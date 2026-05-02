@@ -1,44 +1,57 @@
-import { useState, useRef, useCallback } from "react";
-import { PhoneVerificationDialog } from "@/components/account/PhoneVerificationDialog";
+import { useState, useRef, useCallback, useEffect, Fragment } from "react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createPortal } from "react-dom";
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { useI18n } from "@/hooks/useI18n";
-import { useCountry } from "@/hooks/useCountry";
+import SafeCaption from "@/components/social/SafeCaption";
+import { confirmContentSafe } from "@/lib/security/contentLinkValidation";
+import { stripImageMetadata } from "@/utils/stripImageMetadata";
+
 import SEOHead from "@/components/SEOHead";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import {
-  User, Camera, ArrowLeft, Mail, Phone, Loader2, Save, Sparkles,
-  Shield, Star, Clock, ChevronRight, CreditCard, Bell, Lock, Gift,
+  User, ArrowLeft, Loader2, Sparkles, Camera, ImagePlus, Check, X, MoveVertical,
+  Shield, Star, ChevronRight, UserPlus, BadgeCheck,
   Wallet, Store, ExternalLink, Users, Globe, ChevronDown, Crown, MapPin, ShoppingBag,
-  AlertCircle, CheckCircle2,
+  Handshake, Car, Wrench, UtensilsCrossed, Building2, Truck, Phone, AlertCircle, Bell, MoreHorizontal,
+  Pencil, RotateCcw, Share2, BarChart3, Link as LinkIcon, QrCode, Copy,
+  Repeat, DollarSign, Briefcase, User as UserIcon,
+  Heart, Lock, Gift, MessageCircle, Video, TrendingUp,
 } from "lucide-react";
+import { useHaptics } from "@/hooks/useHaptics";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Badge } from "@/components/ui/badge";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile, useUpdateUserProfile, useUploadAvatar } from "@/hooks/useUserProfile";
+import { useUsername } from "@/hooks/useUsername";
 import { useMerchantRole } from "@/hooks/useMerchantRole";
-import { useAffiliateAttribution } from "@/hooks/useAffiliateAttribution";
+import { useOwnerStoreProfile } from "@/hooks/useOwnerStoreProfile";
 import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 import { MERCHANT_APP_URL } from "@/lib/eatsTables";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
-import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import NavBar from "@/components/home/NavBar";
+import { motion, useScroll, useTransform, AnimatePresence, useMotionValueEvent } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-
-const profileSchema = z.object({
-  first_name: z.string().trim().min(1, "First name is required").max(50, "Too long").optional().or(z.literal("")),
-  last_name: z.string().trim().min(1, "Last name is required").max(50, "Too long").optional().or(z.literal("")),
-  phone: z.string().trim().max(20, "Phone number too long").optional().or(z.literal("")),
-});
-
-type ProfileFormData = z.infer<typeof profileSchema>;
+import { cn } from "@/lib/utils";
+import { openExternalUrl } from "@/lib/openExternalUrl";
+import { assessLinkSync } from "@/hooks/useLinkRisk";
+import ExternalLinkWarning from "@/components/security/ExternalLinkWarning";
+import { stripTrackingParams } from "@/lib/linkSafetyExtras";
+import ProfileContentTabs from "@/components/profile/ProfileContentTabs";
+import ProfileStories from "@/components/profile/ProfileStories";
+import SocialListModal from "@/components/profile/SocialListModal";
+// Wallet, Completeness, Referral & QuickLinks cards moved to /more page
+import ProfileTripsCard from "@/components/profile/ProfileTripsCard";
+import { useCoinBalance } from "@/hooks/useCoinBalance";
+import { useWalletSummary } from "@/hooks/useZivoWallet";
+import { useReferrals } from "@/hooks/useReferrals";
+import { useBookingHistory } from "@/hooks/useBookingHistory";
+import PullToRefresh from "@/components/shared/PullToRefresh";
+import { useNotifications } from "@/hooks/useNotifications";
+import { formatDistanceToNowStrict } from "date-fns";
 
 const LANGS = [
   { code: "en", label: "English", cc: "us" },
@@ -75,10 +88,13 @@ const LANGS = [
 ];
 
 const getFlagUrl = (cc: string) => `/flags/${cc}.svg`;
-const CITY_BG: Record<string, string> = {
-  US: "/flags/city-us.jpg",
-  KH: "/flags/city-kh.jpg",
-};
+
+import VerifiedBadge from "@/components/VerifiedBadge";
+import { formatCount } from "@/lib/social/formatCount";
+
+const BlueVerifiedBadge = ({ className = "h-5 w-5" }: { className?: string }) => (
+  <VerifiedBadge className={className} />
+);
 
 /* ── 3D tilt hook ── */
 function use3DTilt(ref: React.RefObject<HTMLElement | null>, intensity = 8) {
@@ -136,165 +152,381 @@ const GlassCard3D = ({ children, className = "", glow = false }: { children: Rea
 
 const Profile = () => {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const location = useLocation();
-  const phoneRequired = (location.state as any)?.phoneRequired === true;
   const { t, currentLanguage, changeLanguage } = useI18n();
-  const { country, setCountry, countries } = useCountry();
-  const { user, signOut, isAdmin } = useAuth();
+  
+  const { user, isAdmin } = useAuth();
   const { data: profile, isLoading: profileLoading } = useUserProfile();
+  const { username: claimedUsername } = useUsername();
+  // Brand-name override (e.g. "ZIVO" for staff/founder accounts) — falls back to legal name.
+  const brandName = (profile as { display_brand_name?: string | null } | undefined)?.display_brand_name || null;
+  const titleCase = (s: string) => s.replace(/\b([a-z])/g, (m) => m.toUpperCase());
+  const rawHeaderName = brandName || profile?.full_name || "";
+  const headerName = brandName ? rawHeaderName : (rawHeaderName ? titleCase(rawHeaderName) : "");
   const { data: merchantData } = useMerchantRole();
-  const affiliateAttribution = useAffiliateAttribution();
+  const { data: ownerStore, isLoading: ownerStoreLoading } = useOwnerStoreProfile();
+  const { unreadCount: notifUnreadCount, notifications, isLoading: notifLoading, markAsRead, markAllAsRead } = useNotifications(20);
+  const { data: latestVerificationRequest } = useQuery({
+    queryKey: ["verification-request", user?.id, "latest"],
+    queryFn: async () => {
+      if (!user?.id) return null;
+      const { data, error } = await (supabase as any)
+        .from("verification_requests")
+        .select("id, status, rejection_reason, created_at, reviewed_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      return data as { id: string; status: string | null; rejection_reason: string | null; created_at: string; reviewed_at?: string | null } | null;
+    },
+    enabled: !!user?.id,
+    staleTime: 30_000,
+  });
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const refreshBlueVerified = () => {
+      queryClient.invalidateQueries({ queryKey: ["verification-request", user.id, "latest"] });
+      queryClient.invalidateQueries({ queryKey: ["verification-request", user.id] });
+      queryClient.invalidateQueries({ queryKey: ["userProfile", user.id] });
+    };
+
+    const channel = supabase
+      .channel(`blue-verified-status-${user.id}`)
+      .on("postgres_changes", { event: "*", schema: "public", table: "verification_requests", filter: `user_id=eq.${user.id}` }, refreshBlueVerified)
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles", filter: `user_id=eq.${user.id}` }, refreshBlueVerified)
+      .on("postgres_changes", { event: "*", schema: "public", table: "profiles", filter: `id=eq.${user.id}` }, refreshBlueVerified)
+      .subscribe();
+
+    // Fallback: re-check when tab regains focus or network reconnects
+    window.addEventListener("focus", refreshBlueVerified);
+    window.addEventListener("online", refreshBlueVerified);
+
+    return () => {
+      supabase.removeChannel(channel);
+      window.removeEventListener("focus", refreshBlueVerified);
+      window.removeEventListener("online", refreshBlueVerified);
+    };
+  }, [queryClient, user?.id]);
+  
+  // Count pending friend requests + new followers
+  const [socialCount, setSocialCount] = useState(0);
+  useEffect(() => {
+    if (!user) return;
+    const fetchSocialCount = async () => {
+      const { count: friendReqCount } = await (supabase as any)
+        .from('friendships')
+        .select('id', { count: 'exact', head: true })
+        .eq('friend_id', user.id)
+        .eq('status', 'pending');
+      setSocialCount(friendReqCount || 0);
+    };
+    fetchSocialCount();
+    
+    // Listen for realtime changes
+    const channel = supabase
+      .channel('profile-social-count')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'friendships', filter: `friend_id=eq.${user.id}` }, () => {
+        fetchSocialCount();
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [user]);
+  
+  const totalNotifCount = notifUnreadCount + socialCount;
   const { isPlus, plan } = useZivoPlus();
+  const { balance: coinBalance, loading: coinLoading } = useCoinBalance();
+  const { data: walletSummary, isLoading: walletLoading } = useWalletSummary();
+  const { referralCode, isLoading: referralsLoading, copyReferralLink, shareReferral } = useReferrals();
+  const { bookings, isLoading: bookingsLoading } = useBookingHistory();
   const updateProfile = useUpdateUserProfile();
   const uploadAvatar = useUploadAvatar();
-  const fileInputRef = useRef<HTMLInputElement>(null);
   const langTriggerRef = useRef<HTMLButtonElement>(null);
-  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const { impact, selectionChanged } = useHaptics();
+  const [showNotifPanel, setShowNotifPanel] = useState<boolean>(() => {
+    if (typeof window === "undefined") return false;
+    try { return sessionStorage.getItem("zivo:profile:notif-panel") === "1"; } catch { return false; }
+  });
+  useEffect(() => {
+    try { sessionStorage.setItem("zivo:profile:notif-panel", showNotifPanel ? "1" : "0"); } catch {}
+  }, [showNotifPanel]);
+  useEffect(() => {
+    const restore = () => {
+      try {
+        const v = sessionStorage.getItem("zivo:profile:notif-panel") === "1";
+        setShowNotifPanel(v);
+      } catch {}
+    };
+    window.addEventListener("orientationchange", restore);
+    document.addEventListener("visibilitychange", restore);
+    return () => {
+      window.removeEventListener("orientationchange", restore);
+      document.removeEventListener("visibilitychange", restore);
+    };
+  }, []);
+  const handleBack = useCallback(() => {
+    impact("light");
+    if (window.history.length > 1) navigate(-1);
+    else navigate("/feed");
+  }, [impact, navigate]);
+  const handleToggleNotif = useCallback(() => { selectionChanged(); setShowNotifPanel(p => !p); }, [selectionChanged]);
+  const [notifFilter, setNotifFilter] = useState<"all" | "unread">("all");
+  const notifPanelRef = useRef<HTMLDivElement>(null);
+  const notifBellRef = useRef<HTMLButtonElement>(null);
+  // Outside-click + Escape close
+  useEffect(() => {
+    if (!showNotifPanel) return;
+    const onDown = (e: MouseEvent | TouchEvent) => {
+      const t = e.target as Node;
+      if (notifPanelRef.current?.contains(t)) return;
+      if (notifBellRef.current?.contains(t)) return;
+      setShowNotifPanel(false);
+    };
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") setShowNotifPanel(false); };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("touchstart", onDown, { passive: true });
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("touchstart", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [showNotifPanel]);
+  const resolveNotifLink = useCallback((n: { action_url: string | null; metadata: Record<string, any>; template: string }) => {
+    if (n.action_url) return n.action_url;
+    const md = n.metadata || {};
+    const dl = md.deepLink || md.deep_link || md.url;
+    if (typeof dl === "string" && dl) return dl;
+    const tpl = (n.template || "").toLowerCase();
+    if (tpl.includes("friend") || tpl.includes("follow")) return "/notifications?tab=requests";
+    if (tpl.includes("message") || tpl.includes("chat")) return md.thread_id ? `/chat/${md.thread_id}` : "/chat";
+    if (tpl.includes("comment") || tpl.includes("like") || tpl.includes("reaction") || tpl.includes("mention") || tpl.includes("post")) {
+      return md.post_id ? `/post/${md.post_id}` : "/feed";
+    }
+    if (tpl.includes("ride") || tpl.includes("trip") || tpl.includes("driver")) return md.job_id ? `/ride/track/${md.job_id}` : "/rides";
+    if (tpl.includes("order") || tpl.includes("delivery")) return md.order_id ? `/orders/${md.order_id}` : "/account/orders";
+    if (tpl.includes("wallet") || tpl.includes("payout") || tpl.includes("payment")) return "/wallet";
+    if (tpl.includes("verification") || tpl.includes("verify")) return "/account/verification";
+    if (tpl.includes("security") || tpl.includes("login")) return "/account/security";
+    if (tpl.includes("promo") || tpl.includes("coupon")) return "/wallet/promos";
+    return "/notifications";
+  }, []);
+  const handleNotifClick = useCallback(async (n: { id: string; action_url: string | null; metadata: Record<string, any>; template: string; is_read: boolean }) => {
+    selectionChanged();
+    if (!n.is_read) { try { await markAsRead([n.id]); } catch {} }
+    setShowNotifPanel(false);
+    navigate(resolveNotifLink(n));
+  }, [markAsRead, navigate, resolveNotifLink, selectionChanged]);
+  const handleMarkAllRead = useCallback(async () => {
+    if (notifUnreadCount === 0) return;
+    selectionChanged();
+    try {
+      await markAllAsRead();
+      toast.success("All notifications marked as read");
+    } catch {
+      toast.error("Couldn't mark all as read");
+    }
+  }, [markAllAsRead, notifUnreadCount, selectionChanged]);
+  const handleResetCover = useCallback(() => { impact("light"); setCoverPosition(50); }, [impact]);
+  
   const [showLangPicker, setShowLangPicker] = useState(false);
-  const scrollRef = useRef<HTMLDivElement>(null);
   const profileCardRef = useRef<HTMLDivElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
 
-  // Email change state
-  const [newEmail, setNewEmail] = useState("");
-  const [emailEditMode, setEmailEditMode] = useState(false);
-  const [emailOtpSent, setEmailOtpSent] = useState(false);
-  const [emailOtp, setEmailOtp] = useState("");
-  const [emailChanging, setEmailChanging] = useState(false);
-
-  // Phone verification state
-  const [showPhoneVerify, setShowPhoneVerify] = useState(false);
-  const [pendingProfileData, setPendingProfileData] = useState<ProfileFormData | null>(null);
+  // Cover photo state
+  const [coverUploading, setCoverUploading] = useState(false);
+  const [coverRepositioning, setCoverRepositioning] = useState(false);
+  const [coverPosition, setCoverPosition] = useState<number>(profile?.cover_position ?? 50);
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [bioDraft, setBioDraft] = useState("");
+  const [bioEditing, setBioEditing] = useState(false);
+  const [safeLinkPrompt, setSafeLinkPrompt] = useState<string | null>(null);
+  const coverDragRef = useRef<{ startY: number; startPos: number } | null>(null);
 
   const profileTilt = use3DTilt(profileCardRef);
 
-  const { scrollYProgress } = useScroll({ container: scrollRef });
-  const headerY = useTransform(scrollYProgress, [0, 0.3], [0, -30]);
-  const headerScale = useTransform(scrollYProgress, [0, 0.3], [1, 0.95]);
-  const bgParallax = useTransform(scrollYProgress, [0, 1], [0, -80]);
-
-  // Parse first/last from full_name
-  const parsedFirst = profile?.full_name?.split(" ").slice(0, 1).join(" ") || "";
-  const parsedLast = profile?.full_name?.split(" ").slice(1).join(" ") || "";
-
-  const form = useForm<ProfileFormData>({
-    resolver: zodResolver(profileSchema),
-    defaultValues: { first_name: "", last_name: "", phone: "" },
-    values: {
-      first_name: parsedFirst,
-      last_name: parsedLast,
-      phone: profile?.phone || "",
-    },
+  const [friendCount, setFriendCount] = useState(0);
+  const [followerCount, setFollowerCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+  const [postsCount, setPostsCount] = useState(0);
+  const [socialModal, setSocialModal] = useState<{ open: boolean; tab: "friends" | "followers" | "following" }>({ open: false, tab: "friends" });
+  const [shareOpen, setShareOpen] = useState(false);
+  const [modeOpen, setModeOpen] = useState(false);
+  const [activeMode, setActiveMode] = useState<string>(() => {
+    if (typeof window === "undefined") return "personal";
+    return localStorage.getItem("zivo:active_mode") || "personal";
   });
 
-  const handleAvatarClick = () => { fileInputRef.current?.click(); };
+  const getShopDashboardPath = useCallback(() => {
+    if (!ownerStore?.id) return "/shop-dashboard";
+    return ownerStore.isLodging
+      ? `/admin/stores/${ownerStore.id}?tab=lodge-overview`
+      : `/admin/stores/${ownerStore.id}`;
+  }, [ownerStore]);
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    try {
-      const file = e.target.files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = (ev) => { setAvatarPreview(ev.target?.result as string); };
-      reader.readAsDataURL(file);
-      await uploadAvatar.mutateAsync(file);
-      setAvatarPreview(null);
-    } catch (err) {
-      console.error("Avatar upload failed:", err);
-      setAvatarPreview(null);
-    }
-  };
-
-  const onSubmit = async (data: ProfileFormData) => {
-    const phoneChanged = (data.phone || "") !== (profile?.phone || "");
-    const hasNewPhone = !!data.phone?.trim();
-
-    // If phone changed and there's a new phone, verify it first
-    if (phoneChanged && hasNewPhone) {
-      setPendingProfileData(data);
-      setShowPhoneVerify(true);
+  const openShopDashboard = useCallback(() => {
+    selectionChanged();
+    if (!user) {
+      toast.info("Sign in to open Shop Dashboard");
+      navigate("/login?redirect=/shop-dashboard");
       return;
     }
-
-    // No phone change or phone removed — save directly
-    const fullName = [data.first_name, data.last_name].filter(Boolean).join(" ") || null;
-    await updateProfile.mutateAsync({
-      full_name: fullName,
-      phone: data.phone || null,
-    });
-  };
-
-  const handlePhoneVerified = async () => {
-    if (!pendingProfileData) return;
-    const fullName = [pendingProfileData.first_name, pendingProfileData.last_name].filter(Boolean).join(" ") || null;
-    await updateProfile.mutateAsync({
-      full_name: fullName,
-      phone: pendingProfileData.phone || null,
-    });
-    setPendingProfileData(null);
-  };
-
-  const handleEmailChangeRequest = async () => {
-    if (!newEmail || newEmail === user?.email) return;
-    setEmailChanging(true);
-    try {
-      const { error } = await supabase.auth.updateUser({ email: newEmail });
-      if (error) throw error;
-      setEmailOtpSent(true);
-      toast.success("Verification email sent to " + newEmail);
-    } catch (err: any) {
-      toast.error(err.message || "Failed to send verification");
-    } finally {
-      setEmailChanging(false);
+    if (ownerStoreLoading) {
+      toast.info("Loading your shop dashboard");
+      return;
     }
-  };
+    navigate(getShopDashboardPath());
+  }, [getShopDashboardPath, navigate, ownerStoreLoading, selectionChanged, user]);
 
-  const handleEmailVerifyOtp = async () => {
-    setEmailChanging(true);
-    try {
-      const { error } = await supabase.auth.verifyOtp({
-        email: newEmail,
-        token: emailOtp,
-        type: "email_change",
-      });
-      if (error) throw error;
-      toast.success("Email updated successfully!");
-      setEmailEditMode(false);
-      setEmailOtpSent(false);
-      setNewEmail("");
-      setEmailOtp("");
-    } catch (err: any) {
-      toast.error(err.message || "Invalid verification code");
-    } finally {
-      setEmailChanging(false);
-    }
-  };
+  // Load real friendship status, friend count & follower count
+  useEffect(() => {
+    if (!user?.id) return;
+    const load = async () => {
+      // Friend count (accepted friendships)
+      const { count: fc } = await supabase
+        .from("friendships" as any)
+        .select("*", { count: "exact", head: true })
+        .eq("status", "accepted")
+        .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`);
+      setFriendCount(fc || 0);
+
+      // Follower count (people following this user)
+      const { count: flc } = await supabase
+        .from("followers" as any)
+        .select("*", { count: "exact", head: true })
+        .eq("following_id", user.id);
+      setFollowerCount(flc || 0);
+
+      // Following count (people this user follows)
+      const { count: fgc } = await supabase
+        .from("followers" as any)
+        .select("*", { count: "exact", head: true })
+        .eq("follower_id", user.id);
+      setFollowingCount(fgc || 0);
+
+      // Posts count
+      const { count: pc } = await (supabase as any)
+        .from("user_posts")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id);
+      setPostsCount(pc || 0);
+
+      // Check own friendship status (for own profile it stays "none" — used when viewing others)
+      // Check if currently following self (shouldn't happen but keeps state correct)
+    };
+    load();
+  }, [user?.id]);
+
+  useEffect(() => {
+    setBioDraft(profile?.bio ?? "");
+  }, [profile?.bio]);
+
+  // Scroll to top on mount/navigation
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
+
+  const { scrollYProgress, scrollY } = useScroll();
+  const bgParallax = useTransform(scrollYProgress, [0, 1], [0, -80]);
+  // Mobile cover parallax + rubber-band
+  const coverY = useTransform(scrollY, [0, 240], [0, -60]);
+  const coverScale = useTransform(scrollY, [-100, 0], [1.15, 1]);
+  // Header is always pinned & visible. Toggle "over cover" styling vs solid bar
+  // once the user scrolls past the cover area for legibility.
+  const [overCover, setOverCover] = useState(true);
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    setOverCover(latest < 80);
+  });
 
   const getInitials = () => {
+    if (brandName) return brandName.slice(0, 2).toUpperCase();
     if (profile?.full_name) return profile.full_name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
-    if (user?.email) return user.email[0].toUpperCase();
+    if (claimedUsername) return claimedUsername.slice(0, 2).toUpperCase();
     return "U";
   };
 
-  const quickLinks = [
-    { icon: ShoppingBag, label: t("profile.my_orders"), href: "/grocery/orders", description: t("profile.orders_desc"), color: "from-blue-500/15 to-blue-600/10", iconColor: "text-blue-500" },
-    { icon: Wallet, label: t("profile.wallet"), href: "/wallet", description: t("profile.wallet_desc"), color: "from-emerald-500/15 to-emerald-600/10", iconColor: "text-emerald-500" },
-    { icon: Sparkles, label: t("profile.loyalty"), href: "/account/loyalty", description: t("profile.loyalty_desc"), color: "from-amber-500/15 to-amber-600/10", iconColor: "text-amber-500" },
-    { icon: Gift, label: t("profile.gift_cards"), href: "/account/gift-cards", description: t("profile.gift_cards_desc"), color: "from-pink-500/15 to-pink-600/10", iconColor: "text-pink-500" },
-    { icon: CreditCard, label: t("profile.payment_methods"), href: "/payment-methods", description: t("profile.payment_desc"), color: "from-violet-500/15 to-violet-600/10", iconColor: "text-violet-500" },
-    { icon: MapPin, label: t("profile.saved_addresses"), href: "/account/addresses", description: t("profile.addresses_desc"), color: "from-rose-500/15 to-rose-600/10", iconColor: "text-rose-500" },
-    { icon: Bell, label: t("profile.notifications"), href: "/notifications", description: t("profile.notifications_desc"), color: "from-sky-500/15 to-sky-600/10", iconColor: "text-sky-500" },
-    { icon: Lock, label: t("profile.security"), href: "/account/security", description: t("profile.security_desc"), color: "from-teal-500/15 to-teal-600/10", iconColor: "text-teal-500" },
-    { icon: Globe, label: t("profile.preferences"), href: "/account/preferences", description: t("profile.preferences_desc"), color: "from-indigo-500/15 to-indigo-600/10", iconColor: "text-indigo-500" },
-  ];
+  // Cover photo upload
+  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target;
+    const file = input.files?.[0];
+    if (!file || !user?.id) { input.value = ""; return; }
+    if (file.size > 10 * 1024 * 1024) { toast.error("Cover image must be under 10MB"); input.value = ""; return; }
+    setCoverUploading(true);
+    try {
+      const safe = await stripImageMetadata(file);
+      const ext = safe.name.split(".").pop();
+      const path = `${user.id}/cover_${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, safe, { upsert: true });
+      if (upErr) throw upErr;
+      const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
+      await updateProfile.mutateAsync({ cover_url: publicUrl, cover_position: 50 });
+      setCoverPosition(50);
+      toast.success("Cover photo updated!");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to upload cover");
+    } finally {
+      setCoverUploading(false);
+      input.value = "";
+    }
+  };
+
+  // Avatar upload
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const input = e.target;
+    const file = input.files?.[0];
+    if (!file) return;
+    try {
+      const reader = new FileReader();
+      reader.onload = (ev) => setAvatarPreview(ev.target?.result as string);
+      reader.readAsDataURL(file);
+      await uploadAvatar.mutateAsync(file);
+      setAvatarPreview(null);
+    } catch { setAvatarPreview(null); }
+    finally { input.value = ""; }
+  };
+
+  // Cover repositioning handlers
+  const handleCoverDragStart = (clientY: number) => {
+    coverDragRef.current = { startY: clientY, startPos: coverPosition };
+  };
+  const handleCoverDragMove = (clientY: number) => {
+    if (!coverDragRef.current) return;
+    const delta = clientY - coverDragRef.current.startY;
+    const newPos = Math.max(0, Math.min(100, coverDragRef.current.startPos + delta * 0.3));
+    setCoverPosition(newPos);
+  };
+  const handleCoverDragEnd = () => { coverDragRef.current = null; };
+  const saveCoverPosition = async () => {
+    await updateProfile.mutateAsync({ cover_position: Math.round(coverPosition) });
+    setCoverRepositioning(false);
+    toast.success("Cover position saved!");
+  };
+
+
+
 
   const currentLang = LANGS.find(l => l.code === currentLanguage) || LANGS[0];
 
+  const handlePullRefresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ["user-profile"] });
+  }, [queryClient]);
+
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden safe-area-top safe-area-bottom">
+    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background relative overflow-hidden safe-area-bottom">
       <SEOHead title="Profile Settings – ZIVO" description="Manage your ZIVO account, profile, and travel preferences." noIndex={true} />
 
-      {/* ── Deep 3D Background with multiple parallax layers ── */}
-      <motion.div style={{ y: bgParallax }} className="pointer-events-none fixed inset-0 z-0">
-        {/* Base gradient */}
+      {/* Desktop NavBar */}
+      <div className="hidden lg:block">
+        <NavBar />
+      </div>
+
+      {/* ── Background: clean Facebook-style on mobile, parallax on desktop ── */}
+      <motion.div style={{ y: bgParallax }} className="pointer-events-none fixed inset-0 z-0 hidden lg:block">
+        {/* Base gradient (desktop only) */}
         <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.06] via-background to-primary/[0.04]" />
         {/* Radial glows */}
         <div className="absolute top-[-25%] right-[-15%] w-[70vw] h-[70vw] rounded-full bg-primary/[0.07] blur-[120px]" />
@@ -309,83 +541,304 @@ const Profile = () => {
         <BokehParticle delay={1.2} size={45} x="40%" y="10%" color="hsl(var(--primary) / 0.06)" />
       </motion.div>
 
-      {/* ── Scrollable content ── */}
-      <div ref={scrollRef} className="relative z-10 h-screen overflow-y-auto pb-24 scroll-smooth" style={{ scrollbarWidth: 'none' }}>
-        <div className="px-4 pt-4 max-w-lg mx-auto">
-
-          {/* ── Header with 3D parallax ── */}
-          <motion.div style={{ y: headerY, scale: headerScale }} className="flex items-start justify-between mb-5">
-            <div className="flex items-center gap-3">
-              <motion.div whileHover={{ scale: 1.1, rotateY: 10 }} whileTap={{ scale: 0.9 }}>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => navigate(-1)}
-                  className="rounded-2xl bg-card/60 backdrop-blur-xl border border-border/30 shadow-lg shadow-primary/[0.05] hover:bg-card/80 -ml-2 touch-manipulation active:scale-95"
-                  aria-label="Go back"
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                </Button>
-              </motion.div>
-              <div>
-                <h1 className="font-display text-xl font-bold">{t("profile.title")}</h1>
-                <p className="text-muted-foreground text-xs">{t("profile.subtitle")}</p>
-              </div>
-            </div>
-            {isAdmin && (
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button variant="outline" size="sm" onClick={() => navigate("/admin/analytics")} className="gap-2 rounded-2xl backdrop-blur-xl bg-card/60 border-border/30 shadow-lg">
-                  <Shield className="h-4 w-4" /> Admin Dashboard
-                </Button>
-              </motion.div>
+      {/* ── Mobile sticky compact header (Facebook-style) ──
+          Portaled to <body> so the position:fixed element escapes the
+          PullToRefresh transformed ancestor (which would otherwise re-anchor
+          fixed positioning and hide the header). */}
+      {typeof document !== "undefined" && createPortal(
+        <motion.header
+          role="banner"
+          aria-label="Profile quick navigation"
+          data-testid="profile-sticky-header"
+          style={{
+            paddingTop: "var(--zivo-safe-top-sticky)",
+            height: "calc(var(--zivo-safe-top-sticky) + 3rem)",
+          }}
+          className="lg:hidden fixed top-0 inset-x-0 z-40 px-3 flex items-center gap-3"
+        >
+          {/* Adaptive background: gradient scrim over cover, solid blurred bar after scroll */}
+          <div
+            aria-hidden
+            className={cn(
+              "absolute inset-0 -z-10 transition-all duration-300",
+              overCover
+                ? "bg-gradient-to-b from-black/45 via-black/20 to-transparent"
+                : "bg-background/90 backdrop-blur-xl border-b border-border/40 shadow-sm shadow-background/20"
             )}
-          </motion.div>
-
-          {/* ── Language Selector (3D floating pill) ── */}
-          <ParallaxSection index={0}>
-            <div className="relative mb-4">
-              <motion.button
-                ref={langTriggerRef}
-                whileHover={{ scale: 1.05, y: -2, rotateX: 3 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowLangPicker(prev => !prev)}
-                className="relative z-20 flex min-h-12 items-center gap-2 px-5 py-3 rounded-2xl bg-primary text-primary-foreground text-xs font-bold shadow-xl shadow-primary/30 touch-manipulation transition-all"
-                style={{ perspective: "800px", transformStyle: "preserve-3d", transform: "translateZ(24px)" }}
-              >
-                <Globe className="w-4 h-4" />
-                <img src={getFlagUrl(currentLang.cc)} alt="" className="w-5 h-3.5 rounded-[3px] object-cover shadow-sm" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                <span>{currentLang.label}</span>
-                <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-300 ${showLangPicker ? "rotate-180" : ""}`} />
-              </motion.button>
-            </div>
-          </ParallaxSection>
-
-          {/* ── Country Selector (3D photo cards with depth) ── */}
-          <ParallaxSection index={1}>
-            <div className="flex items-center justify-center gap-3 mb-5">
-              {countries.map((c) => (
-                <motion.button
-                  key={c.code}
-                  whileHover={{ scale: 1.06, rotateY: 5, z: 20 }}
-                  whileTap={{ scale: 0.94 }}
-                  onClick={() => setCountry(c.code)}
-                  className={`relative flex items-center gap-2 px-5 py-4 rounded-3xl text-sm font-bold transition-all touch-manipulation overflow-hidden min-w-[150px] justify-center ${
-                    country === c.code
-                      ? "ring-2 ring-primary shadow-2xl shadow-primary/25"
-                      : "ring-1 ring-border/30 opacity-65 hover:opacity-100"
-                  }`}
-                  style={{ perspective: "1000px", transformStyle: "preserve-3d" }}
+          />
+          <motion.button
+            onClick={handleBack}
+            aria-label="Go back"
+            whileTap={{ scale: 0.86 }}
+            whileHover={{ scale: 1.04 }}
+            transition={{ type: "spring", stiffness: 400, damping: 22 }}
+            className={cn(
+              "h-9 w-9 -ml-1 flex items-center justify-center rounded-full transition focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:outline-none focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+              overCover ? "hover:bg-white/15 active:bg-white/20" : "hover:bg-muted/60 active:bg-muted/70"
+            )}
+          >
+            <ArrowLeft className={cn("h-5 w-5", overCover ? "text-white drop-shadow-md" : "text-foreground")} />
+          </motion.button>
+          <span aria-hidden="true">
+            <Avatar className={cn("h-8 w-8 ring-1", overCover ? "ring-white/60" : "ring-border/60")}>
+              <AvatarImage src={profile?.avatar_url || undefined} alt="" />
+              <AvatarFallback className="text-xs">{getInitials()}</AvatarFallback>
+            </Avatar>
+          </span>
+          <div className="flex items-center gap-1 min-w-0 flex-1" aria-live="polite">
+            <span className={cn(
+              "font-semibold text-sm truncate",
+              overCover ? "text-white drop-shadow-md" : "text-foreground"
+            )}>
+              {headerName || "Profile"}
+            </span>
+            {profile?.is_verified && <VerifiedBadge size={14} />}
+          </div>
+          <div className="relative">
+          <motion.button
+            ref={notifBellRef}
+            onClick={handleToggleNotif}
+            aria-label={showNotifPanel ? "Close notifications" : "Open notifications"}
+            aria-pressed={showNotifPanel}
+            aria-expanded={showNotifPanel}
+            aria-controls="profile-notif-panel"
+            whileTap={{ scale: 0.86 }}
+            transition={{ type: "spring", stiffness: 400, damping: 22 }}
+            className={cn(
+              "relative h-9 w-9 flex items-center justify-center rounded-full transition focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:outline-none focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+              showNotifPanel
+                ? "bg-primary text-primary-foreground"
+                : overCover
+                  ? "hover:bg-white/15 text-white drop-shadow-md"
+                  : "hover:bg-muted/60 text-foreground"
+            )}
+          >
+            <Bell className="h-5 w-5" />
+            {totalNotifCount > 0 && !showNotifPanel && (
+              <span className="absolute -right-0.5 -top-0.5 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-destructive px-1 text-[9px] font-bold text-destructive-foreground shadow-sm">
+                {totalNotifCount > 99 ? "99+" : totalNotifCount}
+              </span>
+            )}
+          </motion.button>
+          <AnimatePresence>
+            {showNotifPanel && (
+              <>
+                {/* Soft backdrop on mobile so the popover clearly stands above the page */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.18 }}
+                  onClick={() => setShowNotifPanel(false)}
+                  className="lg:hidden fixed inset-0 z-40 bg-background/40 backdrop-blur-[2px]"
+                  style={{ top: "calc(var(--zivo-safe-top-sticky) + 3rem)" }}
+                  aria-hidden
+                />
+                <motion.div
+                  ref={notifPanelRef}
+                  id="profile-notif-panel"
+                  role="dialog"
+                  aria-label="Notifications"
+                  initial={{ opacity: 0, y: -8, scale: 0.98 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -8, scale: 0.98 }}
+                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                  className="fixed z-50 origin-top-right overflow-hidden rounded-2xl border border-border/60 bg-card text-card-foreground shadow-2xl shadow-black/30 backdrop-blur-xl right-2 left-2 mx-auto max-w-[420px] lg:left-auto lg:right-4 lg:mx-0 lg:w-[400px]"
+                  style={{
+                    top: "calc(var(--zivo-safe-top-sticky) + 3rem + 6px)",
+                    maxHeight: "calc(100vh - var(--zivo-safe-top-sticky) - 3rem - 24px)",
+                  }}
                 >
-                  <img src={CITY_BG[c.code]} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
-                  <div className={`absolute inset-0 transition-colors duration-500 ${country === c.code ? "bg-primary/55" : "bg-foreground/40"}`} />
-                  {/* Depth shadow overlay */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-white/5" />
-                  <img src={getFlagUrl(c.code.toLowerCase())} alt={c.name} className="w-6 h-4 rounded-[3px] object-cover shadow-md border border-white/40 shrink-0 relative z-10" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                  <span className="relative z-10 text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.4)]">{c.name}</span>
-                </motion.button>
-              ))}
-            </div>
-          </ParallaxSection>
+                {/* Caret pointing at the bell */}
+                <div className="pointer-events-none absolute -top-1.5 right-12 h-3 w-3 rotate-45 rounded-sm border-l border-t border-border/60 bg-card lg:right-6" />
+                {/* Header (sticky) */}
+                <div className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-border/40 bg-card/95 px-4 pt-3 pb-2.5 backdrop-blur pt-safe">
+                  <div className="flex items-center gap-2" aria-live="polite">
+                    <h3 className="text-[15px] font-bold leading-none tracking-tight">Notifications</h3>
+                    {totalNotifCount > 0 && (
+                      <Badge variant="secondary" className="h-5 px-1.5 text-[10px]">{totalNotifCount}</Badge>
+                    )}
+                  </div>
+                  {notifUnreadCount > 0 && (
+                    <button
+                      onClick={handleMarkAllRead}
+                      className="rounded-full px-2 py-1 text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
+                    >
+                      Mark all read
+                    </button>
+                  )}
+                </div>
+                {/* Filter chips */}
+                <div className="flex items-center gap-1.5 px-3 pt-2.5 pb-1">
+                  {(["all", "unread"] as const).map((f) => (
+                    <button
+                      key={f}
+                      onClick={() => setNotifFilter(f)}
+                      className={cn(
+                        "rounded-full px-3 py-1 text-xs font-semibold transition-colors",
+                        notifFilter === f
+                          ? "bg-primary text-primary-foreground"
+                          : "bg-muted/50 text-muted-foreground hover:bg-muted"
+                      )}
+                    >
+                      {f === "all" ? "All" : `Unread${notifUnreadCount > 0 ? ` (${notifUnreadCount})` : ""}`}
+                    </button>
+                  ))}
+                </div>
+                {/* List */}
+                <div className="max-h-[60vh] overflow-y-auto overscroll-contain px-1.5 py-1.5">
+                  {/* Friend requests pinned */}
+                  {socialCount > 0 && (
+                    <button
+                      onClick={() => { selectionChanged(); setShowNotifPanel(false); navigate("/notifications?tab=requests"); }}
+                      className="flex w-full items-center gap-3 rounded-xl border border-primary/15 bg-primary/5 p-2.5 text-left transition-colors hover:bg-primary/10"
+                    >
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/15">
+                        <UserPlus className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <p className="truncate text-sm font-semibold">Friend requests</p>
+                        <p className="truncate text-xs text-muted-foreground">{socialCount} pending · tap to review</p>
+                      </div>
+                      <span className="h-2 w-2 shrink-0 rounded-full bg-primary" />
+                    </button>
+                  )}
+
+                  {notifLoading && notifications.length === 0 ? (
+                    <div className="space-y-2 p-2">
+                      {[0, 1, 2].map((i) => (
+                        <div key={i} className="flex items-center gap-3">
+                          <div className="h-10 w-10 shrink-0 animate-pulse rounded-full bg-muted" />
+                          <div className="flex-1 space-y-1.5">
+                            <div className="h-3 w-2/3 animate-pulse rounded bg-muted" />
+                            <div className="h-2.5 w-1/2 animate-pulse rounded bg-muted/70" />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (() => {
+                    const filtered = (notifFilter === "unread"
+                      ? notifications.filter((n) => !n.is_read)
+                      : notifications);
+                    if (filtered.length === 0 && socialCount === 0) {
+                      return (
+                        <div className="flex flex-col items-center justify-center gap-1.5 px-4 py-7 text-center">
+                          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted/40">
+                            <Bell className="h-5 w-5 text-muted-foreground/60" />
+                          </div>
+                          <p className="text-sm font-semibold text-foreground">You're all caught up</p>
+                          <p className="text-xs text-muted-foreground">New notifications will appear here.</p>
+                        </div>
+                      );
+                    }
+                    return (
+                      <AnimatePresence initial={false}>
+                        {filtered.slice(0, 12).map((n) => {
+                          let timeLabel = "";
+                          try { timeLabel = formatDistanceToNowStrict(new Date(n.created_at), { addSuffix: false }); } catch {}
+                          const md: Record<string, any> = n.metadata || {};
+                          const actorAvatar: string | undefined = md.actor_avatar_url || md.avatar_url || md.image_url;
+                          const actorName: string = md.actor_name || md.actor || n.title || "?";
+                          const initials = actorName
+                            .split(/\s+/)
+                            .map((s: string) => s[0])
+                            .filter(Boolean)
+                            .slice(0, 2)
+                            .join("")
+                            .toUpperCase() || "Z";
+                          return (
+                            <motion.button
+                              key={n.id}
+                              layout
+                              initial={{ opacity: 0, y: -4 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, y: -4 }}
+                              transition={{ type: "spring", stiffness: 380, damping: 30, mass: 0.6 }}
+                              onClick={() => handleNotifClick(n)}
+                              className="group flex w-full items-start gap-3 rounded-xl p-2.5 text-left"
+                              style={{
+                                backgroundColor: n.is_read ? "transparent" : "hsl(var(--primary) / 0.06)",
+                                transition: "background-color 200ms ease",
+                              }}
+                            >
+                              {actorAvatar ? (
+                                <Avatar className="h-10 w-10 shrink-0">
+                                  <AvatarImage src={actorAvatar} alt="" />
+                                  <AvatarFallback className="text-xs">{initials}</AvatarFallback>
+                                </Avatar>
+                              ) : (
+                                <div className={cn(
+                                  "flex h-10 w-10 shrink-0 items-center justify-center rounded-full",
+                                  n.category === "transactional" ? "bg-emerald-500/15 text-emerald-500"
+                                    : n.category === "operational" ? "bg-amber-500/15 text-amber-500"
+                                    : n.category === "marketing" ? "bg-fuchsia-500/15 text-fuchsia-500"
+                                    : "bg-primary/15 text-primary"
+                                )}>
+                                  <Bell className="h-5 w-5" />
+                                </div>
+                              )}
+                              <div className="min-w-0 flex-1">
+                                <p className={cn("truncate text-sm transition-all", n.is_read ? "font-medium text-foreground/90" : "font-semibold text-foreground")}>
+                                  {n.title || "Notification"}
+                                </p>
+                                {n.body && (
+                                  <p className="line-clamp-2 text-xs text-muted-foreground">{n.body}</p>
+                                )}
+                                {timeLabel && (
+                                  <p className={cn("mt-0.5 text-[10px] font-medium", n.is_read ? "text-muted-foreground" : "text-primary")}>
+                                    {timeLabel} ago
+                                  </p>
+                                )}
+                              </div>
+                              <motion.span
+                                initial={false}
+                                animate={{ opacity: n.is_read ? 0 : 1, scale: n.is_read ? 0.4 : 1 }}
+                                transition={{ duration: 0.18 }}
+                                className="mt-1.5 h-2 w-2 shrink-0 rounded-full bg-primary"
+                                aria-label={n.is_read ? "Read" : "Unread"}
+                              />
+                            </motion.button>
+                          );
+                        })}
+                      </AnimatePresence>
+                    );
+                  })()}
+                </div>
+                {/* Footer */}
+                <div className="border-t border-border/40 px-2 py-1.5">
+                  <button
+                    onClick={() => { setShowNotifPanel(false); navigate("/notifications"); }}
+                    className="w-full rounded-xl py-2 text-center text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
+                  >
+                    See all notifications
+                  </button>
+                </div>
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+          </div>
+          <motion.button
+            onClick={() => navigate("/more")}
+            aria-label="More account options"
+            whileTap={{ scale: 0.86 }}
+            transition={{ type: "spring", stiffness: 400, damping: 22 }}
+            className={cn(
+              "h-9 w-9 -mr-1 flex items-center justify-center rounded-full transition focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:outline-none focus-visible:ring-offset-2 focus-visible:ring-offset-background",
+              overCover ? "hover:bg-white/15 text-white drop-shadow-md" : "hover:bg-muted/60 text-foreground"
+            )}
+          >
+            <MoreHorizontal className="h-5 w-5" />
+          </motion.button>
+        </motion.header>,
+        document.body
+      )}
+
+
+      {/* ── Scrollable content ── */}
+      <div className="relative z-10 min-h-screen pb-24 scroll-smooth bg-background" style={{ scrollbarWidth: 'none' }}>
+        {/* Mobile: edge-to-edge full-screen (Facebook-style). Desktop: centered card. */}
+        <div className="px-0 lg:px-4 pt-0 lg:pt-20 max-w-none lg:max-w-3xl mx-auto">
 
           {profileLoading ? (
             <div className="flex items-center justify-center py-20">
@@ -394,9 +847,11 @@ const Profile = () => {
               </motion.div>
             </div>
           ) : (
-            <div className="space-y-5">
-              {/* ── Profile Card (3D tilt + glassmorphism) ── */}
-              <ParallaxSection index={2}>
+            <div className="space-y-2 pt-0 lg:pt-1">
+              {/* ── Profile Card with Cover Photo ──
+                  No ParallaxSection here: the hero card must paint immediately
+                  to avoid a giant blank area at the top of the viewport. */}
+              <div>
                 <motion.div
                   ref={profileCardRef}
                   onMouseMove={profileTilt.handleMove as any}
@@ -406,418 +861,522 @@ const Profile = () => {
                   style={{ perspective: "1200px", transformStyle: "preserve-3d" }}
                   className="group"
                 >
-                  <GlassCard3D glow className="shadow-2xl shadow-primary/[0.08]">
-                    <CardHeader className="text-center pb-2 pt-8">
-                      <div className="flex justify-center mb-4">
+                  {/* Mobile: edge-to-edge plain surface (Facebook). Desktop: glass card. */}
+                  <div className="relative bg-card lg:rounded-3xl lg:overflow-hidden lg:shadow-2xl lg:shadow-primary/[0.08]">
+                    <div className="hidden lg:block absolute inset-0 bg-card/70 backdrop-blur-2xl rounded-3xl" />
+                    <div className="hidden lg:block absolute inset-0 bg-gradient-to-br from-primary/[0.04] via-transparent to-primary/[0.02] rounded-3xl" />
+                    <div className="hidden lg:block pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-inset ring-white/[0.08] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]" />
+                    <div className="relative z-10">
+                    {/* Cover Photo — TRUE full-bleed on mobile.
+                        The image extends edge-to-edge AND behind the iOS/Android
+                        status bar / notch. We grow the container height by the
+                        safe-area inset (instead of padding it down) so the photo
+                        itself reaches the very top of the webview. Only the
+                        floating action buttons inside respect the safe area. */}
+                    <div
+                      data-disable-pull-to-refresh="true"
+                      className="relative w-full overflow-hidden select-none"
+                      onMouseDown={coverRepositioning ? (e) => { e.preventDefault(); handleCoverDragStart(e.clientY); } : undefined}
+                      onMouseMove={coverRepositioning ? (e) => handleCoverDragMove(e.clientY) : undefined}
+                      onMouseUp={coverRepositioning ? handleCoverDragEnd : undefined}
+                      onMouseLeave={coverRepositioning ? handleCoverDragEnd : undefined}
+                      onTouchStart={coverRepositioning ? (e) => handleCoverDragStart(e.touches[0].clientY) : undefined}
+                      onTouchMove={coverRepositioning ? (e) => handleCoverDragMove(e.touches[0].clientY) : undefined}
+                      onTouchEnd={coverRepositioning ? handleCoverDragEnd : undefined}
+                      onDoubleClick={coverRepositioning ? () => { impact("medium"); setCoverPosition(50); } : undefined}
+                      style={{
+                        cursor: coverRepositioning ? "ns-resize" : "default",
+                        // Full-bleed: cover photo crosses behind the status bar.
+                        // Mobile target: 10rem of visible cover + safe-area inset.
+                        // Desktop keeps a fixed 13rem (lg:h-52) cover.
+                        height: "calc(10rem + var(--zivo-safe-top, 0px))",
+                      }}
+                    >
+                      {/* Status-bar legibility scrim (mobile only). pointer-events disabled. */}
+                      <div
+                        aria-hidden="true"
+                        className="lg:hidden pointer-events-none absolute inset-x-0 top-0 z-10 bg-gradient-to-b from-black/45 via-black/15 to-transparent"
+                        style={{ height: "calc(var(--zivo-safe-top, 0px) + 24px)" }}
+                      />
+                      <motion.div
+                        className="pointer-events-none absolute inset-0 lg:!translate-y-0 lg:!scale-100"
+                        style={coverRepositioning ? undefined : { y: coverY, scale: coverScale }}
+                      >
+                      {profile?.cover_url ? (
+                        <img
+                          src={profile.cover_url}
+                          alt="Cover"
+                          className="absolute inset-0 w-full h-full object-cover transition-[object-position] duration-100"
+                          style={{ objectPosition: `center ${coverPosition}%` }}
+                          draggable={false}
+                        />
+                      ) : (
+                        <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-primary/15 to-accent/20">
+                          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,hsl(var(--primary)/0.25),transparent_70%)]" />
+                          <div className="absolute bottom-3 right-4 text-primary/40 text-[11px] font-medium flex items-center gap-1">
+                            <ImagePlus className="w-3.5 h-3.5" /> Add cover photo
+                          </div>
+                        </div>
+                      )}
+                      {/* Gradient overlay (subtle on mobile so cover stays vivid like Facebook) */}
+                      <div className="pointer-events-none absolute inset-0 bg-gradient-to-t from-card/40 via-transparent to-transparent lg:from-card/90 lg:via-card/20" />
+                      </motion.div>
+
+                      {/* Cover action buttons — Facebook-style bottom-right of cover.
+                          Pinned to the bottom of the cover photo so they sit far
+                          below the iOS status bar / Dynamic Island safe zone and
+                          never overlap the sticky header (back/bell/more).
+                          Uses a native <label htmlFor> so the file picker
+                          reliably opens on iOS / Android Capacitor. */}
+                      {user && !coverRepositioning && (
+                        <div className="absolute bottom-3 right-3 z-40 flex items-center gap-2 pointer-events-auto">
+                          {profile?.cover_url && (
+                            <motion.button
+                              type="button"
+                              whileTap={{ scale: 0.88 }}
+                              onClick={() => { setCoverPosition(profile?.cover_position ?? 50); setCoverRepositioning(true); }}
+                              aria-label="Reposition cover photo"
+                              className="h-9 w-9 flex items-center justify-center rounded-full bg-background/90 backdrop-blur-md text-foreground hover:bg-background shadow-lg border border-border/40 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
+                            >
+                              <MoveVertical className="h-[16px] w-[16px]" />
+                            </motion.button>
+                          )}
+                          <label
+                            htmlFor="profile-cover-input"
+                            aria-label={profile?.cover_url ? "Change cover photo" : "Add cover photo"}
+                            aria-disabled={coverUploading}
+                            className={cn(
+                              "inline-flex items-center gap-1.5 h-9 rounded-full bg-background/90 backdrop-blur-md text-foreground hover:bg-background shadow-lg border border-border/40 cursor-pointer active:scale-95 transition focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none",
+                              profile?.cover_url ? "w-9 justify-center" : "px-3.5 text-xs font-semibold",
+                              coverUploading && "opacity-60 pointer-events-none"
+                            )}
+                          >
+                            {coverUploading ? (
+                              <Loader2 className="h-[16px] w-[16px] animate-spin" />
+                            ) : (
+                              <>
+                                <ImagePlus className="h-[16px] w-[16px]" />
+                                {!profile?.cover_url && <span>Add cover</span>}
+                              </>
+                            )}
+                          </label>
+                        </div>
+                      )}
+
+                      {/* Repositioning controls */}
+                      {coverRepositioning && (
+                        <div className="absolute inset-0 z-30 flex items-center justify-center">
+                          <div className="absolute inset-0 bg-background/30 backdrop-blur-[2px]" />
+                          <div className="relative flex items-center gap-3 bg-background/90 backdrop-blur-xl rounded-full px-4 py-2 shadow-xl border border-border/50">
+                            <MoveVertical className="h-4 w-4 text-muted-foreground" />
+                            <span className="text-xs font-semibold text-foreground">Drag to reposition</span>
+                            <button type="button" onClick={saveCoverPosition} aria-label="Save cover position" className="p-1.5 rounded-full bg-primary text-primary-foreground transition active:scale-90 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none">
+                              <Check className="h-3.5 w-3.5" />
+                            </button>
+                            <button type="button" onClick={handleResetCover} aria-label="Reset cover position to center" className="p-1.5 rounded-full bg-muted/70 text-foreground hover:bg-muted transition active:scale-90 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none">
+                              <RotateCcw className="h-3.5 w-3.5" />
+                            </button>
+                            <button type="button" onClick={() => { setCoverPosition(profile?.cover_position ?? 50); setCoverRepositioning(false); }} aria-label="Cancel cover repositioning" className="p-1.5 rounded-full bg-muted text-muted-foreground transition active:scale-90 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none">
+                              <X className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      )}
+
+                    </div>
+
+                    {/* Hidden cover file input — placed OUTSIDE the cover
+                        container (which has motion transforms) so iOS/Capacitor
+                        reliably opens the file picker via the <label htmlFor>. */}
+                    <input
+                      id="profile-cover-input"
+                      ref={coverInputRef}
+                      type="file"
+                      accept="image/jpeg,image/png,image/webp"
+                      onChange={handleCoverUpload}
+                      className="sr-only"
+                    />
+
+                    {/* Avatar overlapping cover */}
+                    <div className="relative z-10 -mt-11 px-6">
+                      <div className="flex justify-start">
                         <motion.div
                           className="relative group/avatar"
-                          whileHover={{ scale: 1.08, rotateY: 10 }}
+                          whileHover={{ scale: 1.05 }}
                           transition={{ type: "spring", stiffness: 300 }}
-                          style={{ transformStyle: "preserve-3d" }}
                         >
-                          {/* Multi-layer glow ring */}
-                          <div className="absolute -inset-4 bg-gradient-to-r from-primary via-primary/50 to-primary rounded-full blur-2xl opacity-20 group-hover/avatar:opacity-45 transition-opacity animate-pulse" />
-                          <div className="absolute -inset-2 bg-gradient-to-br from-primary/40 to-primary/20 rounded-full blur-md opacity-30" />
-                          <Avatar className="relative h-24 w-24 ring-[3px] ring-primary/30 shadow-2xl shadow-primary/20">
+                          <div className="absolute -inset-2 bg-gradient-to-r from-primary via-primary/50 to-primary rounded-full blur-xl opacity-20 group-hover/avatar:opacity-40 transition-opacity" />
+                          <Avatar className="relative h-20 w-20 sm:h-24 sm:w-24 md:h-28 md:w-28 ring-4 ring-card shadow-2xl shadow-primary/20">
                             <AvatarImage src={avatarPreview || profile?.avatar_url || undefined} alt="Profile" />
                             <AvatarFallback className="bg-gradient-to-br from-primary to-primary/60 text-primary-foreground text-2xl font-bold">
                               {getInitials()}
                             </AvatarFallback>
                           </Avatar>
-                          <motion.button
-                            whileHover={{ scale: 1.2, rotate: 15 }}
-                            whileTap={{ scale: 0.85 }}
-                            onClick={handleAvatarClick}
-                            disabled={uploadAvatar.isPending}
-                            className="absolute bottom-0 right-0 p-2.5 bg-primary text-primary-foreground rounded-full shadow-xl shadow-primary/40 hover:opacity-90 transition-opacity disabled:opacity-50 touch-manipulation ring-2 ring-background"
+                          <label
+                            htmlFor="profile-avatar-input"
+                            aria-label="Change profile photo"
+                            aria-disabled={uploadAvatar.isPending}
+                            className={cn(
+                              "absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full shadow-xl shadow-primary/40 ring-2 ring-card cursor-pointer active:scale-90 transition focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none",
+                              uploadAvatar.isPending && "opacity-50 pointer-events-none"
+                            )}
                           >
-                            {uploadAvatar.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
-                          </motion.button>
-                          <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" capture={undefined} onChange={handleFileChange} className="hidden" />
+                            {uploadAvatar.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
+                          </label>
+                          <input
+                            id="profile-avatar-input"
+                            ref={avatarInputRef}
+                            type="file"
+                            accept="image/jpeg,image/png,image/webp"
+                            onChange={handleAvatarUpload}
+                            className="sr-only"
+                          />
                         </motion.div>
                       </div>
-                      <CardTitle className="flex items-center justify-center gap-2 text-xl font-bold">
-                        <Sparkles className="h-4 w-4 text-primary" />
-                        {profile?.full_name || t("profile.set_name")}
+                    </div>
+
+                    {/* Name & status */}
+                    <div className="px-6 pb-1.5 pt-2 text-left">
+                      <CardTitle className="flex items-center justify-start gap-2 text-2xl font-bold tracking-tight">
+                        <span>{headerName || t("profile.set_name")}</span>
+                        {profile?.is_verified && <VerifiedBadge size={28} />}
                       </CardTitle>
-                      <CardDescription className="text-sm">{user?.email}</CardDescription>
-                      <div className="flex items-center justify-center gap-2 mt-3">
-                        <Badge className="bg-primary/12 text-primary border-primary/25 font-semibold rounded-full px-3 py-1 shadow-sm">
-                          <Star className="w-3 h-3 mr-1 fill-primary" /> {profile?.status || t("profile.active_member")}
-                        </Badge>
+                      {/* @username line — link or "set" CTA. Email never shown publicly. */}
+                      <div className="mt-1 text-sm text-muted-foreground">
+                        {claimedUsername ? (
+                          <span>@{claimedUsername}</span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => navigate("/account/profile-edit")}
+                            className="text-primary hover:underline"
+                          >
+                            Set a username
+                          </button>
+                        )}
+                      </div>
+                      {/* Email hidden — only visible to account owner in settings */}
+                      <div className="flex flex-wrap items-center justify-start gap-2 mt-3">
                         {isPlus && (
                           <Badge className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-500 border-amber-500/30 font-semibold rounded-full px-3 py-1 shadow-sm">
                             <Crown className="w-3 h-3 mr-1" /> ZIVO+ {plan === "annual" ? "Annual" : "Monthly"}
                           </Badge>
                         )}
                       </div>
-                    </CardHeader>
 
-                    <CardContent className="pt-6 pb-8 px-6">
-                      <Form {...form}>
-                        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-                          {/* First Name & Last Name — side by side */}
-                          <div className="grid grid-cols-2 gap-3">
-                            <FormField control={form.control} name="first_name" render={({ field }) => (
-                              <FormItem className="space-y-1.5">
-                                <FormLabel className="flex items-center gap-1.5 font-semibold text-[13px]"><User className="h-3.5 w-3.5 text-primary" />First Name</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="First name"
-                                    className="h-12 rounded-2xl bg-muted/15 border-border/30 shadow-[inset_0_2px_4px_rgba(0,0,0,0.04)] focus:border-primary/40 focus:shadow-[inset_0_2px_4px_rgba(0,0,0,0.04),0_0_0_3px_hsl(var(--primary)/0.1)] transition-all duration-300 text-[15px] font-medium"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )} />
-
-                            <FormField control={form.control} name="last_name" render={({ field }) => (
-                              <FormItem className="space-y-1.5">
-                                <FormLabel className="flex items-center gap-1.5 font-semibold text-[13px]"><User className="h-3.5 w-3.5 text-primary" />Last Name</FormLabel>
-                                <FormControl>
-                                  <Input
-                                    placeholder="Last name"
-                                    className="h-12 rounded-2xl bg-muted/15 border-border/30 shadow-[inset_0_2px_4px_rgba(0,0,0,0.04)] focus:border-primary/40 focus:shadow-[inset_0_2px_4px_rgba(0,0,0,0.04),0_0_0_3px_hsl(var(--primary)/0.1)] transition-all duration-300 text-[15px] font-medium"
-                                    {...field}
-                                  />
-                                </FormControl>
-                                <FormMessage />
-                              </FormItem>
-                            )} />
-                          </div>
-
-                          {/* Email — editable with verification */}
-                          <div className="space-y-1.5">
-                            <label className="flex items-center gap-2 text-[13px] font-semibold"><Mail className="h-3.5 w-3.5 text-primary" />{t("profile.email")}</label>
-                            
-                            {!emailEditMode ? (
-                              <div className="relative">
-                                <Input 
-                                  value={user?.email || ""} 
-                                  disabled 
-                                  className="h-12 rounded-2xl bg-muted/10 border-border/20 text-muted-foreground shadow-[inset_0_1px_3px_rgba(0,0,0,0.03)] pr-24 text-[15px]" 
-                                />
-                                <motion.button
-                                  type="button"
-                                  whileHover={{ scale: 1.05 }}
-                                  whileTap={{ scale: 0.92 }}
-                                  onClick={() => { setEmailEditMode(true); setNewEmail(user?.email || ""); }}
-                                  className="absolute right-1.5 top-1/2 -translate-y-1/2 px-4 py-2 rounded-xl text-xs font-bold text-primary bg-primary/8 hover:bg-primary/15 border border-primary/15 transition-all duration-200 backdrop-blur-sm"
-                                >
-                                  Change
-                                </motion.button>
-                              </div>
-                            ) : (
-                              <AnimatePresence mode="wait">
-                                <motion.div
-                                  initial={{ opacity: 0, height: 0 }}
-                                  animate={{ opacity: 1, height: "auto" }}
-                                  exit={{ opacity: 0, height: 0 }}
-                                  transition={{ duration: 0.25, ease: [0.22, 1, 0.36, 1] }}
-                                  className="space-y-3 overflow-hidden"
-                                >
-                                  {!emailOtpSent ? (
-                                    <div className="space-y-2.5">
-                                      <Input
-                                        type="email"
-                                        value={newEmail}
-                                        onChange={(e) => setNewEmail(e.target.value)}
-                                        placeholder="Enter new email"
-                                        autoFocus
-                                        className="h-12 rounded-2xl bg-muted/15 border-border/30 shadow-[inset_0_2px_4px_rgba(0,0,0,0.04)] focus:border-primary/40 focus:shadow-[inset_0_2px_4px_rgba(0,0,0,0.04),0_0_0_3px_hsl(var(--primary)/0.1)] transition-all duration-300 text-[15px] font-medium"
-                                      />
-                                      <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground/70">
-                                        <AlertCircle className="w-3 h-3 shrink-0" />
-                                        A verification link will be sent to your new email
-                                      </p>
-                                      <div className="flex gap-2">
-                                        <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
-                                          <Button
-                                            type="button"
-                                            onClick={handleEmailChangeRequest}
-                                            disabled={emailChanging || !newEmail || newEmail === user?.email}
-                                            className="w-full h-11 rounded-2xl bg-primary text-primary-foreground font-bold text-sm shadow-lg shadow-primary/20 border border-primary/20"
-                                          >
-                                            {emailChanging ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Mail className="h-4 w-4 mr-2" />}
-                                            Verify Email
-                                          </Button>
-                                        </motion.div>
-                                        <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                                          <Button
-                                            type="button"
-                                            variant="ghost"
-                                            onClick={() => { setEmailEditMode(false); setNewEmail(""); }}
-                                            className="h-11 rounded-2xl text-muted-foreground hover:text-foreground px-4"
-                                          >
-                                            Cancel
-                                          </Button>
-                                        </motion.div>
-                                      </div>
-                                    </div>
-                                  ) : (
-                                    <div className="space-y-3 rounded-2xl bg-primary/[0.04] border border-primary/10 p-4">
-                                      <div className="flex items-start gap-2.5">
-                                        <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
-                                        <div>
-                                          <p className="text-sm font-semibold text-foreground">Verification sent!</p>
-                                          <p className="text-xs text-muted-foreground mt-0.5">Check <span className="font-medium text-foreground">{newEmail}</span> and click the link to confirm.</p>
-                                        </div>
-                                      </div>
-                                      <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
-                                        <Button
-                                          type="button"
-                                          variant="outline"
-                                          onClick={() => { setEmailEditMode(false); setEmailOtpSent(false); setNewEmail(""); setEmailOtp(""); }}
-                                          className="w-full h-10 rounded-2xl border-border/30 text-sm font-semibold"
-                                        >
-                                          Done
-                                        </Button>
-                                      </motion.div>
-                                    </div>
-                                  )}
-                                </motion.div>
-                              </AnimatePresence>
-                            )}
-                          </div>
-
-                          {/* Phone Required Banner */}
-                          {phoneRequired && !form.watch("phone")?.trim() && (
-                            <motion.div
-                              initial={{ opacity: 0, y: -10 }}
-                              animate={{ opacity: 1, y: 0 }}
-                              className="rounded-2xl bg-destructive/10 border border-destructive/20 p-3 flex items-start gap-2.5"
-                            >
-                              <AlertCircle className="w-5 h-5 text-destructive shrink-0 mt-0.5" />
-                              <div>
-                                <p className="text-sm font-bold text-destructive">{t("profile.phone_required_title")}</p>
-                                <p className="text-xs text-muted-foreground mt-0.5">{t("profile.phone_required_desc")}</p>
-                              </div>
-                            </motion.div>
+                      {!profile?.is_verified && (
+                        <button
+                          type="button"
+                          onClick={() => navigate("/account/verification")}
+                          className={cn(
+                            "group mt-3 inline-flex min-h-[36px] items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-bold shadow-sm transition-all duration-200 active:scale-95 hover:shadow-md hover:-translate-y-0.5",
+                            latestVerificationRequest?.status === "pending"
+                              ? "border-amber-500/30 bg-gradient-to-r from-amber-500/15 to-amber-500/5 text-amber-600"
+                              : latestVerificationRequest?.status === "rejected"
+                                ? "border-destructive/25 bg-destructive/5 text-destructive"
+                                : "border-[hsl(var(--flights)/0.35)] bg-gradient-to-r from-[hsl(var(--flights)/0.14)] via-[hsl(var(--flights)/0.06)] to-[hsl(var(--flights)/0.14)] text-[hsl(var(--flights))] shadow-[0_4px_14px_-6px_hsl(var(--flights)/0.5)]"
                           )}
+                        >
+                          {latestVerificationRequest?.status === "pending" ? (
+                            <>
+                              <Loader2 className="h-3.5 w-3.5 animate-spin" /> Verification pending
+                            </>
+                          ) : latestVerificationRequest?.status === "rejected" ? (
+                            <>
+                              <AlertCircle className="h-3.5 w-3.5" /> Reapply for blue verified
+                            </>
+                          ) : (
+                            <>
+                              <BlueVerifiedBadge className="h-4 w-4 transition-transform duration-300 group-hover:rotate-12" /> Get blue verified
+                            </>
+                          )}
+                        </button>
+                      )}
 
-                          {/* Phone — Country selector */}
-                          <FormField control={form.control} name="phone" render={({ field }) => (
-                            <FormItem className="space-y-1.5">
-                              <FormLabel className="flex items-center gap-2 font-semibold text-[13px]"><Phone className="h-3.5 w-3.5 text-primary" />{t("profile.phone")}</FormLabel>
-                              <FormControl>
-                                <CountryPhoneInput value={field.value || ""} onChange={field.onChange} onBlur={field.onBlur} name={field.name} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )} />
-
-                          {/* Save — 3D elevated button */}
-                          <motion.div
-                            whileHover={{ scale: 1.02, y: -2 }}
-                            whileTap={{ scale: 0.97, y: 1 }}
-                            style={{ perspective: "600px" }}
-                          >
-                            <Button
-                              type="submit"
-                              className="w-full h-13 text-base font-bold rounded-2xl bg-gradient-to-r from-primary to-primary/85 text-primary-foreground shadow-xl shadow-primary/30 hover:shadow-2xl hover:shadow-primary/40 transition-all duration-300 border border-primary/20"
-                              disabled={updateProfile.isPending || !form.formState.isDirty}
+                      {/* Bio */}
+                      <div className="mt-2 max-w-sm">
+                        {profile?.bio && !bioEditing ? (
+                          <div className="flex items-start gap-2">
+                            <p className="flex-1 text-xs text-foreground/85 whitespace-pre-wrap break-words">
+                              <SafeCaption text={profile.bio} />
+                            </p>
+                            <button
+                              type="button"
+                              onClick={() => { setBioDraft(profile.bio ?? ""); setBioEditing(true); }}
+                              aria-label="Edit bio"
+                              className="shrink-0 rounded-full p-1.5 text-muted-foreground hover:bg-muted/60 focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
                             >
-                              {updateProfile.isPending ? (
-                                <><Loader2 className="h-5 w-5 animate-spin mr-2" />{t("profile.saving")}</>
-                              ) : (
-                                <><Save className="h-5 w-5 mr-2" />{t("profile.save")}</>
-                              )}
-                            </Button>
-                          </motion.div>
-
-                          {/* Sign out — 3D outlined */}
-                          {user ? (
-                            <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }}>
+                              <Pencil className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        ) : !profile?.bio && !bioEditing ? (
+                          <button
+                            type="button"
+                            onClick={() => { setBioDraft(""); setBioEditing(true); }}
+                            className="inline-flex items-center gap-1.5 rounded-full border border-dashed border-border/60 px-3 py-1.5 text-xs text-muted-foreground hover:bg-muted/40 hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none transition-colors"
+                          >
+                            <Pencil className="h-3 w-3" />
+                            Add bio
+                          </button>
+                        ) : (
+                          <>
+                            <textarea
+                              value={bioDraft}
+                              onChange={(e) => setBioDraft(e.target.value.slice(0, 160))}
+                              placeholder="Add a short bio so people know who you are."
+                              maxLength={160}
+                              rows={2}
+                              autoFocus
+                              aria-label="Bio"
+                              className="w-full resize-none rounded-2xl border border-border/50 bg-background/80 px-3 py-2 text-xs text-foreground outline-none placeholder:text-muted-foreground focus:border-primary/40 focus:ring-2 focus:ring-primary/10"
+                            />
+                            <div className="mt-1 flex justify-end">
+                              <span className={cn("text-[10px] tabular-nums", bioDraft.length >= 150 ? "text-amber-500" : "text-muted-foreground/70")}>
+                                {bioDraft.length}/160
+                              </span>
+                            </div>
+                            <div className="mt-2 flex items-center gap-2">
                               <Button
                                 type="button"
-                                variant="outline"
-                                className="w-full h-13 text-base font-semibold rounded-2xl backdrop-blur-xl bg-card/50 border-border/40 shadow-lg shadow-foreground/[0.03] hover:shadow-xl hover:bg-card/70 transition-all duration-300 touch-manipulation"
-                                onClick={async () => { await signOut(); navigate("/"); }}
+                                size="sm"
+                                onClick={() => {
+                                  if (!confirmContentSafe(bioDraft, "bio")) return;
+                                  updateProfile.mutate(
+                                    { bio: bioDraft.trim() || null },
+                                    { onSuccess: () => setBioEditing(false) }
+                                  );
+                                }}
+                                disabled={updateProfile.isPending}
+                                className="rounded-full px-4"
                               >
-                                {t("profile.sign_out")}
+                                {updateProfile.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Save bio"}
                               </Button>
-                            </motion.div>
-                          ) : (
-                            <div className="flex gap-3">
-                              <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
-                                <Button type="button" variant="outline" className="w-full h-13 text-base font-semibold rounded-2xl backdrop-blur-xl" onClick={() => navigate("/login")}>{t("profile.log_in")}</Button>
-                              </motion.div>
-                              <motion.div className="flex-1" whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.97 }}>
-                                <Button type="button" variant="hero" className="w-full h-13 text-base font-semibold rounded-2xl" onClick={() => navigate("/signup")}>{t("profile.sign_up")}</Button>
-                              </motion.div>
-                            </div>
-                          )}
-                        </form>
-                      </Form>
-                    </CardContent>
-                  </GlassCard3D>
-                </motion.div>
-              </ParallaxSection>
-
-              {/* ── Quick Access Links (3D floating glass tiles) ── */}
-              <ParallaxSection index={3}>
-                <h3 className="font-display font-bold text-base mb-3">{t("profile.quick_access")}</h3>
-                <div className="grid grid-cols-2 gap-3">
-                  {quickLinks.map((link, i) => (
-                    <motion.div
-                      key={link.label}
-                      initial={{ opacity: 0, y: 30, rotateX: 12 }}
-                      whileInView={{ opacity: 1, y: 0, rotateX: 0 }}
-                      viewport={{ once: true }}
-                      transition={{ delay: i * 0.04, duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
-                      whileHover={{ scale: 1.04, y: -4, rotateY: 3 }}
-                      whileTap={{ scale: 0.96 }}
-                      style={{ perspective: "800px", transformStyle: "preserve-3d" }}
-                    >
-                      <Link to={link.href}>
-                        <GlassCard3D className="shadow-lg hover:shadow-2xl hover:shadow-primary/[0.06] transition-shadow duration-500 group">
-                          <div className="p-3.5 flex items-center gap-3">
-                            <div className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${link.color} flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shrink-0 shadow-inner`}>
-                              <link.icon className={`w-5 h-5 ${link.iconColor}`} />
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="font-semibold text-[13px] truncate">{link.label}</p>
-                              <p className="text-[10px] text-muted-foreground truncate">{link.description}</p>
-                            </div>
-                            <ChevronRight className="w-4 h-4 text-muted-foreground/50 group-hover:text-primary group-hover:translate-x-1 transition-all duration-300 shrink-0" />
-                          </div>
-                        </GlassCard3D>
-                      </Link>
-                    </motion.div>
-                  ))}
-                </div>
-              </ParallaxSection>
-
-              {/* ── ZIVO+ Membership (3D premium card) ── */}
-              {!isPlus && (
-                <ParallaxSection index={4}>
-                  <Link to="/zivo-plus">
-                    <motion.div
-                      whileHover={{ scale: 1.03, y: -3, rotateX: 2 }}
-                      whileTap={{ scale: 0.97 }}
-                      style={{ perspective: "800px" }}
-                    >
-                      <div className="relative rounded-3xl overflow-hidden shadow-2xl shadow-amber-500/15 group">
-                        <div className="absolute inset-0 bg-gradient-to-br from-amber-500/15 via-orange-500/10 to-amber-400/15 backdrop-blur-2xl" />
-                        <div className="absolute inset-0 bg-card/50" />
-                        <div className="pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-inset ring-amber-500/15" />
-                        {/* Animated shimmer */}
-                        <motion.div
-                          className="absolute inset-0 bg-gradient-to-r from-transparent via-amber-400/10 to-transparent"
-                          animate={{ x: ["-100%", "200%"] }}
-                          transition={{ duration: 3, repeat: Infinity, ease: "linear", repeatDelay: 2 }}
-                        />
-                        <div className="relative z-10 p-4">
-                          <div className="flex items-center justify-between gap-3">
-                            <div className="flex items-center gap-3">
-                              <motion.div
-                                animate={{ rotateY: [0, 360] }}
-                                transition={{ duration: 4, repeat: Infinity, ease: "linear" }}
-                                className="w-12 h-12 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center shadow-xl shadow-amber-500/30"
-                                style={{ transformStyle: "preserve-3d" }}
+                              <Button
+                                type="button"
+                                size="sm"
+                                variant="ghost"
+                                onClick={() => { setBioDraft(profile?.bio ?? ""); setBioEditing(false); }}
+                                className="rounded-full px-3 text-muted-foreground"
                               >
-                                <Crown className="w-6 h-6 text-white" />
-                              </motion.div>
-                              <div>
-                                <p className="font-bold text-sm">{t("profile.upgrade_plus")}</p>
-                                <p className="text-xs text-muted-foreground">{t("profile.upgrade_desc")}</p>
-                              </div>
+                                Cancel
+                              </Button>
                             </div>
-                            <ChevronRight className="w-5 h-5 text-amber-500/60 group-hover:text-amber-500 group-hover:translate-x-1 transition-all" />
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  </Link>
-                </ParallaxSection>
-              )}
+                          </>
+                        )}
 
-              {/* ── Merchant Dashboard (3D card) ── */}
-              {merchantData?.isMerchant && (
-                <ParallaxSection index={5}>
-                  <motion.button
-                    whileHover={{ scale: 1.02, y: -2 }}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(MERCHANT_APP_URL))}
-                    className="block w-full text-left"
-                    style={{ perspective: "800px" }}
-                  >
-                    <GlassCard3D className="shadow-xl hover:shadow-2xl transition-shadow duration-500 group">
-                      <div className="p-4">
-                        <div className="flex items-center justify-between gap-3">
-                          <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500 to-amber-500 flex items-center justify-center shadow-xl shadow-orange-500/25">
-                              <Store className="w-5 h-5 text-white" />
-                            </div>
-                            <div>
-                              <p className="font-bold text-sm">{t("profile.merchant_dashboard")}</p>
-                              <p className="text-xs text-muted-foreground">{t("profile.merchant_desc")}</p>
-                            </div>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge className="bg-orange-500/12 text-orange-500 border-orange-500/20 font-semibold text-xs rounded-full">{t("profile.partner")}</Badge>
-                            <ExternalLink className="w-4 h-4 text-muted-foreground group-hover:text-orange-500 transition-colors" />
-                          </div>
-                        </div>
                       </div>
-                    </GlassCard3D>
-                  </motion.button>
-                </ParallaxSection>
-              )}
 
-              {/* ── Account Status (3D glass) ── */}
-              <ParallaxSection index={6}>
-                <GlassCard3D className="shadow-xl">
-                  <div className="p-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-500/15 to-emerald-600/10 flex items-center justify-center shadow-inner">
-                          <Shield className="w-5 h-5 text-emerald-500" />
-                        </div>
-                        <div>
-                          <p className="font-bold text-sm">{t("profile.account_status")}</p>
-                          <p className="text-xs text-muted-foreground flex items-center gap-1.5">
-                            <Clock className="w-3 h-3" />
-                            {t("profile.member_since")} {profile?.created_at ? new Date(profile.created_at).toLocaleDateString() : "recently"}
-                          </p>
-                        </div>
+                      {/* ── Edit Profile / Share / Analytics row ── */}
+                      <div className="mt-3 flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="sm"
+                          onClick={() => { selectionChanged(); navigate("/account/profile-edit"); }}
+                          className="flex-1 rounded-full font-semibold border-border/60 h-9 text-sm"
+                        >
+                          <Pencil className="h-3.5 w-3.5 mr-1.5" />
+                          Edit profile
+                        </Button>
+                        <motion.button
+                          type="button"
+                          whileTap={{ scale: 0.93 }}
+                          onClick={() => { selectionChanged(); setShareOpen(true); }}
+                          aria-label="Share profile"
+                          className="h-9 w-9 flex items-center justify-center rounded-full border border-border/60 bg-muted/30 hover:bg-muted/50 transition-colors focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
+                        >
+                          <Share2 className="h-4 w-4 text-foreground" />
+                        </motion.button>
+                        <motion.button
+                          type="button"
+                          whileTap={{ scale: 0.93 }}
+                          onClick={() => { selectionChanged(); navigate("/account/analytics"); }}
+                          aria-label="Profile analytics"
+                          className="h-9 w-9 flex items-center justify-center rounded-full border border-border/60 bg-muted/30 hover:bg-muted/50 transition-colors focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
+                        >
+                          <BarChart3 className="h-4 w-4 text-foreground" />
+                        </motion.button>
                       </div>
-                      <Badge className="bg-emerald-500/12 text-emerald-500 border-emerald-500/20 font-semibold text-xs rounded-full px-3">{t("profile.active")}</Badge>
+
+                      {/* Facebook-style inline stats row */}
+                      <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm">
+                        <button
+                          type="button"
+                          aria-label={`View ${followerCount} followers`}
+                          onClick={() => setSocialModal({ open: true, tab: "followers" })}
+                          className="inline-flex items-baseline gap-1 rounded-md px-1 -mx-1 py-0.5 hover:underline focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
+                        >
+                          <span className="font-bold text-foreground">{formatCount(followerCount) ?? "0"}</span>
+                          <span className="font-medium text-muted-foreground">followers</span>
+                        </button>
+                        <span aria-hidden="true" className="text-muted-foreground/70">·</span>
+                        <button
+                          type="button"
+                          aria-label={`View ${followingCount} following`}
+                          onClick={() => setSocialModal({ open: true, tab: "following" })}
+                          className="inline-flex items-baseline gap-1 rounded-md px-1 -mx-1 py-0.5 hover:underline focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
+                        >
+                          <span className="font-bold text-foreground">{formatCount(followingCount) ?? "0"}</span>
+                          <span className="font-medium text-muted-foreground">following</span>
+                        </button>
+                        <span aria-hidden="true" className="text-muted-foreground/70">·</span>
+                        <span className="inline-flex items-baseline gap-1">
+                          <span className="font-bold text-foreground">{formatCount(postsCount) ?? "0"}</span>
+                          <span className="font-medium text-muted-foreground">posts</span>
+                        </span>
+                        <span aria-hidden="true" className="text-muted-foreground/70">·</span>
+                        <button
+                          type="button"
+                          aria-label={`View ${friendCount} friends`}
+                          onClick={() => setSocialModal({ open: true, tab: "friends" })}
+                          className="inline-flex items-baseline gap-1 rounded-md px-1 -mx-1 py-0.5 hover:underline focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
+                        >
+                          <span className="font-bold text-foreground">{formatCount(friendCount) ?? "0"}</span>
+                          <span className="font-medium text-muted-foreground">friends</span>
+                        </button>
+                      </div>
+
+                      {/* Quick Actions row (mobile-only) — business-focused
+                          shortcuts: Shop, Employees, Mode switch, Monetization. */}
+                      <div className="lg:hidden mt-3 grid grid-cols-4 gap-2">
+                        {[
+                          { label: "Shop", icon: Store, onClick: openShopDashboard },
+                          { label: "Employees", icon: Users, onClick: () => { selectionChanged(); if (!user) { toast.info("Sign in to open Personal Account"); navigate("/login?redirect=/personal-dashboard"); return; } navigate("/personal-dashboard"); } },
+                          { label: "Mode", icon: Repeat, onClick: () => { selectionChanged(); setModeOpen(true); } },
+                          { label: "Monetization", icon: DollarSign, onClick: () => { selectionChanged(); navigate("/monetization"); } },
+                        ].map((a) => (
+                          <button
+                            key={a.label}
+                            type="button"
+                            onClick={a.onClick}
+                            className="flex flex-col items-center gap-1 rounded-2xl border border-border/50 bg-muted/25 px-2 py-2 text-[11px] font-semibold text-foreground hover:bg-muted/50 active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none transition-all"
+                          >
+                            <a.icon className="h-4 w-4 text-primary" />
+                            <span className="truncate">{a.label}</span>
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Social Links Row */}
+                      {profile?.social_links_visible !== false && (() => {
+                        const socials = [
+                          { key: "social_facebook", name: "Facebook", color: "bg-[#1877F2]", icon: (
+                            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-white"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+                          )},
+                          { key: "social_instagram", name: "Instagram", color: "bg-gradient-to-br from-[#F58529] via-[#DD2A7B] to-[#8134AF]", icon: (
+                            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-white"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zM12 0C8.741 0 8.333.014 7.053.072 2.695.272.273 2.69.073 7.052.014 8.333 0 8.741 0 12c0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98C8.333 23.986 8.741 24 12 24c3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98C15.668.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+                          )},
+                          { key: "social_tiktok", name: "TikTok", color: "bg-[#010101]", icon: (
+                            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-white"><path d="M12.525.02c1.31-.02 2.61-.01 3.91-.02.08 1.53.63 3.09 1.75 4.17 1.12 1.11 2.7 1.62 4.24 1.79v4.03c-1.44-.05-2.89-.35-4.2-.97-.57-.26-1.1-.59-1.62-.93-.01 2.92.01 5.84-.02 8.75-.08 1.4-.54 2.79-1.35 3.94-1.31 1.92-3.58 3.17-5.91 3.21-1.43.08-2.86-.31-4.08-1.03-2.02-1.19-3.44-3.37-3.65-5.71-.02-.5-.03-1-.01-1.49.18-1.9 1.12-3.72 2.58-4.96 1.66-1.44 3.98-2.13 6.15-1.72.02 1.48-.04 2.96-.04 4.44-.99-.32-2.15-.23-3.02.37-.63.41-1.11 1.04-1.36 1.75-.21.51-.15 1.07-.14 1.61.24 1.64 1.82 3.02 3.5 2.87 1.12-.01 2.19-.66 2.77-1.61.19-.33.4-.67.41-1.06.1-1.79.06-3.57.07-5.36.01-4.03-.01-8.05.02-12.07z"/></svg>
+                          )},
+                          { key: "social_snapchat", name: "Snapchat", color: "bg-[#FFFC00]", icon: (
+                            <svg viewBox="0 0 512 512" className="w-5 h-5 fill-white" stroke="black" strokeWidth="18"><path d="M256 32c-60 0-104 26-131 76-18 34-14 88-11 128l1 12c-8-4-18-7-27-7-14 0-25 6-31 16-5 9-5 20-1 30 10 24 36 35 56 43l5 2c-4 14-10 27-20 40-20 26-46 45-72 55-10 4-16 13-15 23 1 9 7 16 12 20 17 11 37 17 55 21 5 1 10 3 13 5 5 4 7 11 11 18 3 7 8 15 16 22 9 8 22 12 37 12 10 0 20-2 30-4 18-5 34-9 56-9s38 4 56 9c10 3 20 4 30 4 15 0 28-4 37-12 8-7 13-15 16-22 4-7 6-14 11-18 3-2 8-4 13-5 18-4 38-10 55-21 5-4 11-11 12-20 1-10-5-19-15-23-26-10-52-29-72-55-10-13-16-26-20-40l5-2c20-8 46-19 56-43 4-10 4-21-1-30-6-10-17-16-31-16-9 0-19 3-27 7l1-12c3-40 7-94-11-128C360 58 316 32 256 32z"/></svg>
+                          )},
+                          { key: "social_x", name: "X", color: "bg-foreground", icon: (
+                            <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-background"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                          )},
+                          { key: "social_linkedin", name: "LinkedIn", color: "bg-[#0A66C2]", icon: (
+                            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-white"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+                          )},
+                          { key: "social_telegram", name: "Telegram", color: "bg-[#26A5E4]", icon: (
+                            <svg viewBox="0 0 24 24" className="w-4 h-4 fill-white"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+                          )},
+                        ].filter(s => (profile as any)?.[s.key]);
+
+                        return socials.length > 0 ? (
+                          <div className="flex items-center justify-center gap-3 mt-4">
+                            {socials.map((social) => (
+                              <motion.button
+                                key={social.name}
+                                whileTap={{ scale: 0.85 }}
+                                whileHover={{ scale: 1.1, y: -2 }}
+                                onClick={() => {
+                                  const raw = (profile as any)[social.key];
+                                  if (!raw) return;
+                                  const cleaned = stripTrackingParams(raw);
+                                  const r = assessLinkSync(cleaned);
+                                  if (r.level === "blocked") {
+                                    toast.error("This link looks unsafe and was blocked.");
+                                    return;
+                                  }
+                                  if (r.level === "trusted") { void openExternalUrl(cleaned); return; }
+                                  setSafeLinkPrompt(cleaned);
+                                }}
+                                title={social.name}
+                                className={`w-10 h-10 rounded-full ${social.color} flex items-center justify-center shadow-md hover:shadow-lg transition-shadow`}
+                              >
+                                {social.icon}
+                              </motion.button>
+                            ))}
+                          </div>
+                        ) : null;
+                      })()}
+
+                      {/* Add Friend & Follow buttons — only shown when viewing other users' profiles */}
+                    </div>
+
+                    <CardContent className="px-6 pb-4 pt-2">
+                    </CardContent>
                     </div>
                   </div>
-                </GlassCard3D>
-              </ParallaxSection>
 
-              {/* ── Partner Attribution (3D glass) ── */}
-              {affiliateAttribution.hasAffiliateAttribution && (
-                <ParallaxSection index={7}>
-                  <GlassCard3D className="shadow-xl">
-                    <div className="p-4">
-                      <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-500/15 to-violet-600/10 flex items-center justify-center shadow-inner">
-                          <Users className="w-5 h-5 text-violet-500" />
-                        </div>
-                        <div>
-                          <p className="font-bold text-sm">{t("profile.referred_by")}</p>
-                          <p className="text-xs text-muted-foreground">{t("profile.joined_through")} {affiliateAttribution.partnerName}</p>
-                        </div>
-                      </div>
-                    </div>
-                  </GlassCard3D>
+                </motion.div>
+              </div>
+
+              {/* ZIVO+ upgrade moved to /more page */}
+
+              {/* Wallet, Completeness & Referral cards moved to /more page to avoid duplication */}
+
+              {/* ── Recent Trips ── */}
+              {user && (bookingsLoading || bookings.length > 0) && (
+                <ParallaxSection index={1.15}>
+                  <ProfileTripsCard
+                    bookings={bookings}
+                    loading={bookingsLoading}
+                    onViewAll={() => { selectionChanged(); navigate("/trips"); }}
+                    onOpen={(b) => { selectionChanged(); navigate(`/trips?booking=${b.id}`); }}
+                  />
                 </ParallaxSection>
               )}
 
-              {/* ── Delete Account (subtle) ── */}
-              <ParallaxSection index={8}>
-                <div className="pt-2 pb-4">
-                  <motion.div whileHover={{ scale: 1.01 }} whileTap={{ scale: 0.97 }}>
-                    <Button variant="ghost" className="w-full text-destructive/50 hover:text-destructive hover:bg-destructive/5 text-xs font-medium rounded-2xl" onClick={() => navigate("/profile/delete-account")}>
-                      {t("profile.delete_account")}
-                    </Button>
-                  </motion.div>
-                </div>
+              {/* Profile Completeness & Referral cards moved to /more page */}
+
+              {/* ── Phone Required Card ── */}
+              {!profile?.phone?.trim() && (
+                <ParallaxSection index={1.5}>
+                  <div
+                    className="mx-3 lg:mx-0 rounded-2xl border border-destructive/20 bg-destructive/5 p-4 flex items-center gap-3 cursor-pointer active:scale-[0.98] transition-transform"
+                    onClick={() => navigate("/account/profile-edit?focus=phone")}
+                  >
+                    <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
+                      <Phone className="w-5 h-5 text-destructive" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm text-foreground">Phone number required</p>
+                      <p className="text-xs text-muted-foreground">Add your phone number to access rides, flights & more</p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-destructive/50 shrink-0" />
+                  </div>
+                </ParallaxSection>
+              )}
+
+              {/* ── Stories Row ── */}
+              <ParallaxSection index={2}>
+                <ProfileStories />
               </ParallaxSection>
+
+          {/* Notifications panel moved into the sticky header (Facebook-style popover) */}
+
+              {/* Account Quick Links moved to /more page to avoid duplication */}
+
+              {/* ── Social Content Tabs (Posts, Videos, Live, Status) ── */}
+              <ParallaxSection index={2.5}>
+                <ProfileContentTabs userId={user?.id} />
+              </ParallaxSection>
+
+
+
+
             </div>
           )}
         </div>
@@ -825,54 +1384,200 @@ const Profile = () => {
 
       <ZivoMobileNav />
 
-      {showLangPicker && langTriggerRef.current && createPortal(
-        <>
-          <div className="fixed inset-0 z-[90]" onClick={() => setShowLangPicker(false)} />
-          <motion.div
-            initial={{ opacity: 0, scale: 0.96, y: -10 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: -10 }}
-            transition={{ duration: 0.2, ease: [0.22, 1, 0.36, 1] }}
-            className="fixed z-[100] bg-card/95 backdrop-blur-2xl border border-border/40 rounded-3xl shadow-2xl shadow-primary/10 p-2 min-w-[230px] max-h-[360px] overflow-y-auto"
-            style={{
-              left: Math.max(16, Math.min(langTriggerRef.current.getBoundingClientRect().left, window.innerWidth - 246)),
-              top: langTriggerRef.current.getBoundingClientRect().bottom + 8,
-              scrollbarWidth: 'thin',
-            }}
-          >
-            {LANGS.map((lang, i) => (
-              <motion.button
-                key={lang.code}
-                initial={{ opacity: 0, x: -12 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.012, duration: 0.2 }}
-                onClick={() => { changeLanguage(lang.code); setShowLangPicker(false); }}
-                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-sm font-medium transition-all touch-manipulation active:scale-[0.97] relative overflow-hidden group ${
-                  currentLanguage === lang.code
-                    ? "bg-primary/12 text-primary ring-1 ring-primary/25"
-                    : "text-foreground hover:bg-muted/70"
-                }`}
-              >
-                <img src={getFlagUrl(lang.cc)} alt="" className="absolute right-2 top-1/2 -translate-y-1/2 w-12 h-8 rounded object-cover opacity-[0.05] pointer-events-none group-hover:opacity-[0.12] transition-opacity" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                <img src={getFlagUrl(lang.cc)} alt={lang.label} className="w-6 h-4 rounded-[3px] object-cover shadow-sm border border-border/30 relative z-10 shrink-0" onError={(e) => { e.currentTarget.style.display = 'none'; }} />
-                <span className="relative z-10">{lang.label}</span>
-                {currentLanguage === lang.code && <Star className="w-3 h-3 text-primary fill-primary ml-auto relative z-10" />}
-              </motion.button>
-            ))}
-          </motion.div>
-        </>,
-        document.body
-      )}
-      {/* Phone Verification Dialog */}
-      {pendingProfileData?.phone && (
-        <PhoneVerificationDialog
-          open={showPhoneVerify}
-          onOpenChange={setShowPhoneVerify}
-          phoneNumber={pendingProfileData.phone}
-          onVerified={handlePhoneVerified}
-        />
-      )}
-    </div>
+      <ExternalLinkWarning
+        url={safeLinkPrompt}
+        open={!!safeLinkPrompt}
+        onOpenChange={(o) => { if (!o) setSafeLinkPrompt(null); }}
+        onConfirm={(u) => { void openExternalUrl(u); setSafeLinkPrompt(null); }}
+      />
+
+      {/* Language picker moved to /more page (TranslateButton component) */}
+
+
+
+      <SocialListModal
+        open={socialModal.open}
+        onClose={() => setSocialModal({ ...socialModal, open: false })}
+        initialTab={socialModal.tab}
+        onCountsChange={(f, fl, fg) => {
+          if (socialModal.tab === "friends") setFriendCount(f);
+          if (socialModal.tab === "followers") setFollowerCount(fl);
+          if (socialModal.tab === "following") setFollowingCount(fg);
+        }}
+      />
+
+      {/* Mode Switch bottom sheet — placeholder for future per-mode routing */}
+      <Sheet open={modeOpen} onOpenChange={setModeOpen}>
+        <SheetContent side="bottom" className="rounded-t-3xl pb-10 max-h-[88vh] overflow-y-auto">
+          <SheetHeader className="pb-3">
+            <SheetTitle className="text-base font-bold">Switch mode</SheetTitle>
+          </SheetHeader>
+          <div className="flex flex-col gap-2">
+            {[
+              { id: "personal", label: "Personal", desc: "Your everyday account", icon: UserIcon, route: "/profile" },
+              { id: "fan", label: "Fan", desc: "Subscribe to creators & unlock content", icon: Heart, route: "/account/subscriptions" },
+              { id: "creator", label: "Creator", desc: "Subscriptions, PPV & tips", icon: Sparkles, route: "/creator-dashboard" },
+              { id: "business", label: "Business", desc: "Manage company travel & teams", icon: Briefcase, route: "/business" },
+              { id: "driver", label: "Driver", desc: "Go online and accept rides", icon: Car, route: "/driver/home" },
+              { id: "shop", label: "Shop Partner", desc: "Open your store dashboard", icon: Store, route: getShopDashboardPath() },
+            ].map((m) => {
+              const active = activeMode === m.id;
+              const Icon = m.icon;
+              return (
+                <button
+                  key={m.id}
+                  type="button"
+                  onClick={() => {
+                    setActiveMode(m.id);
+                    try { localStorage.setItem("zivo:active_mode", m.id); } catch {}
+                    toast.success(`Switched to ${m.label} mode`);
+                    setModeOpen(false);
+                    if (m.id === "shop") openShopDashboard();
+                    else if (m.route && m.id !== "personal") navigate(m.route);
+                  }}
+                  className={`flex items-center gap-3 rounded-2xl border px-3 py-3 text-left transition-all active:scale-[0.99] ${
+                    active ? "border-primary/60 bg-primary/5" : "border-border/50 bg-muted/25 hover:bg-muted/50"
+                  }`}
+                >
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-background border border-border/40">
+                    <Icon className="h-4 w-4 text-primary" />
+                  </span>
+                  <span className="flex-1 min-w-0">
+                    <span className="block text-sm font-semibold text-foreground">{m.label}</span>
+                    <span className="block text-[11px] text-muted-foreground truncate">{m.desc}</span>
+                  </span>
+                  {active && <BadgeCheck className="h-4 w-4 text-primary shrink-0" />}
+                </button>
+              );
+            })}
+          </div>
+
+          {activeMode === "creator" && (
+            <div className="mt-5 pt-4 border-t border-border/40">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Creator tools</span>
+                <button
+                  type="button"
+                  onClick={() => { setModeOpen(false); navigate("/monetization"); }}
+                  className="text-[11px] font-semibold text-primary"
+                >
+                  See all
+                </button>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { label: "Subscribers", icon: Users, route: "/creator/subscribers" },
+                  { label: "PPV posts", icon: Lock, route: "/monetization" },
+                  { label: "Tips", icon: Gift, route: "/creator/tips" },
+                  { label: "Mass DM", icon: MessageCircle, route: "/chat" },
+                  { label: "Earnings", icon: TrendingUp, route: "/creator-analytics" },
+                  { label: "Go live", icon: Video, route: "/live" },
+                ].map((a) => {
+                  const Icon = a.icon;
+                  return (
+                    <button
+                      key={a.label}
+                      type="button"
+                      onClick={() => { setModeOpen(false); navigate(a.route); }}
+                      className="flex flex-col items-center gap-1.5 rounded-2xl border border-border/40 bg-muted/30 p-3 active:scale-[0.97] transition-transform"
+                    >
+                      <Icon className="h-5 w-5 text-primary" />
+                      <span className="text-[11px] font-semibold text-center leading-tight">{a.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {activeMode === "fan" && (
+            <div className="mt-5 pt-4 border-t border-border/40">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">My fan activity</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { label: "Subscriptions", icon: Heart, route: "/account/subscriptions" },
+                  { label: "Unlocked", icon: Lock, route: "/account/subscriptions" },
+                  { label: "Tips sent", icon: Gift, route: "/account/tips" },
+                  { label: "DMs", icon: MessageCircle, route: "/chat" },
+                  { label: "Wallet", icon: DollarSign, route: "/wallet" },
+                  { label: "Discover", icon: Sparkles, route: "/feed?tab=foryou" },
+                ].map((a) => {
+                  const Icon = a.icon;
+                  return (
+                    <button
+                      key={a.label}
+                      type="button"
+                      onClick={() => { setModeOpen(false); navigate(a.route); }}
+                      className="flex flex-col items-center gap-1.5 rounded-2xl border border-border/40 bg-muted/30 p-3 active:scale-[0.97] transition-transform"
+                    >
+                      <Icon className="h-5 w-5 text-primary" />
+                      <span className="text-[11px] font-semibold text-center leading-tight">{a.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
+
+      {/* Share Profile bottom sheet */}
+      <Sheet open={shareOpen} onOpenChange={setShareOpen}>
+        <SheetContent side="bottom" className="rounded-t-3xl pb-10">
+          <SheetHeader className="pb-3">
+            <SheetTitle className="text-base font-bold">Share your profile</SheetTitle>
+          </SheetHeader>
+          <div className="grid grid-cols-3 gap-3">
+            <button
+              type="button"
+              onClick={async () => {
+                if (!user?.id) { toast.error("Sign in to share your profile"); setShareOpen(false); return; }
+                const url = `${window.location.origin}/u/${user.id}`;
+                try {
+                  await navigator.clipboard.writeText(url);
+                  toast.success("Profile link copied");
+                } catch {
+                  toast.error("Could not copy link");
+                }
+                setShareOpen(false);
+              }}
+              className="flex flex-col items-center gap-1.5 rounded-2xl border border-border/40 bg-muted/30 p-3 active:scale-[0.97] transition-transform"
+            >
+              <Copy className="h-5 w-5 text-primary" />
+              <span className="text-[11px] font-semibold">Copy link</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => { setShareOpen(false); navigate("/qr-profile"); }}
+              className="flex flex-col items-center gap-1.5 rounded-2xl border border-border/40 bg-muted/30 p-3 active:scale-[0.97] transition-transform"
+            >
+              <QrCode className="h-5 w-5 text-primary" />
+              <span className="text-[11px] font-semibold">QR code</span>
+            </button>
+            <button
+              type="button"
+              onClick={async () => {
+                if (!user?.id) { toast.error("Sign in to share your profile"); setShareOpen(false); return; }
+                const url = `${window.location.origin}/u/${user.id}`;
+                const title = headerName || "My ZIVO profile";
+                if (navigator.share) {
+                  try { await navigator.share({ title, url }); } catch { /* user cancelled */ }
+                } else {
+                  try { await navigator.clipboard.writeText(url); toast.success("Profile link copied"); } catch { toast.error("Sharing not supported"); }
+                }
+                setShareOpen(false);
+              }}
+              className="flex flex-col items-center gap-1.5 rounded-2xl border border-border/40 bg-muted/30 p-3 active:scale-[0.97] transition-transform"
+            >
+              <Share2 className="h-5 w-5 text-primary" />
+              <span className="text-[11px] font-semibold">Share to…</span>
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
+    </PullToRefresh>
   );
 };
 

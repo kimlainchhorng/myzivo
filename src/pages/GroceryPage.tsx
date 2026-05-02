@@ -22,6 +22,7 @@ import { useStoreSearch, type StoreProduct } from "@/hooks/useStoreSearch";
 import { useGroceryCart } from "@/hooks/useGroceryCart";
 import { GROCERY_STORES, DEFAULT_STORE, getStoreConfig, getStoresForMarket, type StoreName } from "@/config/groceryStores";
 import { useCountry } from "@/hooks/useCountry";
+import SEOHead from "@/components/SEOHead";
 
 export default function GroceryPage() {
   const navigate = useNavigate();
@@ -81,8 +82,21 @@ export default function GroceryPage() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
+      <SEOHead
+        title="Grocery Delivery – ZIVO | Fresh Groceries Delivered Fast"
+        description="Order fresh groceries, household essentials, and more from local stores on ZIVO. Fast delivery, live tracking, and easy checkout."
+        canonical="/grocery"
+        ogImage="/og-grocery.jpg"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "Store",
+          "name": "ZIVO Grocery",
+          "description": "Online grocery ordering and delivery service",
+          "url": "https://zivo.app/grocery",
+        }}
+      />
       {/* ── Header ── */}
-      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-border/50">
+      <div className="sticky top-0 safe-area-top z-30 bg-background/95 backdrop-blur border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">
           <button onClick={() => navigate(-1)} className="p-1.5 rounded-xl hover:bg-muted">
             <ArrowLeft className="h-5 w-5" />

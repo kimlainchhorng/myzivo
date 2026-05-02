@@ -70,20 +70,6 @@ export const affiliatePartners: AffiliatePartner[] = [
     color: 'bg-purple-500'
   },
   {
-    id: 'kiwi',
-    name: 'Kiwi.com',
-    logo: 'globe',
-    baseUrl: 'https://www.kiwi.com',
-    urlTemplate: ({ origin, destination, departDate, passengers }) => {
-      const pax = passengers || 1;
-      return `https://www.kiwi.com/en/search/tiles/${origin}/${destination}/${departDate || 'anytime'}?adults=${pax}`;
-    },
-    priority: 75,
-    commissionRate: 'Competitive',
-    features: ['Nomad search', 'Virtual interlining', 'Guarantee'],
-    color: 'bg-green-500'
-  },
-  {
     id: 'trip',
     name: 'Trip.com',
     logo: 'globe',

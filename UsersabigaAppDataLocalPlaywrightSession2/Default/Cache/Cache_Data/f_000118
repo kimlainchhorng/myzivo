@@ -1,0 +1,849 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/admin/AdsStudioWalletGuard.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"]; const _Fragment = __vite__cjsImport0_react_jsxDevRuntime["Fragment"];
+var _s = $RefreshSig$();
+/**
+ * AdsStudioWalletGuard — Ads Studio wallet with Stripe top-up + auto-recharge + ledger.
+ * Drives `ads_studio_wallet` and `ads_wallet_ledger` (separate from food/restaurant wallet).
+ */ import __vite__cjsImport1_react from "/node_modules/.vite/deps/react.js?v=7fd9520c"; const useEffect = __vite__cjsImport1_react["useEffect"]; const useState = __vite__cjsImport1_react["useState"];
+import { useSearchParams } from "/node_modules/.vite/deps/react-router-dom.js?v=7fd9520c";
+import { Card, CardContent } from "/src/components/ui/card.tsx";
+import { Switch } from "/src/components/ui/switch.tsx";
+import { Input } from "/src/components/ui/input.tsx";
+import { Label } from "/src/components/ui/label.tsx";
+import { Button } from "/src/components/ui/button.tsx";
+import { Badge } from "/src/components/ui/badge.tsx";
+import { ResponsiveModal, ResponsiveModalFooter } from "/src/components/ui/responsive-modal.tsx";
+import { supabase } from "/src/integrations/supabase/client.ts";
+import { Wallet, Zap, Loader2, Plus, History, ArrowDownCircle, ArrowUpCircle, Receipt } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+import { toast } from "/node_modules/.vite/deps/sonner.js?v=7fd9520c";
+import { format } from "/node_modules/.vite/deps/date-fns.js?v=7fd9520c";
+import { WalletSkeleton } from "/src/components/admin/ads/MarketingSkeletons.tsx";
+import MarketingEmptyState from "/src/components/admin/ads/MarketingEmptyState.tsx";
+import { mkBody, mkInput, mkLabel, mkMeta } from "/src/components/admin/ads/marketing-tokens.ts";
+import { cn } from "/src/lib/utils.ts";
+const TOPUP_PRESETS = [
+    25,
+    50,
+    100,
+    250
+];
+export default function AdsStudioWalletGuard({ storeId }) {
+    _s();
+    const [params, setParams] = useSearchParams();
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [balance, setBalance] = useState(0);
+    const [hasCard, setHasCard] = useState(false);
+    const [enabled, setEnabled] = useState(false);
+    const [threshold, setThreshold] = useState(10);
+    const [amount, setAmount] = useState(50);
+    const [topupOpen, setTopupOpen] = useState(false);
+    const [topupAmount, setTopupAmount] = useState(50);
+    const [topupBusy, setTopupBusy] = useState(false);
+    const [ledger, setLedger] = useState([]);
+    const [showLedger, setShowLedger] = useState(false);
+    const [ledgerDetail, setLedgerDetail] = useState(null);
+    const load = async ()=>{
+        setLoading(true);
+        const { data } = await supabase.from("ads_studio_wallet").select("balance_cents, auto_recharge_enabled, threshold_cents, recharge_amount_cents, stripe_payment_method_id").eq("store_id", storeId).maybeSingle();
+        if (data) {
+            const w = data;
+            setBalance(w.balance_cents ?? 0);
+            setEnabled(!!w.auto_recharge_enabled);
+            setThreshold((w.threshold_cents ?? 1000) / 100);
+            setAmount((w.recharge_amount_cents ?? 5000) / 100);
+            setHasCard(!!w.stripe_payment_method_id);
+        }
+        const { data: lg } = await supabase.from("ads_wallet_ledger").select("id, entry_type, amount_cents, balance_after_cents, description, created_at").eq("store_id", storeId).order("created_at", {
+            ascending: false
+        }).limit(20);
+        setLedger(lg ?? []);
+        setLoading(false);
+    };
+    useEffect(()=>{
+        if (storeId) load();
+    }, [
+        storeId
+    ]);
+    // Verify Stripe Checkout session on return
+    useEffect(()=>{
+        const sessionId = params.get("session_id");
+        const topup = params.get("topup");
+        if (topup === "success" && sessionId) {
+            (async ()=>{
+                const { data, error } = await supabase.functions.invoke("verify-ads-wallet-topup", {
+                    body: {
+                        session_id: sessionId
+                    }
+                });
+                if (error) toast.error(error.message);
+                else if (data?.status === "credited") toast.success("Wallet topped up!");
+                else if (data?.status === "already_credited") {} else toast.message("Top-up still processing…");
+                params.delete("topup");
+                params.delete("session_id");
+                setParams(params, {
+                    replace: true
+                });
+                load();
+            })();
+        } else if (topup === "cancelled") {
+            toast.info("Top-up cancelled");
+            params.delete("topup");
+            setParams(params, {
+                replace: true
+            });
+        }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, []);
+    const save = async ()=>{
+        setSaving(true);
+        const { error } = await supabase.from("ads_studio_wallet").upsert({
+            store_id: storeId,
+            auto_recharge_enabled: enabled,
+            threshold_cents: Math.round(threshold * 100),
+            recharge_amount_cents: Math.round(amount * 100)
+        }, {
+            onConflict: "store_id"
+        });
+        setSaving(false);
+        if (error) toast.error(error.message);
+        else toast.success("Auto-recharge settings saved");
+    };
+    const startTopup = async ()=>{
+        if (topupAmount < 5) {
+            toast.error("Minimum $5");
+            return;
+        }
+        setTopupBusy(true);
+        const { data, error } = await supabase.functions.invoke("create-ads-wallet-topup", {
+            body: {
+                store_id: storeId,
+                amount_cents: Math.round(topupAmount * 100),
+                save_card: enabled,
+                return_url: window.location.pathname
+            }
+        });
+        setTopupBusy(false);
+        if (error) {
+            toast.error(error.message);
+            return;
+        }
+        if (data?.url) window.location.href = data.url;
+    };
+    if (loading) return /*#__PURE__*/ _jsxDEV(WalletSkeleton, {}, void 0, false, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+        lineNumber: 135,
+        columnNumber: 23
+    }, this);
+    const isLow = balance < threshold * 100;
+    const balanceColor = isLow ? "text-destructive" : "text-emerald-600";
+    return /*#__PURE__*/ _jsxDEV(Card, {
+        className: "overflow-hidden",
+        children: [
+            /*#__PURE__*/ _jsxDEV(CardContent, {
+                className: "p-3 sm:p-4 space-y-3",
+                children: [
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "flex items-center justify-between gap-2",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "flex items-center gap-2 min-w-0",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        className: "w-9 h-9 sm:w-8 sm:h-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0",
+                                        children: /*#__PURE__*/ _jsxDEV(Wallet, {
+                                            className: "h-4 w-4 text-primary"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                            lineNumber: 146,
+                                            columnNumber: 15
+                                        }, this)
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                        lineNumber: 145,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        className: "min-w-0",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV("h3", {
+                                                className: "font-semibold text-sm leading-tight truncate",
+                                                children: "Ads wallet"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                                lineNumber: 149,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV("p", {
+                                                className: mkMeta,
+                                                children: "Powered by Stripe"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                                lineNumber: 150,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                        lineNumber: 148,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                lineNumber: 144,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "text-right shrink-0",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV("p", {
+                                        className: cn("text-lg sm:text-xl font-bold tracking-tight tabular-nums", balanceColor),
+                                        children: [
+                                            "$",
+                                            (balance / 100).toFixed(2)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                        lineNumber: 154,
+                                        columnNumber: 13
+                                    }, this),
+                                    isLow && /*#__PURE__*/ _jsxDEV(Badge, {
+                                        variant: "destructive",
+                                        className: "text-[9px] h-4",
+                                        children: "Low"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                        lineNumber: 157,
+                                        columnNumber: 23
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                lineNumber: 153,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                        lineNumber: 143,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "grid grid-cols-2 gap-2",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(Button, {
+                                size: "sm",
+                                className: "h-10 sm:h-9 text-xs gap-1",
+                                onClick: ()=>{
+                                    setTopupAmount(50);
+                                    setTopupOpen(true);
+                                },
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(Plus, {
+                                        className: "h-3.5 w-3.5"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                        lineNumber: 163,
+                                        columnNumber: 13
+                                    }, this),
+                                    " Top up"
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                lineNumber: 162,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(Button, {
+                                size: "sm",
+                                variant: "outline",
+                                className: "h-10 sm:h-9 text-xs gap-1",
+                                onClick: ()=>setShowLedger((s)=>!s),
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(History, {
+                                        className: "h-3.5 w-3.5"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                        lineNumber: 166,
+                                        columnNumber: 13
+                                    }, this),
+                                    " History"
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                lineNumber: 165,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                        lineNumber: 161,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "rounded-lg border border-border p-2.5 sm:p-3 space-y-2.5",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "flex items-center justify-between",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        className: "flex items-center gap-1.5",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(Zap, {
+                                                className: "h-3.5 w-3.5 text-primary"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                                lineNumber: 173,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV(Label, {
+                                                className: "text-xs cursor-pointer",
+                                                children: "Auto-recharge when low"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                                lineNumber: 174,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                        lineNumber: 172,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV(Switch, {
+                                        checked: enabled,
+                                        onCheckedChange: setEnabled
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                        lineNumber: 176,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                lineNumber: 171,
+                                columnNumber: 11
+                            }, this),
+                            enabled && /*#__PURE__*/ _jsxDEV(_Fragment, {
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        className: "grid grid-cols-2 gap-2",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV("div", {
+                                                children: [
+                                                    /*#__PURE__*/ _jsxDEV(Label, {
+                                                        className: mkLabel,
+                                                        children: "Below ($)"
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                                        lineNumber: 182,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    /*#__PURE__*/ _jsxDEV(Input, {
+                                                        type: "number",
+                                                        min: 1,
+                                                        step: 1,
+                                                        value: threshold,
+                                                        onChange: (e)=>setThreshold(+e.target.value || 1),
+                                                        className: mkInput
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                                        lineNumber: 183,
+                                                        columnNumber: 19
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                                lineNumber: 181,
+                                                columnNumber: 17
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV("div", {
+                                                children: [
+                                                    /*#__PURE__*/ _jsxDEV(Label, {
+                                                        className: mkLabel,
+                                                        children: "Add ($)"
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                                        lineNumber: 187,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    /*#__PURE__*/ _jsxDEV(Input, {
+                                                        type: "number",
+                                                        min: 5,
+                                                        step: 5,
+                                                        value: amount,
+                                                        onChange: (e)=>setAmount(+e.target.value || 50),
+                                                        className: mkInput
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                                        lineNumber: 188,
+                                                        columnNumber: 19
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                                lineNumber: 186,
+                                                columnNumber: 17
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                        lineNumber: 180,
+                                        columnNumber: 15
+                                    }, this),
+                                    !hasCard && /*#__PURE__*/ _jsxDEV("p", {
+                                        className: "text-[11px] text-amber-600 dark:text-amber-400 leading-relaxed",
+                                        children: "Top up once to save a card for future auto-recharges."
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                        lineNumber: 193,
+                                        columnNumber: 17
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV(Button, {
+                                        size: "sm",
+                                        variant: "secondary",
+                                        className: "w-full h-9 text-xs",
+                                        onClick: save,
+                                        disabled: saving || loading,
+                                        children: [
+                                            saving ? /*#__PURE__*/ _jsxDEV(Loader2, {
+                                                className: "h-3 w-3 mr-1 animate-spin"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                                lineNumber: 198,
+                                                columnNumber: 27
+                                            }, this) : null,
+                                            " Save settings"
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                        lineNumber: 197,
+                                        columnNumber: 15
+                                    }, this)
+                                ]
+                            }, void 0, true)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                        lineNumber: 170,
+                        columnNumber: 9
+                    }, this),
+                    showLedger && /*#__PURE__*/ _jsxDEV("div", {
+                        className: "rounded-lg border border-border max-h-72 overflow-y-auto overscroll-contain divide-y divide-border",
+                        children: ledger.length === 0 ? /*#__PURE__*/ _jsxDEV("div", {
+                            className: "p-3",
+                            children: /*#__PURE__*/ _jsxDEV(MarketingEmptyState, {
+                                icon: Receipt,
+                                title: "No transactions yet",
+                                body: "Top-ups and AI generations will appear here."
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                lineNumber: 208,
+                                columnNumber: 17
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                            lineNumber: 207,
+                            columnNumber: 15
+                        }, this) : ledger.map((row)=>{
+                            const credit = row.entry_type === "topup" || row.entry_type === "refund";
+                            return /*#__PURE__*/ _jsxDEV("button", {
+                                onClick: ()=>setLedgerDetail(row),
+                                className: "flex items-center gap-2 p-2.5 sm:p-2 text-[12px] sm:text-[11px] w-full text-left hover:bg-muted/30 active:bg-muted/50 transition touch-manipulation",
+                                children: [
+                                    credit ? /*#__PURE__*/ _jsxDEV(ArrowDownCircle, {
+                                        className: "h-4 w-4 sm:h-3.5 sm:w-3.5 text-emerald-600 shrink-0"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                        lineNumber: 223,
+                                        columnNumber: 21
+                                    }, this) : /*#__PURE__*/ _jsxDEV(ArrowUpCircle, {
+                                        className: "h-4 w-4 sm:h-3.5 sm:w-3.5 text-muted-foreground shrink-0"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                        lineNumber: 225,
+                                        columnNumber: 21
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        className: "flex-1 min-w-0",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV("p", {
+                                                className: "truncate font-medium",
+                                                children: row.description || row.entry_type
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                                lineNumber: 228,
+                                                columnNumber: 21
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV("p", {
+                                                className: "text-[10px] sm:text-[9px] text-muted-foreground",
+                                                children: format(new Date(row.created_at), "MMM d, h:mm a")
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                                lineNumber: 229,
+                                                columnNumber: 21
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                        lineNumber: 227,
+                                        columnNumber: 19
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("span", {
+                                        className: cn("font-semibold tabular-nums", credit ? "text-emerald-600" : "text-foreground"),
+                                        children: [
+                                            credit ? "+" : "−",
+                                            "$",
+                                            (row.amount_cents / 100).toFixed(2)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                        lineNumber: 233,
+                                        columnNumber: 19
+                                    }, this)
+                                ]
+                            }, row.id, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                lineNumber: 217,
+                                columnNumber: 17
+                            }, this);
+                        })
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                        lineNumber: 205,
+                        columnNumber: 11
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                lineNumber: 142,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV(ResponsiveModal, {
+                open: topupOpen,
+                onOpenChange: setTopupOpen,
+                title: "Top up Ads wallet",
+                description: enabled && !hasCard ? "Card will be saved with Stripe for future auto-recharges." : undefined,
+                footer: /*#__PURE__*/ _jsxDEV(ResponsiveModalFooter, {
+                    children: [
+                        /*#__PURE__*/ _jsxDEV(Button, {
+                            variant: "outline",
+                            className: "w-full sm:w-auto h-10",
+                            onClick: ()=>setTopupOpen(false),
+                            children: "Cancel"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                            lineNumber: 251,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV(Button, {
+                            className: "w-full sm:w-auto h-10",
+                            onClick: startTopup,
+                            disabled: topupBusy || topupAmount < 5,
+                            children: [
+                                topupBusy ? /*#__PURE__*/ _jsxDEV(Loader2, {
+                                    className: "h-4 w-4 mr-1 animate-spin"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                    lineNumber: 255,
+                                    columnNumber: 28
+                                }, this) : null,
+                                "Pay $",
+                                topupAmount.toFixed(2)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                            lineNumber: 254,
+                            columnNumber: 13
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                    lineNumber: 250,
+                    columnNumber: 11
+                }, this),
+                children: /*#__PURE__*/ _jsxDEV("div", {
+                    className: "space-y-4",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "grid grid-cols-2 sm:grid-cols-4 gap-2",
+                            children: TOPUP_PRESETS.map((v)=>/*#__PURE__*/ _jsxDEV("button", {
+                                    onClick: ()=>setTopupAmount(v),
+                                    className: cn("h-12 sm:h-11 rounded-lg border text-base sm:text-sm font-semibold transition active:scale-95 touch-manipulation tabular-nums", topupAmount === v ? "border-primary bg-primary/10 text-primary" : "border-border hover:border-primary/40"),
+                                    children: [
+                                        "$",
+                                        v
+                                    ]
+                                }, v, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                    lineNumber: 264,
+                                    columnNumber: 15
+                                }, this))
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                            lineNumber: 262,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            children: [
+                                /*#__PURE__*/ _jsxDEV(Label, {
+                                    className: mkLabel,
+                                    children: "Custom amount ($)"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                    lineNumber: 279,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV(Input, {
+                                    type: "number",
+                                    inputMode: "decimal",
+                                    min: 5,
+                                    step: 5,
+                                    value: topupAmount,
+                                    onChange: (e)=>setTopupAmount(+e.target.value || 0),
+                                    className: "h-11 sm:h-10 text-base sm:text-sm"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                    lineNumber: 280,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                            lineNumber: 278,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                    lineNumber: 261,
+                    columnNumber: 9
+                }, this)
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                lineNumber: 244,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV(ResponsiveModal, {
+                open: !!ledgerDetail,
+                onOpenChange: (o)=>!o && setLedgerDetail(null),
+                title: "Transaction details",
+                footer: /*#__PURE__*/ _jsxDEV(Button, {
+                    className: "w-full sm:w-auto h-10 sm:ml-auto",
+                    onClick: ()=>setLedgerDetail(null),
+                    children: "Close"
+                }, void 0, false, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                    lineNumber: 299,
+                    columnNumber: 11
+                }, this),
+                children: ledgerDetail && /*#__PURE__*/ _jsxDEV("div", {
+                    className: "space-y-3",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "rounded-lg bg-muted/40 p-3 space-y-2",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "flex justify-between items-start gap-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV("span", {
+                                            className: mkLabel,
+                                            children: "Type"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                            lineNumber: 308,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV(Badge, {
+                                            variant: "secondary",
+                                            className: "text-[10px] capitalize",
+                                            children: ledgerDetail.entry_type
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                            lineNumber: 309,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                    lineNumber: 307,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "flex justify-between items-start gap-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV("span", {
+                                            className: mkLabel,
+                                            children: "Amount"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                            lineNumber: 312,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("span", {
+                                            className: cn("text-base font-bold tabular-nums", ledgerDetail.entry_type === "topup" || ledgerDetail.entry_type === "refund" ? "text-emerald-600" : "text-foreground"),
+                                            children: [
+                                                "$",
+                                                (ledgerDetail.amount_cents / 100).toFixed(2)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                            lineNumber: 313,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                    lineNumber: 311,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "flex justify-between items-start gap-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV("span", {
+                                            className: mkLabel,
+                                            children: "Balance after"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                            lineNumber: 322,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("span", {
+                                            className: "text-sm font-semibold tabular-nums",
+                                            children: [
+                                                "$",
+                                                (ledgerDetail.balance_after_cents / 100).toFixed(2)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                            lineNumber: 323,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                    lineNumber: 321,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "flex justify-between items-start gap-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV("span", {
+                                            className: mkLabel,
+                                            children: "When"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                            lineNumber: 328,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("span", {
+                                            className: "text-sm",
+                                            children: format(new Date(ledgerDetail.created_at), "MMM d, yyyy h:mm a")
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                            lineNumber: 329,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                    lineNumber: 327,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                            lineNumber: 306,
+                            columnNumber: 13
+                        }, this),
+                        ledgerDetail.description && /*#__PURE__*/ _jsxDEV("div", {
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("p", {
+                                    className: mkLabel,
+                                    children: "Description"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                    lineNumber: 334,
+                                    columnNumber: 17
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("p", {
+                                    className: cn(mkBody, "mt-1"),
+                                    children: ledgerDetail.description
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                    lineNumber: 335,
+                                    columnNumber: 17
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                            lineNumber: 333,
+                            columnNumber: 15
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("p", {
+                            className: "text-[11px] text-muted-foreground leading-relaxed",
+                            children: [
+                                "For receipts and refund requests, contact support with the transaction ID:",
+                                /*#__PURE__*/ _jsxDEV("code", {
+                                    className: "ml-1 px-1 py-0.5 bg-muted rounded text-[10px] break-all",
+                                    children: ledgerDetail.id
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                                    lineNumber: 340,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                            lineNumber: 338,
+                            columnNumber: 13
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                    lineNumber: 305,
+                    columnNumber: 11
+                }, this)
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+                lineNumber: 294,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx",
+        lineNumber: 141,
+        columnNumber: 5
+    }, this);
+}
+_s(AdsStudioWalletGuard, "9cEv9HC2MT8V/eCddrFnXUGEvoI=", false, function() {
+    return [
+        useSearchParams
+    ];
+});
+_c = AdsStudioWalletGuard;
+var _c;
+$RefreshReg$(_c, "AdsStudioWalletGuard");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWalletGuard.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIkFkc1N0dWRpb1dhbGxldEd1YXJkLnRzeCJdLCJzb3VyY2VzQ29udGVudCI6WyIvKipcclxuICogQWRzU3R1ZGlvV2FsbGV0R3VhcmQg4oCUIEFkcyBTdHVkaW8gd2FsbGV0IHdpdGggU3RyaXBlIHRvcC11cCArIGF1dG8tcmVjaGFyZ2UgKyBsZWRnZXIuXHJcbiAqIERyaXZlcyBgYWRzX3N0dWRpb193YWxsZXRgIGFuZCBgYWRzX3dhbGxldF9sZWRnZXJgIChzZXBhcmF0ZSBmcm9tIGZvb2QvcmVzdGF1cmFudCB3YWxsZXQpLlxyXG4gKi9cclxuaW1wb3J0IHsgdXNlRWZmZWN0LCB1c2VTdGF0ZSB9IGZyb20gXCJyZWFjdFwiO1xyXG5pbXBvcnQgeyB1c2VTZWFyY2hQYXJhbXMgfSBmcm9tIFwicmVhY3Qtcm91dGVyLWRvbVwiO1xyXG5pbXBvcnQgeyBDYXJkLCBDYXJkQ29udGVudCB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvY2FyZFwiO1xyXG5pbXBvcnQgeyBTd2l0Y2ggfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL3N3aXRjaFwiO1xyXG5pbXBvcnQgeyBJbnB1dCB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvaW5wdXRcIjtcclxuaW1wb3J0IHsgTGFiZWwgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2xhYmVsXCI7XHJcbmltcG9ydCB7IEJ1dHRvbiB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvYnV0dG9uXCI7XHJcbmltcG9ydCB7IEJhZGdlIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9iYWRnZVwiO1xyXG5pbXBvcnQgeyBSZXNwb25zaXZlTW9kYWwsIFJlc3BvbnNpdmVNb2RhbEZvb3RlciB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvcmVzcG9uc2l2ZS1tb2RhbFwiO1xyXG5pbXBvcnQgeyBzdXBhYmFzZSB9IGZyb20gXCJAL2ludGVncmF0aW9ucy9zdXBhYmFzZS9jbGllbnRcIjtcclxuaW1wb3J0IHsgV2FsbGV0LCBaYXAsIExvYWRlcjIsIFBsdXMsIEhpc3RvcnksIEFycm93RG93bkNpcmNsZSwgQXJyb3dVcENpcmNsZSwgUmVjZWlwdCB9IGZyb20gXCJsdWNpZGUtcmVhY3RcIjtcclxuaW1wb3J0IHsgdG9hc3QgfSBmcm9tIFwic29ubmVyXCI7XHJcbmltcG9ydCB7IGZvcm1hdCB9IGZyb20gXCJkYXRlLWZuc1wiO1xyXG5pbXBvcnQgeyBXYWxsZXRTa2VsZXRvbiB9IGZyb20gXCIuL2Fkcy9NYXJrZXRpbmdTa2VsZXRvbnNcIjtcclxuaW1wb3J0IE1hcmtldGluZ0VtcHR5U3RhdGUgZnJvbSBcIi4vYWRzL01hcmtldGluZ0VtcHR5U3RhdGVcIjtcclxuaW1wb3J0IHsgbWtCb2R5LCBta0lucHV0LCBta0xhYmVsLCBta01ldGEgfSBmcm9tIFwiLi9hZHMvbWFya2V0aW5nLXRva2Vuc1wiO1xyXG5pbXBvcnQgeyBjbiB9IGZyb20gXCJAL2xpYi91dGlsc1wiO1xyXG5cclxuaW50ZXJmYWNlIFByb3BzIHsgc3RvcmVJZDogc3RyaW5nIH1cclxuXHJcbmludGVyZmFjZSBMZWRnZXJSb3cge1xyXG4gIGlkOiBzdHJpbmc7XHJcbiAgZW50cnlfdHlwZTogc3RyaW5nO1xyXG4gIGFtb3VudF9jZW50czogbnVtYmVyO1xyXG4gIGJhbGFuY2VfYWZ0ZXJfY2VudHM6IG51bWJlcjtcclxuICBkZXNjcmlwdGlvbjogc3RyaW5nIHwgbnVsbDtcclxuICBjcmVhdGVkX2F0OiBzdHJpbmc7XHJcbn1cclxuXHJcbmNvbnN0IFRPUFVQX1BSRVNFVFMgPSBbMjUsIDUwLCAxMDAsIDI1MF07XHJcblxyXG5leHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBBZHNTdHVkaW9XYWxsZXRHdWFyZCh7IHN0b3JlSWQgfTogUHJvcHMpIHtcclxuICBjb25zdCBbcGFyYW1zLCBzZXRQYXJhbXNdID0gdXNlU2VhcmNoUGFyYW1zKCk7XHJcbiAgY29uc3QgW2xvYWRpbmcsIHNldExvYWRpbmddID0gdXNlU3RhdGUodHJ1ZSk7XHJcbiAgY29uc3QgW3NhdmluZywgc2V0U2F2aW5nXSA9IHVzZVN0YXRlKGZhbHNlKTtcclxuICBjb25zdCBbYmFsYW5jZSwgc2V0QmFsYW5jZV0gPSB1c2VTdGF0ZSgwKTtcclxuICBjb25zdCBbaGFzQ2FyZCwgc2V0SGFzQ2FyZF0gPSB1c2VTdGF0ZShmYWxzZSk7XHJcbiAgY29uc3QgW2VuYWJsZWQsIHNldEVuYWJsZWRdID0gdXNlU3RhdGUoZmFsc2UpO1xyXG4gIGNvbnN0IFt0aHJlc2hvbGQsIHNldFRocmVzaG9sZF0gPSB1c2VTdGF0ZSgxMCk7XHJcbiAgY29uc3QgW2Ftb3VudCwgc2V0QW1vdW50XSA9IHVzZVN0YXRlKDUwKTtcclxuICBjb25zdCBbdG9wdXBPcGVuLCBzZXRUb3B1cE9wZW5dID0gdXNlU3RhdGUoZmFsc2UpO1xyXG4gIGNvbnN0IFt0b3B1cEFtb3VudCwgc2V0VG9wdXBBbW91bnRdID0gdXNlU3RhdGUoNTApO1xyXG4gIGNvbnN0IFt0b3B1cEJ1c3ksIHNldFRvcHVwQnVzeV0gPSB1c2VTdGF0ZShmYWxzZSk7XHJcbiAgY29uc3QgW2xlZGdlciwgc2V0TGVkZ2VyXSA9IHVzZVN0YXRlPExlZGdlclJvd1tdPihbXSk7XHJcbiAgY29uc3QgW3Nob3dMZWRnZXIsIHNldFNob3dMZWRnZXJdID0gdXNlU3RhdGUoZmFsc2UpO1xyXG4gIGNvbnN0IFtsZWRnZXJEZXRhaWwsIHNldExlZGdlckRldGFpbF0gPSB1c2VTdGF0ZTxMZWRnZXJSb3cgfCBudWxsPihudWxsKTtcclxuXHJcbiAgY29uc3QgbG9hZCA9IGFzeW5jICgpID0+IHtcclxuICAgIHNldExvYWRpbmcodHJ1ZSk7XHJcbiAgICBjb25zdCB7IGRhdGEgfSA9IGF3YWl0IHN1cGFiYXNlXHJcbiAgICAgIC5mcm9tKFwiYWRzX3N0dWRpb193YWxsZXRcIiBhcyBhbnkpXHJcbiAgICAgIC5zZWxlY3QoXCJiYWxhbmNlX2NlbnRzLCBhdXRvX3JlY2hhcmdlX2VuYWJsZWQsIHRocmVzaG9sZF9jZW50cywgcmVjaGFyZ2VfYW1vdW50X2NlbnRzLCBzdHJpcGVfcGF5bWVudF9tZXRob2RfaWRcIilcclxuICAgICAgLmVxKFwic3RvcmVfaWRcIiwgc3RvcmVJZClcclxuICAgICAgLm1heWJlU2luZ2xlKCk7XHJcbiAgICBpZiAoZGF0YSkge1xyXG4gICAgICBjb25zdCB3ID0gZGF0YSBhcyBhbnk7XHJcbiAgICAgIHNldEJhbGFuY2Uody5iYWxhbmNlX2NlbnRzID8/IDApO1xyXG4gICAgICBzZXRFbmFibGVkKCEhdy5hdXRvX3JlY2hhcmdlX2VuYWJsZWQpO1xyXG4gICAgICBzZXRUaHJlc2hvbGQoKHcudGhyZXNob2xkX2NlbnRzID8/IDEwMDApIC8gMTAwKTtcclxuICAgICAgc2V0QW1vdW50KCh3LnJlY2hhcmdlX2Ftb3VudF9jZW50cyA/PyA1MDAwKSAvIDEwMCk7XHJcbiAgICAgIHNldEhhc0NhcmQoISF3LnN0cmlwZV9wYXltZW50X21ldGhvZF9pZCk7XHJcbiAgICB9XHJcbiAgICBjb25zdCB7IGRhdGE6IGxnIH0gPSBhd2FpdCBzdXBhYmFzZVxyXG4gICAgICAuZnJvbShcImFkc193YWxsZXRfbGVkZ2VyXCIgYXMgYW55KVxyXG4gICAgICAuc2VsZWN0KFwiaWQsIGVudHJ5X3R5cGUsIGFtb3VudF9jZW50cywgYmFsYW5jZV9hZnRlcl9jZW50cywgZGVzY3JpcHRpb24sIGNyZWF0ZWRfYXRcIilcclxuICAgICAgLmVxKFwic3RvcmVfaWRcIiwgc3RvcmVJZClcclxuICAgICAgLm9yZGVyKFwiY3JlYXRlZF9hdFwiLCB7IGFzY2VuZGluZzogZmFsc2UgfSlcclxuICAgICAgLmxpbWl0KDIwKTtcclxuICAgIHNldExlZGdlcigobGcgYXMgYW55KSA/PyBbXSk7XHJcbiAgICBzZXRMb2FkaW5nKGZhbHNlKTtcclxuICB9O1xyXG5cclxuICB1c2VFZmZlY3QoKCkgPT4geyBpZiAoc3RvcmVJZCkgbG9hZCgpOyB9LCBbc3RvcmVJZF0pO1xyXG5cclxuICAvLyBWZXJpZnkgU3RyaXBlIENoZWNrb3V0IHNlc3Npb24gb24gcmV0dXJuXHJcbiAgdXNlRWZmZWN0KCgpID0+IHtcclxuICAgIGNvbnN0IHNlc3Npb25JZCA9IHBhcmFtcy5nZXQoXCJzZXNzaW9uX2lkXCIpO1xyXG4gICAgY29uc3QgdG9wdXAgPSBwYXJhbXMuZ2V0KFwidG9wdXBcIik7XHJcbiAgICBpZiAodG9wdXAgPT09IFwic3VjY2Vzc1wiICYmIHNlc3Npb25JZCkge1xyXG4gICAgICAoYXN5bmMgKCkgPT4ge1xyXG4gICAgICAgIGNvbnN0IHsgZGF0YSwgZXJyb3IgfSA9IGF3YWl0IHN1cGFiYXNlLmZ1bmN0aW9ucy5pbnZva2UoXCJ2ZXJpZnktYWRzLXdhbGxldC10b3B1cFwiLCB7XHJcbiAgICAgICAgICBib2R5OiB7IHNlc3Npb25faWQ6IHNlc3Npb25JZCB9LFxyXG4gICAgICAgIH0pO1xyXG4gICAgICAgIGlmIChlcnJvcikgdG9hc3QuZXJyb3IoZXJyb3IubWVzc2FnZSk7XHJcbiAgICAgICAgZWxzZSBpZiAoKGRhdGEgYXMgYW55KT8uc3RhdHVzID09PSBcImNyZWRpdGVkXCIpIHRvYXN0LnN1Y2Nlc3MoXCJXYWxsZXQgdG9wcGVkIHVwIVwiKTtcclxuICAgICAgICBlbHNlIGlmICgoZGF0YSBhcyBhbnkpPy5zdGF0dXMgPT09IFwiYWxyZWFkeV9jcmVkaXRlZFwiKSB7IC8qIHNpbGVudCAqLyB9XHJcbiAgICAgICAgZWxzZSB0b2FzdC5tZXNzYWdlKFwiVG9wLXVwIHN0aWxsIHByb2Nlc3NpbmfigKZcIik7XHJcbiAgICAgICAgcGFyYW1zLmRlbGV0ZShcInRvcHVwXCIpOyBwYXJhbXMuZGVsZXRlKFwic2Vzc2lvbl9pZFwiKTtcclxuICAgICAgICBzZXRQYXJhbXMocGFyYW1zLCB7IHJlcGxhY2U6IHRydWUgfSk7XHJcbiAgICAgICAgbG9hZCgpO1xyXG4gICAgICB9KSgpO1xyXG4gICAgfSBlbHNlIGlmICh0b3B1cCA9PT0gXCJjYW5jZWxsZWRcIikge1xyXG4gICAgICB0b2FzdC5pbmZvKFwiVG9wLXVwIGNhbmNlbGxlZFwiKTtcclxuICAgICAgcGFyYW1zLmRlbGV0ZShcInRvcHVwXCIpO1xyXG4gICAgICBzZXRQYXJhbXMocGFyYW1zLCB7IHJlcGxhY2U6IHRydWUgfSk7XHJcbiAgICB9XHJcbiAgICAvLyBlc2xpbnQtZGlzYWJsZS1uZXh0LWxpbmUgcmVhY3QtaG9va3MvZXhoYXVzdGl2ZS1kZXBzXHJcbiAgfSwgW10pO1xyXG5cclxuICBjb25zdCBzYXZlID0gYXN5bmMgKCkgPT4ge1xyXG4gICAgc2V0U2F2aW5nKHRydWUpO1xyXG4gICAgY29uc3QgeyBlcnJvciB9ID0gYXdhaXQgc3VwYWJhc2VcclxuICAgICAgLmZyb20oXCJhZHNfc3R1ZGlvX3dhbGxldFwiIGFzIGFueSlcclxuICAgICAgLnVwc2VydCh7XHJcbiAgICAgICAgc3RvcmVfaWQ6IHN0b3JlSWQsXHJcbiAgICAgICAgYXV0b19yZWNoYXJnZV9lbmFibGVkOiBlbmFibGVkLFxyXG4gICAgICAgIHRocmVzaG9sZF9jZW50czogTWF0aC5yb3VuZCh0aHJlc2hvbGQgKiAxMDApLFxyXG4gICAgICAgIHJlY2hhcmdlX2Ftb3VudF9jZW50czogTWF0aC5yb3VuZChhbW91bnQgKiAxMDApLFxyXG4gICAgICB9LCB7IG9uQ29uZmxpY3Q6IFwic3RvcmVfaWRcIiB9KTtcclxuICAgIHNldFNhdmluZyhmYWxzZSk7XHJcbiAgICBpZiAoZXJyb3IpIHRvYXN0LmVycm9yKGVycm9yLm1lc3NhZ2UpO1xyXG4gICAgZWxzZSB0b2FzdC5zdWNjZXNzKFwiQXV0by1yZWNoYXJnZSBzZXR0aW5ncyBzYXZlZFwiKTtcclxuICB9O1xyXG5cclxuICBjb25zdCBzdGFydFRvcHVwID0gYXN5bmMgKCkgPT4ge1xyXG4gICAgaWYgKHRvcHVwQW1vdW50IDwgNSkgeyB0b2FzdC5lcnJvcihcIk1pbmltdW0gJDVcIik7IHJldHVybjsgfVxyXG4gICAgc2V0VG9wdXBCdXN5KHRydWUpO1xyXG4gICAgY29uc3QgeyBkYXRhLCBlcnJvciB9ID0gYXdhaXQgc3VwYWJhc2UuZnVuY3Rpb25zLmludm9rZShcImNyZWF0ZS1hZHMtd2FsbGV0LXRvcHVwXCIsIHtcclxuICAgICAgYm9keToge1xyXG4gICAgICAgIHN0b3JlX2lkOiBzdG9yZUlkLFxyXG4gICAgICAgIGFtb3VudF9jZW50czogTWF0aC5yb3VuZCh0b3B1cEFtb3VudCAqIDEwMCksXHJcbiAgICAgICAgc2F2ZV9jYXJkOiBlbmFibGVkLFxyXG4gICAgICAgIHJldHVybl91cmw6IHdpbmRvdy5sb2NhdGlvbi5wYXRobmFtZSxcclxuICAgICAgfSxcclxuICAgIH0pO1xyXG4gICAgc2V0VG9wdXBCdXN5KGZhbHNlKTtcclxuICAgIGlmIChlcnJvcikgeyB0b2FzdC5lcnJvcihlcnJvci5tZXNzYWdlKTsgcmV0dXJuOyB9XHJcbiAgICBpZiAoKGRhdGEgYXMgYW55KT8udXJsKSB3aW5kb3cubG9jYXRpb24uaHJlZiA9IChkYXRhIGFzIGFueSkudXJsO1xyXG4gIH07XHJcblxyXG4gIGlmIChsb2FkaW5nKSByZXR1cm4gPFdhbGxldFNrZWxldG9uIC8+O1xyXG5cclxuICBjb25zdCBpc0xvdyA9IGJhbGFuY2UgPCB0aHJlc2hvbGQgKiAxMDA7XHJcbiAgY29uc3QgYmFsYW5jZUNvbG9yID0gaXNMb3cgPyBcInRleHQtZGVzdHJ1Y3RpdmVcIiA6IFwidGV4dC1lbWVyYWxkLTYwMFwiO1xyXG5cclxuICByZXR1cm4gKFxyXG4gICAgPENhcmQgY2xhc3NOYW1lPVwib3ZlcmZsb3ctaGlkZGVuXCI+XHJcbiAgICAgIDxDYXJkQ29udGVudCBjbGFzc05hbWU9XCJwLTMgc206cC00IHNwYWNlLXktM1wiPlxyXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1iZXR3ZWVuIGdhcC0yXCI+XHJcbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0yIG1pbi13LTBcIj5cclxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJ3LTkgaC05IHNtOnctOCBzbTpoLTggcm91bmRlZC14bCBiZy1wcmltYXJ5LzEwIGZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIHNocmluay0wXCI+XHJcbiAgICAgICAgICAgICAgPFdhbGxldCBjbGFzc05hbWU9XCJoLTQgdy00IHRleHQtcHJpbWFyeVwiIC8+XHJcbiAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cIm1pbi13LTBcIj5cclxuICAgICAgICAgICAgICA8aDMgY2xhc3NOYW1lPVwiZm9udC1zZW1pYm9sZCB0ZXh0LXNtIGxlYWRpbmctdGlnaHQgdHJ1bmNhdGVcIj5BZHMgd2FsbGV0PC9oMz5cclxuICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9e21rTWV0YX0+UG93ZXJlZCBieSBTdHJpcGU8L3A+XHJcbiAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInRleHQtcmlnaHQgc2hyaW5rLTBcIj5cclxuICAgICAgICAgICAgPHAgY2xhc3NOYW1lPXtjbihcInRleHQtbGcgc206dGV4dC14bCBmb250LWJvbGQgdHJhY2tpbmctdGlnaHQgdGFidWxhci1udW1zXCIsIGJhbGFuY2VDb2xvcil9PlxyXG4gICAgICAgICAgICAgICR7KGJhbGFuY2UgLyAxMDApLnRvRml4ZWQoMil9XHJcbiAgICAgICAgICAgIDwvcD5cclxuICAgICAgICAgICAge2lzTG93ICYmIDxCYWRnZSB2YXJpYW50PVwiZGVzdHJ1Y3RpdmVcIiBjbGFzc05hbWU9XCJ0ZXh0LVs5cHhdIGgtNFwiPkxvdzwvQmFkZ2U+fVxyXG4gICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgPC9kaXY+XHJcblxyXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZ3JpZCBncmlkLWNvbHMtMiBnYXAtMlwiPlxyXG4gICAgICAgICAgPEJ1dHRvbiBzaXplPVwic21cIiBjbGFzc05hbWU9XCJoLTEwIHNtOmgtOSB0ZXh0LXhzIGdhcC0xXCIgb25DbGljaz17KCkgPT4geyBzZXRUb3B1cEFtb3VudCg1MCk7IHNldFRvcHVwT3Blbih0cnVlKTsgfX0+XHJcbiAgICAgICAgICAgIDxQbHVzIGNsYXNzTmFtZT1cImgtMy41IHctMy41XCIgLz4gVG9wIHVwXHJcbiAgICAgICAgICA8L0J1dHRvbj5cclxuICAgICAgICAgIDxCdXR0b24gc2l6ZT1cInNtXCIgdmFyaWFudD1cIm91dGxpbmVcIiBjbGFzc05hbWU9XCJoLTEwIHNtOmgtOSB0ZXh0LXhzIGdhcC0xXCIgb25DbGljaz17KCkgPT4gc2V0U2hvd0xlZGdlcigocykgPT4gIXMpfT5cclxuICAgICAgICAgICAgPEhpc3RvcnkgY2xhc3NOYW1lPVwiaC0zLjUgdy0zLjVcIiAvPiBIaXN0b3J5XHJcbiAgICAgICAgICA8L0J1dHRvbj5cclxuICAgICAgICA8L2Rpdj5cclxuXHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJyb3VuZGVkLWxnIGJvcmRlciBib3JkZXItYm9yZGVyIHAtMi41IHNtOnAtMyBzcGFjZS15LTIuNVwiPlxyXG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWJldHdlZW5cIj5cclxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMS41XCI+XHJcbiAgICAgICAgICAgICAgPFphcCBjbGFzc05hbWU9XCJoLTMuNSB3LTMuNSB0ZXh0LXByaW1hcnlcIiAvPlxyXG4gICAgICAgICAgICAgIDxMYWJlbCBjbGFzc05hbWU9XCJ0ZXh0LXhzIGN1cnNvci1wb2ludGVyXCI+QXV0by1yZWNoYXJnZSB3aGVuIGxvdzwvTGFiZWw+XHJcbiAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICA8U3dpdGNoIGNoZWNrZWQ9e2VuYWJsZWR9IG9uQ2hlY2tlZENoYW5nZT17c2V0RW5hYmxlZH0gLz5cclxuICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAge2VuYWJsZWQgJiYgKFxyXG4gICAgICAgICAgICA8PlxyXG4gICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZ3JpZCBncmlkLWNvbHMtMiBnYXAtMlwiPlxyXG4gICAgICAgICAgICAgICAgPGRpdj5cclxuICAgICAgICAgICAgICAgICAgPExhYmVsIGNsYXNzTmFtZT17bWtMYWJlbH0+QmVsb3cgKCQpPC9MYWJlbD5cclxuICAgICAgICAgICAgICAgICAgPElucHV0IHR5cGU9XCJudW1iZXJcIiBtaW49ezF9IHN0ZXA9ezF9IHZhbHVlPXt0aHJlc2hvbGR9XHJcbiAgICAgICAgICAgICAgICAgICAgb25DaGFuZ2U9eyhlKSA9PiBzZXRUaHJlc2hvbGQoK2UudGFyZ2V0LnZhbHVlIHx8IDEpfSBjbGFzc05hbWU9e21rSW5wdXR9IC8+XHJcbiAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgIDxkaXY+XHJcbiAgICAgICAgICAgICAgICAgIDxMYWJlbCBjbGFzc05hbWU9e21rTGFiZWx9PkFkZCAoJCk8L0xhYmVsPlxyXG4gICAgICAgICAgICAgICAgICA8SW5wdXQgdHlwZT1cIm51bWJlclwiIG1pbj17NX0gc3RlcD17NX0gdmFsdWU9e2Ftb3VudH1cclxuICAgICAgICAgICAgICAgICAgICBvbkNoYW5nZT17KGUpID0+IHNldEFtb3VudCgrZS50YXJnZXQudmFsdWUgfHwgNTApfSBjbGFzc05hbWU9e21rSW5wdXR9IC8+XHJcbiAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICB7IWhhc0NhcmQgJiYgKFxyXG4gICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1bMTFweF0gdGV4dC1hbWJlci02MDAgZGFyazp0ZXh0LWFtYmVyLTQwMCBsZWFkaW5nLXJlbGF4ZWRcIj5cclxuICAgICAgICAgICAgICAgICAgVG9wIHVwIG9uY2UgdG8gc2F2ZSBhIGNhcmQgZm9yIGZ1dHVyZSBhdXRvLXJlY2hhcmdlcy5cclxuICAgICAgICAgICAgICAgIDwvcD5cclxuICAgICAgICAgICAgICApfVxyXG4gICAgICAgICAgICAgIDxCdXR0b24gc2l6ZT1cInNtXCIgdmFyaWFudD1cInNlY29uZGFyeVwiIGNsYXNzTmFtZT1cInctZnVsbCBoLTkgdGV4dC14c1wiIG9uQ2xpY2s9e3NhdmV9IGRpc2FibGVkPXtzYXZpbmcgfHwgbG9hZGluZ30+XHJcbiAgICAgICAgICAgICAgICB7c2F2aW5nID8gPExvYWRlcjIgY2xhc3NOYW1lPVwiaC0zIHctMyBtci0xIGFuaW1hdGUtc3BpblwiIC8+IDogbnVsbH0gU2F2ZSBzZXR0aW5nc1xyXG4gICAgICAgICAgICAgIDwvQnV0dG9uPlxyXG4gICAgICAgICAgICA8Lz5cclxuICAgICAgICAgICl9XHJcbiAgICAgICAgPC9kaXY+XHJcblxyXG4gICAgICAgIHtzaG93TGVkZ2VyICYmIChcclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwicm91bmRlZC1sZyBib3JkZXIgYm9yZGVyLWJvcmRlciBtYXgtaC03MiBvdmVyZmxvdy15LWF1dG8gb3ZlcnNjcm9sbC1jb250YWluIGRpdmlkZS15IGRpdmlkZS1ib3JkZXJcIj5cclxuICAgICAgICAgICAge2xlZGdlci5sZW5ndGggPT09IDAgPyAoXHJcbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJwLTNcIj5cclxuICAgICAgICAgICAgICAgIDxNYXJrZXRpbmdFbXB0eVN0YXRlXHJcbiAgICAgICAgICAgICAgICAgIGljb249e1JlY2VpcHR9XHJcbiAgICAgICAgICAgICAgICAgIHRpdGxlPVwiTm8gdHJhbnNhY3Rpb25zIHlldFwiXHJcbiAgICAgICAgICAgICAgICAgIGJvZHk9XCJUb3AtdXBzIGFuZCBBSSBnZW5lcmF0aW9ucyB3aWxsIGFwcGVhciBoZXJlLlwiXHJcbiAgICAgICAgICAgICAgICAvPlxyXG4gICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICApIDogbGVkZ2VyLm1hcCgocm93KSA9PiB7XHJcbiAgICAgICAgICAgICAgY29uc3QgY3JlZGl0ID0gcm93LmVudHJ5X3R5cGUgPT09IFwidG9wdXBcIiB8fCByb3cuZW50cnlfdHlwZSA9PT0gXCJyZWZ1bmRcIjtcclxuICAgICAgICAgICAgICByZXR1cm4gKFxyXG4gICAgICAgICAgICAgICAgPGJ1dHRvblxyXG4gICAgICAgICAgICAgICAgICBrZXk9e3Jvdy5pZH1cclxuICAgICAgICAgICAgICAgICAgb25DbGljaz17KCkgPT4gc2V0TGVkZ2VyRGV0YWlsKHJvdyl9XHJcbiAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0yIHAtMi41IHNtOnAtMiB0ZXh0LVsxMnB4XSBzbTp0ZXh0LVsxMXB4XSB3LWZ1bGwgdGV4dC1sZWZ0IGhvdmVyOmJnLW11dGVkLzMwIGFjdGl2ZTpiZy1tdXRlZC81MCB0cmFuc2l0aW9uIHRvdWNoLW1hbmlwdWxhdGlvblwiXHJcbiAgICAgICAgICAgICAgICA+XHJcbiAgICAgICAgICAgICAgICAgIHtjcmVkaXQgPyAoXHJcbiAgICAgICAgICAgICAgICAgICAgPEFycm93RG93bkNpcmNsZSBjbGFzc05hbWU9XCJoLTQgdy00IHNtOmgtMy41IHNtOnctMy41IHRleHQtZW1lcmFsZC02MDAgc2hyaW5rLTBcIiAvPlxyXG4gICAgICAgICAgICAgICAgICApIDogKFxyXG4gICAgICAgICAgICAgICAgICAgIDxBcnJvd1VwQ2lyY2xlIGNsYXNzTmFtZT1cImgtNCB3LTQgc206aC0zLjUgc206dy0zLjUgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIHNocmluay0wXCIgLz5cclxuICAgICAgICAgICAgICAgICAgKX1cclxuICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4LTEgbWluLXctMFwiPlxyXG4gICAgICAgICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRydW5jYXRlIGZvbnQtbWVkaXVtXCI+e3Jvdy5kZXNjcmlwdGlvbiB8fCByb3cuZW50cnlfdHlwZX08L3A+XHJcbiAgICAgICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1bMTBweF0gc206dGV4dC1bOXB4XSB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5cclxuICAgICAgICAgICAgICAgICAgICAgIHtmb3JtYXQobmV3IERhdGUocm93LmNyZWF0ZWRfYXQpLCBcIk1NTSBkLCBoOm1tIGFcIil9XHJcbiAgICAgICAgICAgICAgICAgICAgPC9wPlxyXG4gICAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPXtjbihcImZvbnQtc2VtaWJvbGQgdGFidWxhci1udW1zXCIsIGNyZWRpdCA/IFwidGV4dC1lbWVyYWxkLTYwMFwiIDogXCJ0ZXh0LWZvcmVncm91bmRcIil9PlxyXG4gICAgICAgICAgICAgICAgICAgIHtjcmVkaXQgPyBcIitcIiA6IFwi4oiSXCJ9JHsocm93LmFtb3VudF9jZW50cyAvIDEwMCkudG9GaXhlZCgyKX1cclxuICAgICAgICAgICAgICAgICAgPC9zcGFuPlxyXG4gICAgICAgICAgICAgICAgPC9idXR0b24+XHJcbiAgICAgICAgICAgICAgKTtcclxuICAgICAgICAgICAgfSl9XHJcbiAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICApfVxyXG4gICAgICA8L0NhcmRDb250ZW50PlxyXG5cclxuICAgICAgey8qIFRvcC11cCBtb2RhbCDigJQgYm90dG9tIHNoZWV0IG9uIG1vYmlsZSwgZGlhbG9nIG9uIGRlc2t0b3AgKi99XHJcbiAgICAgIDxSZXNwb25zaXZlTW9kYWxcclxuICAgICAgICBvcGVuPXt0b3B1cE9wZW59XHJcbiAgICAgICAgb25PcGVuQ2hhbmdlPXtzZXRUb3B1cE9wZW59XHJcbiAgICAgICAgdGl0bGU9XCJUb3AgdXAgQWRzIHdhbGxldFwiXHJcbiAgICAgICAgZGVzY3JpcHRpb249e2VuYWJsZWQgJiYgIWhhc0NhcmQgPyBcIkNhcmQgd2lsbCBiZSBzYXZlZCB3aXRoIFN0cmlwZSBmb3IgZnV0dXJlIGF1dG8tcmVjaGFyZ2VzLlwiIDogdW5kZWZpbmVkfVxyXG4gICAgICAgIGZvb3Rlcj17XHJcbiAgICAgICAgICA8UmVzcG9uc2l2ZU1vZGFsRm9vdGVyPlxyXG4gICAgICAgICAgICA8QnV0dG9uIHZhcmlhbnQ9XCJvdXRsaW5lXCIgY2xhc3NOYW1lPVwidy1mdWxsIHNtOnctYXV0byBoLTEwXCIgb25DbGljaz17KCkgPT4gc2V0VG9wdXBPcGVuKGZhbHNlKX0+XHJcbiAgICAgICAgICAgICAgQ2FuY2VsXHJcbiAgICAgICAgICAgIDwvQnV0dG9uPlxyXG4gICAgICAgICAgICA8QnV0dG9uIGNsYXNzTmFtZT1cInctZnVsbCBzbTp3LWF1dG8gaC0xMFwiIG9uQ2xpY2s9e3N0YXJ0VG9wdXB9IGRpc2FibGVkPXt0b3B1cEJ1c3kgfHwgdG9wdXBBbW91bnQgPCA1fT5cclxuICAgICAgICAgICAgICB7dG9wdXBCdXN5ID8gPExvYWRlcjIgY2xhc3NOYW1lPVwiaC00IHctNCBtci0xIGFuaW1hdGUtc3BpblwiIC8+IDogbnVsbH1cclxuICAgICAgICAgICAgICBQYXkgJHt0b3B1cEFtb3VudC50b0ZpeGVkKDIpfVxyXG4gICAgICAgICAgICA8L0J1dHRvbj5cclxuICAgICAgICAgIDwvUmVzcG9uc2l2ZU1vZGFsRm9vdGVyPlxyXG4gICAgICAgIH1cclxuICAgICAgPlxyXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS00XCI+XHJcbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImdyaWQgZ3JpZC1jb2xzLTIgc206Z3JpZC1jb2xzLTQgZ2FwLTJcIj5cclxuICAgICAgICAgICAge1RPUFVQX1BSRVNFVFMubWFwKCh2KSA9PiAoXHJcbiAgICAgICAgICAgICAgPGJ1dHRvblxyXG4gICAgICAgICAgICAgICAga2V5PXt2fVxyXG4gICAgICAgICAgICAgICAgb25DbGljaz17KCkgPT4gc2V0VG9wdXBBbW91bnQodil9XHJcbiAgICAgICAgICAgICAgICBjbGFzc05hbWU9e2NuKFxyXG4gICAgICAgICAgICAgICAgICBcImgtMTIgc206aC0xMSByb3VuZGVkLWxnIGJvcmRlciB0ZXh0LWJhc2Ugc206dGV4dC1zbSBmb250LXNlbWlib2xkIHRyYW5zaXRpb24gYWN0aXZlOnNjYWxlLTk1IHRvdWNoLW1hbmlwdWxhdGlvbiB0YWJ1bGFyLW51bXNcIixcclxuICAgICAgICAgICAgICAgICAgdG9wdXBBbW91bnQgPT09IHZcclxuICAgICAgICAgICAgICAgICAgICA/IFwiYm9yZGVyLXByaW1hcnkgYmctcHJpbWFyeS8xMCB0ZXh0LXByaW1hcnlcIlxyXG4gICAgICAgICAgICAgICAgICAgIDogXCJib3JkZXItYm9yZGVyIGhvdmVyOmJvcmRlci1wcmltYXJ5LzQwXCJcclxuICAgICAgICAgICAgICAgICl9XHJcbiAgICAgICAgICAgICAgPlxyXG4gICAgICAgICAgICAgICAgJHt2fVxyXG4gICAgICAgICAgICAgIDwvYnV0dG9uPlxyXG4gICAgICAgICAgICApKX1cclxuICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgPGRpdj5cclxuICAgICAgICAgICAgPExhYmVsIGNsYXNzTmFtZT17bWtMYWJlbH0+Q3VzdG9tIGFtb3VudCAoJCk8L0xhYmVsPlxyXG4gICAgICAgICAgICA8SW5wdXRcclxuICAgICAgICAgICAgICB0eXBlPVwibnVtYmVyXCJcclxuICAgICAgICAgICAgICBpbnB1dE1vZGU9XCJkZWNpbWFsXCJcclxuICAgICAgICAgICAgICBtaW49ezV9XHJcbiAgICAgICAgICAgICAgc3RlcD17NX1cclxuICAgICAgICAgICAgICB2YWx1ZT17dG9wdXBBbW91bnR9XHJcbiAgICAgICAgICAgICAgb25DaGFuZ2U9eyhlKSA9PiBzZXRUb3B1cEFtb3VudCgrZS50YXJnZXQudmFsdWUgfHwgMCl9XHJcbiAgICAgICAgICAgICAgY2xhc3NOYW1lPVwiaC0xMSBzbTpoLTEwIHRleHQtYmFzZSBzbTp0ZXh0LXNtXCJcclxuICAgICAgICAgICAgLz5cclxuICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgIDwvZGl2PlxyXG4gICAgICA8L1Jlc3BvbnNpdmVNb2RhbD5cclxuXHJcbiAgICAgIHsvKiBMZWRnZXIgZGV0YWlsIG1vZGFsICovfVxyXG4gICAgICA8UmVzcG9uc2l2ZU1vZGFsXHJcbiAgICAgICAgb3Blbj17ISFsZWRnZXJEZXRhaWx9XHJcbiAgICAgICAgb25PcGVuQ2hhbmdlPXsobykgPT4gIW8gJiYgc2V0TGVkZ2VyRGV0YWlsKG51bGwpfVxyXG4gICAgICAgIHRpdGxlPVwiVHJhbnNhY3Rpb24gZGV0YWlsc1wiXHJcbiAgICAgICAgZm9vdGVyPXtcclxuICAgICAgICAgIDxCdXR0b24gY2xhc3NOYW1lPVwidy1mdWxsIHNtOnctYXV0byBoLTEwIHNtOm1sLWF1dG9cIiBvbkNsaWNrPXsoKSA9PiBzZXRMZWRnZXJEZXRhaWwobnVsbCl9PlxyXG4gICAgICAgICAgICBDbG9zZVxyXG4gICAgICAgICAgPC9CdXR0b24+XHJcbiAgICAgICAgfVxyXG4gICAgICA+XHJcbiAgICAgICAge2xlZGdlckRldGFpbCAmJiAoXHJcbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktM1wiPlxyXG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInJvdW5kZWQtbGcgYmctbXV0ZWQvNDAgcC0zIHNwYWNlLXktMlwiPlxyXG4gICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBqdXN0aWZ5LWJldHdlZW4gaXRlbXMtc3RhcnQgZ2FwLTJcIj5cclxuICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT17bWtMYWJlbH0+VHlwZTwvc3Bhbj5cclxuICAgICAgICAgICAgICAgIDxCYWRnZSB2YXJpYW50PVwic2Vjb25kYXJ5XCIgY2xhc3NOYW1lPVwidGV4dC1bMTBweF0gY2FwaXRhbGl6ZVwiPntsZWRnZXJEZXRhaWwuZW50cnlfdHlwZX08L0JhZGdlPlxyXG4gICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBqdXN0aWZ5LWJldHdlZW4gaXRlbXMtc3RhcnQgZ2FwLTJcIj5cclxuICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT17bWtMYWJlbH0+QW1vdW50PC9zcGFuPlxyXG4gICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPXtjbihcclxuICAgICAgICAgICAgICAgICAgXCJ0ZXh0LWJhc2UgZm9udC1ib2xkIHRhYnVsYXItbnVtc1wiLFxyXG4gICAgICAgICAgICAgICAgICAobGVkZ2VyRGV0YWlsLmVudHJ5X3R5cGUgPT09IFwidG9wdXBcIiB8fCBsZWRnZXJEZXRhaWwuZW50cnlfdHlwZSA9PT0gXCJyZWZ1bmRcIilcclxuICAgICAgICAgICAgICAgICAgICA/IFwidGV4dC1lbWVyYWxkLTYwMFwiIDogXCJ0ZXh0LWZvcmVncm91bmRcIlxyXG4gICAgICAgICAgICAgICAgKX0+XHJcbiAgICAgICAgICAgICAgICAgICR7KGxlZGdlckRldGFpbC5hbW91bnRfY2VudHMgLyAxMDApLnRvRml4ZWQoMil9XHJcbiAgICAgICAgICAgICAgICA8L3NwYW4+XHJcbiAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGp1c3RpZnktYmV0d2VlbiBpdGVtcy1zdGFydCBnYXAtMlwiPlxyXG4gICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPXtta0xhYmVsfT5CYWxhbmNlIGFmdGVyPC9zcGFuPlxyXG4gICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwidGV4dC1zbSBmb250LXNlbWlib2xkIHRhYnVsYXItbnVtc1wiPlxyXG4gICAgICAgICAgICAgICAgICAkeyhsZWRnZXJEZXRhaWwuYmFsYW5jZV9hZnRlcl9jZW50cyAvIDEwMCkudG9GaXhlZCgyKX1cclxuICAgICAgICAgICAgICAgIDwvc3Bhbj5cclxuICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXgganVzdGlmeS1iZXR3ZWVuIGl0ZW1zLXN0YXJ0IGdhcC0yXCI+XHJcbiAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9e21rTGFiZWx9PldoZW48L3NwYW4+XHJcbiAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJ0ZXh0LXNtXCI+e2Zvcm1hdChuZXcgRGF0ZShsZWRnZXJEZXRhaWwuY3JlYXRlZF9hdCksIFwiTU1NIGQsIHl5eXkgaDptbSBhXCIpfTwvc3Bhbj5cclxuICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgIHtsZWRnZXJEZXRhaWwuZGVzY3JpcHRpb24gJiYgKFxyXG4gICAgICAgICAgICAgIDxkaXY+XHJcbiAgICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9e21rTGFiZWx9PkRlc2NyaXB0aW9uPC9wPlxyXG4gICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPXtjbihta0JvZHksIFwibXQtMVwiKX0+e2xlZGdlckRldGFpbC5kZXNjcmlwdGlvbn08L3A+XHJcbiAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICl9XHJcbiAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtWzExcHhdIHRleHQtbXV0ZWQtZm9yZWdyb3VuZCBsZWFkaW5nLXJlbGF4ZWRcIj5cclxuICAgICAgICAgICAgICBGb3IgcmVjZWlwdHMgYW5kIHJlZnVuZCByZXF1ZXN0cywgY29udGFjdCBzdXBwb3J0IHdpdGggdGhlIHRyYW5zYWN0aW9uIElEOlxyXG4gICAgICAgICAgICAgIDxjb2RlIGNsYXNzTmFtZT1cIm1sLTEgcHgtMSBweS0wLjUgYmctbXV0ZWQgcm91bmRlZCB0ZXh0LVsxMHB4XSBicmVhay1hbGxcIj57bGVkZ2VyRGV0YWlsLmlkfTwvY29kZT5cclxuICAgICAgICAgICAgPC9wPlxyXG4gICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgKX1cclxuICAgICAgPC9SZXNwb25zaXZlTW9kYWw+XHJcbiAgICA8L0NhcmQ+XHJcbiAgKTtcclxufVxyXG4iXSwibmFtZXMiOlsidXNlRWZmZWN0IiwidXNlU3RhdGUiLCJ1c2VTZWFyY2hQYXJhbXMiLCJDYXJkIiwiQ2FyZENvbnRlbnQiLCJTd2l0Y2giLCJJbnB1dCIsIkxhYmVsIiwiQnV0dG9uIiwiQmFkZ2UiLCJSZXNwb25zaXZlTW9kYWwiLCJSZXNwb25zaXZlTW9kYWxGb290ZXIiLCJzdXBhYmFzZSIsIldhbGxldCIsIlphcCIsIkxvYWRlcjIiLCJQbHVzIiwiSGlzdG9yeSIsIkFycm93RG93bkNpcmNsZSIsIkFycm93VXBDaXJjbGUiLCJSZWNlaXB0IiwidG9hc3QiLCJmb3JtYXQiLCJXYWxsZXRTa2VsZXRvbiIsIk1hcmtldGluZ0VtcHR5U3RhdGUiLCJta0JvZHkiLCJta0lucHV0IiwibWtMYWJlbCIsIm1rTWV0YSIsImNuIiwiVE9QVVBfUFJFU0VUUyIsIkFkc1N0dWRpb1dhbGxldEd1YXJkIiwic3RvcmVJZCIsInBhcmFtcyIsInNldFBhcmFtcyIsImxvYWRpbmciLCJzZXRMb2FkaW5nIiwic2F2aW5nIiwic2V0U2F2aW5nIiwiYmFsYW5jZSIsInNldEJhbGFuY2UiLCJoYXNDYXJkIiwic2V0SGFzQ2FyZCIsImVuYWJsZWQiLCJzZXRFbmFibGVkIiwidGhyZXNob2xkIiwic2V0VGhyZXNob2xkIiwiYW1vdW50Iiwic2V0QW1vdW50IiwidG9wdXBPcGVuIiwic2V0VG9wdXBPcGVuIiwidG9wdXBBbW91bnQiLCJzZXRUb3B1cEFtb3VudCIsInRvcHVwQnVzeSIsInNldFRvcHVwQnVzeSIsImxlZGdlciIsInNldExlZGdlciIsInNob3dMZWRnZXIiLCJzZXRTaG93TGVkZ2VyIiwibGVkZ2VyRGV0YWlsIiwic2V0TGVkZ2VyRGV0YWlsIiwibG9hZCIsImRhdGEiLCJmcm9tIiwic2VsZWN0IiwiZXEiLCJtYXliZVNpbmdsZSIsInciLCJiYWxhbmNlX2NlbnRzIiwiYXV0b19yZWNoYXJnZV9lbmFibGVkIiwidGhyZXNob2xkX2NlbnRzIiwicmVjaGFyZ2VfYW1vdW50X2NlbnRzIiwic3RyaXBlX3BheW1lbnRfbWV0aG9kX2lkIiwibGciLCJvcmRlciIsImFzY2VuZGluZyIsImxpbWl0Iiwic2Vzc2lvbklkIiwiZ2V0IiwidG9wdXAiLCJlcnJvciIsImZ1bmN0aW9ucyIsImludm9rZSIsImJvZHkiLCJzZXNzaW9uX2lkIiwibWVzc2FnZSIsInN0YXR1cyIsInN1Y2Nlc3MiLCJkZWxldGUiLCJyZXBsYWNlIiwiaW5mbyIsInNhdmUiLCJ1cHNlcnQiLCJzdG9yZV9pZCIsIk1hdGgiLCJyb3VuZCIsIm9uQ29uZmxpY3QiLCJzdGFydFRvcHVwIiwiYW1vdW50X2NlbnRzIiwic2F2ZV9jYXJkIiwicmV0dXJuX3VybCIsIndpbmRvdyIsImxvY2F0aW9uIiwicGF0aG5hbWUiLCJ1cmwiLCJocmVmIiwiaXNMb3ciLCJiYWxhbmNlQ29sb3IiLCJjbGFzc05hbWUiLCJkaXYiLCJoMyIsInAiLCJ0b0ZpeGVkIiwidmFyaWFudCIsInNpemUiLCJvbkNsaWNrIiwicyIsImNoZWNrZWQiLCJvbkNoZWNrZWRDaGFuZ2UiLCJ0eXBlIiwibWluIiwic3RlcCIsInZhbHVlIiwib25DaGFuZ2UiLCJlIiwidGFyZ2V0IiwiZGlzYWJsZWQiLCJsZW5ndGgiLCJpY29uIiwidGl0bGUiLCJtYXAiLCJyb3ciLCJjcmVkaXQiLCJlbnRyeV90eXBlIiwiYnV0dG9uIiwiZGVzY3JpcHRpb24iLCJEYXRlIiwiY3JlYXRlZF9hdCIsInNwYW4iLCJpZCIsIm9wZW4iLCJvbk9wZW5DaGFuZ2UiLCJ1bmRlZmluZWQiLCJmb290ZXIiLCJ2IiwiaW5wdXRNb2RlIiwibyIsImJhbGFuY2VfYWZ0ZXJfY2VudHMiLCJjb2RlIl0sIm1hcHBpbmdzIjoiOztBQUFBOzs7Q0FHQyxHQUNELFNBQVNBLFNBQVMsRUFBRUMsUUFBUSxRQUFRLFFBQVE7QUFDNUMsU0FBU0MsZUFBZSxRQUFRLG1CQUFtQjtBQUNuRCxTQUFTQyxJQUFJLEVBQUVDLFdBQVcsUUFBUSx1QkFBdUI7QUFDekQsU0FBU0MsTUFBTSxRQUFRLHlCQUF5QjtBQUNoRCxTQUFTQyxLQUFLLFFBQVEsd0JBQXdCO0FBQzlDLFNBQVNDLEtBQUssUUFBUSx3QkFBd0I7QUFDOUMsU0FB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

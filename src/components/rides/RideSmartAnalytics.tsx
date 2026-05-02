@@ -48,6 +48,25 @@ const maxSpend = Math.max(...weeklyBreakdown.map(d => d.spend));
 export default function RideSmartAnalytics() {
   const [period, setPeriod] = useState<"week" | "month" | "year">("month");
 
+  const downloadReport = () => {
+    const rows = [
+      ["ZIVO Monthly Analytics Report"],
+      [`Period: ${period}`],
+      [""],
+      ["Total Rides", monthlyData.totalRides],
+      ["Total Spent", `$${monthlyData.totalSpent}`],
+      ["Average Per Ride", `$${monthlyData.avgPerRide}`],
+      ["Total Distance", `${monthlyData.totalDistance} mi`],
+      ["Total Time", `${monthlyData.totalTime} min`],
+    ];
+    const csv = rows.map(r => r.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = `zivo-analytics-${period}.csv`; a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Report downloaded!");
+  };
+
   return (
     <div className="space-y-4">
       {/* Period selector */}
@@ -145,7 +164,7 @@ export default function RideSmartAnalytics() {
       </div>
 
       {/* Export */}
-      <Button variant="outline" className="w-full h-12 rounded-2xl text-sm font-bold gap-2" onClick={() => toast.success("Report downloaded!")}>
+      <Button variant="outline" className="w-full h-12 rounded-2xl text-sm font-bold gap-2" onClick={downloadReport}>
         <Download className="w-4 h-4" /> Download Monthly Report
       </Button>
     </div>

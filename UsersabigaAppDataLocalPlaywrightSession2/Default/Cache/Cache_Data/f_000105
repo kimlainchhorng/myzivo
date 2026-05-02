@@ -1,0 +1,555 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/admin/store/lodging/LodgingPayoutsSection.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"]; const _Fragment = __vite__cjsImport0_react_jsxDevRuntime["Fragment"];
+var _s = $RefreshSig$();
+import __vite__cjsImport1_react from "/node_modules/.vite/deps/react.js?v=7fd9520c"; const useEffect = __vite__cjsImport1_react["useEffect"]; const useMemo = __vite__cjsImport1_react["useMemo"]; const useState = __vite__cjsImport1_react["useState"];
+import { Wallet, DollarSign, TrendingUp, Calendar, CalendarClock, CheckCircle2, AlertCircle, Loader2, Send } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+import { useQuery, useQueryClient } from "/node_modules/.vite/deps/@tanstack_react-query.js?v=7fd9520c";
+import { toast } from "/node_modules/.vite/deps/sonner.js?v=7fd9520c";
+import { Button } from "/src/components/ui/button.tsx";
+import { Badge } from "/src/components/ui/badge.tsx";
+import { LoadingPanel, NextActions, SectionShell, StatCard, money, useLodgingOpsData } from "/src/components/admin/store/lodging/LodgingOperationsShared.tsx";
+import LodgingQuickJump from "/src/components/admin/store/lodging/LodgingQuickJump.tsx";
+import LodgingSectionStatusBanner from "/src/components/admin/store/lodging/LodgingSectionStatusBanner.tsx";
+import { useConnectStatus, useConnectOnboard } from "/src/hooks/useStripeConnect.ts";
+import LodgingPayoutAccountCard from "/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx";
+import PayoutInstructionsPanel from "/src/components/admin/store/lodging/PayoutInstructionsPanel.tsx";
+import LodgingPayoutHistoryTable from "/src/components/admin/store/lodging/LodgingPayoutHistoryTable.tsx";
+import LodgingRequestPayoutSheet from "/src/components/admin/store/lodging/LodgingRequestPayoutSheet.tsx";
+import { supabase } from "/src/integrations/supabase/client.ts";
+import { recommendedRail, normalizeCountry } from "/src/lib/payouts/payoutRails.ts";
+/**
+ * Payouts & Finance — full multi-rail flow:
+ *  - Stripe Connect (US + supported countries) with auto-fallback to manual rails
+ *  - ABA / bank wire / PayPal for unsupported markets (Cambodia, etc.)
+ *  - Country-aware fees & instructions
+ *  - Real payout history with status flow (requested → processing → completed/failed)
+ *  - Host-initiated payout request sheet
+ */ export default function LodgingPayoutsSection({ storeId }) {
+    _s();
+    const { reservations, isLoading } = useLodgingOpsData(storeId);
+    const { data: connect, isLoading: connectLoading } = useConnectStatus();
+    const onboard = useConnectOnboard();
+    const queryClient = useQueryClient();
+    const [requestOpen, setRequestOpen] = useState(false);
+    // Pull store country from the store profile (more reliable than reservation rows)
+    const { data: store } = useQuery({
+        queryKey: [
+            "lodge-store-country",
+            storeId
+        ],
+        queryFn: async ()=>{
+            const { data, error } = await supabase.from("store_profiles").select("id, market").eq("id", storeId).maybeSingle();
+            if (error) throw error;
+            return data;
+        },
+        enabled: !!storeId
+    });
+    const storeCountry = normalizeCountry(store?.market || reservations[0]?.country || "US");
+    // Already-requested amount (so available = net − pending/approved)
+    const { data: openRequests = [] } = useQuery({
+        queryKey: [
+            "lodge-payout-open-amounts",
+            storeId
+        ],
+        queryFn: async ()=>{
+            const { data, error } = await supabase.from("lodge_payout_requests").select("amount_cents,status").eq("store_id", storeId).in("status", [
+                "pending",
+                "approved"
+            ]);
+            if (error) throw error;
+            return data || [];
+        },
+        enabled: !!storeId
+    });
+    // Handle return from Stripe onboarding
+    useEffect(()=>{
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("connect") === "done") {
+            queryClient.invalidateQueries({
+                queryKey: [
+                    "stripe-connect-status"
+                ]
+            });
+            toast.success("Stripe setup updated — refreshing status…");
+            params.delete("connect");
+            const qs = params.toString();
+            window.history.replaceState({}, "", `${window.location.pathname}${qs ? "?" + qs : ""}`);
+        }
+    }, [
+        queryClient
+    ]);
+    const stats = useMemo(()=>{
+        const paid = reservations.filter((r)=>r.payment_status === "paid" || r.status === "checked_out");
+        const pending = reservations.filter((r)=>r.payment_status === "pending" || r.payment_status === "deposit");
+        const upcoming = reservations.filter((r)=>[
+                "confirmed",
+                "checked_in"
+            ].includes(r.status));
+        const totalRevenue = paid.reduce((s, r)=>s + (r.total_cents || 0), 0);
+        const platformFee = Math.round(totalRevenue * 0.02);
+        const netPayout = totalRevenue - platformFee;
+        const pendingAmount = pending.reduce((s, r)=>s + (r.total_cents || 0), 0);
+        const upcomingAmount = upcoming.reduce((s, r)=>s + (r.total_cents || 0), 0);
+        const byMonth = {};
+        paid.forEach((r)=>{
+            const month = (r.check_out || r.check_in || r.created_at || "").slice(0, 7);
+            if (!month) return;
+            byMonth[month] = (byMonth[month] || 0) + (r.total_cents || 0);
+        });
+        const months = Object.entries(byMonth).sort(([a], [b])=>b.localeCompare(a)).slice(0, 6);
+        const reservedForPayout = openRequests.reduce((s, r)=>s + (r.amount_cents || 0), 0);
+        const available = Math.max(0, netPayout - reservedForPayout);
+        return {
+            totalRevenue,
+            platformFee,
+            netPayout,
+            pendingAmount,
+            upcomingAmount,
+            paidCount: paid.length,
+            upcomingCount: upcoming.length,
+            months,
+            paidReservations: paid,
+            available
+        };
+    }, [
+        reservations,
+        openRequests
+    ]);
+    const exportCsv = ()=>{
+        const header = "Reservation ID,Guest,Check-in,Check-out,Status,Gross USD,Platform Fee USD,Net USD";
+        const rows = stats.paidReservations.map((r)=>{
+            const gross = (r.total_cents || 0) / 100;
+            const fee = Math.round((r.total_cents || 0) * 0.02) / 100;
+            const net = gross - fee;
+            const guest = (r.guest_name || r.guest_email || "—").replace(/,/g, " ");
+            return `${r.id || ""},${guest},${r.check_in || ""},${r.check_out || ""},${r.status || ""},${gross.toFixed(2)},${fee.toFixed(2)},${net.toFixed(2)}`;
+        });
+        const csv = [
+            header,
+            ...rows
+        ].join("\n");
+        const blob = new Blob([
+            csv
+        ], {
+            type: "text/csv"
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `lodging-payouts-${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+    // Re-use the country-aware fallback logic when host clicks "Finish setup"
+    const startOnboarding = ()=>{
+        const recommended = recommendedRail(storeCountry);
+        if (recommended !== "stripe") {
+            toast.info(`Stripe Connect isn't available in ${storeCountry}. Set up a manual payout method below.`);
+            return;
+        }
+        onboard.mutate(storeCountry);
+    };
+    const payoutsEnabled = !!connect?.payouts_enabled;
+    const showPayoutBlockedBanner = !connectLoading && !payoutsEnabled && stats.pendingAmount > 0 && recommendedRail(storeCountry) === "stripe";
+    return /*#__PURE__*/ _jsxDEV(SectionShell, {
+        title: "Payouts & Finance",
+        subtitle: "Revenue, platform fees, payout methods, and status of every payout.",
+        icon: Wallet,
+        actions: /*#__PURE__*/ _jsxDEV("div", {
+            className: "flex gap-1.5",
+            children: [
+                /*#__PURE__*/ _jsxDEV(Button, {
+                    size: "sm",
+                    variant: "outline",
+                    onClick: exportCsv,
+                    children: "Export CSV"
+                }, void 0, false, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                    lineNumber: 144,
+                    columnNumber: 11
+                }, this),
+                /*#__PURE__*/ _jsxDEV(Button, {
+                    size: "sm",
+                    onClick: ()=>setRequestOpen(true),
+                    disabled: stats.available <= 0,
+                    children: [
+                        /*#__PURE__*/ _jsxDEV(Send, {
+                            className: "h-3.5 w-3.5 mr-1.5"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                            lineNumber: 146,
+                            columnNumber: 13
+                        }, this),
+                        "Request payout"
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                    lineNumber: 145,
+                    columnNumber: 11
+                }, this)
+            ]
+        }, void 0, true, {
+            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+            lineNumber: 143,
+            columnNumber: 9
+        }, this),
+        children: [
+            /*#__PURE__*/ _jsxDEV(LodgingQuickJump, {
+                active: "lodge-payouts"
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                lineNumber: 151,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV(LodgingSectionStatusBanner, {
+                title: "Payouts & Finance",
+                icon: Wallet,
+                countLabel: "Pending revenue",
+                countValue: money(stats.pendingAmount),
+                fixLabel: "Open Reports",
+                fixTab: "lodge-reports"
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                lineNumber: 152,
+                columnNumber: 7
+            }, this),
+            isLoading ? /*#__PURE__*/ _jsxDEV(LoadingPanel, {}, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                lineNumber: 153,
+                columnNumber: 20
+            }, this) : /*#__PURE__*/ _jsxDEV(_Fragment, {
+                children: [
+                    showPayoutBlockedBanner && /*#__PURE__*/ _jsxDEV("div", {
+                        className: "rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 flex items-start gap-3",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(AlertCircle, {
+                                className: "h-4 w-4 text-amber-600 mt-0.5 shrink-0"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                                lineNumber: 156,
+                                columnNumber: 13
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "flex-1 min-w-0",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV("p", {
+                                        className: "text-sm font-semibold",
+                                        children: "Payouts are paused"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                                        lineNumber: 158,
+                                        columnNumber: 15
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("p", {
+                                        className: "text-xs text-muted-foreground mt-0.5",
+                                        children: [
+                                            "You have ",
+                                            money(stats.pendingAmount),
+                                            " pending. Complete Stripe onboarding to receive funds in your bank account."
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                                        lineNumber: 159,
+                                        columnNumber: 15
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                                lineNumber: 157,
+                                columnNumber: 13
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(Button, {
+                                size: "sm",
+                                onClick: startOnboarding,
+                                disabled: onboard.isPending,
+                                children: onboard.isPending ? /*#__PURE__*/ _jsxDEV(Loader2, {
+                                    className: "h-3.5 w-3.5 animate-spin"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                                    lineNumber: 164,
+                                    columnNumber: 36
+                                }, this) : "Finish setup"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                                lineNumber: 163,
+                                columnNumber: 13
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                        lineNumber: 155,
+                        columnNumber: 11
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(StatCard, {
+                                label: "Total revenue",
+                                value: money(stats.totalRevenue),
+                                icon: DollarSign
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                                lineNumber: 170,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(StatCard, {
+                                label: "Platform fee (2%)",
+                                value: money(stats.platformFee),
+                                icon: TrendingUp
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                                lineNumber: 171,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(StatCard, {
+                                label: "Available",
+                                value: money(stats.available),
+                                icon: Wallet
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                                lineNumber: 172,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(StatCard, {
+                                label: "Upcoming revenue",
+                                value: money(stats.upcomingAmount),
+                                icon: CalendarClock
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                                lineNumber: 173,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(StatCard, {
+                                label: "Pending",
+                                value: money(stats.pendingAmount),
+                                icon: Calendar
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                                lineNumber: 174,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(StatCard, {
+                                label: "Paid bookings",
+                                value: String(stats.paidCount),
+                                icon: CheckCircle2
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                                lineNumber: 175,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                        lineNumber: 169,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(PayoutInstructionsPanel, {
+                        country: storeCountry
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                        lineNumber: 179,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(LodgingPayoutAccountCard, {
+                        storeId: storeId,
+                        storeCountry: storeCountry
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                        lineNumber: 182,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "rounded-lg border border-border bg-card p-4",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "mb-3 flex items-center justify-between",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV("p", {
+                                        className: "text-sm font-semibold",
+                                        children: "Monthly revenue"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                                        lineNumber: 187,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV(Badge, {
+                                        variant: "outline",
+                                        children: [
+                                            stats.months.length,
+                                            " month",
+                                            stats.months.length === 1 ? "" : "s"
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                                        lineNumber: 188,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                                lineNumber: 186,
+                                columnNumber: 11
+                            }, this),
+                            stats.months.length === 0 ? /*#__PURE__*/ _jsxDEV("p", {
+                                className: "text-sm text-muted-foreground",
+                                children: "No paid reservations yet. Once guests check out, monthly totals will appear here."
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                                lineNumber: 191,
+                                columnNumber: 13
+                            }, this) : /*#__PURE__*/ _jsxDEV("div", {
+                                className: "space-y-2",
+                                children: stats.months.map(([month, value])=>{
+                                    const max = Math.max(...stats.months.map(([, v])=>v));
+                                    const pct = max > 0 ? value / max * 100 : 0;
+                                    return /*#__PURE__*/ _jsxDEV("div", {
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV("div", {
+                                                className: "mb-1 flex justify-between text-xs",
+                                                children: [
+                                                    /*#__PURE__*/ _jsxDEV("span", {
+                                                        className: "font-medium",
+                                                        children: new Date(month + "-01").toLocaleString("default", {
+                                                            month: "long",
+                                                            year: "numeric"
+                                                        })
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                                                        lineNumber: 200,
+                                                        columnNumber: 23
+                                                    }, this),
+                                                    /*#__PURE__*/ _jsxDEV("span", {
+                                                        className: "text-muted-foreground",
+                                                        children: money(value)
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                                                        lineNumber: 201,
+                                                        columnNumber: 23
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                                                lineNumber: 199,
+                                                columnNumber: 21
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV("div", {
+                                                className: "h-2 rounded-full bg-muted",
+                                                children: /*#__PURE__*/ _jsxDEV("div", {
+                                                    className: "h-2 rounded-full bg-primary",
+                                                    style: {
+                                                        width: `${pct}%`
+                                                    }
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                                                    lineNumber: 204,
+                                                    columnNumber: 23
+                                                }, this)
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                                                lineNumber: 203,
+                                                columnNumber: 21
+                                            }, this)
+                                        ]
+                                    }, month, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                                        lineNumber: 198,
+                                        columnNumber: 19
+                                    }, this);
+                                })
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                                lineNumber: 193,
+                                columnNumber: 13
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                        lineNumber: 185,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(LodgingPayoutHistoryTable, {
+                        storeId: storeId
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                        lineNumber: 214,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(NextActions, {
+                        actions: [
+                            {
+                                label: "Review reservations",
+                                tab: "lodge-reservations",
+                                hint: "Confirm bookings are tagged with correct payment status."
+                            },
+                            {
+                                label: "Tune rate plans",
+                                tab: "lodge-rate-plans",
+                                hint: "Optimize pricing to grow revenue."
+                            },
+                            {
+                                label: "Run promotions",
+                                tab: "lodge-promos",
+                                hint: "Drive occupancy with discounts and codes."
+                            }
+                        ]
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                        lineNumber: 216,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true),
+            /*#__PURE__*/ _jsxDEV(LodgingRequestPayoutSheet, {
+                storeId: storeId,
+                storeCountry: storeCountry,
+                availableCents: stats.available,
+                open: requestOpen,
+                onOpenChange: setRequestOpen
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+                lineNumber: 223,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx",
+        lineNumber: 138,
+        columnNumber: 5
+    }, this);
+}
+_s(LodgingPayoutsSection, "919moQsZNECjv1YRCqPygOUB8pg=", false, function() {
+    return [
+        useLodgingOpsData,
+        useConnectStatus,
+        useConnectOnboard,
+        useQueryClient,
+        useQuery,
+        useQuery
+    ];
+});
+_c = LodgingPayoutsSection;
+var _c;
+$RefreshReg$(_c, "LodgingPayoutsSection");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutsSection.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIkxvZGdpbmdQYXlvdXRzU2VjdGlvbi50c3giXSwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHsgdXNlRWZmZWN0LCB1c2VNZW1vLCB1c2VTdGF0ZSB9IGZyb20gXCJyZWFjdFwiO1xyXG5pbXBvcnQgeyBXYWxsZXQsIERvbGxhclNpZ24sIFRyZW5kaW5nVXAsIENhbGVuZGFyLCBDYWxlbmRhckNsb2NrLCBDaGVja0NpcmNsZTIsIEFsZXJ0Q2lyY2xlLCBMb2FkZXIyLCBTZW5kIH0gZnJvbSBcImx1Y2lkZS1yZWFjdFwiO1xyXG5pbXBvcnQgeyB1c2VRdWVyeSwgdXNlUXVlcnlDbGllbnQgfSBmcm9tIFwiQHRhbnN0YWNrL3JlYWN0LXF1ZXJ5XCI7XHJcbmltcG9ydCB7IHRvYXN0IH0gZnJvbSBcInNvbm5lclwiO1xyXG5pbXBvcnQgeyBCdXR0b24gfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2J1dHRvblwiO1xyXG5pbXBvcnQgeyBCYWRnZSB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvYmFkZ2VcIjtcclxuaW1wb3J0IHsgTG9hZGluZ1BhbmVsLCBOZXh0QWN0aW9ucywgU2VjdGlvblNoZWxsLCBTdGF0Q2FyZCwgbW9uZXksIHVzZUxvZGdpbmdPcHNEYXRhIH0gZnJvbSBcIi4vTG9kZ2luZ09wZXJhdGlvbnNTaGFyZWRcIjtcclxuaW1wb3J0IExvZGdpbmdRdWlja0p1bXAgZnJvbSBcIi4vTG9kZ2luZ1F1aWNrSnVtcFwiO1xyXG5pbXBvcnQgTG9kZ2luZ1NlY3Rpb25TdGF0dXNCYW5uZXIgZnJvbSBcIi4vTG9kZ2luZ1NlY3Rpb25TdGF0dXNCYW5uZXJcIjtcclxuaW1wb3J0IHsgdXNlQ29ubmVjdFN0YXR1cywgdXNlQ29ubmVjdE9uYm9hcmQgfSBmcm9tIFwiQC9ob29rcy91c2VTdHJpcGVDb25uZWN0XCI7XHJcbmltcG9ydCBMb2RnaW5nUGF5b3V0QWNjb3VudENhcmQgZnJvbSBcIi4vTG9kZ2luZ1BheW91dEFjY291bnRDYXJkXCI7XHJcbmltcG9ydCBQYXlvdXRJbnN0cnVjdGlvbnNQYW5lbCBmcm9tIFwiLi9QYXlvdXRJbnN0cnVjdGlvbnNQYW5lbFwiO1xyXG5pbXBvcnQgTG9kZ2luZ1BheW91dEhpc3RvcnlUYWJsZSBmcm9tIFwiLi9Mb2RnaW5nUGF5b3V0SGlzdG9yeVRhYmxlXCI7XHJcbmltcG9ydCBMb2RnaW5nUmVxdWVzdFBheW91dFNoZWV0IGZyb20gXCIuL0xvZGdpbmdSZXF1ZXN0UGF5b3V0U2hlZXRcIjtcclxuaW1wb3J0IHsgc3VwYWJhc2UgfSBmcm9tIFwiQC9pbnRlZ3JhdGlvbnMvc3VwYWJhc2UvY2xpZW50XCI7XHJcbmltcG9ydCB7IHJlY29tbWVuZGVkUmFpbCwgbm9ybWFsaXplQ291bnRyeSB9IGZyb20gXCJAL2xpYi9wYXlvdXRzL3BheW91dFJhaWxzXCI7XHJcblxyXG4vKipcclxuICogUGF5b3V0cyAmIEZpbmFuY2Ug4oCUIGZ1bGwgbXVsdGktcmFpbCBmbG93OlxyXG4gKiAgLSBTdHJpcGUgQ29ubmVjdCAoVVMgKyBzdXBwb3J0ZWQgY291bnRyaWVzKSB3aXRoIGF1dG8tZmFsbGJhY2sgdG8gbWFudWFsIHJhaWxzXHJcbiAqICAtIEFCQSAvIGJhbmsgd2lyZSAvIFBheVBhbCBmb3IgdW5zdXBwb3J0ZWQgbWFya2V0cyAoQ2FtYm9kaWEsIGV0Yy4pXHJcbiAqICAtIENvdW50cnktYXdhcmUgZmVlcyAmIGluc3RydWN0aW9uc1xyXG4gKiAgLSBSZWFsIHBheW91dCBoaXN0b3J5IHdpdGggc3RhdHVzIGZsb3cgKHJlcXVlc3RlZCDihpIgcHJvY2Vzc2luZyDihpIgY29tcGxldGVkL2ZhaWxlZClcclxuICogIC0gSG9zdC1pbml0aWF0ZWQgcGF5b3V0IHJlcXVlc3Qgc2hlZXRcclxuICovXHJcbmV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uIExvZGdpbmdQYXlvdXRzU2VjdGlvbih7IHN0b3JlSWQgfTogeyBzdG9yZUlkOiBzdHJpbmcgfSkge1xyXG4gIGNvbnN0IHsgcmVzZXJ2YXRpb25zLCBpc0xvYWRpbmcgfSA9IHVzZUxvZGdpbmdPcHNEYXRhKHN0b3JlSWQpO1xyXG4gIGNvbnN0IHsgZGF0YTogY29ubmVjdCwgaXNMb2FkaW5nOiBjb25uZWN0TG9hZGluZyB9ID0gdXNlQ29ubmVjdFN0YXR1cygpO1xyXG4gIGNvbnN0IG9uYm9hcmQgPSB1c2VDb25uZWN0T25ib2FyZCgpO1xyXG4gIGNvbnN0IHF1ZXJ5Q2xpZW50ID0gdXNlUXVlcnlDbGllbnQoKTtcclxuICBjb25zdCBbcmVxdWVzdE9wZW4sIHNldFJlcXVlc3RPcGVuXSA9IHVzZVN0YXRlKGZhbHNlKTtcclxuXHJcbiAgLy8gUHVsbCBzdG9yZSBjb3VudHJ5IGZyb20gdGhlIHN0b3JlIHByb2ZpbGUgKG1vcmUgcmVsaWFibGUgdGhhbiByZXNlcnZhdGlvbiByb3dzKVxyXG4gIGNvbnN0IHsgZGF0YTogc3RvcmUgfSA9IHVzZVF1ZXJ5KHtcclxuICAgIHF1ZXJ5S2V5OiBbXCJsb2RnZS1zdG9yZS1jb3VudHJ5XCIsIHN0b3JlSWRdLFxyXG4gICAgcXVlcnlGbjogYXN5bmMgKCkgPT4ge1xyXG4gICAgICBjb25zdCB7IGRhdGEsIGVycm9yIH0gPSBhd2FpdCBzdXBhYmFzZVxyXG4gICAgICAgIC5mcm9tKFwic3RvcmVfcHJvZmlsZXNcIilcclxuICAgICAgICAuc2VsZWN0KFwiaWQsIG1hcmtldFwiKVxyXG4gICAgICAgIC5lcShcImlkXCIsIHN0b3JlSWQpXHJcbiAgICAgICAgLm1heWJlU2luZ2xlKCk7XHJcbiAgICAgIGlmIChlcnJvcikgdGhyb3cgZXJyb3I7XHJcbiAgICAgIHJldHVybiBkYXRhIGFzIHsgaWQ6IHN0cmluZzsgbWFya2V0OiBzdHJpbmcgfCBudWxsIH0gfCBudWxsO1xyXG4gICAgfSxcclxuICAgIGVuYWJsZWQ6ICEhc3RvcmVJZCxcclxuICB9KTtcclxuICBjb25zdCBzdG9yZUNvdW50cnkgPSBub3JtYWxpemVDb3VudHJ5KHN0b3JlPy5tYXJrZXQgfHwgKHJlc2VydmF0aW9uc1swXSBhcyBhbnkpPy5jb3VudHJ5IHx8IFwiVVNcIik7XHJcblxyXG4gIC8vIEFscmVhZHktcmVxdWVzdGVkIGFtb3VudCAoc28gYXZhaWxhYmxlID0gbmV0IOKIkiBwZW5kaW5nL2FwcHJvdmVkKVxyXG4gIGNvbnN0IHsgZGF0YTogb3BlblJlcXVlc3RzID0gW10gfSA9IHVzZVF1ZXJ5KHtcclxuICAgIHF1ZXJ5S2V5OiBbXCJsb2RnZS1wYXlvdXQtb3Blbi1hbW91bnRzXCIsIHN0b3JlSWRdLFxyXG4gICAgcXVlcnlGbjogYXN5bmMgKCkgPT4ge1xyXG4gICAgICBjb25zdCB7IGRhdGEsIGVycm9yIH0gPSBhd2FpdCAoc3VwYWJhc2VcclxuICAgICAgICAuZnJvbShcImxvZGdlX3BheW91dF9yZXF1ZXN0c1wiKSBhcyBhbnkpXHJcbiAgICAgICAgLnNlbGVjdChcImFtb3VudF9jZW50cyxzdGF0dXNcIilcclxuICAgICAgICAuZXEoXCJzdG9yZV9pZFwiLCBzdG9yZUlkKVxyXG4gICAgICAgIC5pbihcInN0YXR1c1wiLCBbXCJwZW5kaW5nXCIsIFwiYXBwcm92ZWRcIl0pO1xyXG4gICAgICBpZiAoZXJyb3IpIHRocm93IGVycm9yO1xyXG4gICAgICByZXR1cm4gKGRhdGEgfHwgW10pIGFzIHsgYW1vdW50X2NlbnRzOiBudW1iZXI7IHN0YXR1czogc3RyaW5nIH1bXTtcclxuICAgIH0sXHJcbiAgICBlbmFibGVkOiAhIXN0b3JlSWQsXHJcbiAgfSk7XHJcblxyXG4gIC8vIEhhbmRsZSByZXR1cm4gZnJvbSBTdHJpcGUgb25ib2FyZGluZ1xyXG4gIHVzZUVmZmVjdCgoKSA9PiB7XHJcbiAgICBjb25zdCBwYXJhbXMgPSBuZXcgVVJMU2VhcmNoUGFyYW1zKHdpbmRvdy5sb2NhdGlvbi5zZWFyY2gpO1xyXG4gICAgaWYgKHBhcmFtcy5nZXQoXCJjb25uZWN0XCIpID09PSBcImRvbmVcIikge1xyXG4gICAgICBxdWVyeUNsaWVudC5pbnZhbGlkYXRlUXVlcmllcyh7IHF1ZXJ5S2V5OiBbXCJzdHJpcGUtY29ubmVjdC1zdGF0dXNcIl0gfSk7XHJcbiAgICAgIHRvYXN0LnN1Y2Nlc3MoXCJTdHJpcGUgc2V0dXAgdXBkYXRlZCDigJQgcmVmcmVzaGluZyBzdGF0dXPigKZcIik7XHJcbiAgICAgIHBhcmFtcy5kZWxldGUoXCJjb25uZWN0XCIpO1xyXG4gICAgICBjb25zdCBxcyA9IHBhcmFtcy50b1N0cmluZygpO1xyXG4gICAgICB3aW5kb3cuaGlzdG9yeS5yZXBsYWNlU3RhdGUoe30sIFwiXCIsIGAke3dpbmRvdy5sb2NhdGlvbi5wYXRobmFtZX0ke3FzID8gXCI/XCIgKyBxcyA6IFwiXCJ9YCk7XHJcbiAgICB9XHJcbiAgfSwgW3F1ZXJ5Q2xpZW50XSk7XHJcblxyXG4gIGNvbnN0IHN0YXRzID0gdXNlTWVtbygoKSA9PiB7XHJcbiAgICBjb25zdCBwYWlkID0gcmVzZXJ2YXRpb25zLmZpbHRlcigocikgPT4gci5wYXltZW50X3N0YXR1cyA9PT0gXCJwYWlkXCIgfHwgci5zdGF0dXMgPT09IFwiY2hlY2tlZF9vdXRcIik7XHJcbiAgICBjb25zdCBwZW5kaW5nID0gcmVzZXJ2YXRpb25zLmZpbHRlcigocikgPT4gci5wYXltZW50X3N0YXR1cyA9PT0gXCJwZW5kaW5nXCIgfHwgci5wYXltZW50X3N0YXR1cyA9PT0gXCJkZXBvc2l0XCIpO1xyXG4gICAgY29uc3QgdXBjb21pbmcgPSByZXNlcnZhdGlvbnMuZmlsdGVyKChyKSA9PiBbXCJjb25maXJtZWRcIiwgXCJjaGVja2VkX2luXCJdLmluY2x1ZGVzKHIuc3RhdHVzKSk7XHJcblxyXG4gICAgY29uc3QgdG90YWxSZXZlbnVlID0gcGFpZC5yZWR1Y2UoKHM6IG51bWJlciwgcjogYW55KSA9PiBzICsgKHIudG90YWxfY2VudHMgfHwgMCksIDApO1xyXG4gICAgY29uc3QgcGxhdGZvcm1GZWUgPSBNYXRoLnJvdW5kKHRvdGFsUmV2ZW51ZSAqIDAuMDIpO1xyXG4gICAgY29uc3QgbmV0UGF5b3V0ID0gdG90YWxSZXZlbnVlIC0gcGxhdGZvcm1GZWU7XHJcbiAgICBjb25zdCBwZW5kaW5nQW1vdW50ID0gcGVuZGluZy5yZWR1Y2UoKHM6IG51bWJlciwgcjogYW55KSA9PiBzICsgKHIudG90YWxfY2VudHMgfHwgMCksIDApO1xyXG4gICAgY29uc3QgdXBjb21pbmdBbW91bnQgPSB1cGNvbWluZy5yZWR1Y2UoKHM6IG51bWJlciwgcjogYW55KSA9PiBzICsgKHIudG90YWxfY2VudHMgfHwgMCksIDApO1xyXG5cclxuICAgIGNvbnN0IGJ5TW9udGg6IFJlY29yZDxzdHJpbmcsIG51bWJlcj4gPSB7fTtcclxuICAgIHBhaWQuZm9yRWFjaCgocjogYW55KSA9PiB7XHJcbiAgICAgIGNvbnN0IG1vbnRoID0gKHIuY2hlY2tfb3V0IHx8IHIuY2hlY2tfaW4gfHwgci5jcmVhdGVkX2F0IHx8IFwiXCIpLnNsaWNlKDAsIDcpO1xyXG4gICAgICBpZiAoIW1vbnRoKSByZXR1cm47XHJcbiAgICAgIGJ5TW9udGhbbW9udGhdID0gKGJ5TW9udGhbbW9udGhdIHx8IDApICsgKHIudG90YWxfY2VudHMgfHwgMCk7XHJcbiAgICB9KTtcclxuICAgIGNvbnN0IG1vbnRocyA9IE9iamVjdC5lbnRyaWVzKGJ5TW9udGgpLnNvcnQoKFthXSwgW2JdKSA9PiBiLmxvY2FsZUNvbXBhcmUoYSkpLnNsaWNlKDAsIDYpO1xyXG5cclxuICAgIGNvbnN0IHJlc2VydmVkRm9yUGF5b3V0ID0gb3BlblJlcXVlc3RzLnJlZHVjZSgocywgcikgPT4gcyArIChyLmFtb3VudF9jZW50cyB8fCAwKSwgMCk7XHJcbiAgICBjb25zdCBhdmFpbGFibGUgPSBNYXRoLm1heCgwLCBuZXRQYXlvdXQgLSByZXNlcnZlZEZvclBheW91dCk7XHJcblxyXG4gICAgcmV0dXJuIHtcclxuICAgICAgdG90YWxSZXZlbnVlLCBwbGF0Zm9ybUZlZSwgbmV0UGF5b3V0LCBwZW5kaW5nQW1vdW50LCB1cGNvbWluZ0Ftb3VudCxcclxuICAgICAgcGFpZENvdW50OiBwYWlkLmxlbmd0aCwgdXBjb21pbmdDb3VudDogdXBjb21pbmcubGVuZ3RoLCBtb250aHMsXHJcbiAgICAgIHBhaWRSZXNlcnZhdGlvbnM6IHBhaWQsIGF2YWlsYWJsZSxcclxuICAgIH07XHJcbiAgfSwgW3Jlc2VydmF0aW9ucywgb3BlblJlcXVlc3RzXSk7XHJcblxyXG4gIGNvbnN0IGV4cG9ydENzdiA9ICgpID0+IHtcclxuICAgIGNvbnN0IGhlYWRlciA9IFwiUmVzZXJ2YXRpb24gSUQsR3Vlc3QsQ2hlY2staW4sQ2hlY2stb3V0LFN0YXR1cyxHcm9zcyBVU0QsUGxhdGZvcm0gRmVlIFVTRCxOZXQgVVNEXCI7XHJcbiAgICBjb25zdCByb3dzID0gc3RhdHMucGFpZFJlc2VydmF0aW9ucy5tYXAoKHI6IGFueSkgPT4ge1xyXG4gICAgICBjb25zdCBncm9zcyA9IChyLnRvdGFsX2NlbnRzIHx8IDApIC8gMTAwO1xyXG4gICAgICBjb25zdCBmZWUgPSBNYXRoLnJvdW5kKChyLnRvdGFsX2NlbnRzIHx8IDApICogMC4wMikgLyAxMDA7XHJcbiAgICAgIGNvbnN0IG5ldCA9IGdyb3NzIC0gZmVlO1xyXG4gICAgICBjb25zdCBndWVzdCA9IChyLmd1ZXN0X25hbWUgfHwgci5ndWVzdF9lbWFpbCB8fCBcIuKAlFwiKS5yZXBsYWNlKC8sL2csIFwiIFwiKTtcclxuICAgICAgcmV0dXJuIGAke3IuaWQgfHwgXCJcIn0sJHtndWVzdH0sJHtyLmNoZWNrX2luIHx8IFwiXCJ9LCR7ci5jaGVja19vdXQgfHwgXCJcIn0sJHtyLnN0YXR1cyB8fCBcIlwifSwke2dyb3NzLnRvRml4ZWQoMil9LCR7ZmVlLnRvRml4ZWQoMil9LCR7bmV0LnRvRml4ZWQoMil9YDtcclxuICAgIH0pO1xyXG4gICAgY29uc3QgY3N2ID0gW2hlYWRlciwgLi4ucm93c10uam9pbihcIlxcblwiKTtcclxuICAgIGNvbnN0IGJsb2IgPSBuZXcgQmxvYihbY3N2XSwgeyB0eXBlOiBcInRleHQvY3N2XCIgfSk7XHJcbiAgICBjb25zdCB1cmwgPSBVUkwuY3JlYXRlT2JqZWN0VVJMKGJsb2IpO1xyXG4gICAgY29uc3QgYSA9IGRvY3VtZW50LmNyZWF0ZUVsZW1lbnQoXCJhXCIpO1xyXG4gICAgYS5ocmVmID0gdXJsO1xyXG4gICAgYS5kb3dubG9hZCA9IGBsb2RnaW5nLXBheW91dHMtJHtuZXcgRGF0ZSgpLnRvSVNPU3RyaW5nKCkuc2xpY2UoMCwgMTApfS5jc3ZgO1xyXG4gICAgYS5jbGljaygpO1xyXG4gICAgVVJMLnJldm9rZU9iamVjdFVSTCh1cmwpO1xyXG4gIH07XHJcblxyXG4gIC8vIFJlLXVzZSB0aGUgY291bnRyeS1hd2FyZSBmYWxsYmFjayBsb2dpYyB3aGVuIGhvc3QgY2xpY2tzIFwiRmluaXNoIHNldHVwXCJcclxuICBjb25zdCBzdGFydE9uYm9hcmRpbmcgPSAoKSA9PiB7XHJcbiAgICBjb25zdCByZWNvbW1lbmRlZCA9IHJlY29tbWVuZGVkUmFpbChzdG9yZUNvdW50cnkpO1xyXG4gICAgaWYgKHJlY29tbWVuZGVkICE9PSBcInN0cmlwZVwiKSB7XHJcbiAgICAgIHRvYXN0LmluZm8oYFN0cmlwZSBDb25uZWN0IGlzbid0IGF2YWlsYWJsZSBpbiAke3N0b3JlQ291bnRyeX0uIFNldCB1cCBhIG1hbnVhbCBwYXlvdXQgbWV0aG9kIGJlbG93LmApO1xyXG4gICAgICByZXR1cm47XHJcbiAgICB9XHJcbiAgICBvbmJvYXJkLm11dGF0ZShzdG9yZUNvdW50cnkpO1xyXG4gIH07XHJcblxyXG4gIGNvbnN0IHBheW91dHNFbmFibGVkID0gISFjb25uZWN0Py5wYXlvdXRzX2VuYWJsZWQ7XHJcbiAgY29uc3Qgc2hvd1BheW91dEJsb2NrZWRCYW5uZXIgPSAhY29ubmVjdExvYWRpbmcgJiYgIXBheW91dHNFbmFibGVkICYmIHN0YXRzLnBlbmRpbmdBbW91bnQgPiAwICYmIHJlY29tbWVuZGVkUmFpbChzdG9yZUNvdW50cnkpID09PSBcInN0cmlwZVwiO1xyXG5cclxuICByZXR1cm4gKFxyXG4gICAgPFNlY3Rpb25TaGVsbFxyXG4gICAgICB0aXRsZT1cIlBheW91dHMgJiBGaW5hbmNlXCJcclxuICAgICAgc3VidGl0bGU9XCJSZXZlbnVlLCBwbGF0Zm9ybSBmZWVzLCBwYXlvdXQgbWV0aG9kcywgYW5kIHN0YXR1cyBvZiBldmVyeSBwYXlvdXQuXCJcclxuICAgICAgaWNvbj17V2FsbGV0fVxyXG4gICAgICBhY3Rpb25zPXtcclxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggZ2FwLTEuNVwiPlxyXG4gICAgICAgICAgPEJ1dHRvbiBzaXplPVwic21cIiB2YXJpYW50PVwib3V0bGluZVwiIG9uQ2xpY2s9e2V4cG9ydENzdn0+RXhwb3J0IENTVjwvQnV0dG9uPlxyXG4gICAgICAgICAgPEJ1dHRvbiBzaXplPVwic21cIiBvbkNsaWNrPXsoKSA9PiBzZXRSZXF1ZXN0T3Blbih0cnVlKX0gZGlzYWJsZWQ9e3N0YXRzLmF2YWlsYWJsZSA8PSAwfT5cclxuICAgICAgICAgICAgPFNlbmQgY2xhc3NOYW1lPVwiaC0zLjUgdy0zLjUgbXItMS41XCIgLz5SZXF1ZXN0IHBheW91dFxyXG4gICAgICAgICAgPC9CdXR0b24+XHJcbiAgICAgICAgPC9kaXY+XHJcbiAgICAgIH1cclxuICAgID5cclxuICAgICAgPExvZGdpbmdRdWlja0p1bXAgYWN0aXZlPVwibG9kZ2UtcGF5b3V0c1wiIC8+XHJcbiAgICAgIDxMb2RnaW5nU2VjdGlvblN0YXR1c0Jhbm5lciB0aXRsZT1cIlBheW91dHMgJiBGaW5hbmNlXCIgaWNvbj17V2FsbGV0fSBjb3VudExhYmVsPVwiUGVuZGluZyByZXZlbnVlXCIgY291bnRWYWx1ZT17bW9uZXkoc3RhdHMucGVuZGluZ0Ftb3VudCl9IGZpeExhYmVsPVwiT3BlbiBSZXBvcnRzXCIgZml4VGFiPVwibG9kZ2UtcmVwb3J0c1wiIC8+XHJcbiAgICAgIHtpc0xvYWRpbmcgPyA8TG9hZGluZ1BhbmVsIC8+IDogPD5cclxuICAgICAgICB7c2hvd1BheW91dEJsb2NrZWRCYW5uZXIgJiYgKFxyXG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJyb3VuZGVkLWxnIGJvcmRlciBib3JkZXItYW1iZXItNTAwLzQwIGJnLWFtYmVyLTUwMC8xMCBwLTMgZmxleCBpdGVtcy1zdGFydCBnYXAtM1wiPlxyXG4gICAgICAgICAgICA8QWxlcnRDaXJjbGUgY2xhc3NOYW1lPVwiaC00IHctNCB0ZXh0LWFtYmVyLTYwMCBtdC0wLjUgc2hyaW5rLTBcIiAvPlxyXG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXgtMSBtaW4tdy0wXCI+XHJcbiAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1zbSBmb250LXNlbWlib2xkXCI+UGF5b3V0cyBhcmUgcGF1c2VkPC9wPlxyXG4gICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQteHMgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIG10LTAuNVwiPlxyXG4gICAgICAgICAgICAgICAgWW91IGhhdmUge21vbmV5KHN0YXRzLnBlbmRpbmdBbW91bnQpfSBwZW5kaW5nLiBDb21wbGV0ZSBTdHJpcGUgb25ib2FyZGluZyB0byByZWNlaXZlIGZ1bmRzIGluIHlvdXIgYmFuayBhY2NvdW50LlxyXG4gICAgICAgICAgICAgIDwvcD5cclxuICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgIDxCdXR0b24gc2l6ZT1cInNtXCIgb25DbGljaz17c3RhcnRPbmJvYXJkaW5nfSBkaXNhYmxlZD17b25ib2FyZC5pc1BlbmRpbmd9PlxyXG4gICAgICAgICAgICAgIHtvbmJvYXJkLmlzUGVuZGluZyA/IDxMb2FkZXIyIGNsYXNzTmFtZT1cImgtMy41IHctMy41IGFuaW1hdGUtc3BpblwiIC8+IDogXCJGaW5pc2ggc2V0dXBcIn1cclxuICAgICAgICAgICAgPC9CdXR0b24+XHJcbiAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICApfVxyXG5cclxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImdyaWQgZ2FwLTMgc206Z3JpZC1jb2xzLTIgbGc6Z3JpZC1jb2xzLTMgeGw6Z3JpZC1jb2xzLTZcIj5cclxuICAgICAgICAgIDxTdGF0Q2FyZCBsYWJlbD1cIlRvdGFsIHJldmVudWVcIiB2YWx1ZT17bW9uZXkoc3RhdHMudG90YWxSZXZlbnVlKX0gaWNvbj17RG9sbGFyU2lnbn0gLz5cclxuICAgICAgICAgIDxTdGF0Q2FyZCBsYWJlbD1cIlBsYXRmb3JtIGZlZSAoMiUpXCIgdmFsdWU9e21vbmV5KHN0YXRzLnBsYXRmb3JtRmVlKX0gaWNvbj17VHJlbmRpbmdVcH0gLz5cclxuICAgICAgICAgIDxTdGF0Q2FyZCBsYWJlbD1cIkF2YWlsYWJsZVwiIHZhbHVlPXttb25leShzdGF0cy5hdmFpbGFibGUpfSBpY29uPXtXYWxsZXR9IC8+XHJcbiAgICAgICAgICA8U3RhdENhcmQgbGFiZWw9XCJVcGNvbWluZyByZXZlbnVlXCIgdmFsdWU9e21vbmV5KHN0YXRzLnVwY29taW5nQW1vdW50KX0gaWNvbj17Q2FsZW5kYXJDbG9ja30gLz5cclxuICAgICAgICAgIDxTdGF0Q2FyZCBsYWJlbD1cIlBlbmRpbmdcIiB2YWx1ZT17bW9uZXkoc3RhdHMucGVuZGluZ0Ftb3VudCl9IGljb249e0NhbGVuZGFyfSAvPlxyXG4gICAgICAgICAgPFN0YXRDYXJkIGxhYmVsPVwiUGFpZCBib29raW5nc1wiIHZhbHVlPXtTdHJpbmcoc3RhdHMucGFpZENvdW50KX0gaWNvbj17Q2hlY2tDaXJjbGUyfSAvPlxyXG4gICAgICAgIDwvZGl2PlxyXG5cclxuICAgICAgICB7LyogQ291bnRyeS1hd2FyZSBmZWVzICsgcHJvY2Vzc2luZyB0aW1lICsgYWRtaW4gbm90ZXMgKi99XHJcbiAgICAgICAgPFBheW91dEluc3RydWN0aW9uc1BhbmVsIGNvdW50cnk9e3N0b3JlQ291bnRyeX0gLz5cclxuXHJcbiAgICAgICAgey8qIE11bHRpLXJhaWwgcGF5b3V0IGFjY291bnQgc2V0dXAgKi99XHJcbiAgICAgICAgPExvZGdpbmdQYXlvdXRBY2NvdW50Q2FyZCBzdG9yZUlkPXtzdG9yZUlkfSBzdG9yZUNvdW50cnk9e3N0b3JlQ291bnRyeX0gLz5cclxuXHJcbiAgICAgICAgey8qIE1vbnRobHkgcmV2ZW51ZSAqL31cclxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInJvdW5kZWQtbGcgYm9yZGVyIGJvcmRlci1ib3JkZXIgYmctY2FyZCBwLTRcIj5cclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwibWItMyBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWJldHdlZW5cIj5cclxuICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1zbSBmb250LXNlbWlib2xkXCI+TW9udGhseSByZXZlbnVlPC9wPlxyXG4gICAgICAgICAgICA8QmFkZ2UgdmFyaWFudD1cIm91dGxpbmVcIj57c3RhdHMubW9udGhzLmxlbmd0aH0gbW9udGh7c3RhdHMubW9udGhzLmxlbmd0aCA9PT0gMSA/IFwiXCIgOiBcInNcIn08L0JhZGdlPlxyXG4gICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICB7c3RhdHMubW9udGhzLmxlbmd0aCA9PT0gMCA/IChcclxuICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1zbSB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5ObyBwYWlkIHJlc2VydmF0aW9ucyB5ZXQuIE9uY2UgZ3Vlc3RzIGNoZWNrIG91dCwgbW9udGhseSB0b3RhbHMgd2lsbCBhcHBlYXIgaGVyZS48L3A+XHJcbiAgICAgICAgICApIDogKFxyXG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktMlwiPlxyXG4gICAgICAgICAgICAgIHtzdGF0cy5tb250aHMubWFwKChbbW9udGgsIHZhbHVlXSkgPT4ge1xyXG4gICAgICAgICAgICAgICAgY29uc3QgbWF4ID0gTWF0aC5tYXgoLi4uc3RhdHMubW9udGhzLm1hcCgoWywgdl0pID0+IHYpKTtcclxuICAgICAgICAgICAgICAgIGNvbnN0IHBjdCA9IG1heCA+IDAgPyAodmFsdWUgLyBtYXgpICogMTAwIDogMDtcclxuICAgICAgICAgICAgICAgIHJldHVybiAoXHJcbiAgICAgICAgICAgICAgICAgIDxkaXYga2V5PXttb250aH0+XHJcbiAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJtYi0xIGZsZXgganVzdGlmeS1iZXR3ZWVuIHRleHQteHNcIj5cclxuICAgICAgICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cImZvbnQtbWVkaXVtXCI+e25ldyBEYXRlKG1vbnRoICsgXCItMDFcIikudG9Mb2NhbGVTdHJpbmcoXCJkZWZhdWx0XCIsIHsgbW9udGg6IFwibG9uZ1wiLCB5ZWFyOiBcIm51bWVyaWNcIiB9KX08L3NwYW4+XHJcbiAgICAgICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJ0ZXh0LW11dGVkLWZvcmVncm91bmRcIj57bW9uZXkodmFsdWUpfTwvc3Bhbj5cclxuICAgICAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImgtMiByb3VuZGVkLWZ1bGwgYmctbXV0ZWRcIj5cclxuICAgICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiaC0yIHJvdW5kZWQtZnVsbCBiZy1wcmltYXJ5XCIgc3R5bGU9e3sgd2lkdGg6IGAke3BjdH0lYCB9fSAvPlxyXG4gICAgICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgICk7XHJcbiAgICAgICAgICAgICAgfSl9XHJcbiAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgKX1cclxuICAgICAgICA8L2Rpdj5cclxuXHJcbiAgICAgICAgey8qIFJlYWwgcGF5b3V0IGhpc3Rvcnkgd2l0aCBzdGF0dXMgYmFkZ2VzICsgZmFpbHVyZSByZWFzb25zICovfVxyXG4gICAgICAgIDxMb2RnaW5nUGF5b3V0SGlzdG9yeVRhYmxlIHN0b3JlSWQ9e3N0b3JlSWR9IC8+XHJcblxyXG4gICAgICAgIDxOZXh0QWN0aW9ucyBhY3Rpb25zPXtbXHJcbiAgICAgICAgICB7IGxhYmVsOiBcIlJldmlldyByZXNlcnZhdGlvbnNcIiwgdGFiOiBcImxvZGdlLXJlc2VydmF0aW9uc1wiLCBoaW50OiBcIkNvbmZpcm0gYm9va2luZ3MgYXJlIHRhZ2dlZCB3aXRoIGNvcnJlY3QgcGF5bWVudCBzdGF0dXMuXCIgfSxcclxuICAgICAgICAgIHsgbGFiZWw6IFwiVHVuZSByYXRlIHBsYW5zXCIsIHRhYjogXCJsb2RnZS1yYXRlLXBsYW5zXCIsIGhpbnQ6IFwiT3B0aW1pemUgcHJpY2luZyB0byBncm93IHJldmVudWUuXCIgfSxcclxuICAgICAgICAgIHsgbGFiZWw6IFwiUnVuIHByb21vdGlvbnNcIiwgdGFiOiBcImxvZGdlLXByb21vc1wiLCBoaW50OiBcIkRyaXZlIG9jY3VwYW5jeSB3aXRoIGRpc2NvdW50cyBhbmQgY29kZXMuXCIgfSxcclxuICAgICAgICBdfSAvPlxyXG4gICAgICA8Lz59XHJcblxyXG4gICAgICA8TG9kZ2luZ1JlcXVlc3RQYXlvdXRTaGVldFxyXG4gICAgICAgIHN0b3JlSWQ9e3N0b3JlSWR9XHJcbiAgICAgICAgc3RvcmVDb3VudHJ5PXtzdG9yZUNvdW50cnl9XHJcbiAgICAgICAgYXZhaWxhYmxlQ2VudHM9e3N0YXRzLmF2YWlsYWJsZX1cclxuICAgICAgICBvcGVuPXtyZXF1ZXN0T3Blbn1cclxuICAgICAgICBvbk9wZW5DaGFuZ2U9e3NldFJlcXVlc3RPcGVufVxyXG4gICAgICAvPlxyXG4gICAgPC9TZWN0aW9uU2hlbGw+XHJcbiAgKTtcclxufVxyXG4iXSwibmFtZXMiOlsidXNlRWZmZWN0IiwidXNlTWVtbyIsInVzZVN0YXRlIiwiV2FsbGV0IiwiRG9sbGFyU2lnbiIsIlRyZW5kaW5nVXAiLCJDYWxlbmRhciIsIkNhbGVuZGFyQ2xvY2siLCJDaGVja0NpcmNsZTIiLCJBbGVydENpcmNsZSIsIkxvYWRlcjIiLCJTZW5kIiwidXNlUXVlcnkiLCJ1c2VRdWVyeUNsaWVudCIsInRvYXN0IiwiQnV0dG9uIiwiQmFkZ2UiLCJMb2FkaW5nUGFuZWwiLCJOZXh0QWN0aW9ucyIsIlNlY3Rpb25TaGVsbCIsIlN0YXRDYXJkIiwibW9uZXkiLCJ1c2VMb2RnaW5nT3BzRGF0YSIsIkxvZGdpbmdRdWlja0p1bXAiLCJMb2RnaW5nU2VjdGlvblN0YXR1c0Jhbm5lciIsInVzZUNvbm5lY3RTdGF0dXMiLCJ1c2VDb25uZWN0T25ib2FyZCIsIkxvZGdpbmdQYXlvdXRBY2NvdW50Q2FyZCIsIlBheW91dEluc3RydWN0aW9uc1BhbmVsIiwiTG9kZ2luZ1BheW91dEhpc3RvcnlUYWJsZSIsIkxvZGdpbmdSZXF1ZXN0UGF5b3V0U2hlZXQiLCJzdXBhYmFzZSIsInJlY29tbWVuZGVkUmFpbCIsIm5vcm1hbGl6ZUNvdW50cnkiLCJMb2RnaW5nUGF5b3V0c1NlY3Rpb24iLCJzdG9yZUlkIiwicmVzZXJ2YXRpb25zIiwiaXNMb2FkaW5nIiwiZGF0YSIsImNvbm5lY3QiLCJjb25uZWN0TG9hZGluZyIsIm9uYm9hcmQiLCJxdWVyeUNsaWVudCIsInJlcXVlc3RPcGVuIiwic2V0UmVxdWVzdE9wZW4iLCJzdG9yZSIsInF1ZXJ5S2V5IiwicXVlcnlGbiIsImVycm9yIiwiZnJvbSIsInNlbGVjdCIsImVxIiwibWF5YmVTaW5nbGUiLCJlbmFibGVkIiwic3RvcmVDb3VudHJ5IiwibWFya2V0IiwiY291bnRyeSIsIm9wZW5SZXF1ZXN0cyIsImluIiwicGFyYW1zIiwiVVJMU2VhcmNoUGFyYW1zIiwid2luZG93IiwibG9jYXRpb24iLCJzZWFyY2giLCJnZXQiLCJpbnZhbGlkYXRlUXVlcmllcyIsInN1Y2Nlc3MiLCJkZWxldGUiLCJxcyIsInRvU3RyaW5nIiwiaGlzdG9yeSIsInJlcGxhY2VTdGF0ZSIsInBhdGhuYW1lIiwic3RhdHMiLCJwYWlkIiwiZmlsdGVyIiwiciIsInBheW1lbnRfc3RhdHVzIiwic3RhdHVzIiwicGVuZGluZyIsInVwY29taW5nIiwiaW5jbHVkZXMiLCJ0b3RhbFJldmVudWUiLCJyZWR1Y2UiLCJzIiwidG90YWxfY2VudHMiLCJwbGF0Zm9ybUZlZSIsIk1hdGgiLCJyb3VuZCIsIm5ldFBheW91dCIsInBlbmRpbmdBbW91bnQiLCJ1cGNvbWluZ0Ftb3VudCIsImJ5TW9udGgiLCJmb3JFYWNoIiwibW9udGgiLCJjaGVja19vdXQiLCJjaGVja19pbiIsImNyZWF0ZWRfYXQiLCJzbGljZSIsIm1vbnRocyIsIk9iamVjdCIsImVudHJpZXMiLCJzb3J0IiwiYSIsImIiLCJsb2NhbGVDb21wYXJlIiwicmVzZXJ2ZWRGb3JQYXlvdXQiLCJhbW91bnRfY2VudHMiLCJhdmFpbGFibGUiLCJtYXgiLCJwYWlkQ291bnQiLCJsZW5ndGgiLCJ1cGNvbWluZ0NvdW50IiwicGFpZFJlc2VydmF0aW9ucyIsImV4cG9ydENzdiIsImhlYWRlciIsInJvd3MiLCJtYXAiLCJncm9zcyIsImZlZSIsIm5ldCIsImd1ZXN0IiwiZ3Vlc3RfbmFtZSIsImd1ZXN0X2VtYWlsIiwicmVwbGFjZSIsImlkIiwidG9GaXhlZCIsImNzdiIsImpvaW4iLCJibG9iIiwiQmxvYiIsInR5cGUiLCJ1cmwiLCJVUkwiLCJjcmVhdGVPYmplY3RVUkwiLCJkb2N1bWVudCIsImNyZWF0ZUVsZW1lbnQiLCJocmVmIiwiZG93bmxvYWQiLCJEYXRlIiwidG9JU09TdHJpbmciLCJjbGljayIsInJldm9rZU9iamVjdFVSTCIsInN0YXJ0T25ib2FyZGluZyIsInJlY29tbWVuZGVkIiwiaW5mbyIsIm11dGF0ZSIsInBheW91dHNFbmFibGVkIiwicGF5b3V0c19lbmFibGVkIiwic2hvd1BheW91dEJsb2NrZWRCYW5uZXIiLCJ0aXRsZSIsInN1YnRpdGxlIiwiaWNvbiIsImFjdGlvbnMiLCJkaXYiLCJjbGFzc05hbWUiLCJzaXplIiwidmFyaWFudCIsIm9uQ2xpY2siLCJkaXNhYmxlZCIsImFjdGl2ZSIsImNvdW50TGFiZWwiLCJjb3VudFZhbHVlIiwiZml4TGFiZWwiLCJmaXhUYWIiLCJwIiwiaXNQZW5kaW5nIiwibGFiZWwiLCJ2YWx1ZSIsIlN0cmluZyIsInYiLCJwY3QiLCJzcGFuIiwidG9Mb2NhbGVTdHJpbmciLCJ5ZWFyIiwic3R5bGUiLCJ3aWR0aCIsInRhYiIsImhpbnQiLCJhdmFpbGFibGVDZW50cyIsIm9wZW4iLCJvbk9wZW5DaGFuZ2UiXSwibWFwcGluZ3Mi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

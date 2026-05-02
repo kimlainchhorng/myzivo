@@ -1,6 +1,6 @@
 /**
  * useAviasalesSearch — Real-time multi-agency flight search via Aviasales Search API
- * Returns live OTA prices (Kiwi, Mytrip, Trip.com, etc.) for comparison
+ * Returns live OTA prices (Mytrip, Trip.com, etc.) for comparison
  */
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";

@@ -9,6 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { useEffect } from "react";
 
 interface SavedPlace {
   id: string;
@@ -27,7 +30,6 @@ const iconMap = {
   custom: { icon: MapPin, color: "text-violet-500", bg: "bg-violet-500/10" },
 };
 
-// TODO: Load saved places from Supabase saved_locations table
 const initialPlaces: SavedPlace[] = [];
 
 // Smart suggestions based on time of day
@@ -50,25 +52,52 @@ export default function SmartSavedPlaces({ onSelect }: SmartSavedPlacesProps) {
   const [newName, setNewName] = useState("");
   const [newAddress, setNewAddress] = useState("");
   const [newIcon, setNewIcon] = useState<keyof typeof iconMap>("custom");
+  const { user } = useAuth();
 
   const suggestions = getSmartSuggestions(places);
 
-  const addPlace = () => {
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("saved_locations").select("*").eq("user_id", user.id).then(({ data }) => {
+      if (data) {
+        setPlaces(data.map(d => ({
+          id: d.id,
+          name: d.label,
+          address: d.address,
+          icon: (d.icon as SavedPlace["icon"]) || "custom",
+          visits: 0,
+        })));
+      }
+    });
+  }, [user]);
+
+  const addPlace = async () => {
     if (!newName.trim() || !newAddress.trim()) return;
-    setPlaces([...places, {
-      id: Date.now().toString(),
-      name: newName,
-      address: newAddress,
-      icon: newIcon,
-      visits: 0,
-    }]);
+    if (user) {
+      const { data, error } = await supabase.from("saved_locations").insert({
+        user_id: user.id,
+        label: newName,
+        address: newAddress,
+        icon: newIcon,
+        lat: 0,
+        lng: 0,
+      }).select().single();
+      if (!error && data) {
+        setPlaces(prev => [...prev, { id: data.id, name: newName, address: newAddress, icon: newIcon, visits: 0 }]);
+      }
+    } else {
+      setPlaces(prev => [...prev, { id: Date.now().toString(), name: newName, address: newAddress, icon: newIcon, visits: 0 }]);
+    }
     setNewName("");
     setNewAddress("");
     setShowAdd(false);
     toast.success("Place saved!");
   };
 
-  const removePlace = (id: string) => {
+  const removePlace = async (id: string) => {
+    if (user) {
+      await supabase.from("saved_locations").delete().eq("id", id).eq("user_id", user.id);
+    }
     setPlaces(places.filter(p => p.id !== id));
     toast.success("Place removed");
   };

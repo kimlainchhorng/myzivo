@@ -4,7 +4,13 @@
 import { useNavigate } from "react-router-dom";
 import { useI18n } from "@/hooks/useI18n";
 import { motion } from "framer-motion";
-import { Plane, Hotel, Car, Calendar, MapPin, ChevronRight, Luggage } from "lucide-react";
+import Plane from "lucide-react/dist/esm/icons/plane";
+import Hotel from "lucide-react/dist/esm/icons/hotel";
+import Car from "lucide-react/dist/esm/icons/car";
+import Calendar from "lucide-react/dist/esm/icons/calendar";
+import MapPin from "lucide-react/dist/esm/icons/map-pin";
+import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
+import Luggage from "lucide-react/dist/esm/icons/luggage";
 import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery } from "@tanstack/react-query";

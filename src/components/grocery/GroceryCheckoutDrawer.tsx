@@ -10,7 +10,9 @@ import {
   ChevronDown, Lock, CheckCircle, Package, Clock, Heart,
   CreditCard, Sparkles, Timer, BadgeCheck, ArrowRight, ArrowLeft,
   MessageSquare, DoorOpen, Star, Gift, RefreshCw, AlertTriangle,
+  Banknote, QrCode,
 } from "lucide-react";
+import { Home, Building2, Bookmark, Trash2, Plus } from "lucide-react";
 import { GroceryDeliveryScheduler, DEFAULT_SCHEDULER, getPriorityFee, type SchedulerState } from "@/components/grocery/GroceryDeliveryScheduler";
 import { addLoyaltyPoints } from "@/components/grocery/GroceryLoyaltyBanner";
 import { Button } from "@/components/ui/button";
@@ -24,7 +26,39 @@ import GroceryInlinePaymentForm from "@/components/grocery/GroceryInlinePaymentF
 import { getLiveEta } from "@/utils/storeStatus";
 import { GROCERY_STORES } from "@/config/groceryStores";
 import { SERVICE_FEE_PCT, calcServiceFee, TIP_OPTIONS, calcDeliveryFee, calcMarkup, getMarkupPct } from "@/config/groceryPricing";
+import { useCityPricing } from "@/hooks/useCityPricing";
+import { getRoute, getPlaceDetails, forwardGeocode } from "@/services/mapsApi";
 import { useZivoPlus } from "@/contexts/ZivoPlusContext";
+import { useI18n } from "@/hooks/useI18n";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import { useCurrentLocation } from "@/hooks/useCurrentLocation";
+import { useCountry } from "@/hooks/useCountry";
+import { CheckoutPinMap } from "@/components/grocery/CheckoutPinMap";
+import { CheckoutRouteMap } from "@/components/grocery/CheckoutRouteMap";
+
+export type StorePaymentType = "cash" | "card" | "aba";
+
+interface SavedDeliveryAddress {
+  id: string;
+  label: string;
+  address: string;
+  isDefault: boolean;
+}
+
+function getAllSavedAddresses(): SavedDeliveryAddress[] {
+  try {
+    const raw = localStorage.getItem("zivo_delivery_addresses");
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch {}
+  return [];
+}
+
+function persistAddresses(addresses: SavedDeliveryAddress[]) {
+  localStorage.setItem("zivo_delivery_addresses", JSON.stringify(addresses));
+}
 
 interface GroceryCheckoutDrawerProps {
   items: GroceryCartItem[];
@@ -33,6 +67,14 @@ interface GroceryCheckoutDrawerProps {
   onOrderPlaced: (orderId: string) => void;
   onRemoveItem?: (productId: string) => void;
   onUpdateQuantity?: (productId: string, quantity: number) => void;
+  storeCoords?: { lat: number; lng: number } | null;
+  storeName?: string;
+  storePaymentTypes?: StorePaymentType[];
+}
+
+interface GroceryRouteMetrics {
+  distanceMiles: number;
+  durationMinutes: number;
 }
 
 type SubstitutionPref = "contact_me" | "best_match" | "refund";
@@ -62,17 +104,53 @@ function getSavedProfile(): { name: string; phone: string; subPref: Substitution
   return { name: "", phone: "", subPref: "contact_me" };
 }
 
-export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, onRemoveItem, onUpdateQuantity }: GroceryCheckoutDrawerProps) {
+export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, onRemoveItem, onUpdateQuantity, storeCoords, storeName: storeNameProp, storePaymentTypes = ["cash", "card"] }: GroceryCheckoutDrawerProps) {
+  const { t } = useI18n();
+  const { data: userProfile } = useUserProfile();
+  const { getCurrentLocation, reverseGeocode, isGettingLocation } = useCurrentLocation();
   const savedAddr = getSavedAddress();
   const savedProfile = getSavedProfile();
 
   const [address, setAddress] = useState(savedAddr?.address || "");
+  const [addressCoords, setAddressCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [addressSuggestions, setAddressSuggestions] = useState<{ display: string; mainText: string; placeId: string }[]>([]);
   const [showAddrSuggestions, setShowAddrSuggestions] = useState(false);
   const [isSearchingAddr, setIsSearchingAddr] = useState(false);
   const addrDebounceRef = useRef<ReturnType<typeof setTimeout>>();
   const [name, setName] = useState(savedProfile.name);
   const [phone, setPhone] = useState(savedProfile.phone);
+  const [gpsAutoFilled, setGpsAutoFilled] = useState(false);
+  const [profileAutoFilled, setProfileAutoFilled] = useState(false);
+  const [showPinMap, setShowPinMap] = useState(false);
+  const [savedAddresses, setSavedAddresses] = useState<SavedDeliveryAddress[]>(getAllSavedAddresses);
+  const [showSavedPicker, setShowSavedPicker] = useState(false);
+  const [saveLabel, setSaveLabel] = useState<"home" | "work" | "other">("home");
+  const [showSaveForm, setShowSaveForm] = useState(false);
+
+  // Auto-fill contact info from user profile
+  useEffect(() => {
+    if (userProfile && !profileAutoFilled) {
+      if (userProfile.full_name && !name) setName(userProfile.full_name);
+      if (userProfile.phone && !phone) setPhone(userProfile.phone);
+      setProfileAutoFilled(true);
+    }
+  }, [userProfile, profileAutoFilled]);
+
+  // Auto-fill address from live GPS
+  useEffect(() => {
+    if (!address && !gpsAutoFilled) {
+      setGpsAutoFilled(true);
+      getCurrentLocation()
+        .then(async (loc) => {
+          setAddressCoords({ lat: loc.lat, lng: loc.lng });
+          const addr = await reverseGeocode(loc.lat, loc.lng);
+          if (addr && addr !== "Unknown location") {
+            setAddress(addr);
+          }
+        })
+        .catch(() => {});
+    }
+  }, []);
   const [tip, setTip] = useState(3);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [paymentClientSecret, setPaymentClientSecret] = useState<string | null>(null);
@@ -86,10 +164,14 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
   const [promoCode, setPromoCode] = useState("");
   const [subPref, setSubPref] = useState<SubstitutionPref>(savedProfile.subPref);
   const [scheduler, setScheduler] = useState<SchedulerState>(DEFAULT_SCHEDULER);
+  const [selectedPayment, setSelectedPayment] = useState<StorePaymentType>(
+    storePaymentTypes.includes("cash") ? "cash" : storePaymentTypes[0] || "card"
+  );
   // Live ETA
   const storeName = items[0]?.store || "Walmart";
   const storeCfg = GROCERY_STORES.find(s => s.name.toLowerCase() === storeName.toLowerCase());
   const [liveEta, setLiveEta] = useState(storeCfg?.deliveryMin ?? 35);
+  const [routeMetrics, setRouteMetrics] = useState<GroceryRouteMetrics | null>(null);
   useEffect(() => {
     const compute = () => setLiveEta(getLiveEta(storeCfg?.deliveryMin ?? 35));
     compute();
@@ -97,17 +179,80 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
     return () => clearInterval(interval);
   }, [storeCfg]);
 
-  const { isPlus } = useZivoPlus();
+  useEffect(() => {
+    let cancelled = false;
 
-  const priorityFee = isPlus ? 0 : getPriorityFee(scheduler.speed); // ZIVO+ gets free priority
-  // Distance-based delivery fee (estimate: ~3mi, ETA-based minutes)
-  const estimatedMiles = 3;
-  const deliveryFee = calcDeliveryFee(estimatedMiles, liveEta);
-  // Platform markup: 3-5% of subtotal
-  const platformMarkup = calcMarkup(total);
-  const markupPct = getMarkupPct(total);
-  // Service fee: waived for ZIVO+ members
-  const serviceFee = isPlus ? 0 : calcServiceFee(total);
+    if (!storeCoords || !addressCoords) {
+      setRouteMetrics(null);
+      return;
+    }
+
+    (async () => {
+      const route = await getRoute(storeCoords, addressCoords);
+      if (cancelled) return;
+
+      if (!route) {
+        setRouteMetrics(null);
+        return;
+      }
+
+      setRouteMetrics({
+        distanceMiles: route.distance_miles,
+        durationMinutes: route.duration_in_traffic_minutes ?? route.duration_minutes,
+      });
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [storeCoords, addressCoords]);
+
+  const { isPlus } = useZivoPlus();
+  const { isCambodia } = useCountry();
+
+  // Cambodia grocery uses ZIVO Moto pricing from city_pricing (stored in KHR/km and converted by useCityPricing)
+  const pickupCity = useMemo(() => {
+    if (isCambodia) return "Phnom Penh";
+    if (!address) return "default";
+    const parts = address.split(",").map((p) => p.trim()).filter(Boolean);
+    if (parts.length >= 3) return parts[parts.length - 3] || parts[parts.length - 2] || "default";
+    if (parts.length >= 2) return parts[parts.length - 2] || "default";
+    return "default";
+  }, [address, isCambodia]);
+
+  const { data: cityPricingMap } = useCityPricing(pickupCity);
+
+  const priorityFee = isPlus ? 0 : getPriorityFee(scheduler.speed);
+  const effectiveDurationMinutes = routeMetrics?.durationMinutes ?? liveEta;
+  const effectiveDistanceMiles = routeMetrics?.distanceMiles ?? (isCambodia ? 5 * 0.621371 : 3);
+  const effectiveDistanceKm = effectiveDistanceMiles * 1.609344;
+
+  const deliveryFee = useMemo(() => {
+    const motoPricing = cityPricingMap?.["moto"];
+
+    if (isCambodia && motoPricing) {
+      // In Cambodia the source data is 1000៛ base + 900៛/km with 3000៛ minimum.
+      // useCityPricing already converts KHR→USD and km→mile, so we price with distance only.
+      const raw = motoPricing.base_fare + motoPricing.per_mile * effectiveDistanceMiles + motoPricing.booking_fee;
+      return Math.round(Math.max(motoPricing.minimum_fare, raw) * 100) / 100;
+    }
+
+    if (motoPricing) {
+      const raw = motoPricing.base_fare + motoPricing.per_mile * effectiveDistanceMiles + motoPricing.per_minute * effectiveDurationMinutes + motoPricing.booking_fee;
+      return Math.round(Math.max(motoPricing.minimum_fare, raw) * 100) / 100;
+    }
+
+    return calcDeliveryFee(effectiveDistanceMiles, effectiveDurationMinutes);
+  }, [cityPricingMap, effectiveDistanceMiles, effectiveDurationMinutes, isCambodia]);
+
+  const distanceLabel = isCambodia
+    ? `~${effectiveDistanceKm < 10 ? effectiveDistanceKm.toFixed(1) : Math.round(effectiveDistanceKm)}km`
+    : `~${effectiveDistanceMiles < 10 ? effectiveDistanceMiles.toFixed(1) : Math.round(effectiveDistanceMiles)}mi`;
+  // Platform markup: 0% for Cambodia, 3-5% elsewhere
+  const platformMarkup = isCambodia ? 0 : calcMarkup(total);
+  const markupPct = isCambodia ? 0 : getMarkupPct(total);
+  // Service fee: waived for Cambodia and ZIVO+ members
+  const serviceFee = isCambodia ? 0 : (isPlus ? 0 : calcServiceFee(total));
   const grandTotal = Math.max(0, total + platformMarkup + deliveryFee + serviceFee + tip + priorityFee - promoDiscount);
   const itemCount = items.reduce((s, i) => s + i.quantity, 0);
   const isValid = address.trim().length > 0 && name.trim().length > 0;
@@ -146,10 +291,21 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
     }, 400);
   }, []);
 
-  const selectAddressSuggestion = useCallback((s: { display: string }) => {
+  const selectAddressSuggestion = useCallback(async (s: { display: string; placeId?: string }) => {
     setAddress(s.display);
     setAddressSuggestions([]);
     setShowAddrSuggestions(false);
+
+    if (s.placeId) {
+      const details = await getPlaceDetails(s.placeId);
+      if (details) {
+        setAddressCoords({ lat: details.lat, lng: details.lng });
+        return;
+      }
+    }
+
+    const coords = await forwardGeocode(s.display);
+    if (coords) setAddressCoords(coords);
   }, []);
 
   // Persist profile
@@ -250,6 +406,55 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
     }
   }, [grandTotal, onOrderPlaced, paymentOrderId]);
 
+  // Cash / ABA order — no Stripe
+  const handleCashOrAbaOrder = async () => {
+    setIsSubmitting(true);
+    try {
+      const orderItems = items.map((i) => ({
+        productId: i.productId, name: i.name, price: i.price,
+        image: i.image, brand: i.brand, quantity: i.quantity, store: i.store,
+      }));
+      const { data: user } = await supabase.auth.getUser();
+      const { data, error } = await supabase.from("grocery_orders" as any).insert({
+        user_id: user?.user?.id || null,
+        store: items[0]?.store || "Unknown",
+        items: orderItems,
+        subtotal: total,
+        delivery_fee: deliveryFee,
+        service_fee: serviceFee,
+        platform_markup: platformMarkup,
+        tip,
+        priority_fee: priorityFee,
+        promo_discount: promoDiscount,
+        total_amount: grandTotal,
+        delivery_address: address.trim(),
+        customer_name: name.trim(),
+        customer_phone: phone.trim() || null,
+        delivery_note: deliveryNote || null,
+        leave_at_door: leaveAtDoor,
+        substitution_pref: subPref,
+        payment_method: selectedPayment,
+        status: "pending",
+      } as any).select("id").single();
+      if (error) throw new Error(error.message);
+      const orderId = (data as any)?.id;
+      const earnedPoints = addLoyaltyPoints(grandTotal);
+      toast.success(
+        selectedPayment === "cash"
+          ? `Order placed! Pay $${grandTotal.toFixed(2)} cash on delivery`
+          : `Order placed! Complete ABA payment`
+      );
+      if (orderId) {
+        onOrderPlaced(orderId);
+      }
+    } catch (err: any) {
+      console.error("Cash/ABA order error:", err);
+      toast.error(err.message || "Failed to place order");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const SUB_OPTIONS: { value: SubstitutionPref; label: string; desc: string; icon: typeof RefreshCw }[] = [
     { value: "contact_me", label: "Contact Me", desc: "Driver will message you", icon: MessageSquare },
     { value: "best_match", label: "Best Match", desc: "Pick a similar item", icon: RefreshCw },
@@ -301,10 +506,10 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
               </motion.div>
               <div>
                 <h2 className="text-lg font-bold tracking-tight">
-                  {step === 1 ? "Delivery Details" : "Review & Pay"}
+                  {step === 1 ? t("grocery.checkout.delivery_details") : t("grocery.checkout.review_pay")}
                 </h2>
                 <p className="text-[11px] text-muted-foreground">
-                  Step {step} of 2 · {itemCount} items from {storeName}
+                  {t("grocery.checkout.step_of")} {step} / 2 · {itemCount} {t("grocery.checkout.items_from")} {storeName}
                 </p>
               </div>
             </div>
@@ -340,17 +545,21 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                   </div>
                   <div className="flex-1">
                     <p className="text-[12px] font-bold text-foreground">
-                      Estimated delivery:{" "}
-                      <motion.span key={liveEta} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-primary">
-                        {liveEta}–{liveEta + 15} min
+                      {t("grocery.checkout.estimated_delivery")}:{" "}
+                      <motion.span key={effectiveDurationMinutes} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-primary">
+                        {effectiveDurationMinutes} {t("grocery.checkout.min")}
                       </motion.span>
                     </p>
-                    <p className="text-[10px] text-muted-foreground">A ZIVO driver will shop & deliver your items</p>
+                    <p className="text-[10px] text-muted-foreground">
+                      {isCambodia
+                        ? (t("grocery.checkout.driver_will_shop_kh") || "Driver will shop & deliver by motorcycle/tuk tuk")
+                        : t("grocery.checkout.driver_will_shop")}
+                    </p>
                   </div>
                 </div>
 
                 {/* Auto-filled address badge */}
-                {savedAddr && address === savedAddr.address && (
+                {address && (
                   <motion.div
                     initial={{ opacity: 0, scale: 0.9 }}
                     animate={{ opacity: 1, scale: 1 }}
@@ -358,7 +567,21 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                   >
                     <CheckCircle className="h-3 w-3 text-emerald-500" />
                     <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400">
-                      Address auto-filled from your saved location
+                      {t("grocery.checkout.address_autofilled")}
+                    </span>
+                  </motion.div>
+                )}
+
+                {/* Profile auto-filled badge */}
+                {profileAutoFilled && userProfile?.full_name && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/15 w-fit mb-3"
+                  >
+                    <User className="h-3 w-3 text-blue-500" />
+                    <span className="text-[10px] font-semibold text-blue-600 dark:text-blue-400">
+                      {t("grocery.checkout.contact_autofilled") || "Contact auto-filled from your account"}
                     </span>
                   </motion.div>
                 )}
@@ -366,7 +589,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                 {/* Contact info */}
                 <h3 className="text-[13px] font-bold flex items-center gap-2 mb-2.5">
                   <User className="h-3.5 w-3.5 text-primary" />
-                  Contact Information
+                  {t("grocery.checkout.contact_info")}
                 </h3>
                 <div className="space-y-2.5 mb-4">
                   <div className="relative">
@@ -374,7 +597,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                     <Input
                       value={name}
                       onChange={(e) => setName(e.target.value)}
-                      placeholder="Full name *"
+                      placeholder={t("grocery.checkout.full_name")}
                       className="pl-10 rounded-xl h-11 bg-muted/15 border-border/15 text-[13px] focus:bg-muted/25 transition-colors"
                     />
                   </div>
@@ -383,7 +606,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                     <Input
                       value={phone}
                       onChange={(e) => setPhone(e.target.value)}
-                      placeholder="Phone (optional)"
+                      placeholder={t("grocery.checkout.phone_optional")}
                       className="pl-10 rounded-xl h-11 bg-muted/15 border-border/15 text-[13px] focus:bg-muted/25 transition-colors"
                       type="tel"
                     />
@@ -393,16 +616,84 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                 {/* Delivery address */}
                 <h3 className="text-[13px] font-bold flex items-center gap-2 mb-2.5">
                   <MapPin className="h-3.5 w-3.5 text-primary" />
-                  Delivery Address
+                  {t("grocery.checkout.delivery_address")}
+                  {savedAddresses.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setShowSavedPicker(!showSavedPicker)}
+                      className="ml-auto text-[11px] font-semibold text-primary flex items-center gap-1 hover:underline"
+                    >
+                      <Bookmark className="h-3 w-3" />
+                      Saved ({savedAddresses.length})
+                    </button>
+                  )}
                 </h3>
+
+                {/* Saved address picker */}
+                <AnimatePresence>
+                  {showSavedPicker && savedAddresses.length > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: "auto" }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="mb-3 space-y-1.5 overflow-hidden"
+                    >
+                      {savedAddresses.map((sa) => {
+                        const LabelIcon = sa.label === "home" ? Home : sa.label === "work" ? Building2 : MapPin;
+                        const isActive = address === sa.address;
+                        return (
+                          <div key={sa.id} className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={async () => {
+                                setAddress(sa.address);
+                                const coords = await forwardGeocode(sa.address);
+                                if (coords) setAddressCoords(coords);
+                                localStorage.setItem("zivo_selected_address", sa.id);
+                                setShowSavedPicker(false);
+                              }}
+                              className={`flex-1 flex items-center gap-2.5 px-3 py-2.5 rounded-xl border transition-all text-left ${
+                                isActive ? "bg-primary/5 border-primary/20" : "bg-muted/10 border-border/15 hover:bg-muted/20"
+                              }`}
+                            >
+                              <LabelIcon className={`h-4 w-4 shrink-0 ${isActive ? "text-primary" : "text-muted-foreground"}`} />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-[11px] font-bold text-foreground capitalize">{sa.label}</p>
+                                <p className="text-[10px] text-muted-foreground truncate">{sa.address}</p>
+                              </div>
+                              {isActive && <CheckCircle className="h-4 w-4 text-primary shrink-0" />}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                const updated = savedAddresses.filter((a) => a.id !== sa.id);
+                                setSavedAddresses(updated);
+                                persistAddresses(updated);
+                                toast.success("Address removed");
+                              }}
+                              className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
                 <div className="relative mb-4">
-                  <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 z-10" />
+                  {isGettingLocation ? (
+                    <Loader2 className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-primary animate-spin z-10" />
+                  ) : (
+                    <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/40 z-10" />
+                  )}
                   <Input
                     value={address}
                     onChange={(e) => searchAddressAutocomplete(e.target.value)}
                     onFocus={() => addressSuggestions.length > 0 && setShowAddrSuggestions(true)}
                     onBlur={() => setTimeout(() => setShowAddrSuggestions(false), 200)}
-                    placeholder="Search delivery address *"
+                    placeholder={t("grocery.checkout.search_address")}
                     className="pl-10 rounded-xl h-11 bg-muted/15 border-border/15 text-[13px] focus:bg-muted/25 transition-colors"
                   />
                   {isSearchingAddr && (
@@ -436,10 +727,117 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                   </AnimatePresence>
                 </div>
 
-                {/* Delivery preferences */}
+                {/* Adjust pin button */}
+                {address && !showPinMap && (
+                  <motion.button
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => setShowPinMap(true)}
+                    className="flex items-center gap-2 px-3 py-2 rounded-xl bg-primary/5 border border-primary/15 mb-4 w-full hover:bg-primary/10 transition-colors"
+                  >
+                    <MapPin className="h-3.5 w-3.5 text-primary" />
+                    <span className="text-[11px] font-semibold text-primary">
+                      {t("grocery.checkout.adjust_pin") || "Adjust pin on map"}
+                    </span>
+                  </motion.button>
+                )}
+
+                {/* Save address button */}
+                {address.trim().length > 5 && !savedAddresses.some((sa) => sa.address === address) && (
+                  <AnimatePresence>
+                    {!showSaveForm ? (
+                      <motion.button
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        whileTap={{ scale: 0.97 }}
+                        onClick={() => setShowSaveForm(true)}
+                        className="flex items-center gap-2 px-3 py-2 rounded-xl bg-accent/50 border border-border/15 mb-4 w-full hover:bg-accent/70 transition-colors"
+                      >
+                        <Plus className="h-3.5 w-3.5 text-primary" />
+                        <span className="text-[11px] font-semibold text-foreground">Save this address</span>
+                      </motion.button>
+                    ) : (
+                      <motion.div
+                        initial={{ opacity: 0, height: 0 }}
+                        animate={{ opacity: 1, height: "auto" }}
+                        exit={{ opacity: 0, height: 0 }}
+                        className="mb-4 p-3 rounded-xl bg-muted/15 border border-border/15 space-y-2.5 overflow-hidden"
+                      >
+                        <p className="text-[11px] font-bold text-foreground">Label this address</p>
+                        <div className="flex gap-2">
+                          {(["home", "work", "other"] as const).map((label) => {
+                            const Icon = label === "home" ? Home : label === "work" ? Building2 : MapPin;
+                            return (
+                              <button
+                                key={label}
+                                type="button"
+                                onClick={() => setSaveLabel(label)}
+                                className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg border text-[11px] font-semibold capitalize transition-all ${
+                                  saveLabel === label
+                                    ? "bg-primary/10 border-primary/30 text-primary"
+                                    : "bg-muted/10 border-border/15 text-muted-foreground hover:bg-muted/20"
+                                }`}
+                              >
+                                <Icon className="h-3.5 w-3.5" />
+                                {label}
+                              </button>
+                            );
+                          })}
+                        </div>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="flex-1 rounded-lg text-[11px] h-8"
+                            onClick={() => setShowSaveForm(false)}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            size="sm"
+                            className="flex-1 rounded-lg text-[11px] h-8"
+                            onClick={() => {
+                              const newAddr: SavedDeliveryAddress = {
+                                id: crypto.randomUUID(),
+                                label: saveLabel,
+                                address: address.trim(),
+                                isDefault: savedAddresses.length === 0,
+                              };
+                              const updated = [...savedAddresses, newAddr];
+                              setSavedAddresses(updated);
+                              persistAddresses(updated);
+                              localStorage.setItem("zivo_selected_address", newAddr.id);
+                              setShowSaveForm(false);
+                              toast.success("Address saved!");
+                            }}
+                          >
+                            <Bookmark className="h-3 w-3 mr-1" />
+                            Save
+                          </Button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                )}
+
+                {/* Draggable pin map */}
+                <AnimatePresence>
+                  {showPinMap && (
+                    <CheckoutPinMap
+                      coords={addressCoords}
+                      onLocationChange={(lat, lng, addr) => {
+                        setAddressCoords({ lat, lng });
+                        setAddress(addr);
+                      }}
+                    />
+                  )}
+                </AnimatePresence>
+
                 <h3 className="text-[13px] font-bold flex items-center gap-2 mb-2.5">
                   <Package className="h-3.5 w-3.5 text-primary" />
-                  Delivery Preferences
+                  {t("grocery.checkout.delivery_preferences")}
                 </h3>
 
                 <motion.button
@@ -455,13 +853,13 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                     {leaveAtDoor && <CheckCircle className="h-3 w-3 text-primary-foreground" />}
                   </div>
                   <DoorOpen className="h-4 w-4 text-muted-foreground" />
-                  <span className="text-[12px] font-medium">Leave at my door</span>
+                  <span className="text-[12px] font-medium">{t("grocery.checkout.leave_at_door")}</span>
                 </motion.button>
 
                 <Textarea
                   value={deliveryNote}
                   onChange={(e) => setDeliveryNote(e.target.value)}
-                  placeholder="Delivery instructions (e.g., gate code, apartment #)"
+                  placeholder={t("grocery.checkout.delivery_instructions")}
                   className="rounded-xl bg-muted/15 border-border/15 text-[12px] min-h-[60px] resize-none focus:bg-muted/25 transition-colors mb-4"
                   rows={2}
                 />
@@ -469,7 +867,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                 {/* Substitution preference */}
                 <h3 className="text-[13px] font-bold flex items-center gap-2 mb-2.5">
                   <RefreshCw className="h-3.5 w-3.5 text-primary" />
-                  If an item is unavailable
+                  {t("grocery.checkout.if_unavailable")}
                 </h3>
                 <div className="grid grid-cols-3 gap-2 mb-4">
                   {SUB_OPTIONS.map((opt) => (
@@ -494,7 +892,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                 <GroceryDeliveryScheduler
                   state={scheduler}
                   onChange={setScheduler}
-                  baseEta={liveEta}
+                  baseEta={effectiveDurationMinutes}
                 />
 
                 <div className="mt-4" />
@@ -583,6 +981,57 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                     )}
                   </AnimatePresence>
                 </div>
+              {/* Fee summary in Step 1 */}
+                <div className="rounded-2xl bg-muted/15 border border-border/20 p-3.5 mb-4">
+                  <h3 className="text-[13px] font-bold flex items-center gap-2 mb-2.5">
+                    <Truck className="h-3.5 w-3.5 text-primary" />
+                    {t("grocery.checkout.fee_summary") || "Fee Summary"}
+                  </h3>
+                  <div className="space-y-1.5">
+                    <div className="flex justify-between text-[12px]">
+                      <span className="text-muted-foreground">{t("grocery.checkout.subtotal")}</span>
+                      <span className="text-foreground font-medium tabular-nums">${total.toFixed(2)}</span>
+                    </div>
+                    {!isCambodia && (
+                      <div className="flex justify-between text-[12px]">
+                        <span className="text-muted-foreground">Platform fee ({markupPct}%)</span>
+                        <span className="text-foreground font-medium tabular-nums">${platformMarkup.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between text-[12px]">
+                      <span className="text-muted-foreground flex items-center gap-1.5">
+                        <Truck className="h-3 w-3" /> {t("grocery.checkout.delivery_fee") || "Delivery Fee"} ({distanceLabel})
+                      </span>
+                      <span className="text-foreground font-medium tabular-nums">${deliveryFee.toFixed(2)}</span>
+                    </div>
+                    {!isCambodia && (
+                    <div className="flex justify-between text-[12px]">
+                      <span className="text-muted-foreground flex items-center gap-1.5">
+                        {t("grocery.checkout.service_fee") || "Service Fee"} ({SERVICE_FEE_PCT}%)
+                        {isPlus && <span className="text-[8px] font-bold px-1 py-0.5 rounded bg-amber-500/15 text-amber-600">ZIVO+</span>}
+                      </span>
+                      {isPlus ? (
+                        <span className="text-amber-600 font-bold">
+                          <span className="line-through text-muted-foreground/50 mr-1">${calcServiceFee(total).toFixed(2)}</span>
+                          $0.00
+                        </span>
+                      ) : (
+                        <span className="text-foreground font-medium tabular-nums">${serviceFee.toFixed(2)}</span>
+                      )}
+                    </div>
+                    )}
+                    {priorityFee > 0 && (
+                      <div className="flex justify-between text-[12px]">
+                        <span className="text-muted-foreground flex items-center gap-1.5">⚡ {t("grocery.checkout.priority") || "Priority"}</span>
+                        <span className="text-amber-600 font-medium tabular-nums">+${priorityFee.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="border-t border-border/15 pt-1.5 mt-1.5 flex justify-between text-[13px] font-bold">
+                      <span>{t("grocery.checkout.estimated_total") || "Estimated Total"}</span>
+                      <span className="text-primary tabular-nums">${grandTotal.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
               </motion.div>
             )}
 
@@ -632,6 +1081,15 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                   </button>
                 </div>
 
+                {/* Route map: Store → Delivery */}
+                {storeCoords && addressCoords && (
+                  <CheckoutRouteMap
+                    storeCoords={storeCoords}
+                    deliveryCoords={addressCoords}
+                    storeName={storeNameProp || storeName}
+                  />
+                )}
+
                 {/* Live ETA */}
                 <motion.div
                   initial={{ opacity: 0, scale: 0.9 }}
@@ -642,8 +1100,8 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                   <div className="flex-1">
                     <span className="text-[11px] font-bold text-foreground">
                       Est. delivery:{" "}
-                      <motion.span key={liveEta} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-primary">
-                        {liveEta}–{liveEta + 15} min
+                      <motion.span key={effectiveDurationMinutes} initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-primary">
+                        {effectiveDurationMinutes} min
                       </motion.span>
                     </span>
                   </div>
@@ -738,17 +1196,20 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                   {/* Price breakdown */}
                   <div className="px-3.5 pb-3.5 pt-2 border-t border-border/10 space-y-1.5">
                     <div className="flex justify-between text-[12px] text-muted-foreground">
-                      <span>Subtotal</span>
+                      <span>{t("grocery.checkout.subtotal")}</span>
                       <span className="text-foreground tabular-nums">${total.toFixed(2)}</span>
                     </div>
+                    {!isCambodia && (
+                      <div className="flex justify-between text-[12px] text-muted-foreground">
+                        <span>Platform fee ({markupPct}%)</span>
+                        <span className="text-foreground tabular-nums">${platformMarkup.toFixed(2)}</span>
+                      </div>
+                    )}
                     <div className="flex justify-between text-[12px] text-muted-foreground">
-                      <span>Platform fee ({markupPct}%)</span>
-                      <span className="text-foreground tabular-nums">${platformMarkup.toFixed(2)}</span>
-                    </div>
-                    <div className="flex justify-between text-[12px] text-muted-foreground">
-                      <span className="flex items-center gap-1.5"><Truck className="h-3 w-3" /> Delivery (~{estimatedMiles}mi)</span>
+                      <span className="flex items-center gap-1.5"><Truck className="h-3 w-3" /> {isCambodia ? "Delivery" : "Delivery"} ({distanceLabel})</span>
                       <span className="text-foreground tabular-nums">${deliveryFee.toFixed(2)}</span>
                     </div>
+                    {!isCambodia && (
                     <div className="flex justify-between text-[12px] text-muted-foreground">
                       <span className="flex items-center gap-1.5">
                         Service fee ({SERVICE_FEE_PCT}%)
@@ -763,6 +1224,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                         <span className="text-foreground tabular-nums">${serviceFee.toFixed(2)}</span>
                       )}
                     </div>
+                    )}
                     {priorityFee > 0 && (
                       <div className="flex justify-between text-[12px] text-muted-foreground">
                         <span className="flex items-center gap-1.5">⚡ Priority</span>
@@ -823,6 +1285,57 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                   </div>
                 ) : (
                   <>
+                    {/* Payment Method Selector */}
+                    {storePaymentTypes.length > 1 && (
+                      <div className="mb-4">
+                        <h3 className="text-[13px] font-bold flex items-center gap-2 mb-2.5">
+                          <CreditCard className="h-3.5 w-3.5 text-primary" />
+                          Payment Method
+                        </h3>
+                        <div className="flex gap-2">
+                          {storePaymentTypes.includes("cash") && (
+                            <motion.button
+                              whileTap={{ scale: 0.92 }}
+                              onClick={() => { setSelectedPayment("cash"); resetInlinePayment(); }}
+                              className={`flex-1 py-2.5 rounded-xl text-[12px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                                selectedPayment === "cash"
+                                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
+                                  : "bg-muted/25 text-muted-foreground hover:bg-muted/40 border border-border/15"
+                              }`}
+                            >
+                              <Banknote className="h-3.5 w-3.5" /> Cash
+                            </motion.button>
+                          )}
+                          {storePaymentTypes.includes("card") && (
+                            <motion.button
+                              whileTap={{ scale: 0.92 }}
+                              onClick={() => { setSelectedPayment("card"); resetInlinePayment(); }}
+                              className={`flex-1 py-2.5 rounded-xl text-[12px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                                selectedPayment === "card"
+                                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
+                                  : "bg-muted/25 text-muted-foreground hover:bg-muted/40 border border-border/15"
+                              }`}
+                            >
+                              <CreditCard className="h-3.5 w-3.5" /> Card
+                            </motion.button>
+                          )}
+                          {storePaymentTypes.includes("aba") && (
+                            <motion.button
+                              whileTap={{ scale: 0.92 }}
+                              onClick={() => { setSelectedPayment("aba"); resetInlinePayment(); }}
+                              className={`flex-1 py-2.5 rounded-xl text-[12px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                                selectedPayment === "aba"
+                                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
+                                  : "bg-muted/25 text-muted-foreground hover:bg-muted/40 border border-border/15"
+                              }`}
+                            >
+                              <QrCode className="h-3.5 w-3.5" /> ABA
+                            </motion.button>
+                          )}
+                        </div>
+                      </div>
+                    )}
+
                     {/* Tip selection */}
                     <div className="mb-4">
                       <h3 className="text-[13px] font-bold flex items-center gap-2 mb-2.5">
@@ -862,7 +1375,11 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                     </div>
 
                     <p className="text-[9px] text-muted-foreground/60 text-center mb-3 leading-relaxed px-4">
-                      Your card is processed inline by Stripe. A verified ZIVO driver will shop your items and deliver to your door.
+                      {selectedPayment === "cash"
+                        ? "Pay your driver in cash upon delivery. A verified ZIVO driver will shop your items and deliver to your door."
+                        : selectedPayment === "aba"
+                        ? "You'll receive an ABA QR code to scan after placing your order."
+                        : "Your card is processed inline by Stripe. A verified ZIVO driver will shop your items and deliver to your door."}
                     </p>
 
                     {/* Policy disclosures */}
@@ -899,7 +1416,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                 disabled={!isValid}
                 onClick={goToReview}
               >
-                Review Order
+                {t("grocery.checkout.review_order")}
                 <ArrowRight className="h-4 w-4" />
               </Button>
             </motion.div>
@@ -912,12 +1429,22 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
               <Button
                 className="w-full h-[50px] rounded-2xl text-[14px] font-bold shadow-lg shadow-primary/20 gap-2"
                 disabled={isSubmitting}
-                onClick={handleCreateInlinePayment}
+                onClick={selectedPayment === "card" ? handleCreateInlinePayment : handleCashOrAbaOrder}
               >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="h-4.5 w-4.5 animate-spin" />
-                    Preparing secure payment…
+                    {selectedPayment === "card" ? "Preparing secure payment…" : "Placing order…"}
+                  </>
+                ) : selectedPayment === "cash" ? (
+                  <>
+                    <Banknote className="h-4 w-4" />
+                    Place Order · ${grandTotal.toFixed(2)} Cash
+                  </>
+                ) : selectedPayment === "aba" ? (
+                  <>
+                    <QrCode className="h-4 w-4" />
+                    Place Order · ${grandTotal.toFixed(2)} ABA
                   </>
                 ) : (
                   <>
@@ -930,7 +1457,9 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
           )}
           <div className="flex items-center justify-center gap-1.5 mt-2">
             <Lock className="h-2.5 w-2.5 text-muted-foreground/40" />
-            <span className="text-[9px] text-muted-foreground/40">Powered by Stripe · 256-bit encryption</span>
+            <span className="text-[9px] text-muted-foreground/40">
+              {selectedPayment === "cash" ? "Cash on delivery" : selectedPayment === "aba" ? "ABA Bank · Secure QR" : "Powered by Stripe · 256-bit encryption"}
+            </span>
           </div>
         </div>
       </motion.div>

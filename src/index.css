@@ -1,9 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
-@import url("https://fonts.googleapis.com/css2?family=Work+Sans:wght@400;500;600;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Lora:wght@400;500;600;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Inconsolata:wght@400;700&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Battambang:wght@300;400;700;900&display=swap");
-@import url("https://fonts.googleapis.com/css2?family=Noto+Sans+Khmer:wght@300;400;500;600;700&display=swap");
+/* Fonts loaded via <link> in index.html to avoid render-blocking @import */
 
 @tailwind base;
 @tailwind components;
@@ -269,23 +264,42 @@
   }
 }
 
+@layer base {
+  /* =============================================
+     SHARED SAFE-AREA TOKENS
+     ---------------------------------------------
+     `env(safe-area-inset-top)` can resolve to 0px in some Capacitor / PWA
+     webview contexts even on notched iPhones (Dynamic Island ~ 59px). These
+     variables guarantee a minimum visual clearance for full-screen overlays
+     and sheet headers so the close button / avatar never sit under the
+     status bar. Use the variable, never inline `env()` directly.
+     ============================================= */
+  :root {
+    --zivo-safe-top: env(safe-area-inset-top, 0px);
+    --zivo-safe-bottom: env(safe-area-inset-bottom, 0px);
+    /* Derived variables chain through --zivo-safe-top so E2E tests can inject
+       a simulated inset by overriding only the root variable. */
+    /* Fullscreen overlays (post-detail header, ReelSlide close button) */
+    --zivo-safe-top-overlay: max(var(--zivo-safe-top, 0px), 60px);
+    /* Bottom-sheet headers (Comments, Share, post menu, etc.) */
+    --zivo-safe-top-sheet: max(var(--zivo-safe-top, 0px), 44px);
+    /* Sticky sub-headers (feed, search) */
+    --zivo-safe-top-sticky: max(calc(var(--zivo-safe-top, 0px) + 0.625rem), 48px);
+  }
+}
+
 @layer components {
   /* Safe area support for mobile apps & PWA
      NOTE: Use !important so these classes remain effective even when combined
      with Tailwind padding utilities like py-3/pt-4 (which would otherwise override). */
   .safe-area-top {
-    /* Default: use iOS safe-area env() when available */
-    --_safe-top: env(safe-area-inset-top, 0px);
+    /* Use the shared sticky-header token so this utility always reserves a
+       safe minimum (≥ 48px) even when env(safe-area-inset-top) returns 0
+       (Lovable mobile preview, some Capacitor / PWA WebView contexts).
+       !important so Tailwind padding utilities (py-3, pt-4, p-3 …) declared
+       on the same element cannot override the top padding. */
+    --_safe-top: var(--zivo-safe-top-sticky);
     padding-top: var(--_safe-top) !important;
-  }
-
-  /* iPhone fallback (when env() is 0 because viewport-fit=cover isn't applied by the container) */
-  @media (max-width: 480px) {
-    @supports (-webkit-touch-callout: none) {
-      .safe-area-top {
-        --_safe-top: max(env(safe-area-inset-top, 0px), 44px);
-      }
-    }
   }
 
   /* Additive variants when combined with Tailwind padding utilities */
@@ -366,21 +380,18 @@
     padding-bottom: calc(var(--_safe-bottom) + 5rem) !important;
   }
 
-  /* Enhanced safe area with fallback for bottom nav */
+  /* Edge-to-edge mode (Capacitor StatusBar.overlaysWebView = true):
+     visual content goes full-bleed, but interactive containers wrapped in
+     .pt-safe / .pb-safe must always clear the notch and home indicator —
+     even in browser/PWA contexts where env(safe-area-inset-*) returns 0.
+     !important so Tailwind padding utilities (py-3, pt-4, p-3 …) declared on
+     the same element cannot override the safe top padding. */
   .pb-safe {
-    padding-bottom: max(env(safe-area-inset-bottom, 0px), 20px);
+    padding-bottom: max(env(safe-area-inset-bottom, 0px), 12px) !important;
   }
 
   .pt-safe {
-    padding-top: max(env(safe-area-inset-top, 0px), 20px);
-  }
-
-  @media (max-width: 480px) {
-    @supports (-webkit-touch-callout: none) {
-      .pt-safe {
-        padding-top: max(env(safe-area-inset-top, 0px), 44px);
-      }
-    }
+    padding-top: var(--zivo-safe-top-sticky) !important;
   }
 
   /* Mobile-native overscroll behavior */
@@ -412,6 +423,25 @@
     -webkit-user-select: none;
     user-select: none;
     -webkit-touch-callout: none;
+  }
+
+  /* Chat bubble gesture surface — fully kills the iOS native
+     "Copy / Look Up / Translate" callout AND the selection loupe so our
+     custom long-press action sheet can take over. Applies to children too
+     because iOS can otherwise select nested timestamps / labels. */
+  .chat-no-callout,
+  .chat-no-callout * {
+    -webkit-user-select: none !important;
+    -moz-user-select: none !important;
+    -ms-user-select: none !important;
+    user-select: none !important;
+    -webkit-touch-callout: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+    -webkit-user-drag: none !important;
+  }
+  .chat-no-callout img,
+  .chat-no-callout video {
+    pointer-events: none;
   }
 
   /* iOS-style momentum scrolling */
@@ -766,6 +796,15 @@
   100% { transform: translateX(0); }
 }
 
+@keyframes marquee {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes soundbar {
+  0% { height: 2px; }
+  100% { height: 8px; }
+}
 /* Premium Glow Pulse */
 @keyframes glow-pulse {
   0%, 100% { box-shadow: 0 0 20px rgba(245, 158, 11, 0.2); }
@@ -1857,4 +1896,390 @@ html[lang="km"] textarea {
   .orb-3d-1, .orb-3d-2, .breathe-glow {
     animation: none !important;
   }
+}
+
+/* =============================================
+   ZIVO SIGNATURE DESIGN LANGUAGE (2026)
+   Unique identity — NOT copied from any platform
+   ============================================= */
+
+/* Aurora Mesh Background */
+.zivo-aurora {
+  background:
+    radial-gradient(ellipse 80% 50% at 20% 40%, hsl(142 71% 45% / 0.08), transparent),
+    radial-gradient(ellipse 60% 80% at 80% 60%, hsl(198 93% 59% / 0.06), transparent),
+    radial-gradient(ellipse 40% 40% at 50% 20%, hsl(263 70% 58% / 0.04), transparent);
+}
+
+/* ZIVO Emerald Ribbon — signature top accent */
+.zivo-ribbon {
+  position: relative;
+  overflow: hidden;
+}
+.zivo-ribbon::before {
+  content: '';
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, hsl(142 71% 45%), hsl(172 66% 50%), hsl(198 93% 59%));
+  border-radius: 0 0 4px 4px;
+}
+
+/* Organic Blob Card */
+.zivo-card-organic {
+  background: hsl(var(--card));
+  border: 1px solid hsl(var(--border) / 0.3);
+  border-radius: 20px;
+  position: relative;
+  overflow: hidden;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+}
+.zivo-card-organic:active {
+  transform: scale(0.97);
+}
+.zivo-card-organic::after {
+  content: '';
+  position: absolute;
+  top: -30%; right: -20%;
+  width: 60%;
+  height: 60%;
+  background: radial-gradient(circle, hsl(var(--primary) / 0.04), transparent 70%);
+  pointer-events: none;
+}
+
+/* ZIVO Icon Pill — signature rounded-square icon container */
+.zivo-icon-pill {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.zivo-icon-pill::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, currentColor, transparent);
+  opacity: 0.1;
+  border-radius: inherit;
+}
+
+/* ZIVO Section Divider — organic wave line */
+.zivo-divider {
+  height: 1px;
+  background: linear-gradient(90deg, transparent, hsl(var(--border) / 0.6) 30%, hsl(var(--border) / 0.6) 70%, transparent);
+  margin: 1.5rem 0;
+}
+
+/* ZIVO Floating Badge */
+.zivo-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 8px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  background: linear-gradient(135deg, hsl(var(--primary) / 0.15), hsl(var(--primary) / 0.05));
+  color: hsl(var(--primary));
+  border: 1px solid hsl(var(--primary) / 0.2);
+}
+
+/* ZIVO Signature Button */
+.zivo-btn-signature {
+  background: linear-gradient(135deg, hsl(142 71% 45%), hsl(158 64% 51%));
+  color: white;
+  border: none;
+  border-radius: 16px;
+  font-weight: 700;
+  position: relative;
+  overflow: hidden;
+  transition: all 0.3s ease;
+}
+.zivo-btn-signature::before {
+  content: '';
+  position: absolute;
+  top: 0; left: -100%;
+  width: 50%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.15), transparent);
+  transition: left 0.5s ease;
+}
+.zivo-btn-signature:hover::before {
+  left: 100%;
+}
+.zivo-btn-signature:active {
+  transform: scale(0.97);
+}
+
+/* ZIVO Stat Orb — circular stat display */
+.zivo-stat-orb {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: hsl(var(--card));
+  border: 2px solid hsl(var(--border) / 0.4);
+  box-shadow: 0 4px 16px hsl(var(--primary) / 0.06);
+}
+
+/* ZIVO Category Chip */
+.zivo-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 12px;
+  font-size: 13px;
+  font-weight: 600;
+  background: hsl(var(--muted) / 0.5);
+  color: hsl(var(--foreground));
+  border: 1px solid hsl(var(--border) / 0.3);
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.zivo-chip:hover, .zivo-chip.active {
+  background: hsl(var(--primary) / 0.1);
+  border-color: hsl(var(--primary) / 0.3);
+  color: hsl(var(--primary));
+}
+
+/* ZIVO Progress Ring */
+@keyframes zivo-ring-fill {
+  from { stroke-dashoffset: 283; }
+}
+
+/* ZIVO Mesh Grid Background */
+.zivo-mesh-grid {
+  background-image:
+    linear-gradient(hsl(var(--border) / 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, hsl(var(--border) / 0.08) 1px, transparent 1px);
+  background-size: 32px 32px;
+}
+
+/* ZIVO Watermark */
+.zivo-watermark {
+  position: absolute;
+  bottom: -20px;
+  right: -10px;
+  font-size: 80px;
+  font-weight: 900;
+  letter-spacing: -4px;
+  color: hsl(var(--foreground) / 0.02);
+  pointer-events: none;
+  user-select: none;
+}
+
+@keyframes zivo-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+}
+
+.zivo-float {
+  animation: zivo-float 3s ease-in-out infinite;
+}
+
+@keyframes zivo-pulse-ring {
+  0% { transform: scale(1); opacity: 0.3; }
+  100% { transform: scale(1.8); opacity: 0; }
+}
+
+/* 🐉 3D floating dragon-scale level badge */
+@keyframes float3d {
+  0%, 100% { transform: perspective(40px) translateZ(0) translateY(0) rotateX(0deg); }
+  50% { transform: perspective(40px) translateZ(2px) translateY(-2px) rotateX(6deg); }
+}
+
+/* 🐉 Dragon banner — rotating conic border for chat rows */
+@keyframes dragonSpin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+@keyframes dragonFloat {
+  0%, 100% { transform: translateY(0) rotateX(0deg); }
+  50% { transform: translateY(-1.5px) rotateX(2deg); }
+}
+@keyframes dragonScale {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+.dragon-banner {
+  position: relative;
+  isolation: isolate;
+  animation: dragonFloat 3.4s ease-in-out infinite;
+  transform-style: preserve-3d;
+}
+.dragon-banner::before {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  border-radius: 20px;
+  padding: 2px;
+  background: conic-gradient(from 0deg, #ff3b6b, #ffb300, #ff3b6b, #c2185b, #ffb300, #ff3b6b);
+  -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+          mask-composite: exclude;
+  animation: dragonSpin 5s linear infinite;
+  z-index: -1;
+  filter: drop-shadow(0 0 6px rgba(255,80,120,0.55));
+  pointer-events: none;
+}
+.dragon-banner::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: 18px;
+  background: linear-gradient(110deg, rgba(255,60,100,0.18), rgba(255,180,40,0.12), rgba(120,30,60,0.18));
+  background-size: 200% 200%;
+  animation: dragonScale 4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: -1;
+}
+.dragon-banner-gold::before {
+  background: conic-gradient(from 0deg, #ffe066, #ff9500, #ffe066, #8b4500, #ffb300, #ffe066);
+  filter: drop-shadow(0 0 5px rgba(255,180,0,0.5));
+}
+.dragon-banner-violet::before {
+  background: conic-gradient(from 0deg, #b388ff, #6a1b9a, #b388ff, #2a0845, #b388ff);
+  filter: drop-shadow(0 0 5px rgba(140,80,220,0.45));
+}
+
+/* =============================================
+   CV BUILDER — Style Customizer Hooks
+   These rules let the Customize Style panel
+   (accent / header / columns / font scale) take
+   real visual effect over any template.
+   ============================================= */
+.cv-doc { color: #1a1a1a; }
+
+/* Accent surfaces use the live --primary token set inline */
+.cv-doc .cv-accent-bg { background-color: hsl(var(--primary)); color: #fff; }
+.cv-doc .cv-accent-text { color: hsl(var(--primary)); }
+.cv-doc .cv-accent-border { border-color: hsl(var(--primary)); }
+.cv-doc .cv-accent-soft { background-color: hsl(var(--primary) / 0.08); }
+.cv-doc .cv-accent-rule { background-color: hsl(var(--primary)); }
+.cv-doc .cv-accent-ring { box-shadow: 0 0 0 2px hsl(var(--primary) / 0.35); }
+
+/* ── Column overrides ── */
+.cv-doc.cv-cols-1 .cv-sidebar { display: none; }
+.cv-doc.cv-cols-1 .cv-main { width: 100% !important; padding: 1rem 1.25rem; }
+.cv-doc.cv-cols-1 .cv-flex-cols { display: block; }
+
+.cv-doc.cv-cols-2 .cv-sidebar { display: block; width: 38% !important; }
+.cv-doc.cv-cols-2 .cv-main { flex: 1 1 0%; }
+.cv-doc.cv-cols-2 .cv-flex-cols { display: flex; }
+
+/* ── Header style overrides (apply to any template) ── */
+.cv-doc.cv-header-bold .cv-hero h1,
+.cv-doc.cv-header-bold .cv-name { font-weight: 900 !important; letter-spacing: -0.01em; }
+.cv-doc.cv-header-bold .cv-hero { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+
+.cv-doc.cv-header-banner .cv-hero {
+  background: linear-gradient(135deg, hsl(var(--primary)), hsl(var(--primary) / 0.7)) !important;
+  color: #fff !important;
+}
+.cv-doc.cv-header-banner .cv-hero h1,
+.cv-doc.cv-header-banner .cv-hero p,
+.cv-doc.cv-header-banner .cv-hero span { color: #fff !important; }
+
+.cv-doc.cv-header-minimal .cv-hero {
+  background: transparent !important;
+  border-bottom: 1px solid hsl(var(--primary) / 0.25);
+  padding: 0.75rem 1rem;
+}
+.cv-doc.cv-header-minimal .cv-hero h1 { font-weight: 600; letter-spacing: 0; }
+.cv-doc.cv-header-minimal .cv-hero .cv-photo { width: 3rem; height: 3rem; }
+
+/* Split header — accent left bar */
+.cv-doc.cv-header-split .cv-hero {
+  border-left: 6px solid hsl(var(--primary)) !important;
+  background: hsl(var(--primary) / 0.05) !important;
+}
+/* Stripe header — top accent stripe */
+.cv-doc.cv-header-stripe .cv-hero {
+  border-top: 5px solid hsl(var(--primary)) !important;
+  background: linear-gradient(180deg, hsl(var(--primary) / 0.08), transparent) !important;
+}
+
+/* ── Photo shape overrides ── */
+.cv-doc.cv-photo-round .cv-photo { border-radius: 9999px !important; }
+.cv-doc.cv-photo-square .cv-photo { border-radius: 0 !important; }
+.cv-doc.cv-photo-rounded .cv-photo { border-radius: 0.75rem !important; }
+
+/* ── Section divider overrides — apply to <h3> headings inside cv-main / cv-sidebar ── */
+.cv-doc.cv-divider-underline .cv-main h3,
+.cv-doc.cv-divider-underline .cv-sidebar h3 {
+  border-bottom: 2px solid hsl(var(--primary) / 0.4) !important;
+  padding-bottom: 0.25rem !important;
+}
+.cv-doc.cv-divider-pill .cv-main h3,
+.cv-doc.cv-divider-pill .cv-sidebar h3 {
+  display: inline-block !important;
+  background: hsl(var(--primary) / 0.12) !important;
+  color: hsl(var(--primary)) !important;
+  padding: 0.15rem 0.6rem !important;
+  border-radius: 9999px !important;
+  border: none !important;
+}
+.cv-doc.cv-divider-bar .cv-main h3,
+.cv-doc.cv-divider-bar .cv-sidebar h3 {
+  border-left: 4px solid hsl(var(--primary)) !important;
+  padding-left: 0.5rem !important;
+  border-bottom: none !important;
+}
+
+
+/* Hide the mobile bottom nav while the fullscreen StoryViewer is open. */
+body[data-story-open="true"] [data-zivo-mobile-nav] {
+  display: none !important;
+}
+
+/* Utility: hide horizontal scrollbar but keep scrolling */
+.no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
+.no-scrollbar::-webkit-scrollbar { display: none; }
+
+/* ── Accessibility preferences (driven by useAccessibilityPrefs) ── */
+:root {
+  --font-scale: 1;
+}
+html {
+  font-size: calc(16px * var(--font-scale));
+}
+
+/* Reduce motion: kill animations & transitions */
+html.reduce-motion *,
+html.reduce-motion *::before,
+html.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* High contrast: bolder borders, stronger text */
+html.high-contrast {
+  --border: 0 0% 30%;
+  --muted-foreground: 0 0% 25%;
+}
+html.dark.high-contrast {
+  --border: 0 0% 70%;
+  --muted-foreground: 0 0% 80%;
+}
+html.high-contrast :focus-visible {
+  outline: 2px solid hsl(var(--primary)) !important;
+  outline-offset: 2px !important;
+}
+
+/* Always underline links */
+html.underline-links a:not([class*="no-underline"]):not(button) {
+  text-decoration: underline;
+  text-underline-offset: 2px;
 }

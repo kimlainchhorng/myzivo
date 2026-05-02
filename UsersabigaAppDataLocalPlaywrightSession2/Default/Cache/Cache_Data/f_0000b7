@@ -1,0 +1,487 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/pages/Login.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"]; const _Fragment = __vite__cjsImport0_react_jsxDevRuntime["Fragment"];
+var _s = $RefreshSig$();
+/**
+ * ZIVO ID — Login page (rebuilt clean v2026)
+ * - Plain native <input> elements (no custom wrappers) so iPhone Safari typing works.
+ * - Emerald glassmorphic ZIVO branding.
+ * - Email + password only.
+ */ import __vite__cjsImport1_react from "/node_modules/.vite/deps/react.js?v=7fd9520c"; const useState = __vite__cjsImport1_react["useState"]; const useEffect = __vite__cjsImport1_react["useEffect"];
+import { Link, useNavigate, useSearchParams } from "/node_modules/.vite/deps/react-router-dom.js?v=7fd9520c";
+import { Loader2, Mail, Lock, ArrowRight, Eye, EyeOff, Sparkles } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+import { supabase } from "/src/integrations/supabase/client.ts";
+import { useAuth } from "/src/contexts/AuthContext.tsx";
+import { Button } from "/src/components/ui/button.tsx";
+import { Checkbox } from "/src/components/ui/checkbox.tsx";
+import { toast } from "/node_modules/.vite/deps/sonner.js?v=7fd9520c";
+import SEOHead from "/src/components/SEOHead.tsx";
+const Login = ()=>{
+    _s();
+    const navigate = useNavigate();
+    const [params] = useSearchParams();
+    const redirect = params.get("redirect") || "/";
+    const { signIn, user, isLoading: authLoading } = useAuth();
+    const [email, setEmail] = useState("");
+    const [password, setPassword] = useState("");
+    const [showPassword, setShowPassword] = useState(false);
+    const [remember, setRemember] = useState(true);
+    const [submitting, setSubmitting] = useState(false);
+    // If already signed in, leave the login page
+    useEffect(()=>{
+        if (!authLoading && user) navigate(redirect, {
+            replace: true
+        });
+    }, [
+        authLoading,
+        user,
+        navigate,
+        redirect
+    ]);
+    const onSubmit = async (e)=>{
+        e.preventDefault();
+        if (submitting) return;
+        if (!email.trim() || !password) {
+            toast.error("Please enter your email and password.");
+            return;
+        }
+        setSubmitting(true);
+        const trimmedEmail = email.trim();
+        // Check if an account exists for this email first, so we can return a precise error
+        let accountExists = null;
+        try {
+            const { data: precheck } = await supabase.functions.invoke("auth_precheck_login", {
+                body: {
+                    email: trimmedEmail
+                }
+            });
+            if (precheck && typeof precheck.exists === "boolean") accountExists = precheck.exists;
+        } catch  {
+        // ignore — fall back to message parsing
+        }
+        const { error } = await signIn(trimmedEmail, password);
+        setSubmitting(false);
+        if (error) {
+            const msg = (error.message || "").toLowerCase();
+            const looksLikeBadCreds = msg.includes("invalid login") || msg.includes("invalid credentials") || msg.includes("user not found");
+            if (accountExists === false || msg.includes("user not found")) {
+                toast.error("Wrong email — no account found for this email.", {
+                    action: {
+                        label: "Sign Up",
+                        onClick: ()=>navigate(`/signup${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`)
+                    }
+                });
+            } else if (accountExists === true || looksLikeBadCreds) {
+                toast.error("Wrong password — please try again.", {
+                    action: {
+                        label: "Forgot?",
+                        onClick: ()=>navigate("/forgot-password")
+                    }
+                });
+            } else {
+                toast.error(error.message || "Sign in failed. Please try again.");
+            }
+            return;
+        }
+        toast.success("Welcome back!");
+        navigate(redirect, {
+            replace: true
+        });
+    };
+    return /*#__PURE__*/ _jsxDEV("div", {
+        className: "relative min-h-[100dvh] w-full overflow-hidden flex items-center justify-center px-4 py-10 bg-[#04100d]",
+        children: [
+            /*#__PURE__*/ _jsxDEV(SEOHead, {
+                title: "Sign in to ZIVO",
+                description: "Sign in to your ZIVO account"
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                lineNumber: 89,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV("div", {
+                "aria-hidden": true,
+                className: "pointer-events-none absolute inset-0 overflow-hidden",
+                children: [
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "absolute inset-0 opacity-90 [background:conic-gradient(from_180deg_at_50%_50%,#022c22_0deg,#064e3b_90deg,#0f766e_180deg,#022c22_270deg,#022c22_360deg)]"
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                        lineNumber: 93,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "absolute -top-40 -left-32 w-[520px] h-[520px] rounded-full bg-emerald-400/40 blur-[140px] animate-pulse"
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                        lineNumber: 94,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "absolute top-1/4 -right-40 w-[560px] h-[560px] rounded-full bg-teal-300/25 blur-[160px] animate-pulse",
+                        style: {
+                            animationDelay: "1.4s"
+                        }
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                        lineNumber: 95,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "absolute -bottom-48 left-1/3 w-[620px] h-[620px] rounded-full bg-emerald-700/35 blur-[180px] animate-pulse",
+                        style: {
+                            animationDelay: "2.6s"
+                        }
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                        lineNumber: 96,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(0,0,0,0.85)_100%)]"
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                        lineNumber: 97,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "absolute inset-0 opacity-[0.05] [background-image:linear-gradient(rgba(255,255,255,0.6)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.6)_1px,transparent_1px)] [background-size:56px_56px] [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_75%)]"
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                        lineNumber: 98,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                lineNumber: 92,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "relative w-full max-w-md animate-flip-in",
+                children: [
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "text-center mb-6",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 shadow-[0_8px_32px_rgba(16,185,129,0.45)] mb-3 ring-1 ring-white/20",
+                                children: /*#__PURE__*/ _jsxDEV(Sparkles, {
+                                    className: "w-7 h-7 text-white"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                                    lineNumber: 105,
+                                    columnNumber: 13
+                                }, this)
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                                lineNumber: 104,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("h1", {
+                                className: "text-3xl font-bold bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent tracking-tight",
+                                children: "ZIVO ID"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                                lineNumber: 107,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("p", {
+                                className: "text-sm text-white/60 mt-1",
+                                children: "Welcome Back — Zivo All in One Place"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                                lineNumber: 108,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                        lineNumber: 103,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "relative rounded-2xl p-[1px] bg-gradient-to-b from-emerald-400/50 via-emerald-500/10 to-transparent shadow-[0_30px_80px_-20px_rgba(16,185,129,0.45)]",
+                        children: /*#__PURE__*/ _jsxDEV("form", {
+                            onSubmit: onSubmit,
+                            className: "rounded-2xl bg-[#0a1f1a]/85 backdrop-blur-2xl p-6 space-y-5",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "space-y-1.5",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV("label", {
+                                            htmlFor: "login-email",
+                                            className: "text-sm font-medium text-foreground",
+                                            children: "Email"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                                            lineNumber: 119,
+                                            columnNumber: 13
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("div", {
+                                            className: "relative",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV(Mail, {
+                                                    className: "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                                                    lineNumber: 123,
+                                                    columnNumber: 15
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV("input", {
+                                                    id: "login-email",
+                                                    type: "email",
+                                                    inputMode: "email",
+                                                    autoComplete: "username",
+                                                    autoCapitalize: "none",
+                                                    autoCorrect: "off",
+                                                    spellCheck: false,
+                                                    value: email,
+                                                    onChange: (e)=>setEmail(e.target.value),
+                                                    placeholder: "you@example.com",
+                                                    disabled: submitting,
+                                                    className: "w-full h-12 pl-10 pr-3 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                                                    lineNumber: 124,
+                                                    columnNumber: 15
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                                            lineNumber: 122,
+                                            columnNumber: 13
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                                    lineNumber: 118,
+                                    columnNumber: 11
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "space-y-1.5",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV("div", {
+                                            className: "flex items-center justify-between",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV("label", {
+                                                    htmlFor: "login-password",
+                                                    className: "text-sm font-medium text-foreground",
+                                                    children: "Password"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                                                    lineNumber: 144,
+                                                    columnNumber: 15
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV(Link, {
+                                                    to: "/forgot-password",
+                                                    className: "text-xs font-medium text-emerald-400 hover:text-emerald-300",
+                                                    children: "Forgot?"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                                                    lineNumber: 147,
+                                                    columnNumber: 15
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                                            lineNumber: 143,
+                                            columnNumber: 13
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("div", {
+                                            className: "relative",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV(Lock, {
+                                                    className: "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                                                    lineNumber: 155,
+                                                    columnNumber: 15
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV("input", {
+                                                    id: "login-password",
+                                                    type: showPassword ? "text" : "password",
+                                                    autoComplete: "current-password",
+                                                    value: password,
+                                                    onChange: (e)=>setPassword(e.target.value),
+                                                    placeholder: "Your password",
+                                                    disabled: submitting,
+                                                    className: "w-full h-12 pl-10 pr-11 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                                                    lineNumber: 156,
+                                                    columnNumber: 15
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV("button", {
+                                                    type: "button",
+                                                    onClick: ()=>setShowPassword((v)=>!v),
+                                                    className: "absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground",
+                                                    tabIndex: -1,
+                                                    "aria-label": showPassword ? "Hide password" : "Show password",
+                                                    children: showPassword ? /*#__PURE__*/ _jsxDEV(EyeOff, {
+                                                        className: "w-4 h-4"
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                                                        lineNumber: 173,
+                                                        columnNumber: 33
+                                                    }, this) : /*#__PURE__*/ _jsxDEV(Eye, {
+                                                        className: "w-4 h-4"
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                                                        lineNumber: 173,
+                                                        columnNumber: 66
+                                                    }, this)
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                                                    lineNumber: 166,
+                                                    columnNumber: 15
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                                            lineNumber: 154,
+                                            columnNumber: 13
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                                    lineNumber: 142,
+                                    columnNumber: 11
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("label", {
+                                    className: "flex items-center gap-2 select-none cursor-pointer",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Checkbox, {
+                                            checked: remember,
+                                            onCheckedChange: (v)=>setRemember(!!v),
+                                            className: "data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                                            lineNumber: 180,
+                                            columnNumber: 13
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("span", {
+                                            className: "text-sm text-muted-foreground",
+                                            children: "Remember me on this device"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                                            lineNumber: 185,
+                                            columnNumber: 13
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                                    lineNumber: 179,
+                                    columnNumber: 11
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV(Button, {
+                                    type: "submit",
+                                    disabled: submitting,
+                                    className: "w-full h-12 rounded-xl text-base font-semibold bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30",
+                                    children: submitting ? /*#__PURE__*/ _jsxDEV(Loader2, {
+                                        className: "w-5 h-5 animate-spin"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                                        lineNumber: 195,
+                                        columnNumber: 15
+                                    }, this) : /*#__PURE__*/ _jsxDEV(_Fragment, {
+                                        children: [
+                                            "Sign In ",
+                                            /*#__PURE__*/ _jsxDEV(ArrowRight, {
+                                                className: "w-4 h-4 ml-1"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                                                lineNumber: 198,
+                                                columnNumber: 25
+                                            }, this)
+                                        ]
+                                    }, void 0, true)
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                                    lineNumber: 189,
+                                    columnNumber: 11
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("p", {
+                                    className: "text-center text-sm text-muted-foreground",
+                                    children: [
+                                        "Don't have an account?",
+                                        " ",
+                                        /*#__PURE__*/ _jsxDEV(Link, {
+                                            to: `/signup${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`,
+                                            className: "font-semibold text-emerald-400 hover:text-emerald-300",
+                                            children: "Sign Up"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                                            lineNumber: 205,
+                                            columnNumber: 13
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                                    lineNumber: 203,
+                                    columnNumber: 11
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                            lineNumber: 113,
+                            columnNumber: 9
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                        lineNumber: 112,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("p", {
+                        className: "text-center text-xs text-muted-foreground mt-4",
+                        children: "Protected by enterprise-grade security"
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                        lineNumber: 215,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+                lineNumber: 101,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx",
+        lineNumber: 88,
+        columnNumber: 5
+    }, this);
+};
+_s(Login, "adoWSHd/4kSayl8JRcs4q64y2iM=", false, function() {
+    return [
+        useNavigate,
+        useSearchParams,
+        useAuth
+    ];
+});
+_c = Login;
+export default Login;
+var _c;
+$RefreshReg$(_c, "Login");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/pages/Login.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIkxvZ2luLnRzeCJdLCJzb3VyY2VzQ29udGVudCI6WyIvKipcclxuICogWklWTyBJRCDigJQgTG9naW4gcGFnZSAocmVidWlsdCBjbGVhbiB2MjAyNilcclxuICogLSBQbGFpbiBuYXRpdmUgPGlucHV0PiBlbGVtZW50cyAobm8gY3VzdG9tIHdyYXBwZXJzKSBzbyBpUGhvbmUgU2FmYXJpIHR5cGluZyB3b3Jrcy5cclxuICogLSBFbWVyYWxkIGdsYXNzbW9ycGhpYyBaSVZPIGJyYW5kaW5nLlxyXG4gKiAtIEVtYWlsICsgcGFzc3dvcmQgb25seS5cclxuICovXHJcbmltcG9ydCB7IHVzZVN0YXRlLCB1c2VFZmZlY3QgfSBmcm9tIFwicmVhY3RcIjtcclxuaW1wb3J0IHsgTGluaywgdXNlTmF2aWdhdGUsIHVzZVNlYXJjaFBhcmFtcyB9IGZyb20gXCJyZWFjdC1yb3V0ZXItZG9tXCI7XHJcbmltcG9ydCB7IExvYWRlcjIsIE1haWwsIExvY2ssIEFycm93UmlnaHQsIEV5ZSwgRXllT2ZmLCBTaGllbGRDaGVjaywgU3BhcmtsZXMgfSBmcm9tIFwibHVjaWRlLXJlYWN0XCI7XHJcbmltcG9ydCB7IHN1cGFiYXNlIH0gZnJvbSBcIkAvaW50ZWdyYXRpb25zL3N1cGFiYXNlL2NsaWVudFwiO1xyXG5pbXBvcnQgeyB1c2VBdXRoIH0gZnJvbSBcIkAvY29udGV4dHMvQXV0aENvbnRleHRcIjtcclxuaW1wb3J0IHsgQnV0dG9uIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9idXR0b25cIjtcclxuaW1wb3J0IHsgQ2hlY2tib3ggfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2NoZWNrYm94XCI7XHJcbmltcG9ydCB7IHRvYXN0IH0gZnJvbSBcInNvbm5lclwiO1xyXG5pbXBvcnQgU0VPSGVhZCBmcm9tIFwiQC9jb21wb25lbnRzL1NFT0hlYWRcIjtcclxuXHJcbmNvbnN0IExvZ2luID0gKCkgPT4ge1xyXG4gIGNvbnN0IG5hdmlnYXRlID0gdXNlTmF2aWdhdGUoKTtcclxuICBjb25zdCBbcGFyYW1zXSA9IHVzZVNlYXJjaFBhcmFtcygpO1xyXG4gIGNvbnN0IHJlZGlyZWN0ID0gcGFyYW1zLmdldChcInJlZGlyZWN0XCIpIHx8IFwiL1wiO1xyXG4gIGNvbnN0IHsgc2lnbkluLCB1c2VyLCBpc0xvYWRpbmc6IGF1dGhMb2FkaW5nIH0gPSB1c2VBdXRoKCk7XHJcblxyXG4gIGNvbnN0IFtlbWFpbCwgc2V0RW1haWxdID0gdXNlU3RhdGUoXCJcIik7XHJcbiAgY29uc3QgW3Bhc3N3b3JkLCBzZXRQYXNzd29yZF0gPSB1c2VTdGF0ZShcIlwiKTtcclxuICBjb25zdCBbc2hvd1Bhc3N3b3JkLCBzZXRTaG93UGFzc3dvcmRdID0gdXNlU3RhdGUoZmFsc2UpO1xyXG4gIGNvbnN0IFtyZW1lbWJlciwgc2V0UmVtZW1iZXJdID0gdXNlU3RhdGUodHJ1ZSk7XHJcbiAgY29uc3QgW3N1Ym1pdHRpbmcsIHNldFN1Ym1pdHRpbmddID0gdXNlU3RhdGUoZmFsc2UpO1xyXG5cclxuICAvLyBJZiBhbHJlYWR5IHNpZ25lZCBpbiwgbGVhdmUgdGhlIGxvZ2luIHBhZ2VcclxuICB1c2VFZmZlY3QoKCkgPT4ge1xyXG4gICAgaWYgKCFhdXRoTG9hZGluZyAmJiB1c2VyKSBuYXZpZ2F0ZShyZWRpcmVjdCwgeyByZXBsYWNlOiB0cnVlIH0pO1xyXG4gIH0sIFthdXRoTG9hZGluZywgdXNlciwgbmF2aWdhdGUsIHJlZGlyZWN0XSk7XHJcblxyXG4gIGNvbnN0IG9uU3VibWl0ID0gYXN5bmMgKGU6IFJlYWN0LkZvcm1FdmVudCkgPT4ge1xyXG4gICAgZS5wcmV2ZW50RGVmYXVsdCgpO1xyXG4gICAgaWYgKHN1Ym1pdHRpbmcpIHJldHVybjtcclxuICAgIGlmICghZW1haWwudHJpbSgpIHx8ICFwYXNzd29yZCkge1xyXG4gICAgICB0b2FzdC5lcnJvcihcIlBsZWFzZSBlbnRlciB5b3VyIGVtYWlsIGFuZCBwYXNzd29yZC5cIik7XHJcbiAgICAgIHJldHVybjtcclxuICAgIH1cclxuICAgIHNldFN1Ym1pdHRpbmcodHJ1ZSk7XHJcbiAgICBjb25zdCB0cmltbWVkRW1haWwgPSBlbWFpbC50cmltKCk7XHJcblxyXG4gICAgLy8gQ2hlY2sgaWYgYW4gYWNjb3VudCBleGlzdHMgZm9yIHRoaXMgZW1haWwgZmlyc3QsIHNvIHdlIGNhbiByZXR1cm4gYSBwcmVjaXNlIGVycm9yXHJcbiAgICBsZXQgYWNjb3VudEV4aXN0czogYm9vbGVhbiB8IG51bGwgPSBudWxsO1xyXG4gICAgdHJ5IHtcclxuICAgICAgY29uc3QgeyBkYXRhOiBwcmVjaGVjayB9ID0gYXdhaXQgc3VwYWJhc2UuZnVuY3Rpb25zLmludm9rZShcImF1dGhfcHJlY2hlY2tfbG9naW5cIiwge1xyXG4gICAgICAgIGJvZHk6IHsgZW1haWw6IHRyaW1tZWRFbWFpbCB9LFxyXG4gICAgICB9KTtcclxuICAgICAgaWYgKHByZWNoZWNrICYmIHR5cGVvZiBwcmVjaGVjay5leGlzdHMgPT09IFwiYm9vbGVhblwiKSBhY2NvdW50RXhpc3RzID0gcHJlY2hlY2suZXhpc3RzO1xyXG4gICAgfSBjYXRjaCB7XHJcbiAgICAgIC8vIGlnbm9yZSDigJQgZmFsbCBiYWNrIHRvIG1lc3NhZ2UgcGFyc2luZ1xyXG4gICAgfVxyXG5cclxuICAgIGNvbnN0IHsgZXJyb3IgfSA9IGF3YWl0IHNpZ25Jbih0cmltbWVkRW1haWwsIHBhc3N3b3JkKTtcclxuICAgIHNldFN1Ym1pdHRpbmcoZmFsc2UpO1xyXG4gICAgaWYgKGVycm9yKSB7XHJcbiAgICAgIGNvbnN0IG1zZyA9IChlcnJvci5tZXNzYWdlIHx8IFwiXCIpLnRvTG93ZXJDYXNlKCk7XHJcbiAgICAgIGNvbnN0IGxvb2tzTGlrZUJhZENyZWRzID1cclxuICAgICAgICBtc2cuaW5jbHVkZXMoXCJpbnZhbGlkIGxvZ2luXCIpIHx8XHJcbiAgICAgICAgbXNnLmluY2x1ZGVzKFwiaW52YWxpZCBjcmVkZW50aWFsc1wiKSB8fFxyXG4gICAgICAgIG1zZy5pbmNsdWRlcyhcInVzZXIgbm90IGZvdW5kXCIpO1xyXG5cclxuICAgICAgaWYgKGFjY291bnRFeGlzdHMgPT09IGZhbHNlIHx8IG1zZy5pbmNsdWRlcyhcInVzZXIgbm90IGZvdW5kXCIpKSB7XHJcbiAgICAgICAgdG9hc3QuZXJyb3IoXCJXcm9uZyBlbWFpbCDigJQgbm8gYWNjb3VudCBmb3VuZCBmb3IgdGhpcyBlbWFpbC5cIiwge1xyXG4gICAgICAgICAgYWN0aW9uOiB7XHJcbiAgICAgICAgICAgIGxhYmVsOiBcIlNpZ24gVXBcIixcclxuICAgICAgICAgICAgb25DbGljazogKCkgPT4gbmF2aWdhdGUoYC9zaWdudXAke3JlZGlyZWN0ID8gYD9yZWRpcmVjdD0ke2VuY29kZVVSSUNvbXBvbmVudChyZWRpcmVjdCl9YCA6IFwiXCJ9YCksXHJcbiAgICAgICAgICB9LFxyXG4gICAgICAgIH0pO1xyXG4gICAgICB9IGVsc2UgaWYgKGFjY291bnRFeGlzdHMgPT09IHRydWUgfHwgbG9va3NMaWtlQmFkQ3JlZHMpIHtcclxuICAgICAgICB0b2FzdC5lcnJvcihcIldyb25nIHBhc3N3b3JkIOKAlCBwbGVhc2UgdHJ5IGFnYWluLlwiLCB7XHJcbiAgICAgICAgICBhY3Rpb246IHtcclxuICAgICAgICAgICAgbGFiZWw6IFwiRm9yZ290P1wiLFxyXG4gICAgICAgICAgICBvbkNsaWNrOiAoKSA9PiBuYXZpZ2F0ZShcIi9mb3Jnb3QtcGFzc3dvcmRcIiksXHJcbiAgICAgICAgICB9LFxyXG4gICAgICAgIH0pO1xyXG4gICAgICB9IGVsc2Uge1xyXG4gICAgICAgIHRvYXN0LmVycm9yKGVycm9yLm1lc3NhZ2UgfHwgXCJTaWduIGluIGZhaWxlZC4gUGxlYXNlIHRyeSBhZ2Fpbi5cIik7XHJcbiAgICAgIH1cclxuICAgICAgcmV0dXJuO1xyXG4gICAgfVxyXG4gICAgdG9hc3Quc3VjY2VzcyhcIldlbGNvbWUgYmFjayFcIik7XHJcbiAgICBuYXZpZ2F0ZShyZWRpcmVjdCwgeyByZXBsYWNlOiB0cnVlIH0pO1xyXG4gIH07XHJcblxyXG4gIHJldHVybiAoXHJcbiAgICA8ZGl2IGNsYXNzTmFtZT1cInJlbGF0aXZlIG1pbi1oLVsxMDBkdmhdIHctZnVsbCBvdmVyZmxvdy1oaWRkZW4gZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXIgcHgtNCBweS0xMCBiZy1bIzA0MTAwZF1cIj5cclxuICAgICAgPFNFT0hlYWQgdGl0bGU9XCJTaWduIGluIHRvIFpJVk9cIiBkZXNjcmlwdGlvbj1cIlNpZ24gaW4gdG8geW91ciBaSVZPIGFjY291bnRcIiAvPlxyXG5cclxuICAgICAgey8qIFByZW1pdW0gbWVzaCBiYWNrZ3JvdW5kICovfVxyXG4gICAgICA8ZGl2IGFyaWEtaGlkZGVuIGNsYXNzTmFtZT1cInBvaW50ZXItZXZlbnRzLW5vbmUgYWJzb2x1dGUgaW5zZXQtMCBvdmVyZmxvdy1oaWRkZW5cIj5cclxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImFic29sdXRlIGluc2V0LTAgb3BhY2l0eS05MCBbYmFja2dyb3VuZDpjb25pYy1ncmFkaWVudChmcm9tXzE4MGRlZ19hdF81MCVfNTAlLCMwMjJjMjJfMGRlZywjMDY0ZTNiXzkwZGVnLCMwZjc2NmVfMTgwZGVnLCMwMjJjMjJfMjcwZGVnLCMwMjJjMjJfMzYwZGVnKV1cIiAvPlxyXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiYWJzb2x1dGUgLXRvcC00MCAtbGVmdC0zMiB3LVs1MjBweF0gaC1bNTIwcHhdIHJvdW5kZWQtZnVsbCBiZy1lbWVyYWxkLTQwMC80MCBibHVyLVsxNDBweF0gYW5pbWF0ZS1wdWxzZVwiIC8+XHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJhYnNvbHV0ZSB0b3AtMS80IC1yaWdodC00MCB3LVs1NjBweF0gaC1bNTYwcHhdIHJvdW5kZWQtZnVsbCBiZy10ZWFsLTMwMC8yNSBibHVyLVsxNjBweF0gYW5pbWF0ZS1wdWxzZVwiIHN0eWxlPXt7IGFuaW1hdGlvbkRlbGF5OiBcIjEuNHNcIiB9fSAvPlxyXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiYWJzb2x1dGUgLWJvdHRvbS00OCBsZWZ0LTEvMyB3LVs2MjBweF0gaC1bNjIwcHhdIHJvdW5kZWQtZnVsbCBiZy1lbWVyYWxkLTcwMC8zNSBibHVyLVsxODBweF0gYW5pbWF0ZS1wdWxzZVwiIHN0eWxlPXt7IGFuaW1hdGlvbkRlbGF5OiBcIjIuNnNcIiB9fSAvPlxyXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiYWJzb2x1dGUgaW5zZXQtMCBiZy1bcmFkaWFsLWdyYWRpZW50KGVsbGlwc2VfYXRfY2VudGVyLHRyYW5zcGFyZW50XzMwJSxyZ2JhKDAsMCwwLDAuODUpXzEwMCUpXVwiIC8+XHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJhYnNvbHV0ZSBpbnNldC0wIG9wYWNpdHktWzAuMDVdIFtiYWNrZ3JvdW5kLWltYWdlOmxpbmVhci1ncmFkaWVudChyZ2JhKDI1NSwyNTUsMjU1LDAuNilfMXB4LHRyYW5zcGFyZW50XzFweCksbGluZWFyLWdyYWRpZW50KDkwZGVnLHJnYmEoMjU1LDI1NSwyNTUsMC42KV8xcHgsdHJhbnNwYXJlbnRfMXB4KV0gW2JhY2tncm91bmQtc2l6ZTo1NnB4XzU2cHhdIFttYXNrLWltYWdlOnJhZGlhbC1ncmFkaWVudChlbGxpcHNlX2F0X2NlbnRlcixibGFja180MCUsdHJhbnNwYXJlbnRfNzUlKV1cIiAvPlxyXG4gICAgICA8L2Rpdj5cclxuXHJcbiAgICAgIDxkaXYgY2xhc3NOYW1lPVwicmVsYXRpdmUgdy1mdWxsIG1heC13LW1kIGFuaW1hdGUtZmxpcC1pblwiPlxyXG4gICAgICAgIHsvKiBCcmFuZCAqL31cclxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInRleHQtY2VudGVyIG1iLTZcIj5cclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiaW5saW5lLWZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyIHctMTQgaC0xNCByb3VuZGVkLTJ4bCBiZy1ncmFkaWVudC10by1iciBmcm9tLWVtZXJhbGQtNDAwIHRvLXRlYWwtNjAwIHNoYWRvdy1bMF84cHhfMzJweF9yZ2JhKDE2LDE4NSwxMjksMC40NSldIG1iLTMgcmluZy0xIHJpbmctd2hpdGUvMjBcIj5cclxuICAgICAgICAgICAgPFNwYXJrbGVzIGNsYXNzTmFtZT1cInctNyBoLTcgdGV4dC13aGl0ZVwiIC8+XHJcbiAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgIDxoMSBjbGFzc05hbWU9XCJ0ZXh0LTN4bCBmb250LWJvbGQgYmctZ3JhZGllbnQtdG8tYiBmcm9tLXdoaXRlIHRvLWVtZXJhbGQtMjAwIGJnLWNsaXAtdGV4dCB0ZXh0LXRyYW5zcGFyZW50IHRyYWNraW5nLXRpZ2h0XCI+WklWTyBJRDwvaDE+XHJcbiAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LXNtIHRleHQtd2hpdGUvNjAgbXQtMVwiPldlbGNvbWUgQmFjayDigJQgWml2byBBbGwgaW4gT25lIFBsYWNlPC9wPlxyXG4gICAgICAgIDwvZGl2PlxyXG5cclxuICAgICAgICB7LyogR2xhc3MgY2FyZCB3aXRoIGdyYWRpZW50IHJpbmcgKi99XHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJyZWxhdGl2ZSByb3VuZGVkLTJ4bCBwLVsxcHhdIGJnLWdyYWRpZW50LXRvLWIgZnJvbS1lbWVyYWxkLTQwMC81MCB2aWEtZW1lcmFsZC01MDAvMTAgdG8tdHJhbnNwYXJlbnQgc2hhZG93LVswXzMwcHhfODBweF8tMjBweF9yZ2JhKDE2LDE4NSwxMjksMC40NSldXCI+XHJcbiAgICAgICAgPGZvcm1cclxuICAgICAgICAgIG9uU3VibWl0PXtvblN1Ym1pdH1cclxuICAgICAgICAgIGNsYXNzTmFtZT1cInJvdW5kZWQtMnhsIGJnLVsjMGExZjFhXS84NSBiYWNrZHJvcC1ibHVyLTJ4bCBwLTYgc3BhY2UteS01XCJcclxuICAgICAgICA+XHJcbiAgICAgICAgICB7LyogRW1haWwgKi99XHJcbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktMS41XCI+XHJcbiAgICAgICAgICAgIDxsYWJlbCBodG1sRm9yPVwibG9naW4tZW1haWxcIiBjbGFzc05hbWU9XCJ0ZXh0LXNtIGZvbnQtbWVkaXVtIHRleHQtZm9yZWdyb3VuZFwiPlxyXG4gICAgICAgICAgICAgIEVtYWlsXHJcbiAgICAgICAgICAgIDwvbGFiZWw+XHJcbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwicmVsYXRpdmVcIj5cclxuICAgICAgICAgICAgICA8TWFpbCBjbGFzc05hbWU9XCJhYnNvbHV0ZSBsZWZ0LTMgdG9wLTEvMiAtdHJhbnNsYXRlLXktMS8yIHctNCBoLTQgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIHBvaW50ZXItZXZlbnRzLW5vbmVcIiAvPlxyXG4gICAgICAgICAgICAgIDxpbnB1dFxyXG4gICAgICAgICAgICAgICAgaWQ9XCJsb2dpbi1lbWFpbFwiXHJcbiAgICAgICAgICAgICAgICB0eXBlPVwiZW1haWxcIlxyXG4gICAgICAgICAgICAgICAgaW5wdXRNb2RlPVwiZW1haWxcIlxyXG4gICAgICAgICAgICAgICAgYXV0b0NvbXBsZXRlPVwidXNlcm5hbWVcIlxyXG4gICAgICAgICAgICAgICAgYXV0b0NhcGl0YWxpemU9XCJub25lXCJcclxuICAgICAgICAgICAgICAgIGF1dG9Db3JyZWN0PVwib2ZmXCJcclxuICAgICAgICAgICAgICAgIHNwZWxsQ2hlY2s9e2ZhbHNlfVxyXG4gICAgICAgICAgICAgICAgdmFsdWU9e2VtYWlsfVxyXG4gICAgICAgICAgICAgICAgb25DaGFuZ2U9eyhlKSA9PiBzZXRFbWFpbChlLnRhcmdldC52YWx1ZSl9XHJcbiAgICAgICAgICAgICAgICBwbGFjZWhvbGRlcj1cInlvdUBleGFtcGxlLmNvbVwiXHJcbiAgICAgICAgICAgICAgICBkaXNhYmxlZD17c3VibWl0dGluZ31cclxuICAgICAgICAgICAgICAgIGNsYXNzTmFtZT1cInctZnVsbCBoLTEyIHBsLTEwIHByLTMgcm91bmRlZC14bCBiZy1iYWNrZ3JvdW5kLzYwIGJvcmRlciBib3JkZXItYm9yZGVyIGZvY3VzOmJvcmRlci1lbWVyYWxkLTUwMCBmb2N1czpyaW5nLTIgZm9jdXM6cmluZy1lbWVyYWxkLTUwMC8zMCBvdXRsaW5lLW5vbmUgdGV4dC1iYXNlIHRleHQtZm9yZWdyb3VuZCBwbGFjZWhvbGRlcjp0ZXh0LW11dGVkLWZvcmVncm91bmQgdHJhbnNpdGlvblwiXHJcbiAgICAgICAgICAgICAgLz5cclxuICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICA8L2Rpdj5cclxuXHJcbiAgICAgICAgICB7LyogUGFzc3dvcmQgKi99XHJcbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktMS41XCI+XHJcbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1iZXR3ZWVuXCI+XHJcbiAgICAgICAgICAgICAgPGxhYmVsIGh0bWxGb3I9XCJsb2dpbi1wYXNzd29yZFwiIGNsYXNzTmFtZT1cInRleHQtc20gZm9udC1tZWRpdW0gdGV4dC1mb3JlZ3JvdW5kXCI+XHJcbiAgICAgICAgICAgICAgICBQYXNzd29yZFxyXG4gICAgICAgICAgICAgIDwvbGFiZWw+XHJcbiAgICAgICAgICAgICAgPExpbmtcclxuICAgICAgICAgICAgICAgIHRvPVwiL2ZvcmdvdC1wYXNzd29yZFwiXHJcbiAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJ0ZXh0LXhzIGZvbnQtbWVkaXVtIHRleHQtZW1lcmFsZC00MDAgaG92ZXI6dGV4dC1lbWVyYWxkLTMwMFwiXHJcbiAgICAgICAgICAgICAgPlxyXG4gICAgICAgICAgICAgICAgRm9yZ290P1xyXG4gICAgICAgICAgICAgIDwvTGluaz5cclxuICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwicmVsYXRpdmVcIj5cclxuICAgICAgICAgICAgICA8TG9jayBjbGFzc05hbWU9XCJhYnNvbHV0ZSBsZWZ0LTMgdG9wLTEvMiAtdHJhbnNsYXRlLXktMS8yIHctNCBoLTQgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIHBvaW50ZXItZXZlbnRzLW5vbmVcIiAvPlxyXG4gICAgICAgICAgICAgIDxpbnB1dFxyXG4gICAgICAgICAgICAgICAgaWQ9XCJsb2dpbi1wYXNzd29yZFwiXHJcbiAgICAgICAgICAgICAgICB0eXBlPXtzaG93UGFzc3dvcmQgPyBcInRleHRcIiA6IFwicGFzc3dvcmRcIn1cclxuICAgICAgICAgICAgICAgIGF1dG9Db21wbGV0ZT1cImN1cnJlbnQtcGFzc3dvcmRcIlxyXG4gICAgICAgICAgICAgICAgdmFsdWU9e3Bhc3N3b3JkfVxyXG4gICAgICAgICAgICAgICAgb25DaGFuZ2U9eyhlKSA9PiBzZXRQYXNzd29yZChlLnRhcmdldC52YWx1ZSl9XHJcbiAgICAgICAgICAgICAgICBwbGFjZWhvbGRlcj1cIllvdXIgcGFzc3dvcmRcIlxyXG4gICAgICAgICAgICAgICAgZGlzYWJsZWQ9e3N1Ym1pdHRpbmd9XHJcbiAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJ3LWZ1bGwgaC0xMiBwbC0xMCBwci0xMSByb3VuZGVkLXhsIGJnLWJhY2tncm91bmQvNjAgYm9yZGVyIGJvcmRlci1ib3JkZXIgZm9jdXM6Ym9yZGVyLWVtZXJhbGQtNTAwIGZvY3VzOnJpbmctMiBmb2N1czpyaW5nLWVtZXJhbGQtNTAwLzMwIG91dGxpbmUtbm9uZSB0ZXh0LWJhc2UgdGV4dC1mb3JlZ3JvdW5kIHBsYWNlaG9sZGVyOnRleHQtbXV0ZWQtZm9yZWdyb3VuZCB0cmFuc2l0aW9uXCJcclxuICAgICAgICAgICAgICAvPlxyXG4gICAgICAgICAgICAgIDxidXR0b25cclxuICAgICAgICAgICAgICAgIHR5cGU9XCJidXR0b25cIlxyXG4gICAgICAgICAgICAgICAgb25DbGljaz17KCkgPT4gc2V0U2hvd1Bhc3N3b3JkKCh2KSA9PiAhdil9XHJcbiAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJhYnNvbHV0ZSByaWdodC0zIHRvcC0xLzIgLXRyYW5zbGF0ZS15LTEvMiB0ZXh0LW11dGVkLWZvcmVncm91bmQgaG92ZXI6dGV4dC1mb3JlZ3JvdW5kXCJcclxuICAgICAgICAgICAgICAgIHRhYkluZGV4PXstMX1cclxuICAgICAgICAgICAgICAgIGFyaWEtbGFiZWw9e3Nob3dQYXNzd29yZCA/IFwiSGlkZSBwYXNzd29yZFwiIDogXCJTaG93IHBhc3N3b3JkXCJ9XHJcbiAgICAgICAgICAgICAgPlxyXG4gICAgICAgICAgICAgICAge3Nob3dQYXNzd29yZCA/IDxFeWVPZmYgY2xhc3NOYW1lPVwidy00IGgtNFwiIC8+IDogPEV5ZSBjbGFzc05hbWU9XCJ3LTQgaC00XCIgLz59XHJcbiAgICAgICAgICAgICAgPC9idXR0b24+XHJcbiAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgPC9kaXY+XHJcblxyXG4gICAgICAgICAgey8qIFJlbWVtYmVyICovfVxyXG4gICAgICAgICAgPGxhYmVsIGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0yIHNlbGVjdC1ub25lIGN1cnNvci1wb2ludGVyXCI+XHJcbiAgICAgICAgICAgIDxDaGVja2JveFxyXG4gICAgICAgICAgICAgIGNoZWNrZWQ9e3JlbWVtYmVyfVxyXG4gICAgICAgICAgICAgIG9uQ2hlY2tlZENoYW5nZT17KHYpID0+IHNldFJlbWVtYmVyKCEhdil9XHJcbiAgICAgICAgICAgICAgY2xhc3NOYW1lPVwiZGF0YS1bc3RhdGU9Y2hlY2tlZF06YmctZW1lcmFsZC01MDAgZGF0YS1bc3RhdGU9Y2hlY2tlZF06Ym9yZGVyLWVtZXJhbGQtNTAwXCJcclxuICAgICAgICAgICAgLz5cclxuICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwidGV4dC1zbSB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5SZW1lbWJlciBtZSBvbiB0aGlzIGRldmljZTwvc3Bhbj5cclxuICAgICAgICAgIDwvbGFiZWw+XHJcblxyXG4gICAgICAgICAgey8qIFN1Ym1pdCAqL31cclxuICAgICAgICAgIDxCdXR0b25cclxuICAgICAgICAgICAgdHlwZT1cInN1Ym1pdFwiXHJcbiAgICAgICAgICAgIGRpc2FibGVkPXtzdWJtaXR0aW5nfVxyXG4gICAgICAgICAgICBjbGFzc05hbWU9XCJ3LWZ1bGwgaC0xMiByb3VuZGVkLXhsIHRleHQtYmFzZSBmb250LXNlbWlib2xkIGJnLWVtZXJhbGQtNTAwIGhvdmVyOmJnLWVtZXJhbGQtNjAwIHRleHQtd2hpdGUgc2hhZG93LWxnIHNoYWRvdy1lbWVyYWxkLTUwMC8zMFwiXHJcbiAgICAgICAgICA+XHJcbiAgICAgICAgICAgIHtzdWJtaXR0aW5nID8gKFxyXG4gICAgICAgICAgICAgIDxMb2FkZXIyIGNsYXNzTmFtZT1cInctNSBoLTUgYW5pbWF0ZS1zcGluXCIgLz5cclxuICAgICAgICAgICAgKSA6IChcclxuICAgICAgICAgICAgICA8PlxyXG4gICAgICAgICAgICAgICAgU2lnbiBJbiA8QXJyb3dSaWdodCBjbGFzc05hbWU9XCJ3LTQgaC00IG1sLTFcIiAvPlxyXG4gICAgICAgICAgICAgIDwvPlxyXG4gICAgICAgICAgICApfVxyXG4gICAgICAgICAgPC9CdXR0b24+XHJcblxyXG4gICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1jZW50ZXIgdGV4dC1zbSB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5cclxuICAgICAgICAgICAgRG9uJ3QgaGF2ZSBhbiBhY2NvdW50P3tcIiBcIn1cclxuICAgICAgICAgICAgPExpbmtcclxuICAgICAgICAgICAgICB0bz17YC9zaWdudXAke3JlZGlyZWN0ID8gYD9yZWRpcmVjdD0ke2VuY29kZVVSSUNvbXBvbmVudChyZWRpcmVjdCl9YCA6IFwiXCJ9YH1cclxuICAgICAgICAgICAgICBjbGFzc05hbWU9XCJmb250LXNlbWlib2xkIHRleHQtZW1lcmFsZC00MDAgaG92ZXI6dGV4dC1lbWVyYWxkLTMwMFwiXHJcbiAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICBTaWduIFVwXHJcbiAgICAgICAgICAgIDwvTGluaz5cclxuICAgICAgICAgIDwvcD5cclxuICAgICAgICA8L2Zvcm0+XHJcbiAgICAgICAgPC9kaXY+XHJcblxyXG4gICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtY2VudGVyIHRleHQteHMgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIG10LTRcIj5cclxuICAgICAgICAgIFByb3RlY3RlZCBieSBlbnRlcnByaXNlLWdyYWRlIHNlY3VyaXR5XHJcbiAgICAgICAgPC9wPlxyXG4gICAgICA8L2Rpdj5cclxuICAgIDwvZGl2PlxyXG4gICk7XHJcbn07XHJcblxyXG5leHBvcnQgZGVmYXVsdCBMb2dpbjtcclxuIl0sIm5hbWVzIjpbInVzZVN0YXRlIiwidXNlRWZmZWN0IiwiTGluayIsInVzZU5hdmlnYXRlIiwidXNlU2VhcmNoUGFyYW1zIiwiTG9hZGVyMiIsIk1haWwiLCJMb2NrIiwiQXJyb3dSaWdodCIsIkV5ZSIsIkV5ZU9mZiIsIlNwYXJrbGVzIiwic3VwYWJhc2UiLCJ1c2VBdXRoIiwiQnV0dG9uIiwiQ2hlY2tib3giLCJ0b2FzdCIsIlNFT0hlYWQiLCJMb2dpbiIsIm5hdmlnYXRlIiwicGFyYW1zIiwicmVkaXJlY3QiLCJnZXQiLCJzaWduSW4iLCJ1c2VyIiwiaXNMb2FkaW5nIiwiYXV0aExvYWRpbmciLCJlbWFpbCIsInNldEVtYWlsIiwicGFzc3dvcmQiLCJzZXRQYXNzd29yZCIsInNob3dQYXNzd29yZCIsInNldFNob3dQYXNzd29yZCIsInJlbWVtYmVyIiwic2V0UmVtZW1iZXIiLCJzdWJtaXR0aW5nIiwic2V0U3VibWl0dGluZyIsInJlcGxhY2UiLCJvblN1Ym1pdCIsImUiLCJwcmV2ZW50RGVmYXVsdCIsInRyaW0iLCJlcnJvciIsInRyaW1tZWRFbWFpbCIsImFjY291bnRFeGlzdHMiLCJkYXRhIiwicHJlY2hlY2siLCJmdW5jdGlvbnMiLCJpbnZva2UiLCJib2R5IiwiZXhpc3RzIiwibXNnIiwibWVzc2FnZSIsInRvTG93ZXJDYXNlIiwibG9va3NMaWtlQmFkQ3JlZHMiLCJpbmNsdWRlcyIsImFjdGlvbiIsImxhYmVsIiwib25DbGljayIsImVuY29kZVVSSUNvbXBvbmVudCIsInN1Y2Nlc3MiLCJkaXYiLCJjbGFzc05hbWUiLCJ0aXRsZSIsImRlc2NyaXB0aW9uIiwiYXJpYS1oaWRkZW4iLCJzdHlsZSIsImFuaW1hdGlvbkRlbGF5IiwiaDEiLCJwIiwiZm9ybSIsImh0bWxGb3IiLCJpbnB1dCIsImlkIiwidHlwZSIsImlucHV0TW9kZSIsImF1dG9Db21wbGV0ZSIsImF1dG9DYXBpdGFsaXplIiwiYXV0b0NvcnJlY3QiLCJzcGVsbENoZWNrIiwidmFsdWUiLCJvbkNoYW5nZSIsInRhcmdldCIsInBsYWNlaG9sZGVyIiwiZGlzYWJsZWQiLCJ0byIsImJ1dHRvbiIsInYiLCJ0YWJJbmRleCIsImFyaWEtbGFiZWwiLCJjaGVja2VkIiwib25DaGVja2VkQ2hhbmdlIiwic3BhbiJdLCJtYXBwaW5ncyI6Ijs7QUFBQTs7Ozs7Q0FLQyxHQUNELFNBQVNBLFFBQVEsRUFBRUMsU0FBUyxRQUFRLFFBQVE7QUFDNUMsU0FBU0MsSUFBSSxFQUFFQyxXQUFXLEVBQUVDLGVBQWUsUUFBUSxtQkFBbUI7QUFDdEUsU0FBU0MsT0FBTyxFQUFFQyxJQUFJLEVBQUVDLElBQUksRUFBRUMsVUFBVSxFQUFFQyxHQUFHLEVBQUVDLE1BQU0sRUFBZUMsUUFBUSxRQUFRLGVBQWU7QUFDbkcsU0FBU0MsUUFBUSxRQUFRLGlDQUFpQztBQUMxRCxTQUFTQyxPQUFPLFFBQVEseUJBQXlCO0FBQ2pELFNBQVNDLE1BQU0sUUFBUSx5QkFBeUI7QUFDaEQsU0FBU0MsUUFBUSxRQUFRLDJCQUEyQjtBQUNwRCxTQUFTQyxLQUFLLFFBQVEsU0FBUztBQUMvQixPQUFPQyxhQUFhLHVCQUF1QjtBQUUzQyxNQUFNQyxRQUFROztJQUNaLE1BQU1DLFdBQVdoQjtJQUNqQixNQUFNLENBQUNpQixPQUFPLEdBQUdoQjtJQUNqQixNQUFNaUIsV0FBV0QsT0FBT0UsR0FBRyxDQUFDLGVBQWU7SUFDM0MsTUFBTSxFQUFFQyxNQUFNLEVBQUVDLElBQUksRUFBRUMsV0FBV0MsV0FBVyxFQUFFLEdBQUdiO0lBRWpELE1BQU0sQ0FBQ2MsT0FBT0MsU0FBUyxHQUFHNUIsU0FBUztJQUNuQyxNQUFNLENBQUM2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

@@ -2,26 +2,91 @@
  * App Home Screen - 2026 Travel Super-App Layout
  * Premium scrollable design with saved places, quick estimate, popular services,
  * quick actions, promos, rewards, and personalized content.
+ * @module AppHome
  */
-import { useState, useEffect } from "react";
+import React, { useState, useEffect, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { useI18n } from "@/hooks/useI18n";
 import { useCountry } from "@/hooks/useCountry";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
-import {
-  Search, Plane, Car, Utensils, BedDouble,
-  MapPin, Bell, LucideIcon, Package, Star, Sparkles,
-  UtensilsCrossed, Heart, History, Hotel, Gift, Users, Share2, Clock,
-  Wallet, CreditCard, Home, Briefcase, Plus, Timer, DollarSign,
-  TrendingUp, Navigation, ChevronRight, ArrowRight, Zap, Shield,
-  Globe, Crown, Flame, Calendar
-} from "lucide-react";
-import { Progress } from "@/components/ui/progress";
+import Search from "lucide-react/dist/esm/icons/search";
+import Plane from "lucide-react/dist/esm/icons/plane";
+import Car from "lucide-react/dist/esm/icons/car";
+import BedDouble from "lucide-react/dist/esm/icons/bed-double";
+import MapPin from "lucide-react/dist/esm/icons/map-pin";
+import Package from "lucide-react/dist/esm/icons/package";
+import Star from "lucide-react/dist/esm/icons/star";
+import Heart from "lucide-react/dist/esm/icons/heart";
+import Home from "lucide-react/dist/esm/icons/home";
+import Briefcase from "lucide-react/dist/esm/icons/briefcase";
+import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
+import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
+import type { LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePersonalizedHome, HomeRestaurant } from "@/hooks/usePersonalizedHome";
+import { useUserProfile } from "@/hooks/useUserProfile";
+import zivoRideIcon from "@/assets/zivo-ride-icon.webp";
+import zivoEatsIcon from "@/assets/zivo-eats-icon.webp";
+import zivoFlightsIcon from "@/assets/zivo-flights-icon.webp";
+import zivoHotelsIcon from "@/assets/zivo-hotels-icon.webp";
+import zivoRentalCarIcon from "@/assets/zivo-rental-car.webp";
+import zivoReserveIcon from "@/assets/zivo-reserve-car.webp";
+import zivoShoppingIcon from "@/assets/zivo-shopping.webp";
+
+// Lazy-load below-fold heavy components
+const LiveTripTracker = lazy(() => import("@/components/home/widgets/LiveTripTracker"));
+const TrendingNearYou = lazy(() => import("@/components/home/TrendingNearYou"));
+const QuickReorderCarousel = lazy(() => import("@/components/home/widgets/QuickReorderCarousel"));
+const PriceAlertsWidget = lazy(() => import("@/components/home/widgets/PriceAlertsWidget"));
+const AISmartDeals = lazy(() => import("@/components/home/AISmartDeals"));
+const TravelItineraryCard = lazy(() => import("@/components/home/widgets/TravelItineraryCard"));
+const ActivityTimeline = lazy(() => import("@/components/shared/ActivityTimeline"));
+const ZivoMobileNav = lazy(() => import("@/components/app/ZivoMobileNav"));
+const UniversalSearchOverlay = lazy(() => import("@/components/search/UniversalSearchOverlay"));
+const ServicesHubGrid = lazy(() => import("@/components/home/ServicesHubGrid"));
+const PlanTripBundle = lazy(() => import("@/components/home/PlanTripBundle"));
+const SmartIntentSearch = lazy(() => import("@/components/home/SmartIntentSearch"));
+const NetworkPromoStrip = lazy(() => import("@/components/home/NetworkPromoStrip"));
+const ConciergeLauncher = lazy(() => import("@/components/home/ConciergeLauncher"));
+const TodayPlanWidget = lazy(() => import("@/components/home/TodayPlanWidget"));
+const NotificationsPeek = lazy(() => import("@/components/home/NotificationsPeek"));
+const SpendTrackerWidget = lazy(() => import("@/components/home/SpendTrackerWidget"));
+const QuickReorderWidget = lazy(() => import("@/components/home/QuickReorderWidget"));
+const InsightsCard = lazy(() => import("@/components/home/InsightsCard"));
+
+// Icons used below-fold (still small, but needed)
+import Utensils from "lucide-react/dist/esm/icons/utensils";
+import History from "lucide-react/dist/esm/icons/history";
+import Hotel from "lucide-react/dist/esm/icons/hotel";
+import Gift from "lucide-react/dist/esm/icons/gift";
+import Users from "lucide-react/dist/esm/icons/users";
+import Share2 from "lucide-react/dist/esm/icons/share-2";
+import Clock from "lucide-react/dist/esm/icons/clock";
+import Wallet from "lucide-react/dist/esm/icons/wallet";
+import CreditCard from "lucide-react/dist/esm/icons/credit-card";
+import Plus from "lucide-react/dist/esm/icons/plus";
+import Timer from "lucide-react/dist/esm/icons/timer";
+import DollarSign from "lucide-react/dist/esm/icons/dollar-sign";
+import TrendingUp from "lucide-react/dist/esm/icons/trending-up";
+import Navigation from "lucide-react/dist/esm/icons/navigation";
+import Zap from "lucide-react/dist/esm/icons/zap";
+import Shield from "lucide-react/dist/esm/icons/shield";
+import Globe from "lucide-react/dist/esm/icons/globe";
+import Crown from "lucide-react/dist/esm/icons/crown";
+import Flame from "lucide-react/dist/esm/icons/flame";
+import Calendar from "lucide-react/dist/esm/icons/calendar";
+import Activity from "lucide-react/dist/esm/icons/activity";
+import Bell from "lucide-react/dist/esm/icons/bell";
+import Sparkles from "lucide-react/dist/esm/icons/sparkles";
+import UtensilsCrossed from "lucide-react/dist/esm/icons/utensils-crossed";
+import Tv from "lucide-react/dist/esm/icons/tv";
+import Rocket from "lucide-react/dist/esm/icons/rocket";
+import Gem from "lucide-react/dist/esm/icons/gem";
+import Dumbbell from "lucide-react/dist/esm/icons/dumbbell";
+import { Progress } from "@/components/ui/progress";
 import { useLoyaltyPoints } from "@/hooks/useLoyaltyPoints";
 import { useUserRewards } from "@/hooks/useUserRewards";
 import { ZIVO_TIERS, getTierFromPoints, getPointsToNextTier, type ZivoTier } from "@/config/zivoPoints";
@@ -30,34 +95,25 @@ import { REFERRAL_REWARDS } from "@/config/referralProgram";
 import { useScheduledBookingsQuery } from "@/hooks/useScheduledBookings";
 import { useCustomerWallet } from "@/hooks/useCustomerWallet";
 import { useLocalPaymentMethods } from "@/hooks/useLocalPaymentMethods";
-import { useUserProfile } from "@/hooks/useUserProfile";
 import { useRecommendedDeals } from "@/hooks/useRecommendedDeals";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { useSavedLocations } from "@/hooks/useSavedLocations";
 import { useCustomerActivityFeed } from "@/hooks/useCustomerActivityFeed";
-import ActivityTimeline from "@/components/shared/ActivityTimeline";
 import { destinationPhotos } from "@/config/photos";
+import PartnerBadge from "@/components/shared/PartnerBadge";
 import { useDestinationPrices } from "@/hooks/useDestinationPrices";
 import { useHotDeals, type HotDeal } from "@/hooks/useHotDeals";
 import { getRestaurantPhoto } from "@/config/restaurantPhotos";
 import { formatDistanceToNow, format } from "date-fns";
 import useEmblaCarousel from "embla-carousel-react";
-import ZivoMobileNav from "@/components/app/ZivoMobileNav";
-import UniversalSearchOverlay from "@/components/search/UniversalSearchOverlay";
 import { useDeviceIntegrityCheck } from "@/hooks/useDeviceIntegrityCheck";
-import LiveTripTracker from "@/components/home/widgets/LiveTripTracker";
-import AISmartDeals from "@/components/home/AISmartDeals";
-import PriceAlertsWidget from "@/components/home/widgets/PriceAlertsWidget";
-import TravelItineraryCard from "@/components/home/widgets/TravelItineraryCard";
-import QuickReorderCarousel from "@/components/home/widgets/QuickReorderCarousel";
-import zivoRideIcon from "@/assets/zivo-ride-icon.png";
-import zivoEatsIcon from "@/assets/zivo-eats-icon.png";
-import zivoFlightsIcon from "@/assets/zivo-flights-icon.png";
-import zivoHotelsIcon from "@/assets/zivo-hotels-icon.png";
-import zivoRentalCarIcon from "@/assets/zivo-rental-car.png";
-import zivoReserveIcon from "@/assets/zivo-reserve-car.png";
-import zivoShoppingIcon from "@/assets/zivo-shopping.png";
-import zivoPromoBanner from "@/assets/zivo-promo-banner.png";
+import { useOwnerStoreProfile } from "@/hooks/useOwnerStoreProfile";
+import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
+import { useLodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile";
+import { useLodgeReservations } from "@/hooks/lodging/useLodgeReservations";
+import { useLodgingPhase5Counts } from "@/hooks/lodging/useLodgingPhase5Counts";
+import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
+
 import tabFlightsBg from "@/assets/tab-flights-bg.jpg";
 import tabHotelsBg from "@/assets/tab-hotels-bg.jpg";
 import tabCarsBg from "@/assets/tab-cars-bg.jpg";
@@ -105,6 +161,8 @@ const RestaurantCard = ({ restaurant, onNavigate }: { restaurant: HomeRestaurant
       <img
         src={restaurant.cover_image_url || restaurant.logo_url || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=400"}
         alt={restaurant.name}
+        width={170}
+        height={120}
         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
         loading="lazy"
       />
@@ -115,6 +173,7 @@ const RestaurantCard = ({ restaurant, onNavigate }: { restaurant: HomeRestaurant
           <span className="text-[10px] font-bold text-primary-foreground">{restaurant.rating.toFixed(1)}</span>
         </div>
       )}
+      <PartnerBadge size="xs" className="absolute top-2 left-2 shadow-sm" />
       <div className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/10 backdrop-blur-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
         <Heart className="w-3.5 h-3.5 text-primary-foreground" />
       </div>
@@ -230,6 +289,27 @@ const AppHome = () => {
   }
   const { recommended, favorites, orderAgain } = usePersonalizedHome();
   const { data: profile } = useUserProfile();
+  const { data: ownerStore, isLoading: ownerStoreLoading } = useOwnerStoreProfile();
+  const lodgingStoreId = ownerStore?.isLodging ? ownerStore.id : "";
+  const lodgingRooms = useLodgeRooms(lodgingStoreId);
+  const lodgingProfile = useLodgePropertyProfile(lodgingStoreId);
+  const lodgingReservations = useLodgeReservations(lodgingStoreId, "all");
+  const lodgingPhase5 = useLodgingPhase5Counts(lodgingStoreId);
+  const lodgingCompletion = ownerStore?.isLodging ? getLodgingCompletion({
+    rooms: lodgingRooms.data || [],
+    profile: lodgingProfile.data,
+    addons: (lodgingRooms.data || []).flatMap((room: any) => room.addons || []),
+    housekeepingCount: lodgingPhase5.housekeepingCount,
+    maintenanceReady: true,
+    reportsReady: Boolean((lodgingRooms.data || []).length) || (lodgingReservations.data?.length ?? 0) > 0,
+    mealPlansCount: lodgingPhase5.mealPlansCount,
+    staffCount: lodgingPhase5.staffCount,
+    channelConnectionsCount: lodgingPhase5.channelConnectionsCount,
+    promotionsCount: lodgingPhase5.promotionsCount,
+    reviewsAwaitingReply: lodgingPhase5.reviewsAwaitingReply,
+    reservationsCount: lodgingReservations.data?.length ?? 0,
+  }) : null;
+  const lodgingProgress = lodgingCompletion ? { complete: lodgingCompletion.complete, total: lodgingCompletion.total, percent: lodgingCompletion.percent } : null;
   const { data: deals = [] } = useRecommendedDeals("all", 6);
   const { items: recentItems } = useRecentlyViewed();
   const { data: savedLocations } = useSavedLocations(user?.id);
@@ -240,11 +320,20 @@ const AppHome = () => {
   const { data: destPrices = {}, isLoading: destPricesLoading } = useDestinationPrices(destKeys, isKH);
   const { data: hotDeals = [], isLoading: hotDealsLoading } = useHotDeals();
   const { data: allBookings = [] } = useScheduledBookingsQuery();
-  const upcomingBookings = allBookings.filter((b) => {
-    if (b.status !== "scheduled" && b.status !== "confirmed") return false;
-    const bookingDate = new Date(`${b.scheduled_date}T${b.scheduled_time}`);
+  const upcomingBookings = allBookings.filter((b: any) => {
+    if (b.status !== "scheduled" && b.status !== "confirmed" && b.status !== "pending") return false;
+    const sd = b.scheduledDate || b.scheduled_date;
+    const st = b.scheduledTime || b.scheduled_time;
+    if (!sd || !st) return false;
+    const bookingDate = new Date(`${sd}T${st}`);
     return bookingDate > new Date();
-  }).sort((a, b) => new Date(`${a.scheduled_date}T${a.scheduled_time}`).getTime() - new Date(`${b.scheduled_date}T${b.scheduled_time}`).getTime());
+  }).sort((a: any, b: any) => {
+    const ad = a.scheduledDate || a.scheduled_date;
+    const at2 = a.scheduledTime || a.scheduled_time;
+    const bd = b.scheduledDate || b.scheduled_date;
+    const bt = b.scheduledTime || b.scheduled_time;
+    return new Date(`${ad}T${at2}`).getTime() - new Date(`${bd}T${bt}`).getTime();
+  });
   const { balanceDollars } = useCustomerWallet();
   const { getDefault } = useLocalPaymentMethods();
   const defaultCard = getDefault();
@@ -298,27 +387,70 @@ const AppHome = () => {
       {/* 3D Ambient orbs — contained within scrollable area only */}
 
       {/* Scrollable content */}
-      <div className="pb-24 scroll-momentum relative z-10">
-        {/* 3D Ambient orbs inside scroll container */}
-        <div className="orb-3d-1 top-[-5%] right-[-10%] opacity-40 z-0 pointer-events-none" />
-        <div className="orb-3d-2 top-[40%] left-[-15%] opacity-25 z-0 pointer-events-none" />
+      <div className="scroll-momentum relative z-10" style={{ paddingBottom: 'calc(56px + env(safe-area-inset-bottom, 0px) + 24px)' }}>
+        {/* Ambient orbs removed on mobile — they triggered CLS and constant repaints. */}
         {/* ─── HEADER ─── */}
         <div className="bg-background relative">
+
+          {/* ─── GREETING HEADER ─── */}
+          {user ? (
+            <div className="flex items-center justify-between px-5 pt-safe pb-3">
+              <button onClick={() => navigate("/profile")} className="flex items-center gap-2.5 touch-manipulation active:opacity-75 transition-opacity">
+                {avatarUrl ? (
+                  <img src={avatarUrl} alt={userName} width={40} height={40} className="w-10 h-10 rounded-full object-cover ring-2 ring-primary/25" />
+                ) : (
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/40 to-primary/15 flex items-center justify-center ring-2 ring-primary/20 shrink-0">
+                    <span className="text-sm font-bold text-primary">{initials}</span>
+                  </div>
+                )}
+                <div>
+                  <p className="text-[10px] text-muted-foreground leading-none mb-0.5">{greeting()}</p>
+                  <p className="text-sm font-bold text-foreground leading-none">{userName}</p>
+                </div>
+              </button>
+              <div className="flex items-center gap-2">
+                {balanceDollars != null && balanceDollars > 0 && (
+                  <button
+                    onClick={() => navigate("/account/wallet")}
+                    className="flex items-center gap-1.5 bg-primary/10 rounded-full px-3 py-1.5 touch-manipulation active:scale-95 transition-transform"
+                  >
+                    <Wallet className="w-3.5 h-3.5 text-primary" />
+                    <span className="text-xs font-bold text-primary">${balanceDollars.toFixed(2)}</span>
+                  </button>
+                )}
+                <button
+                  onClick={() => navigate("/activity")}
+                  className="relative w-9 h-9 rounded-full bg-muted/50 flex items-center justify-center touch-manipulation active:scale-90 transition-transform"
+                >
+                  <Bell className="w-4 h-4 text-foreground" />
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="pt-safe" />
+          )}
+
           {/* Service Tabs — 3D Pill Chips */}
           <div
-            className="flex items-center gap-2 px-4 pb-2 overflow-hidden safe-area-top preserve-3d"
+            className={cn("flex items-center gap-2 px-4 pb-2 overflow-hidden preserve-3d", user ? "pt-1" : "pt-safe")}
           >
             {homeTabs.map((tab) => {
               const isActive = activeHomeTab === tab.id;
               return (
                 <motion.button
                   key={tab.id}
-                  onClick={() => setActiveHomeTab(tab.id)}
-                  whileTap={{ scale: 0.92, rotateX: 5 }}
-                  layout
-                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
+                  onClick={() => {
+                    if (tab.id === "hotels") {
+                      navigate("/hotels");
+                      return;
+                    }
+                    setActiveHomeTab(tab.id);
+                  }}
+                  aria-label={tab.label}
+                  aria-pressed={isActive}
+                  whileTap={{ scale: 0.96 }}
                   className={cn(
-                    "relative flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 touch-manipulation min-h-[44px] tab-3d",
+                    "relative flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 touch-manipulation min-h-[44px]",
                     isActive
                       ? "text-white shadow-lg"
                       : "text-muted-foreground"
@@ -329,6 +461,8 @@ const AppHome = () => {
                   <img
                     src={tabBgMap[tab.id]}
                     alt=""
+                    width={120}
+                    height={44}
                     className="absolute inset-0 w-full h-full object-cover rounded-full"
                     style={{
                       opacity: isActive ? 0.75 : 0.15,
@@ -357,7 +491,7 @@ const AppHome = () => {
                   />
                   <span className="relative z-10 flex items-center gap-1.5">
                     {tab.image ? (
-                      <img src={tab.image} alt={tab.label} className="w-5 h-5 object-contain" style={{ filter: isActive ? "brightness(10)" : "none" }} />
+                      <img src={tab.image} alt={tab.label} width={20} height={20} className="w-5 h-5 object-contain" style={{ filter: isActive ? "brightness(10)" : "none" }} />
                     ) : tab.icon ? (
                       <tab.icon className="w-4.5 h-4.5" />
                     ) : null}
@@ -373,6 +507,7 @@ const AppHome = () => {
             <motion.button
               whileTap={{ scale: 0.98, rotateX: 3 }}
               whileHover={{ y: -2, scale: 1.01 }}
+              aria-label={getSearchPlaceholder(activeHomeTab)}
               onClick={() => {
                 const routes: Record<string, string> = {
                   rides: "/rides",
@@ -390,6 +525,8 @@ const AppHome = () => {
                 <img
                   src={tabBgMap[activeHomeTab]}
                   alt=""
+                  width={390}
+                  height={56}
                   className="absolute inset-0 w-full h-full object-cover"
                   style={{ opacity: 0.35, transition: "opacity 0.3s" }}
                 />
@@ -403,10 +540,286 @@ const AppHome = () => {
             </motion.button>
           </div>
 
+          {/* ─── SMART INTENT SEARCH ─── */}
+          <Suspense fallback={<div className="h-[68px]" />}>
+            <SmartIntentSearch />
+          </Suspense>
+
+          {/* ─── TODAY'S PLAN ─── */}
+          <Suspense fallback={null}>
+            <TodayPlanWidget />
+          </Suspense>
+
+          {/* ─── UNIFIED SERVICES HUB (Rides · Eats · Flights · Hotels) ─── */}
+          <Suspense fallback={<div className="h-[120px]" />}>
+            <ServicesHubGrid />
+          </Suspense>
+
+          {/* ─── ZIVO CONCIERGE ─── */}
+          <Suspense fallback={<div className="h-[140px]" />}>
+            <ConciergeLauncher />
+          </Suspense>
+
+          {/* ─── PLAN A TRIP BUNDLE ─── */}
+          <Suspense fallback={<div className="h-[140px]" />}>
+            <PlanTripBundle />
+          </Suspense>
+
+          {/* ─── ZIVO NETWORK PROMO ─── */}
+          <Suspense fallback={<div className="h-[68px]" />}>
+            <NetworkPromoStrip />
+          </Suspense>
+
+          {/* ─── RECENT ACTIVITY PEEK ─── */}
+          <Suspense fallback={null}>
+            <NotificationsPeek />
+          </Suspense>
+
+          {/* ─── QUICK REORDER (last delivered meal) ─── */}
+          <Suspense fallback={null}>
+            <QuickReorderWidget />
+          </Suspense>
+
+          {/* ─── SPEND TRACKER (this month) ─── */}
+          <Suspense fallback={null}>
+            <SpendTrackerWidget />
+          </Suspense>
+
+          {/* ─── BUNDLE INSIGHTS ─── */}
+          <Suspense fallback={null}>
+            <InsightsCard />
+          </Suspense>
+
+          {/* ─── SAVED PLACES QUICK ACCESS ─── */}
+          {user && savedLocations && savedLocations.length > 0 && (
+            <div className="pb-3">
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide px-5" style={{ WebkitOverflowScrolling: "touch" }}>
+                {savedLocations.slice(0, 6).map((loc) => {
+                  const Icon = savedPlaceIconMap[loc.icon] || MapPin;
+                  return (
+                    <motion.button
+                      key={loc.id}
+                      whileTap={{ scale: 0.94 }}
+                      onClick={() => navigate(`/rides?destination=${encodeURIComponent(loc.address)}`)}
+                      className="shrink-0 flex items-center gap-1.5 bg-card border border-border/50 rounded-full px-3 py-2 shadow-sm touch-manipulation hover:border-primary/30 transition-colors"
+                    >
+                      <Icon className="w-3.5 h-3.5 text-primary" />
+                      <span className="text-xs font-semibold text-foreground whitespace-nowrap">{loc.label}</span>
+                    </motion.button>
+                  );
+                })}
+                <motion.button
+                  whileTap={{ scale: 0.94 }}
+                  onClick={() => navigate("/account/addresses")}
+                  className="shrink-0 flex items-center gap-1.5 bg-muted/50 border border-dashed border-border/50 rounded-full px-3 py-2 touch-manipulation"
+                >
+                  <Plus className="w-3 h-3 text-muted-foreground" />
+                  <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Add place</span>
+                </motion.button>
+              </div>
+            </div>
+          )}
+
+          {/* What's New — recent product updates */}
+          <div className="px-4 sm:px-5 pb-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <motion.button
+              type="button"
+              onClick={() => navigate("/rides/hub?tab=corporate")}
+              whileTap={{ scale: 0.98 }}
+              whileHover={{ y: -1 }}
+              className="group relative w-full overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-3 sm:p-4 text-left shadow-sm"
+              aria-label="See what's new in the Ride Hub"
+            >
+              <div className="flex items-center gap-2.5 sm:gap-3">
+                <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
+                  <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary" />
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-sm font-bold text-foreground">What's new in Ride Hub</p>
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-primary/15 text-primary">3 NEW</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate">
+                    Live fleet tracker · Tab categories &amp; filter · Shareable URLs
+                  </p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 transition-transform group-hover:translate-x-0.5" />
+              </div>
+            </motion.button>
+
+            <motion.button
+              type="button"
+              onClick={() => navigate("/chat")}
+              whileTap={{ scale: 0.98 }}
+              whileHover={{ y: -1 }}
+              className="group relative w-full overflow-hidden rounded-2xl border border-fuchsia-500/20 bg-gradient-to-r from-fuchsia-500/10 via-fuchsia-500/5 to-transparent p-3 sm:p-4 text-left shadow-sm"
+              aria-label="See what's new in Chat"
+            >
+              <div className="flex items-center gap-2.5 sm:gap-3">
+                <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-fuchsia-500/15 flex items-center justify-center shrink-0">
+                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-fuchsia-500" />
+                  <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-fuchsia-500 opacity-75" />
+                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-fuchsia-500" />
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <p className="text-sm font-bold text-foreground">What's new in Chat</p>
+                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-fuchsia-500/15 text-fuchsia-500">9 NEW</span>
+                  </div>
+                  <p className="text-xs text-muted-foreground truncate">
+                    Auto-delete 1d/7d/30d · ⌘K shortcut · Drag &amp; drop · Smart replies · Polls
+                  </p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 transition-transform group-hover:translate-x-0.5" />
+              </div>
+            </motion.button>
+          </div>
+
+          {/* ─── PROMO BANNER CAROUSEL ─── */}
+          <div className="pb-4">
+            <div className="overflow-hidden" ref={emblaRef}>
+              <div className="flex gap-3 pl-5">
+                {promos.map((promo, i) => (
+                  <motion.button
+                    key={`${promo.title}-${i}`}
+                    whileTap={{ scale: 0.97 }}
+                    onClick={() => {
+                      if ((promo as any).isDriverPromo) { navigate("/driver-signup"); return; }
+                      const promoRoutes = ["/rides", "/eats", "/flights", "/hotels"];
+                      navigate(promoRoutes[i] || "/rides");
+                    }}
+                    className={cn(
+                      "shrink-0 w-[calc(82vw)] max-w-[310px] rounded-2xl p-5 text-left shadow-lg touch-manipulation relative overflow-hidden bg-gradient-to-br",
+                      promo.gradient
+                    )}
+                  >
+                    <div className="absolute -top-8 -right-8 w-28 h-28 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+                    <div className="relative z-10">
+                      <promo.icon className="w-6 h-6 text-white/90 mb-2.5" />
+                      <p className="text-white font-bold text-[15px] leading-tight">{promo.title}</p>
+                      {promo.subtitle && <p className="text-white/75 text-xs mt-1 leading-relaxed">{promo.subtitle}</p>}
+                      <div className="mt-3.5 inline-flex items-center gap-1.5 bg-white/25 backdrop-blur-sm rounded-full px-3.5 py-1.5">
+                        <span className="text-white font-bold text-[11px]">{promo.cta}</span>
+                        <ChevronRight className="w-3 h-3 text-white" />
+                      </div>
+                    </div>
+                  </motion.button>
+                ))}
+                <div className="shrink-0 w-5" />
+              </div>
+            </div>
+            <div className="flex justify-center gap-1.5 mt-3">
+              {promos.map((_, i) => (
+                <button
+                  key={i}
+                  onClick={() => emblaApi?.scrollTo(i)}
+                  className={cn(
+                    "rounded-full transition-all duration-200",
+                    activePromo === i ? "w-4 h-1.5 bg-primary" : "w-1.5 h-1.5 bg-muted-foreground/30"
+                  )}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div className="px-5 pb-4">
+            {ownerStoreLoading ? (
+              <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+                <div className="h-4 w-36 rounded-full bg-muted animate-pulse" />
+                <div className="mt-3 h-2 rounded-full bg-muted animate-pulse" />
+              </div>
+            ) : ownerStore?.isLodging ? (
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="overflow-hidden rounded-2xl border border-primary/20 bg-primary/8 shadow-sm">
+                {/* Tappable preview area → public hotel detail page */}
+                <button
+                  type="button"
+                  onClick={() => navigate(`/hotel/${ownerStore.id}`)}
+                  aria-label={`Open ${ownerStore.name} hotel page`}
+                  className="block w-full text-left active:opacity-90 transition"
+                >
+                  <div className="relative h-24 w-full overflow-hidden bg-muted">
+                    {ownerStore.logo_url ? (
+                      <img
+                        src={ownerStore.logo_url}
+                        alt={`${ownerStore.name} cover`}
+                        className="absolute inset-0 w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/40 via-primary/15 to-transparent" />
+                    )}
+                    <div className="absolute inset-0 bg-gradient-to-t from-card/95 via-card/30 to-transparent" />
+                    <div className="absolute bottom-2 left-3 right-3 flex items-center gap-2">
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-background/85 backdrop-blur text-primary"><Hotel className="h-4 w-4" /></div>
+                      <p className="truncate text-sm font-bold text-foreground drop-shadow-sm">{ownerStore.name}</p>
+                      <Badge variant="secondary" className="ml-auto shrink-0 text-[9px]">Tap to view</Badge>
+                    </div>
+                  </div>
+                </button>
+
+                <div className="p-4 pt-3">
+                  <div className="flex items-center gap-2">
+                    <p className="text-sm font-bold text-foreground">Hotel / Resort Admin</p>
+                    <Badge variant="secondary" className="shrink-0 text-[9px]">Ready</Badge>
+                  </div>
+                  <p className="mt-0.5 text-[11px] text-muted-foreground">
+                    {(lodgingRooms.data?.length ?? 0)} rooms · Setup {lodgingProgress?.percent || 0}%
+                  </p>
+                  <div className="mt-2 flex flex-wrap gap-1.5">
+                    {["Rooms", "Rates", "Guest Requests"].map((label) => <span key={label} className="rounded-full bg-background px-2 py-0.5 text-[10px] font-semibold text-primary ring-1 ring-primary/15">{label}</span>)}
+                  </div>
+                  <div className="mt-3">
+                    <div className="mb-1 flex items-center justify-between text-[10px] font-semibold text-primary"><span>Setup progress</span><span>{lodgingProgress ? `${lodgingProgress.complete}/${lodgingProgress.total} ready` : "Loading"}</span></div>
+                    <Progress value={lodgingProgress?.percent || 0} className="h-1.5 bg-primary/15" />
+                  </div>
+                  {lodgingCompletion && lodgingCompletion.percent < 100 && lodgingCompletion.nextBestAction && (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); navigate(`/admin/stores/${ownerStore.id}?tab=${lodgingCompletion.nextBestAction.tab}`); }}
+                      className="mt-2 flex w-full items-center justify-between rounded-lg border border-primary/25 bg-primary/8 px-3 py-2 text-left transition-colors hover:bg-primary/12 active:scale-[0.99]"
+                    >
+                      <span className="min-w-0">
+                        <span className="block text-[10px] font-semibold uppercase tracking-wide text-primary">Next best action</span>
+                        <span className="block truncate text-xs font-bold text-foreground">{lodgingCompletion.nextBestAction.actionLabel}</span>
+                        <span className="block truncate text-[10px] text-muted-foreground">{lodgingCompletion.nextBestAction.hint}</span>
+                      </span>
+                      <ArrowRight className="ml-2 h-4 w-4 shrink-0 text-primary" />
+                    </button>
+                  )}
+                  <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+                    <Button size="sm" className="h-9 px-2 text-xs sm:text-sm" onClick={(e) => { e.stopPropagation(); navigate(`/admin/stores/${ownerStore.id}?tab=lodge-overview`); }}>
+                      <span className="truncate">Open Ops</span>
+                      <ArrowRight className="ml-1 h-3.5 w-3.5 shrink-0" />
+                    </Button>
+                    <Button size="sm" variant="outline" className="h-9 px-2 text-xs sm:text-sm" onClick={(e) => { e.stopPropagation(); navigate("/admin/lodging/qa-checklist"); }}>
+                      <span className="truncate">Run QA</span>
+                    </Button>
+                    <Button size="sm" variant="outline" className="h-9 px-2 text-xs sm:text-sm" onClick={(e) => { e.stopPropagation(); navigate("/hotel-admin"); }}>
+                      <span className="truncate">Operations</span>
+                    </Button>
+                    <Button size="sm" variant="outline" className="h-9 px-2 text-xs sm:text-sm" onClick={(e) => { e.stopPropagation(); navigate("/admin/lodging/completion-verification"); }}>
+                      <span className="truncate">QA Report</span>
+                    </Button>
+                  </div>
+                </div>
+              </motion.div>
+            ) : (
+              <button onClick={() => navigate("/business/new")} className="flex w-full items-center justify-between rounded-2xl border border-border bg-card p-4 text-left shadow-sm active:scale-[0.99]">
+                <span className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><Briefcase className="h-5 w-5" /></span><span><span className="block text-sm font-bold text-foreground">Business Page</span><span className="block text-xs text-muted-foreground">Create your business page on Zivo</span></span></span>
+                <ArrowRight className="h-4 w-4 text-muted-foreground" />
+              </button>
+            )}
+          </div>
 
 
 
-          {/* Suggestions Section */}
+
+          {/* ─── ALL SERVICES ─── */}
           <div className="pb-5">
             <div className="flex items-center justify-between mb-3 px-5">
               <h2 className="text-base font-bold text-foreground">{t("home.more_services")}</h2>
@@ -414,20 +827,20 @@ const AppHome = () => {
                 <ArrowRight className="w-4.5 h-4.5 text-muted-foreground" />
               </button>
             </div>
-            <div className="grid grid-cols-4 gap-3 px-5 pt-3 pb-2 preserve-3d">
-              {suggestions.map((s, idx) => (
+            {/* Row 1 */}
+            <div className="grid grid-cols-4 gap-3 px-5 pb-3 preserve-3d">
+              {[
+                { label: t("home.ride"), image: zivoRideIcon, href: "/rides", badge: "Hot Deal", badgeVariant: "promo" as const },
+                { label: t("home.eats"), image: zivoEatsIcon, href: "/eats", badge: null, badgeVariant: "promo" as const },
+                { label: t("home.flights"), image: zivoFlightsIcon, href: "/flights", badge: "Deals", badgeVariant: "discount" as const },
+                { label: t("home.hotels"), image: zivoHotelsIcon, href: "/hotels", badge: null, badgeVariant: "promo" as const },
+              ].map((s) => (
                 <motion.button
                   key={s.label}
-                  whileTap={{ scale: 0.88, rotateX: 8 }}
-                  whileHover={{ y: -4, rotateX: -3 }}
+                  whileTap={{ scale: 0.94 }}
                   onClick={() => navigate(s.href)}
-                  initial={{ opacity: 0, y: 15, rotateX: -10 }}
-                  animate={{ opacity: 1, y: 0, rotateX: 0 }}
-                  transition={{ delay: idx * 0.08, type: "spring", stiffness: 200 }}
                   className="flex flex-col items-center gap-2 touch-manipulation relative group"
-                  style={{ transformStyle: "preserve-3d" }}
                 >
-                  {/* Badge */}
                   {s.badge && (
                     <div className={cn(
                       "absolute -top-2.5 -right-2 z-10 text-[8px] font-bold px-2 py-[2px] rounded-full shadow-md",
@@ -438,40 +851,88 @@ const AppHome = () => {
                       {s.badge}
                     </div>
                   )}
-                  {/* Icon container — 3D depth */}
-                  <div
-                    className="w-[60px] h-[60px] rounded-2xl bg-card border border-border/30 shadow-sm flex items-center justify-center icon-3d-pop group-active:scale-95 transition-all duration-200"
-                    style={{ transform: "translateZ(10px)" }}
-                  >
-                    {s.image ? (
-                      <img src={s.image} alt={s.label} className="w-8 h-8 object-contain" />
-                    ) : s.icon ? (
-                      <s.icon className="w-6 h-6 text-foreground" />
-                    ) : null}
+                  <div className="w-[60px] h-[60px] rounded-2xl bg-card border border-border/30 shadow-sm flex items-center justify-center icon-3d-pop group-active:scale-95 transition-all duration-200">
+                    <img src={s.image} alt={s.label} width={32} height={32} className="w-8 h-8 object-contain" />
                   </div>
                   <span className="text-[11px] font-semibold text-muted-foreground text-center leading-tight group-hover:text-foreground transition-colors">{s.label}</span>
                 </motion.button>
               ))}
             </div>
+            {/* Row 2 */}
+            <div className="grid grid-cols-4 gap-3 px-5 pb-2 preserve-3d">
+              {(([
+                { label: t("home.rental_cars"), image: zivoRentalCarIcon, icon: null, href: "/rent-car", badge: "Promo" },
+                { label: "Reserve", image: zivoReserveIcon, icon: null, href: "/rides/hub?tab=reserve", badge: null },
+                { label: t("home.shopping"), image: zivoShoppingIcon, icon: null, href: "/grocery", badge: null },
+                { label: "Delivery", image: null, icon: Package, href: "/delivery", badge: null },
+              ]) as Array<{ label: string; image: string | null; icon: typeof Package | null; href: string; badge: string | null }>).map((s) => {
+                const SvcIcon = s.icon;
+                return (
+                  <motion.button
+                    key={s.label}
+                    whileTap={{ scale: 0.94 }}
+                    onClick={() => navigate(s.href)}
+                    className="flex flex-col items-center gap-2 touch-manipulation relative group"
+                  >
+                    {s.badge && (
+                      <div className="absolute -top-2.5 -right-2 z-10 text-[8px] font-bold px-2 py-[2px] rounded-full shadow-md bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+                        {s.badge}
+                      </div>
+                    )}
+                    <div className="w-[60px] h-[60px] rounded-2xl bg-card border border-border/30 shadow-sm flex items-center justify-center icon-3d-pop group-active:scale-95 transition-all duration-200">
+                      {s.image ? (
+                        <img src={s.image} alt={s.label} width={32} height={32} className="w-8 h-8 object-contain" />
+                      ) : SvcIcon ? (
+                        <SvcIcon className="w-7 h-7 text-primary" />
+                      ) : null}
+                    </div>
+                    <span className="text-[11px] font-semibold text-muted-foreground text-center leading-tight group-hover:text-foreground transition-colors">{s.label}</span>
+                  </motion.button>
+                );
+              })}
+            </div>
           </div>
 
-          {/* Promo Banner — 3D Float */}
-          <div className="px-5 pb-3">
-            <motion.div
-              whileHover={{ y: -3, rotateX: 2 }}
-              whileTap={{ scale: 0.98 }}
-              className="card-3d rounded-2xl overflow-hidden"
-              style={{ transformStyle: "preserve-3d" }}
-            >
-              <img
-                src={zivoPromoBanner}
-                alt="ZIVO - All Services in One Place"
-                className="w-full rounded-2xl shadow-sm"
-                loading="lazy"
-              />
-            </motion.div>
-          </div>
 
+
+          {/* ─── DISCOVER (gradient cards) ─── */}
+          <div className="pb-5">
+            <div className="flex items-center justify-between mb-3 px-5">
+              <h2 className="text-base font-bold text-foreground">Discover</h2>
+              <button onClick={() => navigate("/more")} className="w-8 h-8 flex items-center justify-center touch-manipulation rounded-full hover:bg-muted/50 transition-colors">
+                <ArrowRight className="w-4.5 h-4.5 text-muted-foreground" />
+              </button>
+            </div>
+            <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1 px-5" style={{ WebkitOverflowScrolling: "touch" }}>
+              {[
+                { icon: Briefcase, label: "Jobs", desc: "Find work", href: "/personal-dashboard", gradient: "from-blue-500 via-indigo-500 to-violet-500" },
+                { icon: Tv, label: "Live", desc: "Watch live", href: "/live", gradient: "from-rose-500 via-red-500 to-orange-400" },
+                { icon: Rocket, label: "Creator Hub", desc: "Grow & earn", href: "/creator-dashboard", gradient: "from-violet-500 via-purple-500 to-fuchsia-500" },
+                { icon: Heart, label: "Wellness", desc: "Stay healthy", href: "/wellness/activity", gradient: "from-emerald-500 via-teal-400 to-cyan-400" },
+                { icon: Crown, label: "ZIVO Plus", desc: "Premium perks", href: "/zivo-plus", gradient: "from-amber-500 via-yellow-400 to-orange-400" },
+                { icon: Gem, label: "Rewards", desc: "Earn points", href: "/rewards", gradient: "from-pink-500 via-fuchsia-500 to-purple-500" },
+                { icon: Sparkles, label: "Marketplace", desc: "Buy & sell", href: "/marketplace", gradient: "from-sky-500 via-blue-500 to-indigo-500" },
+                { icon: Dumbbell, label: "Workouts", desc: "Train daily", href: "/wellness/workouts", gradient: "from-lime-500 via-green-500 to-emerald-500" },
+              ].map((card, i) => (
+                <motion.button
+                  key={card.label}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => navigate(card.href)}
+                  className={cn(
+                    "shrink-0 w-[128px] h-[96px] rounded-[20px] bg-gradient-to-br p-3 flex flex-col justify-between shadow-lg touch-manipulation text-left",
+                    card.gradient
+                  )}
+                  style={{ animationDelay: `${i * 60}ms` }}
+                >
+                  <card.icon className="w-5 h-5 text-white/90" />
+                  <div>
+                    <p className="text-white font-bold text-[12px] leading-tight">{card.label}</p>
+                    <p className="text-white/75 text-[10px] mt-0.5">{card.desc}</p>
+                  </div>
+                </motion.button>
+              ))}
+            </div>
+          </div>
 
           {/* 3D Section Divider */}
           <div className="h-3 relative overflow-hidden">
@@ -484,13 +945,56 @@ const AppHome = () => {
         <div className="px-5 space-y-8">
 
           {/* ─── LIVE TRIP TRACKER ─── */}
-          <LiveTripTracker />
+          <Suspense fallback={null}><LiveTripTracker /></Suspense>
+
+          {/* ─── UPCOMING BOOKINGS ─── */}
+          {user && upcomingBookings.length > 0 && (
+            <div>
+              <SectionHeader icon={Calendar} iconColor="text-sky-500" title="Upcoming Trips" badge={String(upcomingBookings.length)} actionLabel="See all" onSeeAll={() => navigate("/trips")} />
+              <div className="space-y-2">
+                {upcomingBookings.slice(0, 2).map((booking: any) => {
+                  const sd = booking.scheduledDate || booking.scheduled_date;
+                  const st = booking.scheduledTime || booking.scheduled_time;
+                  const bookingDate = new Date(`${sd}T${st}`);
+                  return (
+                    <motion.button
+                      key={booking.id}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => navigate("/trips")}
+                      className="w-full flex items-center gap-3 bg-card border border-border/40 rounded-2xl p-4 shadow-sm text-left touch-manipulation"
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center shrink-0 border border-sky-500/15">
+                        <Calendar className="w-5 h-5 text-sky-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-foreground truncate capitalize">{(booking.type || booking.service || "Trip").replace(/_/g, " ")}</p>
+                        <p className="text-[11px] text-muted-foreground">{format(bookingDate, "MMM d 'at' h:mm a")}</p>
+                      </div>
+                      <Badge variant="outline" className="text-[9px] font-bold text-sky-500 border-sky-500/20 bg-sky-500/5 shrink-0 capitalize">
+                        {booking.status || "Scheduled"}
+                      </Badge>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* ─── TRAVEL ITINERARY CARD ─── */}
+          {user && (
+            <Suspense fallback={<div className="h-36 rounded-2xl bg-muted/30 animate-pulse" />}>
+              <TravelItineraryCard />
+            </Suspense>
+          )}
+
+          {/* ─── TRENDING NEAR YOU (AI) ─── */}
+          <Suspense fallback={<div className="h-40 rounded-2xl bg-muted/30 animate-pulse" />}><TrendingNearYou /></Suspense>
 
           {/* ─── QUICK REORDER CAROUSEL ─── */}
-          <QuickReorderCarousel />
+          <Suspense fallback={null}><QuickReorderCarousel /></Suspense>
 
           {/* ─── PRICE ALERTS WIDGET ─── */}
-          <PriceAlertsWidget />
+          <Suspense fallback={null}><PriceAlertsWidget /></Suspense>
 
           {/* ─── ORDER AGAIN ─── */}
           {user && orderAgain.length > 0 && (
@@ -505,12 +1009,14 @@ const AppHome = () => {
                     className="shrink-0 w-[170px] rounded-2xl overflow-hidden bg-card border border-border/40 shadow-sm hover:shadow-lg transition-all duration-300 touch-manipulation text-left group"
                   >
                     <div className="relative h-[100px] overflow-hidden">
-                      <img
-                        src={r.cover_image_url || r.logo_url || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=400"}
-                        alt={r.name}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                        loading="lazy"
-                      />
+                       <img
+                         src={r.cover_image_url || r.logo_url || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=400"}
+                         alt={r.name}
+                         width={170}
+                         height={100}
+                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
+                         loading="lazy"
+                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
                       <div className="absolute bottom-2 right-2 bg-orange-500/90 backdrop-blur-sm rounded-full px-2.5 py-0.5 shadow-sm">
                         <span className="text-[9px] font-bold text-primary-foreground flex items-center gap-0.5"><Zap className="w-2.5 h-2.5" /> {t("home.reorder")}</span>
@@ -528,15 +1034,54 @@ const AppHome = () => {
             </div>
           )}
 
+          {/* ─── RECENTLY VIEWED ─── */}
+          {user && recentItems.length > 0 && (
+            <div>
+              <SectionHeader icon={Clock} iconColor="text-muted-foreground" title="Recently Viewed" actionLabel="Clear" onSeeAll={() => navigate("/more")} />
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-5 px-5" style={{ WebkitOverflowScrolling: "touch" }}>
+                {recentItems.slice(0, 8).map((item: any) => (
+                  <motion.button
+                    key={item.id}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={() => {
+                      if (item.item_type === "restaurant") navigate(`/eats/restaurant/${item.item_id}`);
+                      else if (item.item_type === "store") navigate(`/store/${item.item_id}`);
+                      else if (item.item_type === "hotel") navigate(`/hotel/${item.item_id}`);
+                      else navigate("/more");
+                    }}
+                    className="shrink-0 flex flex-col items-center gap-1.5 touch-manipulation group"
+                  >
+                    <div className="w-[60px] h-[60px] rounded-2xl bg-card border border-border/40 shadow-sm flex items-center justify-center overflow-hidden group-hover:border-primary/30 transition-colors">
+                      {item.thumbnail_url ? (
+                        <img src={item.thumbnail_url} alt={item.title || "Item"} width={60} height={60} className="w-full h-full object-cover" loading="lazy" />
+                      ) : (
+                        <Globe className="w-5 h-5 text-muted-foreground" />
+                      )}
+                    </div>
+                    <p className="text-[10px] font-medium text-muted-foreground text-center truncate max-w-[64px]">{item.title || item.item_type}</p>
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* ─── RECENT ACTIVITY ─── */}
           {user && activityItems.length > 0 && (
             <div>
               <SectionHeader icon={Clock} iconColor="text-primary" title={t("home.recent_activity")} actionLabel={t("home.see_all")} onSeeAll={() => navigate("/trips")} />
-              <ActivityTimeline
-                items={activityItems}
+              <Suspense fallback={null}><ActivityTimeline
+                items={activityItems.map((a: any) => ({
+                  id: a.id,
+                  icon: Activity,
+                  iconColor: "text-primary",
+                  title: a.eventType?.replace(/_/g, " ") || "Activity",
+                  subtitle: typeof a.eventData === "object" ? JSON.stringify(a.eventData)?.slice(0, 60) : String(a.eventData || ""),
+                  timestamp: new Date(a.createdAt || a.created_at || Date.now()),
+                  status: "completed" as const,
+                }))}
                 maxHeight="280px"
                 emptyMessage="No recent activity"
-              />
+              /></Suspense>
             </div>
           )}
 
@@ -562,7 +1107,7 @@ const AppHome = () => {
                       className="rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 touch-manipulation text-left group relative"
                     >
                       <div className="relative h-[120px] overflow-hidden">
-                        <img src={dest.src} alt={dest.alt} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
+                        <img src={dest.src} alt={dest.alt} width={340} height={120} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
                         {i < 2 && (
                           <div className="absolute top-2 left-2 bg-amber-500/90 backdrop-blur-sm rounded-full px-2 py-0.5 shadow-sm">
@@ -600,7 +1145,7 @@ const AppHome = () => {
                       className="shrink-0 flex flex-col items-center gap-1.5 touch-manipulation group"
                     >
                       <div className="relative w-[72px] h-[72px] rounded-full overflow-hidden ring-2 ring-border/30 group-hover:ring-primary/40 transition-all">
-                        <img src={dest.src} alt={dest.alt} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
+                        <img src={dest.src} alt={dest.alt} width={72} height={72} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
                       </div>
                       <div className="text-center">
                         <div className="text-[10px] font-semibold text-foreground leading-tight truncate max-w-[76px]">{dest.city}</div>
@@ -619,7 +1164,7 @@ const AppHome = () => {
           </div>
 
           {/* ─── AI SMART DEALS ─── */}
-          <AISmartDeals />
+          <Suspense fallback={<div className="h-40 rounded-2xl bg-muted/30 animate-pulse" />}><AISmartDeals /></Suspense>
 
           {/* ─── HOT DEALS ─── */}
           <div>
@@ -646,6 +1191,8 @@ const AppHome = () => {
                         <img
                           src={destPhoto?.src || `https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=400`}
                           alt={deal.destination}
+                          width={220}
+                          height={140}
                           className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
                           loading="lazy"
                         />
@@ -687,6 +1234,81 @@ const AppHome = () => {
             )}
           </div>
 
+          {/* ─── LOYALTY & REWARDS CARD ─── */}
+          {user && points && (
+            <motion.button
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => navigate("/rewards")}
+              className="w-full rounded-2xl bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-amber-500/8 border border-amber-500/20 p-5 text-left shadow-sm relative overflow-hidden touch-manipulation"
+            >
+              <div className="absolute -top-8 -right-8 w-24 h-24 bg-amber-500/10 rounded-full blur-2xl pointer-events-none" />
+              <div className="flex items-center gap-3 relative z-10">
+                <div className="w-11 h-11 rounded-xl bg-amber-500/15 border border-amber-500/20 flex items-center justify-center shrink-0">
+                  <Crown className="w-5 h-5 text-amber-500" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <p className="text-sm font-bold text-foreground">ZIVO Miles</p>
+                    {(points as any).tier && (
+                      <Badge variant="secondary" className="text-[9px] font-bold bg-amber-500/15 text-amber-600 border-0 px-1.5">
+                        {(points as any).tier}
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    <span className="font-bold text-foreground">{((points as any).points_balance || 0).toLocaleString()}</span> pts · Earn more with every trip
+                  </p>
+                </div>
+                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+              </div>
+              {((points as any).points_balance || 0) > 0 && (
+                <div className="mt-3 relative z-10">
+                  <Progress value={Math.min((((points as any).points_balance || 0) / 5000) * 100, 100)} className="h-1.5 bg-amber-500/20" />
+                  <p className="text-[10px] text-muted-foreground mt-1">
+                    {Math.max(0, 5000 - ((points as any).points_balance || 0)).toLocaleString()} pts to next tier
+                  </p>
+                </div>
+              )}
+            </motion.button>
+          )}
+
+          {/* ─── REFERRAL CTA ─── */}
+          {user && referralCode && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-2xl bg-gradient-to-br from-violet-500/10 via-purple-500/5 to-violet-500/8 border border-violet-500/20 p-5 relative overflow-hidden shadow-sm"
+            >
+              <div className="absolute -top-8 -right-8 w-24 h-24 bg-violet-500/10 rounded-full blur-2xl pointer-events-none" />
+              <div className="relative z-10">
+                <div className="flex items-center gap-2.5 mb-3">
+                  <div className="w-9 h-9 rounded-xl bg-violet-500/15 flex items-center justify-center shrink-0">
+                    <Gift className="w-4 h-4 text-violet-500" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-foreground">Invite Friends, Earn Rewards</p>
+                    <p className="text-[11px] text-muted-foreground">Get ${REFERRAL_REWARDS.referrer.amount} credit per friend who joins</p>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <div className="flex-1 bg-muted/50 rounded-xl px-3 py-2.5 flex items-center border border-border/30">
+                    <span className="text-sm font-mono font-bold text-foreground tracking-widest">{referralCode.code}</span>
+                  </div>
+                  <Button
+                    size="sm"
+                    onClick={(e) => { e.stopPropagation(); shareReferral(); }}
+                    className="h-[42px] px-4 rounded-xl font-bold shadow-sm"
+                  >
+                    <Share2 className="w-3.5 h-3.5 mr-1.5" />
+                    Share
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
           {/* ─── GUEST SIGN-UP CTA ─── */}
           {!user && (
             <motion.div
@@ -722,15 +1344,18 @@ const AppHome = () => {
               </div>
             </motion.div>
           )}
+          {/* Spacer for fixed bottom nav */}
+          <div className="h-24 md:h-8" aria-hidden="true" />
         </div>
       </div>
 
-      {/* Search Overlay */}
-      <UniversalSearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+      <Suspense fallback={null}>
+        <UniversalSearchOverlay isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
+      </Suspense>
     </div>
 
     {/* Bottom Nav — outside perspective container so position:fixed works */}
-    <ZivoMobileNav />
+    <Suspense fallback={<div className="h-16" />}><ZivoMobileNav /></Suspense>
     </>
   );
 };

@@ -1,0 +1,227 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/ui/responsive-modal.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+var _s = $RefreshSig$();
+/**
+ * ResponsiveModal — bottom Sheet on mobile, centered Dialog on `≥sm`.
+ * Includes scrollable body, sticky footer with safe-area padding, and overscroll containment.
+ */ import __vite__cjsImport1_react from "/node_modules/.vite/deps/react.js?v=7fd9520c"; const React = ((m) => m?.__esModule ? m : {	...typeof m === "object" && !Array.isArray(m) || typeof m === "function" ? m : {},	default: m})(__vite__cjsImport1_react);
+import { X } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "/src/components/ui/dialog.tsx";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from "/src/components/ui/sheet.tsx";
+import { useIsMobile } from "/src/hooks/use-mobile.tsx";
+import { useFocusReturn } from "/src/components/admin/ads/useFocusReturn.ts";
+import { cn } from "/src/lib/utils.ts";
+export function ResponsiveModal({ open, onOpenChange, title, description, children, footer, className, forceDialog }) {
+    _s();
+    const isMobile = useIsMobile();
+    useFocusReturn(open);
+    const handleHandleKey = (e)=>{
+        if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onOpenChange(false);
+        }
+    };
+    if (isMobile && !forceDialog) {
+        return /*#__PURE__*/ _jsxDEV(Sheet, {
+            open: open,
+            onOpenChange: onOpenChange,
+            children: /*#__PURE__*/ _jsxDEV(SheetContent, {
+                side: "bottom",
+                "aria-modal": "true",
+                className: "p-0 h-auto max-h-[92dvh] flex flex-col rounded-t-2xl gap-0",
+                children: [
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        role: "button",
+                        tabIndex: 0,
+                        "aria-label": "Drag or press Enter to dismiss",
+                        onClick: ()=>onOpenChange(false),
+                        onKeyDown: handleHandleKey,
+                        className: "flex justify-center pt-2 pb-1 shrink-0 cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-t-2xl",
+                        children: /*#__PURE__*/ _jsxDEV("div", {
+                            className: "h-1.5 w-10 rounded-full bg-muted-foreground/30"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/ui/responsive-modal.tsx",
+                            lineNumber: 63,
+                            columnNumber: 13
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/ui/responsive-modal.tsx",
+                        lineNumber: 55,
+                        columnNumber: 11
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("button", {
+                        type: "button",
+                        onClick: ()=>onOpenChange(false),
+                        "aria-label": "Close dialog",
+                        className: "sr-only focus:not-sr-only focus:absolute focus:top-2 focus:right-2 focus:z-10 focus:rounded-md focus:bg-background focus:p-1.5 focus:ring-2 focus:ring-ring",
+                        children: /*#__PURE__*/ _jsxDEV(X, {
+                            className: "h-4 w-4"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/ui/responsive-modal.tsx",
+                            lineNumber: 72,
+                            columnNumber: 13
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/ui/responsive-modal.tsx",
+                        lineNumber: 66,
+                        columnNumber: 11
+                    }, this),
+                    (title || description) && /*#__PURE__*/ _jsxDEV(SheetHeader, {
+                        className: "px-4 pb-3 pt-1 text-left shrink-0",
+                        children: [
+                            title && /*#__PURE__*/ _jsxDEV(SheetTitle, {
+                                className: "text-base",
+                                children: title
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/ui/responsive-modal.tsx",
+                                lineNumber: 76,
+                                columnNumber: 25
+                            }, this),
+                            description && /*#__PURE__*/ _jsxDEV(SheetDescription, {
+                                className: "text-xs",
+                                children: description
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/ui/responsive-modal.tsx",
+                                lineNumber: 77,
+                                columnNumber: 31
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/ui/responsive-modal.tsx",
+                        lineNumber: 75,
+                        columnNumber: 13
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "flex-1 overflow-y-auto overscroll-contain px-4 pb-4",
+                        children: children
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/ui/responsive-modal.tsx",
+                        lineNumber: 80,
+                        columnNumber: 11
+                    }, this),
+                    footer && /*#__PURE__*/ _jsxDEV("div", {
+                        className: "shrink-0 border-t border-border px-4 pt-3 bg-background",
+                        style: {
+                            paddingBottom: "calc(var(--zivo-mobile-nav-h, 64px) + env(safe-area-inset-bottom) + 0.75rem)"
+                        },
+                        children: footer
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/ui/responsive-modal.tsx",
+                        lineNumber: 84,
+                        columnNumber: 13
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/ui/responsive-modal.tsx",
+                lineNumber: 49,
+                columnNumber: 9
+            }, this)
+        }, void 0, false, {
+            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/ui/responsive-modal.tsx",
+            lineNumber: 48,
+            columnNumber: 7
+        }, this);
+    }
+    return /*#__PURE__*/ _jsxDEV(Dialog, {
+        open: open,
+        onOpenChange: onOpenChange,
+        children: /*#__PURE__*/ _jsxDEV(DialogContent, {
+            className: cn("p-0 max-w-md w-[calc(100vw-2rem)] sm:w-full max-h-[85vh] flex flex-col gap-0", className),
+            children: [
+                (title || description) && /*#__PURE__*/ _jsxDEV(DialogHeader, {
+                    className: "px-5 pt-5 pb-3 shrink-0",
+                    children: [
+                        title && /*#__PURE__*/ _jsxDEV(DialogTitle, {
+                            className: "text-base sm:text-lg",
+                            children: title
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/ui/responsive-modal.tsx",
+                            lineNumber: 106,
+                            columnNumber: 23
+                        }, this),
+                        description && /*#__PURE__*/ _jsxDEV(DialogDescription, {
+                            className: "text-xs sm:text-sm",
+                            children: description
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/ui/responsive-modal.tsx",
+                            lineNumber: 107,
+                            columnNumber: 29
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/ui/responsive-modal.tsx",
+                    lineNumber: 105,
+                    columnNumber: 11
+                }, this),
+                /*#__PURE__*/ _jsxDEV("div", {
+                    className: "flex-1 overflow-y-auto overscroll-contain px-5 pb-4",
+                    children: children
+                }, void 0, false, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/ui/responsive-modal.tsx",
+                    lineNumber: 110,
+                    columnNumber: 9
+                }, this),
+                footer && /*#__PURE__*/ _jsxDEV("div", {
+                    className: "shrink-0 border-t-2 border-border/80 px-5 py-4 bg-muted/30 backdrop-blur-sm rounded-b-lg shadow-[0_-4px_12px_-4px_rgba(0,0,0,0.08)]",
+                    children: footer
+                }, void 0, false, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/ui/responsive-modal.tsx",
+                    lineNumber: 114,
+                    columnNumber: 11
+                }, this)
+            ]
+        }, void 0, true, {
+            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/ui/responsive-modal.tsx",
+            lineNumber: 98,
+            columnNumber: 7
+        }, this)
+    }, void 0, false, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/ui/responsive-modal.tsx",
+        lineNumber: 97,
+        columnNumber: 5
+    }, this);
+}
+_s(ResponsiveModal, "AaVpCQj3zenOPssAD2s5tHlZjdo=", false, function() {
+    return [
+        useIsMobile,
+        useFocusReturn
+    ];
+});
+_c = ResponsiveModal;
+/** Auto-stacks on mobile (primary on top), inline on desktop. */ export function ResponsiveModalFooter({ children, className }) {
+    return /*#__PURE__*/ _jsxDEV("div", {
+        className: cn("flex flex-col-reverse sm:flex-row sm:justify-end gap-2", className),
+        children: children
+    }, void 0, false, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/ui/responsive-modal.tsx",
+        lineNumber: 132,
+        columnNumber: 5
+    }, this);
+}
+_c1 = ResponsiveModalFooter;
+var _c, _c1;
+$RefreshReg$(_c, "ResponsiveModal");
+$RefreshReg$(_c1, "ResponsiveModalFooter");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/ui/responsive-modal.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/ui/responsive-modal.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/ui/responsive-modal.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbInJlc3BvbnNpdmUtbW9kYWwudHN4Il0sInNvdXJjZXNDb250ZW50IjpbIi8qKlxyXG4gKiBSZXNwb25zaXZlTW9kYWwg4oCUIGJvdHRvbSBTaGVldCBvbiBtb2JpbGUsIGNlbnRlcmVkIERpYWxvZyBvbiBg4omlc21gLlxyXG4gKiBJbmNsdWRlcyBzY3JvbGxhYmxlIGJvZHksIHN0aWNreSBmb290ZXIgd2l0aCBzYWZlLWFyZWEgcGFkZGluZywgYW5kIG92ZXJzY3JvbGwgY29udGFpbm1lbnQuXHJcbiAqL1xyXG5pbXBvcnQgKiBhcyBSZWFjdCBmcm9tIFwicmVhY3RcIjtcclxuaW1wb3J0IHsgWCB9IGZyb20gXCJsdWNpZGUtcmVhY3RcIjtcclxuaW1wb3J0IHsgRGlhbG9nLCBEaWFsb2dDb250ZW50LCBEaWFsb2dIZWFkZXIsIERpYWxvZ1RpdGxlLCBEaWFsb2dEZXNjcmlwdGlvbiB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvZGlhbG9nXCI7XHJcbmltcG9ydCB7IFNoZWV0LCBTaGVldENvbnRlbnQsIFNoZWV0SGVhZGVyLCBTaGVldFRpdGxlLCBTaGVldERlc2NyaXB0aW9uIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9zaGVldFwiO1xyXG5pbXBvcnQgeyB1c2VJc01vYmlsZSB9IGZyb20gXCJAL2hvb2tzL3VzZS1tb2JpbGVcIjtcclxuaW1wb3J0IHsgdXNlRm9jdXNSZXR1cm4gfSBmcm9tIFwiQC9jb21wb25lbnRzL2FkbWluL2Fkcy91c2VGb2N1c1JldHVyblwiO1xyXG5pbXBvcnQgeyBjbiB9IGZyb20gXCJAL2xpYi91dGlsc1wiO1xyXG5cclxuaW50ZXJmYWNlIFJlc3BvbnNpdmVNb2RhbFByb3BzIHtcclxuICBvcGVuOiBib29sZWFuO1xyXG4gIG9uT3BlbkNoYW5nZTogKG9wZW46IGJvb2xlYW4pID0+IHZvaWQ7XHJcbiAgdGl0bGU/OiBSZWFjdC5SZWFjdE5vZGU7XHJcbiAgZGVzY3JpcHRpb24/OiBSZWFjdC5SZWFjdE5vZGU7XHJcbiAgY2hpbGRyZW46IFJlYWN0LlJlYWN0Tm9kZTtcclxuICBmb290ZXI/OiBSZWFjdC5SZWFjdE5vZGU7XHJcbiAgLyoqIHdpZHRoIG9uIGRlc2t0b3AgZGlhbG9nICovXHJcbiAgY2xhc3NOYW1lPzogc3RyaW5nO1xyXG4gIC8qKiBkaXNhYmxlIG1vYmlsZSBib3R0b20tc2hlZXQgYmVoYXZpb3IgKGFsd2F5cyBkaWFsb2cpICovXHJcbiAgZm9yY2VEaWFsb2c/OiBib29sZWFuO1xyXG59XHJcblxyXG5leHBvcnQgZnVuY3Rpb24gUmVzcG9uc2l2ZU1vZGFsKHtcclxuICBvcGVuLFxyXG4gIG9uT3BlbkNoYW5nZSxcclxuICB0aXRsZSxcclxuICBkZXNjcmlwdGlvbixcclxuICBjaGlsZHJlbixcclxuICBmb290ZXIsXHJcbiAgY2xhc3NOYW1lLFxyXG4gIGZvcmNlRGlhbG9nLFxyXG59OiBSZXNwb25zaXZlTW9kYWxQcm9wcykge1xyXG4gIGNvbnN0IGlzTW9iaWxlID0gdXNlSXNNb2JpbGUoKTtcclxuICB1c2VGb2N1c1JldHVybihvcGVuKTtcclxuXHJcbiAgY29uc3QgaGFuZGxlSGFuZGxlS2V5ID0gKGU6IFJlYWN0LktleWJvYXJkRXZlbnQpID0+IHtcclxuICAgIGlmIChlLmtleSA9PT0gXCJFbnRlclwiIHx8IGUua2V5ID09PSBcIiBcIikge1xyXG4gICAgICBlLnByZXZlbnREZWZhdWx0KCk7XHJcbiAgICAgIG9uT3BlbkNoYW5nZShmYWxzZSk7XHJcbiAgICB9XHJcbiAgfTtcclxuXHJcbiAgaWYgKGlzTW9iaWxlICYmICFmb3JjZURpYWxvZykge1xyXG4gICAgcmV0dXJuIChcclxuICAgICAgPFNoZWV0IG9wZW49e29wZW59IG9uT3BlbkNoYW5nZT17b25PcGVuQ2hhbmdlfT5cclxuICAgICAgICA8U2hlZXRDb250ZW50XHJcbiAgICAgICAgICBzaWRlPVwiYm90dG9tXCJcclxuICAgICAgICAgIGFyaWEtbW9kYWw9XCJ0cnVlXCJcclxuICAgICAgICAgIGNsYXNzTmFtZT1cInAtMCBoLWF1dG8gbWF4LWgtWzkyZHZoXSBmbGV4IGZsZXgtY29sIHJvdW5kZWQtdC0yeGwgZ2FwLTBcIlxyXG4gICAgICAgID5cclxuICAgICAgICAgIHsvKiBEcmFnIGhhbmRsZSDigJQga2V5Ym9hcmQgYWNjZXNzaWJsZSAqL31cclxuICAgICAgICAgIDxkaXZcclxuICAgICAgICAgICAgcm9sZT1cImJ1dHRvblwiXHJcbiAgICAgICAgICAgIHRhYkluZGV4PXswfVxyXG4gICAgICAgICAgICBhcmlhLWxhYmVsPVwiRHJhZyBvciBwcmVzcyBFbnRlciB0byBkaXNtaXNzXCJcclxuICAgICAgICAgICAgb25DbGljaz17KCkgPT4gb25PcGVuQ2hhbmdlKGZhbHNlKX1cclxuICAgICAgICAgICAgb25LZXlEb3duPXtoYW5kbGVIYW5kbGVLZXl9XHJcbiAgICAgICAgICAgIGNsYXNzTmFtZT1cImZsZXgganVzdGlmeS1jZW50ZXIgcHQtMiBwYi0xIHNocmluay0wIGN1cnNvci1wb2ludGVyIGZvY3VzLXZpc2libGU6b3V0bGluZS1ub25lIGZvY3VzLXZpc2libGU6cmluZy0yIGZvY3VzLXZpc2libGU6cmluZy1yaW5nIHJvdW5kZWQtdC0yeGxcIlxyXG4gICAgICAgICAgPlxyXG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImgtMS41IHctMTAgcm91bmRlZC1mdWxsIGJnLW11dGVkLWZvcmVncm91bmQvMzBcIiAvPlxyXG4gICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICB7LyogVmlzaWJsZS1vbi1mb2N1cyBjbG9zZSBidXR0b24gKFNoZWV0J3MgYnVpbHQtaW4gWCBpcyBpbiB0b3AtcmlnaHQ7IHRoaXMgaXMgYW4gYTExeSBiYWNrdXApICovfVxyXG4gICAgICAgICAgPGJ1dHRvblxyXG4gICAgICAgICAgICB0eXBlPVwiYnV0dG9uXCJcclxuICAgICAgICAgICAgb25DbGljaz17KCkgPT4gb25PcGVuQ2hhbmdlKGZhbHNlKX1cclxuICAgICAgICAgICAgYXJpYS1sYWJlbD1cIkNsb3NlIGRpYWxvZ1wiXHJcbiAgICAgICAgICAgIGNsYXNzTmFtZT1cInNyLW9ubHkgZm9jdXM6bm90LXNyLW9ubHkgZm9jdXM6YWJzb2x1dGUgZm9jdXM6dG9wLTIgZm9jdXM6cmlnaHQtMiBmb2N1czp6LTEwIGZvY3VzOnJvdW5kZWQtbWQgZm9jdXM6YmctYmFja2dyb3VuZCBmb2N1czpwLTEuNSBmb2N1czpyaW5nLTIgZm9jdXM6cmluZy1yaW5nXCJcclxuICAgICAgICAgID5cclxuICAgICAgICAgICAgPFggY2xhc3NOYW1lPVwiaC00IHctNFwiIC8+XHJcbiAgICAgICAgICA8L2J1dHRvbj5cclxuICAgICAgICAgIHsodGl0bGUgfHwgZGVzY3JpcHRpb24pICYmIChcclxuICAgICAgICAgICAgPFNoZWV0SGVhZGVyIGNsYXNzTmFtZT1cInB4LTQgcGItMyBwdC0xIHRleHQtbGVmdCBzaHJpbmstMFwiPlxyXG4gICAgICAgICAgICAgIHt0aXRsZSAmJiA8U2hlZXRUaXRsZSBjbGFzc05hbWU9XCJ0ZXh0LWJhc2VcIj57dGl0bGV9PC9TaGVldFRpdGxlPn1cclxuICAgICAgICAgICAgICB7ZGVzY3JpcHRpb24gJiYgPFNoZWV0RGVzY3JpcHRpb24gY2xhc3NOYW1lPVwidGV4dC14c1wiPntkZXNjcmlwdGlvbn08L1NoZWV0RGVzY3JpcHRpb24+fVxyXG4gICAgICAgICAgICA8L1NoZWV0SGVhZGVyPlxyXG4gICAgICAgICAgKX1cclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleC0xIG92ZXJmbG93LXktYXV0byBvdmVyc2Nyb2xsLWNvbnRhaW4gcHgtNCBwYi00XCI+XHJcbiAgICAgICAgICAgIHtjaGlsZHJlbn1cclxuICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAge2Zvb3RlciAmJiAoXHJcbiAgICAgICAgICAgIDxkaXZcclxuICAgICAgICAgICAgICBjbGFzc05hbWU9XCJzaHJpbmstMCBib3JkZXItdCBib3JkZXItYm9yZGVyIHB4LTQgcHQtMyBiZy1iYWNrZ3JvdW5kXCJcclxuICAgICAgICAgICAgICBzdHlsZT17eyBwYWRkaW5nQm90dG9tOiBcImNhbGModmFyKC0teml2by1tb2JpbGUtbmF2LWgsIDY0cHgpICsgZW52KHNhZmUtYXJlYS1pbnNldC1ib3R0b20pICsgMC43NXJlbSlcIiB9fVxyXG4gICAgICAgICAgICA+XHJcbiAgICAgICAgICAgICAge2Zvb3Rlcn1cclxuICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICApfVxyXG4gICAgICAgIDwvU2hlZXRDb250ZW50PlxyXG4gICAgICA8L1NoZWV0PlxyXG4gICAgKTtcclxuICB9XHJcblxyXG4gIHJldHVybiAoXHJcbiAgICA8RGlhbG9nIG9wZW49e29wZW59IG9uT3BlbkNoYW5nZT17b25PcGVuQ2hhbmdlfT5cclxuICAgICAgPERpYWxvZ0NvbnRlbnRcclxuICAgICAgICBjbGFzc05hbWU9e2NuKFxyXG4gICAgICAgICAgXCJwLTAgbWF4LXctbWQgdy1bY2FsYygxMDB2dy0ycmVtKV0gc206dy1mdWxsIG1heC1oLVs4NXZoXSBmbGV4IGZsZXgtY29sIGdhcC0wXCIsXHJcbiAgICAgICAgICBjbGFzc05hbWVcclxuICAgICAgICApfVxyXG4gICAgICA+XHJcbiAgICAgICAgeyh0aXRsZSB8fCBkZXNjcmlwdGlvbikgJiYgKFxyXG4gICAgICAgICAgPERpYWxvZ0hlYWRlciBjbGFzc05hbWU9XCJweC01IHB0LTUgcGItMyBzaHJpbmstMFwiPlxyXG4gICAgICAgICAgICB7dGl0bGUgJiYgPERpYWxvZ1RpdGxlIGNsYXNzTmFtZT1cInRleHQtYmFzZSBzbTp0ZXh0LWxnXCI+e3RpdGxlfTwvRGlhbG9nVGl0bGU+fVxyXG4gICAgICAgICAgICB7ZGVzY3JpcHRpb24gJiYgPERpYWxvZ0Rlc2NyaXB0aW9uIGNsYXNzTmFtZT1cInRleHQteHMgc206dGV4dC1zbVwiPntkZXNjcmlwdGlvbn08L0RpYWxvZ0Rlc2NyaXB0aW9uPn1cclxuICAgICAgICAgIDwvRGlhbG9nSGVhZGVyPlxyXG4gICAgICAgICl9XHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4LTEgb3ZlcmZsb3cteS1hdXRvIG92ZXJzY3JvbGwtY29udGFpbiBweC01IHBiLTRcIj5cclxuICAgICAgICAgIHtjaGlsZHJlbn1cclxuICAgICAgICA8L2Rpdj5cclxuICAgICAgICB7Zm9vdGVyICYmIChcclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic2hyaW5rLTAgYm9yZGVyLXQtMiBib3JkZXItYm9yZGVyLzgwIHB4LTUgcHktNCBiZy1tdXRlZC8zMCBiYWNrZHJvcC1ibHVyLXNtIHJvdW5kZWQtYi1sZyBzaGFkb3ctWzBfLTRweF8xMnB4Xy00cHhfcmdiYSgwLDAsMCwwLjA4KV1cIj5cclxuICAgICAgICAgICAge2Zvb3Rlcn1cclxuICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICl9XHJcbiAgICAgIDwvRGlhbG9nQ29udGVudD5cclxuICAgIDwvRGlhbG9nPlxyXG4gICk7XHJcbn1cclxuXHJcbi8qKiBBdXRvLXN0YWNrcyBvbiBtb2JpbGUgKHByaW1hcnkgb24gdG9wKSwgaW5saW5lIG9uIGRlc2t0b3AuICovXHJcbmV4cG9ydCBmdW5jdGlvbiBSZXNwb25zaXZlTW9kYWxGb290ZXIoe1xyXG4gIGNoaWxkcmVuLFxyXG4gIGNsYXNzTmFtZSxcclxufToge1xyXG4gIGNoaWxkcmVuOiBSZWFjdC5SZWFjdE5vZGU7XHJcbiAgY2xhc3NOYW1lPzogc3RyaW5nO1xyXG59KSB7XHJcbiAgcmV0dXJuIChcclxuICAgIDxkaXYgY2xhc3NOYW1lPXtjbihcImZsZXggZmxleC1jb2wtcmV2ZXJzZSBzbTpmbGV4LXJvdyBzbTpqdXN0aWZ5LWVuZCBnYXAtMlwiLCBjbGFzc05hbWUpfT5cclxuICAgICAge2NoaWxkcmVufVxyXG4gICAgPC9kaXY+XHJcbiAgKTtcclxufVxyXG4iXSwibmFtZXMiOlsiUmVhY3QiLCJYIiwiRGlhbG9nIiwiRGlhbG9nQ29udGVudCIsIkRpYWxvZ0hlYWRlciIsIkRpYWxvZ1RpdGxlIiwiRGlhbG9nRGVzY3JpcHRpb24iLCJTaGVldCIsIlNoZWV0Q29udGVudCIsIlNoZWV0SGVhZGVyIiwiU2hlZXRUaXRsZSIsIlNoZWV0RGVzY3JpcHRpb24iLCJ1c2VJc01vYmlsZSIsInVzZUZvY3VzUmV0dXJuIiwiY24iLCJSZXNwb25zaXZlTW9kYWwiLCJvcGVuIiwib25PcGVuQ2hhbmdlIiwidGl0bGUiLCJkZXNjcmlwdGlvbiIsImNoaWxkcmVuIiwiZm9vdGVyIiwiY2xhc3NOYW1lIiwiZm9yY2VEaWFsb2ciLCJpc01vYmlsZSIsImhhbmRsZUhhbmRsZUtleSIsImUiLCJrZXkiLCJwcmV2ZW50RGVmYXVsdCIsInNpZGUiLCJhcmlhLW1vZGFsIiwiZGl2Iiwicm9sZSIsInRhYkluZGV4IiwiYXJpYS1sYWJlbCIsIm9uQ2xpY2siLCJvbktleURvd24iLCJidXR0b24iLCJ0eXBlIiwic3R5bGUiLCJwYWRkaW5nQm90dG9tIiwiUmVzcG9uc2l2ZU1vZGFsRm9vdGVyIl0sIm1hcHBpbmdzIjoiOztBQUFBOzs7Q0FHQyxHQUNELFlBQVlBLFdBQVcsUUFBUTtBQUMvQixTQUFTQyxDQUFDLFFBQVEsZUFBZTtBQUNqQyxTQUFTQyxNQUFNLEVBQUVDLGFBQWEsRUFBRUMsWUFBWSxFQUFFQyxXQUFXLEVBQUVDLGlCQUFpQixRQUFRLHlCQUF5QjtBQUM3RyxTQUFTQyxLQUFLLEVBQUVDLFlBQVksRUFBRUMsV0FBVyxFQUFFQyxVQUFVLEVBQUVDLGdCQUFnQixRQUFRLHdCQUF3QjtBQUN2RyxTQUFTQyxXQUFXLFFBQVEscUJBQXFCO0FBQ2pELFNBQVNDLGNBQWMsUUFBUSx3Q0FBd0M7QUFDdkUsU0FBU0MsRUFBRSxRQUFRLGNBQWM7QUFlakMsT0FBTyxTQUFTQyxnQkFBZ0IsRUFDOUJDLElBQUksRUFDSkMsWUFBWSxFQUNaQyxLQUFLLEVBQ0xDLFdBQVcsRUFDWEMsUUFBUSxFQUNSQyxNQUFNLEVBQ05DLFNBQVMsRUFDVEMsV0FBVyxFQUNVOztJQUNyQixNQUFNQyxXQUFXWjtJQUNqQkMsZUFBZUc7SUFFZixNQUFNUyxrQkFBa0IsQ0FBQ0M7UUFDdkIsSUFBSUEsRUFBRUMsR0FBRyxLQUFLLFdBQVdELEVBQUVDLEdBQUcsS0FBSyxLQUFLO1lBQ3RDRCxFQUFFRSxjQUFjO1lBQ2hCWCxhQUFhO1FBQ2Y7SUFDRjtJQUVBLElBQUlPLFlBQVksQ0FBQ0QsYUFBYTtRQUM1QixxQkFDRSxRQUFDaEI7WUFBTVMsTUFBTUE7WUFBTUMsY0FBY0E7c0JBQy9CLGNBQUEsUUFBQ1Q7Z0JBQ0NxQixNQUFLO2dCQUNMQyxjQUFXO2dCQUNYUixXQUFVOztrQ0FHVixRQUFDUzt3QkFDQ0MsTUFBSzt3QkFDTEMsVUFBVTt3QkFDVkMsY0FBVzt3QkFDWEMsU0FBUyxJQUFNbEIsYUFBYTt3QkFDNUJtQixXQUFXWDt3QkFDWEgsV0FBVTtrQ0FFVixjQUFBLFFBQUNTOzRCQUFJVCxXQUFVOzs7Ozs7Ozs7OztrQ0FHakIsUUFBQ2U7d0JBQ0NDLE1BQUs7d0JBQ0xILFNBQVMsSUFBTWxCLGFBQWE7d0JBQzVCaUIsY0FBVzt3QkFDWFosV0FBVTtrQ0FFVixjQUFBLFFBQUNyQjs0QkFBRXFCLFdBQVU7Ozs7Ozs7Ozs7O29CQUViSixDQUFBQSxTQUFTQyxXQUFVLG1CQUNuQixRQUFDVjt3QkFBWWEsV0FBVTs7NEJBQ3BCSix1QkFBUyxRQUFDUjtnQ0FBV1ksV0FBVTswQ0FBYUo7Ozs7Ozs0QkFDNUNDLDZCQUFlLFFBQUNSO2dDQUFpQlcsV0FBVTswQ0FBV0g7Ozs7Ozs7Ozs7OztrQ0FHM0QsUUFBQ1k7d0JBQUlULFdBQVU7a0NBQ1pGOzs7Ozs7b0JBRUZDLHdCQUNDLFFBQUNVO3dCQUNDVCxXQUFVO3dCQUNWaUIsT0FBTzs0QkFBRUMsZUFBZTt3QkFBK0U7a0NBRXRHbkI7Ozs7Ozs7Ozs7Ozs7Ozs7O0lBTWI7SUFFQSxxQkFDRSxRQUFDbkI7UUFBT2MsTUFBTUE7UUFBTUMsY0FBY0E7a0JBQ2hDLGNBQUEsUUFBQ2Q7WUFDQ21CLFdBQVdSLEdBQ1QsZ0ZBQ0FROztnQkFHQUosQ0FBQUEsU0FBU0MsV0FBVSxtQkFDbkIsUUFBQ2Y7b0JBQWFrQixXQUFVOzt3QkFDckJKLHVCQUFTLFFBQUNiOzRCQUFZaUIsV0FBVTtzQ0FBd0JKOzs7Ozs7d0JBQ3hEQyw2QkFBZSxRQUFDYjs0QkFBa0JnQixXQUFVO3NDQUFzQkg7Ozs7Ozs7Ozs7Ozs4QkFHdkUsUUFBQ1k7b0JBQUlULFdBQVU7OEJBQ1pGOzs7Ozs7Z0JBRUZDLHdCQUNDLFFBQUNVO29CQUFJVCxXQUFVOzhCQUNaRDs7Ozs7Ozs7Ozs7Ozs7Ozs7QUFNYjtHQS9GZ0JOOztRQVVHSDtRQUNqQkM7OztLQVhjRTtBQWlHaEIsK0RBQStELEdBQy9ELE9BQU8sU0FBUzBCLHNCQUFzQixFQUNwQ3JCLFFBQVEsRUFDUkUsU0FBUyxFQUlWO0lBQ0MscUJBQ0UsUUFBQ1M7UUFBSVQsV0FBV1IsR0FBRywwREFBMERRO2tCQUMxRUY7Ozs7OztBQUdQO01BWmdCcUIifQ==

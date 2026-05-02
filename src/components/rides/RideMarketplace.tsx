@@ -2,11 +2,13 @@
  * RideMarketplace — Ride bidding, driver auctions, preferred drivers, ride requests
  */
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import { Gavel, Star, Clock, MapPin, DollarSign, ThumbsUp, Users, ArrowUpDown } from "lucide-react";
+import { Gavel, Star, Clock, MapPin, DollarSign, ThumbsUp, Users, ArrowUpDown, Plus, X } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
@@ -25,8 +27,13 @@ const rideRequests = [
 ];
 
 export default function RideMarketplace() {
+  const navigate = useNavigate();
   const [selectedBid, setSelectedBid] = useState<string | null>(null);
   const [sortBy, setSortBy] = useState<"price" | "rating" | "eta">("price");
+  const [showRequestForm, setShowRequestForm] = useState(false);
+  const [reqFrom, setReqFrom] = useState("");
+  const [reqTo, setReqTo] = useState("");
+  const [reqBudget, setReqBudget] = useState("");
 
   const sorted = [...driverBids].sort((a, b) => {
     if (sortBy === "price") return a.bid - b.bid;
@@ -89,7 +96,10 @@ export default function RideMarketplace() {
           </AnimatePresence>
 
           {selectedBid && (
-            <Button className="w-full" onClick={() => { toast.success("Bid accepted!"); setSelectedBid(null); }}>
+            <Button className="w-full" onClick={() => {
+              const driver = driverBids.find(d => d.id === selectedBid);
+              navigate("/rides", { state: { preferredDriverId: driver?.id, preferredDriverName: driver?.name, bidAmount: driver?.bid } });
+            }}>
               Accept Bid — ${driverBids.find(d => d.id === selectedBid)?.bid.toFixed(2)}
             </Button>
           )}
@@ -107,7 +117,7 @@ export default function RideMarketplace() {
                     <div className="text-xs text-muted-foreground">{driver.vehicle} · {driver.rating} ★</div>
                   </div>
                 </div>
-                <Button size="sm" variant="outline" onClick={() => toast.success(`Requesting ${driver.name}...`)}>
+                <Button size="sm" variant="outline" onClick={() => navigate("/rides", { state: { preferredDriverId: driver.id, preferredDriverName: driver.name } })}>
                   Request
                 </Button>
               </CardContent>
@@ -137,7 +147,31 @@ export default function RideMarketplace() {
               </CardContent>
             </Card>
           ))}
-          <Button className="w-full" variant="outline" onClick={() => toast.success("Ride request posted!")}>
+          <AnimatePresence>
+            {showRequestForm && (
+              <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
+                <Card className="mb-2">
+                  <CardContent className="p-4 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <p className="text-sm font-bold">New Ride Request</p>
+                      <button onClick={() => setShowRequestForm(false)}><X className="w-4 h-4 text-muted-foreground" /></button>
+                    </div>
+                    <Input placeholder="From (pickup location)" value={reqFrom} onChange={e => setReqFrom(e.target.value)} className="h-9 text-sm" />
+                    <Input placeholder="To (destination)" value={reqTo} onChange={e => setReqTo(e.target.value)} className="h-9 text-sm" />
+                    <Input placeholder="Your budget (e.g. $15-20)" value={reqBudget} onChange={e => setReqBudget(e.target.value)} className="h-9 text-sm" />
+                    <Button className="w-full" disabled={!reqFrom.trim() || !reqTo.trim()} onClick={() => {
+                      toast.success(`Request posted: ${reqFrom} → ${reqTo}`);
+                      setShowRequestForm(false);
+                      setReqFrom(""); setReqTo(""); setReqBudget("");
+                    }}>
+                      Post Request
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          <Button className="w-full" variant="outline" onClick={() => setShowRequestForm(v => !v)}>
             <Gavel className="w-4 h-4 mr-2" /> Post New Request
           </Button>
         </TabsContent>

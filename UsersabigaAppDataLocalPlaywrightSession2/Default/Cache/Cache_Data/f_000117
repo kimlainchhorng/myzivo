@@ -1,0 +1,464 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/admin/AdsStudioAnalytics.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+var _s = $RefreshSig$();
+/**
+ * AdsStudioAnalytics — performance dashboard across all creatives for a store.
+ * Pulls from ads_studio_creative_stats view (impressions, clicks, conversions, revenue, AI spend).
+ */ import __vite__cjsImport1_react from "/node_modules/.vite/deps/react.js?v=7fd9520c"; const useEffect = __vite__cjsImport1_react["useEffect"]; const useState = __vite__cjsImport1_react["useState"]; const useMemo = __vite__cjsImport1_react["useMemo"]; const memo = __vite__cjsImport1_react["memo"]; const useCallback = __vite__cjsImport1_react["useCallback"];
+import { Card, CardContent } from "/src/components/ui/card.tsx";
+import { Badge } from "/src/components/ui/badge.tsx";
+import { Button } from "/src/components/ui/button.tsx";
+import { supabase } from "/src/integrations/supabase/client.ts";
+import { BarChart3, MousePointerClick, Eye, Target, DollarSign, RefreshCw, TrendingUp } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+import { toast } from "/node_modules/.vite/deps/sonner.js?v=7fd9520c";
+import { PerformanceChartSkeleton } from "/src/components/admin/ads/MarketingSkeletons.tsx";
+import MarketingEmptyState from "/src/components/admin/ads/MarketingEmptyState.tsx";
+import ResponsiveBreakdown from "/src/components/admin/ads/ResponsiveBreakdown.tsx";
+import { mkMeta } from "/src/components/admin/ads/marketing-tokens.ts";
+import { cn } from "/src/lib/utils.ts";
+const NUM_FMT = new Intl.NumberFormat("en-US");
+const CURRENCY_FMT = new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD"
+});
+export default function AdsStudioAnalytics({ storeId }) {
+    _s();
+    const [stats, setStats] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const load = async ()=>{
+        setLoading(true);
+        try {
+            const { data, error } = await supabase.from("ads_studio_creative_stats").select("*").eq("store_id", storeId).order("created_at", {
+                ascending: false
+            }).limit(50);
+            if (error) throw error;
+            setStats(data || []);
+        } catch (e) {
+            toast.error(e?.message || "Failed to load analytics");
+        } finally{
+            setLoading(false);
+        }
+    };
+    useEffect(()=>{
+        if (storeId) load();
+    }, [
+        storeId
+    ]);
+    const totals = useMemo(()=>stats.reduce((acc, s)=>({
+                impressions: acc.impressions + (s.impressions || 0),
+                clicks: acc.clicks + (s.clicks || 0),
+                conversions: acc.conversions + (s.conversions || 0),
+                revenue_cents: acc.revenue_cents + (s.revenue_cents || 0),
+                spend_cents: acc.spend_cents + (s.spend_cents || 0)
+            }), {
+            impressions: 0,
+            clicks: 0,
+            conversions: 0,
+            revenue_cents: 0,
+            spend_cents: 0
+        }), [
+        stats
+    ]);
+    const { ctr, cvr, roas } = useMemo(()=>({
+            ctr: totals.impressions > 0 ? totals.clicks / totals.impressions * 100 : 0,
+            cvr: totals.clicks > 0 ? totals.conversions / totals.clicks * 100 : 0,
+            roas: totals.spend_cents > 0 ? totals.revenue_cents / totals.spend_cents : 0
+        }), [
+        totals
+    ]);
+    const exportCsv = useCallback(()=>{
+        const header = "goal,date,impressions,clicks,conversions,revenue,spend\n";
+        const lines = stats.map((s)=>[
+                s.goal,
+                new Date(s.created_at).toISOString().slice(0, 10),
+                s.impressions,
+                s.clicks,
+                s.conversions,
+                (s.revenue_cents / 100).toFixed(2),
+                (s.spend_cents / 100).toFixed(2)
+            ].join(",")).join("\n");
+        const blob = new Blob([
+            header + lines
+        ], {
+            type: "text/csv"
+        });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `ads-performance-${storeId}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+    }, [
+        stats,
+        storeId
+    ]);
+    const columns = useMemo(()=>[
+            {
+                key: "goal",
+                label: "Goal",
+                render: (s)=>/*#__PURE__*/ _jsxDEV(Badge, {
+                        variant: "outline",
+                        className: "text-[10px]",
+                        children: s.goal
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+                        lineNumber: 106,
+                        columnNumber: 50
+                    }, this)
+            },
+            {
+                key: "date",
+                label: "Date",
+                render: (s)=>new Date(s.created_at).toLocaleDateString(),
+                desktopOnly: true
+            },
+            {
+                key: "impr",
+                label: "Impr",
+                isNumeric: true,
+                render: (s)=>NUM_FMT.format(s.impressions)
+            },
+            {
+                key: "clicks",
+                label: "Clicks",
+                isNumeric: true,
+                render: (s)=>NUM_FMT.format(s.clicks)
+            },
+            {
+                key: "conv",
+                label: "Conv",
+                isNumeric: true,
+                render: (s)=>NUM_FMT.format(s.conversions)
+            },
+            {
+                key: "rev",
+                label: "Revenue",
+                isNumeric: true,
+                render: (s)=>/*#__PURE__*/ _jsxDEV("span", {
+                        className: "text-primary font-medium",
+                        children: CURRENCY_FMT.format(s.revenue_cents / 100)
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+                        lineNumber: 111,
+                        columnNumber: 69
+                    }, this)
+            },
+            {
+                key: "spend",
+                label: "Spend",
+                isNumeric: true,
+                render: (s)=>/*#__PURE__*/ _jsxDEV("span", {
+                        className: "text-muted-foreground",
+                        children: CURRENCY_FMT.format(s.spend_cents / 100)
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+                        lineNumber: 112,
+                        columnNumber: 69
+                    }, this)
+            }
+        ], []);
+    if (loading) return /*#__PURE__*/ _jsxDEV(PerformanceChartSkeleton, {}, void 0, false, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+        lineNumber: 115,
+        columnNumber: 23
+    }, this);
+    return /*#__PURE__*/ _jsxDEV("div", {
+        className: "space-y-3",
+        children: [
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "flex items-center justify-between",
+                children: [
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "flex items-center gap-2",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(BarChart3, {
+                                className: "h-4 w-4 text-primary"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+                                lineNumber: 121,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("h3", {
+                                className: "font-semibold text-sm sm:text-base",
+                                children: "Performance"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+                                lineNumber: 122,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+                        lineNumber: 120,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(Button, {
+                        size: "sm",
+                        variant: "ghost",
+                        className: "h-9 sm:h-8",
+                        onClick: load,
+                        disabled: loading,
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(RefreshCw, {
+                                className: cn("h-3.5 w-3.5 sm:mr-1", loading && "animate-spin")
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+                                lineNumber: 125,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("span", {
+                                className: "hidden sm:inline",
+                                children: "Refresh"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+                                lineNumber: 126,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+                        lineNumber: 124,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+                lineNumber: 119,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "grid grid-cols-2 sm:grid-cols-4 gap-2",
+                children: [
+                    /*#__PURE__*/ _jsxDEV(StatCard, {
+                        icon: Eye,
+                        label: "Impressions",
+                        value: NUM_FMT.format(totals.impressions)
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+                        lineNumber: 132,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(StatCard, {
+                        icon: MousePointerClick,
+                        label: "Clicks",
+                        value: NUM_FMT.format(totals.clicks),
+                        sub: `${ctr.toFixed(2)}% CTR`
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+                        lineNumber: 133,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(StatCard, {
+                        icon: Target,
+                        label: "Conversions",
+                        value: NUM_FMT.format(totals.conversions),
+                        sub: `${cvr.toFixed(2)}% CVR`
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+                        lineNumber: 134,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(StatCard, {
+                        icon: DollarSign,
+                        label: "Revenue",
+                        value: CURRENCY_FMT.format(totals.revenue_cents / 100),
+                        sub: `${roas.toFixed(2)}x ROAS`
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+                        lineNumber: 135,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+                lineNumber: 131,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV(Card, {
+                children: /*#__PURE__*/ _jsxDEV(CardContent, {
+                    className: "p-3 sm:p-4",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "flex items-center gap-2 mb-2",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV(TrendingUp, {
+                                    className: "h-3.5 w-3.5 text-primary"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+                                    lineNumber: 141,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("p", {
+                                    className: "text-xs sm:text-sm font-semibold",
+                                    children: "Per-creative breakdown"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+                                    lineNumber: 142,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV(Badge, {
+                                    variant: "secondary",
+                                    className: "ml-auto text-[10px]",
+                                    children: [
+                                        "AI spend: $",
+                                        (totals.spend_cents / 100).toFixed(2)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+                                    lineNumber: 143,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+                            lineNumber: 140,
+                            columnNumber: 11
+                        }, this),
+                        stats.length === 0 ? /*#__PURE__*/ _jsxDEV(MarketingEmptyState, {
+                            icon: BarChart3,
+                            title: "No campaigns yet",
+                            body: "Generate one in the AI Studio tab to start collecting performance data."
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+                            lineNumber: 148,
+                            columnNumber: 13
+                        }, this) : /*#__PURE__*/ _jsxDEV(ResponsiveBreakdown, {
+                            rows: stats,
+                            columns: columns,
+                            rowKey: (s)=>s.creative_id,
+                            onExportCsv: exportCsv,
+                            mobileTitle: (s)=>/*#__PURE__*/ _jsxDEV("div", {
+                                    className: "flex items-center gap-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Badge, {
+                                            variant: "outline",
+                                            className: "text-[10px]",
+                                            children: s.goal
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+                                            lineNumber: 161,
+                                            columnNumber: 19
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("span", {
+                                            className: mkMeta,
+                                            children: new Date(s.created_at).toLocaleDateString()
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+                                            lineNumber: 162,
+                                            columnNumber: 19
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+                                    lineNumber: 160,
+                                    columnNumber: 17
+                                }, this)
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+                            lineNumber: 154,
+                            columnNumber: 13
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+                    lineNumber: 139,
+                    columnNumber: 9
+                }, this)
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+                lineNumber: 138,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+        lineNumber: 118,
+        columnNumber: 5
+    }, this);
+}
+_s(AdsStudioAnalytics, "kL+gdD5en3xrq7Yi1a00Exj/l5U=");
+_c = AdsStudioAnalytics;
+const StatCard = /*#__PURE__*/ memo(function StatCard({ icon: Icon, label, value, sub }) {
+    return /*#__PURE__*/ _jsxDEV(Card, {
+        children: /*#__PURE__*/ _jsxDEV(CardContent, {
+            className: "p-2.5 sm:p-3",
+            children: [
+                /*#__PURE__*/ _jsxDEV("div", {
+                    className: "flex items-center gap-1.5 text-muted-foreground mb-1",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV(Icon, {
+                            className: "h-3 w-3"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+                            lineNumber: 178,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("span", {
+                            className: "text-[10px] uppercase tracking-wide truncate",
+                            children: label
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+                            lineNumber: 179,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+                    lineNumber: 177,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ _jsxDEV("p", {
+                    className: "text-lg sm:text-xl font-bold tabular-nums",
+                    children: value
+                }, void 0, false, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+                    lineNumber: 181,
+                    columnNumber: 9
+                }, this),
+                sub && /*#__PURE__*/ _jsxDEV("p", {
+                    className: "text-[10px] text-muted-foreground",
+                    children: sub
+                }, void 0, false, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+                    lineNumber: 182,
+                    columnNumber: 17
+                }, this)
+            ]
+        }, void 0, true, {
+            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+            lineNumber: 176,
+            columnNumber: 7
+        }, this)
+    }, void 0, false, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx",
+        lineNumber: 175,
+        columnNumber: 5
+    }, this);
+});
+_c1 = StatCard;
+var _c, _c1;
+$RefreshReg$(_c, "AdsStudioAnalytics");
+$RefreshReg$(_c1, "StatCard");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioAnalytics.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIkFkc1N0dWRpb0FuYWx5dGljcy50c3giXSwic291cmNlc0NvbnRlbnQiOlsiLyoqXHJcbiAqIEFkc1N0dWRpb0FuYWx5dGljcyDigJQgcGVyZm9ybWFuY2UgZGFzaGJvYXJkIGFjcm9zcyBhbGwgY3JlYXRpdmVzIGZvciBhIHN0b3JlLlxyXG4gKiBQdWxscyBmcm9tIGFkc19zdHVkaW9fY3JlYXRpdmVfc3RhdHMgdmlldyAoaW1wcmVzc2lvbnMsIGNsaWNrcywgY29udmVyc2lvbnMsIHJldmVudWUsIEFJIHNwZW5kKS5cclxuICovXHJcbmltcG9ydCB7IHVzZUVmZmVjdCwgdXNlU3RhdGUsIHVzZU1lbW8sIG1lbW8sIHVzZUNhbGxiYWNrIH0gZnJvbSBcInJlYWN0XCI7XHJcbmltcG9ydCB7IENhcmQsIENhcmRDb250ZW50IH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9jYXJkXCI7XHJcbmltcG9ydCB7IEJhZGdlIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9iYWRnZVwiO1xyXG5pbXBvcnQgeyBCdXR0b24gfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2J1dHRvblwiO1xyXG5pbXBvcnQgeyBzdXBhYmFzZSB9IGZyb20gXCJAL2ludGVncmF0aW9ucy9zdXBhYmFzZS9jbGllbnRcIjtcclxuaW1wb3J0IHsgQmFyQ2hhcnQzLCBNb3VzZVBvaW50ZXJDbGljaywgRXllLCBUYXJnZXQsIERvbGxhclNpZ24sIFJlZnJlc2hDdywgVHJlbmRpbmdVcCB9IGZyb20gXCJsdWNpZGUtcmVhY3RcIjtcclxuaW1wb3J0IHsgdG9hc3QgfSBmcm9tIFwic29ubmVyXCI7XHJcbmltcG9ydCB7IFBlcmZvcm1hbmNlQ2hhcnRTa2VsZXRvbiB9IGZyb20gXCIuL2Fkcy9NYXJrZXRpbmdTa2VsZXRvbnNcIjtcclxuaW1wb3J0IE1hcmtldGluZ0VtcHR5U3RhdGUgZnJvbSBcIi4vYWRzL01hcmtldGluZ0VtcHR5U3RhdGVcIjtcclxuaW1wb3J0IFJlc3BvbnNpdmVCcmVha2Rvd24sIHsgQnJlYWtkb3duQ29sdW1uIH0gZnJvbSBcIi4vYWRzL1Jlc3BvbnNpdmVCcmVha2Rvd25cIjtcclxuaW1wb3J0IHsgbWtNZXRhIH0gZnJvbSBcIi4vYWRzL21hcmtldGluZy10b2tlbnNcIjtcclxuaW1wb3J0IHsgY24gfSBmcm9tIFwiQC9saWIvdXRpbHNcIjtcclxuXHJcbmNvbnN0IE5VTV9GTVQgPSBuZXcgSW50bC5OdW1iZXJGb3JtYXQoXCJlbi1VU1wiKTtcclxuY29uc3QgQ1VSUkVOQ1lfRk1UID0gbmV3IEludGwuTnVtYmVyRm9ybWF0KFwiZW4tVVNcIiwgeyBzdHlsZTogXCJjdXJyZW5jeVwiLCBjdXJyZW5jeTogXCJVU0RcIiB9KTtcclxuXHJcbmludGVyZmFjZSBQcm9wcyB7IHN0b3JlSWQ6IHN0cmluZyB9XHJcblxyXG5pbnRlcmZhY2UgQ3JlYXRpdmVTdGF0IHtcclxuICBjcmVhdGl2ZV9pZDogc3RyaW5nO1xyXG4gIGdvYWw6IHN0cmluZztcclxuICBzdGF0dXM6IHN0cmluZztcclxuICBjcmVhdGVkX2F0OiBzdHJpbmc7XHJcbiAgaW1wcmVzc2lvbnM6IG51bWJlcjtcclxuICBjbGlja3M6IG51bWJlcjtcclxuICBjb252ZXJzaW9uczogbnVtYmVyO1xyXG4gIHJldmVudWVfY2VudHM6IG51bWJlcjtcclxuICBzcGVuZF9jZW50czogbnVtYmVyO1xyXG59XHJcblxyXG5leHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBBZHNTdHVkaW9BbmFseXRpY3MoeyBzdG9yZUlkIH06IFByb3BzKSB7XHJcbiAgY29uc3QgW3N0YXRzLCBzZXRTdGF0c10gPSB1c2VTdGF0ZTxDcmVhdGl2ZVN0YXRbXT4oW10pO1xyXG4gIGNvbnN0IFtsb2FkaW5nLCBzZXRMb2FkaW5nXSA9IHVzZVN0YXRlKHRydWUpO1xyXG5cclxuICBjb25zdCBsb2FkID0gYXN5bmMgKCkgPT4ge1xyXG4gICAgc2V0TG9hZGluZyh0cnVlKTtcclxuICAgIHRyeSB7XHJcbiAgICAgIGNvbnN0IHsgZGF0YSwgZXJyb3IgfSA9IGF3YWl0IHN1cGFiYXNlXHJcbiAgICAgICAgLmZyb20oXCJhZHNfc3R1ZGlvX2NyZWF0aXZlX3N0YXRzXCIgYXMgYW55KVxyXG4gICAgICAgIC5zZWxlY3QoXCIqXCIpXHJcbiAgICAgICAgLmVxKFwic3RvcmVfaWRcIiwgc3RvcmVJZClcclxuICAgICAgICAub3JkZXIoXCJjcmVhdGVkX2F0XCIsIHsgYXNjZW5kaW5nOiBmYWxzZSB9KVxyXG4gICAgICAgIC5saW1pdCg1MCk7XHJcbiAgICAgIGlmIChlcnJvcikgdGhyb3cgZXJyb3I7XHJcbiAgICAgIHNldFN0YXRzKChkYXRhIGFzIGFueSkgfHwgW10pO1xyXG4gICAgfSBjYXRjaCAoZTogYW55KSB7XHJcbiAgICAgIHRvYXN0LmVycm9yKGU/Lm1lc3NhZ2UgfHwgXCJGYWlsZWQgdG8gbG9hZCBhbmFseXRpY3NcIik7XHJcbiAgICB9IGZpbmFsbHkgeyBzZXRMb2FkaW5nKGZhbHNlKTsgfVxyXG4gIH07XHJcblxyXG4gIHVzZUVmZmVjdCgoKSA9PiB7IGlmIChzdG9yZUlkKSBsb2FkKCk7IH0sIFtzdG9yZUlkXSk7XHJcblxyXG4gIGNvbnN0IHRvdGFscyA9IHVzZU1lbW8oXHJcbiAgICAoKSA9PlxyXG4gICAgICBzdGF0cy5yZWR1Y2UoXHJcbiAgICAgICAgKGFjYywgcykgPT4gKHtcclxuICAgICAgICAgIGltcHJlc3Npb25zOiBhY2MuaW1wcmVzc2lvbnMgKyAocy5pbXByZXNzaW9ucyB8fCAwKSxcclxuICAgICAgICAgIGNsaWNrczogYWNjLmNsaWNrcyArIChzLmNsaWNrcyB8fCAwKSxcclxuICAgICAgICAgIGNvbnZlcnNpb25zOiBhY2MuY29udmVyc2lvbnMgKyAocy5jb252ZXJzaW9ucyB8fCAwKSxcclxuICAgICAgICAgIHJldmVudWVfY2VudHM6IGFjYy5yZXZlbnVlX2NlbnRzICsgKHMucmV2ZW51ZV9jZW50cyB8fCAwKSxcclxuICAgICAgICAgIHNwZW5kX2NlbnRzOiBhY2Muc3BlbmRfY2VudHMgKyAocy5zcGVuZF9jZW50cyB8fCAwKSxcclxuICAgICAgICB9KSxcclxuICAgICAgICB7IGltcHJlc3Npb25zOiAwLCBjbGlja3M6IDAsIGNvbnZlcnNpb25zOiAwLCByZXZlbnVlX2NlbnRzOiAwLCBzcGVuZF9jZW50czogMCB9LFxyXG4gICAgICApLFxyXG4gICAgW3N0YXRzXSxcclxuICApO1xyXG5cclxuICBjb25zdCB7IGN0ciwgY3ZyLCByb2FzIH0gPSB1c2VNZW1vKFxyXG4gICAgKCkgPT4gKHtcclxuICAgICAgY3RyOiB0b3RhbHMuaW1wcmVzc2lvbnMgPiAwID8gKHRvdGFscy5jbGlja3MgLyB0b3RhbHMuaW1wcmVzc2lvbnMpICogMTAwIDogMCxcclxuICAgICAgY3ZyOiB0b3RhbHMuY2xpY2tzID4gMCA/ICh0b3RhbHMuY29udmVyc2lvbnMgLyB0b3RhbHMuY2xpY2tzKSAqIDEwMCA6IDAsXHJcbiAgICAgIHJvYXM6IHRvdGFscy5zcGVuZF9jZW50cyA+IDAgPyB0b3RhbHMucmV2ZW51ZV9jZW50cyAvIHRvdGFscy5zcGVuZF9jZW50cyA6IDAsXHJcbiAgICB9KSxcclxuICAgIFt0b3RhbHNdLFxyXG4gICk7XHJcblxyXG4gIGNvbnN0IGV4cG9ydENzdiA9IHVzZUNhbGxiYWNrKCgpID0+IHtcclxuICAgIGNvbnN0IGhlYWRlciA9IFwiZ29hbCxkYXRlLGltcHJlc3Npb25zLGNsaWNrcyxjb252ZXJzaW9ucyxyZXZlbnVlLHNwZW5kXFxuXCI7XHJcbiAgICBjb25zdCBsaW5lcyA9IHN0YXRzXHJcbiAgICAgIC5tYXAoKHMpID0+XHJcbiAgICAgICAgW1xyXG4gICAgICAgICAgcy5nb2FsLFxyXG4gICAgICAgICAgbmV3IERhdGUocy5jcmVhdGVkX2F0KS50b0lTT1N0cmluZygpLnNsaWNlKDAsIDEwKSxcclxuICAgICAgICAgIHMuaW1wcmVzc2lvbnMsXHJcbiAgICAgICAgICBzLmNsaWNrcyxcclxuICAgICAgICAgIHMuY29udmVyc2lvbnMsXHJcbiAgICAgICAgICAocy5yZXZlbnVlX2NlbnRzIC8gMTAwKS50b0ZpeGVkKDIpLFxyXG4gICAgICAgICAgKHMuc3BlbmRfY2VudHMgLyAxMDApLnRvRml4ZWQoMiksXHJcbiAgICAgICAgXS5qb2luKFwiLFwiKVxyXG4gICAgICApXHJcbiAgICAgIC5qb2luKFwiXFxuXCIpO1xyXG4gICAgY29uc3QgYmxvYiA9IG5ldyBCbG9iKFtoZWFkZXIgKyBsaW5lc10sIHsgdHlwZTogXCJ0ZXh0L2NzdlwiIH0pO1xyXG4gICAgY29uc3QgdXJsID0gVVJMLmNyZWF0ZU9iamVjdFVSTChibG9iKTtcclxuICAgIGNvbnN0IGEgPSBkb2N1bWVudC5jcmVhdGVFbGVtZW50KFwiYVwiKTtcclxuICAgIGEuaHJlZiA9IHVybDtcclxuICAgIGEuZG93bmxvYWQgPSBgYWRzLXBlcmZvcm1hbmNlLSR7c3RvcmVJZH0uY3N2YDtcclxuICAgIGEuY2xpY2soKTtcclxuICAgIFVSTC5yZXZva2VPYmplY3RVUkwodXJsKTtcclxuICB9LCBbc3RhdHMsIHN0b3JlSWRdKTtcclxuXHJcbiAgY29uc3QgY29sdW1ucyA9IHVzZU1lbW88QnJlYWtkb3duQ29sdW1uPENyZWF0aXZlU3RhdD5bXT4oKCkgPT4gKFtcclxuICAgIHsga2V5OiBcImdvYWxcIiwgbGFiZWw6IFwiR29hbFwiLCByZW5kZXI6IChzKSA9PiA8QmFkZ2UgdmFyaWFudD1cIm91dGxpbmVcIiBjbGFzc05hbWU9XCJ0ZXh0LVsxMHB4XVwiPntzLmdvYWx9PC9CYWRnZT4gfSxcclxuICAgIHsga2V5OiBcImRhdGVcIiwgbGFiZWw6IFwiRGF0ZVwiLCByZW5kZXI6IChzKSA9PiBuZXcgRGF0ZShzLmNyZWF0ZWRfYXQpLnRvTG9jYWxlRGF0ZVN0cmluZygpLCBkZXNrdG9wT25seTogdHJ1ZSB9LFxyXG4gICAgeyBrZXk6IFwiaW1wclwiLCBsYWJlbDogXCJJbXByXCIsIGlzTnVtZXJpYzogdHJ1ZSwgcmVuZGVyOiAocykgPT4gTlVNX0ZNVC5mb3JtYXQocy5pbXByZXNzaW9ucykgfSxcclxuICAgIHsga2V5OiBcImNsaWNrc1wiLCBsYWJlbDogXCJDbGlja3NcIiwgaXNOdW1lcmljOiB0cnVlLCByZW5kZXI6IChzKSA9PiBOVU1fRk1ULmZvcm1hdChzLmNsaWNrcykgfSxcclxuICAgIHsga2V5OiBcImNvbnZcIiwgbGFiZWw6IFwiQ29udlwiLCBpc051bWVyaWM6IHRydWUsIHJlbmRlcjogKHMpID0+IE5VTV9GTVQuZm9ybWF0KHMuY29udmVyc2lvbnMpIH0sXHJcbiAgICB7IGtleTogXCJyZXZcIiwgbGFiZWw6IFwiUmV2ZW51ZVwiLCBpc051bWVyaWM6IHRydWUsIHJlbmRlcjogKHMpID0+IDxzcGFuIGNsYXNzTmFtZT1cInRleHQtcHJpbWFyeSBmb250LW1lZGl1bVwiPntDVVJSRU5DWV9GTVQuZm9ybWF0KHMucmV2ZW51ZV9jZW50cyAvIDEwMCl9PC9zcGFuPiB9LFxyXG4gICAgeyBrZXk6IFwic3BlbmRcIiwgbGFiZWw6IFwiU3BlbmRcIiwgaXNOdW1lcmljOiB0cnVlLCByZW5kZXI6IChzKSA9PiA8c3BhbiBjbGFzc05hbWU9XCJ0ZXh0LW11dGVkLWZvcmVncm91bmRcIj57Q1VSUkVOQ1lfRk1ULmZvcm1hdChzLnNwZW5kX2NlbnRzIC8gMTAwKX08L3NwYW4+IH0sXHJcbiAgXSksIFtdKTtcclxuXHJcbiAgaWYgKGxvYWRpbmcpIHJldHVybiA8UGVyZm9ybWFuY2VDaGFydFNrZWxldG9uIC8+O1xyXG5cclxuICByZXR1cm4gKFxyXG4gICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTNcIj5cclxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWJldHdlZW5cIj5cclxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0yXCI+XHJcbiAgICAgICAgICA8QmFyQ2hhcnQzIGNsYXNzTmFtZT1cImgtNCB3LTQgdGV4dC1wcmltYXJ5XCIgLz5cclxuICAgICAgICAgIDxoMyBjbGFzc05hbWU9XCJmb250LXNlbWlib2xkIHRleHQtc20gc206dGV4dC1iYXNlXCI+UGVyZm9ybWFuY2U8L2gzPlxyXG4gICAgICAgIDwvZGl2PlxyXG4gICAgICAgIDxCdXR0b24gc2l6ZT1cInNtXCIgdmFyaWFudD1cImdob3N0XCIgY2xhc3NOYW1lPVwiaC05IHNtOmgtOFwiIG9uQ2xpY2s9e2xvYWR9IGRpc2FibGVkPXtsb2FkaW5nfT5cclxuICAgICAgICAgIDxSZWZyZXNoQ3cgY2xhc3NOYW1lPXtjbihcImgtMy41IHctMy41IHNtOm1yLTFcIiwgbG9hZGluZyAmJiBcImFuaW1hdGUtc3BpblwiKX0gLz5cclxuICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cImhpZGRlbiBzbTppbmxpbmVcIj5SZWZyZXNoPC9zcGFuPlxyXG4gICAgICAgIDwvQnV0dG9uPlxyXG4gICAgICA8L2Rpdj5cclxuXHJcbiAgICAgIHsvKiBUb3RhbHMgKi99XHJcbiAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZ3JpZCBncmlkLWNvbHMtMiBzbTpncmlkLWNvbHMtNCBnYXAtMlwiPlxyXG4gICAgICAgIDxTdGF0Q2FyZCBpY29uPXtFeWV9IGxhYmVsPVwiSW1wcmVzc2lvbnNcIiB2YWx1ZT17TlVNX0ZNVC5mb3JtYXQodG90YWxzLmltcHJlc3Npb25zKX0gLz5cclxuICAgICAgICA8U3RhdENhcmQgaWNvbj17TW91c2VQb2ludGVyQ2xpY2t9IGxhYmVsPVwiQ2xpY2tzXCIgdmFsdWU9e05VTV9GTVQuZm9ybWF0KHRvdGFscy5jbGlja3MpfSBzdWI9e2Ake2N0ci50b0ZpeGVkKDIpfSUgQ1RSYH0gLz5cclxuICAgICAgICA8U3RhdENhcmQgaWNvbj17VGFyZ2V0fSBsYWJlbD1cIkNvbnZlcnNpb25zXCIgdmFsdWU9e05VTV9GTVQuZm9ybWF0KHRvdGFscy5jb252ZXJzaW9ucyl9IHN1Yj17YCR7Y3ZyLnRvRml4ZWQoMil9JSBDVlJgfSAvPlxyXG4gICAgICAgIDxTdGF0Q2FyZCBpY29uPXtEb2xsYXJTaWdufSBsYWJlbD1cIlJldmVudWVcIiB2YWx1ZT17Q1VSUkVOQ1lfRk1ULmZvcm1hdCh0b3RhbHMucmV2ZW51ZV9jZW50cyAvIDEwMCl9IHN1Yj17YCR7cm9hcy50b0ZpeGVkKDIpfXggUk9BU2B9IC8+XHJcbiAgICAgIDwvZGl2PlxyXG5cclxuICAgICAgPENhcmQ+XHJcbiAgICAgICAgPENhcmRDb250ZW50IGNsYXNzTmFtZT1cInAtMyBzbTpwLTRcIj5cclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTIgbWItMlwiPlxyXG4gICAgICAgICAgICA8VHJlbmRpbmdVcCBjbGFzc05hbWU9XCJoLTMuNSB3LTMuNSB0ZXh0LXByaW1hcnlcIiAvPlxyXG4gICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LXhzIHNtOnRleHQtc20gZm9udC1zZW1pYm9sZFwiPlBlci1jcmVhdGl2ZSBicmVha2Rvd248L3A+XHJcbiAgICAgICAgICAgIDxCYWRnZSB2YXJpYW50PVwic2Vjb25kYXJ5XCIgY2xhc3NOYW1lPVwibWwtYXV0byB0ZXh0LVsxMHB4XVwiPlxyXG4gICAgICAgICAgICAgIEFJIHNwZW5kOiAkeyh0b3RhbHMuc3BlbmRfY2VudHMgLyAxMDApLnRvRml4ZWQoMil9XHJcbiAgICAgICAgICAgIDwvQmFkZ2U+XHJcbiAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgIHtzdGF0cy5sZW5ndGggPT09IDAgPyAoXHJcbiAgICAgICAgICAgIDxNYXJrZXRpbmdFbXB0eVN0YXRlXHJcbiAgICAgICAgICAgICAgaWNvbj17QmFyQ2hhcnQzfVxyXG4gICAgICAgICAgICAgIHRpdGxlPVwiTm8gY2FtcGFpZ25zIHlldFwiXHJcbiAgICAgICAgICAgICAgYm9keT1cIkdlbmVyYXRlIG9uZSBpbiB0aGUgQUkgU3R1ZGlvIHRhYiB0byBzdGFydCBjb2xsZWN0aW5nIHBlcmZvcm1hbmNlIGRhdGEuXCJcclxuICAgICAgICAgICAgLz5cclxuICAgICAgICAgICkgOiAoXHJcbiAgICAgICAgICAgIDxSZXNwb25zaXZlQnJlYWtkb3duXHJcbiAgICAgICAgICAgICAgcm93cz17c3RhdHN9XHJcbiAgICAgICAgICAgICAgY29sdW1ucz17Y29sdW1uc31cclxuICAgICAgICAgICAgICByb3dLZXk9eyhzKSA9PiBzLmNyZWF0aXZlX2lkfVxyXG4gICAgICAgICAgICAgIG9uRXhwb3J0Q3N2PXtleHBvcnRDc3Z9XHJcbiAgICAgICAgICAgICAgbW9iaWxlVGl0bGU9eyhzKSA9PiAoXHJcbiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0yXCI+XHJcbiAgICAgICAgICAgICAgICAgIDxCYWRnZSB2YXJpYW50PVwib3V0bGluZVwiIGNsYXNzTmFtZT1cInRleHQtWzEwcHhdXCI+e3MuZ29hbH08L0JhZGdlPlxyXG4gICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9e21rTWV0YX0+e25ldyBEYXRlKHMuY3JlYXRlZF9hdCkudG9Mb2NhbGVEYXRlU3RyaW5nKCl9PC9zcGFuPlxyXG4gICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgKX1cclxuICAgICAgICAgICAgLz5cclxuICAgICAgICAgICl9XHJcbiAgICAgICAgPC9DYXJkQ29udGVudD5cclxuICAgICAgPC9DYXJkPlxyXG4gICAgPC9kaXY+XHJcbiAgKTtcclxufVxyXG5cclxuY29uc3QgU3RhdENhcmQgPSBtZW1vKGZ1bmN0aW9uIFN0YXRDYXJkKHsgaWNvbjogSWNvbiwgbGFiZWwsIHZhbHVlLCBzdWIgfTogYW55KSB7XHJcbiAgcmV0dXJuIChcclxuICAgIDxDYXJkPlxyXG4gICAgICA8Q2FyZENvbnRlbnQgY2xhc3NOYW1lPVwicC0yLjUgc206cC0zXCI+XHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMS41IHRleHQtbXV0ZWQtZm9yZWdyb3VuZCBtYi0xXCI+XHJcbiAgICAgICAgICA8SWNvbiBjbGFzc05hbWU9XCJoLTMgdy0zXCIgLz5cclxuICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInRleHQtWzEwcHhdIHVwcGVyY2FzZSB0cmFja2luZy13aWRlIHRydW5jYXRlXCI+e2xhYmVsfTwvc3Bhbj5cclxuICAgICAgICA8L2Rpdj5cclxuICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LWxnIHNtOnRleHQteGwgZm9udC1ib2xkIHRhYnVsYXItbnVtc1wiPnt2YWx1ZX08L3A+XHJcbiAgICAgICAge3N1YiAmJiA8cCBjbGFzc05hbWU9XCJ0ZXh0LVsxMHB4XSB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj57c3VifTwvcD59XHJcbiAgICAgIDwvQ2FyZENvbnRlbnQ+XHJcbiAgICA8L0NhcmQ+XHJcbiAgKTtcclxufSk7XHJcbiJdLCJuYW1lcyI6WyJ1c2VFZmZlY3QiLCJ1c2VTdGF0ZSIsInVzZU1lbW8iLCJtZW1vIiwidXNlQ2FsbGJhY2siLCJDYXJkIiwiQ2FyZENvbnRlbnQiLCJCYWRnZSIsIkJ1dHRvbiIsInN1cGFiYXNlIiwiQmFyQ2hhcnQzIiwiTW91c2VQb2ludGVyQ2xpY2siLCJFeWUiLCJUYXJnZXQiLCJEb2xsYXJTaWduIiwiUmVmcmVzaEN3IiwiVHJlbmRpbmdVcCIsInRvYXN0IiwiUGVyZm9ybWFuY2VDaGFydFNrZWxldG9uIiwiTWFya2V0aW5nRW1wdHlTdGF0ZSIsIlJlc3BvbnNpdmVCcmVha2Rvd24iLCJta01ldGEiLCJjbiIsIk5VTV9GTVQiLCJJbnRsIiwiTnVtYmVyRm9ybWF0IiwiQ1VSUkVOQ1lfRk1UIiwic3R5bGUiLCJjdXJyZW5jeSIsIkFkc1N0dWRpb0FuYWx5dGljcyIsInN0b3JlSWQiLCJzdGF0cyIsInNldFN0YXRzIiwibG9hZGluZyIsInNldExvYWRpbmciLCJsb2FkIiwiZGF0YSIsImVycm9yIiwiZnJvbSIsInNlbGVjdCIsImVxIiwib3JkZXIiLCJhc2NlbmRpbmciLCJsaW1pdCIsImUiLCJtZXNzYWdlIiwidG90YWxzIiwicmVkdWNlIiwiYWNjIiwicyIsImltcHJlc3Npb25zIiwiY2xpY2tzIiwiY29udmVyc2lvbnMiLCJyZXZlbnVlX2NlbnRzIiwic3BlbmRfY2VudHMiLCJjdHIiLCJjdnIiLCJyb2FzIiwiZXhwb3J0Q3N2IiwiaGVhZGVyIiwibGluZXMiLCJtYXAiLCJnb2FsIiwiRGF0ZSIsImNyZWF0ZWRfYXQiLCJ0b0lTT1N0cmluZyIsInNsaWNlIiwidG9GaXhlZCIsImpvaW4iLCJibG9iIiwiQmxvYiIsInR5cGUiLCJ1cmwiLCJVUkwiLCJjcmVhdGVPYmplY3RVUkwiLCJhIiwiZG9jdW1lbnQiLCJjcmVhdGVFbGVtZW50IiwiaHJlZiIsImRvd25sb2FkIiwiY2xpY2siLCJyZXZva2VPYmplY3RVUkwiLCJjb2x1bW5zIiwia2V5IiwibGFiZWwiLCJyZW5kZXIiLCJ2YXJpYW50IiwiY2xhc3NOYW1lIiwidG9Mb2NhbGVEYXRlU3RyaW5nIiwiZGVza3RvcE9ubHkiLCJpc051bWVyaWMiLCJmb3JtYXQiLCJzcGFuIiwiZGl2IiwiaDMiLCJzaXplIiwib25DbGljayIsImRpc2FibGVkIiwiU3RhdENhcmQiLCJpY29uIiwidmFsdWUiLCJzdWIiLCJwIiwibGVuZ3RoIiwidGl0bGUiLCJib2R5Iiwicm93cyIsInJvd0tleSIsImNyZWF0aXZlX2lkIiwib25FeHBvcnRDc3YiLCJtb2JpbGVUaXRsZSIsIkljb24iXSwibWFwcGluZ3MiOiI7O0FBQUE7OztDQUdDLEdBQ0QsU0FBU0EsU0FBUyxFQUFFQyxRQUFRLEVBQUVDLE9BQU8sRUFBRUMsSUFBSSxFQUFFQyxXQUFXLFFBQVEsUUFBUTtBQUN4RSxTQUFTQyxJQUFJLEVBQUVDLFdBQVcsUUFBUSx1QkFBdUI7QUFDekQsU0FBU0MsS0FBSyxRQUFRLHdCQUF3QjtBQUM5QyxTQUFTQyxNQUFNLFFBQVEseUJBQXlCO0FBQ2hELFNBQVNDLFFBQVEsUUFBUSxpQ0FBaUM7QUFDMUQsU0FBU0MsU0FBUyxFQUFFQyxpQkFBaUIsRUFBRUMsR0FBRyxFQUFFQyxNQUFNLEVBQUVDLFVBQVUsRUFBRUMsU0FBUyxFQUFFQyxVQUFVLFFBQVEsZUFBZTtBQUM1RyxTQUFTQyxLQUFLLFFBQVEsU0FBUztBQUMvQixTQUFTQyx3QkFBd0IsUUFB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

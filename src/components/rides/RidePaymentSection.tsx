@@ -11,7 +11,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import { withRedirectParam } from "@/lib/authRedirect";
 
 const USD_TO_KHR = 4062.5;
 function toKHR(usd: number): string {
@@ -488,14 +489,14 @@ export default function RidePaymentSection({
             <Button
               variant="outline"
               className="flex-1 h-10 rounded-lg font-bold gap-1.5 text-sm"
-              onClick={() => navigate("/login")}
+              onClick={() => navigate(withRedirectParam("/login", window.location.pathname + window.location.search))}
             >
               <LogIn className="w-3.5 h-3.5" />
               Sign In
             </Button>
             <Button
               className="flex-1 h-10 rounded-lg font-bold gap-1.5 text-sm bg-primary text-primary-foreground"
-              onClick={() => navigate("/signup")}
+              onClick={() => navigate(withRedirectParam("/login?mode=signup", window.location.pathname + window.location.search))}
             >
               <UserPlus className="w-3.5 h-3.5" />
               Sign Up Free
@@ -590,7 +591,7 @@ export default function RidePaymentSection({
       const { data: sessionData } = await supabase.auth.getSession();
       if (!sessionData.session) {
         toast.error("Session expired. Please sign in again.");
-        navigate("/login");
+        navigate(withRedirectParam("/login", window.location.pathname + window.location.search));
         return;
       }
       const expiresAt = sessionData.session.expires_at;

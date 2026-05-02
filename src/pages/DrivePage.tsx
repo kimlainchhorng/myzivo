@@ -6,6 +6,7 @@ import { Car, DollarSign, Clock, Shield, MapPin, ChevronRight, Star, Users } fro
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Link } from "react-router-dom";
+import SEOHead from "@/components/SEOHead";
 
 const benefits = [
   { icon: DollarSign, title: "Earn on your schedule", description: "Drive when you want, earn what you need. Weekly payouts directly to your account." },
@@ -24,6 +25,17 @@ const stats = [
 export default function DrivePage() {
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Drive with ZIVO | Earn on Your Schedule"
+        description="Become a ZIVO driver and earn flexible income. Drive when you want, keep more of what you earn."
+        canonical="/drive"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "WebPage",
+          "name": "Drive with ZIVO",
+          "description": "Earn flexible income as a ZIVO driver"
+        }}
+      />
       {/* Hero */}
       <section className="relative overflow-hidden bg-gradient-to-br from-primary/10 via-emerald-500/5 to-background py-20 lg:py-32">
         <div className="absolute inset-0 opacity-30">

@@ -3,7 +3,8 @@
  * View and download invoices for business account members
  */
 import { useState, useMemo } from "react";
-import { useNavigate, Navigate } from "react-router-dom";
+import { useNavigate, Navigate, useLocation } from "react-router-dom";
+import { withRedirectParam } from "@/lib/authRedirect";
 import {
   ArrowLeft,
   FileText,
@@ -38,6 +39,7 @@ import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 
 export default function BusinessInvoicesPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, isLoading: authLoading } = useAuth();
   const { data: membership, isLoading: membershipLoading } = useBusinessMembership();
   const { invoices, isLoading: invoicesLoading, totalPaid, totalPending, totalOverdue } = useBusinessInvoices();
@@ -98,7 +100,8 @@ export default function BusinessInvoicesPage() {
 
   // Redirect to login if not authenticated
   if (!authLoading && !user) {
-    return <Navigate to="/login" replace />;
+    const redirectTarget = `${location.pathname}${location.search ?? ""}`;
+    return <Navigate to={withRedirectParam("/login", redirectTarget)} replace />;
   }
 
   // Not a business member - show message
@@ -126,7 +129,7 @@ export default function BusinessInvoicesPage() {
           <p className="text-muted-foreground text-sm mb-6 max-w-sm mx-auto">
             Join a company account to view invoices billed to your organization.
           </p>
-          <Button onClick={() => navigate("/account/business")}>
+          <Button onClick={() => navigate("/business/account")}>
             Join Business Account
           </Button>
         </div>

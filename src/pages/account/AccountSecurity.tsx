@@ -3,12 +3,16 @@
  * User-facing security controls: password, 2FA, sessions, data management
  */
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import TwoFactorSetupDialog from "@/components/auth/TwoFactorSetupDialog";
+import PhoneOtpVerifyDialog from "@/components/auth/PhoneOtpVerifyDialog";
+import PasswordChangeVerifyDialog from "@/components/auth/PasswordChangeVerifyDialog";
 import { 
-  Shield, Lock, Smartphone, Monitor, MapPin, Clock, 
-  LogOut, Download, Trash2, AlertTriangle, Key,
-  CheckCircle2, Loader2, Eye, EyeOff, Bell
+  Shield, Lock, Smartphone, Monitor, MapPin, Clock, MessageSquare, Mail,
+  LogOut, Download, Trash2, AlertTriangle, Key, ShieldCheck as ShieldCheckIcon,
+  CheckCircle2, Loader2, Eye, EyeOff, Bell, ArrowLeft
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,47 +42,172 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
-// PhishingWarning removed
 import { useAuth } from "@/contexts/AuthContext";
 import { useI18n } from "@/hooks/useI18n";
 import { supabase } from "@/integrations/supabase/client";
+import { checkPasswordBreach, analyzePassword } from "@/lib/security/passwordStrength";
 import { formatDistanceToNow } from "date-fns";
+import LoginHistorySection from "@/components/auth/LoginHistorySection";
+import DeleteAccountFlow from "@/components/account/DeleteAccountFlow";
+import PendingDeletionBanner from "@/components/account/PendingDeletionBanner";
 
-// Sessions loaded from backend — no hardcoded data
-const activeSessions: { id: string; device: string; location: string; lastActive: Date; current?: boolean }[] = [];
+// Client-side throttle: prevent rapid password change attempts (anti-brute-force)
+const PWD_CHANGE_THROTTLE_KEY = "zivo_pwd_change_attempts";
+const PWD_CHANGE_MAX_ATTEMPTS = 5;
+const PWD_CHANGE_WINDOW_MS = 15 * 60 * 1000; // 15 minutes
+
+function checkPasswordChangeThrottle(): { allowed: boolean; retryInMin: number } {
+  try {
+    const raw = sessionStorage.getItem(PWD_CHANGE_THROTTLE_KEY);
+    const now = Date.now();
+    const attempts: number[] = raw ? JSON.parse(raw) : [];
+    const recent = attempts.filter((t) => now - t < PWD_CHANGE_WINDOW_MS);
+    if (recent.length >= PWD_CHANGE_MAX_ATTEMPTS) {
+      const oldest = Math.min(...recent);
+      const retryInMin = Math.ceil((PWD_CHANGE_WINDOW_MS - (now - oldest)) / 60_000);
+      return { allowed: false, retryInMin };
+    }
+    recent.push(now);
+    sessionStorage.setItem(PWD_CHANGE_THROTTLE_KEY, JSON.stringify(recent));
+    return { allowed: true, retryInMin: 0 };
+  } catch {
+    return { allowed: true, retryInMin: 0 };
+  }
+}
 
 export default function AccountSecurity() {
+  const navigate = useNavigate();
   const { user } = useAuth();
   const { t } = useI18n();
   const [isChangingPassword, setIsChangingPassword] = useState(false);
-  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
   const [showNewPassword, setShowNewPassword] = useState(false);
-  const [passwordForm, setPasswordForm] = useState({ current: "", new: "", confirm: "" });
+  const [passwordForm, setPasswordForm] = useState({ new: "", confirm: "" });
   const [loginAlerts, setLoginAlerts] = useState(true);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
+  const [twoFactorLoading, setTwoFactorLoading] = useState(true);
+  const [twoFactorDialogOpen, setTwoFactorDialogOpen] = useState(false);
+  const [phoneOtpDialogOpen, setPhoneOtpDialogOpen] = useState(false);
+  const [pwdVerifyDialogOpen, setPwdVerifyDialogOpen] = useState(false);
+  const [pwdVerified, setPwdVerified] = useState(false);
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [userPhone, setUserPhone] = useState<string>("");
+  const [emailOtpBackup, setEmailOtpBackup] = useState(true);
   const [isExporting, setIsExporting] = useState(false);
   const [isLoggingOutAll, setIsLoggingOutAll] = useState(false);
 
-  const handlePasswordChange = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // Load real 2FA status from Supabase Auth MFA + phone verification status
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      const [{ data: mfa }, profile] = await Promise.all([
+        supabase.auth.mfa.listFactors(),
+        user?.id
+          ? supabase
+              .from("profiles")
+              .select("phone_e164, phone_verified")
+              .eq("user_id", user.id)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
+      ]);
+      if (cancelled) return;
+      const hasVerified = (mfa?.totp ?? []).some((f) => (f.status as string) === "verified");
+      setTwoFactorEnabled(hasVerified);
+      const p: any = (profile as any)?.data;
+      if (p) {
+        setUserPhone(p.phone_e164 || "");
+        setPhoneVerified(!!p.phone_verified);
+      }
+      setTwoFactorLoading(false);
+    })();
+    return () => { cancelled = true; };
+  }, [user?.id]);
+
+  const refreshTwoFactor = async () => {
+    const { data } = await supabase.auth.mfa.listFactors();
+    const hasVerified = (data?.totp ?? []).some((f) => (f.status as string) === "verified");
+    setTwoFactorEnabled(hasVerified);
+  };
+
+  const handleToggle2FA = async (checked: boolean) => {
+    if (checked) {
+      setTwoFactorDialogOpen(true);
+      return;
+    }
+    // Disable: unenroll all verified TOTP factors
+    try {
+      const { data } = await supabase.auth.mfa.listFactors();
+      for (const f of data?.totp ?? []) {
+        await supabase.auth.mfa.unenroll({ factorId: f.id });
+      }
+      setTwoFactorEnabled(false);
+      toast.success("Two-factor authentication disabled");
+    } catch (e: any) {
+      toast.error(e.message || "Could not disable 2FA");
+    }
+  };
+
+
+  const validatePasswordForm = (): boolean => {
     if (passwordForm.new !== passwordForm.confirm) {
       toast.error("New passwords don't match");
-      return;
+      return false;
     }
     if (passwordForm.new.length < 8) {
       toast.error("Password must be at least 8 characters");
+      return false;
+    }
+    const throttle = checkPasswordChangeThrottle();
+    if (!throttle.allowed) {
+      toast.error(`Too many attempts. Try again in ~${throttle.retryInMin} minute(s).`);
+      return false;
+    }
+    const analysis = analyzePassword(passwordForm.new);
+    if (analysis.strength === "weak") {
+      toast.error(`Password too weak. ${analysis.feedback[0] ?? "Use a stronger password."}`);
+      return false;
+    }
+    return true;
+  };
+
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!validatePasswordForm()) return;
+    // Step 1: Require OTP verification (email or SMS) before changing password
+    if (!pwdVerified) {
+      setPwdVerifyDialogOpen(true);
       return;
     }
+    await commitPasswordChange();
+  };
 
+  const commitPasswordChange = async () => {
     setIsChangingPassword(true);
     try {
+      // Check new password against known breaches (k-anonymity, safe)
+      try {
+        const breach = await checkPasswordBreach(passwordForm.new);
+        if (breach.breached) {
+          toast.error(
+            `This password was found in ${breach.count.toLocaleString()} data breaches. Please choose a different password.`,
+            { duration: 8000 }
+          );
+          return;
+        }
+      } catch {
+        // Continue if breach check fails
+      }
+
+      // Update to new password (identity already verified via OTP)
       const { error } = await supabase.auth.updateUser({ password: passwordForm.new });
       if (error) throw error;
-      toast.success("Password updated successfully");
-      setPasswordForm({ current: "", new: "", confirm: "" });
+
+      // Invalidate all other sessions after password change
+      await supabase.auth.signOut({ scope: "others" });
+
+      toast.success("Password updated. All other sessions have been signed out.");
+      setPasswordForm({ new: "", confirm: "" });
+      setPwdVerified(false); // require re-verification for next change
     } catch (error: any) {
       toast.error(error.message || "Failed to update password");
     } finally {
@@ -88,9 +217,19 @@ export default function AccountSecurity() {
 
   const handleExportData = async () => {
     setIsExporting(true);
-    // TODO: Trigger backend data export job
-    toast.success("Data export requested. You'll receive an email when it's ready.");
-    setIsExporting(false);
+    try {
+      await supabase.from("feedback_submissions").insert({
+        category: "data_export_request",
+        subject: "GDPR Data Export Request",
+        message: `User ${user?.id} requested data export at ${new Date().toISOString()}`,
+        user_id: user?.id ?? null,
+      });
+      toast.success("Data export requested. You'll receive an email when it's ready.");
+    } catch {
+      toast.error("Failed to submit export request.");
+    } finally {
+      setIsExporting(false);
+    }
   };
 
   const handleLogoutAllDevices = async () => {
@@ -108,39 +247,52 @@ export default function AccountSecurity() {
     }
   };
 
-  const handleDeleteAccount = async () => {
-    // In production, this would submit a deletion request
-    toast.success("Account deletion request submitted. We'll process it within 30 days.");
-  };
+  const [deleteFlowOpen, setDeleteFlowOpen] = useState(false);
 
   return (
-    <>
+    <div className="min-h-screen bg-background">
       <SEOHead
         title="Security Settings | ZIVO Account"
         description="Manage your account security: password, two-factor authentication, active sessions, and data."
         noIndex
       />
-      <Header />
 
-      <main className="min-h-screen pt-20 pb-16 bg-muted/30">
+      {/* App-style top bar */}
+      <div className="sticky top-0 safe-area-top z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
+        <div className="flex items-center gap-3 px-4 py-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-10 w-10 rounded-full"
+            onClick={() => navigate(-1)}
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <h1 className="text-lg font-semibold">{t("security.title")}</h1>
+        </div>
+      </div>
+
+      <main className="pb-24">
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.4 }}
-          className="container mx-auto px-4 max-w-3xl"
+          className="px-4 pt-6 max-w-3xl mx-auto"
         >
-          {/* Header */}
-          <div className="mb-8">
-            <div className="flex items-center gap-3 mb-2">
-              <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                <Shield className="w-5 h-5 text-primary" />
-              </div>
-              <div>
-               <h1 className="text-2xl font-bold">{t("security.title")}</h1>
-                <p className="text-muted-foreground text-sm">
-                  {t("security.subtitle")}
-                </p>
-              </div>
+          {/* Section subtitle */}
+          <p className="text-muted-foreground text-sm mb-6">
+            {t("security.subtitle")}
+          </p>
+
+          {/* Phishing & link safety notice */}
+          <div className="mb-6 p-4 rounded-xl border border-primary/20 bg-primary/5 flex gap-3">
+            <Shield className="w-5 h-5 text-primary shrink-0 mt-0.5" />
+            <div className="text-sm">
+              <p className="font-semibold text-foreground mb-1">You're protected</p>
+              <p className="text-muted-foreground leading-relaxed">
+                ZIVO scans every external link before opening it and blocks suspicious or
+                phishing URLs. Never share your password — staff will never ask for it.
+              </p>
             </div>
           </div>
 
@@ -159,27 +311,6 @@ export default function AccountSecurity() {
             </CardHeader>
             <CardContent>
               <form onSubmit={handlePasswordChange} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="current-password">{t("security.current_password")}</Label>
-                  <div className="relative">
-                    <Input
-                      id="current-password"
-                      type={showCurrentPassword ? "text" : "password"}
-                      value={passwordForm.current}
-                      onChange={(e) => setPasswordForm(p => ({ ...p, current: e.target.value }))}
-                      required
-                    />
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      className="absolute right-0 top-0 h-full px-3"
-                      onClick={() => setShowCurrentPassword(!showCurrentPassword)}
-                    >
-                      {showCurrentPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </Button>
-                  </div>
-                </div>
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <Label htmlFor="new-password">{t("security.new_password")}</Label>
@@ -220,10 +351,18 @@ export default function AccountSecurity() {
                       <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                       {t("security.updating")}
                     </>
-                  ) : (
+                  ) : pwdVerified ? (
                     t("security.update_password")
+                  ) : (
+                    <>
+                      <ShieldCheckIcon className="w-4 h-4 mr-2" />
+                      Verify & update password
+                    </>
                   )}
                 </Button>
+                <p className="text-xs text-muted-foreground">
+                  For your security, we'll send a one-time code to your email or phone before changing your password.
+                </p>
               </form>
             </CardContent>
           </Card>
@@ -253,10 +392,8 @@ export default function AccountSecurity() {
                   </Badge>
                   <Switch
                     checked={twoFactorEnabled}
-                    onCheckedChange={(checked) => {
-                      setTwoFactorEnabled(checked);
-                      toast.success(checked ? "2FA setup required - feature coming soon" : "2FA disabled");
-                    }}
+                    disabled={twoFactorLoading}
+                    onCheckedChange={handleToggle2FA}
                   />
                 </div>
               </div>
@@ -265,6 +402,74 @@ export default function AccountSecurity() {
                   Two-factor authentication significantly reduces the risk of unauthorized access.
                 </p>
               )}
+            </CardContent>
+          </Card>
+
+          {/* SMS / Phone Verification (additional 2FA layer) */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <MessageSquare className="w-5 h-5" />
+                SMS Verification
+              </CardTitle>
+              <CardDescription>
+                Get a one-time code by text message as a backup or additional verification step.
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-medium">Phone number</p>
+                  <p className="text-sm text-muted-foreground truncate">
+                    {userPhone || "No phone on file"}
+                  </p>
+                </div>
+                <Badge variant={phoneVerified ? "default" : "secondary"}>
+                  {phoneVerified ? "Verified" : "Unverified"}
+                </Badge>
+              </div>
+              <Button
+                variant={phoneVerified ? "outline" : "default"}
+                onClick={() => setPhoneOtpDialogOpen(true)}
+                className="w-full sm:w-auto"
+              >
+                <Smartphone className="w-4 h-4 mr-2" />
+                {phoneVerified ? "Re-verify or change number" : "Verify phone via SMS"}
+              </Button>
+              <p className="text-xs text-muted-foreground">
+                We'll text a 6-digit code via Twilio Verify. Standard SMS rates may apply.
+              </p>
+            </CardContent>
+          </Card>
+
+          {/* Email OTP backup */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Mail className="w-5 h-5" />
+                Email One-Time Code (Backup)
+              </CardTitle>
+              <CardDescription>
+                If you lose access to your authenticator or phone, receive a 6-digit code at{" "}
+                <span className="font-medium text-foreground">{user?.email}</span>.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="font-medium">Email backup code</p>
+                  <p className="text-sm text-muted-foreground">
+                    Enabled by default for account recovery
+                  </p>
+                </div>
+                <Switch
+                  checked={emailOtpBackup}
+                  onCheckedChange={(v) => {
+                    setEmailOtpBackup(v);
+                    toast.success(v ? "Email backup code enabled" : "Email backup code disabled");
+                  }}
+                />
+              </div>
             </CardContent>
           </Card>
 
@@ -298,76 +503,8 @@ export default function AccountSecurity() {
             </CardContent>
           </Card>
 
-          {/* Active Sessions */}
-          <Card className="mb-6">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <Monitor className="w-5 h-5" />
-                    Active Sessions
-                  </CardTitle>
-                  <CardDescription>
-                    Devices where you're currently logged in
-                  </CardDescription>
-                </div>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button variant="outline" size="sm">
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Log out all devices
-                    </Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Log out of all devices?</AlertDialogTitle>
-                      <AlertDialogDescription>
-                        This will log you out of all devices, including this one. You'll need to log in again.
-                      </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancel</AlertDialogCancel>
-                      <AlertDialogAction onClick={handleLogoutAllDevices} disabled={isLoggingOutAll}>
-                        {isLoggingOutAll ? "Logging out..." : "Log out everywhere"}
-                      </AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {activeSessions.map((session) => (
-                  <div key={session.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-lg bg-background flex items-center justify-center">
-                        {session.device.includes("iPhone") ? (
-                          <Smartphone className="w-5 h-5 text-muted-foreground" />
-                        ) : (
-                          <Monitor className="w-5 h-5 text-muted-foreground" />
-                        )}
-                      </div>
-                      <div>
-                        <p className="font-medium text-sm flex items-center gap-2">
-                          {session.device}
-                          {session.current && (
-                            <Badge variant="secondary" className="text-xs">Current</Badge>
-                          )}
-                        </p>
-                        <p className="text-xs text-muted-foreground flex items-center gap-2">
-                          <MapPin className="w-3 h-3" />
-                          {session.location}
-                          <span>•</span>
-                          <Clock className="w-3 h-3" />
-                          {session.current ? "Active now" : formatDistanceToNow(session.lastActive, { addSuffix: true })}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+          {/* Active Sessions & Login History */}
+          <LoginHistorySection />
 
           {/* Data Management */}
           <Card className="mb-6">
@@ -405,6 +542,9 @@ export default function AccountSecurity() {
             </CardContent>
           </Card>
 
+          {/* Pending deletion banner — shown if a deletion is scheduled */}
+          <PendingDeletionBanner />
+
           {/* Delete Account */}
           <Card className="border-destructive/30">
             <CardHeader>
@@ -419,45 +559,62 @@ export default function AccountSecurity() {
             <CardContent>
               <div className="p-4 bg-destructive/5 rounded-lg border border-destructive/20 mb-4">
                 <p className="text-sm text-muted-foreground">
-                  <strong className="text-foreground">Warning:</strong> This action cannot be undone. 
+                  <strong className="text-foreground">Warning:</strong> This action cannot be undone.
                   All your bookings, preferences, and data will be permanently deleted within 30 days.
                   Some data may be retained for legal compliance.
                 </p>
               </div>
-              <AlertDialog>
-                <AlertDialogTrigger asChild>
-                  <Button variant="destructive">
-                    <Trash2 className="w-4 h-4 mr-2" />
-                    Request Account Deletion
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent>
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>Delete your account?</AlertDialogTitle>
-                    <AlertDialogDescription className="space-y-2">
-                      <p>This will permanently delete:</p>
-                      <ul className="list-disc list-inside text-sm">
-                        <li>Your profile and preferences</li>
-                        <li>All saved payment methods</li>
-                        <li>Booking history (after legal retention period)</li>
-                        <li>Any active bookings or reservations</li>
-                      </ul>
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel>Cancel</AlertDialogCancel>
-                    <AlertDialogAction onClick={handleDeleteAccount} className="bg-destructive hover:bg-destructive/90">
-                      Yes, delete my account
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
+              <Button variant="destructive" onClick={() => setDeleteFlowOpen(true)}>
+                <Trash2 className="w-4 h-4 mr-2" />
+                Request Account Deletion
+              </Button>
             </CardContent>
           </Card>
+          <DeleteAccountFlow open={deleteFlowOpen} onOpenChange={setDeleteFlowOpen} />
         </motion.div>
       </main>
 
-      <Footer />
-    </>
+      <TwoFactorSetupDialog
+        open={twoFactorDialogOpen}
+        onOpenChange={setTwoFactorDialogOpen}
+        onEnrolled={refreshTwoFactor}
+      />
+
+      <PhoneOtpVerifyDialog
+        open={phoneOtpDialogOpen}
+        onOpenChange={setPhoneOtpDialogOpen}
+        initialPhone={userPhone}
+        onVerified={() => {
+          setPhoneVerified(true);
+          // Refresh phone from profile in case the user changed it
+          if (user?.id) {
+            supabase
+              .from("profiles")
+              .select("phone_e164, phone_verified")
+              .eq("user_id", user.id)
+              .maybeSingle()
+              .then(({ data }: any) => {
+                if (data) {
+                  setUserPhone(data.phone_e164 || "");
+                  setPhoneVerified(!!data.phone_verified);
+                }
+              });
+          }
+        }}
+      />
+
+      <PasswordChangeVerifyDialog
+        open={pwdVerifyDialogOpen}
+        onOpenChange={setPwdVerifyDialogOpen}
+        email={user?.email ?? ""}
+        phoneE164={userPhone}
+        phoneVerified={phoneVerified}
+        onVerified={async () => {
+          setPwdVerified(true);
+          // Continue with password change immediately
+          await commitPasswordChange();
+        }}
+      />
+    </div>
   );
 }

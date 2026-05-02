@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, Gift, Ticket, Users, Star, Copy, Check, Share2, Clock, TrendingUp, Award, Sparkles, Zap, ChevronLeft } from "lucide-react";
+import { Gift, Ticket, Users, Star, Copy, Check, Share2, Clock, TrendingUp, Award, Sparkles, Zap, ChevronLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,101 +8,144 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { useToast } from "@/hooks/use-toast";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+
+const TIER_THRESHOLDS: Record<string, { next: string; target: number; multiplier: number }> = {
+  silver:   { next: "Gold",     target: 1000, multiplier: 1.0 },
+  gold:     { next: "Platinum", target: 3000, multiplier: 1.5 },
+  platinum: { next: "Diamond",  target: 5000, multiplier: 2.0 },
+  diamond:  { next: "Diamond",  target: 5000, multiplier: 3.0 },
+};
+
+const REFERRER_REWARD = 15;
+const REFEREE_DISCOUNT = 20;
 
 const Promotions = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
   const [promoCode, setPromoCode] = useState("");
+  const [applyingPromo, setApplyingPromo] = useState(false);
 
   const copyCode = (code: string) => {
     navigator.clipboard.writeText(code);
     setCopiedCode(code);
-    toast({
-      title: "Code copied!",
-      description: `${code} has been copied to your clipboard.`,
-    });
+    toast({ title: "Code copied!", description: `${code} has been copied to your clipboard.` });
     setTimeout(() => setCopiedCode(null), 2000);
   };
 
-  const activeCoupons = [
-    {
-      code: "RIDE10",
-      discount: "10% OFF",
-      description: "Your next ride",
-      expires: "Feb 15, 2026",
-      service: "rides",
-      minOrder: "$15",
-    },
-    {
-      code: "EATS5",
-      discount: "$5 OFF",
-      description: "Food orders over $25",
-      expires: "Feb 28, 2026",
-      service: "eats",
-      minOrder: "$25",
-    },
-    {
-      code: "NEWUSER25",
-      discount: "25% OFF",
-      description: "First booking (any service)",
-      expires: "Mar 31, 2026",
-      service: "all",
-      minOrder: "None",
-    },
-  ];
+  const applyPromoCode = async () => {
+    if (!promoCode.trim()) return;
+    setApplyingPromo(true);
+    try {
+      const now = new Date().toISOString();
+      const { data } = await (supabase as any)
+        .from("promo_codes")
+        .select("code, discount_type, discount_value, end_at, is_active")
+        .eq("code", promoCode.toUpperCase())
+        .eq("is_active", true)
+        .maybeSingle();
 
-  const availableOffers = [
-    {
-      title: "Weekend Rides Special",
-      discount: "15% OFF",
-      description: "All rides on weekends",
-      validUntil: "Every Sat-Sun",
-      code: "WEEKEND15",
-      gradient: "from-primary to-teal-400",
+      if (!data) {
+        toast({ title: "Invalid code", description: "This promo code doesn't exist or has expired.", variant: "destructive" });
+      } else if (data.end_at && data.end_at < now) {
+        toast({ title: "Code expired", description: `This code expired on ${new Date(data.end_at).toLocaleDateString()}.`, variant: "destructive" });
+      } else {
+        const label = data.discount_type === "percentage" ? `${data.discount_value}% OFF` : `$${data.discount_value} OFF`;
+        toast({ title: "Code applied!", description: `${promoCode.toUpperCase()} — ${label} will be applied at checkout.` });
+        setPromoCode("");
+      }
+    } finally {
+      setApplyingPromo(false);
+    }
+  };
+
+  // Active platform promo codes
+  const { data: activeCouponsRaw = [], isLoading: couponsLoading } = useQuery({
+    queryKey: ["promo-codes-active"],
+    queryFn: async () => {
+      const now = new Date().toISOString();
+      const { data } = await (supabase as any)
+        .from("promo_codes")
+        .select("code, discount_type, discount_value, end_at, min_fare, city")
+        .eq("is_active", true)
+        .or(`end_at.is.null,end_at.gt.${now}`)
+        .limit(12);
+      return (data || []) as { code: string; discount_type: string; discount_value: number; end_at: string | null; min_fare: number | null; city: string | null }[];
     },
-    {
-      title: "Late Night Eats",
-      discount: "Free Delivery",
-      description: "Orders after 10 PM",
-      validUntil: "Ongoing",
-      code: "LATENIGHT",
-      gradient: "from-eats to-orange-500",
+  });
+
+  const activeCoupons = activeCouponsRaw.map((c) => ({
+    code: c.code,
+    discount: c.discount_type === "percentage" ? `${c.discount_value}% OFF` : `$${c.discount_value} OFF`,
+    description: c.city ? `Available in ${c.city}` : "All locations",
+    expires: c.end_at ? new Date(c.end_at).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : "No expiry",
+    service: "all" as const,
+    minOrder: c.min_fare ? `$${c.min_fare}` : "None",
+  }));
+
+  // Referral data
+  const { data: referralData, isLoading: referralLoading } = useQuery({
+    queryKey: ["promotions-referral", user?.id],
+    queryFn: async () => {
+      const [{ data: profile }, { data: refs }] = await Promise.all([
+        (supabase as any).from("profiles").select("share_code").eq("user_id", user!.id).maybeSingle(),
+        (supabase as any).from("referrals").select("status, referrer_credit_cents").eq("referrer_user_id", user!.id),
+      ]);
+      const allRefs = (refs || []) as { status: string; referrer_credit_cents: number | null }[];
+      const earned = allRefs.filter((r) => r.status === "completed" || r.status === "earned");
+      return {
+        code: profile?.share_code || `ZIVO-${user!.id.slice(0, 6).toUpperCase()}`,
+        totalReferrals: allRefs.length,
+        pendingCredits: allRefs.filter((r) => r.status === "pending").reduce((s, r) => s + (r.referrer_credit_cents ?? 0), 0) / 100,
+        earnedTotal: earned.reduce((s, r) => s + (r.referrer_credit_cents ?? 0), 0) / 100,
+      };
     },
-    {
-      title: "Luxury Car Rental",
-      discount: "$50 OFF",
-      description: "Premium vehicle rentals 3+ days",
-      validUntil: "Limited time",
-      code: "LUXURY50",
-      gradient: "from-violet-500 to-purple-500",
-    },
-    {
-      title: "Hotel + Flight Bundle",
-      discount: "20% OFF",
-      description: "Book together and save",
-      validUntil: "Mar 2026",
-      code: "BUNDLE20",
-      gradient: "from-sky-500 to-blue-500",
-    },
-  ];
+    enabled: !!user,
+  });
 
   const referralStats = {
-    code: "ZIVO-JOHN123",
-    totalReferrals: 12,
-    pendingCredits: 45,
-    earnedTotal: 180,
-    referrerReward: 15,
-    refereeDiscount: 20,
+    code: referralData?.code ?? "—",
+    totalReferrals: referralData?.totalReferrals ?? 0,
+    pendingCredits: referralData?.pendingCredits ?? 0,
+    earnedTotal: referralData?.earnedTotal ?? 0,
+    referrerReward: REFERRER_REWARD,
+    refereeDiscount: REFEREE_DISCOUNT,
   };
 
+  // Loyalty points
+  const { data: loyaltyRaw, isLoading: loyaltyLoading } = useQuery({
+    queryKey: ["promotions-loyalty", user?.id],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("loyalty_points")
+        .select("points_balance, tier, lifetime_points")
+        .eq("user_id", user!.id)
+        .maybeSingle();
+      return data as { points_balance: number; tier: string; lifetime_points: number } | null;
+    },
+    enabled: !!user,
+  });
+
+  const tierKey = (loyaltyRaw?.tier ?? "silver").toLowerCase();
+  const tierInfo = TIER_THRESHOLDS[tierKey] ?? TIER_THRESHOLDS.silver;
   const loyaltyPoints = {
-    current: 2450,
-    tier: "Gold",
-    nextTier: "Platinum",
-    pointsToNext: 550,
-    multiplier: 1.5,
+    current: loyaltyRaw?.points_balance ?? 0,
+    tier: loyaltyRaw?.tier ?? "Silver",
+    nextTier: tierInfo.next,
+    pointsToNext: Math.max(0, tierInfo.target - (loyaltyRaw?.points_balance ?? 0)),
+    multiplier: tierInfo.multiplier,
   };
+
+  const availableOffers = [
+    { title: "Weekend Rides Special", discount: "15% OFF", description: "All rides on weekends", validUntil: "Every Sat-Sun", code: "WEEKEND15", gradient: "from-primary to-teal-400" },
+    { title: "Late Night Eats", discount: "Free Delivery", description: "Orders after 10 PM", validUntil: "Ongoing", code: "LATENIGHT", gradient: "from-eats to-orange-500" },
+    { title: "Luxury Car Rental", discount: "$50 OFF", description: "Premium vehicle rentals 3+ days", validUntil: "Limited time", code: "LUXURY50", gradient: "from-violet-500 to-purple-500" },
+    { title: "Hotel + Flight Bundle", discount: "20% OFF", description: "Book together and save", validUntil: "Mar 2026", code: "BUNDLE20", gradient: "from-sky-500 to-blue-500" },
+  ];
 
   const rewards = [
     { name: "Free Ride (up to $15)", points: 500, available: true },
@@ -120,7 +163,7 @@ const Promotions = () => {
       <div className="absolute bottom-0 left-0 w-[250px] sm:w-[400px] h-[250px] sm:h-[400px] bg-gradient-to-tr from-primary/12 to-teal-500/8 rounded-full blur-3xl" />
 
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50 animate-in fade-in slide-in-from-top-2 duration-300">
+      <header className="sticky top-0 safe-area-top z-50 bg-background/80 backdrop-blur-xl border-b border-border/50 animate-in fade-in slide-in-from-top-2 duration-300">
         <div className="container mx-auto px-4 py-3 sm:py-4 flex items-center gap-3 sm:gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate(-1)} className="rounded-xl touch-manipulation active:scale-95" aria-label="Go back">
             <ChevronLeft className="h-5 w-5" />
@@ -153,8 +196,12 @@ const Promotions = () => {
                 onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
                 className="flex-1 h-11 sm:h-12 rounded-xl bg-muted/30 border-border/50"
               />
-              <Button className="h-11 sm:h-12 px-4 sm:px-6 rounded-xl bg-gradient-to-r from-eats to-orange-500 text-primary-foreground font-bold shadow-lg shadow-eats/30 touch-manipulation active:scale-95">
-                Apply
+              <Button
+                onClick={applyPromoCode}
+                disabled={applyingPromo || !promoCode.trim()}
+                className="h-11 sm:h-12 px-4 sm:px-6 rounded-xl bg-gradient-to-r from-eats to-orange-500 text-primary-foreground font-bold shadow-lg shadow-eats/30 touch-manipulation active:scale-95"
+              >
+                {applyingPromo ? <Loader2 className="h-4 w-4 animate-spin" /> : "Apply"}
               </Button>
             </div>
           </CardContent>
@@ -187,9 +234,11 @@ const Promotions = () => {
               <div className="space-y-4">
                 <h3 className="font-display font-bold text-lg sm:text-xl flex items-center gap-2">
                   <Ticket className="w-4 h-4 sm:w-5 sm:h-5 text-eats" />
-                  Your Active Coupons
+                  Active Promo Codes
                 </h3>
-                {activeCoupons.length > 0 ? (
+                {couponsLoading ? (
+                  <div className="flex justify-center py-10"><Loader2 className="h-6 w-6 animate-spin text-muted-foreground" /></div>
+                ) : activeCoupons.length > 0 ? (
                   <div className="grid sm:grid-cols-2 gap-3 sm:gap-4">
                     {activeCoupons.map((coupon) => (
                       <Card key={coupon.code} className="overflow-hidden border-0 bg-gradient-to-br from-card/90 to-card shadow-xl">
@@ -325,10 +374,13 @@ const Promotions = () => {
 
                 {/* Referral Stats */}
                 <div className="grid grid-cols-3 gap-2 sm:gap-4">
-                  {[
+                  {referralLoading ? (
+                    <div className="col-span-3 flex justify-center py-6"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+                  ) : null}
+                  {!referralLoading && [
                     { value: referralStats.totalReferrals, label: "Referrals", gradient: "from-primary to-teal-400" },
-                    { value: `$${referralStats.pendingCredits}`, label: "Pending", gradient: "from-amber-500 to-orange-500" },
-                    { value: `$${referralStats.earnedTotal}`, label: "Earned", gradient: "from-emerald-500 to-green-500" },
+                    { value: `$${referralStats.pendingCredits.toFixed(0)}`, label: "Pending", gradient: "from-amber-500 to-orange-500" },
+                    { value: `$${referralStats.earnedTotal.toFixed(0)}`, label: "Earned", gradient: "from-emerald-500 to-green-500" },
                   ].map((stat, index) => (
                     <div
                       key={stat.label}
@@ -394,16 +446,20 @@ const Promotions = () => {
                           </p>
                         </div>
                       </div>
-                      <div className="space-y-2">
-                        <div className="flex justify-between text-xs sm:text-sm">
-                          <span className="font-medium">Progress to {loyaltyPoints.nextTier}</span>
-                          <span className="text-muted-foreground">{loyaltyPoints.pointsToNext} pts to go</span>
+                      {loyaltyLoading ? (
+                        <div className="flex justify-center py-4"><Loader2 className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+                      ) : (
+                        <div className="space-y-2">
+                          <div className="flex justify-between text-xs sm:text-sm">
+                            <span className="font-medium">Progress to {loyaltyPoints.nextTier}</span>
+                            <span className="text-muted-foreground">{loyaltyPoints.pointsToNext} pts to go</span>
+                          </div>
+                          <Progress
+                            value={tierInfo.target > 0 ? Math.min(100, ((tierInfo.target - loyaltyPoints.pointsToNext) / tierInfo.target) * 100) : 100}
+                            className="h-2 sm:h-3 rounded-full"
+                          />
                         </div>
-                        <Progress 
-                          value={((3000 - loyaltyPoints.pointsToNext) / 3000) * 100} 
-                          className="h-2 sm:h-3 rounded-full"
-                        />
-                      </div>
+                      )}
                     </CardContent>
                   </Card>
                 </div>
@@ -419,23 +475,26 @@ const Promotions = () => {
                   <CardContent>
                     <div className="grid grid-cols-4 gap-2 sm:gap-3 text-center">
                       {[
-                        { name: "Silver", points: "1x", active: false },
-                        { name: "Gold", points: "1.5x", active: true },
-                        { name: "Platinum", points: "2x", active: false },
-                        { name: "Diamond", points: "3x", active: false },
-                      ].map((tier) => (
-                        <div 
+                        { name: "Silver", points: "1x" },
+                        { name: "Gold", points: "1.5x" },
+                        { name: "Platinum", points: "2x" },
+                        { name: "Diamond", points: "3x" },
+                      ].map((tier) => {
+                        const isActive = tier.name.toLowerCase() === tierKey;
+                        return (
+                        <div
                           key={tier.name}
                           className={`p-2 sm:p-4 rounded-xl sm:rounded-2xl transition-all ${
-                            tier.active 
-                              ? "bg-gradient-to-br from-amber-500/20 to-orange-500/20 ring-2 ring-amber-500" 
+                            isActive
+                              ? "bg-gradient-to-br from-amber-500/20 to-orange-500/20 ring-2 ring-amber-500"
                               : "bg-muted/50"
                           }`}
                         >
-                          <p className={`font-bold text-xs sm:text-base ${tier.active ? "text-amber-500" : ""}`}>{tier.name}</p>
+                          <p className={`font-bold text-xs sm:text-base ${isActive ? "text-amber-500" : ""}`}>{tier.name}</p>
                           <p className="text-[10px] sm:text-sm text-muted-foreground">{tier.points}</p>
                         </div>
-                      ))}
+                        );
+                      })}
                     </div>
                   </CardContent>
                 </Card>

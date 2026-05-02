@@ -15,6 +15,9 @@ import { format } from "date-fns";
 import { toast } from "sonner";
 import CheckoutTrustFooter from "@/components/checkout/CheckoutTrustFooter";
 import { CHECKOUT_CONFIRMATION } from "@/config/checkoutCompliance";
+import CrossServiceCTAs from "@/components/shared/CrossServiceCTAs";
+import { downloadICS } from "@/lib/buildICS";
+import { CalendarPlus } from "lucide-react";
 
 const TravelConfirmationPage = () => {
   const { orderNumber } = useParams<{ orderNumber: string }>();
@@ -109,7 +112,7 @@ const TravelConfirmationPage = () => {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-40 bg-background/95 backdrop-blur border-b">
+      <header className="sticky top-0 safe-area-top z-40 bg-background/95 backdrop-blur border-b">
         <div className="container mx-auto px-4 py-4 flex items-center gap-4">
           <Button variant="ghost" size="icon" onClick={() => navigate("/")} aria-label="Go home">
             <ArrowLeft className="h-5 w-5" />
@@ -251,6 +254,45 @@ const TravelConfirmationPage = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Cross-service follow-ups (ride from airport, food to room) + calendar export */}
+        {(() => {
+          const hotelItem = items.find((it) => it.type === "hotel");
+          if (!hotelItem) return null;
+          return (
+            <div className="mb-6 space-y-3">
+              <Button
+                variant="outline"
+                onClick={() =>
+                  downloadICS(
+                    {
+                      title: `Stay: ${hotelItem.title}`,
+                      description: `Order ${order.order_number} · Booked via ZIVO`,
+                      start: `${hotelItem.start_date}T15:00:00`,
+                      end: `${hotelItem.end_date ?? hotelItem.start_date}T11:00:00`,
+                      location: hotelItem.title,
+                      uid: `hotel-${hotelItem.id}@zivo.app`,
+                    },
+                    `zivo-hotel-${hotelItem.title}`,
+                  )
+                }
+                className="w-full h-12 rounded-xl gap-2"
+              >
+                <CalendarPlus className="w-4 h-4" /> Add stay to calendar
+              </Button>
+              <CrossServiceCTAs
+                variant="after-hotel"
+                title="Round out your stay"
+                context={{
+                  hotelName: hotelItem.title,
+                  destinationAddress: hotelItem.title,
+                  arrivalDate: hotelItem.start_date,
+                  departureDate: hotelItem.end_date,
+                }}
+              />
+            </div>
+          );
+        })()}
 
         {/* Actions */}
         <div className="flex flex-col sm:flex-row gap-3 justify-center">

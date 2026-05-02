@@ -300,7 +300,7 @@ export default function DuffelSeatPicker({
 
                   {/* Column labels */}
                   {cabin.rows[0] && (
-                    <div className="flex justify-center gap-0 mb-2 sticky top-0 z-10">
+                    <div className="flex justify-center gap-0 mb-2 sticky top-0 safe-area-top z-10">
                       <span className="w-5 mr-1" />
                       {cabin.rows[0].sections.map((section, sIdx) => (
                         <div key={sIdx} className="flex gap-[4px]">

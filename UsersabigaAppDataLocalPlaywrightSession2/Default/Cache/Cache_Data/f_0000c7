@@ -1,0 +1,333 @@
+/** Auto-repair service → image mapping */ import serviceOilChange from "/src/assets/service-oil-change.jpg?import";
+import serviceBrakePads from "/src/assets/service-brake-pads.jpg?import";
+import serviceBrakeRotor from "/src/assets/service-brake-rotor.jpg?import";
+import serviceTransmission from "/src/assets/service-transmission.jpg?import";
+import serviceCoolant from "/src/assets/service-coolant.jpg?import";
+import servicePowerSteering from "/src/assets/service-power-steering.jpg?import";
+import serviceEngine from "/src/assets/service-engine.jpg?import";
+import serviceSparkPlug from "/src/assets/service-spark-plug.jpg?import";
+import serviceBelt from "/src/assets/service-belt.jpg?import";
+import serviceDiagnostic from "/src/assets/service-diagnostic.jpg?import";
+import serviceTire from "/src/assets/service-tire.jpg?import";
+import serviceAlignment from "/src/assets/service-alignment.jpg?import";
+import serviceSuspension from "/src/assets/service-suspension.jpg?import";
+import serviceElectrical from "/src/assets/service-electrical.jpg?import";
+import serviceAC from "/src/assets/service-ac.jpg?import";
+import serviceExhaust from "/src/assets/service-exhaust.jpg?import";
+import serviceLights from "/src/assets/service-lights.jpg?import";
+import serviceWiper from "/src/assets/service-wiper.jpg?import";
+import serviceGasket from "/src/assets/service-gasket.jpg?import";
+import serviceFuel from "/src/assets/service-fuel.jpg?import";
+import serviceBodyPaint from "/src/assets/service-body-paint.jpg?import";
+import serviceDetailing from "/src/assets/service-detailing.jpg?import";
+/**
+ * Each entry: [keyword to match in service name (lowercase), image path]
+ * Order matters — first match wins.
+ */ const SERVICE_IMAGE_RULES = [
+    // Oil & Fluids
+    [
+        "oil change",
+        serviceOilChange
+    ],
+    [
+        "transmission fluid",
+        serviceTransmission
+    ],
+    [
+        "coolant",
+        serviceCoolant
+    ],
+    [
+        "brake fluid",
+        serviceBrakePads
+    ],
+    [
+        "power steering",
+        servicePowerSteering
+    ],
+    // Brake System
+    [
+        "brake pad",
+        serviceBrakePads
+    ],
+    [
+        "brake rotor",
+        serviceBrakeRotor
+    ],
+    [
+        "brake caliper",
+        serviceBrakeRotor
+    ],
+    [
+        "brake line",
+        serviceBrakePads
+    ],
+    // Engine
+    [
+        "engine tune",
+        serviceEngine
+    ],
+    [
+        "spark plug",
+        serviceSparkPlug
+    ],
+    [
+        "timing belt",
+        serviceBelt
+    ],
+    [
+        "serpentine belt",
+        serviceBelt
+    ],
+    [
+        "engine diagnostic",
+        serviceDiagnostic
+    ],
+    [
+        "head gasket",
+        serviceGasket
+    ],
+    [
+        "engine mount",
+        serviceEngine
+    ],
+    // Transmission
+    [
+        "transmission",
+        serviceTransmission
+    ],
+    [
+        "clutch",
+        serviceTransmission
+    ],
+    // Suspension & Steering
+    [
+        "shock",
+        serviceSuspension
+    ],
+    [
+        "strut",
+        serviceSuspension
+    ],
+    [
+        "ball joint",
+        serviceSuspension
+    ],
+    [
+        "tie rod",
+        serviceSuspension
+    ],
+    [
+        "control arm",
+        serviceSuspension
+    ],
+    [
+        "wheel bearing",
+        serviceSuspension
+    ],
+    [
+        "suspension",
+        serviceSuspension
+    ],
+    [
+        "steering",
+        servicePowerSteering
+    ],
+    // Electrical
+    [
+        "battery",
+        serviceElectrical
+    ],
+    [
+        "alternator",
+        serviceElectrical
+    ],
+    [
+        "starter",
+        serviceElectrical
+    ],
+    [
+        "electrical",
+        serviceElectrical
+    ],
+    [
+        "fuse",
+        serviceElectrical
+    ],
+    // HVAC
+    [
+        "a/c",
+        serviceAC
+    ],
+    [
+        "ac ",
+        serviceAC
+    ],
+    [
+        "air conditioning",
+        serviceAC
+    ],
+    [
+        "heater",
+        serviceAC
+    ],
+    [
+        "cabin filter",
+        serviceAC
+    ],
+    // Exhaust
+    [
+        "exhaust",
+        serviceExhaust
+    ],
+    [
+        "muffler",
+        serviceExhaust
+    ],
+    [
+        "catalytic",
+        serviceExhaust
+    ],
+    // Tires & Wheels
+    [
+        "tire",
+        serviceTire
+    ],
+    [
+        "wheel alignment",
+        serviceAlignment
+    ],
+    [
+        "alignment",
+        serviceAlignment
+    ],
+    [
+        "rotation",
+        serviceTire
+    ],
+    [
+        "balancing",
+        serviceTire
+    ],
+    [
+        "flat",
+        serviceTire
+    ],
+    // Lights
+    [
+        "headlight",
+        serviceLights
+    ],
+    [
+        "taillight",
+        serviceLights
+    ],
+    [
+        "bulb",
+        serviceLights
+    ],
+    [
+        "light",
+        serviceLights
+    ],
+    // Wipers
+    [
+        "wiper",
+        serviceWiper
+    ],
+    [
+        "windshield",
+        serviceWiper
+    ],
+    // Fuel
+    [
+        "fuel",
+        serviceFuel
+    ],
+    [
+        "injector",
+        serviceFuel
+    ],
+    // Body & Paint
+    [
+        "paint",
+        serviceBodyPaint
+    ],
+    [
+        "dent",
+        serviceBodyPaint
+    ],
+    [
+        "bumper",
+        serviceBodyPaint
+    ],
+    [
+        "body",
+        serviceBodyPaint
+    ],
+    // Detailing
+    [
+        "detail",
+        serviceDetailing
+    ],
+    [
+        "polish",
+        serviceDetailing
+    ],
+    [
+        "wax",
+        serviceDetailing
+    ],
+    // Additional mappings
+    [
+        "cv axle",
+        serviceTransmission
+    ],
+    [
+        "differential",
+        serviceTransmission
+    ],
+    [
+        "thermostat",
+        serviceCoolant
+    ],
+    [
+        "radiator",
+        serviceCoolant
+    ],
+    [
+        "wheel bearing",
+        serviceSuspension
+    ],
+    [
+        "compressor",
+        serviceAC
+    ],
+    // General engine fallback
+    [
+        "engine",
+        serviceEngine
+    ],
+    [
+        "diagnostic",
+        serviceDiagnostic
+    ],
+    [
+        "inspection",
+        serviceDiagnostic
+    ],
+    [
+        "brake",
+        serviceBrakePads
+    ]
+];
+/** Returns the matching service image for a given service name, or empty string */ export function getServiceImage(serviceName) {
+    if (!serviceName) return "";
+    const lower = serviceName.toLowerCase();
+    for (const [keyword, image] of SERVICE_IMAGE_RULES){
+        if (lower.includes(keyword)) return image;
+    }
+    return "";
+}
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbImF1dG9SZXBhaXJTZXJ2aWNlSW1hZ2VzLnRzIl0sInNvdXJjZXNDb250ZW50IjpbIi8qKiBBdXRvLXJlcGFpciBzZXJ2aWNlIOKGkiBpbWFnZSBtYXBwaW5nICovXHJcbmltcG9ydCBzZXJ2aWNlT2lsQ2hhbmdlIGZyb20gXCJAL2Fzc2V0cy9zZXJ2aWNlLW9pbC1jaGFuZ2UuanBnXCI7XHJcbmltcG9ydCBzZXJ2aWNlQnJha2VQYWRzIGZyb20gXCJAL2Fzc2V0cy9zZXJ2aWNlLWJyYWtlLXBhZHMuanBnXCI7XHJcbmltcG9ydCBzZXJ2aWNlQnJha2VSb3RvciBmcm9tIFwiQC9hc3NldHMvc2VydmljZS1icmFrZS1yb3Rvci5qcGdcIjtcclxuaW1wb3J0IHNlcnZpY2VUcmFuc21pc3Npb24gZnJvbSBcIkAvYXNzZXRzL3NlcnZpY2UtdHJhbnNtaXNzaW9uLmpwZ1wiO1xyXG5pbXBvcnQgc2VydmljZUNvb2xhbnQgZnJvbSBcIkAvYXNzZXRzL3NlcnZpY2UtY29vbGFudC5qcGdcIjtcclxuaW1wb3J0IHNlcnZpY2VQb3dlclN0ZWVyaW5nIGZyb20gXCJAL2Fzc2V0cy9zZXJ2aWNlLXBvd2VyLXN0ZWVyaW5nLmpwZ1wiO1xyXG5pbXBvcnQgc2VydmljZUVuZ2luZSBmcm9tIFwiQC9hc3NldHMvc2VydmljZS1lbmdpbmUuanBnXCI7XHJcbmltcG9ydCBzZXJ2aWNlU3BhcmtQbHVnIGZyb20gXCJAL2Fzc2V0cy9zZXJ2aWNlLXNwYXJrLXBsdWcuanBnXCI7XHJcbmltcG9ydCBzZXJ2aWNlQmVsdCBmcm9tIFwiQC9hc3NldHMvc2VydmljZS1iZWx0LmpwZ1wiO1xyXG5pbXBvcnQgc2VydmljZURpYWdub3N0aWMgZnJvbSBcIkAvYXNzZXRzL3NlcnZpY2UtZGlhZ25vc3RpYy5qcGdcIjtcclxuaW1wb3J0IHNlcnZpY2VUaXJlIGZyb20gXCJAL2Fzc2V0cy9zZXJ2aWNlLXRpcmUuanBnXCI7XHJcbmltcG9ydCBzZXJ2aWNlQWxpZ25tZW50IGZyb20gXCJAL2Fzc2V0cy9zZXJ2aWNlLWFsaWdubWVudC5qcGdcIjtcclxuaW1wb3J0IHNlcnZpY2VTdXNwZW5zaW9uIGZyb20gXCJAL2Fzc2V0cy9zZXJ2aWNlLXN1c3BlbnNpb24uanBnXCI7XHJcbmltcG9ydCBzZXJ2aWNlRWxlY3RyaWNhbCBmcm9tIFwiQC9hc3NldHMvc2VydmljZS1lbGVjdHJpY2FsLmpwZ1wiO1xyXG5pbXBvcnQgc2VydmljZUFDIGZyb20gXCJAL2Fzc2V0cy9zZXJ2aWNlLWFjLmpwZ1wiO1xyXG5pbXBvcnQgc2VydmljZUV4aGF1c3QgZnJvbSBcIkAvYXNzZXRzL3NlcnZpY2UtZXhoYXVzdC5qcGdcIjtcclxuaW1wb3J0IHNlcnZpY2VMaWdodHMgZnJvbSBcIkAvYXNzZXRzL3NlcnZpY2UtbGlnaHRzLmpwZ1wiO1xyXG5pbXBvcnQgc2VydmljZVdpcGVyIGZyb20gXCJAL2Fzc2V0cy9zZXJ2aWNlLXdpcGVyLmpwZ1wiO1xyXG5pbXBvcnQgc2VydmljZUdhc2tldCBmcm9tIFwiQC9hc3NldHMvc2VydmljZS1nYXNrZXQuanBnXCI7XHJcbmltcG9ydCBzZXJ2aWNlRnVlbCBmcm9tIFwiQC9hc3NldHMvc2VydmljZS1mdWVsLmpwZ1wiO1xyXG5pbXBvcnQgc2VydmljZUJvZHlQYWludCBmcm9tIFwiQC9hc3NldHMvc2VydmljZS1ib2R5LXBhaW50LmpwZ1wiO1xyXG5pbXBvcnQgc2VydmljZURldGFpbGluZyBmcm9tIFwiQC9hc3NldHMvc2VydmljZS1kZXRhaWxpbmcuanBnXCI7XHJcblxyXG4vKipcclxuICogRWFjaCBlbnRyeTogW2tleXdvcmQgdG8gbWF0Y2ggaW4gc2VydmljZSBuYW1lIChsb3dlcmNhc2UpLCBpbWFnZSBwYXRoXVxyXG4gKiBPcmRlciBtYXR0ZXJzIOKAlCBmaXJzdCBtYXRjaCB3aW5zLlxyXG4gKi9cclxuY29uc3QgU0VSVklDRV9JTUFHRV9SVUxFUzogW3N0cmluZywgc3RyaW5nXVtdID0gW1xyXG4gIC8vIE9pbCAmIEZsdWlkc1xyXG4gIFtcIm9pbCBjaGFuZ2VcIiwgc2VydmljZU9pbENoYW5nZV0sXHJcbiAgW1widHJhbnNtaXNzaW9uIGZsdWlkXCIsIHNlcnZpY2VUcmFuc21pc3Npb25dLFxyXG4gIFtcImNvb2xhbnRcIiwgc2VydmljZUNvb2xhbnRdLFxyXG4gIFtcImJyYWtlIGZsdWlkXCIsIHNlcnZpY2VCcmFrZVBhZHNdLFxyXG4gIFtcInBvd2VyIHN0ZWVyaW5nXCIsIHNlcnZpY2VQb3dlclN0ZWVyaW5nXSxcclxuXHJcbiAgLy8gQnJha2UgU3lzdGVtXHJcbiAgW1wiYnJha2UgcGFkXCIsIHNlcnZpY2VCcmFrZVBhZHNdLFxyXG4gIFtcImJyYWtlIHJvdG9yXCIsIHNlcnZpY2VCcmFrZVJvdG9yXSxcclxuICBbXCJicmFrZSBjYWxpcGVyXCIsIHNlcnZpY2VCcmFrZVJvdG9yXSxcclxuICBbXCJicmFrZSBsaW5lXCIsIHNlcnZpY2VCcmFrZVBhZHNdLFxyXG5cclxuICAvLyBFbmdpbmVcclxuICBbXCJlbmdpbmUgdHVuZVwiLCBzZXJ2aWNlRW5naW5lXSxcclxuICBbXCJzcGFyayBwbHVnXCIsIHNlcnZpY2VTcGFya1BsdWddLFxyXG4gIFtcInRpbWluZyBiZWx0XCIsIHNlcnZpY2VCZWx0XSxcclxuICBbXCJzZXJwZW50aW5lIGJlbHRcIiwgc2VydmljZUJlbHRdLFxyXG4gIFtcImVuZ2luZSBkaWFnbm9zdGljXCIsIHNlcnZpY2VEaWFnbm9zdGljXSxcclxuICBbXCJoZWFkIGdhc2tldFwiLCBzZXJ2aWNlR2Fza2V0XSxcclxuICBbXCJlbmdpbmUgbW91bnRcIiwgc2VydmljZUVuZ2luZV0sXHJcblxyXG4gIC8vIFRyYW5zbWlzc2lvblxyXG4gIFtcInRyYW5zbWlzc2lvblwiLCBzZXJ2aWNlVHJhbnNtaXNzaW9uXSxcclxuICBbXCJjbHV0Y2hcIiwgc2VydmljZVRyYW5zbWlzc2lvbl0sXHJcblxyXG4gIC8vIFN1c3BlbnNpb24gJiBTdGVlcmluZ1xyXG4gIFtcInNob2NrXCIsIHNlcnZpY2VTdXNwZW5zaW9uXSxcclxuICBbXCJzdHJ1dFwiLCBzZXJ2aWNlU3VzcGVuc2lvbl0sXHJcbiAgW1wiYmFsbCBqb2ludFwiLCBzZXJ2aWNlU3VzcGVuc2lvbl0sXHJcbiAgW1widGllIHJvZFwiLCBzZXJ2aWNlU3VzcGVuc2lvbl0sXHJcbiAgW1wiY29udHJvbCBhcm1cIiwgc2VydmljZVN1c3BlbnNpb25dLFxyXG4gIFtcIndoZWVsIGJlYXJpbmdcIiwgc2VydmljZVN1c3BlbnNpb25dLFxyXG4gIFtcInN1c3BlbnNpb25cIiwgc2VydmljZVN1c3BlbnNpb25dLFxyXG4gIFtcInN0ZWVyaW5nXCIsIHNlcnZpY2VQb3dlclN0ZWVyaW5nXSxcclxuXHJcbiAgLy8gRWxlY3RyaWNhbFxyXG4gIFtcImJhdHRlcnlcIiwgc2VydmljZUVsZWN0cmljYWxdLFxyXG4gIFtcImFsdGVybmF0b3JcIiwgc2VydmljZUVsZWN0cmljYWxdLFxyXG4gIFtcInN0YXJ0ZXJcIiwgc2VydmljZUVsZWN0cmljYWxdLFxyXG4gIFtcImVsZWN0cmljYWxcIiwgc2VydmljZUVsZWN0cmljYWxdLFxyXG4gIFtcImZ1c2VcIiwgc2VydmljZUVsZWN0cmljYWxdLFxyXG5cclxuICAvLyBIVkFDXHJcbiAgW1wiYS9jXCIsIHNlcnZpY2VBQ10sXHJcbiAgW1wiYWMgXCIsIHNlcnZpY2VBQ10sXHJcbiAgW1wiYWlyIGNvbmRpdGlvbmluZ1wiLCBzZXJ2aWNlQUNdLFxyXG4gIFtcImhlYXRlclwiLCBzZXJ2aWNlQUNdLFxyXG4gIFtcImNhYmluIGZpbHRlclwiLCBzZXJ2aWNlQUNdLFxyXG5cclxuICAvLyBFeGhhdXN0XHJcbiAgW1wiZXhoYXVzdFwiLCBzZXJ2aWNlRXhoYXVzdF0sXHJcbiAgW1wibXVmZmxlclwiLCBzZXJ2aWNlRXhoYXVzdF0sXHJcbiAgW1wiY2F0YWx5dGljXCIsIHNlcnZpY2VFeGhhdXN0XSxcclxuXHJcbiAgLy8gVGlyZXMgJiBXaGVlbHNcclxuICBbXCJ0aXJlXCIsIHNlcnZpY2VUaXJlXSxcclxuICBbXCJ3aGVlbCBhbGlnbm1lbnRcIiwgc2VydmljZUFsaWdubWVudF0sXHJcbiAgW1wiYWxpZ25tZW50XCIsIHNlcnZpY2VBbGlnbm1lbnRdLFxyXG4gIFtcInJvdGF0aW9uXCIsIHNlcnZpY2VUaXJlXSxcclxuICBbXCJiYWxhbmNpbmdcIiwgc2VydmljZVRpcmVdLFxyXG4gIFtcImZsYXRcIiwgc2VydmljZVRpcmVdLFxyXG5cclxuICAvLyBMaWdodHNcclxuICBbXCJoZWFkbGlnaHRcIiwgc2VydmljZUxpZ2h0c10sXHJcbiAgW1widGFpbGxpZ2h0XCIsIHNlcnZpY2VMaWdodHNdLFxyXG4gIFtcImJ1bGJcIiwgc2VydmljZUxpZ2h0c10sXHJcbiAgW1wibGlnaHRcIiwgc2VydmljZUxpZ2h0c10sXHJcblxyXG4gIC8vIFdpcGVyc1xyXG4gIFtcIndpcGVyXCIsIHNlcnZpY2VXaXBlcl0sXHJcbiAgW1wid2luZHNoaWVsZFwiLCBzZXJ2aWNlV2lwZXJdLFxyXG5cclxuICAvLyBGdWVsXHJcbiAgW1wiZnVlbFwiLCBzZXJ2aWNlRnVlbF0sXHJcbiAgW1wiaW5qZWN0b3JcIiwgc2VydmljZUZ1ZWxdLFxyXG5cclxuICAvLyBCb2R5ICYgUGFpbnRcclxuICBbXCJwYWludFwiLCBzZXJ2aWNlQm9keVBhaW50XSxcclxuICBbXCJkZW50XCIsIHNlcnZpY2VCb2R5UGFpbnRdLFxyXG4gIFtcImJ1bXBlclwiLCBzZXJ2aWNlQm9keVBhaW50XSxcclxuICBbXCJib2R5XCIsIHNlcnZpY2VCb2R5UGFpbnRdLFxyXG5cclxuICAvLyBEZXRhaWxpbmdcclxuICBbXCJkZXRhaWxcIiwgc2VydmljZURldGFpbGluZ10sXHJcbiAgW1wicG9saXNoXCIsIHNlcnZpY2VEZXRhaWxpbmddLFxyXG4gIFtcIndheFwiLCBzZXJ2aWNlRGV0YWlsaW5nXSxcclxuXHJcbiAgLy8gQWRkaXRpb25hbCBtYXBwaW5nc1xyXG4gIFtcImN2IGF4bGVcIiwgc2VydmljZVRyYW5zbWlzc2lvbl0sXHJcbiAgW1wiZGlmZmVyZW50aWFsXCIsIHNlcnZpY2VUcmFuc21pc3Npb25dLFxyXG4gIFtcInRoZXJtb3N0YXRcIiwgc2VydmljZUNvb2xhbnRdLFxyXG4gIFtcInJhZGlhdG9yXCIsIHNlcnZpY2VDb29sYW50XSxcclxuICBbXCJ3aGVlbCBiZWFyaW5nXCIsIHNlcnZpY2VTdXNwZW5zaW9uXSxcclxuICBbXCJjb21wcmVzc29yXCIsIHNlcnZpY2VBQ10sXHJcblxyXG4gIC8vIEdlbmVyYWwgZW5naW5lIGZhbGxiYWNrXHJcbiAgW1wiZW5naW5lXCIsIHNlcnZpY2VFbmdpbmVdLFxyXG4gIFtcImRpYWdub3N0aWNcIiwgc2VydmljZURpYWdub3N0aWNdLFxyXG4gIFtcImluc3BlY3Rpb25cIiwgc2VydmljZURpYWdub3N0aWNdLFxyXG4gIFtcImJyYWtlXCIsIHNlcnZpY2VCcmFrZVBhZHNdLFxyXG5dO1xyXG5cclxuLyoqIFJldHVybnMgdGhlIG1hdGNoaW5nIHNlcnZpY2UgaW1hZ2UgZm9yIGEgZ2l2ZW4gc2VydmljZSBuYW1lLCBvciBlbXB0eSBzdHJpbmcgKi9cclxuZXhwb3J0IGZ1bmN0aW9uIGdldFNlcnZpY2VJbWFnZShzZXJ2aWNlTmFtZTogc3RyaW5nKTogc3RyaW5nIHtcclxuICBpZiAoIXNlcnZpY2VOYW1lKSByZXR1cm4gXCJcIjtcclxuICBjb25zdCBsb3dlciA9IHNlcnZpY2VOYW1lLnRvTG93ZXJDYXNlKCk7XHJcbiAgZm9yIChjb25zdCBba2V5d29yZCwgaW1hZ2VdIG9mIFNFUlZJQ0VfSU1BR0VfUlVMRVMpIHtcclxuICAgIGlmIChsb3dlci5pbmNsdWRlcyhrZXl3b3JkKSkgcmV0dXJuIGltYWdlO1xyXG4gIH1cclxuICByZXR1cm4gXCJcIjtcclxufVxyXG4iXSwibmFtZXMiOlsic2VydmljZU9pbENoYW5nZSIsInNlcnZpY2VCcmFrZVBhZHMiLCJzZXJ2aWNlQnJha2VSb3RvciIsInNlcnZpY2VUcmFuc21pc3Npb24iLCJzZXJ2aWNlQ29vbGFudCIsInNlcnZpY2VQb3dlclN0ZWVyaW5nIiwic2VydmljZUVuZ2luZSIsInNlcnZpY2VTcGFya1BsdWciLCJzZXJ2aWNlQmVsdCIsInNlcnZpY2VEaWFnbm9zdGljIiwic2VydmljZVRpcmUiLCJzZXJ2aWNlQWxpZ25tZW50Iiwic2VydmljZVN1c3BlbnNpb24iLCJzZXJ2aWNlRWxlY3RyaWNhbCIsInNlcnZpY2VBQyIsInNlcnZpY2VFeGhhdXN0Iiwic2VydmljZUxpZ2h0cyIsInNlcnZpY2VXaXBlciIsInNlcnZpY2VHYXNrZXQiLCJzZXJ2aWNlRnVlbCIsInNlcnZpY2VCb2R5UGFpbnQiLCJzZXJ2aWNlRGV0YWlsaW5nIiwiU0VSVklDRV9JTUFHRV9SVUxFUyIsImdldFNlcnZpY2VJbWFnZSIsInNlcnZpY2VOYW1lIiwibG93ZXIiLCJ0b0xvd2VyQ2FzZSIsImtleXdvcmQiLCJpbWFnZSIsImluY2x1ZGVzIl0sIm1hcHBpbmdzIjoiQUFBQSx3Q0FBd0MsR0FDeEMsT0FBT0Esc0JBQXNCLGtDQUFrQztBQUMvRCxPQUFPQyxzQkFBc0Isa0NBQWtDO0FBQy9ELE9BQU9DLHVCQUF1QixtQ0FBbUM7QUFDakUsT0FBT0MseUJBQXlCLG9DQUFvQztBQUNwRSxPQUFPQyxvQkFBb0IsK0JBQStCO0FBQzFELE9BQU9DLDBCQUEwQixzQ0FBc0M7QUFDdkUsT0FBT0MsbUJBQW1CLDhCQUE4QjtBQUN4RCxPQUFPQyxzQkFBc0Isa0NBQWtDO0FBQy9ELE9BQU9DLGlCQUFpQiw0QkFBNEI7QUFDcEQsT0FBT0MsdUJBQXVCLGtDQUFrQztBQUNoRSxPQUFPQyxpQkFBaUIsNEJBQTRCO0FBQ3BELE9BQU9DLHNCQUFzQixpQ0FBaUM7QUFDOUQsT0FBT0MsdUJBQXVCLGtDQUFrQztBQUNoRSxPQUFPQyx1QkFBdUIsa0NBQWtDO0FBQ2hFLE9BQU9DLGVBQWUsMEJBQTBCO0FBQ2hELE9BQU9DLG9CQUFvQiwrQkFBK0I7QUFDMUQsT0FBT0MsbUJBQW1CLDhCQUE4QjtBQUN4RCxPQUFPQyxrQkFBa0IsNkJBQTZCO0FBQ3RELE9BQU9DLG1CQUFtQiw4QkFBOEI7QUFDeEQsT0FBT0MsaUJBQWlCLDRCQUE0QjtBQUNwRCxPQUFPQyxzQkFBc0Isa0NBQWtDO0FBQy9ELE9BQU9D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

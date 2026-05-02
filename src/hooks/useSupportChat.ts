@@ -8,6 +8,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { assessChatMessageRisk, sanitizeOutgoingMessage } from "@/lib/security/chatContentSafety";
 
 export interface TicketReply {
   id: string;
@@ -53,12 +54,22 @@ export function useSendTicketMessage() {
       message: string;
       isAdmin?: boolean;
     }) => {
+      const cleanMessage = sanitizeOutgoingMessage(message);
+      if (!cleanMessage) {
+        throw new Error("Message cannot be empty");
+      }
+
+      const risk = assessChatMessageRisk(cleanMessage);
+      if (risk.blocked) {
+        throw new Error("Message blocked for security reasons");
+      }
+
       const { data, error } = await supabase
         .from("ticket_replies")
         .insert({
           ticket_id: ticketId,
           user_id: user?.id || null,
-          message: message.trim(),
+          message: cleanMessage,
           is_admin: isAdmin,
         })
         .select()
@@ -87,7 +98,7 @@ export function useSendTicketMessage() {
     },
     onError: (error: Error) => {
       console.error("[useSendTicketMessage] Error:", error);
-      toast.error("Failed to send message");
+      toast.error(error.message || "Failed to send message");
     },
   });
 }

@@ -222,8 +222,9 @@ export default function GroceryDeliveryBar({ onAddressChange }: GroceryDeliveryB
           {selectedAddress ? (
             <div className="flex items-center gap-1.5">
               {(() => {
-                const Icon = LABEL_ICONS[selectedAddress.label];
-                return <Icon className={`h-3 w-3 ${LABEL_COLORS[selectedAddress.label]}`} />;
+                const Icon = LABEL_ICONS[selectedAddress.label] ?? MapPin;
+                const color = LABEL_COLORS[selectedAddress.label] ?? "text-muted-foreground";
+                return <Icon className={`h-3 w-3 ${color}`} />;
               })()}
               <p className="text-[12px] font-bold text-foreground truncate">
                 {selectedAddress.label}
@@ -254,7 +255,8 @@ export default function GroceryDeliveryBar({ onAddressChange }: GroceryDeliveryB
             <div className="px-4 py-3 space-y-2">
               {/* Existing addresses */}
               {addresses.map((addr) => {
-                const Icon = LABEL_ICONS[addr.label];
+                const Icon = LABEL_ICONS[addr.label] ?? MapPin;
+                const labelColor = LABEL_COLORS[addr.label] ?? "text-muted-foreground";
                 const isSelected = selectedAddress?.id === addr.id;
                 return (
                   <motion.div
@@ -269,7 +271,7 @@ export default function GroceryDeliveryBar({ onAddressChange }: GroceryDeliveryB
                     onClick={() => { selectAddress(addr.id); setIsOpen(false); }}
                   >
                     <div className={`p-2 rounded-xl ${isSelected ? "bg-primary/15" : "bg-muted/30"}`}>
-                      <Icon className={`h-4 w-4 ${isSelected ? "text-primary" : LABEL_COLORS[addr.label]}`} />
+                      <Icon className={`h-4 w-4 ${isSelected ? "text-primary" : labelColor}`} />
                     </div>
                     <div className="flex-1 min-w-0">
                       <p className="text-[12px] font-bold text-foreground">{addr.label}</p>

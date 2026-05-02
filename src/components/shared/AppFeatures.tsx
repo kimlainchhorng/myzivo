@@ -115,11 +115,10 @@ const AppFeatures = () => {
             <div className="flex flex-col sm:flex-row gap-3">
               <Button size="lg" className="bg-gradient-to-r from-primary to-teal-400">
                 <Download className="w-4 h-4 mr-2" />
-                Download for iOS
+                Download the App
               </Button>
               <Button size="lg" variant="outline">
-                <Download className="w-4 h-4 mr-2" />
-                Download for Android
+                Get Started
               </Button>
             </div>
 

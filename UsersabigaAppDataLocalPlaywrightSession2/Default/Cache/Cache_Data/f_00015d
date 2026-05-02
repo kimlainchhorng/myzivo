@@ -1,0 +1,331 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/auth/PhoneOtpVerifyDialog.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"]; const _Fragment = __vite__cjsImport0_react_jsxDevRuntime["Fragment"];
+var _s = $RefreshSig$();
+/**
+ * Phone OTP Verification Dialog — adds SMS-based 2FA layer.
+ * Uses existing send-otp-sms / verify-otp-sms edge functions (Twilio Verify).
+ * Flow: enter phone → receive 6-digit SMS code → verify → phone marked verified.
+ */ import __vite__cjsImport1_react from "/node_modules/.vite/deps/react.js?v=7fd9520c"; const useEffect = __vite__cjsImport1_react["useEffect"]; const useState = __vite__cjsImport1_react["useState"];
+import { Loader2, Smartphone, ShieldCheck, ArrowRight } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+import { Button } from "/src/components/ui/button.tsx";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "/src/components/ui/dialog.tsx";
+import { Input } from "/src/components/ui/input.tsx";
+import { Label } from "/src/components/ui/label.tsx";
+import { CountryPhoneInput } from "/src/components/auth/CountryPhoneInput.tsx";
+import { useSendPhoneOTP, useVerifyPhoneOTP } from "/src/hooks/useNotificationPreferences.ts";
+import { normalizePhoneE164 } from "/src/lib/phone.ts";
+import { toast } from "/node_modules/.vite/deps/sonner.js?v=7fd9520c";
+const RESEND_COOLDOWN = 30;
+export default function PhoneOtpVerifyDialog({ open, onOpenChange, onVerified, initialPhone }) {
+    _s();
+    const [step, setStep] = useState("phone");
+    const [phone, setPhone] = useState(initialPhone || "");
+    const [code, setCode] = useState("");
+    const [cooldown, setCooldown] = useState(0);
+    const sendOtp = useSendPhoneOTP();
+    const verifyOtp = useVerifyPhoneOTP();
+    useEffect(()=>{
+        if (!open) {
+            setStep("phone");
+            setCode("");
+            setCooldown(0);
+        } else {
+            setPhone(initialPhone || "");
+        }
+    }, [
+        open,
+        initialPhone
+    ]);
+    useEffect(()=>{
+        if (cooldown <= 0) return;
+        const t = setTimeout(()=>setCooldown((c)=>c - 1), 1000);
+        return ()=>clearTimeout(t);
+    }, [
+        cooldown
+    ]);
+    const handleSend = async ()=>{
+        const e164 = normalizePhoneE164(phone);
+        if (!e164 || e164.length < 8) {
+            toast.error("Please enter a valid phone number");
+            return;
+        }
+        try {
+            await sendOtp.mutateAsync(e164);
+            setStep("code");
+            setCooldown(RESEND_COOLDOWN);
+        } catch  {
+        /* toast handled in hook */ }
+    };
+    const handleVerify = async ()=>{
+        if (code.length !== 6) {
+            toast.error("Enter the 6-digit code");
+            return;
+        }
+        try {
+            await verifyOtp.mutateAsync({
+                phoneE164: normalizePhoneE164(phone),
+                code
+            });
+            onVerified();
+            onOpenChange(false);
+        } catch  {
+            setCode("");
+        }
+    };
+    return /*#__PURE__*/ _jsxDEV(Dialog, {
+        open: open,
+        onOpenChange: onOpenChange,
+        children: /*#__PURE__*/ _jsxDEV(DialogContent, {
+            className: "max-w-md",
+            children: [
+                /*#__PURE__*/ _jsxDEV(DialogHeader, {
+                    children: [
+                        /*#__PURE__*/ _jsxDEV(DialogTitle, {
+                            className: "flex items-center gap-2",
+                            children: step === "phone" ? /*#__PURE__*/ _jsxDEV(_Fragment, {
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(Smartphone, {
+                                        className: "w-5 h-5 text-primary"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/auth/PhoneOtpVerifyDialog.tsx",
+                                        lineNumber: 95,
+                                        columnNumber: 17
+                                    }, this),
+                                    "Verify your phone number"
+                                ]
+                            }, void 0, true) : /*#__PURE__*/ _jsxDEV(_Fragment, {
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(ShieldCheck, {
+                                        className: "w-5 h-5 text-primary"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/auth/PhoneOtpVerifyDialog.tsx",
+                                        lineNumber: 100,
+                                        columnNumber: 17
+                                    }, this),
+                                    "Enter verification code"
+                                ]
+                            }, void 0, true)
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/auth/PhoneOtpVerifyDialog.tsx",
+                            lineNumber: 92,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV(DialogDescription, {
+                            children: step === "phone" ? "We'll send a 6-digit code via SMS to confirm this is your phone." : `Code sent to ${phone}. Enter it below to complete verification.`
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/auth/PhoneOtpVerifyDialog.tsx",
+                            lineNumber: 105,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/auth/PhoneOtpVerifyDialog.tsx",
+                    lineNumber: 91,
+                    columnNumber: 9
+                }, this),
+                step === "phone" && /*#__PURE__*/ _jsxDEV("div", {
+                    className: "space-y-3 py-2",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV(Label, {
+                            children: "Mobile number"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/auth/PhoneOtpVerifyDialog.tsx",
+                            lineNumber: 114,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV(CountryPhoneInput, {
+                            value: phone,
+                            onChange: setPhone
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/auth/PhoneOtpVerifyDialog.tsx",
+                            lineNumber: 115,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("p", {
+                            className: "text-xs text-muted-foreground",
+                            children: "Standard SMS rates may apply. Carrier delivery times vary."
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/auth/PhoneOtpVerifyDialog.tsx",
+                            lineNumber: 116,
+                            columnNumber: 13
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/auth/PhoneOtpVerifyDialog.tsx",
+                    lineNumber: 113,
+                    columnNumber: 11
+                }, this),
+                step === "code" && /*#__PURE__*/ _jsxDEV("div", {
+                    className: "space-y-4 py-2",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "space-y-1.5",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV(Label, {
+                                    htmlFor: "sms-code",
+                                    children: "6-digit code"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/auth/PhoneOtpVerifyDialog.tsx",
+                                    lineNumber: 125,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV(Input, {
+                                    id: "sms-code",
+                                    inputMode: "numeric",
+                                    pattern: "[0-9]*",
+                                    maxLength: 6,
+                                    autoComplete: "one-time-code",
+                                    value: code,
+                                    onChange: (e)=>setCode(e.target.value.replace(/\D/g, "").slice(0, 6)),
+                                    placeholder: "123456",
+                                    className: "text-center text-lg tracking-widest font-mono"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/auth/PhoneOtpVerifyDialog.tsx",
+                                    lineNumber: 126,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/auth/PhoneOtpVerifyDialog.tsx",
+                            lineNumber: 124,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "text-center text-sm text-muted-foreground",
+                            children: [
+                                "Didn't get it?",
+                                " ",
+                                /*#__PURE__*/ _jsxDEV("button", {
+                                    type: "button",
+                                    onClick: handleSend,
+                                    disabled: cooldown > 0 || sendOtp.isPending,
+                                    className: "font-semibold text-primary hover:underline disabled:opacity-50 disabled:cursor-not-allowed disabled:no-underline",
+                                    children: sendOtp.isPending ? "Sending…" : cooldown > 0 ? `Resend in ${cooldown}s` : "Resend code"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/auth/PhoneOtpVerifyDialog.tsx",
+                                    lineNumber: 140,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/auth/PhoneOtpVerifyDialog.tsx",
+                            lineNumber: 138,
+                            columnNumber: 13
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/auth/PhoneOtpVerifyDialog.tsx",
+                    lineNumber: 123,
+                    columnNumber: 11
+                }, this),
+                /*#__PURE__*/ _jsxDEV(DialogFooter, {
+                    children: [
+                        /*#__PURE__*/ _jsxDEV(Button, {
+                            variant: "ghost",
+                            onClick: ()=>onOpenChange(false),
+                            children: "Cancel"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/auth/PhoneOtpVerifyDialog.tsx",
+                            lineNumber: 157,
+                            columnNumber: 11
+                        }, this),
+                        step === "phone" ? /*#__PURE__*/ _jsxDEV(Button, {
+                            onClick: handleSend,
+                            disabled: sendOtp.isPending,
+                            children: sendOtp.isPending ? /*#__PURE__*/ _jsxDEV(_Fragment, {
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(Loader2, {
+                                        className: "w-4 h-4 mr-2 animate-spin"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/auth/PhoneOtpVerifyDialog.tsx",
+                                        lineNumber: 164,
+                                        columnNumber: 19
+                                    }, this),
+                                    "Sending…"
+                                ]
+                            }, void 0, true) : /*#__PURE__*/ _jsxDEV(_Fragment, {
+                                children: [
+                                    "Send code ",
+                                    /*#__PURE__*/ _jsxDEV(ArrowRight, {
+                                        className: "w-4 h-4 ml-1"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/auth/PhoneOtpVerifyDialog.tsx",
+                                        lineNumber: 169,
+                                        columnNumber: 29
+                                    }, this)
+                                ]
+                            }, void 0, true)
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/auth/PhoneOtpVerifyDialog.tsx",
+                            lineNumber: 161,
+                            columnNumber: 13
+                        }, this) : /*#__PURE__*/ _jsxDEV(Button, {
+                            onClick: handleVerify,
+                            disabled: verifyOtp.isPending || code.length !== 6,
+                            children: verifyOtp.isPending ? /*#__PURE__*/ _jsxDEV(_Fragment, {
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(Loader2, {
+                                        className: "w-4 h-4 mr-2 animate-spin"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/auth/PhoneOtpVerifyDialog.tsx",
+                                        lineNumber: 177,
+                                        columnNumber: 19
+                                    }, this),
+                                    "Verifying…"
+                                ]
+                            }, void 0, true) : "Verify"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/auth/PhoneOtpVerifyDialog.tsx",
+                            lineNumber: 174,
+                            columnNumber: 13
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/auth/PhoneOtpVerifyDialog.tsx",
+                    lineNumber: 156,
+                    columnNumber: 9
+                }, this)
+            ]
+        }, void 0, true, {
+            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/auth/PhoneOtpVerifyDialog.tsx",
+            lineNumber: 90,
+            columnNumber: 7
+        }, this)
+    }, void 0, false, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/auth/PhoneOtpVerifyDialog.tsx",
+        lineNumber: 89,
+        columnNumber: 5
+    }, this);
+}
+_s(PhoneOtpVerifyDialog, "exmthn7xsnhfMKDhdHnNZ5RECsI=", false, function() {
+    return [
+        useSendPhoneOTP,
+        useVerifyPhoneOTP
+    ];
+});
+_c = PhoneOtpVerifyDialog;
+var _c;
+$RefreshReg$(_c, "PhoneOtpVerifyDialog");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/auth/PhoneOtpVerifyDialog.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/auth/PhoneOtpVerifyDialog.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/auth/PhoneOtpVerifyDialog.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIlBob25lT3RwVmVyaWZ5RGlhbG9nLnRzeCJdLCJzb3VyY2VzQ29udGVudCI6WyIvKipcclxuICogUGhvbmUgT1RQIFZlcmlmaWNhdGlvbiBEaWFsb2cg4oCUIGFkZHMgU01TLWJhc2VkIDJGQSBsYXllci5cclxuICogVXNlcyBleGlzdGluZyBzZW5kLW90cC1zbXMgLyB2ZXJpZnktb3RwLXNtcyBlZGdlIGZ1bmN0aW9ucyAoVHdpbGlvIFZlcmlmeSkuXHJcbiAqIEZsb3c6IGVudGVyIHBob25lIOKGkiByZWNlaXZlIDYtZGlnaXQgU01TIGNvZGUg4oaSIHZlcmlmeSDihpIgcGhvbmUgbWFya2VkIHZlcmlmaWVkLlxyXG4gKi9cclxuaW1wb3J0IHsgdXNlRWZmZWN0LCB1c2VTdGF0ZSB9IGZyb20gXCJyZWFjdFwiO1xyXG5pbXBvcnQgeyBMb2FkZXIyLCBTbWFydHBob25lLCBTaGllbGRDaGVjaywgQXJyb3dSaWdodCB9IGZyb20gXCJsdWNpZGUtcmVhY3RcIjtcclxuaW1wb3J0IHsgc3VwYWJhc2UgfSBmcm9tIFwiQC9pbnRlZ3JhdGlvbnMvc3VwYWJhc2UvY2xpZW50XCI7XHJcbmltcG9ydCB7IEJ1dHRvbiB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvYnV0dG9uXCI7XHJcbmltcG9ydCB7XHJcbiAgRGlhbG9nLFxyXG4gIERpYWxvZ0NvbnRlbnQsXHJcbiAgRGlhbG9nRGVzY3JpcHRpb24sXHJcbiAgRGlhbG9nRm9vdGVyLFxyXG4gIERpYWxvZ0hlYWRlcixcclxuICBEaWFsb2dUaXRsZSxcclxufSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2RpYWxvZ1wiO1xyXG5pbXBvcnQgeyBJbnB1dCB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvaW5wdXRcIjtcclxuaW1wb3J0IHsgTGFiZWwgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2xhYmVsXCI7XHJcbmltcG9ydCB7IENvdW50cnlQaG9uZUlucHV0IH0gZnJvbSBcIkAvY29tcG9uZW50cy9hdXRoL0NvdW50cnlQaG9uZUlucHV0XCI7XHJcbmltcG9ydCB7IHVzZVNlbmRQaG9uZU9UUCwgdXNlVmVyaWZ5UGhvbmVPVFAgfSBmcm9tIFwiQC9ob29rcy91c2VOb3RpZmljYXRpb25QcmVmZXJlbmNlc1wiO1xyXG5pbXBvcnQgeyBub3JtYWxpemVQaG9uZUUxNjQgfSBmcm9tIFwiQC9saWIvcGhvbmVcIjtcclxuaW1wb3J0IHsgdG9hc3QgfSBmcm9tIFwic29ubmVyXCI7XHJcblxyXG5pbnRlcmZhY2UgUHJvcHMge1xyXG4gIG9wZW46IGJvb2xlYW47XHJcbiAgb25PcGVuQ2hhbmdlOiAob3BlbjogYm9vbGVhbikgPT4gdm9pZDtcclxuICBvblZlcmlmaWVkOiAoKSA9PiB2b2lkO1xyXG4gIGluaXRpYWxQaG9uZT86IHN0cmluZztcclxufVxyXG5cclxuY29uc3QgUkVTRU5EX0NPT0xET1dOID0gMzA7XHJcblxyXG5leHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBQaG9uZU90cFZlcmlmeURpYWxvZyh7IG9wZW4sIG9uT3BlbkNoYW5nZSwgb25WZXJpZmllZCwgaW5pdGlhbFBob25lIH06IFByb3BzKSB7XHJcbiAgY29uc3QgW3N0ZXAsIHNldFN0ZXBdID0gdXNlU3RhdGU8XCJwaG9uZVwiIHwgXCJjb2RlXCI+KFwicGhvbmVcIik7XHJcbiAgY29uc3QgW3Bob25lLCBzZXRQaG9uZV0gPSB1c2VTdGF0ZShpbml0aWFsUGhvbmUgfHwgXCJcIik7XHJcbiAgY29uc3QgW2NvZGUsIHNldENvZGVdID0gdXNlU3RhdGUoXCJcIik7XHJcbiAgY29uc3QgW2Nvb2xkb3duLCBzZXRDb29sZG93bl0gPSB1c2VTdGF0ZSgwKTtcclxuXHJcbiAgY29uc3Qgc2VuZE90cCA9IHVzZVNlbmRQaG9uZU9UUCgpO1xyXG4gIGNvbnN0IHZlcmlmeU90cCA9IHVzZVZlcmlmeVBob25lT1RQKCk7XHJcblxyXG4gIHVzZUVmZmVjdCgoKSA9PiB7XHJcbiAgICBpZiAoIW9wZW4pIHtcclxuICAgICAgc2V0U3RlcChcInBob25lXCIpO1xyXG4gICAgICBzZXRDb2RlKFwiXCIpO1xyXG4gICAgICBzZXRDb29sZG93bigwKTtcclxuICAgIH0gZWxzZSB7XHJcbiAgICAgIHNldFBob25lKGluaXRpYWxQaG9uZSB8fCBcIlwiKTtcclxuICAgIH1cclxuICB9LCBbb3BlbiwgaW5pdGlhbFBob25lXSk7XHJcblxyXG4gIHVzZUVmZmVjdCgoKSA9PiB7XHJcbiAgICBpZiAoY29vbGRvd24gPD0gMCkgcmV0dXJuO1xyXG4gICAgY29uc3QgdCA9IHNldFRpbWVvdXQoKCkgPT4gc2V0Q29vbGRvd24oKGMpID0+IGMgLSAxKSwgMTAwMCk7XHJcbiAgICByZXR1cm4gKCkgPT4gY2xlYXJUaW1lb3V0KHQpO1xyXG4gIH0sIFtjb29sZG93bl0pO1xyXG5cclxuICBjb25zdCBoYW5kbGVTZW5kID0gYXN5bmMgKCkgPT4ge1xyXG4gICAgY29uc3QgZTE2NCA9IG5vcm1hbGl6ZVBob25lRTE2NChwaG9uZSk7XHJcbiAgICBpZiAoIWUxNjQgfHwgZTE2NC5sZW5ndGggPCA4KSB7XHJcbiAgICAgIHRvYXN0LmVycm9yKFwiUGxlYXNlIGVudGVyIGEgdmFsaWQgcGhvbmUgbnVtYmVyXCIpO1xyXG4gICAgICByZXR1cm47XHJcbiAgICB9XHJcbiAgICB0cnkge1xyXG4gICAgICBhd2FpdCBzZW5kT3RwLm11dGF0ZUFzeW5jKGUxNjQpO1xyXG4gICAgICBzZXRTdGVwKFwiY29kZVwiKTtcclxuICAgICAgc2V0Q29vbGRvd24oUkVTRU5EX0NPT0xET1dOKTtcclxuICAgIH0gY2F0Y2gge1xyXG4gICAgICAvKiB0b2FzdCBoYW5kbGVkIGluIGhvb2sgKi9cclxuICAgIH1cclxuICB9O1xyXG5cclxuICBjb25zdCBoYW5kbGVWZXJpZnkgPSBhc3luYyAoKSA9PiB7XHJcbiAgICBpZiAoY29kZS5sZW5ndGggIT09IDYpIHtcclxuICAgICAgdG9hc3QuZXJyb3IoXCJFbnRlciB0aGUgNi1kaWdpdCBjb2RlXCIpO1xyXG4gICAgICByZXR1cm47XHJcbiAgICB9XHJcbiAgICB0cnkge1xyXG4gICAgICBhd2FpdCB2ZXJpZnlPdHAubXV0YXRlQXN5bmMoeyBwaG9uZUUxNjQ6IG5vcm1hbGl6ZVBob25lRTE2NChwaG9uZSksIGNvZGUgfSk7XHJcbiAgICAgIG9uVmVyaWZpZWQoKTtcclxuICAgICAgb25PcGVuQ2hhbmdlKGZhbHNlKTtcclxuICAgIH0gY2F0Y2gge1xyXG4gICAgICBzZXRDb2RlKFwiXCIpO1xyXG4gICAgfVxyXG4gIH07XHJcblxyXG4gIHJldHVybiAoXHJcbiAgICA8RGlhbG9nIG9wZW49e29wZW59IG9uT3BlbkNoYW5nZT17b25PcGVuQ2hhbmdlfT5cclxuICAgICAgPERpYWxvZ0NvbnRlbnQgY2xhc3NOYW1lPVwibWF4LXctbWRcIj5cclxuICAgICAgICA8RGlhbG9nSGVhZGVyPlxyXG4gICAgICAgICAgPERpYWxvZ1RpdGxlIGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0yXCI+XHJcbiAgICAgICAgICAgIHtzdGVwID09PSBcInBob25lXCIgPyAoXHJcbiAgICAgICAgICAgICAgPD5cclxuICAgICAgICAgICAgICAgIDxTbWFydHBob25lIGNsYXNzTmFtZT1cInctNSBoLTUgdGV4dC1wcmltYXJ5XCIgLz5cclxuICAgICAgICAgICAgICAgIFZlcmlmeSB5b3VyIHBob25lIG51bWJlclxyXG4gICAgICAgICAgICAgIDwvPlxyXG4gICAgICAgICAgICApIDogKFxyXG4gICAgICAgICAgICAgIDw+XHJcbiAgICAgICAgICAgICAgICA8U2hpZWxkQ2hlY2sgY2xhc3NOYW1lPVwidy01IGgtNSB0ZXh0LXByaW1hcnlcIiAvPlxyXG4gICAgICAgICAgICAgICAgRW50ZXIgdmVyaWZpY2F0aW9uIGNvZGVcclxuICAgICAgICAgICAgICA8Lz5cclxuICAgICAgICAgICAgKX1cclxuICAgICAgICAgIDwvRGlhbG9nVGl0bGU+XHJcbiAgICAgICAgICA8RGlhbG9nRGVzY3JpcHRpb24+XHJcbiAgICAgICAgICAgIHtzdGVwID09PSBcInBob25lXCJcclxuICAgICAgICAgICAgICA/IFwiV2UnbGwgc2VuZCBhIDYtZGlnaXQgY29kZSB2aWEgU01TIHRvIGNvbmZpcm0gdGhpcyBpcyB5b3VyIHBob25lLlwiXHJcbiAgICAgICAgICAgICAgOiBgQ29kZSBzZW50IHRvICR7cGhvbmV9LiBFbnRlciBpdCBiZWxvdyB0byBjb21wbGV0ZSB2ZXJpZmljYXRpb24uYH1cclxuICAgICAgICAgIDwvRGlhbG9nRGVzY3JpcHRpb24+XHJcbiAgICAgICAgPC9EaWFsb2dIZWFkZXI+XHJcblxyXG4gICAgICAgIHtzdGVwID09PSBcInBob25lXCIgJiYgKFxyXG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTMgcHktMlwiPlxyXG4gICAgICAgICAgICA8TGFiZWw+TW9iaWxlIG51bWJlcjwvTGFiZWw+XHJcbiAgICAgICAgICAgIDxDb3VudHJ5UGhvbmVJbnB1dCB2YWx1ZT17cGhvbmV9IG9uQ2hhbmdlPXtzZXRQaG9uZX0gLz5cclxuICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC14cyB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5cclxuICAgICAgICAgICAgICBTdGFuZGFyZCBTTVMgcmF0ZXMgbWF5IGFwcGx5LiBDYXJyaWVyIGRlbGl2ZXJ5IHRpbWVzIHZhcnkuXHJcbiAgICAgICAgICAgIDwvcD5cclxuICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICl9XHJcblxyXG4gICAgICAgIHtzdGVwID09PSBcImNvZGVcIiAmJiAoXHJcbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktNCBweS0yXCI+XHJcbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS0xLjVcIj5cclxuICAgICAgICAgICAgICA8TGFiZWwgaHRtbEZvcj1cInNtcy1jb2RlXCI+Ni1kaWdpdCBjb2RlPC9MYWJlbD5cclxuICAgICAgICAgICAgICA8SW5wdXRcclxuICAgICAgICAgICAgICAgIGlkPVwic21zLWNvZGVcIlxyXG4gICAgICAgICAgICAgICAgaW5wdXRNb2RlPVwibnVtZXJpY1wiXHJcbiAgICAgICAgICAgICAgICBwYXR0ZXJuPVwiWzAtOV0qXCJcclxuICAgICAgICAgICAgICAgIG1heExlbmd0aD17Nn1cclxuICAgICAgICAgICAgICAgIGF1dG9Db21wbGV0ZT1cIm9uZS10aW1lLWNvZGVcIlxyXG4gICAgICAgICAgICAgICAgdmFsdWU9e2NvZGV9XHJcbiAgICAgICAgICAgICAgICBvbkNoYW5nZT17KGUpID0+IHNldENvZGUoZS50YXJnZXQudmFsdWUucmVwbGFjZSgvXFxEL2csIFwiXCIpLnNsaWNlKDAsIDYpKX1cclxuICAgICAgICAgICAgICAgIHBsYWNlaG9sZGVyPVwiMTIzNDU2XCJcclxuICAgICAgICAgICAgICAgIGNsYXNzTmFtZT1cInRleHQtY2VudGVyIHRleHQtbGcgdHJhY2tpbmctd2lkZXN0IGZvbnQtbW9ub1wiXHJcbiAgICAgICAgICAgICAgLz5cclxuICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidGV4dC1jZW50ZXIgdGV4dC1zbSB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5cclxuICAgICAgICAgICAgICBEaWRuJ3QgZ2V0IGl0P3tcIiBcIn1cclxuICAgICAgICAgICAgICA8YnV0dG9uXHJcbiAgICAgICAgICAgICAgICB0eXBlPVwiYnV0dG9uXCJcclxuICAgICAgICAgICAgICAgIG9uQ2xpY2s9e2hhbmRsZVNlbmR9XHJcbiAgICAgICAgICAgICAgICBkaXNhYmxlZD17Y29vbGRvd24gPiAwIHx8IHNlbmRPdHAuaXNQZW5kaW5nfVxyXG4gICAgICAgICAgICAgICAgY2xhc3NOYW1lPVwiZm9udC1zZW1pYm9sZCB0ZXh0LXByaW1hcnkgaG92ZXI6dW5kZXJsaW5lIGRpc2FibGVkOm9wYWNpdHktNTAgZGlzYWJsZWQ6Y3Vyc29yLW5vdC1hbGxvd2VkIGRpc2FibGVkOm5vLXVuZGVybGluZVwiXHJcbiAgICAgICAgICAgICAgPlxyXG4gICAgICAgICAgICAgICAge3NlbmRPdHAuaXNQZW5kaW5nXHJcbiAgICAgICAgICAgICAgICAgID8gXCJTZW5kaW5n4oCmXCJcclxuICAgICAgICAgICAgICAgICAgOiBjb29sZG93biA+IDBcclxuICAgICAgICAgICAgICAgICAgPyBgUmVzZW5kIGluICR7Y29vbGRvd259c2BcclxuICAgICAgICAgICAgICAgICAgOiBcIlJlc2VuZCBjb2RlXCJ9XHJcbiAgICAgICAgICAgICAgPC9idXR0b24+XHJcbiAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgKX1cclxuXHJcbiAgICAgICAgPERpYWxvZ0Zvb3Rlcj5cclxuICAgICAgICAgIDxCdXR0b24gdmFyaWFudD1cImdob3N0XCIgb25DbGljaz17KCkgPT4gb25PcGVuQ2hhbmdlKGZhbHNlKX0+XHJcbiAgICAgICAgICAgIENhbmNlbFxyXG4gICAgICAgICAgPC9CdXR0b24+XHJcbiAgICAgICAgICB7c3RlcCA9PT0gXCJwaG9uZVwiID8gKFxyXG4gICAgICAgICAgICA8QnV0dG9uIG9uQ2xpY2s9e2hhbmRsZVNlbmR9IGRpc2FibGVkPXtzZW5kT3RwLmlzUGVuZGluZ30+XHJcbiAgICAgICAgICAgICAge3NlbmRPdHAuaXNQZW5kaW5nID8gKFxyXG4gICAgICAgICAgICAgICAgPD5cclxuICAgICAgICAgICAgICAgICAgPExvYWRlcjIgY2xhc3NOYW1lPVwidy00IGgtNCBtci0yIGFuaW1hdGUtc3BpblwiIC8+XHJcbiAgICAgICAgICAgICAgICAgIFNlbmRpbmfigKZcclxuICAgICAgICAgICAgICAgIDwvPlxyXG4gICAgICAgICAgICAgICkgOiAoXHJcbiAgICAgICAgICAgICAgICA8PlxyXG4gICAgICAgICAgICAgICAgICBTZW5kIGNvZGUgPEFycm93UmlnaHQgY2xhc3NOYW1lPVwidy00IGgtNCBtbC0xXCIgLz5cclxuICAgICAgICAgICAgICAgIDwvPlxyXG4gICAgICAgICAgICAgICl9XHJcbiAgICAgICAgICAgIDwvQnV0dG9uPlxyXG4gICAgICAgICAgKSA6IChcclxuICAgICAgICAgICAgPEJ1dHRvbiBvbkNsaWNrPXtoYW5kbGVWZXJpZnl9IGRpc2FibGVkPXt2ZXJpZnlPdHAuaXNQZW5kaW5nIHx8IGNvZGUubGVuZ3RoICE9PSA2fT5cclxuICAgICAgICAgICAgICB7dmVyaWZ5T3RwLmlzUGVuZGluZyA/IChcclxuICAgICAgICAgICAgICAgIDw+XHJcbiAgICAgICAgICAgICAgICAgIDxMb2FkZXIyIGNsYXNzTmFtZT1cInctNCBoLTQgbXItMiBhbmltYXRlLXNwaW5cIiAvPlxyXG4gICAgICAgICAgICAgICAgICBWZXJpZnlpbmfigKZcclxuICAgICAgICAgICAgICAgIDwvPlxyXG4gICAgICAgICAgICAgICkgOiAoXHJcbiAgICAgICAgICAgICAgICBcIlZlcmlmeVwiXHJcbiAgICAgICAgICAgICAgKX1cclxuICAgICAgICAgICAgPC9CdXR0b24+XHJcbiAgICAgICAgICApfVxyXG4gICAgICAgIDwvRGlhbG9nRm9vdGVyPlxyXG4gICAgICA8L0RpYWxvZ0NvbnRlbnQ+XHJcbiAgICA8L0RpYWxvZz5cclxuICApO1xyXG59XHJcbiJdLCJuYW1lcyI6WyJ1c2VFZmZlY3QiLCJ1c2VTdGF0ZSIsIkxvYWRlcjIiLCJTbWFydHBob25lIiwiU2hpZWxkQ2hlY2siLCJBcnJvd1JpZ2h0IiwiQnV0dG9uIiwiRGlhbG9nIiwiRGlhbG9nQ29udGVudCIsIkRpYWxvZ0Rlc2NyaXB0aW9uIiwiRGlhbG9nRm9vdGVyIiwiRGlhbG9nSGVhZGVyIiwiRGlhbG9nVGl0bGUiLCJJbnB1dCIsIkxhYmVsIiwiQ291bnRyeVBob25lSW5wdXQiLCJ1c2VTZW5kUGhvbmVPVFAiLCJ1c2VWZXJpZnlQaG9uZU9UUCIsIm5vcm1hbGl6ZVBob25lRTE2NCIsInRvYXN0IiwiUkVTRU5EX0NPT0xET1dOIiwiUGhvbmVPdHBWZXJpZnlEaWFsb2ciLCJvcGVuIiwib25PcGVuQ2hhbmdlIiwib25WZXJpZmllZCIsImluaXRpYWxQaG9uZSIsInN0ZXAiLCJzZXRTdGVwIiwicGhvbmUiLCJzZXRQaG9uZSIsImNvZGUiLCJzZXRDb2RlIiwiY29vbGRvd24iLCJzZXRDb29sZG93biIsInNlbmRPdHAiLCJ2ZXJpZnlPdHAiLCJ0Iiwic2V0VGltZW91dCIsImMiLCJjbGVhclRpbWVvdXQiLCJoYW5kbGVTZW5kIiwiZTE2NCIsImxlbmd0aCIsImVycm9yIiwibXV0YXRlQXN5bmMiLCJoYW5kbGVWZXJpZnkiLCJwaG9uZUUxNjQiLCJjbGFzc05hbWUiLCJkaXYiLCJ2YWx1ZSIsIm9uQ2hhbmdlIiwicCIsImh0bWxGb3IiLCJpZCIsImlucHV0TW9kZSIsInBhdHRlcm4iLCJtYXhMZW5ndGgiLCJhdXRvQ29tcGxldGUiLCJlIiwidGFyZ2V0IiwicmVwbGFjZSIsInNsaWNlIiwicGxhY2Vob2xkZXIiLCJidXR0b24iLCJ0eXBlIiwib25DbGljayIsImRpc2FibGVkIiwiaXNQZW5kaW5nIiwidmFyaWFudCJdLCJtYXBwaW5ncyI6Ijs7QUFBQTs7OztDQUlDLEdBQ0QsU0FBU0EsU0FBUyxFQUFFQyxRQUFRLFFBQVEsUUFBUTtBQUM1QyxTQUFTQyxPQUFPLEVBQUVDLFVBQVUsRUFBRUMsV0FBVyxFQUFFQyxVQUFVLFFBQVEsZUFBZTtBQUU1RSxTQUFTQyxNQUFNLFFBQVEseUJBQXlCO0FBQ2hELFNBQ0VDLE1BQU0sRUFDTkMsYUFBYSxFQUNiQyxpQkFBaUIsRUFDakJDLFlBQVksRUFDWkMsWUFBWSxFQUNaQyxXQUFXLFFBQ04seUJBQXlCO0FBQ2hDLFNBQVNDLEtBQUssUUFBUSx3QkFBd0I7QUFDOUMsU0FBU0MsS0FBSyxRQUFRLHdCQUF3QjtBQUM5QyxTQUFTQyxpQkFBaUIsUUFBUSxzQ0FBc0M7QUFDeEUsU0FBU0MsZUFBZSxFQUFFQyxpQkFBaUIsUUFBUSxxQ0FBcUM7QUFDeEYsU0FBU0Msa0JBQWtCLFFBQVEsY0FBYztBQUNqRCxTQUFTQyxLQUFLLFFBQVEsU0FBUztBQVMvQixNQUFNQyxrQkFBa0I7QUFFeEIsZUFBZSxTQUFTQyxxQkFBcUIsRUFBRUMsSUFBSSxFQUFFQyxZ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

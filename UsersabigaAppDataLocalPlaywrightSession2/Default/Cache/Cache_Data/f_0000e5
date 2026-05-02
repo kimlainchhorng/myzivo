@@ -1,0 +1,680 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+var _s = $RefreshSig$();
+/**
+ * Auto Repair — Service Reminders & Recalls
+ */ import __vite__cjsImport1_react from "/node_modules/.vite/deps/react.js?v=7fd9520c"; const useState = __vite__cjsImport1_react["useState"];
+import { useQuery, useMutation, useQueryClient } from "/node_modules/.vite/deps/@tanstack_react-query.js?v=7fd9520c";
+import { supabase } from "/src/integrations/supabase/client.ts";
+import { Card, CardContent, CardHeader, CardTitle } from "/src/components/ui/card.tsx";
+import { Button } from "/src/components/ui/button.tsx";
+import { Input } from "/src/components/ui/input.tsx";
+import { Textarea } from "/src/components/ui/textarea.tsx";
+import { Badge } from "/src/components/ui/badge.tsx";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "/src/components/ui/tabs.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "/src/components/ui/dialog.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "/src/components/ui/select.tsx";
+import { BellRing, Plus, Search, ShieldAlert } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+import { toast } from "/node_modules/.vite/deps/sonner.js?v=7fd9520c";
+export default function AutoRepairRemindersSection({ storeId }) {
+    _s();
+    const qc = useQueryClient();
+    const [open, setOpen] = useState(false);
+    const [vin, setVin] = useState("");
+    const [recallLoading, setRecallLoading] = useState(false);
+    const [form, setForm] = useState({
+        reminder_type: "Oil change",
+        channel: "email",
+        message: "",
+        due_at: ""
+    });
+    const { data: reminders = [] } = useQuery({
+        queryKey: [
+            "ar-reminders",
+            storeId
+        ],
+        queryFn: async ()=>{
+            const { data, error } = await supabase.from("ar_service_reminders").select("*").eq("store_id", storeId).order("due_at", {
+                ascending: true
+            });
+            if (error) throw error;
+            return data;
+        }
+    });
+    const { data: recalls = [] } = useQuery({
+        queryKey: [
+            "ar-recalls",
+            storeId
+        ],
+        queryFn: async ()=>{
+            const { data, error } = await supabase.from("ar_recall_checks").select("*").eq("store_id", storeId).order("fetched_at", {
+                ascending: false
+            });
+            if (error) throw error;
+            return data;
+        }
+    });
+    const create = useMutation({
+        mutationFn: async ()=>{
+            const payload = {
+                store_id: storeId,
+                ...form
+            };
+            if (!form.due_at) delete payload.due_at;
+            const { error } = await supabase.from("ar_service_reminders").insert(payload);
+            if (error) throw error;
+        },
+        onSuccess: ()=>{
+            toast.success("Reminder scheduled");
+            qc.invalidateQueries({
+                queryKey: [
+                    "ar-reminders",
+                    storeId
+                ]
+            });
+            setOpen(false);
+            setForm({
+                reminder_type: "Oil change",
+                channel: "email",
+                message: "",
+                due_at: ""
+            });
+        },
+        onError: (e)=>toast.error(e.message ?? "Failed")
+    });
+    const lookupRecall = async ()=>{
+        if (!vin || vin.length < 11) {
+            toast.error("Enter a valid VIN");
+            return;
+        }
+        setRecallLoading(true);
+        try {
+            // NHTSA decode then recall lookup
+            const decode = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/decodevinvalues/${vin}?format=json`).then((r)=>r.json());
+            const rec = decode?.Results?.[0] || {};
+            const make = rec.Make, model = rec.Model, year = rec.ModelYear;
+            let summary = "No recalls found.";
+            let severity = "none";
+            let campaignId = null;
+            if (make && model && year) {
+                const r = await fetch(`https://api.nhtsa.gov/recalls/recallsByVehicle?make=${make}&model=${model}&modelYear=${year}`).then((r)=>r.json());
+                const items = r?.results || [];
+                if (items.length > 0) {
+                    summary = `${items.length} recall(s): ${items.slice(0, 2).map((i)=>i.Component).join("; ")}`;
+                    severity = "high";
+                    campaignId = items[0]?.NHTSACampaignNumber ?? null;
+                }
+            }
+            const { error } = await supabase.from("ar_recall_checks").insert({
+                store_id: storeId,
+                vin,
+                summary,
+                severity,
+                campaign_id: campaignId
+            });
+            if (error) throw error;
+            toast.success("Recall check saved");
+            qc.invalidateQueries({
+                queryKey: [
+                    "ar-recalls",
+                    storeId
+                ]
+            });
+            setVin("");
+        } catch (e) {
+            toast.error(e.message ?? "Lookup failed");
+        } finally{
+            setRecallLoading(false);
+        }
+    };
+    return /*#__PURE__*/ _jsxDEV("div", {
+        className: "space-y-4",
+        children: [
+            /*#__PURE__*/ _jsxDEV(Card, {
+                children: /*#__PURE__*/ _jsxDEV(CardHeader, {
+                    children: /*#__PURE__*/ _jsxDEV(CardTitle, {
+                        className: "text-base flex items-center gap-2",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(BellRing, {
+                                className: "w-4 h-4"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                lineNumber: 99,
+                                columnNumber: 68
+                            }, this),
+                            " Reminders & Recalls"
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                        lineNumber: 99,
+                        columnNumber: 11
+                    }, this)
+                }, void 0, false, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                    lineNumber: 98,
+                    columnNumber: 9
+                }, this)
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                lineNumber: 97,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV(Tabs, {
+                defaultValue: "reminders",
+                children: [
+                    /*#__PURE__*/ _jsxDEV(TabsList, {
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(TabsTrigger, {
+                                value: "reminders",
+                                children: [
+                                    "Reminders (",
+                                    reminders.length,
+                                    ")"
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                lineNumber: 105,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(TabsTrigger, {
+                                value: "recalls",
+                                children: [
+                                    "Recalls (",
+                                    recalls.length,
+                                    ")"
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                lineNumber: 106,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                        lineNumber: 104,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(TabsContent, {
+                        value: "reminders",
+                        className: "space-y-3",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "flex justify-end",
+                                children: /*#__PURE__*/ _jsxDEV(Button, {
+                                    size: "sm",
+                                    className: "gap-1.5",
+                                    onClick: ()=>setOpen(true),
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Plus, {
+                                            className: "w-3.5 h-3.5"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                            lineNumber: 111,
+                                            columnNumber: 81
+                                        }, this),
+                                        " Schedule Reminder"
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                    lineNumber: 111,
+                                    columnNumber: 13
+                                }, this)
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                lineNumber: 110,
+                                columnNumber: 11
+                            }, this),
+                            reminders.length === 0 ? /*#__PURE__*/ _jsxDEV(Card, {
+                                children: /*#__PURE__*/ _jsxDEV(CardContent, {
+                                    className: "py-10 text-center text-sm text-muted-foreground",
+                                    children: "No reminders scheduled."
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                    lineNumber: 114,
+                                    columnNumber: 19
+                                }, this)
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                lineNumber: 114,
+                                columnNumber: 13
+                            }, this) : /*#__PURE__*/ _jsxDEV("div", {
+                                className: "grid gap-2",
+                                children: reminders.map((r)=>/*#__PURE__*/ _jsxDEV(Card, {
+                                        children: /*#__PURE__*/ _jsxDEV(CardContent, {
+                                            className: "p-4 flex items-center justify-between",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV("div", {
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxDEV("p", {
+                                                            className: "font-semibold",
+                                                            children: r.reminder_type
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                                            lineNumber: 121,
+                                                            columnNumber: 23
+                                                        }, this),
+                                                        /*#__PURE__*/ _jsxDEV("p", {
+                                                            className: "text-xs text-muted-foreground",
+                                                            children: [
+                                                                r.due_at ? new Date(r.due_at).toLocaleDateString() : r.due_mileage ? `${r.due_mileage} mi` : "—",
+                                                                " · ",
+                                                                r.channel
+                                                            ]
+                                                        }, void 0, true, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                                            lineNumber: 122,
+                                                            columnNumber: 23
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                                    lineNumber: 120,
+                                                    columnNumber: 21
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV(Badge, {
+                                                    variant: "outline",
+                                                    className: "capitalize",
+                                                    children: r.status
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                                    lineNumber: 126,
+                                                    columnNumber: 21
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                            lineNumber: 119,
+                                            columnNumber: 19
+                                        }, this)
+                                    }, r.id, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                        lineNumber: 118,
+                                        columnNumber: 17
+                                    }, this))
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                lineNumber: 116,
+                                columnNumber: 13
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                        lineNumber: 109,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(TabsContent, {
+                        value: "recalls",
+                        className: "space-y-3",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(Card, {
+                                children: /*#__PURE__*/ _jsxDEV(CardContent, {
+                                    className: "p-4 space-y-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV("p", {
+                                            className: "text-xs font-semibold text-muted-foreground flex items-center gap-1.5",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV(ShieldAlert, {
+                                                    className: "w-3.5 h-3.5"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                                    lineNumber: 137,
+                                                    columnNumber: 100
+                                                }, this),
+                                                " NHTSA Recall Lookup"
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                            lineNumber: 137,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("div", {
+                                            className: "flex gap-2",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV("div", {
+                                                    className: "relative flex-1",
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxDEV(Search, {
+                                                            className: "absolute left-2.5 top-2.5 w-4 h-4 text-muted-foreground"
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                                            lineNumber: 140,
+                                                            columnNumber: 19
+                                                        }, this),
+                                                        /*#__PURE__*/ _jsxDEV(Input, {
+                                                            placeholder: "Enter VIN",
+                                                            className: "pl-9 font-mono uppercase",
+                                                            value: vin,
+                                                            onChange: (e)=>setVin(e.target.value.toUpperCase())
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                                            lineNumber: 141,
+                                                            columnNumber: 19
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                                    lineNumber: 139,
+                                                    columnNumber: 17
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV(Button, {
+                                                    onClick: lookupRecall,
+                                                    disabled: recallLoading,
+                                                    children: recallLoading ? "Checking…" : "Check"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                                    lineNumber: 143,
+                                                    columnNumber: 17
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                            lineNumber: 138,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                    lineNumber: 136,
+                                    columnNumber: 13
+                                }, this)
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                lineNumber: 135,
+                                columnNumber: 11
+                            }, this),
+                            recalls.length === 0 ? /*#__PURE__*/ _jsxDEV(Card, {
+                                children: /*#__PURE__*/ _jsxDEV(CardContent, {
+                                    className: "py-10 text-center text-sm text-muted-foreground",
+                                    children: "No recall checks yet."
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                    lineNumber: 148,
+                                    columnNumber: 19
+                                }, this)
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                lineNumber: 148,
+                                columnNumber: 13
+                            }, this) : /*#__PURE__*/ _jsxDEV("div", {
+                                className: "grid gap-2",
+                                children: recalls.map((r)=>/*#__PURE__*/ _jsxDEV(Card, {
+                                        children: /*#__PURE__*/ _jsxDEV(CardContent, {
+                                            className: "p-4 flex items-start justify-between gap-3",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV("div", {
+                                                    className: "min-w-0",
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxDEV("p", {
+                                                            className: "font-mono text-sm",
+                                                            children: r.vin
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                                            lineNumber: 155,
+                                                            columnNumber: 23
+                                                        }, this),
+                                                        /*#__PURE__*/ _jsxDEV("p", {
+                                                            className: "text-xs text-muted-foreground",
+                                                            children: r.summary
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                                            lineNumber: 156,
+                                                            columnNumber: 23
+                                                        }, this),
+                                                        r.campaign_id && /*#__PURE__*/ _jsxDEV("p", {
+                                                            className: "text-[10px] text-muted-foreground",
+                                                            children: [
+                                                                "Campaign: ",
+                                                                r.campaign_id
+                                                            ]
+                                                        }, void 0, true, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                                            lineNumber: 157,
+                                                            columnNumber: 41
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                                    lineNumber: 154,
+                                                    columnNumber: 21
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV(Badge, {
+                                                    variant: r.severity === "high" ? "destructive" : "outline",
+                                                    children: r.severity ?? "—"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                                    lineNumber: 159,
+                                                    columnNumber: 21
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                            lineNumber: 153,
+                                            columnNumber: 19
+                                        }, this)
+                                    }, r.id, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                        lineNumber: 152,
+                                        columnNumber: 17
+                                    }, this))
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                lineNumber: 150,
+                                columnNumber: 13
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                        lineNumber: 134,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                lineNumber: 103,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV(Dialog, {
+                open: open,
+                onOpenChange: setOpen,
+                children: /*#__PURE__*/ _jsxDEV(DialogContent, {
+                    className: "max-w-md",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV(DialogHeader, {
+                            children: /*#__PURE__*/ _jsxDEV(DialogTitle, {
+                                children: "Schedule Reminder"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                lineNumber: 170,
+                                columnNumber: 25
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                            lineNumber: 170,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "space-y-2",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV(Input, {
+                                    placeholder: "Reminder type",
+                                    value: form.reminder_type,
+                                    onChange: (e)=>setForm({
+                                            ...form,
+                                            reminder_type: e.target.value
+                                        })
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                    lineNumber: 172,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV(Input, {
+                                    type: "datetime-local",
+                                    value: form.due_at,
+                                    onChange: (e)=>setForm({
+                                            ...form,
+                                            due_at: e.target.value
+                                        })
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                    lineNumber: 173,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV(Select, {
+                                    value: form.channel,
+                                    onValueChange: (v)=>setForm({
+                                            ...form,
+                                            channel: v
+                                        }),
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(SelectTrigger, {
+                                            children: /*#__PURE__*/ _jsxDEV(SelectValue, {}, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                                lineNumber: 175,
+                                                columnNumber: 30
+                                            }, this)
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                            lineNumber: 175,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV(SelectContent, {
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                    value: "email",
+                                                    children: "Email"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                                    lineNumber: 177,
+                                                    columnNumber: 17
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                    value: "sms",
+                                                    children: "SMS"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                                    lineNumber: 178,
+                                                    columnNumber: 17
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                    value: "push",
+                                                    children: "Push"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                                    lineNumber: 179,
+                                                    columnNumber: 17
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                    value: "inapp",
+                                                    children: "In-app"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                                    lineNumber: 180,
+                                                    columnNumber: 17
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                            lineNumber: 176,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                    lineNumber: 174,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV(Textarea, {
+                                    placeholder: "Message",
+                                    value: form.message,
+                                    onChange: (e)=>setForm({
+                                            ...form,
+                                            message: e.target.value
+                                        })
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                    lineNumber: 183,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                            lineNumber: 171,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV(DialogFooter, {
+                            children: [
+                                /*#__PURE__*/ _jsxDEV(Button, {
+                                    variant: "outline",
+                                    onClick: ()=>setOpen(false),
+                                    children: "Cancel"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                    lineNumber: 186,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV(Button, {
+                                    onClick: ()=>create.mutate(),
+                                    children: "Schedule"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                                    lineNumber: 187,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                            lineNumber: 185,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                    lineNumber: 169,
+                    columnNumber: 9
+                }, this)
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+                lineNumber: 168,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx",
+        lineNumber: 96,
+        columnNumber: 5
+    }, this);
+}
+_s(AutoRepairRemindersSection, "vKeGKurEAImAtCmG55F4wuHfsYc=", false, function() {
+    return [
+        useQueryClient,
+        useQuery,
+        useQuery,
+        useMutation
+    ];
+});
+_c = AutoRepairRemindersSection;
+var _c;
+$RefreshReg$(_c, "AutoRepairRemindersSection");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairRemindersSection.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIkF1dG9SZXBhaXJSZW1pbmRlcnNTZWN0aW9uLnRzeCJdLCJzb3VyY2VzQ29udGVudCI6WyIvKipcclxuICogQXV0byBSZXBhaXIg4oCUIFNlcnZpY2UgUmVtaW5kZXJzICYgUmVjYWxsc1xyXG4gKi9cclxuaW1wb3J0IHsgdXNlU3RhdGUgfSBmcm9tIFwicmVhY3RcIjtcclxuaW1wb3J0IHsgdXNlUXVlcnksIHVzZU11dGF0aW9uLCB1c2VRdWVyeUNsaWVudCB9IGZyb20gXCJAdGFuc3RhY2svcmVhY3QtcXVlcnlcIjtcclxuaW1wb3J0IHsgc3VwYWJhc2UgfSBmcm9tIFwiQC9pbnRlZ3JhdGlvbnMvc3VwYWJhc2UvY2xpZW50XCI7XHJcbmltcG9ydCB7IENhcmQsIENhcmRDb250ZW50LCBDYXJkSGVhZGVyLCBDYXJkVGl0bGUgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2NhcmRcIjtcclxuaW1wb3J0IHsgQnV0dG9uIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9idXR0b25cIjtcclxuaW1wb3J0IHsgSW5wdXQgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2lucHV0XCI7XHJcbmltcG9ydCB7IFRleHRhcmVhIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS90ZXh0YXJlYVwiO1xyXG5pbXBvcnQgeyBCYWRnZSB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvYmFkZ2VcIjtcclxuaW1wb3J0IHsgVGFicywgVGFic0NvbnRlbnQsIFRhYnNMaXN0LCBUYWJzVHJpZ2dlciB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvdGFic1wiO1xyXG5pbXBvcnQgeyBEaWFsb2csIERpYWxvZ0NvbnRlbnQsIERpYWxvZ0hlYWRlciwgRGlhbG9nVGl0bGUsIERpYWxvZ0Zvb3RlciB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvZGlhbG9nXCI7XHJcbmltcG9ydCB7IFNlbGVjdCwgU2VsZWN0Q29udGVudCwgU2VsZWN0SXRlbSwgU2VsZWN0VHJpZ2dlciwgU2VsZWN0VmFsdWUgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL3NlbGVjdFwiO1xyXG5pbXBvcnQgeyBCZWxsUmluZywgUGx1cywgU2VhcmNoLCBTaGllbGRBbGVydCB9IGZyb20gXCJsdWNpZGUtcmVhY3RcIjtcclxuaW1wb3J0IHsgdG9hc3QgfSBmcm9tIFwic29ubmVyXCI7XHJcblxyXG5pbnRlcmZhY2UgUHJvcHMgeyBzdG9yZUlkOiBzdHJpbmcgfVxyXG5cclxuZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gQXV0b1JlcGFpclJlbWluZGVyc1NlY3Rpb24oeyBzdG9yZUlkIH06IFByb3BzKSB7XHJcbiAgY29uc3QgcWMgPSB1c2VRdWVyeUNsaWVudCgpO1xyXG4gIGNvbnN0IFtvcGVuLCBzZXRPcGVuXSA9IHVzZVN0YXRlKGZhbHNlKTtcclxuICBjb25zdCBbdmluLCBzZXRWaW5dID0gdXNlU3RhdGUoXCJcIik7XHJcbiAgY29uc3QgW3JlY2FsbExvYWRpbmcsIHNldFJlY2FsbExvYWRpbmddID0gdXNlU3RhdGUoZmFsc2UpO1xyXG4gIGNvbnN0IFtmb3JtLCBzZXRGb3JtXSA9IHVzZVN0YXRlKHsgcmVtaW5kZXJfdHlwZTogXCJPaWwgY2hhbmdlXCIsIGNoYW5uZWw6IFwiZW1haWxcIiwgbWVzc2FnZTogXCJcIiwgZHVlX2F0OiBcIlwiIH0pO1xyXG5cclxuICBjb25zdCB7IGRhdGE6IHJlbWluZGVycyA9IFtdIH0gPSB1c2VRdWVyeSh7XHJcbiAgICBxdWVyeUtleTogW1wiYXItcmVtaW5kZXJzXCIsIHN0b3JlSWRdLFxyXG4gICAgcXVlcnlGbjogYXN5bmMgKCkgPT4ge1xyXG4gICAgICBjb25zdCB7IGRhdGEsIGVycm9yIH0gPSBhd2FpdCBzdXBhYmFzZS5mcm9tKFwiYXJfc2VydmljZV9yZW1pbmRlcnNcIiBhcyBhbnkpLnNlbGVjdChcIipcIikuZXEoXCJzdG9yZV9pZFwiLCBzdG9yZUlkKS5vcmRlcihcImR1ZV9hdFwiLCB7IGFzY2VuZGluZzogdHJ1ZSB9KTtcclxuICAgICAgaWYgKGVycm9yKSB0aHJvdyBlcnJvcjtcclxuICAgICAgcmV0dXJuIGRhdGEgYXMgYW55W107XHJcbiAgICB9LFxyXG4gIH0pO1xyXG5cclxuICBjb25zdCB7IGRhdGE6IHJlY2FsbHMgPSBbXSB9ID0gdXNlUXVlcnkoe1xyXG4gICAgcXVlcnlLZXk6IFtcImFyLXJlY2FsbHNcIiwgc3RvcmVJZF0sXHJcbiAgICBxdWVyeUZuOiBhc3luYyAoKSA9PiB7XHJcbiAgICAgIGNvbnN0IHsgZGF0YSwgZXJyb3IgfSA9IGF3YWl0IHN1cGFiYXNlLmZyb20oXCJhcl9yZWNhbGxfY2hlY2tzXCIgYXMgYW55KS5zZWxlY3QoXCIqXCIpLmVxKFwic3RvcmVfaWRcIiwgc3RvcmVJZCkub3JkZXIoXCJmZXRjaGVkX2F0XCIsIHsgYXNjZW5kaW5nOiBmYWxzZSB9KTtcclxuICAgICAgaWYgKGVycm9yKSB0aHJvdyBlcnJvcjtcclxuICAgICAgcmV0dXJuIGRhdGEgYXMgYW55W107XHJcbiAgICB9LFxyXG4gIH0pO1xyXG5cclxuICBjb25zdCBjcmVhdGUgPSB1c2VNdXRhdGlvbih7XHJcbiAgICBtdXRhdGlvbkZuOiBhc3luYyAoKSA9PiB7XHJcbiAgICAgIGNvbnN0IHBheWxvYWQ6IGFueSA9IHsgc3RvcmVfaWQ6IHN0b3JlSWQsIC4uLmZvcm0gfTtcclxuICAgICAgaWYgKCFmb3JtLmR1ZV9hdCkgZGVsZXRlIHBheWxvYWQuZHVlX2F0O1xyXG4gICAgICBjb25zdCB7IGVycm9yIH0gPSBhd2FpdCBzdXBhYmFzZS5mcm9tKFwiYXJfc2VydmljZV9yZW1pbmRlcnNcIiBhcyBhbnkpLmluc2VydChwYXlsb2FkKTtcclxuICAgICAgaWYgKGVycm9yKSB0aHJvdyBlcnJvcjtcclxuICAgIH0sXHJcbiAgICBvblN1Y2Nlc3M6ICgpID0+IHtcclxuICAgICAgdG9hc3Quc3VjY2VzcyhcIlJlbWluZGVyIHNjaGVkdWxlZFwiKTtcclxuICAgICAgcWMuaW52YWxpZGF0ZVF1ZXJpZXMoeyBxdWVyeUtleTogW1wiYXItcmVtaW5kZXJzXCIsIHN0b3JlSWRdIH0pO1xyXG4gICAgICBzZXRPcGVuKGZhbHNlKTtcclxuICAgICAgc2V0Rm9ybSh7IHJlbWluZGVyX3R5cGU6IFwiT2lsIGNoYW5nZVwiLCBjaGFubmVsOiBcImVtYWlsXCIsIG1lc3NhZ2U6IFwiXCIsIGR1ZV9hdDogXCJcIiB9KTtcclxuICAgIH0sXHJcbiAgICBvbkVycm9yOiAoZTogYW55KSA9PiB0b2FzdC5lcnJvcihlLm1lc3NhZ2UgPz8gXCJGYWlsZWRcIiksXHJcbiAgfSk7XHJcblxyXG4gIGNvbnN0IGxvb2t1cFJlY2FsbCA9IGFzeW5jICgpID0+IHtcclxuICAgIGlmICghdmluIHx8IHZpbi5sZW5ndGggPCAxMSkgeyB0b2FzdC5lcnJvcihcIkVudGVyIGEgdmFsaWQgVklOXCIpOyByZXR1cm47IH1cclxuICAgIHNldFJlY2FsbExvYWRpbmcodHJ1ZSk7XHJcbiAgICB0cnkge1xyXG4gICAgICAvLyBOSFRTQSBkZWNvZGUgdGhlbiByZWNhbGwgbG9va3VwXHJcbiAgICAgIGNvbnN0IGRlY29kZSA9IGF3YWl0IGZldGNoKGBodHRwczovL3ZwaWMubmh0c2EuZG90Lmdvdi9hcGkvdmVoaWNsZXMvZGVjb2RldmludmFsdWVzLyR7dmlufT9mb3JtYXQ9anNvbmApLnRoZW4ociA9PiByLmpzb24oKSk7XHJcbiAgICAgIGNvbnN0IHJlYyA9IGRlY29kZT8uUmVzdWx0cz8uWzBdIHx8IHt9O1xyXG4gICAgICBjb25zdCBtYWtlID0gcmVjLk1ha2UsIG1vZGVsID0gcmVjLk1vZGVsLCB5ZWFyID0gcmVjLk1vZGVsWWVhcjtcclxuICAgICAgbGV0IHN1bW1hcnkgPSBcIk5vIHJlY2FsbHMgZm91bmQuXCI7XHJcbiAgICAgIGxldCBzZXZlcml0eSA9IFwibm9uZVwiO1xyXG4gICAgICBsZXQgY2FtcGFpZ25JZDogc3RyaW5nIHwgbnVsbCA9IG51bGw7XHJcbiAgICAgIGlmIChtYWtlICYmIG1vZGVsICYmIHllYXIpIHtcclxuICAgICAgICBjb25zdCByID0gYXdhaXQgZmV0Y2goYGh0dHBzOi8vYXBpLm5odHNhLmdvdi9yZWNhbGxzL3JlY2FsbHNCeVZlaGljbGU/bWFrZT0ke21ha2V9Jm1vZGVsPSR7bW9kZWx9Jm1vZGVsWWVhcj0ke3llYXJ9YCkudGhlbihyID0+IHIuanNvbigpKTtcclxuICAgICAgICBjb25zdCBpdGVtcyA9IHI/LnJlc3VsdHMgfHwgW107XHJcbiAgICAgICAgaWYgKGl0ZW1zLmxlbmd0aCA+IDApIHtcclxuICAgICAgICAgIHN1bW1hcnkgPSBgJHtpdGVtcy5sZW5ndGh9IHJlY2FsbChzKTogJHtpdGVtcy5zbGljZSgwLCAyKS5tYXAoKGk6IGFueSkgPT4gaS5Db21wb25lbnQpLmpvaW4oXCI7IFwiKX1gO1xyXG4gICAgICAgICAgc2V2ZXJpdHkgPSBcImhpZ2hcIjtcclxuICAgICAgICAgIGNhbXBhaWduSWQgPSBpdGVtc1swXT8uTkhUU0FDYW1wYWlnbk51bWJlciA/PyBudWxsO1xyXG4gICAgICAgIH1cclxuICAgICAgfVxyXG4gICAgICBjb25zdCB7IGVycm9yIH0gPSBhd2FpdCBzdXBhYmFzZS5mcm9tKFwiYXJfcmVjYWxsX2NoZWNrc1wiIGFzIGFueSkuaW5zZXJ0KHtcclxuICAgICAgICBzdG9yZV9pZDogc3RvcmVJZCwgdmluLCBzdW1tYXJ5LCBzZXZlcml0eSwgY2FtcGFpZ25faWQ6IGNhbXBhaWduSWQsXHJcbiAgICAgIH0pO1xyXG4gICAgICBpZiAoZXJyb3IpIHRocm93IGVycm9yO1xyXG4gICAgICB0b2FzdC5zdWNjZXNzKFwiUmVjYWxsIGNoZWNrIHNhdmVkXCIpO1xyXG4gICAgICBxYy5pbnZhbGlkYXRlUXVlcmllcyh7IHF1ZXJ5S2V5OiBbXCJhci1yZWNhbGxzXCIsIHN0b3JlSWRdIH0pO1xyXG4gICAgICBzZXRWaW4oXCJcIik7XHJcbiAgICB9IGNhdGNoIChlOiBhbnkpIHtcclxuICAgICAgdG9hc3QuZXJyb3IoZS5tZXNzYWdlID8/IFwiTG9va3VwIGZhaWxlZFwiKTtcclxuICAgIH0gZmluYWxseSB7XHJcbiAgICAgIHNldFJlY2FsbExvYWRpbmcoZmFsc2UpO1xyXG4gICAgfVxyXG4gIH07XHJcblxyXG4gIHJldHVybiAoXHJcbiAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktNFwiPlxyXG4gICAgICA8Q2FyZD5cclxuICAgICAgICA8Q2FyZEhlYWRlcj5cclxuICAgICAgICAgIDxDYXJkVGl0bGUgY2xhc3NOYW1lPVwidGV4dC1iYXNlIGZsZXggaXRlbXMtY2VudGVyIGdhcC0yXCI+PEJlbGxSaW5nIGNsYXNzTmFtZT1cInctNCBoLTRcIiAvPiBSZW1pbmRlcnMgJiBSZWNhbGxzPC9DYXJkVGl0bGU+XHJcbiAgICAgICAgPC9DYXJkSGVhZGVyPlxyXG4gICAgICA8L0NhcmQ+XHJcblxyXG4gICAgICA8VGFicyBkZWZhdWx0VmFsdWU9XCJyZW1pbmRlcnNcIj5cclxuICAgICAgICA8VGFic0xpc3Q+XHJcbiAgICAgICAgICA8VGFic1RyaWdnZXIgdmFsdWU9XCJyZW1pbmRlcnNcIj5SZW1pbmRlcnMgKHtyZW1pbmRlcnMubGVuZ3RofSk8L1RhYnNUcmlnZ2VyPlxyXG4gICAgICAgICAgPFRhYnNUcmlnZ2VyIHZhbHVlPVwicmVjYWxsc1wiPlJlY2FsbHMgKHtyZWNhbGxzLmxlbmd0aH0pPC9UYWJzVHJpZ2dlcj5cclxuICAgICAgICA8L1RhYnNMaXN0PlxyXG5cclxuICAgICAgICA8VGFic0NvbnRlbnQgdmFsdWU9XCJyZW1pbmRlcnNcIiBjbGFzc05hbWU9XCJzcGFjZS15LTNcIj5cclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBqdXN0aWZ5LWVuZFwiPlxyXG4gICAgICAgICAgICA8QnV0dG9uIHNpemU9XCJzbVwiIGNsYXNzTmFtZT1cImdhcC0xLjVcIiBvbkNsaWNrPXsoKSA9PiBzZXRPcGVuKHRydWUpfT48UGx1cyBjbGFzc05hbWU9XCJ3LTMuNSBoLTMuNVwiIC8+IFNjaGVkdWxlIFJlbWluZGVyPC9CdXR0b24+XHJcbiAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgIHtyZW1pbmRlcnMubGVuZ3RoID09PSAwID8gKFxyXG4gICAgICAgICAgICA8Q2FyZD48Q2FyZENvbnRlbnQgY2xhc3NOYW1lPVwicHktMTAgdGV4dC1jZW50ZXIgdGV4dC1zbSB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5ObyByZW1pbmRlcnMgc2NoZWR1bGVkLjwvQ2FyZENvbnRlbnQ+PC9DYXJkPlxyXG4gICAgICAgICAgKSA6IChcclxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJncmlkIGdhcC0yXCI+XHJcbiAgICAgICAgICAgICAge3JlbWluZGVycy5tYXAoKHI6IGFueSkgPT4gKFxyXG4gICAgICAgICAgICAgICAgPENhcmQga2V5PXtyLmlkfT5cclxuICAgICAgICAgICAgICAgICAgPENhcmRDb250ZW50IGNsYXNzTmFtZT1cInAtNCBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWJldHdlZW5cIj5cclxuICAgICAgICAgICAgICAgICAgICA8ZGl2PlxyXG4gICAgICAgICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwiZm9udC1zZW1pYm9sZFwiPntyLnJlbWluZGVyX3R5cGV9PC9wPlxyXG4gICAgICAgICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC14cyB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5cclxuICAgICAgICAgICAgICAgICAgICAgICAge3IuZHVlX2F0ID8gbmV3IERhdGUoci5kdWVfYXQpLnRvTG9jYWxlRGF0ZVN0cmluZygpIDogci5kdWVfbWlsZWFnZSA/IGAke3IuZHVlX21pbGVhZ2V9IG1pYCA6IFwi4oCUXCJ9IMK3IHtyLmNoYW5uZWx9XHJcbiAgICAgICAgICAgICAgICAgICAgICA8L3A+XHJcbiAgICAgICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICAgICAgPEJhZGdlIHZhcmlhbnQ9XCJvdXRsaW5lXCIgY2xhc3NOYW1lPVwiY2FwaXRhbGl6ZVwiPntyLnN0YXR1c308L0JhZGdlPlxyXG4gICAgICAgICAgICAgICAgICA8L0NhcmRDb250ZW50PlxyXG4gICAgICAgICAgICAgICAgPC9DYXJkPlxyXG4gICAgICAgICAgICAgICkpfVxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICl9XHJcbiAgICAgICAgPC9UYWJzQ29udGVudD5cclxuXHJcbiAgICAgICAgPFRhYnNDb250ZW50IHZhbHVlPVwicmVjYWxsc1wiIGNsYXNzTmFtZT1cInNwYWNlLXktM1wiPlxyXG4gICAgICAgICAgPENhcmQ+XHJcbiAgICAgICAgICAgIDxDYXJkQ29udGVudCBjbGFzc05hbWU9XCJwLTQgc3BhY2UteS0yXCI+XHJcbiAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC14cyBmb250LXNlbWlib2xkIHRleHQtbXV0ZWQtZm9yZWdyb3VuZCBmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMS41XCI+PFNoaWVsZEFsZXJ0IGNsYXNzTmFtZT1cInctMy41IGgtMy41XCIgLz4gTkhUU0EgUmVjYWxsIExvb2t1cDwvcD5cclxuICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggZ2FwLTJcIj5cclxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwicmVsYXRpdmUgZmxleC0xXCI+XHJcbiAgICAgICAgICAgICAgICAgIDxTZWFyY2ggY2xhc3NOYW1lPVwiYWJzb2x1dGUgbGVmdC0yLjUgdG9wLTIuNSB3LTQgaC00IHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiIC8+XHJcbiAgICAgICAgICAgICAgICAgIDxJbnB1dCBwbGFjZWhvbGRlcj1cIkVudGVyIFZJTlwiIGNsYXNzTmFtZT1cInBsLTkgZm9udC1tb25vIHVwcGVyY2FzZVwiIHZhbHVlPXt2aW59IG9uQ2hhbmdlPXsoZSkgPT4gc2V0VmluKGUudGFyZ2V0LnZhbHVlLnRvVXBwZXJDYXNlKCkpfSAvPlxyXG4gICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICA8QnV0dG9uIG9uQ2xpY2s9e2xvb2t1cFJlY2FsbH0gZGlzYWJsZWQ9e3JlY2FsbExvYWRpbmd9PntyZWNhbGxMb2FkaW5nID8gXCJDaGVja2luZ+KAplwiIDogXCJDaGVja1wifTwvQnV0dG9uPlxyXG4gICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICA8L0NhcmRDb250ZW50PlxyXG4gICAgICAgICAgPC9DYXJkPlxyXG4gICAgICAgICAge3JlY2FsbHMubGVuZ3RoID09PSAwID8gKFxyXG4gICAgICAgICAgICA8Q2FyZD48Q2FyZENvbnRlbnQgY2xhc3NOYW1lPVwicHktMTAgdGV4dC1jZW50ZXIgdGV4dC1zbSB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5ObyByZWNhbGwgY2hlY2tzIHlldC48L0NhcmRDb250ZW50PjwvQ2FyZD5cclxuICAgICAgICAgICkgOiAoXHJcbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZ3JpZCBnYXAtMlwiPlxyXG4gICAgICAgICAgICAgIHtyZWNhbGxzLm1hcCgocjogYW55KSA9PiAoXHJcbiAgICAgICAgICAgICAgICA8Q2FyZCBrZXk9e3IuaWR9PlxyXG4gICAgICAgICAgICAgICAgICA8Q2FyZENvbnRlbnQgY2xhc3NOYW1lPVwicC00IGZsZXggaXRlbXMtc3RhcnQganVzdGlmeS1iZXR3ZWVuIGdhcC0zXCI+XHJcbiAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJtaW4tdy0wXCI+XHJcbiAgICAgICAgICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJmb250LW1vbm8gdGV4dC1zbVwiPntyLnZpbn08L3A+XHJcbiAgICAgICAgICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LXhzIHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiPntyLnN1bW1hcnl9PC9wPlxyXG4gICAgICAgICAgICAgICAgICAgICAge3IuY2FtcGFpZ25faWQgJiYgPHAgY2xhc3NOYW1lPVwidGV4dC1bMTBweF0gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+Q2FtcGFpZ246IHtyLmNhbXBhaWduX2lkfTwvcD59XHJcbiAgICAgICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICAgICAgPEJhZGdlIHZhcmlhbnQ9e3Iuc2V2ZXJpdHkgPT09IFwiaGlnaFwiID8gXCJkZXN0cnVjdGl2ZVwiIDogXCJvdXRsaW5lXCJ9PntyLnNldmVyaXR5ID8/IFwi4oCUXCJ9PC9CYWRnZT5cclxuICAgICAgICAgICAgICAgICAgPC9DYXJkQ29udGVudD5cclxuICAgICAgICAgICAgICAgIDwvQ2FyZD5cclxuICAgICAgICAgICAgICApKX1cclxuICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICApfVxyXG4gICAgICAgIDwvVGFic0NvbnRlbnQ+XHJcbiAgICAgIDwvVGFicz5cclxuXHJcbiAgICAgIDxEaWFsb2cgb3Blbj17b3Blbn0gb25PcGVuQ2hhbmdlPXtzZXRPcGVufT5cclxuICAgICAgICA8RGlhbG9nQ29udGVudCBjbGFzc05hbWU9XCJtYXgtdy1tZFwiPlxyXG4gICAgICAgICAgPERpYWxvZ0hlYWRlcj48RGlhbG9nVGl0bGU+U2NoZWR1bGUgUmVtaW5kZXI8L0RpYWxvZ1RpdGxlPjwvRGlhbG9nSGVhZGVyPlxyXG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTJcIj5cclxuICAgICAgICAgICAgPElucHV0IHBsYWNlaG9sZGVyPVwiUmVtaW5kZXIgdHlwZVwiIHZhbHVlPXtmb3JtLnJlbWluZGVyX3R5cGV9IG9uQ2hhbmdlPXsoZSkgPT4gc2V0Rm9ybSh7IC4uLmZvcm0sIHJlbWluZGVyX3R5cGU6IGUudGFyZ2V0LnZhbHVlIH0pfSAvPlxyXG4gICAgICAgICAgICA8SW5wdXQgdHlwZT1cImRhdGV0aW1lLWxvY2FsXCIgdmFsdWU9e2Zvcm0uZHVlX2F0fSBvbkNoYW5nZT17KGUpID0+IHNldEZvcm0oeyAuLi5mb3JtLCBkdWVfYXQ6IGUudGFyZ2V0LnZhbHVlIH0pfSAvPlxyXG4gICAgICAgICAgICA8U2VsZWN0IHZhbHVlPXtmb3JtLmNoYW5uZWx9IG9uVmFsdWVDaGFuZ2U9eyh2KSA9PiBzZXRGb3JtKHsgLi4uZm9ybSwgY2hhbm5lbDogdiB9KX0+XHJcbiAgICAgICAgICAgICAgPFNlbGVjdFRyaWdnZXI+PFNlbGVjdFZhbHVlIC8+PC9TZWxlY3RUcmlnZ2VyPlxyXG4gICAgICAgICAgICAgIDxTZWxlY3RDb250ZW50PlxyXG4gICAgICAgICAgICAgICAgPFNlbGVjdEl0ZW0gdmFsdWU9XCJlbWFpbFwiPkVtYWlsPC9TZWxlY3RJdGVtPlxyXG4gICAgICAgICAgICAgICAgPFNlbGVjdEl0ZW0gdmFsdWU9XCJzbXNcIj5TTVM8L1NlbGVjdEl0ZW0+XHJcbiAgICAgICAgICAgICAgICA8U2VsZWN0SXRlbSB2YWx1ZT1cInB1c2hcIj5QdXNoPC9TZWxlY3RJdGVtPlxyXG4gICAgICAgICAgICAgICAgPFNlbGVjdEl0ZW0gdmFsdWU9XCJpbmFwcFwiPkluLWFwcDwvU2VsZWN0SXRlbT5cclxuICAgICAgICAgICAgICA8L1NlbGVjdENvbnRlbnQ+XHJcbiAgICAgICAgICAgIDwvU2VsZWN0PlxyXG4gICAgICAgICAgICA8VGV4dGFyZWEgcGxhY2Vob2xkZXI9XCJNZXNzYWdlXCIgdmFsdWU9e2Zvcm0ubWVzc2FnZX0gb25DaGFuZ2U9eyhlKSA9PiBzZXRGb3JtKHsgLi4uZm9ybSwgbWVzc2FnZTogZS50YXJnZXQudmFsdWUgfSl9IC8+XHJcbiAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgIDxEaWFsb2dGb290ZXI+XHJcbiAgICAgICAgICAgIDxCdXR0b24gdmFyaWFudD1cIm91dGxpbmVcIiBvbkNsaWNrPXsoKSA9PiBzZXRPcGVuKGZhbHNlKX0+Q2FuY2VsPC9CdXR0b24+XHJcbiAgICAgICAgICAgIDxCdXR0b24gb25DbGljaz17KCkgPT4gY3JlYXRlLm11dGF0ZSgpfT5TY2hlZHVsZTwvQnV0dG9uPlxyXG4gICAgICAgICAgPC9EaWFsb2dGb290ZXI+XHJcbiAgICAgICAgPC9EaWFsb2dDb250ZW50PlxyXG4gICAgICA8L0RpYWxvZz5cclxuICAgIDwvZGl2PlxyXG4gICk7XHJcbn1cclxuIl0sIm5hbWVzIjpbInVzZVN0YXRlIiwidXNlUXVlcnkiLCJ1c2VNdXRhdGlvbiIsInVzZVF1ZXJ5Q2xpZW50Iiwic3VwYWJhc2UiLCJDYXJkIiwiQ2FyZENvbnRlbnQiLCJDYXJkSGVhZGVyIiwiQ2FyZFRpdGxlIiwiQnV0dG9uIiwiSW5wdXQiLCJUZXh0YXJlYSIsIkJhZGdlIiwiVGFicyIsIlRhYnNDb250ZW50IiwiVGFic0xpc3QiLCJUYWJzVHJpZ2dlciIsIkRpYWxvZyIsIkRpYWxvZ0NvbnRlbnQiLCJEaWFsb2dIZWFkZXIiLCJEaWFsb2dUaXRsZSIsIkRpYWxvZ0Zvb3RlciIsIlNlbGVjdCIsIlNlbGVjdENvbnRlbnQiLCJTZWxlY3RJdGVtIiwiU2VsZWN0VHJpZ2dlciIsIlNlbGVjdFZhbHVlIiwiQmVsbFJpbmciLCJQbHVzIiwiU2VhcmNoIiwiU2hpZWxkQWxlcnQiLCJ0b2FzdCIsIkF1dG9SZXBhaXJSZW1pbmRlcnNTZWN0aW9uIiwic3RvcmVJZCIsInFjIiwib3BlbiIsInNldE9wZW4iLCJ2aW4iLCJzZXRWaW4iLCJyZWNhbGxMb2FkaW5nIiwic2V0UmVjYWxsTG9hZGluZyIsImZvcm0iLCJzZXRGb3JtIiwicmVtaW5kZXJfdHlwZSIsImNoYW5uZWwiLCJtZXNzYWdlIiwiZHVlX2F0IiwiZGF0YSIsInJlbWluZGVycyIsInF1ZXJ5S2V5IiwicXVlcnlGbiIsImVycm9yIiwiZnJvbSIsInNlbGVjdCIsImVxIiwib3JkZXIiLCJhc2NlbmRpbmciLCJyZWNhbGxzIiwiY3JlYXRlIiwibXV0YXRpb25GbiIsInBheWxvYWQiLCJzdG9yZV9pZCIsImluc2VydCIsIm9uU3VjY2VzcyIsInN1Y2Nlc3MiLCJpbnZhbGlkYXRlUXVlcmllcyIsIm9uRXJyb3IiLCJlIiwibG9va3VwUmVjYWxsIiwibGVuZ3RoIiwiZGVjb2RlIiwiZmV0Y2giLCJ0aGVuIiwiciIsImpzb24iLCJyZWMiLCJSZXN1bHRzIiwibWFrZSIsIk1ha2UiLCJtb2RlbCIsIk1vZGVsIiwieWVhciIsIk1vZGVsWWVhciIsInN1bW1hcnkiLCJzZXZlcml0eSIsImNhbXBhaWduSWQiLCJpdGVtcyIsInJlc3VsdHMiLCJzbGljZSIsIm1hcCIsImkiLCJDb21wb25lbnQiLCJqb2luIiwiTkhUU0FDYW1wYWlnbk51bWJlciIsImNhbXBhaWduX2lkIiwiZGl2IiwiY2xhc3NOYW1lIiwiZGVmYXVsdFZhbHVlIiwidmFsdWUiLCJzaXplIiwib25DbGljayIsInAiLCJEYXRlIiwidG9Mb2NhbGVEYXRlU3RyaW5nIiwiZHVlX21pbGVhZ2UiLCJ2YXJpYW50Iiwic3RhdHVzIiwiaWQiLCJwbGFjZWhvbGRlciIsIm9uQ2hhbmdlIiwidGFyZ2V0IiwidG9VcHBlckNhc2UiLCJkaXNhYmxlZCIsIm9uT3BlbkNoYW5nZSIsInR5cGUiLCJvblZhbHVlQ2hhbmdlIiwidiIsIm11dGF0ZSJdLCJtYXBwaW5ncyI6Ijs7QUFBQTs7Q0FFQyxHQUNELFNBQVNBLFFBQVEsUUFBUSxRQUFRO0FBQ2pDLFNBQVNDLFFBQVEsRUFBRUMsV0FBVyxFQUFFQyxjQUFjLFFBQVEsd0JBQXdCO0FBQzlFLFNBQVNDLFFBQVEsUUFBUSxpQ0FBaUM7QUFDMUQsU0FBU0MsSUFBSSxFQUFFQyxXQUFXLEVBQUVDLFVBQVUsRUFBRUMsU0FBUyxRQUFRLHVCQUF1QjtBQUNoRixTQUFTQyxNQUFNLFFBQVEseUJBQXlCO0FBQ2hELFNBQVNDLEtBQUssUUFBUSx3QkFBd0I7QUFDOUMsU0FBU0MsUUFBUSxRQUFRLDJCQUEyQjtBQUNwRCxTQUFTQyxLQUFLLFFBQVEsd0JBQXdCO0FBQzlDLFNBQVNDLElBQUksRUFBRUMsV0FBVyxFQUFFQyxRQUFRLEVBQUVDLFdBQVcsUUFBUSx1QkFBdUI7QUFDaEYsU0FBU0MsTUFBTSxFQUFFQyxhQUFhLEVBQUVDLFlBQVksRUFBRUMsV0FBVyxFQUFFQyxZQUFZLFFBQVEseUJBQXlCO0FBQ3hHLFNBQVNDLE1BQU0sRUFBRUMsYUFBYSxFQUFFQyxVQUFVLEVBQUVDLGFBQWEsRUFBRUMsV0FBVyxRQUFRLHlCQUF5QjtBQUN2RyxTQUFTQyxRQUFRLEVBQUVDLElBQUksRUFBRUMsTUFBTSxFQUFF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

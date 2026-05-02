@@ -41,6 +41,62 @@ async function logPaymentAudit(
   }
 }
 
+async function upsertPurchaseRecord(
+  supabase: any,
+  input: {
+    userId?: string | null;
+    transactionId: string;
+    sourceType: string;
+    amountCents: number;
+    currency: string;
+    status?: string;
+    metadata?: Record<string, any>;
+  }
+) {
+  const payload = {
+    user_id: input.userId || null,
+    transaction_id: input.transactionId,
+    source_type: input.sourceType,
+    amount_cents: input.amountCents,
+    currency: (input.currency || 'USD').toUpperCase(),
+    status: input.status || 'completed',
+    metadata: input.metadata || {},
+  };
+
+  const { error } = await supabase
+    .from('purchase_records')
+    .upsert(payload, { onConflict: 'transaction_id' });
+
+  if (error) {
+    console.error('[Webhook] Failed to upsert purchase record:', error);
+  }
+}
+
+async function upsertShopPulse(
+  supabase: any,
+  storeId: string,
+  transactionId: string,
+) {
+  if (!storeId) return;
+
+  const nowIso = new Date().toISOString();
+  const { error } = await supabase
+    .from('shop_live_pulse')
+    .upsert(
+      {
+        store_id: storeId,
+        last_purchase_at: nowIso,
+        last_event_id: transactionId,
+        updated_at: nowIso,
+      },
+      { onConflict: 'store_id' }
+    );
+
+  if (error) {
+    console.error('[Webhook] Failed to upsert live pulse:', error);
+  }
+}
+
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
@@ -112,6 +168,17 @@ serve(async (req) => {
             console.error("Error updating ride request:", error);
           } else {
             console.log("Ride request updated to paid:", metadata.ride_request_id);
+            // Notify rider: payment confirmed
+            if (metadata.rider_id || metadata.user_id || metadata.customer_id) {
+              const uid = metadata.rider_id || metadata.user_id || metadata.customer_id;
+              try {
+                await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", "Authorization": `Bearer ${supabaseServiceKey}` },
+                  body: JSON.stringify({ user_id: uid, notification_type: "payment_confirmed", title: "Ride Payment Confirmed ✅", body: `Your ride payment of $${((session.amount_total || 0) / 100).toFixed(2)} was successful`, data: { type: "payment_confirmed", service: "ride", action_url: `/rides/tracking/${metadata.ride_request_id}` } }),
+                });
+              } catch {}
+            }
           }
         } else if (metadata.type === "eats") {
           // Update food order
@@ -129,6 +196,17 @@ serve(async (req) => {
             console.error("Error updating food order:", error);
           } else {
             console.log("Food order updated to paid:", metadata.order_id);
+            // Notify customer: order confirmed
+            if (metadata.user_id || metadata.customer_id) {
+              const uid = metadata.user_id || metadata.customer_id;
+              try {
+                await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", "Authorization": `Bearer ${supabaseServiceKey}` },
+                  body: JSON.stringify({ user_id: uid, notification_type: "payment_confirmed", title: "Order Confirmed 🍕", body: `Your order payment of $${((session.amount_total || 0) / 100).toFixed(2)} was successful`, data: { type: "payment_confirmed", service: "eats", action_url: `/eats/${metadata.order_id}` } }),
+                });
+              } catch {}
+            }
           }
         } else if (metadata.type === "p2p") {
           // Update P2P booking
@@ -192,8 +270,17 @@ serve(async (req) => {
           }
 
           console.log("[Webhook] Flight booking paid:", metadata.booking_id);
-          
-          // Send payment receipt email
+
+          // Notify user: flight payment confirmed
+          if (metadata.user_id) {
+            try {
+              await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${supabaseServiceKey}` },
+                body: JSON.stringify({ user_id: metadata.user_id, notification_type: "payment_confirmed", title: "Flight Payment Confirmed ✈️", body: `Your flight payment of $${((session.amount_total || 0) / 100).toFixed(2)} was successful. Ticketing in progress.`, data: { type: "payment_confirmed", service: "flight", booking_id: metadata.booking_id, action_url: `/bookings/${metadata.booking_id}` } }),
+              });
+            } catch {}
+          }
           try {
             await fetch(`${supabaseUrl}/functions/v1/send-flight-email`, {
               method: "POST",
@@ -312,6 +399,129 @@ serve(async (req) => {
             });
           }
         }
+        // ──── Record 2% platform fee ────
+        const merchantId = metadata.merchant_id || metadata.restaurant_id || metadata.store_id || null;
+
+        if (session.amount_total && session.amount_total > 0) {
+          try {
+            const grossCents = session.amount_total;
+            const feePct = 2.00;
+
+            // Check for active fee waiver
+            let waived = false;
+            let waiverId = null;
+            if (merchantId) {
+              const { data: waiver } = await supabase
+                .from("merchant_fee_waivers")
+                .select("id, waiver_pct")
+                .eq("store_id", merchantId)
+                .gte("expires_at", new Date().toISOString())
+                .lte("starts_at", new Date().toISOString())
+                .order("waiver_pct", { ascending: false })
+                .limit(1)
+                .maybeSingle();
+
+              if (waiver && waiver.waiver_pct >= 100) {
+                waived = true;
+                waiverId = waiver.id;
+              }
+            }
+
+            const feeAmountCents = waived ? 0 : Math.round(grossCents * feePct / 100);
+
+            await supabase.from("platform_fee_ledger").insert({
+              order_type: metadata.type || "general",
+              order_id: session.id,
+              merchant_id: merchantId,
+              gross_amount_cents: grossCents,
+              fee_pct: waived ? 0 : feePct,
+              fee_amount_cents: feeAmountCents,
+              waived,
+              waiver_id: waiverId,
+            });
+
+            if (feeAmountCents > 0) {
+              await supabase.from("admin_wallet_ledger").upsert(
+                {
+                  source_type: "platform_fee",
+                  source_id: session.id,
+                  transaction_id: session.id,
+                  amount_cents: feeAmountCents,
+                  currency: session.currency?.toUpperCase() || "USD",
+                  metadata: {
+                    order_type: metadata.type || "general",
+                    merchant_id: merchantId,
+                    gross_amount_cents: grossCents,
+                    fee_pct: feePct,
+                  },
+                },
+                { onConflict: "transaction_id,source_type,source_id" }
+              );
+            }
+
+            console.log("[Webhook] Platform fee recorded:", feeAmountCents, "cents", waived ? "(WAIVED)" : "");
+          } catch (feeErr) {
+            console.error("[Webhook] Platform fee recording failed:", feeErr);
+          }
+        }
+
+        if (session.amount_total && session.amount_total > 0) {
+          const userId = metadata.user_id || metadata.customer_id || metadata.rider_id || null;
+          await upsertPurchaseRecord(supabase, {
+            userId,
+            transactionId: session.id,
+            sourceType: metadata.type || 'stripe_checkout',
+            amountCents: session.amount_total,
+            currency: session.currency?.toUpperCase() || 'USD',
+            status: 'completed',
+            metadata: {
+              stripe_event_id: event.id,
+              stripe_payment_intent_id: paymentIntentId,
+              merchant_id: merchantId,
+              checkout_session_id: session.id,
+              meta_event_id: session.id,
+            },
+          });
+
+          if (merchantId) {
+            await upsertShopPulse(supabase, merchantId, session.id);
+          }
+        }
+
+        // ──── Fire Meta CAPI Purchase event ────
+        if (session.amount_total && session.amount_total > 0) {
+          try {
+            const capiUrl = `${supabaseUrl}/functions/v1/meta-capi-bridge`;
+            const userId = metadata.user_id || metadata.customer_id || metadata.rider_id || null;
+            const capiPayload: Record<string, unknown> = {
+              table: "stripe_checkout",
+              type: "INSERT",
+              record: {
+                id: session.id,
+                user_id: userId,
+                store_id: merchantId,
+                total_amount: session.amount_total / 100,
+                currency: session.currency?.toUpperCase() || "USD",
+                created_at: new Date().toISOString(),
+                service_type: metadata.type || "general",
+                metadata: {
+                  store_id: merchantId,
+                },
+              },
+            };
+            await fetch(capiUrl, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${supabaseServiceKey}`,
+              },
+              body: JSON.stringify(capiPayload),
+            });
+            console.log("[Webhook] Meta CAPI Purchase event fired for:", session.id);
+          } catch (capiErr) {
+            console.error("[Webhook] Meta CAPI trigger failed:", capiErr);
+          }
+        }
         break;
       }
 
@@ -348,6 +558,7 @@ serve(async (req) => {
       case "payment_intent.payment_failed": {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
         console.log("[Webhook] Payment failed:", paymentIntent.id);
+        const failedUserId = paymentIntent.metadata?.user_id || paymentIntent.metadata?.customer_id || paymentIntent.metadata?.rider_id;
 
         // Update any orders with this payment intent ID
         await supabase
@@ -359,6 +570,17 @@ serve(async (req) => {
           .from("food_orders")
           .update({ payment_status: "failed", status: "cancelled" })
           .eq("stripe_payment_id", paymentIntent.id);
+
+        // Notify user: payment failed
+        if (failedUserId) {
+          try {
+            await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${supabaseServiceKey}` },
+              body: JSON.stringify({ user_id: failedUserId, notification_type: "payment_failed", title: "Payment Failed ❌", body: `Your payment of $${(paymentIntent.amount / 100).toFixed(2)} could not be processed. Please try again.`, data: { type: "payment_failed", action_url: "/wallet" } }),
+            });
+          } catch {}
+        }
 
         // Handle flight payment failures
         if (paymentIntent.metadata?.type === 'flight') {
@@ -399,6 +621,18 @@ serve(async (req) => {
         const refundAmount = charge.amount_refunded / 100;
 
         console.log("[Webhook] Charge refunded:", charge.id, "Amount:", refundAmount, "PI:", paymentIntentId);
+
+        // Notify user about refund
+        const refundUserId = charge.metadata?.user_id || charge.metadata?.customer_id || charge.metadata?.rider_id;
+        if (refundUserId) {
+          try {
+            await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", "Authorization": `Bearer ${supabaseServiceKey}` },
+              body: JSON.stringify({ user_id: refundUserId, notification_type: "refund_processed", title: "Refund Processed 💵", body: `$${refundAmount.toFixed(2)} has been refunded to your payment method`, data: { type: "refund_processed", amount: refundAmount, action_url: "/wallet" } }),
+            });
+          } catch {}
+        }
 
         if (paymentIntentId) {
           // Update ride requests
@@ -596,6 +830,16 @@ serve(async (req) => {
             console.error("[Webhook] Error upserting membership:", upsertError);
           } else {
             console.log("[Webhook] Membership subscription synced:", metadata.user_id, "Status:", subscription.status);
+            // Notify user: ZIVO+ activated
+            if (subscription.status === "active") {
+              try {
+                await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", "Authorization": `Bearer ${supabaseServiceKey}` },
+                  body: JSON.stringify({ user_id: metadata.user_id, notification_type: "membership_activated", title: "Welcome to ZIVO+ ⭐", body: "Your premium membership is now active. Enjoy exclusive perks!", data: { type: "membership_activated", action_url: "/account" } }),
+                });
+              } catch {}
+            }
           }
         }
         break;
@@ -620,6 +864,15 @@ serve(async (req) => {
             console.error("[Webhook] Error cancelling membership:", updateError);
           } else {
             console.log("[Webhook] Membership cancelled for subscription:", subscription.id);
+            if (metadata.user_id) {
+              try {
+                await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json", "Authorization": `Bearer ${supabaseServiceKey}` },
+                  body: JSON.stringify({ user_id: metadata.user_id, notification_type: "membership_cancelled", title: "ZIVO+ Cancelled", body: "Your ZIVO+ membership has been cancelled. You can resubscribe anytime.", data: { type: "membership_cancelled", action_url: "/account" } }),
+                });
+              } catch {}
+            }
           }
         }
         break;

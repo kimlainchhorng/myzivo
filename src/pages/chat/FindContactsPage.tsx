@@ -1,0 +1,245 @@
+import { useEffect, useMemo, useState } from "react";
+import { useSmartBack } from "@/lib/smartBack";
+import { useLocation, useNavigate } from "react-router-dom";
+import { ArrowLeft, Search, UserPlus, Loader2, Phone, Smartphone, Check } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { toast } from "sonner";
+import { hashPhoneE164 } from "@/lib/phoneHash";
+import { isNativeAvailable, pickAndHashPhones } from "@/lib/nativeContacts";
+import { useContacts } from "@/hooks/useContacts";
+import { useContactRequests } from "@/hooks/useContactRequests";
+import ConfirmAddContactSheet, { type AddTarget } from "@/components/chat/ConfirmAddContactSheet";
+
+interface Match {
+  user_id: string;
+  full_name: string | null;
+  username: string | null;
+  avatar_url: string | null;
+}
+
+interface ContactMatchResponse {
+  matches?: Match[];
+}
+
+export default function FindContactsPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const goBack = useSmartBack("/chat");
+  const [raw, setRaw] = useState("");
+  const [scanning, setScanning] = useState(false);
+  const initialMatches = (location.state as any)?.matches as Match[] | undefined;
+  const [matches, setMatches] = useState<Match[] | null>(initialMatches ?? null);
+  const [nativeReady, setNativeReady] = useState(false);
+  const [syncing, setSyncing] = useState(false);
+  const [confirmTarget, setConfirmTarget] = useState<AddTarget | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+
+  const { contacts } = useContacts();
+  const { outgoing } = useContactRequests();
+  const contactIds = useMemo(() => new Set((contacts ?? []).map((c) => c.contact_user_id)), [contacts]);
+  const pendingIds = useMemo(
+    () => new Set((outgoing ?? []).filter((r) => r.status === "pending").map((r) => r.to_user_id)),
+    [outgoing]
+  );
+
+  useEffect(() => {
+    let alive = true;
+    void isNativeAvailable().then((v) => { if (alive) setNativeReady(v); });
+    return () => { alive = false; };
+  }, []);
+
+  async function nativeSync() {
+    setSyncing(true);
+    try {
+      const r = await pickAndHashPhones();
+      if (!r.ok) {
+        if (r.reason === "denied") toast.error("Permission denied. Enable Contacts in Settings.");
+        else if (r.reason === "empty") toast.message("No phone numbers found in your contacts.");
+        else toast.error("Couldn't read contacts on this device.");
+        return;
+      }
+      const { data, error } = await supabase.functions.invoke("contact-match", { body: { hashes: r.hashes } });
+      if (error) throw error;
+      const results = (data as ContactMatchResponse | null)?.matches ?? [];
+      setMatches(results);
+      toast.success(
+        results.length
+          ? `${results.length} of your ${r.count} contacts are on ZIVO`
+          : `Scanned ${r.count} contacts — no matches yet`
+      );
+    } catch (e: unknown) {
+      const m = e instanceof Error ? e.message : "Sync failed";
+      toast.error(m);
+    } finally {
+      setSyncing(false);
+    }
+  }
+
+  const parsePhones = (text: string): string[] => {
+    // Extract candidate phone numbers; keep + and digits.
+    const found = new Set<string>();
+    const re = /\+?\d[\d\s\-().]{6,}\d/g;
+    const matches = text.match(re) ?? [];
+    for (const m of matches) {
+      const digits = m.replace(/[^\d+]/g, "");
+      if (digits.length >= 7) found.add(digits.startsWith("+") ? digits : `+${digits}`);
+    }
+    return Array.from(found);
+  };
+
+  const scan = async () => {
+    const phones = parsePhones(raw);
+    if (phones.length === 0) {
+      toast.error("No phone numbers detected");
+      return;
+    }
+    setScanning(true);
+    try {
+      const hashes = await Promise.all(phones.map(hashPhoneE164));
+      const { data, error } = await supabase.functions.invoke("contact-match", {
+        body: { hashes },
+      });
+      if (error) throw error;
+      const results = (data as ContactMatchResponse | null)?.matches ?? [];
+      setMatches(results);
+      toast.success(
+        results.length
+          ? `${results.length} of your contact${phones.length > 1 ? "s are" : " is"} on ZIVO`
+          : `Scanned ${phones.length} contact${phones.length > 1 ? "s" : ""} — no matches yet`
+      );
+    } catch (e: unknown) {
+      const message = e instanceof Error ? e.message : "Couldn't match contacts";
+      toast.error(message);
+    } finally {
+      setScanning(false);
+    }
+  };
+
+  const openConfirm = (m: Match) => {
+    setConfirmTarget({
+      user_id: m.user_id,
+      full_name: m.full_name,
+      username: m.username,
+      avatar_url: m.avatar_url,
+    });
+    setConfirmOpen(true);
+  };
+
+  const openChat = (m: Match) => {
+    const name = m.full_name || (m.username ? `@${m.username}` : "ZIVO user");
+    navigate("/chat", {
+      state: {
+        openChat: { recipientId: m.user_id, recipientName: name, recipientAvatar: m.avatar_url || null },
+      },
+    });
+  };
+
+  return (
+    <div className="mx-auto max-w-2xl pb-24">
+      <header className="sticky top-0 z-10 flex items-center gap-2 border-b border-border bg-background/95 pt-safe px-3 py-3 backdrop-blur">
+        <Button variant="ghost" size="icon" onClick={goBack} aria-label="Back">
+          <ArrowLeft className="h-5 w-5" />
+        </Button>
+        <h1 className="text-base font-semibold">Find contacts on ZIVO</h1>
+      </header>
+
+      <div className="space-y-4 p-4">
+        {nativeReady && (
+          <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-4">
+            <div className="mb-1 flex items-center gap-2 text-sm font-medium">
+              <Smartphone className="h-4 w-4 text-emerald-600" />
+              Sync from your phone
+            </div>
+            <p className="mb-3 text-xs text-muted-foreground">
+              Read contacts directly from this device. Numbers are hashed on-device — only hashes are sent.
+            </p>
+            <Button onClick={nativeSync} disabled={syncing} className="bg-emerald-500 hover:bg-emerald-600 text-white gap-2">
+              {syncing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Smartphone className="h-4 w-4" />}
+              Sync now
+            </Button>
+          </div>
+        )}
+
+        <div className="rounded-lg border border-border bg-card p-4">
+          <div className="mb-2 flex items-center gap-2 text-sm font-medium">
+            <Phone className="h-4 w-4 text-primary" />
+            Paste or type phone numbers
+          </div>
+          <p className="mb-3 text-xs text-muted-foreground">
+            We hash numbers locally with SHA-256 — your raw contacts never leave your device.
+            Use full international format (e.g. <span className="font-mono">+15551234567</span>),
+            one per line or comma-separated.
+          </p>
+          <Textarea
+            value={raw}
+            onChange={(e) => setRaw(e.target.value)}
+            placeholder={"+15551234567\n+447700900000\n+85512345678"}
+            rows={6}
+            className="font-mono text-sm"
+          />
+          <Button onClick={scan} disabled={scanning || !raw.trim()} className="mt-3 gap-2">
+            {scanning ? <Loader2 className="h-4 w-4 animate-spin" /> : <Search className="h-4 w-4" />}
+            Scan & Match
+          </Button>
+        </div>
+
+        {matches !== null && (
+          <div className="space-y-2">
+            <h2 className="px-1 text-sm font-semibold text-muted-foreground">
+              Matches ({matches.length})
+            </h2>
+            {matches.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+                None of those numbers are on ZIVO yet. Invite them to join!
+              </div>
+            ) : (
+              matches.map((m) => (
+                <div
+                  key={m.user_id}
+                  className="flex items-center gap-3 rounded-lg border border-border bg-card p-3"
+                >
+                  <Avatar className="h-10 w-10">
+                    <AvatarImage src={m.avatar_url ?? undefined} />
+                    <AvatarFallback>
+                      {(m.full_name ?? m.username ?? "?").slice(0, 1).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="min-w-0 flex-1">
+                    <div className="truncate text-sm font-medium">
+                      {m.full_name ?? m.username ?? "ZIVO user"}
+                    </div>
+                    {m.username && (
+                      <div className="truncate text-xs text-muted-foreground">@{m.username}</div>
+                    )}
+                  </div>
+                  {contactIds.has(m.user_id) ? (
+                    <Button size="sm" variant="ghost" onClick={() => openChat(m)} className="gap-1 text-emerald-600">
+                      <Check className="h-4 w-4" /> In contacts
+                    </Button>
+                  ) : pendingIds.has(m.user_id) ? (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => navigate("/chat/contacts/requests?tab=out")}
+                      className="gap-1 text-amber-600 border-amber-300"
+                    >
+                      <Loader2 className="h-4 w-4" /> Pending
+                    </Button>
+                  ) : (
+                    <Button size="sm" variant="outline" onClick={() => openConfirm(m)} className="gap-1">
+                      <UserPlus className="h-4 w-4" /> Add
+                    </Button>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+      <ConfirmAddContactSheet open={confirmOpen} onOpenChange={setConfirmOpen} target={confirmTarget} />
+    </div>
+  );
+}

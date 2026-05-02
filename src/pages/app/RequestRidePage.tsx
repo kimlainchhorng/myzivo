@@ -1,4 +1,5 @@
 import { useState, useCallback, useMemo, useRef, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, MapPin, Navigation, Loader2, Car, Receipt, ChevronRight, DollarSign, CreditCard, Lock, Shield, CheckCircle, Zap, Plus, Users, Clock, Sparkles, Leaf, Crown, Volume2, VolumeX, Thermometer, Music, Tag, Gift, Heart, Star, Share2, UserPlus, Phone, AlertTriangle, Copy, ExternalLink, MessageSquare, History, RotateCcw, Headphones, Baby, Briefcase, Home, Building2, Bookmark, Route, Info, X, Bell, ThumbsUp, ThumbsDown, Award, Plane, BarChart3, TrendingUp } from "lucide-react";
@@ -15,6 +16,7 @@ import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-
 import { getStripe } from "@/lib/stripe";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { cn } from "@/lib/utils";
+import { getPublicOrigin } from "@/lib/getPublicOrigin";
 import RideMap from "@/components/maps/RideMap";
 
 const stripePromise = getStripe();
@@ -109,13 +111,6 @@ const safetyFeatures = [
   { id: "audio-record", icon: Headphones, label: "Audio Recording", description: "Record ride audio for safety" },
 ];
 
-const recentRides = [
-  { id: "r1", from: "123 Main St", to: "Airport Terminal B", time: "Yesterday", price: "$28.50", vehicle: "Black" },
-  { id: "r2", from: "Home", to: "Downtown Office", time: "2 days ago", price: "$14.20", vehicle: "Standard" },
-  { id: "r3", from: "Whole Foods", to: "Home", time: "Last week", price: "$9.80", vehicle: "Green" },
-  { id: "r4", from: "Hotel Grand", to: "Convention Center", time: "Last week", price: "$11.50", vehicle: "Comfort" },
-  { id: "r5", from: "Home", to: "Airport Terminal A", time: "2 weeks ago", price: "$32.00", vehicle: "Black SUV" },
-];
 
 // Carbon offset data
 const carbonOffsetInfo = {
@@ -341,7 +336,7 @@ function RideEstimateCard({ pickup, dropoff }: { pickup: string; dropoff: string
 }
 
 // Recent rides section
-function RecentRidesSection({ onSelect }: { onSelect: (from: string, to: string) => void }) {
+function RecentRidesSection({ onSelect, rides }: { onSelect: (from: string, to: string) => void; rides: Array<{ id: string; from: string; to: string; date: string; price: string }> }) {
   const [showRecent, setShowRecent] = useState(false);
 
   return (
@@ -355,14 +350,19 @@ function RecentRidesSection({ onSelect }: { onSelect: (from: string, to: string)
         {showRecent && (
           <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
             className="space-y-1.5 overflow-hidden">
-            {recentRides.map((ride, i) => (
+            {rides.length === 0 && (
+              <div className="rounded-xl bg-muted/30 border border-border/30 p-3 text-center">
+                <p className="text-[11px] text-muted-foreground">No recent rides yet.</p>
+              </div>
+            )}
+            {rides.map((ride, i) => (
               <motion.button key={ride.id} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: i * 0.05 }}
                 onClick={() => onSelect(ride.from, ride.to)}
                 className="w-full flex items-center gap-3 p-3 rounded-xl bg-card border border-border/30 hover:border-primary/20 transition-all touch-manipulation active:scale-[0.98] text-left">
                 <RotateCcw className="w-4 h-4 text-muted-foreground shrink-0" />
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-bold text-foreground truncate">{ride.from} → {ride.to}</p>
-                  <p className="text-[10px] text-muted-foreground">{ride.time} · {ride.vehicle}</p>
+                  <p className="text-[10px] text-muted-foreground">{ride.date}</p>
                 </div>
                 <span className="text-xs font-bold text-foreground shrink-0">{ride.price}</span>
               </motion.button>
@@ -413,6 +413,28 @@ export default function RequestRidePage() {
   const [selectedPreferences, setSelectedPreferences] = useState<string[]>([]);
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
+
+  // Pre-fill promo code if forwarded from Stores list (?promo=… or sessionStorage)
+  useEffect(() => {
+    if (promoCode) return;
+    try {
+      const params = new URLSearchParams(window.location.search);
+      let code = params.get("promo")?.trim().toUpperCase() || "";
+      if (!code) {
+        const raw = sessionStorage.getItem("zivo:pending-promo");
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          if (parsed?.code && Date.now() - (parsed.ts || 0) < 15 * 60 * 1000) {
+            code = String(parsed.code).toUpperCase();
+          }
+        }
+      }
+      if (code) setPromoCode(code);
+    } catch {
+      /* noop */
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [selectedTip, setSelectedTip] = useState("none");
   const [customTip, setCustomTip] = useState("");
   const [rideNote, setRideNote] = useState("");
@@ -422,7 +444,21 @@ export default function RequestRidePage() {
   const [carbonOffset, setCarbonOffset] = useState(false);
   const [showRidePass, setShowRidePass] = useState(false);
   const [selectedPaymentMethod, setSelectedPaymentMethod] = useState<"card" | "cash" | "wallet">("card");
-  const [surgeActive] = useState(Math.random() > 0.6);
+
+  // Live surge detection from surge_zones table
+  const { data: surgeZones = [] } = useQuery({
+    queryKey: ["surge-zones-active"],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("surge_zones")
+        .select("base_multiplier, manual_multiplier")
+        .eq("is_active", true)
+        .eq("surge_enabled", true);
+      return data || [];
+    },
+    refetchInterval: 60000,
+  });
+  const surgeActive = surgeZones.some((z: any) => (z.manual_multiplier ?? z.base_multiplier ?? 1) > 1.0);
   const [favoriteDrivers] = useState(["Marcus T.", "Sarah L.", "David K."]);
   const [requestFavoriteDriver, setRequestFavoriteDriver] = useState(false);
   const [selectedRoute, setSelectedRoute] = useState("fastest");
@@ -438,7 +474,7 @@ export default function RequestRidePage() {
   const [musicPreference, setMusicPreference] = useState<"none" | "chill" | "pop" | "jazz" | "classical">("none");
   const [splitFare, setSplitFare] = useState(false);
   const [splitWith, setSplitWith] = useState(1);
-  const [weatherAlert] = useState(Math.random() > 0.7);
+  const [weatherAlert] = useState(false);
   const [accessibilityMode, setAccessibilityMode] = useState(false);
   const [safetyRecording, setSafetyRecording] = useState(false);
   const [waitTimeGuarantee, setWaitTimeGuarantee] = useState(false);
@@ -453,7 +489,28 @@ export default function RequestRidePage() {
   const [chatInput, setChatInput] = useState("");
   const [fareLocked, setFareLocked] = useState(false);
   const [showRoutePreview, setShowRoutePreview] = useState(false);
-  const [rideStats] = useState({ totalRides: 142, totalMiles: 1847, avgRating: 4.9, savedCO2: "34 lbs" });
+
+  // Real ride stats from trips table
+  const { data: userTrips = [] } = useQuery({
+    queryKey: ["user-trips-stats", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("trips")
+        .select("rating, distance_km")
+        .eq("rider_id", user!.id)
+        .eq("status", "completed");
+      return data || [];
+    },
+  });
+  const rideStats = useMemo(() => {
+    const totalRides = userTrips.length;
+    const totalMiles = Math.round(userTrips.reduce((s: number, t: any) => s + ((t.distance_km ?? 0) * 0.621371), 0));
+    const rated = userTrips.filter((t: any) => t.rating != null);
+    const avgRating = rated.length ? (rated.reduce((s: number, t: any) => s + t.rating, 0) / rated.length).toFixed(1) : "—";
+    const savedCO2 = `${Math.round(userTrips.reduce((s: number, t: any) => s + ((t.distance_km ?? 0) * 0.248), 0))} lbs`;
+    return { totalRides, totalMiles, avgRating, savedCO2 };
+  }, [userTrips]);
   const [tempPreference, setTempPreference] = useState<"cool" | "warm" | "no-pref">("no-pref");
   const [showRideStats, setShowRideStats] = useState(false);
   const [returnTrip, setReturnTrip] = useState(false);
@@ -469,11 +526,29 @@ export default function RequestRidePage() {
   const [etaRecipient, setEtaRecipient] = useState("");
   const [rideNotes, setRideNotes] = useState("");
   const [showRideHistory, setShowRideHistory] = useState(false);
-  const [recentRides] = useState([
-    { id: "1", from: "Home", to: "Downtown Office", price: "$14.50", date: "Yesterday" },
-    { id: "2", from: "Airport", to: "Hotel Grand", price: "$32.00", date: "2 days ago" },
-    { id: "3", from: "Mall", to: "Home", price: "$11.25", date: "Last week" },
-  ]);
+
+  // Load user's recent completed rides
+  const { data: recentTripRows = [] } = useQuery({
+    queryKey: ["user-recent-trips", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("trips")
+        .select("id, pickup_address, dropoff_address, fare_amount, created_at")
+        .eq("rider_id", user!.id)
+        .eq("status", "completed")
+        .order("created_at", { ascending: false })
+        .limit(5);
+      return data || [];
+    },
+  });
+  const recentRides = useMemo(() => recentTripRows.map((t: any) => ({
+    id: t.id,
+    from: t.pickup_address,
+    to: t.dropoff_address,
+    price: t.fare_amount ? `$${Number(t.fare_amount).toFixed(2)}` : "—",
+    date: new Date(t.created_at).toLocaleDateString(),
+  })), [recentTripRows]);
   const [showQuickRebook, setShowQuickRebook] = useState(false);
   const [selectedVehicleAge, setSelectedVehicleAge] = useState<"any" | "new" | "2yr" | "5yr">("any");
   const [airFreshener, setAirFreshener] = useState(false);
@@ -493,7 +568,7 @@ export default function RequestRidePage() {
   const [executiveChauffeur, setExecutiveChauffeur] = useState(false);
   const [flightTracking, setFlightTracking] = useState(false);
   const [flightNumber, setFlightNumber] = useState("");
-  const [poolCountdown] = useState(Math.floor(Math.random() * 4) + 1);
+  const [poolCountdown] = useState(0);
   const [upfrontPrice, setUpfrontPrice] = useState(true);
   const [rewardPoints] = useState(1247);
   const [showRewards, setShowRewards] = useState(false);
@@ -680,9 +755,10 @@ export default function RequestRidePage() {
 
   const handleShareTrip = () => {
     if (navigator.share) {
-      navigator.share({ title: "My ZIVO Trip", text: `I'm on my way! Track my ride from ${pickupAddress} to ${dropoffAddress}.`, url: window.location.href });
+      const tripUrl = `${getPublicOrigin()}/rides`;
+      navigator.share({ title: "My ZIVO Trip", text: `I'm on my way! Track my ride from ${pickupAddress} to ${dropoffAddress}.`, url: tripUrl });
     } else {
-      navigator.clipboard.writeText(window.location.href);
+      navigator.clipboard.writeText(`${getPublicOrigin()}/rides`);
       toast.success("Trip link copied to clipboard!");
     }
   };
@@ -1362,6 +1438,12 @@ export default function RequestRidePage() {
                       <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
                         className="overflow-hidden">
                         <div className="space-y-2 mt-3">
+                          {recentRides.length === 0 && (
+                            <div className="rounded-xl bg-muted/30 p-3 text-center">
+                              <p className="text-xs text-muted-foreground">No recent rides yet.</p>
+                              <p className="text-[10px] text-muted-foreground/70 mt-0.5">Your past trips will appear here.</p>
+                            </div>
+                          )}
                           {recentRides.map(ride => (
                             <button key={ride.id} onClick={() => { toast.info(`Rebooking: ${ride.from} → ${ride.to}`); }}
                               className="w-full rounded-xl bg-muted/30 p-3 text-left hover:bg-muted/50 transition-colors touch-manipulation">
@@ -1452,7 +1534,7 @@ export default function RequestRidePage() {
                 <RideEstimateCard pickup={pickupAddress} dropoff={dropoffAddress} />
 
                 {/* Recent rides */}
-                <RecentRidesSection onSelect={handleSelectRecentRide} />
+                <RecentRidesSection onSelect={handleSelectRecentRide} rides={recentRides} />
 
                 {/* Note to driver */}
                 <div className="flex items-center gap-2">
@@ -1604,7 +1686,7 @@ export default function RequestRidePage() {
                           </div>
                         </div>
                       ))}
-                      <Button variant="outline" size="sm" onClick={() => toast.info("Ride Pass subscription coming soon!")} className="w-full rounded-xl text-xs font-bold">
+                      <Button variant="outline" size="sm" onClick={() => navigate("/membership")} className="w-full rounded-xl text-xs font-bold">
                         Learn More
                       </Button>
                     </motion.div>
@@ -1924,7 +2006,7 @@ export default function RequestRidePage() {
                     className="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border border-border/40 bg-card text-xs font-bold text-foreground hover:bg-muted/50 touch-manipulation active:scale-95">
                     <Share2 className="w-4 h-4 text-primary" /> Share Trip
                   </button>
-                  <button onClick={() => { notifyRide("trip_cancelled"); toast.info("Ride cancelled. Refund will be processed."); navigate("/"); }}
+                  <button onClick={() => { notifyRide("trip_cancelled", { jobId: draftJobId ?? undefined }); toast.info("Ride cancelled. Refund will be processed."); navigate("/"); }}
                     className="flex-1 flex items-center justify-center gap-2 p-3 rounded-xl border border-destructive/30 bg-destructive/5 text-xs font-bold text-destructive hover:bg-destructive/10 touch-manipulation active:scale-95">
                     Cancel
                   </button>
@@ -2027,7 +2109,7 @@ export default function RequestRidePage() {
                       <p className="text-xs font-bold text-foreground">{d.name}</p>
                       <p className="text-[10px] text-muted-foreground">{d.vehicle} · ★ {d.rating} · {d.rides} rides</p>
                     </div>
-                    <button onClick={() => toast.success(`Requesting ${d.name}...`)} className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-full">Request</button>
+                    <button onClick={() => navigate("/rides", { state: { preferredDriverId: d.name, preferredDriverName: d.name } })} className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-full">Request</button>
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {d.preferences.map(p => <span key={p} className="px-2 py-0.5 rounded-full bg-muted/50 text-[8px] text-muted-foreground">{p}</span>)}

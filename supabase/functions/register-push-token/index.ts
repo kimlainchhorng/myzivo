@@ -37,9 +37,20 @@ serve(async (req) => {
     }
 
     const jwt = authHeader.replace("Bearer ", "");
-    const { data: { user }, error: authError } = await supabase.auth.getUser(jwt);
+    const authResponse = await fetch(`${supabaseUrl}/auth/v1/user`, {
+      headers: {
+        Authorization: `Bearer ${jwt}`,
+        apikey: supabaseKey,
+      },
+    });
 
-    if (authError || !user) {
+    let user = null;
+
+    if (authResponse.ok) {
+      user = await authResponse.json();
+    }
+
+    if (!authResponse.ok || !user) {
       return new Response(
         JSON.stringify({ error: "Invalid or expired token" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
@@ -70,24 +81,61 @@ serve(async (req) => {
       );
     }
 
-    // Upsert device token — one token per device, update if it already exists
-    const { data, error } = await supabase
+    const now = new Date().toISOString();
+
+    const { data: existingToken, error: existingTokenError } = await supabase
       .from("device_tokens")
-      .upsert(
-        {
+      .select("id")
+      .eq("token", token)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (existingTokenError) {
+      console.error("[register-push-token] Lookup error:", existingTokenError);
+      return new Response(
+        JSON.stringify({ error: "Failed to look up token", details: existingTokenError.message }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    let data = null;
+    let error = null;
+
+    if (existingToken?.id) {
+      const updateResult = await supabase
+        .from("device_tokens")
+        .update({
           user_id: user.id,
           token,
           platform,
           is_active: true,
-          updated_at: new Date().toISOString(),
-        },
-        {
-          onConflict: "token",
-          ignoreDuplicates: false,
-        }
-      )
-      .select("id")
-      .single();
+          updated_at: now,
+          last_used_at: now,
+        })
+        .eq("id", existingToken.id)
+        .select("id")
+        .single();
+
+      data = updateResult.data;
+      error = updateResult.error;
+    } else {
+      const insertResult = await supabase
+        .from("device_tokens")
+        .insert({
+          user_id: user.id,
+          token,
+          platform,
+          is_active: true,
+          updated_at: now,
+          last_used_at: now,
+        })
+        .select("id")
+        .single();
+
+      data = insertResult.data;
+      error = insertResult.error;
+    }
 
     if (error) {
       console.error("[register-push-token] DB error:", error);

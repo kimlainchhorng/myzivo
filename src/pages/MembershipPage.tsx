@@ -2,8 +2,9 @@
  * MembershipPage - ZIVO+ Subscription Management
  * Join, manage, and view membership benefits
  */
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { withRedirectParam } from "@/lib/authRedirect";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -41,6 +42,7 @@ import SEOHead from "@/components/SEOHead";
 import NavBar from "@/components/home/NavBar";
 import Footer from "@/components/Footer";
 import { toast } from "sonner";
+import PullToRefresh from "@/components/shared/PullToRefresh";
 import { format } from "date-fns";
 import { useMembershipSavings } from "@/hooks/useMembershipSavings";
 import { Link } from "react-router-dom";
@@ -93,6 +95,7 @@ export default function MembershipPage() {
   const createCheckout = useCreateMembershipCheckout();
   const cancelMembership = useCancelMembership();
   const openPortal = useOpenCustomerPortal();
+  const handlePullRefresh = useCallback(async () => { await refetch(); }, [refetch]);
 
   // Handle success/cancel from Stripe redirect
   useEffect(() => {
@@ -111,7 +114,7 @@ export default function MembershipPage() {
 
   const handleJoin = async () => {
     if (!user) {
-      navigate("/login?redirect=/membership");
+      navigate(withRedirectParam("/login", "/membership"));
       return;
     }
 
@@ -164,7 +167,7 @@ export default function MembershipPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background">
       <SEOHead 
         title="ZIVO+ Membership" 
         description="Join ZIVO+ for free delivery, reduced fees, and priority support" 
@@ -647,6 +650,6 @@ export default function MembershipPage() {
       </main>
       
       <Footer />
-    </div>
+    </PullToRefresh>
   );
 }

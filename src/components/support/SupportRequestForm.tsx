@@ -14,6 +14,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { HelpCircle, Send, Loader2, CheckCircle } from "lucide-react";
 import { useCreateTicket } from "@/hooks/useSupportTickets";
 import { cn } from "@/lib/utils";
+import { confirmContentSafe } from "@/lib/security/contentLinkValidation";
 
 interface SupportRequestFormProps {
   orderId?: string;
@@ -51,6 +52,7 @@ export function SupportRequestForm({
     e.preventDefault();
     
     if (!category || !subject.trim() || !description.trim()) return;
+    if (!confirmContentSafe(`${subject}\n${description}`, "support request")) return;
 
     await createTicket.mutateAsync({
       subject,

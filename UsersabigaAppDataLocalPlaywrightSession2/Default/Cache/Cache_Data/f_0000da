@@ -1,0 +1,1116 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/admin/store/StoreDocumentsSection.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"]; const _Fragment = __vite__cjsImport0_react_jsxDevRuntime["Fragment"];
+var _s = $RefreshSig$();
+import __vite__cjsImport1_react from "/node_modules/.vite/deps/react.js?v=7fd9520c"; const useMemo = __vite__cjsImport1_react["useMemo"]; const useRef = __vite__cjsImport1_react["useRef"]; const useState = __vite__cjsImport1_react["useState"];
+import { useQuery } from "/node_modules/.vite/deps/@tanstack_react-query.js?v=7fd9520c";
+import { supabase } from "/src/integrations/supabase/client.ts";
+import { cn } from "/src/lib/utils.ts";
+import { Badge } from "/src/components/ui/badge.tsx";
+import { Button } from "/src/components/ui/button.tsx";
+import { Input } from "/src/components/ui/input.tsx";
+import { Skeleton } from "/src/components/ui/skeleton.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "/src/components/ui/dialog.tsx";
+import { Label } from "/src/components/ui/label.tsx";
+import { FolderOpen, FileText, Upload, Search, Download, Trash2, Eye, File as FileIcon, FileImage, Users, AlertTriangle } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+import { toast } from "/node_modules/.vite/deps/sonner.js?v=7fd9520c";
+import { useStoreDocuments } from "/src/hooks/store/useStoreDocuments.ts";
+const CATEGORIES = [
+    "All",
+    "Contracts",
+    "IDs & Licenses",
+    "Certifications",
+    "Tax Forms",
+    "Policies",
+    "Other"
+];
+function formatBytes(b) {
+    if (b < 1024) return `${b} B`;
+    if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
+    return `${(b / 1024 / 1024).toFixed(1)} MB`;
+}
+function formatDate(iso) {
+    if (!iso) return "—";
+    return new Date(iso).toLocaleDateString();
+}
+export default function StoreDocumentsSection({ storeId }) {
+    _s();
+    const { list, upload, remove, getSignedUrl } = useStoreDocuments(storeId);
+    const docs = list.data || [];
+    const [category, setCategory] = useState("All");
+    const [search, setSearch] = useState("");
+    const [showUpload, setShowUpload] = useState(false);
+    const [selectedDoc, setSelectedDoc] = useState(null);
+    const [pendingFile, setPendingFile] = useState(null);
+    const [form, setForm] = useState({
+        name: "",
+        category: "Contracts",
+        employeeId: "",
+        expires_at: ""
+    });
+    const fileInputRef = useRef(null);
+    const { data: employees = [] } = useQuery({
+        queryKey: [
+            "store-employees-docs",
+            storeId
+        ],
+        queryFn: async ()=>{
+            const { data } = await supabase.from("store_employees").select("*").eq("store_id", storeId).eq("status", "active");
+            return data || [];
+        }
+    });
+    const employeesById = useMemo(()=>{
+        const map = {};
+        for (const e of employees)map[e.id] = e;
+        return map;
+    }, [
+        employees
+    ]);
+    const filtered = useMemo(()=>docs.filter((d)=>(category === "All" || d.category === category) && d.name.toLowerCase().includes(search.toLowerCase())), [
+        docs,
+        category,
+        search
+    ]);
+    const expiringSoon = useMemo(()=>docs.filter((d)=>{
+            if (!d.expires_at) return false;
+            const diff = new Date(d.expires_at).getTime() - Date.now();
+            return diff > 0 && diff < 90 * 24 * 60 * 60 * 1000;
+        }), [
+        docs
+    ]);
+    const stats = [
+        {
+            icon: FileText,
+            label: "Total Documents",
+            value: docs.length,
+            color: "text-primary",
+            bg: "bg-primary/10"
+        },
+        {
+            icon: FolderOpen,
+            label: "Categories",
+            value: CATEGORIES.length - 1,
+            color: "text-info",
+            bg: "bg-info/10"
+        },
+        {
+            icon: AlertTriangle,
+            label: "Expiring Soon",
+            value: expiringSoon.length,
+            color: "text-warning",
+            bg: "bg-warning/10"
+        },
+        {
+            icon: Users,
+            label: "Employees",
+            value: employees.length,
+            color: "text-success",
+            bg: "bg-success/10"
+        }
+    ];
+    const openFilePicker = ()=>fileInputRef.current?.click();
+    const handleFilePicked = (file)=>{
+        setPendingFile(file);
+        setForm((f)=>({
+                ...f,
+                name: f.name || file.name
+            }));
+        setShowUpload(true);
+    };
+    const handleUpload = async ()=>{
+        if (!pendingFile) return toast.error("Choose a file");
+        if (pendingFile.size > 50 * 1024 * 1024) return toast.error("File too large (max 50MB)");
+        try {
+            await upload.mutateAsync({
+                file: pendingFile,
+                name: form.name || pendingFile.name,
+                category: form.category,
+                employee_id: form.employeeId || null,
+                expires_at: form.expires_at || null
+            });
+            toast.success("Document uploaded");
+            setShowUpload(false);
+            setPendingFile(null);
+            setForm({
+                name: "",
+                category: "Contracts",
+                employeeId: "",
+                expires_at: ""
+            });
+        } catch (e) {
+            toast.error(e.message || "Upload failed");
+        }
+    };
+    const handleDelete = async (doc)=>{
+        try {
+            await remove.mutateAsync(doc);
+            setSelectedDoc(null);
+            toast.success("Document deleted");
+        } catch (e) {
+            toast.error(e.message || "Delete failed");
+        }
+    };
+    const handleView = async (doc)=>{
+        try {
+            const url = await getSignedUrl(doc.file_path, 60);
+            window.open(url, "_blank", "noopener,noreferrer");
+        } catch (e) {
+            toast.error(e.message || "Could not open document");
+        }
+    };
+    const fileIconFor = (type)=>type === "image" ? FileImage : type === "pdf" ? FileText : FileIcon;
+    return /*#__PURE__*/ _jsxDEV("div", {
+        className: "space-y-6",
+        children: [
+            /*#__PURE__*/ _jsxDEV("input", {
+                ref: fileInputRef,
+                type: "file",
+                accept: ".pdf,image/*,.doc,.docx",
+                className: "hidden",
+                onChange: (e)=>{
+                    const f = e.target.files?.[0];
+                    if (f) handleFilePicked(f);
+                    e.target.value = "";
+                }
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                lineNumber: 141,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "grid grid-cols-2 lg:grid-cols-4 gap-4",
+                children: stats.map((s)=>/*#__PURE__*/ _jsxDEV("div", {
+                        className: "rounded-xl border border-border/40 bg-card p-4",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "flex items-center gap-3 mb-2",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        className: cn("w-10 h-10 rounded-full flex items-center justify-center", s.bg),
+                                        children: /*#__PURE__*/ _jsxDEV(s.icon, {
+                                            className: cn("w-5 h-5", s.color)
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                            lineNumber: 159,
+                                            columnNumber: 17
+                                        }, this)
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                        lineNumber: 158,
+                                        columnNumber: 15
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("span", {
+                                        className: "text-xs text-muted-foreground",
+                                        children: s.label
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                        lineNumber: 161,
+                                        columnNumber: 15
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                lineNumber: 157,
+                                columnNumber: 13
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("p", {
+                                className: "text-2xl font-bold",
+                                children: s.value
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                lineNumber: 163,
+                                columnNumber: 13
+                            }, this)
+                        ]
+                    }, s.label, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                        lineNumber: 156,
+                        columnNumber: 11
+                    }, this))
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                lineNumber: 154,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "flex items-center gap-2 flex-wrap",
+                children: CATEGORIES.map((c)=>/*#__PURE__*/ _jsxDEV("button", {
+                        onClick: ()=>setCategory(c),
+                        className: cn("px-3 py-1.5 rounded-lg text-xs font-medium border transition-all", category === c ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:bg-muted"),
+                        children: c
+                    }, c, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                        lineNumber: 171,
+                        columnNumber: 11
+                    }, this))
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                lineNumber: 169,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "flex items-center gap-3 flex-wrap",
+                children: [
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "relative flex-1 min-w-[200px]",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(Search, {
+                                className: "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                lineNumber: 189,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(Input, {
+                                placeholder: "Search documents...",
+                                value: search,
+                                onChange: (e)=>setSearch(e.target.value),
+                                className: "pl-9"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                lineNumber: 190,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                        lineNumber: 188,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(Button, {
+                        onClick: openFilePicker,
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(Upload, {
+                                className: "w-4 h-4 mr-1.5"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                lineNumber: 193,
+                                columnNumber: 11
+                            }, this),
+                            " Upload Document"
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                        lineNumber: 192,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                lineNumber: 187,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "rounded-xl border border-border/40 bg-card overflow-hidden",
+                children: list.isLoading ? /*#__PURE__*/ _jsxDEV("div", {
+                    className: "p-4 space-y-2",
+                    children: Array.from({
+                        length: 4
+                    }).map((_, i)=>/*#__PURE__*/ _jsxDEV(Skeleton, {
+                            className: "h-12 w-full"
+                        }, i, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                            lineNumber: 202,
+                            columnNumber: 15
+                        }, this))
+                }, void 0, false, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                    lineNumber: 200,
+                    columnNumber: 11
+                }, this) : filtered.length === 0 ? /*#__PURE__*/ _jsxDEV("div", {
+                    className: "p-10 text-center",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV(FileText, {
+                            className: "w-10 h-10 text-muted-foreground/50 mx-auto mb-3"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                            lineNumber: 207,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("h3", {
+                            className: "text-sm font-semibold mb-1",
+                            children: "No documents yet"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                            lineNumber: 208,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("p", {
+                            className: "text-xs text-muted-foreground mb-4",
+                            children: "Upload contracts, IDs, certifications, or policies."
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                            lineNumber: 209,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV(Button, {
+                            variant: "outline",
+                            size: "sm",
+                            onClick: openFilePicker,
+                            children: [
+                                /*#__PURE__*/ _jsxDEV(Upload, {
+                                    className: "w-3.5 h-3.5 mr-1.5"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                    lineNumber: 211,
+                                    columnNumber: 15
+                                }, this),
+                                " Upload your first document"
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                            lineNumber: 210,
+                            columnNumber: 13
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                    lineNumber: 206,
+                    columnNumber: 11
+                }, this) : /*#__PURE__*/ _jsxDEV("table", {
+                    className: "w-full text-sm",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV("thead", {
+                            children: /*#__PURE__*/ _jsxDEV("tr", {
+                                className: "bg-muted/30 text-xs text-muted-foreground",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV("th", {
+                                        className: "text-left px-4 py-3 font-medium",
+                                        children: "Document"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                        lineNumber: 218,
+                                        columnNumber: 17
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("th", {
+                                        className: "text-left px-4 py-3 font-medium",
+                                        children: "Category"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                        lineNumber: 219,
+                                        columnNumber: 17
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("th", {
+                                        className: "text-left px-4 py-3 font-medium",
+                                        children: "Employee"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                        lineNumber: 220,
+                                        columnNumber: 17
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("th", {
+                                        className: "text-left px-4 py-3 font-medium",
+                                        children: "Uploaded"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                        lineNumber: 221,
+                                        columnNumber: 17
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("th", {
+                                        className: "text-left px-4 py-3 font-medium",
+                                        children: "Expires"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                        lineNumber: 222,
+                                        columnNumber: 17
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("th", {
+                                        className: "text-left px-4 py-3 font-medium",
+                                        children: "Status"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                        lineNumber: 223,
+                                        columnNumber: 17
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("th", {
+                                        className: "text-right px-4 py-3 font-medium",
+                                        children: "Actions"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                        lineNumber: 224,
+                                        columnNumber: 17
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                lineNumber: 217,
+                                columnNumber: 15
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                            lineNumber: 216,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("tbody", {
+                            className: "divide-y divide-border/30",
+                            children: filtered.map((d)=>{
+                                const Icon = fileIconFor(d.file_type);
+                                const empName = d.employee_id ? employeesById[d.employee_id]?.name || "Employee" : "Company";
+                                return /*#__PURE__*/ _jsxDEV("tr", {
+                                    className: "hover:bg-muted/20",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV("td", {
+                                            className: "px-4 py-3",
+                                            children: /*#__PURE__*/ _jsxDEV("div", {
+                                                className: "flex items-center gap-2",
+                                                children: [
+                                                    /*#__PURE__*/ _jsxDEV(Icon, {
+                                                        className: "w-4 h-4 text-primary shrink-0"
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                                        lineNumber: 235,
+                                                        columnNumber: 25
+                                                    }, this),
+                                                    /*#__PURE__*/ _jsxDEV("div", {
+                                                        children: [
+                                                            /*#__PURE__*/ _jsxDEV("p", {
+                                                                className: "font-medium text-xs truncate max-w-[200px]",
+                                                                children: d.name
+                                                            }, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                                                lineNumber: 237,
+                                                                columnNumber: 27
+                                                            }, this),
+                                                            /*#__PURE__*/ _jsxDEV("p", {
+                                                                className: "text-[10px] text-muted-foreground",
+                                                                children: formatBytes(d.size_bytes)
+                                                            }, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                                                lineNumber: 238,
+                                                                columnNumber: 27
+                                                            }, this)
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                                        lineNumber: 236,
+                                                        columnNumber: 25
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                                lineNumber: 234,
+                                                columnNumber: 23
+                                            }, this)
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                            lineNumber: 233,
+                                            columnNumber: 21
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("td", {
+                                            className: "px-4 py-3",
+                                            children: /*#__PURE__*/ _jsxDEV(Badge, {
+                                                variant: "outline",
+                                                className: "text-[10px]",
+                                                children: d.category
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                                lineNumber: 242,
+                                                columnNumber: 47
+                                            }, this)
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                            lineNumber: 242,
+                                            columnNumber: 21
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("td", {
+                                            className: "px-4 py-3 text-xs",
+                                            children: empName
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                            lineNumber: 243,
+                                            columnNumber: 21
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("td", {
+                                            className: "px-4 py-3 text-xs text-muted-foreground",
+                                            children: formatDate(d.created_at)
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                            lineNumber: 244,
+                                            columnNumber: 21
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("td", {
+                                            className: "px-4 py-3 text-xs text-muted-foreground",
+                                            children: formatDate(d.expires_at)
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                            lineNumber: 245,
+                                            columnNumber: 21
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("td", {
+                                            className: "px-4 py-3",
+                                            children: /*#__PURE__*/ _jsxDEV(Badge, {
+                                                variant: "outline",
+                                                className: cn("text-[10px]", d.status === "active" && "bg-success/10 text-success border-success/30", d.status === "expired" && "bg-destructive/10 text-destructive border-destructive/30", d.status === "pending" && "bg-warning/10 text-warning border-warning/30"),
+                                                children: d.status
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                                lineNumber: 247,
+                                                columnNumber: 23
+                                            }, this)
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                            lineNumber: 246,
+                                            columnNumber: 21
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("td", {
+                                            className: "px-4 py-3 text-right",
+                                            children: /*#__PURE__*/ _jsxDEV("div", {
+                                                className: "flex items-center gap-1 justify-end",
+                                                children: [
+                                                    /*#__PURE__*/ _jsxDEV(Button, {
+                                                        variant: "ghost",
+                                                        size: "icon",
+                                                        className: "h-7 w-7",
+                                                        onClick: ()=>handleView(d),
+                                                        children: /*#__PURE__*/ _jsxDEV(Eye, {
+                                                            className: "w-3.5 h-3.5"
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                                            lineNumber: 262,
+                                                            columnNumber: 27
+                                                        }, this)
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                                        lineNumber: 261,
+                                                        columnNumber: 25
+                                                    }, this),
+                                                    /*#__PURE__*/ _jsxDEV(Button, {
+                                                        variant: "ghost",
+                                                        size: "icon",
+                                                        className: "h-7 w-7 text-destructive hover:text-destructive",
+                                                        onClick: ()=>setSelectedDoc(d),
+                                                        children: /*#__PURE__*/ _jsxDEV(Trash2, {
+                                                            className: "w-3.5 h-3.5"
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                                            lineNumber: 270,
+                                                            columnNumber: 27
+                                                        }, this)
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                                        lineNumber: 264,
+                                                        columnNumber: 25
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                                lineNumber: 260,
+                                                columnNumber: 23
+                                            }, this)
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                            lineNumber: 259,
+                                            columnNumber: 21
+                                        }, this)
+                                    ]
+                                }, d.id, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                    lineNumber: 232,
+                                    columnNumber: 19
+                                }, this);
+                            })
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                            lineNumber: 227,
+                            columnNumber: 13
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                    lineNumber: 215,
+                    columnNumber: 11
+                }, this)
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                lineNumber: 198,
+                columnNumber: 7
+            }, this),
+            expiringSoon.length > 0 && /*#__PURE__*/ _jsxDEV("div", {
+                className: "rounded-xl border border-warning/40 bg-warning/10 p-4",
+                children: [
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "flex items-center gap-2 mb-2",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(AlertTriangle, {
+                                className: "w-4 h-4 text-warning"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                lineNumber: 286,
+                                columnNumber: 13
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("h3", {
+                                className: "text-sm font-semibold text-warning",
+                                children: "Expiring Soon"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                lineNumber: 287,
+                                columnNumber: 13
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                        lineNumber: 285,
+                        columnNumber: 11
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "space-y-1",
+                        children: expiringSoon.map((d)=>{
+                            const empName = d.employee_id ? employeesById[d.employee_id]?.name || "Employee" : "Company";
+                            return /*#__PURE__*/ _jsxDEV("p", {
+                                className: "text-xs text-warning/90",
+                                children: [
+                                    d.name,
+                                    " — expires ",
+                                    formatDate(d.expires_at),
+                                    " (",
+                                    empName,
+                                    ")"
+                                ]
+                            }, d.id, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                lineNumber: 293,
+                                columnNumber: 17
+                            }, this);
+                        })
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                        lineNumber: 289,
+                        columnNumber: 11
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                lineNumber: 284,
+                columnNumber: 9
+            }, this),
+            /*#__PURE__*/ _jsxDEV(Dialog, {
+                open: showUpload,
+                onOpenChange: (o)=>{
+                    if (!o) {
+                        setShowUpload(false);
+                        setPendingFile(null);
+                    }
+                },
+                children: /*#__PURE__*/ _jsxDEV(DialogContent, {
+                    className: "max-w-md",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV(DialogHeader, {
+                            children: /*#__PURE__*/ _jsxDEV(DialogTitle, {
+                                children: "Upload Document"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                lineNumber: 305,
+                                columnNumber: 25
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                            lineNumber: 305,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "space-y-4 py-2",
+                            children: [
+                                pendingFile ? /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "flex items-center gap-3 rounded-lg border border-border/40 p-3 bg-muted/30",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(FileText, {
+                                            className: "w-5 h-5 text-primary"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                            lineNumber: 309,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("div", {
+                                            className: "flex-1 min-w-0",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV("p", {
+                                                    className: "text-xs font-medium truncate",
+                                                    children: pendingFile.name
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                                    lineNumber: 311,
+                                                    columnNumber: 19
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV("p", {
+                                                    className: "text-[10px] text-muted-foreground",
+                                                    children: formatBytes(pendingFile.size)
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                                    lineNumber: 312,
+                                                    columnNumber: 19
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                            lineNumber: 310,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV(Button, {
+                                            variant: "ghost",
+                                            size: "sm",
+                                            onClick: openFilePicker,
+                                            children: "Change"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                            lineNumber: 314,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                    lineNumber: 308,
+                                    columnNumber: 15
+                                }, this) : /*#__PURE__*/ _jsxDEV("button", {
+                                    onClick: openFilePicker,
+                                    className: "w-full border-2 border-dashed border-border rounded-xl p-8 text-center hover:bg-muted/30 transition-colors",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Upload, {
+                                            className: "w-8 h-8 text-muted-foreground mx-auto mb-2"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                            lineNumber: 321,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("p", {
+                                            className: "text-sm text-muted-foreground",
+                                            children: "Click to choose a file"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                            lineNumber: 322,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("p", {
+                                            className: "text-[10px] text-muted-foreground mt-1",
+                                            children: "PDF, JPG, PNG, DOC up to 50MB"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                            lineNumber: 323,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                    lineNumber: 317,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "space-y-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Label, {
+                                            children: "Document Name"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                            lineNumber: 328,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV(Input, {
+                                            value: form.name,
+                                            onChange: (e)=>setForm((p)=>({
+                                                        ...p,
+                                                        name: e.target.value
+                                                    })),
+                                            placeholder: "e.g. Contract - John.pdf"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                            lineNumber: 329,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                    lineNumber: 327,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "space-y-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Label, {
+                                            children: "Category"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                            lineNumber: 336,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("select", {
+                                            value: form.category,
+                                            onChange: (e)=>setForm((p)=>({
+                                                        ...p,
+                                                        category: e.target.value
+                                                    })),
+                                            className: "w-full border border-border rounded-lg px-3 py-2 text-sm bg-background",
+                                            children: CATEGORIES.filter((c)=>c !== "All").map((c)=>/*#__PURE__*/ _jsxDEV("option", {
+                                                    value: c,
+                                                    children: c
+                                                }, c, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                                    lineNumber: 342,
+                                                    columnNumber: 67
+                                                }, this))
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                            lineNumber: 337,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                    lineNumber: 335,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "space-y-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Label, {
+                                            children: "Employee (optional)"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                            lineNumber: 346,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("select", {
+                                            value: form.employeeId,
+                                            onChange: (e)=>setForm((p)=>({
+                                                        ...p,
+                                                        employeeId: e.target.value
+                                                    })),
+                                            className: "w-full border border-border rounded-lg px-3 py-2 text-sm bg-background",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV("option", {
+                                                    value: "",
+                                                    children: "Company-wide"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                                    lineNumber: 352,
+                                                    columnNumber: 17
+                                                }, this),
+                                                employees.map((e)=>/*#__PURE__*/ _jsxDEV("option", {
+                                                        value: e.id,
+                                                        children: e.name
+                                                    }, e.id, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                                        lineNumber: 353,
+                                                        columnNumber: 44
+                                                    }, this))
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                            lineNumber: 347,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                    lineNumber: 345,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "space-y-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Label, {
+                                            children: "Expires (optional)"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                            lineNumber: 357,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV(Input, {
+                                            type: "date",
+                                            value: form.expires_at,
+                                            onChange: (e)=>setForm((p)=>({
+                                                        ...p,
+                                                        expires_at: e.target.value
+                                                    }))
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                            lineNumber: 358,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                    lineNumber: 356,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                            lineNumber: 306,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV(DialogFooter, {
+                            children: [
+                                /*#__PURE__*/ _jsxDEV(Button, {
+                                    variant: "outline",
+                                    onClick: ()=>{
+                                        setShowUpload(false);
+                                        setPendingFile(null);
+                                    },
+                                    children: "Cancel"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                    lineNumber: 366,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV(Button, {
+                                    onClick: handleUpload,
+                                    disabled: upload.isPending || !pendingFile,
+                                    children: upload.isPending ? "Uploading..." : "Upload"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                    lineNumber: 367,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                            lineNumber: 365,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                    lineNumber: 304,
+                    columnNumber: 9
+                }, this)
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                lineNumber: 303,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV(Dialog, {
+                open: !!selectedDoc,
+                onOpenChange: ()=>setSelectedDoc(null),
+                children: /*#__PURE__*/ _jsxDEV(DialogContent, {
+                    className: "max-w-sm",
+                    children: selectedDoc && /*#__PURE__*/ _jsxDEV(_Fragment, {
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(DialogHeader, {
+                                children: /*#__PURE__*/ _jsxDEV(DialogTitle, {
+                                    className: "text-base",
+                                    children: "Delete document?"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                    lineNumber: 379,
+                                    columnNumber: 29
+                                }, this)
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                lineNumber: 379,
+                                columnNumber: 15
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("p", {
+                                className: "text-sm text-muted-foreground",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV("span", {
+                                        className: "font-medium text-foreground",
+                                        children: selectedDoc.name
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                        lineNumber: 381,
+                                        columnNumber: 17
+                                    }, this),
+                                    " will be permanently removed."
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                lineNumber: 380,
+                                columnNumber: 15
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(DialogFooter, {
+                                className: "gap-2",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(Button, {
+                                        variant: "outline",
+                                        size: "sm",
+                                        onClick: ()=>handleView(selectedDoc),
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(Download, {
+                                                className: "w-3.5 h-3.5 mr-1"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                                lineNumber: 385,
+                                                columnNumber: 19
+                                            }, this),
+                                            " View first"
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                        lineNumber: 384,
+                                        columnNumber: 17
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV(Button, {
+                                        variant: "destructive",
+                                        size: "sm",
+                                        onClick: ()=>handleDelete(selectedDoc),
+                                        disabled: remove.isPending,
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(Trash2, {
+                                                className: "w-3.5 h-3.5 mr-1"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                                lineNumber: 393,
+                                                columnNumber: 19
+                                            }, this),
+                                            " Delete"
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                        lineNumber: 387,
+                                        columnNumber: 17
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                                lineNumber: 383,
+                                columnNumber: 15
+                            }, this)
+                        ]
+                    }, void 0, true)
+                }, void 0, false, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                    lineNumber: 376,
+                    columnNumber: 9
+                }, this)
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+                lineNumber: 375,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx",
+        lineNumber: 139,
+        columnNumber: 5
+    }, this);
+}
+_s(StoreDocumentsSection, "xSZvEwqqakoBiixqBgXCiYUj/gw=", false, function() {
+    return [
+        useStoreDocuments,
+        useQuery
+    ];
+});
+_c = StoreDocumentsSection;
+var _c;
+$RefreshReg$(_c, "StoreDocumentsSection");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreDocumentsSection.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIlN0b3JlRG9jdW1lbnRzU2VjdGlvbi50c3giXSwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHsgdXNlTWVtbywgdXNlUmVmLCB1c2VTdGF0ZSB9IGZyb20gXCJyZWFjdFwiO1xyXG5pbXBvcnQgeyB1c2VRdWVyeSB9IGZyb20gXCJAdGFuc3RhY2svcmVhY3QtcXVlcnlcIjtcclxuaW1wb3J0IHsgc3VwYWJhc2UgfSBmcm9tIFwiQC9pbnRlZ3JhdGlvbnMvc3VwYWJhc2UvY2xpZW50XCI7XHJcbmltcG9ydCB7IGNuIH0gZnJvbSBcIkAvbGliL3V0aWxzXCI7XHJcbmltcG9ydCB7IEJhZGdlIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9iYWRnZVwiO1xyXG5pbXBvcnQgeyBCdXR0b24gfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2J1dHRvblwiO1xyXG5pbXBvcnQgeyBJbnB1dCB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvaW5wdXRcIjtcclxuaW1wb3J0IHsgU2tlbGV0b24gfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL3NrZWxldG9uXCI7XHJcbmltcG9ydCB7IERpYWxvZywgRGlhbG9nQ29udGVudCwgRGlhbG9nSGVhZGVyLCBEaWFsb2dUaXRsZSwgRGlhbG9nRm9vdGVyIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9kaWFsb2dcIjtcclxuaW1wb3J0IHsgTGFiZWwgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2xhYmVsXCI7XHJcbmltcG9ydCB7XHJcbiAgRm9sZGVyT3BlbiwgRmlsZVRleHQsIFVwbG9hZCwgU2VhcmNoLCBEb3dubG9hZCwgVHJhc2gyLCBFeWUsXHJcbiAgRmlsZSBhcyBGaWxlSWNvbiwgRmlsZUltYWdlLCBVc2VycywgQWxlcnRUcmlhbmdsZSxcclxufSBmcm9tIFwibHVjaWRlLXJlYWN0XCI7XHJcbmltcG9ydCB7IHRvYXN0IH0gZnJvbSBcInNvbm5lclwiO1xyXG5pbXBvcnQgeyB1c2VTdG9yZURvY3VtZW50cywgdHlwZSBTdG9yZURvY3VtZW50IH0gZnJvbSBcIkAvaG9va3Mvc3RvcmUvdXNlU3RvcmVEb2N1bWVudHNcIjtcclxuXHJcbmludGVyZmFjZSBQcm9wcyB7IHN0b3JlSWQ6IHN0cmluZzsgfVxyXG5cclxuY29uc3QgQ0FURUdPUklFUyA9IFtcIkFsbFwiLCBcIkNvbnRyYWN0c1wiLCBcIklEcyAmIExpY2Vuc2VzXCIsIFwiQ2VydGlmaWNhdGlvbnNcIiwgXCJUYXggRm9ybXNcIiwgXCJQb2xpY2llc1wiLCBcIk90aGVyXCJdO1xyXG5cclxuZnVuY3Rpb24gZm9ybWF0Qnl0ZXMoYjogbnVtYmVyKSB7XHJcbiAgaWYgKGIgPCAxMDI0KSByZXR1cm4gYCR7Yn0gQmA7XHJcbiAgaWYgKGIgPCAxMDI0ICogMTAyNCkgcmV0dXJuIGAkeyhiIC8gMTAyNCkudG9GaXhlZCgxKX0gS0JgO1xyXG4gIHJldHVybiBgJHsoYiAvIDEwMjQgLyAxMDI0KS50b0ZpeGVkKDEpfSBNQmA7XHJcbn1cclxuXHJcbmZ1bmN0aW9uIGZvcm1hdERhdGUoaXNvOiBzdHJpbmcgfCBudWxsKSB7XHJcbiAgaWYgKCFpc28pIHJldHVybiBcIuKAlFwiO1xyXG4gIHJldHVybiBuZXcgRGF0ZShpc28pLnRvTG9jYWxlRGF0ZVN0cmluZygpO1xyXG59XHJcblxyXG5leHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBTdG9yZURvY3VtZW50c1NlY3Rpb24oeyBzdG9yZUlkIH06IFByb3BzKSB7XHJcbiAgY29uc3QgeyBsaXN0LCB1cGxvYWQsIHJlbW92ZSwgZ2V0U2lnbmVkVXJsIH0gPSB1c2VTdG9yZURvY3VtZW50cyhzdG9yZUlkKTtcclxuICBjb25zdCBkb2NzID0gbGlzdC5kYXRhIHx8IFtdO1xyXG5cclxuICBjb25zdCBbY2F0ZWdvcnksIHNldENhdGVnb3J5XSA9IHVzZVN0YXRlKFwiQWxsXCIpO1xyXG4gIGNvbnN0IFtzZWFyY2gsIHNldFNlYXJjaF0gPSB1c2VTdGF0ZShcIlwiKTtcclxuICBjb25zdCBbc2hvd1VwbG9hZCwgc2V0U2hvd1VwbG9hZF0gPSB1c2VTdGF0ZShmYWxzZSk7XHJcbiAgY29uc3QgW3NlbGVjdGVkRG9jLCBzZXRTZWxlY3RlZERvY10gPSB1c2VTdGF0ZTxTdG9yZURvY3VtZW50IHwgbnVsbD4obnVsbCk7XHJcbiAgY29uc3QgW3BlbmRpbmdGaWxlLCBzZXRQZW5kaW5nRmlsZV0gPSB1c2VTdGF0ZTxGaWxlIHwgbnVsbD4obnVsbCk7XHJcbiAgY29uc3QgW2Zvcm0sIHNldEZvcm1dID0gdXNlU3RhdGUoeyBuYW1lOiBcIlwiLCBjYXRlZ29yeTogXCJDb250cmFjdHNcIiwgZW1wbG95ZWVJZDogXCJcIiwgZXhwaXJlc19hdDogXCJcIiB9KTtcclxuICBjb25zdCBmaWxlSW5wdXRSZWYgPSB1c2VSZWY8SFRNTElucHV0RWxlbWVudD4obnVsbCk7XHJcblxyXG4gIGNvbnN0IHsgZGF0YTogZW1wbG95ZWVzID0gW10gfSA9IHVzZVF1ZXJ5KHtcclxuICAgIHF1ZXJ5S2V5OiBbXCJzdG9yZS1lbXBsb3llZXMtZG9jc1wiLCBzdG9yZUlkXSxcclxuICAgIHF1ZXJ5Rm46IGFzeW5jICgpID0+IHtcclxuICAgICAgY29uc3QgeyBkYXRhIH0gPSBhd2FpdCBzdXBhYmFzZVxyXG4gICAgICAgIC5mcm9tKFwic3RvcmVfZW1wbG95ZWVzXCIpXHJcbiAgICAgICAgLnNlbGVjdChcIipcIilcclxuICAgICAgICAuZXEoXCJzdG9yZV9pZFwiLCBzdG9yZUlkKVxyXG4gICAgICAgIC5lcShcInN0YXR1c1wiLCBcImFjdGl2ZVwiKTtcclxuICAgICAgcmV0dXJuIGRhdGEgfHwgW107XHJcbiAgICB9LFxyXG4gIH0pO1xyXG5cclxuICBjb25zdCBlbXBsb3llZXNCeUlkID0gdXNlTWVtbygoKSA9PiB7XHJcbiAgICBjb25zdCBtYXA6IFJlY29yZDxzdHJpbmcsIGFueT4gPSB7fTtcclxuICAgIGZvciAoY29uc3QgZSBvZiBlbXBsb3llZXMgYXMgYW55W10pIG1hcFtlLmlkXSA9IGU7XHJcbiAgICByZXR1cm4gbWFwO1xyXG4gIH0sIFtlbXBsb3llZXNdKTtcclxuXHJcbiAgY29uc3QgZmlsdGVyZWQgPSB1c2VNZW1vKFxyXG4gICAgKCkgPT4gZG9jcy5maWx0ZXIoXHJcbiAgICAgIChkKSA9PlxyXG4gICAgICAgIChjYXRlZ29yeSA9PT0gXCJBbGxcIiB8fCBkLmNhdGVnb3J5ID09PSBjYXRlZ29yeSkgJiZcclxuICAgICAgICBkLm5hbWUudG9Mb3dlckNhc2UoKS5pbmNsdWRlcyhzZWFyY2gudG9Mb3dlckNhc2UoKSksXHJcbiAgICApLFxyXG4gICAgW2RvY3MsIGNhdGVnb3J5LCBzZWFyY2hdLFxyXG4gICk7XHJcblxyXG4gIGNvbnN0IGV4cGlyaW5nU29vbiA9IHVzZU1lbW8oXHJcbiAgICAoKSA9PiBkb2NzLmZpbHRlcigoZCkgPT4ge1xyXG4gICAgICBpZiAoIWQuZXhwaXJlc19hdCkgcmV0dXJuIGZhbHNlO1xyXG4gICAgICBjb25zdCBkaWZmID0gbmV3IERhdGUoZC5leHBpcmVzX2F0KS5nZXRUaW1lKCkgLSBEYXRlLm5vdygpO1xyXG4gICAgICByZXR1cm4gZGlmZiA+IDAgJiYgZGlmZiA8IDkwICogMjQgKiA2MCAqIDYwICogMTAwMDtcclxuICAgIH0pLFxyXG4gICAgW2RvY3NdLFxyXG4gICk7XHJcblxyXG4gIGNvbnN0IHN0YXRzID0gW1xyXG4gICAgeyBpY29uOiBGaWxlVGV4dCwgbGFiZWw6IFwiVG90YWwgRG9jdW1lbnRzXCIsIHZhbHVlOiBkb2NzLmxlbmd0aCwgY29sb3I6IFwidGV4dC1wcmltYXJ5XCIsIGJnOiBcImJnLXByaW1hcnkvMTBcIiB9LFxyXG4gICAgeyBpY29uOiBGb2xkZXJPcGVuLCBsYWJlbDogXCJDYXRlZ29yaWVzXCIsIHZhbHVlOiBDQVRFR09SSUVTLmxlbmd0aCAtIDEsIGNvbG9yOiBcInRleHQtaW5mb1wiLCBiZzogXCJiZy1pbmZvLzEwXCIgfSxcclxuICAgIHsgaWNvbjogQWxlcnRUcmlhbmdsZSwgbGFiZWw6IFwiRXhwaXJpbmcgU29vblwiLCB2YWx1ZTogZXhwaXJpbmdTb29uLmxlbmd0aCwgY29sb3I6IFwidGV4dC13YXJuaW5nXCIsIGJnOiBcImJnLXdhcm5pbmcvMTBcIiB9LFxyXG4gICAgeyBpY29uOiBVc2VycywgbGFiZWw6IFwiRW1wbG95ZWVzXCIsIHZhbHVlOiBlbXBsb3llZXMubGVuZ3RoLCBjb2xvcjogXCJ0ZXh0LXN1Y2Nlc3NcIiwgYmc6IFwiYmctc3VjY2Vzcy8xMFwiIH0sXHJcbiAgXTtcclxuXHJcbiAgY29uc3Qgb3BlbkZpbGVQaWNrZXIgPSAoKSA9PiBmaWxlSW5wdXRSZWYuY3VycmVudD8uY2xpY2soKTtcclxuXHJcbiAgY29uc3QgaGFuZGxlRmlsZVBpY2tlZCA9IChmaWxlOiBGaWxlKSA9PiB7XHJcbiAgICBzZXRQZW5kaW5nRmlsZShmaWxlKTtcclxuICAgIHNldEZvcm0oKGYpID0+ICh7IC4uLmYsIG5hbWU6IGYubmFtZSB8fCBmaWxlLm5hbWUgfSkpO1xyXG4gICAgc2V0U2hvd1VwbG9hZCh0cnVlKTtcclxuICB9O1xyXG5cclxuICBjb25zdCBoYW5kbGVVcGxvYWQgPSBhc3luYyAoKSA9PiB7XHJcbiAgICBpZiAoIXBlbmRpbmdGaWxlKSByZXR1cm4gdG9hc3QuZXJyb3IoXCJDaG9vc2UgYSBmaWxlXCIpO1xyXG4gICAgaWYgKHBlbmRpbmdGaWxlLnNpemUgPiA1MCAqIDEwMjQgKiAxMDI0KSByZXR1cm4gdG9hc3QuZXJyb3IoXCJGaWxlIHRvbyBsYXJnZSAobWF4IDUwTUIpXCIpO1xyXG4gICAgdHJ5IHtcclxuICAgICAgYXdhaXQgdXBsb2FkLm11dGF0ZUFzeW5jKHtcclxuICAgICAgICBmaWxlOiBwZW5kaW5nRmlsZSxcclxuICAgICAgICBuYW1lOiBmb3JtLm5hbWUgfHwgcGVuZGluZ0ZpbGUubmFtZSxcclxuICAgICAgICBjYXRlZ29yeTogZm9ybS5jYXRlZ29yeSxcclxuICAgICAgICBlbXBsb3llZV9pZDogZm9ybS5lbXBsb3llZUlkIHx8IG51bGwsXHJcbiAgICAgICAgZXhwaXJlc19hdDogZm9ybS5leHBpcmVzX2F0IHx8IG51bGwsXHJcbiAgICAgIH0pO1xyXG4gICAgICB0b2FzdC5zdWNjZXNzKFwiRG9jdW1lbnQgdXBsb2FkZWRcIik7XHJcbiAgICAgIHNldFNob3dVcGxvYWQoZmFsc2UpO1xyXG4gICAgICBzZXRQZW5kaW5nRmlsZShudWxsKTtcclxuICAgICAgc2V0Rm9ybSh7IG5hbWU6IFwiXCIsIGNhdGVnb3J5OiBcIkNvbnRyYWN0c1wiLCBlbXBsb3llZUlkOiBcIlwiLCBleHBpcmVzX2F0OiBcIlwiIH0pO1xyXG4gICAgfSBjYXRjaCAoZTogYW55KSB7XHJcbiAgICAgIHRvYXN0LmVycm9yKGUubWVzc2FnZSB8fCBcIlVwbG9hZCBmYWlsZWRcIik7XHJcbiAgICB9XHJcbiAgfTtcclxuXHJcbiAgY29uc3QgaGFuZGxlRGVsZXRlID0gYXN5bmMgKGRvYzogU3RvcmVEb2N1bWVudCkgPT4ge1xyXG4gICAgdHJ5IHtcclxuICAgICAgYXdhaXQgcmVtb3ZlLm11dGF0ZUFzeW5jKGRvYyk7XHJcbiAgICAgIHNldFNlbGVjdGVkRG9jKG51bGwpO1xyXG4gICAgICB0b2FzdC5zdWNjZXNzKFwiRG9jdW1lbnQgZGVsZXRlZFwiKTtcclxuICAgIH0gY2F0Y2ggKGU6IGFueSkge1xyXG4gICAgICB0b2FzdC5lcnJvcihlLm1lc3NhZ2UgfHwgXCJEZWxldGUgZmFpbGVkXCIpO1xyXG4gICAgfVxyXG4gIH07XHJcblxyXG4gIGNvbnN0IGhhbmRsZVZpZXcgPSBhc3luYyAoZG9jOiBTdG9yZURvY3VtZW50KSA9PiB7XHJcbiAgICB0cnkge1xyXG4gICAgICBjb25zdCB1cmwgPSBhd2FpdCBnZXRTaWduZWRVcmwoZG9jLmZpbGVfcGF0aCwgNjApO1xyXG4gICAgICB3aW5kb3cub3Blbih1cmwsIFwiX2JsYW5rXCIsIFwibm9vcGVuZXIsbm9yZWZlcnJlclwiKTtcclxuICAgIH0gY2F0Y2ggKGU6IGFueSkge1xyXG4gICAgICB0b2FzdC5lcnJvcihlLm1lc3NhZ2UgfHwgXCJDb3VsZCBub3Qgb3BlbiBkb2N1bWVudFwiKTtcclxuICAgIH1cclxuICB9O1xyXG5cclxuICBjb25zdCBmaWxlSWNvbkZvciA9ICh0eXBlOiBzdHJpbmcpID0+XHJcbiAgICB0eXBlID09PSBcImltYWdlXCIgPyBGaWxlSW1hZ2UgOiB0eXBlID09PSBcInBkZlwiID8gRmlsZVRleHQgOiBGaWxlSWNvbjtcclxuXHJcbiAgcmV0dXJuIChcclxuICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS02XCI+XHJcbiAgICAgIHsvKiBIaWRkZW4gZmlsZSBpbnB1dCAqL31cclxuICAgICAgPGlucHV0XHJcbiAgICAgICAgcmVmPXtmaWxlSW5wdXRSZWZ9XHJcbiAgICAgICAgdHlwZT1cImZpbGVcIlxyXG4gICAgICAgIGFjY2VwdD1cIi5wZGYsaW1hZ2UvKiwuZG9jLC5kb2N4XCJcclxuICAgICAgICBjbGFzc05hbWU9XCJoaWRkZW5cIlxyXG4gICAgICAgIG9uQ2hhbmdlPXsoZSkgPT4ge1xyXG4gICAgICAgICAgY29uc3QgZiA9IGUudGFyZ2V0LmZpbGVzPy5bMF07XHJcbiAgICAgICAgICBpZiAoZikgaGFuZGxlRmlsZVBpY2tlZChmKTtcclxuICAgICAgICAgIGUudGFyZ2V0LnZhbHVlID0gXCJcIjtcclxuICAgICAgICB9fVxyXG4gICAgICAvPlxyXG5cclxuICAgICAgey8qIFN0YXRzICovfVxyXG4gICAgICA8ZGl2IGNsYXNzTmFtZT1cImdyaWQgZ3JpZC1jb2xzLTIgbGc6Z3JpZC1jb2xzLTQgZ2FwLTRcIj5cclxuICAgICAgICB7c3RhdHMubWFwKChzKSA9PiAoXHJcbiAgICAgICAgICA8ZGl2IGtleT17cy5sYWJlbH0gY2xhc3NOYW1lPVwicm91bmRlZC14bCBib3JkZXIgYm9yZGVyLWJvcmRlci80MCBiZy1jYXJkIHAtNFwiPlxyXG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0zIG1iLTJcIj5cclxuICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT17Y24oXCJ3LTEwIGgtMTAgcm91bmRlZC1mdWxsIGZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyXCIsIHMuYmcpfT5cclxuICAgICAgICAgICAgICAgIDxzLmljb24gY2xhc3NOYW1lPXtjbihcInctNSBoLTVcIiwgcy5jb2xvcil9IC8+XHJcbiAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwidGV4dC14cyB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj57cy5sYWJlbH08L3NwYW4+XHJcbiAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LTJ4bCBmb250LWJvbGRcIj57cy52YWx1ZX08L3A+XHJcbiAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICApKX1cclxuICAgICAgPC9kaXY+XHJcblxyXG4gICAgICB7LyogQ2F0ZWdvcnkgRmlsdGVyICovfVxyXG4gICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0yIGZsZXgtd3JhcFwiPlxyXG4gICAgICAgIHtDQVRFR09SSUVTLm1hcCgoYykgPT4gKFxyXG4gICAgICAgICAgPGJ1dHRvblxyXG4gICAgICAgICAgICBrZXk9e2N9XHJcbiAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHNldENhdGVnb3J5KGMpfVxyXG4gICAgICAgICAgICBjbGFzc05hbWU9e2NuKFxyXG4gICAgICAgICAgICAgIFwicHgtMyBweS0xLjUgcm91bmRlZC1sZyB0ZXh0LXhzIGZvbnQtbWVkaXVtIGJvcmRlciB0cmFuc2l0aW9uLWFsbFwiLFxyXG4gICAgICAgICAgICAgIGNhdGVnb3J5ID09PSBjXHJcbiAgICAgICAgICAgICAgICA/IFwiYm9yZGVyLXByaW1hcnkgYmctcHJpbWFyeS8xMCB0ZXh0LXByaW1hcnlcIlxyXG4gICAgICAgICAgICAgICAgOiBcImJvcmRlci1ib3JkZXIgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIGhvdmVyOmJnLW11dGVkXCIsXHJcbiAgICAgICAgICAgICl9XHJcbiAgICAgICAgICA+XHJcbiAgICAgICAgICAgIHtjfVxyXG4gICAgICAgICAgPC9idXR0b24+XHJcbiAgICAgICAgKSl9XHJcbiAgICAgIDwvZGl2PlxyXG5cclxuICAgICAgey8qIFRvb2xiYXIgKi99XHJcbiAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTMgZmxleC13cmFwXCI+XHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJyZWxhdGl2ZSBmbGV4LTEgbWluLXctWzIwMHB4XVwiPlxyXG4gICAgICAgICAgPFNlYXJjaCBjbGFzc05hbWU9XCJhYnNvbHV0ZSBsZWZ0LTMgdG9wLTEvMiAtdHJhbnNsYXRlLXktMS8yIHctNCBoLTQgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCIgLz5cclxuICAgICAgICAgIDxJbnB1dCBwbGFjZWhvbGRlcj1cIlNlYXJjaCBkb2N1bWVudHMuLi5cIiB2YWx1ZT17c2VhcmNofSBvbkNoYW5nZT17KGUpID0+IHNldFNlYXJjaChlLnRhcmdldC52YWx1ZSl9IGNsYXNzTmFtZT1cInBsLTlcIiAvPlxyXG4gICAgICAgIDwvZGl2PlxyXG4gICAgICAgIDxCdXR0b24gb25DbGljaz17b3BlbkZpbGVQaWNrZXJ9PlxyXG4gICAgICAgICAgPFVwbG9hZCBjbGFzc05hbWU9XCJ3LTQgaC00IG1yLTEuNVwiIC8+IFVwbG9hZCBEb2N1bWVudFxyXG4gICAgICAgIDwvQnV0dG9uPlxyXG4gICAgICA8L2Rpdj5cclxuXHJcbiAgICAgIHsvKiBEb2N1bWVudHMgVGFibGUgKi99XHJcbiAgICAgIDxkaXYgY2xhc3NOYW1lPVwicm91bmRlZC14bCBib3JkZXIgYm9yZGVyLWJvcmRlci80MCBiZy1jYXJkIG92ZXJmbG93LWhpZGRlblwiPlxyXG4gICAgICAgIHtsaXN0LmlzTG9hZGluZyA/IChcclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwicC00IHNwYWNlLXktMlwiPlxyXG4gICAgICAgICAgICB7QXJyYXkuZnJvbSh7IGxlbmd0aDogNCB9KS5tYXAoKF8sIGkpID0+IChcclxuICAgICAgICAgICAgICA8U2tlbGV0b24ga2V5PXtpfSBjbGFzc05hbWU9XCJoLTEyIHctZnVsbFwiIC8+XHJcbiAgICAgICAgICAgICkpfVxyXG4gICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgKSA6IGZpbHRlcmVkLmxlbmd0aCA9PT0gMCA/IChcclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwicC0xMCB0ZXh0LWNlbnRlclwiPlxyXG4gICAgICAgICAgICA8RmlsZVRleHQgY2xhc3NOYW1lPVwidy0xMCBoLTEwIHRleHQtbXV0ZWQtZm9yZWdyb3VuZC81MCBteC1hdXRvIG1iLTNcIiAvPlxyXG4gICAgICAgICAgICA8aDMgY2xhc3NOYW1lPVwidGV4dC1zbSBmb250LXNlbWlib2xkIG1iLTFcIj5ObyBkb2N1bWVudHMgeWV0PC9oMz5cclxuICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC14cyB0ZXh0LW11dGVkLWZvcmVncm91bmQgbWItNFwiPlVwbG9hZCBjb250cmFjdHMsIElEcywgY2VydGlmaWNhdGlvbnMsIG9yIHBvbGljaWVzLjwvcD5cclxuICAgICAgICAgICAgPEJ1dHRvbiB2YXJpYW50PVwib3V0bGluZVwiIHNpemU9XCJzbVwiIG9uQ2xpY2s9e29wZW5GaWxlUGlja2VyfT5cclxuICAgICAgICAgICAgICA8VXBsb2FkIGNsYXNzTmFtZT1cInctMy41IGgtMy41IG1yLTEuNVwiIC8+IFVwbG9hZCB5b3VyIGZpcnN0IGRvY3VtZW50XHJcbiAgICAgICAgICAgIDwvQnV0dG9uPlxyXG4gICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgKSA6IChcclxuICAgICAgICAgIDx0YWJsZSBjbGFzc05hbWU9XCJ3LWZ1bGwgdGV4dC1zbVwiPlxyXG4gICAgICAgICAgICA8dGhlYWQ+XHJcbiAgICAgICAgICAgICAgPHRyIGNsYXNzTmFtZT1cImJnLW11dGVkLzMwIHRleHQteHMgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+XHJcbiAgICAgICAgICAgICAgICA8dGggY2xhc3NOYW1lPVwidGV4dC1sZWZ0IHB4LTQgcHktMyBmb250LW1lZGl1bVwiPkRvY3VtZW50PC90aD5cclxuICAgICAgICAgICAgICAgIDx0aCBjbGFzc05hbWU9XCJ0ZXh0LWxlZnQgcHgtNCBweS0zIGZvbnQtbWVkaXVtXCI+Q2F0ZWdvcnk8L3RoPlxyXG4gICAgICAgICAgICAgICAgPHRoIGNsYXNzTmFtZT1cInRleHQtbGVmdCBweC00IHB5LTMgZm9udC1tZWRpdW1cIj5FbXBsb3llZTwvdGg+XHJcbiAgICAgICAgICAgICAgICA8dGggY2xhc3NOYW1lPVwidGV4dC1sZWZ0IHB4LTQgcHktMyBmb250LW1lZGl1bVwiPlVwbG9hZGVkPC90aD5cclxuICAgICAgICAgICAgICAgIDx0aCBjbGFzc05hbWU9XCJ0ZXh0LWxlZnQgcHgtNCBweS0zIGZvbnQtbWVkaXVtXCI+RXhwaXJlczwvdGg+XHJcbiAgICAgICAgICAgICAgICA8dGggY2xhc3NOYW1lPVwidGV4dC1sZWZ0IHB4LTQgcHktMyBmb250LW1lZGl1bVwiPlN0YXR1czwvdGg+XHJcbiAgICAgICAgICAgICAgICA8dGggY2xhc3NOYW1lPVwidGV4dC1yaWdodCBweC00IHB5LTMgZm9udC1tZWRpdW1cIj5BY3Rpb25zPC90aD5cclxuICAgICAgICAgICAgICA8L3RyPlxyXG4gICAgICAgICAgICA8L3RoZWFkPlxyXG4gICAgICAgICAgICA8dGJvZHkgY2xhc3NOYW1lPVwiZGl2aWRlLXkgZGl2aWRlLWJvcmRlci8zMFwiPlxyXG4gICAgICAgICAgICAgIHtmaWx0ZXJlZC5tYXAoKGQpID0+IHtcclxuICAgICAgICAgICAgICAgIGNvbnN0IEljb24gPSBmaWxlSWNvbkZvcihkLmZpbGVfdHlwZSk7XHJcbiAgICAgICAgICAgICAgICBjb25zdCBlbXBOYW1lID0gZC5lbXBsb3llZV9pZCA/IChlbXBsb3llZXNCeUlkW2QuZW1wbG95ZWVfaWRdPy5uYW1lIHx8IFwiRW1wbG95ZWVcIikgOiBcIkNvbXBhbnlcIjtcclxuICAgICAgICAgICAgICAgIHJldHVybiAoXHJcbiAgICAgICAgICAgICAgICAgIDx0ciBrZXk9e2QuaWR9IGNsYXNzTmFtZT1cImhvdmVyOmJnLW11dGVkLzIwXCI+XHJcbiAgICAgICAgICAgICAgICAgICAgPHRkIGNsYXNzTmFtZT1cInB4LTQgcHktM1wiPlxyXG4gICAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMlwiPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICA8SWNvbiBjbGFzc05hbWU9XCJ3LTQgaC00IHRleHQtcHJpbWFyeSBzaHJpbmstMFwiIC8+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgIDxkaXY+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwiZm9udC1tZWRpdW0gdGV4dC14cyB0cnVuY2F0ZSBtYXgtdy1bMjAwcHhdXCI+e2QubmFtZX08L3A+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1bMTBweF0gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+e2Zvcm1hdEJ5dGVzKGQuc2l6ZV9ieXRlcyl9PC9wPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICAgICAgIDwvdGQ+XHJcbiAgICAgICAgICAgICAgICAgICAgPHRkIGNsYXNzTmFtZT1cInB4LTQgcHktM1wiPjxCYWRnZSB2YXJpYW50PVwib3V0bGluZVwiIGNsYXNzTmFtZT1cInRleHQtWzEwcHhdXCI+e2QuY2F0ZWdvcnl9PC9CYWRnZT48L3RkPlxyXG4gICAgICAgICAgICAgICAgICAgIDx0ZCBjbGFzc05hbWU9XCJweC00IHB5LTMgdGV4dC14c1wiPntlbXBOYW1lfTwvdGQ+XHJcbiAgICAgICAgICAgICAgICAgICAgPHRkIGNsYXNzTmFtZT1cInB4LTQgcHktMyB0ZXh0LXhzIHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiPntmb3JtYXREYXRlKGQuY3JlYXRlZF9hdCl9PC90ZD5cclxuICAgICAgICAgICAgICAgICAgICA8dGQgY2xhc3NOYW1lPVwicHgtNCBweS0zIHRleHQteHMgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+e2Zvcm1hdERhdGUoZC5leHBpcmVzX2F0KX08L3RkPlxyXG4gICAgICAgICAgICAgICAgICAgIDx0ZCBjbGFzc05hbWU9XCJweC00IHB5LTNcIj5cclxuICAgICAgICAgICAgICAgICAgICAgIDxCYWRnZVxyXG4gICAgICAgICAgICAgICAgICAgICAgICB2YXJpYW50PVwib3V0bGluZVwiXHJcbiAgICAgICAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT17Y24oXHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgXCJ0ZXh0LVsxMHB4XVwiLFxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIGQuc3RhdHVzID09PSBcImFjdGl2ZVwiICYmIFwiYmctc3VjY2Vzcy8xMCB0ZXh0LXN1Y2Nlc3MgYm9yZGVyLXN1Y2Nlc3MvMzBcIixcclxuICAgICAgICAgICAgICAgICAgICAgICAgICBkLnN0YXR1cyA9PT0gXCJleHBpcmVkXCIgJiYgXCJiZy1kZXN0cnVjdGl2ZS8xMCB0ZXh0LWRlc3RydWN0aXZlIGJvcmRlci1kZXN0cnVjdGl2ZS8zMFwiLFxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIGQuc3RhdHVzID09PSBcInBlbmRpbmdcIiAmJiBcImJnLXdhcm5pbmcvMTAgdGV4dC13YXJuaW5nIGJvcmRlci13YXJuaW5nLzMwXCIsXHJcbiAgICAgICAgICAgICAgICAgICAgICAgICl9XHJcbiAgICAgICAgICAgICAgICAgICAgICA+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgIHtkLnN0YXR1c31cclxuICAgICAgICAgICAgICAgICAgICAgIDwvQmFkZ2U+XHJcbiAgICAgICAgICAgICAgICAgICAgPC90ZD5cclxuICAgICAgICAgICAgICAgICAgICA8dGQgY2xhc3NOYW1lPVwicHgtNCBweS0zIHRleHQtcmlnaHRcIj5cclxuICAgICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTEganVzdGlmeS1lbmRcIj5cclxuICAgICAgICAgICAgICAgICAgICAgICAgPEJ1dHRvbiB2YXJpYW50PVwiZ2hvc3RcIiBzaXplPVwiaWNvblwiIGNsYXNzTmFtZT1cImgtNyB3LTdcIiBvbkNsaWNrPXsoKSA9PiBoYW5kbGVWaWV3KGQpfT5cclxuICAgICAgICAgICAgICAgICAgICAgICAgICA8RXllIGNsYXNzTmFtZT1cInctMy41IGgtMy41XCIgLz5cclxuICAgICAgICAgICAgICAgICAgICAgICAgPC9CdXR0b24+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgIDxCdXR0b25cclxuICAgICAgICAgICAgICAgICAgICAgICAgICB2YXJpYW50PVwiZ2hvc3RcIlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIHNpemU9XCJpY29uXCJcclxuICAgICAgICAgICAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJoLTcgdy03IHRleHQtZGVzdHJ1Y3RpdmUgaG92ZXI6dGV4dC1kZXN0cnVjdGl2ZVwiXHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgb25DbGljaz17KCkgPT4gc2V0U2VsZWN0ZWREb2MoZCl9XHJcbiAgICAgICAgICAgICAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICAgICAgICAgICAgICA8VHJhc2gyIGNsYXNzTmFtZT1cInctMy41IGgtMy41XCIgLz5cclxuICAgICAgICAgICAgICAgICAgICAgICAgPC9CdXR0b24+XHJcbiAgICAgICAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgICAgICA8L3RkPlxyXG4gICAgICAgICAgICAgICAgICA8L3RyPlxyXG4gICAgICAgICAgICAgICAgKTtcclxuICAgICAgICAgICAgICB9KX1cclxuICAgICAgICAgICAgPC90Ym9keT5cclxuICAgICAgICAgIDwvdGFibGU+XHJcbiAgICAgICAgKX1cclxuICAgICAgPC9kaXY+XHJcblxyXG4gICAgICB7LyogRXhwaXJpbmcgU29vbiBBbGVydCAqL31cclxuICAgICAge2V4cGlyaW5nU29vbi5sZW5ndGggPiAwICYmIChcclxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInJvdW5kZWQteGwgYm9yZGVyIGJvcmRlci13YXJuaW5nLzQwIGJnLXdhcm5pbmcvMTAgcC00XCI+XHJcbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0yIG1iLTJcIj5cclxuICAgICAgICAgICAgPEFsZXJ0VHJpYW5nbGUgY2xhc3NOYW1lPVwidy00IGgtNCB0ZXh0LXdhcm5pbmdcIiAvPlxyXG4gICAgICAgICAgICA8aDMgY2xhc3NOYW1lPVwidGV4dC1zbSBmb250LXNlbWlib2xkIHRleHQtd2FybmluZ1wiPkV4cGlyaW5nIFNvb248L2gzPlxyXG4gICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktMVwiPlxyXG4gICAgICAgICAgICB7ZXhwaXJpbmdTb29uLm1hcCgoZCkgPT4ge1xyXG4gICAgICAgICAgICAgIGNvbnN0IGVtcE5hbWUgPSBkLmVtcGxveWVlX2lkID8gKGVtcGxveWVlc0J5SWRbZC5lbXBsb3llZV9pZF0/Lm5hbWUgfHwgXCJFbXBsb3llZVwiKSA6IFwiQ29tcGFueVwiO1xyXG4gICAgICAgICAgICAgIHJldHVybiAoXHJcbiAgICAgICAgICAgICAgICA8cCBrZXk9e2QuaWR9IGNsYXNzTmFtZT1cInRleHQteHMgdGV4dC13YXJuaW5nLzkwXCI+XHJcbiAgICAgICAgICAgICAgICAgIHtkLm5hbWV9IOKAlCBleHBpcmVzIHtmb3JtYXREYXRlKGQuZXhwaXJlc19hdCl9ICh7ZW1wTmFtZX0pXHJcbiAgICAgICAgICAgICAgICA8L3A+XHJcbiAgICAgICAgICAgICAgKTtcclxuICAgICAgICAgICAgfSl9XHJcbiAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICA8L2Rpdj5cclxuICAgICAgKX1cclxuXHJcbiAgICAgIHsvKiBVcGxvYWQgRGlhbG9nICovfVxyXG4gICAgICA8RGlhbG9nIG9wZW49e3Nob3dVcGxvYWR9IG9uT3BlbkNoYW5nZT17KG8pID0+IHsgaWYgKCFvKSB7IHNldFNob3dVcGxvYWQoZmFsc2UpOyBzZXRQZW5kaW5nRmlsZShudWxsKTsgfSB9fT5cclxuICAgICAgICA8RGlhbG9nQ29udGVudCBjbGFzc05hbWU9XCJtYXgtdy1tZFwiPlxyXG4gICAgICAgICAgPERpYWxvZ0hlYWRlcj48RGlhbG9nVGl0bGU+VXBsb2FkIERvY3VtZW50PC9EaWFsb2dUaXRsZT48L0RpYWxvZ0hlYWRlcj5cclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS00IHB5LTJcIj5cclxuICAgICAgICAgICAge3BlbmRpbmdGaWxlID8gKFxyXG4gICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTMgcm91bmRlZC1sZyBib3JkZXIgYm9yZGVyLWJvcmRlci80MCBwLTMgYmctbXV0ZWQvMzBcIj5cclxuICAgICAgICAgICAgICAgIDxGaWxlVGV4dCBjbGFzc05hbWU9XCJ3LTUgaC01IHRleHQtcHJpbWFyeVwiIC8+XHJcbiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXgtMSBtaW4tdy0wXCI+XHJcbiAgICAgICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQteHMgZm9udC1tZWRpdW0gdHJ1bmNhdGVcIj57cGVuZGluZ0ZpbGUubmFtZX08L3A+XHJcbiAgICAgICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtWzEwcHhdIHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiPntmb3JtYXRCeXRlcyhwZW5kaW5nRmlsZS5zaXplKX08L3A+XHJcbiAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgIDxCdXR0b24gdmFyaWFudD1cImdob3N0XCIgc2l6ZT1cInNtXCIgb25DbGljaz17b3BlbkZpbGVQaWNrZXJ9PkNoYW5nZTwvQnV0dG9uPlxyXG4gICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICApIDogKFxyXG4gICAgICAgICAgICAgIDxidXR0b25cclxuICAgICAgICAgICAgICAgIG9uQ2xpY2s9e29wZW5GaWxlUGlja2VyfVxyXG4gICAgICAgICAgICAgICAgY2xhc3NOYW1lPVwidy1mdWxsIGJvcmRlci0yIGJvcmRlci1kYXNoZWQgYm9yZGVyLWJvcmRlciByb3VuZGVkLXhsIHAtOCB0ZXh0LWNlbnRlciBob3ZlcjpiZy1tdXRlZC8zMCB0cmFuc2l0aW9uLWNvbG9yc1wiXHJcbiAgICAgICAgICAgICAgPlxyXG4gICAgICAgICAgICAgICAgPFVwbG9hZCBjbGFzc05hbWU9XCJ3LTggaC04IHRleHQtbXV0ZWQtZm9yZWdyb3VuZCBteC1hdXRvIG1iLTJcIiAvPlxyXG4gICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1zbSB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5DbGljayB0byBjaG9vc2UgYSBmaWxlPC9wPlxyXG4gICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1bMTBweF0gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIG10LTFcIj5QREYsIEpQRywgUE5HLCBET0MgdXAgdG8gNTBNQjwvcD5cclxuICAgICAgICAgICAgICA8L2J1dHRvbj5cclxuICAgICAgICAgICAgKX1cclxuXHJcbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS0yXCI+XHJcbiAgICAgICAgICAgICAgPExhYmVsPkRvY3VtZW50IE5hbWU8L0xhYmVsPlxyXG4gICAgICAgICAgICAgIDxJbnB1dFxyXG4gICAgICAgICAgICAgICAgdmFsdWU9e2Zvcm0ubmFtZX1cclxuICAgICAgICAgICAgICAgIG9uQ2hhbmdlPXsoZSkgPT4gc2V0Rm9ybSgocCkgPT4gKHsgLi4ucCwgbmFtZTogZS50YXJnZXQudmFsdWUgfSkpfVxyXG4gICAgICAgICAgICAgICAgcGxhY2Vob2xkZXI9XCJlLmcuIENvbnRyYWN0IC0gSm9obi5wZGZcIlxyXG4gICAgICAgICAgICAgIC8+XHJcbiAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktMlwiPlxyXG4gICAgICAgICAgICAgIDxMYWJlbD5DYXRlZ29yeTwvTGFiZWw+XHJcbiAgICAgICAgICAgICAgPHNlbGVjdFxyXG4gICAgICAgICAgICAgICAgdmFsdWU9e2Zvcm0uY2F0ZWdvcnl9XHJcbiAgICAgICAgICAgICAgICBvbkNoYW5nZT17KGUpID0+IHNldEZvcm0oKHApID0+ICh7IC4uLnAsIGNhdGVnb3J5OiBlLnRhcmdldC52YWx1ZSB9KSl9XHJcbiAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJ3LWZ1bGwgYm9yZGVyIGJvcmRlci1ib3JkZXIgcm91bmRlZC1sZyBweC0zIHB5LTIgdGV4dC1zbSBiZy1iYWNrZ3JvdW5kXCJcclxuICAgICAgICAgICAgICA+XHJcbiAgICAgICAgICAgICAgICB7Q0FURUdPUklFUy5maWx0ZXIoKGMpID0+IGMgIT09IFwiQWxsXCIpLm1hcCgoYykgPT4gPG9wdGlvbiBrZXk9e2N9IHZhbHVlPXtjfT57Y308L29wdGlvbj4pfVxyXG4gICAgICAgICAgICAgIDwvc2VsZWN0PlxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTJcIj5cclxuICAgICAgICAgICAgICA8TGFiZWw+RW1wbG95ZWUgKG9wdGlvbmFsKTwvTGFiZWw+XHJcbiAgICAgICAgICAgICAgPHNlbGVjdFxyXG4gICAgICAgICAgICAgICAgdmFsdWU9e2Zvcm0uZW1wbG95ZWVJZH1cclxuICAgICAgICAgICAgICAgIG9uQ2hhbmdlPXsoZSkgPT4gc2V0Rm9ybSgocCkgPT4gKHsgLi4ucCwgZW1wbG95ZWVJZDogZS50YXJnZXQudmFsdWUgfSkpfVxyXG4gICAgICAgICAgICAgICAgY2xhc3NOYW1lPVwidy1mdWxsIGJvcmRlciBib3JkZXItYm9yZGVyIHJvdW5kZWQtbGcgcHgtMyBweS0yIHRleHQtc20gYmctYmFja2dyb3VuZFwiXHJcbiAgICAgICAgICAgICAgPlxyXG4gICAgICAgICAgICAgICAgPG9wdGlvbiB2YWx1ZT1cIlwiPkNvbXBhbnktd2lkZTwvb3B0aW9uPlxyXG4gICAgICAgICAgICAgICAge2VtcGxveWVlcy5tYXAoKGU6IGFueSkgPT4gPG9wdGlvbiBrZXk9e2UuaWR9IHZhbHVlPXtlLmlkfT57ZS5uYW1lfTwvb3B0aW9uPil9XHJcbiAgICAgICAgICAgICAgPC9zZWxlY3Q+XHJcbiAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktMlwiPlxyXG4gICAgICAgICAgICAgIDxMYWJlbD5FeHBpcmVzIChvcHRpb25hbCk8L0xhYmVsPlxyXG4gICAgICAgICAgICAgIDxJbnB1dFxyXG4gICAgICAgICAgICAgICAgdHlwZT1cImRhdGVcIlxyXG4gICAgICAgICAgICAgICAgdmFsdWU9e2Zvcm0uZXhwaXJlc19hdH1cclxuICAgICAgICAgICAgICAgIG9uQ2hhbmdlPXsoZSkgPT4gc2V0Rm9ybSgocCkgPT4gKHsgLi4ucCwgZXhwaXJlc19hdDogZS50YXJnZXQudmFsdWUgfSkpfVxyXG4gICAgICAgICAgICAgIC8+XHJcbiAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICA8RGlhbG9nRm9vdGVyPlxyXG4gICAgICAgICAgICA8QnV0dG9uIHZhcmlhbnQ9XCJvdXRsaW5lXCIgb25DbGljaz17KCkgPT4geyBzZXRTaG93VXBsb2FkKGZhbHNlKTsgc2V0UGVuZGluZ0ZpbGUobnVsbCk7IH19PkNhbmNlbDwvQnV0dG9uPlxyXG4gICAgICAgICAgICA8QnV0dG9uIG9uQ2xpY2s9e2hhbmRsZVVwbG9hZH0gZGlzYWJsZWQ9e3VwbG9hZC5pc1BlbmRpbmcgfHwgIXBlbmRpbmdGaWxlfT5cclxuICAgICAgICAgICAgICB7dXBsb2FkLmlzUGVuZGluZyA/IFwiVXBsb2FkaW5nLi4uXCIgOiBcIlVwbG9hZFwifVxyXG4gICAgICAgICAgICA8L0J1dHRvbj5cclxuICAgICAgICAgIDwvRGlhbG9nRm9vdGVyPlxyXG4gICAgICAgIDwvRGlhbG9nQ29udGVudD5cclxuICAgICAgPC9EaWFsb2c+XHJcblxyXG4gICAgICB7LyogRGVsZXRlIGNvbmZpcm0gKi99XHJcbiAgICAgIDxEaWFsb2cgb3Blbj17ISFzZWxlY3RlZERvY30gb25PcGVuQ2hhbmdlPXsoKSA9PiBzZXRTZWxlY3RlZERvYyhudWxsKX0+XHJcbiAgICAgICAgPERpYWxvZ0NvbnRlbnQgY2xhc3NOYW1lPVwibWF4LXctc21cIj5cclxuICAgICAgICAgIHtzZWxlY3RlZERvYyAmJiAoXHJcbiAgICAgICAgICAgIDw+XHJcbiAgICAgICAgICAgICAgPERpYWxvZ0hlYWRlcj48RGlhbG9nVGl0bGUgY2xhc3NOYW1lPVwidGV4dC1iYXNlXCI+RGVsZXRlIGRvY3VtZW50PzwvRGlhbG9nVGl0bGU+PC9EaWFsb2dIZWFkZXI+XHJcbiAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1zbSB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5cclxuICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cImZvbnQtbWVkaXVtIHRleHQtZm9yZWdyb3VuZFwiPntzZWxlY3RlZERvYy5uYW1lfTwvc3Bhbj4gd2lsbCBiZSBwZXJtYW5lbnRseSByZW1vdmVkLlxyXG4gICAgICAgICAgICAgIDwvcD5cclxuICAgICAgICAgICAgICA8RGlhbG9nRm9vdGVyIGNsYXNzTmFtZT1cImdhcC0yXCI+XHJcbiAgICAgICAgICAgICAgICA8QnV0dG9uIHZhcmlhbnQ9XCJvdXRsaW5lXCIgc2l6ZT1cInNtXCIgb25DbGljaz17KCkgPT4gaGFuZGxlVmlldyhzZWxlY3RlZERvYyl9PlxyXG4gICAgICAgICAgICAgICAgICA8RG93bmxvYWQgY2xhc3NOYW1lPVwidy0zLjUgaC0zLjUgbXItMVwiIC8+IFZpZXcgZmlyc3RcclxuICAgICAgICAgICAgICAgIDwvQnV0dG9uPlxyXG4gICAgICAgICAgICAgICAgPEJ1dHRvblxyXG4gICAgICAgICAgICAgICAgICB2YXJpYW50PVwiZGVzdHJ1Y3RpdmVcIlxyXG4gICAgICAgICAgICAgICAgICBzaXplPVwic21cIlxyXG4gICAgICAgICAgICAgICAgICBvbkNsaWNrPXsoKSA9PiBoYW5kbGVEZWxldGUoc2VsZWN0ZWREb2MpfVxyXG4gICAgICAgICAgICAgICAgICBkaXNhYmxlZD17cmVtb3ZlLmlzUGVuZGluZ31cclxuICAgICAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICAgICAgPFRyYXNoMiBjbGFzc05hbWU9XCJ3LTMuNSBoLTMuNSBtci0xXCIgLz4gRGVsZXRlXHJcbiAgICAgICAgICAgICAgICA8L0J1dHRvbj5cclxuICAgICAgICAgICAgICA8L0RpYWxvZ0Zvb3Rlcj5cclxuICAgICAgICAgICAgPC8+XHJcbiAgICAgICAgICApfVxyXG4gICAgICAgIDwvRGlhbG9nQ29udGVudD5cclxuICAgICAgPC9EaWFsb2c+XHJcbiAgICA8L2Rpdj5cclxuICApO1xyXG59XHJcbiJdLCJuYW1lcyI6WyJ1c2VNZW1vIiwidXNlUmVmIiwidXNlU3RhdGUiLCJ1c2VRdWVyeSIsInN1cGFiYXNlIiwiY24iLCJCYWRnZSIsIkJ1dHRvbiIsIklucHV0IiwiU2tlbGV0b24iLCJEaWFsb2ciLCJEaWFsb2dDb250ZW50IiwiRGlhbG9nSGVhZGVyIiwiRGlhbG9nVGl0bGUiLCJEaWFsb2dGb290ZXIiLCJMYWJlbCIsIkZvbGRlck9wZW4iLCJGaWxlVGV4dCIsIlVwbG9hZCIsIlNlYXJjaCIsIkRvd25sb2FkIiwiVHJhc2gyIiwiRXllIiwiRmlsZSIsIkZpbGVJY29uIiwiRmlsZUltYWdlIiwiVXNlcnMiLCJBbGVydFRyaWFuZ2xlIiwidG9hc3QiLCJ1c2VTdG9yZURvY3VtZW50cyIsIkNBVEVHT1JJRVMiLCJmb3JtYXRCeXRlcyIsImIiLCJ0b0ZpeGVkIiwiZm9ybWF0RGF0ZSIsImlzbyIsIkRhdGUiLCJ0b0xvY2FsZURhdGVTdHJpbmciLCJTdG9yZURvY3VtZW50c1NlY3Rpb24iLCJzdG9yZUlkIiwibGlzdCIsInVwbG9hZCIsInJlbW92ZSIsImdldFNpZ25lZFVybCIsImRvY3MiLCJkYXRhIiwiY2F0ZWdvcnkiLCJzZXRDYXRlZ29yeSIsInNlYXJjaCIsInNldFNlYXJjaCIsInNob3dVcGxvYWQiLCJzZXRTaG93VXBsb2FkIiwic2VsZWN0ZWREb2MiLCJzZXRTZWxlY3RlZERvYyIsInBlbmRpbmdGaWxlIiwic2V0UGVuZGluZ0ZpbGUiLCJmb3JtIiwic2V0Rm9ybSIsIm5hbWUiLCJlbXBsb3llZUlkIiwiZXhwaXJlc19hdCIsImZpbGVJbnB1dFJlZiIsImVtcGxveWVlcyIsInF1ZXJ5S2V5IiwicXVlcnlGbiIsImZyb20iLCJzZWxlY3QiLCJlcSIsImVtcGxveWVlc0J5SWQiLCJtYXAiLCJlIiwiaWQiLCJmaWx0ZXJlZCIsImZpbHRlciIsImQiLCJ0b0xvd2VyQ2FzZSIsImluY2x1ZGVzIiwiZXhwaXJpbmdTb29uIiwiZGlmZiIsImdldFRpbWUiLCJub3ciLCJzdGF0cyIsImljb24iLCJsYWJlbCIsInZhbHVlIiwibGVuZ3RoIiwiY29sb3IiLCJiZyIsIm9wZW5GaWxlUGlja2VyIiwiY3VycmVudCIsImNsaWNrIiwiaGFuZGxlRmlsZVBpY2tlZCIsImZpbGUiLCJmIiwiaGFuZGxlVXBsb2FkIiwiZXJyb3IiLCJzaXplIiwibXV0YXRlQXN5bmMiLCJlbXBsb3llZV9pZCIsInN1Y2Nlc3MiLCJtZXNzYWdlIiwiaGFuZGxlRGVsZXRlIiwiZG9jIiwiaGFuZGxlVmlldyIsInVybCIsImZpbGVfcGF0aCIsIndpbmRvdyIsIm9wZW4iLCJmaWxlSWNvbkZvciIsInR5cGUiLCJkaXYiLCJjbGFzc05hbWUiLCJpbnB1dCIsInJlZiIsImFjY2VwdCIsIm9uQ2hhbmdlIiwidGFyZ2V0IiwiZmlsZXMiLCJzIiwic3BhbiIsInAiLCJjIiwiYnV0dG9uIiwib25DbGljayIsInBsYWNlaG9sZGVyIiwiaXNMb2FkaW5nIiwiQXJyYXkiLCJfIiwiaSIsImgzIiwidmFyaWFudCIsInRhYmxlIiwidGhlYWQiLCJ0ciIsInRoIiwidGJvZHkiLCJJY29uIiwiZmlsZV90eXBlIiwiZW1wTmFtZSIsInRkIiwic2l6ZV9ieXRlcyIsImNyZWF0ZWRfYXQiLCJzdGF0dXMiLCJvbk9wZW5DaGFuZ2UiLCJvIiwib3B0aW9uIiwiZGlzYWJsZWQiLCJpc1BlbmRpbmciXSwibWFwcGluZ3MiOiI7O0FBQUEsU0FBU0EsT0FBTyxFQUFFQyxNQUFNLEVBQUVDLFFBQVEsUUFBUSxRQUFRO0FBQ2xELFNBQVNDLFFBQVEsUUFBUSx3QkFBd0I7QUFDakQsU0FBU0MsUUFBUSxRQUFRLGlDQUFpQztBQUMxRCxTQUFTQyxFQUFFLFFBQVEsY0FBYztBQUNqQyxTQUFTQyxLQUFLLFFBQVEsd0JBQXdCO0FBQzlDLFNBQVNDLE1BQU0sUUFBUSx5QkFBeUI7QUFDaEQsU0FBU0MsS0FBSyxRQUFRLHdCQUF3QjtBQUM5QyxTQUFTQyxRQUFRLFFBQVEsMkJBQTJCO0FBQ3BELFNBQVNDLE1BQU0sRUFBRUMsYUFBYSxFQUFFQyxZQUFZLEVBQUVDLFdBQVcsRUFBRUMsWUFBWSxRQUFRLHlCQUF5QjtBQUN4RyxTQUFTQyxLQUFLLFFBQVEsd0JBQXdCO0FBQzlDLFNBQ0VDLFVBQVUsRUFBRUMsUUFBUSxFQUFFQyxNQUFNLEVBQUVDLE1BQU0sRUFBRUMsUUFBUSxFQUFFQyxNQUFNLEVBQUVDLEdBQUcsRUFDM0RDLFFBQVFDLFFBQVEsRUFBRUMsU0FBUyxFQUFFQyxLQUFLLEVBQUVDLGFBQWEsUUFDNUMsZUFBZTtBQUN0QixTQUFTQyxLQUFLLFFBQVEsU0FBUztBQUMvQixTQUFTQyxpQkFBaUIsUUFBNEIsa0NBQWtDO0FBSXhGLE1BQU1DLGFBQWE7SUFBQztJQUFPO0lBQWE7SUFBa0I7SUFBa0I7SUFBYTtJQUFZO0NBQVE7QUFFN0csU0FBU0MsWUFBWUMsQ0FBUztJQUM1QixJQUFJQSxJQUFJLE1BQU0sT0FBTyxHQUFHQSxFQUFFLEVBQUUsQ0FBQztJQUM3QixJQUFJQSxJQUFJLE9BQU8sTUFBTSxPQUFPLEdBQUcsQUFBQ0EsQ0FBQUEsSUFBSSxJQUFHLEVBQUdDLE9BQU8sQ0FBQyxHQUFHLEdBQUcsQ0FBQztJQUN6RCxPQUFPLEdBQUcsQUFBQ0QsQ0FBQUEsSUFBSSxPQUFPLElBQUcsRUFBR0MsT0FBTyxDQUFDLEdBQUcsR0FBRyxDQUFDO0FBQzdDO0FBRUEsU0FBU0MsV0FBV0MsR0FBa0I7SUFDcEMsSUFBSSxDQUFDQSxLQUFLLE9BQU87SUFDakIsT0FBTyxJQUFJQyxLQUFLRCxLQUFLRSxrQkFBa0I7QUFDekM7QUFFQSxlQUFlLFNBQVNDLHNCQUFzQixFQUFFQyxPQUFPLEVBQVM7O0lBQzlELE1BQU0sRUFBRUMsSUFBSSxFQUFFQyxNQUFNLEVBQUVDLE1BQU0sRUFBRUMsWUFBWSxFQUFFLEdBQUdkLGtCQUFrQlU7SUFDakUsTUFBTUssT0FBT0osS0FBS0ssSUFBSSxJQUFJLEVBQUU7SUFFNUIsTUFBTSxDQUFDQyxVQUFVQyxZQUFZLEdBQUc3QyxTQUFTO0lBQ3pDLE1BQU0sQ0FBQzhDLFFBQVFDLFVBQVUsR0FBRy9DLFNBQVM7SUFDckMsTUFBTSxDQUFDZ0QsWUFBWUMsY0FBYyxHQUFHakQsU0FBUztJQUM3QyxNQUFNLENBQUNrRCxhQUFhQyxlQUFlLEdBQUduRCxTQUErQjtJQUNyRSxNQUFNLENBQUNvRCxhQUFhQyxlQUFlLEdBQUdyRCxTQUFzQjtJQUM1RCxNQUFNLENBQUNzRCxNQUFNQyxRQUFRLEdBQUd2RCxTQUFTO1FBQUV3RCxNQUFNO1FBQUlaLFVBQVU7UUFBYWEsWUFBWTtRQUFJQyxZQUFZO0lBQUc7SUFDbkcsTUFBTUMsZUFBZTVELE9BQXlCO0lBRTlDLE1BQU0sRUFBRTRDLE1BQU1pQixZQUFZLEVBQUUsRUFBRSxHQUFHM0QsU0FBUztRQUN4QzRELFVBQVU7WUFBQztZQUF3QnhCO1NBQVE7UUFDM0N5QixTQUFTO1lBQ1AsTUFBTSxFQUFFbkIsSUFBSSxFQUFFLEdBQUcsTUFBTXpDLFNBQ3BCNkQsSUFBSSxDQUFDLG1CQUNMQyxNQUFNLENBQUMsS0FDUEMsRUFBRSxDQUFDLFlBQVk1QixTQUNmNEIsRUFBRSxDQUFDLFVBQVU7WUFDaEIsT0FBT3RCLFFBQVEsRUFBRTtRQUNuQjtJQUNGO0lBRUEsTUFBTXVCLGdCQUFnQnBFLFFBQVE7UUFDNUIsTUFBTXFFLE1BQTJCLENBQUM7UUFDbEMsS0FBSyxNQUFNQyxLQUFLUixVQUFvQk8sR0FBRyxDQUFDQyxFQUFFQyxFQUFFLENBQUMsR0FBR0Q7UUFDaEQsT0FBT0Q7SUFDVCxHQUFHO1FBQUNQO0tBQVU7SUFFZCxNQUFNVSxXQUFXeEUsUUFDZixJQUFNNEMsS0FBSzZCLE1BQU0sQ0FDZixDQUFDQyxJQUNDLEFBQUM1QixDQUFBQSxhQUFhLFNBQVM0QixFQUFFNUIsUUFBUSxLQUFLQSxRQUFPLEtBQzdDNEIsRUFBRWhCLElBQUksQ0FBQ2lCLFdBQVcsR0FBR0MsUUFBUSxDQUFDNUIsT0FBTzJCLFdBQVcsTUFFcEQ7UUFBQy9CO1FBQU1FO1FBQVVFO0tBQU87SUFHMUIsTUFBTTZCLGVBQWU3RSxRQUNuQixJQUFNNEMsS0FBSzZCLE1BQU0sQ0FBQyxDQUFDQztZQUNqQixJQUFJLENBQUNBLEVBQUVkLFVBQVUsRUFBRSxPQUFPO1lBQzFCLE1BQU1rQixPQUFPLElBQUkxQyxLQUFLc0MsRUFBRWQsVUFBVSxFQUFFbUIsT0FBTyxLQUFLM0MsS0FBSzRDLEdBQUc7WUFDeEQsT0FBT0YsT0FBTyxLQUFLQSxPQUFPLEtBQUssS0FBSyxLQUFLLEtBQUs7UUFDaEQsSUFDQTtRQUFDbEM7S0FBSztJQUdSLE1BQU1xQyxRQUFRO1FBQ1o7WUFBRUMsTUFBTWpFO1lBQVVrRSxPQUFPO1lBQW1CQyxPQUFPeEMsS0FBS3lDLE1BQU07WUFBRUMsT0FBTztZQUFnQkMsSUFBSTtRQUFnQjtRQUMzRztZQUFFTCxNQUFNbEU7WUFBWW1FLE9BQU87WUFBY0MsT0FBT3RELFdBQVd1RCxNQUFNLEdBQUc7WUFBR0MsT0FBTztZQUFhQyxJQUFJO1FBQWE7UUFDNUc7WUFBRUwsTUFBTXZEO1lBQWV3RCxPQUFPO1lBQWlCQyxPQUFPUCxhQUFhUSxNQUFNO1lBQUVDLE9BQU87WUFBZ0JDLElBQUk7UUFBZ0I7UUFDdEg7WUFBRUwsTUFBTXhEO1lBQU95RCxPQUFPO1lBQWFDLE9BQU90QixVQUFVdUIsTUFBTTtZQUFFQyxPQUFPO1lBQWdCQyxJQUFJO1FBQWdCO0tBQ3hHO0lBRUQsTUFBTUMsaUJBQWlCLElBQU0zQixhQUFhNEIsT0FBTyxFQUFFQztJQUVuRCxNQUFNQyxtQkFBbUIsQ0FBQ0M7UUFDeEJyQyxlQUFlcUM7UUFDZm5DLFFBQVEsQ0FBQ29DLElBQU8sQ0FBQTtnQkFBRSxHQUFHQSxDQUFDO2dCQUFFbkMsTUFBTW1DLEVBQUVuQyxJQUFJLElBQUlrQyxLQUFLbEMsSUFBSTtZQUFDLENBQUE7UUFDbERQLGNBQWM7SUFDaEI7SUFFQSxNQUFNMkMsZUFBZTtRQUNuQixJQUFJLENBQUN4QyxhQUFhLE9BQU8xQixNQUFNbUUsS0FBSyxDQUFDO1FBQ3JDLElBQUl6QyxZQUFZMEMsSUFBSSxHQUFHLEtBQUssT0FBTyxNQUFNLE9BQU9wRSxNQUFNbUUsS0FBSyxDQUFDO1FBQzVELElBQUk7WUFDRixNQUFNdEQsT0FBT3dELFdBQVcsQ0FBQztnQkFDdkJMLE1BQU10QztnQkFDTkksTUFBTUYsS0FBS0UsSUFBSSxJQUFJSixZQUFZSSxJQUFJO2dCQUNuQ1osVUFBVVUsS0FBS1YsUUFBUTtnQkFDdkJvRCxhQUFhMUMsS0FBS0csVUFBVSxJQUFJO2dCQUNoQ0MsWUFBWUosS0FBS0ksVUFBVSxJQUFJO1lBQ2pDO1lBQ0FoQyxNQUFNdUUsT0FBTyxDQUFDO1lBQ2RoRCxjQUFjO1lBQ2RJLGVBQWU7WUFDZkUsUUFBUTtnQkFBRUMsTUFBTTtnQkFBSVosVUFBVTtnQkFBYWEsWUFBWTtnQkFBSUMsWUFBWTtZQUFHO1FBQzVFLEVBQUUsT0FBT1UsR0FBUTtZQUNmMUMsTUFBTW1FLEtBQUssQ0FBQ3pCLEVBQUU4QixPQUFPLElBQUk7UUFDM0I7SUFDRjtJQUVBLE1BQU1DLGVBQWUsT0FBT0M7UUFDMUIsSUFBSTtZQUNGLE1BQU01RCxPQUFPdUQsV0FBVyxDQUFDSztZQUN6QmpELGVBQWU7WUFDZnpCLE1BQU11RSxPQUFPLENBQUM7UUFDaEIsRUFBRSxPQUFPN0IsR0FBUTtZQUNmMUMsTUFBTW1FLEtBQUssQ0FBQ3pCLEVBQUU4QixPQUFPLElBQUk7UUFDM0I7SUFDRjtJQUVBLE1BQU1HLGFBQWEsT0FBT0Q7UUFDeEIsSUFBSTtZQUNGLE1BQU1FLE1BQU0sTUFBTTdELGFBQWEyRCxJQUFJRyxTQUFTLEVBQUU7WUFDOUNDLE9BQU9DLElBQUksQ0FBQ0gsS0FBSyxVQUFVO1FBQzdCLEVBQUUsT0FBT2xDLEdBQVE7WUFDZjFDLE1BQU1tRSxLQUFLLENBQUN6QixFQUFFOEIsT0FBTyxJQUFJO1FBQzNCO0lBQ0Y7SUFFQSxNQUFNUSxjQUFjLENBQUNDLE9BQ25CQSxTQUFTLFVBQVVwRixZQUFZb0YsU0FBUyxRQUFRNUYsV0FBV087SUFFN0QscUJBQ0UsUUFBQ3NGO1FBQUlDLFdBQVU7OzBCQUViLFFBQUNDO2dCQUNDQyxLQUFLcEQ7Z0JBQ0xnRCxNQUFLO2dCQUNMSyxRQUFPO2dCQUNQSCxXQUFVO2dCQUNWSSxVQUFVLENBQUM3QztvQkFDVCxNQUFNdUIsSUFBSXZCLEVBQUU4QyxNQUFNLENBQUNDLEtBQUssRUFBRSxDQUFDLEVBQUU7b0JBQzdCLElBQUl4QixHQUFHRixpQkFBaUJFO29CQUN4QnZCLEVBQUU4QyxNQUFNLENBQUNoQyxLQUFLLEdBQUc7Z0JBQ25COzs7Ozs7MEJBSUYsUUFBQzBCO2dCQUFJQyxXQUFVOzBCQUNaOUIsTUFBTVosR0FBRyxDQUFDLENBQUNpRCxrQkFDVixRQUFDUjt3QkFBa0JDLFdBQVU7OzBDQUMzQixRQUFDRDtnQ0FBSUMsV0FBVTs7a0RBQ2IsUUFBQ0Q7d0NBQUlDLFdBQVcxRyxHQUFHLDJEQUEyRGlILEVBQUUvQixFQUFFO2tEQUNoRixjQUFBLFFBQUMrQixFQUFFcEMsSUFBSTs0Q0FBQzZCLFdBQVcxRyxHQUFHLFdBQVdpSCxFQUFFaEMsS0FBSzs7Ozs7Ozs7Ozs7a0RBRTFDLFFBQUNpQzt3Q0FBS1IsV0FBVTtrREFBaUNPLEVBQUVuQyxLQUFLOzs7Ozs7Ozs7Ozs7MENBRTFELFFBQUNxQztnQ0FBRVQsV0FBVTswQ0FBc0JPLEVBQUVsQyxLQUFLOzs7Ozs7O3VCQVBsQ2tDLEVBQUVuQyxLQUFLOzs7Ozs7Ozs7OzBCQWFyQixRQUFDMkI7Z0JBQUlDLFdBQVU7MEJBQ1pqRixXQUFXdUMsR0FBRyxDQUFDLENBQUNvRCxrQkFDZixRQUFDQzt3QkFFQ0MsU0FBUyxJQUFNNUUsWUFBWTBFO3dCQUMzQlYsV0FBVzFHLEdBQ1Qsb0VBQ0F5QyxhQUFhMkUsSUFDVCw4Q0FDQTtrQ0FHTEE7dUJBVElBOzs7Ozs7Ozs7OzBCQWVYLFFBQUNYO2dCQUFJQyxXQUFVOztrQ0FDYixRQUFDRDt3QkFBSUMsV0FBVTs7MENBQ2IsUUFBQzVGO2dDQUFPNEYsV0FBVTs7Ozs7OzBDQUNsQixRQUFDdkc7Z0NBQU1vSCxhQUFZO2dDQUFzQnhDLE9BQU9wQztnQ0FBUW1FLFVBQVUsQ0FBQzdDLElBQU1yQixVQUFVcUIsRUFBRThDLE1BQU0sQ0FBQ2hDLEtBQUs7Z0NBQUcyQixXQUFVOzs7Ozs7Ozs7Ozs7a0NBRWhILFFBQUN4Rzt3QkFBT29ILFNBQVNuQzs7MENBQ2YsUUFBQ3RFO2dDQUFPNkYsV0FBVTs7Ozs7OzRCQUFtQjs7Ozs7Ozs7Ozs7OzswQkFLekMsUUFBQ0Q7Z0JBQUlDLFdBQVU7MEJBQ1p2RSxLQUFLcUYsU0FBUyxpQkFDYixRQUFDZjtvQkFBSUMsV0FBVTs4QkFDWmUsTUFBTTdELElBQUksQ0FBQzt3QkFBRW9CLFFBQVE7b0JBQUUsR0FBR2hCLEdBQUcsQ0FBQyxDQUFDMEQsR0FBR0Msa0JBQ2pDLFFBQUN2SDs0QkFBaUJzRyxXQUFVOzJCQUFiaUI7Ozs7Ozs7OzsyQkFHakJ4RCxTQUFTYSxNQUFNLEtBQUssa0JBQ3RCLFFBQUN5QjtvQkFBSUMsV0FBVTs7c0NBQ2IsUUFBQzlGOzRCQUFTOEYsV0FBVTs7Ozs7O3NDQUNwQixRQUFDa0I7NEJBQUdsQixXQUFVO3NDQUE2Qjs7Ozs7O3NDQUMzQyxRQUFDUzs0QkFBRVQsV0FBVTtzQ0FBcUM7Ozs7OztzQ0FDbEQsUUFBQ3hHOzRCQUFPMkgsU0FBUTs0QkFBVWxDLE1BQUs7NEJBQUsyQixTQUFTbkM7OzhDQUMzQyxRQUFDdEU7b0NBQU82RixXQUFVOzs7Ozs7Z0NBQXVCOzs7Ozs7Ozs7Ozs7eUNBSTdDLFFBQUNvQjtvQkFBTXBCLFdBQVU7O3NDQUNmLFFBQUNxQjtzQ0FDQyxjQUFBLFFBQUNDO2dDQUFHdEIsV0FBVTs7a0RBQ1osUUFBQ3VCO3dDQUFHdkIsV0FBVTtrREFBa0M7Ozs7OztrREFDaEQsUUFBQ3VCO3dDQUFHdkIsV0FBVTtrREFBa0M7Ozs7OztrREFDaEQsUUFBQ3VCO3dDQUFHdkIsV0FBVTtrREFBa0M7Ozs7OztrREFDaEQsUUFBQ3VCO3dDQUFHdkIsV0FBVTtrREFBa0M7Ozs7OztrREFDaEQsUUFBQ3VCO3dDQUFHdkIsV0FBVTtrREFBa0M7Ozs7OztrREFDaEQsUUFBQ3VCO3dDQUFHdkIsV0FBVTtrREFBa0M7Ozs7OztrREFDaEQsUUFBQ3VCO3dDQUFHdkIsV0FBVTtrREFBbUM7Ozs7Ozs7Ozs7Ozs7Ozs7O3NDQUdyRCxRQUFDd0I7NEJBQU14QixXQUFVO3NDQUNkdkMsU0FBU0gsR0FBRyxDQUFDLENBQUNLO2dDQUNiLE1BQU04RCxPQUFPNUIsWUFBWWxDLEVBQUUrRCxTQUFTO2dDQUNwQyxNQUFNQyxVQUFVaEUsRUFBRXdCLFdBQVcsR0FBSTlCLGFBQWEsQ0FBQ00sRUFBRXdCLFdBQVcsQ0FBQyxFQUFFeEMsUUFBUSxhQUFjO2dDQUNyRixxQkFDRSxRQUFDMkU7b0NBQWN0QixXQUFVOztzREFDdkIsUUFBQzRCOzRDQUFHNUIsV0FBVTtzREFDWixjQUFBLFFBQUNEO2dEQUFJQyxXQUFVOztrRUFDYixRQUFDeUI7d0RBQUt6QixXQUFVOzs7Ozs7a0VBQ2hCLFFBQUNEOzswRUFDQyxRQUFDVTtnRUFBRVQsV0FBVTswRUFBOENyQyxFQUFFaEIsSUFBSTs7Ozs7OzBFQUNqRSxRQUFDOEQ7Z0VBQUVULFdBQVU7MEVBQXFDaEYsWUFBWTJDLEVBQUVrRSxVQUFVOzs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7OztzREFJaEYsUUFBQ0Q7NENBQUc1QixXQUFVO3NEQUFZLGNBQUEsUUFBQ3pHO2dEQUFNNEgsU0FBUTtnREFBVW5CLFdBQVU7MERBQWVyQyxFQUFFNUIsUUFBUTs7Ozs7Ozs7Ozs7c0RBQ3RGLFFBQUM2Rjs0Q0FBRzVCLFdBQVU7c0RBQXFCMkI7Ozs7OztzREFDbkMsUUFBQ0M7NENBQUc1QixXQUFVO3NEQUEyQzdFLFdBQVd3QyxFQUFFbUUsVUFBVTs7Ozs7O3NEQUNoRixRQUFDRjs0Q0FBRzVCLFdBQVU7c0RBQTJDN0UsV0FBV3dDLEVBQUVkLFVBQVU7Ozs7OztzREFDaEYsUUFBQytFOzRDQUFHNUIsV0FBVTtzREFDWixjQUFBLFFBQUN6RztnREFDQzRILFNBQVE7Z0RBQ1JuQixXQUFXMUcsR0FDVCxlQUNBcUUsRUFBRW9FLE1BQU0sS0FBSyxZQUFZLGdEQUN6QnBFLEVBQUVvRSxNQUFNLEtBQUssYUFBYSw0REFDMUJwRSxFQUFFb0UsTUFBTSxLQUFLLGFBQWE7MERBRzNCcEUsRUFBRW9FLE1BQU07Ozs7Ozs7Ozs7O3NEQUdiLFFBQUNIOzRDQUFHNUIsV0FBVTtzREFDWixjQUFBLFFBQUNEO2dEQUFJQyxXQUFVOztrRUFDYixRQUFDeEc7d0RBQU8ySCxTQUFRO3dEQUFRbEMsTUFBSzt3REFBT2UsV0FBVTt3REFBVVksU0FBUyxJQUFNcEIsV0FBVzdCO2tFQUNoRixjQUFBLFFBQUNwRDs0REFBSXlGLFdBQVU7Ozs7Ozs7Ozs7O2tFQUVqQixRQUFDeEc7d0RBQ0MySCxTQUFRO3dEQUNSbEMsTUFBSzt3REFDTGUsV0FBVTt3REFDVlksU0FBUyxJQUFNdEUsZUFBZXFCO2tFQUU5QixjQUFBLFFBQUNyRDs0REFBTzBGLFdBQVU7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O21DQXRDakJyQyxFQUFFSCxFQUFFOzs7Ozs0QkE0Q2pCOzs7Ozs7Ozs7Ozs7Ozs7OztZQU9QTSxhQUFhUSxNQUFNLEdBQUcsbUJBQ3JCLFFBQUN5QjtnQkFBSUMsV0FBVTs7a0NBQ2IsUUFBQ0Q7d0JBQUlDLFdBQVU7OzBDQUNiLFFBQUNwRjtnQ0FBY29GLFdBQVU7Ozs7OzswQ0FDekIsUUFBQ2tCO2dDQUFHbEIsV0FBVTswQ0FBcUM7Ozs7Ozs7Ozs7OztrQ0FFckQsUUFBQ0Q7d0JBQUlDLFdBQVU7a0NBQ1psQyxhQUFhUixHQUFHLENBQUMsQ0FBQ0s7NEJBQ2pCLE1BQU1nRSxVQUFVaEUsRUFBRXdCLFdBQVcsR0FBSTlCLGFBQWEsQ0FBQ00sRUFBRXdCLFdBQVcsQ0FBQyxFQUFFeEMsUUFBUSxhQUFjOzRCQUNyRixxQkFDRSxRQUFDOEQ7Z0NBQWFULFdBQVU7O29DQUNyQnJDLEVBQUVoQixJQUFJO29DQUFDO29DQUFZeEIsV0FBV3dDLEVBQUVkLFVBQVU7b0NBQUU7b0NBQUc4RTtvQ0FBUTs7K0JBRGxEaEUsRUFBRUgsRUFBRTs7Ozs7d0JBSWhCOzs7Ozs7Ozs7Ozs7MEJBTU4sUUFBQzdEO2dCQUFPaUcsTUFBTXpEO2dCQUFZNkYsY0FBYyxDQUFDQztvQkFBUSxJQUFJLENBQUNBLEdBQUc7d0JBQUU3RixjQUFjO3dCQUFRSSxlQUFlO29CQUFPO2dCQUFFOzBCQUN2RyxjQUFBLFFBQUM1QztvQkFBY29HLFdBQVU7O3NDQUN2QixRQUFDbkc7c0NBQWEsY0FBQSxRQUFDQzswQ0FBWTs7Ozs7Ozs7Ozs7c0NBQzNCLFFBQUNpRzs0QkFBSUMsV0FBVTs7Z0NBQ1p6RCw0QkFDQyxRQUFDd0Q7b0NBQUlDLFdBQVU7O3NEQUNiLFFBQUM5Rjs0Q0FBUzhGLFdBQVU7Ozs7OztzREFDcEIsUUFBQ0Q7NENBQUlDLFdBQVU7OzhEQUNiLFFBQUNTO29EQUFFVCxXQUFVOzhEQUFnQ3pELFlBQVlJLElBQUk7Ozs7Ozs4REFDN0QsUUFBQzhEO29EQUFFVCxXQUFVOzhEQUFxQ2hGLFlBQVl1QixZQUFZMEMsSUFBSTs7Ozs7Ozs7Ozs7O3NEQUVoRixRQUFDekY7NENBQU8ySCxTQUFROzRDQUFRbEMsTUFBSzs0Q0FBSzJCLFNBQVNuQztzREFBZ0I7Ozs7Ozs7Ozs7O3lEQUc3RCxRQUFDa0M7b0NBQ0NDLFNBQVNuQztvQ0FDVHVCLFdBQVU7O3NEQUVWLFFBQUM3Rjs0Q0FBTzZGLFdBQVU7Ozs7OztzREFDbEIsUUFBQ1M7NENBQUVULFdBQVU7c0RBQWdDOzs7Ozs7c0RBQzdDLFFBQUNTOzRDQUFFVCxXQUFVO3NEQUF5Qzs7Ozs7Ozs7Ozs7OzhDQUkxRCxRQUFDRDtvQ0FBSUMsV0FBVTs7c0RBQ2IsUUFBQ2hHO3NEQUFNOzs7Ozs7c0RBQ1AsUUFBQ1A7NENBQ0M0RSxPQUFPNUIsS0FBS0UsSUFBSTs0Q0FDaEJ5RCxVQUFVLENBQUM3QyxJQUFNYixRQUFRLENBQUMrRCxJQUFPLENBQUE7d0RBQUUsR0FBR0EsQ0FBQzt3REFBRTlELE1BQU1ZLEVBQUU4QyxNQUFNLENBQUNoQyxLQUFLO29EQUFDLENBQUE7NENBQzlEd0MsYUFBWTs7Ozs7Ozs7Ozs7OzhDQUdoQixRQUFDZDtvQ0FBSUMsV0FBVTs7c0RBQ2IsUUFBQ2hHO3NEQUFNOzs7Ozs7c0RBQ1AsUUFBQ21EOzRDQUNDa0IsT0FBTzVCLEtBQUtWLFFBQVE7NENBQ3BCcUUsVUFBVSxDQUFDN0MsSUFBTWIsUUFBUSxDQUFDK0QsSUFBTyxDQUFBO3dEQUFFLEdBQUdBLENBQUM7d0RBQUUxRSxVQUFVd0IsRUFBRThDLE1BQU0sQ0FBQ2hDLEtBQUs7b0RBQUMsQ0FBQTs0Q0FDbEUyQixXQUFVO3NEQUVUakYsV0FBVzJDLE1BQU0sQ0FBQyxDQUFDZ0QsSUFBTUEsTUFBTSxPQUFPcEQsR0FBRyxDQUFDLENBQUNvRCxrQkFBTSxRQUFDd0I7b0RBQWU3RCxPQUFPcUM7OERBQUlBO21EQUFkQTs7Ozs7Ozs7Ozs7Ozs7Ozs4Q0FHbkUsUUFBQ1g7b0NBQUlDLFdBQVU7O3NEQUNiLFFBQUNoRztzREFBTTs7Ozs7O3NEQUNQLFFBQUNtRDs0Q0FDQ2tCLE9BQU81QixLQUFLRyxVQUFVOzRDQUN0QndELFVBQVUsQ0FBQzdDLElBQU1iLFFBQVEsQ0FBQytELElBQU8sQ0FBQTt3REFBRSxHQUFHQSxDQUFDO3dEQUFFN0QsWUFBWVcsRUFBRThDLE1BQU0sQ0FBQ2hDLEtBQUs7b0RBQUMsQ0FBQTs0Q0FDcEUyQixXQUFVOzs4REFFVixRQUFDa0M7b0RBQU83RCxPQUFNOzhEQUFHOzs7Ozs7Z0RBQ2hCdEIsVUFBVU8sR0FBRyxDQUFDLENBQUNDLGtCQUFXLFFBQUMyRTt3REFBa0I3RCxPQUFPZCxFQUFFQyxFQUFFO2tFQUFHRCxFQUFFWixJQUFJO3VEQUExQlksRUFBRUMsRUFBRTs7Ozs7Ozs7Ozs7Ozs7Ozs7OENBR2hELFFBQUN1QztvQ0FBSUMsV0FBVTs7c0RBQ2IsUUFBQ2hHO3NEQUFNOzs7Ozs7c0RBQ1AsUUFBQ1A7NENBQ0NxRyxNQUFLOzRDQUNMekIsT0FBTzVCLEtBQUtJLFVBQVU7NENBQ3RCdUQsVUFBVSxDQUFDN0MsSUFBTWIsUUFBUSxDQUFDK0QsSUFBTyxDQUFBO3dEQUFFLEdBQUdBLENBQUM7d0RBQUU1RCxZQUFZVSxFQUFFOEMsTUFBTSxDQUFDaEMsS0FBSztvREFBQyxDQUFBOzs7Ozs7Ozs7Ozs7Ozs7Ozs7c0NBSTFFLFFBQUN0RTs7OENBQ0MsUUFBQ1A7b0NBQU8ySCxTQUFRO29DQUFVUCxTQUFTO3dDQUFReEUsY0FBYzt3Q0FBUUksZUFBZTtvQ0FBTzs4Q0FBRzs7Ozs7OzhDQUMxRixRQUFDaEQ7b0NBQU9vSCxTQUFTN0I7b0NBQWNvRCxVQUFVekcsT0FBTzBHLFNBQVMsSUFBSSxDQUFDN0Y7OENBQzNEYixPQUFPMEcsU0FBUyxHQUFHLGlCQUFpQjs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7MEJBTzdDLFFBQUN6STtnQkFBT2lHLE1BQU0sQ0FBQyxDQUFDdkQ7Z0JBQWEyRixjQUFjLElBQU0xRixlQUFlOzBCQUM5RCxjQUFBLFFBQUMxQztvQkFBY29HLFdBQVU7OEJBQ3RCM0QsNkJBQ0M7OzBDQUNFLFFBQUN4QzswQ0FBYSxjQUFBLFFBQUNDO29DQUFZa0csV0FBVTs4Q0FBWTs7Ozs7Ozs7Ozs7MENBQ2pELFFBQUNTO2dDQUFFVCxXQUFVOztrREFDWCxRQUFDUTt3Q0FBS1IsV0FBVTtrREFBK0IzRCxZQUFZTSxJQUFJOzs7Ozs7b0NBQVE7Ozs7Ozs7MENBRXpFLFFBQUM1QztnQ0FBYWlHLFdBQVU7O2tEQUN0QixRQUFDeEc7d0NBQU8ySCxTQUFRO3dDQUFVbEMsTUFBSzt3Q0FBSzJCLFNBQVMsSUFBTXBCLFdBQVduRDs7MERBQzVELFFBQUNoQztnREFBUzJGLFdBQVU7Ozs7Ozs0Q0FBcUI7Ozs7Ozs7a0RBRTNDLFFBQUN4Rzt3Q0FDQzJILFNBQVE7d0NBQ1JsQyxNQUFLO3dDQUNMMkIsU0FBUyxJQUFNdEIsYUFBYWpEO3dDQUM1QjhGLFVBQVV4RyxPQUFPeUcsU0FBUzs7MERBRTFCLFFBQUM5SDtnREFBTzBGLFdBQVU7Ozs7Ozs0Q0FBcUI7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7QUFTekQ7R0FqWHdCekU7O1FBQ3lCVDtRQVdkMUI7OztLQVpYbUMifQ==

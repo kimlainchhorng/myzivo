@@ -1,0 +1,1014 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"]; const _Fragment = __vite__cjsImport0_react_jsxDevRuntime["Fragment"];
+var _s = $RefreshSig$(), _s1 = $RefreshSig$();
+/**
+ * LodgingPayoutAccountCard
+ * ------------------------
+ * Multi-rail payout setup for a lodge/hotel. Routes by host country:
+ *   - Stripe Connect Express (where supported)
+ *   - ABA Bank / KHQR (Cambodia)
+ *   - International bank wire (any unsupported country)
+ *   - PayPal (where available)
+ *
+ * Methods are stored in `customer_payout_methods` scoped by `store_id` so
+ * a host that owns multiple properties can set different bank accounts
+ * per property.
+ */ import __vite__cjsImport1_react from "/node_modules/.vite/deps/react.js?v=7fd9520c"; const useEffect = __vite__cjsImport1_react["useEffect"]; const useMemo = __vite__cjsImport1_react["useMemo"]; const useState = __vite__cjsImport1_react["useState"];
+import { useQuery, useQueryClient, useMutation } from "/node_modules/.vite/deps/@tanstack_react-query.js?v=7fd9520c";
+import { Loader2, CheckCircle2, AlertCircle, ShieldCheck, Banknote, Landmark, Wallet, Trash2, Plus, ArrowRight } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+import { toast } from "/node_modules/.vite/deps/sonner.js?v=7fd9520c";
+import { Button } from "/src/components/ui/button.tsx";
+import { Badge } from "/src/components/ui/badge.tsx";
+import { Input } from "/src/components/ui/input.tsx";
+import { Label } from "/src/components/ui/label.tsx";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "/src/components/ui/tabs.tsx";
+import { supabase } from "/src/integrations/supabase/client.ts";
+import { useAuth } from "/src/contexts/AuthContext.tsx";
+import { useConnectStatus, useConnectOnboard } from "/src/hooks/useStripeConnect.ts";
+import { getAvailableRails, normalizeCountry, recommendedRail, RAIL_DESCRIPTIONS } from "/src/lib/payouts/payoutRails.ts";
+const RAIL_ICON = {
+    stripe: ShieldCheck,
+    aba: Banknote,
+    bank_wire: Landmark,
+    paypal: Wallet
+};
+export default function LodgingPayoutAccountCard({ storeId, storeCountry }) {
+    _s();
+    const { user } = useAuth();
+    const queryClient = useQueryClient();
+    const country = normalizeCountry(storeCountry);
+    const rails = useMemo(()=>getAvailableRails(country), [
+        country
+    ]);
+    const recommended = useMemo(()=>recommendedRail(country), [
+        country
+    ]);
+    const [activeRail, setActiveRail] = useState(recommended);
+    useEffect(()=>{
+        setActiveRail(recommended);
+    }, [
+        recommended
+    ]);
+    // Stripe Connect status (account-level, not per-store — one Stripe account per user)
+    const { data: connect, isLoading: connectLoading } = useConnectStatus();
+    const onboard = useConnectOnboard();
+    // Methods saved for THIS store
+    const { data: methods = [], isLoading: methodsLoading } = useQuery({
+        queryKey: [
+            "lodge-payout-methods",
+            storeId
+        ],
+        queryFn: async ()=>{
+            const { data, error } = await supabase.from("customer_payout_methods").select("*").eq("store_id", storeId).order("created_at", {
+                ascending: false
+            });
+            if (error) throw error;
+            return data || [];
+        },
+        enabled: !!user && !!storeId
+    });
+    // Handle return from Stripe (?connect=done) — refresh status, clean URL, preserve tab
+    useEffect(()=>{
+        const params = new URLSearchParams(window.location.search);
+        if (params.get("connect") === "done") {
+            queryClient.invalidateQueries({
+                queryKey: [
+                    "stripe-connect-status"
+                ]
+            });
+            toast.success("Stripe setup updated — refreshing status…");
+            params.delete("connect");
+            const qs = params.toString();
+            window.history.replaceState({}, "", `${window.location.pathname}${qs ? "?" + qs : ""}`);
+        }
+    }, [
+        queryClient
+    ]);
+    const startStripe = ()=>{
+        if (!rails.stripe) {
+            const fallback = recommended;
+            setActiveRail(fallback);
+            toast.error(`Stripe Connect isn't available in ${country}. Switched to ${fallback.replace("_", " ")}.`);
+            return;
+        }
+        onboard.mutate(country, {
+            onError: (e)=>{
+                const msg = String(e?.message || "");
+                if (msg.includes("stripe_unsupported_country") || msg.toLowerCase().includes("not available")) {
+                    const fallback = recommended === "stripe" ? "bank_wire" : recommended;
+                    setActiveRail(fallback);
+                    toast.error(`Stripe Connect rejected ${country}. Switched to ${fallback.replace("_", " ")}.`);
+                }
+            }
+        });
+    };
+    const removeMethod = useMutation({
+        mutationFn: async (id)=>{
+            const { error } = await supabase.from("customer_payout_methods").delete().eq("id", id);
+            if (error) throw error;
+        },
+        onSuccess: ()=>{
+            toast.success("Payout method removed");
+            queryClient.invalidateQueries({
+                queryKey: [
+                    "lodge-payout-methods",
+                    storeId
+                ]
+            });
+        },
+        onError: (e)=>toast.error(e?.message || "Failed to remove")
+    });
+    const stripeReady = !!connect?.payouts_enabled;
+    const anyManualReady = methods.length > 0;
+    const anyConfigured = stripeReady || anyManualReady;
+    return /*#__PURE__*/ _jsxDEV("div", {
+        className: "rounded-lg border border-border bg-card p-4 space-y-3",
+        children: [
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "flex items-center justify-between gap-2",
+                children: [
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "flex items-center gap-2",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(ShieldCheck, {
+                                className: "h-4 w-4 text-primary"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                lineNumber: 132,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("p", {
+                                className: "text-sm font-semibold",
+                                children: "Payout account"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                lineNumber: 133,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                        lineNumber: 131,
+                        columnNumber: 9
+                    }, this),
+                    anyConfigured ? /*#__PURE__*/ _jsxDEV(Badge, {
+                        className: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30 gap-1",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(CheckCircle2, {
+                                className: "h-3 w-3"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                lineNumber: 137,
+                                columnNumber: 13
+                            }, this),
+                            "Ready"
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                        lineNumber: 136,
+                        columnNumber: 11
+                    }, this) : /*#__PURE__*/ _jsxDEV(Badge, {
+                        variant: "outline",
+                        className: "gap-1",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(AlertCircle, {
+                                className: "h-3 w-3"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                lineNumber: 141,
+                                columnNumber: 13
+                            }, this),
+                            "Not configured"
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                        lineNumber: 140,
+                        columnNumber: 11
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                lineNumber: 130,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV("p", {
+                className: "text-[11px] text-muted-foreground",
+                children: [
+                    "Property country: ",
+                    /*#__PURE__*/ _jsxDEV("span", {
+                        className: "font-medium",
+                        children: country
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                        lineNumber: 147,
+                        columnNumber: 27
+                    }, this),
+                    " · Recommended rail: ",
+                    /*#__PURE__*/ _jsxDEV("span", {
+                        className: "font-medium",
+                        children: recommended.replace("_", " ")
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                        lineNumber: 147,
+                        columnNumber: 94
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                lineNumber: 146,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV(Tabs, {
+                value: activeRail,
+                onValueChange: (v)=>setActiveRail(v),
+                children: [
+                    /*#__PURE__*/ _jsxDEV(TabsList, {
+                        className: "grid w-full",
+                        style: {
+                            gridTemplateColumns: `repeat(${[
+                                rails.stripe,
+                                rails.aba,
+                                rails.bank_wire,
+                                rails.paypal
+                            ].filter(Boolean).length}, minmax(0, 1fr))`
+                        },
+                        children: [
+                            rails.stripe && /*#__PURE__*/ _jsxDEV(TabsTrigger, {
+                                value: "stripe",
+                                className: "text-xs",
+                                children: "Stripe"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                lineNumber: 152,
+                                columnNumber: 28
+                            }, this),
+                            rails.aba && /*#__PURE__*/ _jsxDEV(TabsTrigger, {
+                                value: "aba",
+                                className: "text-xs",
+                                children: "ABA"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                lineNumber: 153,
+                                columnNumber: 25
+                            }, this),
+                            rails.bank_wire && /*#__PURE__*/ _jsxDEV(TabsTrigger, {
+                                value: "bank_wire",
+                                className: "text-xs",
+                                children: "Bank wire"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                lineNumber: 154,
+                                columnNumber: 31
+                            }, this),
+                            rails.paypal && /*#__PURE__*/ _jsxDEV(TabsTrigger, {
+                                value: "paypal",
+                                className: "text-xs",
+                                children: "PayPal"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                lineNumber: 155,
+                                columnNumber: 28
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                        lineNumber: 151,
+                        columnNumber: 9
+                    }, this),
+                    rails.stripe && /*#__PURE__*/ _jsxDEV(TabsContent, {
+                        value: "stripe",
+                        className: "mt-3 space-y-2",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("p", {
+                                className: "text-xs text-muted-foreground",
+                                children: RAIL_DESCRIPTIONS.stripe
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                lineNumber: 161,
+                                columnNumber: 13
+                            }, this),
+                            connectLoading ? /*#__PURE__*/ _jsxDEV("p", {
+                                className: "text-xs text-muted-foreground flex items-center gap-1.5",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(Loader2, {
+                                        className: "h-3 w-3 animate-spin"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                        lineNumber: 164,
+                                        columnNumber: 17
+                                    }, this),
+                                    "Checking Stripe status…"
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                lineNumber: 163,
+                                columnNumber: 15
+                            }, this) : !connect?.connected ? /*#__PURE__*/ _jsxDEV(Button, {
+                                size: "sm",
+                                onClick: startStripe,
+                                disabled: onboard.isPending,
+                                children: [
+                                    onboard.isPending ? /*#__PURE__*/ _jsxDEV(Loader2, {
+                                        className: "h-3.5 w-3.5 animate-spin mr-2"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                        lineNumber: 168,
+                                        columnNumber: 38
+                                    }, this) : /*#__PURE__*/ _jsxDEV(ArrowRight, {
+                                        className: "h-3.5 w-3.5 mr-2"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                        lineNumber: 168,
+                                        columnNumber: 94
+                                    }, this),
+                                    "Set up Stripe (",
+                                    country,
+                                    ")"
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                lineNumber: 167,
+                                columnNumber: 15
+                            }, this) : /*#__PURE__*/ _jsxDEV("div", {
+                                className: "space-y-2",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        className: "flex flex-wrap gap-1.5",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(Badge, {
+                                                variant: connect.details_submitted ? "default" : "secondary",
+                                                className: "gap-1",
+                                                children: [
+                                                    connect.details_submitted ? /*#__PURE__*/ _jsxDEV(CheckCircle2, {
+                                                        className: "h-3 w-3"
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                                        lineNumber: 175,
+                                                        columnNumber: 50
+                                                    }, this) : /*#__PURE__*/ _jsxDEV(AlertCircle, {
+                                                        className: "h-3 w-3"
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                                        lineNumber: 175,
+                                                        columnNumber: 89
+                                                    }, this),
+                                                    "Details ",
+                                                    connect.details_submitted ? "submitted" : "pending"
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                                lineNumber: 174,
+                                                columnNumber: 19
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV(Badge, {
+                                                variant: connect.payouts_enabled ? "default" : "secondary",
+                                                className: "gap-1",
+                                                children: [
+                                                    connect.payouts_enabled ? /*#__PURE__*/ _jsxDEV(CheckCircle2, {
+                                                        className: "h-3 w-3"
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                                        lineNumber: 179,
+                                                        columnNumber: 48
+                                                    }, this) : /*#__PURE__*/ _jsxDEV(AlertCircle, {
+                                                        className: "h-3 w-3"
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                                        lineNumber: 179,
+                                                        columnNumber: 87
+                                                    }, this),
+                                                    "Payouts ",
+                                                    connect.payouts_enabled ? "enabled" : "disabled"
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                                lineNumber: 178,
+                                                columnNumber: 19
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                        lineNumber: 173,
+                                        columnNumber: 17
+                                    }, this),
+                                    !stripeReady && /*#__PURE__*/ _jsxDEV(Button, {
+                                        size: "sm",
+                                        variant: "outline",
+                                        onClick: startStripe,
+                                        disabled: onboard.isPending,
+                                        children: [
+                                            onboard.isPending ? /*#__PURE__*/ _jsxDEV(Loader2, {
+                                                className: "h-3.5 w-3.5 animate-spin mr-2"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                                lineNumber: 185,
+                                                columnNumber: 42
+                                            }, this) : null,
+                                            "Continue Stripe onboarding"
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                        lineNumber: 184,
+                                        columnNumber: 19
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                lineNumber: 172,
+                                columnNumber: 15
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                        lineNumber: 160,
+                        columnNumber: 11
+                    }, this),
+                    rails.aba && /*#__PURE__*/ _jsxDEV(TabsContent, {
+                        value: "aba",
+                        className: "mt-3 space-y-2",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("p", {
+                                className: "text-xs text-muted-foreground",
+                                children: RAIL_DESCRIPTIONS.aba
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                lineNumber: 197,
+                                columnNumber: 13
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(ManualMethodForm, {
+                                storeId: storeId,
+                                country: country,
+                                rail: "aba",
+                                methods: methods,
+                                onRemove: (id)=>removeMethod.mutate(id)
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                lineNumber: 198,
+                                columnNumber: 13
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                        lineNumber: 196,
+                        columnNumber: 11
+                    }, this),
+                    rails.bank_wire && /*#__PURE__*/ _jsxDEV(TabsContent, {
+                        value: "bank_wire",
+                        className: "mt-3 space-y-2",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("p", {
+                                className: "text-xs text-muted-foreground",
+                                children: RAIL_DESCRIPTIONS.bank_wire
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                lineNumber: 205,
+                                columnNumber: 13
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(ManualMethodForm, {
+                                storeId: storeId,
+                                country: country,
+                                rail: "bank_wire",
+                                methods: methods,
+                                onRemove: (id)=>removeMethod.mutate(id)
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                lineNumber: 206,
+                                columnNumber: 13
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                        lineNumber: 204,
+                        columnNumber: 11
+                    }, this),
+                    rails.paypal && /*#__PURE__*/ _jsxDEV(TabsContent, {
+                        value: "paypal",
+                        className: "mt-3 space-y-2",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("p", {
+                                className: "text-xs text-muted-foreground",
+                                children: RAIL_DESCRIPTIONS.paypal
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                lineNumber: 213,
+                                columnNumber: 13
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(ManualMethodForm, {
+                                storeId: storeId,
+                                country: country,
+                                rail: "paypal",
+                                methods: methods,
+                                onRemove: (id)=>removeMethod.mutate(id)
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                lineNumber: 214,
+                                columnNumber: 13
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                        lineNumber: 212,
+                        columnNumber: 11
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                lineNumber: 150,
+                columnNumber: 7
+            }, this),
+            methodsLoading && /*#__PURE__*/ _jsxDEV("p", {
+                className: "text-[11px] text-muted-foreground flex items-center gap-1.5",
+                children: [
+                    /*#__PURE__*/ _jsxDEV(Loader2, {
+                        className: "h-3 w-3 animate-spin"
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                        lineNumber: 221,
+                        columnNumber: 11
+                    }, this),
+                    "Loading saved methods…"
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                lineNumber: 220,
+                columnNumber: 9
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+        lineNumber: 129,
+        columnNumber: 5
+    }, this);
+}
+_s(LodgingPayoutAccountCard, "9i5aX8P2ZQVBDyv1Gmp3KurY/lk=", false, function() {
+    return [
+        useAuth,
+        useQueryClient,
+        useConnectStatus,
+        useConnectOnboard,
+        useQuery,
+        useMutation
+    ];
+});
+_c = LodgingPayoutAccountCard;
+/* -------------------------------------------------------------------------- */ /* Manual rail form (ABA / Bank wire / PayPal)                                */ /* -------------------------------------------------------------------------- */ function ManualMethodForm({ storeId, country, rail, methods, onRemove }) {
+    _s1();
+    const { user } = useAuth();
+    const queryClient = useQueryClient();
+    const [open, setOpen] = useState(false);
+    const [confirmed, setConfirmed] = useState(false);
+    const [form, setForm] = useState({
+        label: "",
+        account_holder_name: "",
+        bank_name: "",
+        account_number: "",
+        aba_account_id: "",
+        paypal_email: "",
+        swift: ""
+    });
+    const ownMethods = methods.filter((m)=>(m.rail || mapMethodTypeToRail(m.method_type)) === rail);
+    const reset = ()=>{
+        setForm({
+            label: "",
+            account_holder_name: "",
+            bank_name: "",
+            account_number: "",
+            aba_account_id: "",
+            paypal_email: "",
+            swift: ""
+        });
+        setConfirmed(false);
+    };
+    const save = useMutation({
+        mutationFn: async ()=>{
+            if (!user) throw new Error("Sign in required");
+            if (!confirmed) throw new Error("Please confirm the account details are correct");
+            // Per-rail validation (eligibility + format)
+            if (rail === "aba") {
+                if (!form.aba_account_id.trim()) throw new Error("ABA account ID is required");
+                if (!form.account_holder_name.trim()) throw new Error("Account holder name is required");
+                if (!/^[0-9]{6,12}$/.test(form.aba_account_id.replace(/\s/g, ""))) throw new Error("ABA account ID should be 6–12 digits");
+            }
+            if (rail === "bank_wire") {
+                if (!form.bank_name.trim() || !form.account_number.trim()) throw new Error("Bank name and account number are required");
+                if (!form.account_holder_name.trim()) throw new Error("Account holder name is required");
+                if (country !== "US" && !form.swift.trim()) throw new Error("SWIFT/BIC is required for international wires");
+            }
+            if (rail === "paypal" && !/.+@.+\..+/.test(form.paypal_email)) throw new Error("Valid PayPal email required");
+            const method_type = rail === "aba" ? "aba" : rail === "paypal" ? "paypal" : "bank_transfer";
+            const payload = {
+                user_id: user.id,
+                store_id: storeId,
+                country_code: country,
+                rail,
+                method_type,
+                label: form.label || defaultLabel(rail),
+                account_holder_name: form.account_holder_name || null,
+                bank_name: rail === "bank_wire" ? form.bank_name : rail === "aba" ? "ABA Bank" : null,
+                account_number: rail === "bank_wire" ? form.account_number : rail === "paypal" ? form.paypal_email : null,
+                aba_account_id: rail === "aba" ? form.aba_account_id : null,
+                verification_status: "pending",
+                verification_note: rail === "bank_wire" && form.swift ? `SWIFT/BIC: ${form.swift}` : null,
+                is_default: methods.length === 0
+            };
+            const { error } = await supabase.from("customer_payout_methods").insert(payload);
+            if (error) throw error;
+        },
+        onSuccess: ()=>{
+            toast.success("Payout method saved");
+            reset();
+            setOpen(false);
+            queryClient.invalidateQueries({
+                queryKey: [
+                    "lodge-payout-methods",
+                    storeId
+                ]
+            });
+        },
+        onError: (e)=>toast.error(e?.message || "Could not save")
+    });
+    return /*#__PURE__*/ _jsxDEV("div", {
+        className: "space-y-2",
+        children: [
+            ownMethods.length > 0 && /*#__PURE__*/ _jsxDEV("ul", {
+                className: "space-y-1.5",
+                children: ownMethods.map((m)=>/*#__PURE__*/ _jsxDEV("li", {
+                        className: "flex items-center justify-between rounded-md border border-border bg-background/50 px-2.5 py-1.5",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "min-w-0",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV("p", {
+                                        className: "text-xs font-semibold truncate flex items-center gap-1.5",
+                                        children: [
+                                            m.label || defaultLabel(rail),
+                                            m.verification_status === "verified" ? /*#__PURE__*/ _jsxDEV(Badge, {
+                                                className: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30 h-4 px-1 text-[9px]",
+                                                children: "Verified"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                                lineNumber: 309,
+                                                columnNumber: 21
+                                            }, this) : /*#__PURE__*/ _jsxDEV(Badge, {
+                                                variant: "outline",
+                                                className: "h-4 px-1 text-[9px]",
+                                                children: "Pending verification"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                                lineNumber: 311,
+                                                columnNumber: 21
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                        lineNumber: 306,
+                                        columnNumber: 17
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("p", {
+                                        className: "text-[11px] text-muted-foreground truncate",
+                                        children: m.method_type === "aba" ? `ABA: ${m.aba_account_id}` : m.method_type === "paypal" ? m.account_number : `${m.bank_name || ""} ···${(m.account_number || "").slice(-4)}`
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                        lineNumber: 314,
+                                        columnNumber: 17
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                lineNumber: 305,
+                                columnNumber: 15
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(Button, {
+                                size: "icon",
+                                variant: "ghost",
+                                className: "h-7 w-7 shrink-0",
+                                onClick: ()=>onRemove(m.id),
+                                children: /*#__PURE__*/ _jsxDEV(Trash2, {
+                                    className: "h-3.5 w-3.5 text-destructive"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                    lineNumber: 319,
+                                    columnNumber: 17
+                                }, this)
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                lineNumber: 318,
+                                columnNumber: 15
+                            }, this)
+                        ]
+                    }, m.id, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                        lineNumber: 304,
+                        columnNumber: 13
+                    }, this))
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                lineNumber: 302,
+                columnNumber: 9
+            }, this),
+            !open ? /*#__PURE__*/ _jsxDEV(Button, {
+                size: "sm",
+                variant: "outline",
+                onClick: ()=>setOpen(true),
+                className: "w-full",
+                children: [
+                    /*#__PURE__*/ _jsxDEV(Plus, {
+                        className: "h-3.5 w-3.5 mr-1.5"
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                        lineNumber: 328,
+                        columnNumber: 11
+                    }, this),
+                    "Add ",
+                    rail === "aba" ? "ABA" : rail === "paypal" ? "PayPal" : "bank",
+                    " account"
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                lineNumber: 327,
+                columnNumber: 9
+            }, this) : /*#__PURE__*/ _jsxDEV("div", {
+                className: "space-y-2 rounded-md border border-border bg-background/40 p-2.5",
+                children: [
+                    rail !== "paypal" && /*#__PURE__*/ _jsxDEV(FieldRow, {
+                        label: "Account holder",
+                        children: /*#__PURE__*/ _jsxDEV(Input, {
+                            value: form.account_holder_name,
+                            onChange: (e)=>setForm((f)=>({
+                                        ...f,
+                                        account_holder_name: e.target.value
+                                    })),
+                            placeholder: "Full legal name"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                            lineNumber: 335,
+                            columnNumber: 15
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                        lineNumber: 334,
+                        columnNumber: 13
+                    }, this),
+                    rail === "aba" && /*#__PURE__*/ _jsxDEV(FieldRow, {
+                        label: "ABA account ID / phone",
+                        children: /*#__PURE__*/ _jsxDEV(Input, {
+                            value: form.aba_account_id,
+                            onChange: (e)=>setForm((f)=>({
+                                        ...f,
+                                        aba_account_id: e.target.value
+                                    })),
+                            placeholder: "e.g. 000123456"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                            lineNumber: 340,
+                            columnNumber: 15
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                        lineNumber: 339,
+                        columnNumber: 13
+                    }, this),
+                    rail === "bank_wire" && /*#__PURE__*/ _jsxDEV(_Fragment, {
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(FieldRow, {
+                                label: "Bank name",
+                                children: /*#__PURE__*/ _jsxDEV(Input, {
+                                    value: form.bank_name,
+                                    onChange: (e)=>setForm((f)=>({
+                                                ...f,
+                                                bank_name: e.target.value
+                                            })),
+                                    placeholder: "e.g. ACLEDA Bank"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                    lineNumber: 346,
+                                    columnNumber: 17
+                                }, this)
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                lineNumber: 345,
+                                columnNumber: 15
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(FieldRow, {
+                                label: "Account number / IBAN",
+                                children: /*#__PURE__*/ _jsxDEV(Input, {
+                                    value: form.account_number,
+                                    onChange: (e)=>setForm((f)=>({
+                                                ...f,
+                                                account_number: e.target.value
+                                            })),
+                                    placeholder: "Account number or IBAN"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                    lineNumber: 349,
+                                    columnNumber: 17
+                                }, this)
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                lineNumber: 348,
+                                columnNumber: 15
+                            }, this),
+                            country !== "US" && /*#__PURE__*/ _jsxDEV(FieldRow, {
+                                label: "SWIFT / BIC",
+                                children: /*#__PURE__*/ _jsxDEV(Input, {
+                                    value: form.swift,
+                                    onChange: (e)=>setForm((f)=>({
+                                                ...f,
+                                                swift: e.target.value
+                                            })),
+                                    placeholder: "e.g. ACLBKHPP"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                    lineNumber: 353,
+                                    columnNumber: 19
+                                }, this)
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                lineNumber: 352,
+                                columnNumber: 17
+                            }, this)
+                        ]
+                    }, void 0, true),
+                    rail === "paypal" && /*#__PURE__*/ _jsxDEV(FieldRow, {
+                        label: "PayPal email",
+                        children: /*#__PURE__*/ _jsxDEV(Input, {
+                            type: "email",
+                            value: form.paypal_email,
+                            onChange: (e)=>setForm((f)=>({
+                                        ...f,
+                                        paypal_email: e.target.value
+                                    })),
+                            placeholder: "payouts@example.com"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                            lineNumber: 360,
+                            columnNumber: 15
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                        lineNumber: 359,
+                        columnNumber: 13
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(FieldRow, {
+                        label: "Nickname (optional)",
+                        children: /*#__PURE__*/ _jsxDEV(Input, {
+                            value: form.label,
+                            onChange: (e)=>setForm((f)=>({
+                                        ...f,
+                                        label: e.target.value
+                                    })),
+                            placeholder: defaultLabel(rail)
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                            lineNumber: 364,
+                            columnNumber: 13
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                        lineNumber: 363,
+                        columnNumber: 11
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("label", {
+                        className: "flex items-start gap-2 text-[11px] text-muted-foreground cursor-pointer",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("input", {
+                                type: "checkbox",
+                                checked: confirmed,
+                                onChange: (e)=>setConfirmed(e.target.checked),
+                                className: "mt-0.5"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                lineNumber: 368,
+                                columnNumber: 13
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("span", {
+                                children: "I confirm these account details are correct and the holder name matches my ID. ZIVO will mark this method as verified after the first successful payout."
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                lineNumber: 369,
+                                columnNumber: 13
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                        lineNumber: 367,
+                        columnNumber: 11
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "flex justify-end gap-1.5 pt-1",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(Button, {
+                                size: "sm",
+                                variant: "ghost",
+                                onClick: ()=>{
+                                    setOpen(false);
+                                    reset();
+                                },
+                                children: "Cancel"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                lineNumber: 372,
+                                columnNumber: 13
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(Button, {
+                                size: "sm",
+                                onClick: ()=>save.mutate(),
+                                disabled: save.isPending,
+                                children: [
+                                    save.isPending ? /*#__PURE__*/ _jsxDEV(Loader2, {
+                                        className: "h-3.5 w-3.5 animate-spin mr-2"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                        lineNumber: 374,
+                                        columnNumber: 33
+                                    }, this) : null,
+                                    "Save"
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                                lineNumber: 373,
+                                columnNumber: 13
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                        lineNumber: 371,
+                        columnNumber: 11
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                lineNumber: 332,
+                columnNumber: 9
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+        lineNumber: 300,
+        columnNumber: 5
+    }, this);
+}
+_s1(ManualMethodForm, "ajIDSsytRG15beByXB7HxSMTPm4=", false, function() {
+    return [
+        useAuth,
+        useQueryClient,
+        useMutation
+    ];
+});
+_c1 = ManualMethodForm;
+function FieldRow({ label, children }) {
+    return /*#__PURE__*/ _jsxDEV("div", {
+        className: "space-y-1",
+        children: [
+            /*#__PURE__*/ _jsxDEV(Label, {
+                className: "text-[11px] text-muted-foreground",
+                children: label
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+                lineNumber: 387,
+                columnNumber: 7
+            }, this),
+            children
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx",
+        lineNumber: 386,
+        columnNumber: 5
+    }, this);
+}
+_c2 = FieldRow;
+function defaultLabel(rail) {
+    return rail === "aba" ? "ABA Account" : rail === "paypal" ? "PayPal" : "Bank Account";
+}
+function mapMethodTypeToRail(method_type) {
+    if (method_type === "aba") return "aba";
+    if (method_type === "paypal") return "paypal";
+    return "bank_wire";
+}
+var _c, _c1, _c2;
+$RefreshReg$(_c, "LodgingPayoutAccountCard");
+$RefreshReg$(_c1, "ManualMethodForm");
+$RefreshReg$(_c2, "FieldRow");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPayoutAccountCard.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIkxvZGdpbmdQYXlvdXRBY2NvdW50Q2FyZC50c3giXSwic291cmNlc0NvbnRlbnQiOlsiLyoqXHJcbiAqIExvZGdpbmdQYXlvdXRBY2NvdW50Q2FyZFxyXG4gKiAtLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS1cclxuICogTXVsdGktcmFpbCBwYXlvdXQgc2V0dXAgZm9yIGEgbG9kZ2UvaG90ZWwuIFJvdXRlcyBieSBob3N0IGNvdW50cnk6XHJcbiAqICAgLSBTdHJpcGUgQ29ubmVjdCBFeHByZXNzICh3aGVyZSBzdXBwb3J0ZWQpXHJcbiAqICAgLSBBQkEgQmFuayAvIEtIUVIgKENhbWJvZGlhKVxyXG4gKiAgIC0gSW50ZXJuYXRpb25hbCBiYW5rIHdpcmUgKGFueSB1bnN1cHBvcnRlZCBjb3VudHJ5KVxyXG4gKiAgIC0gUGF5UGFsICh3aGVyZSBhdmFpbGFibGUpXHJcbiAqXHJcbiAqIE1ldGhvZHMgYXJlIHN0b3JlZCBpbiBgY3VzdG9tZXJfcGF5b3V0X21ldGhvZHNgIHNjb3BlZCBieSBgc3RvcmVfaWRgIHNvXHJcbiAqIGEgaG9zdCB0aGF0IG93bnMgbXVsdGlwbGUgcHJvcGVydGllcyBjYW4gc2V0IGRpZmZlcmVudCBiYW5rIGFjY291bnRzXHJcbiAqIHBlciBwcm9wZXJ0eS5cclxuICovXHJcbmltcG9ydCB7IHVzZUVmZmVjdCwgdXNlTWVtbywgdXNlU3RhdGUgfSBmcm9tIFwicmVhY3RcIjtcclxuaW1wb3J0IHsgdXNlUXVlcnksIHVzZVF1ZXJ5Q2xpZW50LCB1c2VNdXRhdGlvbiB9IGZyb20gXCJAdGFuc3RhY2svcmVhY3QtcXVlcnlcIjtcclxuaW1wb3J0IHsgTG9hZGVyMiwgQ2hlY2tDaXJjbGUyLCBBbGVydENpcmNsZSwgU2hpZWxkQ2hlY2ssIEJhbmtub3RlLCBMYW5kbWFyaywgV2FsbGV0LCBUcmFzaDIsIFBsdXMsIEFycm93UmlnaHQgfSBmcm9tIFwibHVjaWRlLXJlYWN0XCI7XHJcbmltcG9ydCB7IHRvYXN0IH0gZnJvbSBcInNvbm5lclwiO1xyXG5pbXBvcnQgeyBCdXR0b24gfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2J1dHRvblwiO1xyXG5pbXBvcnQgeyBCYWRnZSB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvYmFkZ2VcIjtcclxuaW1wb3J0IHsgSW5wdXQgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2lucHV0XCI7XHJcbmltcG9ydCB7IExhYmVsIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9sYWJlbFwiO1xyXG5pbXBvcnQgeyBUYWJzLCBUYWJzQ29udGVudCwgVGFic0xpc3QsIFRhYnNUcmlnZ2VyIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS90YWJzXCI7XHJcbmltcG9ydCB7IHN1cGFiYXNlIH0gZnJvbSBcIkAvaW50ZWdyYXRpb25zL3N1cGFiYXNlL2NsaWVudFwiO1xyXG5pbXBvcnQgeyB1c2VBdXRoIH0gZnJvbSBcIkAvY29udGV4dHMvQXV0aENvbnRleHRcIjtcclxuaW1wb3J0IHsgdXNlQ29ubmVjdFN0YXR1cywgdXNlQ29ubmVjdE9uYm9hcmQgfSBmcm9tIFwiQC9ob29rcy91c2VTdHJpcGVDb25uZWN0XCI7XHJcbmltcG9ydCB7IGdldEF2YWlsYWJsZVJhaWxzLCBub3JtYWxpemVDb3VudHJ5LCByZWNvbW1lbmRlZFJhaWwsIFJBSUxfREVTQ1JJUFRJT05TLCB0eXBlIFBheW91dFJhaWwgfSBmcm9tIFwiQC9saWIvcGF5b3V0cy9wYXlvdXRSYWlsc1wiO1xyXG5cclxuaW50ZXJmYWNlIFByb3BzIHsgc3RvcmVJZDogc3RyaW5nOyBzdG9yZUNvdW50cnk/OiBzdHJpbmcgfCBudWxsOyB9XHJcblxyXG5pbnRlcmZhY2UgUGF5b3V0TWV0aG9kUm93IHtcclxuICBpZDogc3RyaW5nO1xyXG4gIG1ldGhvZF90eXBlOiBzdHJpbmc7XHJcbiAgcmFpbDogc3RyaW5nIHwgbnVsbDtcclxuICBsYWJlbDogc3RyaW5nIHwgbnVsbDtcclxuICBiYW5rX25hbWU6IHN0cmluZyB8IG51bGw7XHJcbiAgYWNjb3VudF9udW1iZXI6IHN0cmluZyB8IG51bGw7XHJcbiAgYWNjb3VudF9ob2xkZXJfbmFtZTogc3RyaW5nIHwgbnVsbDtcclxuICBhYmFfYWNjb3VudF9pZDogc3RyaW5nIHwgbnVsbDtcclxuICBjb3VudHJ5X2NvZGU6IHN0cmluZyB8IG51bGw7XHJcbiAgaXNfZGVmYXVsdDogYm9vbGVhbjtcclxuICB2ZXJpZmljYXRpb25fc3RhdHVzPzogc3RyaW5nIHwgbnVsbDtcclxuICBjcmVhdGVkX2F0OiBzdHJpbmc7XHJcbn1cclxuXHJcbmNvbnN0IFJBSUxfSUNPTjogUmVjb3JkPFBheW91dFJhaWwsIHR5cGVvZiBCYW5rbm90ZT4gPSB7XHJcbiAgc3RyaXBlOiBTaGllbGRDaGVjayxcclxuICBhYmE6IEJhbmtub3RlLFxyXG4gIGJhbmtfd2lyZTogTGFuZG1hcmssXHJcbiAgcGF5cGFsOiBXYWxsZXQsXHJcbn07XHJcblxyXG5leHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBMb2RnaW5nUGF5b3V0QWNjb3VudENhcmQoeyBzdG9yZUlkLCBzdG9yZUNvdW50cnkgfTogUHJvcHMpIHtcclxuICBjb25zdCB7IHVzZXIgfSA9IHVzZUF1dGgoKTtcclxuICBjb25zdCBxdWVyeUNsaWVudCA9IHVzZVF1ZXJ5Q2xpZW50KCk7XHJcbiAgY29uc3QgY291bnRyeSA9IG5vcm1hbGl6ZUNvdW50cnkoc3RvcmVDb3VudHJ5KTtcclxuICBjb25zdCByYWlscyA9IHVzZU1lbW8oKCkgPT4gZ2V0QXZhaWxhYmxlUmFpbHMoY291bnRyeSksIFtjb3VudHJ5XSk7XHJcbiAgY29uc3QgcmVjb21tZW5kZWQgPSB1c2VNZW1vKCgpID0+IHJlY29tbWVuZGVkUmFpbChjb3VudHJ5KSwgW2NvdW50cnldKTtcclxuXHJcbiAgY29uc3QgW2FjdGl2ZVJhaWwsIHNldEFjdGl2ZVJhaWxdID0gdXNlU3RhdGU8UGF5b3V0UmFpbD4ocmVjb21tZW5kZWQpO1xyXG4gIHVzZUVmZmVjdCgoKSA9PiB7IHNldEFjdGl2ZVJhaWwocmVjb21tZW5kZWQpOyB9LCBbcmVjb21tZW5kZWRdKTtcclxuXHJcbiAgLy8gU3RyaXBlIENvbm5lY3Qgc3RhdHVzIChhY2NvdW50LWxldmVsLCBub3QgcGVyLXN0b3JlIOKAlCBvbmUgU3RyaXBlIGFjY291bnQgcGVyIHVzZXIpXHJcbiAgY29uc3QgeyBkYXRhOiBjb25uZWN0LCBpc0xvYWRpbmc6IGNvbm5lY3RMb2FkaW5nIH0gPSB1c2VDb25uZWN0U3RhdHVzKCk7XHJcbiAgY29uc3Qgb25ib2FyZCA9IHVzZUNvbm5lY3RPbmJvYXJkKCk7XHJcblxyXG4gIC8vIE1ldGhvZHMgc2F2ZWQgZm9yIFRISVMgc3RvcmVcclxuICBjb25zdCB7IGRhdGE6IG1ldGhvZHMgPSBbXSwgaXNMb2FkaW5nOiBtZXRob2RzTG9hZGluZyB9ID0gdXNlUXVlcnkoe1xyXG4gICAgcXVlcnlLZXk6IFtcImxvZGdlLXBheW91dC1tZXRob2RzXCIsIHN0b3JlSWRdLFxyXG4gICAgcXVlcnlGbjogYXN5bmMgKCk6IFByb21pc2U8UGF5b3V0TWV0aG9kUm93W10+ID0+IHtcclxuICAgICAgY29uc3QgeyBkYXRhLCBlcnJvciB9ID0gYXdhaXQgc3VwYWJhc2VcclxuICAgICAgICAuZnJvbShcImN1c3RvbWVyX3BheW91dF9tZXRob2RzXCIpXHJcbiAgICAgICAgLnNlbGVjdChcIipcIilcclxuICAgICAgICAuZXEoXCJzdG9yZV9pZFwiLCBzdG9yZUlkKVxyXG4gICAgICAgIC5vcmRlcihcImNyZWF0ZWRfYXRcIiwgeyBhc2NlbmRpbmc6IGZhbHNlIH0pO1xyXG4gICAgICBpZiAoZXJyb3IpIHRocm93IGVycm9yO1xyXG4gICAgICByZXR1cm4gKGRhdGEgfHwgW10pIGFzIFBheW91dE1ldGhvZFJvd1tdO1xyXG4gICAgfSxcclxuICAgIGVuYWJsZWQ6ICEhdXNlciAmJiAhIXN0b3JlSWQsXHJcbiAgfSk7XHJcblxyXG4gIC8vIEhhbmRsZSByZXR1cm4gZnJvbSBTdHJpcGUgKD9jb25uZWN0PWRvbmUpIOKAlCByZWZyZXNoIHN0YXR1cywgY2xlYW4gVVJMLCBwcmVzZXJ2ZSB0YWJcclxuICB1c2VFZmZlY3QoKCkgPT4ge1xyXG4gICAgY29uc3QgcGFyYW1zID0gbmV3IFVSTFNlYXJjaFBhcmFtcyh3aW5kb3cubG9jYXRpb24uc2VhcmNoKTtcclxuICAgIGlmIChwYXJhbXMuZ2V0KFwiY29ubmVjdFwiKSA9PT0gXCJkb25lXCIpIHtcclxuICAgICAgcXVlcnlDbGllbnQuaW52YWxpZGF0ZVF1ZXJpZXMoeyBxdWVyeUtleTogW1wic3RyaXBlLWNvbm5lY3Qtc3RhdHVzXCJdIH0pO1xyXG4gICAgICB0b2FzdC5zdWNjZXNzKFwiU3RyaXBlIHNldHVwIHVwZGF0ZWQg4oCUIHJlZnJlc2hpbmcgc3RhdHVz4oCmXCIpO1xyXG4gICAgICBwYXJhbXMuZGVsZXRlKFwiY29ubmVjdFwiKTtcclxuICAgICAgY29uc3QgcXMgPSBwYXJhbXMudG9TdHJpbmcoKTtcclxuICAgICAgd2luZG93Lmhpc3RvcnkucmVwbGFjZVN0YXRlKHt9LCBcIlwiLCBgJHt3aW5kb3cubG9jYXRpb24ucGF0aG5hbWV9JHtxcyA/IFwiP1wiICsgcXMgOiBcIlwifWApO1xyXG4gICAgfVxyXG4gIH0sIFtxdWVyeUNsaWVudF0pO1xyXG5cclxuICBjb25zdCBzdGFydFN0cmlwZSA9ICgpID0+IHtcclxuICAgIGlmICghcmFpbHMuc3RyaXBlKSB7XHJcbiAgICAgIGNvbnN0IGZhbGxiYWNrID0gcmVjb21tZW5kZWQ7XHJcbiAgICAgIHNldEFjdGl2ZVJhaWwoZmFsbGJhY2spO1xyXG4gICAgICB0b2FzdC5lcnJvcihgU3RyaXBlIENvbm5lY3QgaXNuJ3QgYXZhaWxhYmxlIGluICR7Y291bnRyeX0uIFN3aXRjaGVkIHRvICR7ZmFsbGJhY2sucmVwbGFjZShcIl9cIiwgXCIgXCIpfS5gKTtcclxuICAgICAgcmV0dXJuO1xyXG4gICAgfVxyXG4gICAgb25ib2FyZC5tdXRhdGUoY291bnRyeSwge1xyXG4gICAgICBvbkVycm9yOiAoZTogYW55KSA9PiB7XHJcbiAgICAgICAgY29uc3QgbXNnID0gU3RyaW5nKGU/Lm1lc3NhZ2UgfHwgXCJcIik7XHJcbiAgICAgICAgaWYgKG1zZy5pbmNsdWRlcyhcInN0cmlwZV91bnN1cHBvcnRlZF9jb3VudHJ5XCIpIHx8IG1zZy50b0xvd2VyQ2FzZSgpLmluY2x1ZGVzKFwibm90IGF2YWlsYWJsZVwiKSkge1xyXG4gICAgICAgICAgY29uc3QgZmFsbGJhY2sgPSByZWNvbW1lbmRlZCA9PT0gXCJzdHJpcGVcIiA/IFwiYmFua193aXJlXCIgOiByZWNvbW1lbmRlZDtcclxuICAgICAgICAgIHNldEFjdGl2ZVJhaWwoZmFsbGJhY2spO1xyXG4gICAgICAgICAgdG9hc3QuZXJyb3IoYFN0cmlwZSBDb25uZWN0IHJlamVjdGVkICR7Y291bnRyeX0uIFN3aXRjaGVkIHRvICR7ZmFsbGJhY2sucmVwbGFjZShcIl9cIiwgXCIgXCIpfS5gKTtcclxuICAgICAgICB9XHJcbiAgICAgIH0sXHJcbiAgICB9KTtcclxuICB9O1xyXG5cclxuICBjb25zdCByZW1vdmVNZXRob2QgPSB1c2VNdXRhdGlvbih7XHJcbiAgICBtdXRhdGlvbkZuOiBhc3luYyAoaWQ6IHN0cmluZykgPT4ge1xyXG4gICAgICBjb25zdCB7IGVycm9yIH0gPSBhd2FpdCBzdXBhYmFzZS5mcm9tKFwiY3VzdG9tZXJfcGF5b3V0X21ldGhvZHNcIikuZGVsZXRlKCkuZXEoXCJpZFwiLCBpZCk7XHJcbiAgICAgIGlmIChlcnJvcikgdGhyb3cgZXJyb3I7XHJcbiAgICB9LFxyXG4gICAgb25TdWNjZXNzOiAoKSA9PiB7XHJcbiAgICAgIHRvYXN0LnN1Y2Nlc3MoXCJQYXlvdXQgbWV0aG9kIHJlbW92ZWRcIik7XHJcbiAgICAgIHF1ZXJ5Q2xpZW50LmludmFsaWRhdGVRdWVyaWVzKHsgcXVlcnlLZXk6IFtcImxvZGdlLXBheW91dC1tZXRob2RzXCIsIHN0b3JlSWRdIH0pO1xyXG4gICAgfSxcclxuICAgIG9uRXJyb3I6IChlOiBhbnkpID0+IHRvYXN0LmVycm9yKGU/Lm1lc3NhZ2UgfHwgXCJGYWlsZWQgdG8gcmVtb3ZlXCIpLFxyXG4gIH0pO1xyXG5cclxuICBjb25zdCBzdHJpcGVSZWFkeSA9ICEhY29ubmVjdD8ucGF5b3V0c19lbmFibGVkO1xyXG4gIGNvbnN0IGFueU1hbnVhbFJlYWR5ID0gbWV0aG9kcy5sZW5ndGggPiAwO1xyXG4gIGNvbnN0IGFueUNvbmZpZ3VyZWQgPSBzdHJpcGVSZWFkeSB8fCBhbnlNYW51YWxSZWFkeTtcclxuXHJcbiAgcmV0dXJuIChcclxuICAgIDxkaXYgY2xhc3NOYW1lPVwicm91bmRlZC1sZyBib3JkZXIgYm9yZGVyLWJvcmRlciBiZy1jYXJkIHAtNCBzcGFjZS15LTNcIj5cclxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWJldHdlZW4gZ2FwLTJcIj5cclxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0yXCI+XHJcbiAgICAgICAgICA8U2hpZWxkQ2hlY2sgY2xhc3NOYW1lPVwiaC00IHctNCB0ZXh0LXByaW1hcnlcIiAvPlxyXG4gICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1zbSBmb250LXNlbWlib2xkXCI+UGF5b3V0IGFjY291bnQ8L3A+XHJcbiAgICAgICAgPC9kaXY+XHJcbiAgICAgICAge2FueUNvbmZpZ3VyZWQgPyAoXHJcbiAgICAgICAgICA8QmFkZ2UgY2xhc3NOYW1lPVwiYmctZW1lcmFsZC01MDAvMTUgdGV4dC1lbWVyYWxkLTcwMCBib3JkZXItZW1lcmFsZC01MDAvMzAgZ2FwLTFcIj5cclxuICAgICAgICAgICAgPENoZWNrQ2lyY2xlMiBjbGFzc05hbWU9XCJoLTMgdy0zXCIgLz5SZWFkeVxyXG4gICAgICAgICAgPC9CYWRnZT5cclxuICAgICAgICApIDogKFxyXG4gICAgICAgICAgPEJhZGdlIHZhcmlhbnQ9XCJvdXRsaW5lXCIgY2xhc3NOYW1lPVwiZ2FwLTFcIj5cclxuICAgICAgICAgICAgPEFsZXJ0Q2lyY2xlIGNsYXNzTmFtZT1cImgtMyB3LTNcIiAvPk5vdCBjb25maWd1cmVkXHJcbiAgICAgICAgICA8L0JhZGdlPlxyXG4gICAgICAgICl9XHJcbiAgICAgIDwvZGl2PlxyXG5cclxuICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1bMTFweF0gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+XHJcbiAgICAgICAgUHJvcGVydHkgY291bnRyeTogPHNwYW4gY2xhc3NOYW1lPVwiZm9udC1tZWRpdW1cIj57Y291bnRyeX08L3NwYW4+IMK3IFJlY29tbWVuZGVkIHJhaWw6IDxzcGFuIGNsYXNzTmFtZT1cImZvbnQtbWVkaXVtXCI+e3JlY29tbWVuZGVkLnJlcGxhY2UoXCJfXCIsIFwiIFwiKX08L3NwYW4+XHJcbiAgICAgIDwvcD5cclxuXHJcbiAgICAgIDxUYWJzIHZhbHVlPXthY3RpdmVSYWlsfSBvblZhbHVlQ2hhbmdlPXsodikgPT4gc2V0QWN0aXZlUmFpbCh2IGFzIFBheW91dFJhaWwpfT5cclxuICAgICAgICA8VGFic0xpc3QgY2xhc3NOYW1lPVwiZ3JpZCB3LWZ1bGxcIiBzdHlsZT17eyBncmlkVGVtcGxhdGVDb2x1bW5zOiBgcmVwZWF0KCR7W3JhaWxzLnN0cmlwZSwgcmFpbHMuYWJhLCByYWlscy5iYW5rX3dpcmUsIHJhaWxzLnBheXBhbF0uZmlsdGVyKEJvb2xlYW4pLmxlbmd0aH0sIG1pbm1heCgwLCAxZnIpKWAgfX0+XHJcbiAgICAgICAgICB7cmFpbHMuc3RyaXBlICYmIDxUYWJzVHJpZ2dlciB2YWx1ZT1cInN0cmlwZVwiIGNsYXNzTmFtZT1cInRleHQteHNcIj5TdHJpcGU8L1RhYnNUcmlnZ2VyPn1cclxuICAgICAgICAgIHtyYWlscy5hYmEgJiYgPFRhYnNUcmlnZ2VyIHZhbHVlPVwiYWJhXCIgY2xhc3NOYW1lPVwidGV4dC14c1wiPkFCQTwvVGFic1RyaWdnZXI+fVxyXG4gICAgICAgICAge3JhaWxzLmJhbmtfd2lyZSAmJiA8VGFic1RyaWdnZXIgdmFsdWU9XCJiYW5rX3dpcmVcIiBjbGFzc05hbWU9XCJ0ZXh0LXhzXCI+QmFuayB3aXJlPC9UYWJzVHJpZ2dlcj59XHJcbiAgICAgICAgICB7cmFpbHMucGF5cGFsICYmIDxUYWJzVHJpZ2dlciB2YWx1ZT1cInBheXBhbFwiIGNsYXNzTmFtZT1cInRleHQteHNcIj5QYXlQYWw8L1RhYnNUcmlnZ2VyPn1cclxuICAgICAgICA8L1RhYnNMaXN0PlxyXG5cclxuICAgICAgICB7LyogU3RyaXBlIHRhYiAqL31cclxuICAgICAgICB7cmFpbHMuc3RyaXBlICYmIChcclxuICAgICAgICAgIDxUYWJzQ29udGVudCB2YWx1ZT1cInN0cmlwZVwiIGNsYXNzTmFtZT1cIm10LTMgc3BhY2UteS0yXCI+XHJcbiAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQteHMgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+e1JBSUxfREVTQ1JJUFRJT05TLnN0cmlwZX08L3A+XHJcbiAgICAgICAgICAgIHtjb25uZWN0TG9hZGluZyA/IChcclxuICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LXhzIHRleHQtbXV0ZWQtZm9yZWdyb3VuZCBmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMS41XCI+XHJcbiAgICAgICAgICAgICAgICA8TG9hZGVyMiBjbGFzc05hbWU9XCJoLTMgdy0zIGFuaW1hdGUtc3BpblwiIC8+Q2hlY2tpbmcgU3RyaXBlIHN0YXR1c+KAplxyXG4gICAgICAgICAgICAgIDwvcD5cclxuICAgICAgICAgICAgKSA6ICFjb25uZWN0Py5jb25uZWN0ZWQgPyAoXHJcbiAgICAgICAgICAgICAgPEJ1dHRvbiBzaXplPVwic21cIiBvbkNsaWNrPXtzdGFydFN0cmlwZX0gZGlzYWJsZWQ9e29uYm9hcmQuaXNQZW5kaW5nfT5cclxuICAgICAgICAgICAgICAgIHtvbmJvYXJkLmlzUGVuZGluZyA/IDxMb2FkZXIyIGNsYXNzTmFtZT1cImgtMy41IHctMy41IGFuaW1hdGUtc3BpbiBtci0yXCIgLz4gOiA8QXJyb3dSaWdodCBjbGFzc05hbWU9XCJoLTMuNSB3LTMuNSBtci0yXCIgLz59XHJcbiAgICAgICAgICAgICAgICBTZXQgdXAgU3RyaXBlICh7Y291bnRyeX0pXHJcbiAgICAgICAgICAgICAgPC9CdXR0b24+XHJcbiAgICAgICAgICAgICkgOiAoXHJcbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTJcIj5cclxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBmbGV4LXdyYXAgZ2FwLTEuNVwiPlxyXG4gICAgICAgICAgICAgICAgICA8QmFkZ2UgdmFyaWFudD17Y29ubmVjdC5kZXRhaWxzX3N1Ym1pdHRlZCA/IFwiZGVmYXVsdFwiIDogXCJzZWNvbmRhcnlcIn0gY2xhc3NOYW1lPVwiZ2FwLTFcIj5cclxuICAgICAgICAgICAgICAgICAgICB7Y29ubmVjdC5kZXRhaWxzX3N1Ym1pdHRlZCA/IDxDaGVja0NpcmNsZTIgY2xhc3NOYW1lPVwiaC0zIHctM1wiIC8+IDogPEFsZXJ0Q2lyY2xlIGNsYXNzTmFtZT1cImgtMyB3LTNcIiAvPn1cclxuICAgICAgICAgICAgICAgICAgICBEZXRhaWxzIHtjb25uZWN0LmRldGFpbHNfc3VibWl0dGVkID8gXCJzdWJtaXR0ZWRcIiA6IFwicGVuZGluZ1wifVxyXG4gICAgICAgICAgICAgICAgICA8L0JhZGdlPlxyXG4gICAgICAgICAgICAgICAgICA8QmFkZ2UgdmFyaWFudD17Y29ubmVjdC5wYXlvdXRzX2VuYWJsZWQgPyBcImRlZmF1bHRcIiA6IFwic2Vjb25kYXJ5XCJ9IGNsYXNzTmFtZT1cImdhcC0xXCI+XHJcbiAgICAgICAgICAgICAgICAgICAge2Nvbm5lY3QucGF5b3V0c19lbmFibGVkID8gPENoZWNrQ2lyY2xlMiBjbGFzc05hbWU9XCJoLTMgdy0zXCIgLz4gOiA8QWxlcnRDaXJjbGUgY2xhc3NOYW1lPVwiaC0zIHctM1wiIC8+fVxyXG4gICAgICAgICAgICAgICAgICAgIFBheW91dHMge2Nvbm5lY3QucGF5b3V0c19lbmFibGVkID8gXCJlbmFibGVkXCIgOiBcImRpc2FibGVkXCJ9XHJcbiAgICAgICAgICAgICAgICAgIDwvQmFkZ2U+XHJcbiAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgIHshc3RyaXBlUmVhZHkgJiYgKFxyXG4gICAgICAgICAgICAgICAgICA8QnV0dG9uIHNpemU9XCJzbVwiIHZhcmlhbnQ9XCJvdXRsaW5lXCIgb25DbGljaz17c3RhcnRTdHJpcGV9IGRpc2FibGVkPXtvbmJvYXJkLmlzUGVuZGluZ30+XHJcbiAgICAgICAgICAgICAgICAgICAge29uYm9hcmQuaXNQZW5kaW5nID8gPExvYWRlcjIgY2xhc3NOYW1lPVwiaC0zLjUgdy0zLjUgYW5pbWF0ZS1zcGluIG1yLTJcIiAvPiA6IG51bGx9XHJcbiAgICAgICAgICAgICAgICAgICAgQ29udGludWUgU3RyaXBlIG9uYm9hcmRpbmdcclxuICAgICAgICAgICAgICAgICAgPC9CdXR0b24+XHJcbiAgICAgICAgICAgICAgICApfVxyXG4gICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICApfVxyXG4gICAgICAgICAgPC9UYWJzQ29udGVudD5cclxuICAgICAgICApfVxyXG5cclxuICAgICAgICB7LyogQUJBIHRhYiAqL31cclxuICAgICAgICB7cmFpbHMuYWJhICYmIChcclxuICAgICAgICAgIDxUYWJzQ29udGVudCB2YWx1ZT1cImFiYVwiIGNsYXNzTmFtZT1cIm10LTMgc3BhY2UteS0yXCI+XHJcbiAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQteHMgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+e1JBSUxfREVTQ1JJUFRJT05TLmFiYX08L3A+XHJcbiAgICAgICAgICAgIDxNYW51YWxNZXRob2RGb3JtIHN0b3JlSWQ9e3N0b3JlSWR9IGNvdW50cnk9e2NvdW50cnl9IHJhaWw9XCJhYmFcIiBtZXRob2RzPXttZXRob2RzfSBvblJlbW92ZT17KGlkKSA9PiByZW1vdmVNZXRob2QubXV0YXRlKGlkKX0gLz5cclxuICAgICAgICAgIDwvVGFic0NvbnRlbnQ+XHJcbiAgICAgICAgKX1cclxuXHJcbiAgICAgICAgey8qIEJhbmsgd2lyZSB0YWIgKi99XHJcbiAgICAgICAge3JhaWxzLmJhbmtfd2lyZSAmJiAoXHJcbiAgICAgICAgICA8VGFic0NvbnRlbnQgdmFsdWU9XCJiYW5rX3dpcmVcIiBjbGFzc05hbWU9XCJtdC0zIHNwYWNlLXktMlwiPlxyXG4gICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LXhzIHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiPntSQUlMX0RFU0NSSVBUSU9OUy5iYW5rX3dpcmV9PC9wPlxyXG4gICAgICAgICAgICA8TWFudWFsTWV0aG9kRm9ybSBzdG9yZUlkPXtzdG9yZUlkfSBjb3VudHJ5PXtjb3VudHJ5fSByYWlsPVwiYmFua193aXJlXCIgbWV0aG9kcz17bWV0aG9kc30gb25SZW1vdmU9eyhpZCkgPT4gcmVtb3ZlTWV0aG9kLm11dGF0ZShpZCl9IC8+XHJcbiAgICAgICAgICA8L1RhYnNDb250ZW50PlxyXG4gICAgICAgICl9XHJcblxyXG4gICAgICAgIHsvKiBQYXlQYWwgdGFiICovfVxyXG4gICAgICAgIHtyYWlscy5wYXlwYWwgJiYgKFxyXG4gICAgICAgICAgPFRhYnNDb250ZW50IHZhbHVlPVwicGF5cGFsXCIgY2xhc3NOYW1lPVwibXQtMyBzcGFjZS15LTJcIj5cclxuICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC14cyB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj57UkFJTF9ERVNDUklQVElPTlMucGF5cGFsfTwvcD5cclxuICAgICAgICAgICAgPE1hbnVhbE1ldGhvZEZvcm0gc3RvcmVJZD17c3RvcmVJZH0gY291bnRyeT17Y291bnRyeX0gcmFpbD1cInBheXBhbFwiIG1ldGhvZHM9e21ldGhvZHN9IG9uUmVtb3ZlPXsoaWQpID0+IHJlbW92ZU1ldGhvZC5tdXRhdGUoaWQpfSAvPlxyXG4gICAgICAgICAgPC9UYWJzQ29udGVudD5cclxuICAgICAgICApfVxyXG4gICAgICA8L1RhYnM+XHJcblxyXG4gICAgICB7bWV0aG9kc0xvYWRpbmcgJiYgKFxyXG4gICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtWzExcHhdIHRleHQtbXV0ZWQtZm9yZWdyb3VuZCBmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMS41XCI+XHJcbiAgICAgICAgICA8TG9hZGVyMiBjbGFzc05hbWU9XCJoLTMgdy0zIGFuaW1hdGUtc3BpblwiIC8+TG9hZGluZyBzYXZlZCBtZXRob2Rz4oCmXHJcbiAgICAgICAgPC9wPlxyXG4gICAgICApfVxyXG4gICAgPC9kaXY+XHJcbiAgKTtcclxufVxyXG5cclxuLyogLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0gKi9cclxuLyogTWFudWFsIHJhaWwgZm9ybSAoQUJBIC8gQmFuayB3aXJlIC8gUGF5UGFsKSAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgKi9cclxuLyogLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0gKi9cclxuXHJcbmZ1bmN0aW9uIE1hbnVhbE1ldGhvZEZvcm0oe1xyXG4gIHN0b3JlSWQsIGNvdW50cnksIHJhaWwsIG1ldGhvZHMsIG9uUmVtb3ZlLFxyXG59OiB7XHJcbiAgc3RvcmVJZDogc3RyaW5nO1xyXG4gIGNvdW50cnk6IHN0cmluZztcclxuICByYWlsOiBQYXlvdXRSYWlsO1xyXG4gIG1ldGhvZHM6IFBheW91dE1ldGhvZFJvd1tdO1xyXG4gIG9uUmVtb3ZlOiAoaWQ6IHN0cmluZykgPT4gdm9pZDtcclxufSkge1xyXG4gIGNvbnN0IHsgdXNlciB9ID0gdXNlQXV0aCgpO1xyXG4gIGNvbnN0IHF1ZXJ5Q2xpZW50ID0gdXNlUXVlcnlDbGllbnQoKTtcclxuICBjb25zdCBbb3Blbiwgc2V0T3Blbl0gPSB1c2VTdGF0ZShmYWxzZSk7XHJcbiAgY29uc3QgW2NvbmZpcm1lZCwgc2V0Q29uZmlybWVkXSA9IHVzZVN0YXRlKGZhbHNlKTtcclxuICBjb25zdCBbZm9ybSwgc2V0Rm9ybV0gPSB1c2VTdGF0ZSh7XHJcbiAgICBsYWJlbDogXCJcIiwgYWNjb3VudF9ob2xkZXJfbmFtZTogXCJcIiwgYmFua19uYW1lOiBcIlwiLCBhY2NvdW50X251bWJlcjogXCJcIixcclxuICAgIGFiYV9hY2NvdW50X2lkOiBcIlwiLCBwYXlwYWxfZW1haWw6IFwiXCIsIHN3aWZ0OiBcIlwiLFxyXG4gIH0pO1xyXG4gIGNvbnN0IG93bk1ldGhvZHMgPSBtZXRob2RzLmZpbHRlcigobSkgPT4gKG0ucmFpbCB8fCBtYXBNZXRob2RUeXBlVG9SYWlsKG0ubWV0aG9kX3R5cGUpKSA9PT0gcmFpbCk7XHJcblxyXG4gIGNvbnN0IHJlc2V0ID0gKCkgPT4geyBzZXRGb3JtKHsgbGFiZWw6IFwiXCIsIGFjY291bnRfaG9sZGVyX25hbWU6IFwiXCIsIGJhbmtfbmFtZTogXCJcIiwgYWNjb3VudF9udW1iZXI6IFwiXCIsIGFiYV9hY2NvdW50X2lkOiBcIlwiLCBwYXlwYWxfZW1haWw6IFwiXCIsIHN3aWZ0OiBcIlwiIH0pOyBzZXRDb25maXJtZWQoZmFsc2UpOyB9O1xyXG5cclxuICBjb25zdCBzYXZlID0gdXNlTXV0YXRpb24oe1xyXG4gICAgbXV0YXRpb25GbjogYXN5bmMgKCkgPT4ge1xyXG4gICAgICBpZiAoIXVzZXIpIHRocm93IG5ldyBFcnJvcihcIlNpZ24gaW4gcmVxdWlyZWRcIik7XHJcbiAgICAgIGlmICghY29uZmlybWVkKSB0aHJvdyBuZXcgRXJyb3IoXCJQbGVhc2UgY29uZmlybSB0aGUgYWNjb3VudCBkZXRhaWxzIGFyZSBjb3JyZWN0XCIpO1xyXG5cclxuICAgICAgLy8gUGVyLXJhaWwgdmFsaWRhdGlvbiAoZWxpZ2liaWxpdHkgKyBmb3JtYXQpXHJcbiAgICAgIGlmIChyYWlsID09PSBcImFiYVwiKSB7XHJcbiAgICAgICAgaWYgKCFmb3JtLmFiYV9hY2NvdW50X2lkLnRyaW0oKSkgdGhyb3cgbmV3IEVycm9yKFwiQUJBIGFjY291bnQgSUQgaXMgcmVxdWlyZWRcIik7XHJcbiAgICAgICAgaWYgKCFmb3JtLmFjY291bnRfaG9sZGVyX25hbWUudHJpbSgpKSB0aHJvdyBuZXcgRXJyb3IoXCJBY2NvdW50IGhvbGRlciBuYW1lIGlzIHJlcXVpcmVkXCIpO1xyXG4gICAgICAgIGlmICghL15bMC05XXs2LDEyfSQvLnRlc3QoZm9ybS5hYmFfYWNjb3VudF9pZC5yZXBsYWNlKC9cXHMvZywgXCJcIikpKSB0aHJvdyBuZXcgRXJyb3IoXCJBQkEgYWNjb3VudCBJRCBzaG91bGQgYmUgNuKAkzEyIGRpZ2l0c1wiKTtcclxuICAgICAgfVxyXG4gICAgICBpZiAocmFpbCA9PT0gXCJiYW5rX3dpcmVcIikge1xyXG4gICAgICAgIGlmICghZm9ybS5iYW5rX25hbWUudHJpbSgpIHx8ICFmb3JtLmFjY291bnRfbnVtYmVyLnRyaW0oKSkgdGhyb3cgbmV3IEVycm9yKFwiQmFuayBuYW1lIGFuZCBhY2NvdW50IG51bWJlciBhcmUgcmVxdWlyZWRcIik7XHJcbiAgICAgICAgaWYgKCFmb3JtLmFjY291bnRfaG9sZGVyX25hbWUudHJpbSgpKSB0aHJvdyBuZXcgRXJyb3IoXCJBY2NvdW50IGhvbGRlciBuYW1lIGlzIHJlcXVpcmVkXCIpO1xyXG4gICAgICAgIGlmIChjb3VudHJ5ICE9PSBcIlVTXCIgJiYgIWZvcm0uc3dpZnQudHJpbSgpKSB0aHJvdyBuZXcgRXJyb3IoXCJTV0lGVC9CSUMgaXMgcmVxdWlyZWQgZm9yIGludGVybmF0aW9uYWwgd2lyZXNcIik7XHJcbiAgICAgIH1cclxuICAgICAgaWYgKHJhaWwgPT09IFwicGF5cGFsXCIgJiYgIS8uK0AuK1xcLi4rLy50ZXN0KGZvcm0ucGF5cGFsX2VtYWlsKSkgdGhyb3cgbmV3IEVycm9yKFwiVmFsaWQgUGF5UGFsIGVtYWlsIHJlcXVpcmVkXCIpO1xyXG5cclxuICAgICAgY29uc3QgbWV0aG9kX3R5cGUgPSByYWlsID09PSBcImFiYVwiID8gXCJhYmFcIiA6IHJhaWwgPT09IFwicGF5cGFsXCIgPyBcInBheXBhbFwiIDogXCJiYW5rX3RyYW5zZmVyXCI7XHJcbiAgICAgIGNvbnN0IHBheWxvYWQ6IFJlY29yZDxzdHJpbmcsIGFueT4gPSB7XHJcbiAgICAgICAgdXNlcl9pZDogdXNlci5pZCxcclxuICAgICAgICBzdG9yZV9pZDogc3RvcmVJZCxcclxuICAgICAgICBjb3VudHJ5X2NvZGU6IGNvdW50cnksXHJcbiAgICAgICAgcmFpbCxcclxuICAgICAgICBtZXRob2RfdHlwZSxcclxuICAgICAgICBsYWJlbDogZm9ybS5sYWJlbCB8fCBkZWZhdWx0TGFiZWwocmFpbCksXHJcbiAgICAgICAgYWNjb3VudF9ob2xkZXJfbmFtZTogZm9ybS5hY2NvdW50X2hvbGRlcl9uYW1lIHx8IG51bGwsXHJcbiAgICAgICAgYmFua19uYW1lOiByYWlsID09PSBcImJhbmtfd2lyZVwiID8gZm9ybS5iYW5rX25hbWUgOiAocmFpbCA9PT0gXCJhYmFcIiA/IFwiQUJBIEJhbmtcIiA6IG51bGwpLFxyXG4gICAgICAgIGFjY291bnRfbnVtYmVyOiByYWlsID09PSBcImJhbmtfd2lyZVwiID8gZm9ybS5hY2NvdW50X251bWJlciA6IChyYWlsID09PSBcInBheXBhbFwiID8gZm9ybS5wYXlwYWxfZW1haWwgOiBudWxsKSxcclxuICAgICAgICBhYmFfYWNjb3VudF9pZDogcmFpbCA9PT0gXCJhYmFcIiA/IGZvcm0uYWJhX2FjY291bnRfaWQgOiBudWxsLFxyXG4gICAgICAgIHZlcmlmaWNhdGlvbl9zdGF0dXM6IFwicGVuZGluZ1wiLFxyXG4gICAgICAgIHZlcmlmaWNhdGlvbl9ub3RlOiByYWlsID09PSBcImJhbmtfd2lyZVwiICYmIGZvcm0uc3dpZnQgPyBgU1dJRlQvQklDOiAke2Zvcm0uc3dpZnR9YCA6IG51bGwsXHJcbiAgICAgICAgaXNfZGVmYXVsdDogbWV0aG9kcy5sZW5ndGggPT09IDAsXHJcbiAgICAgIH07XHJcbiAgICAgIGNvbnN0IHsgZXJyb3IgfSA9IGF3YWl0IChzdXBhYmFzZS5mcm9tKFwiY3VzdG9tZXJfcGF5b3V0X21ldGhvZHNcIikgYXMgYW55KS5pbnNlcnQocGF5bG9hZCk7XHJcbiAgICAgIGlmIChlcnJvcikgdGhyb3cgZXJyb3I7XHJcbiAgICB9LFxyXG4gICAgb25TdWNjZXNzOiAoKSA9PiB7XHJcbiAgICAgIHRvYXN0LnN1Y2Nlc3MoXCJQYXlvdXQgbWV0aG9kIHNhdmVkXCIpO1xyXG4gICAgICByZXNldCgpO1xyXG4gICAgICBzZXRPcGVuKGZhbHNlKTtcclxuICAgICAgcXVlcnlDbGllbnQuaW52YWxpZGF0ZVF1ZXJpZXMoeyBxdWVyeUtleTogW1wibG9kZ2UtcGF5b3V0LW1ldGhvZHNcIiwgc3RvcmVJZF0gfSk7XHJcbiAgICB9LFxyXG4gICAgb25FcnJvcjogKGU6IGFueSkgPT4gdG9hc3QuZXJyb3IoZT8ubWVzc2FnZSB8fCBcIkNvdWxkIG5vdCBzYXZlXCIpLFxyXG4gIH0pO1xyXG5cclxuICByZXR1cm4gKFxyXG4gICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTJcIj5cclxuICAgICAge293bk1ldGhvZHMubGVuZ3RoID4gMCAmJiAoXHJcbiAgICAgICAgPHVsIGNsYXNzTmFtZT1cInNwYWNlLXktMS41XCI+XHJcbiAgICAgICAgICB7b3duTWV0aG9kcy5tYXAoKG0pID0+IChcclxuICAgICAgICAgICAgPGxpIGtleT17bS5pZH0gY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1iZXR3ZWVuIHJvdW5kZWQtbWQgYm9yZGVyIGJvcmRlci1ib3JkZXIgYmctYmFja2dyb3VuZC81MCBweC0yLjUgcHktMS41XCI+XHJcbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJtaW4tdy0wXCI+XHJcbiAgICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LXhzIGZvbnQtc2VtaWJvbGQgdHJ1bmNhdGUgZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTEuNVwiPlxyXG4gICAgICAgICAgICAgICAgICB7bS5sYWJlbCB8fCBkZWZhdWx0TGFiZWwocmFpbCl9XHJcbiAgICAgICAgICAgICAgICAgIHttLnZlcmlmaWNhdGlvbl9zdGF0dXMgPT09IFwidmVyaWZpZWRcIiA/IChcclxuICAgICAgICAgICAgICAgICAgICA8QmFkZ2UgY2xhc3NOYW1lPVwiYmctZW1lcmFsZC01MDAvMTUgdGV4dC1lbWVyYWxkLTcwMCBib3JkZXItZW1lcmFsZC01MDAvMzAgaC00IHB4LTEgdGV4dC1bOXB4XVwiPlZlcmlmaWVkPC9CYWRnZT5cclxuICAgICAgICAgICAgICAgICAgKSA6IChcclxuICAgICAgICAgICAgICAgICAgICA8QmFkZ2UgdmFyaWFudD1cIm91dGxpbmVcIiBjbGFzc05hbWU9XCJoLTQgcHgtMSB0ZXh0LVs5cHhdXCI+UGVuZGluZyB2ZXJpZmljYXRpb248L0JhZGdlPlxyXG4gICAgICAgICAgICAgICAgICApfVxyXG4gICAgICAgICAgICAgICAgPC9wPlxyXG4gICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1bMTFweF0gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIHRydW5jYXRlXCI+XHJcbiAgICAgICAgICAgICAgICAgIHttLm1ldGhvZF90eXBlID09PSBcImFiYVwiID8gYEFCQTogJHttLmFiYV9hY2NvdW50X2lkfWAgOiBtLm1ldGhvZF90eXBlID09PSBcInBheXBhbFwiID8gbS5hY2NvdW50X251bWJlciA6IGAke20uYmFua19uYW1lIHx8IFwiXCJ9IMK3wrfCtyR7KG0uYWNjb3VudF9udW1iZXIgfHwgXCJcIikuc2xpY2UoLTQpfWB9XHJcbiAgICAgICAgICAgICAgICA8L3A+XHJcbiAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgPEJ1dHRvbiBzaXplPVwiaWNvblwiIHZhcmlhbnQ9XCJnaG9zdFwiIGNsYXNzTmFtZT1cImgtNyB3LTcgc2hyaW5rLTBcIiBvbkNsaWNrPXsoKSA9PiBvblJlbW92ZShtLmlkKX0+XHJcbiAgICAgICAgICAgICAgICA8VHJhc2gyIGNsYXNzTmFtZT1cImgtMy41IHctMy41IHRleHQtZGVzdHJ1Y3RpdmVcIiAvPlxyXG4gICAgICAgICAgICAgIDwvQnV0dG9uPlxyXG4gICAgICAgICAgICA8L2xpPlxyXG4gICAgICAgICAgKSl9XHJcbiAgICAgICAgPC91bD5cclxuICAgICAgKX1cclxuXHJcbiAgICAgIHshb3BlbiA/IChcclxuICAgICAgICA8QnV0dG9uIHNpemU9XCJzbVwiIHZhcmlhbnQ9XCJvdXRsaW5lXCIgb25DbGljaz17KCkgPT4gc2V0T3Blbih0cnVlKX0gY2xhc3NOYW1lPVwidy1mdWxsXCI+XHJcbiAgICAgICAgICA8UGx1cyBjbGFzc05hbWU9XCJoLTMuNSB3LTMuNSBtci0xLjVcIiAvPlxyXG4gICAgICAgICAgQWRkIHtyYWlsID09PSBcImFiYVwiID8gXCJBQkFcIiA6IHJhaWwgPT09IFwicGF5cGFsXCIgPyBcIlBheVBhbFwiIDogXCJiYW5rXCJ9IGFjY291bnRcclxuICAgICAgICA8L0J1dHRvbj5cclxuICAgICAgKSA6IChcclxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktMiByb3VuZGVkLW1kIGJvcmRlciBib3JkZXItYm9yZGVyIGJnLWJhY2tncm91bmQvNDAgcC0yLjVcIj5cclxuICAgICAgICAgIHtyYWlsICE9PSBcInBheXBhbFwiICYmIChcclxuICAgICAgICAgICAgPEZpZWxkUm93IGxhYmVsPVwiQWNjb3VudCBob2xkZXJcIj5cclxuICAgICAgICAgICAgICA8SW5wdXQgdmFsdWU9e2Zvcm0uYWNjb3VudF9ob2xkZXJfbmFtZX0gb25DaGFuZ2U9eyhlKSA9PiBzZXRGb3JtKChmKSA9PiAoeyAuLi5mLCBhY2NvdW50X2hvbGRlcl9uYW1lOiBlLnRhcmdldC52YWx1ZSB9KSl9IHBsYWNlaG9sZGVyPVwiRnVsbCBsZWdhbCBuYW1lXCIgLz5cclxuICAgICAgICAgICAgPC9GaWVsZFJvdz5cclxuICAgICAgICAgICl9XHJcbiAgICAgICAgICB7cmFpbCA9PT0gXCJhYmFcIiAmJiAoXHJcbiAgICAgICAgICAgIDxGaWVsZFJvdyBsYWJlbD1cIkFCQSBhY2NvdW50IElEIC8gcGhvbmVcIj5cclxuICAgICAgICAgICAgICA8SW5wdXQgdmFsdWU9e2Zvcm0uYWJhX2FjY291bnRfaWR9IG9uQ2hhbmdlPXsoZSkgPT4gc2V0Rm9ybSgoZikgPT4gKHsgLi4uZiwgYWJhX2FjY291bnRfaWQ6IGUudGFyZ2V0LnZhbHVlIH0pKX0gcGxhY2Vob2xkZXI9XCJlLmcuIDAwMDEyMzQ1NlwiIC8+XHJcbiAgICAgICAgICAgIDwvRmllbGRSb3c+XHJcbiAgICAgICAgICApfVxyXG4gICAgICAgICAge3JhaWwgPT09IFwiYmFua193aXJlXCIgJiYgKFxyXG4gICAgICAgICAgICA8PlxyXG4gICAgICAgICAgICAgIDxGaWVsZFJvdyBsYWJlbD1cIkJhbmsgbmFtZVwiPlxyXG4gICAgICAgICAgICAgICAgPElucHV0IHZhbHVlPXtmb3JtLmJhbmtfbmFtZX0gb25DaGFuZ2U9eyhlKSA9PiBzZXRGb3JtKChmKSA9PiAoeyAuLi5mLCBiYW5rX25hbWU6IGUudGFyZ2V0LnZhbHVlIH0pKX0gcGxhY2Vob2xkZXI9XCJlLmcuIEFDTEVEQSBCYW5rXCIgLz5cclxuICAgICAgICAgICAgICA8L0ZpZWxkUm93PlxyXG4gICAgICAgICAgICAgIDxGaWVsZFJvdyBsYWJlbD1cIkFjY291bnQgbnVtYmVyIC8gSUJBTlwiPlxyXG4gICAgICAgICAgICAgICAgPElucHV0IHZhbHVlPXtmb3JtLmFjY291bnRfbnVtYmVyfSBvbkNoYW5nZT17KGUpID0+IHNldEZvcm0oKGYpID0+ICh7IC4uLmYsIGFjY291bnRfbnVtYmVyOiBlLnRhcmdldC52YWx1ZSB9KSl9IHBsYWNlaG9sZGVyPVwiQWNjb3VudCBudW1iZXIgb3IgSUJBTlwiIC8+XHJcbiAgICAgICAgICAgICAgPC9GaWVsZFJvdz5cclxuICAgICAgICAgICAgICB7Y291bnRyeSAhPT0gXCJVU1wiICYmIChcclxuICAgICAgICAgICAgICAgIDxGaWVsZFJvdyBsYWJlbD1cIlNXSUZUIC8gQklDXCI+XHJcbiAgICAgICAgICAgICAgICAgIDxJbnB1dCB2YWx1ZT17Zm9ybS5zd2lmdH0gb25DaGFuZ2U9eyhlKSA9PiBzZXRGb3JtKChmKSA9PiAoeyAuLi5mLCBzd2lmdDogZS50YXJnZXQudmFsdWUgfSkpfSBwbGFjZWhvbGRlcj1cImUuZy4gQUNMQktIUFBcIiAvPlxyXG4gICAgICAgICAgICAgICAgPC9GaWVsZFJvdz5cclxuICAgICAgICAgICAgICApfVxyXG4gICAgICAgICAgICA8Lz5cclxuICAgICAgICAgICl9XHJcbiAgICAgICAgICB7cmFpbCA9PT0gXCJwYXlwYWxcIiAmJiAoXHJcbiAgICAgICAgICAgIDxGaWVsZFJvdyBsYWJlbD1cIlBheVBhbCBlbWFpbFwiPlxyXG4gICAgICAgICAgICAgIDxJbnB1dCB0eXBlPVwiZW1haWxcIiB2YWx1ZT17Zm9ybS5wYXlwYWxfZW1haWx9IG9uQ2hhbmdlPXsoZSkgPT4gc2V0Rm9ybSgoZikgPT4gKHsgLi4uZiwgcGF5cGFsX2VtYWlsOiBlLnRhcmdldC52YWx1ZSB9KSl9IHBsYWNlaG9sZGVyPVwicGF5b3V0c0BleGFtcGxlLmNvbVwiIC8+XHJcbiAgICAgICAgICAgIDwvRmllbGRSb3c+XHJcbiAgICAgICAgICApfVxyXG4gICAgICAgICAgPEZpZWxkUm93IGxhYmVsPVwiTmlja25hbWUgKG9wdGlvbmFsKVwiPlxyXG4gICAgICAgICAgICA8SW5wdXQgdmFsdWU9e2Zvcm0ubGFiZWx9IG9uQ2hhbmdlPXsoZSkgPT4gc2V0Rm9ybSgoZikgPT4gKHsgLi4uZiwgbGFiZWw6IGUudGFyZ2V0LnZhbHVlIH0pKX0gcGxhY2Vob2xkZXI9e2RlZmF1bHRMYWJlbChyYWlsKX0gLz5cclxuICAgICAgICAgIDwvRmllbGRSb3c+XHJcblxyXG4gICAgICAgICAgPGxhYmVsIGNsYXNzTmFtZT1cImZsZXggaXRlbXMtc3RhcnQgZ2FwLTIgdGV4dC1bMTFweF0gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIGN1cnNvci1wb2ludGVyXCI+XHJcbiAgICAgICAgICAgIDxpbnB1dCB0eXBlPVwiY2hlY2tib3hcIiBjaGVja2VkPXtjb25maXJtZWR9IG9uQ2hhbmdlPXsoZSkgPT4gc2V0Q29uZmlybWVkKGUudGFyZ2V0LmNoZWNrZWQpfSBjbGFzc05hbWU9XCJtdC0wLjVcIiAvPlxyXG4gICAgICAgICAgICA8c3Bhbj5JIGNvbmZpcm0gdGhlc2UgYWNjb3VudCBkZXRhaWxzIGFyZSBjb3JyZWN0IGFuZCB0aGUgaG9sZGVyIG5hbWUgbWF0Y2hlcyBteSBJRC4gWklWTyB3aWxsIG1hcmsgdGhpcyBtZXRob2QgYXMgdmVyaWZpZWQgYWZ0ZXIgdGhlIGZpcnN0IHN1Y2Nlc3NmdWwgcGF5b3V0Ljwvc3Bhbj5cclxuICAgICAgICAgIDwvbGFiZWw+XHJcbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXgganVzdGlmeS1lbmQgZ2FwLTEuNSBwdC0xXCI+XHJcbiAgICAgICAgICAgIDxCdXR0b24gc2l6ZT1cInNtXCIgdmFyaWFudD1cImdob3N0XCIgb25DbGljaz17KCkgPT4geyBzZXRPcGVuKGZhbHNlKTsgcmVzZXQoKTsgfX0+Q2FuY2VsPC9CdXR0b24+XHJcbiAgICAgICAgICAgIDxCdXR0b24gc2l6ZT1cInNtXCIgb25DbGljaz17KCkgPT4gc2F2ZS5tdXRhdGUoKX0gZGlzYWJsZWQ9e3NhdmUuaXNQZW5kaW5nfT5cclxuICAgICAgICAgICAgICB7c2F2ZS5pc1BlbmRpbmcgPyA8TG9hZGVyMiBjbGFzc05hbWU9XCJoLTMuNSB3LTMuNSBhbmltYXRlLXNwaW4gbXItMlwiIC8+IDogbnVsbH1cclxuICAgICAgICAgICAgICBTYXZlXHJcbiAgICAgICAgICAgIDwvQnV0dG9uPlxyXG4gICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgPC9kaXY+XHJcbiAgICAgICl9XHJcbiAgICA8L2Rpdj5cclxuICApO1xyXG59XHJcblxyXG5mdW5jdGlvbiBGaWVsZFJvdyh7IGxhYmVsLCBjaGlsZHJlbiB9OiB7IGxhYmVsOiBzdHJpbmc7IGNoaWxkcmVuOiBSZWFjdC5SZWFjdE5vZGUgfSkge1xyXG4gIHJldHVybiAoXHJcbiAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktMVwiPlxyXG4gICAgICA8TGFiZWwgY2xhc3NOYW1lPVwidGV4dC1bMTFweF0gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+e2xhYmVsfTwvTGFiZWw+XHJcbiAgICAgIHtjaGlsZHJlbn1cclxuICAgIDwvZGl2PlxyXG4gICk7XHJcbn1cclxuXHJcbmZ1bmN0aW9uIGRlZmF1bHRMYWJlbChyYWlsOiBQYXlvdXRSYWlsKTogc3RyaW5nIHtcclxuICByZXR1cm4gcmFpbCA9PT0gXCJhYmFcIiA/IFwiQUJBIEFjY291bnRcIiA6IHJhaWwgPT09IFwicGF5cGFsXCIgPyBcIlBheVBhbFwiIDogXCJCYW5rIEFjY291bnRcIjtcclxufVxyXG5cclxuZnVuY3Rpb24gbWFwTWV0aG9kVHlwZVRvUmFpbChtZXRob2RfdHlwZTogc3RyaW5nKTogUGF5b3V0UmFpbCB7XHJcbiAgaWYgKG1ldGhvZF90eXBlID09PSBcImFiYVwiKSByZXR1cm4gXCJhYmFcIjtcclxuICBpZiAobWV0aG9kX3R5cGUgPT09IFwicGF5cGFsXCIpIHJldHVybiBcInBheXBhbFwiO1xyXG4gIHJldHVybiBcImJhbmtfd2lyZVwiO1xyXG59XHJcbiJdLCJuYW1lcyI6WyJ1c2VFZmZlY3QiLCJ1c2VNZW1vIiwidXNlU3RhdGUiLCJ1c2VRdWVyeSIsInVzZVF1ZXJ5Q2xpZW50IiwidXNlTXV0YXRpb24iLCJMb2FkZXIyIiwiQ2hlY2tDaXJjbGUyIiwiQWxlcnRDaXJjbGUiLCJTaGllbGRDaGVjayIsIkJhbmtub3RlIiwiTGFuZG1hcmsiLCJXYWxsZXQiLCJUcmFzaDIiLCJQbHVzIiwiQXJyb3dSaWdodCIsInRvYXN0IiwiQnV0dG9uIiwiQmFkZ2UiLCJJbnB1dCIsIkxhYmVsIiwiVGFicyIsIlRhYnNDb250ZW50IiwiVGFic0xpc3QiLCJUYWJzVHJpZ2dlciIsInN1cGFiYXNlIiwidXNlQXV0aCIsInVzZUNvbm5lY3RTdGF0dXMiLCJ1c2VDb25uZWN0T25ib2FyZCIsImdldEF2YWlsYWJsZVJhaWxzIiwibm9ybWFsaXplQ291bnRyeSIsInJlY29tbWVuZGVkUmFpbCIsIlJBSUxfREVTQ1JJUFRJT05TIiwiUkFJTF9JQ09OIiwic3RyaXBlIiwiYWJhIiwiYmFua193aXJlIiwicGF5cGFsIiwiTG9kZ2luZ1BheW91dEFjY291bnRDYXJkIiwic3RvcmVJZCIsInN0b3JlQ291bnRyeSIsInVzZXIiLCJxdWVyeUNsaWVudCIsImNvdW50cnkiLCJyYWlscyIsInJlY29tbWVuZGVkIiwiYWN0aXZlUmFpbCIsInNldEFjdGl2ZVJhaWwiLCJkYXRhIiwiY29ubmVjdCIsImlzTG9hZGluZyIsImNvbm5lY3RMb2FkaW5nIiwib25ib2FyZCIsIm1ldGhvZHMiLCJtZXRob2RzTG9hZGluZyIsInF1ZXJ5S2V5IiwicXVlcnlGbiIsImVycm9yIiwiZnJvbSIsInNlbGVjdCIsImVxIiwib3JkZXIiLCJhc2NlbmRpbmciLCJlbmFibGVkIiwicGFyYW1zIiwiVVJMU2VhcmNoUGFyYW1zIiwid2luZG93IiwibG9jYXRpb24iLCJzZWFyY2giLCJnZXQiLCJpbnZhbGlkYXRlUXVlcmllcyIsInN1Y2Nlc3MiLCJkZWxldGUiLCJxcyIsInRvU3RyaW5nIiwiaGlzdG9yeSIsInJlcGxhY2VTdGF0ZSIsInBhdGhuYW1lIiwic3RhcnRTdHJpcGUiLCJmYWxsYmFjayIsInJlcGxhY2UiLCJtdXRhdGUiLCJvbkVycm9yIiwiZSIsIm1zZyIsIlN0cmluZyIsIm1lc3NhZ2UiLCJpbmNsdWRlcyIsInRvTG93ZXJDYXNlIiwicmVtb3ZlTWV0aG9kIiwibXV0YXRpb25GbiIsImlkIiwib25TdWNjZXNzIiwic3RyaXBlUmVhZHkiLCJwYXlvdXRzX2VuYWJsZWQiLCJhbnlNYW51YWxSZWFkeSIsImxlbmd0aCIsImFueUNvbmZpZ3VyZWQiLCJkaXYiLCJjbGFzc05hbWUiLCJwIiwidmFyaWFudCIsInNwYW4iLCJ2YWx1ZSIsIm9uVmFsdWVDaGFuZ2UiLCJ2Iiwic3R5bGUiLCJncmlkVGVtcGxhdGVDb2x1bW5zIiwiZmlsdGVyIiwiQm9vbGVhbiIsImNvbm5lY3RlZCIsInNpemUiLCJvbkNsaWNrIiwiZGlzYWJsZWQiLCJpc1BlbmRpbmciLCJkZXRhaWxzX3N1Ym1pdHRlZCIsIk1hbnVhbE1ldGhvZEZvcm0iLCJyYWlsIiwib25SZW1vdmUiLCJvcGVuIiwic2V0T3BlbiIsImNvbmZpcm1lZCIsInNldENvbmZpcm1lZCIsImZvcm0iLCJzZXRGb3JtIiwibGFiZWwiLCJhY2NvdW50X2hvbGRlcl9uYW1lIiwiYmFua19uYW1lIiwiYWNjb3VudF9udW1iZXIiLCJhYmFfYWNjb3VudF9pZCIsInBheXBhbF9lbWFpbCIsInN3aWZ0Iiwib3duTWV0aG9kcyIsIm0iLCJtYXBNZXRob2RUeXBlVG9SYWlsIiwibWV0aG9kX3R5cGUiLCJyZXNldCIsInNhdmUiLCJFcnJvciIsInRyaW0iLCJ0ZXN0IiwicGF5bG9hZCIsInVzZXJfaWQiLCJzdG9yZV9pZCIsImNvdW50cnlfY29kZSIsImRlZmF1bHRMYWJlbCIsInZlcmlmaWNhdGlvbl9zdGF0dXMiLCJ2ZXJpZmljYXRpb25fbm90ZSIsImlzX2RlZmF1bHQiLCJpbnNlcnQiLCJ1bCIsIm1hcCIsImxpIiwic2xpY2UiLCJGaWVsZFJvdyIsIm9uQ2hhbmdlIiwiZiIsInRhcmdldCIsInBsYWNlaG9sZGVyIiwidHlwZSIsImlucHV0IiwiY2hlY2tlZCIsImNoaWxkcmVuIl0sIm1hcHBpbmdzIjoiOztBQUFBOzs7Ozs7Ozs7Ozs7Q0FZQyxHQUNELFNBQVNBLFNBQVMsRUFBRUMsT0FBTyxFQUFFQyxRQUFRLFFBQVEsUUFBUTtBQUNyRCxTQUFTQyxRQUFRLEVBQUVDLGNBQWMsRUFBRUMsV0FBVyxRQUFRLHdCQUF3QjtBQUM5RSxTQUFTQyxPQUFPLEVBQUVDLFlBQVksRUFBRUMsV0FBVyxFQUFFQyxXQUFXLEVBQUVDLFFBQVEsRUFBRUMsUUFBUSxFQUFFQyxNQUFNLEVBQUVDLE1BQU0sRUFBRUMsSUFBSSxFQUFFQyxVQUFVLFFBQVEsZUFBZTtBQUNySSxTQUFTQyxLQUFLLFFBQVEsU0FBUztBQUMvQixTQUFTQyxNQUFNLFFBQVEseUJBQXlCO0FBQ2hELFNBQVNDLEtBQUssUUFBUSx3QkFBd0I7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

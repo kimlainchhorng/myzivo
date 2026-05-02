@@ -3,7 +3,10 @@
  */
 import { useEffect, useState, useRef } from "react";
 import { motion, useInView } from "framer-motion";
-import { Plane, Users, Globe, Shield } from "lucide-react";
+import Plane from "lucide-react/dist/esm/icons/plane";
+import Users from "lucide-react/dist/esm/icons/users";
+import Globe from "lucide-react/dist/esm/icons/globe";
+import Shield from "lucide-react/dist/esm/icons/shield";
 import { cn } from "@/lib/utils";
 
 const stats = [

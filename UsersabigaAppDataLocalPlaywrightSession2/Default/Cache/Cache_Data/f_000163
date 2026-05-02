@@ -1,0 +1,215 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/admin/marketing/SegmentPicker.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+var _s = $RefreshSig$();
+/**
+ * SegmentPicker — shared segment selector for Ads and Marketing wizards.
+ * Shows segment name + live member count + last refreshed; "Everyone" fallback.
+ */ import { Users, Sparkles, Plus } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+import { Button } from "/src/components/ui/button.tsx";
+import { cn } from "/src/lib/utils.ts";
+import { useMarketingSegments } from "/src/hooks/useMarketingSegments.ts";
+const fmt = (n)=>n >= 1000 ? `${(n / 1000).toFixed(1)}k` : n.toString();
+export default function SegmentPicker({ storeId, value, onChange, onCreateNew, className }) {
+    _s();
+    const { data: segments = [], isLoading } = useMarketingSegments(storeId);
+    return /*#__PURE__*/ _jsxDEV("div", {
+        className: cn("space-y-2", className),
+        children: [
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "flex items-center justify-between",
+                children: [
+                    /*#__PURE__*/ _jsxDEV("span", {
+                        className: "text-xs font-medium text-muted-foreground",
+                        children: "Audience"
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentPicker.tsx",
+                        lineNumber: 27,
+                        columnNumber: 9
+                    }, this),
+                    onCreateNew && /*#__PURE__*/ _jsxDEV(Button, {
+                        type: "button",
+                        variant: "ghost",
+                        size: "sm",
+                        className: "h-6 text-[10px] text-primary",
+                        onClick: onCreateNew,
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(Plus, {
+                                className: "w-3 h-3 mr-1"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentPicker.tsx",
+                                lineNumber: 36,
+                                columnNumber: 13
+                            }, this),
+                            " New segment"
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentPicker.tsx",
+                        lineNumber: 29,
+                        columnNumber: 11
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentPicker.tsx",
+                lineNumber: 26,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "grid grid-cols-1 sm:grid-cols-2 gap-2",
+                children: [
+                    /*#__PURE__*/ _jsxDEV("button", {
+                        type: "button",
+                        onClick: ()=>onChange(null),
+                        className: cn("flex items-start gap-2 p-2.5 rounded-lg border text-left transition", value === null ? "border-primary bg-primary/5 ring-1 ring-primary/30" : "border-border hover:border-primary/40"),
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(Sparkles, {
+                                className: "w-4 h-4 text-primary mt-0.5 shrink-0"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentPicker.tsx",
+                                lineNumber: 51,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "min-w-0",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        className: "text-xs font-semibold",
+                                        children: "Everyone"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentPicker.tsx",
+                                        lineNumber: 53,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        className: "text-[10px] text-muted-foreground",
+                                        children: "All eligible customers"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentPicker.tsx",
+                                        lineNumber: 54,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentPicker.tsx",
+                                lineNumber: 52,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentPicker.tsx",
+                        lineNumber: 41,
+                        columnNumber: 9
+                    }, this),
+                    isLoading ? /*#__PURE__*/ _jsxDEV("div", {
+                        className: "p-2.5 text-[11px] text-muted-foreground",
+                        children: "Loading…"
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentPicker.tsx",
+                        lineNumber: 59,
+                        columnNumber: 11
+                    }, this) : segments.map((s)=>/*#__PURE__*/ _jsxDEV("button", {
+                            type: "button",
+                            onClick: ()=>onChange(s.id),
+                            className: cn("flex items-start gap-2 p-2.5 rounded-lg border text-left transition", value === s.id ? "border-primary bg-primary/5 ring-1 ring-primary/30" : "border-border hover:border-primary/40"),
+                            children: [
+                                /*#__PURE__*/ _jsxDEV(Users, {
+                                    className: "w-4 h-4 text-emerald-500 mt-0.5 shrink-0"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentPicker.tsx",
+                                    lineNumber: 73,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "min-w-0 flex-1",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV("div", {
+                                            className: "text-xs font-semibold truncate",
+                                            children: s.name
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentPicker.tsx",
+                                            lineNumber: 75,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("div", {
+                                            className: "text-[10px] text-muted-foreground",
+                                            children: [
+                                                "≈ ",
+                                                fmt(s.member_count || 0),
+                                                " customers",
+                                                s.last_refreshed_at && /*#__PURE__*/ _jsxDEV("span", {
+                                                    className: "ml-1 opacity-70",
+                                                    children: "· refreshed"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentPicker.tsx",
+                                                    lineNumber: 79,
+                                                    columnNumber: 21
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentPicker.tsx",
+                                            lineNumber: 76,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentPicker.tsx",
+                                    lineNumber: 74,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, s.id, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentPicker.tsx",
+                            lineNumber: 62,
+                            columnNumber: 13
+                        }, this))
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentPicker.tsx",
+                lineNumber: 40,
+                columnNumber: 7
+            }, this),
+            !isLoading && segments.length === 0 && !onCreateNew && /*#__PURE__*/ _jsxDEV("p", {
+                className: "text-[10px] text-muted-foreground",
+                children: "No saved segments yet — Everyone will be used."
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentPicker.tsx",
+                lineNumber: 88,
+                columnNumber: 9
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentPicker.tsx",
+        lineNumber: 25,
+        columnNumber: 5
+    }, this);
+}
+_s(SegmentPicker, "Na6uv3wBi6owuHDRZWg446ns8pE=", false, function() {
+    return [
+        useMarketingSegments
+    ];
+});
+_c = SegmentPicker;
+var _c;
+$RefreshReg$(_c, "SegmentPicker");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentPicker.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentPicker.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SegmentPicker.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIlNlZ21lbnRQaWNrZXIudHN4Il0sInNvdXJjZXNDb250ZW50IjpbIi8qKlxyXG4gKiBTZWdtZW50UGlja2VyIOKAlCBzaGFyZWQgc2VnbWVudCBzZWxlY3RvciBmb3IgQWRzIGFuZCBNYXJrZXRpbmcgd2l6YXJkcy5cclxuICogU2hvd3Mgc2VnbWVudCBuYW1lICsgbGl2ZSBtZW1iZXIgY291bnQgKyBsYXN0IHJlZnJlc2hlZDsgXCJFdmVyeW9uZVwiIGZhbGxiYWNrLlxyXG4gKi9cclxuaW1wb3J0IHsgVXNlcnMsIFNwYXJrbGVzLCBQbHVzIH0gZnJvbSBcImx1Y2lkZS1yZWFjdFwiO1xyXG5pbXBvcnQgeyBCdXR0b24gfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2J1dHRvblwiO1xyXG5pbXBvcnQgeyBjbiB9IGZyb20gXCJAL2xpYi91dGlsc1wiO1xyXG5pbXBvcnQgeyB1c2VNYXJrZXRpbmdTZWdtZW50cyB9IGZyb20gXCJAL2hvb2tzL3VzZU1hcmtldGluZ1NlZ21lbnRzXCI7XHJcblxyXG5pbnRlcmZhY2UgUHJvcHMge1xyXG4gIHN0b3JlSWQ6IHN0cmluZztcclxuICB2YWx1ZTogc3RyaW5nIHwgbnVsbDtcclxuICBvbkNoYW5nZTogKHNlZ21lbnRJZDogc3RyaW5nIHwgbnVsbCkgPT4gdm9pZDtcclxuICBvbkNyZWF0ZU5ldz86ICgpID0+IHZvaWQ7XHJcbiAgY2xhc3NOYW1lPzogc3RyaW5nO1xyXG59XHJcblxyXG5jb25zdCBmbXQgPSAobjogbnVtYmVyKSA9PlxyXG4gIG4gPj0gMTAwMCA/IGAkeyhuIC8gMTAwMCkudG9GaXhlZCgxKX1rYCA6IG4udG9TdHJpbmcoKTtcclxuXHJcbmV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uIFNlZ21lbnRQaWNrZXIoeyBzdG9yZUlkLCB2YWx1ZSwgb25DaGFuZ2UsIG9uQ3JlYXRlTmV3LCBjbGFzc05hbWUgfTogUHJvcHMpIHtcclxuICBjb25zdCB7IGRhdGE6IHNlZ21lbnRzID0gW10sIGlzTG9hZGluZyB9ID0gdXNlTWFya2V0aW5nU2VnbWVudHMoc3RvcmVJZCk7XHJcblxyXG4gIHJldHVybiAoXHJcbiAgICA8ZGl2IGNsYXNzTmFtZT17Y24oXCJzcGFjZS15LTJcIiwgY2xhc3NOYW1lKX0+XHJcbiAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1iZXR3ZWVuXCI+XHJcbiAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwidGV4dC14cyBmb250LW1lZGl1bSB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5BdWRpZW5jZTwvc3Bhbj5cclxuICAgICAgICB7b25DcmVhdGVOZXcgJiYgKFxyXG4gICAgICAgICAgPEJ1dHRvblxyXG4gICAgICAgICAgICB0eXBlPVwiYnV0dG9uXCJcclxuICAgICAgICAgICAgdmFyaWFudD1cImdob3N0XCJcclxuICAgICAgICAgICAgc2l6ZT1cInNtXCJcclxuICAgICAgICAgICAgY2xhc3NOYW1lPVwiaC02IHRleHQtWzEwcHhdIHRleHQtcHJpbWFyeVwiXHJcbiAgICAgICAgICAgIG9uQ2xpY2s9e29uQ3JlYXRlTmV3fVxyXG4gICAgICAgICAgPlxyXG4gICAgICAgICAgICA8UGx1cyBjbGFzc05hbWU9XCJ3LTMgaC0zIG1yLTFcIiAvPiBOZXcgc2VnbWVudFxyXG4gICAgICAgICAgPC9CdXR0b24+XHJcbiAgICAgICAgKX1cclxuICAgICAgPC9kaXY+XHJcbiAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZ3JpZCBncmlkLWNvbHMtMSBzbTpncmlkLWNvbHMtMiBnYXAtMlwiPlxyXG4gICAgICAgIDxidXR0b25cclxuICAgICAgICAgIHR5cGU9XCJidXR0b25cIlxyXG4gICAgICAgICAgb25DbGljaz17KCkgPT4gb25DaGFuZ2UobnVsbCl9XHJcbiAgICAgICAgICBjbGFzc05hbWU9e2NuKFxyXG4gICAgICAgICAgICBcImZsZXggaXRlbXMtc3RhcnQgZ2FwLTIgcC0yLjUgcm91bmRlZC1sZyBib3JkZXIgdGV4dC1sZWZ0IHRyYW5zaXRpb25cIixcclxuICAgICAgICAgICAgdmFsdWUgPT09IG51bGxcclxuICAgICAgICAgICAgICA/IFwiYm9yZGVyLXByaW1hcnkgYmctcHJpbWFyeS81IHJpbmctMSByaW5nLXByaW1hcnkvMzBcIlxyXG4gICAgICAgICAgICAgIDogXCJib3JkZXItYm9yZGVyIGhvdmVyOmJvcmRlci1wcmltYXJ5LzQwXCJcclxuICAgICAgICAgICl9XHJcbiAgICAgICAgPlxyXG4gICAgICAgICAgPFNwYXJrbGVzIGNsYXNzTmFtZT1cInctNCBoLTQgdGV4dC1wcmltYXJ5IG10LTAuNSBzaHJpbmstMFwiIC8+XHJcbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cIm1pbi13LTBcIj5cclxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJ0ZXh0LXhzIGZvbnQtc2VtaWJvbGRcIj5FdmVyeW9uZTwvZGl2PlxyXG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInRleHQtWzEwcHhdIHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiPkFsbCBlbGlnaWJsZSBjdXN0b21lcnM8L2Rpdj5cclxuICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgIDwvYnV0dG9uPlxyXG5cclxuICAgICAgICB7aXNMb2FkaW5nID8gKFxyXG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJwLTIuNSB0ZXh0LVsxMXB4XSB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5Mb2FkaW5n4oCmPC9kaXY+XHJcbiAgICAgICAgKSA6IChcclxuICAgICAgICAgIHNlZ21lbnRzLm1hcCgocykgPT4gKFxyXG4gICAgICAgICAgICA8YnV0dG9uXHJcbiAgICAgICAgICAgICAgdHlwZT1cImJ1dHRvblwiXHJcbiAgICAgICAgICAgICAga2V5PXtzLmlkfVxyXG4gICAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IG9uQ2hhbmdlKHMuaWQpfVxyXG4gICAgICAgICAgICAgIGNsYXNzTmFtZT17Y24oXHJcbiAgICAgICAgICAgICAgICBcImZsZXggaXRlbXMtc3RhcnQgZ2FwLTIgcC0yLjUgcm91bmRlZC1sZyBib3JkZXIgdGV4dC1sZWZ0IHRyYW5zaXRpb25cIixcclxuICAgICAgICAgICAgICAgIHZhbHVlID09PSBzLmlkXHJcbiAgICAgICAgICAgICAgICAgID8gXCJib3JkZXItcHJpbWFyeSBiZy1wcmltYXJ5LzUgcmluZy0xIHJpbmctcHJpbWFyeS8zMFwiXHJcbiAgICAgICAgICAgICAgICAgIDogXCJib3JkZXItYm9yZGVyIGhvdmVyOmJvcmRlci1wcmltYXJ5LzQwXCJcclxuICAgICAgICAgICAgICApfVxyXG4gICAgICAgICAgICA+XHJcbiAgICAgICAgICAgICAgPFVzZXJzIGNsYXNzTmFtZT1cInctNCBoLTQgdGV4dC1lbWVyYWxkLTUwMCBtdC0wLjUgc2hyaW5rLTBcIiAvPlxyXG4gICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwibWluLXctMCBmbGV4LTFcIj5cclxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidGV4dC14cyBmb250LXNlbWlib2xkIHRydW5jYXRlXCI+e3MubmFtZX08L2Rpdj5cclxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidGV4dC1bMTBweF0gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+XHJcbiAgICAgICAgICAgICAgICAgIOKJiCB7Zm10KHMubWVtYmVyX2NvdW50IHx8IDApfSBjdXN0b21lcnNcclxuICAgICAgICAgICAgICAgICAge3MubGFzdF9yZWZyZXNoZWRfYXQgJiYgKFxyXG4gICAgICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cIm1sLTEgb3BhY2l0eS03MFwiPsK3IHJlZnJlc2hlZDwvc3Bhbj5cclxuICAgICAgICAgICAgICAgICAgKX1cclxuICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICA8L2J1dHRvbj5cclxuICAgICAgICAgICkpXHJcbiAgICAgICAgKX1cclxuICAgICAgPC9kaXY+XHJcbiAgICAgIHshaXNMb2FkaW5nICYmIHNlZ21lbnRzLmxlbmd0aCA9PT0gMCAmJiAhb25DcmVhdGVOZXcgJiYgKFxyXG4gICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtWzEwcHhdIHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiPlxyXG4gICAgICAgICAgTm8gc2F2ZWQgc2VnbWVudHMgeWV0IOKAlCBFdmVyeW9uZSB3aWxsIGJlIHVzZWQuXHJcbiAgICAgICAgPC9wPlxyXG4gICAgICApfVxyXG4gICAgPC9kaXY+XHJcbiAgKTtcclxufVxyXG4iXSwibmFtZXMiOlsiVXNlcnMiLCJTcGFya2xlcyIsIlBsdXMiLCJCdXR0b24iLCJjbiIsInVzZU1hcmtldGluZ1NlZ21lbnRzIiwiZm10IiwibiIsInRvRml4ZWQiLCJ0b1N0cmluZyIsIlNlZ21lbnRQaWNrZXIiLCJzdG9yZUlkIiwidmFsdWUiLCJvbkNoYW5nZSIsIm9uQ3JlYXRlTmV3IiwiY2xhc3NOYW1lIiwiZGF0YSIsInNlZ21lbnRzIiwiaXNMb2FkaW5nIiwiZGl2Iiwic3BhbiIsInR5cGUiLCJ2YXJpYW50Iiwic2l6ZSIsIm9uQ2xpY2siLCJidXR0b24iLCJtYXAiLCJzIiwiaWQiLCJuYW1lIiwibWVtYmVyX2NvdW50IiwibGFzdF9yZWZyZXNoZWRfYXQiLCJsZW5ndGgiLCJwIl0sIm1hcHBpbmdzIjoiOztBQUFBOzs7Q0FHQyxHQUNELFNBQVNBLEtBQUssRUFBRUMsUUFBUSxFQUFFQyxJQUFJLFFBQVEsZUFBZTtBQUNyRCxTQUFTQyxNQUFNLFFBQVEseUJBQXlCO0FBQ2hELFNBQVNDLEVBQUUsUUFBUSxjQUFjO0FBQ2pDLFNBQVNDLG9CQUFvQixRQUFRLCtCQUErQjtBQVVwRSxNQUFNQyxNQUFNLENBQUNDLElBQ1hBLEtBQUssT0FBTyxHQUFHLEFBQUNBLENBQUFBLElBQUksSUFBRyxFQUFHQyxPQUFPLENBQUMsR0FBRyxDQUFDLENBQUMsR0FBR0QsRUFBRUUsUUFBUTtBQUV0RCxlQUFlLFNBQVNDLGNBQWMsRUFBRUMsT0FBTyxFQUFFQyxLQUFLLEVBQUVDLFFBQVEsRUFBRUMsV0FBVyxFQUFFQyxTQUFTLEVBQVM7O0lBQy9GLE1BQU0sRUFBRUMsTUFBTUMsV0FBVyxFQUFFLEVBQUVDLFNBQVMsRUFBRSxHQUFHYixxQkFBcUJNO0lBRWhFLHFCQUNFLFFBQUNRO1FBQUlKLFdBQVdYLEdBQUcsYUFBYVc7OzBCQUM5QixRQUFDSTtnQkFBSUosV0FBVTs7a0NBQ2IsUUFBQ0s7d0JBQUtMLFdBQVU7a0NBQTRDOzs7Ozs7b0JBQzNERCw2QkFDQyxRQUFDWDt3QkFDQ2tCLE1BQUs7d0JBQ0xDLFNBQVE7d0JBQ1JDLE1BQUs7d0JBQ0xSLFdBQVU7d0JBQ1ZTLFNBQVNWOzswQ0FFVCxRQUFDWjtnQ0FBS2EsV0FBVTs7Ozs7OzRCQUFpQjs7Ozs7Ozs7Ozs7OzswQkFJdkMsUUFBQ0k7Z0JBQUlKLFdBQVU7O2tDQUNiLFFBQUNVO3dCQUNDSixNQUFLO3dCQUNMRyxTQUFTLElBQU1YLFNBQVM7d0JBQ3hCRSxXQUFXWCxHQUNULHVFQUNBUSxVQUFVLE9BQ04sdURBQ0E7OzBDQUdOLFFBQUNYO2dDQUFTYyxXQUFVOzs7Ozs7MENBQ3BCLFFBQUNJO2dDQUFJSixXQUFVOztrREFDYixRQUFDSTt3Q0FBSUosV0FBVTtrREFBd0I7Ozs7OztrREFDdkMsUUFBQ0k7d0NBQUlKLFdBQVU7a0RBQW9DOzs7Ozs7Ozs7Ozs7Ozs7Ozs7b0JBSXRERywwQkFDQyxRQUFDQzt3QkFBSUosV0FBVTtrQ0FBMEM7Ozs7OytCQUV6REUsU0FBU1MsR0FBRyxDQUFDLENBQUNDLGtCQUNaLFFBQUNGOzRCQUNDSixNQUFLOzRCQUVMRyxTQUFTLElBQU1YLFNBQVNjLEVBQUVDLEVBQUU7NEJBQzVCYixXQUFXWCxHQUNULHVFQUNBUSxVQUFVZSxFQUFFQyxFQUFFLEdBQ1YsdURBQ0E7OzhDQUdOLFFBQUM1QjtvQ0FBTWUsV0FBVTs7Ozs7OzhDQUNqQixRQUFDSTtvQ0FBSUosV0FBVTs7c0RBQ2IsUUFBQ0k7NENBQUlKLFdBQVU7c0RBQWtDWSxFQUFFRSxJQUFJOzs7Ozs7c0RBQ3ZELFFBQUNWOzRDQUFJSixXQUFVOztnREFBb0M7Z0RBQzlDVCxJQUFJcUIsRUFBRUcsWUFBWSxJQUFJO2dEQUFHO2dEQUMzQkgsRUFBRUksaUJBQWlCLGtCQUNsQixRQUFDWDtvREFBS0wsV0FBVTs4REFBa0I7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7MkJBZm5DWSxFQUFFQyxFQUFFOzs7Ozs7Ozs7OztZQXVCaEIsQ0FBQ1YsYUFBYUQsU0FBU2UsTUFBTSxLQUFLLEtBQUssQ0FBQ2xCLDZCQUN2QyxRQUFDbUI7Z0JBQUVsQixXQUFVOzBCQUFvQzs7Ozs7Ozs7Ozs7O0FBTXpEO0dBekV3Qkw7O1FBQ3FCTDs7O0tBRHJCSyJ9

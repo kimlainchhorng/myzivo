@@ -1,4 +1,7 @@
+import { useEffect, useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { 
@@ -17,6 +20,24 @@ interface FlightAlertsPromoProps {
 }
 
 export default function FlightAlertsPromo({ className, onSetAlert }: FlightAlertsPromoProps) {
+  const { user } = useAuth();
+  const [sampleAlerts, setSampleAlerts] = useState<{ route: string; drop: string; percent: string; time: string }[]>([]);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("price_alerts").select("origin_name, destination_name, current_price, target_price, updated_at")
+      .eq("user_id", user.id).eq("is_active", true).eq("triggered", true).limit(3).then(({ data }) => {
+        if (data && data.length > 0) {
+          setSampleAlerts(data.map(a => ({
+            route: `${a.origin_name || "?"} → ${a.destination_name || "?"}`,
+            drop: `$${((a.current_price ?? 0) - (a.target_price ?? 0)).toFixed(0)}`,
+            percent: `${Math.round(((a.current_price ?? 1) - (a.target_price ?? 0)) / (a.current_price ?? 1) * 100)}%`,
+            time: a.updated_at ? new Date(a.updated_at).toLocaleDateString() : "Recently",
+          })));
+        }
+      });
+  }, [user]);
+
   const alertFeatures = [
     {
       icon: TrendingDown,
@@ -37,9 +58,6 @@ export default function FlightAlertsPromo({ className, onSetAlert }: FlightAlert
       color: "text-sky-500",
     },
   ];
-
-  // TODO: Fetch real price drop alerts
-  const sampleAlerts: { route: string; drop: string; percent: string; time: string }[] = [];
 
   return (
     <section className={cn("py-10 sm:py-16", className)}>

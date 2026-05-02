@@ -5,12 +5,27 @@
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
-import {
-  Sparkles, Plane, Calendar, Zap, TrendingDown, ArrowRight,
-  Palmtree, Building2, Mountain, Landmark, Music, Users,
-  ChevronRight, Lightbulb, Clock, MapPin, Brain, Luggage,
-  Radio, Shield, Timer
-} from "lucide-react";
+import Sparkles from "lucide-react/dist/esm/icons/sparkles";
+import Plane from "lucide-react/dist/esm/icons/plane";
+import Calendar from "lucide-react/dist/esm/icons/calendar";
+import Zap from "lucide-react/dist/esm/icons/zap";
+import TrendingDown from "lucide-react/dist/esm/icons/trending-down";
+import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
+import Palmtree from "lucide-react/dist/esm/icons/palmtree";
+import Building2 from "lucide-react/dist/esm/icons/building-2";
+import Mountain from "lucide-react/dist/esm/icons/mountain";
+import Landmark from "lucide-react/dist/esm/icons/landmark";
+import Music from "lucide-react/dist/esm/icons/music";
+import Users from "lucide-react/dist/esm/icons/users";
+import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
+import Lightbulb from "lucide-react/dist/esm/icons/lightbulb";
+import Clock from "lucide-react/dist/esm/icons/clock";
+import MapPin from "lucide-react/dist/esm/icons/map-pin";
+import Brain from "lucide-react/dist/esm/icons/brain";
+import Luggage from "lucide-react/dist/esm/icons/luggage";
+import Radio from "lucide-react/dist/esm/icons/radio";
+import Shield from "lucide-react/dist/esm/icons/shield";
+import Timer from "lucide-react/dist/esm/icons/timer";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useAISmartDeals, type SmartDeal } from "@/hooks/useAISmartDeals";

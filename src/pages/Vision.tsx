@@ -25,6 +25,8 @@ import {
 import NavBar from "@/components/home/NavBar";
 import Footer from "@/components/Footer";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const visionSections = [
   {
@@ -93,11 +95,30 @@ const upcomingFeatures = [
 const Vision = () => {
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
+  const [submittingNewsletter, setSubmittingNewsletter] = useState(false);
 
-  const handleSubscribe = (e: React.FormEvent) => {
+  const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
-    setSubscribed(true);
-    setEmail("");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error("Please enter a valid email");
+      return;
+    }
+    setSubmittingNewsletter(true);
+    try {
+      const { error } = await supabase.from("feedback_submissions").insert({
+        category: "newsletter_signup",
+        subject: "Vision page newsletter signup",
+        message: `Email: ${email}`,
+      });
+      if (error) throw error;
+      setSubscribed(true);
+      setEmail("");
+      toast.success("Subscribed!", { description: "We'll keep you in the loop on new launches." });
+    } catch (err: any) {
+      toast.error(err?.message || "Could not subscribe. Please try again.");
+    } finally {
+      setSubmittingNewsletter(false);
+    }
   };
 
   return (
@@ -316,8 +337,8 @@ const Vision = () => {
                       required
                     />
                   </div>
-                  <Button type="submit" className="h-12 px-6 bg-gradient-to-r from-violet-500 to-purple-500 gap-2 shadow-[0_0_15px_hsl(270_60%_50%/0.3)] hover:shadow-[0_0_25px_hsl(270_60%_50%/0.4)] transition-shadow">
-                    Subscribe
+                  <Button type="submit" disabled={submittingNewsletter} className="h-12 px-6 bg-gradient-to-r from-violet-500 to-purple-500 gap-2 shadow-[0_0_15px_hsl(270_60%_50%/0.3)] hover:shadow-[0_0_25px_hsl(270_60%_50%/0.4)] transition-shadow">
+                    {submittingNewsletter ? "Subscribing…" : "Subscribe"}
                     <ArrowRight className="w-4 h-4" />
                   </Button>
                 </form>

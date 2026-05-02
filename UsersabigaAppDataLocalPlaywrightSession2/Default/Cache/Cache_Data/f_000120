@@ -1,0 +1,361 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/admin/marketing/AutomationsBuilder.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+var _s = $RefreshSig$();
+/**
+ * AutomationsBuilder — List automations with quick canvas preview.
+ */ import __vite__cjsImport1_react from "/node_modules/.vite/deps/react.js?v=7fd9520c"; const useState = __vite__cjsImport1_react["useState"];
+import { Card, CardContent } from "/src/components/ui/card.tsx";
+import { Button } from "/src/components/ui/button.tsx";
+import { Badge } from "/src/components/ui/badge.tsx";
+import { Switch } from "/src/components/ui/switch.tsx";
+import { Plus, Zap, Trash2, Edit, Users } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+import { useMarketingAutomations, useToggleAutomationStatus, useDeleteAutomation } from "/src/hooks/useMarketingAutomations.ts";
+import AutomationCanvas from "/src/components/admin/marketing/AutomationCanvas.tsx";
+export default function AutomationsBuilder({ storeId }) {
+    _s();
+    const { data: automations = [], isLoading } = useMarketingAutomations(storeId);
+    const toggle = useToggleAutomationStatus(storeId);
+    const del = useDeleteAutomation(storeId);
+    const [editing, setEditing] = useState(null);
+    const [creating, setCreating] = useState(false);
+    return /*#__PURE__*/ _jsxDEV("div", {
+        className: "space-y-3",
+        children: [
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "flex items-center justify-between gap-2",
+                children: [
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("h3", {
+                                className: "text-sm font-semibold",
+                                children: "Automations"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                                lineNumber: 29,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("p", {
+                                className: "text-[11px] text-muted-foreground",
+                                children: [
+                                    automations.length,
+                                    " flows · ",
+                                    automations.reduce((s, a)=>s + a.enrolled_count, 0),
+                                    " customers enrolled"
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                                lineNumber: 30,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                        lineNumber: 28,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(Button, {
+                        size: "sm",
+                        onClick: ()=>setCreating(true),
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(Plus, {
+                                className: "w-4 h-4 mr-1"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                                lineNumber: 33,
+                                columnNumber: 11
+                            }, this),
+                            " New flow"
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                        lineNumber: 32,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                lineNumber: 27,
+                columnNumber: 7
+            }, this),
+            isLoading ? /*#__PURE__*/ _jsxDEV("div", {
+                className: "text-xs text-muted-foreground py-8 text-center",
+                children: "Loading..."
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                lineNumber: 38,
+                columnNumber: 9
+            }, this) : automations.length === 0 ? /*#__PURE__*/ _jsxDEV(Card, {
+                children: /*#__PURE__*/ _jsxDEV(CardContent, {
+                    className: "text-center py-10",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV(Zap, {
+                            className: "w-10 h-10 text-muted-foreground/40 mx-auto mb-2"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                            lineNumber: 41,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("p", {
+                            className: "text-sm font-medium",
+                            children: "No automations yet"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                            lineNumber: 42,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("p", {
+                            className: "text-[11px] text-muted-foreground mt-1 max-w-xs mx-auto",
+                            children: 'Set up triggered flows like "send welcome email when first order placed".'
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                            lineNumber: 43,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV(Button, {
+                            size: "sm",
+                            className: "mt-3",
+                            onClick: ()=>setCreating(true),
+                            children: [
+                                /*#__PURE__*/ _jsxDEV(Plus, {
+                                    className: "w-4 h-4 mr-1"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                                    lineNumber: 47,
+                                    columnNumber: 13
+                                }, this),
+                                " Create automation"
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                            lineNumber: 46,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                    lineNumber: 40,
+                    columnNumber: 15
+                }, this)
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                lineNumber: 40,
+                columnNumber: 9
+            }, this) : /*#__PURE__*/ _jsxDEV("div", {
+                className: "space-y-2",
+                children: automations.map((a)=>/*#__PURE__*/ _jsxDEV(Card, {
+                        className: "p-3",
+                        children: /*#__PURE__*/ _jsxDEV("div", {
+                            className: "flex items-center gap-3",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "w-9 h-9 rounded-lg bg-amber-500/10 text-amber-600 flex items-center justify-center shrink-0",
+                                    children: /*#__PURE__*/ _jsxDEV(Zap, {
+                                        className: "w-4 h-4"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                                        lineNumber: 56,
+                                        columnNumber: 19
+                                    }, this)
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                                    lineNumber: 55,
+                                    columnNumber: 17
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "flex-1 min-w-0",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV("div", {
+                                            className: "flex items-center gap-2",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV("h4", {
+                                                    className: "text-sm font-semibold truncate",
+                                                    children: a.name
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                                                    lineNumber: 60,
+                                                    columnNumber: 21
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV(Badge, {
+                                                    variant: a.status === "active" ? "default" : "secondary",
+                                                    className: "text-[9px] h-4 px-1.5",
+                                                    children: a.status
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                                                    lineNumber: 61,
+                                                    columnNumber: 21
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                                            lineNumber: 59,
+                                            columnNumber: 19
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("div", {
+                                            className: "flex items-center gap-2 text-[11px] text-muted-foreground",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV("span", {
+                                                    className: "capitalize",
+                                                    children: [
+                                                        "Trigger: ",
+                                                        (a.trigger_json?.type || "").replace(/_/g, " ")
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                                                    lineNumber: 64,
+                                                    columnNumber: 21
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV("span", {
+                                                    children: [
+                                                        "· ",
+                                                        a.steps_json?.length || 0,
+                                                        " steps"
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                                                    lineNumber: 65,
+                                                    columnNumber: 21
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV("span", {
+                                                    className: "flex items-center gap-1",
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxDEV(Users, {
+                                                            className: "w-2.5 h-2.5"
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                                                            lineNumber: 66,
+                                                            columnNumber: 63
+                                                        }, this),
+                                                        a.enrolled_count
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                                                    lineNumber: 66,
+                                                    columnNumber: 21
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                                            lineNumber: 63,
+                                            columnNumber: 19
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                                    lineNumber: 58,
+                                    columnNumber: 17
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV(Switch, {
+                                    checked: a.status === "active",
+                                    onCheckedChange: (v)=>toggle.mutate({
+                                            id: a.id,
+                                            status: v ? "active" : "paused"
+                                        }),
+                                    className: "scale-75"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                                    lineNumber: 69,
+                                    columnNumber: 17
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV(Button, {
+                                    size: "icon",
+                                    variant: "ghost",
+                                    className: "h-8 w-8",
+                                    onClick: ()=>setEditing(a),
+                                    children: /*#__PURE__*/ _jsxDEV(Edit, {
+                                        className: "w-3.5 h-3.5"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                                        lineNumber: 75,
+                                        columnNumber: 19
+                                    }, this)
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                                    lineNumber: 74,
+                                    columnNumber: 17
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV(Button, {
+                                    size: "icon",
+                                    variant: "ghost",
+                                    className: "h-8 w-8 text-destructive",
+                                    onClick: ()=>del.mutate(a.id),
+                                    children: /*#__PURE__*/ _jsxDEV(Trash2, {
+                                        className: "w-3.5 h-3.5"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                                        lineNumber: 78,
+                                        columnNumber: 19
+                                    }, this)
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                                    lineNumber: 77,
+                                    columnNumber: 17
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                            lineNumber: 54,
+                            columnNumber: 15
+                        }, this)
+                    }, a.id, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                        lineNumber: 53,
+                        columnNumber: 13
+                    }, this))
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                lineNumber: 51,
+                columnNumber: 9
+            }, this),
+            /*#__PURE__*/ _jsxDEV(AutomationCanvas, {
+                open: creating || !!editing,
+                onClose: ()=>{
+                    setCreating(false);
+                    setEditing(null);
+                },
+                storeId: storeId,
+                automation: editing
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+                lineNumber: 86,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx",
+        lineNumber: 26,
+        columnNumber: 5
+    }, this);
+}
+_s(AutomationsBuilder, "83ZAS+tXbMvSh7IvgklcDDBINlY=", false, function() {
+    return [
+        useMarketingAutomations,
+        useToggleAutomationStatus,
+        useDeleteAutomation
+    ];
+});
+_c = AutomationsBuilder;
+var _c;
+$RefreshReg$(_c, "AutomationsBuilder");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/AutomationsBuilder.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIkF1dG9tYXRpb25zQnVpbGRlci50c3giXSwic291cmNlc0NvbnRlbnQiOlsiLyoqXHJcbiAqIEF1dG9tYXRpb25zQnVpbGRlciDigJQgTGlzdCBhdXRvbWF0aW9ucyB3aXRoIHF1aWNrIGNhbnZhcyBwcmV2aWV3LlxyXG4gKi9cclxuaW1wb3J0IHsgdXNlU3RhdGUgfSBmcm9tIFwicmVhY3RcIjtcclxuaW1wb3J0IHsgQ2FyZCwgQ2FyZENvbnRlbnQgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2NhcmRcIjtcclxuaW1wb3J0IHsgQnV0dG9uIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9idXR0b25cIjtcclxuaW1wb3J0IHsgQmFkZ2UgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2JhZGdlXCI7XHJcbmltcG9ydCB7IFN3aXRjaCB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvc3dpdGNoXCI7XHJcbmltcG9ydCB7IFBsdXMsIFphcCwgVHJhc2gyLCBFZGl0LCBVc2VycyB9IGZyb20gXCJsdWNpZGUtcmVhY3RcIjtcclxuaW1wb3J0IHtcclxuICB1c2VNYXJrZXRpbmdBdXRvbWF0aW9ucyxcclxuICB1c2VUb2dnbGVBdXRvbWF0aW9uU3RhdHVzLFxyXG4gIHVzZURlbGV0ZUF1dG9tYXRpb24sXHJcbiAgdHlwZSBBdXRvbWF0aW9uLFxyXG59IGZyb20gXCJAL2hvb2tzL3VzZU1hcmtldGluZ0F1dG9tYXRpb25zXCI7XHJcbmltcG9ydCBBdXRvbWF0aW9uQ2FudmFzIGZyb20gXCIuL0F1dG9tYXRpb25DYW52YXNcIjtcclxuXHJcbmV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uIEF1dG9tYXRpb25zQnVpbGRlcih7IHN0b3JlSWQgfTogeyBzdG9yZUlkOiBzdHJpbmcgfSkge1xyXG4gIGNvbnN0IHsgZGF0YTogYXV0b21hdGlvbnMgPSBbXSwgaXNMb2FkaW5nIH0gPSB1c2VNYXJrZXRpbmdBdXRvbWF0aW9ucyhzdG9yZUlkKTtcclxuICBjb25zdCB0b2dnbGUgPSB1c2VUb2dnbGVBdXRvbWF0aW9uU3RhdHVzKHN0b3JlSWQpO1xyXG4gIGNvbnN0IGRlbCA9IHVzZURlbGV0ZUF1dG9tYXRpb24oc3RvcmVJZCk7XHJcbiAgY29uc3QgW2VkaXRpbmcsIHNldEVkaXRpbmddID0gdXNlU3RhdGU8QXV0b21hdGlvbiB8IG51bGw+KG51bGwpO1xyXG4gIGNvbnN0IFtjcmVhdGluZywgc2V0Q3JlYXRpbmddID0gdXNlU3RhdGUoZmFsc2UpO1xyXG5cclxuICByZXR1cm4gKFxyXG4gICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTNcIj5cclxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWJldHdlZW4gZ2FwLTJcIj5cclxuICAgICAgICA8ZGl2PlxyXG4gICAgICAgICAgPGgzIGNsYXNzTmFtZT1cInRleHQtc20gZm9udC1zZW1pYm9sZFwiPkF1dG9tYXRpb25zPC9oMz5cclxuICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtWzExcHhdIHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiPnthdXRvbWF0aW9ucy5sZW5ndGh9IGZsb3dzIMK3IHthdXRvbWF0aW9ucy5yZWR1Y2UoKHMsIGEpID0+IHMgKyBhLmVucm9sbGVkX2NvdW50LCAwKX0gY3VzdG9tZXJzIGVucm9sbGVkPC9wPlxyXG4gICAgICAgIDwvZGl2PlxyXG4gICAgICAgIDxCdXR0b24gc2l6ZT1cInNtXCIgb25DbGljaz17KCkgPT4gc2V0Q3JlYXRpbmcodHJ1ZSl9PlxyXG4gICAgICAgICAgPFBsdXMgY2xhc3NOYW1lPVwidy00IGgtNCBtci0xXCIgLz4gTmV3IGZsb3dcclxuICAgICAgICA8L0J1dHRvbj5cclxuICAgICAgPC9kaXY+XHJcblxyXG4gICAgICB7aXNMb2FkaW5nID8gKFxyXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidGV4dC14cyB0ZXh0LW11dGVkLWZvcmVncm91bmQgcHktOCB0ZXh0LWNlbnRlclwiPkxvYWRpbmcuLi48L2Rpdj5cclxuICAgICAgKSA6IGF1dG9tYXRpb25zLmxlbmd0aCA9PT0gMCA/IChcclxuICAgICAgICA8Q2FyZD48Q2FyZENvbnRlbnQgY2xhc3NOYW1lPVwidGV4dC1jZW50ZXIgcHktMTBcIj5cclxuICAgICAgICAgIDxaYXAgY2xhc3NOYW1lPVwidy0xMCBoLTEwIHRleHQtbXV0ZWQtZm9yZWdyb3VuZC80MCBteC1hdXRvIG1iLTJcIiAvPlxyXG4gICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1zbSBmb250LW1lZGl1bVwiPk5vIGF1dG9tYXRpb25zIHlldDwvcD5cclxuICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtWzExcHhdIHRleHQtbXV0ZWQtZm9yZWdyb3VuZCBtdC0xIG1heC13LXhzIG14LWF1dG9cIj5cclxuICAgICAgICAgICAgU2V0IHVwIHRyaWdnZXJlZCBmbG93cyBsaWtlIFwic2VuZCB3ZWxjb21lIGVtYWlsIHdoZW4gZmlyc3Qgb3JkZXIgcGxhY2VkXCIuXHJcbiAgICAgICAgICA8L3A+XHJcbiAgICAgICAgICA8QnV0dG9uIHNpemU9XCJzbVwiIGNsYXNzTmFtZT1cIm10LTNcIiBvbkNsaWNrPXsoKSA9PiBzZXRDcmVhdGluZyh0cnVlKX0+XHJcbiAgICAgICAgICAgIDxQbHVzIGNsYXNzTmFtZT1cInctNCBoLTQgbXItMVwiIC8+IENyZWF0ZSBhdXRvbWF0aW9uXHJcbiAgICAgICAgICA8L0J1dHRvbj5cclxuICAgICAgICA8L0NhcmRDb250ZW50PjwvQ2FyZD5cclxuICAgICAgKSA6IChcclxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktMlwiPlxyXG4gICAgICAgICAge2F1dG9tYXRpb25zLm1hcCgoYSkgPT4gKFxyXG4gICAgICAgICAgICA8Q2FyZCBrZXk9e2EuaWR9IGNsYXNzTmFtZT1cInAtM1wiPlxyXG4gICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTNcIj5cclxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidy05IGgtOSByb3VuZGVkLWxnIGJnLWFtYmVyLTUwMC8xMCB0ZXh0LWFtYmVyLTYwMCBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciBzaHJpbmstMFwiPlxyXG4gICAgICAgICAgICAgICAgICA8WmFwIGNsYXNzTmFtZT1cInctNCBoLTRcIiAvPlxyXG4gICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXgtMSBtaW4tdy0wXCI+XHJcbiAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTJcIj5cclxuICAgICAgICAgICAgICAgICAgICA8aDQgY2xhc3NOYW1lPVwidGV4dC1zbSBmb250LXNlbWlib2xkIHRydW5jYXRlXCI+e2EubmFtZX08L2g0PlxyXG4gICAgICAgICAgICAgICAgICAgIDxCYWRnZSB2YXJpYW50PXthLnN0YXR1cyA9PT0gXCJhY3RpdmVcIiA/IFwiZGVmYXVsdFwiIDogXCJzZWNvbmRhcnlcIn0gY2xhc3NOYW1lPVwidGV4dC1bOXB4XSBoLTQgcHgtMS41XCI+e2Euc3RhdHVzfTwvQmFkZ2U+XHJcbiAgICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0yIHRleHQtWzExcHhdIHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiPlxyXG4gICAgICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cImNhcGl0YWxpemVcIj5UcmlnZ2VyOiB7KGEudHJpZ2dlcl9qc29uPy50eXBlIHx8IFwiXCIpLnJlcGxhY2UoL18vZywgXCIgXCIpfTwvc3Bhbj5cclxuICAgICAgICAgICAgICAgICAgICA8c3Bhbj7CtyB7YS5zdGVwc19qc29uPy5sZW5ndGggfHwgMH0gc3RlcHM8L3NwYW4+XHJcbiAgICAgICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTFcIj48VXNlcnMgY2xhc3NOYW1lPVwidy0yLjUgaC0yLjVcIiAvPnthLmVucm9sbGVkX2NvdW50fTwvc3Bhbj5cclxuICAgICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgIDxTd2l0Y2hcclxuICAgICAgICAgICAgICAgICAgY2hlY2tlZD17YS5zdGF0dXMgPT09IFwiYWN0aXZlXCJ9XHJcbiAgICAgICAgICAgICAgICAgIG9uQ2hlY2tlZENoYW5nZT17KHYpID0+IHRvZ2dsZS5tdXRhdGUoeyBpZDogYS5pZCwgc3RhdHVzOiB2ID8gXCJhY3RpdmVcIiA6IFwicGF1c2VkXCIgfSl9XHJcbiAgICAgICAgICAgICAgICAgIGNsYXNzTmFtZT1cInNjYWxlLTc1XCJcclxuICAgICAgICAgICAgICAgIC8+XHJcbiAgICAgICAgICAgICAgICA8QnV0dG9uIHNpemU9XCJpY29uXCIgdmFyaWFudD1cImdob3N0XCIgY2xhc3NOYW1lPVwiaC04IHctOFwiIG9uQ2xpY2s9eygpID0+IHNldEVkaXRpbmcoYSl9PlxyXG4gICAgICAgICAgICAgICAgICA8RWRpdCBjbGFzc05hbWU9XCJ3LTMuNSBoLTMuNVwiIC8+XHJcbiAgICAgICAgICAgICAgICA8L0J1dHRvbj5cclxuICAgICAgICAgICAgICAgIDxCdXR0b24gc2l6ZT1cImljb25cIiB2YXJpYW50PVwiZ2hvc3RcIiBjbGFzc05hbWU9XCJoLTggdy04IHRleHQtZGVzdHJ1Y3RpdmVcIiBvbkNsaWNrPXsoKSA9PiBkZWwubXV0YXRlKGEuaWQpfT5cclxuICAgICAgICAgICAgICAgICAgPFRyYXNoMiBjbGFzc05hbWU9XCJ3LTMuNSBoLTMuNVwiIC8+XHJcbiAgICAgICAgICAgICAgICA8L0J1dHRvbj5cclxuICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgPC9DYXJkPlxyXG4gICAgICAgICAgKSl9XHJcbiAgICAgICAgPC9kaXY+XHJcbiAgICAgICl9XHJcblxyXG4gICAgICA8QXV0b21hdGlvbkNhbnZhc1xyXG4gICAgICAgIG9wZW49e2NyZWF0aW5nIHx8ICEhZWRpdGluZ31cclxuICAgICAgICBvbkNsb3NlPXsoKSA9PiB7IHNldENyZWF0aW5nKGZhbHNlKTsgc2V0RWRpdGluZyhudWxsKTsgfX1cclxuICAgICAgICBzdG9yZUlkPXtzdG9yZUlkfVxyXG4gICAgICAgIGF1dG9tYXRpb249e2VkaXRpbmd9XHJcbiAgICAgIC8+XHJcbiAgICA8L2Rpdj5cclxuICApO1xyXG59XHJcbiJdLCJuYW1lcyI6WyJ1c2VTdGF0ZSIsIkNhcmQiLCJDYXJkQ29udGVudCIsIkJ1dHRvbiIsIkJhZGdlIiwiU3dpdGNoIiwiUGx1cyIsIlphcCIsIlRyYXNoMiIsIkVkaXQiLCJVc2VycyIsInVzZU1hcmtldGluZ0F1dG9tYXRpb25zIiwidXNlVG9nZ2xlQXV0b21hdGlvblN0YXR1cyIsInVzZURlbGV0ZUF1dG9tYXRpb24iLCJBdXRvbWF0aW9uQ2FudmFzIiwiQXV0b21hdGlvbnNCdWlsZGVyIiwic3RvcmVJZCIsImRhdGEiLCJhdXRvbWF0aW9ucyIsImlzTG9hZGluZyIsInRvZ2dsZSIsImRlbCIsImVkaXRpbmciLCJzZXRFZGl0aW5nIiwiY3JlYXRpbmciLCJzZXRDcmVhdGluZyIsImRpdiIsImNsYXNzTmFtZSIsImgzIiwicCIsImxlbmd0aCIsInJlZHVjZSIsInMiLCJhIiwiZW5yb2xsZWRfY291bnQiLCJzaXplIiwib25DbGljayIsIm1hcCIsImg0IiwibmFtZSIsInZhcmlhbnQiLCJzdGF0dXMiLCJzcGFuIiwidHJpZ2dlcl9qc29uIiwidHlwZSIsInJlcGxhY2UiLCJzdGVwc19qc29uIiwiY2hlY2tlZCIsIm9uQ2hlY2tlZENoYW5nZSIsInYiLCJtdXRhdGUiLCJpZCIsIm9wZW4iLCJvbkNsb3NlIiwiYXV0b21hdGlvbiJdLCJtYXBwaW5ncyI6Ijs7QUFBQTs7Q0FFQyxHQUNELFNBQVNBLFFBQVEsUUFBUSxRQUFRO0FBQ2pDLFNBQVNDLElBQUksRUFB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

@@ -3,7 +3,8 @@
  * Shows full details of a travel order with actions
  */
 import { useState } from "react";
-import { useParams, Link, Navigate } from "react-router-dom";
+import { useParams, Link, Navigate, useLocation } from "react-router-dom";
+import { withRedirectParam } from "@/lib/authRedirect";
 import { format } from "date-fns";
 import {
   ArrowLeft,
@@ -42,6 +43,7 @@ const statusConfig: Record<string, { icon: React.ElementType; label: string; col
 
 export default function TravelOrderDetailPage() {
   const { orderNumber } = useParams<{ orderNumber: string }>();
+  const location = useLocation();
   const { user, isLoading: authLoading } = useAuth();
   const { data: order, isLoading, error } = useTripDetails(orderNumber);
   const { resendConfirmation, isResending } = useOrderActions();
@@ -50,7 +52,8 @@ export default function TravelOrderDetailPage() {
 
   // Redirect to login if not authenticated
   if (!authLoading && !user) {
-    return <Navigate to="/login" replace />;
+    const redirectTarget = `${location.pathname}${location.search ?? ""}`;
+    return <Navigate to={withRedirectParam("/login", redirectTarget)} replace />;
   }
 
   if (isLoading) {
@@ -89,7 +92,7 @@ export default function TravelOrderDetailPage() {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b">
+      <div className="sticky top-0 safe-area-top z-40 bg-background/95 backdrop-blur-sm border-b">
         <div className="container px-4 py-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" asChild aria-label="Back to trips">

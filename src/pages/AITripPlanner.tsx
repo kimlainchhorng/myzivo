@@ -15,30 +15,29 @@ import { Badge } from "@/components/ui/badge";
 import { Slider } from "@/components/ui/slider";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import {
-  Sparkles,
-  MapPin,
-  Calendar as CalendarIcon,
-  Users,
-  DollarSign,
-  Plane,
-  Building2,
-  Compass,
-  ChevronRight,
-  ChevronLeft,
-  Loader2,
-  Share2,
-  Bookmark,
-  Check,
-  Sun,
-  Cloud,
-  Umbrella,
-  Star,
-} from "lucide-react";
+import Sparkles from "lucide-react/dist/esm/icons/sparkles";
+import MapPin from "lucide-react/dist/esm/icons/map-pin";
+import CalendarIcon from "lucide-react/dist/esm/icons/calendar";
+import Users from "lucide-react/dist/esm/icons/users";
+import DollarSign from "lucide-react/dist/esm/icons/dollar-sign";
+import Plane from "lucide-react/dist/esm/icons/plane";
+import Building2 from "lucide-react/dist/esm/icons/building-2";
+import Compass from "lucide-react/dist/esm/icons/compass";
+import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
+import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left";
+import Loader2 from "lucide-react/dist/esm/icons/loader-2";
+import Share2 from "lucide-react/dist/esm/icons/share-2";
+import Bookmark from "lucide-react/dist/esm/icons/bookmark";
+import Check from "lucide-react/dist/esm/icons/check";
+import Sun from "lucide-react/dist/esm/icons/sun";
+import Cloud from "lucide-react/dist/esm/icons/cloud";
+import Umbrella from "lucide-react/dist/esm/icons/umbrella";
+import Star from "lucide-react/dist/esm/icons/star";
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import NavBar from "@/components/home/NavBar";
 import Footer from "@/components/Footer";
+import SEOHead from "@/components/SEOHead";
 
 const interestOptions = [
   { id: "beach", label: "Beach & Relaxation", icon: Sun },
@@ -387,10 +386,10 @@ const AITripPlanner = () => {
                             <><Bookmark className="w-4 h-4" /> Save as Trip</>
                           )}
                         </Button>
-                        <Button variant="outline" size="icon" onClick={() => navigate(`/flights?to=${suggestion.airportCode}`)}>
+                        <Button aria-label="Search flights" variant="outline" size="icon" onClick={() => navigate(`/flights?to=${suggestion.airportCode}`)}>
                           <Plane className="w-4 h-4" />
                         </Button>
-                        <Button variant="outline" size="icon">
+                        <Button aria-label="Share" variant="outline" size="icon">
                           <Share2 className="w-4 h-4" />
                         </Button>
                       </div>
@@ -415,6 +414,18 @@ const AITripPlanner = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="AI Trip Planner – ZIVO | Plan Your Perfect Trip"
+        description="Use ZIVO's AI to discover personalized travel destinations, plan itineraries, and book everything in one place."
+        canonical="/ai-trip-planner"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "WebApplication",
+          "name": "ZIVO AI Trip Planner",
+          "description": "AI-powered travel planning",
+          "applicationCategory": "TravelApplication"
+        }}
+      />
       <NavBar />
       
       <main className="pt-24 pb-16">

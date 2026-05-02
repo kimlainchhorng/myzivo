@@ -3,6 +3,7 @@ import { createPortal } from "react-dom";
 import { cn } from "@/lib/utils";
 import { ChevronDown } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { buildPhoneE164, normalizePhoneDigits } from "@/lib/phone";
 
 interface CountryCode {
   code: string;
@@ -141,16 +142,27 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
   const rootRef = useRef<HTMLDivElement>(null);
   const searchRef = useRef<HTMLInputElement>(null);
 
+  // Sync external value prop → internal localNumber (only on external changes)
+  const lastEmittedRef = useRef<string>("");
+
   useEffect(() => {
-    if (value && !localNumber) {
-      const sorted = [...COUNTRY_CODES].sort((a, b) => b.dial.length - a.dial.length);
-      const match = sorted.find((country) => value.startsWith(country.dial));
-      if (match) {
-        setSelectedCountry(match);
-        setLocalNumber(value.slice(match.dial.length).trim());
-      }
+    // Skip if this value was emitted by us (avoid loop)
+    if (value === lastEmittedRef.current) return;
+
+    if (!value) {
+      setLocalNumber("");
+      return;
     }
-  }, [value, localNumber]);
+
+    const sorted = [...COUNTRY_CODES].sort((a, b) => b.dial.length - a.dial.length);
+    const match = sorted.find((country) => value.startsWith(country.dial));
+
+    if (match) {
+      const incomingLocalNumber = value.slice(match.dial.length).trim();
+      setSelectedCountry(match);
+      setLocalNumber(incomingLocalNumber);
+    }
+  }, [value]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -180,14 +192,22 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
 
   const handleCountrySelect = (country: CountryCode) => {
     setSelectedCountry(country);
-    onChange(`${country.dial}${localNumber}`);
+    const e164 = buildPhoneE164(country.dial, localNumber);
+    lastEmittedRef.current = e164;
+    onChange(e164);
     closeDropdown();
   };
 
   const handleNumberChange = (num: string) => {
-    const cleaned = num.replace(/[^\d\s\-]/g, "");
+    const cleaned = num
+      .normalize("NFKD")
+      .replace(/[０-９]/g, (digit) => String.fromCharCode(digit.charCodeAt(0) - 65248))
+      .replace(/[^\d\s\-]/g, "");
+
     setLocalNumber(cleaned);
-    onChange(`${selectedCountry.dial}${cleaned}`);
+    const e164 = buildPhoneE164(selectedCountry.dial, cleaned);
+    lastEmittedRef.current = e164;
+    onChange(e164);
   };
 
   const filtered = search
@@ -316,7 +336,7 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
         <button
           type="button"
           onClick={() => setIsOpen((open) => !open)}
-          className="flex shrink-0 items-center gap-2 rounded-l-xl border border-border bg-muted/50 px-3 py-2 text-sm text-foreground backdrop-blur-sm transition-all touch-manipulation active:scale-[0.97] hover:bg-muted"
+          className="flex shrink-0 items-center gap-2 rounded-l-xl border border-border bg-muted/50 px-3 py-2 text-sm text-foreground transition-all touch-manipulation active:scale-[0.97] hover:bg-muted"
         >
           <FlagImg src={selectedCountry.flag} alt={selectedCountry.name} size={24} />
           <span className="text-xs font-semibold tracking-tight text-foreground/70">{selectedCountry.dial}</span>
@@ -325,13 +345,25 @@ export function CountryPhoneInput({ value, onChange, onBlur, name }: CountryPhon
 
         <input
           type="tel"
+          inputMode="numeric"
+          autoCapitalize="off"
+          autoCorrect="off"
+          spellCheck={false}
           name={name}
           placeholder={selectedCountry.placeholder}
-          autoComplete="tel-national"
+          autoComplete="off"
           value={localNumber}
           onChange={(e) => handleNumberChange(e.target.value)}
+          onInput={(e) => {
+            // Catch browser autofill / iOS paste that may bypass React onChange
+            const target = e.target as HTMLInputElement;
+            if (target.value !== localNumber) {
+              handleNumberChange(target.value);
+            }
+          }}
           onBlur={onBlur}
-          className="w-full rounded-r-xl border border-border border-l-0 bg-muted/50 py-2 pl-2 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary transition-all backdrop-blur-sm"
+          className="w-full rounded-r-xl border border-border border-l-0 bg-muted/50 py-2 pl-2 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:border-transparent focus:outline-none focus:ring-2 focus:ring-primary transition-all"
+          style={{ WebkitAppearance: "none" }}
         />
       </div>
 

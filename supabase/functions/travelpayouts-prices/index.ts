@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { serve, createClient } from "../_shared/deps.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -8,6 +8,23 @@ const corsHeaders = {
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return new Response(JSON.stringify({ success: false, error: "Authentication required", data: [] }), {
+      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
+  }
+  const { data: { user }, error: authErr } = await createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+    { global: { headers: { Authorization: authHeader } } }
+  ).auth.getUser();
+  if (authErr || !user) {
+    return new Response(JSON.stringify({ success: false, error: "Authentication required", data: [] }), {
+      status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    });
   }
 
   try {
@@ -57,14 +74,45 @@ serve(async (req) => {
 
     console.log(`[travelpayouts-prices] Fetching: ${origin} → ${destination}, depart: ${depart_date || 'any'}`);
 
-    const response = await fetch(url);
+    // Retry transient network errors (Travelpayouts occasionally resets the connection)
+    const fetchWithRetry = async (attempts = 3): Promise<Response> => {
+      let lastErr: unknown;
+      for (let i = 0; i < attempts; i++) {
+        try {
+          const ctrl = new AbortController();
+          const timeout = setTimeout(() => ctrl.abort(), 10_000);
+          const res = await fetch(url, { signal: ctrl.signal });
+          clearTimeout(timeout);
+          return res;
+        } catch (e) {
+          lastErr = e;
+          console.warn(`[travelpayouts-prices] fetch attempt ${i + 1} failed:`, (e as Error)?.message);
+          await new Promise((r) => setTimeout(r, 300 * (i + 1)));
+        }
+      }
+      throw lastErr;
+    };
+
+    let response: Response;
+    try {
+      response = await fetchWithRetry(3);
+    } catch (e) {
+      const message = e instanceof Error ? e.message : 'Network error';
+      console.error('[travelpayouts-prices] Network failure after retries:', message);
+      // Return 200 with fallback flag so the client SDK reads the body cleanly
+      return new Response(
+        JSON.stringify({ success: false, fallback: true, error: 'SERVICE_UNAVAILABLE', details: message, data: [] }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     const data = await response.json();
 
     if (!response.ok || !data.success) {
       console.error('[travelpayouts-prices] API error:', JSON.stringify(data));
       return new Response(
-        JSON.stringify({ success: false, error: 'Travelpayouts API error', details: data }),
-        { status: 502, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        JSON.stringify({ success: false, fallback: true, error: 'Travelpayouts API error', details: data, data: [] }),
+        { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
       );
     }
 
@@ -79,11 +127,11 @@ serve(async (req) => {
       flightNumber: ticket.flight_number,
       departureAt: ticket.departure_at,
       returnAt: ticket.return_at,
-      transfers: ticket.transfers, // number of stops
-      duration: ticket.duration, // in minutes
+      transfers: ticket.transfers,
+      duration: ticket.duration,
       durationTo: ticket.duration_to,
       durationBack: ticket.duration_back,
-      link: ticket.link, // Aviasales deep link code
+      link: ticket.link,
     }));
 
     console.log(`[travelpayouts-prices] Found ${prices.length} prices for ${origin} → ${destination}`);
@@ -95,9 +143,10 @@ serve(async (req) => {
   } catch (error) {
     console.error('[travelpayouts-prices] Error:', error);
     const message = error instanceof Error ? error.message : 'Unknown error';
+    // Always return 200 so the frontend doesn't blank-screen on a 500
     return new Response(
-      JSON.stringify({ success: false, error: message }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      JSON.stringify({ success: false, fallback: true, error: message, data: [] }),
+      { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
   }
 });

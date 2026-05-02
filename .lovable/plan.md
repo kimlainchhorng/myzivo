@@ -1,38 +1,36 @@
+## Problem
 
+In both Feed (`/feed`) and Reel (`/reels`), only posts from one store ("Mommy Seafood") show up. Posts from other people are missing.
 
-## Fix: Duplicate Blue Check Icons in Fare Carousel
+## Root cause
 
-### Root Cause Analysis
+The Feed and Reel pages query the `user_posts` table and select a `location` column. That column does not exist in the database. Supabase returns a 400 error, so the entire `user_posts` fetch fails and only `store_posts` render.
 
-After auditing the code, the check icon is rendered in exactly one place (line 480-496) and is gated by `isSelected = variant.id === selectedFareId`. The logic is correct. The duplicate check is caused by one of two things:
+Verified directly:
+- `SELECT location FROM user_posts` → `ERROR: column "location" does not exist`
+- DB has 17 published `user_posts` from 10 different authors that should be showing.
+- The Create Post modal also writes `location` and `visibility` to `user_posts`, both of which are missing — so any post created with a location or non-default visibility silently loses that data (or fails when the column is required).
 
-1. **AnimatePresence exit overlap**: Each card has its own `<AnimatePresence>` wrapping the check. When switching selection, the old card's check plays an exit animation (spring with stiffness 500, damping 22 — can take ~300ms+) while the new card's check plays an enter animation. During this window, two checks are visible simultaneously.
+Affected reads:
+- `src/pages/ReelsFeedPage.tsx` line ~516 (selects `location`)
+- `src/pages/FeedPage.tsx` lines ~482 and ~3482 (select `location`)
+Affected write:
+- `src/components/social/CreatePostModal.tsx` line ~331 (writes `location`), and `visibility` is always written.
 
-2. **Possible duplicate variant IDs in the array**: The `mergeFareVariants` dedup has two passes (content-key then ID) but edge cases in the recovery/stored/live merge could still produce duplicates if `buildFareVariantKey` produces different keys for variants that share the same `id`.
+## Fix
 
-### Plan
+Add the missing columns to `user_posts` so the existing read/write code works as designed.
 
-#### 1. Eliminate AnimatePresence exit overlap on check icon (`FareVariantsCard.tsx`)
-- Remove `AnimatePresence` around the check icon entirely
-- Use a simple conditional render: `{isSelected && <div>...</div>}` — no exit animation
-- This guarantees zero frames where two checks coexist
-- Keep the enter animation if desired via a simple `motion.div` with `initial`/`animate` but no `exit`
+```text
+ALTER TABLE public.user_posts
+  ADD COLUMN IF NOT EXISTS location text,
+  ADD COLUMN IF NOT EXISTS visibility text NOT NULL DEFAULT 'public';
+```
 
-#### 2. Final dedup safety in the render loop (`FareVariantsCard.tsx`)
-- Before mapping `filteredVariants`, add a final dedup by `variant.id`:
-  ```
-  const uniqueVariants = filteredVariants.filter(
-    (v, i, arr) => arr.findIndex(x => x.id === v.id) === i
-  );
-  ```
-- Map over `uniqueVariants` instead of `filteredVariants`
-- Use `key={`fare-${variant.id}`}` (drop the index suffix since IDs are now guaranteed unique)
+That's the only change needed. No frontend changes required — once the columns exist, the user_posts query stops 400-ing and posts from all 10 authors (xixi24362, rarest_fact, MD Movie, AB Complete Car Care, ZIVO Platform, Nerissa, secon_de_gold, vivienne, Shiela Vidal, carajasan.rej) will show up alongside the store posts in both Feed and Reel.
 
-#### 3. Also remove AnimatePresence from the shine and glow bar
-- The shine effect (line 413-427) and glow bar (line 430-444) also use AnimatePresence with exit animations
-- These can also briefly show on two cards during transitions
-- Replace with simple conditional renders gated only by `isSelected`
+## Verification after fix
 
-#### Files
-- `src/components/flight/review/FareVariantsCard.tsx` — all changes are here
-
+1. Reload `/feed` — list shows posts from many authors, not just Mommy Seafood.
+2. Reload `/reels` — vertical scroller shows multiple authors.
+3. Create a new post with a location pin — location persists.

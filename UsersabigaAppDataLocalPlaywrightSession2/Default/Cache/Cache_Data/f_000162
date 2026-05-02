@@ -1,0 +1,251 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/admin/marketing/SendTestDialog.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+var _s = $RefreshSig$();
+/**
+ * SendTestDialog — quick test-send for a specific marketing channel to the operator's account.
+ */ import __vite__cjsImport1_react from "/node_modules/.vite/deps/react.js?v=7fd9520c"; const useState = __vite__cjsImport1_react["useState"];
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "/src/components/ui/dialog.tsx";
+import { Button } from "/src/components/ui/button.tsx";
+import { Input } from "/src/components/ui/input.tsx";
+import { Label } from "/src/components/ui/label.tsx";
+import { Textarea } from "/src/components/ui/textarea.tsx";
+import { Loader2, Send } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+import { supabase } from "/src/integrations/supabase/client.ts";
+import { toast } from "/node_modules/.vite/deps/sonner.js?v=7fd9520c";
+const CHANNEL_LABELS = {
+    push: "Push notification",
+    email: "Email",
+    sms: "SMS",
+    inapp: "In-app banner"
+};
+export default function SendTestDialog({ open, onClose, storeId, channel }) {
+    _s();
+    const [title, setTitle] = useState(`[TEST] ${CHANNEL_LABELS[channel]}`);
+    const [body, setBody] = useState("This is a test message from your store.");
+    const [sending, setSending] = useState(false);
+    const handleSend = async ()=>{
+        setSending(true);
+        try {
+            const { data: userData } = await supabase.auth.getUser();
+            const userId = userData.user?.id;
+            if (!userId) throw new Error("Not authenticated");
+            // Create ephemeral test campaign and immediately invoke the send fn in test mode
+            const channelFlags = {
+                push_enabled: channel === "push" || channel === "inapp",
+                email_enabled: channel === "email",
+                sms_enabled: channel === "sms"
+            };
+            const { data: campaign, error: campErr } = await supabase.from("marketing_campaigns").insert({
+                name: `Test ${channel} ${new Date().toISOString()}`,
+                campaign_type: "test",
+                target_restaurant_id: storeId,
+                notification_title: title,
+                notification_body: body,
+                message: body,
+                sms_message: channel === "sms" ? body : null,
+                ...channelFlags,
+                status: "draft",
+                created_by: userId
+            }).select("id").single();
+            if (campErr) throw campErr;
+            const { error: invokeErr } = await supabase.functions.invoke("send-marketing-campaign", {
+                body: {
+                    campaign_id: campaign.id,
+                    is_test: true,
+                    test_recipient_user_id: userId
+                }
+            });
+            if (invokeErr) throw invokeErr;
+            toast.success("Test sent to your account");
+            onClose();
+        } catch (e) {
+            toast.error(e.message || "Failed to send test");
+        } finally{
+            setSending(false);
+        }
+    };
+    return /*#__PURE__*/ _jsxDEV(Dialog, {
+        open: open,
+        onOpenChange: (o)=>!o && onClose(),
+        children: /*#__PURE__*/ _jsxDEV(DialogContent, {
+            className: "max-w-md",
+            children: [
+                /*#__PURE__*/ _jsxDEV(DialogHeader, {
+                    children: /*#__PURE__*/ _jsxDEV(DialogTitle, {
+                        children: [
+                            "Send test ",
+                            CHANNEL_LABELS[channel]
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SendTestDialog.tsx",
+                        lineNumber: 90,
+                        columnNumber: 11
+                    }, this)
+                }, void 0, false, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SendTestDialog.tsx",
+                    lineNumber: 89,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ _jsxDEV("div", {
+                    className: "space-y-3 py-2",
+                    children: [
+                        (channel === "push" || channel === "email" || channel === "inapp") && /*#__PURE__*/ _jsxDEV("div", {
+                            children: [
+                                /*#__PURE__*/ _jsxDEV(Label, {
+                                    className: "text-xs",
+                                    children: "Title"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SendTestDialog.tsx",
+                                    lineNumber: 95,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV(Input, {
+                                    value: title,
+                                    onChange: (e)=>setTitle(e.target.value),
+                                    className: "mt-1 h-9"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SendTestDialog.tsx",
+                                    lineNumber: 96,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SendTestDialog.tsx",
+                            lineNumber: 94,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            children: [
+                                /*#__PURE__*/ _jsxDEV(Label, {
+                                    className: "text-xs",
+                                    children: "Message"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SendTestDialog.tsx",
+                                    lineNumber: 104,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV(Textarea, {
+                                    value: body,
+                                    onChange: (e)=>setBody(e.target.value),
+                                    rows: 3,
+                                    className: "mt-1"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SendTestDialog.tsx",
+                                    lineNumber: 105,
+                                    columnNumber: 13
+                                }, this),
+                                channel === "sms" && /*#__PURE__*/ _jsxDEV("p", {
+                                    className: "text-[10px] text-muted-foreground mt-1",
+                                    children: [
+                                        body.length,
+                                        "/160 chars · ",
+                                        Math.ceil(body.length / 160),
+                                        " segment",
+                                        Math.ceil(body.length / 160) === 1 ? "" : "s"
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SendTestDialog.tsx",
+                                    lineNumber: 112,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SendTestDialog.tsx",
+                            lineNumber: 103,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("p", {
+                            className: "text-[11px] text-muted-foreground",
+                            children: "Test will be delivered only to your own account."
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SendTestDialog.tsx",
+                            lineNumber: 118,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SendTestDialog.tsx",
+                    lineNumber: 92,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ _jsxDEV(DialogFooter, {
+                    children: [
+                        /*#__PURE__*/ _jsxDEV(Button, {
+                            variant: "ghost",
+                            onClick: onClose,
+                            disabled: sending,
+                            children: "Cancel"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SendTestDialog.tsx",
+                            lineNumber: 123,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV(Button, {
+                            onClick: handleSend,
+                            disabled: sending || !body.trim(),
+                            children: [
+                                sending ? /*#__PURE__*/ _jsxDEV(Loader2, {
+                                    className: "w-4 h-4 mr-2 animate-spin"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SendTestDialog.tsx",
+                                    lineNumber: 128,
+                                    columnNumber: 15
+                                }, this) : /*#__PURE__*/ _jsxDEV(Send, {
+                                    className: "w-4 h-4 mr-2"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SendTestDialog.tsx",
+                                    lineNumber: 130,
+                                    columnNumber: 15
+                                }, this),
+                                "Send test"
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SendTestDialog.tsx",
+                            lineNumber: 126,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SendTestDialog.tsx",
+                    lineNumber: 122,
+                    columnNumber: 9
+                }, this)
+            ]
+        }, void 0, true, {
+            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SendTestDialog.tsx",
+            lineNumber: 88,
+            columnNumber: 7
+        }, this)
+    }, void 0, false, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SendTestDialog.tsx",
+        lineNumber: 87,
+        columnNumber: 5
+    }, this);
+}
+_s(SendTestDialog, "roo7mJSbEhcjSjRp0HfBurs5k9M=");
+_c = SendTestDialog;
+var _c;
+$RefreshReg$(_c, "SendTestDialog");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SendTestDialog.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SendTestDialog.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/SendTestDialog.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIlNlbmRUZXN0RGlhbG9nLnRzeCJdLCJzb3VyY2VzQ29udGVudCI6WyIvKipcclxuICogU2VuZFRlc3REaWFsb2cg4oCUIHF1aWNrIHRlc3Qtc2VuZCBmb3IgYSBzcGVjaWZpYyBtYXJrZXRpbmcgY2hhbm5lbCB0byB0aGUgb3BlcmF0b3IncyBhY2NvdW50LlxyXG4gKi9cclxuaW1wb3J0IHsgdXNlU3RhdGUgfSBmcm9tIFwicmVhY3RcIjtcclxuaW1wb3J0IHsgRGlhbG9nLCBEaWFsb2dDb250ZW50LCBEaWFsb2dIZWFkZXIsIERpYWxvZ1RpdGxlLCBEaWFsb2dGb290ZXIgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2RpYWxvZ1wiO1xyXG5pbXBvcnQgeyBCdXR0b24gfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2J1dHRvblwiO1xyXG5pbXBvcnQgeyBJbnB1dCB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvaW5wdXRcIjtcclxuaW1wb3J0IHsgTGFiZWwgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2xhYmVsXCI7XHJcbmltcG9ydCB7IFRleHRhcmVhIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS90ZXh0YXJlYVwiO1xyXG5pbXBvcnQgeyBMb2FkZXIyLCBTZW5kIH0gZnJvbSBcImx1Y2lkZS1yZWFjdFwiO1xyXG5pbXBvcnQgeyBzdXBhYmFzZSB9IGZyb20gXCJAL2ludGVncmF0aW9ucy9zdXBhYmFzZS9jbGllbnRcIjtcclxuaW1wb3J0IHsgdG9hc3QgfSBmcm9tIFwic29ubmVyXCI7XHJcblxyXG5pbnRlcmZhY2UgUHJvcHMge1xyXG4gIG9wZW46IGJvb2xlYW47XHJcbiAgb25DbG9zZTogKCkgPT4gdm9pZDtcclxuICBzdG9yZUlkOiBzdHJpbmc7XHJcbiAgY2hhbm5lbDogXCJwdXNoXCIgfCBcImVtYWlsXCIgfCBcInNtc1wiIHwgXCJpbmFwcFwiO1xyXG59XHJcblxyXG5jb25zdCBDSEFOTkVMX0xBQkVMUyA9IHtcclxuICBwdXNoOiBcIlB1c2ggbm90aWZpY2F0aW9uXCIsXHJcbiAgZW1haWw6IFwiRW1haWxcIixcclxuICBzbXM6IFwiU01TXCIsXHJcbiAgaW5hcHA6IFwiSW4tYXBwIGJhbm5lclwiLFxyXG59O1xyXG5cclxuZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gU2VuZFRlc3REaWFsb2coeyBvcGVuLCBvbkNsb3NlLCBzdG9yZUlkLCBjaGFubmVsIH06IFByb3BzKSB7XHJcbiAgY29uc3QgW3RpdGxlLCBzZXRUaXRsZV0gPSB1c2VTdGF0ZShgW1RFU1RdICR7Q0hBTk5FTF9MQUJFTFNbY2hhbm5lbF19YCk7XHJcbiAgY29uc3QgW2JvZHksIHNldEJvZHldID0gdXNlU3RhdGUoXCJUaGlzIGlzIGEgdGVzdCBtZXNzYWdlIGZyb20geW91ciBzdG9yZS5cIik7XHJcbiAgY29uc3QgW3NlbmRpbmcsIHNldFNlbmRpbmddID0gdXNlU3RhdGUoZmFsc2UpO1xyXG5cclxuICBjb25zdCBoYW5kbGVTZW5kID0gYXN5bmMgKCkgPT4ge1xyXG4gICAgc2V0U2VuZGluZyh0cnVlKTtcclxuICAgIHRyeSB7XHJcbiAgICAgIGNvbnN0IHsgZGF0YTogdXNlckRhdGEgfSA9IGF3YWl0IHN1cGFiYXNlLmF1dGguZ2V0VXNlcigpO1xyXG4gICAgICBjb25zdCB1c2VySWQgPSB1c2VyRGF0YS51c2VyPy5pZDtcclxuICAgICAgaWYgKCF1c2VySWQpIHRocm93IG5ldyBFcnJvcihcIk5vdCBhdXRoZW50aWNhdGVkXCIpO1xyXG5cclxuICAgICAgLy8gQ3JlYXRlIGVwaGVtZXJhbCB0ZXN0IGNhbXBhaWduIGFuZCBpbW1lZGlhdGVseSBpbnZva2UgdGhlIHNlbmQgZm4gaW4gdGVzdCBtb2RlXHJcbiAgICAgIGNvbnN0IGNoYW5uZWxGbGFncyA9IHtcclxuICAgICAgICBwdXNoX2VuYWJsZWQ6IGNoYW5uZWwgPT09IFwicHVzaFwiIHx8IGNoYW5uZWwgPT09IFwiaW5hcHBcIixcclxuICAgICAgICBlbWFpbF9lbmFibGVkOiBjaGFubmVsID09PSBcImVtYWlsXCIsXHJcbiAgICAgICAgc21zX2VuYWJsZWQ6IGNoYW5uZWwgPT09IFwic21zXCIsXHJcbiAgICAgIH07XHJcblxyXG4gICAgICBjb25zdCB7IGRhdGE6IGNhbXBhaWduLCBlcnJvcjogY2FtcEVyciB9ID0gYXdhaXQgc3VwYWJhc2VcclxuICAgICAgICAuZnJvbShcIm1hcmtldGluZ19jYW1wYWlnbnNcIilcclxuICAgICAgICAuaW5zZXJ0KHtcclxuICAgICAgICAgIG5hbWU6IGBUZXN0ICR7Y2hhbm5lbH0gJHtuZXcgRGF0ZSgpLnRvSVNPU3RyaW5nKCl9YCxcclxuICAgICAgICAgIGNhbXBhaWduX3R5cGU6IFwidGVzdFwiLFxyXG4gICAgICAgICAgdGFyZ2V0X3Jlc3RhdXJhbnRfaWQ6IHN0b3JlSWQsXHJcbiAgICAgICAgICBub3RpZmljYXRpb25fdGl0bGU6IHRpdGxlLFxyXG4gICAgICAgICAgbm90aWZpY2F0aW9uX2JvZHk6IGJvZHksXHJcbiAgICAgICAgICBtZXNzYWdlOiBib2R5LFxyXG4gICAgICAgICAgc21zX21lc3NhZ2U6IGNoYW5uZWwgPT09IFwic21zXCIgPyBib2R5IDogbnVsbCxcclxuICAgICAgICAgIC4uLmNoYW5uZWxGbGFncyxcclxuICAgICAgICAgIHN0YXR1czogXCJkcmFmdFwiLFxyXG4gICAgICAgICAgY3JlYXRlZF9ieTogdXNlcklkLFxyXG4gICAgICAgIH0pXHJcbiAgICAgICAgLnNlbGVjdChcImlkXCIpXHJcbiAgICAgICAgLnNpbmdsZSgpO1xyXG4gICAgICBpZiAoY2FtcEVycikgdGhyb3cgY2FtcEVycjtcclxuXHJcbiAgICAgIGNvbnN0IHsgZXJyb3I6IGludm9rZUVyciB9ID0gYXdhaXQgc3VwYWJhc2UuZnVuY3Rpb25zLmludm9rZShcclxuICAgICAgICBcInNlbmQtbWFya2V0aW5nLWNhbXBhaWduXCIsXHJcbiAgICAgICAge1xyXG4gICAgICAgICAgYm9keToge1xyXG4gICAgICAgICAgICBjYW1wYWlnbl9pZDogY2FtcGFpZ24uaWQsXHJcbiAgICAgICAgICAgIGlzX3Rlc3Q6IHRydWUsXHJcbiAgICAgICAgICAgIHRlc3RfcmVjaXBpZW50X3VzZXJfaWQ6IHVzZXJJZCxcclxuICAgICAgICAgIH0sXHJcbiAgICAgICAgfVxyXG4gICAgICApO1xyXG4gICAgICBpZiAoaW52b2tlRXJyKSB0aHJvdyBpbnZva2VFcnI7XHJcblxyXG4gICAgICB0b2FzdC5zdWNjZXNzKFwiVGVzdCBzZW50IHRvIHlvdXIgYWNjb3VudFwiKTtcclxuICAgICAgb25DbG9zZSgpO1xyXG4gICAgfSBjYXRjaCAoZTogYW55KSB7XHJcbiAgICAgIHRvYXN0LmVycm9yKGUubWVzc2FnZSB8fCBcIkZhaWxlZCB0byBzZW5kIHRlc3RcIik7XHJcbiAgICB9IGZpbmFsbHkge1xyXG4gICAgICBzZXRTZW5kaW5nKGZhbHNlKTtcclxuICAgIH1cclxuICB9O1xyXG5cclxuICByZXR1cm4gKFxyXG4gICAgPERpYWxvZyBvcGVuPXtvcGVufSBvbk9wZW5DaGFuZ2U9eyhvKSA9PiAhbyAmJiBvbkNsb3NlKCl9PlxyXG4gICAgICA8RGlhbG9nQ29udGVudCBjbGFzc05hbWU9XCJtYXgtdy1tZFwiPlxyXG4gICAgICAgIDxEaWFsb2dIZWFkZXI+XHJcbiAgICAgICAgICA8RGlhbG9nVGl0bGU+U2VuZCB0ZXN0IHtDSEFOTkVMX0xBQkVMU1tjaGFubmVsXX08L0RpYWxvZ1RpdGxlPlxyXG4gICAgICAgIDwvRGlhbG9nSGVhZGVyPlxyXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS0zIHB5LTJcIj5cclxuICAgICAgICAgIHsoY2hhbm5lbCA9PT0gXCJwdXNoXCIgfHwgY2hhbm5lbCA9PT0gXCJlbWFpbFwiIHx8IGNoYW5uZWwgPT09IFwiaW5hcHBcIikgJiYgKFxyXG4gICAgICAgICAgICA8ZGl2PlxyXG4gICAgICAgICAgICAgIDxMYWJlbCBjbGFzc05hbWU9XCJ0ZXh0LXhzXCI+VGl0bGU8L0xhYmVsPlxyXG4gICAgICAgICAgICAgIDxJbnB1dFxyXG4gICAgICAgICAgICAgICAgdmFsdWU9e3RpdGxlfVxyXG4gICAgICAgICAgICAgICAgb25DaGFuZ2U9eyhlKSA9PiBzZXRUaXRsZShlLnRhcmdldC52YWx1ZSl9XHJcbiAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJtdC0xIGgtOVwiXHJcbiAgICAgICAgICAgICAgLz5cclxuICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICApfVxyXG4gICAgICAgICAgPGRpdj5cclxuICAgICAgICAgICAgPExhYmVsIGNsYXNzTmFtZT1cInRleHQteHNcIj5NZXNzYWdlPC9MYWJlbD5cclxuICAgICAgICAgICAgPFRleHRhcmVhXHJcbiAgICAgICAgICAgICAgdmFsdWU9e2JvZHl9XHJcbiAgICAgICAgICAgICAgb25DaGFuZ2U9eyhlKSA9PiBzZXRCb2R5KGUudGFyZ2V0LnZhbHVlKX1cclxuICAgICAgICAgICAgICByb3dzPXszfVxyXG4gICAgICAgICAgICAgIGNsYXNzTmFtZT1cIm10LTFcIlxyXG4gICAgICAgICAgICAvPlxyXG4gICAgICAgICAgICB7Y2hhbm5lbCA9PT0gXCJzbXNcIiAmJiAoXHJcbiAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1bMTBweF0gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIG10LTFcIj5cclxuICAgICAgICAgICAgICAgIHtib2R5Lmxlbmd0aH0vMTYwIGNoYXJzIMK3IHtNYXRoLmNlaWwoYm9keS5sZW5ndGggLyAxNjApfSBzZWdtZW50XHJcbiAgICAgICAgICAgICAgICB7TWF0aC5jZWlsKGJvZHkubGVuZ3RoIC8gMTYwKSA9PT0gMSA/IFwiXCIgOiBcInNcIn1cclxuICAgICAgICAgICAgICA8L3A+XHJcbiAgICAgICAgICAgICl9XHJcbiAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtWzExcHhdIHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiPlxyXG4gICAgICAgICAgICBUZXN0IHdpbGwgYmUgZGVsaXZlcmVkIG9ubHkgdG8geW91ciBvd24gYWNjb3VudC5cclxuICAgICAgICAgIDwvcD5cclxuICAgICAgICA8L2Rpdj5cclxuICAgICAgICA8RGlhbG9nRm9vdGVyPlxyXG4gICAgICAgICAgPEJ1dHRvbiB2YXJpYW50PVwiZ2hvc3RcIiBvbkNsaWNrPXtvbkNsb3NlfSBkaXNhYmxlZD17c2VuZGluZ30+XHJcbiAgICAgICAgICAgIENhbmNlbFxyXG4gICAgICAgICAgPC9CdXR0b24+XHJcbiAgICAgICAgICA8QnV0dG9uIG9uQ2xpY2s9e2hhbmRsZVNlbmR9IGRpc2FibGVkPXtzZW5kaW5nIHx8ICFib2R5LnRyaW0oKX0+XHJcbiAgICAgICAgICAgIHtzZW5kaW5nID8gKFxyXG4gICAgICAgICAgICAgIDxMb2FkZXIyIGNsYXNzTmFtZT1cInctNCBoLTQgbXItMiBhbmltYXRlLXNwaW5cIiAvPlxyXG4gICAgICAgICAgICApIDogKFxyXG4gICAgICAgICAgICAgIDxTZW5kIGNsYXNzTmFtZT1cInctNCBoLTQgbXItMlwiIC8+XHJcbiAgICAgICAgICAgICl9XHJcbiAgICAgICAgICAgIFNlbmQgdGVzdFxyXG4gICAgICAgICAgPC9CdXR0b24+XHJcbiAgICAgICAgPC9EaWFsb2dGb290ZXI+XHJcbiAgICAgIDwvRGlhbG9nQ29udGVudD5cclxuICAgIDwvRGlhbG9nPlxyXG4gICk7XHJcbn1cclxuIl0sIm5hbWVzIjpbInVzZVN0YXRlIiwiRGlhbG9nIiwiRGlhbG9nQ29udGVudCIsIkRpYWxvZ0hlYWRlciIsIkRpYWxvZ1RpdGxlIiwiRGlhbG9nRm9vdGVyIiwiQnV0dG9uIiwiSW5wdXQiLCJMYWJlbCIsIlRleHRhcmVhIiwiTG9hZGVyMiIsIlNlbmQiLCJzdXBhYmFzZSIsInRvYXN0IiwiQ0hBTk5FTF9MQUJFTFMiLCJwdXNoIiwiZW1haWwiLCJzbXMiLCJpbmFwcCIsIlNlbmRUZXN0RGlhbG9nIiwib3BlbiIsIm9uQ2xvc2UiLCJzdG9yZUlkIiwiY2hhbm5lbCIsInRpdGxlIiwic2V0VGl0bGUiLCJib2R5Iiwic2V0Qm9keSIsInNlbmRpbmciLCJzZXRTZW5kaW5nIiwiaGFuZGxlU2VuZCIsImRhdGEiLCJ1c2VyRGF0YSIsImF1dGgiLCJnZXRVc2VyIiwidXNlcklkIiwidXNlciIsImlkIiwiRXJyb3IiLCJjaGFubmVsRmxhZ3MiLCJwdXNoX2VuYWJsZWQiLCJlbWFpbF9lbmFibGVkIiwic21zX2VuYWJsZWQiLCJjYW1wYWlnbiIsImVycm9yIiwiY2FtcEVyciIsImZyb20iLCJpbnNlcnQiLCJuYW1lIiwiRGF0ZSIsInRvSVNPU3RyaW5nIiwiY2FtcGFpZ25fdHlwZSIsInRhcmdldF9yZXN0YXVyYW50X2lkIiwibm90aWZpY2F0aW9uX3RpdGxlIiwibm90aWZpY2F0aW9uX2JvZHkiLCJtZXNzYWdlIiwic21zX21lc3NhZ2UiLCJzdGF0dXMiLCJjcmVhdGVkX2J5Iiwic2VsZWN0Iiwic2luZ2xlIiwiaW52b2tlRXJyIiwiZnVuY3Rpb25zIiwiaW52b2tlIiwiY2FtcGFpZ25faWQiLCJpc190ZXN0IiwidGVzdF9yZWNpcGllbnRfdXNlcl9pZCIsInN1Y2Nlc3MiLCJlIiwib25PcGVuQ2hhbmdlIiwibyIsImNsYXNzTmFtZSIsImRpdiIsInZhbHVlIiwib25DaGFuZ2UiLCJ0YXJnZXQiLCJyb3dzIiwicCIsImxlbmd0aCIsIk1hdGgiLCJjZWlsIiwidmFyaWFudCIsIm9uQ2xpY2siLCJkaXNhYmxlZCIsInRyaW0iXSwibWFwcGluZ3MiOiI7O0FBQUE7O0NBRUMsR0FDRCxTQUFTQSxRQUFRLFFBQVEsUUFBUTtBQUNqQyxTQUFTQyxNQUFNLEVBQUVDLGFBQWEsRUFBRUMsWUFBWSxFQUFFQyxXQUFXLEVBQUVDLFlBQVksUUFBUSx5QkFBeUI7QUFDeEcsU0FBU0MsTUFBTSxRQUFRLHlCQUF5QjtBQUNoRCxTQUFTQyxLQUFLLFFBQVEsd0JBQXdCO0FBQzlDLFNBQVNDLEtBQUssUUFBUSx3QkFBd0I7QUFDOUMsU0FBU0MsUUFBUSxRQUFRLDJCQUEyQjtBQUNwRCxTQUFTQyxPQUFPLEVBQUVDLElBQUksUUFBUSxlQUFlO0FBQzdDLFNBQVNDLFFB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

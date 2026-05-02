@@ -30,6 +30,7 @@ import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import { getAirportByCode } from "@/data/airports";
 import { cn } from "@/lib/utils";
 import DuffelFlightCard from "@/components/flight/DuffelFlightCard";
+import FlightCompareWidget, { type CompareFlight } from "@/components/flight/FlightCompareWidget";
 import FlightLegCard, { type LegGroup } from "@/components/flight/FlightLegCard";
 import FlightEmptyState from "@/components/flight/FlightEmptyState";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -38,8 +39,9 @@ import { ResultsFAQ } from "@/components/results/ResultsFAQ";
 import TravelExtrasCTA from "@/components/shared/TravelExtrasCTA";
 import { groupByOutbound, groupByReturn, getLegDurationMinutes } from "@/lib/flightLegGrouping";
 import { getAllInPrice } from "@/utils/flightPricing";
-import { buildKiwiDeepLink, TRAVELPAYOUTS_DIRECT_LINKS } from "@/config/affiliateLinks";
+import { TRAVELPAYOUTS_DIRECT_LINKS } from "@/config/affiliateLinks";
 import { openExternalUrl } from "@/lib/openExternalUrl";
+import PullToRefresh from "@/components/shared/PullToRefresh";
 
 type SortBy = "best" | "cheapest" | "fastest" | "earliest" | "shortest";
 
@@ -88,6 +90,15 @@ const FlightResults = () => {
   const [selectionStep, setSelectionStep] = useState<"outbound" | "return">("outbound");
   const [selectedOutboundGroup, setSelectedOutboundGroup] = useState<LegGroup | null>(null);
   const [editMode, setEditMode] = useState(false);
+  const [compareList, setCompareList] = useState<CompareFlight[]>([]);
+
+  const handleAddToCompare = (flight: CompareFlight) => {
+    setCompareList(prev => {
+      if (prev.find(f => f.id === flight.id)) return prev.filter(f => f.id !== flight.id);
+      if (prev.length >= 3) return prev;
+      return [...prev, flight];
+    });
+  };
 
   const handlePartnerOpen = useCallback((url: string) => {
     void openExternalUrl(url);
@@ -117,6 +128,10 @@ const FlightResults = () => {
     cabinClass,
     enabled: !!origin && !!destination && !!departureDate,
   });
+
+  const handlePullRefresh = useCallback(async () => {
+    await refetch();
+  }, [refetch]);
 
   // Travelpayouts cached prices (runs in parallel, non-blocking)
   const { data: tpPrices = [] } = useTravelpayoutsPrices({
@@ -1100,7 +1115,7 @@ const FlightResults = () => {
                           );
                         })}
 
-                        {/* Kiwi.com — affiliate partner link */}
+                        {/* Aviasales — affiliate partner link (always visible) */}
                         {/* Aviasales — affiliate partner link (always visible) */}
                         {origin && destination && departureDate && (
                           <button
@@ -1132,44 +1147,6 @@ const FlightResults = () => {
                           </button>
                         )}
 
-                        {/* Kiwi.com — affiliate partner link */}
-                        {origin && destination && departureDate && (() => {
-                          const kiwiLink = buildKiwiDeepLink({
-                            origin,
-                            destination,
-                            departureDate,
-                            returnDate: validReturnDate,
-                          });
-                          return (
-                            <button
-                              type="button"
-                              onClick={() => handlePartnerOpen(kiwiLink)}
-                              className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-muted/30 transition-colors group w-full text-left"
-                            >
-                              <div className="flex items-center gap-3 min-w-0">
-                                <div className="w-9 h-9 rounded-lg bg-emerald-500/12 flex items-center justify-center shrink-0">
-                                  <span className="text-base font-black text-emerald-600">K</span>
-                                </div>
-                                <div>
-                                  <div className="flex items-center gap-1.5">
-                                    <p className="text-sm font-bold text-foreground">Kiwi.com</p>
-                                    <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                                  </div>
-                                  <p className="text-[10px] text-muted-foreground">
-                                    Compare on partner site
-                                  </p>
-                                </div>
-                              </div>
-                              <div className="text-right shrink-0">
-                                {lowestDuffelPrice ? (
-                                  <p className="text-lg font-bold text-foreground">${Math.round(getAllInPrice(lowestDuffelPrice) * 1.03 + 7)}</p>
-                                ) : (
-                                  <p className="text-xs font-semibold text-primary">View prices →</p>
-                                )}
-                              </div>
-                            </button>
-                          );
-                        })()}
                       </div>
 
                       {/* Footer */}
@@ -1341,6 +1318,8 @@ const FlightResults = () => {
                         hasReturn={false}
                         onSelect={handleSelect}
                         searchDestination={destination}
+                        onCompare={handleAddToCompare}
+                        inCompare={compareList.some(f => f.id === offer.id)}
                       />
                     </motion.div>
                   ))}
@@ -1363,6 +1342,20 @@ const FlightResults = () => {
               )}
             </div>
           </div>
+
+          {/* Flight Compare Widget — one-way only, shown when at least one flight added */}
+          {!isRoundTrip && compareList.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: 12 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mt-6"
+            >
+              <FlightCompareWidget
+                compareList={compareList}
+                onRemove={(id) => setCompareList(prev => prev.filter(f => f.id !== id))}
+              />
+            </motion.div>
+          )}
 
           {/* Cross-sell: Hotels & Cars — desktop only */}
           {!isMobile && !isLoading && filtered.length > 0 && (
@@ -1398,11 +1391,11 @@ const FlightResults = () => {
           description={`Compare flight deals from ${origin} to ${destination}.`}
         />
         <AppLayout hideHeader hideNav>
-          <div className="min-h-[100dvh] bg-background">
+          <PullToRefresh onRefresh={handlePullRefresh} className="min-h-[100dvh] bg-background">
             <div className="pb-4">
               {resultsContent}
             </div>
-          </div>
+          </PullToRefresh>
         </AppLayout>
       </>
     );

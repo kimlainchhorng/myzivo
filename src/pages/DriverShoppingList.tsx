@@ -194,7 +194,7 @@ export default function DriverShoppingList() {
   return (
     <div className="min-h-screen bg-background pb-24">
       {/* Header */}
-      <div className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-border/50">
+      <div className="sticky top-0 safe-area-top z-30 bg-background/95 backdrop-blur border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">
           <button onClick={() => navigate("/driver/orders")} className="p-1.5 rounded-xl hover:bg-muted">
             <ArrowLeft className="h-5 w-5" />

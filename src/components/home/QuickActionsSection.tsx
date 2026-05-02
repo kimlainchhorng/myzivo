@@ -1,5 +1,10 @@
 import { useNavigate } from "react-router-dom";
-import { Car, Plane, Hotel, Zap, UtensilsCrossed, Package } from "lucide-react";
+import Car from "lucide-react/dist/esm/icons/car";
+import Plane from "lucide-react/dist/esm/icons/plane";
+import Hotel from "lucide-react/dist/esm/icons/hotel";
+import Zap from "lucide-react/dist/esm/icons/zap";
+import UtensilsCrossed from "lucide-react/dist/esm/icons/utensils-crossed";
+import Package from "lucide-react/dist/esm/icons/package";
 import { QuickAction } from "@/components/ui/premium-card";
 import { QuickRepeatOrders, RecentlyViewed } from "@/components/ui/personalization";
 import { useAuth } from "@/contexts/AuthContext";

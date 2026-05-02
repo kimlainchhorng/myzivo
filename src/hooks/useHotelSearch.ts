@@ -60,7 +60,7 @@ export function useHotelSearch() {
     setIsLoading(true);
     setSearchParams(params);
     
-    // TODO: Replace with real hotel API call
+    // Deprecated — real search handled by useRealHotelSearch (Booking.com affiliate)
     await new Promise(resolve => setTimeout(resolve, 500));
     
     const filteredHotels = filterHotels([], filters);

@@ -68,7 +68,7 @@ export default function DeleteAccountPage() {
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
-      <header className="sticky top-0 z-50 bg-background border-b border-border">
+      <header className="sticky top-0 safe-area-top z-50 bg-background border-b border-border">
         <div className="container max-w-2xl mx-auto px-4 h-14 flex items-center gap-3">
           <Button
             variant="ghost"

@@ -12,6 +12,7 @@ export interface GroceryCartItem {
   brand: string;
   quantity: number;
   store: string;
+  sizeLabel?: string; // e.g. "S", "M", "L"
 }
 
 const STORAGE_KEY = "zivo-grocery-cart";
@@ -32,7 +33,8 @@ export function useGroceryCart() {
 
   const addItem = useCallback((product: Omit<GroceryCartItem, "quantity" | "store">, store = "Walmart") => {
     setItems((prev) => {
-      const idx = prev.findIndex((i) => i.productId === product.productId);
+      // Match by productId + sizeLabel so different sizes are separate items
+      const idx = prev.findIndex((i) => i.productId === product.productId && (i.sizeLabel || "") === (product.sizeLabel || ""));
       if (idx > -1) {
         const updated = [...prev];
         updated[idx] = { ...updated[idx], quantity: updated[idx].quantity + 1 };

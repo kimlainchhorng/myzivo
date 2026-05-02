@@ -1,0 +1,1523 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/admin/AdsStudioWizard.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"]; const _Fragment = __vite__cjsImport0_react_jsxDevRuntime["Fragment"];
+var _s = $RefreshSig$();
+/**
+ * AdsStudioWizard — AI-powered ad creative generator for store owners.
+ * 4 steps: Goal → Offer → Targeting+Budget → AI Generate → Export bundles.
+ */ import __vite__cjsImport1_react from "/node_modules/.vite/deps/react.js?v=7fd9520c"; const useState = __vite__cjsImport1_react["useState"];
+import { Card, CardContent } from "/src/components/ui/card.tsx";
+import { Button } from "/src/components/ui/button.tsx";
+import { Input } from "/src/components/ui/input.tsx";
+import { Label } from "/src/components/ui/label.tsx";
+import { Textarea } from "/src/components/ui/textarea.tsx";
+import { Badge } from "/src/components/ui/badge.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "/src/components/ui/select.tsx";
+import { toast } from "/node_modules/.vite/deps/sonner.js?v=7fd9520c";
+import { supabase } from "/src/integrations/supabase/client.ts";
+import { Sparkles, Target, DollarSign, Wand2, Loader2, Check, Copy, Facebook, Music2, Youtube, Search as GoogleIcon, Download, ExternalLink, Image as ImageIcon, Video } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+import { WizardSkeleton } from "/src/components/admin/ads/MarketingSkeletons.tsx";
+import MarketingEmptyState from "/src/components/admin/ads/MarketingEmptyState.tsx";
+const GOALS = [
+    {
+        id: "traffic",
+        label: "Get visits",
+        desc: "Drive people to your store page"
+    },
+    {
+        id: "leads",
+        label: "Get leads",
+        desc: "Capture phone calls & messages"
+    },
+    {
+        id: "bookings",
+        label: "Drive bookings",
+        desc: "Customers book a service or buy"
+    },
+    {
+        id: "awareness",
+        label: "Brand awareness",
+        desc: "Reach as many people as possible"
+    }
+];
+const PLATFORM_META = {
+    google: {
+        label: "Google + Maps",
+        icon: GoogleIcon,
+        color: "text-[#4285F4]"
+    },
+    meta: {
+        label: "Facebook + Instagram",
+        icon: Facebook,
+        color: "text-[#1877F2]"
+    },
+    tiktok: {
+        label: "TikTok",
+        icon: Music2,
+        color: "text-foreground"
+    },
+    youtube: {
+        label: "YouTube Shorts",
+        icon: Youtube,
+        color: "text-[#FF0000]"
+    }
+};
+const PRICE_CENTS = {
+    copy: 25,
+    image: 100,
+    video_script: 50
+};
+export default function AdsStudioWizard({ storeId, storeName, storeSlug }) {
+    _s();
+    const [step, setStep] = useState(1);
+    const [goal, setGoal] = useState("traffic");
+    const [offer, setOffer] = useState("");
+    const [city, setCity] = useState("");
+    const [radius, setRadius] = useState(15);
+    const [ageMin, setAgeMin] = useState(18);
+    const [ageMax, setAgeMax] = useState(55);
+    const [dailyBudget, setDailyBudget] = useState(20);
+    const [platforms, setPlatforms] = useState([
+        "google",
+        "meta",
+        "tiktok",
+        "youtube"
+    ]);
+    const [imageCount, setImageCount] = useState(2);
+    const [genVideo, setGenVideo] = useState(true);
+    const [loading, setLoading] = useState(false);
+    const [result, setResult] = useState(null);
+    const [exporting, setExporting] = useState(null);
+    const [exports, setExports] = useState(null);
+    const estCost = PRICE_CENTS.copy + imageCount * PRICE_CENTS.image + (genVideo ? PRICE_CENTS.video_script : 0);
+    const togglePlatform = (p)=>setPlatforms((prev)=>prev.includes(p) ? prev.filter((x)=>x !== p) : [
+                ...prev,
+                p
+            ]);
+    const handleGenerate = async ()=>{
+        if (!offer.trim()) {
+            toast.error("Tell us what to advertise");
+            return;
+        }
+        setLoading(true);
+        try {
+            const { data, error } = await supabase.functions.invoke("ads-studio-generate", {
+                body: {
+                    store_id: storeId,
+                    goal,
+                    service_summary: offer,
+                    store_name: storeName,
+                    store_city: city,
+                    targeting: {
+                        city,
+                        radius_km: radius,
+                        age_min: ageMin,
+                        age_max: ageMax
+                    },
+                    platforms,
+                    generate: {
+                        copy: true,
+                        images: imageCount,
+                        video_scripts: genVideo
+                    }
+                }
+            });
+            if (error) throw error;
+            const d = data;
+            if (d?.error === "insufficient_balance") {
+                toast.error(d.message || "Top up your Ads wallet to continue.");
+                return;
+            }
+            if (d?.error) throw new Error(d.error);
+            // Persist creative
+            const { data: creative, error: insErr } = await supabase.from("ads_studio_creatives").insert({
+                store_id: storeId,
+                goal,
+                targeting: {
+                    city,
+                    radius_km: radius,
+                    age_min: ageMin,
+                    age_max: ageMax
+                },
+                budget: {
+                    daily: dailyBudget,
+                    currency: "USD"
+                },
+                headlines: d.copy?.headlines ?? {},
+                descriptions: d.copy?.descriptions ?? {},
+                ctas: d.copy?.ctas ?? [],
+                hashtags: d.copy?.hashtags ?? [],
+                image_urls: d.images ?? [],
+                video_scripts: d.video_scripts ?? null,
+                platforms,
+                status: "ready"
+            }).select().maybeSingle();
+            if (insErr) console.warn(insErr);
+            // Auto-create A/B variants from the first 3 headlines + images
+            if (creative?.id) {
+                const allHeadlines = [
+                    ...d.copy?.headlines?.meta || [],
+                    ...d.copy?.headlines?.google || [],
+                    ...d.copy?.headlines?.tiktok || []
+                ];
+                const variants = allHeadlines.slice(0, 3).map((h, i)=>({
+                        creative_id: creative.id,
+                        store_id: storeId,
+                        variant_label: String.fromCharCode(65 + i),
+                        headline: h,
+                        description: d.copy?.descriptions?.short?.[i] || d.copy?.descriptions?.short?.[0] || null,
+                        image_url: d.images?.[i % Math.max(1, d.images?.length || 1)]?.url || null,
+                        cta: d.copy?.ctas?.[i % Math.max(1, d.copy?.ctas?.length || 1)] || null,
+                        is_active: true
+                    }));
+                if (variants.length > 0) {
+                    await supabase.from("ads_studio_variants").insert(variants);
+                }
+            }
+            setResult({
+                ...d,
+                creative_id: creative?.id
+            });
+            setStep(4);
+            toast.success(`Generated! Cost: $${(d.cost_cents / 100).toFixed(2)} · Balance: $${((d.balance_after_cents ?? 0) / 100).toFixed(2)}`);
+        } catch (e) {
+            toast.error(e?.message || "Generation failed");
+        } finally{
+            setLoading(false);
+        }
+    };
+    const handleExport = async (p)=>{
+        if (!result?.creative_id) {
+            toast.error("No creative to export");
+            return;
+        }
+        setExporting(p);
+        try {
+            const { data, error } = await supabase.functions.invoke("ads-studio-export", {
+                body: {
+                    creative_id: result.creative_id
+                }
+            });
+            if (error) throw error;
+            setExports(data);
+            if (p === "google") {
+                const blob = new Blob([
+                    data.bundles.google_csv
+                ], {
+                    type: "text/csv"
+                });
+                downloadBlob(blob, `zivo-google-ads-${storeSlug || storeId}.csv`);
+            } else if (p === "meta" || p === "tiktok" || p === "youtube") {
+                const bundle = data.bundles[p];
+                const blob = new Blob([
+                    JSON.stringify(bundle, null, 2)
+                ], {
+                    type: "application/json"
+                });
+                downloadBlob(blob, `zivo-${p}-ads-${storeSlug || storeId}.json`);
+            }
+            toast.success(`${PLATFORM_META[p].label} bundle downloaded`);
+        } catch (e) {
+            toast.error(e?.message || "Export failed");
+        } finally{
+            setExporting(null);
+        }
+    };
+    const copy = (text)=>{
+        navigator.clipboard.writeText(text);
+        toast.success("Copied");
+    };
+    return /*#__PURE__*/ _jsxDEV("div", {
+        className: "space-y-3 sm:space-y-4",
+        children: [
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "flex items-center gap-1 sm:gap-2",
+                children: [
+                    {
+                        n: 1,
+                        label: "Goal"
+                    },
+                    {
+                        n: 2,
+                        label: "Offer"
+                    },
+                    {
+                        n: 3,
+                        label: "Targeting"
+                    },
+                    {
+                        n: 4,
+                        label: "Results"
+                    }
+                ].map((s, i, arr)=>/*#__PURE__*/ _jsxDEV("div", {
+                        className: "flex-1 flex items-center gap-1 sm:gap-2 min-w-0",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "flex flex-col items-center gap-1 shrink-0",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        className: `h-7 w-7 sm:h-8 sm:w-8 rounded-full flex items-center justify-center text-[11px] sm:text-xs font-semibold transition ${step >= s.n ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground"}`,
+                                        children: step > s.n ? /*#__PURE__*/ _jsxDEV(Check, {
+                                            className: "h-3.5 w-3.5 sm:h-4 sm:w-4"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                            lineNumber: 184,
+                                            columnNumber: 33
+                                        }, this) : s.n
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                        lineNumber: 182,
+                                        columnNumber: 15
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("span", {
+                                        className: `text-[9px] sm:text-[10px] font-medium hidden xs:block ${step >= s.n ? "text-foreground" : "text-muted-foreground"}`,
+                                        children: s.label
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                        lineNumber: 185,
+                                        columnNumber: 15
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                lineNumber: 181,
+                                columnNumber: 13
+                            }, this),
+                            i < arr.length - 1 && /*#__PURE__*/ _jsxDEV("div", {
+                                className: `h-0.5 flex-1 -mt-3 sm:-mt-4 ${step > s.n ? "bg-primary" : "bg-muted"}`
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                lineNumber: 187,
+                                columnNumber: 36
+                            }, this)
+                        ]
+                    }, s.n, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                        lineNumber: 180,
+                        columnNumber: 11
+                    }, this))
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                lineNumber: 173,
+                columnNumber: 7
+            }, this),
+            step === 1 && /*#__PURE__*/ _jsxDEV(Card, {
+                children: /*#__PURE__*/ _jsxDEV(CardContent, {
+                    className: "p-3 sm:p-4 space-y-3",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "flex items-center gap-2",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV(Target, {
+                                    className: "h-4 w-4 text-primary"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 195,
+                                    columnNumber: 52
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("h3", {
+                                    className: "font-semibold text-sm sm:text-base",
+                                    children: "Pick your goal"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 195,
+                                    columnNumber: 95
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                            lineNumber: 195,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "grid grid-cols-1 sm:grid-cols-2 gap-2",
+                            children: GOALS.map((g)=>/*#__PURE__*/ _jsxDEV("button", {
+                                    onClick: ()=>setGoal(g.id),
+                                    className: `text-left p-3 rounded-xl border-2 transition active:scale-[0.98] touch-manipulation min-h-[64px] ${goal === g.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"}`,
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV("p", {
+                                            className: "font-semibold text-sm",
+                                            children: g.label
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                            lineNumber: 202,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("p", {
+                                            className: "text-[11px] text-muted-foreground mt-0.5",
+                                            children: g.desc
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                            lineNumber: 203,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, g.id, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 198,
+                                    columnNumber: 15
+                                }, this))
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                            lineNumber: 196,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV(Button, {
+                            className: "w-full h-11 sm:h-10",
+                            onClick: ()=>setStep(2),
+                            children: "Continue"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                            lineNumber: 207,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                    lineNumber: 194,
+                    columnNumber: 15
+                }, this)
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                lineNumber: 194,
+                columnNumber: 9
+            }, this),
+            step === 2 && /*#__PURE__*/ _jsxDEV(Card, {
+                children: /*#__PURE__*/ _jsxDEV(CardContent, {
+                    className: "p-4 space-y-3",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "flex items-center gap-2",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV(Sparkles, {
+                                    className: "h-4 w-4 text-primary"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 214,
+                                    columnNumber: 52
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("h3", {
+                                    className: "font-semibold",
+                                    children: "What are you advertising?"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 214,
+                                    columnNumber: 97
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                            lineNumber: 214,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV(Textarea, {
+                            placeholder: "Example: 20% off oil changes this month, plus free tire rotation. Family-owned auto shop in Phnom Penh, open 7 days.",
+                            value: offer,
+                            onChange: (e)=>setOffer(e.target.value),
+                            rows: 4,
+                            maxLength: 500
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                            lineNumber: 215,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("p", {
+                            className: "text-[11px] text-muted-foreground",
+                            children: [
+                                offer.length,
+                                "/500 — Be specific. AI uses this to write headlines & generate images."
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                            lineNumber: 220,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "flex flex-col-reverse sm:flex-row gap-2",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV(Button, {
+                                    variant: "outline",
+                                    className: "flex-1 h-11 sm:h-10",
+                                    onClick: ()=>setStep(1),
+                                    children: "Back"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 222,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV(Button, {
+                                    className: "flex-1 h-11 sm:h-10",
+                                    onClick: ()=>setStep(3),
+                                    disabled: !offer.trim(),
+                                    children: "Continue"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 223,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                            lineNumber: 221,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                    lineNumber: 213,
+                    columnNumber: 15
+                }, this)
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                lineNumber: 213,
+                columnNumber: 9
+            }, this),
+            step === 3 && /*#__PURE__*/ _jsxDEV(Card, {
+                children: /*#__PURE__*/ _jsxDEV(CardContent, {
+                    className: "p-3 sm:p-4 space-y-4",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "flex items-center gap-2",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV(DollarSign, {
+                                    className: "h-4 w-4 text-primary"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 231,
+                                    columnNumber: 52
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("h3", {
+                                    className: "font-semibold text-sm sm:text-base",
+                                    children: "Targeting & budget"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 231,
+                                    columnNumber: 99
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                            lineNumber: 231,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "grid grid-cols-2 gap-2",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Label, {
+                                            className: "text-xs",
+                                            children: "City"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                            lineNumber: 235,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV(Input, {
+                                            placeholder: "Phnom Penh",
+                                            value: city,
+                                            onChange: (e)=>setCity(e.target.value)
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                            lineNumber: 236,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 234,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Label, {
+                                            className: "text-xs",
+                                            children: "Radius (km)"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                            lineNumber: 239,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV(Input, {
+                                            type: "number",
+                                            min: 1,
+                                            max: 500,
+                                            value: radius,
+                                            onChange: (e)=>setRadius(+e.target.value || 15)
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                            lineNumber: 240,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 238,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Label, {
+                                            className: "text-xs",
+                                            children: "Age min"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                            lineNumber: 243,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV(Input, {
+                                            type: "number",
+                                            min: 13,
+                                            max: 99,
+                                            value: ageMin,
+                                            onChange: (e)=>setAgeMin(+e.target.value || 18)
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                            lineNumber: 244,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 242,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Label, {
+                                            className: "text-xs",
+                                            children: "Age max"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                            lineNumber: 247,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV(Input, {
+                                            type: "number",
+                                            min: 13,
+                                            max: 99,
+                                            value: ageMax,
+                                            onChange: (e)=>setAgeMax(+e.target.value || 55)
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                            lineNumber: 248,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 246,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Label, {
+                                            className: "text-xs",
+                                            children: "Daily budget (USD)"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                            lineNumber: 251,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV(Input, {
+                                            type: "number",
+                                            min: 5,
+                                            value: dailyBudget,
+                                            onChange: (e)=>setDailyBudget(+e.target.value || 20)
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                            lineNumber: 252,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 250,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Label, {
+                                            className: "text-xs",
+                                            children: "Image variants"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                            lineNumber: 255,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV(Select, {
+                                            value: String(imageCount),
+                                            onValueChange: (v)=>setImageCount(+v),
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV(SelectTrigger, {
+                                                    children: /*#__PURE__*/ _jsxDEV(SelectValue, {}, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                        lineNumber: 257,
+                                                        columnNumber: 32
+                                                    }, this)
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                    lineNumber: 257,
+                                                    columnNumber: 17
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV(SelectContent, {
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                            value: "0",
+                                                            children: "No images"
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                            lineNumber: 259,
+                                                            columnNumber: 19
+                                                        }, this),
+                                                        /*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                            value: "1",
+                                                            children: "1 (square only)"
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                            lineNumber: 260,
+                                                            columnNumber: 19
+                                                        }, this),
+                                                        /*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                            value: "2",
+                                                            children: "2 (square + vertical)"
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                            lineNumber: 261,
+                                                            columnNumber: 19
+                                                        }, this),
+                                                        /*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                            value: "4",
+                                                            children: "4 (all aspects)"
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                            lineNumber: 262,
+                                                            columnNumber: 19
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                    lineNumber: 258,
+                                                    columnNumber: 17
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                            lineNumber: 256,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 254,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                            lineNumber: 233,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            children: [
+                                /*#__PURE__*/ _jsxDEV(Label, {
+                                    className: "text-xs mb-2 block",
+                                    children: "Platforms"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 269,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "grid grid-cols-1 sm:grid-cols-2 gap-2",
+                                    children: Object.keys(PLATFORM_META).map((p)=>{
+                                        const M = PLATFORM_META[p];
+                                        const Icon = M.icon;
+                                        const on = platforms.includes(p);
+                                        return /*#__PURE__*/ _jsxDEV("button", {
+                                            onClick: ()=>togglePlatform(p),
+                                            className: `flex items-center gap-2 p-2.5 rounded-lg border-2 text-sm active:scale-[0.98] touch-manipulation min-h-[44px] ${on ? "border-primary bg-primary/5" : "border-border"}`,
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV(Icon, {
+                                                    className: `h-4 w-4 ${M.color}`
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                    lineNumber: 278,
+                                                    columnNumber: 21
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV("span", {
+                                                    className: "font-medium",
+                                                    children: M.label
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                    lineNumber: 279,
+                                                    columnNumber: 21
+                                                }, this),
+                                                on && /*#__PURE__*/ _jsxDEV(Check, {
+                                                    className: "h-3.5 w-3.5 ml-auto text-primary"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                    lineNumber: 280,
+                                                    columnNumber: 28
+                                                }, this)
+                                            ]
+                                        }, p, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                            lineNumber: 274,
+                                            columnNumber: 19
+                                        }, this);
+                                    })
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 270,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                            lineNumber: 268,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("label", {
+                            className: "flex items-center gap-2 text-sm min-h-[44px] cursor-pointer",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("input", {
+                                    type: "checkbox",
+                                    checked: genVideo,
+                                    onChange: (e)=>setGenVideo(e.target.checked),
+                                    className: "h-4 w-4"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 288,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("span", {
+                                    children: "Also generate TikTok + YouTube Shorts video scripts"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 289,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                            lineNumber: 287,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "rounded-lg bg-muted/50 p-3 flex items-center justify-between",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("span", {
+                                    className: "text-xs text-muted-foreground",
+                                    children: "Estimated AI cost"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 293,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("span", {
+                                    className: "text-base font-bold text-primary",
+                                    children: [
+                                        "$",
+                                        (estCost / 100).toFixed(2)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 294,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                            lineNumber: 292,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "flex flex-col-reverse sm:flex-row gap-2",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV(Button, {
+                                    variant: "outline",
+                                    className: "flex-1 h-11 sm:h-10",
+                                    onClick: ()=>setStep(2),
+                                    disabled: loading,
+                                    children: "Back"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 298,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV(Button, {
+                                    className: "flex-1 h-11 sm:h-10",
+                                    onClick: handleGenerate,
+                                    disabled: loading || !platforms.length,
+                                    children: loading ? /*#__PURE__*/ _jsxDEV(_Fragment, {
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(Loader2, {
+                                                className: "h-4 w-4 mr-2 animate-spin"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                lineNumber: 300,
+                                                columnNumber: 28
+                                            }, this),
+                                            " Generating…"
+                                        ]
+                                    }, void 0, true) : /*#__PURE__*/ _jsxDEV(_Fragment, {
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(Wand2, {
+                                                className: "h-4 w-4 mr-2"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                lineNumber: 300,
+                                                columnNumber: 97
+                                            }, this),
+                                            " Generate AI ads"
+                                        ]
+                                    }, void 0, true)
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 299,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                            lineNumber: 297,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                    lineNumber: 230,
+                    columnNumber: 15
+                }, this)
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                lineNumber: 230,
+                columnNumber: 9
+            }, this),
+            step === 4 && !result && !loading && /*#__PURE__*/ _jsxDEV(MarketingEmptyState, {
+                icon: Sparkles,
+                title: "Ready to generate",
+                body: "Pick a goal, audience, and budget — then tap Generate to see AI-crafted ad variants."
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                lineNumber: 308,
+                columnNumber: 9
+            }, this),
+            step === 4 && !result && loading && /*#__PURE__*/ _jsxDEV(WizardSkeleton, {}, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                lineNumber: 316,
+                columnNumber: 44
+            }, this),
+            step === 4 && result && /*#__PURE__*/ _jsxDEV("div", {
+                className: "space-y-3",
+                children: [
+                    /*#__PURE__*/ _jsxDEV(Card, {
+                        children: /*#__PURE__*/ _jsxDEV(CardContent, {
+                            className: "p-4 space-y-2",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("h4", {
+                                    className: "font-semibold text-sm flex items-center gap-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Sparkles, {
+                                            className: "h-4 w-4 text-primary"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                            lineNumber: 323,
+                                            columnNumber: 75
+                                        }, this),
+                                        " Headlines"
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 323,
+                                    columnNumber: 13
+                                }, this),
+                                Object.entries(result.copy?.headlines ?? {}).map(([plat, lines])=>/*#__PURE__*/ _jsxDEV("div", {
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV("p", {
+                                                className: "text-[11px] uppercase font-semibold text-muted-foreground mt-2 mb-1",
+                                                children: plat
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                lineNumber: 326,
+                                                columnNumber: 17
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV("div", {
+                                                className: "space-y-1",
+                                                children: lines.map((h, i)=>/*#__PURE__*/ _jsxDEV("div", {
+                                                        className: "flex items-center gap-2 text-sm bg-muted/40 rounded px-2 py-1.5",
+                                                        children: [
+                                                            /*#__PURE__*/ _jsxDEV("span", {
+                                                                className: "flex-1",
+                                                                children: h
+                                                            }, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                                lineNumber: 330,
+                                                                columnNumber: 23
+                                                            }, this),
+                                                            /*#__PURE__*/ _jsxDEV("button", {
+                                                                onClick: ()=>copy(h),
+                                                                className: "text-muted-foreground hover:text-primary",
+                                                                children: /*#__PURE__*/ _jsxDEV(Copy, {
+                                                                    className: "h-3.5 w-3.5"
+                                                                }, void 0, false, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                                    lineNumber: 331,
+                                                                    columnNumber: 108
+                                                                }, this)
+                                                            }, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                                lineNumber: 331,
+                                                                columnNumber: 23
+                                                            }, this)
+                                                        ]
+                                                    }, i, true, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                        lineNumber: 329,
+                                                        columnNumber: 21
+                                                    }, this))
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                lineNumber: 327,
+                                                columnNumber: 17
+                                            }, this)
+                                        ]
+                                    }, plat, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                        lineNumber: 325,
+                                        columnNumber: 15
+                                    }, this))
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                            lineNumber: 322,
+                            columnNumber: 17
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                        lineNumber: 322,
+                        columnNumber: 11
+                    }, this),
+                    result.copy?.descriptions && /*#__PURE__*/ _jsxDEV(Card, {
+                        children: /*#__PURE__*/ _jsxDEV(CardContent, {
+                            className: "p-4 space-y-2",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("h4", {
+                                    className: "font-semibold text-sm",
+                                    children: "Descriptions"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 342,
+                                    columnNumber: 15
+                                }, this),
+                                [
+                                    ...result.copy.descriptions.short || [],
+                                    ...result.copy.descriptions.long || []
+                                ].map((d, i)=>/*#__PURE__*/ _jsxDEV("div", {
+                                        className: "flex items-start gap-2 text-sm bg-muted/40 rounded px-2 py-1.5",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV("span", {
+                                                className: "flex-1",
+                                                children: d
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                lineNumber: 345,
+                                                columnNumber: 19
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV("button", {
+                                                onClick: ()=>copy(d),
+                                                className: "text-muted-foreground hover:text-primary",
+                                                children: /*#__PURE__*/ _jsxDEV(Copy, {
+                                                    className: "h-3.5 w-3.5"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                    lineNumber: 346,
+                                                    columnNumber: 104
+                                                }, this)
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                lineNumber: 346,
+                                                columnNumber: 19
+                                            }, this)
+                                        ]
+                                    }, i, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                        lineNumber: 344,
+                                        columnNumber: 17
+                                    }, this)),
+                                result.copy.hashtags?.length > 0 && /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "flex flex-wrap gap-1 pt-2",
+                                    children: result.copy.hashtags.map((h, i)=>/*#__PURE__*/ _jsxDEV(Badge, {
+                                            variant: "secondary",
+                                            children: h
+                                        }, i, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                            lineNumber: 351,
+                                            columnNumber: 71
+                                        }, this))
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 350,
+                                    columnNumber: 17
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                            lineNumber: 341,
+                            columnNumber: 19
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                        lineNumber: 341,
+                        columnNumber: 13
+                    }, this),
+                    result.images?.length > 0 && /*#__PURE__*/ _jsxDEV(Card, {
+                        children: /*#__PURE__*/ _jsxDEV(CardContent, {
+                            className: "p-3 sm:p-4 space-y-2",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("h4", {
+                                    className: "font-semibold text-sm flex items-center gap-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(ImageIcon, {
+                                            className: "h-4 w-4 text-primary"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                            lineNumber: 360,
+                                            columnNumber: 77
+                                        }, this),
+                                        " Generated images"
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 360,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-2",
+                                    children: result.images.map((img, i)=>/*#__PURE__*/ _jsxDEV("div", {
+                                            className: "relative group",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV("img", {
+                                                    src: img.url,
+                                                    alt: "ad",
+                                                    className: "w-full rounded-lg border",
+                                                    loading: "lazy"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                    lineNumber: 364,
+                                                    columnNumber: 21
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV(Badge, {
+                                                    className: "absolute top-2 left-2 text-[10px]",
+                                                    children: img.aspect
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                    lineNumber: 365,
+                                                    columnNumber: 21
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV("a", {
+                                                    href: img.url,
+                                                    download: true,
+                                                    className: "absolute top-2 right-2 bg-background/90 rounded p-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition",
+                                                    children: /*#__PURE__*/ _jsxDEV(Download, {
+                                                        className: "h-3.5 w-3.5"
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                        lineNumber: 367,
+                                                        columnNumber: 23
+                                                    }, this)
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                    lineNumber: 366,
+                                                    columnNumber: 21
+                                                }, this)
+                                            ]
+                                        }, i, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                            lineNumber: 363,
+                                            columnNumber: 19
+                                        }, this))
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 361,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                            lineNumber: 359,
+                            columnNumber: 19
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                        lineNumber: 359,
+                        columnNumber: 13
+                    }, this),
+                    result.video_scripts && /*#__PURE__*/ _jsxDEV(Card, {
+                        children: /*#__PURE__*/ _jsxDEV(CardContent, {
+                            className: "p-4 space-y-2",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("h4", {
+                                    className: "font-semibold text-sm flex items-center gap-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Video, {
+                                            className: "h-4 w-4 text-primary"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                            lineNumber: 378,
+                                            columnNumber: 77
+                                        }, this),
+                                        " Video scripts"
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 378,
+                                    columnNumber: 15
+                                }, this),
+                                result.video_scripts.tiktok_15s && /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "bg-muted/40 p-3 rounded-lg text-sm space-y-1",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV("p", {
+                                            className: "font-semibold text-xs text-primary",
+                                            children: "TikTok 15s"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                            lineNumber: 381,
+                                            columnNumber: 19
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("p", {
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV("b", {
+                                                    children: "Hook:"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                    lineNumber: 382,
+                                                    columnNumber: 22
+                                                }, this),
+                                                " ",
+                                                result.video_scripts.tiktok_15s.hook
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                            lineNumber: 382,
+                                            columnNumber: 19
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("p", {
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV("b", {
+                                                    children: "Body:"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                    lineNumber: 383,
+                                                    columnNumber: 22
+                                                }, this),
+                                                " ",
+                                                result.video_scripts.tiktok_15s.body
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                            lineNumber: 383,
+                                            columnNumber: 19
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("p", {
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV("b", {
+                                                    children: "CTA:"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                    lineNumber: 384,
+                                                    columnNumber: 22
+                                                }, this),
+                                                " ",
+                                                result.video_scripts.tiktok_15s.cta
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                            lineNumber: 384,
+                                            columnNumber: 19
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 380,
+                                    columnNumber: 17
+                                }, this),
+                                result.video_scripts.youtube_shorts_30s && /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "bg-muted/40 p-3 rounded-lg text-sm space-y-1",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV("p", {
+                                            className: "font-semibold text-xs text-primary",
+                                            children: "YouTube Shorts 30s"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                            lineNumber: 389,
+                                            columnNumber: 19
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("p", {
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV("b", {
+                                                    children: "Hook:"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                    lineNumber: 390,
+                                                    columnNumber: 22
+                                                }, this),
+                                                " ",
+                                                result.video_scripts.youtube_shorts_30s.hook
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                            lineNumber: 390,
+                                            columnNumber: 19
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("p", {
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV("b", {
+                                                    children: "Body:"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                    lineNumber: 391,
+                                                    columnNumber: 22
+                                                }, this),
+                                                " ",
+                                                result.video_scripts.youtube_shorts_30s.body
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                            lineNumber: 391,
+                                            columnNumber: 19
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("p", {
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV("b", {
+                                                    children: "CTA:"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                    lineNumber: 392,
+                                                    columnNumber: 22
+                                                }, this),
+                                                " ",
+                                                result.video_scripts.youtube_shorts_30s.cta
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                            lineNumber: 392,
+                                            columnNumber: 19
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 388,
+                                    columnNumber: 17
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                            lineNumber: 377,
+                            columnNumber: 19
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                        lineNumber: 377,
+                        columnNumber: 13
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(Card, {
+                        children: /*#__PURE__*/ _jsxDEV(CardContent, {
+                            className: "p-3 sm:p-4 space-y-2",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("h4", {
+                                    className: "font-semibold text-sm",
+                                    children: "Launch on platforms"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 400,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("p", {
+                                    className: "text-[11px] text-muted-foreground",
+                                    children: "Download the ready-to-import bundle, then open the ad manager."
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 401,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "grid grid-cols-1 sm:grid-cols-2 gap-2",
+                                    children: Object.keys(PLATFORM_META).map((p)=>{
+                                        const M = PLATFORM_META[p];
+                                        const Icon = M.icon;
+                                        const launch = exports?.launch_urls?.[p];
+                                        return /*#__PURE__*/ _jsxDEV("div", {
+                                            className: "border rounded-lg p-2.5 space-y-2",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV("div", {
+                                                    className: "flex items-center gap-2",
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxDEV(Icon, {
+                                                            className: `h-4 w-4 ${M.color}`
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                            lineNumber: 408,
+                                                            columnNumber: 62
+                                                        }, this),
+                                                        /*#__PURE__*/ _jsxDEV("span", {
+                                                            className: "text-sm font-medium",
+                                                            children: M.label
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                            lineNumber: 408,
+                                                            columnNumber: 103
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                    lineNumber: 408,
+                                                    columnNumber: 21
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV("div", {
+                                                    className: "flex gap-1.5",
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxDEV(Button, {
+                                                            size: "sm",
+                                                            variant: "outline",
+                                                            className: "flex-1 h-9",
+                                                            onClick: ()=>handleExport(p),
+                                                            disabled: exporting === p,
+                                                            children: [
+                                                                exporting === p ? /*#__PURE__*/ _jsxDEV(Loader2, {
+                                                                    className: "h-3.5 w-3.5 animate-spin"
+                                                                }, void 0, false, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                                    lineNumber: 411,
+                                                                    columnNumber: 44
+                                                                }, this) : /*#__PURE__*/ _jsxDEV(Download, {
+                                                                    className: "h-3.5 w-3.5 mr-1"
+                                                                }, void 0, false, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                                    lineNumber: 411,
+                                                                    columnNumber: 95
+                                                                }, this),
+                                                                "Export"
+                                                            ]
+                                                        }, void 0, true, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                            lineNumber: 410,
+                                                            columnNumber: 23
+                                                        }, this),
+                                                        launch && /*#__PURE__*/ _jsxDEV("a", {
+                                                            href: launch,
+                                                            target: "_blank",
+                                                            rel: "noopener noreferrer",
+                                                            children: /*#__PURE__*/ _jsxDEV(Button, {
+                                                                size: "sm",
+                                                                variant: "ghost",
+                                                                className: "h-9 w-9 p-0",
+                                                                children: /*#__PURE__*/ _jsxDEV(ExternalLink, {
+                                                                    className: "h-3.5 w-3.5"
+                                                                }, void 0, false, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                                    lineNumber: 416,
+                                                                    columnNumber: 85
+                                                                }, this)
+                                                            }, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                                lineNumber: 416,
+                                                                columnNumber: 27
+                                                            }, this)
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                            lineNumber: 415,
+                                                            columnNumber: 25
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                                    lineNumber: 409,
+                                                    columnNumber: 21
+                                                }, this)
+                                            ]
+                                        }, p, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                            lineNumber: 407,
+                                            columnNumber: 19
+                                        }, this);
+                                    })
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 402,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV(Button, {
+                                    variant: "outline",
+                                    className: "w-full mt-2 h-11 sm:h-10",
+                                    onClick: ()=>{
+                                        setStep(1);
+                                        setResult(null);
+                                        setExports(null);
+                                        setOffer("");
+                                    },
+                                    children: "Create another ad"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                                    lineNumber: 424,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                            lineNumber: 399,
+                            columnNumber: 17
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                        lineNumber: 399,
+                        columnNumber: 11
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+                lineNumber: 320,
+                columnNumber: 9
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx",
+        lineNumber: 171,
+        columnNumber: 5
+    }, this);
+}
+_s(AdsStudioWizard, "7eY/4axzZ4HBcDBhobNOeTc+i/k=");
+_c = AdsStudioWizard;
+function downloadBlob(blob, filename) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+var _c;
+$RefreshReg$(_c, "AdsStudioWizard");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/AdsStudioWizard.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIkFkc1N0dWRpb1dpemFyZC50c3giXSwic291cmNlc0NvbnRlbnQiOlsiLyoqXHJcbiAqIEFkc1N0dWRpb1dpemFyZCDigJQgQUktcG93ZXJlZCBhZCBjcmVhdGl2ZSBnZW5lcmF0b3IgZm9yIHN0b3JlIG93bmVycy5cclxuICogNCBzdGVwczogR29hbCDihpIgT2ZmZXIg4oaSIFRhcmdldGluZytCdWRnZXQg4oaSIEFJIEdlbmVyYXRlIOKGkiBFeHBvcnQgYnVuZGxlcy5cclxuICovXHJcbmltcG9ydCB7IHVzZVN0YXRlIH0gZnJvbSBcInJlYWN0XCI7XHJcbmltcG9ydCB7IENhcmQsIENhcmRDb250ZW50IH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9jYXJkXCI7XHJcbmltcG9ydCB7IEJ1dHRvbiB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvYnV0dG9uXCI7XHJcbmltcG9ydCB7IElucHV0IH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9pbnB1dFwiO1xyXG5pbXBvcnQgeyBMYWJlbCB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvbGFiZWxcIjtcclxuaW1wb3J0IHsgVGV4dGFyZWEgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL3RleHRhcmVhXCI7XHJcbmltcG9ydCB7IEJhZGdlIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9iYWRnZVwiO1xyXG5pbXBvcnQgeyBTZWxlY3QsIFNlbGVjdENvbnRlbnQsIFNlbGVjdEl0ZW0sIFNlbGVjdFRyaWdnZXIsIFNlbGVjdFZhbHVlIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9zZWxlY3RcIjtcclxuaW1wb3J0IHsgdG9hc3QgfSBmcm9tIFwic29ubmVyXCI7XHJcbmltcG9ydCB7IHN1cGFiYXNlIH0gZnJvbSBcIkAvaW50ZWdyYXRpb25zL3N1cGFiYXNlL2NsaWVudFwiO1xyXG5pbXBvcnQge1xyXG4gIFNwYXJrbGVzLCBUYXJnZXQsIERvbGxhclNpZ24sIFdhbmQyLCBMb2FkZXIyLCBDaGVjaywgQ29weSxcclxuICBGYWNlYm9vaywgSW5zdGFncmFtLCBNdXNpYzIsIFlvdXR1YmUsIFNlYXJjaCBhcyBHb29nbGVJY29uLCBEb3dubG9hZCwgRXh0ZXJuYWxMaW5rLCBJbWFnZSBhcyBJbWFnZUljb24sIFZpZGVvLFxyXG59IGZyb20gXCJsdWNpZGUtcmVhY3RcIjtcclxuaW1wb3J0IHsgV2l6YXJkU2tlbGV0b24gfSBmcm9tIFwiQC9jb21wb25lbnRzL2FkbWluL2Fkcy9NYXJrZXRpbmdTa2VsZXRvbnNcIjtcclxuaW1wb3J0IE1hcmtldGluZ0VtcHR5U3RhdGUgZnJvbSBcIkAvY29tcG9uZW50cy9hZG1pbi9hZHMvTWFya2V0aW5nRW1wdHlTdGF0ZVwiO1xyXG5cclxuaW50ZXJmYWNlIFByb3BzIHtcclxuICBzdG9yZUlkOiBzdHJpbmc7XHJcbiAgc3RvcmVOYW1lPzogc3RyaW5nO1xyXG4gIHN0b3JlU2x1Zz86IHN0cmluZztcclxufVxyXG5cclxudHlwZSBHb2FsID0gXCJ0cmFmZmljXCIgfCBcImxlYWRzXCIgfCBcImJvb2tpbmdzXCIgfCBcImF3YXJlbmVzc1wiO1xyXG50eXBlIFBsYXRmb3JtID0gXCJnb29nbGVcIiB8IFwibWV0YVwiIHwgXCJ0aWt0b2tcIiB8IFwieW91dHViZVwiO1xyXG5cclxuY29uc3QgR09BTFM6IHsgaWQ6IEdvYWw7IGxhYmVsOiBzdHJpbmc7IGRlc2M6IHN0cmluZyB9W10gPSBbXHJcbiAgeyBpZDogXCJ0cmFmZmljXCIsIGxhYmVsOiBcIkdldCB2aXNpdHNcIiwgZGVzYzogXCJEcml2ZSBwZW9wbGUgdG8geW91ciBzdG9yZSBwYWdlXCIgfSxcclxuICB7IGlkOiBcImxlYWRzXCIsIGxhYmVsOiBcIkdldCBsZWFkc1wiLCBkZXNjOiBcIkNhcHR1cmUgcGhvbmUgY2FsbHMgJiBtZXNzYWdlc1wiIH0sXHJcbiAgeyBpZDogXCJib29raW5nc1wiLCBsYWJlbDogXCJEcml2ZSBib29raW5nc1wiLCBkZXNjOiBcIkN1c3RvbWVycyBib29rIGEgc2VydmljZSBvciBidXlcIiB9LFxyXG4gIHsgaWQ6IFwiYXdhcmVuZXNzXCIsIGxhYmVsOiBcIkJyYW5kIGF3YXJlbmVzc1wiLCBkZXNjOiBcIlJlYWNoIGFzIG1hbnkgcGVvcGxlIGFzIHBvc3NpYmxlXCIgfSxcclxuXTtcclxuXHJcbmNvbnN0IFBMQVRGT1JNX01FVEE6IFJlY29yZDxQbGF0Zm9ybSwgeyBsYWJlbDogc3RyaW5nOyBpY29uOiBhbnk7IGNvbG9yOiBzdHJpbmcgfT4gPSB7XHJcbiAgZ29vZ2xlOiB7IGxhYmVsOiBcIkdvb2dsZSArIE1hcHNcIiwgaWNvbjogR29vZ2xlSWNvbiwgY29sb3I6IFwidGV4dC1bIzQyODVGNF1cIiB9LFxyXG4gIG1ldGE6IHsgbGFiZWw6IFwiRmFjZWJvb2sgKyBJbnN0YWdyYW1cIiwgaWNvbjogRmFjZWJvb2ssIGNvbG9yOiBcInRleHQtWyMxODc3RjJdXCIgfSxcclxuICB0aWt0b2s6IHsgbGFiZWw6IFwiVGlrVG9rXCIsIGljb246IE11c2ljMiwgY29sb3I6IFwidGV4dC1mb3JlZ3JvdW5kXCIgfSxcclxuICB5b3V0dWJlOiB7IGxhYmVsOiBcIllvdVR1YmUgU2hvcnRzXCIsIGljb246IFlvdXR1YmUsIGNvbG9yOiBcInRleHQtWyNGRjAwMDBdXCIgfSxcclxufTtcclxuXHJcbmNvbnN0IFBSSUNFX0NFTlRTID0geyBjb3B5OiAyNSwgaW1hZ2U6IDEwMCwgdmlkZW9fc2NyaXB0OiA1MCB9O1xyXG5cclxuZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gQWRzU3R1ZGlvV2l6YXJkKHsgc3RvcmVJZCwgc3RvcmVOYW1lLCBzdG9yZVNsdWcgfTogUHJvcHMpIHtcclxuICBjb25zdCBbc3RlcCwgc2V0U3RlcF0gPSB1c2VTdGF0ZSgxKTtcclxuICBjb25zdCBbZ29hbCwgc2V0R29hbF0gPSB1c2VTdGF0ZTxHb2FsPihcInRyYWZmaWNcIik7XHJcbiAgY29uc3QgW29mZmVyLCBzZXRPZmZlcl0gPSB1c2VTdGF0ZShcIlwiKTtcclxuICBjb25zdCBbY2l0eSwgc2V0Q2l0eV0gPSB1c2VTdGF0ZShcIlwiKTtcclxuICBjb25zdCBbcmFkaXVzLCBzZXRSYWRpdXNdID0gdXNlU3RhdGUoMTUpO1xyXG4gIGNvbnN0IFthZ2VNaW4sIHNldEFnZU1pbl0gPSB1c2VTdGF0ZSgxOCk7XHJcbiAgY29uc3QgW2FnZU1heCwgc2V0QWdlTWF4XSA9IHVzZVN0YXRlKDU1KTtcclxuICBjb25zdCBbZGFpbHlCdWRnZXQsIHNldERhaWx5QnVkZ2V0XSA9IHVzZVN0YXRlKDIwKTtcclxuICBjb25zdCBbcGxhdGZvcm1zLCBzZXRQbGF0Zm9ybXNdID0gdXNlU3RhdGU8UGxhdGZvcm1bXT4oW1wiZ29vZ2xlXCIsIFwibWV0YVwiLCBcInRpa3Rva1wiLCBcInlvdXR1YmVcIl0pO1xyXG4gIGNvbnN0IFtpbWFnZUNvdW50LCBzZXRJbWFnZUNvdW50XSA9IHVzZVN0YXRlKDIpO1xyXG4gIGNvbnN0IFtnZW5WaWRlbywgc2V0R2VuVmlkZW9dID0gdXNlU3RhdGUodHJ1ZSk7XHJcbiAgY29uc3QgW2xvYWRpbmcsIHNldExvYWRpbmddID0gdXNlU3RhdGUoZmFsc2UpO1xyXG4gIGNvbnN0IFtyZXN1bHQsIHNldFJlc3VsdF0gPSB1c2VTdGF0ZTxhbnk+KG51bGwpO1xyXG4gIGNvbnN0IFtleHBvcnRpbmcsIHNldEV4cG9ydGluZ10gPSB1c2VTdGF0ZTxQbGF0Zm9ybSB8IG51bGw+KG51bGwpO1xyXG4gIGNvbnN0IFtleHBvcnRzLCBzZXRFeHBvcnRzXSA9IHVzZVN0YXRlPGFueT4obnVsbCk7XHJcblxyXG4gIGNvbnN0IGVzdENvc3QgPSBQUklDRV9DRU5UUy5jb3B5ICsgaW1hZ2VDb3VudCAqIFBSSUNFX0NFTlRTLmltYWdlICsgKGdlblZpZGVvID8gUFJJQ0VfQ0VOVFMudmlkZW9fc2NyaXB0IDogMCk7XHJcblxyXG4gIGNvbnN0IHRvZ2dsZVBsYXRmb3JtID0gKHA6IFBsYXRmb3JtKSA9PlxyXG4gICAgc2V0UGxhdGZvcm1zKChwcmV2KSA9PiAocHJldi5pbmNsdWRlcyhwKSA/IHByZXYuZmlsdGVyKCh4KSA9PiB4ICE9PSBwKSA6IFsuLi5wcmV2LCBwXSkpO1xyXG5cclxuICBjb25zdCBoYW5kbGVHZW5lcmF0ZSA9IGFzeW5jICgpID0+IHtcclxuICAgIGlmICghb2ZmZXIudHJpbSgpKSB7IHRvYXN0LmVycm9yKFwiVGVsbCB1cyB3aGF0IHRvIGFkdmVydGlzZVwiKTsgcmV0dXJuOyB9XHJcbiAgICBzZXRMb2FkaW5nKHRydWUpO1xyXG4gICAgdHJ5IHtcclxuICAgICAgY29uc3QgeyBkYXRhLCBlcnJvciB9ID0gYXdhaXQgc3VwYWJhc2UuZnVuY3Rpb25zLmludm9rZShcImFkcy1zdHVkaW8tZ2VuZXJhdGVcIiwge1xyXG4gICAgICAgIGJvZHk6IHtcclxuICAgICAgICAgIHN0b3JlX2lkOiBzdG9yZUlkLFxyXG4gICAgICAgICAgZ29hbCxcclxuICAgICAgICAgIHNlcnZpY2Vfc3VtbWFyeTogb2ZmZXIsXHJcbiAgICAgICAgICBzdG9yZV9uYW1lOiBzdG9yZU5hbWUsXHJcbiAgICAgICAgICBzdG9yZV9jaXR5OiBjaXR5LFxyXG4gICAgICAgICAgdGFyZ2V0aW5nOiB7IGNpdHksIHJhZGl1c19rbTogcmFkaXVzLCBhZ2VfbWluOiBhZ2VNaW4sIGFnZV9tYXg6IGFnZU1heCB9LFxyXG4gICAgICAgICAgcGxhdGZvcm1zLFxyXG4gICAgICAgICAgZ2VuZXJhdGU6IHsgY29weTogdHJ1ZSwgaW1hZ2VzOiBpbWFnZUNvdW50LCB2aWRlb19zY3JpcHRzOiBnZW5WaWRlbyB9LFxyXG4gICAgICAgIH0sXHJcbiAgICAgIH0pO1xyXG4gICAgICBpZiAoZXJyb3IpIHRocm93IGVycm9yO1xyXG4gICAgICBjb25zdCBkOiBhbnkgPSBkYXRhO1xyXG4gICAgICBpZiAoZD8uZXJyb3IgPT09IFwiaW5zdWZmaWNpZW50X2JhbGFuY2VcIikge1xyXG4gICAgICAgIHRvYXN0LmVycm9yKGQubWVzc2FnZSB8fCBcIlRvcCB1cCB5b3VyIEFkcyB3YWxsZXQgdG8gY29udGludWUuXCIpO1xyXG4gICAgICAgIHJldHVybjtcclxuICAgICAgfVxyXG4gICAgICBpZiAoZD8uZXJyb3IpIHRocm93IG5ldyBFcnJvcihkLmVycm9yKTtcclxuXHJcbiAgICAgIC8vIFBlcnNpc3QgY3JlYXRpdmVcclxuICAgICAgY29uc3QgeyBkYXRhOiBjcmVhdGl2ZSwgZXJyb3I6IGluc0VyciB9ID0gYXdhaXQgc3VwYWJhc2VcclxuICAgICAgICAuZnJvbShcImFkc19zdHVkaW9fY3JlYXRpdmVzXCIpXHJcbiAgICAgICAgLmluc2VydCh7XHJcbiAgICAgICAgICBzdG9yZV9pZDogc3RvcmVJZCxcclxuICAgICAgICAgIGdvYWwsXHJcbiAgICAgICAgICB0YXJnZXRpbmc6IHsgY2l0eSwgcmFkaXVzX2ttOiByYWRpdXMsIGFnZV9taW46IGFnZU1pbiwgYWdlX21heDogYWdlTWF4IH0sXHJcbiAgICAgICAgICBidWRnZXQ6IHsgZGFpbHk6IGRhaWx5QnVkZ2V0LCBjdXJyZW5jeTogXCJVU0RcIiB9LFxyXG4gICAgICAgICAgaGVhZGxpbmVzOiBkLmNvcHk/LmhlYWRsaW5lcyA/PyB7fSxcclxuICAgICAgICAgIGRlc2NyaXB0aW9uczogZC5jb3B5Py5kZXNjcmlwdGlvbnMgPz8ge30sXHJcbiAgICAgICAgICBjdGFzOiBkLmNvcHk/LmN0YXMgPz8gW10sXHJcbiAgICAgICAgICBoYXNodGFnczogZC5jb3B5Py5oYXNodGFncyA/PyBbXSxcclxuICAgICAgICAgIGltYWdlX3VybHM6IGQuaW1hZ2VzID8/IFtdLFxyXG4gICAgICAgICAgdmlkZW9fc2NyaXB0czogZC52aWRlb19zY3JpcHRzID8/IG51bGwsXHJcbiAgICAgICAgICBwbGF0Zm9ybXMsXHJcbiAgICAgICAgICBzdGF0dXM6IFwicmVhZHlcIixcclxuICAgICAgICB9KVxyXG4gICAgICAgIC5zZWxlY3QoKVxyXG4gICAgICAgIC5tYXliZVNpbmdsZSgpO1xyXG4gICAgICBpZiAoaW5zRXJyKSBjb25zb2xlLndhcm4oaW5zRXJyKTtcclxuXHJcbiAgICAgIC8vIEF1dG8tY3JlYXRlIEEvQiB2YXJpYW50cyBmcm9tIHRoZSBmaXJzdCAzIGhlYWRsaW5lcyArIGltYWdlc1xyXG4gICAgICBpZiAoY3JlYXRpdmU/LmlkKSB7XHJcbiAgICAgICAgY29uc3QgYWxsSGVhZGxpbmVzOiBzdHJpbmdbXSA9IFtcclxuICAgICAgICAgIC4uLihkLmNvcHk/LmhlYWRsaW5lcz8ubWV0YSB8fCBbXSksXHJcbiAgICAgICAgICAuLi4oZC5jb3B5Py5oZWFkbGluZXM/Lmdvb2dsZSB8fCBbXSksXHJcbiAgICAgICAgICAuLi4oZC5jb3B5Py5oZWFkbGluZXM/LnRpa3RvayB8fCBbXSksXHJcbiAgICAgICAgXTtcclxuICAgICAgICBjb25zdCB2YXJpYW50cyA9IGFsbEhlYWRsaW5lcy5zbGljZSgwLCAzKS5tYXAoKGg6IHN0cmluZywgaTogbnVtYmVyKSA9PiAoe1xyXG4gICAgICAgICAgY3JlYXRpdmVfaWQ6IGNyZWF0aXZlLmlkLFxyXG4gICAgICAgICAgc3RvcmVfaWQ6IHN0b3JlSWQsXHJcbiAgICAgICAgICB2YXJpYW50X2xhYmVsOiBTdHJpbmcuZnJvbUNoYXJDb2RlKDY1ICsgaSksIC8vIEEsIEIsIENcclxuICAgICAgICAgIGhlYWRsaW5lOiBoLFxyXG4gICAgICAgICAgZGVzY3JpcHRpb246IGQuY29weT8uZGVzY3JpcHRpb25zPy5zaG9ydD8uW2ldIHx8IGQuY29weT8uZGVzY3JpcHRpb25zPy5zaG9ydD8uWzBdIHx8IG51bGwsXHJcbiAgICAgICAgICBpbWFnZV91cmw6IGQuaW1hZ2VzPy5baSAlIE1hdGgubWF4KDEsIGQuaW1hZ2VzPy5sZW5ndGggfHwgMSldPy51cmwgfHwgbnVsbCxcclxuICAgICAgICAgIGN0YTogZC5jb3B5Py5jdGFzPy5baSAlIE1hdGgubWF4KDEsIGQuY29weT8uY3Rhcz8ubGVuZ3RoIHx8IDEpXSB8fCBudWxsLFxyXG4gICAgICAgICAgaXNfYWN0aXZlOiB0cnVlLFxyXG4gICAgICAgIH0pKTtcclxuICAgICAgICBpZiAodmFyaWFudHMubGVuZ3RoID4gMCkge1xyXG4gICAgICAgICAgYXdhaXQgc3VwYWJhc2UuZnJvbShcImFkc19zdHVkaW9fdmFyaWFudHNcIiBhcyBhbnkpLmluc2VydCh2YXJpYW50cyk7XHJcbiAgICAgICAgfVxyXG4gICAgICB9XHJcblxyXG4gICAgICBzZXRSZXN1bHQoeyAuLi5kLCBjcmVhdGl2ZV9pZDogY3JlYXRpdmU/LmlkIH0pO1xyXG4gICAgICBzZXRTdGVwKDQpO1xyXG4gICAgICB0b2FzdC5zdWNjZXNzKGBHZW5lcmF0ZWQhIENvc3Q6ICQkeyhkLmNvc3RfY2VudHMgLyAxMDApLnRvRml4ZWQoMil9IMK3IEJhbGFuY2U6ICQkeygoZC5iYWxhbmNlX2FmdGVyX2NlbnRzID8/IDApIC8gMTAwKS50b0ZpeGVkKDIpfWApO1xyXG4gICAgfSBjYXRjaCAoZTogYW55KSB7XHJcbiAgICAgIHRvYXN0LmVycm9yKGU/Lm1lc3NhZ2UgfHwgXCJHZW5lcmF0aW9uIGZhaWxlZFwiKTtcclxuICAgIH0gZmluYWxseSB7IHNldExvYWRpbmcoZmFsc2UpOyB9XHJcbiAgfTtcclxuXHJcbiAgY29uc3QgaGFuZGxlRXhwb3J0ID0gYXN5bmMgKHA6IFBsYXRmb3JtKSA9PiB7XHJcbiAgICBpZiAoIXJlc3VsdD8uY3JlYXRpdmVfaWQpIHsgdG9hc3QuZXJyb3IoXCJObyBjcmVhdGl2ZSB0byBleHBvcnRcIik7IHJldHVybjsgfVxyXG4gICAgc2V0RXhwb3J0aW5nKHApO1xyXG4gICAgdHJ5IHtcclxuICAgICAgY29uc3QgeyBkYXRhLCBlcnJvciB9ID0gYXdhaXQgc3VwYWJhc2UuZnVuY3Rpb25zLmludm9rZShcImFkcy1zdHVkaW8tZXhwb3J0XCIsIHtcclxuICAgICAgICBib2R5OiB7IGNyZWF0aXZlX2lkOiByZXN1bHQuY3JlYXRpdmVfaWQgfSxcclxuICAgICAgfSk7XHJcbiAgICAgIGlmIChlcnJvcikgdGhyb3cgZXJyb3I7XHJcbiAgICAgIHNldEV4cG9ydHMoZGF0YSk7XHJcblxyXG4gICAgICBpZiAocCA9PT0gXCJnb29nbGVcIikge1xyXG4gICAgICAgIGNvbnN0IGJsb2IgPSBuZXcgQmxvYihbZGF0YS5idW5kbGVzLmdvb2dsZV9jc3ZdLCB7IHR5cGU6IFwidGV4dC9jc3ZcIiB9KTtcclxuICAgICAgICBkb3dubG9hZEJsb2IoYmxvYiwgYHppdm8tZ29vZ2xlLWFkcy0ke3N0b3JlU2x1ZyB8fCBzdG9yZUlkfS5jc3ZgKTtcclxuICAgICAgfSBlbHNlIGlmIChwID09PSBcIm1ldGFcIiB8fCBwID09PSBcInRpa3Rva1wiIHx8IHAgPT09IFwieW91dHViZVwiKSB7XHJcbiAgICAgICAgY29uc3QgYnVuZGxlID0gZGF0YS5idW5kbGVzW3BdO1xyXG4gICAgICAgIGNvbnN0IGJsb2IgPSBuZXcgQmxvYihbSlNPTi5zdHJpbmdpZnkoYnVuZGxlLCBudWxsLCAyKV0sIHsgdHlwZTogXCJhcHBsaWNhdGlvbi9qc29uXCIgfSk7XHJcbiAgICAgICAgZG93bmxvYWRCbG9iKGJsb2IsIGB6aXZvLSR7cH0tYWRzLSR7c3RvcmVTbHVnIHx8IHN0b3JlSWR9Lmpzb25gKTtcclxuICAgICAgfVxyXG4gICAgICB0b2FzdC5zdWNjZXNzKGAke1BMQVRGT1JNX01FVEFbcF0ubGFiZWx9IGJ1bmRsZSBkb3dubG9hZGVkYCk7XHJcbiAgICB9IGNhdGNoIChlOiBhbnkpIHtcclxuICAgICAgdG9hc3QuZXJyb3IoZT8ubWVzc2FnZSB8fCBcIkV4cG9ydCBmYWlsZWRcIik7XHJcbiAgICB9IGZpbmFsbHkgeyBzZXRFeHBvcnRpbmcobnVsbCk7IH1cclxuICB9O1xyXG5cclxuICBjb25zdCBjb3B5ID0gKHRleHQ6IHN0cmluZykgPT4geyBuYXZpZ2F0b3IuY2xpcGJvYXJkLndyaXRlVGV4dCh0ZXh0KTsgdG9hc3Quc3VjY2VzcyhcIkNvcGllZFwiKTsgfTtcclxuXHJcbiAgcmV0dXJuIChcclxuICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS0zIHNtOnNwYWNlLXktNFwiPlxyXG4gICAgICB7LyogU3RlcHBlciB3aXRoIGxhYmVscyAqL31cclxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMSBzbTpnYXAtMlwiPlxyXG4gICAgICAgIHtbXHJcbiAgICAgICAgICB7IG46IDEsIGxhYmVsOiBcIkdvYWxcIiB9LFxyXG4gICAgICAgICAgeyBuOiAyLCBsYWJlbDogXCJPZmZlclwiIH0sXHJcbiAgICAgICAgICB7IG46IDMsIGxhYmVsOiBcIlRhcmdldGluZ1wiIH0sXHJcbiAgICAgICAgICB7IG46IDQsIGxhYmVsOiBcIlJlc3VsdHNcIiB9LFxyXG4gICAgICAgIF0ubWFwKChzLCBpLCBhcnIpID0+IChcclxuICAgICAgICAgIDxkaXYga2V5PXtzLm59IGNsYXNzTmFtZT1cImZsZXgtMSBmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMSBzbTpnYXAtMiBtaW4tdy0wXCI+XHJcbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBmbGV4LWNvbCBpdGVtcy1jZW50ZXIgZ2FwLTEgc2hyaW5rLTBcIj5cclxuICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT17YGgtNyB3LTcgc206aC04IHNtOnctOCByb3VuZGVkLWZ1bGwgZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXIgdGV4dC1bMTFweF0gc206dGV4dC14cyBmb250LXNlbWlib2xkIHRyYW5zaXRpb24gJHtcclxuICAgICAgICAgICAgICAgIHN0ZXAgPj0gcy5uID8gXCJiZy1wcmltYXJ5IHRleHQtcHJpbWFyeS1mb3JlZ3JvdW5kXCIgOiBcImJnLW11dGVkIHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiXHJcbiAgICAgICAgICAgICAgfWB9PntzdGVwID4gcy5uID8gPENoZWNrIGNsYXNzTmFtZT1cImgtMy41IHctMy41IHNtOmgtNCBzbTp3LTRcIiAvPiA6IHMubn08L2Rpdj5cclxuICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9e2B0ZXh0LVs5cHhdIHNtOnRleHQtWzEwcHhdIGZvbnQtbWVkaXVtIGhpZGRlbiB4czpibG9jayAke3N0ZXAgPj0gcy5uID8gXCJ0ZXh0LWZvcmVncm91bmRcIiA6IFwidGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCJ9YH0+e3MubGFiZWx9PC9zcGFuPlxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAge2kgPCBhcnIubGVuZ3RoIC0gMSAmJiA8ZGl2IGNsYXNzTmFtZT17YGgtMC41IGZsZXgtMSAtbXQtMyBzbTotbXQtNCAke3N0ZXAgPiBzLm4gPyBcImJnLXByaW1hcnlcIiA6IFwiYmctbXV0ZWRcIn1gfSAvPn1cclxuICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICkpfVxyXG4gICAgICA8L2Rpdj5cclxuXHJcbiAgICAgIHsvKiBTdGVwIDE6IEdvYWwgKi99XHJcbiAgICAgIHtzdGVwID09PSAxICYmIChcclxuICAgICAgICA8Q2FyZD48Q2FyZENvbnRlbnQgY2xhc3NOYW1lPVwicC0zIHNtOnAtNCBzcGFjZS15LTNcIj5cclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTJcIj48VGFyZ2V0IGNsYXNzTmFtZT1cImgtNCB3LTQgdGV4dC1wcmltYXJ5XCIgLz48aDMgY2xhc3NOYW1lPVwiZm9udC1zZW1pYm9sZCB0ZXh0LXNtIHNtOnRleHQtYmFzZVwiPlBpY2sgeW91ciBnb2FsPC9oMz48L2Rpdj5cclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZ3JpZCBncmlkLWNvbHMtMSBzbTpncmlkLWNvbHMtMiBnYXAtMlwiPlxyXG4gICAgICAgICAgICB7R09BTFMubWFwKChnKSA9PiAoXHJcbiAgICAgICAgICAgICAgPGJ1dHRvbiBrZXk9e2cuaWR9IG9uQ2xpY2s9eygpID0+IHNldEdvYWwoZy5pZCl9XHJcbiAgICAgICAgICAgICAgICBjbGFzc05hbWU9e2B0ZXh0LWxlZnQgcC0zIHJvdW5kZWQteGwgYm9yZGVyLTIgdHJhbnNpdGlvbiBhY3RpdmU6c2NhbGUtWzAuOThdIHRvdWNoLW1hbmlwdWxhdGlvbiBtaW4taC1bNjRweF0gJHtcclxuICAgICAgICAgICAgICAgICAgZ29hbCA9PT0gZy5pZCA/IFwiYm9yZGVyLXByaW1hcnkgYmctcHJpbWFyeS81XCIgOiBcImJvcmRlci1ib3JkZXIgaG92ZXI6Ym9yZGVyLXByaW1hcnkvNTBcIlxyXG4gICAgICAgICAgICAgICAgfWB9PlxyXG4gICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwiZm9udC1zZW1pYm9sZCB0ZXh0LXNtXCI+e2cubGFiZWx9PC9wPlxyXG4gICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1bMTFweF0gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIG10LTAuNVwiPntnLmRlc2N9PC9wPlxyXG4gICAgICAgICAgICAgIDwvYnV0dG9uPlxyXG4gICAgICAgICAgICApKX1cclxuICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgPEJ1dHRvbiBjbGFzc05hbWU9XCJ3LWZ1bGwgaC0xMSBzbTpoLTEwXCIgb25DbGljaz17KCkgPT4gc2V0U3RlcCgyKX0+Q29udGludWU8L0J1dHRvbj5cclxuICAgICAgICA8L0NhcmRDb250ZW50PjwvQ2FyZD5cclxuICAgICAgKX1cclxuXHJcbiAgICAgIHsvKiBTdGVwIDI6IE9mZmVyICovfVxyXG4gICAgICB7c3RlcCA9PT0gMiAmJiAoXHJcbiAgICAgICAgPENhcmQ+PENhcmRDb250ZW50IGNsYXNzTmFtZT1cInAtNCBzcGFjZS15LTNcIj5cclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTJcIj48U3BhcmtsZXMgY2xhc3NOYW1lPVwiaC00IHctNCB0ZXh0LXByaW1hcnlcIiAvPjxoMyBjbGFzc05hbWU9XCJmb250LXNlbWlib2xkXCI+V2hhdCBhcmUgeW91IGFkdmVydGlzaW5nPzwvaDM+PC9kaXY+XHJcbiAgICAgICAgICA8VGV4dGFyZWFcclxuICAgICAgICAgICAgcGxhY2Vob2xkZXI9XCJFeGFtcGxlOiAyMCUgb2ZmIG9pbCBjaGFuZ2VzIHRoaXMgbW9udGgsIHBsdXMgZnJlZSB0aXJlIHJvdGF0aW9uLiBGYW1pbHktb3duZWQgYXV0byBzaG9wIGluIFBobm9tIFBlbmgsIG9wZW4gNyBkYXlzLlwiXHJcbiAgICAgICAgICAgIHZhbHVlPXtvZmZlcn0gb25DaGFuZ2U9eyhlKSA9PiBzZXRPZmZlcihlLnRhcmdldC52YWx1ZSl9IHJvd3M9ezR9XHJcbiAgICAgICAgICAgIG1heExlbmd0aD17NTAwfVxyXG4gICAgICAgICAgLz5cclxuICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtWzExcHhdIHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiPntvZmZlci5sZW5ndGh9LzUwMCDigJQgQmUgc3BlY2lmaWMuIEFJIHVzZXMgdGhpcyB0byB3cml0ZSBoZWFkbGluZXMgJiBnZW5lcmF0ZSBpbWFnZXMuPC9wPlxyXG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGZsZXgtY29sLXJldmVyc2Ugc206ZmxleC1yb3cgZ2FwLTJcIj5cclxuICAgICAgICAgICAgPEJ1dHRvbiB2YXJpYW50PVwib3V0bGluZVwiIGNsYXNzTmFtZT1cImZsZXgtMSBoLTExIHNtOmgtMTBcIiBvbkNsaWNrPXsoKSA9PiBzZXRTdGVwKDEpfT5CYWNrPC9CdXR0b24+XHJcbiAgICAgICAgICAgIDxCdXR0b24gY2xhc3NOYW1lPVwiZmxleC0xIGgtMTEgc206aC0xMFwiIG9uQ2xpY2s9eygpID0+IHNldFN0ZXAoMyl9IGRpc2FibGVkPXshb2ZmZXIudHJpbSgpfT5Db250aW51ZTwvQnV0dG9uPlxyXG4gICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgPC9DYXJkQ29udGVudD48L0NhcmQ+XHJcbiAgICAgICl9XHJcblxyXG4gICAgICB7LyogU3RlcCAzOiBUYXJnZXRpbmcgKyBCdWRnZXQgKyBQbGF0Zm9ybXMgKi99XHJcbiAgICAgIHtzdGVwID09PSAzICYmIChcclxuICAgICAgICA8Q2FyZD48Q2FyZENvbnRlbnQgY2xhc3NOYW1lPVwicC0zIHNtOnAtNCBzcGFjZS15LTRcIj5cclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTJcIj48RG9sbGFyU2lnbiBjbGFzc05hbWU9XCJoLTQgdy00IHRleHQtcHJpbWFyeVwiIC8+PGgzIGNsYXNzTmFtZT1cImZvbnQtc2VtaWJvbGQgdGV4dC1zbSBzbTp0ZXh0LWJhc2VcIj5UYXJnZXRpbmcgJiBidWRnZXQ8L2gzPjwvZGl2PlxyXG5cclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZ3JpZCBncmlkLWNvbHMtMiBnYXAtMlwiPlxyXG4gICAgICAgICAgICA8ZGl2PlxyXG4gICAgICAgICAgICAgIDxMYWJlbCBjbGFzc05hbWU9XCJ0ZXh0LXhzXCI+Q2l0eTwvTGFiZWw+XHJcbiAgICAgICAgICAgICAgPElucHV0IHBsYWNlaG9sZGVyPVwiUGhub20gUGVuaFwiIHZhbHVlPXtjaXR5fSBvbkNoYW5nZT17KGUpID0+IHNldENpdHkoZS50YXJnZXQudmFsdWUpfSAvPlxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgPGRpdj5cclxuICAgICAgICAgICAgICA8TGFiZWwgY2xhc3NOYW1lPVwidGV4dC14c1wiPlJhZGl1cyAoa20pPC9MYWJlbD5cclxuICAgICAgICAgICAgICA8SW5wdXQgdHlwZT1cIm51bWJlclwiIG1pbj17MX0gbWF4PXs1MDB9IHZhbHVlPXtyYWRpdXN9IG9uQ2hhbmdlPXsoZSkgPT4gc2V0UmFkaXVzKCtlLnRhcmdldC52YWx1ZSB8fCAxNSl9IC8+XHJcbiAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICA8ZGl2PlxyXG4gICAgICAgICAgICAgIDxMYWJlbCBjbGFzc05hbWU9XCJ0ZXh0LXhzXCI+QWdlIG1pbjwvTGFiZWw+XHJcbiAgICAgICAgICAgICAgPElucHV0IHR5cGU9XCJudW1iZXJcIiBtaW49ezEzfSBtYXg9ezk5fSB2YWx1ZT17YWdlTWlufSBvbkNoYW5nZT17KGUpID0+IHNldEFnZU1pbigrZS50YXJnZXQudmFsdWUgfHwgMTgpfSAvPlxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgPGRpdj5cclxuICAgICAgICAgICAgICA8TGFiZWwgY2xhc3NOYW1lPVwidGV4dC14c1wiPkFnZSBtYXg8L0xhYmVsPlxyXG4gICAgICAgICAgICAgIDxJbnB1dCB0eXBlPVwibnVtYmVyXCIgbWluPXsxM30gbWF4PXs5OX0gdmFsdWU9e2FnZU1heH0gb25DaGFuZ2U9eyhlKSA9PiBzZXRBZ2VNYXgoK2UudGFyZ2V0LnZhbHVlIHx8IDU1KX0gLz5cclxuICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgIDxkaXY+XHJcbiAgICAgICAgICAgICAgPExhYmVsIGNsYXNzTmFtZT1cInRleHQteHNcIj5EYWlseSBidWRnZXQgKFVTRCk8L0xhYmVsPlxyXG4gICAgICAgICAgICAgIDxJbnB1dCB0eXBlPVwibnVtYmVyXCIgbWluPXs1fSB2YWx1ZT17ZGFpbHlCdWRnZXR9IG9uQ2hhbmdlPXsoZSkgPT4gc2V0RGFpbHlCdWRnZXQoK2UudGFyZ2V0LnZhbHVlIHx8IDIwKX0gLz5cclxuICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgIDxkaXY+XHJcbiAgICAgICAgICAgICAgPExhYmVsIGNsYXNzTmFtZT1cInRleHQteHNcIj5JbWFnZSB2YXJpYW50czwvTGFiZWw+XHJcbiAgICAgICAgICAgICAgPFNlbGVjdCB2YWx1ZT17U3RyaW5nKGltYWdlQ291bnQpfSBvblZhbHVlQ2hhbmdlPXsodikgPT4gc2V0SW1hZ2VDb3VudCgrdil9PlxyXG4gICAgICAgICAgICAgICAgPFNlbGVjdFRyaWdnZXI+PFNlbGVjdFZhbHVlIC8+PC9TZWxlY3RUcmlnZ2VyPlxyXG4gICAgICAgICAgICAgICAgPFNlbGVjdENvbnRlbnQ+XHJcbiAgICAgICAgICAgICAgICAgIDxTZWxlY3RJdGVtIHZhbHVlPVwiMFwiPk5vIGltYWdlczwvU2VsZWN0SXRlbT5cclxuICAgICAgICAgICAgICAgICAgPFNlbGVjdEl0ZW0gdmFsdWU9XCIxXCI+MSAoc3F1YXJlIG9ubHkpPC9TZWxlY3RJdGVtPlxyXG4gICAgICAgICAgICAgICAgICA8U2VsZWN0SXRlbSB2YWx1ZT1cIjJcIj4yIChzcXVhcmUgKyB2ZXJ0aWNhbCk8L1NlbGVjdEl0ZW0+XHJcbiAgICAgICAgICAgICAgICAgIDxTZWxlY3RJdGVtIHZhbHVlPVwiNFwiPjQgKGFsbCBhc3BlY3RzKTwvU2VsZWN0SXRlbT5cclxuICAgICAgICAgICAgICAgIDwvU2VsZWN0Q29udGVudD5cclxuICAgICAgICAgICAgICA8L1NlbGVjdD5cclxuICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICA8L2Rpdj5cclxuXHJcbiAgICAgICAgICA8ZGl2PlxyXG4gICAgICAgICAgICA8TGFiZWwgY2xhc3NOYW1lPVwidGV4dC14cyBtYi0yIGJsb2NrXCI+UGxhdGZvcm1zPC9MYWJlbD5cclxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJncmlkIGdyaWQtY29scy0xIHNtOmdyaWQtY29scy0yIGdhcC0yXCI+XHJcbiAgICAgICAgICAgICAgeyhPYmplY3Qua2V5cyhQTEFURk9STV9NRVRBKSBhcyBQbGF0Zm9ybVtdKS5tYXAoKHApID0+IHtcclxuICAgICAgICAgICAgICAgIGNvbnN0IE0gPSBQTEFURk9STV9NRVRBW3BdOyBjb25zdCBJY29uID0gTS5pY29uOyBjb25zdCBvbiA9IHBsYXRmb3Jtcy5pbmNsdWRlcyhwKTtcclxuICAgICAgICAgICAgICAgIHJldHVybiAoXHJcbiAgICAgICAgICAgICAgICAgIDxidXR0b24ga2V5PXtwfSBvbkNsaWNrPXsoKSA9PiB0b2dnbGVQbGF0Zm9ybShwKX1cclxuICAgICAgICAgICAgICAgICAgICBjbGFzc05hbWU9e2BmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMiBwLTIuNSByb3VuZGVkLWxnIGJvcmRlci0yIHRleHQtc20gYWN0aXZlOnNjYWxlLVswLjk4XSB0b3VjaC1tYW5pcHVsYXRpb24gbWluLWgtWzQ0cHhdICR7XHJcbiAgICAgICAgICAgICAgICAgICAgICBvbiA/IFwiYm9yZGVyLXByaW1hcnkgYmctcHJpbWFyeS81XCIgOiBcImJvcmRlci1ib3JkZXJcIlxyXG4gICAgICAgICAgICAgICAgICAgIH1gfT5cclxuICAgICAgICAgICAgICAgICAgICA8SWNvbiBjbGFzc05hbWU9e2BoLTQgdy00ICR7TS5jb2xvcn1gfSAvPlxyXG4gICAgICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cImZvbnQtbWVkaXVtXCI+e00ubGFiZWx9PC9zcGFuPlxyXG4gICAgICAgICAgICAgICAgICAgIHtvbiAmJiA8Q2hlY2sgY2xhc3NOYW1lPVwiaC0zLjUgdy0zLjUgbWwtYXV0byB0ZXh0LXByaW1hcnlcIiAvPn1cclxuICAgICAgICAgICAgICAgICAgPC9idXR0b24+XHJcbiAgICAgICAgICAgICAgICApO1xyXG4gICAgICAgICAgICAgIH0pfVxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgIDwvZGl2PlxyXG5cclxuICAgICAgICAgIDxsYWJlbCBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMiB0ZXh0LXNtIG1pbi1oLVs0NHB4XSBjdXJzb3ItcG9pbnRlclwiPlxyXG4gICAgICAgICAgICA8aW5wdXQgdHlwZT1cImNoZWNrYm94XCIgY2hlY2tlZD17Z2VuVmlkZW99IG9uQ2hhbmdlPXsoZSkgPT4gc2V0R2VuVmlkZW8oZS50YXJnZXQuY2hlY2tlZCl9IGNsYXNzTmFtZT1cImgtNCB3LTRcIiAvPlxyXG4gICAgICAgICAgICA8c3Bhbj5BbHNvIGdlbmVyYXRlIFRpa1RvayArIFlvdVR1YmUgU2hvcnRzIHZpZGVvIHNjcmlwdHM8L3NwYW4+XHJcbiAgICAgICAgICA8L2xhYmVsPlxyXG5cclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwicm91bmRlZC1sZyBiZy1tdXRlZC81MCBwLTMgZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1iZXR3ZWVuXCI+XHJcbiAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInRleHQteHMgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+RXN0aW1hdGVkIEFJIGNvc3Q8L3NwYW4+XHJcbiAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInRleHQtYmFzZSBmb250LWJvbGQgdGV4dC1wcmltYXJ5XCI+JHsoZXN0Q29zdCAvIDEwMCkudG9GaXhlZCgyKX08L3NwYW4+XHJcbiAgICAgICAgICA8L2Rpdj5cclxuXHJcbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggZmxleC1jb2wtcmV2ZXJzZSBzbTpmbGV4LXJvdyBnYXAtMlwiPlxyXG4gICAgICAgICAgICA8QnV0dG9uIHZhcmlhbnQ9XCJvdXRsaW5lXCIgY2xhc3NOYW1lPVwiZmxleC0xIGgtMTEgc206aC0xMFwiIG9uQ2xpY2s9eygpID0+IHNldFN0ZXAoMil9IGRpc2FibGVkPXtsb2FkaW5nfT5CYWNrPC9CdXR0b24+XHJcbiAgICAgICAgICAgIDxCdXR0b24gY2xhc3NOYW1lPVwiZmxleC0xIGgtMTEgc206aC0xMFwiIG9uQ2xpY2s9e2hhbmRsZUdlbmVyYXRlfSBkaXNhYmxlZD17bG9hZGluZyB8fCAhcGxhdGZvcm1zLmxlbmd0aH0+XHJcbiAgICAgICAgICAgICAge2xvYWRpbmcgPyA8PjxMb2FkZXIyIGNsYXNzTmFtZT1cImgtNCB3LTQgbXItMiBhbmltYXRlLXNwaW5cIiAvPiBHZW5lcmF0aW5n4oCmPC8+IDogPD48V2FuZDIgY2xhc3NOYW1lPVwiaC00IHctNCBtci0yXCIgLz4gR2VuZXJhdGUgQUkgYWRzPC8+fVxyXG4gICAgICAgICAgICA8L0J1dHRvbj5cclxuICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgIDwvQ2FyZENvbnRlbnQ+PC9DYXJkPlxyXG4gICAgICApfVxyXG5cclxuICAgICAgey8qIFN0ZXAgNDogUHJlLWdlbmVyYXRpb24gcGxhY2Vob2xkZXIgKi99XHJcbiAgICAgIHtzdGVwID09PSA0ICYmICFyZXN1bHQgJiYgIWxvYWRpbmcgJiYgKFxyXG4gICAgICAgIDxNYXJrZXRpbmdFbXB0eVN0YXRlXHJcbiAgICAgICAgICBpY29uPXtTcGFya2xlc31cclxuICAgICAgICAgIHRpdGxlPVwiUmVhZHkgdG8gZ2VuZXJhdGVcIlxyXG4gICAgICAgICAgYm9keT1cIlBpY2sgYSBnb2FsLCBhdWRpZW5jZSwgYW5kIGJ1ZGdldCDigJQgdGhlbiB0YXAgR2VuZXJhdGUgdG8gc2VlIEFJLWNyYWZ0ZWQgYWQgdmFyaWFudHMuXCJcclxuICAgICAgICAvPlxyXG4gICAgICApfVxyXG5cclxuICAgICAgey8qIFN0ZXAgNDogTG9hZGluZyB0cmFuc2l0aW9uICovfVxyXG4gICAgICB7c3RlcCA9PT0gNCAmJiAhcmVzdWx0ICYmIGxvYWRpbmcgJiYgPFdpemFyZFNrZWxldG9uIC8+fVxyXG5cclxuICAgICAgey8qIFN0ZXAgNDogUmVzdWx0cyAqL31cclxuICAgICAge3N0ZXAgPT09IDQgJiYgcmVzdWx0ICYmIChcclxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktM1wiPlxyXG4gICAgICAgICAgey8qIEhlYWRsaW5lcyAqL31cclxuICAgICAgICAgIDxDYXJkPjxDYXJkQ29udGVudCBjbGFzc05hbWU9XCJwLTQgc3BhY2UteS0yXCI+XHJcbiAgICAgICAgICAgIDxoNCBjbGFzc05hbWU9XCJmb250LXNlbWlib2xkIHRleHQtc20gZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTJcIj48U3BhcmtsZXMgY2xhc3NOYW1lPVwiaC00IHctNCB0ZXh0LXByaW1hcnlcIiAvPiBIZWFkbGluZXM8L2g0PlxyXG4gICAgICAgICAgICB7T2JqZWN0LmVudHJpZXMocmVzdWx0LmNvcHk/LmhlYWRsaW5lcyA/PyB7fSkubWFwKChbcGxhdCwgbGluZXNdKSA9PiAoXHJcbiAgICAgICAgICAgICAgPGRpdiBrZXk9e3BsYXR9PlxyXG4gICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1bMTFweF0gdXBwZXJjYXNlIGZvbnQtc2VtaWJvbGQgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIG10LTIgbWItMVwiPntwbGF0fTwvcD5cclxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS0xXCI+XHJcbiAgICAgICAgICAgICAgICAgIHsobGluZXMgYXMgc3RyaW5nW10pLm1hcCgoaCwgaSkgPT4gKFxyXG4gICAgICAgICAgICAgICAgICAgIDxkaXYga2V5PXtpfSBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMiB0ZXh0LXNtIGJnLW11dGVkLzQwIHJvdW5kZWQgcHgtMiBweS0xLjVcIj5cclxuICAgICAgICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cImZsZXgtMVwiPntofTwvc3Bhbj5cclxuICAgICAgICAgICAgICAgICAgICAgIDxidXR0b24gb25DbGljaz17KCkgPT4gY29weShoKX0gY2xhc3NOYW1lPVwidGV4dC1tdXRlZC1mb3JlZ3JvdW5kIGhvdmVyOnRleHQtcHJpbWFyeVwiPjxDb3B5IGNsYXNzTmFtZT1cImgtMy41IHctMy41XCIgLz48L2J1dHRvbj5cclxuICAgICAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgICAgKSl9XHJcbiAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgKSl9XHJcbiAgICAgICAgICA8L0NhcmRDb250ZW50PjwvQ2FyZD5cclxuXHJcbiAgICAgICAgICB7LyogRGVzY3JpcHRpb25zICovfVxyXG4gICAgICAgICAge3Jlc3VsdC5jb3B5Py5kZXNjcmlwdGlvbnMgJiYgKFxyXG4gICAgICAgICAgICA8Q2FyZD48Q2FyZENvbnRlbnQgY2xhc3NOYW1lPVwicC00IHNwYWNlLXktMlwiPlxyXG4gICAgICAgICAgICAgIDxoNCBjbGFzc05hbWU9XCJmb250LXNlbWlib2xkIHRleHQtc21cIj5EZXNjcmlwdGlvbnM8L2g0PlxyXG4gICAgICAgICAgICAgIHtbLi4uKHJlc3VsdC5jb3B5LmRlc2NyaXB0aW9ucy5zaG9ydCB8fCBbXSksIC4uLihyZXN1bHQuY29weS5kZXNjcmlwdGlvbnMubG9uZyB8fCBbXSldLm1hcCgoZDogc3RyaW5nLCBpOiBudW1iZXIpID0+IChcclxuICAgICAgICAgICAgICAgIDxkaXYga2V5PXtpfSBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLXN0YXJ0IGdhcC0yIHRleHQtc20gYmctbXV0ZWQvNDAgcm91bmRlZCBweC0yIHB5LTEuNVwiPlxyXG4gICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJmbGV4LTFcIj57ZH08L3NwYW4+XHJcbiAgICAgICAgICAgICAgICAgIDxidXR0b24gb25DbGljaz17KCkgPT4gY29weShkKX0gY2xhc3NOYW1lPVwidGV4dC1tdXRlZC1mb3JlZ3JvdW5kIGhvdmVyOnRleHQtcHJpbWFyeVwiPjxDb3B5IGNsYXNzTmFtZT1cImgtMy41IHctMy41XCIgLz48L2J1dHRvbj5cclxuICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICkpfVxyXG4gICAgICAgICAgICAgIHtyZXN1bHQuY29weS5oYXNodGFncz8ubGVuZ3RoID4gMCAmJiAoXHJcbiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggZmxleC13cmFwIGdhcC0xIHB0LTJcIj5cclxuICAgICAgICAgICAgICAgICAge3Jlc3VsdC5jb3B5Lmhhc2h0YWdzLm1hcCgoaDogc3RyaW5nLCBpOiBudW1iZXIpID0+IDxCYWRnZSBrZXk9e2l9IHZhcmlhbnQ9XCJzZWNvbmRhcnlcIj57aH08L0JhZGdlPil9XHJcbiAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICApfVxyXG4gICAgICAgICAgICA8L0NhcmRDb250ZW50PjwvQ2FyZD5cclxuICAgICAgICAgICl9XHJcblxyXG4gICAgICAgICAgey8qIEltYWdlcyAqL31cclxuICAgICAgICAgIHtyZXN1bHQuaW1hZ2VzPy5sZW5ndGggPiAwICYmIChcclxuICAgICAgICAgICAgPENhcmQ+PENhcmRDb250ZW50IGNsYXNzTmFtZT1cInAtMyBzbTpwLTQgc3BhY2UteS0yXCI+XHJcbiAgICAgICAgICAgICAgPGg0IGNsYXNzTmFtZT1cImZvbnQtc2VtaWJvbGQgdGV4dC1zbSBmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMlwiPjxJbWFnZUljb24gY2xhc3NOYW1lPVwiaC00IHctNCB0ZXh0LXByaW1hcnlcIiAvPiBHZW5lcmF0ZWQgaW1hZ2VzPC9oND5cclxuICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImdyaWQgZ3JpZC1jb2xzLTIgc206Z3JpZC1jb2xzLTIgbGc6Z3JpZC1jb2xzLTMgZ2FwLTJcIj5cclxuICAgICAgICAgICAgICAgIHtyZXN1bHQuaW1hZ2VzLm1hcCgoaW1nOiBhbnksIGk6IG51bWJlcikgPT4gKFxyXG4gICAgICAgICAgICAgICAgICA8ZGl2IGtleT17aX0gY2xhc3NOYW1lPVwicmVsYXRpdmUgZ3JvdXBcIj5cclxuICAgICAgICAgICAgICAgICAgICA8aW1nIHNyYz17aW1nLnVybH0gYWx0PVwiYWRcIiBjbGFzc05hbWU9XCJ3LWZ1bGwgcm91bmRlZC1sZyBib3JkZXJcIiBsb2FkaW5nPVwibGF6eVwiIC8+XHJcbiAgICAgICAgICAgICAgICAgICAgPEJhZGdlIGNsYXNzTmFtZT1cImFic29sdXRlIHRvcC0yIGxlZnQtMiB0ZXh0LVsxMHB4XVwiPntpbWcuYXNwZWN0fTwvQmFkZ2U+XHJcbiAgICAgICAgICAgICAgICAgICAgPGEgaHJlZj17aW1nLnVybH0gZG93bmxvYWQgY2xhc3NOYW1lPVwiYWJzb2x1dGUgdG9wLTIgcmlnaHQtMiBiZy1iYWNrZ3JvdW5kLzkwIHJvdW5kZWQgcC0xLjUgb3BhY2l0eS0xMDAgc206b3BhY2l0eS0wIHNtOmdyb3VwLWhvdmVyOm9wYWNpdHktMTAwIHRyYW5zaXRpb25cIj5cclxuICAgICAgICAgICAgICAgICAgICAgIDxEb3dubG9hZCBjbGFzc05hbWU9XCJoLTMuNSB3LTMuNVwiIC8+XHJcbiAgICAgICAgICAgICAgICAgICAgPC9hPlxyXG4gICAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgICkpfVxyXG4gICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICA8L0NhcmRDb250ZW50PjwvQ2FyZD5cclxuICAgICAgICAgICl9XHJcblxyXG4gICAgICAgICAgey8qIFZpZGVvIHNjcmlwdHMgKi99XHJcbiAgICAgICAgICB7cmVzdWx0LnZpZGVvX3NjcmlwdHMgJiYgKFxyXG4gICAgICAgICAgICA8Q2FyZD48Q2FyZENvbnRlbnQgY2xhc3NOYW1lPVwicC00IHNwYWNlLXktMlwiPlxyXG4gICAgICAgICAgICAgIDxoNCBjbGFzc05hbWU9XCJmb250LXNlbWlib2xkIHRleHQtc20gZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTJcIj48VmlkZW8gY2xhc3NOYW1lPVwiaC00IHctNCB0ZXh0LXByaW1hcnlcIiAvPiBWaWRlbyBzY3JpcHRzPC9oND5cclxuICAgICAgICAgICAgICB7cmVzdWx0LnZpZGVvX3NjcmlwdHMudGlrdG9rXzE1cyAmJiAoXHJcbiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImJnLW11dGVkLzQwIHAtMyByb3VuZGVkLWxnIHRleHQtc20gc3BhY2UteS0xXCI+XHJcbiAgICAgICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cImZvbnQtc2VtaWJvbGQgdGV4dC14cyB0ZXh0LXByaW1hcnlcIj5UaWtUb2sgMTVzPC9wPlxyXG4gICAgICAgICAgICAgICAgICA8cD48Yj5Ib29rOjwvYj4ge3Jlc3VsdC52aWRlb19zY3JpcHRzLnRpa3Rva18xNXMuaG9va308L3A+XHJcbiAgICAgICAgICAgICAgICAgIDxwPjxiPkJvZHk6PC9iPiB7cmVzdWx0LnZpZGVvX3NjcmlwdHMudGlrdG9rXzE1cy5ib2R5fTwvcD5cclxuICAgICAgICAgICAgICAgICAgPHA+PGI+Q1RBOjwvYj4ge3Jlc3VsdC52aWRlb19zY3JpcHRzLnRpa3Rva18xNXMuY3RhfTwvcD5cclxuICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICl9XHJcbiAgICAgICAgICAgICAge3Jlc3VsdC52aWRlb19zY3JpcHRzLnlvdXR1YmVfc2hvcnRzXzMwcyAmJiAoXHJcbiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImJnLW11dGVkLzQwIHAtMyByb3VuZGVkLWxnIHRleHQtc20gc3BhY2UteS0xXCI+XHJcbiAgICAgICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cImZvbnQtc2VtaWJvbGQgdGV4dC14cyB0ZXh0LXByaW1hcnlcIj5Zb3VUdWJlIFNob3J0cyAzMHM8L3A+XHJcbiAgICAgICAgICAgICAgICAgIDxwPjxiPkhvb2s6PC9iPiB7cmVzdWx0LnZpZGVvX3NjcmlwdHMueW91dHViZV9zaG9ydHNfMzBzLmhvb2t9PC9wPlxyXG4gICAgICAgICAgICAgICAgICA8cD48Yj5Cb2R5OjwvYj4ge3Jlc3VsdC52aWRlb19zY3JpcHRzLnlvdXR1YmVfc2hvcnRzXzMwcy5ib2R5fTwvcD5cclxuICAgICAgICAgICAgICAgICAgPHA+PGI+Q1RBOjwvYj4ge3Jlc3VsdC52aWRlb19zY3JpcHRzLnlvdXR1YmVfc2hvcnRzXzMwcy5jdGF9PC9wPlxyXG4gICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgKX1cclxuICAgICAgICAgICAgPC9DYXJkQ29udGVudD48L0NhcmQ+XHJcbiAgICAgICAgICApfVxyXG5cclxuICAgICAgICAgIHsvKiBFeHBvcnQgKi99XHJcbiAgICAgICAgICA8Q2FyZD48Q2FyZENvbnRlbnQgY2xhc3NOYW1lPVwicC0zIHNtOnAtNCBzcGFjZS15LTJcIj5cclxuICAgICAgICAgICAgPGg0IGNsYXNzTmFtZT1cImZvbnQtc2VtaWJvbGQgdGV4dC1zbVwiPkxhdW5jaCBvbiBwbGF0Zm9ybXM8L2g0PlxyXG4gICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LVsxMXB4XSB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5Eb3dubG9hZCB0aGUgcmVhZHktdG8taW1wb3J0IGJ1bmRsZSwgdGhlbiBvcGVuIHRoZSBhZCBtYW5hZ2VyLjwvcD5cclxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJncmlkIGdyaWQtY29scy0xIHNtOmdyaWQtY29scy0yIGdhcC0yXCI+XHJcbiAgICAgICAgICAgICAgeyhPYmplY3Qua2V5cyhQTEFURk9STV9NRVRBKSBhcyBQbGF0Zm9ybVtdKS5tYXAoKHApID0+IHtcclxuICAgICAgICAgICAgICAgIGNvbnN0IE0gPSBQTEFURk9STV9NRVRBW3BdOyBjb25zdCBJY29uID0gTS5pY29uO1xyXG4gICAgICAgICAgICAgICAgY29uc3QgbGF1bmNoID0gZXhwb3J0cz8ubGF1bmNoX3VybHM/LltwXTtcclxuICAgICAgICAgICAgICAgIHJldHVybiAoXHJcbiAgICAgICAgICAgICAgICAgIDxkaXYga2V5PXtwfSBjbGFzc05hbWU9XCJib3JkZXIgcm91bmRlZC1sZyBwLTIuNSBzcGFjZS15LTJcIj5cclxuICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0yXCI+PEljb24gY2xhc3NOYW1lPXtgaC00IHctNCAke00uY29sb3J9YH0gLz48c3BhbiBjbGFzc05hbWU9XCJ0ZXh0LXNtIGZvbnQtbWVkaXVtXCI+e00ubGFiZWx9PC9zcGFuPjwvZGl2PlxyXG4gICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBnYXAtMS41XCI+XHJcbiAgICAgICAgICAgICAgICAgICAgICA8QnV0dG9uIHNpemU9XCJzbVwiIHZhcmlhbnQ9XCJvdXRsaW5lXCIgY2xhc3NOYW1lPVwiZmxleC0xIGgtOVwiIG9uQ2xpY2s9eygpID0+IGhhbmRsZUV4cG9ydChwKX0gZGlzYWJsZWQ9e2V4cG9ydGluZyA9PT0gcH0+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgIHtleHBvcnRpbmcgPT09IHAgPyA8TG9hZGVyMiBjbGFzc05hbWU9XCJoLTMuNSB3LTMuNSBhbmltYXRlLXNwaW5cIiAvPiA6IDxEb3dubG9hZCBjbGFzc05hbWU9XCJoLTMuNSB3LTMuNSBtci0xXCIgLz59XHJcbiAgICAgICAgICAgICAgICAgICAgICAgIEV4cG9ydFxyXG4gICAgICAgICAgICAgICAgICAgICAgPC9CdXR0b24+XHJcbiAgICAgICAgICAgICAgICAgICAgICB7bGF1bmNoICYmIChcclxuICAgICAgICAgICAgICAgICAgICAgICAgPGEgaHJlZj17bGF1bmNofSB0YXJnZXQ9XCJfYmxhbmtcIiByZWw9XCJub29wZW5lciBub3JlZmVycmVyXCI+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgPEJ1dHRvbiBzaXplPVwic21cIiB2YXJpYW50PVwiZ2hvc3RcIiBjbGFzc05hbWU9XCJoLTkgdy05IHAtMFwiPjxFeHRlcm5hbExpbmsgY2xhc3NOYW1lPVwiaC0zLjUgdy0zLjVcIiAvPjwvQnV0dG9uPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICA8L2E+XHJcbiAgICAgICAgICAgICAgICAgICAgICApfVxyXG4gICAgICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgICk7XHJcbiAgICAgICAgICAgICAgfSl9XHJcbiAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICA8QnV0dG9uIHZhcmlhbnQ9XCJvdXRsaW5lXCIgY2xhc3NOYW1lPVwidy1mdWxsIG10LTIgaC0xMSBzbTpoLTEwXCIgb25DbGljaz17KCkgPT4geyBzZXRTdGVwKDEpOyBzZXRSZXN1bHQobnVsbCk7IHNldEV4cG9ydHMobnVsbCk7IHNldE9mZmVyKFwiXCIpOyB9fT5cclxuICAgICAgICAgICAgICBDcmVhdGUgYW5vdGhlciBhZFxyXG4gICAgICAgICAgICA8L0J1dHRvbj5cclxuICAgICAgICAgIDwvQ2FyZENvbnRlbnQ+PC9DYXJkPlxyXG4gICAgICAgIDwvZGl2PlxyXG4gICAgICApfVxyXG4gICAgPC9kaXY+XHJcbiAgKTtcclxufVxyXG5cclxuZnVuY3Rpb24gZG93bmxvYWRCbG9iKGJsb2I6IEJsb2IsIGZpbGVuYW1lOiBzdHJpbmcpIHtcclxuICBjb25zdCB1cmwgPSBVUkwuY3JlYXRlT2JqZWN0VVJMKGJsb2IpO1xyXG4gIGNvbnN0IGEgPSBkb2N1bWVudC5jcmVhdGVFbGVtZW50KFwiYVwiKTtcclxuICBhLmhyZWYgPSB1cmw7IGEuZG93bmxvYWQgPSBmaWxlbmFtZTsgYS5jbGljaygpO1xyXG4gIFVSTC5yZXZva2VPYmplY3RVUkwodXJsKTtcclxufVxyXG4iXSwibmFtZXMiOlsidXNlU3RhdGUiLCJDYXJkIiwiQ2FyZENvbnRlbnQiLCJCdXR0b24iLCJJbnB1dCIsIkxhYmVsIiwiVGV4dGFyZWEiLCJCYWRnZSIsIlNlbGVjdCIsIlNlbGVjdENvbnRlbnQiLCJTZWxlY3RJdGVtIiwiU2VsZWN0VHJpZ2dlciIsIlNlbGVjdFZhbHVlIiwidG9hc3QiLCJzdXBhYmFzZSIsIlNwYXJrbGVzIiwiVGFyZ2V0IiwiRG9sbGFyU2lnbiIsIldhbmQyIiwiTG9hZGVyMiIsIkNoZWNrIiwiQ29weSIsIkZhY2Vib29rIiwiTXVzaWMyIiwiWW91dHViZSIsIlNlYXJjaCIsIkdvb2dsZUljb24iLCJEb3dubG9hZCIsIkV4dGVybmFsTGluayIsIkltYWdlIiwiSW1hZ2VJY29uIiwiVmlkZW8iLCJXaXphcmRTa2VsZXRvbiIsIk1hcmtldGluZ0VtcHR5U3RhdGUiLCJHT0FMUyIsImlkIiwibGFiZWwiLCJkZXNjIiwiUExBVEZPUk1fTUVUQSIsImdvb2dsZSIsImljb24iLCJjb2xvciIsIm1ldGEiLCJ0aWt0b2siLCJ5b3V0dWJlIiwiUFJJQ0VfQ0VOVFMiLCJjb3B5IiwiaW1hZ2UiLCJ2aWRlb19zY3JpcHQiLCJBZHNTdHVkaW9XaXphcmQiLCJzdG9yZUlkIiwic3RvcmVOYW1lIiwic3RvcmVTbHVnIiwic3RlcCIsInNldFN0ZXAiLCJnb2FsIiwic2V0R29hbCIsIm9mZmVyIiwic2V0T2ZmZXIiLCJjaXR5Iiwic2V0Q2l0eSIsInJhZGl1cyIsInNldFJhZGl1cyIsImFnZU1pbiIsInNldEFnZU1pbiIsImFnZU1heCIsInNldEFnZU1heCIsImRhaWx5QnVkZ2V0Iiwic2V0RGFpbHlCdWRnZXQiLCJwbGF0Zm9ybXMiLCJzZXRQbGF0Zm9ybXMiLCJpbWFnZUNvdW50Iiwic2V0SW1hZ2VDb3VudCIsImdlblZpZGVvIiwic2V0R2VuVmlkZW8iLCJsb2FkaW5nIiwic2V0TG9hZGluZyIsInJlc3VsdCIsInNldFJlc3VsdCIsImV4cG9ydGluZyIsInNldEV4cG9ydGluZyIsImV4cG9ydHMiLCJzZXRFeHBvcnRzIiwiZXN0Q29zdCIsInRvZ2dsZVBsYXRmb3JtIiwicCIsInByZXYiLCJpbmNsdWRlcyIsImZpbHRlciIsIngiLCJoYW5kbGVHZW5lcmF0ZSIsInRyaW0iLCJlcnJvciIsImRhdGEiLCJmdW5jdGlvbnMiLCJpbnZva2UiLCJib2R5Iiwic3RvcmVfaWQiLCJzZXJ2aWNlX3N1bW1hcnkiLCJzdG9yZV9uYW1lIiwic3RvcmVfY2l0eSIsInRhcmdldGluZyIsInJhZGl1c19rbSIsImFnZV9taW4iLCJhZ2VfbWF4IiwiZ2VuZXJhdGUiLCJpbWFnZXMiLCJ2aWRlb19zY3JpcHRzIiwiZCIsIm1lc3NhZ2UiLCJFcnJvciIsImNyZWF0aXZlIiwiaW5zRXJyIiwiZnJvbSIsImluc2VydCIsImJ1ZGdldCIsImRhaWx5IiwiY3VycmVuY3kiLCJoZWFkbGluZXMiLCJkZXNjcmlwdGlvbnMiLCJjdGFzIiwiaGFzaHRhZ3MiLCJpbWFnZV91cmxzIiwic3RhdHVzIiwic2VsZWN0IiwibWF5YmVTaW5nbGUiLCJjb25zb2xlIiwid2FybiIsImFsbEhlYWRsaW5lcyIsInZhcmlhbnRzIiwic2xpY2UiLCJtYXAiLCJoIiwiaSIsImNyZWF0aXZlX2lkIiwidmFyaWFudF9sYWJlbCIsIlN0cmluZyIsImZyb21DaGFyQ29kZSIsImhlYWRsaW5lIiwiZGVzY3JpcHRpb24iLCJzaG9ydCIsImltYWdlX3VybCIsIk1hdGgiLCJtYXgiLCJsZW5ndGgiLCJ1cmwiLCJjdGEiLCJpc19hY3RpdmUiLCJzdWNjZXNzIiwiY29zdF9jZW50cyIsInRvRml4ZWQiLCJiYWxhbmNlX2FmdGVyX2NlbnRzIiwiZSIsImhhbmRsZUV4cG9ydCIsImJsb2IiLCJCbG9iIiwiYnVuZGxlcyIsImdvb2dsZV9jc3YiLCJ0eXBlIiwiZG93bmxvYWRCbG9iIiwiYnVuZGxlIiwiSlNPTiIsInN0cmluZ2lmeSIsInRleHQiLCJuYXZpZ2F0b3IiLCJjbGlwYm9hcmQiLCJ3cml0ZVRleHQiLCJkaXYiLCJjbGFzc05hbWUiLCJuIiwicyIsImFyciIsInNwYW4iLCJoMyIsImciLCJidXR0b24iLCJvbkNsaWNrIiwicGxhY2Vob2xkZXIiLCJ2YWx1ZSIsIm9uQ2hhbmdlIiwidGFyZ2V0Iiwicm93cyIsIm1heExlbmd0aCIsInZhcmlhbnQiLCJkaXNhYmxlZCIsIm1pbiIsIm9uVmFsdWVDaGFuZ2UiLCJ2IiwiT2JqZWN0Iiwia2V5cyIsIk0iLCJJY29uIiwib24iLCJpbnB1dCIsImNoZWNrZWQiLCJ0aXRsZSIsImg0IiwiZW50cmllcyIsInBsYXQiLCJsaW5lcyIsImxvbmciLCJpbWciLCJzcmMiLCJhbHQiLCJhc3BlY3QiLCJhIiwiaHJlZiIsImRvd25sb2FkIiwidGlrdG9rXzE1cyIsImIiLCJob29rIiwieW91dHViZV9zaG9ydHNfMzBzIiwibGF1bmNoIiwibGF1bmNoX3VybHMiLCJzaXplIiwicmVsIiwiZmlsZW5hbWUiLCJVUkwiLCJjcmVhdGVPYmplY3RVUkwiLCJkb2N1bWVudCIsImNyZWF0ZUVsZW1lbnQiLCJjbGljayIsInJldm9rZU9iamVjdFVSTCJdLCJtYXBwaW5ncyI6Ijs7QUFBQTs7O0NBR0MsR0FDRCxTQUFTQSxRQUFRLFFBQVEsUUFBUTtBQUNqQyxTQUFTQyxJQUFJLEVBQUVDLFdBQVcsUUFBUSx1QkFBdUI7QUFDekQsU0FBU0MsTUFBTSxRQUFRLHlCQUF5QjtBQUNoRCxTQUFTQyxLQUFLLFFBQVEsd0JBQXdCO0FBQzlDLFNBQVNDLEtBQUssUUFBUSx3QkFBd0I7QUFDOUMsU0FBU0MsUUFBUSxRQUFRLDJCQUEyQjtBQUNwRCxTQUFTQyxLQUFLLFFBQVEsd0JBQXdCO0FBQzlDLFNBQVNDLE1BQU0sRUFBRUMsYUFBYSxFQUFFQyxVQUFV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

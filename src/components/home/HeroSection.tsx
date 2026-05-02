@@ -4,7 +4,14 @@
  */
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Search, Hotel, ArrowDown, Plane, Car, UtensilsCrossed, CarFront } from "lucide-react";
+import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
+import Search from "lucide-react/dist/esm/icons/search";
+import Hotel from "lucide-react/dist/esm/icons/hotel";
+import ArrowDown from "lucide-react/dist/esm/icons/arrow-down";
+import Plane from "lucide-react/dist/esm/icons/plane";
+import Car from "lucide-react/dist/esm/icons/car";
+import UtensilsCrossed from "lucide-react/dist/esm/icons/utensils-crossed";
+import CarFront from "lucide-react/dist/esm/icons/car-front";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { useState, useEffect, useCallback, useRef } from "react";
 

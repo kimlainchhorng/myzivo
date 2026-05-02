@@ -1,4 +1,5 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
+import { createClient } from "../_shared/deps.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -8,6 +9,23 @@ const corsHeaders = {
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return new Response(JSON.stringify({ error: "Authentication required" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  const { data: { user }, error: authErr } = await createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+    { global: { headers: { Authorization: authHeader } } }
+  ).auth.getUser();
+  if (authErr || !user) {
+    return new Response(JSON.stringify({ error: "Authentication required" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
   }
 
   try {
@@ -36,8 +54,17 @@ Deno.serve(async (req) => {
 
     console.log(`[maps-reverse-geocode] Reverse geocoding: ${lat}, ${lng}`);
 
-    const res = await fetch(url);
-    const data = await res.json();
+    // Retry up to 2 times on transient Google errors (UNKNOWN_ERROR, OVER_QUERY_LIMIT)
+    const RETRYABLE = new Set(["UNKNOWN_ERROR", "OVER_QUERY_LIMIT"]);
+    let data: any = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      if (attempt > 0) await new Promise((r) => setTimeout(r, 300 * attempt));
+      const res = await fetch(url);
+      data = await res.json();
+      if (data.status === "OK" && data.results?.length) break;
+      if (!RETRYABLE.has(data.status)) break;
+      console.warn(`[maps-reverse-geocode] Retry ${attempt + 1}/2 for ${data.status}`);
+    }
 
     if (data.status !== "OK" || !data.results?.length) {
       console.error("[maps-reverse-geocode] Google API error:", data.status, data.error_message);

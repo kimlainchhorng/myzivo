@@ -4,6 +4,7 @@ import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { supabase } from "@/integrations/supabase/client";
+import { checkRateLimit, formatLockout } from "@/lib/security/rateLimiter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -32,9 +33,18 @@ const ForgotPassword = () => {
 
   const onSubmit = async (data: ForgotPasswordForm) => {
     setIsLoading(true);
+
+    // Rate limit: prevent enumeration attacks
+    const { allowed, retryAfter } = await checkRateLimit("auth:forgot_password");
+    if (!allowed) {
+      setIsLoading(false);
+      toast.error(`Too many requests. Try again in ${formatLockout(retryAfter)}.`);
+      return;
+    }
+
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `https://www.zivollc.com/reset-password`,
       });
 
       if (error) throw error;

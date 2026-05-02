@@ -7,6 +7,7 @@ import ZivoMobileNav from "./ZivoMobileNav";
 import AppHeader from "./AppHeader";
 import SystemStatusBanner from "@/components/shared/SystemStatusBanner";
 import OfflineBanner from "@/components/shared/OfflineBanner";
+import SafeAreaDebugOverlay from "@/components/dev/SafeAreaDebugOverlay";
 import { useNetworkStatus } from "@/hooks/useNetworkStatus";
 import { cn } from "@/lib/utils";
 
@@ -68,13 +69,15 @@ const AppLayout = ({
         style={
           !hideHeader
             ? { paddingTop: "calc(56px + env(safe-area-inset-top, 0px))" }
-            : undefined
+            : { paddingTop: "env(safe-area-inset-top, 0px)" }
         }
       >
         {children}
       </main>
 
       {!hideNav && <ZivoMobileNav />}
+
+      <SafeAreaDebugOverlay />
     </div>
   );
 };

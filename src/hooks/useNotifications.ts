@@ -78,28 +78,29 @@ export function useNotifications(limit = 50): UseNotificationsResult {
   }, [limit]);
 
   const markAsRead = useCallback(async (notificationIds: string[]) => {
+    // Optimistic update first — no spinner flash
+    const nowIso = new Date().toISOString();
+    let prevSnapshot: Notification[] = [];
+    setNotifications(prev => {
+      prevSnapshot = prev;
+      return prev.map(n =>
+        notificationIds.includes(n.id) ? { ...n, is_read: true, read_at: nowIso } : n
+      );
+    });
+    const unreadDelta = prevSnapshot.filter(n => notificationIds.includes(n.id) && !n.is_read).length;
+    setUnreadCount(prev => Math.max(0, prev - unreadDelta));
+
     try {
       const { error: updateError } = await supabase
         .from('notifications')
-        .update({ 
-          is_read: true, 
-          read_at: new Date().toISOString() 
-        })
+        .update({ is_read: true, read_at: nowIso })
         .in('id', notificationIds);
 
       if (updateError) throw updateError;
-
-      // Update local state
-      setNotifications(prev => 
-        prev.map(n => 
-          notificationIds.includes(n.id) 
-            ? { ...n, is_read: true, read_at: new Date().toISOString() }
-            : n
-        )
-      );
-      setUnreadCount(prev => Math.max(0, prev - notificationIds.length));
-
     } catch (err: any) {
+      // Rollback on failure
+      setNotifications(prevSnapshot);
+      setUnreadCount(prev => prev + unreadDelta);
       console.error('Error marking notifications as read:', err);
       toast({
         title: 'Error',

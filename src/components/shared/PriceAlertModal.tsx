@@ -18,6 +18,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { toast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 type ServiceType = "flights" | "hotels" | "cars";
 
@@ -110,8 +111,22 @@ export function PriceAlertModal({
     setIsSubmitting(true);
 
     try {
-      // TODO: Save price alert to database
-      
+      const { error } = await supabase.from("price_alerts").insert({
+        email,
+        origin_code: routeInfo.origin || routeInfo.pickupLocation || "",
+        destination_code: routeInfo.destination || routeInfo.city || routeInfo.dropoffDate || "",
+        origin_name: routeInfo.origin || routeInfo.pickupLocation || null,
+        destination_name: routeInfo.destination || routeInfo.city || null,
+        departure_date: routeInfo.departDate || routeInfo.checkIn || routeInfo.pickupDate || null,
+        return_date: routeInfo.returnDate || routeInfo.checkOut || routeInfo.dropoffDate || null,
+        target_price: currentPrice,
+        current_price: currentPrice,
+        notify_email: true,
+        notify_push: false,
+        notify_sms: false,
+        is_active: true,
+      });
+      if (error) throw error;
       setIsSuccess(true);
       
       toast({

@@ -5,6 +5,8 @@ import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { StarRating } from "@/components/shared/StarRating";
+import SafeCaption from "@/components/social/SafeCaption";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { toast } from "sonner";
@@ -128,7 +130,7 @@ const CarRentalBooking = () => {
     { id: "heated-seats", label: "Heated Seats", icon: "🔥" },
     { id: "sunroof", label: "Sunroof", icon: "☀️" },
     { id: "apple-carplay", label: "Apple CarPlay", icon: "🍎" },
-    { id: "android-auto", label: "Android Auto", icon: "🤖" },
+    { id: "smartphone-integration", label: "Smartphone Integration", icon: "📲" },
     { id: "keyless", label: "Keyless Entry", icon: "🔑" },
   ];
 
@@ -777,13 +779,9 @@ const CarRentalBooking = () => {
                           <p className="text-[10px] text-muted-foreground">{review.car} · {review.date}</p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-0.5">
-                        {Array.from({ length: review.rating }).map((_, i) => (
-                          <Star key={i} className="w-3 h-3 fill-amber-400 text-amber-400" />
-                        ))}
-                      </div>
+                      <StarRating value={review.rating} size="xs" />
                     </div>
-                    <p className="text-xs text-muted-foreground">{review.text}</p>
+                    <p className="text-xs text-muted-foreground"><SafeCaption text={review.text} /></p>
                   </div>
                 ))}
               </div>

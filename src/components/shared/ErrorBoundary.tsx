@@ -3,7 +3,9 @@
  * Catches React render errors and shows a graceful fallback with retry
  */
 import { Component, type ErrorInfo, type ReactNode } from "react";
-import { AlertTriangle, RefreshCw, Home } from "lucide-react";
+import AlertTriangle from "lucide-react/dist/esm/icons/alert-triangle";
+import RefreshCw from "lucide-react/dist/esm/icons/refresh-cw";
+import Home from "lucide-react/dist/esm/icons/home";
 import { Button } from "@/components/ui/button";
 
 interface Props {
@@ -28,9 +30,38 @@ export class ErrorBoundary extends Component<Props, State> {
 
   componentDidCatch(error: Error, errorInfo: ErrorInfo) {
     console.error("[ErrorBoundary] Caught error:", error, errorInfo);
+
+    // Auto-reload once on chunk/module loading failures (stale deploy)
+    const isChunkError =
+      error.message?.includes("Importing a module script failed") ||
+      error.message?.includes("Failed to fetch dynamically imported module") ||
+      error.message?.includes("Loading chunk") ||
+      error.message?.includes("Loading CSS chunk");
+
+    if (isChunkError) {
+      const reloadKey = "zivo_chunk_reload";
+      try {
+        if (!sessionStorage.getItem(reloadKey)) {
+          sessionStorage.setItem(reloadKey, "1");
+          window.location.reload();
+          return;
+        }
+      } catch {}
+    }
   }
 
   handleRetry = () => {
+    const msg = this.state.error?.message || "";
+    const isChunkError =
+      msg.includes("Importing a module script failed") ||
+      msg.includes("Failed to fetch dynamically imported module") ||
+      msg.includes("Loading chunk") ||
+      msg.includes("Loading CSS chunk");
+    if (isChunkError) {
+      try { sessionStorage.removeItem("zivo_chunk_reload"); } catch {}
+      window.location.reload();
+      return;
+    }
     this.setState({ hasError: false, error: null });
   };
 

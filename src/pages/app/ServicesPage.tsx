@@ -3,28 +3,30 @@
  * Premium super-app style with glassmorphism, layered banners, staggered animations
  */
 import { useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, Car, Shield, MapPin, Sparkles, Package, Gift, Crown,
   Users, Wine, ShoppingCart, Pill, Ship, FileCheck, ChevronRight,
+  Search, X, Heart, Tv, Briefcase, Store, Dumbbell,
 } from "lucide-react";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { useI18n } from "@/hooks/useI18n";
 import { useCountry } from "@/hooks/useCountry";
-import zivoRideIcon from "@/assets/zivo-ride-icon.png";
-import zivoEatsIcon from "@/assets/zivo-eats-icon.png";
-import zivoFlightsIcon from "@/assets/zivo-flights-icon.png";
-import zivoHotelsIcon from "@/assets/zivo-hotels-icon.png";
-import zivoRentalCarIcon from "@/assets/zivo-rental-car.png";
-import zivoReserveIcon from "@/assets/zivo-reserve-car.png";
-import zivoShoppingIcon from "@/assets/zivo-shopping.png";
-import zivoDeliveryBanner from "@/assets/zivo-delivery-banner.png";
+import zivoRideIcon from "@/assets/zivo-ride-icon.webp";
+import zivoEatsIcon from "@/assets/zivo-eats-icon.webp";
+import zivoFlightsIcon from "@/assets/zivo-flights-icon.webp";
+import zivoHotelsIcon from "@/assets/zivo-hotels-icon.webp";
+import zivoRentalCarIcon from "@/assets/zivo-rental-car.webp";
+import zivoReserveIcon from "@/assets/zivo-reserve-car.webp";
+import zivoShoppingIcon from "@/assets/zivo-shopping.webp";
+import zivoDeliveryBanner from "@/assets/zivo-delivery-banner.webp";
 import zivoPackageIcon from "@/assets/service-package.png";
-import zivoReserveBanner from "@/assets/zivo-reserve-banner.png";
-import zivoTravelBanner from "@/assets/zivo-travel-banner.png";
+import zivoReserveBanner from "@/assets/zivo-reserve-banner.webp";
+import zivoTravelBanner from "@/assets/zivo-travel-banner.webp";
 import zivoGroupRideIcon from "@/assets/service-group-ride.png";
 import zivoAlcoholIcon from "@/assets/service-alcohol.png";
 import zivoPharmacyIcon from "@/assets/service-pharmacy.png";
@@ -55,10 +57,10 @@ const getServiceCategories = (t: (key: string) => string, isCambodia = false): S
     subtitle: t("services.category.ride_sub"),
     services: [
       { label: t("services.ride"), href: "/rides", image: zivoRideIcon, badge: t("services.badge.off_10"), badgeVariant: "discount", animClass: "animate-car-run" },
-      { label: t("services.package"), href: "/delivery", image: zivoPackageIcon, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-pkg-bounce" },
+      { label: t("services.package"), href: "/delivery", image: zivoPackageIcon, badge: "Live", badgeVariant: "new", animClass: "animate-pkg-bounce" },
       { label: t("services.travel"), href: "/flights", image: zivoFlightsIcon, badge: "Hot", badgeVariant: "promo", animClass: "animate-plane-fly" },
       { label: t("services.reserve"), href: "/rides?tab=reserve", image: zivoReserveIcon, badge: t("services.badge.promo"), badgeVariant: "promo", animClass: "animate-car-run" },
-      { label: t("services.rental_cars"), href: "/rent-car", image: zivoRentalCarIcon, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-car-run" },
+      { label: t("services.rental_cars"), href: "/rent-car", image: zivoRentalCarIcon, badge: "Book", badgeVariant: "promo", animClass: "animate-car-run" },
       { label: t("services.group_ride"), href: "/rides", image: zivoGroupRideIcon, animClass: "animate-car-run" },
     ],
   },
@@ -66,11 +68,11 @@ const getServiceCategories = (t: (key: string) => string, isCambodia = false): S
     title: t("services.category.food"),
     subtitle: t("services.category.food_sub"),
     services: [
-      { label: t("services.food"), href: "/eats", image: zivoEatsIcon, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-food-wiggle" },
-      { label: t("services.grocery"), href: "/grocery", image: zivoShoppingIcon, animClass: "animate-food-wiggle", ...(isCambodia ? { badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon" as const, comingSoon: true } : {}) },
-      { label: t("services.alcohol"), href: "/eats", image: zivoAlcoholIcon, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-food-wiggle" },
-      { label: t("services.pharmacy"), href: "/eats", image: zivoPharmacyIcon, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-pkg-bounce" },
-      { label: t("services.shopping"), href: "/grocery", image: zivoShoppingCartIcon, animClass: "animate-food-wiggle", ...(!isCambodia ? { badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon" as const, comingSoon: true } : {}) },
+      { label: t("services.food"), href: "/eats", image: zivoEatsIcon, badge: "Order", badgeVariant: "promo", animClass: "animate-food-wiggle" },
+      { label: t("services.grocery"), href: "/grocery", image: zivoShoppingIcon, animClass: "animate-food-wiggle", badge: "Shop", badgeVariant: "promo" as const },
+      { label: t("services.alcohol"), href: "/grocery", image: zivoAlcoholIcon, badge: "New", badgeVariant: "new", animClass: "animate-food-wiggle" },
+      { label: t("services.pharmacy"), href: "/grocery", image: zivoPharmacyIcon, badge: "New", badgeVariant: "new", animClass: "animate-pkg-bounce" },
+      { label: t("services.shopping"), href: "/marketplace", image: zivoShoppingCartIcon, animClass: "animate-food-wiggle" },
     ],
   },
   {
@@ -78,13 +80,13 @@ const getServiceCategories = (t: (key: string) => string, isCambodia = false): S
     subtitle: t("services.category.trip_sub"),
     services: [
       { label: t("services.flights"), href: "/flights", image: zivoFlightsIcon, badge: "Hot", badgeVariant: "promo", animClass: "animate-plane-fly" },
-      { label: t("services.hotels"), href: "/hotels", image: zivoHotelsIcon, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-pkg-bounce" },
-      { label: t("services.car_rental"), href: "/rent-car", image: zivoRentalCarIcon, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true, animClass: "animate-car-run" },
+      { label: t("services.hotels"), href: "/hotels", image: zivoHotelsIcon, badge: "Book", badgeVariant: "promo", animClass: "animate-pkg-bounce" },
+      { label: t("services.car_rental"), href: "/rent-car", image: zivoRentalCarIcon, badge: "Rent", badgeVariant: "promo", animClass: "animate-car-run" },
       { label: t("services.insurance"), href: "/travel-insurance", icon: Shield, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true },
-      { label: t("services.things_to_do"), href: "/things-to-do", icon: MapPin, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true },
-      { label: t("services.ai_planner"), href: "/ai-trip-planner", icon: Sparkles, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true },
+      { label: t("services.things_to_do"), href: "/explore", icon: MapPin, badge: "New", badgeVariant: "new" },
+      { label: t("services.ai_planner"), href: "/ai-trip-planner", icon: Sparkles, badge: "AI", badgeVariant: "new" },
       { label: t("services.visa_help"), href: "/support", icon: FileCheck, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true },
-      { label: t("services.cruise"), href: "/flights", icon: Ship, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true },
+      { label: t("services.cruise"), href: "/flights", icon: Ship, badge: "New", badgeVariant: "new" },
     ],
   },
   {
@@ -92,9 +94,13 @@ const getServiceCategories = (t: (key: string) => string, isCambodia = false): S
     subtitle: t("services.category.more_sub"),
     services: [
       { label: t("services.drive"), href: "/drive", icon: Car },
-      { label: "ZIVO+", href: "/zivo-plus", icon: Crown, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true },
-      { label: t("services.rewards"), href: "/rewards", icon: Gift, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true },
-      { label: t("services.deals"), href: "/deals", icon: Sparkles, badge: t("services.badge.coming_soon"), badgeVariant: "coming_soon", comingSoon: true },
+      { label: "ZIVO+", href: "/zivo-plus", icon: Crown, badge: "Premium", badgeVariant: "new" },
+      { label: t("services.rewards"), href: "/rewards", icon: Gift, badge: "Earn", badgeVariant: "promo" },
+      { label: t("services.deals"), href: "/deals", icon: Sparkles, badge: "Hot", badgeVariant: "promo" },
+      { label: t("services.marketplace"), href: "/marketplace", icon: Store, badge: "Shop", badgeVariant: "promo" },
+      { label: t("services.live"), href: "/live", icon: Tv, badge: "Live", badgeVariant: "new" },
+      { label: t("services.wellness"), href: "/explore", icon: Dumbbell, badge: "New", badgeVariant: "new" },
+      { label: t("services.creator"), href: "/creator", icon: Briefcase },
     ],
   },
 ];
@@ -181,6 +187,18 @@ export default function ServicesPage() {
   const { isCambodia } = useCountry();
   const serviceCategories = getServiceCategories(t, isCambodia);
   const [runningLabel, setRunningLabel] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const filteredCategories = useMemo(() => {
+    if (!searchQuery.trim()) return serviceCategories;
+    const q = searchQuery.toLowerCase();
+    return serviceCategories
+      .map(cat => ({
+        ...cat,
+        services: cat.services.filter(s => s.label.toLowerCase().includes(q)),
+      }))
+      .filter(cat => cat.services.length > 0);
+  }, [serviceCategories, searchQuery]);
 
   const handleServiceClick = (service: ServiceItem) => {
     if (service.comingSoon) {
@@ -233,24 +251,63 @@ export default function ServicesPage() {
         </motion.div>
       </div>
 
-      {/* Hero Reserve Banner */}
-      <div className="px-5 pt-3 relative z-10">
-        <PromoBanner
-          image={zivoReserveBanner}
-          alt={t("services.banner.reserve_alt")}
-          label={t("services.banner.reserve_label")}
-          title={t("services.banner.reserve_title")}
-          subtitle={t("services.banner.reserve_subtitle")}
-          href="/rides?tab=reserve"
-          delay={0.1}
-          navigate={navigate}
-          objectPosition="top"
-        />
+      {/* Search bar */}
+      <div className="px-5 pt-4 pb-1 relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1, duration: 0.3 }}
+          className="relative"
+        >
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+          <Input
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            placeholder={t("services.search_placeholder")}
+            className="pl-9 pr-9 h-10 rounded-full bg-muted/60 border-border/40 text-sm focus-visible:ring-primary/40"
+          />
+          {searchQuery && (
+            <button
+              onClick={() => setSearchQuery("")}
+              className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full bg-muted-foreground/20 hover:bg-muted-foreground/30 transition-colors"
+            >
+              <X className="w-3 h-3 text-muted-foreground" />
+            </button>
+          )}
+        </motion.div>
       </div>
+
+      {/* Hero Reserve Banner */}
+      {!searchQuery && (
+        <div className="px-5 pt-3 relative z-10">
+          <PromoBanner
+            image={zivoReserveBanner}
+            alt={t("services.banner.reserve_alt")}
+            label={t("services.banner.reserve_label")}
+            title={t("services.banner.reserve_title")}
+            subtitle={t("services.banner.reserve_subtitle")}
+            href="/rides?tab=reserve"
+            delay={0.1}
+            navigate={navigate}
+            objectPosition="top"
+          />
+        </div>
+      )}
 
       {/* Service Categories */}
       <div className="px-5 space-y-7 pt-7 relative z-10">
-        {serviceCategories.map((category, catIdx) => (
+        {filteredCategories.length === 0 && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex flex-col items-center justify-center py-16 text-center"
+          >
+            <Search className="w-10 h-10 text-muted-foreground/40 mb-3" />
+            <p className="text-sm font-semibold text-foreground">{t("services.search_no_results")}</p>
+            <p className="text-xs text-muted-foreground mt-1">{t("services.search_no_results_sub")}</p>
+          </motion.div>
+        )}
+        {filteredCategories.map((category, catIdx) => (
           <div key={category.title}>
             <motion.div
               initial={{ opacity: 0, y: 12 }}
@@ -334,7 +391,7 @@ export default function ServicesPage() {
             </motion.div>
 
             {/* Promo banner after "Your ride, your way" */}
-            {catIdx === 0 && (
+            {catIdx === 0 && !searchQuery && (
               <PromoBanner
                 image={zivoDeliveryBanner}
                 alt={t("services.banner.deliver_alt")}
@@ -347,7 +404,7 @@ export default function ServicesPage() {
             )}
 
             {/* Travel banner after "Food & more, fast" */}
-            {catIdx === 1 && (
+            {catIdx === 1 && !searchQuery && (
               <PromoBanner
                 image={zivoTravelBanner}
                 alt={t("services.banner.trip_alt")}

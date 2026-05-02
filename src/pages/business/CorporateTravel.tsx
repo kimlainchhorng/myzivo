@@ -18,6 +18,7 @@ import NavBar from "@/components/home/NavBar";
 import Footer from "@/components/Footer";
 import { useState } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const FEATURES = [
   {
@@ -67,11 +68,23 @@ export default function CorporateTravel() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
-    
-    // TODO: Submit to backend API
-    
-    toast.success("Thanks for your interest! We'll be in touch soon.");
-    setIsSubmitting(false);
+    const form = e.target as HTMLFormElement;
+    const data = new FormData(form);
+    const message = `Company: ${data.get("company") || ""}\nName: ${data.get("name") || ""}\nEmail: ${data.get("email") || ""}\nSize: ${data.get("size") || ""}\nMessage: ${data.get("message") || ""}`;
+    try {
+      const { error } = await supabase.from("feedback_submissions").insert({
+        category: "corporate_lead",
+        subject: "Corporate Travel Inquiry",
+        message,
+      });
+      if (error) throw error;
+      toast.success("Thanks for your interest! We'll be in touch soon.");
+      form.reset();
+    } catch {
+      toast.error("Failed to submit. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

@@ -18,6 +18,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { toast } from "sonner";
 import { useGroceryCart } from "@/hooks/useGroceryCart";
+import PullToRefresh from "@/components/shared/PullToRefresh";
 
 interface OrderItem {
   productId: string;
@@ -105,6 +106,7 @@ function OrderCard({ order, onReorder, onRate, onTrack }: {
   onRate: (orderId: string, stars: number) => void;
   onTrack: (orderId: string) => void;
 }) {
+  const navigate = useNavigate();
   const [expanded, setExpanded] = useState(false);
   const cfg = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending;
   const StatusIcon = cfg.icon;
@@ -357,7 +359,7 @@ function OrderCard({ order, onReorder, onRate, onTrack }: {
                   variant="ghost"
                   className="rounded-xl text-[11px] font-bold gap-1.5 h-9 text-muted-foreground"
                   onClick={() => {
-                    import("@/lib/openExternalUrl").then(({ openSystemUrl }) => openSystemUrl(`mailto:support@hizivo.com?subject=Order ${order.id.slice(0, 8).toUpperCase()}`));
+                    navigate(`/help?order=${order.id.slice(0, 8).toUpperCase()}&store=${encodeURIComponent(order.store)}`);
                   }}
                 >
                   <HelpCircle className="h-3 w-3" />
@@ -400,6 +402,41 @@ export default function GroceryOrderHistory() {
   }, []);
 
   useEffect(() => { fetchOrders(); }, [fetchOrders]);
+
+  // Auto-cancel orders stuck at pending_payment for over 1 hour
+  useEffect(() => {
+    const autoCancelStale = async () => {
+      const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+      const stale = orders.filter(
+        (o) => o.status === "pending_payment" && o.placed_at < oneHourAgo
+      );
+      if (stale.length === 0) return;
+
+      for (const order of stale) {
+        const { error } = await supabase
+          .from("shopping_orders")
+          .update({
+            status: "cancelled",
+            cancelled_at: new Date().toISOString(),
+          } as any)
+          .eq("id", order.id);
+
+        if (!error) {
+          setOrders((prev) =>
+            prev.map((o) =>
+              o.id === order.id ? { ...o, status: "cancelled" } : o
+            )
+          );
+          toast.info(`Order from ${order.store} auto-cancelled`, {
+            description: "Payment was not completed within 1 hour",
+          });
+        }
+      }
+    };
+    if (!loading && orders.length > 0) {
+      autoCancelStale();
+    }
+  }, [loading, orders.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Real-time subscription for active orders
   useEffect(() => {
@@ -446,13 +483,22 @@ export default function GroceryOrderHistory() {
 
   const handleRefresh = () => { setRefreshing(true); fetchOrders(); };
 
-  const filtered = orders.filter((o) => {
+  // Auto-hide cancelled orders 14 days after cancellation
+  const CANCELLED_HIDE_MS = 14 * 24 * 60 * 60 * 1000;
+  const visibleOrders = orders.filter((o) => {
+    if (o.status !== "cancelled") return true;
+    const cancelledAt = (o as any).cancelled_at || o.placed_at;
+    if (!cancelledAt) return true;
+    return Date.now() - new Date(cancelledAt).getTime() < CANCELLED_HIDE_MS;
+  });
+
+  const filtered = visibleOrders.filter((o) => {
     if (filter === "active") return !["delivered", "cancelled"].includes(o.status);
     if (filter === "past") return ["delivered", "cancelled"].includes(o.status);
     return true;
   });
 
-  const activeCount = orders.filter((o) => !["delivered", "cancelled"].includes(o.status)).length;
+  const activeCount = visibleOrders.filter((o) => !["delivered", "cancelled"].includes(o.status)).length;
 
   // Real reorder: add items to cart and navigate to store
   const handleReorder = (items: OrderItem[]) => {
@@ -486,13 +532,13 @@ export default function GroceryOrderHistory() {
   }, [orders]);
 
   return (
-    <div className="min-h-screen bg-background pb-24 relative overflow-hidden">
+    <PullToRefresh onRefresh={fetchOrders} className="min-h-screen bg-background pb-24 relative overflow-hidden">
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-32 -right-32 h-64 w-64 rounded-full bg-primary/6 blur-[60px]" />
       </div>
 
       {/* Header */}
-      <div className="sticky top-0 z-30 bg-background/70 backdrop-blur-2xl border-b border-border/20">
+      <div className="sticky top-0 safe-area-top z-30 bg-background/70 backdrop-blur-2xl border-b border-border/20">
         <div className="flex items-center gap-3 px-4 py-3">
           <motion.button
             whileTap={{ scale: 0.9 }}
@@ -633,6 +679,6 @@ export default function GroceryOrderHistory() {
       </div>
 
       <ZivoMobileNav />
-    </div>
+    </PullToRefresh>
   );
 }

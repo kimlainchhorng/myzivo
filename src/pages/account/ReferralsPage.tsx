@@ -2,14 +2,17 @@
  * Account Referrals Page
  * Shows invite code, how it works, and referral progress
  */
-import { ArrowLeft, Copy, Share2, Users, Gift, Check, Clock, Crown, ExternalLink } from "lucide-react";
+import { ArrowLeft, Copy, Share2, Users, Gift, Check, Clock, Crown, ExternalLink, QrCode, Download, TrendingUp, Sparkles } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useReferrals } from "@/hooks/useReferrals";
 import { REFERRAL_REWARDS, REFERRAL_TERMS } from "@/config/referralProgram";
 import SEOHead from "@/components/SEOHead";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { format } from "date-fns";
+import { useState } from "react";
+import { QRCodeSVG } from "qrcode.react";
+import { toast } from "sonner";
 
 export default function ReferralsPage() {
   const navigate = useNavigate();
@@ -27,6 +30,51 @@ export default function ReferralsPage() {
 
   const currentTier = getCurrentTier();
   const nextTier = getNextTier();
+
+  const [showQR, setShowQR] = useState(false);
+  const shareUrl = getShareUrl();
+
+  // Stats summary computed from referrals
+  const referralStats = (() => {
+    const list = referrals || [];
+    const credited = list.filter((r) => r.status === "credited").length;
+    const pending = list.filter((r) => r.status === "pending" || r.status === "qualified").length;
+    const earned = credited * REFERRAL_REWARDS.referrer.pointsPerReferral;
+    return { total: list.length, credited, pending, earned };
+  })();
+
+  const handleDownloadQR = () => {
+    const svg = document.getElementById("referral-qr-code");
+    if (!svg) return;
+    const serializer = new XMLSerializer();
+    const xml = serializer.serializeToString(svg);
+    const svgBlob = new Blob([xml], { type: "image/svg+xml;charset=utf-8" });
+    const svgUrl = URL.createObjectURL(svgBlob);
+    const img = new Image();
+    img.onload = () => {
+      const canvas = document.createElement("canvas");
+      const size = 512;
+      canvas.width = size;
+      canvas.height = size;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) return;
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, size, size);
+      ctx.drawImage(img, 0, 0, size, size);
+      canvas.toBlob((blob) => {
+        if (!blob) return;
+        const dlUrl = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = dlUrl;
+        a.download = `zivo-referral-${referralCode?.code || "qr"}.png`;
+        a.click();
+        URL.revokeObjectURL(dlUrl);
+        URL.revokeObjectURL(svgUrl);
+        toast.success("QR code saved");
+      }, "image/png");
+    };
+    img.src = svgUrl;
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -67,7 +115,7 @@ export default function ReferralsPage() {
       <SEOHead title="Referrals — ZIVO" description="Invite friends and earn rewards" />
 
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
+      <div className="sticky top-0 safe-area-top z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="flex items-center justify-between px-6 py-4">
           <button
             onClick={() => navigate(-1)}
@@ -80,7 +128,33 @@ export default function ReferralsPage() {
         </div>
       </div>
 
-      <div className="px-6 py-6 space-y-6">
+      <div className="px-6 py-6 space-y-6 max-w-2xl mx-auto">
+        {/* Stats summary */}
+        {!isLoading && referralCode && (
+          <motion.div
+            initial={{ opacity: 0, y: -6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3 }}
+            className="grid grid-cols-3 gap-2"
+          >
+            <div className="rounded-2xl bg-card border border-border/40 p-3 text-center">
+              <Users className="h-4 w-4 text-primary mx-auto mb-1" />
+              <p className="text-lg font-bold tabular-nums">{referralStats.total}</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Invited</p>
+            </div>
+            <div className="rounded-2xl bg-card border border-border/40 p-3 text-center">
+              <Sparkles className="h-4 w-4 text-emerald-500 mx-auto mb-1" />
+              <p className="text-lg font-bold tabular-nums text-emerald-500">{referralStats.earned.toLocaleString()}</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Points earned</p>
+            </div>
+            <div className="rounded-2xl bg-card border border-border/40 p-3 text-center">
+              <Clock className="h-4 w-4 text-amber-500 mx-auto mb-1" />
+              <p className="text-lg font-bold tabular-nums text-amber-500">{referralStats.pending}</p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Pending</p>
+            </div>
+          </motion.div>
+        )}
+
         {/* Invite Code Card */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -111,23 +185,68 @@ export default function ReferralsPage() {
                 {getShareUrl()}
               </p>
 
-              <div className="flex gap-3">
+              <div className="grid grid-cols-3 gap-2 mb-3">
                 <Button
                   onClick={copyReferralLink}
                   variant="outline"
-                  className="flex-1 h-12 rounded-xl"
+                  className="h-11 rounded-xl text-xs"
                 >
-                  <Copy className="w-4 h-4 mr-2" />
-                  Copy Link
+                  <Copy className="w-3.5 h-3.5 mr-1.5" />
+                  Copy
                 </Button>
                 <Button
                   onClick={shareReferral}
-                  className="flex-1 h-12 rounded-xl"
+                  className="h-11 rounded-xl text-xs"
                 >
-                  <Share2 className="w-4 h-4 mr-2" />
+                  <Share2 className="w-3.5 h-3.5 mr-1.5" />
                   Share
                 </Button>
+                <Button
+                  onClick={() => setShowQR((s) => !s)}
+                  variant="outline"
+                  className="h-11 rounded-xl text-xs"
+                  aria-expanded={showQR}
+                >
+                  <QrCode className="w-3.5 h-3.5 mr-1.5" />
+                  {showQR ? "Hide QR" : "QR"}
+                </Button>
               </div>
+
+              <AnimatePresence initial={false}>
+                {showQR && shareUrl && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.25 }}
+                    className="overflow-hidden"
+                  >
+                    <div className="flex flex-col items-center gap-3 pt-2">
+                      <div className="rounded-2xl bg-white p-3 border border-border/40 shadow-sm">
+                        <QRCodeSVG
+                          id="referral-qr-code"
+                          value={shareUrl}
+                          size={180}
+                          level="H"
+                          includeMargin={false}
+                        />
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleDownloadQR}
+                        className="h-9 rounded-xl text-xs"
+                      >
+                        <Download className="h-3.5 w-3.5 mr-1.5" />
+                        Save QR as image
+                      </Button>
+                      <p className="text-[11px] text-muted-foreground text-center max-w-xs">
+                        Anyone who scans this gets your referral link automatically.
+                      </p>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </>
           )}
         </motion.div>

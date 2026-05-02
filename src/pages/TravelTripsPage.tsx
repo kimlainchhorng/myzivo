@@ -3,10 +3,13 @@
   * Unified view of all travel bookings with tabs
   * Premium mobile experience with living timeline
   */
-import { useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { useState, useCallback } from "react";
+import { Link, Navigate, useLocation } from "react-router-dom";
+import { withRedirectParam } from "@/lib/authRedirect";
 import { motion } from "framer-motion";
 import { ArrowLeft, Calendar, Plane, Loader2 } from "lucide-react";
+import PullToRefresh from "@/components/shared/PullToRefresh";
+import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,27 +22,34 @@ import { TripCard } from "@/components/travel/TripCard";
  // MobileTripsPremium removed - use standard trips view on mobile
 
 export default function TravelTripsPage() {
+  const location = useLocation();
   const { user, isLoading: authLoading } = useAuth();
   const [filter, setFilter] = useState<TripFilter>("upcoming");
    const isMobile = useIsMobile();
+  const queryClient = useQueryClient();
   
   const { data: trips, isLoading } = useMyTrips(filter);
 
+  const handlePullRefresh = useCallback(async () => {
+    await queryClient.invalidateQueries({ queryKey: ["my-trips"] });
+  }, [queryClient]);
+
   // Redirect to login if not authenticated
   if (!authLoading && !user) {
-    return <Navigate to="/login" replace />;
+    const redirectTarget = `${location.pathname}${location.search ?? ""}`;
+    return <Navigate to={withRedirectParam("/login", redirectTarget)} replace />;
   }
  
    // Mobile and desktop use the same trips view
 
   return (
+    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-20">
     <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
-      className="min-h-screen bg-background pb-20"
     >
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b">
+      <div className="sticky top-0 safe-area-top z-40 bg-background/95 backdrop-blur-sm border-b">
         <div className="container px-4 py-4">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="icon" aria-label="Go back" asChild>
@@ -119,5 +129,6 @@ export default function TravelTripsPage() {
 
       <MobileBottomNav />
     </motion.div>
+    </PullToRefresh>
   );
 }

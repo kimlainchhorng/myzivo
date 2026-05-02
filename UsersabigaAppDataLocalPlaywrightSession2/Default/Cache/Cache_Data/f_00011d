@@ -1,0 +1,218 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/admin/ads/MarketingPreviewSwitcher.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"]; const _Fragment = __vite__cjsImport0_react_jsxDevRuntime["Fragment"];
+var _s = $RefreshSig$(), _s1 = $RefreshSig$();
+/**
+ * MarketingPreviewSwitcher — floating control to preview the Marketing & Ads
+ * section at fixed widths (Mobile 375 / iPad 820 / Desktop 1280) without
+ * resizing the actual viewport. Hidden on Capacitor native shells.
+ */ import __vite__cjsImport1_react from "/node_modules/.vite/deps/react.js?v=7fd9520c"; const React = ((m) => m?.__esModule ? m : {	...typeof m === "object" && !Array.isArray(m) || typeof m === "function" ? m : {},	default: m})(__vite__cjsImport1_react);
+import { Smartphone, Tablet, Monitor, X } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+import { Button } from "/src/components/ui/button.tsx";
+import { cn } from "/src/lib/utils.ts";
+import { useMarketingPreview } from "/src/components/admin/ads/MarketingPreviewContext.tsx";
+const PRESETS = [
+    {
+        label: "Mobile",
+        width: 375,
+        icon: Smartphone
+    },
+    {
+        label: "iPad",
+        width: 820,
+        icon: Tablet
+    },
+    {
+        label: "Desktop",
+        width: 1280,
+        icon: Monitor
+    }
+];
+function isCapacitor() {
+    if (typeof window === "undefined") return false;
+    return Boolean(window.Capacitor?.isNativePlatform?.());
+}
+export default function MarketingPreviewSwitcher() {
+    _s();
+    const { previewWidth, setPreviewWidth } = useMarketingPreview();
+    const [collapsed, setCollapsed] = React.useState(true);
+    if (isCapacitor()) return null;
+    const select = (w)=>setPreviewWidth(w);
+    return /*#__PURE__*/ _jsxDEV("div", {
+        className: "fixed bottom-4 right-4 z-40 flex items-center gap-1.5 rounded-full border border-border bg-background/95 backdrop-blur p-1 shadow-lg",
+        role: "toolbar",
+        "aria-label": "Preview viewport switcher",
+        children: [
+            !collapsed && PRESETS.map((p)=>{
+                const Icon = p.icon;
+                const active = previewWidth === p.width;
+                return /*#__PURE__*/ _jsxDEV(Button, {
+                    size: "sm",
+                    variant: active ? "default" : "ghost",
+                    onClick: ()=>select(p.width),
+                    className: "h-8 px-2.5 gap-1 text-xs",
+                    "aria-pressed": active,
+                    "aria-label": `Preview at ${p.label} width ${p.width}px`,
+                    children: [
+                        /*#__PURE__*/ _jsxDEV(Icon, {
+                            className: "h-3.5 w-3.5"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/ads/MarketingPreviewSwitcher.tsx",
+                            lineNumber: 50,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("span", {
+                            className: "hidden sm:inline",
+                            children: p.label
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/ads/MarketingPreviewSwitcher.tsx",
+                            lineNumber: 51,
+                            columnNumber: 13
+                        }, this)
+                    ]
+                }, p.label, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/ads/MarketingPreviewSwitcher.tsx",
+                    lineNumber: 41,
+                    columnNumber: 11
+                }, this);
+            }),
+            previewWidth !== null && !collapsed && /*#__PURE__*/ _jsxDEV(Button, {
+                size: "sm",
+                variant: "ghost",
+                className: "h-8 px-2 text-xs",
+                onClick: ()=>select(null),
+                "aria-label": "Reset to native viewport",
+                children: /*#__PURE__*/ _jsxDEV(X, {
+                    className: "h-3.5 w-3.5"
+                }, void 0, false, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/ads/MarketingPreviewSwitcher.tsx",
+                    lineNumber: 63,
+                    columnNumber: 11
+                }, this)
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/ads/MarketingPreviewSwitcher.tsx",
+                lineNumber: 56,
+                columnNumber: 9
+            }, this),
+            /*#__PURE__*/ _jsxDEV(Button, {
+                size: "sm",
+                variant: previewWidth ? "default" : "outline",
+                className: "h-8 px-2.5 text-xs",
+                onClick: ()=>setCollapsed((c)=>!c),
+                "aria-label": collapsed ? "Expand preview switcher" : "Collapse preview switcher",
+                children: [
+                    /*#__PURE__*/ _jsxDEV(Monitor, {
+                        className: "h-3.5 w-3.5"
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/ads/MarketingPreviewSwitcher.tsx",
+                        lineNumber: 73,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("span", {
+                        className: "ml-1 hidden sm:inline",
+                        children: previewWidth ? `${previewWidth}px` : "Preview"
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/ads/MarketingPreviewSwitcher.tsx",
+                        lineNumber: 74,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/ads/MarketingPreviewSwitcher.tsx",
+                lineNumber: 66,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/ads/MarketingPreviewSwitcher.tsx",
+        lineNumber: 32,
+        columnNumber: 5
+    }, this);
+}
+_s(MarketingPreviewSwitcher, "VwWVtfhgICZ8y57YdE/hqbB+quU=", false, function() {
+    return [
+        useMarketingPreview
+    ];
+});
+_c = MarketingPreviewSwitcher;
+/**
+ * MarketingPreviewFrame — wraps children in a fixed-width device frame when a
+ * preview is active. When `previewWidth` is null, renders children unchanged.
+ */ export function MarketingPreviewFrame({ children }) {
+    _s1();
+    const { previewWidth } = useMarketingPreview();
+    if (!previewWidth) return /*#__PURE__*/ _jsxDEV(_Fragment, {
+        children: children
+    }, void 0, false);
+    return /*#__PURE__*/ _jsxDEV("div", {
+        className: "w-full overflow-x-auto",
+        children: /*#__PURE__*/ _jsxDEV("div", {
+            "data-marketing-preview-frame": true,
+            style: {
+                width: previewWidth
+            },
+            className: cn("mx-auto rounded-2xl border-2 border-border/60 bg-background shadow-xl overflow-hidden", "transition-[width] duration-200"),
+            children: [
+                /*#__PURE__*/ _jsxDEV("div", {
+                    className: "px-3 py-1.5 border-b border-border/40 bg-muted/30 text-[10px] uppercase tracking-wider text-muted-foreground font-medium",
+                    children: [
+                        "Preview · ",
+                        previewWidth,
+                        "px"
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/ads/MarketingPreviewSwitcher.tsx",
+                    lineNumber: 99,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ _jsxDEV("div", {
+                    className: "p-3",
+                    children: children
+                }, void 0, false, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/ads/MarketingPreviewSwitcher.tsx",
+                    lineNumber: 102,
+                    columnNumber: 9
+                }, this)
+            ]
+        }, void 0, true, {
+            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/ads/MarketingPreviewSwitcher.tsx",
+            lineNumber: 91,
+            columnNumber: 7
+        }, this)
+    }, void 0, false, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/ads/MarketingPreviewSwitcher.tsx",
+        lineNumber: 90,
+        columnNumber: 5
+    }, this);
+}
+_s1(MarketingPreviewFrame, "kLDBZP//Po0ncX9ezJX+3m+NCLo=", false, function() {
+    return [
+        useMarketingPreview
+    ];
+});
+_c1 = MarketingPreviewFrame;
+var _c, _c1;
+$RefreshReg$(_c, "MarketingPreviewSwitcher");
+$RefreshReg$(_c1, "MarketingPreviewFrame");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/ads/MarketingPreviewSwitcher.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/ads/MarketingPreviewSwitcher.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/ads/MarketingPreviewSwitcher.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIk1hcmtldGluZ1ByZXZpZXdTd2l0Y2hlci50c3giXSwic291cmNlc0NvbnRlbnQiOlsiLyoqXHJcbiAqIE1hcmtldGluZ1ByZXZpZXdTd2l0Y2hlciDigJQgZmxvYXRpbmcgY29udHJvbCB0byBwcmV2aWV3IHRoZSBNYXJrZXRpbmcgJiBBZHNcclxuICogc2VjdGlvbiBhdCBmaXhlZCB3aWR0aHMgKE1vYmlsZSAzNzUgLyBpUGFkIDgyMCAvIERlc2t0b3AgMTI4MCkgd2l0aG91dFxyXG4gKiByZXNpemluZyB0aGUgYWN0dWFsIHZpZXdwb3J0LiBIaWRkZW4gb24gQ2FwYWNpdG9yIG5hdGl2ZSBzaGVsbHMuXHJcbiAqL1xyXG5pbXBvcnQgKiBhcyBSZWFjdCBmcm9tIFwicmVhY3RcIjtcclxuaW1wb3J0IHsgU21hcnRwaG9uZSwgVGFibGV0LCBNb25pdG9yLCBYIH0gZnJvbSBcImx1Y2lkZS1yZWFjdFwiO1xyXG5pbXBvcnQgeyBCdXR0b24gfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2J1dHRvblwiO1xyXG5pbXBvcnQgeyBjbiB9IGZyb20gXCJAL2xpYi91dGlsc1wiO1xyXG5pbXBvcnQgeyB1c2VNYXJrZXRpbmdQcmV2aWV3LCBNYXJrZXRpbmdQcmV2aWV3V2lkdGggfSBmcm9tIFwiLi9NYXJrZXRpbmdQcmV2aWV3Q29udGV4dFwiO1xyXG5cclxuY29uc3QgUFJFU0VUUzogeyBsYWJlbDogc3RyaW5nOyB3aWR0aDogbnVtYmVyOyBpY29uOiBSZWFjdC5Db21wb25lbnRUeXBlPHsgY2xhc3NOYW1lPzogc3RyaW5nIH0+IH1bXSA9IFtcclxuICB7IGxhYmVsOiBcIk1vYmlsZVwiLCB3aWR0aDogMzc1LCBpY29uOiBTbWFydHBob25lIH0sXHJcbiAgeyBsYWJlbDogXCJpUGFkXCIsIHdpZHRoOiA4MjAsIGljb246IFRhYmxldCB9LFxyXG4gIHsgbGFiZWw6IFwiRGVza3RvcFwiLCB3aWR0aDogMTI4MCwgaWNvbjogTW9uaXRvciB9LFxyXG5dO1xyXG5cclxuZnVuY3Rpb24gaXNDYXBhY2l0b3IoKTogYm9vbGVhbiB7XHJcbiAgaWYgKHR5cGVvZiB3aW5kb3cgPT09IFwidW5kZWZpbmVkXCIpIHJldHVybiBmYWxzZTtcclxuICByZXR1cm4gQm9vbGVhbigod2luZG93IGFzIGFueSkuQ2FwYWNpdG9yPy5pc05hdGl2ZVBsYXRmb3JtPy4oKSk7XHJcbn1cclxuXHJcbmV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uIE1hcmtldGluZ1ByZXZpZXdTd2l0Y2hlcigpIHtcclxuICBjb25zdCB7IHByZXZpZXdXaWR0aCwgc2V0UHJldmlld1dpZHRoIH0gPSB1c2VNYXJrZXRpbmdQcmV2aWV3KCk7XHJcbiAgY29uc3QgW2NvbGxhcHNlZCwgc2V0Q29sbGFwc2VkXSA9IFJlYWN0LnVzZVN0YXRlKHRydWUpO1xyXG5cclxuICBpZiAoaXNDYXBhY2l0b3IoKSkgcmV0dXJuIG51bGw7XHJcblxyXG4gIGNvbnN0IHNlbGVjdCA9ICh3OiBNYXJrZXRpbmdQcmV2aWV3V2lkdGgpID0+IHNldFByZXZpZXdXaWR0aCh3KTtcclxuXHJcbiAgcmV0dXJuIChcclxuICAgIDxkaXZcclxuICAgICAgY2xhc3NOYW1lPVwiZml4ZWQgYm90dG9tLTQgcmlnaHQtNCB6LTQwIGZsZXggaXRlbXMtY2VudGVyIGdhcC0xLjUgcm91bmRlZC1mdWxsIGJvcmRlciBib3JkZXItYm9yZGVyIGJnLWJhY2tncm91bmQvOTUgYmFja2Ryb3AtYmx1ciBwLTEgc2hhZG93LWxnXCJcclxuICAgICAgcm9sZT1cInRvb2xiYXJcIlxyXG4gICAgICBhcmlhLWxhYmVsPVwiUHJldmlldyB2aWV3cG9ydCBzd2l0Y2hlclwiXHJcbiAgICA+XHJcbiAgICAgIHshY29sbGFwc2VkICYmIFBSRVNFVFMubWFwKChwKSA9PiB7XHJcbiAgICAgICAgY29uc3QgSWNvbiA9IHAuaWNvbjtcclxuICAgICAgICBjb25zdCBhY3RpdmUgPSBwcmV2aWV3V2lkdGggPT09IHAud2lkdGg7XHJcbiAgICAgICAgcmV0dXJuIChcclxuICAgICAgICAgIDxCdXR0b25cclxuICAgICAgICAgICAga2V5PXtwLmxhYmVsfVxyXG4gICAgICAgICAgICBzaXplPVwic21cIlxyXG4gICAgICAgICAgICB2YXJpYW50PXthY3RpdmUgPyBcImRlZmF1bHRcIiA6IFwiZ2hvc3RcIn1cclxuICAgICAgICAgICAgb25DbGljaz17KCkgPT4gc2VsZWN0KHAud2lkdGgpfVxyXG4gICAgICAgICAgICBjbGFzc05hbWU9XCJoLTggcHgtMi41IGdhcC0xIHRleHQteHNcIlxyXG4gICAgICAgICAgICBhcmlhLXByZXNzZWQ9e2FjdGl2ZX1cclxuICAgICAgICAgICAgYXJpYS1sYWJlbD17YFByZXZpZXcgYXQgJHtwLmxhYmVsfSB3aWR0aCAke3Aud2lkdGh9cHhgfVxyXG4gICAgICAgICAgPlxyXG4gICAgICAgICAgICA8SWNvbiBjbGFzc05hbWU9XCJoLTMuNSB3LTMuNVwiIC8+XHJcbiAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cImhpZGRlbiBzbTppbmxpbmVcIj57cC5sYWJlbH08L3NwYW4+XHJcbiAgICAgICAgICA8L0J1dHRvbj5cclxuICAgICAgICApO1xyXG4gICAgICB9KX1cclxuICAgICAge3ByZXZpZXdXaWR0aCAhPT0gbnVsbCAmJiAhY29sbGFwc2VkICYmIChcclxuICAgICAgICA8QnV0dG9uXHJcbiAgICAgICAgICBzaXplPVwic21cIlxyXG4gICAgICAgICAgdmFyaWFudD1cImdob3N0XCJcclxuICAgICAgICAgIGNsYXNzTmFtZT1cImgtOCBweC0yIHRleHQteHNcIlxyXG4gICAgICAgICAgb25DbGljaz17KCkgPT4gc2VsZWN0KG51bGwpfVxyXG4gICAgICAgICAgYXJpYS1sYWJlbD1cIlJlc2V0IHRvIG5hdGl2ZSB2aWV3cG9ydFwiXHJcbiAgICAgICAgPlxyXG4gICAgICAgICAgPFggY2xhc3NOYW1lPVwiaC0zLjUgdy0zLjVcIiAvPlxyXG4gICAgICAgIDwvQnV0dG9uPlxyXG4gICAgICApfVxyXG4gICAgICA8QnV0dG9uXHJcbiAgICAgICAgc2l6ZT1cInNtXCJcclxuICAgICAgICB2YXJpYW50PXtwcmV2aWV3V2lkdGggPyBcImRlZmF1bHRcIiA6IFwib3V0bGluZVwifVxyXG4gICAgICAgIGNsYXNzTmFtZT1cImgtOCBweC0yLjUgdGV4dC14c1wiXHJcbiAgICAgICAgb25DbGljaz17KCkgPT4gc2V0Q29sbGFwc2VkKChjKSA9PiAhYyl9XHJcbiAgICAgICAgYXJpYS1sYWJlbD17Y29sbGFwc2VkID8gXCJFeHBhbmQgcHJldmlldyBzd2l0Y2hlclwiIDogXCJDb2xsYXBzZSBwcmV2aWV3IHN3aXRjaGVyXCJ9XHJcbiAgICAgID5cclxuICAgICAgICA8TW9uaXRvciBjbGFzc05hbWU9XCJoLTMuNSB3LTMuNVwiIC8+XHJcbiAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwibWwtMSBoaWRkZW4gc206aW5saW5lXCI+XHJcbiAgICAgICAgICB7cHJldmlld1dpZHRoID8gYCR7cHJldmlld1dpZHRofXB4YCA6IFwiUHJldmlld1wifVxyXG4gICAgICAgIDwvc3Bhbj5cclxuICAgICAgPC9CdXR0b24+XHJcbiAgICA8L2Rpdj5cclxuICApO1xyXG59XHJcblxyXG4vKipcclxuICogTWFya2V0aW5nUHJldmlld0ZyYW1lIOKAlCB3cmFwcyBjaGlsZHJlbiBpbiBhIGZpeGVkLXdpZHRoIGRldmljZSBmcmFtZSB3aGVuIGFcclxuICogcHJldmlldyBpcyBhY3RpdmUuIFdoZW4gYHByZXZpZXdXaWR0aGAgaXMgbnVsbCwgcmVuZGVycyBjaGlsZHJlbiB1bmNoYW5nZWQuXHJcbiAqL1xyXG5leHBvcnQgZnVuY3Rpb24gTWFya2V0aW5nUHJldmlld0ZyYW1lKHsgY2hpbGRyZW4gfTogeyBjaGlsZHJlbjogUmVhY3QuUmVhY3ROb2RlIH0pIHtcclxuICBjb25zdCB7IHByZXZpZXdXaWR0aCB9ID0gdXNlTWFya2V0aW5nUHJldmlldygpO1xyXG4gIGlmICghcHJldmlld1dpZHRoKSByZXR1cm4gPD57Y2hpbGRyZW59PC8+O1xyXG4gIHJldHVybiAoXHJcbiAgICA8ZGl2IGNsYXNzTmFtZT1cInctZnVsbCBvdmVyZmxvdy14LWF1dG9cIj5cclxuICAgICAgPGRpdlxyXG4gICAgICAgIGRhdGEtbWFya2V0aW5nLXByZXZpZXctZnJhbWVcclxuICAgICAgICBzdHlsZT17eyB3aWR0aDogcHJldmlld1dpZHRoIH19XHJcbiAgICAgICAgY2xhc3NOYW1lPXtjbihcclxuICAgICAgICAgIFwibXgtYXV0byByb3VuZGVkLTJ4bCBib3JkZXItMiBib3JkZXItYm9yZGVyLzYwIGJnLWJhY2tncm91bmQgc2hhZG93LXhsIG92ZXJmbG93LWhpZGRlblwiLFxyXG4gICAgICAgICAgXCJ0cmFuc2l0aW9uLVt3aWR0aF0gZHVyYXRpb24tMjAwXCJcclxuICAgICAgICApfVxyXG4gICAgICA+XHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJweC0zIHB5LTEuNSBib3JkZXItYiBib3JkZXItYm9yZGVyLzQwIGJnLW11dGVkLzMwIHRleHQtWzEwcHhdIHVwcGVyY2FzZSB0cmFja2luZy13aWRlciB0ZXh0LW11dGVkLWZvcmVncm91bmQgZm9udC1tZWRpdW1cIj5cclxuICAgICAgICAgIFByZXZpZXcgwrcge3ByZXZpZXdXaWR0aH1weFxyXG4gICAgICAgIDwvZGl2PlxyXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwicC0zXCI+e2NoaWxkcmVufTwvZGl2PlxyXG4gICAgICA8L2Rpdj5cclxuICAgIDwvZGl2PlxyXG4gICk7XHJcbn1cclxuIl0sIm5hbWVzIjpbIlJlYWN0IiwiU21hcnRwaG9uZSIsIlRhYmxldCIsIk1vbml0b3IiLCJYIiwiQnV0dG9uIiwiY24iLCJ1c2VNYXJrZXRpbmdQcmV2aWV3IiwiUFJFU0VUUyIsImxhYmVsIiwid2lkdGgiLCJpY29uIiwiaXNDYXBhY2l0b3IiLCJ3aW5kb3ciLCJCb29sZWFuIiwiQ2FwYWNpdG9yIiwiaXNOYXRpdmVQbGF0Zm9ybSIsIk1hcmtldGluZ1ByZXZpZXdTd2l0Y2hlciIsInByZXZpZXdXaWR0aCIsInNldFByZXZpZXdXaWR0aCIsImNvbGxhcHNlZCIsInNldENvbGxhcHNlZCIsInVzZVN0YXRlIiwic2VsZWN0IiwidyIsImRpdiIsImNsYXNzTmFtZSIsInJvbGUiLCJhcmlhLWxhYmVsIiwibWFwIiwicCIsIkljb24iLCJhY3RpdmUiLCJzaXplIiwidmFyaWFudCIsIm9uQ2xpY2siLCJhcmlhLXByZXNzZWQiLCJzcGFuIiwiYyIsIk1hcmtldGluZ1ByZXZpZXdGcmFtZSIsImNoaWxkcmVuIiwiZGF0YS1tYXJrZXRpbmctcHJldmlldy1mcmFtZSIsInN0eWxlIl0sIm1hcHBpbmdzIjoiOztBQUFBOzs7O0NBSUMsR0FDRCxZQUFZQSxXQUFXLFFBQVE7QUFDL0IsU0FBU0MsVUFBVSxFQUFFQyxNQUFNLEVBQUVDLE9BQU8sRUFBRUMsQ0FBQyxRQUFRLGVBQWU7QUFDOUQsU0FBU0MsTUFBTSxRQUFRLHlCQUF5QjtBQUNoRCxTQUFTQyxFQUFFLFFBQVEsY0FBYztBQUNqQyxTQUFTQyxtQkFBbUIsUUFBK0IsNEJBQTRCO0FBRXZGLE1BQU1DLFVBQWlHO0lBQ3JHO1FBQUVDLE9BQU87UUFBVUMsT0FBTztRQUFLQyxNQUFNVjtJQUFXO0lBQ2hEO1FBQUVRLE9BQU87UUFBUUMsT0FBTztRQUFLQyxNQUFNVDtJQUFPO0lBQzFDO1FBQUVPLE9BQU87UUFBV0MsT0FBTztRQUFNQyxNQUFNUjtJQUFRO0NBQ2hEO0FBRUQsU0FBU1M7SUFDUCxJQUFJLE9BQU9DLFdBQVcsYUFBYSxPQUFPO0lBQzFDLE9BQU9DLFFBQVEsQUFBQ0QsT0FBZUUsU0FBUyxFQUFFQztBQUM1QztBQUVBLGVBQWUsU0FBU0M7O0lBQ3RCLE1BQU0sRUFBRUMsWUFBWSxFQUFFQyxlQUFlLEVBQUUsR0FBR1o7SUFDMUMsTUFBTSxDQUFDYSxXQUFXQyxhQUFhLEdBQUdyQixNQUFNc0IsUUFBUSxDQUFDO0lBRWpELElBQUlWLGVBQWUsT0FBTztJQUUxQixNQUFNVyxTQUFTLENBQUNDLElBQTZCTCxnQkFBZ0JLO0lBRTdELHFCQUNFLFFBQUNDO1FBQ0NDLFdBQVU7UUFDVkMsTUFBSztRQUNMQyxjQUFXOztZQUVWLENBQUNSLGFBQWFaLFFBQVFxQixHQUFHLENBQUMsQ0FBQ0M7Z0JBQzFCLE1BQU1DLE9BQU9ELEVBQUVuQixJQUFJO2dCQUNuQixNQUFNcUIsU0FBU2QsaUJBQWlCWSxFQUFFcEIsS0FBSztnQkFDdkMscUJBQ0UsUUFBQ0w7b0JBRUM0QixNQUFLO29CQUNMQyxTQUFTRixTQUFTLFlBQVk7b0JBQzlCRyxTQUFTLElBQU1aLE9BQU9PLEVBQUVwQixLQUFLO29CQUM3QmdCLFdBQVU7b0JBQ1ZVLGdCQUFjSjtvQkFDZEosY0FBWSxDQUFDLFdBQVcsRUFBRUUsRUFBRXJCLEtBQUssQ0FBQyxPQUFPLEVBQUVxQixFQUFFcEIsS0FBSyxDQUFDLEVBQUUsQ0FBQzs7c0NBRXRELFFBQUNxQjs0QkFBS0wsV0FBVTs7Ozs7O3NDQUNoQixRQUFDVzs0QkFBS1gsV0FBVTtzQ0FBb0JJLEVBQUVyQixLQUFLOzs7Ozs7O21CQVR0Q3FCLEVBQUVyQixLQUFLOzs7OztZQVlsQjtZQUNDUyxpQkFBaUIsUUFBUSxDQUFDRSwyQkFDekIsUUFBQ2Y7Z0JBQ0M0QixNQUFLO2dCQUNMQyxTQUFRO2dCQUNSUixXQUFVO2dCQUNWUyxTQUFTLElBQU1aLE9BQU87Z0JBQ3RCSyxjQUFXOzBCQUVYLGNBQUEsUUFBQ3hCO29CQUFFc0IsV0FBVTs7Ozs7Ozs7Ozs7MEJBR2pCLFFBQUNyQjtnQkFDQzRCLE1BQUs7Z0JBQ0xDLFNBQVNoQixlQUFlLFlBQVk7Z0JBQ3BDUSxXQUFVO2dCQUNWUyxTQUFTLElBQU1kLGFBQWEsQ0FBQ2lCLElBQU0sQ0FBQ0E7Z0JBQ3BDVixjQUFZUixZQUFZLDRCQUE0Qjs7a0NBRXBELFFBQUNqQjt3QkFBUXVCLFdBQVU7Ozs7OztrQ0FDbkIsUUFBQ1c7d0JBQUtYLFdBQVU7a0NBQ2JSLGVBQWUsR0FBR0EsYUFBYSxFQUFFLENBQUMsR0FBRzs7Ozs7Ozs7Ozs7Ozs7Ozs7O0FBS2hEO0dBekR3QkQ7O1FBQ29CVjs7O0tBRHBCVTtBQTJEeEI7OztDQUdDLEdBQ0QsT0FBTyxTQUFTc0Isc0JBQXNCLEVBQUVDLFFBQVEsRUFBaUM7O0lBQy9FLE1BQU0sRUFBRXRCLFlBQVksRUFBRSxHQUFHWDtJQUN6QixJQUFJLENBQUNXLGNBQWMscUJBQU87a0JBQUdzQjs7SUFDN0IscUJBQ0UsUUFBQ2Y7UUFBSUMsV0FBVTtrQkFDYixjQUFBLFFBQUNEO1lBQ0NnQiw4QkFBNEI7WUFDNUJDLE9BQU87Z0JBQUVoQyxPQUFPUTtZQUFhO1lBQzdCUSxXQUFXcEIsR0FDVCx5RkFDQTs7OEJBR0YsUUFBQ21CO29CQUFJQyxXQUFVOzt3QkFBMkg7d0JBQzdIUjt3QkFBYTs7Ozs7Ozs4QkFFMUIsUUFBQ087b0JBQUlDLFdBQVU7OEJBQU9jOzs7Ozs7Ozs7Ozs7Ozs7OztBQUk5QjtJQXBCZ0JEOztRQUNXaEM7OztNQURYZ0MifQ==

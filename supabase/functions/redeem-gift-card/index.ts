@@ -1,5 +1,6 @@
 import { serve, createClient } from "../_shared/deps.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { rateLimitDb, rateLimitHeaders } from "../_shared/rateLimiter.ts";
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -38,6 +39,13 @@ serve(async (req) => {
         JSON.stringify({ error: "Invalid authentication" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
+    }
+
+    const rl = await rateLimitDb(user.id, "payment");
+    if (!rl.allowed) {
+      return new Response(JSON.stringify({ error: "Too many requests. Please try again later." }), {
+        status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", ...rateLimitHeaders(rl, "payment") },
+      });
     }
 
     const supabase = createClient(supabaseUrl, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
@@ -156,6 +164,23 @@ serve(async (req) => {
       balance_after: 0,
       notes: `Redeemed by user ${user.id}`,
     });
+
+    // Notify user: gift card redeemed and wallet credited
+    try {
+      const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+      const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+      await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "Authorization": `Bearer ${serviceKey}` },
+        body: JSON.stringify({
+          user_id: user.id,
+          notification_type: "gift_card_redeemed",
+          title: "Gift Card Redeemed! 🎁",
+          body: `$${giftCard.current_balance.toFixed(2)} has been added to your wallet`,
+          data: { type: "gift_card_redeemed", amount_dollars: giftCard.current_balance, action_url: "/wallet" },
+        }),
+      });
+    } catch (e) { console.error("[redeem-gift-card] Push notify error:", e); }
 
     return new Response(
       JSON.stringify({

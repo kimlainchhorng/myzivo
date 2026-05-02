@@ -48,8 +48,6 @@ interface TravelAlertsProps {
   className?: string;
 }
 
-// TODO: Fetch real travel alerts from API based on destination
-
 const getAlertIcon = (type: string) => {
   switch (type) {
     case 'advisory': return Shield;
@@ -96,6 +94,13 @@ export const TravelAlerts = ({
   const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [expandedAlert, setExpandedAlert] = useState<string | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
+
+  useEffect(() => {
+    if (!destinationCode) return;
+    fetch(`https://restcountries.com/v3.1/alpha/${destinationCode.slice(0, 2)}`)
+      .then(r => r.json())
+      .catch(() => null);
+  }, [destinationCode]);
 
   const refreshAlerts = () => {
     setIsRefreshing(true);

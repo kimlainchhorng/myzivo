@@ -1,0 +1,1136 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"]; const _Fragment = __vite__cjsImport0_react_jsxDevRuntime["Fragment"];
+var _s = $RefreshSig$();
+/**
+ * CreateMarketingCampaignWizard — 5-step wizard with live device preview.
+ * Persists to marketing_campaigns; "Send now" calls send-marketing-campaign edge fn.
+ */ import __vite__cjsImport1_react from "/node_modules/.vite/deps/react.js?v=7fd9520c"; const useState = __vite__cjsImport1_react["useState"]; const useEffect = __vite__cjsImport1_react["useEffect"];
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "/src/components/ui/dialog.tsx";
+import { Button } from "/src/components/ui/button.tsx";
+import { Input } from "/src/components/ui/input.tsx";
+import { Label } from "/src/components/ui/label.tsx";
+import { Textarea } from "/src/components/ui/textarea.tsx";
+import { RadioGroup, RadioGroupItem } from "/src/components/ui/radio-group.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "/src/components/ui/select.tsx";
+import { Switch } from "/src/components/ui/switch.tsx";
+import { Bell, Mail, MessageSquare, Smartphone, Layers, ChevronRight, ChevronLeft, Check, Send, Calendar, FileText, AlertCircle, Save } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+import { useMarketingSegments } from "/src/hooks/useMarketingSegments.ts";
+import SegmentPicker from "/src/components/admin/marketing/SegmentPicker.tsx";
+import TemplatePicker from "/src/components/admin/marketing/TemplatePicker.tsx";
+import { supabase } from "/src/integrations/supabase/client.ts";
+import { useQueryClient } from "/node_modules/.vite/deps/@tanstack_react-query.js?v=7fd9520c";
+import { toast } from "/node_modules/.vite/deps/sonner.js?v=7fd9520c";
+import { motion, AnimatePresence } from "/node_modules/.vite/deps/framer-motion.js?v=7fd9520c";
+const CHANNELS = [
+    {
+        id: "push",
+        icon: Bell,
+        label: "Push",
+        desc: "Mobile + web push"
+    },
+    {
+        id: "email",
+        icon: Mail,
+        label: "Email",
+        desc: "Rich HTML"
+    },
+    {
+        id: "sms",
+        icon: MessageSquare,
+        label: "SMS",
+        desc: "160-char text"
+    },
+    {
+        id: "inapp",
+        icon: Smartphone,
+        label: "In-app",
+        desc: "Banner / card"
+    },
+    {
+        id: "multi",
+        icon: Layers,
+        label: "Multi-channel",
+        desc: "Sequential"
+    }
+];
+export default function CreateMarketingCampaignWizard({ open, onClose, storeId, onCreated, defaultChannel }) {
+    _s();
+    const qc = useQueryClient();
+    const [step, setStep] = useState(1);
+    const [channel, setChannel] = useState(defaultChannel ?? "push");
+    // Apply preselected channel whenever the dialog opens with a new value
+    useEffect(()=>{
+        if (open && defaultChannel) {
+            setChannel(defaultChannel);
+        }
+    }, [
+        open,
+        defaultChannel
+    ]);
+    const [name, setName] = useState("");
+    const [segmentId, setSegmentId] = useState("");
+    const [subject, setSubject] = useState("");
+    const [body, setBody] = useState("");
+    const [deepLink, setDeepLink] = useState("");
+    const [scheduleMode, setScheduleMode] = useState("now");
+    const [sendDate, setSendDate] = useState("");
+    const [trigger, setTrigger] = useState("cart_abandoned");
+    const [confirmed, setConfirmed] = useState(false);
+    const [submitting, setSubmitting] = useState(false);
+    const { data: segments } = useMarketingSegments(storeId);
+    const reset = ()=>{
+        setStep(1);
+        setChannel("push");
+        setName("");
+        setSegmentId("");
+        setSubject("");
+        setBody("");
+        setDeepLink("");
+        setScheduleMode("now");
+        setSendDate("");
+        setConfirmed(false);
+    };
+    const close = ()=>{
+        reset();
+        onClose();
+    };
+    const next = ()=>setStep((s)=>Math.min(5, s + 1));
+    const prev = ()=>setStep((s)=>Math.max(1, s - 1));
+    const canNext = ()=>{
+        if (step === 1) return !!channel && !!name.trim();
+        if (step === 2) return true;
+        if (step === 3) {
+            if (channel === "email") return !!subject && !!body;
+            return !!body;
+        }
+        if (step === 4) return scheduleMode === "now" || scheduleMode === "triggered" || !!sendDate;
+        return true;
+    };
+    const handleSubmit = async (asDraft = false)=>{
+        if (!asDraft && !confirmed) {
+            toast.error("Confirm before sending");
+            return;
+        }
+        setSubmitting(true);
+        try {
+            const userRes = await supabase.auth.getUser();
+            const userId = userRes.data.user?.id ?? null;
+            const channelToFlags = (c)=>({
+                    push_enabled: c === "push" || c === "inapp" || c === "multi",
+                    email_enabled: c === "email" || c === "multi",
+                    sms_enabled: c === "sms" || c === "multi"
+                });
+            let status;
+            if (asDraft) status = "draft";
+            else if (scheduleMode === "now") status = "sending";
+            else if (scheduleMode === "triggered") status = "active";
+            else status = "scheduled";
+            const payload = {
+                name: name || `Campaign ${new Date().toLocaleString()}`,
+                campaign_type: scheduleMode === "triggered" ? "triggered" : "broadcast",
+                target_restaurant_id: storeId,
+                target_segment_id: segmentId && segmentId !== "all" ? segmentId : null,
+                title: subject || null,
+                notification_title: subject || null,
+                notification_body: body || null,
+                message: body || null,
+                sms_message: channel === "sms" || channel === "multi" ? body : null,
+                ...channelToFlags(channel),
+                status,
+                is_recurring: scheduleMode === "recurring",
+                recurrence_interval: scheduleMode === "recurring" ? "weekly" : null,
+                trigger_type: scheduleMode === "triggered" ? trigger : null,
+                trigger_config: scheduleMode === "triggered" ? {
+                    trigger
+                } : null,
+                start_date: sendDate || null,
+                next_run_at: sendDate || null,
+                created_by: userId
+            };
+            const { data: inserted, error } = await supabase.from("marketing_campaigns").insert(payload).select().single();
+            if (error) throw error;
+            // Fire send-marketing-campaign edge fn (best-effort) when sending now
+            if (status === "sending" && inserted) {
+                supabase.functions.invoke("send-marketing-campaign", {
+                    body: {
+                        campaign_id: inserted.id
+                    }
+                }).catch(()=>{});
+            }
+            qc.invalidateQueries({
+                queryKey: [
+                    "store-marketing-overview",
+                    storeId
+                ]
+            });
+            qc.invalidateQueries({
+                queryKey: [
+                    "marketing-campaigns",
+                    storeId
+                ]
+            });
+            toast.success(asDraft ? "Saved as draft" : status === "sending" ? "Campaign sending" : status === "scheduled" ? "Campaign scheduled" : "Automation activated");
+            onCreated?.();
+            close();
+        } catch (e) {
+            toast.error(e.message || "Failed to save campaign");
+        } finally{
+            setSubmitting(false);
+        }
+    };
+    const smsCost = Math.ceil(body.length / 160) * 0.015 * (segments?.find((s)=>s.id === segmentId)?.member_count || 100);
+    return /*#__PURE__*/ _jsxDEV(Dialog, {
+        open: open,
+        onOpenChange: (v)=>!v && close(),
+        children: /*#__PURE__*/ _jsxDEV(DialogContent, {
+            className: "max-w-3xl p-0 overflow-hidden max-h-[90vh] flex flex-col",
+            children: [
+                /*#__PURE__*/ _jsxDEV(DialogHeader, {
+                    className: "p-4 border-b",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV(DialogTitle, {
+                            className: "text-base",
+                            children: [
+                                "New campaign · Step ",
+                                step,
+                                " of 5"
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                            lineNumber: 169,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "flex gap-1 mt-2",
+                            children: [
+                                1,
+                                2,
+                                3,
+                                4,
+                                5
+                            ].map((n)=>/*#__PURE__*/ _jsxDEV("div", {
+                                    className: `h-1 flex-1 rounded-full ${n <= step ? "bg-primary" : "bg-muted"}`
+                                }, n, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                    lineNumber: 172,
+                                    columnNumber: 15
+                                }, this))
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                            lineNumber: 170,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                    lineNumber: 168,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ _jsxDEV("div", {
+                    className: "grid grid-cols-1 md:grid-cols-[1fr,260px] flex-1 min-h-0",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "p-4 overflow-y-auto",
+                            "aria-live": "polite",
+                            children: /*#__PURE__*/ _jsxDEV(AnimatePresence, {
+                                mode: "wait",
+                                children: /*#__PURE__*/ _jsxDEV(motion.div, {
+                                    initial: {
+                                        opacity: 0,
+                                        x: 12
+                                    },
+                                    animate: {
+                                        opacity: 1,
+                                        x: 0
+                                    },
+                                    exit: {
+                                        opacity: 0,
+                                        x: -12
+                                    },
+                                    transition: {
+                                        duration: 0.15
+                                    },
+                                    children: [
+                                        step === 1 && /*#__PURE__*/ _jsxDEV("div", {
+                                            className: "space-y-3",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV("div", {
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxDEV(Label, {
+                                                            className: "text-xs",
+                                                            children: "Campaign name"
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                            lineNumber: 185,
+                                                            columnNumber: 23
+                                                        }, this),
+                                                        /*#__PURE__*/ _jsxDEV(Input, {
+                                                            value: name,
+                                                            onChange: (e)=>setName(e.target.value),
+                                                            placeholder: "Spring Sale Push",
+                                                            className: "mt-1"
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                            lineNumber: 186,
+                                                            columnNumber: 23
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                    lineNumber: 184,
+                                                    columnNumber: 21
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV(Label, {
+                                                    className: "text-xs",
+                                                    children: "Channel"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                    lineNumber: 188,
+                                                    columnNumber: 21
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV("div", {
+                                                    className: "grid grid-cols-2 sm:grid-cols-3 gap-2",
+                                                    children: CHANNELS.map((c)=>{
+                                                        const I = c.icon;
+                                                        const sel = channel === c.id;
+                                                        return /*#__PURE__*/ _jsxDEV("button", {
+                                                            onClick: ()=>setChannel(c.id),
+                                                            className: `p-3 rounded-lg border text-left transition-all ${sel ? "border-primary bg-primary/5" : "border-border hover:border-primary/40"}`,
+                                                            children: [
+                                                                /*#__PURE__*/ _jsxDEV(I, {
+                                                                    className: `w-4 h-4 mb-1 ${sel ? "text-primary" : "text-muted-foreground"}`
+                                                                }, void 0, false, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                                    lineNumber: 201,
+                                                                    columnNumber: 29
+                                                                }, this),
+                                                                /*#__PURE__*/ _jsxDEV("div", {
+                                                                    className: "text-xs font-semibold",
+                                                                    children: c.label
+                                                                }, void 0, false, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                                    lineNumber: 202,
+                                                                    columnNumber: 29
+                                                                }, this),
+                                                                /*#__PURE__*/ _jsxDEV("div", {
+                                                                    className: "text-[10px] text-muted-foreground",
+                                                                    children: c.desc
+                                                                }, void 0, false, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                                    lineNumber: 203,
+                                                                    columnNumber: 29
+                                                                }, this)
+                                                            ]
+                                                        }, c.id, true, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                            lineNumber: 194,
+                                                            columnNumber: 27
+                                                        }, this);
+                                                    })
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                    lineNumber: 189,
+                                                    columnNumber: 21
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                            lineNumber: 183,
+                                            columnNumber: 19
+                                        }, this),
+                                        step === 2 && /*#__PURE__*/ _jsxDEV("div", {
+                                            className: "space-y-3",
+                                            "aria-live": "polite",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV(SegmentPicker, {
+                                                    storeId: storeId,
+                                                    value: segmentId && segmentId !== "all" ? segmentId : null,
+                                                    onChange: (v)=>setSegmentId(v ?? "all")
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                    lineNumber: 213,
+                                                    columnNumber: 21
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV("p", {
+                                                    className: "text-[11px] text-muted-foreground",
+                                                    children: "Build new segments in the Audience tab to target by tags, last-order date, total spend, etc."
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                    lineNumber: 218,
+                                                    columnNumber: 21
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                            lineNumber: 212,
+                                            columnNumber: 19
+                                        }, this),
+                                        step === 3 && /*#__PURE__*/ _jsxDEV("div", {
+                                            className: "space-y-3",
+                                            "aria-live": "polite",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV(Label, {
+                                                    className: "text-xs flex items-center gap-1",
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxDEV(FileText, {
+                                                            className: "w-3 h-3"
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                            lineNumber: 226,
+                                                            columnNumber: 72
+                                                        }, this),
+                                                        " Content"
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                    lineNumber: 226,
+                                                    columnNumber: 21
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV("details", {
+                                                    className: "rounded-lg border bg-muted/30",
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxDEV("summary", {
+                                                            className: "cursor-pointer text-[11px] px-2.5 py-1.5 font-medium hover:bg-muted/50",
+                                                            children: "Use a template"
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                            lineNumber: 228,
+                                                            columnNumber: 23
+                                                        }, this),
+                                                        /*#__PURE__*/ _jsxDEV("div", {
+                                                            className: "p-2.5 border-t",
+                                                            children: /*#__PURE__*/ _jsxDEV(TemplatePicker, {
+                                                                storeId: storeId,
+                                                                channel: channel === "multi" ? undefined : channel,
+                                                                onPick: (t)=>{
+                                                                    if (t.subject) setSubject(t.subject);
+                                                                    if (t.body) setBody(t.body);
+                                                                    toast.success(`Template "${t.name}" applied`);
+                                                                }
+                                                            }, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                                lineNumber: 232,
+                                                                columnNumber: 25
+                                                            }, this)
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                            lineNumber: 231,
+                                                            columnNumber: 23
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                    lineNumber: 227,
+                                                    columnNumber: 21
+                                                }, this),
+                                                channel === "email" && /*#__PURE__*/ _jsxDEV("div", {
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxDEV(Label, {
+                                                            className: "text-[11px] text-muted-foreground",
+                                                            children: "Subject"
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                            lineNumber: 245,
+                                                            columnNumber: 25
+                                                        }, this),
+                                                        /*#__PURE__*/ _jsxDEV(Input, {
+                                                            value: subject,
+                                                            onChange: (e)=>setSubject(e.target.value),
+                                                            className: "mt-1",
+                                                            placeholder: "Your spring deal is here"
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                            lineNumber: 246,
+                                                            columnNumber: 25
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                    lineNumber: 244,
+                                                    columnNumber: 23
+                                                }, this),
+                                                (channel === "push" || channel === "inapp") && /*#__PURE__*/ _jsxDEV("div", {
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxDEV(Label, {
+                                                            className: "text-[11px] text-muted-foreground",
+                                                            children: "Title"
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                            lineNumber: 251,
+                                                            columnNumber: 25
+                                                        }, this),
+                                                        /*#__PURE__*/ _jsxDEV(Input, {
+                                                            value: subject,
+                                                            onChange: (e)=>setSubject(e.target.value),
+                                                            className: "mt-1",
+                                                            placeholder: "Don't miss out!"
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                            lineNumber: 252,
+                                                            columnNumber: 25
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                    lineNumber: 250,
+                                                    columnNumber: 23
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV("div", {
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxDEV(Label, {
+                                                            className: "text-[11px] text-muted-foreground",
+                                                            children: channel === "sms" ? "Message" : "Body"
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                            lineNumber: 256,
+                                                            columnNumber: 23
+                                                        }, this),
+                                                        /*#__PURE__*/ _jsxDEV(Textarea, {
+                                                            value: body,
+                                                            onChange: (e)=>setBody(e.target.value),
+                                                            rows: 4,
+                                                            className: "mt-1",
+                                                            placeholder: "Your message...",
+                                                            maxLength: channel === "sms" ? 160 : 500
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                            lineNumber: 257,
+                                                            columnNumber: 23
+                                                        }, this),
+                                                        channel === "sms" && /*#__PURE__*/ _jsxDEV("div", {
+                                                            className: "text-[10px] text-muted-foreground mt-1 flex justify-between",
+                                                            children: [
+                                                                /*#__PURE__*/ _jsxDEV("span", {
+                                                                    children: [
+                                                                        body.length,
+                                                                        " / 160 chars"
+                                                                    ]
+                                                                }, void 0, true, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                                    lineNumber: 260,
+                                                                    columnNumber: 27
+                                                                }, this),
+                                                                /*#__PURE__*/ _jsxDEV("span", {
+                                                                    children: [
+                                                                        "≈ $",
+                                                                        smsCost.toFixed(2),
+                                                                        " estimated"
+                                                                    ]
+                                                                }, void 0, true, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                                    lineNumber: 261,
+                                                                    columnNumber: 27
+                                                                }, this)
+                                                            ]
+                                                        }, void 0, true, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                            lineNumber: 259,
+                                                            columnNumber: 25
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                    lineNumber: 255,
+                                                    columnNumber: 21
+                                                }, this),
+                                                (channel === "push" || channel === "inapp") && /*#__PURE__*/ _jsxDEV("div", {
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxDEV(Label, {
+                                                            className: "text-[11px] text-muted-foreground",
+                                                            children: "Deep link (optional)"
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                            lineNumber: 267,
+                                                            columnNumber: 25
+                                                        }, this),
+                                                        /*#__PURE__*/ _jsxDEV(Input, {
+                                                            value: deepLink,
+                                                            onChange: (e)=>setDeepLink(e.target.value),
+                                                            className: "mt-1",
+                                                            placeholder: "/products/featured"
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                            lineNumber: 268,
+                                                            columnNumber: 25
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                    lineNumber: 266,
+                                                    columnNumber: 23
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                            lineNumber: 225,
+                                            columnNumber: 19
+                                        }, this),
+                                        step === 4 && /*#__PURE__*/ _jsxDEV("div", {
+                                            className: "space-y-3",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV(Label, {
+                                                    className: "text-xs flex items-center gap-1",
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxDEV(Calendar, {
+                                                            className: "w-3 h-3"
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                            lineNumber: 276,
+                                                            columnNumber: 72
+                                                        }, this),
+                                                        " Schedule"
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                    lineNumber: 276,
+                                                    columnNumber: 21
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV(RadioGroup, {
+                                                    value: scheduleMode,
+                                                    onValueChange: (v)=>setScheduleMode(v),
+                                                    children: [
+                                                        {
+                                                            v: "now",
+                                                            l: "Send now"
+                                                        },
+                                                        {
+                                                            v: "once",
+                                                            l: "Schedule once"
+                                                        },
+                                                        {
+                                                            v: "recurring",
+                                                            l: "Recurring"
+                                                        },
+                                                        {
+                                                            v: "triggered",
+                                                            l: "Triggered (event-based)"
+                                                        }
+                                                    ].map((o)=>/*#__PURE__*/ _jsxDEV("div", {
+                                                            className: "flex items-center gap-2 p-2 rounded-lg border hover:bg-muted/40 cursor-pointer",
+                                                            children: [
+                                                                /*#__PURE__*/ _jsxDEV(RadioGroupItem, {
+                                                                    value: o.v,
+                                                                    id: o.v
+                                                                }, void 0, false, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                                    lineNumber: 285,
+                                                                    columnNumber: 27
+                                                                }, this),
+                                                                /*#__PURE__*/ _jsxDEV(Label, {
+                                                                    htmlFor: o.v,
+                                                                    className: "text-sm flex-1 cursor-pointer",
+                                                                    children: o.l
+                                                                }, void 0, false, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                                    lineNumber: 286,
+                                                                    columnNumber: 27
+                                                                }, this)
+                                                            ]
+                                                        }, o.v, true, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                            lineNumber: 284,
+                                                            columnNumber: 25
+                                                        }, this))
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                    lineNumber: 277,
+                                                    columnNumber: 21
+                                                }, this),
+                                                (scheduleMode === "once" || scheduleMode === "recurring") && /*#__PURE__*/ _jsxDEV(Input, {
+                                                    type: "datetime-local",
+                                                    value: sendDate,
+                                                    onChange: (e)=>setSendDate(e.target.value)
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                    lineNumber: 291,
+                                                    columnNumber: 23
+                                                }, this),
+                                                scheduleMode === "triggered" && /*#__PURE__*/ _jsxDEV(Select, {
+                                                    value: trigger,
+                                                    onValueChange: setTrigger,
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxDEV(SelectTrigger, {
+                                                            children: /*#__PURE__*/ _jsxDEV(SelectValue, {}, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                                lineNumber: 295,
+                                                                columnNumber: 40
+                                                            }, this)
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                            lineNumber: 295,
+                                                            columnNumber: 25
+                                                        }, this),
+                                                        /*#__PURE__*/ _jsxDEV(SelectContent, {
+                                                            children: [
+                                                                /*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                                    value: "cart_abandoned",
+                                                                    children: "Cart abandoned (1h)"
+                                                                }, void 0, false, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                                    lineNumber: 297,
+                                                                    columnNumber: 27
+                                                                }, this),
+                                                                /*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                                    value: "first_order",
+                                                                    children: "First order placed"
+                                                                }, void 0, false, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                                    lineNumber: 298,
+                                                                    columnNumber: 27
+                                                                }, this),
+                                                                /*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                                    value: "birthday",
+                                                                    children: "Customer birthday"
+                                                                }, void 0, false, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                                    lineNumber: 299,
+                                                                    columnNumber: 27
+                                                                }, this),
+                                                                /*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                                    value: "inactivity_30",
+                                                                    children: "Inactive 30+ days"
+                                                                }, void 0, false, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                                    lineNumber: 300,
+                                                                    columnNumber: 27
+                                                                }, this)
+                                                            ]
+                                                        }, void 0, true, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                            lineNumber: 296,
+                                                            columnNumber: 25
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                    lineNumber: 294,
+                                                    columnNumber: 23
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                            lineNumber: 275,
+                                            columnNumber: 19
+                                        }, this),
+                                        step === 5 && /*#__PURE__*/ _jsxDEV("div", {
+                                            className: "space-y-3",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV("div", {
+                                                    className: "rounded-lg border p-3 space-y-2 text-sm",
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxDEV("div", {
+                                                            className: "flex justify-between",
+                                                            children: [
+                                                                /*#__PURE__*/ _jsxDEV("span", {
+                                                                    className: "text-muted-foreground",
+                                                                    children: "Channel"
+                                                                }, void 0, false, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                                    lineNumber: 310,
+                                                                    columnNumber: 61
+                                                                }, this),
+                                                                /*#__PURE__*/ _jsxDEV("span", {
+                                                                    className: "font-medium capitalize",
+                                                                    children: channel
+                                                                }, void 0, false, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                                    lineNumber: 310,
+                                                                    columnNumber: 115
+                                                                }, this)
+                                                            ]
+                                                        }, void 0, true, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                            lineNumber: 310,
+                                                            columnNumber: 23
+                                                        }, this),
+                                                        /*#__PURE__*/ _jsxDEV("div", {
+                                                            className: "flex justify-between",
+                                                            children: [
+                                                                /*#__PURE__*/ _jsxDEV("span", {
+                                                                    className: "text-muted-foreground",
+                                                                    children: "Audience"
+                                                                }, void 0, false, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                                    lineNumber: 311,
+                                                                    columnNumber: 61
+                                                                }, this),
+                                                                /*#__PURE__*/ _jsxDEV("span", {
+                                                                    className: "font-medium",
+                                                                    children: segments?.find((s)=>s.id === segmentId)?.member_count.toLocaleString() || "All"
+                                                                }, void 0, false, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                                    lineNumber: 311,
+                                                                    columnNumber: 116
+                                                                }, this)
+                                                            ]
+                                                        }, void 0, true, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                            lineNumber: 311,
+                                                            columnNumber: 23
+                                                        }, this),
+                                                        /*#__PURE__*/ _jsxDEV("div", {
+                                                            className: "flex justify-between",
+                                                            children: [
+                                                                /*#__PURE__*/ _jsxDEV("span", {
+                                                                    className: "text-muted-foreground",
+                                                                    children: "Schedule"
+                                                                }, void 0, false, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                                    lineNumber: 312,
+                                                                    columnNumber: 61
+                                                                }, this),
+                                                                /*#__PURE__*/ _jsxDEV("span", {
+                                                                    className: "font-medium capitalize",
+                                                                    children: scheduleMode
+                                                                }, void 0, false, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                                    lineNumber: 312,
+                                                                    columnNumber: 116
+                                                                }, this)
+                                                            ]
+                                                        }, void 0, true, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                            lineNumber: 312,
+                                                            columnNumber: 23
+                                                        }, this),
+                                                        channel === "sms" && /*#__PURE__*/ _jsxDEV("div", {
+                                                            className: "flex justify-between",
+                                                            children: [
+                                                                /*#__PURE__*/ _jsxDEV("span", {
+                                                                    className: "text-muted-foreground",
+                                                                    children: "Est. cost"
+                                                                }, void 0, false, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                                    lineNumber: 314,
+                                                                    columnNumber: 63
+                                                                }, this),
+                                                                /*#__PURE__*/ _jsxDEV("span", {
+                                                                    className: "font-medium",
+                                                                    children: [
+                                                                        "$",
+                                                                        smsCost.toFixed(2)
+                                                                    ]
+                                                                }, void 0, true, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                                    lineNumber: 314,
+                                                                    columnNumber: 119
+                                                                }, this)
+                                                            ]
+                                                        }, void 0, true, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                            lineNumber: 314,
+                                                            columnNumber: 25
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                    lineNumber: 309,
+                                                    columnNumber: 21
+                                                }, this),
+                                                channel === "email" && body.length < 30 && /*#__PURE__*/ _jsxDEV("div", {
+                                                    className: "rounded-lg border-amber-300 border bg-amber-50 dark:bg-amber-950/20 p-2 text-[11px] flex gap-2",
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxDEV(AlertCircle, {
+                                                            className: "w-3.5 h-3.5 text-amber-600 shrink-0"
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                            lineNumber: 319,
+                                                            columnNumber: 25
+                                                        }, this),
+                                                        /*#__PURE__*/ _jsxDEV("span", {
+                                                            children: "Short body may trigger spam filters. Consider adding more context."
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                            lineNumber: 320,
+                                                            columnNumber: 25
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                    lineNumber: 318,
+                                                    columnNumber: 23
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV("label", {
+                                                    className: "flex items-center gap-2 text-xs cursor-pointer",
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxDEV(Switch, {
+                                                            checked: confirmed,
+                                                            onCheckedChange: setConfirmed
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                            lineNumber: 324,
+                                                            columnNumber: 23
+                                                        }, this),
+                                                        "I confirm the audience and message are correct."
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                    lineNumber: 323,
+                                                    columnNumber: 21
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                            lineNumber: 308,
+                                            columnNumber: 19
+                                        }, this)
+                                    ]
+                                }, step, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                    lineNumber: 181,
+                                    columnNumber: 15
+                                }, this)
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                lineNumber: 180,
+                                columnNumber: 13
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                            lineNumber: 179,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "hidden md:flex flex-col bg-muted/30 border-l p-4 items-center justify-center",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "w-[200px] h-[400px] rounded-[2rem] border-4 border-foreground/80 bg-background overflow-hidden flex flex-col shadow-xl",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV("div", {
+                                            className: "h-6 bg-foreground/80"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                            lineNumber: 336,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("div", {
+                                            className: "flex-1 p-2 overflow-hidden",
+                                            children: /*#__PURE__*/ _jsxDEV("div", {
+                                                className: "rounded-lg bg-card border p-2 shadow-sm",
+                                                children: [
+                                                    /*#__PURE__*/ _jsxDEV("div", {
+                                                        className: "flex items-center gap-1 mb-1",
+                                                        children: [
+                                                            /*#__PURE__*/ _jsxDEV("div", {
+                                                                className: "w-4 h-4 rounded bg-primary/20"
+                                                            }, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                                lineNumber: 340,
+                                                                columnNumber: 21
+                                                            }, this),
+                                                            /*#__PURE__*/ _jsxDEV("span", {
+                                                                className: "text-[8px] text-muted-foreground",
+                                                                children: "YOUR STORE · now"
+                                                            }, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                                lineNumber: 341,
+                                                                columnNumber: 21
+                                                            }, this)
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                        lineNumber: 339,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    /*#__PURE__*/ _jsxDEV("div", {
+                                                        className: "text-[10px] font-bold leading-tight",
+                                                        children: subject || "Your title"
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                        lineNumber: 343,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    /*#__PURE__*/ _jsxDEV("div", {
+                                                        className: "text-[9px] text-muted-foreground line-clamp-3 mt-0.5",
+                                                        children: body || "Your message preview..."
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                        lineNumber: 344,
+                                                        columnNumber: 19
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                lineNumber: 338,
+                                                columnNumber: 17
+                                            }, this)
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                            lineNumber: 337,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                    lineNumber: 335,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("p", {
+                                    className: "text-[10px] text-muted-foreground mt-3",
+                                    children: "Live preview"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                    lineNumber: 348,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                            lineNumber: 334,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                    lineNumber: 177,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ _jsxDEV("div", {
+                    className: "flex items-center justify-between gap-2 p-3 border-t bg-muted/20",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV(Button, {
+                            variant: "ghost",
+                            size: "sm",
+                            onClick: step === 1 ? close : prev,
+                            children: step === 1 ? "Cancel" : /*#__PURE__*/ _jsxDEV(_Fragment, {
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(ChevronLeft, {
+                                        className: "w-4 h-4 mr-1"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                        lineNumber: 354,
+                                        columnNumber: 40
+                                    }, this),
+                                    "Back"
+                                ]
+                            }, void 0, true)
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                            lineNumber: 353,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "flex items-center gap-2",
+                            children: [
+                                step > 1 && /*#__PURE__*/ _jsxDEV(Button, {
+                                    variant: "outline",
+                                    size: "sm",
+                                    onClick: ()=>handleSubmit(true),
+                                    disabled: submitting,
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Save, {
+                                            className: "w-4 h-4 mr-1"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                            lineNumber: 359,
+                                            columnNumber: 17
+                                        }, this),
+                                        " Draft"
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                    lineNumber: 358,
+                                    columnNumber: 15
+                                }, this),
+                                step < 5 ? /*#__PURE__*/ _jsxDEV(Button, {
+                                    size: "sm",
+                                    onClick: next,
+                                    disabled: !canNext(),
+                                    children: [
+                                        "Next ",
+                                        /*#__PURE__*/ _jsxDEV(ChevronRight, {
+                                            className: "w-4 h-4 ml-1"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                            lineNumber: 364,
+                                            columnNumber: 22
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                    lineNumber: 363,
+                                    columnNumber: 15
+                                }, this) : /*#__PURE__*/ _jsxDEV(Button, {
+                                    size: "sm",
+                                    onClick: ()=>handleSubmit(false),
+                                    disabled: !confirmed || submitting,
+                                    children: submitting ? "Sending..." : /*#__PURE__*/ _jsxDEV(_Fragment, {
+                                        children: [
+                                            scheduleMode === "now" ? /*#__PURE__*/ _jsxDEV(Send, {
+                                                className: "w-4 h-4 mr-1"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                lineNumber: 368,
+                                                columnNumber: 74
+                                            }, this) : /*#__PURE__*/ _jsxDEV(Check, {
+                                                className: "w-4 h-4 mr-1"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                                lineNumber: 368,
+                                                columnNumber: 110
+                                            }, this),
+                                            " ",
+                                            scheduleMode === "now" ? "Send now" : "Schedule"
+                                        ]
+                                    }, void 0, true)
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                                    lineNumber: 367,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                            lineNumber: 356,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+                    lineNumber: 352,
+                    columnNumber: 9
+                }, this)
+            ]
+        }, void 0, true, {
+            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+            lineNumber: 167,
+            columnNumber: 7
+        }, this)
+    }, void 0, false, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx",
+        lineNumber: 166,
+        columnNumber: 5
+    }, this);
+}
+_s(CreateMarketingCampaignWizard, "Ys0IaWd5lEa6M52rC4LTo3JStOg=", false, function() {
+    return [
+        useQueryClient,
+        useMarketingSegments
+    ];
+});
+_c = CreateMarketingCampaignWizard;
+var _c;
+$RefreshReg$(_c, "CreateMarketingCampaignWizard");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIkNyZWF0ZU1hcmtldGluZ0NhbXBhaWduV2l6YXJkLnRzeCJdLCJzb3VyY2VzQ29udGVudCI6WyIvKipcclxuICogQ3JlYXRlTWFya2V0aW5nQ2FtcGFpZ25XaXphcmQg4oCUIDUtc3RlcCB3aXphcmQgd2l0aCBsaXZlIGRldmljZSBwcmV2aWV3LlxyXG4gKiBQZXJzaXN0cyB0byBtYXJrZXRpbmdfY2FtcGFpZ25zOyBcIlNlbmQgbm93XCIgY2FsbHMgc2VuZC1tYXJrZXRpbmctY2FtcGFpZ24gZWRnZSBmbi5cclxuICovXHJcbmltcG9ydCB7IHVzZVN0YXRlLCB1c2VFZmZlY3QgfSBmcm9tIFwicmVhY3RcIjtcclxuaW1wb3J0IHsgRGlhbG9nLCBEaWFsb2dDb250ZW50LCBEaWFsb2dIZWFkZXIsIERpYWxvZ1RpdGxlIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9kaWFsb2dcIjtcclxuaW1wb3J0IHsgQnV0dG9uIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9idXR0b25cIjtcclxuaW1wb3J0IHsgSW5wdXQgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2lucHV0XCI7XHJcbmltcG9ydCB7IExhYmVsIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9sYWJlbFwiO1xyXG5pbXBvcnQgeyBUZXh0YXJlYSB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvdGV4dGFyZWFcIjtcclxuaW1wb3J0IHsgQmFkZ2UgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2JhZGdlXCI7XHJcbmltcG9ydCB7IFJhZGlvR3JvdXAsIFJhZGlvR3JvdXBJdGVtIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9yYWRpby1ncm91cFwiO1xyXG5pbXBvcnQgeyBTZWxlY3QsIFNlbGVjdENvbnRlbnQsIFNlbGVjdEl0ZW0sIFNlbGVjdFRyaWdnZXIsIFNlbGVjdFZhbHVlIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9zZWxlY3RcIjtcclxuaW1wb3J0IHsgU3dpdGNoIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9zd2l0Y2hcIjtcclxuaW1wb3J0IHsgQmVsbCwgTWFpbCwgTWVzc2FnZVNxdWFyZSwgU21hcnRwaG9uZSwgTGF5ZXJzLCBDaGV2cm9uUmlnaHQsIENoZXZyb25MZWZ0LCBDaGVjaywgU2VuZCwgVXNlcnMsIENhbGVuZGFyLCBGaWxlVGV4dCwgQWxlcnRDaXJjbGUsIFNhdmUgfSBmcm9tIFwibHVjaWRlLXJlYWN0XCI7XHJcbmltcG9ydCB7IHVzZU1hcmtldGluZ1NlZ21lbnRzIH0gZnJvbSBcIkAvaG9va3MvdXNlTWFya2V0aW5nU2VnbWVudHNcIjtcclxuaW1wb3J0IFNlZ21lbnRQaWNrZXIgZnJvbSBcIi4vU2VnbWVudFBpY2tlclwiO1xyXG5pbXBvcnQgVGVtcGxhdGVQaWNrZXIgZnJvbSBcIi4vVGVtcGxhdGVQaWNrZXJcIjtcclxuaW1wb3J0IHsgc3VwYWJhc2UgfSBmcm9tIFwiQC9pbnRlZ3JhdGlvbnMvc3VwYWJhc2UvY2xpZW50XCI7XHJcbmltcG9ydCB7IHVzZVF1ZXJ5Q2xpZW50IH0gZnJvbSBcIkB0YW5zdGFjay9yZWFjdC1xdWVyeVwiO1xyXG5pbXBvcnQgeyB0b2FzdCB9IGZyb20gXCJzb25uZXJcIjtcclxuaW1wb3J0IHsgbW90aW9uLCBBbmltYXRlUHJlc2VuY2UgfSBmcm9tIFwiZnJhbWVyLW1vdGlvblwiO1xyXG5cclxudHlwZSBDaGFubmVsID0gXCJwdXNoXCIgfCBcImVtYWlsXCIgfCBcInNtc1wiIHwgXCJpbmFwcFwiIHwgXCJtdWx0aVwiO1xyXG50eXBlIFNjaGVkdWxlTW9kZSA9IFwibm93XCIgfCBcIm9uY2VcIiB8IFwicmVjdXJyaW5nXCIgfCBcInRyaWdnZXJlZFwiO1xyXG5cclxuaW50ZXJmYWNlIFByb3BzIHtcclxuICBvcGVuOiBib29sZWFuO1xyXG4gIG9uQ2xvc2U6ICgpID0+IHZvaWQ7XHJcbiAgc3RvcmVJZDogc3RyaW5nO1xyXG4gIG9uQ3JlYXRlZD86ICgpID0+IHZvaWQ7XHJcbiAgZGVmYXVsdENoYW5uZWw/OiBDaGFubmVsO1xyXG59XHJcblxyXG5jb25zdCBDSEFOTkVMUzogeyBpZDogQ2hhbm5lbDsgaWNvbjogYW55OyBsYWJlbDogc3RyaW5nOyBkZXNjOiBzdHJpbmcgfVtdID0gW1xyXG4gIHsgaWQ6IFwicHVzaFwiLCBpY29uOiBCZWxsLCBsYWJlbDogXCJQdXNoXCIsIGRlc2M6IFwiTW9iaWxlICsgd2ViIHB1c2hcIiB9LFxyXG4gIHsgaWQ6IFwiZW1haWxcIiwgaWNvbjogTWFpbCwgbGFiZWw6IFwiRW1haWxcIiwgZGVzYzogXCJSaWNoIEhUTUxcIiB9LFxyXG4gIHsgaWQ6IFwic21zXCIsIGljb246IE1lc3NhZ2VTcXVhcmUsIGxhYmVsOiBcIlNNU1wiLCBkZXNjOiBcIjE2MC1jaGFyIHRleHRcIiB9LFxyXG4gIHsgaWQ6IFwiaW5hcHBcIiwgaWNvbjogU21hcnRwaG9uZSwgbGFiZWw6IFwiSW4tYXBwXCIsIGRlc2M6IFwiQmFubmVyIC8gY2FyZFwiIH0sXHJcbiAgeyBpZDogXCJtdWx0aVwiLCBpY29uOiBMYXllcnMsIGxhYmVsOiBcIk11bHRpLWNoYW5uZWxcIiwgZGVzYzogXCJTZXF1ZW50aWFsXCIgfSxcclxuXTtcclxuXHJcbmV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uIENyZWF0ZU1hcmtldGluZ0NhbXBhaWduV2l6YXJkKHsgb3Blbiwgb25DbG9zZSwgc3RvcmVJZCwgb25DcmVhdGVkLCBkZWZhdWx0Q2hhbm5lbCB9OiBQcm9wcykge1xyXG4gIGNvbnN0IHFjID0gdXNlUXVlcnlDbGllbnQoKTtcclxuICBjb25zdCBbc3RlcCwgc2V0U3RlcF0gPSB1c2VTdGF0ZSgxKTtcclxuICBjb25zdCBbY2hhbm5lbCwgc2V0Q2hhbm5lbF0gPSB1c2VTdGF0ZTxDaGFubmVsPihkZWZhdWx0Q2hhbm5lbCA/PyBcInB1c2hcIik7XHJcblxyXG4gIC8vIEFwcGx5IHByZXNlbGVjdGVkIGNoYW5uZWwgd2hlbmV2ZXIgdGhlIGRpYWxvZyBvcGVucyB3aXRoIGEgbmV3IHZhbHVlXHJcbiAgdXNlRWZmZWN0KCgpID0+IHtcclxuICAgIGlmIChvcGVuICYmIGRlZmF1bHRDaGFubmVsKSB7XHJcbiAgICAgIHNldENoYW5uZWwoZGVmYXVsdENoYW5uZWwpO1xyXG4gICAgfVxyXG4gIH0sIFtvcGVuLCBkZWZhdWx0Q2hhbm5lbF0pO1xyXG4gIGNvbnN0IFtuYW1lLCBzZXROYW1lXSA9IHVzZVN0YXRlKFwiXCIpO1xyXG4gIGNvbnN0IFtzZWdtZW50SWQsIHNldFNlZ21lbnRJZF0gPSB1c2VTdGF0ZTxzdHJpbmc+KFwiXCIpO1xyXG4gIGNvbnN0IFtzdWJqZWN0LCBzZXRTdWJqZWN0XSA9IHVzZVN0YXRlKFwiXCIpO1xyXG4gIGNvbnN0IFtib2R5LCBzZXRCb2R5XSA9IHVzZVN0YXRlKFwiXCIpO1xyXG4gIGNvbnN0IFtkZWVwTGluaywgc2V0RGVlcExpbmtdID0gdXNlU3RhdGUoXCJcIik7XHJcbiAgY29uc3QgW3NjaGVkdWxlTW9kZSwgc2V0U2NoZWR1bGVNb2RlXSA9IHVzZVN0YXRlPFNjaGVkdWxlTW9kZT4oXCJub3dcIik7XHJcbiAgY29uc3QgW3NlbmREYXRlLCBzZXRTZW5kRGF0ZV0gPSB1c2VTdGF0ZShcIlwiKTtcclxuICBjb25zdCBbdHJpZ2dlciwgc2V0VHJpZ2dlcl0gPSB1c2VTdGF0ZShcImNhcnRfYWJhbmRvbmVkXCIpO1xyXG4gIGNvbnN0IFtjb25maXJtZWQsIHNldENvbmZpcm1lZF0gPSB1c2VTdGF0ZShmYWxzZSk7XHJcbiAgY29uc3QgW3N1Ym1pdHRpbmcsIHNldFN1Ym1pdHRpbmddID0gdXNlU3RhdGUoZmFsc2UpO1xyXG5cclxuICBjb25zdCB7IGRhdGE6IHNlZ21lbnRzIH0gPSB1c2VNYXJrZXRpbmdTZWdtZW50cyhzdG9yZUlkKTtcclxuXHJcbiAgY29uc3QgcmVzZXQgPSAoKSA9PiB7XHJcbiAgICBzZXRTdGVwKDEpOyBzZXRDaGFubmVsKFwicHVzaFwiKTsgc2V0TmFtZShcIlwiKTsgc2V0U2VnbWVudElkKFwiXCIpOyBzZXRTdWJqZWN0KFwiXCIpOyBzZXRCb2R5KFwiXCIpO1xyXG4gICAgc2V0RGVlcExpbmsoXCJcIik7IHNldFNjaGVkdWxlTW9kZShcIm5vd1wiKTsgc2V0U2VuZERhdGUoXCJcIik7IHNldENvbmZpcm1lZChmYWxzZSk7XHJcbiAgfTtcclxuXHJcbiAgY29uc3QgY2xvc2UgPSAoKSA9PiB7IHJlc2V0KCk7IG9uQ2xvc2UoKTsgfTtcclxuXHJcbiAgY29uc3QgbmV4dCA9ICgpID0+IHNldFN0ZXAoKHMpID0+IE1hdGgubWluKDUsIHMgKyAxKSk7XHJcbiAgY29uc3QgcHJldiA9ICgpID0+IHNldFN0ZXAoKHMpID0+IE1hdGgubWF4KDEsIHMgLSAxKSk7XHJcblxyXG4gIGNvbnN0IGNhbk5leHQgPSAoKSA9PiB7XHJcbiAgICBpZiAoc3RlcCA9PT0gMSkgcmV0dXJuICEhY2hhbm5lbCAmJiAhIW5hbWUudHJpbSgpO1xyXG4gICAgaWYgKHN0ZXAgPT09IDIpIHJldHVybiB0cnVlO1xyXG4gICAgaWYgKHN0ZXAgPT09IDMpIHtcclxuICAgICAgaWYgKGNoYW5uZWwgPT09IFwiZW1haWxcIikgcmV0dXJuICEhc3ViamVjdCAmJiAhIWJvZHk7XHJcbiAgICAgIHJldHVybiAhIWJvZHk7XHJcbiAgICB9XHJcbiAgICBpZiAoc3RlcCA9PT0gNCkgcmV0dXJuIHNjaGVkdWxlTW9kZSA9PT0gXCJub3dcIiB8fCBzY2hlZHVsZU1vZGUgPT09IFwidHJpZ2dlcmVkXCIgfHwgISFzZW5kRGF0ZTtcclxuICAgIHJldHVybiB0cnVlO1xyXG4gIH07XHJcblxyXG4gIGNvbnN0IGhhbmRsZVN1Ym1pdCA9IGFzeW5jIChhc0RyYWZ0ID0gZmFsc2UpID0+IHtcclxuICAgIGlmICghYXNEcmFmdCAmJiAhY29uZmlybWVkKSB7IHRvYXN0LmVycm9yKFwiQ29uZmlybSBiZWZvcmUgc2VuZGluZ1wiKTsgcmV0dXJuOyB9XHJcbiAgICBzZXRTdWJtaXR0aW5nKHRydWUpO1xyXG4gICAgdHJ5IHtcclxuICAgICAgY29uc3QgdXNlclJlcyA9IGF3YWl0IHN1cGFiYXNlLmF1dGguZ2V0VXNlcigpO1xyXG4gICAgICBjb25zdCB1c2VySWQgPSB1c2VyUmVzLmRhdGEudXNlcj8uaWQgPz8gbnVsbDtcclxuXHJcbiAgICAgIGNvbnN0IGNoYW5uZWxUb0ZsYWdzID0gKGM6IENoYW5uZWwpID0+ICh7XHJcbiAgICAgICAgcHVzaF9lbmFibGVkOiBjID09PSBcInB1c2hcIiB8fCBjID09PSBcImluYXBwXCIgfHwgYyA9PT0gXCJtdWx0aVwiLFxyXG4gICAgICAgIGVtYWlsX2VuYWJsZWQ6IGMgPT09IFwiZW1haWxcIiB8fCBjID09PSBcIm11bHRpXCIsXHJcbiAgICAgICAgc21zX2VuYWJsZWQ6IGMgPT09IFwic21zXCIgfHwgYyA9PT0gXCJtdWx0aVwiLFxyXG4gICAgICB9KTtcclxuXHJcbiAgICAgIGxldCBzdGF0dXM6IHN0cmluZztcclxuICAgICAgaWYgKGFzRHJhZnQpIHN0YXR1cyA9IFwiZHJhZnRcIjtcclxuICAgICAgZWxzZSBpZiAoc2NoZWR1bGVNb2RlID09PSBcIm5vd1wiKSBzdGF0dXMgPSBcInNlbmRpbmdcIjtcclxuICAgICAgZWxzZSBpZiAoc2NoZWR1bGVNb2RlID09PSBcInRyaWdnZXJlZFwiKSBzdGF0dXMgPSBcImFjdGl2ZVwiO1xyXG4gICAgICBlbHNlIHN0YXR1cyA9IFwic2NoZWR1bGVkXCI7XHJcblxyXG4gICAgICBjb25zdCBwYXlsb2FkOiBhbnkgPSB7XHJcbiAgICAgICAgbmFtZTogbmFtZSB8fCBgQ2FtcGFpZ24gJHtuZXcgRGF0ZSgpLnRvTG9jYWxlU3RyaW5nKCl9YCxcclxuICAgICAgICBjYW1wYWlnbl90eXBlOiBzY2hlZHVsZU1vZGUgPT09IFwidHJpZ2dlcmVkXCIgPyBcInRyaWdnZXJlZFwiIDogXCJicm9hZGNhc3RcIixcclxuICAgICAgICB0YXJnZXRfcmVzdGF1cmFudF9pZDogc3RvcmVJZCxcclxuICAgICAgICB0YXJnZXRfc2VnbWVudF9pZDogc2VnbWVudElkICYmIHNlZ21lbnRJZCAhPT0gXCJhbGxcIiA/IHNlZ21lbnRJZCA6IG51bGwsXHJcbiAgICAgICAgdGl0bGU6IHN1YmplY3QgfHwgbnVsbCxcclxuICAgICAgICBub3RpZmljYXRpb25fdGl0bGU6IHN1YmplY3QgfHwgbnVsbCxcclxuICAgICAgICBub3RpZmljYXRpb25fYm9keTogYm9keSB8fCBudWxsLFxyXG4gICAgICAgIG1lc3NhZ2U6IGJvZHkgfHwgbnVsbCxcclxuICAgICAgICBzbXNfbWVzc2FnZTogY2hhbm5lbCA9PT0gXCJzbXNcIiB8fCBjaGFubmVsID09PSBcIm11bHRpXCIgPyBib2R5IDogbnVsbCxcclxuICAgICAgICAuLi5jaGFubmVsVG9GbGFncyhjaGFubmVsKSxcclxuICAgICAgICBzdGF0dXMsXHJcbiAgICAgICAgaXNfcmVjdXJyaW5nOiBzY2hlZHVsZU1vZGUgPT09IFwicmVjdXJyaW5nXCIsXHJcbiAgICAgICAgcmVjdXJyZW5jZV9pbnRlcnZhbDogc2NoZWR1bGVNb2RlID09PSBcInJlY3VycmluZ1wiID8gXCJ3ZWVrbHlcIiA6IG51bGwsXHJcbiAgICAgICAgdHJpZ2dlcl90eXBlOiBzY2hlZHVsZU1vZGUgPT09IFwidHJpZ2dlcmVkXCIgPyB0cmlnZ2VyIDogbnVsbCxcclxuICAgICAgICB0cmlnZ2VyX2NvbmZpZzogc2NoZWR1bGVNb2RlID09PSBcInRyaWdnZXJlZFwiID8geyB0cmlnZ2VyIH0gOiBudWxsLFxyXG4gICAgICAgIHN0YXJ0X2RhdGU6IHNlbmREYXRlIHx8IG51bGwsXHJcbiAgICAgICAgbmV4dF9ydW5fYXQ6IHNlbmREYXRlIHx8IG51bGwsXHJcbiAgICAgICAgY3JlYXRlZF9ieTogdXNlcklkLFxyXG4gICAgICB9O1xyXG5cclxuICAgICAgY29uc3QgeyBkYXRhOiBpbnNlcnRlZCwgZXJyb3IgfSA9IGF3YWl0IHN1cGFiYXNlXHJcbiAgICAgICAgLmZyb20oXCJtYXJrZXRpbmdfY2FtcGFpZ25zXCIpXHJcbiAgICAgICAgLmluc2VydChwYXlsb2FkKVxyXG4gICAgICAgIC5zZWxlY3QoKVxyXG4gICAgICAgIC5zaW5nbGUoKTtcclxuICAgICAgaWYgKGVycm9yKSB0aHJvdyBlcnJvcjtcclxuXHJcbiAgICAgIC8vIEZpcmUgc2VuZC1tYXJrZXRpbmctY2FtcGFpZ24gZWRnZSBmbiAoYmVzdC1lZmZvcnQpIHdoZW4gc2VuZGluZyBub3dcclxuICAgICAgaWYgKHN0YXR1cyA9PT0gXCJzZW5kaW5nXCIgJiYgaW5zZXJ0ZWQpIHtcclxuICAgICAgICBzdXBhYmFzZS5mdW5jdGlvbnNcclxuICAgICAgICAgIC5pbnZva2UoXCJzZW5kLW1hcmtldGluZy1jYW1wYWlnblwiLCB7IGJvZHk6IHsgY2FtcGFpZ25faWQ6IGluc2VydGVkLmlkIH0gfSlcclxuICAgICAgICAgIC5jYXRjaCgoKSA9PiB7Lyogbm9uLWZhdGFsOiBjYW1wYWlnbiBxdWV1ZWQgZm9yIGNyb24gKi99KTtcclxuICAgICAgfVxyXG5cclxuICAgICAgcWMuaW52YWxpZGF0ZVF1ZXJpZXMoeyBxdWVyeUtleTogW1wic3RvcmUtbWFya2V0aW5nLW92ZXJ2aWV3XCIsIHN0b3JlSWRdIH0pO1xyXG4gICAgICBxYy5pbnZhbGlkYXRlUXVlcmllcyh7IHF1ZXJ5S2V5OiBbXCJtYXJrZXRpbmctY2FtcGFpZ25zXCIsIHN0b3JlSWRdIH0pO1xyXG5cclxuICAgICAgdG9hc3Quc3VjY2VzcyhcclxuICAgICAgICBhc0RyYWZ0XHJcbiAgICAgICAgICA/IFwiU2F2ZWQgYXMgZHJhZnRcIlxyXG4gICAgICAgICAgOiBzdGF0dXMgPT09IFwic2VuZGluZ1wiXHJcbiAgICAgICAgICA/IFwiQ2FtcGFpZ24gc2VuZGluZ1wiXHJcbiAgICAgICAgICA6IHN0YXR1cyA9PT0gXCJzY2hlZHVsZWRcIlxyXG4gICAgICAgICAgPyBcIkNhbXBhaWduIHNjaGVkdWxlZFwiXHJcbiAgICAgICAgICA6IFwiQXV0b21hdGlvbiBhY3RpdmF0ZWRcIlxyXG4gICAgICApO1xyXG4gICAgICBvbkNyZWF0ZWQ/LigpO1xyXG4gICAgICBjbG9zZSgpO1xyXG4gICAgfSBjYXRjaCAoZTogYW55KSB7XHJcbiAgICAgIHRvYXN0LmVycm9yKGUubWVzc2FnZSB8fCBcIkZhaWxlZCB0byBzYXZlIGNhbXBhaWduXCIpO1xyXG4gICAgfSBmaW5hbGx5IHtcclxuICAgICAgc2V0U3VibWl0dGluZyhmYWxzZSk7XHJcbiAgICB9XHJcbiAgfTtcclxuXHJcbiAgY29uc3Qgc21zQ29zdCA9IE1hdGguY2VpbChib2R5Lmxlbmd0aCAvIDE2MCkgKiAwLjAxNSAqIChzZWdtZW50cz8uZmluZCgocykgPT4gcy5pZCA9PT0gc2VnbWVudElkKT8ubWVtYmVyX2NvdW50IHx8IDEwMCk7XHJcblxyXG4gIHJldHVybiAoXHJcbiAgICA8RGlhbG9nIG9wZW49e29wZW59IG9uT3BlbkNoYW5nZT17KHYpID0+ICF2ICYmIGNsb3NlKCl9PlxyXG4gICAgICA8RGlhbG9nQ29udGVudCBjbGFzc05hbWU9XCJtYXgtdy0zeGwgcC0wIG92ZXJmbG93LWhpZGRlbiBtYXgtaC1bOTB2aF0gZmxleCBmbGV4LWNvbFwiPlxyXG4gICAgICAgIDxEaWFsb2dIZWFkZXIgY2xhc3NOYW1lPVwicC00IGJvcmRlci1iXCI+XHJcbiAgICAgICAgICA8RGlhbG9nVGl0bGUgY2xhc3NOYW1lPVwidGV4dC1iYXNlXCI+TmV3IGNhbXBhaWduIMK3IFN0ZXAge3N0ZXB9IG9mIDU8L0RpYWxvZ1RpdGxlPlxyXG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGdhcC0xIG10LTJcIj5cclxuICAgICAgICAgICAge1sxLCAyLCAzLCA0LCA1XS5tYXAoKG4pID0+IChcclxuICAgICAgICAgICAgICA8ZGl2IGtleT17bn0gY2xhc3NOYW1lPXtgaC0xIGZsZXgtMSByb3VuZGVkLWZ1bGwgJHtuIDw9IHN0ZXAgPyBcImJnLXByaW1hcnlcIiA6IFwiYmctbXV0ZWRcIn1gfSAvPlxyXG4gICAgICAgICAgICApKX1cclxuICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgIDwvRGlhbG9nSGVhZGVyPlxyXG5cclxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImdyaWQgZ3JpZC1jb2xzLTEgbWQ6Z3JpZC1jb2xzLVsxZnIsMjYwcHhdIGZsZXgtMSBtaW4taC0wXCI+XHJcbiAgICAgICAgICB7LyogRm9ybSAqL31cclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwicC00IG92ZXJmbG93LXktYXV0b1wiIGFyaWEtbGl2ZT1cInBvbGl0ZVwiPlxyXG4gICAgICAgICAgICA8QW5pbWF0ZVByZXNlbmNlIG1vZGU9XCJ3YWl0XCI+XHJcbiAgICAgICAgICAgICAgPG1vdGlvbi5kaXYga2V5PXtzdGVwfSBpbml0aWFsPXt7IG9wYWNpdHk6IDAsIHg6IDEyIH19IGFuaW1hdGU9e3sgb3BhY2l0eTogMSwgeDogMCB9fSBleGl0PXt7IG9wYWNpdHk6IDAsIHg6IC0xMiB9fSB0cmFuc2l0aW9uPXt7IGR1cmF0aW9uOiAwLjE1IH19PlxyXG4gICAgICAgICAgICAgICAge3N0ZXAgPT09IDEgJiYgKFxyXG4gICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktM1wiPlxyXG4gICAgICAgICAgICAgICAgICAgIDxkaXY+XHJcbiAgICAgICAgICAgICAgICAgICAgICA8TGFiZWwgY2xhc3NOYW1lPVwidGV4dC14c1wiPkNhbXBhaWduIG5hbWU8L0xhYmVsPlxyXG4gICAgICAgICAgICAgICAgICAgICAgPElucHV0IHZhbHVlPXtuYW1lfSBvbkNoYW5nZT17KGUpID0+IHNldE5hbWUoZS50YXJnZXQudmFsdWUpfSBwbGFjZWhvbGRlcj1cIlNwcmluZyBTYWxlIFB1c2hcIiBjbGFzc05hbWU9XCJtdC0xXCIgLz5cclxuICAgICAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgICAgICA8TGFiZWwgY2xhc3NOYW1lPVwidGV4dC14c1wiPkNoYW5uZWw8L0xhYmVsPlxyXG4gICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZ3JpZCBncmlkLWNvbHMtMiBzbTpncmlkLWNvbHMtMyBnYXAtMlwiPlxyXG4gICAgICAgICAgICAgICAgICAgICAge0NIQU5ORUxTLm1hcCgoYykgPT4ge1xyXG4gICAgICAgICAgICAgICAgICAgICAgICBjb25zdCBJID0gYy5pY29uO1xyXG4gICAgICAgICAgICAgICAgICAgICAgICBjb25zdCBzZWwgPSBjaGFubmVsID09PSBjLmlkO1xyXG4gICAgICAgICAgICAgICAgICAgICAgICByZXR1cm4gKFxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIDxidXR0b25cclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIGtleT17Yy5pZH1cclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIG9uQ2xpY2s9eygpID0+IHNldENoYW5uZWwoYy5pZCl9XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICBjbGFzc05hbWU9e2BwLTMgcm91bmRlZC1sZyBib3JkZXIgdGV4dC1sZWZ0IHRyYW5zaXRpb24tYWxsICR7XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIHNlbCA/IFwiYm9yZGVyLXByaW1hcnkgYmctcHJpbWFyeS81XCIgOiBcImJvcmRlci1ib3JkZXIgaG92ZXI6Ym9yZGVyLXByaW1hcnkvNDBcIlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgfWB9XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgPEkgY2xhc3NOYW1lPXtgdy00IGgtNCBtYi0xICR7c2VsID8gXCJ0ZXh0LXByaW1hcnlcIiA6IFwidGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCJ9YH0gLz5cclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidGV4dC14cyBmb250LXNlbWlib2xkXCI+e2MubGFiZWx9PC9kaXY+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInRleHQtWzEwcHhdIHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiPntjLmRlc2N9PC9kaXY+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgPC9idXR0b24+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICk7XHJcbiAgICAgICAgICAgICAgICAgICAgICB9KX1cclxuICAgICAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICApfVxyXG5cclxuICAgICAgICAgICAgICAgIHtzdGVwID09PSAyICYmIChcclxuICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTNcIiBhcmlhLWxpdmU9XCJwb2xpdGVcIj5cclxuICAgICAgICAgICAgICAgICAgICA8U2VnbWVudFBpY2tlclxyXG4gICAgICAgICAgICAgICAgICAgICAgc3RvcmVJZD17c3RvcmVJZH1cclxuICAgICAgICAgICAgICAgICAgICAgIHZhbHVlPXtzZWdtZW50SWQgJiYgc2VnbWVudElkICE9PSBcImFsbFwiID8gc2VnbWVudElkIDogbnVsbH1cclxuICAgICAgICAgICAgICAgICAgICAgIG9uQ2hhbmdlPXsodikgPT4gc2V0U2VnbWVudElkKHYgPz8gXCJhbGxcIil9XHJcbiAgICAgICAgICAgICAgICAgICAgLz5cclxuICAgICAgICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LVsxMXB4XSB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5cclxuICAgICAgICAgICAgICAgICAgICAgIEJ1aWxkIG5ldyBzZWdtZW50cyBpbiB0aGUgQXVkaWVuY2UgdGFiIHRvIHRhcmdldCBieSB0YWdzLCBsYXN0LW9yZGVyIGRhdGUsIHRvdGFsIHNwZW5kLCBldGMuXHJcbiAgICAgICAgICAgICAgICAgICAgPC9wPlxyXG4gICAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgICl9XHJcblxyXG4gICAgICAgICAgICAgICAge3N0ZXAgPT09IDMgJiYgKFxyXG4gICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktM1wiIGFyaWEtbGl2ZT1cInBvbGl0ZVwiPlxyXG4gICAgICAgICAgICAgICAgICAgIDxMYWJlbCBjbGFzc05hbWU9XCJ0ZXh0LXhzIGZsZXggaXRlbXMtY2VudGVyIGdhcC0xXCI+PEZpbGVUZXh0IGNsYXNzTmFtZT1cInctMyBoLTNcIiAvPiBDb250ZW50PC9MYWJlbD5cclxuICAgICAgICAgICAgICAgICAgICA8ZGV0YWlscyBjbGFzc05hbWU9XCJyb3VuZGVkLWxnIGJvcmRlciBiZy1tdXRlZC8zMFwiPlxyXG4gICAgICAgICAgICAgICAgICAgICAgPHN1bW1hcnkgY2xhc3NOYW1lPVwiY3Vyc29yLXBvaW50ZXIgdGV4dC1bMTFweF0gcHgtMi41IHB5LTEuNSBmb250LW1lZGl1bSBob3ZlcjpiZy1tdXRlZC81MFwiPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICBVc2UgYSB0ZW1wbGF0ZVxyXG4gICAgICAgICAgICAgICAgICAgICAgPC9zdW1tYXJ5PlxyXG4gICAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJwLTIuNSBib3JkZXItdFwiPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICA8VGVtcGxhdGVQaWNrZXJcclxuICAgICAgICAgICAgICAgICAgICAgICAgICBzdG9yZUlkPXtzdG9yZUlkfVxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIGNoYW5uZWw9e2NoYW5uZWwgPT09IFwibXVsdGlcIiA/IHVuZGVmaW5lZCA6IGNoYW5uZWx9XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgb25QaWNrPXsodCkgPT4ge1xyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgaWYgKHQuc3ViamVjdCkgc2V0U3ViamVjdCh0LnN1YmplY3QpO1xyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgaWYgKHQuYm9keSkgc2V0Qm9keSh0LmJvZHkpO1xyXG4gICAgICAgICAgICAgICAgICAgICAgICAgICAgdG9hc3Quc3VjY2VzcyhgVGVtcGxhdGUgXCIke3QubmFtZX1cIiBhcHBsaWVkYCk7XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgfX1cclxuICAgICAgICAgICAgICAgICAgICAgICAgLz5cclxuICAgICAgICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICAgICAgIDwvZGV0YWlscz5cclxuICAgICAgICAgICAgICAgICAgICB7Y2hhbm5lbCA9PT0gXCJlbWFpbFwiICYmIChcclxuICAgICAgICAgICAgICAgICAgICAgIDxkaXY+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgIDxMYWJlbCBjbGFzc05hbWU9XCJ0ZXh0LVsxMXB4XSB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5TdWJqZWN0PC9MYWJlbD5cclxuICAgICAgICAgICAgICAgICAgICAgICAgPElucHV0IHZhbHVlPXtzdWJqZWN0fSBvbkNoYW5nZT17KGUpID0+IHNldFN1YmplY3QoZS50YXJnZXQudmFsdWUpfSBjbGFzc05hbWU9XCJtdC0xXCIgcGxhY2Vob2xkZXI9XCJZb3VyIHNwcmluZyBkZWFsIGlzIGhlcmVcIiAvPlxyXG4gICAgICAgICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICAgICAgKX1cclxuICAgICAgICAgICAgICAgICAgICB7KGNoYW5uZWwgPT09IFwicHVzaFwiIHx8IGNoYW5uZWwgPT09IFwiaW5hcHBcIikgJiYgKFxyXG4gICAgICAgICAgICAgICAgICAgICAgPGRpdj5cclxuICAgICAgICAgICAgICAgICAgICAgICAgPExhYmVsIGNsYXNzTmFtZT1cInRleHQtWzExcHhdIHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiPlRpdGxlPC9MYWJlbD5cclxuICAgICAgICAgICAgICAgICAgICAgICAgPElucHV0IHZhbHVlPXtzdWJqZWN0fSBvbkNoYW5nZT17KGUpID0+IHNldFN1YmplY3QoZS50YXJnZXQudmFsdWUpfSBjbGFzc05hbWU9XCJtdC0xXCIgcGxhY2Vob2xkZXI9XCJEb24ndCBtaXNzIG91dCFcIiAvPlxyXG4gICAgICAgICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICAgICAgKX1cclxuICAgICAgICAgICAgICAgICAgICA8ZGl2PlxyXG4gICAgICAgICAgICAgICAgICAgICAgPExhYmVsIGNsYXNzTmFtZT1cInRleHQtWzExcHhdIHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiPntjaGFubmVsID09PSBcInNtc1wiID8gXCJNZXNzYWdlXCIgOiBcIkJvZHlcIn08L0xhYmVsPlxyXG4gICAgICAgICAgICAgICAgICAgICAgPFRleHRhcmVhIHZhbHVlPXtib2R5fSBvbkNoYW5nZT17KGUpID0+IHNldEJvZHkoZS50YXJnZXQudmFsdWUpfSByb3dzPXs0fSBjbGFzc05hbWU9XCJtdC0xXCIgcGxhY2Vob2xkZXI9XCJZb3VyIG1lc3NhZ2UuLi5cIiBtYXhMZW5ndGg9e2NoYW5uZWwgPT09IFwic21zXCIgPyAxNjAgOiA1MDB9IC8+XHJcbiAgICAgICAgICAgICAgICAgICAgICB7Y2hhbm5lbCA9PT0gXCJzbXNcIiAmJiAoXHJcbiAgICAgICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidGV4dC1bMTBweF0gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIG10LTEgZmxleCBqdXN0aWZ5LWJldHdlZW5cIj5cclxuICAgICAgICAgICAgICAgICAgICAgICAgICA8c3Bhbj57Ym9keS5sZW5ndGh9IC8gMTYwIGNoYXJzPC9zcGFuPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIDxzcGFuPuKJiCAke3Ntc0Nvc3QudG9GaXhlZCgyKX0gZXN0aW1hdGVkPC9zcGFuPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgICAgICAgICl9XHJcbiAgICAgICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICAgICAgeyhjaGFubmVsID09PSBcInB1c2hcIiB8fCBjaGFubmVsID09PSBcImluYXBwXCIpICYmIChcclxuICAgICAgICAgICAgICAgICAgICAgIDxkaXY+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgIDxMYWJlbCBjbGFzc05hbWU9XCJ0ZXh0LVsxMXB4XSB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5EZWVwIGxpbmsgKG9wdGlvbmFsKTwvTGFiZWw+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgIDxJbnB1dCB2YWx1ZT17ZGVlcExpbmt9IG9uQ2hhbmdlPXsoZSkgPT4gc2V0RGVlcExpbmsoZS50YXJnZXQudmFsdWUpfSBjbGFzc05hbWU9XCJtdC0xXCIgcGxhY2Vob2xkZXI9XCIvcHJvZHVjdHMvZmVhdHVyZWRcIiAvPlxyXG4gICAgICAgICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICAgICAgKX1cclxuICAgICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICApfVxyXG5cclxuICAgICAgICAgICAgICAgIHtzdGVwID09PSA0ICYmIChcclxuICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTNcIj5cclxuICAgICAgICAgICAgICAgICAgICA8TGFiZWwgY2xhc3NOYW1lPVwidGV4dC14cyBmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMVwiPjxDYWxlbmRhciBjbGFzc05hbWU9XCJ3LTMgaC0zXCIgLz4gU2NoZWR1bGU8L0xhYmVsPlxyXG4gICAgICAgICAgICAgICAgICAgIDxSYWRpb0dyb3VwIHZhbHVlPXtzY2hlZHVsZU1vZGV9IG9uVmFsdWVDaGFuZ2U9eyh2KSA9PiBzZXRTY2hlZHVsZU1vZGUodiBhcyBTY2hlZHVsZU1vZGUpfT5cclxuICAgICAgICAgICAgICAgICAgICAgIHtbXHJcbiAgICAgICAgICAgICAgICAgICAgICAgIHsgdjogXCJub3dcIiwgbDogXCJTZW5kIG5vd1wiIH0sXHJcbiAgICAgICAgICAgICAgICAgICAgICAgIHsgdjogXCJvbmNlXCIsIGw6IFwiU2NoZWR1bGUgb25jZVwiIH0sXHJcbiAgICAgICAgICAgICAgICAgICAgICAgIHsgdjogXCJyZWN1cnJpbmdcIiwgbDogXCJSZWN1cnJpbmdcIiB9LFxyXG4gICAgICAgICAgICAgICAgICAgICAgICB7IHY6IFwidHJpZ2dlcmVkXCIsIGw6IFwiVHJpZ2dlcmVkIChldmVudC1iYXNlZClcIiB9LFxyXG4gICAgICAgICAgICAgICAgICAgICAgXS5tYXAoKG8pID0+IChcclxuICAgICAgICAgICAgICAgICAgICAgICAgPGRpdiBrZXk9e28udn0gY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTIgcC0yIHJvdW5kZWQtbGcgYm9yZGVyIGhvdmVyOmJnLW11dGVkLzQwIGN1cnNvci1wb2ludGVyXCI+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgPFJhZGlvR3JvdXBJdGVtIHZhbHVlPXtvLnZ9IGlkPXtvLnZ9IC8+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgPExhYmVsIGh0bWxGb3I9e28udn0gY2xhc3NOYW1lPVwidGV4dC1zbSBmbGV4LTEgY3Vyc29yLXBvaW50ZXJcIj57by5sfTwvTGFiZWw+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICAgICAgICAgKSl9XHJcbiAgICAgICAgICAgICAgICAgICAgPC9SYWRpb0dyb3VwPlxyXG4gICAgICAgICAgICAgICAgICAgIHsoc2NoZWR1bGVNb2RlID09PSBcIm9uY2VcIiB8fCBzY2hlZHVsZU1vZGUgPT09IFwicmVjdXJyaW5nXCIpICYmIChcclxuICAgICAgICAgICAgICAgICAgICAgIDxJbnB1dCB0eXBlPVwiZGF0ZXRpbWUtbG9jYWxcIiB2YWx1ZT17c2VuZERhdGV9IG9uQ2hhbmdlPXsoZSkgPT4gc2V0U2VuZERhdGUoZS50YXJnZXQudmFsdWUpfSAvPlxyXG4gICAgICAgICAgICAgICAgICAgICl9XHJcbiAgICAgICAgICAgICAgICAgICAge3NjaGVkdWxlTW9kZSA9PT0gXCJ0cmlnZ2VyZWRcIiAmJiAoXHJcbiAgICAgICAgICAgICAgICAgICAgICA8U2VsZWN0IHZhbHVlPXt0cmlnZ2VyfSBvblZhbHVlQ2hhbmdlPXtzZXRUcmlnZ2VyfT5cclxuICAgICAgICAgICAgICAgICAgICAgICAgPFNlbGVjdFRyaWdnZXI+PFNlbGVjdFZhbHVlIC8+PC9TZWxlY3RUcmlnZ2VyPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICA8U2VsZWN0Q29udGVudD5cclxuICAgICAgICAgICAgICAgICAgICAgICAgICA8U2VsZWN0SXRlbSB2YWx1ZT1cImNhcnRfYWJhbmRvbmVkXCI+Q2FydCBhYmFuZG9uZWQgKDFoKTwvU2VsZWN0SXRlbT5cclxuICAgICAgICAgICAgICAgICAgICAgICAgICA8U2VsZWN0SXRlbSB2YWx1ZT1cImZpcnN0X29yZGVyXCI+Rmlyc3Qgb3JkZXIgcGxhY2VkPC9TZWxlY3RJdGVtPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIDxTZWxlY3RJdGVtIHZhbHVlPVwiYmlydGhkYXlcIj5DdXN0b21lciBiaXJ0aGRheTwvU2VsZWN0SXRlbT5cclxuICAgICAgICAgICAgICAgICAgICAgICAgICA8U2VsZWN0SXRlbSB2YWx1ZT1cImluYWN0aXZpdHlfMzBcIj5JbmFjdGl2ZSAzMCsgZGF5czwvU2VsZWN0SXRlbT5cclxuICAgICAgICAgICAgICAgICAgICAgICAgPC9TZWxlY3RDb250ZW50PlxyXG4gICAgICAgICAgICAgICAgICAgICAgPC9TZWxlY3Q+XHJcbiAgICAgICAgICAgICAgICAgICAgKX1cclxuICAgICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICApfVxyXG5cclxuICAgICAgICAgICAgICAgIHtzdGVwID09PSA1ICYmIChcclxuICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTNcIj5cclxuICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInJvdW5kZWQtbGcgYm9yZGVyIHAtMyBzcGFjZS15LTIgdGV4dC1zbVwiPlxyXG4gICAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGp1c3RpZnktYmV0d2VlblwiPjxzcGFuIGNsYXNzTmFtZT1cInRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiPkNoYW5uZWw8L3NwYW4+PHNwYW4gY2xhc3NOYW1lPVwiZm9udC1tZWRpdW0gY2FwaXRhbGl6ZVwiPntjaGFubmVsfTwvc3Bhbj48L2Rpdj5cclxuICAgICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBqdXN0aWZ5LWJldHdlZW5cIj48c3BhbiBjbGFzc05hbWU9XCJ0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5BdWRpZW5jZTwvc3Bhbj48c3BhbiBjbGFzc05hbWU9XCJmb250LW1lZGl1bVwiPntzZWdtZW50cz8uZmluZCgocykgPT4gcy5pZCA9PT0gc2VnbWVudElkKT8ubWVtYmVyX2NvdW50LnRvTG9jYWxlU3RyaW5nKCkgfHwgXCJBbGxcIn08L3NwYW4+PC9kaXY+XHJcbiAgICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXgganVzdGlmeS1iZXR3ZWVuXCI+PHNwYW4gY2xhc3NOYW1lPVwidGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+U2NoZWR1bGU8L3NwYW4+PHNwYW4gY2xhc3NOYW1lPVwiZm9udC1tZWRpdW0gY2FwaXRhbGl6ZVwiPntzY2hlZHVsZU1vZGV9PC9zcGFuPjwvZGl2PlxyXG4gICAgICAgICAgICAgICAgICAgICAge2NoYW5uZWwgPT09IFwic21zXCIgJiYgKFxyXG4gICAgICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXgganVzdGlmeS1iZXR3ZWVuXCI+PHNwYW4gY2xhc3NOYW1lPVwidGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+RXN0LiBjb3N0PC9zcGFuPjxzcGFuIGNsYXNzTmFtZT1cImZvbnQtbWVkaXVtXCI+JHtzbXNDb3N0LnRvRml4ZWQoMil9PC9zcGFuPjwvZGl2PlxyXG4gICAgICAgICAgICAgICAgICAgICAgKX1cclxuICAgICAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgICAgICB7Y2hhbm5lbCA9PT0gXCJlbWFpbFwiICYmIGJvZHkubGVuZ3RoIDwgMzAgJiYgKFxyXG4gICAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJyb3VuZGVkLWxnIGJvcmRlci1hbWJlci0zMDAgYm9yZGVyIGJnLWFtYmVyLTUwIGRhcms6YmctYW1iZXItOTUwLzIwIHAtMiB0ZXh0LVsxMXB4XSBmbGV4IGdhcC0yXCI+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgIDxBbGVydENpcmNsZSBjbGFzc05hbWU9XCJ3LTMuNSBoLTMuNSB0ZXh0LWFtYmVyLTYwMCBzaHJpbmstMFwiIC8+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgIDxzcGFuPlNob3J0IGJvZHkgbWF5IHRyaWdnZXIgc3BhbSBmaWx0ZXJzLiBDb25zaWRlciBhZGRpbmcgbW9yZSBjb250ZXh0Ljwvc3Bhbj5cclxuICAgICAgICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICAgICAgICl9XHJcbiAgICAgICAgICAgICAgICAgICAgPGxhYmVsIGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0yIHRleHQteHMgY3Vyc29yLXBvaW50ZXJcIj5cclxuICAgICAgICAgICAgICAgICAgICAgIDxTd2l0Y2ggY2hlY2tlZD17Y29uZmlybWVkfSBvbkNoZWNrZWRDaGFuZ2U9e3NldENvbmZpcm1lZH0gLz5cclxuICAgICAgICAgICAgICAgICAgICAgIEkgY29uZmlybSB0aGUgYXVkaWVuY2UgYW5kIG1lc3NhZ2UgYXJlIGNvcnJlY3QuXHJcbiAgICAgICAgICAgICAgICAgICAgPC9sYWJlbD5cclxuICAgICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICApfVxyXG4gICAgICAgICAgICAgIDwvbW90aW9uLmRpdj5cclxuICAgICAgICAgICAgPC9BbmltYXRlUHJlc2VuY2U+XHJcbiAgICAgICAgICA8L2Rpdj5cclxuXHJcbiAgICAgICAgICB7LyogTGl2ZSBwcmV2aWV3ICovfVxyXG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJoaWRkZW4gbWQ6ZmxleCBmbGV4LWNvbCBiZy1tdXRlZC8zMCBib3JkZXItbCBwLTQgaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyXCI+XHJcbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidy1bMjAwcHhdIGgtWzQwMHB4XSByb3VuZGVkLVsycmVtXSBib3JkZXItNCBib3JkZXItZm9yZWdyb3VuZC84MCBiZy1iYWNrZ3JvdW5kIG92ZXJmbG93LWhpZGRlbiBmbGV4IGZsZXgtY29sIHNoYWRvdy14bFwiPlxyXG4gICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiaC02IGJnLWZvcmVncm91bmQvODBcIiAvPlxyXG4gICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleC0xIHAtMiBvdmVyZmxvdy1oaWRkZW5cIj5cclxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwicm91bmRlZC1sZyBiZy1jYXJkIGJvcmRlciBwLTIgc2hhZG93LXNtXCI+XHJcbiAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTEgbWItMVwiPlxyXG4gICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidy00IGgtNCByb3VuZGVkIGJnLXByaW1hcnkvMjBcIiAvPlxyXG4gICAgICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInRleHQtWzhweF0gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+WU9VUiBTVE9SRSDCtyBub3c8L3NwYW4+XHJcbiAgICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInRleHQtWzEwcHhdIGZvbnQtYm9sZCBsZWFkaW5nLXRpZ2h0XCI+e3N1YmplY3QgfHwgXCJZb3VyIHRpdGxlXCJ9PC9kaXY+XHJcbiAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidGV4dC1bOXB4XSB0ZXh0LW11dGVkLWZvcmVncm91bmQgbGluZS1jbGFtcC0zIG10LTAuNVwiPntib2R5IHx8IFwiWW91ciBtZXNzYWdlIHByZXZpZXcuLi5cIn08L2Rpdj5cclxuICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1bMTBweF0gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIG10LTNcIj5MaXZlIHByZXZpZXc8L3A+XHJcbiAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICA8L2Rpdj5cclxuXHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWJldHdlZW4gZ2FwLTIgcC0zIGJvcmRlci10IGJnLW11dGVkLzIwXCI+XHJcbiAgICAgICAgICA8QnV0dG9uIHZhcmlhbnQ9XCJnaG9zdFwiIHNpemU9XCJzbVwiIG9uQ2xpY2s9e3N0ZXAgPT09IDEgPyBjbG9zZSA6IHByZXZ9PlxyXG4gICAgICAgICAgICB7c3RlcCA9PT0gMSA/IFwiQ2FuY2VsXCIgOiA8PjxDaGV2cm9uTGVmdCBjbGFzc05hbWU9XCJ3LTQgaC00IG1yLTFcIiAvPkJhY2s8Lz59XHJcbiAgICAgICAgICA8L0J1dHRvbj5cclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTJcIj5cclxuICAgICAgICAgICAge3N0ZXAgPiAxICYmIChcclxuICAgICAgICAgICAgICA8QnV0dG9uIHZhcmlhbnQ9XCJvdXRsaW5lXCIgc2l6ZT1cInNtXCIgb25DbGljaz17KCkgPT4gaGFuZGxlU3VibWl0KHRydWUpfSBkaXNhYmxlZD17c3VibWl0dGluZ30+XHJcbiAgICAgICAgICAgICAgICA8U2F2ZSBjbGFzc05hbWU9XCJ3LTQgaC00IG1yLTFcIiAvPiBEcmFmdFxyXG4gICAgICAgICAgICAgIDwvQnV0dG9uPlxyXG4gICAgICAgICAgICApfVxyXG4gICAgICAgICAgICB7c3RlcCA8IDUgPyAoXHJcbiAgICAgICAgICAgICAgPEJ1dHRvbiBzaXplPVwic21cIiBvbkNsaWNrPXtuZXh0fSBkaXNhYmxlZD17IWNhbk5leHQoKX0+XHJcbiAgICAgICAgICAgICAgICBOZXh0IDxDaGV2cm9uUmlnaHQgY2xhc3NOYW1lPVwidy00IGgtNCBtbC0xXCIgLz5cclxuICAgICAgICAgICAgICA8L0J1dHRvbj5cclxuICAgICAgICAgICAgKSA6IChcclxuICAgICAgICAgICAgICA8QnV0dG9uIHNpemU9XCJzbVwiIG9uQ2xpY2s9eygpID0+IGhhbmRsZVN1Ym1pdChmYWxzZSl9IGRpc2FibGVkPXshY29uZmlybWVkIHx8IHN1Ym1pdHRpbmd9PlxyXG4gICAgICAgICAgICAgICAge3N1Ym1pdHRpbmcgPyBcIlNlbmRpbmcuLi5cIiA6IDw+e3NjaGVkdWxlTW9kZSA9PT0gXCJub3dcIiA/IDxTZW5kIGNsYXNzTmFtZT1cInctNCBoLTQgbXItMVwiIC8+IDogPENoZWNrIGNsYXNzTmFtZT1cInctNCBoLTQgbXItMVwiIC8+fSB7c2NoZWR1bGVNb2RlID09PSBcIm5vd1wiID8gXCJTZW5kIG5vd1wiIDogXCJTY2hlZHVsZVwifTwvPn1cclxuICAgICAgICAgICAgICA8L0J1dHRvbj5cclxuICAgICAgICAgICAgKX1cclxuICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgIDwvZGl2PlxyXG4gICAgICA8L0RpYWxvZ0NvbnRlbnQ+XHJcbiAgICA8L0RpYWxvZz5cclxuICApO1xyXG59XHJcbiJdLCJuYW1lcyI6WyJ1c2VTdGF0ZSIsInVzZUVmZmVjdCIsIkRpYWxvZyIsIkRpYWxvZ0NvbnRlbnQiLCJEaWFsb2dIZWFkZXIiLCJEaWFsb2dUaXRsZSIsIkJ1dHRvbiIsIklucHV0IiwiTGFiZWwiLCJUZXh0YXJlYSIsIlJhZGlvR3JvdXAiLCJSYWRpb0dyb3VwSXRlbSIsIlNlbGVjdCIsIlNlbGVjdENvbnRlbnQiLCJTZWxlY3RJdGVtIiwiU2VsZWN0VHJpZ2dlciIsIlNlbGVjdFZhbHVlIiwiU3dpdGNoIiwiQmVsbCIsIk1haWwiLCJNZXNzYWdlU3F1YXJlIiwiU21hcnRwaG9uZSIsIkxheWVycyIsIkNoZXZyb25SaWdodCIsIkNoZXZyb25MZWZ0IiwiQ2hlY2siLCJTZW5kIiwiQ2FsZW5kYXIiLCJGaWxlVGV4dCIsIkFsZXJ0Q2lyY2xlIiwiU2F2ZSIsInVzZU1hcmtldGluZ1NlZ21lbnRzIiwiU2VnbWVudFBpY2tlciIsIlRlbXBsYXRlUGlja2VyIiwic3VwYWJhc2UiLCJ1c2VRdWVyeUNsaWVudCIsInRvYXN0IiwibW90aW9uIiwiQW5pbWF0ZVByZXNlbmNlIiwiQ0hBTk5FTFMiLCJpZCIsImljb24iLCJsYWJlbCIsImRlc2MiLCJDcmVhdGVNYXJrZXRpbmdDYW1wYWlnbldpemFyZCIsIm9wZW4iLCJvbkNsb3NlIiwic3RvcmVJZCIsIm9uQ3JlYXRlZCIsImRlZmF1bHRDaGFubmVsIiwicWMiLCJzdGVwIiwic2V0U3RlcCIsImNoYW5uZWwiLCJzZXRDaGFubmVsIiwibmFtZSIsInNldE5hbWUiLCJzZWdtZW50SWQiLCJzZXRTZWdtZW50SWQiLCJzdWJqZWN0Iiwic2V0U3ViamVjdCIsImJvZHkiLCJzZXRCb2R5IiwiZGVlcExpbmsiLCJzZXREZWVwTGluayIsInNjaGVkdWxlTW9kZSIsInNldFNjaGVkdWxlTW9kZSIsInNlbmREYXRlIiwic2V0U2VuZERhdGUiLCJ0cmlnZ2VyIiwic2V0VHJpZ2dlciIsImNvbmZpcm1lZCIsInNldENvbmZpcm1lZCIsInN1Ym1pdHRpbmciLCJzZXRTdWJtaXR0aW5nIiwiZGF0YSIsInNlZ21lbnRzIiwicmVzZXQiLCJjbG9zZSIsIm5leHQiLCJzIiwiTWF0aCIsIm1pbiIsInByZXYiLCJtYXgiLCJjYW5OZXh0IiwidHJpbSIsImhhbmRsZVN1Ym1pdCIsImFzRHJhZnQiLCJlcnJvciIsInVzZXJSZXMiLCJhdXRoIiwiZ2V0VXNlciIsInVzZXJJZCIsInVzZXIiLCJjaGFubmVsVG9GbGFncyIsImMiLCJwdXNoX2VuYWJsZWQiLCJlbWFpbF9lbmFibGVkIiwic21zX2VuYWJsZWQiLCJzdGF0dXMiLCJwYXlsb2FkIiwiRGF0ZSIsInRvTG9jYWxlU3RyaW5nIiwiY2FtcGFpZ25fdHlwZSIsInRhcmdldF9yZXN0YXVyYW50X2lkIiwidGFyZ2V0X3NlZ21lbnRfaWQiLCJ0aXRsZSIsIm5vdGlmaWNhdGlvbl90aXRsZSIsIm5vdGlmaWNhdGlvbl9ib2R5IiwibWVzc2FnZSIsInNtc19tZXNzYWdlIiwiaXNfcmVjdXJyaW5nIiwicmVjdXJyZW5jZV9pbnRlcnZhbCIsInRyaWdnZXJfdHlwZSIsInRyaWdnZXJfY29uZmlnIiwic3RhcnRfZGF0ZSIsIm5leHRfcnVuX2F0IiwiY3JlYXRlZF9ieSIsImluc2VydGVkIiwiZnJvbSIsImluc2VydCIsInNlbGVjdCIsInNpbmdsZSIsImZ1bmN0aW9ucyIsImludm9rZSIsImNhbXBhaWduX2lkIiwiY2F0Y2giLCJpbnZhbGlkYXRlUXVlcmllcyIsInF1ZXJ5S2V5Iiwic3VjY2VzcyIsImUiLCJzbXNDb3N0IiwiY2VpbCIsImxlbmd0aCIsImZpbmQiLCJtZW1iZXJfY291bnQiLCJvbk9wZW5DaGFuZ2UiLCJ2IiwiY2xhc3NOYW1lIiwiZGl2IiwibWFwIiwibiIsImFyaWEtbGl2ZSIsIm1vZGUiLCJpbml0aWFsIiwib3BhY2l0eSIsIngiLCJhbmltYXRlIiwiZXhpdCIsInRyYW5zaXRpb24iLCJkdXJhdGlvbiIsInZhbHVlIiwib25DaGFuZ2UiLCJ0YXJnZXQiLCJwbGFjZWhvbGRlciIsIkkiLCJzZWwiLCJidXR0b24iLCJvbkNsaWNrIiwicCIsImRldGFpbHMiLCJzdW1tYXJ5IiwidW5kZWZpbmVkIiwib25QaWNrIiwidCIsInJvd3MiLCJtYXhMZW5ndGgiLCJzcGFuIiwidG9GaXhlZCIsIm9uVmFsdWVDaGFuZ2UiLCJsIiwibyIsImh0bWxGb3IiLCJ0eXBlIiwiY2hlY2tlZCIsIm9uQ2hlY2tlZENoYW5nZSIsInZhcmlhbnQiLCJzaXplIiwiZGlzYWJsZWQiXSwibWFwcGluZ3MiOiI7O0FBQUE7OztDQUdDLEdBQ0QsU0FBU0EsUUFBUSxFQUFFQyxTQUFTLFFBQVEsUUFBUTtBQUM1QyxTQUFTQyxNQUFNLEVBQUVDLGFBQWEsRUFBRUMsWUFBWSxFQUFFQyxXQUFXLFFBQVEseUJBQXlCO0FBQzFGLFNBQVNDLE1BQU0sUUFBUSx5QkFBeUI7QUFDaEQsU0FBU0MsS0FBSyxRQUFRLHdCQUF3QjtBQUM5QyxTQUFTQyxLQUFLLFFBQVEsd0JBQXdCO0FBQzlDLFNBQVNDLFFBQVEsUUFBUSwyQkFBMkI7QUFFcEQsU0FBU0MsVUFBVSxFQUFFQyxjQUFjLFFBQVEsOEJBQThCO0FBQ3pFLFNBQVNDLE1BQU0sRUFBRUMsYUFBYSxFQUFFQyxVQUFVLEVBQUVDLGFBQWEsRUFBRUMsV0FBVyxRQUFRLHlCQUF5QjtBQUN2RyxTQUFTQyxNQUFNLFFBQVEseUJBQXlCO0FBQ2hELFNBQVNDLElBQUksRUFBRUMsSUFBSSxFQUFFQyxhQUFhLEVBQUVDLFVBQVUsRUFBRUMsTUFBTSxFQUFFQyxZQUFZLEVBQUVDLFdBQVcsRUFBRUMsS0FBSyxFQUFFQyxJQUFJLEVBQVNDLFFBQVEsRUFBRUMsUUFBUSxFQUFFQyxXQUFXLEVBQUVDLElBQUksUUFBUSxlQUFlO0FBQ25LLFNBQVNDLG9CQUFvQixRQUFRLCtCQUErQjtBQUNwRSxPQUFPQyxtQkFBbUIsa0JBQWtCO0FBQzVDLE9BQU9DLG9CQUFvQixtQkFBbUI7QUFDOUMsU0FBU0MsUUFBUSxRQUFRLGlDQUFpQztBQUMxRCxTQUFTQyxjQUFjLFFBQVEsd0JBQXdCO0FBQ3ZELFNBQVNDLEtBQUssUUFBUSxTQUFTO0FBQy9CLFNBQVNDLE1BQU0sRUFBRUMsZUFBZSxRQUFRLGdCQUFnQjtBQWF4RCxNQUFNQyxXQUFzRTtJQUMxRTtRQUFFQyxJQUFJO1FBQVFDLE1BQU12QjtRQUFNd0IsT0FBTztRQUFRQyxNQUFNO0lBQW9CO0lBQ25FO1FBQUVILElBQUk7UUFBU0MsTUFBTXRCO1FBQU11QixPQUFPO1FBQVNDLE1BQU07SUFBWTtJQUM3RDtRQUFFSCxJQUFJO1FBQU9DLE1BQU1yQjtRQUFlc0IsT0FBTztRQUFPQyxNQUFNO0lBQWdCO0lBQ3RFO1FBQUVILElBQUk7UUFBU0MsTUFBTXBCO1FBQVlxQixPQUFPO1FBQVVDLE1BQU07SUFBZ0I7SUFDeEU7UUFBRUgsSUFBSTtRQUFTQyxNQUFNbkI7UUFBUW9CLE9BQU87UUFBaUJDLE1BQU07SUFBYTtDQUN6RTtBQUVELGVBQWUsU0FBU0MsOEJBQThCLEVBQUVDLElBQUksRUFBRUMsT0FBTyxFQUFFQyxPQUFPLEVBQUVDLFNBQVMsRUFBRUMsY0FBYyxFQUFTOztJQUNoSCxNQUFNQyxLQUFLZjtJQUNYLE1BQU0sQ0FBQ2dCLE1BQU1DLFFBQVEsR0FBR3BELFNBQVM7SUFDakMsTUFBTSxDQUFDcUQsU0FBU0MsV0FBVyxHQUFHdEQsU0FBa0JpRCxrQkFBa0I7SUFFbEUsdUVBQXVFO0lBQ3ZFaEQsVUFBVTtRQUNSLElBQUk0QyxRQUFRSSxnQkFBZ0I7WUFDMUJLLFdBQVdMO1FBQ2I7SUFDRixHQUFHO1FBQUNKO1FBQU1JO0tBQWU7SUFDekIsTUFBTSxDQUFDTSxNQUFNQyxRQUFRLEdBQUd4RCxTQUFTO0lBQ2pDLE1BQU0sQ0FBQ3lELFdBQVdDLGFBQWEsR0FBRzFELFNBQWlCO0lBQ25ELE1BQU0sQ0FBQzJELFNBQVNDLFdBQVcsR0FBRzVELFNBQVM7SUFDdkMsTUFBTSxDQUFDNkQsTUFBTUMsUUFBUSxHQUFHOUQsU0FBUztJQUNqQyxNQUFNLENBQUMrRCxVQUFVQyxZQUFZLEdBQUdoRSxTQUFTO0lBQ3pDLE1BQU0sQ0FBQ2lFLGNBQWNDLGdCQUFnQixHQUFHbEUsU0FBdUI7SUFDL0QsTUFBTSxDQUFDbUUsVUFBVUMsWUFBWSxHQUFHcEUsU0FBUztJQUN6QyxNQUFNLENBQUNxRSxTQUFTQyxXQUFXLEdBQUd0RSxTQUFTO0lBQ3ZDLE1BQU0sQ0FBQ3VFLFdBQVdDLGFBQWEsR0FBR3hFLFNBQVM7SUFDM0MsTUFBTSxDQUFDeUUsWUFBWUMsY0FBYyxHQUFHMUUsU0FBUztJQUU3QyxNQUFNLEVBQUUyRSxNQUFNQyxRQUFRLEVBQUUsR0FBRzdDLHFCQUFxQmdCO0lBRWhELE1BQU04QixRQUFRO1FBQ1p6QixRQUFRO1FBQUlFLFdBQVc7UUFBU0UsUUFBUTtRQUFLRSxhQUFhO1FBQUtFLFdBQVc7UUFBS0UsUUFBUTtRQUN2RkUsWUFBWTtRQUFLRSxnQkFBZ0I7UUFBUUUsWUFBWTtRQUFLSSxhQUFhO0lBQ3pFO0lBRUEsTUFBTU0sUUFBUTtRQUFRRDtRQUFTL0I7SUFBVztJQUUxQyxNQUFNaUMsT0FBTyxJQUFNM0IsUUFBUSxDQUFDNEIsSUFBTUMsS0FBS0MsR0FBRyxDQUFDLEdBQUdGLElBQUk7SUFDbEQsTUFBTUcsT0FBTyxJQUFNL0IsUUFBUSxDQUFDNEIsSUFBTUMsS0FBS0csR0FBRyxDQUFDLEdBQUdKLElBQUk7SUFFbEQsTUFBTUssVUFBVTtRQUNkLElBQUlsQyxTQUFTLEdBQUcsT0FBTyxDQUFDLENBQUNFLFdBQVcsQ0FBQyxDQUFDRSxLQUFLK0IsSUFBSTtRQUMvQyxJQUFJbkMsU0FBUyxHQUFHLE9BQU87UUFDdkIsSUFBSUEsU0FBUyxHQUFHO1lBQ2QsSUFBSUUsWUFBWSxTQUFTLE9BQU8sQ0FBQyxDQUFDTSxXQUFXLENBQUMsQ0FBQ0U7WUFDL0MsT0FBTyxDQUFDLENBQUNBO1FBQ1g7UUFDQSxJQUFJVixTQUFTLEdBQUcsT0FBT2MsaUJBQWlCLFNBQVNBLGlCQUFpQixlQUFlLENBQUMsQ0FBQ0U7UUFDbkYsT0FBTztJQUNUO0lBRUEsTUFBTW9CLGVBQWUsT0FBT0MsVUFBVSxLQUFLO1FBQ3pDLElBQUksQ0FBQ0EsV0FBVyxDQUFDakIsV0FBVztZQUFFbkMsTUFBTXFELEtBQUssQ0FBQztZQUEyQjtRQUFRO1FBQzdFZixjQUFjO1FBQ2QsSUFBSTtZQUNGLE1BQU1nQixVQUFVLE1BQU14RCxTQUFTeUQsSUFBSSxDQUFDQyxPQUFPO1lBQzNDLE1BQU1DLFNBQVNILFFBQVFmLElBQUksQ0FBQ21CLElBQUksRUFBRXRELE1BQU07WUFFeEMsTUFBTXVELGlCQUFpQixDQUFDQyxJQUFnQixDQUFBO29CQUN0Q0MsY0FBY0QsTUFBTSxVQUFVQSxNQUFNLFdBQVdBLE1BQU07b0JBQ3JERSxlQUFlRixNQUFNLFdBQVdBLE1BQU07b0JBQ3RDRyxhQUFhSCxNQUFNLFNBQVNBLE1BQU07Z0JBQ3BDLENBQUE7WUFFQSxJQUFJSTtZQUNKLElBQUlaLFNBQVNZLFNBQVM7aUJBQ2pCLElBQUluQyxpQkFBaUIsT0FBT21DLFNBQVM7aUJBQ3JDLElBQUluQyxpQkFBaUIsYUFBYW1DLFNBQVM7aUJBQzNDQSxTQUFTO1lBRWQsTUFBTUMsVUFBZTtnQkFDbkI5QyxNQUFNQSxRQUFRLENBQUMsU0FBUyxFQUFFLElBQUkrQyxPQUFPQyxjQUFjLElBQUk7Z0JBQ3ZEQyxlQUFldkMsaUJBQWlCLGNBQWMsY0FBYztnQkFDNUR3QyxzQkFBc0IxRDtnQkFDdEIyRCxtQkFBbUJqRCxhQUFhQSxjQUFjLFFBQVFBLFlBQVk7Z0JBQ2xFa0QsT0FBT2hELFdBQVc7Z0JBQ2xCaUQsb0JBQW9CakQsV0FBVztnQkFDL0JrRCxtQkFBbUJoRCxRQUFRO2dCQUMzQmlELFNBQVNqRCxRQUFRO2dCQUNqQmtELGFBQWExRCxZQUFZLFNBQVNBLFlBQVksVUFBVVEsT0FBTztnQkFDL0QsR0FBR2tDLGVBQWUxQyxRQUFRO2dCQUMxQitDO2dCQUNBWSxjQUFjL0MsaUJBQWlCO2dCQUMvQmdELHFCQUFxQmhELGlCQUFpQixjQUFjLFdBQVc7Z0JBQy9EaUQsY0FBY2pELGlCQUFpQixjQUFjSSxVQUFVO2dCQUN2RDhDLGdCQUFnQmxELGlCQUFpQixjQUFjO29CQUFFSTtnQkFBUSxJQUFJO2dCQUM3RCtDLFlBQVlqRCxZQUFZO2dCQUN4QmtELGFBQWFsRCxZQUFZO2dCQUN6Qm1ELFlBQVl6QjtZQUNkO1lBRUEsTUFBTSxFQUFFbEIsTUFBTTRDLFFBQVEsRUFBRTlCLEtBQUssRUFBRSxHQUFHLE1BQU12RCxTQUNyQ3NGLElBQUksQ0FBQyx1QkFDTEMsTUFBTSxDQUFDcEIsU0FDUHFCLE1BQU0sR0FDTkMsTUFBTTtZQUNULElBQUlsQyxPQUFPLE1BQU1BO1lBRWpCLHNFQUFzRTtZQUN0RSxJQUFJVyxXQUFXLGFBQWFtQixVQUFVO2dCQUNwQ3JGLFNBQVMwRixTQUFTLENBQ2ZDLE1BQU0sQ0FBQywyQkFBMkI7b0JBQUVoRSxNQUFNO3dCQUFFaUUsYUFBYVAsU0FBUy9FLEVBQUU7b0JBQUM7Z0JBQUUsR0FDdkV1RixLQUFLLENBQUMsS0FBZ0Q7WUFDM0Q7WUFFQTdFLEdBQUc4RSxpQkFBaUIsQ0FBQztnQkFBRUMsVUFBVTtvQkFBQztvQkFBNEJsRjtpQkFBUTtZQUFDO1lBQ3ZFRyxHQUFHOEUsaUJBQWlCLENBQUM7Z0JBQUVDLFVBQVU7b0JBQUM7b0JBQXVCbEY7aUJBQVE7WUFBQztZQUVsRVgsTUFBTThGLE9BQU8sQ0FDWDFDLFVBQ0ksbUJBQ0FZLFdBQVcsWUFDWCxxQkFDQUEsV0FBVyxjQUNYLHVCQUNBO1lBRU5wRDtZQUNBOEI7UUFDRixFQUFFLE9BQU9xRCxHQUFRO1lBQ2YvRixNQUFNcUQsS0FBSyxDQUFDMEMsRUFBRXJCLE9BQU8sSUFBSTtRQUMzQixTQUFVO1lBQ1JwQyxjQUFjO1FBQ2hCO0lBQ0Y7SUFFQSxNQUFNMEQsVUFBVW5ELEtBQUtvRCxJQUFJLENBQUN4RSxLQUFLeUUsTUFBTSxHQUFHLE9BQU8sUUFBUzFELENBQUFBLFVBQVUyRCxLQUFLLENBQUN2RCxJQUFNQSxFQUFFeEMsRUFBRSxLQUFLaUIsWUFBWStFLGdCQUFnQixHQUFFO0lBRXJILHFCQUNFLFFBQUN0STtRQUFPMkMsTUFBTUE7UUFBTTRGLGNBQWMsQ0FBQ0MsSUFBTSxDQUFDQSxLQUFLNUQ7a0JBQzdDLGNBQUEsUUFBQzNFO1lBQWN3SSxXQUFVOzs4QkFDdkIsUUFBQ3ZJO29CQUFhdUksV0FBVTs7c0NBQ3RCLFFBQUN0STs0QkFBWXNJLFdBQVU7O2dDQUFZO2dDQUFxQnhGO2dDQUFLOzs7Ozs7O3NDQUM3RCxRQUFDeUY7NEJBQUlELFdBQVU7c0NBQ1o7Z0NBQUM7Z0NBQUc7Z0NBQUc7Z0NBQUc7Z0NBQUc7NkJBQUUsQ0FBQ0UsR0FBRyxDQUFDLENBQUNDLGtCQUNwQixRQUFDRjtvQ0FBWUQsV0FBVyxDQUFDLHdCQUF3QixFQUFFRyxLQUFLM0YsT0FBTyxlQUFlLFlBQVk7bUNBQWhGMkY7Ozs7Ozs7Ozs7Ozs7Ozs7OEJBS2hCLFFBQUNGO29CQUFJRCxXQUFVOztzQ0FFYixRQUFDQzs0QkFBSUQsV0FBVTs0QkFBc0JJLGFBQVU7c0NBQzdDLGNBQUEsUUFBQ3pHO2dDQUFnQjBHLE1BQUs7MENBQ3BCLGNBQUEsUUFBQzNHLE9BQU91RyxHQUFHO29DQUFZSyxTQUFTO3dDQUFFQyxTQUFTO3dDQUFHQyxHQUFHO29DQUFHO29DQUFHQyxTQUFTO3dDQUFFRixTQUFTO3dDQUFHQyxHQUFHO29DQUFFO29DQUFHRSxNQUFNO3dDQUFFSCxTQUFTO3dDQUFHQyxHQUFHLENBQUM7b0NBQUc7b0NBQUdHLFlBQVk7d0NBQUVDLFVBQVU7b0NBQUs7O3dDQUM5SXBHLFNBQVMsbUJBQ1IsUUFBQ3lGOzRDQUFJRCxXQUFVOzs4REFDYixRQUFDQzs7c0VBQ0MsUUFBQ3BJOzREQUFNbUksV0FBVTtzRUFBVTs7Ozs7O3NFQUMzQixRQUFDcEk7NERBQU1pSixPQUFPakc7NERBQU1rRyxVQUFVLENBQUN0QixJQUFNM0UsUUFBUTJFLEVBQUV1QixNQUFNLENBQUNGLEtBQUs7NERBQUdHLGFBQVk7NERBQW1CaEIsV0FBVTs7Ozs7Ozs7Ozs7OzhEQUV6RyxRQUFDbkk7b0RBQU1tSSxXQUFVOzhEQUFVOzs7Ozs7OERBQzNCLFFBQUNDO29EQUFJRCxXQUFVOzhEQUNacEcsU0FBU3NHLEdBQUcsQ0FBQyxDQUFDN0M7d0RBQ2IsTUFBTTRELElBQUk1RCxFQUFFdkQsSUFBSTt3REFDaEIsTUFBTW9ILE1BQU14RyxZQUFZMkMsRUFBRXhELEVBQUU7d0RBQzVCLHFCQUNFLFFBQUNzSDs0REFFQ0MsU0FBUyxJQUFNekcsV0FBVzBDLEVBQUV4RCxFQUFFOzREQUM5Qm1HLFdBQVcsQ0FBQywrQ0FBK0MsRUFDekRrQixNQUFNLGdDQUFnQyx5Q0FDdEM7OzhFQUVGLFFBQUNEO29FQUFFakIsV0FBVyxDQUFDLGFBQWEsRUFBRWtCLE1BQU0saUJBQWlCLHlCQUF5Qjs7Ozs7OzhFQUM5RSxRQUFDakI7b0VBQUlELFdBQVU7OEVBQXlCM0MsRUFBRXRELEtBQUs7Ozs7Ozs4RUFDL0MsUUFBQ2tHO29FQUFJRCxXQUFVOzhFQUFxQzNDLEVBQUVyRCxJQUFJOzs7Ozs7OzJEQVJyRHFELEVBQUV4RCxFQUFFOzs7OztvREFXZjs7Ozs7Ozs7Ozs7O3dDQUtMVyxTQUFTLG1CQUNSLFFBQUN5Rjs0Q0FBSUQsV0FBVTs0Q0FBWUksYUFBVTs7OERBQ25DLFFBQUMvRztvREFDQ2UsU0FBU0E7b0RBQ1R5RyxPQUFPL0YsYUFBYUEsY0FBYyxRQUFRQSxZQUFZO29EQUN0RGdHLFVBQVUsQ0FBQ2YsSUFBTWhGLGFBQWFnRixLQUFLOzs7Ozs7OERBRXJDLFFBQUNzQjtvREFBRXJCLFdBQVU7OERBQW9DOzs7Ozs7Ozs7Ozs7d0NBTXBEeEYsU0FBUyxtQkFDUixRQUFDeUY7NENBQUlELFdBQVU7NENBQVlJLGFBQVU7OzhEQUNuQyxRQUFDdkk7b0RBQU1tSSxXQUFVOztzRUFBa0MsUUFBQy9HOzREQUFTK0csV0FBVTs7Ozs7O3dEQUFZOzs7Ozs7OzhEQUNuRixRQUFDc0I7b0RBQVF0QixXQUFVOztzRUFDakIsUUFBQ3VCOzREQUFRdkIsV0FBVTtzRUFBeUU7Ozs7OztzRUFHNUYsUUFBQ0M7NERBQUlELFdBQVU7c0VBQ2IsY0FBQSxRQUFDMUc7Z0VBQ0NjLFNBQVNBO2dFQUNUTSxTQUFTQSxZQUFZLFVBQVU4RyxZQUFZOUc7Z0VBQzNDK0csUUFBUSxDQUFDQztvRUFDUCxJQUFJQSxFQUFFMUcsT0FBTyxFQUFFQyxXQUFXeUcsRUFBRTFHLE9BQU87b0VBQ25DLElBQUkwRyxFQUFFeEcsSUFBSSxFQUFFQyxRQUFRdUcsRUFBRXhHLElBQUk7b0VBQzFCekIsTUFBTThGLE9BQU8sQ0FBQyxDQUFDLFVBQVUsRUFBRW1DLEVBQUU5RyxJQUFJLENBQUMsU0FBUyxDQUFDO2dFQUM5Qzs7Ozs7Ozs7Ozs7Ozs7Ozs7Z0RBSUxGLFlBQVkseUJBQ1gsUUFBQ3VGOztzRUFDQyxRQUFDcEk7NERBQU1tSSxXQUFVO3NFQUFvQzs7Ozs7O3NFQUNyRCxRQUFDcEk7NERBQU1pSixPQUFPN0Y7NERBQVM4RixVQUFVLENBQUN0QixJQUFNdkUsV0FBV3VFLEVBQUV1QixNQUFNLENBQUNGLEtBQUs7NERBQUdiLFdBQVU7NERBQU9nQixhQUFZOzs7Ozs7Ozs7Ozs7Z0RBR25HdEcsQ0FBQUEsWUFBWSxVQUFVQSxZQUFZLE9BQU0sbUJBQ3hDLFFBQUN1Rjs7c0VBQ0MsUUFBQ3BJOzREQUFNbUksV0FBVTtzRUFBb0M7Ozs7OztzRUFDckQsUUFBQ3BJOzREQUFNaUosT0FBTzdGOzREQUFTOEYsVUFBVSxDQUFDdEIsSUFBTXZFLFdBQVd1RSxFQUFFdUIsTUFBTSxDQUFDRixLQUFLOzREQUFHYixXQUFVOzREQUFPZ0IsYUFBWTs7Ozs7Ozs7Ozs7OzhEQUdyRyxRQUFDZjs7c0VBQ0MsUUFBQ3BJOzREQUFNbUksV0FBVTtzRUFBcUN0RixZQUFZLFFBQVEsWUFBWTs7Ozs7O3NFQUN0RixRQUFDNUM7NERBQVMrSSxPQUFPM0Y7NERBQU00RixVQUFVLENBQUN0QixJQUFNckUsUUFBUXFFLEVBQUV1QixNQUFNLENBQUNGLEtBQUs7NERBQUdjLE1BQU07NERBQUczQixXQUFVOzREQUFPZ0IsYUFBWTs0REFBa0JZLFdBQVdsSCxZQUFZLFFBQVEsTUFBTTs7Ozs7O3dEQUM3SkEsWUFBWSx1QkFDWCxRQUFDdUY7NERBQUlELFdBQVU7OzhFQUNiLFFBQUM2Qjs7d0VBQU0zRyxLQUFLeUUsTUFBTTt3RUFBQzs7Ozs7Ozs4RUFDbkIsUUFBQ2tDOzt3RUFBSzt3RUFBSXBDLFFBQVFxQyxPQUFPLENBQUM7d0VBQUc7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Z0RBSWpDcEgsQ0FBQUEsWUFBWSxVQUFVQSxZQUFZLE9BQU0sbUJBQ3hDLFFBQUN1Rjs7c0VBQ0MsUUFBQ3BJOzREQUFNbUksV0FBVTtzRUFBb0M7Ozs7OztzRUFDckQsUUFBQ3BJOzREQUFNaUosT0FBT3pGOzREQUFVMEYsVUFBVSxDQUFDdEIsSUFBTW5FLFlBQVltRSxFQUFFdUIsTUFBTSxDQUFDRixLQUFLOzREQUFHYixXQUFVOzREQUFPZ0IsYUFBWTs7Ozs7Ozs7Ozs7Ozs7Ozs7O3dDQU0xR3hHLFNBQVMsbUJBQ1IsUUFBQ3lGOzRDQUFJRCxXQUFVOzs4REFDYixRQUFDbkk7b0RBQU1tSSxXQUFVOztzRUFBa0MsUUFBQ2hIOzREQUFTZ0gsV0FBVTs7Ozs7O3dEQUFZOzs7Ozs7OzhEQUNuRixRQUFDakk7b0RBQVc4SSxPQUFPdkY7b0RBQWN5RyxlQUFlLENBQUNoQyxJQUFNeEUsZ0JBQWdCd0U7OERBQ3BFO3dEQUNDOzREQUFFQSxHQUFHOzREQUFPaUMsR0FBRzt3REFBVzt3REFDMUI7NERBQUVqQyxHQUFHOzREQUFRaUMsR0FBRzt3REFBZ0I7d0RBQ2hDOzREQUFFakMsR0FBRzs0REFBYWlDLEdBQUc7d0RBQVk7d0RBQ2pDOzREQUFFakMsR0FBRzs0REFBYWlDLEdBQUc7d0RBQTBCO3FEQUNoRCxDQUFDOUIsR0FBRyxDQUFDLENBQUMrQixrQkFDTCxRQUFDaEM7NERBQWNELFdBQVU7OzhFQUN2QixRQUFDaEk7b0VBQWU2SSxPQUFPb0IsRUFBRWxDLENBQUM7b0VBQUVsRyxJQUFJb0ksRUFBRWxDLENBQUM7Ozs7Ozs4RUFDbkMsUUFBQ2xJO29FQUFNcUssU0FBU0QsRUFBRWxDLENBQUM7b0VBQUVDLFdBQVU7OEVBQWlDaUMsRUFBRUQsQ0FBQzs7Ozs7OzsyREFGM0RDLEVBQUVsQyxDQUFDOzs7Ozs7Ozs7O2dEQU1mekUsQ0FBQUEsaUJBQWlCLFVBQVVBLGlCQUFpQixXQUFVLG1CQUN0RCxRQUFDMUQ7b0RBQU11SyxNQUFLO29EQUFpQnRCLE9BQU9yRjtvREFBVXNGLFVBQVUsQ0FBQ3RCLElBQU0vRCxZQUFZK0QsRUFBRXVCLE1BQU0sQ0FBQ0YsS0FBSzs7Ozs7O2dEQUUxRnZGLGlCQUFpQiw2QkFDaEIsUUFBQ3JEO29EQUFPNEksT0FBT25GO29EQUFTcUcsZUFBZXBHOztzRUFDckMsUUFBQ3ZEO3NFQUFjLGNBQUEsUUFBQ0M7Ozs7Ozs7Ozs7c0VBQ2hCLFFBQUNIOzs4RUFDQyxRQUFDQztvRUFBVzBJLE9BQU07OEVBQWlCOzs7Ozs7OEVBQ25DLFFBQUMxSTtvRUFBVzBJLE9BQU07OEVBQWM7Ozs7Ozs4RUFDaEMsUUFBQzFJO29FQUFXMEksT0FBTTs4RUFBVzs7Ozs7OzhFQUM3QixRQUFDMUk7b0VBQVcwSSxPQUFNOzhFQUFnQjs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7O3dDQU8zQ3JHLFNBQVMsbUJBQ1IsUUFBQ3lGOzRDQUFJRCxXQUFVOzs4REFDYixRQUFDQztvREFBSUQsV0FBVTs7c0VBQ2IsUUFBQ0M7NERBQUlELFdBQVU7OzhFQUF1QixRQUFDNkI7b0VBQUs3QixXQUFVOzhFQUF3Qjs7Ozs7OzhFQUFjLFFBQUM2QjtvRUFBSzdCLFdBQVU7OEVBQTBCdEY7Ozs7Ozs7Ozs7OztzRUFDdEksUUFBQ3VGOzREQUFJRCxXQUFVOzs4RUFBdUIsUUFBQzZCO29FQUFLN0IsV0FBVTs4RUFBd0I7Ozs7Ozs4RUFBZSxRQUFDNkI7b0VBQUs3QixXQUFVOzhFQUFlL0QsVUFBVTJELEtBQUssQ0FBQ3ZELElBQU1BLEVBQUV4QyxFQUFFLEtBQUtpQixZQUFZK0UsYUFBYWpDLG9CQUFvQjs7Ozs7Ozs7Ozs7O3NFQUN4TSxRQUFDcUM7NERBQUlELFdBQVU7OzhFQUF1QixRQUFDNkI7b0VBQUs3QixXQUFVOzhFQUF3Qjs7Ozs7OzhFQUFlLFFBQUM2QjtvRUFBSzdCLFdBQVU7OEVBQTBCMUU7Ozs7Ozs7Ozs7Ozt3REFDdElaLFlBQVksdUJBQ1gsUUFBQ3VGOzREQUFJRCxXQUFVOzs4RUFBdUIsUUFBQzZCO29FQUFLN0IsV0FBVTs4RUFBd0I7Ozs7Ozs4RUFBZ0IsUUFBQzZCO29FQUFLN0IsV0FBVTs7d0VBQWM7d0VBQUVQLFFBQVFxQyxPQUFPLENBQUM7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Z0RBR2pKcEgsWUFBWSxXQUFXUSxLQUFLeUUsTUFBTSxHQUFHLG9CQUNwQyxRQUFDTTtvREFBSUQsV0FBVTs7c0VBQ2IsUUFBQzlHOzREQUFZOEcsV0FBVTs7Ozs7O3NFQUN2QixRQUFDNkI7c0VBQUs7Ozs7Ozs7Ozs7Ozs4REFHVixRQUFDOUg7b0RBQU1pRyxXQUFVOztzRUFDZixRQUFDMUg7NERBQU84SixTQUFTeEc7NERBQVd5RyxpQkFBaUJ4Rzs7Ozs7O3dEQUFnQjs7Ozs7Ozs7Ozs7Ozs7bUNBL0lwRHJCOzs7Ozs7Ozs7Ozs7Ozs7c0NBeUpyQixRQUFDeUY7NEJBQUlELFdBQVU7OzhDQUNiLFFBQUNDO29DQUFJRCxXQUFVOztzREFDYixRQUFDQzs0Q0FBSUQsV0FBVTs7Ozs7O3NEQUNmLFFBQUNDOzRDQUFJRCxXQUFVO3NEQUNiLGNBQUEsUUFBQ0M7Z0RBQUlELFdBQVU7O2tFQUNiLFFBQUNDO3dEQUFJRCxXQUFVOzswRUFDYixRQUFDQztnRUFBSUQsV0FBVTs7Ozs7OzBFQUNmLFFBQUM2QjtnRUFBSzdCLFdBQVU7MEVBQW1DOzs7Ozs7Ozs7Ozs7a0VBRXJELFFBQUNDO3dEQUFJRCxXQUFVO2tFQUF1Q2hGLFdBQVc7Ozs7OztrRUFDakUsUUFBQ2lGO3dEQUFJRCxXQUFVO2tFQUF3RDlFLFFBQVE7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7OzhDQUlyRixRQUFDbUc7b0NBQUVyQixXQUFVOzhDQUF5Qzs7Ozs7Ozs7Ozs7Ozs7Ozs7OzhCQUkxRCxRQUFDQztvQkFBSUQsV0FBVTs7c0NBQ2IsUUFBQ3JJOzRCQUFPMkssU0FBUTs0QkFBUUMsTUFBSzs0QkFBS25CLFNBQVM1RyxTQUFTLElBQUkyQixRQUFRSztzQ0FDN0RoQyxTQUFTLElBQUkseUJBQVc7O2tEQUFFLFFBQUMzQjt3Q0FBWW1ILFdBQVU7Ozs7OztvQ0FBaUI7Ozs7Ozs7O3NDQUVyRSxRQUFDQzs0QkFBSUQsV0FBVTs7Z0NBQ1p4RixPQUFPLG1CQUNOLFFBQUM3QztvQ0FBTzJLLFNBQVE7b0NBQVVDLE1BQUs7b0NBQUtuQixTQUFTLElBQU14RSxhQUFhO29DQUFPNEYsVUFBVTFHOztzREFDL0UsUUFBQzNDOzRDQUFLNkcsV0FBVTs7Ozs7O3dDQUFpQjs7Ozs7OztnQ0FHcEN4RixPQUFPLGtCQUNOLFFBQUM3QztvQ0FBTzRLLE1BQUs7b0NBQUtuQixTQUFTaEY7b0NBQU1vRyxVQUFVLENBQUM5Rjs7d0NBQVc7c0RBQ2hELFFBQUM5RDs0Q0FBYW9ILFdBQVU7Ozs7Ozs7Ozs7O3lEQUcvQixRQUFDckk7b0NBQU80SyxNQUFLO29DQUFLbkIsU0FBUyxJQUFNeEUsYUFBYTtvQ0FBUTRGLFVBQVUsQ0FBQzVHLGFBQWFFOzhDQUMzRUEsYUFBYSw2QkFBZTs7NENBQUdSLGlCQUFpQixzQkFBUSxRQUFDdkM7Z0RBQUtpSCxXQUFVOzs7OztxRUFBb0IsUUFBQ2xIO2dEQUFNa0gsV0FBVTs7Ozs7OzRDQUFrQjs0Q0FBRTFFLGlCQUFpQixRQUFRLGFBQWE7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7Ozs7QUFReEw7R0E3VXdCckI7O1FBQ1hUO1FBcUJnQko7OztLQXRCTGEifQ==

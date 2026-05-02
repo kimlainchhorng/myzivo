@@ -1,0 +1,181 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/admin/marketing/MarketingOverviewHeader.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+var _s = $RefreshSig$();
+/**
+ * MarketingOverviewHeader — Stat strip + channel tiles + "+ New Campaign" entry point.
+ * Opens NewCampaignChannelPicker → CreateMarketingCampaignWizard with channel preselected.
+ */ import __vite__cjsImport1_react from "/node_modules/.vite/deps/react.js?v=7fd9520c"; const useState = __vite__cjsImport1_react["useState"];
+import { Button } from "/src/components/ui/button.tsx";
+import { Plus } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+import MarketingStatStrip from "/src/components/admin/marketing/MarketingStatStrip.tsx";
+import MarketingChannelTile from "/src/components/admin/marketing/MarketingChannelTile.tsx";
+import NewCampaignChannelPicker from "/src/components/admin/marketing/NewCampaignChannelPicker.tsx";
+import CreateMarketingCampaignWizard from "/src/components/admin/marketing/CreateMarketingCampaignWizard.tsx";
+import { useStoreMarketingOverview } from "/src/hooks/useStoreMarketingOverview.ts";
+export default function MarketingOverviewHeader({ storeId }) {
+    _s();
+    const { data, isLoading } = useStoreMarketingOverview(storeId);
+    const [pickerOpen, setPickerOpen] = useState(false);
+    const [wizardOpen, setWizardOpen] = useState(false);
+    const [chosenChannel, setChosenChannel] = useState("push");
+    const openWizardWith = (ch)=>{
+        setChosenChannel(ch);
+        setPickerOpen(false);
+        setWizardOpen(true);
+    };
+    return /*#__PURE__*/ _jsxDEV("div", {
+        className: "space-y-4 relative",
+        children: [
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "flex items-center justify-between gap-2",
+                children: [
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("h2", {
+                                className: "text-base font-semibold tracking-tight",
+                                children: "Marketing overview"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/MarketingOverviewHeader.tsx",
+                                lineNumber: 33,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("p", {
+                                className: "text-xs text-muted-foreground",
+                                children: "Live performance across every channel"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/MarketingOverviewHeader.tsx",
+                                lineNumber: 34,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/MarketingOverviewHeader.tsx",
+                        lineNumber: 32,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(Button, {
+                        size: "sm",
+                        onClick: ()=>setPickerOpen(true),
+                        className: "hidden sm:inline-flex rounded-full px-4 shadow-sm",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(Plus, {
+                                className: "w-4 h-4 mr-1"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/MarketingOverviewHeader.tsx",
+                                lineNumber: 41,
+                                columnNumber: 11
+                            }, this),
+                            " New campaign"
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/MarketingOverviewHeader.tsx",
+                        lineNumber: 36,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/MarketingOverviewHeader.tsx",
+                lineNumber: 31,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV(MarketingStatStrip, {
+                stats: data?.stats,
+                isLoading: isLoading
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/MarketingOverviewHeader.tsx",
+                lineNumber: 45,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "grid grid-cols-2 lg:grid-cols-4 gap-3",
+                children: (data?.channels || []).map((ch)=>/*#__PURE__*/ _jsxDEV(MarketingChannelTile, {
+                        channel: ch,
+                        storeId: storeId,
+                        onCompose: (c)=>openWizardWith(c)
+                    }, ch.channel, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/MarketingOverviewHeader.tsx",
+                        lineNumber: 49,
+                        columnNumber: 11
+                    }, this))
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/MarketingOverviewHeader.tsx",
+                lineNumber: 47,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV(Button, {
+                size: "lg",
+                onClick: ()=>setPickerOpen(true),
+                className: "sm:hidden fixed right-4 z-30 rounded-full shadow-lg h-14 w-14 p-0",
+                style: {
+                    bottom: "calc(env(safe-area-inset-bottom, 0px) + 5rem)"
+                },
+                "aria-label": "New campaign",
+                children: /*#__PURE__*/ _jsxDEV(Plus, {
+                    className: "w-6 h-6"
+                }, void 0, false, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/MarketingOverviewHeader.tsx",
+                    lineNumber: 66,
+                    columnNumber: 9
+                }, this)
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/MarketingOverviewHeader.tsx",
+                lineNumber: 59,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV(NewCampaignChannelPicker, {
+                open: pickerOpen,
+                onClose: ()=>setPickerOpen(false),
+                onSelect: (ch)=>openWizardWith(ch)
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/MarketingOverviewHeader.tsx",
+                lineNumber: 69,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV(CreateMarketingCampaignWizard, {
+                open: wizardOpen,
+                onClose: ()=>setWizardOpen(false),
+                storeId: storeId,
+                defaultChannel: chosenChannel
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/MarketingOverviewHeader.tsx",
+                lineNumber: 75,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/MarketingOverviewHeader.tsx",
+        lineNumber: 29,
+        columnNumber: 5
+    }, this);
+}
+_s(MarketingOverviewHeader, "GFtmL2Kz2j01IDChDhPeHEAg2NA=", false, function() {
+    return [
+        useStoreMarketingOverview
+    ];
+});
+_c = MarketingOverviewHeader;
+var _c;
+$RefreshReg$(_c, "MarketingOverviewHeader");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/MarketingOverviewHeader.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/MarketingOverviewHeader.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/marketing/MarketingOverviewHeader.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIk1hcmtldGluZ092ZXJ2aWV3SGVhZGVyLnRzeCJdLCJzb3VyY2VzQ29udGVudCI6WyIvKipcclxuICogTWFya2V0aW5nT3ZlcnZpZXdIZWFkZXIg4oCUIFN0YXQgc3RyaXAgKyBjaGFubmVsIHRpbGVzICsgXCIrIE5ldyBDYW1wYWlnblwiIGVudHJ5IHBvaW50LlxyXG4gKiBPcGVucyBOZXdDYW1wYWlnbkNoYW5uZWxQaWNrZXIg4oaSIENyZWF0ZU1hcmtldGluZ0NhbXBhaWduV2l6YXJkIHdpdGggY2hhbm5lbCBwcmVzZWxlY3RlZC5cclxuICovXHJcbmltcG9ydCB7IHVzZVN0YXRlIH0gZnJvbSBcInJlYWN0XCI7XHJcbmltcG9ydCB7IEJ1dHRvbiB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvYnV0dG9uXCI7XHJcbmltcG9ydCB7IFBsdXMgfSBmcm9tIFwibHVjaWRlLXJlYWN0XCI7XHJcbmltcG9ydCBNYXJrZXRpbmdTdGF0U3RyaXAgZnJvbSBcIi4vTWFya2V0aW5nU3RhdFN0cmlwXCI7XHJcbmltcG9ydCBNYXJrZXRpbmdDaGFubmVsVGlsZSBmcm9tIFwiLi9NYXJrZXRpbmdDaGFubmVsVGlsZVwiO1xyXG5pbXBvcnQgTmV3Q2FtcGFpZ25DaGFubmVsUGlja2VyIGZyb20gXCIuL05ld0NhbXBhaWduQ2hhbm5lbFBpY2tlclwiO1xyXG5pbXBvcnQgQ3JlYXRlTWFya2V0aW5nQ2FtcGFpZ25XaXphcmQgZnJvbSBcIi4vQ3JlYXRlTWFya2V0aW5nQ2FtcGFpZ25XaXphcmRcIjtcclxuaW1wb3J0IHsgdXNlU3RvcmVNYXJrZXRpbmdPdmVydmlldyB9IGZyb20gXCJAL2hvb2tzL3VzZVN0b3JlTWFya2V0aW5nT3ZlcnZpZXdcIjtcclxuXHJcbnR5cGUgQ2hhbm5lbCA9IFwicHVzaFwiIHwgXCJlbWFpbFwiIHwgXCJzbXNcIiB8IFwiaW5hcHBcIiB8IFwibXVsdGlcIjtcclxuXHJcbmV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uIE1hcmtldGluZ092ZXJ2aWV3SGVhZGVyKHsgc3RvcmVJZCB9OiB7IHN0b3JlSWQ6IHN0cmluZyB9KSB7XHJcbiAgY29uc3QgeyBkYXRhLCBpc0xvYWRpbmcgfSA9IHVzZVN0b3JlTWFya2V0aW5nT3ZlcnZpZXcoc3RvcmVJZCk7XHJcbiAgY29uc3QgW3BpY2tlck9wZW4sIHNldFBpY2tlck9wZW5dID0gdXNlU3RhdGUoZmFsc2UpO1xyXG4gIGNvbnN0IFt3aXphcmRPcGVuLCBzZXRXaXphcmRPcGVuXSA9IHVzZVN0YXRlKGZhbHNlKTtcclxuICBjb25zdCBbY2hvc2VuQ2hhbm5lbCwgc2V0Q2hvc2VuQ2hhbm5lbF0gPSB1c2VTdGF0ZTxDaGFubmVsPihcInB1c2hcIik7XHJcblxyXG4gIGNvbnN0IG9wZW5XaXphcmRXaXRoID0gKGNoOiBDaGFubmVsKSA9PiB7XHJcbiAgICBzZXRDaG9zZW5DaGFubmVsKGNoKTtcclxuICAgIHNldFBpY2tlck9wZW4oZmFsc2UpO1xyXG4gICAgc2V0V2l6YXJkT3Blbih0cnVlKTtcclxuICB9O1xyXG5cclxuICByZXR1cm4gKFxyXG4gICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTQgcmVsYXRpdmVcIj5cclxuICAgICAgey8qIEhlYWRlciByb3cgd2l0aCBkZXNrdG9wIHBpbGwgYnV0dG9uICovfVxyXG4gICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktYmV0d2VlbiBnYXAtMlwiPlxyXG4gICAgICAgIDxkaXY+XHJcbiAgICAgICAgICA8aDIgY2xhc3NOYW1lPVwidGV4dC1iYXNlIGZvbnQtc2VtaWJvbGQgdHJhY2tpbmctdGlnaHRcIj5NYXJrZXRpbmcgb3ZlcnZpZXc8L2gyPlxyXG4gICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC14cyB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5MaXZlIHBlcmZvcm1hbmNlIGFjcm9zcyBldmVyeSBjaGFubmVsPC9wPlxyXG4gICAgICAgIDwvZGl2PlxyXG4gICAgICAgIDxCdXR0b25cclxuICAgICAgICAgIHNpemU9XCJzbVwiXHJcbiAgICAgICAgICBvbkNsaWNrPXsoKSA9PiBzZXRQaWNrZXJPcGVuKHRydWUpfVxyXG4gICAgICAgICAgY2xhc3NOYW1lPVwiaGlkZGVuIHNtOmlubGluZS1mbGV4IHJvdW5kZWQtZnVsbCBweC00IHNoYWRvdy1zbVwiXHJcbiAgICAgICAgPlxyXG4gICAgICAgICAgPFBsdXMgY2xhc3NOYW1lPVwidy00IGgtNCBtci0xXCIgLz4gTmV3IGNhbXBhaWduXHJcbiAgICAgICAgPC9CdXR0b24+XHJcbiAgICAgIDwvZGl2PlxyXG5cclxuICAgICAgPE1hcmtldGluZ1N0YXRTdHJpcCBzdGF0cz17ZGF0YT8uc3RhdHMgYXMgYW55fSBpc0xvYWRpbmc9e2lzTG9hZGluZ30gLz5cclxuXHJcbiAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZ3JpZCBncmlkLWNvbHMtMiBsZzpncmlkLWNvbHMtNCBnYXAtM1wiPlxyXG4gICAgICAgIHsoZGF0YT8uY2hhbm5lbHMgfHwgW10pLm1hcCgoY2gpID0+IChcclxuICAgICAgICAgIDxNYXJrZXRpbmdDaGFubmVsVGlsZVxyXG4gICAgICAgICAgICBrZXk9e2NoLmNoYW5uZWx9XHJcbiAgICAgICAgICAgIGNoYW5uZWw9e2NofVxyXG4gICAgICAgICAgICBzdG9yZUlkPXtzdG9yZUlkfVxyXG4gICAgICAgICAgICBvbkNvbXBvc2U9eyhjKSA9PiBvcGVuV2l6YXJkV2l0aChjIGFzIENoYW5uZWwpfVxyXG4gICAgICAgICAgLz5cclxuICAgICAgICApKX1cclxuICAgICAgPC9kaXY+XHJcblxyXG4gICAgICB7LyogTW9iaWxlIHN0aWNreSBGQUIgKi99XHJcbiAgICAgIDxCdXR0b25cclxuICAgICAgICBzaXplPVwibGdcIlxyXG4gICAgICAgIG9uQ2xpY2s9eygpID0+IHNldFBpY2tlck9wZW4odHJ1ZSl9XHJcbiAgICAgICAgY2xhc3NOYW1lPVwic206aGlkZGVuIGZpeGVkIHJpZ2h0LTQgei0zMCByb3VuZGVkLWZ1bGwgc2hhZG93LWxnIGgtMTQgdy0xNCBwLTBcIlxyXG4gICAgICAgIHN0eWxlPXt7IGJvdHRvbTogXCJjYWxjKGVudihzYWZlLWFyZWEtaW5zZXQtYm90dG9tLCAwcHgpICsgNXJlbSlcIiB9fVxyXG4gICAgICAgIGFyaWEtbGFiZWw9XCJOZXcgY2FtcGFpZ25cIlxyXG4gICAgICA+XHJcbiAgICAgICAgPFBsdXMgY2xhc3NOYW1lPVwidy02IGgtNlwiIC8+XHJcbiAgICAgIDwvQnV0dG9uPlxyXG5cclxuICAgICAgPE5ld0NhbXBhaWduQ2hhbm5lbFBpY2tlclxyXG4gICAgICAgIG9wZW49e3BpY2tlck9wZW59XHJcbiAgICAgICAgb25DbG9zZT17KCkgPT4gc2V0UGlja2VyT3BlbihmYWxzZSl9XHJcbiAgICAgICAgb25TZWxlY3Q9eyhjaCkgPT4gb3BlbldpemFyZFdpdGgoY2ggYXMgQ2hhbm5lbCl9XHJcbiAgICAgIC8+XHJcblxyXG4gICAgICA8Q3JlYXRlTWFya2V0aW5nQ2FtcGFpZ25XaXphcmRcclxuICAgICAgICBvcGVuPXt3aXphcmRPcGVufVxyXG4gICAgICAgIG9uQ2xvc2U9eygpID0+IHNldFdpemFyZE9wZW4oZmFsc2UpfVxyXG4gICAgICAgIHN0b3JlSWQ9e3N0b3JlSWR9XHJcbiAgICAgICAgZGVmYXVsdENoYW5uZWw9e2Nob3NlbkNoYW5uZWx9XHJcbiAgICAgIC8+XHJcbiAgICA8L2Rpdj5cclxuICApO1xyXG59XHJcbiJdLCJuYW1lcyI6WyJ1c2VTdGF0ZSIsIkJ1dHRvbiIsIlBsdXMiLCJNYXJrZXRpbmdTdGF0U3RyaXAiLCJNYXJrZXRpbmdDaGFubmVsVGlsZSIsIk5ld0NhbXBhaWduQ2hhbm5lbFBpY2tlciIsIkNyZWF0ZU1hcmtldGluZ0NhbXBhaWduV2l6YXJkIiwidXNlU3RvcmVNYXJrZXRpbmdPdmVydmlldyIsIk1hcmtldGluZ092ZXJ2aWV3SGVhZGVyIiwic3RvcmVJZCIsImRhdGEiLCJpc0xvYWRpbmciLCJwaWNrZXJPcGVuIiwic2V0UGlja2VyT3BlbiIsIndpemFyZE9wZW4iLCJzZXRXaXphcmRPcGVuIiwiY2hvc2VuQ2hhbm5lbCIsInNldENob3NlbkNoYW5uZWwiLCJvcGVuV2l6YXJkV2l0aCIsImNoIiwiZGl2IiwiY2xhc3NOYW1lIiwiaDIiLCJwIiwic2l6ZSIsIm9uQ2xpY2siLCJzdGF0cyIsImNoYW5uZWxzIiwibWFwIiwiY2hhbm5lbCIsIm9uQ29tcG9zZSIsImMiLCJzdHlsZSIsImJvdHRvbSIsImFyaWEtbGFiZWwiLCJvcGVuIiwib25DbG9zZSIsIm9uU2VsZWN0IiwiZGVmYXVsdENoYW5uZWwiXSwibWFwcGluZ3MiOiI7O0FBQUE7OztDQUdDLEdBQ0QsU0FBU0EsUUFBUSxRQUFRLFFBQVE7QUFDakMsU0FBU0MsTUFBTSxRQUFRLHlCQUF5QjtBQUNoRCxTQUFTQyxJQUFJLFFBQVEsZUFBZTtBQUNwQyxPQUFPQyx3QkFBd0IsdUJBQXVCO0FBQ3RELE9BQU9DLDBCQUEwQix5QkFBeUI7QUFDMUQsT0FBT0MsOEJBQThCLDZCQUE2QjtBQUNsRSxPQUFPQyxtQ0FBbUMsa0NBQWtDO0FBQzVFLFNBQVNDLHlCQUF5QixRQUFRLG9DQUFvQztBQUk5RSxlQUFlLFNBQVNDLHdCQUF3QixFQUFFQyxPQUFPLEVBQXVCOztJQUM5RSxNQUFNLEVBQUVDLElBQUksRUFBRUMsU0FBUyxFQUFFLEdBQUdKLDBCQUEwQkU7SUFDdEQsTUFBTSxDQUFDRyxZQUFZQyxjQUFjLEdBQUdiLFNBQVM7SUFDN0MsTUFBTSxDQUFDYyxZQUFZQyxjQUFjLEdBQUdmLFNBQVM7SUFDN0MsTUFBTSxDQUFDZ0IsZUFBZUMsaUJBQWlCLEdBQUdqQixTQUFrQjtJQUU1RCxNQUFNa0IsaUJBQWlCLENBQUNDO1FBQ3RCRixpQkFBaUJFO1FBQ2pCTixjQUFjO1FBQ2RFLGNBQWM7SUFDaEI7SUFFQSxxQkFDRSxRQUFDSztRQUFJQyxXQUFVOzswQkFFYixRQUFDRDtnQkFBSUMsV0FBVTs7a0NBQ2IsUUFBQ0Q7OzBDQUNDLFFBQUNFO2dDQUFHRCxXQUFVOzBDQUF5Qzs7Ozs7OzBDQUN2RCxRQUFDRTtnQ0FBRUYsV0FBVTswQ0FBZ0M7Ozs7Ozs7Ozs7OztrQ0FFL0MsUUFBQ3BCO3dCQUNDdUIsTUFBSzt3QkFDTEMsU0FBUyxJQUFNWixjQUFjO3dCQUM3QlEsV0FBVTs7MENBRVYsUUFBQ25CO2dDQUFLbUIsV0FBVTs7Ozs7OzRCQUFpQjs7Ozs7Ozs7Ozs7OzswQkFJckMsUUFBQ2xCO2dCQUFtQnVCLE9BQU9oQixNQUFNZ0I7Z0JBQWNmLFdBQVdBOzs7Ozs7MEJBRTFELFFBQUNTO2dCQUFJQyxXQUFVOzBCQUNaLEFBQUNYLENBQUFBLE1BQU1pQixZQUFZLEVBQUUsQUFBRCxFQUFHQyxHQUFHLENBQUMsQ0FBQ1QsbUJBQzNCLFFBQUNmO3dCQUVDeUIsU0FBU1Y7d0JBQ1RWLFNBQVNBO3dCQUNUcUIsV0FBVyxDQUFDQyxJQUFNYixlQUFlYTt1QkFINUJaLEdBQUdVLE9BQU87Ozs7Ozs7Ozs7MEJBU3JCLFFBQUM1QjtnQkFDQ3VCLE1BQUs7Z0JBQ0xDLFNBQVMsSUFBTVosY0FBYztnQkFDN0JRLFdBQVU7Z0JBQ1ZXLE9BQU87b0JBQUVDLFFBQVE7Z0JBQWdEO2dCQUNqRUMsY0FBVzswQkFFWCxjQUFBLFFBQUNoQztvQkFBS21CLFdBQVU7Ozs7Ozs7Ozs7OzBCQUdsQixRQUFDaEI7Z0JBQ0M4QixNQUFNdkI7Z0JBQ053QixTQUFTLElBQU12QixjQUFjO2dCQUM3QndCLFVBQVUsQ0FBQ2xCLEtBQU9ELGVBQWVDOzs7Ozs7MEJBR25DLFFBQUNiO2dCQUNDNkIsTUFBTXJCO2dCQUNOc0IsU0FBUyxJQUFNckIsY0FBYztnQkFDN0JOLFNBQVNBO2dCQUNUNkIsZ0JBQWdCdEI7Ozs7Ozs7Ozs7OztBQUl4QjtHQW5Fd0JSOztRQUNNRDs7O0tBRE5DIn0=

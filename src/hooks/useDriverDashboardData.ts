@@ -56,7 +56,7 @@ export function useDriverDashboardData() {
       // Fetch driver profile
       const { data: driver } = await supabase
         .from("drivers")
-        .select("rating, total_trips")
+        .select("rating, total_trips, acceptance_rate, completion_rate, daily_goal")
         .eq("id", driverId)
         .maybeSingle();
 
@@ -76,22 +76,40 @@ export function useDriverDashboardData() {
         .gte("delivered_at", weekStart.toISOString())
         .in("status", ["delivered"]);
 
-      const todayEarnings = (todayOrders || []).reduce((sum, o) => sum + (o.delivery_fee || 0), 0);
+      // Fetch today's completed trips (ride-hailing)
+      const { data: todayTrips } = await supabase
+        .from("trips")
+        .select("driver_payout_cents, completed_at")
+        .eq("driver_id", driverId)
+        .gte("completed_at", todayStart.toISOString())
+        .eq("status", "completed");
+
+      // Fetch week's completed trips
+      const { data: weekTrips } = await supabase
+        .from("trips")
+        .select("driver_payout_cents, completed_at")
+        .eq("driver_id", driverId)
+        .gte("completed_at", weekStart.toISOString())
+        .eq("status", "completed");
+
+      const todayDeliveryEarnings = (todayOrders || []).reduce((sum, o) => sum + (o.delivery_fee || 0), 0);
       const todayTips = (todayOrders || []).reduce((sum, o) => sum + (o.tip_amount || 0), 0);
-      const weekEarnings = (weekOrders || []).reduce((sum, o) => sum + (o.delivery_fee || 0), 0);
+      const todayRideEarnings = (todayTrips || []).reduce((sum, t) => sum + (t.driver_payout_cents || 0) / 100, 0);
+      const weekDeliveryEarnings = (weekOrders || []).reduce((sum, o) => sum + (o.delivery_fee || 0), 0);
       const weekTips = (weekOrders || []).reduce((sum, o) => sum + (o.tip_amount || 0), 0);
+      const weekRideEarnings = (weekTrips || []).reduce((sum, t) => sum + (t.driver_payout_cents || 0) / 100, 0);
 
       setStats({
-        todayEarnings: todayEarnings + todayTips,
-        todayDeliveries: todayOrders?.length || 0,
+        todayEarnings: todayDeliveryEarnings + todayTips + todayRideEarnings,
+        todayDeliveries: (todayOrders?.length || 0) + (todayTrips?.length || 0),
         todayTips,
-        weekEarnings: weekEarnings + weekTips,
-        weekDeliveries: weekOrders?.length || 0,
+        weekEarnings: weekDeliveryEarnings + weekTips + weekRideEarnings,
+        weekDeliveries: (weekOrders?.length || 0) + (weekTrips?.length || 0),
         weekTips,
-        hoursOnline: 0, // Would need a work session tracker
-        acceptanceRate: 100,
-        rating: driver?.rating || 5.0,
-        dailyGoal: 150,
+        hoursOnline: 0,
+        acceptanceRate: driver?.acceptance_rate ?? 100,
+        rating: driver?.rating ?? 5.0,
+        dailyGoal: driver?.daily_goal ?? 150,
       });
     } catch (err) {
       console.error("Failed to fetch driver stats:", err);

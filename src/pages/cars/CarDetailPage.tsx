@@ -11,6 +11,8 @@ import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { StarRating } from "@/components/shared/StarRating";
+import SafeCaption from "@/components/social/SafeCaption";
 import { Separator } from "@/components/ui/separator";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -51,11 +53,8 @@ export default function CarDetailPage() {
   // Queries
   const { data: vehicle, isLoading } = useP2PVehicleDetail(id);
   const { data: reviews = [] } = useVehicleReviews(id);
-  const { data: pricing } = useBookingPricing(
-    id,
-    pickupDate ? format(pickupDate, "yyyy-MM-dd") : undefined,
-    returnDate ? format(returnDate, "yyyy-MM-dd") : undefined
-  );
+  const totalDays = pickupDate && returnDate ? Math.max(1, differenceInDays(returnDate, pickupDate)) : 0;
+  const { data: pricing } = useBookingPricing(id, totalDays);
 
   if (isLoading) {
     return (
@@ -94,7 +93,6 @@ export default function CarDetailPage() {
   }
 
   const images = (vehicle.images as string[]) || [];
-  const totalDays = pickupDate && returnDate ? differenceInDays(returnDate, pickupDate) : 0;
 
   const handleBookNow = () => {
     if (!user) {
@@ -299,25 +297,13 @@ export default function CarDetailPage() {
                       <Card key={review.id}>
                         <CardContent className="p-4">
                           <div className="flex items-center gap-2 mb-2">
-                            <div className="flex">
-                              {Array.from({ length: 5 }).map((_, i) => (
-                                <Star
-                                  key={i}
-                                  className={cn(
-                                    "w-4 h-4",
-                                    i < (review.rating || 0)
-                                      ? "fill-amber-400 text-amber-400"
-                                      : "text-muted"
-                                  )}
-                                />
-                              ))}
-                            </div>
+                            <StarRating value={review.rating || 0} size="md" />
                             <span className="text-sm text-muted-foreground">
                               {format(new Date(review.created_at), "MMM d, yyyy")}
                             </span>
                           </div>
                           {review.comment && (
-                            <p className="text-sm text-muted-foreground">{review.comment}</p>
+                            <p className="text-sm text-muted-foreground"><SafeCaption text={review.comment} /></p>
                           )}
                         </CardContent>
                       </Card>
@@ -389,7 +375,7 @@ export default function CarDetailPage() {
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">
-                          ${pricing.dailyRate.toFixed(2)} × {pricing.totalDays} days
+                          ${pricing.dailyRate.toFixed(2)} × {pricing.days} days
                         </span>
                         <span>${pricing.subtotal.toFixed(2)}</span>
                       </div>
@@ -397,19 +383,20 @@ export default function CarDetailPage() {
                         <span className="text-muted-foreground">Service fee</span>
                         <span>${pricing.serviceFee.toFixed(2)}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Insurance</span>
-                        <span>${pricing.insuranceFee.toFixed(2)}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-muted-foreground">Taxes</span>
-                        <span>${pricing.taxes.toFixed(2)}</span>
-                      </div>
+                      {pricing.cleaningFee > 0 && (
+                        <div className="flex justify-between">
+                          <span className="text-muted-foreground">Cleaning fee</span>
+                          <span>${pricing.cleaningFee.toFixed(2)}</span>
+                        </div>
+                      )}
                       <Separator />
                       <div className="flex justify-between font-semibold text-base">
                         <span>Total</span>
-                        <span>${pricing.totalAmount.toFixed(2)}</span>
+                        <span>${pricing.total.toFixed(2)}</span>
                       </div>
+                      {pricing.deposit > 0 && (
+                        <p className="text-xs text-muted-foreground">+ ${pricing.deposit.toFixed(2)} refundable deposit</p>
+                      )}
                     </div>
                   )}
 

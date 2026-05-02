@@ -50,11 +50,16 @@ serve(async (req) => {
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   try {
-    const { bookingId, reason, action }: RefundRequest = await req.json();
+    const { bookingId, reason: rawReason, action }: RefundRequest = await req.json();
 
     if (!bookingId) {
       throw new Error("bookingId is required");
     }
+
+    // Sanitize reason: plain text only, max 500 chars
+    const reason = typeof rawReason === "string"
+      ? rawReason.replace(/[<>&"']/g, "").trim().slice(0, 500)
+      : undefined;
 
     console.log(`[FlightRefund] Processing ${action} refund for booking:`, bookingId);
 

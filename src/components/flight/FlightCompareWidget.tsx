@@ -1,9 +1,10 @@
-import { useState } from "react";
-import { Scale, X, Plus, Clock, Plane, Luggage, Utensils, Wifi, Check } from "lucide-react";
+import { Scale, X, Plus, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { toast } from "sonner";
 
-interface CompareFlight {
+export interface CompareFlight {
   id: string;
   airline: string;
   route: string;
@@ -15,19 +16,13 @@ interface CompareFlight {
   amenities: string[];
 }
 
-const FlightCompareWidget = () => {
-  // TODO: Populate from user's selected flights
-  const [compareList, setCompareList] = useState<CompareFlight[]>([]);
+interface FlightCompareWidgetProps {
+  compareList: CompareFlight[];
+  onRemove: (id: string) => void;
+}
 
-  const removeFromCompare = (id: string) => {
-    setCompareList(compareList.filter(f => f.id !== id));
-  };
-
-  const addToCompare = (flight: CompareFlight) => {
-    if (compareList.length < 3 && !compareList.find(f => f.id === flight.id)) {
-      setCompareList([...compareList, flight]);
-    }
-  };
+const FlightCompareWidget = ({ compareList, onRemove }: FlightCompareWidgetProps) => {
+  const navigate = useNavigate();
 
   return (
     <section className="py-12 px-4 bg-gradient-to-b from-background to-sky-500/5">
@@ -41,11 +36,19 @@ const FlightCompareWidget = () => {
           </h2>
         </div>
 
+        {compareList.length === 0 && (
+          <div className="text-center py-14 text-muted-foreground">
+            <Scale className="w-10 h-10 mx-auto mb-3 opacity-20" />
+            <p className="font-medium text-sm">No flights selected to compare</p>
+            <p className="text-xs mt-1 max-w-xs mx-auto">Search for flights and tap <strong>Compare</strong> on up to 3 results to compare them here side by side.</p>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {compareList.map((flight, index) => (
             <div key={flight.id} className="relative bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl p-4">
               <button
-                onClick={() => removeFromCompare(flight.id)}
+                onClick={() => onRemove(flight.id)}
                 className="absolute top-2 right-2 p-1.5 rounded-full bg-destructive/10 text-destructive hover:bg-destructive/20 transition-all duration-200 active:scale-[0.90] touch-manipulation"
               >
                 <X className="w-4 h-4" />
@@ -95,7 +98,10 @@ const FlightCompareWidget = () => {
 
           {compareList.length < 3 && compareList.length > 0 && (
             <button
-              onClick={() => {}}
+              onClick={() => {
+                toast.info("Search for flights to add", { description: "Tap the compare icon on a flight in the search results." });
+                navigate("/book-flight");
+              }}
               className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-border/50 rounded-2xl hover:border-sky-500/50 hover:bg-sky-500/5 transition-all"
             >
               <div className="w-16 h-16 rounded-full bg-sky-500/10 flex items-center justify-center mb-4">

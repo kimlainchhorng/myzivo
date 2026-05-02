@@ -3,9 +3,10 @@
  */
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Calendar, Clock, Repeat, MapPin, Trash2, Edit3, ChevronLeft, ChevronRight, Bell, Car, Plus } from "lucide-react";
+import { Calendar, Clock, Repeat, MapPin, Trash2, Edit3, ChevronLeft, ChevronRight, Bell, Car, Plus, Check, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { format, addDays, startOfWeek, isSameDay, isToday, addMonths, subMonths, startOfMonth, endOfMonth, eachDayOfInterval, getDay } from "date-fns";
@@ -33,6 +34,8 @@ export default function RideScheduleCalendar() {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [rides, setRides] = useState(scheduledRides);
+  const [editingRideId, setEditingRideId] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState<{ time: string; pickup: string; dropoff: string; vehicle: string }>({ time: "", pickup: "", dropoff: "", vehicle: "" });
 
   const monthStart = startOfMonth(currentMonth);
   const monthEnd = endOfMonth(currentMonth);
@@ -57,6 +60,17 @@ export default function RideScheduleCalendar() {
   const handleToggleReminder = (id: string) => {
     setRides(prev => prev.map(r => r.id === id ? { ...r, reminder: !r.reminder } : r));
     toast.success("Reminder updated");
+  };
+
+  const startEdit = (ride: ScheduledRide) => {
+    setEditingRideId(ride.id);
+    setEditDraft({ time: ride.time, pickup: ride.pickup, dropoff: ride.dropoff, vehicle: ride.vehicle });
+  };
+
+  const saveEdit = (id: string) => {
+    setRides(prev => prev.map(r => r.id === id ? { ...r, ...editDraft } : r));
+    setEditingRideId(null);
+    toast.success("Ride updated");
   };
 
   return (
@@ -170,13 +184,53 @@ export default function RideScheduleCalendar() {
                   <Bell className={cn("w-3 h-3", ride.reminder ? "text-primary" : "text-muted-foreground")} />
                   {ride.reminder ? "Reminder On" : "Reminder Off"}
                 </Button>
-                <Button variant="outline" size="sm" className="h-8 rounded-lg text-[10px] font-bold px-3" onClick={() => toast.info("Edit ride")}>
+                <Button variant="outline" size="sm" className="h-8 rounded-lg text-[10px] font-bold px-3" onClick={() => editingRideId === ride.id ? setEditingRideId(null) : startEdit(ride)}>
                   <Edit3 className="w-3 h-3" />
                 </Button>
                 <Button variant="outline" size="sm" className="h-8 rounded-lg text-[10px] font-bold px-3 border-red-500/20 text-red-500 hover:bg-red-500/5" onClick={() => handleDelete(ride.id)}>
                   <Trash2 className="w-3 h-3" />
                 </Button>
               </div>
+
+              {/* Inline edit form */}
+              <AnimatePresence>
+                {editingRideId === ride.id && (
+                  <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="space-y-2 overflow-hidden border-t border-border/30 pt-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <p className="text-[9px] text-muted-foreground font-bold mb-1">TIME</p>
+                        <Input value={editDraft.time} onChange={e => setEditDraft(d => ({ ...d, time: e.target.value }))} className="h-8 text-xs rounded-lg" placeholder="8:00 AM" />
+                      </div>
+                      <div>
+                        <p className="text-[9px] text-muted-foreground font-bold mb-1">VEHICLE</p>
+                        <div className="flex gap-1">
+                          {["Economy", "Premium", "SUV"].map(v => (
+                            <button key={v} onClick={() => setEditDraft(d => ({ ...d, vehicle: v }))} className={cn("flex-1 h-8 rounded-lg text-[9px] font-bold border transition-all", editDraft.vehicle === v ? "bg-primary text-primary-foreground border-primary" : "bg-muted/20 border-border/40")}>
+                              {v}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-[9px] text-muted-foreground font-bold mb-1">PICKUP</p>
+                      <Input value={editDraft.pickup} onChange={e => setEditDraft(d => ({ ...d, pickup: e.target.value }))} className="h-8 text-xs rounded-lg" />
+                    </div>
+                    <div>
+                      <p className="text-[9px] text-muted-foreground font-bold mb-1">DROPOFF</p>
+                      <Input value={editDraft.dropoff} onChange={e => setEditDraft(d => ({ ...d, dropoff: e.target.value }))} className="h-8 text-xs rounded-lg" />
+                    </div>
+                    <div className="flex gap-2">
+                      <Button size="sm" className="flex-1 h-8 rounded-lg text-[10px] font-bold gap-1" onClick={() => saveEdit(ride.id)}>
+                        <Check className="w-3 h-3" /> Save Changes
+                      </Button>
+                      <Button size="sm" variant="outline" className="h-8 rounded-lg text-[10px] font-bold px-3" onClick={() => setEditingRideId(null)}>
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </motion.div>
           ))
         )}

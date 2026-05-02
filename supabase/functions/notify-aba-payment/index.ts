@@ -2,7 +2,7 @@
  * notify-aba-payment — Sends a Telegram message to the business owner
  * when a customer confirms ABA KHQR payment.
  */
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
+import { createClient } from "../_shared/deps.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

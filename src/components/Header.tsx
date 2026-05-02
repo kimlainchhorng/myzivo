@@ -66,9 +66,9 @@ function Nav3DButton({ item }: { item: Nav3DItem }) {
       onMouseMove={onMouseMove}
       onMouseLeave={onMouseLeave}
       className={cn(
-        "relative flex items-center gap-2 px-4 py-2 rounded-2xl text-sm font-bold text-white overflow-hidden",
+        "relative flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[13px] font-bold text-white overflow-hidden",
         "transition-all duration-300 ease-out will-change-transform",
-        `shadow-lg ${item.shadow} hover:shadow-xl ring-1 ${item.ring}`
+        `shadow-md ${item.shadow} hover:shadow-lg ring-1 ${item.ring}`
       )}
       style={{ transformStyle: "preserve-3d" }}
     >
@@ -82,7 +82,7 @@ function Nav3DButton({ item }: { item: Nav3DItem }) {
       {/* Gradient overlay */}
       <div className={cn("absolute inset-0 bg-gradient-to-r", item.gradient)} />
       {/* Content */}
-      <Icon className="w-4 h-4 relative z-10 drop-shadow-md" />
+      <Icon className="w-3.5 h-3.5 relative z-10 drop-shadow-md" />
       <span className="relative z-10 drop-shadow-md">{item.label}</span>
     </Link>
   );
@@ -103,14 +103,14 @@ const Header = () => {
     <>
       <header className="fixed top-0 left-0 right-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border/30 safe-area-top">
         <div className="container mx-auto px-3 sm:px-4">
-          <div className="flex items-center justify-between h-14 sm:h-16 md:h-20">
+          <div className="flex items-center gap-3 h-11 sm:h-12">
             {/* Logo */}
             <div className="flex items-center gap-2">
               <div 
                 className="cursor-pointer transition-transform duration-150 hover:scale-[1.02] active:scale-[0.98]" 
                 onClick={() => navigate("/")}
               >
-                <ZivoLogo size="md" />
+                <ZivoLogo size="sm" />
               </div>
               <BetaBadge variant="compact" className="hidden sm:flex" />
             </div>
@@ -127,14 +127,14 @@ const Header = () => {
             </nav>
 
             {/* Desktop Actions - Enhanced */}
-            <div className="hidden md:flex items-center gap-1.5">
+            <div className="hidden md:flex items-center gap-1 ml-auto">
               {/* Language Selector */}
               <Popover open={isLangOpen} onOpenChange={setIsLangOpen}>
                 <PopoverTrigger asChild>
                   <Button
                     variant="ghost"
                     size="sm"
-                    className="relative gap-1.5 px-3 h-9 text-white font-bold rounded-2xl overflow-hidden shadow-lg shadow-indigo-500/20 ring-1 ring-indigo-400/30 transition-all duration-300 hover:scale-[1.06] hover:shadow-xl active:scale-[0.97]"
+                    className="relative gap-1.5 px-2.5 h-8 text-white font-bold rounded-xl overflow-hidden shadow-md shadow-indigo-500/20 ring-1 ring-indigo-400/30 transition-all duration-300 hover:scale-[1.06] hover:shadow-lg active:scale-[0.97]"
                   >
                     <img src={bgLang} alt="" className="absolute inset-0 w-full h-full object-cover" loading="eager" />
                     <div className="absolute inset-0 bg-gradient-to-r from-indigo-800/60 to-violet-600/50" />
@@ -202,15 +202,12 @@ const Header = () => {
                   {/* User Menu - Enhanced */}
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="sm" className="gap-2 ml-1.5 rounded-xl hover:bg-muted/50 pr-3 transition-all duration-150 hover:scale-[1.02] active:scale-[0.98]">
-                        <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center ring-2 ring-primary/20">
-                          <User className="h-4 w-4 text-primary" />
+                      <Button variant="ghost" size="sm" className="gap-1.5 ml-1 rounded-xl hover:bg-muted/50 px-2 h-8 transition-all duration-150 hover:scale-[1.02] active:scale-[0.98]">
+                        <div className="w-6 h-6 rounded-lg bg-gradient-to-br from-primary/20 to-teal-400/10 flex items-center justify-center ring-1 ring-primary/20">
+                          <User className="h-3 w-3 text-primary" />
                         </div>
-                        <div className="hidden lg:flex flex-col items-start">
-                          <span className="text-sm font-semibold">Account</span>
-                          <span className="text-[10px] text-muted-foreground">Menu</span>
-                        </div>
-                        <ChevronDown className="w-4 h-4 text-muted-foreground hidden lg:block" />
+                        <span className="hidden lg:inline text-[13px] font-semibold">Account</span>
+                        <ChevronDown className="w-3.5 h-3.5 text-muted-foreground hidden lg:block" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="w-64 bg-card/95 backdrop-blur-xl border-border/50 shadow-2xl rounded-2xl p-2">

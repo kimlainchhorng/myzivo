@@ -1,5 +1,6 @@
 import { serve, createClient } from "../_shared/deps.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { rateLimitDb, rateLimitHeaders } from "../_shared/rateLimiter.ts";
 
 /**
  * Duffel Flights API Edge Function
@@ -835,12 +836,18 @@ function transformOffer(offer: unknown): DuffelOfferTransformed | null {
     baggageDetails: {
       carryOnIncluded,
       carryOnQuantity,
-      carryOnWeightKg,
-      carryOnWeightLb,
       checkedBagsIncluded,
       checkedBagQuantity,
-      checkedBagWeightKg,
-      checkedBagWeightLb,
+    } as {
+      carryOnIncluded: boolean;
+      carryOnQuantity: number;
+      carryOnWeightKg?: number | null;
+      carryOnWeightLb?: number | null;
+      checkedBagsIncluded: boolean;
+      checkedBagQuantity: number;
+      checkedBagWeightKg?: number | null;
+      checkedBagWeightLb?: number | null;
+      [key: string]: unknown;
     },
     segments: allSegs.map(seg => transformSegment(seg)),
     owner: firstCarrier,
@@ -892,7 +899,7 @@ function transformOffers(offers: unknown[]): DuffelOfferTransformed[] {
     .filter((o): o is DuffelOfferTransformed => o !== null);
 
   const buildFareVariantKey = (offer: DuffelOfferTransformed) => {
-    const bag = offer.baggageDetails;
+    const bag = offer.baggageDetails as Record<string, unknown>;
     const conditions = offer.conditions;
     return [
       offer.cabinClass,
@@ -919,7 +926,7 @@ function transformOffers(offers: unknown[]): DuffelOfferTransformed[] {
   const groups = new Map<string, DuffelOfferTransformed[]>();
   for (const offer of transformed) {
     // Build fingerprint from all segment flight numbers + times to uniquely identify the itinerary
-    const segFP = offer.segments.map(s => `${s.marketingCarrierCode}${s.flightNumber}-${s.departingAt}`).join('|');
+    const segFP = offer.segments.map((s: any) => `${s.marketingCarrierCode}${s.flightNumber}-${s.departingAt}`).join('|');
     const flightFP = `${offer.airlineCode}-${segFP}`;
     const group = groups.get(flightFP) || [];
     // Avoid only truly identical duplicates; preserve same-price Duffel fare bundles with different bags/rules
@@ -1067,7 +1074,7 @@ interface DuffelOfferTransformed {
     price: number;
     currency: string;
     conditions: { changeable: boolean; refundable: boolean; changePenalty: number | null; refundPenalty: number | null; penaltyCurrency: string };
-    baggageDetails: { carryOnIncluded: boolean; carryOnQuantity: number; checkedBagsIncluded: boolean; checkedBagQuantity: number };
+    baggageDetails: { carryOnIncluded: boolean; carryOnQuantity: number; carryOnWeightKg?: number | null; carryOnWeightLb?: number | null; checkedBagsIncluded: boolean; checkedBagQuantity: number; checkedBagWeightKg?: number | null; checkedBagWeightLb?: number | null };
     baggageIncluded: string;
     cabinClass: string;
   }>;
@@ -1253,6 +1260,29 @@ serve(async (req) => {
 
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  const authHeader = req.headers.get("Authorization");
+  if (!authHeader?.startsWith("Bearer ")) {
+    return new Response(JSON.stringify({ error: "Authentication required" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  const { data: { user }, error: authErr } = await createClient(
+    Deno.env.get("SUPABASE_URL") ?? "",
+    Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+    { global: { headers: { Authorization: authHeader } } }
+  ).auth.getUser();
+  if (authErr || !user) {
+    return new Response(JSON.stringify({ error: "Authentication required" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+  const rl = await rateLimitDb(user.id, "search");
+  if (!rl.allowed) {
+    return new Response(JSON.stringify({ error: "Too many requests. Please wait before searching again." }), {
+      status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", ...rateLimitHeaders(rl, "search") },
+    });
   }
 
   try {

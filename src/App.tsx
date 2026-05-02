@@ -1,62 +1,228 @@
-import { Suspense, lazy, useEffect } from "react";
+import { Suspense, lazy, useEffect, useState, forwardRef } from "react";
+import { AdminShellRoute } from "@/components/admin/shell/AdminShellRoute";
+import { restaurantNav } from "@/components/admin/shell/nav/restaurant";
+import { businessNav } from "@/components/admin/shell/nav/business";
 import { usePageViewTracker } from "@/hooks/usePageViewTracker";
 import { useGeoDetect } from "@/hooks/useGeoDetect";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { useVerificationRealtime } from "@/hooks/useVerificationRealtime";
+import { useOTAUpdate } from "@/hooks/useOTAUpdate";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useSearchParams } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
-import { AuthProvider } from "@/contexts/AuthContext";
+import { AuthProvider, useAuth } from "@/contexts/AuthContext";
+import { RemoteConfigProvider } from "@/contexts/RemoteConfigContext";
 import { ZivoPlusProvider } from "@/contexts/ZivoPlusContext";
 import { UTMProvider } from "@/contexts/UTMContext";
 import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { CustomerCityProvider } from "@/contexts/CustomerCityContext";
 import { BrandProvider } from "@/contexts/BrandContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import GuestOrUser from "@/components/auth/GuestOrUser";
 import PhoneRequiredGate from "@/components/auth/PhoneRequiredGate";
 import { ErrorBoundary } from "./components/shared/ErrorBoundary";
 import { RouteErrorBoundary } from "./components/shared/RouteErrorBoundary";
-import CookieConsent from "./components/common/CookieConsent";
 import PreserveQueryRedirect from "./components/routing/PreserveQueryRedirect";
-import LiveChatWidget from "./components/shared/LiveChatWidget";
-import { PWAUpdatePrompt } from "./components/shared/PWAUpdatePrompt";
-import { PWAInstallBanner } from "./components/shared/PWAInstallBanner";
-import { ScrollToTopButton } from "./components/shared/ScrollToTopButton";
+
+// Defer non-critical overlays — these don't need to block FCP/LCP
+import { lazyWithRetry } from "@/lib/lazyWithRetry";
+const CookieConsent = lazyWithRetry(() => import("./components/common/CookieConsent"));
+const PWAUpdatePrompt = lazyWithRetry(() => import("./components/shared/PWAUpdatePrompt").then(m => ({ default: m.PWAUpdatePrompt })));
+const PWAInstallBanner = lazyWithRetry(() => import("./components/shared/PWAInstallBanner").then(m => ({ default: m.PWAInstallBanner })));
+const InAppBrowserInterstitial = lazyWithRetry(() => import("./components/shared/InAppBrowserInterstitial"));
+const IncomingCallListener = lazyWithRetry(() => import("@/components/chat/IncomingCallListener"));
+const ChatNotificationListener = lazyWithRetry(() => import("@/components/chat/ChatNotificationListener"));
+const RuntimeSecurityGuard = lazyWithRetry(() => import("@/components/security/RuntimeSecurityGuard"));
+const SpatialCursor = lazyWithRetry(() => import("./components/ui/SpatialCursor").then(m => ({ default: m.SpatialCursor })));
+const StoryDebugPanel = lazyWithRetry(() => import("@/components/stories/StoryDebugPanel"));
+const PostMenuRegressionPage = lazy(() => import("./pages/dev/PostMenuRegressionPage"));
+const SafeAreaQAPage = lazy(() => import("./pages/dev/SafeAreaQAPage"));
+
 import { SkipToContent } from "./components/shared/SkipToContent";
-import RoutePrefetcher from "./components/shared/RoutePrefetcher";
+const RoutePrefetcher = lazy(() => import("./components/shared/RoutePrefetcher"));
 import { GlobalViewportMeta } from "@/components/shared/GlobalViewportMeta";
-import { Loader2 } from "lucide-react";
 import { categorizeError } from "@/lib/supabaseErrors";
-import { SpatialCursor } from "./components/ui/SpatialCursor";
 import { useBrand } from "@/hooks/useBrand";
 import { applyBrandTheme, resetBrandTheme } from "@/lib/brandTheme";
+import { lazyRetry } from "@/lib/lazyRetry";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 
-// Eager load critical pages
-import Login from "./pages/Login";
-import Signup from "./pages/Signup";
+// Auth pages — lazy loaded (not always the entry point)
+const Login = lazy(() => import("./pages/Login"));
+const Signup = lazy(() => import("./pages/Signup"));
+const ConnectCallback = lazy(() => import("./pages/ConnectCallback"));
+const PublicDocumentView = lazy(() => import("./pages/PublicDocumentView"));
+const PairPage = lazy(() => lazyRetry(() => import("./pages/PairPage")));
+const EstimateApprovalPage = lazy(() => lazyRetry(() => import("./pages/EstimateApprovalPage")));
+const RepairStatusPage = lazy(() => lazyRetry(() => import("./pages/RepairStatusPage")));
 
-const Index = lazy(() => import("./pages/Index"));
+const Index = lazy(() => lazyRetry(() => import("./pages/Index")));
+const AdminDriverModerationPage = lazy(() => import("./pages/admin/AdminDriverModerationPage"));
+const AdminTripHeatmapPage = lazy(() => import("./pages/admin/AdminTripHeatmapPage"));
+const AdminRefundsPage = lazy(() => import("./pages/admin/AdminRefundsPage"));
+const AdminMessageModerationPage = lazy(() => import("./pages/admin/AdminMessageModerationPage"));
+const AdminCallClosuresPage = lazy(() => import("./pages/admin/AdminCallClosuresPage"));
+const AdminModerationQAPage = lazy(() => import("./pages/admin/AdminModerationQAPage"));
+const AdminMarketingResponsiveQA = lazy(() => import("./pages/admin/AdminMarketingResponsiveQA"));
 
 // App (mobile-first) pages
-const AppHome = lazy(() => import("./pages/app/AppHome"));
+const AppHome = lazy(() => lazyRetry(() => import("./pages/app/AppHome")));
 const AppTravel = lazy(() => import("./pages/app/AppTravel"));
 const AppMore = lazy(() => import("./pages/app/AppMore"));
+const PersonalDashboard = lazy(() => import("./pages/app/PersonalDashboard"));
+const ShopDashboard = lazy(() => import("./pages/app/ShopDashboard"));
+const ShopEmployeesPage = lazy(() => import("./pages/app/shop/ShopEmployeesPage"));
+const ShopPayrollPage = lazy(() => import("./pages/app/shop/ShopPayrollPage"));
+const ShopEmployeeSchedulePage = lazy(() => import("./pages/app/shop/ShopEmployeeSchedulePage"));
+const ShopTimeClockPage = lazy(() => import("./pages/app/shop/ShopTimeClockPage"));
+const ShopEmployeeRulesPage = lazy(() => import("./pages/app/shop/ShopEmployeeRulesPage"));
+const ShopAttendancePage = lazy(() => import("./pages/app/shop/ShopAttendancePage"));
+const ShopTrainingPage = lazy(() => import("./pages/app/shop/ShopTrainingPage"));
+const ShopPerformancePage = lazy(() => import("./pages/app/shop/ShopPerformancePage"));
+const ShopDocumentsPage = lazy(() => import("./pages/app/shop/ShopDocumentsPage"));
+const TruckDashboardPage = lazy(() => import("./pages/app/shop/TruckDashboardPage"));
+const SalesAttributionPage = lazy(() => import("./pages/app/shop/SalesAttributionPage"));
+const SandboxModePage = lazy(() => import("./pages/app/shop/SandboxModePage"));
+const MerchantROIDashboard = lazy(() => import("./pages/app/shop/MerchantROIDashboard"));
+const ReferAShopPage = lazy(() => import("./pages/app/shop/ReferAShopPage"));
+const ShopProductsPage = lazy(() => import("./pages/app/shop/ShopProductsPage"));
+const ShopOrdersPage = lazy(() => import("./pages/app/shop/ShopOrdersPage"));
+const ShopSettingsPage = lazy(() => import("./pages/app/shop/ShopSettingsPage"));
+const ShopPromotionsPage = lazy(() => import("./pages/app/shop/ShopPromotionsPage"));
+const ShopAnalyticsPage = lazy(() => import("./pages/app/shop/ShopAnalyticsPage"));
+const ShopDeliveryPage = lazy(() => import("./pages/app/shop/ShopDeliveryPage"));
+const ReferAFriendPage = lazy(() => import("./pages/app/ReferAFriendPage"));
+const MetaPrivacyDisclosure = lazy(() => import("./pages/legal/MetaPrivacyDisclosure"));
+const CreateCVPage = lazy(() => import("./pages/app/CreateCVPage"));
+const ConnectWebsitePage = lazy(() => import("./pages/app/ConnectWebsitePage"));
+const ApplyJobHubPage = lazy(() => import("./pages/app/personal/ApplyJobHubPage"));
+const FindEmployeePage = lazy(() => import("./pages/app/personal/FindEmployeePage"));
+const CompanyDetailPage = lazy(() => import("./pages/app/personal/CompanyDetailPage"));
+const JobDetailPage = lazy(() => import("./pages/app/personal/JobDetailPage"));
+const MyApplicationsPage = lazy(() => import("./pages/app/personal/MyApplicationsPage"));
+const EmployerDashboardPage = lazy(() => import("./pages/app/personal/EmployerDashboardPage"));
+const JobApplicantsPage = lazy(() => import("./pages/app/personal/JobApplicantsPage"));
+const PersonalEmployeesPage = lazy(() => import("./pages/app/personal/PersonalEmployeesPage"));
+const AcceptInvitePage = lazy(() => import("./pages/auth/AcceptInvitePage"));
+const PersonalSchedulePage = lazy(() => import("./pages/app/personal/PersonalSchedulePage"));
+const PersonalTimesheetPage = lazy(() => import("./pages/app/personal/PersonalTimesheetPage"));
+const PersonalPayStubsPage = lazy(() => import("./pages/app/personal/PersonalPayStubsPage"));
+const PersonalNotificationsPage = lazy(() => import("./pages/app/personal/PersonalNotificationsPage"));
+const PersonalHelpPage = lazy(() => import("./pages/app/personal/PersonalHelpPage"));
+const PersonalSettingsPage = lazy(() => import("./pages/app/personal/PersonalSettingsPage"));
 const ServicesPage = lazy(() => import("./pages/app/ServicesPage"));
 const UnifiedDashboard = lazy(() => import("./pages/app/UnifiedDashboard"));
 const MyTripsPage = lazy(() => import("./pages/app/MyTripsPage"));
-const WalletPage = lazy(() => import("./pages/app/WalletPage"));
+const MyLodgingTripPage = lazy(() => import("./pages/MyLodgingTripPage"));
+
 const SupportCenterPage = lazy(() => import("./pages/app/SupportCenterPage"));
 const RideTrackingPage = lazy(() => import("./pages/app/RideTrackingPage"));
 const RideHubPage = lazy(() => import("./pages/app/RideHubPage"));
 const EatsLanding = lazy(() => import("./pages/EatsLanding"));
+const EatsTrackingPage = lazy(() => import("./pages/EatsTrackingPage"));
+const ReservationPage = lazy(() => import("./pages/ReservationPage"));
+const BecomePartnerPage = lazy(() => import("./pages/BecomePartnerPage"));
+const NetworkPlacesPage = lazy(() => import("./pages/NetworkPlacesPage"));
+const SavedFavoritesPage = lazy(() => import("./pages/SavedFavoritesPage"));
+const ConciergePage = lazy(() => import("./pages/ConciergePage"));
+const PublicTripSharePage = lazy(() => import("./pages/PublicTripSharePage"));
+const MultiStopRideBuilder = lazy(() => import("./pages/MultiStopRideBuilder"));
+const PublicOrderSharePage = lazy(() => import("./pages/PublicOrderSharePage"));
+const ShareWatchlistPage = lazy(() => import("./pages/ShareWatchlistPage"));
+const EatsOrdersPage = lazy(() => import("./pages/EatsOrdersPage"));
+const EatsRestaurantDashboard = lazy(() => import("./pages/EatsRestaurantDashboard"));
+const EatsDriverDeliveryPage = lazy(() => import("./pages/EatsDriverDeliveryPage"));
 const DeliveryPage = lazy(() => import("./pages/DeliveryPage"));
 const GroceryMarketplace = lazy(() => import("./pages/GroceryMarketplace"));
 const FeedPage = lazy(() => import("./pages/FeedPage"));
+const ReelsFeedPage = lazy(() => import("./pages/ReelsFeedPage"));
+const SoundPage = lazy(() => import("./pages/SoundPage"));
+const ChatHubPage = lazy(() => import("./pages/ChatHubPage"));
+const ContactsPage = lazy(() => import("./pages/chat/ContactsPage"));
+const ContactRequestsPage = lazy(() => import("./pages/chat/ContactRequestsPage"));
+const NearbyChatPage = lazy(() => import("./pages/chat/NearbyChatPage"));
+const FindContactsPage = lazy(() => import("./pages/chat/FindContactsPage"));
+const BlockedUsersPage = lazy(() => import("./pages/chat/BlockedUsersPage"));
+const JoinGroupPage = lazy(() => import("./pages/chat/JoinGroupPage"));
+const PrivacySecurityPage = lazy(() => import("./pages/chat/settings/PrivacySecurityPage"));
+const ActiveSessionsPage = lazy(() => import("./pages/chat/settings/ActiveSessionsPage"));
+const TwoStepSetupPage = lazy(() => import("./pages/chat/settings/TwoStepSetupPage"));
+const PasscodeSetupPage = lazy(() => import("./pages/chat/settings/PasscodeSetupPage"));
+const LoginAlertsPage = lazy(() => import("./pages/chat/settings/LoginAlertsPage"));
+const ChatPrivacyHubPage = lazy(() => import("./pages/chat/settings/ChatPrivacyHubPage"));
+const ChatSearchAllPage = lazy(() => import("./pages/chat/ChatSearchAllPage"));
+const CustomFoldersPage = lazy(() => import("./pages/chat/CustomFoldersPage"));
+const BroadcastListsPage = lazy(() => import("./pages/chat/BroadcastListsPage"));
+const NewBroadcastPage = lazy(() => import("./pages/chat/NewBroadcastPage"));
+const StorageManagerPage = lazy(() => import("./pages/chat/settings/StorageManagerPage"));
+const AppLockGate = lazy(() => import("./components/chat/settings/AppLockGate"));
+const MfaChallengeDialog = lazy(() => import("./components/auth/MfaChallengeDialog"));
+const GroupCallEntryPage = lazy(() => import("./pages/chat/GroupCallEntryPage"));
+const ChannelsDirectoryPage = lazy(() => import("./pages/channels/ChannelsDirectoryPage"));
+const NewChannelPage = lazy(() => import("./pages/channels/NewChannelPage"));
+const ChannelPage = lazy(() => import("./pages/channels/ChannelPage"));
+const ManageChannelPage = lazy(() => import("./pages/channels/ManageChannelPage"));
+const ExplorePage = lazy(() => import("./pages/ExplorePage"));
+const BookmarksPage = lazy(() => import("./pages/BookmarksPage"));
+const PrivacySettingsPage = lazy(() => import("./pages/account/PrivacySettingsPage"));
+const CreatorDashboardPage = lazy(() => import("./pages/CreatorDashboardPage"));
+const CreatorAnalyticsPage = lazy(() => import("./pages/CreatorAnalyticsPage"));
+const CreatorSetupPage = lazy(() => import("./pages/CreatorSetupPage"));
+const CreatorLiveEarningsPage = lazy(() => import("./pages/CreatorLiveEarningsPage"));
+const CreatorSubscribersPage = lazy(() => import("./pages/CreatorSubscribersPage"));
+const CreatorTipsPage = lazy(() => import("./pages/CreatorTipsPage"));
+const AffiliateHubPage = lazy(() => import("./pages/AffiliateHubPage"));
+const DigitalProductsPage = lazy(() => import("./pages/DigitalProductsPage"));
+const MonetizationPage = lazy(() => import("./pages/MonetizationPage"));
+const MonetizationArticlesPage = lazy(() => import("./pages/MonetizationArticlesPage"));
+const MonetizationArticleDetailPage = lazy(() => import("./pages/MonetizationArticleDetailPage"));
+const ProgramDetailPage = lazy(() => import("./pages/ProgramDetailPage"));
+const LiveStreamPage = lazy(() => import("./pages/LiveStreamPage"));
+const GoLivePage = lazy(() => import("./pages/GoLivePage"));
+const EventsPage = lazy(() => import("./pages/EventsPage"));
+const CommunitiesPage = lazy(() => import("./pages/CommunitiesPage"));
+const CommunityDetailPage = lazy(() => import("./pages/CommunityDetailPage"));
+const MarketplacePage = lazy(() => import("./pages/MarketplacePage"));
+const ContentAnalyticsPage = lazy(() => import("./pages/ContentAnalyticsPage"));
+const MarketplaceOrdersPage = lazy(() => import("./pages/MarketplaceOrdersPage"));
+const DatingPage = lazy(() => import("./pages/DatingPage"));
+const DraftsPage = lazy(() => import("./pages/DraftsPage"));
+const AudioSpacesPage = lazy(() => import("./pages/AudioSpacesPage"));
+const SmartSearchPage = lazy(() => import("./pages/SmartSearchPage"));
+const NotificationCenterPage = lazy(() => import("./pages/NotificationCenterPage"));
+const ActivityFeedPage = lazy(() => import("./pages/ActivityFeedPage"));
+const UnsubscribePage = lazy(() => import("./pages/UnsubscribePage"));
+const AdminModerationPage = lazy(() => import("./pages/AdminModerationPage"));
+const AdminLaunchDashboard = lazy(() => import("./pages/admin/AdminLaunchDashboard"));
+const AdminWalletPage = lazy(() => import("./pages/admin/AdminWalletPage"));
+const ContentSchedulerPage = lazy(() => import("./pages/ContentSchedulerPage"));
+const StoryPollsPage = lazy(() => import("./pages/StoryPollsPage"));
+
+const BadgesPage = lazy(() => import("./pages/BadgesPage"));
+const LeaderboardPage = lazy(() => import("./pages/LeaderboardPage"));
+const WellnessPage = lazy(() => import("./pages/WellnessPage"));
+const AppSettingsPage = lazy(() => import("./pages/AppSettingsPage"));
+const WatchPartyPage = lazy(() => import("./pages/WatchPartyPage"));
+const WhiteboardPage = lazy(() => import("./pages/WhiteboardPage"));
+const QRProfilePage = lazy(() => import("./pages/QRProfilePage"));
+const TrendingPage = lazy(() => import("./pages/TrendingPage"));
+const HistoryPage = lazy(() => import("./pages/HistoryPage"));
+const AutoRepairPage = lazy(() => import("./pages/AutoRepairPage"));
+const LinkHubPage = lazy(() => import("./pages/LinkHubPage"));
+const NearbyPage = lazy(() => import("./pages/NearbyPage"));
+const CheckInPage = lazy(() => import("./pages/CheckInPage"));
+const SafetyCenterPage = lazy(() => import("./pages/SafetyCenterPage"));
+const AccountAnalyticsPage = lazy(() => import("./pages/account/AccountAnalyticsPage"));
+const VerificationRequestPage = lazy(() => import("./pages/account/VerificationRequestPage"));
+const ActivityLogPage = lazy(() => import("./pages/account/ActivityLogPage"));
+const AccountExportPage = lazy(() => import("./pages/account/AccountExportPage"));
 const GroceryStorePage = lazy(() => import("./pages/GroceryStorePage"));
 const StoreProfilePage = lazy(() => import("./pages/StoreProfilePage"));
 const StoreMapPage = lazy(() => import("./pages/StoreMapPage"));
+const StoresListPage = lazy(() => import("./pages/StoresListPage"));
 const GroceryOrderPlaced = lazy(() => import("./pages/grocery/GroceryOrderPlaced"));
 const GroceryOrderConfirmed = lazy(() => import("./pages/grocery/GroceryOrderConfirmed"));
 const GroceryOrderHistory = lazy(() => import("./pages/GroceryOrderHistory"));
@@ -70,17 +236,64 @@ const DriverShoppingList = lazy(() => import("./pages/DriverShoppingList"));
 const DriverOrdersPage = lazy(() => import("./pages/DriverOrdersPage"));
 const AdminShoppingOrders = lazy(() => import("./pages/admin/AdminShoppingOrders"));
 const AdminAnalyticsDashboard = lazy(() => import("./pages/admin/AdminAnalyticsDashboard"));
+const AdminStoriesFunnelPage = lazy(() => import("./pages/admin/AdminStoriesFunnelPage"));
 const AdminUsersPage = lazy(() => import("./pages/admin/AdminUsersPage"));
 const AdminPricingPage = lazy(() => import("./pages/admin/AdminPricingPage"));
+const AdminRemoteConfigPage = lazy(() => import("./pages/admin/AdminRemoteConfigPage"));
 const AdminFlightOrders = lazy(() => import("./pages/admin/AdminFlightOrders"));
 const AdminFlightSearchAnalytics = lazy(() => import("./pages/admin/AdminFlightSearchAnalytics"));
 const AdminFlightApiMonitoring = lazy(() => import("./pages/admin/AdminFlightApiMonitoring"));
 const AdminFlightPriceAlerts = lazy(() => import("./pages/admin/AdminFlightPriceAlerts"));
 const AdminStoresPage = lazy(() => import("./pages/admin/AdminStoresPage"));
 const AdminStoreEditPage = lazy(() => import("./pages/admin/AdminStoreEditPage"));
+const HotelAdminLaunchPage = lazy(() => import("./pages/admin/HotelAdminLaunchPage"));
+const AdminLodgingQAChecklistPage = lazy(() => import("./pages/admin/AdminLodgingQAChecklistPage"));
+const AdminLodgingCompletionVerificationPage = lazy(() => import("./pages/admin/AdminLodgingCompletionVerificationPage"));
+const AdminBlockedLinksPage = lazy(() => import("./pages/admin/AdminBlockedLinksPage"));
+const AdminThreatHistoryPage = lazy(() => import("./pages/admin/AdminThreatHistoryPage"));
+const AdminCspViolationsPage = lazy(() => import("./pages/admin/AdminCspViolationsPage"));
+const AdminSecurityAuditPage = lazy(() => import("./pages/admin/AdminSecurityAuditPage"));
+const AdminSecurityNotificationsPage = lazy(() => import("./pages/admin/AdminSecurityNotificationsPage"));
+const AdminSecurityOverviewPage = lazy(() => import("./pages/admin/AdminSecurityOverviewPage"));
+const AdminLodgingReservationDetailPage = lazy(() => import("./pages/admin/lodging/AdminLodgingReservationDetailPage"));
+const AdminLodgingWiringCheckPage = lazy(() => import("./pages/admin/AdminLodgingWiringCheckPage"));
+const AdminLodgingWebhookEventsPage = lazy(() => import("./pages/admin/AdminLodgingWebhookEventsPage"));
+const StoreAssetsUploadCheck = lazy(() => import("./pages/admin/StoreAssetsUploadCheck"));
+const StoreSetup = lazy(() => import("./pages/store/StoreSetup"));
+const BusinessPageWizard = lazy(() => import("./pages/business/BusinessPageWizard"));
+const ServiceBookingPage = lazy(() => import("./pages/store/ServiceBookingPage"));
+const AdminEmployeesPage = lazy(() => import("./pages/admin/AdminEmployeesPage"));
 const AdminSystemHealth = lazy(() => import("./pages/admin/AdminSystemHealth"));
+const AdminAppStoreAssets = lazy(() => import("./pages/admin/AdminAppStoreAssets"));
+const AdminAndroidVerification = lazy(() => import("./pages/admin/AdminAndroidVerification"));
+const AdminSupportDashboard = lazy(() => import("./pages/admin/AdminSupportDashboard"));
+const AdminUserAccounts = lazy(() => import("./pages/admin/AdminUserAccounts"));
+const AdminGodView = lazy(() => import("./pages/admin/AdminGodView"));
+const AdBoostBidding = lazy(() => import("./pages/app/shop/AdBoostBidding"));
+const MerchantBoostEngine = lazy(() => import("./pages/app/shop/MerchantBoostEngine"));
+const AiCreativeSuite = lazy(() => import("./pages/app/shop/AiCreativeSuite"));
+const AiContentSuite = lazy(() => import("./pages/app/shop/AiContentSuite"));
+const MerchantWalletPage = lazy(() => import("./pages/app/shop/MerchantWalletPage"));
+const MerchantTaxReportPage = lazy(() => import("./pages/app/shop/MerchantTaxReportPage"));
+const AdminChatSecurityPage = lazy(() => import("./pages/admin/AdminChatSecurityPage"));
+const AdminSecuritySentinelPage = lazy(() => import("./pages/admin/AdminSecuritySentinelPage"));
+const AdminAuthShieldPage = lazy(() => import("./pages/admin/AdminAuthShieldPage"));
 const DriverHomePage = lazy(() => import("./pages/driver/DriverHomePage"));
 const DriverEarningsPage = lazy(() => import("./pages/driver/DriverEarningsPage"));
+const DriverPayoutsPage = lazy(() => import("./pages/driver/DriverPayoutsPage"));
+const AdminGoogleAdsPage = lazy(() => import("./pages/admin/AdminGoogleAdsPage"));
+const AdminMetaAdsPage = lazy(() => import("./pages/admin/AdminMetaAdsPage"));
+const AdminAdsAnalyticsPage = lazy(() => import("./pages/admin/AdminAdsAnalyticsPage"));
+const AdminMarketingCampaignsPage = lazy(() => import("./pages/admin/AdminMarketingCampaignsPage"));
+const AdminPromoCodesPage = lazy(() => import("./pages/admin/AdminPromoCodesPage"));
+const AdminBroadcastPage = lazy(() => import("./pages/admin/AdminBroadcastPage"));
+const AdminFeedbackReplyPage = lazy(() => import("./pages/admin/AdminFeedbackReplyPage"));
+const AdminStoreVerificationPage = lazy(() => import("./pages/admin/AdminStoreVerificationPage"));
+const AdminFinanceSummaryPage = lazy(() => import("./pages/admin/AdminFinanceSummaryPage"));
+const AdminWebhookStatusPage = lazy(() => import("./pages/admin/AdminWebhookStatusPage"));
+const AdminDriverVerificationPage = lazy(() => import("./pages/admin/AdminDriverVerificationPage"));
+const DriverOnboardingDocumentsPage = lazy(() => import("./pages/driver/DriverOnboardingDocumentsPage"));
+const SharedTripPage = lazy(() => import("./pages/public/SharedTripPage"));
 const DriverPerformancePage = lazy(() => import("./pages/driver/DriverPerformancePage"));
 const DriverMapPage = lazy(() => import("./pages/driver/DriverMapPage"));
 const DriverShopPage = lazy(() => import("./pages/driver/DriverShopPage"));
@@ -94,13 +307,20 @@ const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
 const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const AuthCallback = lazy(() => import("./pages/AuthCallback"));
 const Onboarding = lazy(() => import("./pages/Onboarding"));
-const VerifyEmail = lazy(() => import("./pages/VerifyEmail"));
-const VerifyOTP = lazy(() => import("./pages/VerifyOTP"));
-const Setup = lazy(() => import("./pages/Setup"));
+
+const VerifyOTP = lazy(() => lazyRetry(() => import("./pages/VerifyOTP")));
+const Setup = lazy(() => lazyRetry(() => import("./pages/Setup")));
+const VerifyNewDevice = lazy(() => lazyRetry(() => import("./pages/VerifyNewDevice")));
+const Unsubscribe = lazy(() => import("./pages/Unsubscribe"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
-const Profile = lazy(() => import("./pages/Profile"));
+const Profile = lazy(() => lazyRetry(() => import("./pages/Profile")));
+const MorePage = lazy(() => import("./pages/MorePage"));
+const PublicProfilePage = lazy(() => import("./pages/PublicProfilePage"));
 const DeleteAccountPage = lazy(() => import("./pages/profile/DeleteAccountPage"));
+const ShareProfileRedirect = lazy(() => import("./pages/ShareProfileRedirect"));
+const DeepLinkLandingPage = lazy(() => import("./pages/DeepLinkLandingPage"));
+const StoryDeepLinkPage = lazy(() => import("./pages/StoryDeepLinkPage"));
 
 // Customer Loyalty
 const LoyaltyPage = lazy(() => import("./pages/account/LoyaltyPage"));
@@ -126,9 +346,12 @@ const FlightReview = lazy(() => import("./pages/FlightReview"));
 // Hotels
 const HotelBooking = lazy(() => import("./pages/HotelBooking"));
 const HotelLanding = lazy(() => import("./pages/HotelLanding"));
-const HotelsPage = lazy(() => import("./pages/HotelsPage"));
+// HotelsPage removed
 // HotelDashboard removed
 const HotelResultsPage = lazy(() => import("./pages/HotelResultsPage"));
+const HotelResortDetailPage = lazy(() => import("./pages/lodging/HotelResortDetailPage"));
+const HotelsResortsDirectoryPage = lazy(() => import("./pages/lodging/HotelsResortsDirectoryPage"));
+const HotelsLandingPage = lazy(() => import("./pages/lodging/HotelsLandingPage"));
 
 // Car Rental
 const CarRentalBooking = lazy(() => import("./pages/CarRentalBooking"));
@@ -166,9 +389,43 @@ const CancellationPolicy = lazy(() => import("./pages/legal/CancellationPolicy")
 const PartnerDisclosure = lazy(() => import("./pages/legal/PartnerDisclosure"));
 const DoNotSell = lazy(() => import("./pages/legal/DoNotSell"));
 const SecurityIncident = lazy(() => import("./pages/legal/SecurityIncident"));
+const SecurityPolicy = lazy(() => import("./pages/legal/SecurityPolicy"));
+const VulnerabilityDisclosureLegal = lazy(() => import("./pages/legal/VulnerabilityDisclosure"));
 const SellerOfTravel = lazy(() => import("./pages/legal/SellerOfTravel"));
+const SocialMediaPolicy = lazy(() => import("./pages/legal/SocialMediaPolicy"));
+const AcceptableUsePolicy = lazy(() => import("./pages/legal/AcceptableUsePolicy"));
+const DataRetentionPolicy = lazy(() => import("./pages/legal/DataRetentionPolicy"));
+const DMCACopyrightPolicy = lazy(() => import("./pages/legal/DMCACopyrightPolicy"));
+const DisputeResolution = lazy(() => import("./pages/legal/DisputeResolution"));
+const LimitationOfLiability = lazy(() => import("./pages/legal/LimitationOfLiability"));
+const IndemnificationPolicy = lazy(() => import("./pages/legal/IndemnificationPolicy"));
+const AgeRestrictionPolicy = lazy(() => import("./pages/legal/AgeRestrictionPolicy"));
+const AssumptionOfRisk = lazy(() => import("./pages/legal/AssumptionOfRisk"));
+const ElectronicConsent = lazy(() => import("./pages/legal/ElectronicConsent"));
+const ForceMajeure = lazy(() => import("./pages/legal/ForceMajeure"));
+const NoGuaranteeDisclaimer = lazy(() => import("./pages/legal/NoGuaranteeDisclaimer"));
+const GoverningLaw = lazy(() => import("./pages/legal/GoverningLaw"));
+const IntellectualProperty = lazy(() => import("./pages/legal/IntellectualProperty"));
+const AccountTermination = lazy(() => import("./pages/legal/AccountTermination"));
+const ThirdPartyLinks = lazy(() => import("./pages/legal/ThirdPartyLinks"));
+const CommunicationConsent = lazy(() => import("./pages/legal/CommunicationConsent"));
+const ModificationOfTerms = lazy(() => import("./pages/legal/ModificationOfTerms"));
+const ClassActionWaiver = lazy(() => import("./pages/legal/ClassActionWaiver"));
+const AntiMoneyLaundering = lazy(() => import("./pages/legal/AntiMoneyLaundering"));
+const UserConduct = lazy(() => import("./pages/legal/UserConduct"));
+const CaliforniaPrivacy = lazy(() => import("./pages/legal/CaliforniaPrivacy"));
+const FraudPrevention = lazy(() => import("./pages/legal/FraudPrevention"));
+const WarrantyDisclaimer = lazy(() => import("./pages/legal/WarrantyDisclaimer"));
+const GDPRCompliance = lazy(() => import("./pages/legal/GDPRCompliance"));
+const NonDiscrimination = lazy(() => import("./pages/legal/NonDiscrimination"));
+const TransportationDisclaimer = lazy(() => import("./pages/legal/TransportationDisclaimer"));
+const CarRentalDisclaimer = lazy(() => import("./pages/legal/CarRentalDisclaimer"));
+const InsuranceDisclaimer = lazy(() => import("./pages/legal/InsuranceDisclaimer"));
+const DamagePolicy = lazy(() => import("./pages/legal/DamagePolicy"));
+const OwnerTerms = lazy(() => import("./pages/legal/OwnerTerms"));
+const RenterTerms = lazy(() => import("./pages/legal/RenterTerms"));
+const GenericLegalPage = lazy(() => import("./pages/legal/GenericLegalPage"));
 
-// Public pages
 const AffiliateDisclosure = lazy(() => import("./pages/AffiliateDisclosure"));
 const About = lazy(() => import("./pages/About"));
 const HowItWorks = lazy(() => import("./pages/HowItWorks"));
@@ -184,6 +441,9 @@ const Promotions = lazy(() => import("./pages/Promotions"));
 const ForCustomers = lazy(() => import("./pages/ForCustomers"));
 const Reliability = lazy(() => import("./pages/Reliability"));
 const TrustStatement = lazy(() => import("./pages/TrustStatement"));
+const SecurityStatus = lazy(() => import("./pages/SecurityStatus"));
+const SavedPostsPage = lazy(() => import("./pages/SavedPostsPage"));
+const HashtagPage = lazy(() => import("./pages/HashtagPage"));
 const Status = lazy(() => import("./pages/Status"));
 const FAQPage = lazy(() => import("./pages/FAQPage"));
 const BookingReturn = lazy(() => import("./pages/BookingReturnPage"));
@@ -193,6 +453,8 @@ const AITripPlanner = lazy(() => import("./pages/AITripPlanner"));
 const MultiCityBuilder = lazy(() => import("./pages/MultiCityBuilder"));
 const ZivoPlus = lazy(() => import("./pages/ZivoPlus"));
 const MembershipPage = lazy(() => import("./pages/MembershipPage"));
+const ComingSoonPage = lazy(() => import("./pages/ComingSoonPage"));
+
 const Vision = lazy(() => import("./pages/Vision"));
 const BrandMission = lazy(() => import("./pages/BrandMission"));
 const CompanyProfile = lazy(() => import("./pages/CompanyProfile"));
@@ -208,12 +470,24 @@ const ReferralProgram = lazy(() => import("./pages/ReferralProgram"));
 const Help = lazy(() => import("./pages/Help"));
 
 // Account pages
+const AccountSettingsPage = lazy(() => import("./pages/account/AccountSettingsPage"));
+const LegalPoliciesPage = lazy(() => import("./pages/account/LegalPoliciesPage"));
+const ProfileEditPage = lazy(() => import("./pages/account/ProfileEditPage"));
 const AccountSecurity = lazy(() => import("./pages/account/AccountSecurity"));
+const AccountSessionsPage = lazy(() => import("./pages/account/AccountSessionsPage"));
+const LinkedDevicesPage = lazy(() => import("./pages/account/LinkedDevicesPage"));
+const LinkDevicePage = lazy(() => import("./pages/account/LinkDevicePage"));
+const ScanDevicePage = lazy(() => import("./pages/account/ScanDevicePage"));
+const SecretChatPage = lazy(() => import("./pages/chat/SecretChatPage"));
 const PreferencesPage = lazy(() => import("./pages/account/PreferencesPage"));
 const PrivacyControls = lazy(() => import("./pages/account/PrivacyControls"));
 const NotificationSettings = lazy(() => import("./pages/account/NotificationSettings"));
 const AccountReferralsPage = lazy(() => import("./pages/account/ReferralsPage"));
 const AccountWalletPage = lazy(() => import("./pages/account/WalletPage"));
+const AccountSubscriptionsPage = lazy(() => import("./pages/account/AccountSubscriptionsPage"));
+const AccountTipsPage = lazy(() => import("./pages/account/AccountTipsPage"));
+const CoinPurchaseSuccess = lazy(() => import("./pages/CoinPurchaseSuccess"));
+const GuestProfilePreview = lazy(() => import("./components/auth/GuestProfilePreview"));
 const GiftCardsPage = lazy(() => import("./pages/account/GiftCardsPage"));
 const GiftCardSuccessPage = lazy(() => import("./pages/account/GiftCardSuccessPage"));
 const AccountAddressesPage = lazy(() => import("./pages/account/AddressesPage"));
@@ -234,6 +508,7 @@ const ScamPrevention = lazy(() => import("./pages/security/ScamPrevention"));
 const SecurityOperations = lazy(() => import("./pages/security/SecurityOperations"));
 const DisasterRecovery = lazy(() => import("./pages/security/DisasterRecovery"));
 const VulnerabilityDisclosure = lazy(() => import("./pages/security/VulnerabilityDisclosure"));
+const SecurityTestPage = lazy(() => import("./pages/SecurityTestPage"));
 const EnterpriseTrust = lazy(() => import("./pages/security/EnterpriseTrust"));
 
 // Business pages
@@ -244,6 +519,7 @@ const BusinessAccountPage = lazy(() => import("./pages/business/BusinessAccountP
 const PartnerAuditDocs = lazy(() => import("./pages/business/PartnerAuditDocs"));
 const EnterpriseReady = lazy(() => import("./pages/business/EnterpriseReady"));
 const PartnerWithZivo = lazy(() => import("./pages/business/PartnerWithZivo"));
+const PartnerOnboarding = lazy(() => import("./pages/business/PartnerOnboarding"));
 const PartnerLogin = lazy(() => import("./pages/PartnerLogin"));
 const CorporateTravel = lazy(() => import("./pages/business/CorporateTravel"));
 const DataInsights = lazy(() => import("./pages/business/DataInsights"));
@@ -274,7 +550,9 @@ const BestTimeToBook = lazy(() => import("./pages/guides/BestTimeToBook"));
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 30_000,
+      staleTime: 60_000, // 1 min default — reduce unnecessary refetches
+      gcTime: 5 * 60_000, // keep cache 5 min
+      refetchOnWindowFocus: false, // don't refetch every tab switch
       retry: (failureCount, error) => {
         const info = categorizeError(error);
         if (info.type === "auth") return false;
@@ -291,32 +569,18 @@ const queryClient = new QueryClient({
   },
 });
 
-const PageLoader = () => (
-  <div className="min-h-screen bg-background flex items-center justify-center relative overflow-hidden">
-    <div className="absolute inset-0 bg-gradient-radial from-primary/8 via-transparent to-transparent opacity-60" />
-    <div className="flex flex-col items-center gap-5 relative z-10 animate-fade-in">
-      <div className="relative">
-        {/* Pulsing ring behind the icon */}
-        <div className="absolute inset-0 rounded-2xl bg-primary/20 animate-ping" style={{ animationDuration: "1.5s" }} />
-        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-xl shadow-primary/30 relative">
-          <Loader2 className="w-8 h-8 text-primary-foreground animate-spin" />
-        </div>
+const PageLoader = forwardRef<HTMLDivElement>(function PageLoader(_, ref) {
+  return (
+  <div ref={ref} className="min-h-screen bg-background flex items-center justify-center">
+    <div className="flex flex-col items-center gap-4">
+      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/20">
+        <svg className="w-6 h-6 text-primary-foreground animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
       </div>
-      <div className="flex flex-col items-center gap-1.5">
-        <p className="text-sm text-foreground font-semibold tracking-tight">ZIVO</p>
-        <div className="flex gap-1">
-          {[0, 1, 2].map((i) => (
-            <div
-              key={i}
-              className="w-1.5 h-1.5 rounded-full bg-primary/60 animate-bounce"
-              style={{ animationDelay: `${i * 150}ms`, animationDuration: "0.8s" }}
-            />
-          ))}
-        </div>
-      </div>
+      <p className="text-sm text-foreground font-semibold tracking-tight">ZIVO</p>
     </div>
   </div>
-);
+  );
+});
 
 function BrandThemeApplicator() {
   const { brand } = useBrand();
@@ -342,6 +606,100 @@ function GeoDetector() {
   return null;
 }
 
+/** Initializes native/web push registration listeners once auth context is mounted. */
+function PushNotificationsBootstrap() {
+  usePushNotifications();
+  return null;
+}
+
+/** Background geofence check for boosted shops nearby — lazy loaded */
+const GeofenceBootstrap = lazy(() => import("@/hooks/useGeofenceNotifications").then(m => {
+  function GeofenceComp() { m.useGeofenceNotifications(); return null; }
+  return { default: GeofenceComp };
+}));
+
+const DeletionReturnDialog = lazy(() => import("@/components/account/DeletionReturnDialog"));
+
+/** Routes /partner-with-zivo: with ?type= → onboarding wizard, otherwise landing page */
+const PartnerOnboardingDispatcher = () => {
+  const [params] = useSearchParams();
+  return params.get("type") ? <PartnerOnboarding /> : <PartnerWithZivo />;
+};
+
+function useAfterFirstPaint(timeout = 1600) {
+  const [ready, setReady] = useState(false);
+  useEffect(() => {
+    if (window.requestIdleCallback) {
+      const handle = window.requestIdleCallback(() => setReady(true), { timeout });
+      return () => window.cancelIdleCallback?.(handle);
+    }
+    const handle = window.setTimeout(() => setReady(true), timeout);
+    return () => window.clearTimeout(handle);
+  }, [timeout]);
+  return ready;
+}
+
+function DeferredPageViewTracker() {
+  const ready = useAfterFirstPaint(2200);
+  return ready ? <PageViewTracker /> : null;
+}
+
+function DeferredGeoDetector() {
+  const ready = useAfterFirstPaint(3500);
+  return ready ? <GeoDetector /> : null;
+}
+
+function RouteAwareGlobalUI() {
+  const location = useLocation();
+  const { user } = useAuth();
+  const ready = useAfterFirstPaint(2600);
+  const blockedRoutes = ["/login", "/signup", "/setup", "/forgot-password", "/reset-password", "/verify-email", "/verify-otp", "/verify-new-device"];
+  const hideGlobalUI = blockedRoutes.some((route) => location.pathname.startsWith(route));
+
+  if (hideGlobalUI || !ready) return null;
+
+  return (
+    <Suspense fallback={null}>
+      <CookieConsent />
+      <PWAUpdatePrompt />
+      <PWAInstallBanner />
+      <InAppBrowserInterstitial />
+      <SpatialCursor />
+      <RuntimeSecurityGuard />
+      {user && <MfaChallengeDialog />}
+      {user && <IncomingCallListener />}
+      {user && <ChatNotificationListener />}
+      {user && <AppLockGate />}
+    </Suspense>
+  );
+}
+
+
+const VerificationRealtimeBridge = () => {
+  useVerificationRealtime();
+  return null;
+};
+
+function OTAUpdateBootstrap() {
+  useOTAUpdate();
+  return null;
+}
+
+function AuthBackgroundServices() {
+  const { user } = useAuth();
+  const ready = useAfterFirstPaint(2200);
+  if (!user || !ready) return null;
+  return (
+    <Suspense fallback={null}>
+      {import.meta.env.DEV && <StoryDebugPanel />}
+      <VerificationRealtimeBridge />
+      <PushNotificationsBootstrap />
+      <GeofenceBootstrap />
+      <DeletionReturnDialog />
+    </Suspense>
+  );
+}
+
 const App = () => (
   <ErrorBoundary>
     <HelmetProvider>
@@ -354,10 +712,14 @@ const App = () => (
               <Toaster />
               <Sonner />
               <BrowserRouter>
-                <PageViewTracker />
-                <GeoDetector />
-                <RoutePrefetcher />
+                
+                <DeferredPageViewTracker />
+                <DeferredGeoDetector />
+                <OTAUpdateBootstrap />
+                <Suspense fallback={null}><RoutePrefetcher /></Suspense>
                 <AuthProvider>
+                  <AuthBackgroundServices />
+                   <RemoteConfigProvider>
                   <ZivoPlusProvider>
                   <CustomerCityProvider>
                     <CurrencyProvider>
@@ -367,15 +729,62 @@ const App = () => (
                             <Route path="/" element={<Index />} />
                             <Route path="/login" element={<Login />} />
                             <Route path="/signup" element={<Signup />} />
+                            <Route path="/unsubscribe" element={<Unsubscribe />} />
+                            <Route path="/connect/callback" element={<ConnectCallback />} />
+                            <Route path="/d/:token" element={<PublicDocumentView />} />
 
                 {/* App Dashboard */}
                 <Route path="/app" element={<ProtectedRoute><UnifiedDashboard /></ProtectedRoute>} />
                 <Route path="/app/home" element={<ProtectedRoute><AppHome /></ProtectedRoute>} />
+                <Route path="/index" element={<ProtectedRoute><AppHome /></ProtectedRoute>} />
+                <Route path="/hotel-admin" element={<ProtectedRoute><HotelAdminLaunchPage /></ProtectedRoute>} />
                 <Route path="/my-trips" element={<ProtectedRoute><MyTripsPage /></ProtectedRoute>} />
-                <Route path="/wallet" element={<ProtectedRoute><WalletPage /></ProtectedRoute>} />
+                <Route path="/wallet" element={<ProtectedRoute><AccountWalletPage /></ProtectedRoute>} />
+                <Route path="/wallet/coins/success" element={<ProtectedRoute><CoinPurchaseSuccess /></ProtectedRoute>} />
                 <Route path="/support" element={<ProtectedRoute><SupportCenterPage /></ProtectedRoute>} />
                 <Route path="/travel" element={<ProtectedRoute><AppTravel /></ProtectedRoute>} />
-                <Route path="/more" element={<ProtectedRoute><AppMore /></ProtectedRoute>} />
+                {/* /more is registered below with MorePage (the canonical hub).
+                   Do NOT re-add an /more route here — it would shadow MorePage. */}
+                <Route path="/personal-dashboard" element={<ProtectedRoute><PersonalDashboard /></ProtectedRoute>} />
+                <Route path="/personal/apply-job" element={<ProtectedRoute><ApplyJobHubPage /></ProtectedRoute>} />
+                <Route path="/personal/find-employee" element={<ProtectedRoute><FindEmployeePage /></ProtectedRoute>} />
+                <Route path="/auth/accept-invite" element={<AcceptInvitePage />} />
+                <Route path="/personal/companies/:id" element={<ProtectedRoute><CompanyDetailPage /></ProtectedRoute>} />
+                <Route path="/personal/jobs/:id" element={<ProtectedRoute><JobDetailPage /></ProtectedRoute>} />
+                <Route path="/personal/my-applications" element={<ProtectedRoute><MyApplicationsPage /></ProtectedRoute>} />
+                <Route path="/personal/employer" element={<ProtectedRoute><EmployerDashboardPage /></ProtectedRoute>} />
+                <Route path="/personal/employer/jobs/:id/applicants" element={<ProtectedRoute><JobApplicantsPage /></ProtectedRoute>} />
+                <Route path="/personal/create-cv" element={<ProtectedRoute><CreateCVPage /></ProtectedRoute>} />
+                <Route path="/connect-website" element={<ProtectedRoute><ConnectWebsitePage /></ProtectedRoute>} />
+                <Route path="/personal/connect-website" element={<ProtectedRoute><ConnectWebsitePage /></ProtectedRoute>} />
+                <Route path="/personal/employees" element={<ProtectedRoute><PersonalEmployeesPage /></ProtectedRoute>} />
+                <Route path="/personal/schedule" element={<ProtectedRoute><PersonalSchedulePage /></ProtectedRoute>} />
+                <Route path="/personal/timesheet" element={<ProtectedRoute><PersonalTimesheetPage /></ProtectedRoute>} />
+                <Route path="/personal/pay-stubs" element={<ProtectedRoute><PersonalPayStubsPage /></ProtectedRoute>} />
+                <Route path="/personal/notifications" element={<ProtectedRoute><PersonalNotificationsPage /></ProtectedRoute>} />
+                <Route path="/personal/help" element={<ProtectedRoute><PersonalHelpPage /></ProtectedRoute>} />
+                <Route path="/personal/settings" element={<ProtectedRoute><PersonalSettingsPage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/employees" element={<ProtectedRoute><ShopEmployeesPage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/payroll" element={<ProtectedRoute><ShopPayrollPage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/employee-schedule" element={<ProtectedRoute><ShopEmployeeSchedulePage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/time-clock" element={<ProtectedRoute><ShopTimeClockPage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/employee-rules" element={<ProtectedRoute><ShopEmployeeRulesPage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/attendance" element={<ProtectedRoute><ShopAttendancePage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/training" element={<ProtectedRoute><ShopTrainingPage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/performance" element={<ProtectedRoute><ShopPerformancePage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/documents" element={<ProtectedRoute><ShopDocumentsPage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/truck" element={<ProtectedRoute><TruckDashboardPage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/attribution" element={<ProtectedRoute><SalesAttributionPage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/sandbox" element={<ProtectedRoute><SandboxModePage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/roi" element={<ProtectedRoute><MerchantROIDashboard /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/refer" element={<ProtectedRoute><ReferAShopPage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/products" element={<ProtectedRoute><ShopProductsPage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/orders" element={<ProtectedRoute><ShopOrdersPage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/settings" element={<ProtectedRoute><ShopSettingsPage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/promotions" element={<ProtectedRoute><ShopPromotionsPage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/analytics" element={<ProtectedRoute><ShopAnalyticsPage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/delivery" element={<ProtectedRoute><ShopDeliveryPage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard" element={<ProtectedRoute><ShopDashboard /></ProtectedRoute>} />
                 <Route path="/services" element={<ProtectedRoute><ServicesPage /></ProtectedRoute>} />
 
                 {/* Legacy redirects */}
@@ -388,6 +797,12 @@ const App = () => (
                 <Route path="/ride" element={<PreserveQueryRedirect to="/rides" />} />
                 <Route path="/eats" element={<ProtectedRoute><PhoneRequiredGate><EatsLanding /></PhoneRequiredGate></ProtectedRoute>} />
                 <Route path="/eats/restaurant/:id" element={<ProtectedRoute><EatsLanding /></ProtectedRoute>} />
+                <Route path="/eats/reserve" element={<ProtectedRoute><PhoneRequiredGate><ReservationPage /></PhoneRequiredGate></ProtectedRoute>} />
+                <Route path="/eats/reserve/:restaurantId" element={<ProtectedRoute><PhoneRequiredGate><ReservationPage /></PhoneRequiredGate></ProtectedRoute>} />
+                <Route path="/eats/track/:orderId" element={<ProtectedRoute><EatsTrackingPage /></ProtectedRoute>} />
+                <Route path="/eats/orders" element={<ProtectedRoute><EatsOrdersPage /></ProtectedRoute>} />
+                <Route path="/eats/restaurant-dashboard" element={<AdminShellRoute vertical="restaurant" nav={restaurantNav} title="Restaurant Dashboard | ZIVO Admin"><EatsRestaurantDashboard /></AdminShellRoute>} />
+                <Route path="/eats/driver-deliveries" element={<ProtectedRoute><EatsDriverDeliveryPage /></ProtectedRoute>} />
                 <Route path="/food" element={<PreserveQueryRedirect to="/eats" />} />
                 <Route path="/move" element={<PreserveQueryRedirect to="/rides" />} />
                 <Route path="/search" element={<PreserveQueryRedirect to="/flights" />} />
@@ -396,10 +811,103 @@ const App = () => (
                 <Route path="/alerts" element={<PreserveQueryRedirect to="/notifications" />} />
                 <Route path="/delivery" element={<DeliveryPage />} />
                 <Route path="/grocery" element={<GroceryMarketplace />} />
-                <Route path="/feed" element={<FeedPage />} />
+                <Route path="/feed" element={<ReelsFeedPage />} />
+                <Route path="/reels" element={<FeedPage />} />
+                <Route path="/live" element={<LiveStreamPage />} />
+                <Route path="/go-live" element={<GoLivePage />} />
+                <Route path="/pair/:token" element={<PairPage />} />
+                <Route path="/estimate/:token" element={<EstimateApprovalPage />} />
+                <Route path="/repair/:token" element={<RepairStatusPage />} />
+                <Route path="/reels/:postId" element={<FeedPage />} />
+                <Route path="/sound/:soundName" element={<SoundPage />} />
+                <Route path="/dl/:kind/:id" element={<DeepLinkLandingPage />} />
+                <Route path="/stories/:storyId" element={<StoryDeepLinkPage />} />
+                <Route path="/shop/:storeId" element={<StoreProfilePage />} />
+                <Route path="/refer" element={<ProtectedRoute><ReferAFriendPage /></ProtectedRoute>} />
+                <Route path="/chat" element={<ChatHubPage />} />
+                <Route path="/chat/saved" element={<ProtectedRoute><ChatHubPage /></ProtectedRoute>} />
+                <Route path="/chat/contacts" element={<ProtectedRoute><ContactsPage /></ProtectedRoute>} />
+                <Route path="/chat/contacts/requests" element={<ProtectedRoute><ContactRequestsPage /></ProtectedRoute>} />
+                <Route path="/chat/nearby" element={<ProtectedRoute><NearbyChatPage /></ProtectedRoute>} />
+                <Route path="/chat/find-contacts" element={<ProtectedRoute><FindContactsPage /></ProtectedRoute>} />
+                <Route path="/chat/blocked" element={<ProtectedRoute><BlockedUsersPage /></ProtectedRoute>} />
+                <Route path="/chat/join/:code" element={<JoinGroupPage />} />
+                <Route path="/chat/secret/:partnerId" element={<ProtectedRoute><SecretChatPage /></ProtectedRoute>} />
+                <Route path="/chat/call/group/:roomName" element={<ProtectedRoute><GroupCallEntryPage /></ProtectedRoute>} />
+                <Route path="/chat/group-call/:roomName" element={<ProtectedRoute><GroupCallEntryPage /></ProtectedRoute>} />
+                <Route path="/channels" element={<ChannelsDirectoryPage />} />
+                <Route path="/channels/new" element={<ProtectedRoute><NewChannelPage /></ProtectedRoute>} />
+                <Route path="/c/:handle" element={<ChannelPage />} />
+                <Route path="/c/:handle/manage" element={<ProtectedRoute><ManageChannelPage /></ProtectedRoute>} />
+                <Route path="/chat/settings/privacy" element={<ProtectedRoute><PrivacySecurityPage /></ProtectedRoute>} />
+                <Route path="/chat/settings/sessions" element={<ProtectedRoute><ActiveSessionsPage /></ProtectedRoute>} />
+                <Route path="/chat/settings/two-step" element={<ProtectedRoute><TwoStepSetupPage /></ProtectedRoute>} />
+                <Route path="/chat/settings/passcode" element={<ProtectedRoute><PasscodeSetupPage /></ProtectedRoute>} />
+                <Route path="/chat/settings/login-alerts" element={<ProtectedRoute><LoginAlertsPage /></ProtectedRoute>} />
+                <Route path="/chat/settings/privacy-hub" element={<ProtectedRoute><ChatPrivacyHubPage /></ProtectedRoute>} />
+                <Route path="/chat/search" element={<ProtectedRoute><ChatSearchAllPage /></ProtectedRoute>} />
+                <Route path="/chat/folders" element={<ProtectedRoute><CustomFoldersPage /></ProtectedRoute>} />
+                <Route path="/chat/broadcasts" element={<ProtectedRoute><BroadcastListsPage /></ProtectedRoute>} />
+                <Route path="/chat/broadcasts/new" element={<ProtectedRoute><NewBroadcastPage /></ProtectedRoute>} />
+                <Route path="/chat/settings/storage" element={<ProtectedRoute><StorageManagerPage /></ProtectedRoute>} />
+                <Route path="/explore" element={<ExplorePage />} />
+                <Route path="/saved" element={<ProtectedRoute><BookmarksPage /></ProtectedRoute>} />
+                <Route path="/creators" element={<ProtectedRoute><CreatorDashboardPage /></ProtectedRoute>} />
+                <Route path="/creator-dashboard" element={<ProtectedRoute><CreatorDashboardPage /></ProtectedRoute>} />
+                <Route path="/creator/setup" element={<ProtectedRoute><CreatorSetupPage /></ProtectedRoute>} />
+                <Route path="/creator-analytics" element={<ProtectedRoute><CreatorAnalyticsPage /></ProtectedRoute>} />
+                <Route path="/creator/live-earnings" element={<ProtectedRoute><CreatorLiveEarningsPage /></ProtectedRoute>} />
+                <Route path="/creator/subscribers" element={<ProtectedRoute><CreatorSubscribersPage /></ProtectedRoute>} />
+                <Route path="/creator/tips" element={<ProtectedRoute><CreatorTipsPage /></ProtectedRoute>} />
+                <Route path="/affiliate-hub" element={<ProtectedRoute><AffiliateHubPage /></ProtectedRoute>} />
+                <Route path="/digital-products" element={<ProtectedRoute><DigitalProductsPage /></ProtectedRoute>} />
+                <Route path="/monetization" element={<ProtectedRoute><MonetizationPage /></ProtectedRoute>} />
+                <Route path="/monetization/articles" element={<ProtectedRoute><MonetizationArticlesPage /></ProtectedRoute>} />
+                <Route path="/monetization/articles/:slug" element={<ProtectedRoute><MonetizationArticleDetailPage /></ProtectedRoute>} />
+                <Route path="/monetization/program/:programId" element={<ProtectedRoute><ProgramDetailPage /></ProtectedRoute>} />
+                <Route path="/events" element={<EventsPage />} />
+                <Route path="/communities" element={<CommunitiesPage />} />
+                <Route path="/communities/:id" element={<CommunityDetailPage />} />
+                <Route path="/marketplace" element={<MarketplacePage />} />
+                <Route path="/marketplace/orders" element={<ProtectedRoute><MarketplaceOrdersPage /></ProtectedRoute>} />
+                <Route path="/content-analytics" element={<ProtectedRoute><ContentAnalyticsPage /></ProtectedRoute>} />
+                <Route path="/dating" element={<ProtectedRoute><DatingPage /></ProtectedRoute>} />
+                <Route path="/spaces" element={<AudioSpacesPage />} />
+                <Route path="/smart-search" element={<SmartSearchPage />} />
+                <Route path="/notification-center" element={<ProtectedRoute><NotificationCenterPage /></ProtectedRoute>} />
+                <Route path="/activity" element={<ProtectedRoute><ActivityFeedPage /></ProtectedRoute>} />
+                <Route path="/admin/moderation" element={<ProtectedRoute requireAdmin={true}><AdminModerationPage /></ProtectedRoute>} />
+                <Route path="/admin/launch" element={<ProtectedRoute requireAdmin={true}><AdminLaunchDashboard /></ProtectedRoute>} />
+                <Route path="/content-scheduler" element={<ProtectedRoute><ContentSchedulerPage /></ProtectedRoute>} />
+                <Route path="/story-polls" element={<ProtectedRoute><StoryPollsPage /></ProtectedRoute>} />
+                
+                <Route path="/badges" element={<BadgesPage />} />
+                <Route path="/leaderboard" element={<LeaderboardPage />} />
+                <Route path="/wellness" element={<ProtectedRoute><WellnessPage /></ProtectedRoute>} />
+                <Route path="/wellness/:section" element={<ProtectedRoute><WellnessPage /></ProtectedRoute>} />
+                <Route path="/settings" element={<ProtectedRoute><AppSettingsPage /></ProtectedRoute>} />
+                <Route path="/account/privacy" element={<ProtectedRoute><PrivacySettingsPage /></ProtectedRoute>} />
+                <Route path="/watch-party" element={<WatchPartyPage />} />
+                <Route path="/whiteboard" element={<WhiteboardPage />} />
+                <Route path="/qr-profile" element={<ProtectedRoute><QRProfilePage /></ProtectedRoute>} />
+                <Route path="/link-hub" element={<ProtectedRoute><LinkHubPage /></ProtectedRoute>} />
+                <Route path="/nearby" element={<NearbyPage />} />
+                <Route path="/check-in" element={<ProtectedRoute><CheckInPage /></ProtectedRoute>} />
+                <Route path="/trending" element={<TrendingPage />} />
+                <Route path="/history" element={<ProtectedRoute><HistoryPage /></ProtectedRoute>} />
+                <Route path="/auto-repair" element={<AutoRepairPage />} />
+                <Route path="/safety" element={<ProtectedRoute><SafetyCenterPage /></ProtectedRoute>} />
+                <Route path="/drafts" element={<ProtectedRoute><DraftsPage /></ProtectedRoute>} />
+                <Route path="/account/analytics" element={<ProtectedRoute><AccountAnalyticsPage /></ProtectedRoute>} />
+                <Route path="/account/verification" element={<ProtectedRoute><VerificationRequestPage /></ProtectedRoute>} />
+                <Route path="/account/activity-log" element={<ProtectedRoute><ActivityLogPage /></ProtectedRoute>} />
+                <Route path="/account/export" element={<ProtectedRoute><AccountExportPage /></ProtectedRoute>} />
                 <Route path="/store-map" element={<StoreMapPage />} />
+                <Route path="/store-map/list" element={<StoresListPage />} />
+                <Route path="/book/:slug" element={<ServiceBookingPage />} />
                 <Route path="/grocery/store/:slug" element={<GroceryStorePage />} />
                 <Route path="/grocery/shop/:slug" element={<StoreProfilePage />} />
+                <Route path="/store/:slug" element={<StoreProfilePage />} />
                 <Route path="/grocery/order-placed" element={<GroceryOrderPlaced />} />
                 <Route path="/grocery/order-confirmed" element={<GroceryOrderConfirmed />} />
                 <Route path="/grocery/orders" element={<GroceryOrderHistory />} />
@@ -414,20 +922,73 @@ const App = () => (
                 <Route path="/driver/shop/:orderId" element={<DriverShopPage />} />
                 <Route path="/driver/home" element={<DriverHomePage />} />
                 <Route path="/driver/earnings" element={<DriverEarningsPage />} />
+                <Route path="/driver/payouts" element={<ProtectedRoute><DriverPayoutsPage /></ProtectedRoute>} />
+                <Route path="/driver/onboarding/documents" element={<ProtectedRoute><DriverOnboardingDocumentsPage /></ProtectedRoute>} />
+                <Route path="/admin/ads/google" element={<ProtectedRoute requireAdmin={true}><AdminGoogleAdsPage /></ProtectedRoute>} />
+                <Route path="/admin/ads/meta" element={<ProtectedRoute requireAdmin={true}><AdminMetaAdsPage /></ProtectedRoute>} />
+                <Route path="/admin/ads/analytics" element={<ProtectedRoute requireAdmin={true}><AdminAdsAnalyticsPage /></ProtectedRoute>} />
+                <Route path="/admin/marketing/campaigns" element={<ProtectedRoute requireAdmin={true}><AdminMarketingCampaignsPage /></ProtectedRoute>} />
+                <Route path="/admin/marketing/promo-codes" element={<ProtectedRoute requireAdmin={true}><AdminPromoCodesPage /></ProtectedRoute>} />
+                <Route path="/admin/marketing/broadcast" element={<ProtectedRoute requireAdmin={true}><AdminBroadcastPage /></ProtectedRoute>} />
+                <Route path="/admin/feedback" element={<ProtectedRoute requireAdmin={true}><AdminFeedbackReplyPage /></ProtectedRoute>} />
+                <Route path="/admin/stores/verification" element={<ProtectedRoute requireAdmin={true}><AdminStoreVerificationPage /></ProtectedRoute>} />
+                <Route path="/admin/finance/summary" element={<ProtectedRoute requireAdmin={true}><AdminFinanceSummaryPage /></ProtectedRoute>} />
+                <Route path="/admin/payments/webhook-status" element={<ProtectedRoute requireAdmin={true}><AdminWebhookStatusPage /></ProtectedRoute>} />
+                <Route path="/admin/drivers/verification" element={<ProtectedRoute requireAdmin={true}><AdminDriverVerificationPage /></ProtectedRoute>} />
+                <Route path="/admin/drivers/moderation" element={<ProtectedRoute requireAdmin={true}><AdminDriverModerationPage /></ProtectedRoute>} />
+                <Route path="/admin/operations/heatmap" element={<ProtectedRoute requireAdmin={true}><AdminTripHeatmapPage /></ProtectedRoute>} />
+                <Route path="/admin/payments/refunds" element={<ProtectedRoute requireAdmin={true}><AdminRefundsPage /></ProtectedRoute>} />
+                <Route path="/admin/moderation/messages" element={<ProtectedRoute requireAdmin={true}><AdminMessageModerationPage /></ProtectedRoute>} />
+                <Route path="/admin/operations/call-closures" element={<ProtectedRoute requireAdmin={true}><AdminCallClosuresPage /></ProtectedRoute>} />
+                <Route path="/admin/qa/moderation" element={<ProtectedRoute requireAdmin={true}><AdminModerationQAPage /></ProtectedRoute>} />
+                <Route path="/admin/qa/marketing-responsive" element={<ProtectedRoute requireAdmin={true}><AdminMarketingResponsiveQA /></ProtectedRoute>} />
+                <Route path="/track/:token" element={<SharedTripPage />} />
                 <Route path="/driver/performance" element={<DriverPerformancePage />} />
                 <Route path="/driver/map" element={<DriverMapPage />} />
                 <Route path="/package-delivery" element={<PreserveQueryRedirect to="/delivery" />} />
-                <Route path="/admin/shopping-orders" element={<AdminShoppingOrders />} />
-                <Route path="/admin/analytics" element={<ProtectedRoute><AdminAnalyticsDashboard /></ProtectedRoute>} />
-                <Route path="/admin/users" element={<ProtectedRoute><AdminUsersPage /></ProtectedRoute>} />
-                <Route path="/admin/pricing" element={<ProtectedRoute><AdminPricingPage /></ProtectedRoute>} />
-                <Route path="/admin/flight-orders" element={<ProtectedRoute><AdminFlightOrders /></ProtectedRoute>} />
-                <Route path="/admin/flight-searches" element={<ProtectedRoute><AdminFlightSearchAnalytics /></ProtectedRoute>} />
-                <Route path="/admin/flight-api" element={<ProtectedRoute><AdminFlightApiMonitoring /></ProtectedRoute>} />
-                <Route path="/admin/flight-price-alerts" element={<ProtectedRoute><AdminFlightPriceAlerts /></ProtectedRoute>} />
-                <Route path="/admin/stores" element={<ProtectedRoute><AdminStoresPage /></ProtectedRoute>} />
-                <Route path="/admin/stores/:storeId" element={<ProtectedRoute><AdminStoreEditPage /></ProtectedRoute>} />
-                <Route path="/admin/system-health" element={<ProtectedRoute><AdminSystemHealth /></ProtectedRoute>} />
+                <Route path="/admin/shopping-orders" element={<ProtectedRoute requireAdmin={true}><AdminShoppingOrders /></ProtectedRoute>} />
+                <Route path="/admin/analytics" element={<ProtectedRoute requireAdmin={true}><AdminAnalyticsDashboard /></ProtectedRoute>} />
+                <Route path="/admin/stories-funnel" element={<ProtectedRoute requireAdmin={true}><AdminStoriesFunnelPage /></ProtectedRoute>} />
+                <Route path="/admin/users" element={<ProtectedRoute requireAdmin={true}><AdminUsersPage /></ProtectedRoute>} />
+                <Route path="/admin/pricing" element={<ProtectedRoute requireAdmin={true}><AdminPricingPage /></ProtectedRoute>} />
+                <Route path="/admin/remote-config" element={<ProtectedRoute requireAdmin={true}><AdminRemoteConfigPage /></ProtectedRoute>} />
+                <Route path="/admin/flight-orders" element={<ProtectedRoute requireAdmin={true}><AdminFlightOrders /></ProtectedRoute>} />
+                <Route path="/admin/flight-searches" element={<ProtectedRoute requireAdmin={true}><AdminFlightSearchAnalytics /></ProtectedRoute>} />
+                <Route path="/admin/flight-api" element={<ProtectedRoute requireAdmin={true}><AdminFlightApiMonitoring /></ProtectedRoute>} />
+                <Route path="/admin/flight-price-alerts" element={<ProtectedRoute requireAdmin={true}><AdminFlightPriceAlerts /></ProtectedRoute>} />
+                <Route path="/admin/stores" element={<ProtectedRoute requireAdmin={true}><AdminStoresPage /></ProtectedRoute>} />
+                <Route path="/admin/stores/:storeId" element={<ProtectedRoute requireAdmin={true}><AdminStoreEditPage /></ProtectedRoute>} />
+                <Route path="/admin/stores/:storeId/upload-check" element={<ProtectedRoute requireAdmin={true}><StoreAssetsUploadCheck /></ProtectedRoute>} />
+                <Route path="/admin/stores/:storeId/lodging/reservations/:reservationId" element={<ProtectedRoute requireAdmin={true}><AdminLodgingReservationDetailPage /></ProtectedRoute>} />
+                <Route path="/admin/lodging/qa-checklist" element={<ProtectedRoute requireAdmin={true}><AdminLodgingQAChecklistPage /></ProtectedRoute>} />
+                <Route path="/admin/lodging/completion-verification" element={<ProtectedRoute requireAdmin={true}><AdminLodgingCompletionVerificationPage /></ProtectedRoute>} />
+                <Route path="/admin/security/blocked-links" element={<ProtectedRoute requireAdmin={true}><AdminBlockedLinksPage /></ProtectedRoute>} />
+                <Route path="/admin/security/threat-history" element={<ProtectedRoute requireAdmin={true}><AdminThreatHistoryPage /></ProtectedRoute>} />
+                <Route path="/admin/security/csp-violations" element={<ProtectedRoute requireAdmin={true}><AdminCspViolationsPage /></ProtectedRoute>} />
+                <Route path="/admin/security/audit" element={<ProtectedRoute requireAdmin={true}><AdminSecurityAuditPage /></ProtectedRoute>} />
+                <Route path="/admin/security/notifications" element={<ProtectedRoute requireAdmin={true}><AdminSecurityNotificationsPage /></ProtectedRoute>} />
+                <Route path="/admin/security" element={<ProtectedRoute requireAdmin={true}><AdminSecurityOverviewPage /></ProtectedRoute>} />
+                <Route path="/admin/lodging/wiring-check" element={<ProtectedRoute requireAdmin={true}><AdminLodgingWiringCheckPage /></ProtectedRoute>} />
+                <Route path="/admin/lodging/webhook-events" element={<ProtectedRoute requireAdmin={true}><AdminLodgingWebhookEventsPage /></ProtectedRoute>} />
+                <Route path="/store/setup" element={<ProtectedRoute><StoreSetup /></ProtectedRoute>} />
+                <Route path="/business/new" element={<ProtectedRoute><BusinessPageWizard /></ProtectedRoute>} />
+                <Route path="/admin/employees" element={<ProtectedRoute requireAdmin={true}><AdminEmployeesPage /></ProtectedRoute>} />
+                <Route path="/admin/wallet" element={<ProtectedRoute requireAdmin={true}><AdminWalletPage /></ProtectedRoute>} />
+                <Route path="/admin/system-health" element={<ProtectedRoute requireAdmin={true}><AdminSystemHealth /></ProtectedRoute>} />
+                <Route path="/admin/app-store-assets" element={<ProtectedRoute requireAdmin={true}><AdminAppStoreAssets /></ProtectedRoute>} />
+                <Route path="/admin/android-verification" element={<ProtectedRoute requireAdmin={true}><AdminAndroidVerification /></ProtectedRoute>} />
+                <Route path="/admin/support" element={<ProtectedRoute requireAdmin={true}><AdminSupportDashboard /></ProtectedRoute>} />
+                <Route path="/admin/user-accounts" element={<ProtectedRoute requireAdmin={true}><AdminUserAccounts /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/boost" element={<ProtectedRoute><AdBoostBidding /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/boost-engine" element={<ProtectedRoute><MerchantBoostEngine /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/ai-creative" element={<ProtectedRoute><AiCreativeSuite /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/ai-content" element={<ProtectedRoute><AiContentSuite /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/wallet" element={<ProtectedRoute><MerchantWalletPage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/tax-reports" element={<ProtectedRoute><MerchantTaxReportPage /></ProtectedRoute>} />
+                <Route path="/admin/god-view" element={<ProtectedRoute requireAdmin={true}><AdminGodView /></ProtectedRoute>} />
+                <Route path="/admin/chat-security" element={<ProtectedRoute requireAdmin={true}><AdminChatSecurityPage /></ProtectedRoute>} />
+                <Route path="/admin/security-sentinel" element={<ProtectedRoute requireAdmin={true}><AdminSecuritySentinelPage /></ProtectedRoute>} />
+                <Route path="/admin/auth-shield" element={<ProtectedRoute requireAdmin={true}><AdminAuthShieldPage /></ProtectedRoute>} />
                 <Route path="/events" element={<PreserveQueryRedirect to="/things-to-do" />} />
                 <Route path="/ground-transport" element={<PreserveQueryRedirect to="/car-rental" />} />
                 <Route path="/insurance" element={<PreserveQueryRedirect to="/travel-insurance" />} />
@@ -455,10 +1016,11 @@ const App = () => (
                 {/* /checkout removed — partners block iframe; redirect model used instead */}
 
                 {/* Hotels */}
-                <Route path="/hotels" element={<RouteErrorBoundary section="Hotels"><HotelsPage /></RouteErrorBoundary>} />
                 <Route path="/hotels/:city" element={<RouteErrorBoundary section="Hotels"><HotelCityLandingPage /></RouteErrorBoundary>} />
-                <Route path="/hotels/in-:city" element={<RouteErrorBoundary section="Hotels"><HotelsPage /></RouteErrorBoundary>} />
-                {/* hotels-dashboard removed */}
+                <Route path="/hotel/:storeId" element={<RouteErrorBoundary section="HotelDetail"><HotelResortDetailPage /></RouteErrorBoundary>} />
+                <Route path="/hotels" element={<RouteErrorBoundary section="HotelsLanding"><HotelsLandingPage /></RouteErrorBoundary>} />
+                <Route path="/hotels-list" element={<RouteErrorBoundary section="HotelsDirectory"><HotelsResortsDirectoryPage /></RouteErrorBoundary>} />
+                {/* /hotels and /hotels/in-:city removed */}
 
                 {/* Car Rental */}
                 <Route path="/car-rental" element={<RouteErrorBoundary section="Cars"><CarRentalLanding /></RouteErrorBoundary>} />
@@ -478,6 +1040,7 @@ const App = () => (
                 {/* Travel Checkout */}
                 <Route path="/travel/checkout" element={<RouteErrorBoundary section="Checkout"><PhoneRequiredGate><TravelCheckoutPage /></PhoneRequiredGate></RouteErrorBoundary>} />
                 <Route path="/confirmation/:orderNumber" element={<RouteErrorBoundary section="Checkout"><TravelConfirmationPage /></RouteErrorBoundary>} />
+                <Route path="/my-trips/lodging/:reservationId" element={<ProtectedRoute><RouteErrorBoundary section="Lodging"><MyLodgingTripPage /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/my-trips/:orderNumber" element={<RouteErrorBoundary section="Checkout"><TravelOrderDetailPage /></RouteErrorBoundary>} />
 
                 {/* Extras */}
@@ -492,20 +1055,31 @@ const App = () => (
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/auth-callback" element={<AuthCallback />} />
                 <Route path="/onboarding" element={<Onboarding />} />
-                <Route path="/verify-email" element={<VerifyEmail />} />
+                
                 <Route path="/verify-otp" element={<VerifyOTP />} />
+                <Route path="/verify-new-device" element={<VerifyNewDevice />} />
                 <Route path="/setup" element={<Setup />} />
                 
-                <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+                <Route path="/profile" element={<GuestOrUser guestPreview={<GuestProfilePreview />}><Profile /></GuestOrUser>} />
+                <Route path="/more" element={<ProtectedRoute><MorePage /></ProtectedRoute>} />
                 <Route path="/profile/delete-account" element={<ProtectedRoute><DeleteAccountPage /></ProtectedRoute>} />
+                <Route path="/user/:userId" element={<PublicProfilePage />} />
+                <Route path="/p/:code" element={<ShareProfileRedirect />} />
                 <Route path="/traveler" element={<ProtectedRoute><TravelerDashboard /></ProtectedRoute>} />
                 <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
                 <Route path="/saved-searches" element={<ProtectedRoute><SavedSearchesPage /></ProtectedRoute>} />
                 <Route path="/payment-methods" element={<ProtectedRoute><PaymentMethodsPage /></ProtectedRoute>} />
 
                 {/* Account sub-pages */}
+                <Route path="/account/settings" element={<ProtectedRoute><AccountSettingsPage /></ProtectedRoute>} />
+                <Route path="/account/legal" element={<LegalPoliciesPage />} />
+                <Route path="/account/profile-edit" element={<ProtectedRoute><ProfileEditPage /></ProtectedRoute>} />
                 <Route path="/account/security" element={<ProtectedRoute><AccountSecurity /></ProtectedRoute>} />
-                <Route path="/account/privacy" element={<ProtectedRoute><PrivacyControls /></ProtectedRoute>} />
+                <Route path="/account/sessions" element={<ProtectedRoute><AccountSessionsPage /></ProtectedRoute>} />
+                <Route path="/account/linked-devices" element={<ProtectedRoute><LinkedDevicesPage /></ProtectedRoute>} />
+                <Route path="/account/link-device" element={<ProtectedRoute><LinkDevicePage /></ProtectedRoute>} />
+                <Route path="/account/scan-device" element={<ProtectedRoute><ScanDevicePage /></ProtectedRoute>} />
+                <Route path="/account/data-rights" element={<ProtectedRoute><PrivacyControls /></ProtectedRoute>} />
                 <Route path="/account/notifications" element={<ProtectedRoute><NotificationSettings /></ProtectedRoute>} />
                 <Route path="/account/referrals" element={<ProtectedRoute><AccountReferralsPage /></ProtectedRoute>} />
                 <Route path="/account/wallet" element={<ProtectedRoute><AccountWalletPage /></ProtectedRoute>} />
@@ -519,6 +1093,33 @@ const App = () => (
                 <Route path="/account/preferences" element={<ProtectedRoute><PreferencesPage /></ProtectedRoute>} />
                 <Route path="/account/promos" element={<ProtectedRoute><PromosPage /></ProtectedRoute>} />
                 <Route path="/account/membership" element={<ProtectedRoute><MembershipPage /></ProtectedRoute>} />
+                <Route path="/account/invoices" element={<ProtectedRoute><AccountInvoicesPage /></ProtectedRoute>} />
+
+                {/* Other ComingSoon placeholders */}
+                <Route path="/filters" element={<ComingSoonPage title="AR Filters" description="Browse and apply AR effects in stories, reels, and live streams." />} />
+                <Route path="/promote" element={<ProtectedRoute><ComingSoonPage title="Promote Posts" description="Boost reach for your posts, reels, and stories." /></ProtectedRoute>} />
+                <Route path="/brand-deals" element={<ProtectedRoute><ComingSoonPage title="Brand Deals" description="Connect with brands for sponsorships and partnerships." /></ProtectedRoute>} />
+                <Route path="/library" element={<ProtectedRoute><ComingSoonPage title="Content Library" description="All your saved drafts, snippets, and templates." /></ProtectedRoute>} />
+                <Route path="/podcasts" element={<ComingSoonPage title="Podcasts" description="Listen to ZIVO podcasts on the go." />} />
+                <Route path="/sounds" element={<ComingSoonPage title="Sound Effects" description="Audio & sound effects library for creators." />} />
+                <Route path="/media-library" element={<ProtectedRoute><ComingSoonPage title="Media Library" description="All your photos, videos, and assets." /></ProtectedRoute>} />
+                <Route path="/creator/goals" element={<ProtectedRoute><ComingSoonPage title="Creator Goals" description="Track milestones and creator achievements." /></ProtectedRoute>} />
+                <Route path="/track" element={<ProtectedRoute><ComingSoonPage title="Track Package" description="Live tracking for deliveries and shipments." /></ProtectedRoute>} />
+                {/* Redirect legacy paths to the real implementations */}
+                <Route path="/account/cookies" element={<Navigate to="/account/data-rights#cookies" replace />} />
+                <Route path="/account/translation" element={<Navigate to="/account/preferences#translation" replace />} />
+                <Route path="/account/accessibility" element={<Navigate to="/account/preferences#accessibility" replace />} />
+                <Route path="/account/contact" element={<Navigate to="/account/profile-edit" replace />} />
+
+                {/* Wellness — placeholders */}
+                <Route path="/wellness/meds" element={<ProtectedRoute><ComingSoonPage title="Medications" description="Track meds, doses, and refills with reminders." /></ProtectedRoute>} />
+                <Route path="/wellness/mindfulness" element={<ProtectedRoute><ComingSoonPage title="Mindfulness" description="Guided meditation, breathing, and sleep stories." /></ProtectedRoute>} />
+                <Route path="/wellness/nutrition" element={<ProtectedRoute><ComingSoonPage title="Nutrition" description="Log meals, calories, macros, and water intake." /></ProtectedRoute>} />
+                <Route path="/account/tax" element={<ProtectedRoute><ComingSoonPage title="Tax Info" description="Tax forms, 1099s, and reporting." /></ProtectedRoute>} />
+                <Route path="/account/receipts" element={<ProtectedRoute><ComingSoonPage title="Receipts" description="Past payments and order receipts." /></ProtectedRoute>} />
+                <Route path="/account/reviews" element={<ProtectedRoute><ComingSoonPage title="My Reviews" description="Ratings and reviews you've left." /></ProtectedRoute>} />
+                <Route path="/account/subscriptions" element={<ProtectedRoute><AccountSubscriptionsPage /></ProtectedRoute>} />
+                <Route path="/account/tips" element={<ProtectedRoute><AccountTipsPage /></ProtectedRoute>} />
 
                 {/* Trip Itineraries */}
                 <Route path="/trips" element={<ProtectedRoute><TripsListPage /></ProtectedRoute>} />
@@ -537,9 +1138,45 @@ const App = () => (
                 <Route path="/legal/partner-disclosure" element={<PartnerDisclosure />} />
                 <Route path="/legal/cancellation" element={<CancellationPolicy />} />
                 <Route path="/legal/security-incident" element={<SecurityIncident />} />
+                <Route path="/legal/security" element={<SecurityPolicy />} />
+                <Route path="/legal/vdp" element={<VulnerabilityDisclosureLegal />} />
                 <Route path="/legal/seller-of-travel" element={<SellerOfTravel />} />
                 <Route path="/legal/flight-terms" element={<FlightTerms />} />
-                <Route path="/affiliate-disclosure" element={<AffiliateDisclosure />} />
+                <Route path="/legal/social-media-policy" element={<SocialMediaPolicy />} />
+                <Route path="/legal/acceptable-use" element={<AcceptableUsePolicy />} />
+                <Route path="/legal/data-retention" element={<DataRetentionPolicy />} />
+                <Route path="/unsubscribe" element={<UnsubscribePage />} />
+                <Route path="/legal/dmca" element={<DMCACopyrightPolicy />} />
+                <Route path="/legal/dispute-resolution" element={<DisputeResolution />} />
+                <Route path="/legal/limitation-of-liability" element={<LimitationOfLiability />} />
+                <Route path="/legal/indemnification" element={<IndemnificationPolicy />} />
+                <Route path="/legal/age-restriction" element={<AgeRestrictionPolicy />} />
+                <Route path="/legal/assumption-of-risk" element={<AssumptionOfRisk />} />
+                <Route path="/legal/electronic-consent" element={<ElectronicConsent />} />
+                <Route path="/legal/force-majeure" element={<ForceMajeure />} />
+                <Route path="/legal/no-guarantee" element={<NoGuaranteeDisclaimer />} />
+                <Route path="/legal/governing-law" element={<GoverningLaw />} />
+                <Route path="/legal/intellectual-property" element={<IntellectualProperty />} />
+                <Route path="/legal/account-termination" element={<AccountTermination />} />
+                <Route path="/legal/third-party-links" element={<ThirdPartyLinks />} />
+                <Route path="/legal/communication-consent" element={<CommunicationConsent />} />
+                <Route path="/legal/modification-of-terms" element={<ModificationOfTerms />} />
+                <Route path="/legal/class-action-waiver" element={<ClassActionWaiver />} />
+                <Route path="/legal/anti-money-laundering" element={<AntiMoneyLaundering />} />
+                <Route path="/legal/user-conduct" element={<UserConduct />} />
+                <Route path="/legal/california-privacy" element={<CaliforniaPrivacy />} />
+                <Route path="/legal/fraud-prevention" element={<FraudPrevention />} />
+                <Route path="/legal/warranty-disclaimer" element={<WarrantyDisclaimer />} />
+                <Route path="/legal/gdpr" element={<GDPRCompliance />} />
+                <Route path="/legal/non-discrimination" element={<NonDiscrimination />} />
+                <Route path="/legal/transportation-disclaimer" element={<TransportationDisclaimer />} />
+                <Route path="/legal/car-rental-disclaimer" element={<CarRentalDisclaimer />} />
+                <Route path="/legal/insurance-disclaimer" element={<InsuranceDisclaimer />} />
+                <Route path="/legal/damage-policy" element={<DamagePolicy />} />
+                <Route path="/terms/owner" element={<OwnerTerms />} />
+                <Route path="/terms/renter" element={<RenterTerms />} />
+                <Route path="/legal/meta-privacy" element={<MetaPrivacyDisclosure />} />
+                <Route path="/legal/*" element={<GenericLegalPage />} />
                 <Route path="/cookies" element={<CookiePolicy />} />
                 <Route path="/cancellation-policy" element={<CancellationPolicy />} />
 
@@ -551,6 +1188,10 @@ const App = () => (
                 <Route path="/refunds" element={<Refunds />} />
                 <Route path="/company" element={<Company />} />
                 <Route path="/security" element={<Security />} />
+                <Route path="/security-status" element={<SecurityStatus />} />
+                {/* /saved is taken by BookmarksPage above; tile-grid view lives at /saved-posts */}
+                <Route path="/saved-posts" element={<ProtectedRoute><SavedPostsPage /></ProtectedRoute>} />
+                <Route path="/tag/:tag" element={<HashtagPage />} />
                 <Route path="/ai-trip-planner" element={<AITripPlanner />} />
                 <Route path="/multi-city-builder" element={<MultiCityBuilder />} />
                 {/* /zivo-plus defined above */}
@@ -596,15 +1237,27 @@ const App = () => (
                 <Route path="/security/operations" element={<SecurityOperations />} />
                 <Route path="/security/disaster-recovery" element={<DisasterRecovery />} />
                 <Route path="/security/vulnerability-disclosure" element={<VulnerabilityDisclosure />} />
+                <Route path="/security-test" element={<SecurityTestPage />} />
 
                 {/* Business */}
-                <Route path="/partner-with-zivo" element={<PartnerWithZivo />} />
+                <Route path="/partner-with-zivo" element={<PartnerOnboardingDispatcher />} />
+                <Route path="/become-partner" element={<BecomePartnerPage />} />
+                <Route path="/partners/join" element={<PreserveQueryRedirect to="/become-partner" />} />
+                <Route path="/network" element={<NetworkPlacesPage />} />
+                <Route path="/places" element={<PreserveQueryRedirect to="/network" />} />
+                <Route path="/network/saved" element={<SavedFavoritesPage />} />
+                <Route path="/favorites/network" element={<PreserveQueryRedirect to="/network/saved" />} />
+                <Route path="/concierge" element={<ConciergePage />} />
+                <Route path="/share/trip/:tripId" element={<PublicTripSharePage />} />
+                <Route path="/rides/multi-stop" element={<ProtectedRoute><PhoneRequiredGate><MultiStopRideBuilder /></PhoneRequiredGate></ProtectedRoute>} />
+                <Route path="/share/order/:orderId" element={<PublicOrderSharePage />} />
+                <Route path="/share/with-me" element={<ShareWatchlistPage />} />
                 <Route path="/partner-login" element={<PartnerLogin />} />
                 <Route path="/partners" element={<PartnerWithZivo />} />
                 <Route path="/business" element={<BusinessLandingPage />} />
                 <Route path="/api-partners" element={<APIPartners />} />
                 <Route path="/developers" element={<APIPartners />} />
-                <Route path="/business/dashboard" element={<ProtectedRoute><BusinessDashboard /></ProtectedRoute>} />
+                <Route path="/business/dashboard" element={<AdminShellRoute vertical="business" nav={businessNav} title="Business Dashboard | ZIVO Admin"><BusinessDashboard /></AdminShellRoute>} />
                 <Route path="/business/account" element={<BusinessAccountPage />} />
                 <Route path="/business/insights" element={<DataInsights />} />
                 <Route path="/data-insights" element={<DataInsights />} />
@@ -636,6 +1289,10 @@ const App = () => (
                 <Route path="/:countrySlug" element={<CountryHubPage />} />
                 <Route path="/:countrySlug/flights/:routeSlug" element={<LocalizedFlightRoutePage />} />
 
+                {/* Dev-only QA — page itself 404s in production */}
+                <Route path="/dev/post-menu-check" element={<PostMenuRegressionPage />} />
+                <Route path="/dev/qa/safe-area" element={<SafeAreaQAPage />} />
+
                 {/* Catch-all */}
                 <Route path="*" element={<NotFound />} />
               </Routes>
@@ -643,14 +1300,10 @@ const App = () => (
           </UTMProvider>
           </CurrencyProvider>
           </CustomerCityProvider>
-          <CookieConsent />
-          <PWAUpdatePrompt />
-          <PWAInstallBanner />
-          {/* ScrollToTopButton removed */}
-          {/* LiveChatWidget removed */}
-          <SpatialCursor />
+          <RouteAwareGlobalUI />
           <BrandThemeApplicator />
         </ZivoPlusProvider>
+        </RemoteConfigProvider>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>

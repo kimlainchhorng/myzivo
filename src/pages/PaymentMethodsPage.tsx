@@ -86,8 +86,6 @@ const PaymentMethodsPage = () => {
     }
 
     setIsSubmitting(true);
-    // TODO: Submit card via Stripe API
-
     const cleanedNumber = cardNumber.replace(/\s/g, "");
     const parsedExpiry = parseExpiry(expiry)!;
 
@@ -119,7 +117,7 @@ const PaymentMethodsPage = () => {
   return (
     <div className="min-h-screen bg-background text-foreground pb-8">
       {/* Header */}
-      <header className="sticky top-0 z-50 flex items-center gap-3 px-4 py-4 bg-background/95 backdrop-blur-xl border-b border-border/50">
+      <header className="sticky top-0 safe-area-top z-50 flex items-center gap-3 px-4 py-4 bg-background/95 backdrop-blur-xl border-b border-border/50">
         <button
           onClick={() => navigate(-1)}
           className="p-2 rounded-full hover:bg-muted transition-colors touch-manipulation"

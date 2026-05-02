@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,8 @@ import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Coins,
   Plane,
@@ -108,7 +110,6 @@ const TIERS: TierInfo[] = [
   },
 ];
 
-// TODO: Load transaction history from database
 const MOCK_TRANSACTIONS: MilesTransaction[] = [];
 
 const REDEMPTION_OPTIONS: RedemptionOption[] = [
@@ -133,16 +134,29 @@ interface ZivoMilesProgramProps {
 }
 
 export const ZivoMilesProgram = ({ className }: ZivoMilesProgramProps) => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [transferAmount, setTransferAmount] = useState('');
-  
-  // User's miles data
-  const currentMiles = 45680;
-  const lifetimeMiles = 125400;
-  const pendingMiles = 2340;
-  const expiringMiles = 5000;
-  const expiryDate = 'Mar 31, 2025';
-  const yearlyMiles = 78500;
+  const [transactions, setTransactions] = useState<MilesTransaction[]>(MOCK_TRANSACTIONS);
+
+  // User's miles data from loyalty_points
+  const [currentMiles, setCurrentMiles] = useState(0);
+  const [lifetimeMiles, setLifetimeMiles] = useState(0);
+  const pendingMiles = 0;
+  const expiringMiles = 0;
+  const expiryDate = 'Dec 31, 2025';
+  const [yearlyMiles, setYearlyMiles] = useState(0);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("loyalty_points").select("points_balance, lifetime_points, tier").eq("user_id", user.id).single().then(({ data }) => {
+      if (data) {
+        setCurrentMiles(data.points_balance ?? 0);
+        setLifetimeMiles(data.lifetime_points ?? 0);
+        setYearlyMiles(data.lifetime_points ?? 0);
+      }
+    });
+  }, [user]);
   
   // Calculate tier
   const currentTier = TIERS.reduce((acc, tier) => 

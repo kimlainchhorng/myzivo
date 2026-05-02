@@ -1,0 +1,283 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/admin/store/lodging/CatalogTable.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+import { Button } from "/src/components/ui/button.tsx";
+import { Switch } from "/src/components/ui/switch.tsx";
+import { Pencil, Plus, Trash2 } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger } from "/src/components/ui/dialog.tsx";
+export function CatalogTable({ rows, columns, isLoading, emptyTitle, emptyBody, onAddClick, onEdit, onDelete, onToggleActive, addLabel = "Add new" }) {
+    return /*#__PURE__*/ _jsxDEV("div", {
+        className: "space-y-3",
+        children: [
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "flex justify-end",
+                children: /*#__PURE__*/ _jsxDEV(Button, {
+                    size: "sm",
+                    onClick: onAddClick,
+                    children: [
+                        /*#__PURE__*/ _jsxDEV(Plus, {
+                            className: "mr-1.5 h-4 w-4"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/CatalogTable.tsx",
+                            lineNumber: 43,
+                            columnNumber: 11
+                        }, this),
+                        " ",
+                        addLabel
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/CatalogTable.tsx",
+                    lineNumber: 42,
+                    columnNumber: 9
+                }, this)
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/CatalogTable.tsx",
+                lineNumber: 41,
+                columnNumber: 7
+            }, this),
+            isLoading ? /*#__PURE__*/ _jsxDEV("div", {
+                className: "rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground",
+                children: "Loading…"
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/CatalogTable.tsx",
+                lineNumber: 48,
+                columnNumber: 9
+            }, this) : rows.length === 0 ? /*#__PURE__*/ _jsxDEV("div", {
+                className: "rounded-lg border border-dashed border-border bg-muted/20 p-6 text-center",
+                children: [
+                    /*#__PURE__*/ _jsxDEV("p", {
+                        className: "text-sm font-semibold text-foreground",
+                        children: emptyTitle
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/CatalogTable.tsx",
+                        lineNumber: 53,
+                        columnNumber: 11
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("p", {
+                        className: "mt-1 text-xs text-muted-foreground",
+                        children: emptyBody
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/CatalogTable.tsx",
+                        lineNumber: 54,
+                        columnNumber: 11
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(Button, {
+                        size: "sm",
+                        className: "mt-3",
+                        onClick: onAddClick,
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(Plus, {
+                                className: "mr-1.5 h-4 w-4"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/CatalogTable.tsx",
+                                lineNumber: 56,
+                                columnNumber: 13
+                            }, this),
+                            " ",
+                            addLabel
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/CatalogTable.tsx",
+                        lineNumber: 55,
+                        columnNumber: 11
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/CatalogTable.tsx",
+                lineNumber: 52,
+                columnNumber: 9
+            }, this) : /*#__PURE__*/ _jsxDEV("div", {
+                className: "space-y-2",
+                children: rows.map((row)=>/*#__PURE__*/ _jsxDEV("div", {
+                        className: "flex flex-wrap items-center gap-3 rounded-lg border border-border bg-card p-3",
+                        children: [
+                            columns.map((col)=>/*#__PURE__*/ _jsxDEV("div", {
+                                    className: col.className || "min-w-0 flex-1",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV("p", {
+                                            className: "text-[10px] font-semibold uppercase tracking-wide text-muted-foreground",
+                                            children: col.label
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/CatalogTable.tsx",
+                                            lineNumber: 68,
+                                            columnNumber: 19
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("div", {
+                                            className: "mt-0.5 text-sm text-foreground",
+                                            children: col.render(row)
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/CatalogTable.tsx",
+                                            lineNumber: 71,
+                                            columnNumber: 19
+                                        }, this)
+                                    ]
+                                }, col.key, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/CatalogTable.tsx",
+                                    lineNumber: 67,
+                                    columnNumber: 17
+                                }, this)),
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "flex items-center gap-2",
+                                children: [
+                                    onToggleActive && /*#__PURE__*/ _jsxDEV(Switch, {
+                                        checked: row.active !== false,
+                                        onCheckedChange: ()=>onToggleActive(row),
+                                        "aria-label": "Active"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/CatalogTable.tsx",
+                                        lineNumber: 76,
+                                        columnNumber: 19
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV(Button, {
+                                        size: "icon",
+                                        variant: "ghost",
+                                        onClick: ()=>onEdit(row),
+                                        children: /*#__PURE__*/ _jsxDEV(Pencil, {
+                                            className: "h-4 w-4"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/CatalogTable.tsx",
+                                            lineNumber: 83,
+                                            columnNumber: 19
+                                        }, this)
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/CatalogTable.tsx",
+                                        lineNumber: 82,
+                                        columnNumber: 17
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV(Button, {
+                                        size: "icon",
+                                        variant: "ghost",
+                                        className: "text-destructive hover:text-destructive",
+                                        onClick: ()=>{
+                                            if (confirm("Delete this item?")) onDelete(row.id);
+                                        },
+                                        children: /*#__PURE__*/ _jsxDEV(Trash2, {
+                                            className: "h-4 w-4"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/CatalogTable.tsx",
+                                            lineNumber: 93,
+                                            columnNumber: 19
+                                        }, this)
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/CatalogTable.tsx",
+                                        lineNumber: 85,
+                                        columnNumber: 17
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/CatalogTable.tsx",
+                                lineNumber: 74,
+                                columnNumber: 15
+                            }, this)
+                        ]
+                    }, row.id, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/CatalogTable.tsx",
+                        lineNumber: 62,
+                        columnNumber: 13
+                    }, this))
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/CatalogTable.tsx",
+                lineNumber: 60,
+                columnNumber: 9
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/CatalogTable.tsx",
+        lineNumber: 40,
+        columnNumber: 5
+    }, this);
+}
+_c = CatalogTable;
+export function EditorDialog({ open, onOpenChange, title, children, onSave, saving }) {
+    return /*#__PURE__*/ _jsxDEV(Dialog, {
+        open: open,
+        onOpenChange: onOpenChange,
+        children: /*#__PURE__*/ _jsxDEV(DialogContent, {
+            className: "max-w-2xl max-h-[85vh] overflow-y-auto",
+            children: [
+                /*#__PURE__*/ _jsxDEV(DialogHeader, {
+                    children: /*#__PURE__*/ _jsxDEV(DialogTitle, {
+                        children: title
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/CatalogTable.tsx",
+                        lineNumber: 123,
+                        columnNumber: 11
+                    }, this)
+                }, void 0, false, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/CatalogTable.tsx",
+                    lineNumber: 122,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ _jsxDEV("div", {
+                    className: "space-y-3",
+                    children: children
+                }, void 0, false, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/CatalogTable.tsx",
+                    lineNumber: 125,
+                    columnNumber: 9
+                }, this),
+                /*#__PURE__*/ _jsxDEV(DialogFooter, {
+                    children: [
+                        /*#__PURE__*/ _jsxDEV(Button, {
+                            variant: "outline",
+                            onClick: ()=>onOpenChange(false),
+                            children: "Cancel"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/CatalogTable.tsx",
+                            lineNumber: 127,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV(Button, {
+                            onClick: onSave,
+                            disabled: saving,
+                            children: saving ? "Saving…" : "Save"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/CatalogTable.tsx",
+                            lineNumber: 130,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/CatalogTable.tsx",
+                    lineNumber: 126,
+                    columnNumber: 9
+                }, this)
+            ]
+        }, void 0, true, {
+            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/CatalogTable.tsx",
+            lineNumber: 121,
+            columnNumber: 7
+        }, this)
+    }, void 0, false, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/CatalogTable.tsx",
+        lineNumber: 120,
+        columnNumber: 5
+    }, this);
+}
+_c1 = EditorDialog;
+export { Dialog, DialogTrigger };
+var _c, _c1;
+$RefreshReg$(_c, "CatalogTable");
+$RefreshReg$(_c1, "EditorDialog");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/CatalogTable.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/CatalogTable.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/CatalogTable.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIkNhdGFsb2dUYWJsZS50c3giXSwic291cmNlc0NvbnRlbnQiOlsiaW1wb3J0IHsgUmVhY3ROb2RlLCB1c2VTdGF0ZSB9IGZyb20gXCJyZWFjdFwiO1xyXG5pbXBvcnQgeyBCdXR0b24gfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2J1dHRvblwiO1xyXG5pbXBvcnQgeyBTd2l0Y2ggfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL3N3aXRjaFwiO1xyXG5pbXBvcnQgeyBQZW5jaWwsIFBsdXMsIFRyYXNoMiB9IGZyb20gXCJsdWNpZGUtcmVhY3RcIjtcclxuaW1wb3J0IHsgRGlhbG9nLCBEaWFsb2dDb250ZW50LCBEaWFsb2dIZWFkZXIsIERpYWxvZ1RpdGxlLCBEaWFsb2dGb290ZXIsIERpYWxvZ1RyaWdnZXIgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2RpYWxvZ1wiO1xyXG5cclxuZXhwb3J0IGludGVyZmFjZSBDYXRhbG9nQ29sdW1uPFQ+IHtcclxuICBrZXk6IHN0cmluZztcclxuICBsYWJlbDogc3RyaW5nO1xyXG4gIHJlbmRlcjogKHJvdzogVCkgPT4gUmVhY3ROb2RlO1xyXG4gIGNsYXNzTmFtZT86IHN0cmluZztcclxufVxyXG5cclxuaW50ZXJmYWNlIFByb3BzPFQgZXh0ZW5kcyB7IGlkOiBzdHJpbmc7IGFjdGl2ZT86IGJvb2xlYW4gfT4ge1xyXG4gIHJvd3M6IFRbXTtcclxuICBjb2x1bW5zOiBDYXRhbG9nQ29sdW1uPFQ+W107XHJcbiAgaXNMb2FkaW5nPzogYm9vbGVhbjtcclxuICBlbXB0eVRpdGxlOiBzdHJpbmc7XHJcbiAgZW1wdHlCb2R5OiBzdHJpbmc7XHJcbiAgb25BZGRDbGljazogKCkgPT4gdm9pZDtcclxuICBvbkVkaXQ6IChyb3c6IFQpID0+IHZvaWQ7XHJcbiAgb25EZWxldGU6IChpZDogc3RyaW5nKSA9PiB2b2lkO1xyXG4gIG9uVG9nZ2xlQWN0aXZlPzogKHJvdzogVCkgPT4gdm9pZDtcclxuICBhZGRMYWJlbD86IHN0cmluZztcclxufVxyXG5cclxuZXhwb3J0IGZ1bmN0aW9uIENhdGFsb2dUYWJsZTxUIGV4dGVuZHMgeyBpZDogc3RyaW5nOyBhY3RpdmU/OiBib29sZWFuIH0+KHtcclxuICByb3dzLFxyXG4gIGNvbHVtbnMsXHJcbiAgaXNMb2FkaW5nLFxyXG4gIGVtcHR5VGl0bGUsXHJcbiAgZW1wdHlCb2R5LFxyXG4gIG9uQWRkQ2xpY2ssXHJcbiAgb25FZGl0LFxyXG4gIG9uRGVsZXRlLFxyXG4gIG9uVG9nZ2xlQWN0aXZlLFxyXG4gIGFkZExhYmVsID0gXCJBZGQgbmV3XCIsXHJcbn06IFByb3BzPFQ+KSB7XHJcbiAgcmV0dXJuIChcclxuICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS0zXCI+XHJcbiAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBqdXN0aWZ5LWVuZFwiPlxyXG4gICAgICAgIDxCdXR0b24gc2l6ZT1cInNtXCIgb25DbGljaz17b25BZGRDbGlja30+XHJcbiAgICAgICAgICA8UGx1cyBjbGFzc05hbWU9XCJtci0xLjUgaC00IHctNFwiIC8+IHthZGRMYWJlbH1cclxuICAgICAgICA8L0J1dHRvbj5cclxuICAgICAgPC9kaXY+XHJcblxyXG4gICAgICB7aXNMb2FkaW5nID8gKFxyXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwicm91bmRlZC1sZyBib3JkZXIgYm9yZGVyLWRhc2hlZCBib3JkZXItYm9yZGVyIHAtNiB0ZXh0LWNlbnRlciB0ZXh0LXNtIHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiPlxyXG4gICAgICAgICAgTG9hZGluZ+KAplxyXG4gICAgICAgIDwvZGl2PlxyXG4gICAgICApIDogcm93cy5sZW5ndGggPT09IDAgPyAoXHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJyb3VuZGVkLWxnIGJvcmRlciBib3JkZXItZGFzaGVkIGJvcmRlci1ib3JkZXIgYmctbXV0ZWQvMjAgcC02IHRleHQtY2VudGVyXCI+XHJcbiAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LXNtIGZvbnQtc2VtaWJvbGQgdGV4dC1mb3JlZ3JvdW5kXCI+e2VtcHR5VGl0bGV9PC9wPlxyXG4gICAgICAgICAgPHAgY2xhc3NOYW1lPVwibXQtMSB0ZXh0LXhzIHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiPntlbXB0eUJvZHl9PC9wPlxyXG4gICAgICAgICAgPEJ1dHRvbiBzaXplPVwic21cIiBjbGFzc05hbWU9XCJtdC0zXCIgb25DbGljaz17b25BZGRDbGlja30+XHJcbiAgICAgICAgICAgIDxQbHVzIGNsYXNzTmFtZT1cIm1yLTEuNSBoLTQgdy00XCIgLz4ge2FkZExhYmVsfVxyXG4gICAgICAgICAgPC9CdXR0b24+XHJcbiAgICAgICAgPC9kaXY+XHJcbiAgICAgICkgOiAoXHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTJcIj5cclxuICAgICAgICAgIHtyb3dzLm1hcCgocm93KSA9PiAoXHJcbiAgICAgICAgICAgIDxkaXZcclxuICAgICAgICAgICAgICBrZXk9e3Jvdy5pZH1cclxuICAgICAgICAgICAgICBjbGFzc05hbWU9XCJmbGV4IGZsZXgtd3JhcCBpdGVtcy1jZW50ZXIgZ2FwLTMgcm91bmRlZC1sZyBib3JkZXIgYm9yZGVyLWJvcmRlciBiZy1jYXJkIHAtM1wiXHJcbiAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICB7Y29sdW1ucy5tYXAoKGNvbCkgPT4gKFxyXG4gICAgICAgICAgICAgICAgPGRpdiBrZXk9e2NvbC5rZXl9IGNsYXNzTmFtZT17Y29sLmNsYXNzTmFtZSB8fCBcIm1pbi13LTAgZmxleC0xXCJ9PlxyXG4gICAgICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LVsxMHB4XSBmb250LXNlbWlib2xkIHVwcGVyY2FzZSB0cmFja2luZy13aWRlIHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiPlxyXG4gICAgICAgICAgICAgICAgICAgIHtjb2wubGFiZWx9XHJcbiAgICAgICAgICAgICAgICAgIDwvcD5cclxuICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJtdC0wLjUgdGV4dC1zbSB0ZXh0LWZvcmVncm91bmRcIj57Y29sLnJlbmRlcihyb3cpfTwvZGl2PlxyXG4gICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgKSl9XHJcbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMlwiPlxyXG4gICAgICAgICAgICAgICAge29uVG9nZ2xlQWN0aXZlICYmIChcclxuICAgICAgICAgICAgICAgICAgPFN3aXRjaFxyXG4gICAgICAgICAgICAgICAgICAgIGNoZWNrZWQ9e3Jvdy5hY3RpdmUgIT09IGZhbHNlfVxyXG4gICAgICAgICAgICAgICAgICAgIG9uQ2hlY2tlZENoYW5nZT17KCkgPT4gb25Ub2dnbGVBY3RpdmUocm93KX1cclxuICAgICAgICAgICAgICAgICAgICBhcmlhLWxhYmVsPVwiQWN0aXZlXCJcclxuICAgICAgICAgICAgICAgICAgLz5cclxuICAgICAgICAgICAgICAgICl9XHJcbiAgICAgICAgICAgICAgICA8QnV0dG9uIHNpemU9XCJpY29uXCIgdmFyaWFudD1cImdob3N0XCIgb25DbGljaz17KCkgPT4gb25FZGl0KHJvdyl9PlxyXG4gICAgICAgICAgICAgICAgICA8UGVuY2lsIGNsYXNzTmFtZT1cImgtNCB3LTRcIiAvPlxyXG4gICAgICAgICAgICAgICAgPC9CdXR0b24+XHJcbiAgICAgICAgICAgICAgICA8QnV0dG9uXHJcbiAgICAgICAgICAgICAgICAgIHNpemU9XCJpY29uXCJcclxuICAgICAgICAgICAgICAgICAgdmFyaWFudD1cImdob3N0XCJcclxuICAgICAgICAgICAgICAgICAgY2xhc3NOYW1lPVwidGV4dC1kZXN0cnVjdGl2ZSBob3Zlcjp0ZXh0LWRlc3RydWN0aXZlXCJcclxuICAgICAgICAgICAgICAgICAgb25DbGljaz17KCkgPT4ge1xyXG4gICAgICAgICAgICAgICAgICAgIGlmIChjb25maXJtKFwiRGVsZXRlIHRoaXMgaXRlbT9cIikpIG9uRGVsZXRlKHJvdy5pZCk7XHJcbiAgICAgICAgICAgICAgICAgIH19XHJcbiAgICAgICAgICAgICAgICA+XHJcbiAgICAgICAgICAgICAgICAgIDxUcmFzaDIgY2xhc3NOYW1lPVwiaC00IHctNFwiIC8+XHJcbiAgICAgICAgICAgICAgICA8L0J1dHRvbj5cclxuICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICApKX1cclxuICAgICAgICA8L2Rpdj5cclxuICAgICAgKX1cclxuICAgIDwvZGl2PlxyXG4gICk7XHJcbn1cclxuXHJcbmV4cG9ydCBmdW5jdGlvbiBFZGl0b3JEaWFsb2coe1xyXG4gIG9wZW4sXHJcbiAgb25PcGVuQ2hhbmdlLFxyXG4gIHRpdGxlLFxyXG4gIGNoaWxkcmVuLFxyXG4gIG9uU2F2ZSxcclxuICBzYXZpbmcsXHJcbn06IHtcclxuICBvcGVuOiBib29sZWFuO1xyXG4gIG9uT3BlbkNoYW5nZTogKHY6IGJvb2xlYW4pID0+IHZvaWQ7XHJcbiAgdGl0bGU6IHN0cmluZztcclxuICBjaGlsZHJlbjogUmVhY3ROb2RlO1xyXG4gIG9uU2F2ZTogKCkgPT4gdm9pZDtcclxuICBzYXZpbmc/OiBib29sZWFuO1xyXG59KSB7XHJcbiAgcmV0dXJuIChcclxuICAgIDxEaWFsb2cgb3Blbj17b3Blbn0gb25PcGVuQ2hhbmdlPXtvbk9wZW5DaGFuZ2V9PlxyXG4gICAgICA8RGlhbG9nQ29udGVudCBjbGFzc05hbWU9XCJtYXgtdy0yeGwgbWF4LWgtWzg1dmhdIG92ZXJmbG93LXktYXV0b1wiPlxyXG4gICAgICAgIDxEaWFsb2dIZWFkZXI+XHJcbiAgICAgICAgICA8RGlhbG9nVGl0bGU+e3RpdGxlfTwvRGlhbG9nVGl0bGU+XHJcbiAgICAgICAgPC9EaWFsb2dIZWFkZXI+XHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTNcIj57Y2hpbGRyZW59PC9kaXY+XHJcbiAgICAgICAgPERpYWxvZ0Zvb3Rlcj5cclxuICAgICAgICAgIDxCdXR0b24gdmFyaWFudD1cIm91dGxpbmVcIiBvbkNsaWNrPXsoKSA9PiBvbk9wZW5DaGFuZ2UoZmFsc2UpfT5cclxuICAgICAgICAgICAgQ2FuY2VsXHJcbiAgICAgICAgICA8L0J1dHRvbj5cclxuICAgICAgICAgIDxCdXR0b24gb25DbGljaz17b25TYXZlfSBkaXNhYmxlZD17c2F2aW5nfT5cclxuICAgICAgICAgICAge3NhdmluZyA/IFwiU2F2aW5n4oCmXCIgOiBcIlNhdmVcIn1cclxuICAgICAgICAgIDwvQnV0dG9uPlxyXG4gICAgICAgIDwvRGlhbG9nRm9vdGVyPlxyXG4gICAgICA8L0RpYWxvZ0NvbnRlbnQ+XHJcbiAgICA8L0RpYWxvZz5cclxuICApO1xyXG59XHJcblxyXG5leHBvcnQgeyBEaWFsb2csIERpYWxvZ1RyaWdnZXIgfTtcclxuIl0sIm5hbWVzIjpbIkJ1dHRvbiIsIlN3aXRjaCIsIlBlbmNpbCIsIlBsdXMiLCJUcmFzaDIiLCJEaWFsb2ciLCJEaWFsb2dDb250ZW50IiwiRGlhbG9nSGVhZGVyIiwiRGlhbG9nVGl0bGUiLCJEaWFsb2dGb290ZXIiLCJEaWFsb2dUcmlnZ2VyIiwiQ2F0YWxvZ1RhYmxlIiwicm93cyIsImNvbHVtbnMiLCJpc0xvYWRpbmciLCJlbXB0eVRpdGxlIiwiZW1wdHlCb2R5Iiwib25BZGRDbGljayIsIm9uRWRpdCIsIm9uRGVsZXRlIiwib25Ub2dnbGVBY3RpdmUiLCJhZGRMYWJlbCIsImRpdiIsImNsYXNzTmFtZSIsInNpemUiLCJvbkNsaWNrIiwibGVuZ3RoIiwicCIsIm1hcCIsInJvdyIsImNvbCIsImxhYmVsIiwicmVuZGVyIiwia2V5IiwiY2hlY2tlZCIsImFjdGl2ZSIsIm9uQ2hlY2tlZENoYW5nZSIsImFyaWEtbGFiZWwiLCJ2YXJpYW50IiwiY29uZmlybSIsImlkIiwiRWRpdG9yRGlhbG9nIiwib3BlbiIsIm9uT3BlbkNoYW5nZSIsInRpdGxlIiwiY2hpbGRyZW4iLCJvblNhdmUiLCJzYXZpbmciLCJkaXNhYmxlZCJdLCJtYXBwaW5ncyI6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

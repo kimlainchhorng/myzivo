@@ -1,7 +1,11 @@
 /**
  * How It Works - Premium numbered steps with animated connectors
  */
-import { Search, CreditCard, Plane, CheckCircle, ArrowRight } from "lucide-react";
+import Search from "lucide-react/dist/esm/icons/search";
+import CreditCard from "lucide-react/dist/esm/icons/credit-card";
+import Plane from "lucide-react/dist/esm/icons/plane";
+import CheckCircle from "lucide-react/dist/esm/icons/check-circle";
+import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";

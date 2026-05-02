@@ -2,7 +2,7 @@
  * RideFamilyAccounts — Family profiles, child settings, parental controls, shared payment
  */
 import { useState } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { Users, Baby, Shield, CreditCard, MapPin, Clock, Bell, Plus, ChevronRight, Eye, Check } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -32,6 +32,9 @@ type Tab = "members" | "controls" | "payment";
 export default function RideFamilyAccounts() {
   const [activeTab, setActiveTab] = useState<Tab>("members");
   const [controls, setControls] = useState(parentalControls);
+  const [showInvite, setShowInvite] = useState(false);
+  const [inviteName, setInviteName] = useState("");
+  const [invitePhone, setInvitePhone] = useState("");
 
   const tabs: { id: Tab; label: string; icon: typeof Users }[] = [
     { id: "members", label: "Family", icon: Users },
@@ -98,11 +101,29 @@ export default function RideFamilyAccounts() {
             </div>
           ))}
           <button
-            onClick={() => toast.info("Sending family invite...")}
+            onClick={() => setShowInvite(v => !v)}
             className="w-full py-2.5 bg-primary/10 rounded-xl text-sm font-bold text-primary flex items-center justify-center gap-2"
           >
-            <Plus className="w-4 h-4" /> Add Family Member
+            <Plus className="w-4 h-4" /> {showInvite ? "Cancel" : "Add Family Member"}
           </button>
+          <AnimatePresence>
+            {showInvite && (
+              <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+                className="rounded-xl border border-primary/20 bg-primary/5 p-3 space-y-2">
+                <input value={inviteName} onChange={e => setInviteName(e.target.value)} placeholder="Name"
+                  className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                <div className="flex gap-2">
+                  <input value={invitePhone} onChange={e => setInvitePhone(e.target.value)} placeholder="Phone number" type="tel"
+                    className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+                  <button disabled={!inviteName.trim() || !invitePhone.trim()}
+                    onClick={() => { toast.success(`Invite sent to ${inviteName}!`); setInviteName(""); setInvitePhone(""); setShowInvite(false); }}
+                    className="px-3 rounded-lg bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-40">
+                    Send
+                  </button>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
         </motion.div>
       )}
 

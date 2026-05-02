@@ -1,0 +1,1154 @@
+/**
+ * CreatePostModal — Facebook-style "Create Post" modal
+ * Shared component for Feed and Profile pages
+ */
+import { useState, useRef, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import {
+  X as XIcon, Globe, Users, Lock, FolderPlus, MapPin, Hash,
+  ChevronDown, Image as ImageIcon, Play, Film, Radio, Plus, Search, Share2, Loader2,
+  Smile, Music,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
+import { confirmContentSafe } from "@/lib/security/contentLinkValidation";
+import { supabase } from "@/integrations/supabase/client";
+import VerifiedBadge from "@/components/VerifiedBadge";
+import { isBlueVerified } from "@/lib/verification";
+import { uploadWithProgress } from "@/utils/uploadWithProgress";
+import { stripImageMetadata } from "@/utils/stripImageMetadata";
+
+interface CreatePostModalProps {
+  userId: string;
+  userProfile: { name: string; avatar: string | null } | null;
+  onClose: () => void;
+  onCreated: () => void;
+  initialCaption?: string;
+  sharedMediaUrl?: string;
+  sharedMediaType?: "image" | "video";
+  sharedPostId?: string;
+  sharedPostAuthorId?: string;
+  sharedPostAuthorName?: string;
+  commerceLinkDraft?: {
+    linkType: "store_product" | "truck_sale";
+    storeId?: string;
+    storeProductId?: string;
+    truckSaleId?: string;
+    checkoutPath?: string;
+    mapLat?: number;
+    mapLng?: number;
+    mapLabel?: string;
+  };
+  initialAudioName?: string;
+}
+
+const FILTERS = [
+  { name: "Original", css: "none" },
+  { name: "Vivid", css: "saturate(1.75) contrast(1.08)" },
+  { name: "Warm", css: "sepia(0.3) saturate(1.35) brightness(1.04)" },
+  { name: "Cool", css: "saturate(0.85) hue-rotate(18deg) brightness(1.06)" },
+  { name: "B&W", css: "grayscale(1) contrast(1.2)" },
+  { name: "Vintage", css: "sepia(0.28) saturate(1.08) contrast(0.94) brightness(1.08)" },
+  { name: "Dreamy", css: "brightness(1.15) saturate(0.72) contrast(0.84)" },
+  { name: "Noir", css: "grayscale(0.9) contrast(1.35) brightness(0.88)" },
+];
+
+const LOCATIONS = [
+  "New York, NY", "Los Angeles, CA", "Chicago, IL", "Miami, FL",
+  "San Francisco, CA", "Las Vegas, NV", "Seattle, WA", "Austin, TX",
+  "Denver, CO", "Nashville, TN", "Portland, OR", "Boston, MA",
+  "Phnom Penh, Cambodia", "Siem Reap, Cambodia", "Battambang, Cambodia",
+];
+
+const QUICK_EMOJIS = ["😀", "❤️", "🔥", "👏", "😂", "😍", "🎉", "💯", "🤩", "😎", "✨", "🙏"];
+
+const FEELINGS = [
+  { emoji: "😊", label: "happy" },
+  { emoji: "😢", label: "sad" },
+  { emoji: "😍", label: "in love" },
+  { emoji: "😂", label: "laughing" },
+  { emoji: "😤", label: "motivated" },
+  { emoji: "🙏", label: "grateful" },
+  { emoji: "😴", label: "tired" },
+  { emoji: "🤩", label: "excited" },
+  { emoji: "😡", label: "frustrated" },
+  { emoji: "😎", label: "cool" },
+  { emoji: "🥳", label: "celebrating" },
+  { emoji: "😌", label: "relaxed" },
+  { emoji: "🤔", label: "thoughtful" },
+  { emoji: "💪", label: "strong" },
+  { emoji: "🥺", label: "overwhelmed" },
+  { emoji: "😏", label: "confident" },
+  { emoji: "🤒", label: "sick" },
+  { emoji: "😇", label: "blessed" },
+  { emoji: "🫶", label: "loved" },
+  { emoji: "🧠", label: "focused" },
+];
+
+const DRAFT_KEY = "zivo-post-draft";
+
+export default function CreatePostModal({
+  userId,
+  userProfile,
+  onClose,
+  onCreated,
+  initialCaption,
+  sharedMediaUrl,
+  sharedMediaType,
+  sharedPostId,
+  sharedPostAuthorId,
+  sharedPostAuthorName,
+  commerceLinkDraft,
+  initialAudioName,
+}: CreatePostModalProps) {
+  const navigate = useNavigate();
+  // Load draft from localStorage
+  const loadDraft = () => {
+    try {
+      const saved = localStorage.getItem(DRAFT_KEY);
+      if (saved && !initialCaption && !sharedMediaUrl) {
+        const draft = JSON.parse(saved);
+        return draft.caption || "";
+      }
+    } catch {}
+    return initialCaption || "";
+  };
+
+  const [caption, setCaption] = useState(loadDraft);
+  const [files, setFiles] = useState<File[]>([]);
+  const [previews, setPreviews] = useState<string[]>(sharedMediaUrl ? [sharedMediaUrl] : []);
+  const [mediaType, setMediaType] = useState<"image" | "video">(sharedMediaType || "image");
+  const [selectedType, setSelectedType] = useState<"Photo" | "Video" | "Reel" | "Live" | null>(null);
+  const [visibility, setVisibility] = useState<"everyone" | "friends" | "onlyme">("everyone");
+  const [showVisibilityMenu, setShowVisibilityMenu] = useState(false);
+  const [album, setAlbum] = useState<string | null>(null);
+  const [showAlbumInput, setShowAlbumInput] = useState(false);
+  const [albumInput, setAlbumInput] = useState("");
+  const [uploading, setUploading] = useState(false);
+  const [currentPreview, setCurrentPreview] = useState(0);
+  const [location, setLocation] = useState<string | null>(null);
+  const [showLocationSearch, setShowLocationSearch] = useState(false);
+  const [locationQuery, setLocationQuery] = useState("");
+  const [taggedUsers, setTaggedUsers] = useState<{ id: string; name: string }[]>([]);
+  const [showTagSearch, setShowTagSearch] = useState(false);
+  const [tagQuery, setTagQuery] = useState("");
+  const [tagResults, setTagResults] = useState<any[]>([]);
+  const [tagSearching, setTagSearching] = useState(false);
+  const [activeFilter, setActiveFilter] = useState(0);
+  const [showEmojis, setShowEmojis] = useState(false);
+  const [audioName, setAudioName] = useState(initialAudioName || "");
+  const [showAudioInput, setShowAudioInput] = useState(!!initialAudioName);
+  const [showCameraChoice, setShowCameraChoice] = useState(false);
+  const [feeling, setFeeling] = useState<{ emoji: string; label: string } | null>(null);
+  const [showFeelingPicker, setShowFeelingPicker] = useState(false);
+  const [isPoll, setIsPoll] = useState(false);
+  const [pollOptions, setPollOptions] = useState(["", ""]);
+
+  const fileRef = useRef<HTMLInputElement>(null);
+  const cameraRef = useRef<HTMLInputElement>(null);
+  const captionRef = useRef<HTMLTextAreaElement>(null);
+  const tagTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const albumInputRef = useRef<HTMLInputElement>(null);
+
+  const filteredLocations = locationQuery
+    ? LOCATIONS.filter((l) => l.toLowerCase().includes(locationQuery.toLowerCase()))
+    : LOCATIONS;
+
+  // Auto-save draft
+  useEffect(() => {
+    if (!sharedMediaUrl && !initialCaption) {
+      const timer = setTimeout(() => {
+        if (caption.trim()) {
+          localStorage.setItem(DRAFT_KEY, JSON.stringify({ caption, timestamp: Date.now() }));
+        } else {
+          localStorage.removeItem(DRAFT_KEY);
+        }
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [caption, sharedMediaUrl, initialCaption]);
+
+  // Auto-resize textarea
+  const autoResize = useCallback(() => {
+    const el = captionRef.current;
+    if (el) {
+      el.style.height = "auto";
+      el.style.height = Math.min(el.scrollHeight, 200) + "px";
+    }
+  }, []);
+
+  useEffect(() => { autoResize(); }, [caption, autoResize]);
+
+  // Focus album input when shown
+  useEffect(() => {
+    if (showAlbumInput) albumInputRef.current?.focus();
+  }, [showAlbumInput]);
+
+  // Auto-show camera choice when coming from "Use this sound" with no media
+  useEffect(() => {
+    if (initialAudioName && files.length === 0 && !showCameraChoice) {
+      const timer = setTimeout(() => setShowCameraChoice(true), 400);
+      return () => clearTimeout(timer);
+    }
+  }, [initialAudioName]);
+
+  const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selected = Array.from(e.target.files || []);
+    if (selected.length === 0) return;
+    const newFiles = [...files, ...selected].slice(0, 10);
+    setFiles(newFiles);
+    const newPreviews = newFiles.map((f) => URL.createObjectURL(f));
+    setPreviews((prev) => {
+      prev.forEach((p) => { if (p.startsWith("blob:")) URL.revokeObjectURL(p); });
+      return newPreviews;
+    });
+    if (selected[0].type.startsWith("video")) setMediaType("video");
+  };
+
+  const removeMedia = (index: number) => {
+    const newFiles = files.filter((_, i) => i !== index);
+    setFiles(newFiles);
+    if (previews[index]?.startsWith("blob:")) URL.revokeObjectURL(previews[index]);
+    setPreviews((prev) => prev.filter((_, i) => i !== index));
+    if (currentPreview >= newFiles.length) setCurrentPreview(Math.max(0, newFiles.length - 1));
+  };
+
+  const handleTagSearch = (q: string) => {
+    setTagQuery(q);
+    if (tagTimerRef.current) clearTimeout(tagTimerRef.current);
+    if (!q.trim()) { setTagResults([]); return; }
+    setTagSearching(true);
+    tagTimerRef.current = setTimeout(async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("id, full_name, avatar_url, is_verified")
+        .ilike("full_name", `%${q}%`)
+        .limit(8);
+      setTagResults(data || []);
+      setTagSearching(false);
+    }, 300);
+  };
+
+  const handleCaptionChange = (text: string) => {
+    setCaption(text);
+    const lastWord = text.split(/\s/).pop() || "";
+    if (lastWord.startsWith("@") && lastWord.length > 1) {
+      handleTagSearch(lastWord.slice(1));
+      setShowTagSearch(true);
+    } else if (showTagSearch && !tagQuery) {
+      setShowTagSearch(false);
+    }
+  };
+
+  const insertMention = (user: any) => {
+    const words = caption.split(/\s/);
+    words[words.length - 1] = `@${user.full_name} `;
+    setCaption(words.join(" "));
+    setShowTagSearch(false);
+    if (!taggedUsers.find((t) => t.id === user.id)) {
+      setTaggedUsers((prev) => [...prev, { id: user.id, name: user.full_name }]);
+    }
+  };
+
+  const insertEmoji = (emoji: string) => {
+    setCaption((prev) => prev + emoji);
+    captionRef.current?.focus();
+  };
+
+  const hasSharedLink = !!initialCaption || !!sharedMediaUrl;
+
+  const [uploadStatus, setUploadStatus] = useState("");
+
+  const handlePost = async () => {
+    if (isPoll) {
+      const valid = pollOptions.filter((o) => o.trim());
+      if (!caption.trim()) { toast.error("Please write a poll question"); return; }
+      if (valid.length < 2) { toast.error("Add at least 2 poll options"); return; }
+    } else if (files.length === 0 && !hasSharedLink && !caption.trim()) {
+      toast.error("Please add a photo, video, or write something");
+      return;
+    }
+    if (!confirmContentSafe(caption, "caption")) return;
+    setUploading(true);
+    setUploadStatus("");
+    try {
+      let mediaUrl: string | null = null;
+      let allMediaUrls: string[] = [];
+      let finalMediaType = mediaType;
+
+      // Upload all files (first one is primary media_url)
+      if (files.length > 0) {
+        const uploadedUrls: string[] = [];
+        for (let i = 0; i < files.length; i++) {
+          const original = files[i];
+          const file = await stripImageMetadata(original);
+          const sizeMB = (file.size / (1024 * 1024)).toFixed(0);
+          setUploadStatus(`Uploading ${i + 1}/${files.length} — ${file.name} (${sizeMB} MB) — 0%`);
+          const ext = file.name.split(".").pop() || "jpg";
+          const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
+          const publicUrl = await uploadWithProgress("user-posts", path, file, (pct) => {
+            setUploadStatus(`Uploading ${i + 1}/${files.length} — ${file.name} (${sizeMB} MB) — ${pct}%`);
+          });
+          uploadedUrls.push(publicUrl);
+        }
+        mediaUrl = uploadedUrls[0];
+        allMediaUrls = uploadedUrls;
+        if (files[0].type.startsWith("video")) finalMediaType = "video";
+      } else if (sharedMediaUrl) {
+        mediaUrl = sharedMediaUrl;
+        allMediaUrls = [sharedMediaUrl];
+        finalMediaType = sharedMediaType || "image";
+      } else {
+        finalMediaType = "image";
+      }
+
+      setUploadStatus("Creating post...");
+
+      let finalCaption = caption.trim() || null;
+      if (feeling && finalCaption) {
+        finalCaption = `${finalCaption}\n\n— feeling ${feeling.emoji} ${feeling.label}`;
+      } else if (feeling) {
+        finalCaption = `feeling ${feeling.emoji} ${feeling.label}`;
+      }
+      if (isPoll && finalCaption) {
+        const validOptions = pollOptions.filter((o) => o.trim());
+        const optLines = validOptions.map((o, i) => `${["🔵", "🟢", "🔴", "🟡", "🟠", "🟣"][i] || "▪"} ${o}`).join("\n");
+        finalCaption = `📊 ${finalCaption}\n\n${optLines}`;
+        finalMediaType = "image";
+      }
+
+      const insertData: any = {
+        user_id: userId,
+        media_type: finalMediaType,
+        media_url: mediaUrl,
+        media_urls: allMediaUrls,
+        caption: finalCaption,
+        filter_css: FILTERS[activeFilter]?.css || null,
+        is_published: true,
+        visibility,
+      };
+      if (location) insertData.location = location;
+      if (audioName.trim()) insertData.audio_name = audioName.trim();
+      if (sharedPostId) insertData.shared_from_post_id = sharedPostId;
+      if (sharedPostAuthorId) insertData.shared_from_user_id = sharedPostAuthorId;
+
+      const { data: insertedPost, error: insertErr } = await (supabase as any)
+        .from("user_posts")
+        .insert(insertData)
+        .select("id")
+        .single();
+      if (insertErr) throw insertErr;
+
+      if (commerceLinkDraft && insertedPost?.id) {
+        await (supabase as any).from("social_reel_links").insert({
+          post_id: insertedPost.id,
+          post_source: "user",
+          link_type: commerceLinkDraft.linkType,
+          store_id: commerceLinkDraft.storeId || null,
+          store_product_id: commerceLinkDraft.storeProductId || null,
+          truck_sale_id: commerceLinkDraft.truckSaleId || null,
+          checkout_path: commerceLinkDraft.checkoutPath || null,
+          map_lat: commerceLinkDraft.mapLat ?? null,
+          map_lng: commerceLinkDraft.mapLng ?? null,
+          map_label: commerceLinkDraft.mapLabel || null,
+          created_by: userId,
+        });
+      }
+
+      // Clear draft on successful post
+      localStorage.removeItem(DRAFT_KEY);
+
+      toast.success("Post shared! 🎉");
+      onCreated();
+    } catch (err: any) {
+      console.error("[CreatePost]", err);
+      toast.error(err.message || "Failed to create post");
+    } finally {
+      setUploading(false);
+      setUploadStatus("");
+    }
+  };
+
+  const charCount = caption.length;
+  const charLimit = 2200;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[60] bg-black/50 flex items-end sm:items-center justify-center"
+      onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
+    >
+      <motion.div
+        initial={{ y: 100 }}
+        animate={{ y: 0 }}
+        exit={{ y: 100 }}
+        className="w-full max-w-lg bg-card rounded-t-3xl sm:rounded-2xl max-h-[90vh] overflow-auto pb-20 z-[60]"
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border/30 sticky top-0 bg-card z-10 rounded-t-3xl">
+          <button onClick={onClose} className="text-muted-foreground active:scale-90 transition-transform">
+            <XIcon className="h-5 w-5" />
+          </button>
+          <h2 className="text-sm font-bold text-foreground">Create Post</h2>
+          <button
+            onClick={handlePost}
+            disabled={(files.length === 0 && !hasSharedLink && !caption.trim() && !isPoll) || uploading}
+            className={cn(
+              "px-4 py-1.5 rounded-full text-xs font-bold transition-all",
+              (files.length > 0 || caption.trim() || hasSharedLink) && !uploading
+                ? "bg-primary text-primary-foreground shadow-sm"
+                : "bg-muted text-muted-foreground"
+            )}
+          >
+            {uploading ? (
+              <span className="flex items-center gap-1.5">
+                <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                {uploadStatus || "Posting..."}
+              </span>
+            ) : "Share"}
+          </button>
+        </div>
+
+        {/* Author */}
+        <div className="flex items-center gap-3 px-4 py-3">
+          <div className="h-10 w-10 rounded-full overflow-hidden bg-muted border border-border/30 shrink-0">
+            {userProfile?.avatar ? (
+              <img src={userProfile.avatar} alt="" className="h-full w-full object-cover" />
+            ) : (
+              <div className="h-full w-full flex items-center justify-center text-muted-foreground/40 text-sm font-bold">
+                {userProfile?.name?.[0] || "?"}
+              </div>
+            )}
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-semibold text-foreground truncate">
+              {userProfile?.name || "You"}
+              {feeling && (
+                <span className="text-muted-foreground font-normal"> — feeling {feeling.emoji} {feeling.label}</span>
+              )}
+            </p>
+            {location && (
+              <p className="text-[10px] text-muted-foreground flex items-center gap-1">
+                <MapPin className="h-2.5 w-2.5 shrink-0" /> {location}
+              </p>
+            )}
+          </div>
+        </div>
+
+        {/* Privacy & extras row */}
+        <div className="px-4 pb-2 flex items-center gap-2 flex-wrap">
+          {/* Visibility dropdown */}
+          <div className="relative">
+            <button
+              onClick={() => setShowVisibilityMenu(!showVisibilityMenu)}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/40 border border-border/30 text-xs font-medium text-foreground min-h-[36px]"
+            >
+              {visibility === "everyone" && <Globe className="h-3.5 w-3.5 text-primary" />}
+              {visibility === "friends" && <Users className="h-3.5 w-3.5 text-primary" />}
+              {visibility === "onlyme" && <Lock className="h-3.5 w-3.5 text-primary" />}
+              <span>{visibility === "everyone" ? "Everyone" : visibility === "friends" ? "Friends" : "Only me"}</span>
+              <ChevronDown className="h-3 w-3 text-muted-foreground" />
+            </button>
+            <AnimatePresence>
+              {showVisibilityMenu && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  className="absolute top-full left-0 mt-1 w-40 bg-card border border-border/40 rounded-xl shadow-lg z-10 overflow-hidden"
+                >
+                  {([
+                    { value: "everyone" as const, label: "Everyone", icon: Globe },
+                    { value: "friends" as const, label: "Friends", icon: Users },
+                    { value: "onlyme" as const, label: "Only me", icon: Lock },
+                  ]).map((opt) => (
+                    <button
+                      key={opt.value}
+                      onClick={() => { setVisibility(opt.value); setShowVisibilityMenu(false); }}
+                      className={cn(
+                        "w-full flex items-center gap-2 px-3 py-2.5 text-xs font-medium transition-colors",
+                        visibility === opt.value ? "bg-primary/10 text-primary" : "text-foreground hover:bg-muted/40"
+                      )}
+                    >
+                      <opt.icon className="h-4 w-4" />
+                      {opt.label}
+                      {visibility === opt.value && <span className="ml-auto text-primary">✓</span>}
+                    </button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Album button — inline input instead of prompt() */}
+          <div className="relative">
+            <button
+              onClick={() => {
+                if (album) {
+                  setAlbum(null);
+                  setShowAlbumInput(false);
+                } else {
+                  setShowAlbumInput(!showAlbumInput);
+                }
+              }}
+              className={cn(
+                "flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium min-h-[36px]",
+                album
+                  ? "bg-primary/10 text-primary border-primary/30"
+                  : "bg-muted/40 text-muted-foreground border-border/30 hover:bg-muted/50"
+              )}
+            >
+              <FolderPlus className="h-3.5 w-3.5" />
+              {album || "Album"}
+              {album && <XIcon className="h-3 w-3 ml-0.5" />}
+            </button>
+            <AnimatePresence>
+              {showAlbumInput && !album && (
+                <motion.div
+                  initial={{ opacity: 0, y: -4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  className="absolute top-full left-0 mt-1 w-48 bg-card border border-border/40 rounded-xl shadow-lg z-10 p-2"
+                >
+                  <input
+                    ref={albumInputRef}
+                    type="text"
+                    placeholder="Album name..."
+                    value={albumInput}
+                    onChange={(e) => setAlbumInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && albumInput.trim()) {
+                        setAlbum(albumInput.trim());
+                        setShowAlbumInput(false);
+                        setAlbumInput("");
+                      }
+                    }}
+                    className="w-full bg-muted/30 rounded-lg px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground/50 outline-none border border-border/20 focus:border-primary/40"
+                  />
+                  <button
+                    onClick={() => {
+                      if (albumInput.trim()) {
+                        setAlbum(albumInput.trim());
+                        setShowAlbumInput(false);
+                        setAlbumInput("");
+                      }
+                    }}
+                    disabled={!albumInput.trim()}
+                    className="mt-1.5 w-full py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium disabled:opacity-40"
+                  >
+                    Add
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
+          {/* Location tag */}
+          <button
+            onClick={() => setShowLocationSearch(!showLocationSearch)}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium min-h-[36px]",
+              location
+                ? "bg-primary/10 text-primary border-primary/30"
+                : "bg-muted/40 text-muted-foreground border-border/30 hover:bg-muted/50"
+            )}
+          >
+            <MapPin className="h-3.5 w-3.5" />
+            {location || "Location"}
+          </button>
+
+          {/* Tag people */}
+          <button
+            onClick={() => { setShowTagSearch(true); setTagQuery(""); handleTagSearch(""); }}
+            className={cn(
+              "flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium min-h-[36px]",
+              taggedUsers.length > 0
+                ? "bg-primary/10 text-primary border-primary/30"
+                : "bg-muted/40 text-muted-foreground border-border/30 hover:bg-muted/50"
+            )}
+          >
+            <Hash className="h-3.5 w-3.5" />
+            {taggedUsers.length > 0 ? `${taggedUsers.length} tagged` : "Tag"}
+          </button>
+        </div>
+
+        {/* Location search dropdown */}
+        <AnimatePresence>
+          {showLocationSearch && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden mx-4 mb-2"
+            >
+              <div className="bg-muted/30 rounded-xl border border-border/20 p-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <Search className="h-4 w-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Search location..."
+                    value={locationQuery}
+                    onChange={(e) => setLocationQuery(e.target.value)}
+                    className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none"
+                    autoFocus
+                  />
+                  {location && (
+                    <button onClick={() => { setLocation(null); setShowLocationSearch(false); }} className="text-xs text-destructive">Clear</button>
+                  )}
+                </div>
+                <div className="max-h-[120px] overflow-y-auto space-y-0.5">
+                  {filteredLocations.map((loc) => (
+                    <button
+                      key={loc}
+                      onClick={() => { setLocation(loc); setShowLocationSearch(false); setLocationQuery(""); }}
+                      className={cn(
+                        "w-full text-left px-2 py-1.5 rounded-lg text-xs transition-colors",
+                        location === loc ? "bg-primary/10 text-primary font-medium" : "text-foreground hover:bg-muted/50"
+                      )}
+                    >
+                      <MapPin className="h-3 w-3 inline mr-1.5 text-muted-foreground" />
+                      {loc}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Tag search panel (standalone, not caption-based) */}
+        <AnimatePresence>
+          {showTagSearch && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden mx-4 mb-2"
+            >
+              <div className="bg-muted/30 rounded-xl border border-border/20 p-2">
+                <div className="flex items-center gap-2 mb-2">
+                  <Search className="h-4 w-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    placeholder="Search people..."
+                    value={tagQuery}
+                    onChange={(e) => handleTagSearch(e.target.value)}
+                    className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none"
+                    autoFocus
+                  />
+                  <button onClick={() => setShowTagSearch(false)} className="text-xs text-muted-foreground">Done</button>
+                </div>
+                {tagSearching && <p className="text-xs text-muted-foreground py-2 text-center">Searching...</p>}
+                <div className="max-h-[140px] overflow-y-auto space-y-0.5">
+                  {tagResults.map((u: any) => {
+                    const isTagged = taggedUsers.some((t) => t.id === u.id);
+                    return (
+                      <button
+                        key={u.id}
+                        onClick={() => {
+                          if (isTagged) {
+                            setTaggedUsers((prev) => prev.filter((t) => t.id !== u.id));
+                          } else {
+                            setTaggedUsers((prev) => [...prev, { id: u.id, name: u.full_name }]);
+                          }
+                        }}
+                        className={cn(
+                          "w-full flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors",
+                          isTagged ? "bg-primary/10" : "hover:bg-muted/50"
+                        )}
+                      >
+                        <div className="h-7 w-7 rounded-full bg-muted overflow-hidden shrink-0">
+                          {u.avatar_url ? <img src={u.avatar_url} className="h-full w-full object-cover" alt="" /> :
+                            <div className="h-full w-full flex items-center justify-center text-[10px] font-bold text-muted-foreground">{(u.full_name || "?")[0]}</div>}
+                        </div>
+                        <span className="text-xs font-medium text-foreground flex-1 text-left truncate inline-flex items-center gap-1">
+                          <span className="truncate">{u.full_name}</span>
+                          {isBlueVerified(u.is_verified) && <VerifiedBadge size={11} interactive={false} />}
+                        </span>
+                        {isTagged && <span className="text-primary text-xs">✓</span>}
+                      </button>
+                    );
+                  })}
+                  {!tagSearching && tagQuery && tagResults.length === 0 && (
+                    <p className="text-xs text-muted-foreground py-2 text-center">No results</p>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Tagged users */}
+        {taggedUsers.length > 0 && (
+          <div className="px-4 pb-2 flex flex-wrap gap-1.5">
+            {taggedUsers.map((t) => (
+              <span key={t.id} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-medium">
+                @{t.name}
+                <button onClick={() => setTaggedUsers((prev) => prev.filter((u) => u.id !== t.id))}>
+                  <XIcon className="h-3 w-3" />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+
+        {/* Caption with @mention autocomplete */}
+        <div className="px-4 relative">
+          <textarea
+            ref={captionRef}
+            placeholder="Write a caption... Use @ to tag people"
+            value={caption}
+            onChange={(e) => handleCaptionChange(e.target.value)}
+            maxLength={charLimit}
+            rows={2}
+            className="w-full resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none leading-relaxed"
+            style={{ minHeight: "48px" }}
+          />
+
+          {/* Character counter & emoji toggle */}
+          <div className="flex items-center justify-between mt-1 mb-2">
+            <button
+              onClick={() => setShowEmojis(!showEmojis)}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Smile className="h-5 w-5" />
+            </button>
+            <span className={cn(
+              "text-[10px] font-medium",
+              charCount > charLimit * 0.9 ? "text-destructive" : "text-muted-foreground/50"
+            )}>
+              {charCount}/{charLimit}
+            </span>
+          </div>
+
+          {/* Quick emoji row */}
+          <AnimatePresence>
+            {showEmojis && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden mb-2"
+              >
+                <div className="flex gap-1.5 flex-wrap">
+                  {QUICK_EMOJIS.map((e) => (
+                    <button
+                      key={e}
+                      onClick={() => insertEmoji(e)}
+                      className="h-9 w-9 flex items-center justify-center rounded-lg hover:bg-muted/50 text-lg transition-colors active:scale-90"
+                    >
+                      {e}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* @mention autocomplete */}
+          <AnimatePresence>
+            {showTagSearch && tagResults.length > 0 && !showAlbumInput && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                className="absolute left-0 right-0 bottom-full mb-1 bg-card border border-border/40 rounded-xl shadow-lg z-20 max-h-[160px] overflow-y-auto"
+              >
+                {tagResults.map((u: any) => (
+                  <button
+                    key={u.id}
+                    onClick={() => insertMention(u)}
+                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="h-7 w-7 rounded-full bg-muted overflow-hidden">
+                      {u.avatar_url ? <img src={u.avatar_url} className="h-full w-full object-cover" alt="" /> :
+                        <div className="h-full w-full flex items-center justify-center text-[10px] font-bold text-muted-foreground">{(u.full_name || "?")[0]}</div>}
+                    </div>
+                    <span className="text-xs font-medium text-foreground inline-flex items-center gap-1">
+                      <span>{u.full_name}</span>
+                      {isBlueVerified(u.is_verified) && <VerifiedBadge size={11} interactive={false} />}
+                    </span>
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Feeling picker */}
+        <AnimatePresence>
+          {showFeelingPicker && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden border-t border-border/30"
+            >
+              <div className="px-4 py-3">
+                <p className="text-[11px] font-semibold text-muted-foreground mb-2 uppercase tracking-wide">How are you feeling?</p>
+                <div className="grid grid-cols-4 gap-1.5">
+                  {FEELINGS.map((f) => (
+                    <button
+                      key={f.label}
+                      onClick={() => { setFeeling(feeling?.label === f.label ? null : f); setShowFeelingPicker(false); }}
+                      className={cn(
+                        "flex flex-col items-center gap-1 py-2 rounded-xl transition-all active:scale-95",
+                        feeling?.label === f.label ? "bg-primary/10 ring-2 ring-primary/30" : "hover:bg-muted/50"
+                      )}
+                    >
+                      <span className="text-xl">{f.emoji}</span>
+                      <span className="text-[9px] font-medium text-muted-foreground capitalize">{f.label}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Poll creation */}
+        <AnimatePresence>
+          {isPoll && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden border-t border-border/30"
+            >
+              <div className="px-4 py-3 space-y-2">
+                <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Poll Options</p>
+                {pollOptions.map((opt, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <span className="text-base">{["🔵", "🟢", "🔴", "🟡"][i] || "▪"}</span>
+                    <input
+                      type="text"
+                      value={opt}
+                      onChange={(e) => {
+                        const next = [...pollOptions];
+                        next[i] = e.target.value;
+                        setPollOptions(next);
+                      }}
+                      placeholder={`Option ${i + 1}`}
+                      maxLength={80}
+                      className="flex-1 px-3 py-2 rounded-xl bg-muted/40 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
+                    />
+                    {pollOptions.length > 2 && (
+                      <button onClick={() => setPollOptions(pollOptions.filter((_, j) => j !== i))} className="text-muted-foreground hover:text-destructive">
+                        <XIcon className="h-4 w-4" />
+                      </button>
+                    )}
+                  </div>
+                ))}
+                {pollOptions.length < 6 && (
+                  <button
+                    onClick={() => setPollOptions([...pollOptions, ""])}
+                    className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-dashed border-border/40 text-xs text-primary font-medium hover:bg-primary/5 transition-colors"
+                  >
+                    <Plus className="h-3.5 w-3.5" /> Add option
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Media preview — grid layout like Facebook */}
+        {previews.length > 0 && (
+          <div className="mx-4 mb-3">
+            {/* Main preview */}
+            <div className="relative rounded-xl overflow-hidden bg-black aspect-square mb-2">
+              {(files[currentPreview]?.type?.startsWith("video") || (currentPreview === 0 && mediaType === "video" && files.length === 0)) ? (
+                <video
+                  src={previews[currentPreview]}
+                  className="h-full w-full object-cover"
+                  style={{ filter: FILTERS[activeFilter]?.css || "none" }}
+                  controls
+                  muted
+                />
+              ) : (
+                <img
+                  src={previews[currentPreview]}
+                  alt=""
+                  className="h-full w-full object-cover"
+                  style={{ filter: FILTERS[activeFilter]?.css || "none" }}
+                />
+              )}
+
+              {files.length > 0 && (
+                <button
+                  onClick={() => removeMedia(currentPreview)}
+                  className="absolute top-2 left-2 h-7 w-7 rounded-full bg-black/60 flex items-center justify-center active:scale-90 transition-transform"
+                >
+                  <XIcon className="h-4 w-4 text-white" />
+                </button>
+              )}
+
+              {previews.length > 1 && (
+                <div className="absolute top-2 right-2 px-2 py-1 rounded-full bg-black/60 text-[10px] font-bold text-white">
+                  {currentPreview + 1}/{previews.length}
+                </div>
+              )}
+
+              {sharedMediaUrl && files.length === 0 && (
+                <div className="absolute top-2 left-2 px-2.5 py-1 rounded-full bg-black/60 text-[10px] font-bold text-white uppercase tracking-wider flex items-center gap-1">
+                  <Share2 className="h-3 w-3" /> Shared
+                </div>
+              )}
+            </div>
+
+            {/* Thumbnail grid */}
+            {previews.length >= 1 && (
+              <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+                {previews.map((p, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setCurrentPreview(i)}
+                    className={cn(
+                      "relative shrink-0 h-14 w-14 rounded-lg overflow-hidden border-2 transition-all",
+                      i === currentPreview ? "border-primary ring-1 ring-primary/30 scale-105" : "border-border/30 opacity-70 hover:opacity-100"
+                    )}
+                  >
+                    {files[i]?.type?.startsWith("video") ? (
+                      <video src={p} className="h-full w-full object-cover" muted />
+                    ) : (
+                      <img src={p} alt="" className="h-full w-full object-cover" />
+                    )}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); removeMedia(i); }}
+                      className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-destructive flex items-center justify-center"
+                    >
+                      <XIcon className="h-2.5 w-2.5 text-destructive-foreground" />
+                    </button>
+                  </button>
+                ))}
+                {/* Add more inline */}
+                {files.length < 10 && (
+                  <button
+                    onClick={() => {
+                      if (fileRef.current) {
+                        fileRef.current.accept = "image/*,video/*";
+                        fileRef.current.multiple = true;
+                        fileRef.current.click();
+                      }
+                    }}
+                    className="shrink-0 h-14 w-14 rounded-lg border-2 border-dashed border-border/40 flex items-center justify-center hover:bg-muted/30 transition-colors"
+                  >
+                    <Plus className="h-5 w-5 text-muted-foreground" />
+                  </button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Filter strip */}
+        {previews.length > 0 && mediaType === "image" && (
+          <div className="px-4 pb-3">
+            <p className="text-[10px] font-semibold text-muted-foreground mb-2">Filter</p>
+            <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
+              {FILTERS.map((f, i) => (
+                <button
+                  key={f.name}
+                  onClick={() => setActiveFilter(i)}
+                  className="shrink-0 flex flex-col items-center gap-1"
+                >
+                  <div
+                    className={cn(
+                      "h-14 w-14 rounded-lg overflow-hidden border-2 transition-all",
+                      activeFilter === i ? "border-primary scale-105" : "border-transparent"
+                    )}
+                  >
+                    <img
+                      src={previews[0]}
+                      alt={f.name}
+                      className="h-full w-full object-cover"
+                      style={{ filter: f.css }}
+                    />
+                  </div>
+                  <span className={cn(
+                    "text-[9px] font-medium",
+                    activeFilter === i ? "text-primary" : "text-muted-foreground"
+                  )}>
+                    {f.name}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Audio name input */}
+        <AnimatePresence>
+          {showAudioInput && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden border-t border-border/30"
+            >
+              <div className="px-4 py-3 flex items-center gap-3">
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center shrink-0">
+                  <Music className="w-4 h-4 text-primary" />
+                </div>
+                <input
+                  type="text"
+                  value={audioName}
+                  onChange={(e) => setAudioName(e.target.value)}
+                  placeholder="Sound name (e.g. Original Sound)"
+                  className="flex-1 bg-transparent text-sm outline-none text-foreground placeholder:text-muted-foreground/50"
+                  maxLength={100}
+                  autoFocus
+                />
+                {audioName && (
+                  <button onClick={() => { setAudioName(""); setShowAudioInput(false); }} className="text-muted-foreground hover:text-foreground">
+                    <XIcon className="w-4 h-4" />
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Record/Select video prompt when using a sound */}
+        <AnimatePresence>
+          {showCameraChoice && files.length === 0 && initialAudioName && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden border-t border-border/30"
+            >
+              <div className="px-4 py-4 space-y-2.5">
+                <p className="text-xs text-muted-foreground font-medium text-center">
+                  Create a reel with this sound
+                </p>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    onClick={() => {
+                      if (cameraRef.current) {
+                        cameraRef.current.click();
+                      }
+                      setShowCameraChoice(false);
+                    }}
+                    className="flex flex-col items-center gap-1.5 py-3 rounded-xl bg-primary/10 hover:bg-primary/15 transition-colors"
+                  >
+                    <Film className="h-6 w-6 text-primary" />
+                    <span className="text-xs font-semibold text-primary">Record Video</span>
+                  </button>
+                  <button
+                    onClick={() => {
+                      if (fileRef.current) {
+                        fileRef.current.accept = "video/*";
+                        fileRef.current.multiple = false;
+                        fileRef.current.click();
+                      }
+                      setShowCameraChoice(false);
+                    }}
+                    className="flex flex-col items-center gap-1.5 py-3 rounded-xl bg-muted/60 hover:bg-muted transition-colors"
+                  >
+                    <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                    <span className="text-xs font-semibold text-muted-foreground">From Gallery</span>
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Bottom toolbar — Add to your post */}
+        <div className="px-4 py-2 border-t border-border/30">
+          <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wide mb-2">Add to your post</p>
+          <div className="flex gap-1 overflow-x-auto scrollbar-none pb-1">
+            {[
+              { label: "Photo", icon: ImageIcon, color: "text-emerald-500", action: "photo" as const },
+              { label: "Video", icon: Play, color: "text-rose-500", action: "video" as const },
+              { label: "Feeling", icon: Smile, color: "text-amber-500", action: "feeling" as const },
+              { label: "Poll", icon: Hash, color: "text-violet-500", action: "poll" as const },
+              { label: "Reel", icon: Film, color: "text-indigo-500", action: "reel" as const },
+              { label: "Music", icon: Music, color: "text-sky-500", action: "audio" as const },
+              { label: "Live", icon: Radio, color: "text-red-500", action: "live" as const },
+            ].map((opt) => {
+              const isActive =
+                (opt.action === "audio" && showAudioInput) ||
+                (opt.action === "feeling" && (showFeelingPicker || !!feeling)) ||
+                (opt.action === "poll" && isPoll) ||
+                (["photo", "video", "reel"].includes(opt.action) && selectedType === (opt.label as any));
+              return (
+                <button
+                  key={opt.label}
+                  onClick={() => {
+                    if (opt.action === "live") { onClose(); navigate("/live"); return; }
+                    if (opt.action === "audio") { setShowAudioInput((v) => !v); return; }
+                    if (opt.action === "feeling") {
+                      setShowFeelingPicker((v) => !v);
+                      return;
+                    }
+                    if (opt.action === "poll") {
+                      setIsPoll((v) => !v);
+                      return;
+                    }
+                    const accept = opt.action === "video" || opt.action === "reel" ? "video/*" : "image/*";
+                    setSelectedType(opt.label as any);
+                    if (fileRef.current) {
+                      fileRef.current.accept = accept;
+                      fileRef.current.multiple = opt.action === "photo";
+                      fileRef.current.click();
+                    }
+                  }}
+                  className={cn(
+                    "flex flex-col items-center gap-1 py-2 px-3 rounded-xl shrink-0 transition-colors active:scale-95",
+                    isActive ? "bg-primary/10" : "hover:bg-muted/30"
+                  )}
+                >
+                  <opt.icon className={cn("h-5 w-5 transition-colors", isActive ? "text-primary" : opt.color)} />
+                  <span className={cn("text-[10px] font-medium", isActive ? "text-primary" : "text-muted-foreground")}>
+                    {opt.label}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Add more media button */}
+        {files.length > 0 && files.length < 10 && (
+          <div className="px-4 pb-2">
+            <button
+              onClick={() => {
+                if (fileRef.current) {
+                  fileRef.current.accept = "image/*";
+                  fileRef.current.multiple = true;
+                  fileRef.current.click();
+                }
+              }}
+              className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-dashed border-border/40 text-xs text-primary font-medium hover:bg-primary/5 transition-colors"
+            >
+              <Plus className="h-4 w-4" />
+              Add more ({files.length}/10)
+            </button>
+          </div>
+        )}
+
+        <input
+          ref={fileRef}
+          type="file"
+          accept="image/*,video/*"
+          multiple
+          className="hidden"
+          onChange={handleFiles}
+        />
+        <input
+          ref={cameraRef}
+          type="file"
+          accept="video/*"
+          capture="environment"
+          className="hidden"
+          onChange={handleFiles}
+        />
+      </motion.div>
+    </motion.div>
+  );
+}

@@ -1,584 +1,441 @@
-import { useState, useEffect, useRef, useCallback } from "react";
-import { createPortal } from "react-dom";
-import { Link, useNavigate, useLocation, useSearchParams } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+/**
+ * ZIVO ID — Login page
+ * - Facebook-style saved accounts: tap an avatar, enter password only
+ * - Full email+password form for new/other accounts
+ * - Remember me saves avatar/name to localStorage for quick re-login
+ */
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Loader2, Mail, Lock, ArrowRight, Eye, EyeOff, Sparkles, UserPlus, X, ChevronLeft, Car, AlertTriangle } from "lucide-react";
+import { supabase, setRememberMePreference } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2, Mail, Lock, User, ArrowRight, Shield, Home, Globe, CheckCircle, Sparkles } from "lucide-react";
-import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
 import { toast } from "sonner";
-import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
 import SEOHead from "@/components/SEOHead";
-import { useI18n } from "@/hooks/useI18n";
-import { cn } from "@/lib/utils";
-import InlineLegalSheet, { useLegalSheet } from "@/components/checkout/InlineLegalSheet";
+import { useSavedAccounts, saveAccount, type SavedAccount } from "@/hooks/useSavedAccounts";
 
-// Login schema
-const loginSchema = z.object({
-  email: z.string().email("Please enter a valid email address"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-});
-
-// Signup schema (extends login with name + confirm)
-const signupSchema = z.object({
-  firstName: z.string().min(1, "First name is required").max(50),
-  lastName: z.string().min(1, "Last name is required").max(50),
-  email: z.string().email("Please enter a valid email address"),
-  phone: z.string().min(7, "Please enter a valid phone number").max(20).regex(/^[+]?[\d\s\-().]+$/, "Invalid phone number format"),
-  password: z.string().min(6, "Password must be at least 6 characters"),
-  confirmPassword: z.string(),
-  agreeToTerms: z.literal(true, { errorMap: () => ({ message: "You must agree to the Terms of Service" }) }),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ["confirmPassword"],
-});
-
-type LoginFormData = z.infer<typeof loginSchema>;
-type SignupFormData = z.infer<typeof signupSchema>;
-
-const Login = () => {
-  const [searchParams] = useSearchParams();
-  const initialMode = searchParams.get("mode") === "signup" ? false : true;
-  
-  const [isLogin, setIsLogin] = useState(initialMode);
-
-  // Capture affiliate_code from URL for attribution tracking
-  useEffect(() => {
-    const affiliateCode = searchParams.get("affiliate_code");
-    if (affiliateCode) {
-      sessionStorage.setItem("signup_affiliate_code", affiliateCode);
-    }
-  }, [searchParams]);
-  const [isLoading, setIsLoading] = useState(false);
-  
-  const [showLangMenu, setShowLangMenu] = useState(false);
-  const { sheet, openSheet, setOpen } = useLegalSheet();
-  const { currentLanguage, changeLanguage, t } = useI18n();
-  const LANGS = [
-    { code: "en", label: "English", flag: "/flags/us.svg" },
-    { code: "km", label: "ខ្មែរ", flag: "/flags/kh.svg" },
-    { code: "zh", label: "中文", flag: "/flags/cn.svg" },
-    { code: "ko", label: "한국어", flag: "/flags/kr.svg" },
-    { code: "ja", label: "日本語", flag: "/flags/jp.svg" },
-    { code: "vi", label: "Tiếng Việt", flag: "/flags/vn.svg" },
-    { code: "th", label: "ไทย", flag: "/flags/th.svg" },
-    { code: "es", label: "Español", flag: "/flags/es.svg" },
-    { code: "fr", label: "Français", flag: "/flags/fr.svg" },
-    { code: "de", label: "Deutsch", flag: "/flags/de.svg" },
-    { code: "it", label: "Italiano", flag: "/flags/it.svg" },
-    { code: "pt", label: "Português", flag: "/flags/pt.svg" },
-    { code: "nl", label: "Nederlands", flag: "/flags/nl.svg" },
-    { code: "pl", label: "Polski", flag: "/flags/pl.svg" },
-    { code: "sv", label: "Svenska", flag: "/flags/se.svg" },
-    { code: "da", label: "Dansk", flag: "/flags/dk.svg" },
-    { code: "fi", label: "Suomi", flag: "/flags/fi.svg" },
-    { code: "el", label: "Ελληνικά", flag: "/flags/gr.svg" },
-    { code: "cs", label: "Čeština", flag: "/flags/cz.svg" },
-    { code: "ro", label: "Română", flag: "/flags/ro.svg" },
-    { code: "hu", label: "Magyar", flag: "/flags/hu.svg" },
-    { code: "no", label: "Norsk", flag: "/flags/no.svg" },
-    { code: "ru", label: "Русский", flag: "/flags/ru.svg" },
-    { code: "tr", label: "Türkçe", flag: "/flags/tr.svg" },
-    { code: "ar", label: "العربية", flag: "/flags/sa.svg" },
-  ];
-  const currentLangItem = LANGS.find(l => l.code === currentLanguage);
-  const { signIn, signUp } = useAuth();
-  const navigate = useNavigate();
-  const location = useLocation();
-  
-  const from = (location.state as { from?: { pathname: string } })?.from?.pathname || "/";
-
-  // Login form
-  const loginForm = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: "",
-      password: "",
-    },
-  });
-
-  // Signup form
-  const signupForm = useForm<SignupFormData>({
-    resolver: zodResolver(signupSchema),
-    defaultValues: {
-      firstName: "",
-      lastName: "",
-      email: "",
-      phone: "",
-      password: "",
-      confirmPassword: "",
-      agreeToTerms: undefined as unknown as true,
-    },
-  });
-
-  // Reset forms when switching modes
-  useEffect(() => {
-    if (isLogin) {
-      signupForm.reset();
-    } else {
-      loginForm.reset();
-    }
-  }, [isLogin, loginForm, signupForm]);
-
-  const onLoginSubmit = async (data: LoginFormData) => {
-    setIsLoading(true);
-    const { error } = await signIn(data.email, data.password);
-
-    if (error) {
-      setIsLoading(false);
-      toast.error(error.message || "Failed to sign in");
-      return;
-    }
-
-    // Check user and email verification status
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      // Check email verification for email/password users
-      if (!user.email_confirmed_at) {
-        setIsLoading(false);
-        navigate("/verify-email", { replace: true });
-        return;
-      }
-
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("setup_complete")
-        .eq("user_id", user.id)
-        .maybeSingle();
-
-      // Check if user is admin for auto-redirect
-      const { data: isAdminUser } = await supabase.rpc("check_user_role", {
-        _user_id: user.id,
-        _role: "admin",
-      });
-
-      setIsLoading(false);
-      toast.success("Welcome back!");
-
-      if (isAdminUser) {
-        navigate("/admin/analytics", { replace: true });
-      } else if (!profile?.setup_complete) {
-        navigate("/setup", { replace: true });
-      } else {
-        navigate("/", { replace: true });
-      }
-    } else {
-      setIsLoading(false);
-      navigate(from, { replace: true });
-    }
-  };
-
-  const onSignupSubmit = async (data: SignupFormData) => {
-    setIsLoading(true);
-    
-    // Check if email is on allowlist before attempting signup
-    try {
-      const { data: allowlistResponse, error: allowlistError } = await supabase.functions.invoke(
-        "check-signup-allowlist",
-        { body: { email: data.email } }
-      );
-
-      if (allowlistError) {
-        setIsLoading(false);
-        toast.error("Unable to verify email authorization. Please try again.");
-        return;
-      }
-
-      if (!allowlistResponse?.allowed) {
-        setIsLoading(false);
-        if (allowlistResponse?.existingUser) {
-          toast.info("An account with this email already exists. Please sign in instead.");
-          setIsLogin(true); // Switch to login mode
-        } else {
-          toast.error(allowlistResponse?.message || "This email is not authorized to sign up.");
-        }
-        return;
-      }
-    } catch (err) {
-      setIsLoading(false);
-      toast.error("Unable to verify email authorization. Please try again.");
-      return;
-    }
-
-    const fullName = `${data.firstName} ${data.lastName}`.trim();
-    const { error } = await signUp(data.email, data.password, fullName, data.phone);
-
-    if (error) {
-      setIsLoading(false);
-      toast.error(error.message || "Failed to create account");
-      return;
-    }
-
-    // Get the user ID for OTP tracking
-    const { data: { user } } = await supabase.auth.getUser();
-    const userId = user?.id;
-
-    // Send OTP email
-    try {
-      const { data: otpResponse, error: otpError } = await supabase.functions.invoke(
-        "send-otp-email",
-        { body: { email: data.email, userId } }
-      );
-
-      if (otpError || !otpResponse?.success) {
-        console.error("Failed to send OTP:", otpError || otpResponse?.error);
-        // Fall back to old verification email flow
-        setIsLoading(false);
-        toast.success("Account created! Please check your email to verify.");
-        navigate("/verify-email");
-        return;
-      }
-    } catch (err) {
-      console.error("OTP send error:", err);
-      // Fall back to old verification email flow
-      setIsLoading(false);
-      toast.success("Account created! Please check your email to verify.");
-      navigate("/verify-email");
-      return;
-    }
-
-    setIsLoading(false);
-    toast.success("Verification code sent to your email!");
-    navigate("/verify-otp", { state: { email: data.email, userId } });
-  };
-
-
-  const toggleMode = () => {
-    setIsLogin(!isLogin);
-  };
-
-  // 3D tilt effect
-  const cardRef = useRef<HTMLDivElement>(null);
-  const mouseX = useMotionValue(0);
-  const mouseY = useMotionValue(0);
-  const rotateX = useSpring(useTransform(mouseY, [-0.5, 0.5], [4, -4]), { stiffness: 200, damping: 30 });
-  const rotateY = useSpring(useTransform(mouseX, [-0.5, 0.5], [-4, 4]), { stiffness: 200, damping: 30 });
-
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!cardRef.current) return;
-    const rect = cardRef.current.getBoundingClientRect();
-    mouseX.set((e.clientX - rect.left) / rect.width - 0.5);
-    mouseY.set((e.clientY - rect.top) / rect.height - 0.5);
-  }, [mouseX, mouseY]);
-
-  const handleMouseLeave = useCallback(() => {
-    mouseX.set(0);
-    mouseY.set(0);
-  }, [mouseX, mouseY]);
-
-  const input3D = "w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl py-2 pl-9 pr-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_0_rgba(255,255,255,0.05)]";
-  const input3DLg = "w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl py-2.5 pl-10 pr-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_0_rgba(255,255,255,0.05)]";
+// ── Saved account avatar card ────────────────────────────────────────────────
+function AccountCard({
+  account,
+  onSelect,
+  onRemove,
+}: {
+  account: SavedAccount;
+  onSelect: (account: SavedAccount) => void;
+  onRemove: (email: string) => void;
+}) {
+  const initials = account.fullName
+    ? account.fullName.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase()
+    : account.email[0].toUpperCase();
 
   return (
-    <div className="h-[100dvh] flex flex-col items-center justify-center relative overflow-hidden">
-      <SEOHead title={isLogin ? "Sign In – ZIVO" : "Create Account – ZIVO"} description="Sign in or create your ZIVO account to search flights, hotels, and car rentals." noIndex={true} />
+    <div className="relative group flex flex-col items-center gap-2 cursor-pointer" onClick={() => onSelect(account)}>
+      {/* Remove button */}
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); onRemove(account.email); }}
+        className="absolute -top-1 -right-1 z-10 w-5 h-5 rounded-full bg-black/70 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+        aria-label="Remove account"
+      >
+        <X className="w-3 h-3" />
+      </button>
 
-      {/* 3D Background */}
-      <div className="absolute inset-0">
-        <img src="/images/auth-bg-3d.jpg" alt="" className="w-full h-full object-cover" />
-        <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" />
+      {/* Avatar */}
+      <div className="w-16 h-16 rounded-2xl ring-2 ring-white/10 overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shadow-lg group-hover:ring-emerald-400/60 transition">
+        {account.avatarUrl ? (
+          <img src={account.avatarUrl} alt={account.fullName} className="w-full h-full object-cover" />
+        ) : (
+          <span className="text-white font-bold text-lg">{initials}</span>
+        )}
       </div>
 
-      {/* Floating particles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {[...Array(6)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1 h-1 bg-primary/40 rounded-full"
-            animate={{ y: [0, -200, 0], x: [0, Math.sin(i) * 50, 0], opacity: [0, 0.8, 0] }}
-            transition={{ duration: 4 + i * 0.8, repeat: Infinity, delay: i * 0.7, ease: "easeInOut" }}
-            style={{ left: `${15 + i * 14}%`, bottom: "10%" }}
-          />
-        ))}
+      {/* Name */}
+      <span className="text-xs text-white/80 font-medium text-center max-w-[72px] truncate">
+        {account.fullName || account.email.split("@")[0]}
+      </span>
+    </div>
+  );
+}
+
+// ── Main login page ──────────────────────────────────────────────────────────
+const Login = () => {
+  const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const redirect = params.get("redirect") || "/";
+  const { signIn, user, isLoading: authLoading } = useAuth();
+  const { accounts, remove, refresh } = useSavedAccounts();
+
+  // "picker" = show saved accounts, "password" = selected an account (email locked),
+  // "full" = show email+password form for a new account
+  type Mode = "picker" | "password" | "full";
+  const [mode, setMode] = useState<Mode>(() => (accounts.length > 0 ? "picker" : "full"));
+  const [selectedAccount, setSelectedAccount] = useState<SavedAccount | null>(null);
+
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [capsLockOn, setCapsLockOn] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  const canSubmit =
+    !submitting &&
+    password.length > 0 &&
+    (mode === "password" ? !!selectedAccount : email.trim().length > 0);
+
+  const passwordKeyHandlers = {
+    onKeyUp: (e: React.KeyboardEvent<HTMLInputElement>) =>
+      setCapsLockOn(e.getModifierState("CapsLock")),
+    onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) =>
+      setCapsLockOn(e.getModifierState("CapsLock")),
+    onBlur: () => setCapsLockOn(false),
+  };
+
+  const capsLockNotice = capsLockOn ? (
+    <p role="alert" className="flex items-center gap-1.5 text-xs text-amber-400 mt-1">
+      <AlertTriangle className="w-3.5 h-3.5" />
+      Caps Lock is on
+    </p>
+  ) : null;
+
+  useEffect(() => {
+    if (!authLoading && user) navigate(redirect, { replace: true });
+  }, [authLoading, user, navigate, redirect]);
+
+  // When accounts change (e.g. all removed), fall back to full form
+  useEffect(() => {
+    if (accounts.length === 0 && mode === "picker") setMode("full");
+  }, [accounts.length, mode]);
+
+  const handleSelectAccount = (account: SavedAccount) => {
+    setSelectedAccount(account);
+    setEmail(account.email);
+    setPassword("");
+    setMode("password");
+  };
+
+  const handleAddAccount = () => {
+    setSelectedAccount(null);
+    setEmail("");
+    setPassword("");
+    setMode("full");
+  };
+
+  const handleBack = () => {
+    setPassword("");
+    setMode(accounts.length > 0 ? "picker" : "full");
+  };
+
+  const onSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (submitting) return;
+    const trimmedEmail = (mode === "password" ? selectedAccount!.email : email).trim();
+    if (!trimmedEmail || !password) {
+      toast.error("Please enter your email and password.");
+      return;
+    }
+    setSubmitting(true);
+
+    // Precheck for better error messages
+    let accountExists: boolean | null = null;
+    try {
+      const { data: precheck } = await supabase.functions.invoke("auth_precheck_login", {
+        body: { email: trimmedEmail },
+      });
+      if (precheck && typeof precheck.exists === "boolean") accountExists = precheck.exists;
+    } catch {}
+
+    setRememberMePreference(true);
+    const { error } = await signIn(trimmedEmail, password);
+
+    if (error) {
+      setSubmitting(false);
+      if (error.message === "DRIVER_ACCOUNT") {
+        toast.error("This is a ZIVO Driver account. Please use the ZIVO Driver app to sign in.", {
+          duration: 6000,
+          description: "Driver accounts cannot access the passenger app.",
+          action: {
+            label: "Driver App",
+            onClick: () => window.open("https://apps.apple.com/us/app/zivodrivers/id6759507131", "_blank", "noopener"),
+          },
+        });
+        return;
+      }
+      const msg = (error.message || "").toLowerCase();
+      const badCreds = msg.includes("invalid login") || msg.includes("invalid credentials") || msg.includes("user not found");
+
+      if (accountExists === false || msg.includes("user not found")) {
+        toast.error("No account found for this email.", {
+          action: { label: "Sign Up", onClick: () => navigate(`/signup${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`) },
+        });
+      } else if (accountExists === true || badCreds) {
+        toast.error("Wrong password — please try again.", {
+          action: { label: "Forgot?", onClick: () => navigate("/forgot-password") },
+        });
+      } else {
+        toast.error(error.message || "Sign in failed. Please try again.");
+      }
+      return;
+    }
+
+    // Save account for next time
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name, avatar_url, role")
+        .eq("email", trimmedEmail)
+        .maybeSingle();
+
+      saveAccount({
+        email: trimmedEmail,
+        fullName: profile?.full_name || trimmedEmail.split("@")[0],
+        avatarUrl: profile?.avatar_url ?? null,
+        lastLoginAt: new Date().toISOString(),
+        role: profile?.role ?? null,
+      });
+      refresh();
+    } catch {}
+
+    setSubmitting(false);
+    toast.success("Welcome back!");
+    navigate(redirect, { replace: true });
+  };
+
+  return (
+    <div className="relative min-h-[100dvh] w-full overflow-hidden flex items-center justify-center px-4 py-10 bg-[#04100d]">
+      <SEOHead title="Sign in to ZIVO" description="Sign in to your ZIVO account" />
+
+      {/* Background */}
+      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute inset-0 opacity-90 [background:conic-gradient(from_180deg_at_50%_50%,#022c22_0deg,#064e3b_90deg,#0f766e_180deg,#022c22_270deg,#022c22_360deg)]" />
+        <div className="absolute -top-40 -left-32 w-[520px] h-[520px] rounded-full bg-emerald-400/40 blur-[140px] animate-pulse" />
+        <div className="absolute top-1/4 -right-40 w-[560px] h-[560px] rounded-full bg-teal-300/25 blur-[160px] animate-pulse" style={{ animationDelay: "1.4s" }} />
+        <div className="absolute -bottom-48 left-1/3 w-[620px] h-[620px] rounded-full bg-emerald-700/35 blur-[180px] animate-pulse" style={{ animationDelay: "2.6s" }} />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(0,0,0,0.85)_100%)]" />
+        <div className="absolute inset-0 opacity-[0.05] [background-image:linear-gradient(rgba(255,255,255,0.6)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.6)_1px,transparent_1px)] [background-size:56px_56px] [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_75%)]" />
       </div>
 
-      <div className="w-full max-w-md relative z-10 px-4" style={{ perspective: "1200px" }}>
-        <motion.div
-          ref={cardRef}
-          initial={{ opacity: 0, y: 30, scale: 0.95 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-          style={{
-            rotateX, rotateY,
-            transformStyle: "preserve-3d" as const,
-            boxShadow: "0 25px 60px -15px rgba(0,0,0,0.5), 0 10px 25px -10px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1), inset 0 -1px 0 rgba(0,0,0,0.2)",
-          }}
-          onMouseMove={handleMouseMove}
-          onMouseLeave={handleMouseLeave}
-          className="relative bg-white/[0.08] backdrop-blur-2xl border border-white/[0.15] rounded-3xl p-4 sm:p-5 flex flex-col"
-        >
-          {/* Glass shimmer */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/[0.12] via-transparent to-white/[0.04] rounded-3xl pointer-events-none" />
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/30 to-transparent pointer-events-none" />
-
-          {/* Header */}
-          <div className="text-center mb-3 relative z-20" style={{ transform: "translateZ(30px)" }}>
-            <div className="absolute -left-2 -top-2">
-              <button onClick={(e) => { e.stopPropagation(); navigate("/"); }} className="w-12 h-12 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all active:scale-90 touch-manipulation relative z-30" aria-label="Go to Home">
-                <Home className="w-5 h-5 text-white/70" />
-              </button>
-            </div>
-            <div className="absolute -right-2 -top-2">
-              <button onClick={(e) => { e.stopPropagation(); setShowLangMenu(!showLangMenu); }} className="w-12 h-12 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all active:scale-90 touch-manipulation relative z-30" aria-label="Change language">
-                <Globe className="w-5 h-5 text-white/70" />
-              </button>
-            </div>
-            <h1 className="text-xl sm:text-2xl font-bold text-white tracking-tight drop-shadow-lg">ZIVO ID</h1>
-            <motion.p key={isLogin ? "login" : "signup"} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="text-white/60 mt-0.5 text-xs">
-              {isLogin ? t("auth.welcome_back") : t("auth.get_started")}
-            </motion.p>
+      <div className="relative w-full max-w-md animate-flip-in">
+        {/* Brand */}
+        <div className="text-center mb-6">
+          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 shadow-[0_8px_32px_rgba(16,185,129,0.45)] mb-3 ring-1 ring-white/20">
+            <Sparkles className="w-7 h-7 text-white" />
           </div>
+          <h1 className="text-3xl font-bold bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent tracking-tight">ZIVO ID</h1>
+          <p className="text-sm text-white/60 mt-1">Welcome Back — Zivo All in One Place</p>
+        </div>
 
-          {/* Forms */}
-          <div className="relative z-10">
-          {isLogin ? (
-            <Form {...loginForm}>
-              <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-2.5">
-                <FormField control={loginForm.control} name="email" render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <FormLabel className="text-white/70 text-xs font-medium">{t("auth.email")}</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                        <input type="email" placeholder="you@example.com" autoComplete="email" className={input3DLg} {...field} />
-                      </div>
-                    </FormControl>
-                    <FormMessage className="text-red-400 text-xs" />
-                  </FormItem>
-                )} />
+        <div className="relative rounded-2xl p-[1px] bg-gradient-to-b from-emerald-400/50 via-emerald-500/10 to-transparent shadow-[0_30px_80px_-20px_rgba(16,185,129,0.45)]">
+          <div className="rounded-2xl bg-[#0a1f1a]/85 backdrop-blur-2xl p-6">
 
-                <FormField control={loginForm.control} name="password" render={({ field }) => (
-                  <FormItem className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <FormLabel className="text-white/70 text-xs font-medium">{t("auth.password")}</FormLabel>
-                      <Link to="/forgot-password" className="text-xs text-primary hover:text-primary/80 font-medium transition-colors">{t("auth.forgot")}</Link>
-                    </div>
-                    <FormControl>
-                      <div className="relative">
-                        <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                        <input type="password" placeholder="••••••••" autoComplete="current-password" className={input3DLg} {...field} />
-                      </div>
-                    </FormControl>
-                    <FormMessage className="text-red-400 text-xs" />
-                  </FormItem>
-                )} />
+            {/* ── MODE: saved account picker ── */}
+            {mode === "picker" && (
+              <div className="space-y-5">
+                <p className="text-sm font-medium text-white/70 text-center">Continue as</p>
 
-                <motion.div whileTap={{ scale: 0.97, y: 2 }} whileHover={{ scale: 1.01 }}>
-                  <Button type="submit" className="w-full h-10 text-sm font-bold rounded-xl touch-manipulation transition-all relative overflow-hidden shadow-[0_6px_20px_-4px_rgba(34,197,94,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]" disabled={isLoading} style={{ background: "linear-gradient(180deg, hsl(var(--primary)) 0%, hsl(var(--primary)/0.85) 100%)" }}>
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent h-1/2 pointer-events-none rounded-t-xl" />
-                    {isLoading ? <Loader2 className="h-5 w-5 animate-spin relative z-10" /> : <span className="relative z-10 flex items-center gap-2">{t("auth.sign_in")}<ArrowRight className="h-4 w-4" /></span>}
-                  </Button>
-                </motion.div>
-              </form>
-            </Form>
-          ) : (
-            <Form {...signupForm}>
-              <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} className="space-y-1.5">
-                <div className="grid grid-cols-2 gap-2">
-                  <FormField control={signupForm.control} name="firstName" render={({ field }) => (
-                    <FormItem className="space-y-0.5">
-                      <FormLabel className="text-white/70 text-xs font-medium">{t("auth.first_name")}</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
-                          <input placeholder="John" autoComplete="given-name" className={input3D} {...field} />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-red-400 text-xs" />
-                    </FormItem>
-                  )} />
-                  <FormField control={signupForm.control} name="lastName" render={({ field }) => (
-                    <FormItem className="space-y-0.5">
-                      <FormLabel className="text-white/70 text-xs font-medium">{t("auth.last_name")}</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <User className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
-                          <input placeholder="Doe" autoComplete="family-name" className={input3D} {...field} />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-red-400 text-xs" />
-                    </FormItem>
-                  )} />
-                </div>
+                {/* Account grid */}
+                <div className="flex flex-wrap justify-center gap-4">
+                  {accounts.map((acc) => (
+                    <AccountCard
+                      key={acc.email}
+                      account={acc}
+                      onSelect={handleSelectAccount}
+                      onRemove={(email) => { remove(email); }}
+                    />
+                  ))}
 
-                <FormField control={signupForm.control} name="phone" render={({ field }) => (
-                  <FormItem className="space-y-0.5">
-                    <FormLabel className="text-white/70 text-xs font-medium">{t("auth.phone")}</FormLabel>
-                    <FormControl>
-                      <CountryPhoneInput value={field.value} onChange={field.onChange} onBlur={field.onBlur} name={field.name} />
-                    </FormControl>
-                    <FormMessage className="text-red-400 text-xs" />
-                  </FormItem>
-                )} />
-
-                <FormField control={signupForm.control} name="email" render={({ field }) => (
-                  <FormItem className="space-y-0.5">
-                    <FormLabel className="text-white/70 text-xs font-medium">{t("auth.email")}</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
-                        <input type="email" placeholder="you@example.com" autoComplete="email" className={input3D} {...field} />
-                      </div>
-                    </FormControl>
-                    <FormMessage className="text-red-400 text-xs" />
-                  </FormItem>
-                )} />
-
-                <div className="grid grid-cols-2 gap-2">
-                  <FormField control={signupForm.control} name="password" render={({ field }) => (
-                    <FormItem className="space-y-0.5">
-                      <FormLabel className="text-white/70 text-xs font-medium">{t("auth.password")}</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
-                          <input type="password" placeholder="••••••••" autoComplete="new-password" className={input3D} {...field} />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-red-400 text-xs" />
-                    </FormItem>
-                  )} />
-                  <FormField control={signupForm.control} name="confirmPassword" render={({ field }) => (
-                    <FormItem className="space-y-0.5">
-                      <FormLabel className="text-white/70 text-xs font-medium">{t("auth.confirm_password")}</FormLabel>
-                      <FormControl>
-                        <div className="relative">
-                          <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
-                          <input type="password" placeholder="••••••••" autoComplete="new-password" className={input3D} {...field} />
-                        </div>
-                      </FormControl>
-                      <FormMessage className="text-red-400 text-xs" />
-                    </FormItem>
-                  )} />
-                </div>
-
-                <FormField control={signupForm.control} name="agreeToTerms" render={({ field }) => (
-                  <FormItem className="space-y-0">
-                    <div className="flex items-start gap-2">
-                      <FormControl>
-                        <input type="checkbox" checked={field.value === true} onChange={(e) => field.onChange(e.target.checked ? true : undefined)} className="mt-0.5 h-4 w-4 rounded border-white/30 bg-white/10 text-primary focus:ring-primary accent-primary cursor-pointer" />
-                      </FormControl>
-                      <label className="text-xs text-white/60 leading-tight cursor-pointer" onClick={() => field.onChange(field.value === true ? undefined : true)}>
-                        I agree to the{" "}
-                        <button type="button" onClick={(e) => { e.stopPropagation(); openSheet("Terms of Service", "/terms"); }} className="text-primary hover:underline font-medium">Terms of Service</button>
-                        {" "}and{" "}
-                        <button type="button" onClick={(e) => { e.stopPropagation(); openSheet("Privacy Policy", "/privacy"); }} className="text-primary hover:underline font-medium">Privacy Policy</button>
-                      </label>
-                    </div>
-                    <FormMessage className="text-red-400 text-xs ml-6" />
-                  </FormItem>
-                )} />
-
-                <motion.div whileTap={{ scale: 0.97, y: 2 }} whileHover={{ scale: 1.01 }}>
-                  <Button type="submit" className="w-full h-10 text-sm font-bold rounded-xl touch-manipulation transition-all relative overflow-hidden shadow-[0_6px_20px_-4px_rgba(34,197,94,0.5),0_2px_4px_-1px_rgba(0,0,0,0.3),inset_0_1px_0_rgba(255,255,255,0.2)]" disabled={isLoading} style={{ background: "linear-gradient(180deg, hsl(var(--primary)) 0%, hsl(var(--primary)/0.85) 100%)" }}>
-                    <div className="absolute inset-0 bg-gradient-to-b from-white/20 to-transparent h-1/2 pointer-events-none rounded-t-xl" />
-                    {isLoading ? <Loader2 className="h-5 w-5 animate-spin relative z-10" /> : <span className="relative z-10 flex items-center gap-2">{t("auth.create_account")}<ArrowRight className="h-4 w-4" /></span>}
-                  </Button>
-                </motion.div>
-              </form>
-            </Form>
-          )}
-          </div>
-
-
-          {/* Trust */}
-          <div className="flex items-center justify-center gap-3 mt-2.5 text-white/40 text-[10px] relative z-10">
-            <div className="flex items-center gap-1"><Shield className="w-3 h-3" /><span>{t("auth.encrypted")}</span></div>
-            <div className="w-px h-3 bg-white/15" />
-            <div className="flex items-center gap-1"><Mail className="w-3 h-3" /><span>{t("auth.no_spam")}</span></div>
-          </div>
-
-          {/* Toggle */}
-          <div className="text-center mt-2 relative z-10">
-            <button type="button" onClick={toggleMode} className="text-xs text-white/50 hover:text-white/80 transition-colors">
-              {isLogin ? t("auth.no_account") + " " : t("auth.have_account") + " "}
-              <span className="text-primary font-semibold">{isLogin ? t("auth.sign_up") : t("auth.log_in")}</span>
-            </button>
-          </div>
-
-          <div className="flex items-center justify-center gap-3 mt-2 text-[10px] text-white/30 relative z-10">
-            <span>{isLogin ? t("auth.protected") : t("auth.terms_agree")}</span>
-          </div>
-
-          {/* Partner buttons row */}
-          <div className="relative z-10 mt-4 flex gap-2">
-            {/* Become a ZIVO Partner */}
-            <motion.button
-              type="button"
-              onClick={() => navigate("/partner-with-zivo")}
-              whileHover={{ y: -2, scale: 1.02 }}
-              whileTap={{ scale: 0.96, rotateX: 6 }}
-              className="relative flex-1 py-3 rounded-2xl text-xs font-bold tracking-wide text-white/80 hover:text-white border border-white/10 hover:border-primary/40 bg-gradient-to-b from-white/[0.06] via-transparent to-white/[0.02] backdrop-blur-sm transition-all duration-300 overflow-hidden group"
-              style={{ transformStyle: "preserve-3d" }}
-            >
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-white/[0.04] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-              <span className="relative z-10 flex items-center justify-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-primary" />
-                {t("auth.become_partner")}
-              </span>
-            </motion.button>
-
-            {/* Partner Sign In */}
-            <motion.button
-              type="button"
-              onClick={() => navigate("/partner-login")}
-              whileHover={{ y: -2, scale: 1.02 }}
-              whileTap={{ scale: 0.96, rotateX: 6 }}
-              className="relative flex-1 py-3 rounded-2xl text-xs font-bold tracking-wide text-white/80 hover:text-white border border-white/10 hover:border-primary/40 bg-gradient-to-b from-white/[0.06] via-transparent to-white/[0.02] backdrop-blur-sm transition-all duration-300 overflow-hidden group"
-              style={{ transformStyle: "preserve-3d" }}
-            >
-              <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-transparent via-white/[0.04] to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-              <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-              <span className="relative z-10 flex items-center justify-center gap-1.5">
-                <Lock className="w-3.5 h-3.5 text-primary" />
-                {t("auth.partner_sign_in")}
-              </span>
-            </motion.button>
-          </div>
-        </motion.div>
-      </div>
-
-      <InlineLegalSheet open={sheet.open} onOpenChange={setOpen} title={sheet.title} url={sheet.url} />
-
-      {/* Language menu rendered via portal to escape 3D transform context */}
-      {showLangMenu && createPortal(
-        <>
-          <div className="fixed inset-0 z-[90]" onClick={() => setShowLangMenu(false)} />
-          <div className="fixed inset-0 z-[100] flex items-start justify-center pt-20 px-6 pointer-events-none">
-            <div className="pointer-events-auto w-[260px] max-h-[60vh] bg-black/90 backdrop-blur-2xl border border-white/15 rounded-2xl shadow-2xl py-1 overflow-hidden animate-in fade-in slide-in-from-top-2 duration-150 h-fit ml-auto">
-              <div className="relative px-3 py-2 border-b border-white/10 overflow-hidden">
-                {currentLangItem?.flag && (
-                  <img src={currentLangItem.flag} alt="" className="absolute -right-3 -top-3 w-24 h-24 opacity-[0.07] pointer-events-none blur-[1px]" style={{ transform: "rotate(-12deg) scale(1.3)" }} />
-                )}
-                <p className="text-xs font-medium text-white/60 relative z-10">{t("lang.select")}</p>
-              </div>
-              <div className="max-h-[320px] overflow-y-auto py-1">
-                {LANGS.map(l => (
-                  <button
-                    key={l.code}
-                    onClick={() => { changeLanguage(l.code); setShowLangMenu(false); }}
-                    className={cn(
-                      "w-full flex items-center gap-2.5 px-3 py-2 text-sm transition-all duration-200 relative overflow-hidden group",
-                      currentLanguage === l.code ? "bg-primary/20 text-primary font-semibold" : "text-white/80 hover:bg-white/10"
-                    )}
+                  {/* Add account tile */}
+                  <div
+                    className="flex flex-col items-center gap-2 cursor-pointer group"
+                    onClick={handleAddAccount}
                   >
-                    <img src={l.flag} alt="" className="absolute right-0 top-1/2 w-14 h-14 opacity-0 group-hover:opacity-[0.08] transition-opacity duration-300 pointer-events-none blur-[0.5px]" style={{ transform: "translateY(-50%) rotate(-8deg)" }} />
-                    <img src={l.flag} alt={l.label} className="w-6 h-[17px] rounded-[3px] object-cover shadow-sm border border-white/20 shrink-0 relative z-10" />
-                    <span className="relative z-10 flex-1 text-left">{l.label}</span>
-                    <span className="text-[10px] font-mono text-white/40 uppercase relative z-10">{l.code}</span>
-                    {currentLanguage === l.code && <CheckCircle className="w-3.5 h-3.5 text-primary relative z-10" />}
-                  </button>
-                ))}
+                    <div className="w-16 h-16 rounded-2xl ring-2 ring-white/10 bg-white/5 flex items-center justify-center group-hover:ring-emerald-400/60 group-hover:bg-white/10 transition">
+                      <UserPlus className="w-6 h-6 text-white/50 group-hover:text-emerald-400 transition" />
+                    </div>
+                    <span className="text-xs text-white/50 font-medium">Add account</span>
+                  </div>
+                </div>
+
+                <p className="text-center text-xs text-muted-foreground pt-1">
+                  Don't have an account?{" "}
+                  <Link
+                    to={`/signup${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`}
+                    className="font-semibold text-emerald-400 hover:text-emerald-300"
+                  >
+                    Sign Up
+                  </Link>
+                </p>
               </div>
-            </div>
+            )}
+
+            {/* ── MODE: selected account — password only ── */}
+            {mode === "password" && selectedAccount && (
+              <form onSubmit={onSubmit} className="space-y-5">
+                {/* Back */}
+                <button
+                  type="button"
+                  onClick={handleBack}
+                  className="flex items-center gap-1 text-sm text-white/50 hover:text-white transition"
+                >
+                  <ChevronLeft className="w-4 h-4" /> Back
+                </button>
+
+                {/* Selected account banner */}
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
+                  <div className="w-10 h-10 rounded-xl overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center flex-shrink-0">
+                    {selectedAccount.avatarUrl ? (
+                      <img src={selectedAccount.avatarUrl} alt={selectedAccount.fullName} className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-white font-bold text-sm">
+                        {selectedAccount.fullName ? selectedAccount.fullName.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase() : selectedAccount.email[0].toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-white truncate">{selectedAccount.fullName || selectedAccount.email.split("@")[0]}</p>
+                    <p className="text-xs text-white/50 truncate">{selectedAccount.email}</p>
+                  </div>
+                </div>
+
+                {/* Password */}
+                <div className="space-y-1.5">
+                  <label htmlFor="login-password" className="text-sm font-medium text-foreground">Password</label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                    <input
+                      id="login-password"
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="current-password"
+                      autoFocus
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      {...passwordKeyHandlers}
+                      placeholder="Your password"
+                      disabled={submitting}
+                      className="w-full h-12 pl-10 pr-11 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      tabIndex={-1}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  {capsLockNotice}
+                  <div className="text-right">
+                    <Link to="/forgot-password" className="text-xs font-medium text-emerald-400 hover:text-emerald-300">
+                      Forgot password?
+                    </Link>
+                  </div>
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={!canSubmit}
+                  className="w-full h-12 rounded-xl text-base font-semibold bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Continue <ArrowRight className="w-4 h-4 ml-1" /></>}
+                </Button>
+              </form>
+            )}
+
+            {/* ── MODE: full email + password form ── */}
+            {mode === "full" && (
+              <form onSubmit={onSubmit} className="space-y-5">
+                {/* Back to accounts if any saved */}
+                {accounts.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleBack}
+                    className="flex items-center gap-1 text-sm text-white/50 hover:text-white transition"
+                  >
+                    <ChevronLeft className="w-4 h-4" /> Saved accounts
+                  </button>
+                )}
+
+                {/* Email */}
+                <div className="space-y-1.5">
+                  <label htmlFor="login-email" className="text-sm font-medium text-foreground">Email</label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                    <input
+                      id="login-email"
+                      type="email"
+                      inputMode="email"
+                      autoComplete="username"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      spellCheck={false}
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      disabled={submitting}
+                      className="w-full h-12 pl-10 pr-3 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
+                    />
+                  </div>
+                </div>
+
+                {/* Password */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label htmlFor="login-password-full" className="text-sm font-medium text-foreground">Password</label>
+                    <Link to="/forgot-password" className="text-xs font-medium text-emerald-400 hover:text-emerald-300">Forgot?</Link>
+                  </div>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                    <input
+                      id="login-password-full"
+                      type={showPassword ? "text" : "password"}
+                      autoComplete="current-password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      {...passwordKeyHandlers}
+                      placeholder="Your password"
+                      disabled={submitting}
+                      className="w-full h-12 pl-10 pr-11 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                      tabIndex={-1}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  {capsLockNotice}
+                </div>
+
+                <Button
+                  type="submit"
+                  disabled={!canSubmit}
+                  className="w-full h-12 rounded-xl text-base font-semibold bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Sign In <ArrowRight className="w-4 h-4 ml-1" /></>}
+                </Button>
+
+                <p className="text-center text-sm text-muted-foreground">
+                  Don't have an account?{" "}
+                  <Link
+                    to={`/signup${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`}
+                    className="font-semibold text-emerald-400 hover:text-emerald-300"
+                  >
+                    Sign Up
+                  </Link>
+                </p>
+              </form>
+            )}
+
           </div>
-        </>,
-        document.body
-      )}
+        </div>
+
+        <p className="text-center text-xs text-muted-foreground mt-4">
+          Protected by enterprise-grade security
+        </p>
+      </div>
     </div>
   );
 };

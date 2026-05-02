@@ -8,6 +8,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import { normalizePhoneE164 } from "@/lib/phone";
 
 export interface NotificationPreferences {
   id: string;
@@ -224,8 +225,11 @@ export function useSendPhoneOTP() {
     mutationFn: async (phoneE164: string): Promise<{ success: boolean; message: string }> => {
       if (!user?.id) throw new Error("Not authenticated");
 
+      const normalizedPhone = normalizePhoneE164(phoneE164);
+      if (!normalizedPhone) throw new Error("Phone number is required");
+
       const { data, error } = await supabase.functions.invoke("send-otp-sms", {
-        body: { phone_e164: phoneE164, user_id: user.id },
+        body: { phone_e164: normalizedPhone, user_id: user.id },
       });
 
       if (error) throw error;
@@ -256,8 +260,11 @@ export function useVerifyPhoneOTP() {
     }): Promise<{ success: boolean }> => {
       if (!user?.id) throw new Error("Not authenticated");
 
+      const normalizedPhone = normalizePhoneE164(phoneE164);
+      if (!normalizedPhone) throw new Error("Phone number is required");
+
       const { data, error } = await supabase.functions.invoke("verify-otp-sms", {
-        body: { phone_e164: phoneE164, code, user_id: user.id },
+        body: { phone_e164: normalizedPhone, code, user_id: user.id },
       });
 
       if (error) throw error;

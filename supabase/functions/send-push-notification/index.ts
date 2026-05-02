@@ -12,12 +12,14 @@ const corsHeaders = {
 
 interface PushRequest {
   user_id?: string;
+  user_ids?: string[];  // batch: send to multiple users in one call
   device_token_id?: string;
   notification_type: string;
   title: string;
   body?: string;
   data?: Record<string, unknown>;
   order_id?: string;
+  image_url?: string;
 }
 
 serve(async (req) => {
@@ -25,13 +27,46 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
+  // Internal-only: require service role key
+  const authHeader = req.headers.get("Authorization");
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+  if (!authHeader || !serviceKey || authHeader !== `Bearer ${serviceKey}`) {
+    return new Response(JSON.stringify({ error: "Authentication required" }), {
+      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
+
   try {
-    const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseUrl = Deno.env.get("SUPABASE_URL");
+    const supabaseKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+
+    if (!supabaseUrl || !supabaseKey) {
+      return new Response(
+        JSON.stringify({ error: "Missing Supabase environment configuration" }),
+        { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    const payload: PushRequest = await req.json();
-    const { user_id, device_token_id, notification_type, title, body, data } = payload;
+    let payload: PushRequest | null = null;
+    try {
+      payload = await req.json();
+    } catch {
+      return new Response(
+        JSON.stringify({ error: "Invalid JSON body" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    if (!payload || typeof payload !== "object") {
+      return new Response(
+        JSON.stringify({ error: "Request body must be a JSON object" }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const { user_id, user_ids, device_token_id, notification_type, title, body, data, image_url } = payload;
 
     if (!title || !notification_type) {
       return new Response(
@@ -42,7 +77,7 @@ serve(async (req) => {
 
     // Get device tokens from device_tokens table
     let tokens: any[] = [];
-    
+
     if (device_token_id) {
       const { data: token } = await supabase
         .from("device_tokens")
@@ -50,28 +85,34 @@ serve(async (req) => {
         .eq("id", device_token_id)
         .eq("is_active", true)
         .single();
-      
       if (token) tokens = [token];
+    } else if (user_ids && user_ids.length > 0) {
+      // Batch: fetch tokens for all users in one query
+      const { data: batchTokens } = await supabase
+        .from("device_tokens")
+        .select("*")
+        .in("user_id", user_ids)
+        .eq("is_active", true);
+      tokens = batchTokens || [];
     } else if (user_id) {
       const { data: userTokens } = await supabase
         .from("device_tokens")
         .select("*")
         .eq("user_id", user_id)
         .eq("is_active", true);
-      
       tokens = userTokens || [];
     }
 
-    // Also get web push subscriptions from push_subscriptions table
+    // Also get web push subscriptions (VAPID)
     let webSubscriptions: any[] = [];
-    if (user_id) {
+    const targetUserIds = user_ids && user_ids.length > 0 ? user_ids : user_id ? [user_id] : [];
+    if (targetUserIds.length > 0) {
       const { data: subs } = await supabase
         .from("push_subscriptions")
         .select("*")
-        .eq("user_id", user_id)
+        .in("user_id", targetUserIds)
         .eq("is_active", true)
         .eq("platform", "web");
-      
       webSubscriptions = subs || [];
     }
 
@@ -98,13 +139,16 @@ serve(async (req) => {
       try {
         let sendResult: { success: boolean; error?: string } = { success: false };
 
+        // Always include notification_type in data so clients can route correctly
+        const enrichedData = { notification_type, ...(data || {}) };
+
         if (token.platform === "web") {
           // Legacy web tokens - use web push
-          sendResult = await sendWebPush(token.token, { title, body, data });
+          sendResult = await sendWebPush(token.token, { title, body, data: enrichedData });
         } else if (token.platform === "ios") {
-          sendResult = await sendAPNS(token.token, { title, body, data });
+          sendResult = await sendAPNS(token.token, { title, body, data: enrichedData, image_url });
         } else if (token.platform === "android") {
-          sendResult = await sendFCM(token.token, { title, body, data });
+          sendResult = await sendFCM(token.token, { title, body, data: enrichedData, image_url });
         }
 
         await updateNotificationLog(supabase, log?.id, sendResult);
@@ -302,18 +346,138 @@ async function sendWebPush(
 // APNs implementation via FCM (Firebase handles APNs routing for Capacitor apps)
 async function sendAPNS(
   token: string,
-  payload: { title: string; body?: string; data?: Record<string, unknown> }
+  payload: { title: string; body?: string; data?: Record<string, unknown>; image_url?: string }
 ): Promise<{ success: boolean; error?: string }> {
-  // Capacitor push-notifications plugin uses FCM on both iOS and Android
-  // FCM handles the APNs routing automatically for iOS
-  // So we send via FCM for both platforms
-  return sendFCM(token, payload);
+  const keyId = Deno.env.get("APNS_KEY_ID");
+  const teamId = Deno.env.get("APNS_TEAM_ID");
+  const bundleId = Deno.env.get("APNS_BUNDLE_ID") || "com.hizovo.app";
+  const privateKeyRaw = Deno.env.get("APNS_PRIVATE_KEY");
+  const apnsEnvironment = (Deno.env.get("APNS_ENV") || "development").toLowerCase();
+  const apnsHost = apnsEnvironment === "production"
+    ? "https://api.push.apple.com"
+    : "https://api.sandbox.push.apple.com";
+
+  if (!keyId || !teamId || !privateKeyRaw) {
+    console.error("[APNS] Missing APNS credentials");
+    return { success: false, error: "Missing APNS credentials" };
+  }
+
+  try {
+    const privateKeyPem = privateKeyRaw.includes("-----BEGIN")
+      ? privateKeyRaw
+      : privateKeyRaw.replace(/\\n/g, "\n");
+
+    const tokenJwt = await createAPNsJWT({ keyId, teamId, privateKeyPem });
+
+    const apnsPayload: Record<string, unknown> = {
+      aps: {
+        alert: {
+          title: payload.title,
+          body: payload.body || "",
+        },
+        sound: "default",
+        badge: 1,
+        "mutable-content": 1,
+      },
+      ...(payload.data || {}),
+    };
+
+    // Include image URL for Notification Service Extension to download
+    if (payload.image_url) {
+      apnsPayload.image_url = payload.image_url;
+    }
+
+    const response = await fetch(`${apnsHost}/3/device/${token}`, {
+      method: "POST",
+      headers: {
+        authorization: `bearer ${tokenJwt}`,
+        "apns-topic": bundleId,
+        "apns-push-type": "alert",
+        "apns-priority": "10",
+        "content-type": "application/json",
+      },
+      body: JSON.stringify(apnsPayload),
+    });
+
+    if (response.status === 200) {
+      console.log(`[APNS] Sent to token: ${token.substring(0, 16)}...`);
+      return { success: true };
+    }
+
+    const errorText = await response.text();
+    console.error("[APNS] Send failed:", response.status, errorText);
+    return { success: false, error: `APNS ${response.status}: ${errorText}` };
+  } catch (error) {
+    console.error("[APNS] Error:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "APNS send failed",
+    };
+  }
+}
+
+async function createAPNsJWT(params: {
+  keyId: string;
+  teamId: string;
+  privateKeyPem: string;
+}): Promise<string> {
+  const now = Math.floor(Date.now() / 1000);
+  const header = { alg: "ES256", kid: params.keyId, typ: "JWT" };
+  const claims = { iss: params.teamId, iat: now };
+
+  const encodedHeader = base64UrlEncode(JSON.stringify(header));
+  const encodedClaims = base64UrlEncode(JSON.stringify(claims));
+  const signingInput = `${encodedHeader}.${encodedClaims}`;
+
+  const key = await importP8PrivateKey(params.privateKeyPem);
+  const signatureBuffer = await crypto.subtle.sign(
+    { name: "ECDSA", hash: "SHA-256" },
+    key,
+    new TextEncoder().encode(signingInput),
+  );
+
+  const signature = base64UrlEncodeBytes(new Uint8Array(signatureBuffer));
+  return `${signingInput}.${signature}`;
+}
+
+async function importP8PrivateKey(pem: string): Promise<CryptoKey> {
+  const clean = pem
+    .replace("-----BEGIN PRIVATE KEY-----", "")
+    .replace("-----END PRIVATE KEY-----", "")
+    .replace(/\s+/g, "");
+
+  const der = base64ToBytes(clean);
+  return crypto.subtle.importKey(
+    "pkcs8",
+    der.buffer.slice(der.byteOffset, der.byteOffset + der.byteLength) as ArrayBuffer,
+    { name: "ECDSA", namedCurve: "P-256" },
+    false,
+    ["sign"],
+  );
+}
+
+function base64UrlEncode(value: string): string {
+  return base64UrlEncodeBytes(new TextEncoder().encode(value));
+}
+
+function base64UrlEncodeBytes(bytes: Uint8Array): string {
+  const base64 = btoa(String.fromCharCode(...bytes));
+  return base64.replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/g, "");
+}
+
+function base64ToBytes(base64: string): Uint8Array {
+  const binary = atob(base64);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i += 1) {
+    bytes[i] = binary.charCodeAt(i);
+  }
+  return bytes;
 }
 
 // FCM v1 HTTP API implementation
 async function sendFCM(
   token: string,
-  payload: { title: string; body?: string; data?: Record<string, unknown> }
+  payload: { title: string; body?: string; data?: Record<string, unknown>; image_url?: string }
 ): Promise<{ success: boolean; error?: string }> {
   const fcmKey = Deno.env.get("FCM_SERVER_KEY");
 
@@ -330,6 +494,19 @@ async function sendFCM(
         stringData[key] = String(value ?? "");
       }
     }
+    if (payload.image_url) {
+      stringData.image_url = payload.image_url;
+    }
+
+    const notification: Record<string, unknown> = {
+      title: payload.title,
+      body: payload.body || "",
+      sound: "default",
+      badge: "1",
+    };
+    if (payload.image_url) {
+      notification.image = payload.image_url;
+    }
 
     const response = await fetch("https://fcm.googleapis.com/fcm/send", {
       method: "POST",
@@ -339,12 +516,7 @@ async function sendFCM(
       },
       body: JSON.stringify({
         to: token,
-        notification: {
-          title: payload.title,
-          body: payload.body || "",
-          sound: "default",
-          badge: "1",
-        },
+        notification,
         data: stringData,
         priority: "high",
         // iOS-specific: ensure notification appears when app is in background

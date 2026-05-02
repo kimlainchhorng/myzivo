@@ -10,6 +10,15 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useCustomerLocationBroadcast } from "@/hooks/useCustomerLocationBroadcast";
 import { useRideNotifications } from "@/hooks/useRideNotifications";
+import TripChatFab from "@/components/rides/TripChatFab";
+import CrossServiceCTAs from "@/components/shared/CrossServiceCTAs";
+import { useMultiLegQueue } from "@/hooks/useMultiLegQueue";
+import SavePlaceInline from "@/components/rides/SavePlaceInline";
+
+function shortenAddress(s: string, n = 32) {
+  if (!s) return "";
+  return s.length > n ? `${s.slice(0, n - 1)}…` : s;
+}
 
 export default function RideTrackingPage() {
   const { tripId } = useParams();
@@ -41,7 +50,7 @@ export default function RideTrackingPage() {
 
     const event = statusToEvent[tripData.status];
     if (event) {
-      notify(event as any);
+      notify(event as any, { jobId: tripId });
     }
   }, [tripData?.status, notify]);
 
@@ -111,9 +120,114 @@ export default function RideTrackingPage() {
       }
     : undefined;
 
+  const shareTrip = async () => {
+    if (!tripId) return;
+    const url = `${window.location.origin}/share/trip/${tripId}`;
+    try {
+      if ((navigator as any).share) {
+        await (navigator as any).share({
+          title: "Track my ZIVO ride",
+          text: "I'm on my way — follow my live ride here.",
+          url,
+        });
+        return;
+      }
+      await navigator.clipboard.writeText(url);
+      toast.success("Trip share link copied");
+    } catch {
+      toast.error("Could not share trip");
+    }
+  };
+
+  const { queue, advance, clear } = useMultiLegQueue();
+  const handleNextLeg = () => {
+    const lastDrop = tripData?.dropoff_address ?? queue?.current ?? "";
+    const updated = advance();
+    if (!updated) {
+      clear();
+      navigate("/rides");
+      return;
+    }
+    const sp = new URLSearchParams();
+    if (lastDrop) sp.set("pickup", lastDrop);
+    sp.set("dropoff", updated.current);
+    if (updated.upcoming.length > 0) sp.set("multi", updated.upcoming.join("|"));
+    navigate(`/rides?${sp.toString()}`);
+  };
+
   return (
     <AppLayout title="Live Tracking" showBack onBack={() => navigate("/rides")} hideNav>
       <div className="p-4 space-y-4">
+        {tripData?.status === "completed" && queue && queue.upcoming.length > 0 && (
+          <button
+            onClick={handleNextLeg}
+            className="w-full flex items-center gap-3 rounded-2xl border border-primary/40 bg-gradient-to-r from-primary/15 to-primary/5 p-3 text-left active:scale-[0.99] transition-transform touch-manipulation"
+          >
+            <div className="w-11 h-11 rounded-xl bg-primary/20 text-primary flex items-center justify-center text-lg">
+              ➡️
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-primary">
+                Multi-stop · {queue.upcoming.length} leg{queue.upcoming.length === 1 ? "" : "s"} left
+              </div>
+              <div className="text-sm font-bold text-foreground truncate">
+                Book next leg → {queue.upcoming[0]}
+              </div>
+              <div className="text-[11px] text-muted-foreground">
+                Pickup auto-fills with where you just arrived.
+              </div>
+            </div>
+          </button>
+        )}
+        {tripData?.status && tripData.status !== "completed" && tripData.status !== "cancelled" && (
+          <button
+            onClick={shareTrip}
+            className="w-full flex items-center gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-left active:scale-[0.99] transition-transform touch-manipulation"
+          >
+            <div className="w-11 h-11 rounded-xl bg-emerald-500/20 text-emerald-600 flex items-center justify-center text-lg">
+              🔗
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700">
+                Share live trip
+              </div>
+              <div className="text-sm font-bold text-foreground">
+                Send a public link so a friend can follow along
+              </div>
+            </div>
+          </button>
+        )}
+        {tripData?.status === "completed" && (
+          <>
+            {tripData?.dropoff_address && (
+              <SavePlaceInline address={tripData.dropoff_address} />
+            )}
+            <CrossServiceCTAs
+              variant="after-ride"
+              title="You've arrived — what's next?"
+              context={{ dropoffAddress: tripData?.dropoff_address }}
+            />
+          </>
+        )}
+        {tripData?.status && ["en_route", "arrived", "in_progress"].includes(tripData.status) && tripData?.dropoff_address && (
+          <button
+            onClick={() => navigate(`/eats?q=${encodeURIComponent(tripData.dropoff_address)}`)}
+            className="w-full flex items-center gap-3 rounded-2xl border border-orange-500/30 bg-gradient-to-r from-orange-500/10 to-amber-500/5 p-3 text-left active:scale-[0.99] transition-transform touch-manipulation"
+          >
+            <div className="w-11 h-11 rounded-xl bg-orange-500/15 flex items-center justify-center text-lg">🍽️</div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-orange-600">
+                Skip the wait
+              </div>
+              <div className="text-sm font-bold text-foreground truncate">
+                Pre-order food at {shortenAddress(tripData.dropoff_address)}
+              </div>
+              <div className="text-[11px] text-muted-foreground">
+                Order now so it's ready when your ride arrives.
+              </div>
+            </div>
+          </button>
+        )}
         <DriverEnRouteTracker
           tripId={tripId || ""}
           driverId={tripData?.assigned_driver_id}
@@ -129,6 +243,9 @@ export default function RideTrackingPage() {
           onCancel={() => toast.info("Safety center opened")}
         />
       </div>
+      {isRideActive && tripId && (
+        <TripChatFab rideRequestId={tripId} senderRole="rider" counterpartName={tripData?.driver?.full_name} />
+      )}
     </AppLayout>
   );
 }

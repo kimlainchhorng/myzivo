@@ -1,0 +1,850 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+var _s = $RefreshSig$();
+/**
+ * Auto Repair — Part Shop
+ * Wired to ar_parts: store-owned catalog with search/filter and full CRUD.
+ */ import __vite__cjsImport1_react from "/node_modules/.vite/deps/react.js?v=7fd9520c"; const useState = __vite__cjsImport1_react["useState"]; const useMemo = __vite__cjsImport1_react["useMemo"];
+import { useQuery, useMutation, useQueryClient } from "/node_modules/.vite/deps/@tanstack_react-query.js?v=7fd9520c";
+import { supabase } from "/src/integrations/supabase/client.ts";
+import { Card, CardContent, CardHeader, CardTitle } from "/src/components/ui/card.tsx";
+import { Button } from "/src/components/ui/button.tsx";
+import { Input } from "/src/components/ui/input.tsx";
+import { Badge } from "/src/components/ui/badge.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "/src/components/ui/dialog.tsx";
+import Search from "/node_modules/.vite/deps/lucide-react_dist_esm_icons_search.js?v=7fd9520c";
+import Package from "/node_modules/.vite/deps/lucide-react_dist_esm_icons_package.js?v=7fd9520c";
+import Plus from "/node_modules/.vite/deps/lucide-react_dist_esm_icons_plus.js?v=7fd9520c";
+import Wrench from "/node_modules/.vite/deps/lucide-react_dist_esm_icons_wrench.js?v=7fd9520c";
+import Pencil from "/node_modules/.vite/deps/lucide-react_dist_esm_icons_pencil.js?v=7fd9520c";
+import Trash2 from "/node_modules/.vite/deps/lucide-react_dist_esm_icons_trash-2.js?v=7fd9520c";
+import Sparkles from "/node_modules/.vite/deps/lucide-react_dist_esm_icons_sparkles.js?v=7fd9520c";
+import { toast } from "/node_modules/.vite/deps/sonner.js?v=7fd9520c";
+const SEED = [
+    {
+        sku: "BP-2231",
+        name: "Ceramic Brake Pads (Front)",
+        brand: "Akebono",
+        category: "Brakes",
+        price_cents: 8999,
+        stock: 24
+    },
+    {
+        sku: "BR-1102",
+        name: "Brake Rotor 320mm",
+        brand: "Brembo",
+        category: "Brakes",
+        price_cents: 14500,
+        stock: 12
+    },
+    {
+        sku: "OF-001",
+        name: "Oil Filter (Universal)",
+        brand: "Mobil 1",
+        category: "Engine",
+        price_cents: 1249,
+        stock: 80
+    },
+    {
+        sku: "OL-5W30",
+        name: "5W-30 Full Synthetic 5qt",
+        brand: "Castrol",
+        category: "Fluids",
+        price_cents: 3299,
+        stock: 60
+    },
+    {
+        sku: "SP-4101",
+        name: "Iridium Spark Plug (set of 4)",
+        brand: "NGK",
+        category: "Engine",
+        price_cents: 4800,
+        stock: 35
+    },
+    {
+        sku: "BAT-H7",
+        name: "AGM Battery H7",
+        brand: "Bosch",
+        category: "Electrical",
+        price_cents: 21900,
+        stock: 8
+    },
+    {
+        sku: "TIRE-225",
+        name: "All-Season Tire 225/65R17",
+        brand: "Michelin",
+        category: "Tires",
+        price_cents: 18900,
+        stock: 16
+    },
+    {
+        sku: "CAB-AF",
+        name: "Cabin Air Filter",
+        brand: "K&N",
+        category: "HVAC",
+        price_cents: 2499,
+        stock: 42
+    },
+    {
+        sku: "WB-22",
+        name: 'Wiper Blade 22"',
+        brand: "Bosch",
+        category: "Exterior",
+        price_cents: 1849,
+        stock: 50
+    },
+    {
+        sku: "ALT-130",
+        name: "Alternator 130A",
+        brand: "Denso",
+        category: "Electrical",
+        price_cents: 28900,
+        stock: 5
+    },
+    {
+        sku: "SHK-FR",
+        name: "Front Strut Assembly",
+        brand: "Monroe",
+        category: "Suspension",
+        price_cents: 15600,
+        stock: 10
+    },
+    {
+        sku: "COOL-50",
+        name: "Universal Coolant 1gal",
+        brand: "Prestone",
+        category: "Fluids",
+        price_cents: 1899,
+        stock: 45
+    }
+];
+const CATS = [
+    "All",
+    "Brakes",
+    "Engine",
+    "Fluids",
+    "Electrical",
+    "Tires",
+    "HVAC",
+    "Suspension",
+    "Exterior",
+    "Other"
+];
+const blank = {
+    sku: "",
+    name: "",
+    brand: "",
+    category: "Brakes",
+    price_cents: 0,
+    stock: 0
+};
+export default function AutoRepairPartShopSection({ storeId }) {
+    _s();
+    const qc = useQueryClient();
+    const [q, setQ] = useState("");
+    const [cat, setCat] = useState("All");
+    const [open, setOpen] = useState(false);
+    const [editId, setEditId] = useState(null);
+    const [form, setForm] = useState({
+        ...blank,
+        price: "0.00"
+    });
+    const { data: parts = [], isLoading } = useQuery({
+        queryKey: [
+            "ar-parts",
+            storeId
+        ],
+        queryFn: async ()=>{
+            const { data, error } = await supabase.from("ar_parts").select("*").eq("store_id", storeId).order("created_at", {
+                ascending: false
+            });
+            if (error) throw error;
+            return data ?? [];
+        }
+    });
+    const filtered = useMemo(()=>parts.filter((p)=>(cat === "All" || p.category === cat) && (!q || p.name.toLowerCase().includes(q.toLowerCase()) || p.sku.toLowerCase().includes(q.toLowerCase()) || (p.brand ?? "").toLowerCase().includes(q.toLowerCase()))), [
+        parts,
+        q,
+        cat
+    ]);
+    const seedCatalog = useMutation({
+        mutationFn: async ()=>{
+            const rows = SEED.map((s)=>({
+                    ...s,
+                    store_id: storeId,
+                    active: true
+                }));
+            const { error } = await supabase.from("ar_parts").insert(rows);
+            if (error) throw error;
+        },
+        onSuccess: ()=>{
+            toast.success("12 starter parts added");
+            qc.invalidateQueries({
+                queryKey: [
+                    "ar-parts",
+                    storeId
+                ]
+            });
+        },
+        onError: (e)=>toast.error(e.message ?? "Could not seed catalog")
+    });
+    const upsert = useMutation({
+        mutationFn: async ()=>{
+            if (!form.sku.trim() || !form.name.trim()) throw new Error("SKU and name are required");
+            const payload = {
+                store_id: storeId,
+                sku: form.sku.trim(),
+                name: form.name.trim(),
+                brand: form.brand.trim() || null,
+                category: form.category,
+                price_cents: Math.round((Number(form.price) || 0) * 100),
+                stock: form.stock,
+                active: true
+            };
+            if (editId) {
+                const { error } = await supabase.from("ar_parts").update(payload).eq("id", editId);
+                if (error) throw error;
+            } else {
+                const { error } = await supabase.from("ar_parts").insert(payload);
+                if (error) throw error;
+            }
+        },
+        onSuccess: ()=>{
+            toast.success(editId ? "Part updated" : "Part added");
+            qc.invalidateQueries({
+                queryKey: [
+                    "ar-parts",
+                    storeId
+                ]
+            });
+            setOpen(false);
+            setEditId(null);
+            setForm({
+                ...blank,
+                price: "0.00"
+            });
+        },
+        onError: (e)=>toast.error(e.message ?? "Failed")
+    });
+    const remove = useMutation({
+        mutationFn: async (id)=>{
+            const { error } = await supabase.from("ar_parts").delete().eq("id", id);
+            if (error) throw error;
+        },
+        onSuccess: ()=>{
+            toast.success("Removed");
+            qc.invalidateQueries({
+                queryKey: [
+                    "ar-parts",
+                    storeId
+                ]
+            });
+        }
+    });
+    const startEdit = (p)=>{
+        setEditId(p.id);
+        setForm({
+            sku: p.sku,
+            name: p.name,
+            brand: p.brand ?? "",
+            category: p.category ?? "Other",
+            price_cents: p.price_cents,
+            stock: p.stock,
+            price: (p.price_cents / 100).toFixed(2)
+        });
+        setOpen(true);
+    };
+    const startNew = ()=>{
+        setEditId(null);
+        setForm({
+            ...blank,
+            price: "0.00"
+        });
+        setOpen(true);
+    };
+    return /*#__PURE__*/ _jsxDEV("div", {
+        className: "space-y-4",
+        children: [
+            /*#__PURE__*/ _jsxDEV(Card, {
+                children: [
+                    /*#__PURE__*/ _jsxDEV(CardHeader, {
+                        className: "flex flex-row items-center justify-between",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(CardTitle, {
+                                className: "text-base flex items-center gap-2",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(Wrench, {
+                                        className: "w-4 h-4"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                        lineNumber: 156,
+                                        columnNumber: 13
+                                    }, this),
+                                    " Part Shop",
+                                    /*#__PURE__*/ _jsxDEV(Badge, {
+                                        variant: "secondary",
+                                        className: "ml-1",
+                                        children: parts.length
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                        lineNumber: 157,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                lineNumber: 155,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(Button, {
+                                size: "sm",
+                                className: "gap-1.5",
+                                onClick: startNew,
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(Plus, {
+                                        className: "w-3.5 h-3.5"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                        lineNumber: 160,
+                                        columnNumber: 13
+                                    }, this),
+                                    " Add Part"
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                lineNumber: 159,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                        lineNumber: 154,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(CardContent, {
+                        className: "space-y-3",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "relative",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(Search, {
+                                        className: "absolute left-2.5 top-2.5 w-4 h-4 text-muted-foreground"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                        lineNumber: 165,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV(Input, {
+                                        placeholder: "Search by name, SKU, or brand",
+                                        className: "pl-9",
+                                        value: q,
+                                        onChange: (e)=>setQ(e.target.value)
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                        lineNumber: 166,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                lineNumber: 164,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "flex gap-1.5 overflow-x-auto pb-1",
+                                children: CATS.map((c)=>/*#__PURE__*/ _jsxDEV(Button, {
+                                        size: "sm",
+                                        variant: cat === c ? "default" : "outline",
+                                        onClick: ()=>setCat(c),
+                                        className: "h-7 px-3 text-xs shrink-0",
+                                        children: c
+                                    }, c, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                        lineNumber: 170,
+                                        columnNumber: 15
+                                    }, this))
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                lineNumber: 168,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                        lineNumber: 163,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                lineNumber: 153,
+                columnNumber: 7
+            }, this),
+            isLoading ? /*#__PURE__*/ _jsxDEV("div", {
+                className: "grid grid-cols-2 md:grid-cols-3 gap-3",
+                children: [
+                    0,
+                    1,
+                    2,
+                    3,
+                    4,
+                    5
+                ].map((i)=>/*#__PURE__*/ _jsxDEV("div", {
+                        className: "h-44 rounded-xl bg-muted animate-pulse"
+                    }, i, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                        lineNumber: 178,
+                        columnNumber: 35
+                    }, this))
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                lineNumber: 177,
+                columnNumber: 9
+            }, this) : parts.length === 0 ? /*#__PURE__*/ _jsxDEV(Card, {
+                children: /*#__PURE__*/ _jsxDEV(CardContent, {
+                    className: "py-12 text-center space-y-3",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV(Package, {
+                            className: "w-10 h-10 mx-auto text-muted-foreground/40"
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                            lineNumber: 182,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("p", {
+                            className: "text-sm text-muted-foreground",
+                            children: "No parts in your catalog yet."
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                            lineNumber: 183,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "flex gap-2 justify-center",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV(Button, {
+                                    size: "sm",
+                                    onClick: startNew,
+                                    className: "gap-1.5",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Plus, {
+                                            className: "w-3.5 h-3.5"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                            lineNumber: 185,
+                                            columnNumber: 70
+                                        }, this),
+                                        " Add a part"
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                    lineNumber: 185,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV(Button, {
+                                    size: "sm",
+                                    variant: "outline",
+                                    onClick: ()=>seedCatalog.mutate(),
+                                    disabled: seedCatalog.isPending,
+                                    className: "gap-1.5",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Sparkles, {
+                                            className: "w-3.5 h-3.5"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                            lineNumber: 187,
+                                            columnNumber: 15
+                                        }, this),
+                                        " ",
+                                        seedCatalog.isPending ? "Adding..." : "Seed 12 starter parts"
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                    lineNumber: 186,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                            lineNumber: 184,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                    lineNumber: 181,
+                    columnNumber: 15
+                }, this)
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                lineNumber: 181,
+                columnNumber: 9
+            }, this) : filtered.length === 0 ? /*#__PURE__*/ _jsxDEV("div", {
+                className: "text-center py-12 text-muted-foreground text-sm",
+                children: "No parts match your search."
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                lineNumber: 192,
+                columnNumber: 9
+            }, this) : /*#__PURE__*/ _jsxDEV("div", {
+                className: "grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3",
+                children: filtered.map((p)=>/*#__PURE__*/ _jsxDEV(Card, {
+                        className: "overflow-hidden",
+                        children: /*#__PURE__*/ _jsxDEV(CardContent, {
+                            className: "p-3 space-y-2",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "aspect-video rounded-lg bg-muted flex items-center justify-center",
+                                    children: p.image_url ? /*#__PURE__*/ _jsxDEV("img", {
+                                        src: p.image_url,
+                                        alt: p.name,
+                                        className: "w-full h-full object-cover rounded-lg"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                        lineNumber: 199,
+                                        columnNumber: 34
+                                    }, this) : /*#__PURE__*/ _jsxDEV(Package, {
+                                        className: "w-8 h-8 text-muted-foreground/40"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                        lineNumber: 199,
+                                        columnNumber: 125
+                                    }, this)
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                    lineNumber: 198,
+                                    columnNumber: 17
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV("p", {
+                                            className: "text-xs text-muted-foreground",
+                                            children: [
+                                                p.brand || "—",
+                                                " · ",
+                                                p.sku
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                            lineNumber: 202,
+                                            columnNumber: 19
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("p", {
+                                            className: "text-sm font-semibold leading-tight",
+                                            children: p.name
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                            lineNumber: 203,
+                                            columnNumber: 19
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                    lineNumber: 201,
+                                    columnNumber: 17
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "flex items-center justify-between",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV("div", {
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV("span", {
+                                                    className: "text-base font-bold",
+                                                    children: [
+                                                        "$",
+                                                        (p.price_cents / 100).toFixed(2)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                                    lineNumber: 207,
+                                                    columnNumber: 21
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV(Badge, {
+                                                    variant: p.stock > 10 ? "secondary" : "outline",
+                                                    className: "ml-2 text-[10px]",
+                                                    children: p.stock > 0 ? `${p.stock} in stock` : "Out"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                                    lineNumber: 208,
+                                                    columnNumber: 21
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                            lineNumber: 206,
+                                            columnNumber: 19
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("div", {
+                                            className: "flex gap-1",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV(Button, {
+                                                    size: "icon",
+                                                    variant: "ghost",
+                                                    className: "h-8 w-8",
+                                                    onClick: ()=>startEdit(p),
+                                                    children: /*#__PURE__*/ _jsxDEV(Pencil, {
+                                                        className: "w-4 h-4"
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                                        lineNumber: 213,
+                                                        columnNumber: 106
+                                                    }, this)
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                                    lineNumber: 213,
+                                                    columnNumber: 21
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV(Button, {
+                                                    size: "icon",
+                                                    variant: "ghost",
+                                                    className: "h-8 w-8 text-destructive",
+                                                    onClick: ()=>{
+                                                        if (confirm(`Remove ${p.name}?`)) remove.mutate(p.id);
+                                                    },
+                                                    children: /*#__PURE__*/ _jsxDEV(Trash2, {
+                                                        className: "w-4 h-4"
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                                        lineNumber: 215,
+                                                        columnNumber: 23
+                                                    }, this)
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                                    lineNumber: 214,
+                                                    columnNumber: 21
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                            lineNumber: 212,
+                                            columnNumber: 19
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                    lineNumber: 205,
+                                    columnNumber: 17
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                            lineNumber: 197,
+                            columnNumber: 15
+                        }, this)
+                    }, p.id, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                        lineNumber: 196,
+                        columnNumber: 13
+                    }, this))
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                lineNumber: 194,
+                columnNumber: 9
+            }, this),
+            /*#__PURE__*/ _jsxDEV(Dialog, {
+                open: open,
+                onOpenChange: setOpen,
+                children: /*#__PURE__*/ _jsxDEV(DialogContent, {
+                    className: "max-w-md",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV(DialogHeader, {
+                            children: /*#__PURE__*/ _jsxDEV(DialogTitle, {
+                                children: editId ? "Edit Part" : "Add Part"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                lineNumber: 227,
+                                columnNumber: 25
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                            lineNumber: 227,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "space-y-2",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "grid grid-cols-2 gap-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Input, {
+                                            placeholder: "SKU *",
+                                            value: form.sku,
+                                            onChange: (e)=>setForm({
+                                                    ...form,
+                                                    sku: e.target.value
+                                                })
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                            lineNumber: 230,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV(Input, {
+                                            placeholder: "Brand",
+                                            value: form.brand,
+                                            onChange: (e)=>setForm({
+                                                    ...form,
+                                                    brand: e.target.value
+                                                })
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                            lineNumber: 231,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                    lineNumber: 229,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV(Input, {
+                                    placeholder: "Name *",
+                                    value: form.name,
+                                    onChange: (e)=>setForm({
+                                            ...form,
+                                            name: e.target.value
+                                        })
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                    lineNumber: 233,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("select", {
+                                    value: form.category,
+                                    onChange: (e)=>setForm({
+                                            ...form,
+                                            category: e.target.value
+                                        }),
+                                    className: "w-full h-10 px-3 rounded-md border border-input bg-background text-sm",
+                                    children: CATS.filter((c)=>c !== "All").map((c)=>/*#__PURE__*/ _jsxDEV("option", {
+                                            value: c,
+                                            children: c
+                                        }, c, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                            lineNumber: 239,
+                                            columnNumber: 55
+                                        }, this))
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                    lineNumber: 234,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "grid grid-cols-2 gap-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Input, {
+                                            placeholder: "Price (USD)",
+                                            inputMode: "decimal",
+                                            value: form.price,
+                                            onChange: (e)=>setForm({
+                                                    ...form,
+                                                    price: e.target.value.replace(/[^0-9.]/g, "")
+                                                })
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                            lineNumber: 242,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV(Input, {
+                                            placeholder: "Stock",
+                                            inputMode: "numeric",
+                                            value: String(form.stock),
+                                            onChange: (e)=>setForm({
+                                                    ...form,
+                                                    stock: parseInt(e.target.value.replace(/\D/g, "") || "0", 10)
+                                                })
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                            lineNumber: 248,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                    lineNumber: 241,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                            lineNumber: 228,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV(DialogFooter, {
+                            children: [
+                                /*#__PURE__*/ _jsxDEV(Button, {
+                                    variant: "outline",
+                                    onClick: ()=>setOpen(false),
+                                    children: "Cancel"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                    lineNumber: 257,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV(Button, {
+                                    onClick: ()=>upsert.mutate(),
+                                    disabled: upsert.isPending,
+                                    children: upsert.isPending ? "Saving..." : editId ? "Save changes" : "Add part"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                                    lineNumber: 258,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                            lineNumber: 256,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                    lineNumber: 226,
+                    columnNumber: 9
+                }, this)
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+                lineNumber: 225,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx",
+        lineNumber: 152,
+        columnNumber: 5
+    }, this);
+}
+_s(AutoRepairPartShopSection, "F2swgmvWaSHHyAJekmT7OU5+lrM=", false, function() {
+    return [
+        useQueryClient,
+        useQuery,
+        useMutation,
+        useMutation,
+        useMutation
+    ];
+});
+_c = AutoRepairPartShopSection;
+var _c;
+$RefreshReg$(_c, "AutoRepairPartShopSection");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIkF1dG9SZXBhaXJQYXJ0U2hvcFNlY3Rpb24udHN4Il0sInNvdXJjZXNDb250ZW50IjpbIi8qKlxyXG4gKiBBdXRvIFJlcGFpciDigJQgUGFydCBTaG9wXHJcbiAqIFdpcmVkIHRvIGFyX3BhcnRzOiBzdG9yZS1vd25lZCBjYXRhbG9nIHdpdGggc2VhcmNoL2ZpbHRlciBhbmQgZnVsbCBDUlVELlxyXG4gKi9cclxuaW1wb3J0IHsgdXNlU3RhdGUsIHVzZU1lbW8gfSBmcm9tIFwicmVhY3RcIjtcclxuaW1wb3J0IHsgdXNlUXVlcnksIHVzZU11dGF0aW9uLCB1c2VRdWVyeUNsaWVudCB9IGZyb20gXCJAdGFuc3RhY2svcmVhY3QtcXVlcnlcIjtcclxuaW1wb3J0IHsgc3VwYWJhc2UgfSBmcm9tIFwiQC9pbnRlZ3JhdGlvbnMvc3VwYWJhc2UvY2xpZW50XCI7XHJcbmltcG9ydCB7IENhcmQsIENhcmRDb250ZW50LCBDYXJkSGVhZGVyLCBDYXJkVGl0bGUgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2NhcmRcIjtcclxuaW1wb3J0IHsgQnV0dG9uIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9idXR0b25cIjtcclxuaW1wb3J0IHsgSW5wdXQgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2lucHV0XCI7XHJcbmltcG9ydCB7IEJhZGdlIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9iYWRnZVwiO1xyXG5pbXBvcnQgeyBEaWFsb2csIERpYWxvZ0NvbnRlbnQsIERpYWxvZ0hlYWRlciwgRGlhbG9nVGl0bGUsIERpYWxvZ0Zvb3RlciB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvZGlhbG9nXCI7XHJcbmltcG9ydCBTZWFyY2ggZnJvbSBcImx1Y2lkZS1yZWFjdC9kaXN0L2VzbS9pY29ucy9zZWFyY2hcIjtcclxuaW1wb3J0IFBhY2thZ2UgZnJvbSBcImx1Y2lkZS1yZWFjdC9kaXN0L2VzbS9pY29ucy9wYWNrYWdlXCI7XHJcbmltcG9ydCBQbHVzIGZyb20gXCJsdWNpZGUtcmVhY3QvZGlzdC9lc20vaWNvbnMvcGx1c1wiO1xyXG5pbXBvcnQgV3JlbmNoIGZyb20gXCJsdWNpZGUtcmVhY3QvZGlzdC9lc20vaWNvbnMvd3JlbmNoXCI7XHJcbmltcG9ydCBQZW5jaWwgZnJvbSBcImx1Y2lkZS1yZWFjdC9kaXN0L2VzbS9pY29ucy9wZW5jaWxcIjtcclxuaW1wb3J0IFRyYXNoMiBmcm9tIFwibHVjaWRlLXJlYWN0L2Rpc3QvZXNtL2ljb25zL3RyYXNoLTJcIjtcclxuaW1wb3J0IFNwYXJrbGVzIGZyb20gXCJsdWNpZGUtcmVhY3QvZGlzdC9lc20vaWNvbnMvc3BhcmtsZXNcIjtcclxuaW1wb3J0IHsgdG9hc3QgfSBmcm9tIFwic29ubmVyXCI7XHJcblxyXG5pbnRlcmZhY2UgUHJvcHMgeyBzdG9yZUlkOiBzdHJpbmcgfVxyXG50eXBlIFBhcnQgPSB7XHJcbiAgaWQ6IHN0cmluZztcclxuICBzdG9yZV9pZDogc3RyaW5nO1xyXG4gIHNrdTogc3RyaW5nO1xyXG4gIG5hbWU6IHN0cmluZztcclxuICBicmFuZDogc3RyaW5nIHwgbnVsbDtcclxuICBjYXRlZ29yeTogc3RyaW5nIHwgbnVsbDtcclxuICBwcmljZV9jZW50czogbnVtYmVyO1xyXG4gIHN0b2NrOiBudW1iZXI7XHJcbiAgYWN0aXZlOiBib29sZWFuO1xyXG4gIGltYWdlX3VybDogc3RyaW5nIHwgbnVsbDtcclxufTtcclxuXHJcbmNvbnN0IFNFRUQ6IEFycmF5PE9taXQ8UGFydCwgXCJpZFwiIHwgXCJzdG9yZV9pZFwiIHwgXCJhY3RpdmVcIiB8IFwiaW1hZ2VfdXJsXCI+PiA9IFtcclxuICB7IHNrdTogXCJCUC0yMjMxXCIsIG5hbWU6IFwiQ2VyYW1pYyBCcmFrZSBQYWRzIChGcm9udClcIiwgYnJhbmQ6IFwiQWtlYm9ub1wiLCBjYXRlZ29yeTogXCJCcmFrZXNcIiwgcHJpY2VfY2VudHM6IDg5OTksIHN0b2NrOiAyNCB9LFxyXG4gIHsgc2t1OiBcIkJSLTExMDJcIiwgbmFtZTogXCJCcmFrZSBSb3RvciAzMjBtbVwiLCBicmFuZDogXCJCcmVtYm9cIiwgY2F0ZWdvcnk6IFwiQnJha2VzXCIsIHByaWNlX2NlbnRzOiAxNDUwMCwgc3RvY2s6IDEyIH0sXHJcbiAgeyBza3U6IFwiT0YtMDAxXCIsIG5hbWU6IFwiT2lsIEZpbHRlciAoVW5pdmVyc2FsKVwiLCBicmFuZDogXCJNb2JpbCAxXCIsIGNhdGVnb3J5OiBcIkVuZ2luZVwiLCBwcmljZV9jZW50czogMTI0OSwgc3RvY2s6IDgwIH0sXHJcbiAgeyBza3U6IFwiT0wtNVczMFwiLCBuYW1lOiBcIjVXLTMwIEZ1bGwgU3ludGhldGljIDVxdFwiLCBicmFuZDogXCJDYXN0cm9sXCIsIGNhdGVnb3J5OiBcIkZsdWlkc1wiLCBwcmljZV9jZW50czogMzI5OSwgc3RvY2s6IDYwIH0sXHJcbiAgeyBza3U6IFwiU1AtNDEwMVwiLCBuYW1lOiBcIklyaWRpdW0gU3BhcmsgUGx1ZyAoc2V0IG9mIDQpXCIsIGJyYW5kOiBcIk5HS1wiLCBjYXRlZ29yeTogXCJFbmdpbmVcIiwgcHJpY2VfY2VudHM6IDQ4MDAsIHN0b2NrOiAzNSB9LFxyXG4gIHsgc2t1OiBcIkJBVC1IN1wiLCBuYW1lOiBcIkFHTSBCYXR0ZXJ5IEg3XCIsIGJyYW5kOiBcIkJvc2NoXCIsIGNhdGVnb3J5OiBcIkVsZWN0cmljYWxcIiwgcHJpY2VfY2VudHM6IDIxOTAwLCBzdG9jazogOCB9LFxyXG4gIHsgc2t1OiBcIlRJUkUtMjI1XCIsIG5hbWU6IFwiQWxsLVNlYXNvbiBUaXJlIDIyNS82NVIxN1wiLCBicmFuZDogXCJNaWNoZWxpblwiLCBjYXRlZ29yeTogXCJUaXJlc1wiLCBwcmljZV9jZW50czogMTg5MDAsIHN0b2NrOiAxNiB9LFxyXG4gIHsgc2t1OiBcIkNBQi1BRlwiLCBuYW1lOiBcIkNhYmluIEFpciBGaWx0ZXJcIiwgYnJhbmQ6IFwiSyZOXCIsIGNhdGVnb3J5OiBcIkhWQUNcIiwgcHJpY2VfY2VudHM6IDI0OTksIHN0b2NrOiA0MiB9LFxyXG4gIHsgc2t1OiBcIldCLTIyXCIsIG5hbWU6ICdXaXBlciBCbGFkZSAyMlwiJywgYnJhbmQ6IFwiQm9zY2hcIiwgY2F0ZWdvcnk6IFwiRXh0ZXJpb3JcIiwgcHJpY2VfY2VudHM6IDE4NDksIHN0b2NrOiA1MCB9LFxyXG4gIHsgc2t1OiBcIkFMVC0xMzBcIiwgbmFtZTogXCJBbHRlcm5hdG9yIDEzMEFcIiwgYnJhbmQ6IFwiRGVuc29cIiwgY2F0ZWdvcnk6IFwiRWxlY3RyaWNhbFwiLCBwcmljZV9jZW50czogMjg5MDAsIHN0b2NrOiA1IH0sXHJcbiAgeyBza3U6IFwiU0hLLUZSXCIsIG5hbWU6IFwiRnJvbnQgU3RydXQgQXNzZW1ibHlcIiwgYnJhbmQ6IFwiTW9ucm9lXCIsIGNhdGVnb3J5OiBcIlN1c3BlbnNpb25cIiwgcHJpY2VfY2VudHM6IDE1NjAwLCBzdG9jazogMTAgfSxcclxuICB7IHNrdTogXCJDT09MLTUwXCIsIG5hbWU6IFwiVW5pdmVyc2FsIENvb2xhbnQgMWdhbFwiLCBicmFuZDogXCJQcmVzdG9uZVwiLCBjYXRlZ29yeTogXCJGbHVpZHNcIiwgcHJpY2VfY2VudHM6IDE4OTksIHN0b2NrOiA0NSB9LFxyXG5dO1xyXG5cclxuY29uc3QgQ0FUUyA9IFtcIkFsbFwiLCBcIkJyYWtlc1wiLCBcIkVuZ2luZVwiLCBcIkZsdWlkc1wiLCBcIkVsZWN0cmljYWxcIiwgXCJUaXJlc1wiLCBcIkhWQUNcIiwgXCJTdXNwZW5zaW9uXCIsIFwiRXh0ZXJpb3JcIiwgXCJPdGhlclwiXTtcclxuY29uc3QgYmxhbmsgPSB7IHNrdTogXCJcIiwgbmFtZTogXCJcIiwgYnJhbmQ6IFwiXCIsIGNhdGVnb3J5OiBcIkJyYWtlc1wiLCBwcmljZV9jZW50czogMCwgc3RvY2s6IDAgfTtcclxuXHJcbmV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uIEF1dG9SZXBhaXJQYXJ0U2hvcFNlY3Rpb24oeyBzdG9yZUlkIH06IFByb3BzKSB7XHJcbiAgY29uc3QgcWMgPSB1c2VRdWVyeUNsaWVudCgpO1xyXG4gIGNvbnN0IFtxLCBzZXRRXSA9IHVzZVN0YXRlKFwiXCIpO1xyXG4gIGNvbnN0IFtjYXQsIHNldENhdF0gPSB1c2VTdGF0ZShcIkFsbFwiKTtcclxuICBjb25zdCBbb3Blbiwgc2V0T3Blbl0gPSB1c2VTdGF0ZShmYWxzZSk7XHJcbiAgY29uc3QgW2VkaXRJZCwgc2V0RWRpdElkXSA9IHVzZVN0YXRlPHN0cmluZyB8IG51bGw+KG51bGwpO1xyXG4gIGNvbnN0IFtmb3JtLCBzZXRGb3JtXSA9IHVzZVN0YXRlKHsgLi4uYmxhbmssIHByaWNlOiBcIjAuMDBcIiB9KTtcclxuXHJcbiAgY29uc3QgeyBkYXRhOiBwYXJ0cyA9IFtdLCBpc0xvYWRpbmcgfSA9IHVzZVF1ZXJ5KHtcclxuICAgIHF1ZXJ5S2V5OiBbXCJhci1wYXJ0c1wiLCBzdG9yZUlkXSxcclxuICAgIHF1ZXJ5Rm46IGFzeW5jICgpID0+IHtcclxuICAgICAgY29uc3QgeyBkYXRhLCBlcnJvciB9ID0gYXdhaXQgc3VwYWJhc2VcclxuICAgICAgICAuZnJvbShcImFyX3BhcnRzXCIpXHJcbiAgICAgICAgLnNlbGVjdChcIipcIilcclxuICAgICAgICAuZXEoXCJzdG9yZV9pZFwiLCBzdG9yZUlkKVxyXG4gICAgICAgIC5vcmRlcihcImNyZWF0ZWRfYXRcIiwgeyBhc2NlbmRpbmc6IGZhbHNlIH0pO1xyXG4gICAgICBpZiAoZXJyb3IpIHRocm93IGVycm9yO1xyXG4gICAgICByZXR1cm4gKGRhdGEgPz8gW10pIGFzIFBhcnRbXTtcclxuICAgIH0sXHJcbiAgfSk7XHJcblxyXG4gIGNvbnN0IGZpbHRlcmVkID0gdXNlTWVtbygoKSA9PiBwYXJ0cy5maWx0ZXIocCA9PlxyXG4gICAgKGNhdCA9PT0gXCJBbGxcIiB8fCBwLmNhdGVnb3J5ID09PSBjYXQpICYmXHJcbiAgICAoIXEgfHwgcC5uYW1lLnRvTG93ZXJDYXNlKCkuaW5jbHVkZXMocS50b0xvd2VyQ2FzZSgpKVxyXG4gICAgICB8fCBwLnNrdS50b0xvd2VyQ2FzZSgpLmluY2x1ZGVzKHEudG9Mb3dlckNhc2UoKSlcclxuICAgICAgfHwgKHAuYnJhbmQgPz8gXCJcIikudG9Mb3dlckNhc2UoKS5pbmNsdWRlcyhxLnRvTG93ZXJDYXNlKCkpKVxyXG4gICksIFtwYXJ0cywgcSwgY2F0XSk7XHJcblxyXG4gIGNvbnN0IHNlZWRDYXRhbG9nID0gdXNlTXV0YXRpb24oe1xyXG4gICAgbXV0YXRpb25GbjogYXN5bmMgKCkgPT4ge1xyXG4gICAgICBjb25zdCByb3dzID0gU0VFRC5tYXAocyA9PiAoeyAuLi5zLCBzdG9yZV9pZDogc3RvcmVJZCwgYWN0aXZlOiB0cnVlIH0pKTtcclxuICAgICAgY29uc3QgeyBlcnJvciB9ID0gYXdhaXQgc3VwYWJhc2UuZnJvbShcImFyX3BhcnRzXCIpLmluc2VydChyb3dzKTtcclxuICAgICAgaWYgKGVycm9yKSB0aHJvdyBlcnJvcjtcclxuICAgIH0sXHJcbiAgICBvblN1Y2Nlc3M6ICgpID0+IHtcclxuICAgICAgdG9hc3Quc3VjY2VzcyhcIjEyIHN0YXJ0ZXIgcGFydHMgYWRkZWRcIik7XHJcbiAgICAgIHFjLmludmFsaWRhdGVRdWVyaWVzKHsgcXVlcnlLZXk6IFtcImFyLXBhcnRzXCIsIHN0b3JlSWRdIH0pO1xyXG4gICAgfSxcclxuICAgIG9uRXJyb3I6IChlOiBhbnkpID0+IHRvYXN0LmVycm9yKGUubWVzc2FnZSA/PyBcIkNvdWxkIG5vdCBzZWVkIGNhdGFsb2dcIiksXHJcbiAgfSk7XHJcblxyXG4gIGNvbnN0IHVwc2VydCA9IHVzZU11dGF0aW9uKHtcclxuICAgIG11dGF0aW9uRm46IGFzeW5jICgpID0+IHtcclxuICAgICAgaWYgKCFmb3JtLnNrdS50cmltKCkgfHwgIWZvcm0ubmFtZS50cmltKCkpIHRocm93IG5ldyBFcnJvcihcIlNLVSBhbmQgbmFtZSBhcmUgcmVxdWlyZWRcIik7XHJcbiAgICAgIGNvbnN0IHBheWxvYWQgPSB7XHJcbiAgICAgICAgc3RvcmVfaWQ6IHN0b3JlSWQsXHJcbiAgICAgICAgc2t1OiBmb3JtLnNrdS50cmltKCksXHJcbiAgICAgICAgbmFtZTogZm9ybS5uYW1lLnRyaW0oKSxcclxuICAgICAgICBicmFuZDogZm9ybS5icmFuZC50cmltKCkgfHwgbnVsbCxcclxuICAgICAgICBjYXRlZ29yeTogZm9ybS5jYXRlZ29yeSxcclxuICAgICAgICBwcmljZV9jZW50czogTWF0aC5yb3VuZCgoTnVtYmVyKGZvcm0ucHJpY2UpIHx8IDApICogMTAwKSxcclxuICAgICAgICBzdG9jazogZm9ybS5zdG9jayxcclxuICAgICAgICBhY3RpdmU6IHRydWUsXHJcbiAgICAgIH07XHJcbiAgICAgIGlmIChlZGl0SWQpIHtcclxuICAgICAgICBjb25zdCB7IGVycm9yIH0gPSBhd2FpdCBzdXBhYmFzZS5mcm9tKFwiYXJfcGFydHNcIikudXBkYXRlKHBheWxvYWQpLmVxKFwiaWRcIiwgZWRpdElkKTtcclxuICAgICAgICBpZiAoZXJyb3IpIHRocm93IGVycm9yO1xyXG4gICAgICB9IGVsc2Uge1xyXG4gICAgICAgIGNvbnN0IHsgZXJyb3IgfSA9IGF3YWl0IHN1cGFiYXNlLmZyb20oXCJhcl9wYXJ0c1wiKS5pbnNlcnQocGF5bG9hZCk7XHJcbiAgICAgICAgaWYgKGVycm9yKSB0aHJvdyBlcnJvcjtcclxuICAgICAgfVxyXG4gICAgfSxcclxuICAgIG9uU3VjY2VzczogKCkgPT4ge1xyXG4gICAgICB0b2FzdC5zdWNjZXNzKGVkaXRJZCA/IFwiUGFydCB1cGRhdGVkXCIgOiBcIlBhcnQgYWRkZWRcIik7XHJcbiAgICAgIHFjLmludmFsaWRhdGVRdWVyaWVzKHsgcXVlcnlLZXk6IFtcImFyLXBhcnRzXCIsIHN0b3JlSWRdIH0pO1xyXG4gICAgICBzZXRPcGVuKGZhbHNlKTsgc2V0RWRpdElkKG51bGwpOyBzZXRGb3JtKHsgLi4uYmxhbmssIHByaWNlOiBcIjAuMDBcIiB9KTtcclxuICAgIH0sXHJcbiAgICBvbkVycm9yOiAoZTogYW55KSA9PiB0b2FzdC5lcnJvcihlLm1lc3NhZ2UgPz8gXCJGYWlsZWRcIiksXHJcbiAgfSk7XHJcblxyXG4gIGNvbnN0IHJlbW92ZSA9IHVzZU11dGF0aW9uKHtcclxuICAgIG11dGF0aW9uRm46IGFzeW5jIChpZDogc3RyaW5nKSA9PiB7XHJcbiAgICAgIGNvbnN0IHsgZXJyb3IgfSA9IGF3YWl0IHN1cGFiYXNlLmZyb20oXCJhcl9wYXJ0c1wiKS5kZWxldGUoKS5lcShcImlkXCIsIGlkKTtcclxuICAgICAgaWYgKGVycm9yKSB0aHJvdyBlcnJvcjtcclxuICAgIH0sXHJcbiAgICBvblN1Y2Nlc3M6ICgpID0+IHtcclxuICAgICAgdG9hc3Quc3VjY2VzcyhcIlJlbW92ZWRcIik7XHJcbiAgICAgIHFjLmludmFsaWRhdGVRdWVyaWVzKHsgcXVlcnlLZXk6IFtcImFyLXBhcnRzXCIsIHN0b3JlSWRdIH0pO1xyXG4gICAgfSxcclxuICB9KTtcclxuXHJcbiAgY29uc3Qgc3RhcnRFZGl0ID0gKHA6IFBhcnQpID0+IHtcclxuICAgIHNldEVkaXRJZChwLmlkKTtcclxuICAgIHNldEZvcm0oe1xyXG4gICAgICBza3U6IHAuc2t1LCBuYW1lOiBwLm5hbWUsIGJyYW5kOiBwLmJyYW5kID8/IFwiXCIsIGNhdGVnb3J5OiBwLmNhdGVnb3J5ID8/IFwiT3RoZXJcIixcclxuICAgICAgcHJpY2VfY2VudHM6IHAucHJpY2VfY2VudHMsIHN0b2NrOiBwLnN0b2NrLFxyXG4gICAgICBwcmljZTogKHAucHJpY2VfY2VudHMgLyAxMDApLnRvRml4ZWQoMiksXHJcbiAgICB9KTtcclxuICAgIHNldE9wZW4odHJ1ZSk7XHJcbiAgfTtcclxuXHJcbiAgY29uc3Qgc3RhcnROZXcgPSAoKSA9PiB7XHJcbiAgICBzZXRFZGl0SWQobnVsbCk7XHJcbiAgICBzZXRGb3JtKHsgLi4uYmxhbmssIHByaWNlOiBcIjAuMDBcIiB9KTtcclxuICAgIHNldE9wZW4odHJ1ZSk7XHJcbiAgfTtcclxuXHJcbiAgcmV0dXJuIChcclxuICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS00XCI+XHJcbiAgICAgIDxDYXJkPlxyXG4gICAgICAgIDxDYXJkSGVhZGVyIGNsYXNzTmFtZT1cImZsZXggZmxleC1yb3cgaXRlbXMtY2VudGVyIGp1c3RpZnktYmV0d2VlblwiPlxyXG4gICAgICAgICAgPENhcmRUaXRsZSBjbGFzc05hbWU9XCJ0ZXh0LWJhc2UgZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTJcIj5cclxuICAgICAgICAgICAgPFdyZW5jaCBjbGFzc05hbWU9XCJ3LTQgaC00XCIgLz4gUGFydCBTaG9wXHJcbiAgICAgICAgICAgIDxCYWRnZSB2YXJpYW50PVwic2Vjb25kYXJ5XCIgY2xhc3NOYW1lPVwibWwtMVwiPntwYXJ0cy5sZW5ndGh9PC9CYWRnZT5cclxuICAgICAgICAgIDwvQ2FyZFRpdGxlPlxyXG4gICAgICAgICAgPEJ1dHRvbiBzaXplPVwic21cIiBjbGFzc05hbWU9XCJnYXAtMS41XCIgb25DbGljaz17c3RhcnROZXd9PlxyXG4gICAgICAgICAgICA8UGx1cyBjbGFzc05hbWU9XCJ3LTMuNSBoLTMuNVwiIC8+IEFkZCBQYXJ0XHJcbiAgICAgICAgICA8L0J1dHRvbj5cclxuICAgICAgICA8L0NhcmRIZWFkZXI+XHJcbiAgICAgICAgPENhcmRDb250ZW50IGNsYXNzTmFtZT1cInNwYWNlLXktM1wiPlxyXG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJyZWxhdGl2ZVwiPlxyXG4gICAgICAgICAgICA8U2VhcmNoIGNsYXNzTmFtZT1cImFic29sdXRlIGxlZnQtMi41IHRvcC0yLjUgdy00IGgtNCB0ZXh0LW11dGVkLWZvcmVncm91bmRcIiAvPlxyXG4gICAgICAgICAgICA8SW5wdXQgcGxhY2Vob2xkZXI9XCJTZWFyY2ggYnkgbmFtZSwgU0tVLCBvciBicmFuZFwiIGNsYXNzTmFtZT1cInBsLTlcIiB2YWx1ZT17cX0gb25DaGFuZ2U9e2UgPT4gc2V0UShlLnRhcmdldC52YWx1ZSl9IC8+XHJcbiAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBnYXAtMS41IG92ZXJmbG93LXgtYXV0byBwYi0xXCI+XHJcbiAgICAgICAgICAgIHtDQVRTLm1hcChjID0+IChcclxuICAgICAgICAgICAgICA8QnV0dG9uIGtleT17Y30gc2l6ZT1cInNtXCIgdmFyaWFudD17Y2F0ID09PSBjID8gXCJkZWZhdWx0XCIgOiBcIm91dGxpbmVcIn0gb25DbGljaz17KCkgPT4gc2V0Q2F0KGMpfSBjbGFzc05hbWU9XCJoLTcgcHgtMyB0ZXh0LXhzIHNocmluay0wXCI+e2N9PC9CdXR0b24+XHJcbiAgICAgICAgICAgICkpfVxyXG4gICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgPC9DYXJkQ29udGVudD5cclxuICAgICAgPC9DYXJkPlxyXG5cclxuICAgICAge2lzTG9hZGluZyA/IChcclxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImdyaWQgZ3JpZC1jb2xzLTIgbWQ6Z3JpZC1jb2xzLTMgZ2FwLTNcIj5cclxuICAgICAgICAgIHtbMCwxLDIsMyw0LDVdLm1hcChpID0+IDxkaXYga2V5PXtpfSBjbGFzc05hbWU9XCJoLTQ0IHJvdW5kZWQteGwgYmctbXV0ZWQgYW5pbWF0ZS1wdWxzZVwiIC8+KX1cclxuICAgICAgICA8L2Rpdj5cclxuICAgICAgKSA6IHBhcnRzLmxlbmd0aCA9PT0gMCA/IChcclxuICAgICAgICA8Q2FyZD48Q2FyZENvbnRlbnQgY2xhc3NOYW1lPVwicHktMTIgdGV4dC1jZW50ZXIgc3BhY2UteS0zXCI+XHJcbiAgICAgICAgICA8UGFja2FnZSBjbGFzc05hbWU9XCJ3LTEwIGgtMTAgbXgtYXV0byB0ZXh0LW11dGVkLWZvcmVncm91bmQvNDBcIiAvPlxyXG4gICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1zbSB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5ObyBwYXJ0cyBpbiB5b3VyIGNhdGFsb2cgeWV0LjwvcD5cclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBnYXAtMiBqdXN0aWZ5LWNlbnRlclwiPlxyXG4gICAgICAgICAgICA8QnV0dG9uIHNpemU9XCJzbVwiIG9uQ2xpY2s9e3N0YXJ0TmV3fSBjbGFzc05hbWU9XCJnYXAtMS41XCI+PFBsdXMgY2xhc3NOYW1lPVwidy0zLjUgaC0zLjVcIiAvPiBBZGQgYSBwYXJ0PC9CdXR0b24+XHJcbiAgICAgICAgICAgIDxCdXR0b24gc2l6ZT1cInNtXCIgdmFyaWFudD1cIm91dGxpbmVcIiBvbkNsaWNrPXsoKSA9PiBzZWVkQ2F0YWxvZy5tdXRhdGUoKX0gZGlzYWJsZWQ9e3NlZWRDYXRhbG9nLmlzUGVuZGluZ30gY2xhc3NOYW1lPVwiZ2FwLTEuNVwiPlxyXG4gICAgICAgICAgICAgIDxTcGFya2xlcyBjbGFzc05hbWU9XCJ3LTMuNSBoLTMuNVwiIC8+IHtzZWVkQ2F0YWxvZy5pc1BlbmRpbmcgPyBcIkFkZGluZy4uLlwiIDogXCJTZWVkIDEyIHN0YXJ0ZXIgcGFydHNcIn1cclxuICAgICAgICAgICAgPC9CdXR0b24+XHJcbiAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICA8L0NhcmRDb250ZW50PjwvQ2FyZD5cclxuICAgICAgKSA6IGZpbHRlcmVkLmxlbmd0aCA9PT0gMCA/IChcclxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInRleHQtY2VudGVyIHB5LTEyIHRleHQtbXV0ZWQtZm9yZWdyb3VuZCB0ZXh0LXNtXCI+Tm8gcGFydHMgbWF0Y2ggeW91ciBzZWFyY2guPC9kaXY+XHJcbiAgICAgICkgOiAoXHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJncmlkIGdyaWQtY29scy0xIHNtOmdyaWQtY29scy0yIHhsOmdyaWQtY29scy0zIGdhcC0zXCI+XHJcbiAgICAgICAgICB7ZmlsdGVyZWQubWFwKHAgPT4gKFxyXG4gICAgICAgICAgICA8Q2FyZCBrZXk9e3AuaWR9IGNsYXNzTmFtZT1cIm92ZXJmbG93LWhpZGRlblwiPlxyXG4gICAgICAgICAgICAgIDxDYXJkQ29udGVudCBjbGFzc05hbWU9XCJwLTMgc3BhY2UteS0yXCI+XHJcbiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImFzcGVjdC12aWRlbyByb3VuZGVkLWxnIGJnLW11dGVkIGZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyXCI+XHJcbiAgICAgICAgICAgICAgICAgIHtwLmltYWdlX3VybCA/IDxpbWcgc3JjPXtwLmltYWdlX3VybH0gYWx0PXtwLm5hbWV9IGNsYXNzTmFtZT1cInctZnVsbCBoLWZ1bGwgb2JqZWN0LWNvdmVyIHJvdW5kZWQtbGdcIiAvPiA6IDxQYWNrYWdlIGNsYXNzTmFtZT1cInctOCBoLTggdGV4dC1tdXRlZC1mb3JlZ3JvdW5kLzQwXCIgLz59XHJcbiAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgIDxkaXY+XHJcbiAgICAgICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQteHMgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+e3AuYnJhbmQgfHwgXCLigJRcIn0gwrcge3Auc2t1fTwvcD5cclxuICAgICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1zbSBmb250LXNlbWlib2xkIGxlYWRpbmctdGlnaHRcIj57cC5uYW1lfTwvcD5cclxuICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWJldHdlZW5cIj5cclxuICAgICAgICAgICAgICAgICAgPGRpdj5cclxuICAgICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJ0ZXh0LWJhc2UgZm9udC1ib2xkXCI+JHsocC5wcmljZV9jZW50cyAvIDEwMCkudG9GaXhlZCgyKX08L3NwYW4+XHJcbiAgICAgICAgICAgICAgICAgICAgPEJhZGdlIHZhcmlhbnQ9e3Auc3RvY2sgPiAxMCA/IFwic2Vjb25kYXJ5XCIgOiBcIm91dGxpbmVcIn0gY2xhc3NOYW1lPVwibWwtMiB0ZXh0LVsxMHB4XVwiPlxyXG4gICAgICAgICAgICAgICAgICAgICAge3Auc3RvY2sgPiAwID8gYCR7cC5zdG9ja30gaW4gc3RvY2tgIDogXCJPdXRcIn1cclxuICAgICAgICAgICAgICAgICAgICA8L0JhZGdlPlxyXG4gICAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGdhcC0xXCI+XHJcbiAgICAgICAgICAgICAgICAgICAgPEJ1dHRvbiBzaXplPVwiaWNvblwiIHZhcmlhbnQ9XCJnaG9zdFwiIGNsYXNzTmFtZT1cImgtOCB3LThcIiBvbkNsaWNrPXsoKSA9PiBzdGFydEVkaXQocCl9PjxQZW5jaWwgY2xhc3NOYW1lPVwidy00IGgtNFwiIC8+PC9CdXR0b24+XHJcbiAgICAgICAgICAgICAgICAgICAgPEJ1dHRvbiBzaXplPVwiaWNvblwiIHZhcmlhbnQ9XCJnaG9zdFwiIGNsYXNzTmFtZT1cImgtOCB3LTggdGV4dC1kZXN0cnVjdGl2ZVwiIG9uQ2xpY2s9eygpID0+IHsgaWYgKGNvbmZpcm0oYFJlbW92ZSAke3AubmFtZX0/YCkpIHJlbW92ZS5tdXRhdGUocC5pZCk7IH19PlxyXG4gICAgICAgICAgICAgICAgICAgICAgPFRyYXNoMiBjbGFzc05hbWU9XCJ3LTQgaC00XCIgLz5cclxuICAgICAgICAgICAgICAgICAgICA8L0J1dHRvbj5cclxuICAgICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICA8L0NhcmRDb250ZW50PlxyXG4gICAgICAgICAgICA8L0NhcmQ+XHJcbiAgICAgICAgICApKX1cclxuICAgICAgICA8L2Rpdj5cclxuICAgICAgKX1cclxuXHJcbiAgICAgIDxEaWFsb2cgb3Blbj17b3Blbn0gb25PcGVuQ2hhbmdlPXtzZXRPcGVufT5cclxuICAgICAgICA8RGlhbG9nQ29udGVudCBjbGFzc05hbWU9XCJtYXgtdy1tZFwiPlxyXG4gICAgICAgICAgPERpYWxvZ0hlYWRlcj48RGlhbG9nVGl0bGU+e2VkaXRJZCA/IFwiRWRpdCBQYXJ0XCIgOiBcIkFkZCBQYXJ0XCJ9PC9EaWFsb2dUaXRsZT48L0RpYWxvZ0hlYWRlcj5cclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS0yXCI+XHJcbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZ3JpZCBncmlkLWNvbHMtMiBnYXAtMlwiPlxyXG4gICAgICAgICAgICAgIDxJbnB1dCBwbGFjZWhvbGRlcj1cIlNLVSAqXCIgdmFsdWU9e2Zvcm0uc2t1fSBvbkNoYW5nZT17ZSA9PiBzZXRGb3JtKHsgLi4uZm9ybSwgc2t1OiBlLnRhcmdldC52YWx1ZSB9KX0gLz5cclxuICAgICAgICAgICAgICA8SW5wdXQgcGxhY2Vob2xkZXI9XCJCcmFuZFwiIHZhbHVlPXtmb3JtLmJyYW5kfSBvbkNoYW5nZT17ZSA9PiBzZXRGb3JtKHsgLi4uZm9ybSwgYnJhbmQ6IGUudGFyZ2V0LnZhbHVlIH0pfSAvPlxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgPElucHV0IHBsYWNlaG9sZGVyPVwiTmFtZSAqXCIgdmFsdWU9e2Zvcm0ubmFtZX0gb25DaGFuZ2U9e2UgPT4gc2V0Rm9ybSh7IC4uLmZvcm0sIG5hbWU6IGUudGFyZ2V0LnZhbHVlIH0pfSAvPlxyXG4gICAgICAgICAgICA8c2VsZWN0XHJcbiAgICAgICAgICAgICAgdmFsdWU9e2Zvcm0uY2F0ZWdvcnl9XHJcbiAgICAgICAgICAgICAgb25DaGFuZ2U9e2UgPT4gc2V0Rm9ybSh7IC4uLmZvcm0sIGNhdGVnb3J5OiBlLnRhcmdldC52YWx1ZSB9KX1cclxuICAgICAgICAgICAgICBjbGFzc05hbWU9XCJ3LWZ1bGwgaC0xMCBweC0zIHJvdW5kZWQtbWQgYm9yZGVyIGJvcmRlci1pbnB1dCBiZy1iYWNrZ3JvdW5kIHRleHQtc21cIlxyXG4gICAgICAgICAgICA+XHJcbiAgICAgICAgICAgICAge0NBVFMuZmlsdGVyKGMgPT4gYyAhPT0gXCJBbGxcIikubWFwKGMgPT4gPG9wdGlvbiBrZXk9e2N9IHZhbHVlPXtjfT57Y308L29wdGlvbj4pfVxyXG4gICAgICAgICAgICA8L3NlbGVjdD5cclxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJncmlkIGdyaWQtY29scy0yIGdhcC0yXCI+XHJcbiAgICAgICAgICAgICAgPElucHV0XHJcbiAgICAgICAgICAgICAgICBwbGFjZWhvbGRlcj1cIlByaWNlIChVU0QpXCJcclxuICAgICAgICAgICAgICAgIGlucHV0TW9kZT1cImRlY2ltYWxcIlxyXG4gICAgICAgICAgICAgICAgdmFsdWU9e2Zvcm0ucHJpY2V9XHJcbiAgICAgICAgICAgICAgICBvbkNoYW5nZT17ZSA9PiBzZXRGb3JtKHsgLi4uZm9ybSwgcHJpY2U6IGUudGFyZ2V0LnZhbHVlLnJlcGxhY2UoL1teMC05Ll0vZywgXCJcIikgfSl9XHJcbiAgICAgICAgICAgICAgLz5cclxuICAgICAgICAgICAgICA8SW5wdXRcclxuICAgICAgICAgICAgICAgIHBsYWNlaG9sZGVyPVwiU3RvY2tcIlxyXG4gICAgICAgICAgICAgICAgaW5wdXRNb2RlPVwibnVtZXJpY1wiXHJcbiAgICAgICAgICAgICAgICB2YWx1ZT17U3RyaW5nKGZvcm0uc3RvY2spfVxyXG4gICAgICAgICAgICAgICAgb25DaGFuZ2U9e2UgPT4gc2V0Rm9ybSh7IC4uLmZvcm0sIHN0b2NrOiBwYXJzZUludChlLnRhcmdldC52YWx1ZS5yZXBsYWNlKC9cXEQvZywgXCJcIikgfHwgXCIwXCIsIDEwKSB9KX1cclxuICAgICAgICAgICAgICAvPlxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgPERpYWxvZ0Zvb3Rlcj5cclxuICAgICAgICAgICAgPEJ1dHRvbiB2YXJpYW50PVwib3V0bGluZVwiIG9uQ2xpY2s9eygpID0+IHNldE9wZW4oZmFsc2UpfT5DYW5jZWw8L0J1dHRvbj5cclxuICAgICAgICAgICAgPEJ1dHRvbiBvbkNsaWNrPXsoKSA9PiB1cHNlcnQubXV0YXRlKCl9IGRpc2FibGVkPXt1cHNlcnQuaXNQZW5kaW5nfT5cclxuICAgICAgICAgICAgICB7dXBzZXJ0LmlzUGVuZGluZyA/IFwiU2F2aW5nLi4uXCIgOiBlZGl0SWQgPyBcIlNhdmUgY2hhbmdlc1wiIDogXCJBZGQgcGFydFwifVxyXG4gICAgICAgICAgICA8L0J1dHRvbj5cclxuICAgICAgICAgIDwvRGlhbG9nRm9vdGVyPlxyXG4gICAgICAgIDwvRGlhbG9nQ29udGVudD5cclxuICAgICAgPC9EaWFsb2c+XHJcbiAgICA8L2Rpdj5cclxuICApO1xyXG59XHJcbiJdLCJuYW1lcyI6WyJ1c2VTdGF0ZSIsInVzZU1lbW8iLCJ1c2VRdWVyeSIsInVzZU11dGF0aW9uIiwidXNlUXVlcnlDbGllbnQiLCJzdXBhYmFzZSIsIkNhcmQiLCJDYXJkQ29udGVudCIsIkNhcmRIZWFkZXIiLCJDYXJkVGl0bGUiLCJCdXR0b24iLCJJbnB1dCIsIkJhZGdlIiwiRGlhbG9nIiwiRGlhbG9nQ29udGVudCIsIkRpYWxvZ0hlYWRlciIsIkRpYWxvZ1RpdGxlIiwiRGlhbG9nRm9vdGVyIiwiU2VhcmNoIiwiUGFja2FnZSIsIlBsdXMiLCJXcmVuY2giLCJQZW5jaWwiLCJUcmFzaDIiLCJTcGFya2xlcyIsInRvYXN0IiwiU0VFRCIsInNrdSIsIm5hbWUiLCJicmFuZCIsImNhdGVnb3J5IiwicHJpY2VfY2VudHMiLCJzdG9jayIsIkNBVFMiLCJibGFuayIsIkF1dG9SZXBhaXJQYXJ0U2hvcFNlY3Rpb24iLCJzdG9yZUlkIiwicWMiLCJxIiwic2V0USIsImNhdCIsInNldENhdCIsIm9wZW4iLCJzZXRPcGVuIiwiZWRpdElkIiwic2V0RWRpdElkIiwiZm9ybSIsInNldEZvcm0iLCJwcmljZSIsImRhdGEiLCJwYXJ0cyIsImlzTG9hZGluZyIsInF1ZXJ5S2V5IiwicXVlcnlGbiIsImVycm9yIiwiZnJvbSIsInNlbGVjdCIsImVxIiwib3JkZXIiLCJhc2NlbmRpbmciLCJmaWx0ZXJlZCIsImZpbHRlciIsInAiLCJ0b0xvd2VyQ2FzZSIsImluY2x1ZGVzIiwic2VlZENhdGFsb2ciLCJtdXRhdGlvbkZuIiwicm93cyIsIm1hcCIsInMiLCJzdG9yZV9pZCIsImFjdGl2ZSIsImluc2VydCIsIm9uU3VjY2VzcyIsInN1Y2Nlc3MiLCJpbnZhbGlkYXRlUXVlcmllcyIsIm9uRXJyb3IiLCJlIiwibWVzc2FnZSIsInVwc2VydCIsInRyaW0iLCJFcnJvciIsInBheWxvYWQiLCJNYXRoIiwicm91bmQiLCJOdW1iZXIiLCJ1cGRhdGUiLCJyZW1vdmUiLCJpZCIsImRlbGV0ZSIsInN0YXJ0RWRpdCIsInRvRml4ZWQiLCJzdGFydE5ldyIsImRpdiIsImNsYXNzTmFtZSIsInZhcmlhbnQiLCJsZW5ndGgiLCJzaXplIiwib25DbGljayIsInBsYWNlaG9sZGVyIiwidmFsdWUiLCJvbkNoYW5nZSIsInRhcmdldCIsImMiLCJpIiwibXV0YXRlIiwiZGlzYWJsZWQiLCJpc1BlbmRpbmciLCJpbWFnZV91cmwiLCJpbWciLCJzcmMiLCJhbHQiLCJzcGFuIiwiY29uZmlybSIsIm9uT3BlbkNoYW5nZSIsIm9wdGlvbiIsImlucHV0TW9kZSIsInJlcGxhY2UiLCJTdHJpbmciLCJwYXJzZUludCJdLCJtYXBwaW5ncyI6Ijs7QUFBQTs7O0NBR0MsR0FDRCxTQUFTQSxRQUFRLEVBQUVDLE9BQU8sUUFBUSxRQUFRO0FBQzFDLFNBQVNDLFFBQVEsRUFBRUMsV0FBVyxFQUFFQyxjQUFjLFFBQVEsd0JBQXdCO0FBQzlFLFNBQVNDLFFBQVEsUUFBUSxpQ0FBaUM7QUFDMUQsU0FBU0MsSUFBSSxFQUFFQyxXQUFXLEVBQUVDLFVBQVUsRUFBRUMsU0FBUyxRQUFRLHVCQUF1QjtBQUNoRixTQUFTQyxNQUFNLFFBQVEseUJBQXlCO0FBQ2hELFNBQVNDLEtBQUssUUFBUSx3QkFBd0I7QUFDOUMsU0FBU0MsS0FBSyxRQUFRLHdCQUF3QjtBQUM5QyxTQUFTQyxNQUFNLEVBQUVDLGFBQWEsRUFBRUMsWUFBWSxFQUFFQyxXQUFXLEVBQUVDLFlBQVksUUFBUSx5QkFBeUI7QUFDeEcsT0FBT0MsWUFBWSxxQ0FBcUM7QUFDeEQsT0FBT0MsYUFBYSxzQ0FBc0M7QUFDMUQsT0FBT0MsVUFBVSxtQ0FBbUM7QUFDcEQsT0FBT0MsWUFBWSxxQ0FBcUM7QUFDeEQsT0FBT0MsWUFBWSxxQ0FBcUM7QUFDeEQsT0FB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

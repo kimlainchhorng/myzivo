@@ -183,16 +183,33 @@ export const useDriverActivity = () => {
 
       if (error) throw error;
 
-      const online = drivers?.filter(d => d.is_online && d.status === "verified").length || 0;
-      const verified = drivers?.filter(d => d.status === "verified").length || 0;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
 
-      // TODO: Load real hourly driver analytics from Supabase
-      const hours = ["6am", "9am", "12pm", "3pm", "6pm", "9pm"];
+      const { data: todayTrips } = await supabase
+        .from("trips")
+        .select("created_at, status")
+        .gte("created_at", today.toISOString());
 
-      return hours.map((hour) => ({
+      const hourSlots = [6, 9, 12, 15, 18, 21];
+      const hourLabels = ["6am", "9am", "12pm", "3pm", "6pm", "9pm"];
+
+      const onlineCounts = hourSlots.map(() => 0);
+      const busyCounts = hourSlots.map(() => 0);
+
+      todayTrips?.forEach(trip => {
+        const h = new Date(trip.created_at).getHours();
+        const slot = hourSlots.findIndex((s, i) => h >= s && (i === hourSlots.length - 1 || h < hourSlots[i + 1]));
+        if (slot >= 0) {
+          onlineCounts[slot] += 1;
+          if (trip.status === "in_progress") busyCounts[slot] += 1;
+        }
+      });
+
+      return hourLabels.map((hour, i) => ({
         hour,
-        online: 0,
-        busy: 0,
+        online: onlineCounts[i],
+        busy: busyCounts[i],
       }));
     },
   });

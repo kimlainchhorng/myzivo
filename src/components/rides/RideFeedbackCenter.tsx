@@ -9,6 +9,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import SafeCaption from "@/components/social/SafeCaption";
+import { confirmContentSafe } from "@/lib/security/contentLinkValidation";
 
 type Tab = "survey" | "compliments" | "history";
 
@@ -58,6 +60,7 @@ export default function RideFeedbackCenter() {
   };
 
   const submitSurvey = () => {
+    if (!confirmContentSafe(feedbackText, "feedback")) return;
     toast.success("Feedback submitted! Thank you 🎉");
     setSurveyStep(0);
     setSurveyRating(0);
@@ -229,7 +232,7 @@ export default function RideFeedbackCenter() {
                       </div>
                     </div>
                   </div>
-                  {fb.comment && <p className="text-[11px] text-foreground mt-2 pl-13">{fb.comment}</p>}
+                  {fb.comment && <p className="text-[11px] text-foreground mt-2 pl-13"><SafeCaption text={fb.comment} /></p>}
                   {fb.compliments.length > 0 && (
                     <div className="flex flex-wrap gap-1 mt-2 pl-13">
                       {fb.compliments.map(c => (

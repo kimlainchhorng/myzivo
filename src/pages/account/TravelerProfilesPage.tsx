@@ -368,12 +368,12 @@ function ProfileCard({
 
             {/* Actions */}
             <div className="flex flex-col gap-1 shrink-0">
-              <Button variant="ghost" size="icon" className="w-8 h-8 rounded-xl hover:bg-[hsl(var(--flights))]/10" onClick={onEdit}>
+              <Button variant="ghost" size="icon" aria-label="Edit traveler" className="w-8 h-8 rounded-xl hover:bg-[hsl(var(--flights))]/10" onClick={onEdit}>
                 <Edit2 className="w-3.5 h-3.5" />
               </Button>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="ghost" size="icon" className="w-8 h-8 rounded-xl text-destructive/60 hover:text-destructive hover:bg-destructive/10">
+                  <Button variant="ghost" size="icon" aria-label="Delete traveler" className="w-8 h-8 rounded-xl text-destructive/60 hover:text-destructive hover:bg-destructive/10">
                     <Trash2 className="w-3.5 h-3.5" />
                   </Button>
                 </AlertDialogTrigger>

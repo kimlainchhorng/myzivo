@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { airports } from "@/data/airports";
+import { edgeFunctionFallback } from "@/utils/edgeFunctionFallback";
 
 export interface HotDeal {
   origin: string;
@@ -64,8 +65,12 @@ export function useHotDeals(autoDetectOrigin = false) {
       });
 
       if (error) {
-        console.error("Failed to fetch hot deals:", error);
-        return [] as HotDeal[];
+        return edgeFunctionFallback({
+          functionName: "duffel-hot-deals",
+          error,
+          fallback: [] as HotDeal[],
+          context: { origin },
+        });
       }
 
       return (data?.deals || []) as HotDeal[];

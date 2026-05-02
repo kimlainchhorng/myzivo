@@ -4,7 +4,8 @@
  */
 
 import { useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useLocation } from "react-router-dom";
+import { withRedirectParam } from "@/lib/authRedirect";
 import { ArrowLeft, MessageSquare, Plus, Loader2, Inbox } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -21,6 +22,7 @@ import MobileBottomNav from "@/components/shared/MobileBottomNav";
 type TicketFilter = 'active' | 'resolved' | 'all';
 
 export default function UserSupportTicketsPage() {
+  const location = useLocation();
   const { user, isLoading: authLoading } = useAuth();
   const [filter, setFilter] = useState<TicketFilter>('active');
   
@@ -28,7 +30,8 @@ export default function UserSupportTicketsPage() {
 
   // Redirect to login if not authenticated
   if (!authLoading && !user) {
-    return <Navigate to="/login" replace />;
+    const redirectTarget = `${location.pathname}${location.search ?? ""}`;
+    return <Navigate to={withRedirectParam("/login", redirectTarget)} replace />;
   }
 
   const filteredTickets = tickets?.filter(ticket => {
@@ -47,7 +50,7 @@ export default function UserSupportTicketsPage() {
   return (
     <div className="min-h-screen bg-background pb-20">
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-sm border-b">
+      <div className="sticky top-0 safe-area-top z-40 bg-background/95 backdrop-blur-sm border-b">
         <div className="container px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">

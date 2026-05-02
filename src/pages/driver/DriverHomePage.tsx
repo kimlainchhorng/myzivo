@@ -26,7 +26,10 @@ export default function DriverHomePage() {
         tips={stats.todayTips}
       />
 
-      <main className="flex-1 flex flex-col overflow-auto px-3 gap-1.5 mt-1 pb-24">
+      <main
+        className="flex-1 flex flex-col overflow-auto px-3 gap-1.5 mt-1 pb-24"
+        style={{ contentVisibility: "auto", containIntrinsicSize: "1px 1200px" } as React.CSSProperties}
+      >
         {isLoading ? (
           <div className="flex-1 flex items-center justify-center">
             <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />

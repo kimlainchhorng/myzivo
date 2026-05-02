@@ -25,13 +25,20 @@
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
 	<key>NSCameraUsageDescription</key>
-	<string>ZIVO uses your camera to capture a profile photo for your account. For example, when you tap "Change Profile Photo" on your Profile page, your camera opens so you can take a new picture. The photo is stored on your account and may be shown to restaurant partners or drivers to help confirm your orders.</string>
+	<string>ZIVO uses your camera for video calls and to capture a profile photo for your account.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>ZIVO uses your microphone for voice and video calls between users.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>ZIVO accesses your photo library so you can select an existing photo to use as your profile picture on your account.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>ZIVO uses your location while you use the app to find nearby airports, estimate pickups, improve delivery and ride tracking, and help drivers navigate to customers.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>ZIVO uses your location to support live trip, delivery, and driver navigation features while you are actively using the app.</string>
+	<key>NSUserActivityTypes</key>
+	<array>
+		<string>INSendMessageIntent</string>
+		<string>INStartCallIntent</string>
+	</array>
 	<key>UILaunchStoryboardName</key>
 	<string>LaunchScreen</string>
 	<key>UIMainStoryboardFile</key>
@@ -39,6 +46,12 @@
 	<key>UIRequiredDeviceCapabilities</key>
 	<array>
 		<string>armv7</string>
+	</array>
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>remote-notification</string>
+		<string>voip</string>
+		<string>audio</string>
 	</array>
 	<key>UISupportedInterfaceOrientations</key>
 	<array>
@@ -55,5 +68,56 @@
 	</array>
 	<key>UIViewControllerBasedStatusBarAppearance</key>
 	<true/>
+	<key>NSAppTransportSecurity</key>
+	<dict>
+		<key>NSAllowsArbitraryLoads</key>
+		<false/>
+		<key>NSAllowsArbitraryLoadsForMedia</key>
+		<false/>
+		<key>NSAllowsArbitraryLoadsInWebContent</key>
+		<false/>
+		<key>NSAllowsLocalNetworking</key>
+		<false/>
+		<key>NSPinnedDomains</key>
+		<dict>
+			<key>supabase.co</key>
+			<dict>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+				<key>NSPinnedCAIdentities</key>
+				<array>
+					<dict>
+						<key>SPKI-SHA256-BASE64</key>
+						<string>GU2W4j1P24T3sqlI+o6YTnidzz0PI8fB/Gvd2ITfSZE=</string>
+					</dict>
+					<dict>
+						<key>SPKI-SHA256-BASE64</key>
+						<string>kIdp6NNEd8wsugYyyIYFsi1ylMCED3hZbSR8ZFsa/A4=</string>
+					</dict>
+				</array>
+			</dict>
+			<key>stripe.com</key>
+			<dict>
+				<key>NSIncludesSubdomains</key>
+				<true/>
+				<key>NSPinnedCAIdentities</key>
+				<array>
+					<dict>
+						<key>SPKI-SHA256-BASE64</key>
+						<string>xUUBOliw6Rgb7It2YbiSOg0ifTHlP3Lv6MXMkw//uLM=</string>
+					</dict>
+					<dict>
+						<key>SPKI-SHA256-BASE64</key>
+						<string>Ld64SpoeXjpLjc+/7Wahk6p5+KVyzVSUptciuWsyxeY=</string>
+					</dict>
+				</array>
+			</dict>
+		</dict>
+		<key>NSExceptionDomains</key>
+		<dict>
+			<!-- Add development overrides here only; production traffic
+			     must satisfy NSPinnedDomains above. -->
+		</dict>
+	</dict>
 </dict>
 </plist>

@@ -62,6 +62,7 @@ Deno.serve(async (req) => {
       .eq("id", booking_id)
       .single();
     if (bErr || !booking) throw new Error("Booking not found");
+    if (booking.user_id !== user.id) throw new Error("Access denied");
 
     const { data: dbPassengers } = await supabase
       .from("flight_passengers")

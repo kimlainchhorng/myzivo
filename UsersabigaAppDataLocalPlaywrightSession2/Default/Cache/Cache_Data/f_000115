@@ -1,0 +1,295 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/admin/PaymentVerificationDialog.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+var _s = $RefreshSig$();
+import __vite__cjsImport1_react from "/node_modules/.vite/deps/react.js?v=7fd9520c"; const useState = __vite__cjsImport1_react["useState"]; const useEffect = __vite__cjsImport1_react["useEffect"];
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "/src/components/ui/dialog.tsx";
+import { Button } from "/src/components/ui/button.tsx";
+import { Input } from "/src/components/ui/input.tsx";
+import { supabase } from "/src/integrations/supabase/client.ts";
+import { toast } from "/node_modules/.vite/deps/sonner.js?v=7fd9520c";
+import { Loader2, Mail, ShieldCheck } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+export default function PaymentVerificationDialog({ open, onOpenChange, storeId, onVerified }) {
+    _s();
+    const [step, setStep] = useState("send");
+    const [loading, setLoading] = useState(false);
+    const [code, setCode] = useState("");
+    const [maskedEmail, setMaskedEmail] = useState("");
+    const [countdown, setCountdown] = useState(0);
+    useEffect(()=>{
+        if (!open) {
+            setStep("send");
+            setCode("");
+            setCountdown(0);
+        }
+    }, [
+        open
+    ]);
+    useEffect(()=>{
+        if (countdown > 0) {
+            const timer = setTimeout(()=>setCountdown(countdown - 1), 1000);
+            return ()=>clearTimeout(timer);
+        }
+    }, [
+        countdown
+    ]);
+    const handleSendCode = async ()=>{
+        setLoading(true);
+        try {
+            const { data, error } = await supabase.functions.invoke("payment-verification", {
+                body: {
+                    action: "send",
+                    store_id: storeId
+                }
+            });
+            if (error) throw error;
+            if (data?.error) throw new Error(data.error);
+            setMaskedEmail(data.email || "your email");
+            setStep("verify");
+            setCountdown(60);
+            toast.success("Verification code sent to your email");
+        } catch (err) {
+            toast.error(err.message || "Failed to send verification code");
+        } finally{
+            setLoading(false);
+        }
+    };
+    const handleVerify = async ()=>{
+        if (code.length !== 6) {
+            toast.error("Please enter the 6-digit code");
+            return;
+        }
+        setLoading(true);
+        try {
+            const { data, error } = await supabase.functions.invoke("payment-verification", {
+                body: {
+                    action: "verify",
+                    store_id: storeId,
+                    code
+                }
+            });
+            if (error) throw error;
+            if (data?.error) throw new Error(data.error);
+            toast.success("Verified successfully!");
+            onVerified();
+            onOpenChange(false);
+        } catch (err) {
+            toast.error(err.message || "Invalid verification code");
+        } finally{
+            setLoading(false);
+        }
+    };
+    const handleResend = async ()=>{
+        if (countdown > 0) return;
+        await handleSendCode();
+    };
+    return /*#__PURE__*/ _jsxDEV(Dialog, {
+        open: open,
+        onOpenChange: onOpenChange,
+        children: /*#__PURE__*/ _jsxDEV(DialogContent, {
+            className: "sm:max-w-md",
+            children: [
+                /*#__PURE__*/ _jsxDEV(DialogHeader, {
+                    children: /*#__PURE__*/ _jsxDEV(DialogTitle, {
+                        className: "flex items-center gap-2 text-base",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(ShieldCheck, {
+                                className: "h-5 w-5 text-primary"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/PaymentVerificationDialog.tsx",
+                                lineNumber: 96,
+                                columnNumber: 13
+                            }, this),
+                            "Verify to Update Payment"
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/PaymentVerificationDialog.tsx",
+                        lineNumber: 95,
+                        columnNumber: 11
+                    }, this)
+                }, void 0, false, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/PaymentVerificationDialog.tsx",
+                    lineNumber: 94,
+                    columnNumber: 9
+                }, this),
+                step === "send" ? /*#__PURE__*/ _jsxDEV("div", {
+                    className: "space-y-4 py-2",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV("p", {
+                            className: "text-sm text-muted-foreground",
+                            children: "For security, we need to verify your identity before changing payment details. We'll send a 6-digit code to your registered email."
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/PaymentVerificationDialog.tsx",
+                            lineNumber: 103,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV(DialogFooter, {
+                            children: /*#__PURE__*/ _jsxDEV(Button, {
+                                onClick: handleSendCode,
+                                disabled: loading,
+                                className: "w-full gap-2",
+                                children: [
+                                    loading ? /*#__PURE__*/ _jsxDEV(Loader2, {
+                                        className: "h-4 w-4 animate-spin"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/PaymentVerificationDialog.tsx",
+                                        lineNumber: 109,
+                                        columnNumber: 28
+                                    }, this) : /*#__PURE__*/ _jsxDEV(Mail, {
+                                        className: "h-4 w-4"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/PaymentVerificationDialog.tsx",
+                                        lineNumber: 109,
+                                        columnNumber: 75
+                                    }, this),
+                                    "Send Verification Code"
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/PaymentVerificationDialog.tsx",
+                                lineNumber: 108,
+                                columnNumber: 15
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/PaymentVerificationDialog.tsx",
+                            lineNumber: 107,
+                            columnNumber: 13
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/PaymentVerificationDialog.tsx",
+                    lineNumber: 102,
+                    columnNumber: 11
+                }, this) : /*#__PURE__*/ _jsxDEV("div", {
+                    className: "space-y-4 py-2",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV("p", {
+                            className: "text-sm text-muted-foreground",
+                            children: [
+                                "Enter the 6-digit code sent to ",
+                                /*#__PURE__*/ _jsxDEV("span", {
+                                    className: "font-medium text-foreground",
+                                    children: maskedEmail
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/PaymentVerificationDialog.tsx",
+                                    lineNumber: 117,
+                                    columnNumber: 46
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/PaymentVerificationDialog.tsx",
+                            lineNumber: 116,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "flex justify-center",
+                            children: /*#__PURE__*/ _jsxDEV(Input, {
+                                value: code,
+                                onChange: (e)=>setCode(e.target.value.replace(/\D/g, "").slice(0, 6)),
+                                placeholder: "000000",
+                                className: "text-center text-2xl tracking-[0.5em] font-mono max-w-[200px]",
+                                maxLength: 6,
+                                autoFocus: true
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/PaymentVerificationDialog.tsx",
+                                lineNumber: 120,
+                                columnNumber: 15
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/PaymentVerificationDialog.tsx",
+                            lineNumber: 119,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "flex justify-center",
+                            children: /*#__PURE__*/ _jsxDEV(Button, {
+                                variant: "ghost",
+                                size: "sm",
+                                onClick: handleResend,
+                                disabled: countdown > 0,
+                                className: "text-xs text-muted-foreground",
+                                children: countdown > 0 ? `Resend in ${countdown}s` : "Resend code"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/PaymentVerificationDialog.tsx",
+                                lineNumber: 130,
+                                columnNumber: 15
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/PaymentVerificationDialog.tsx",
+                            lineNumber: 129,
+                            columnNumber: 13
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV(DialogFooter, {
+                            children: /*#__PURE__*/ _jsxDEV(Button, {
+                                onClick: handleVerify,
+                                disabled: loading || code.length !== 6,
+                                className: "w-full gap-2",
+                                children: [
+                                    loading ? /*#__PURE__*/ _jsxDEV(Loader2, {
+                                        className: "h-4 w-4 animate-spin"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/PaymentVerificationDialog.tsx",
+                                        lineNumber: 142,
+                                        columnNumber: 28
+                                    }, this) : /*#__PURE__*/ _jsxDEV(ShieldCheck, {
+                                        className: "h-4 w-4"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/PaymentVerificationDialog.tsx",
+                                        lineNumber: 142,
+                                        columnNumber: 75
+                                    }, this),
+                                    "Verify & Continue"
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/PaymentVerificationDialog.tsx",
+                                lineNumber: 141,
+                                columnNumber: 15
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/PaymentVerificationDialog.tsx",
+                            lineNumber: 140,
+                            columnNumber: 13
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/PaymentVerificationDialog.tsx",
+                    lineNumber: 115,
+                    columnNumber: 11
+                }, this)
+            ]
+        }, void 0, true, {
+            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/PaymentVerificationDialog.tsx",
+            lineNumber: 93,
+            columnNumber: 7
+        }, this)
+    }, void 0, false, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/PaymentVerificationDialog.tsx",
+        lineNumber: 92,
+        columnNumber: 5
+    }, this);
+}
+_s(PaymentVerificationDialog, "coTT3avn59yPGmHlx4jtjZivSRg=");
+_c = PaymentVerificationDialog;
+var _c;
+$RefreshReg$(_c, "PaymentVerificationDialog");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/PaymentVerificationDialog.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/PaymentVerificationDialog.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/PaymentVerificationDialog.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIlBheW1lbnRWZXJpZmljYXRpb25EaWFsb2cudHN4Il0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB7IHVzZVN0YXRlLCB1c2VFZmZlY3QgfSBmcm9tIFwicmVhY3RcIjtcclxuaW1wb3J0IHsgRGlhbG9nLCBEaWFsb2dDb250ZW50LCBEaWFsb2dIZWFkZXIsIERpYWxvZ1RpdGxlLCBEaWFsb2dGb290ZXIgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2RpYWxvZ1wiO1xyXG5pbXBvcnQgeyBCdXR0b24gfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2J1dHRvblwiO1xyXG5pbXBvcnQgeyBJbnB1dCB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvaW5wdXRcIjtcclxuaW1wb3J0IHsgc3VwYWJhc2UgfSBmcm9tIFwiQC9pbnRlZ3JhdGlvbnMvc3VwYWJhc2UvY2xpZW50XCI7XHJcbmltcG9ydCB7IHRvYXN0IH0gZnJvbSBcInNvbm5lclwiO1xyXG5pbXBvcnQgeyBMb2FkZXIyLCBNYWlsLCBTaGllbGRDaGVjayB9IGZyb20gXCJsdWNpZGUtcmVhY3RcIjtcclxuXHJcbmludGVyZmFjZSBQYXltZW50VmVyaWZpY2F0aW9uRGlhbG9nUHJvcHMge1xyXG4gIG9wZW46IGJvb2xlYW47XHJcbiAgb25PcGVuQ2hhbmdlOiAob3BlbjogYm9vbGVhbikgPT4gdm9pZDtcclxuICBzdG9yZUlkOiBzdHJpbmc7XHJcbiAgb25WZXJpZmllZDogKCkgPT4gdm9pZDtcclxufVxyXG5cclxuZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gUGF5bWVudFZlcmlmaWNhdGlvbkRpYWxvZyh7XHJcbiAgb3BlbixcclxuICBvbk9wZW5DaGFuZ2UsXHJcbiAgc3RvcmVJZCxcclxuICBvblZlcmlmaWVkLFxyXG59OiBQYXltZW50VmVyaWZpY2F0aW9uRGlhbG9nUHJvcHMpIHtcclxuICBjb25zdCBbc3RlcCwgc2V0U3RlcF0gPSB1c2VTdGF0ZTxcInNlbmRcIiB8IFwidmVyaWZ5XCI+KFwic2VuZFwiKTtcclxuICBjb25zdCBbbG9hZGluZywgc2V0TG9hZGluZ10gPSB1c2VTdGF0ZShmYWxzZSk7XHJcbiAgY29uc3QgW2NvZGUsIHNldENvZGVdID0gdXNlU3RhdGUoXCJcIik7XHJcbiAgY29uc3QgW21hc2tlZEVtYWlsLCBzZXRNYXNrZWRFbWFpbF0gPSB1c2VTdGF0ZShcIlwiKTtcclxuICBjb25zdCBbY291bnRkb3duLCBzZXRDb3VudGRvd25dID0gdXNlU3RhdGUoMCk7XHJcblxyXG4gIHVzZUVmZmVjdCgoKSA9PiB7XHJcbiAgICBpZiAoIW9wZW4pIHtcclxuICAgICAgc2V0U3RlcChcInNlbmRcIik7XHJcbiAgICAgIHNldENvZGUoXCJcIik7XHJcbiAgICAgIHNldENvdW50ZG93bigwKTtcclxuICAgIH1cclxuICB9LCBbb3Blbl0pO1xyXG5cclxuICB1c2VFZmZlY3QoKCkgPT4ge1xyXG4gICAgaWYgKGNvdW50ZG93biA+IDApIHtcclxuICAgICAgY29uc3QgdGltZXIgPSBzZXRUaW1lb3V0KCgpID0+IHNldENvdW50ZG93bihjb3VudGRvd24gLSAxKSwgMTAwMCk7XHJcbiAgICAgIHJldHVybiAoKSA9PiBjbGVhclRpbWVvdXQodGltZXIpO1xyXG4gICAgfVxyXG4gIH0sIFtjb3VudGRvd25dKTtcclxuXHJcbiAgY29uc3QgaGFuZGxlU2VuZENvZGUgPSBhc3luYyAoKSA9PiB7XHJcbiAgICBzZXRMb2FkaW5nKHRydWUpO1xyXG4gICAgdHJ5IHtcclxuICAgICAgY29uc3QgeyBkYXRhLCBlcnJvciB9ID0gYXdhaXQgc3VwYWJhc2UuZnVuY3Rpb25zLmludm9rZShcInBheW1lbnQtdmVyaWZpY2F0aW9uXCIsIHtcclxuICAgICAgICBib2R5OiB7IGFjdGlvbjogXCJzZW5kXCIsIHN0b3JlX2lkOiBzdG9yZUlkIH0sXHJcbiAgICAgIH0pO1xyXG4gICAgICBpZiAoZXJyb3IpIHRocm93IGVycm9yO1xyXG4gICAgICBpZiAoZGF0YT8uZXJyb3IpIHRocm93IG5ldyBFcnJvcihkYXRhLmVycm9yKTtcclxuICAgICAgXHJcbiAgICAgIHNldE1hc2tlZEVtYWlsKGRhdGEuZW1haWwgfHwgXCJ5b3VyIGVtYWlsXCIpO1xyXG4gICAgICBzZXRTdGVwKFwidmVyaWZ5XCIpO1xyXG4gICAgICBzZXRDb3VudGRvd24oNjApO1xyXG4gICAgICB0b2FzdC5zdWNjZXNzKFwiVmVyaWZpY2F0aW9uIGNvZGUgc2VudCB0byB5b3VyIGVtYWlsXCIpO1xyXG4gICAgfSBjYXRjaCAoZXJyOiBhbnkpIHtcclxuICAgICAgdG9hc3QuZXJyb3IoZXJyLm1lc3NhZ2UgfHwgXCJGYWlsZWQgdG8gc2VuZCB2ZXJpZmljYXRpb24gY29kZVwiKTtcclxuICAgIH0gZmluYWxseSB7XHJcbiAgICAgIHNldExvYWRpbmcoZmFsc2UpO1xyXG4gICAgfVxyXG4gIH07XHJcblxyXG4gIGNvbnN0IGhhbmRsZVZlcmlmeSA9IGFzeW5jICgpID0+IHtcclxuICAgIGlmIChjb2RlLmxlbmd0aCAhPT0gNikge1xyXG4gICAgICB0b2FzdC5lcnJvcihcIlBsZWFzZSBlbnRlciB0aGUgNi1kaWdpdCBjb2RlXCIpO1xyXG4gICAgICByZXR1cm47XHJcbiAgICB9XHJcbiAgICBzZXRMb2FkaW5nKHRydWUpO1xyXG4gICAgdHJ5IHtcclxuICAgICAgY29uc3QgeyBkYXRhLCBlcnJvciB9ID0gYXdhaXQgc3VwYWJhc2UuZnVuY3Rpb25zLmludm9rZShcInBheW1lbnQtdmVyaWZpY2F0aW9uXCIsIHtcclxuICAgICAgICBib2R5OiB7IGFjdGlvbjogXCJ2ZXJpZnlcIiwgc3RvcmVfaWQ6IHN0b3JlSWQsIGNvZGUgfSxcclxuICAgICAgfSk7XHJcbiAgICAgIGlmIChlcnJvcikgdGhyb3cgZXJyb3I7XHJcbiAgICAgIGlmIChkYXRhPy5lcnJvcikgdGhyb3cgbmV3IEVycm9yKGRhdGEuZXJyb3IpO1xyXG5cclxuICAgICAgdG9hc3Quc3VjY2VzcyhcIlZlcmlmaWVkIHN1Y2Nlc3NmdWxseSFcIik7XHJcbiAgICAgIG9uVmVyaWZpZWQoKTtcclxuICAgICAgb25PcGVuQ2hhbmdlKGZhbHNlKTtcclxuICAgIH0gY2F0Y2ggKGVycjogYW55KSB7XHJcbiAgICAgIHRvYXN0LmVycm9yKGVyci5tZXNzYWdlIHx8IFwiSW52YWxpZCB2ZXJpZmljYXRpb24gY29kZVwiKTtcclxuICAgIH0gZmluYWxseSB7XHJcbiAgICAgIHNldExvYWRpbmcoZmFsc2UpO1xyXG4gICAgfVxyXG4gIH07XHJcblxyXG4gIGNvbnN0IGhhbmRsZVJlc2VuZCA9IGFzeW5jICgpID0+IHtcclxuICAgIGlmIChjb3VudGRvd24gPiAwKSByZXR1cm47XHJcbiAgICBhd2FpdCBoYW5kbGVTZW5kQ29kZSgpO1xyXG4gIH07XHJcblxyXG4gIHJldHVybiAoXHJcbiAgICA8RGlhbG9nIG9wZW49e29wZW59IG9uT3BlbkNoYW5nZT17b25PcGVuQ2hhbmdlfT5cclxuICAgICAgPERpYWxvZ0NvbnRlbnQgY2xhc3NOYW1lPVwic206bWF4LXctbWRcIj5cclxuICAgICAgICA8RGlhbG9nSGVhZGVyPlxyXG4gICAgICAgICAgPERpYWxvZ1RpdGxlIGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0yIHRleHQtYmFzZVwiPlxyXG4gICAgICAgICAgICA8U2hpZWxkQ2hlY2sgY2xhc3NOYW1lPVwiaC01IHctNSB0ZXh0LXByaW1hcnlcIiAvPlxyXG4gICAgICAgICAgICBWZXJpZnkgdG8gVXBkYXRlIFBheW1lbnRcclxuICAgICAgICAgIDwvRGlhbG9nVGl0bGU+XHJcbiAgICAgICAgPC9EaWFsb2dIZWFkZXI+XHJcblxyXG4gICAgICAgIHtzdGVwID09PSBcInNlbmRcIiA/IChcclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS00IHB5LTJcIj5cclxuICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1zbSB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5cclxuICAgICAgICAgICAgICBGb3Igc2VjdXJpdHksIHdlIG5lZWQgdG8gdmVyaWZ5IHlvdXIgaWRlbnRpdHkgYmVmb3JlIGNoYW5naW5nIHBheW1lbnQgZGV0YWlscy4gXHJcbiAgICAgICAgICAgICAgV2UnbGwgc2VuZCBhIDYtZGlnaXQgY29kZSB0byB5b3VyIHJlZ2lzdGVyZWQgZW1haWwuXHJcbiAgICAgICAgICAgIDwvcD5cclxuICAgICAgICAgICAgPERpYWxvZ0Zvb3Rlcj5cclxuICAgICAgICAgICAgICA8QnV0dG9uIG9uQ2xpY2s9e2hhbmRsZVNlbmRDb2RlfSBkaXNhYmxlZD17bG9hZGluZ30gY2xhc3NOYW1lPVwidy1mdWxsIGdhcC0yXCI+XHJcbiAgICAgICAgICAgICAgICB7bG9hZGluZyA/IDxMb2FkZXIyIGNsYXNzTmFtZT1cImgtNCB3LTQgYW5pbWF0ZS1zcGluXCIgLz4gOiA8TWFpbCBjbGFzc05hbWU9XCJoLTQgdy00XCIgLz59XHJcbiAgICAgICAgICAgICAgICBTZW5kIFZlcmlmaWNhdGlvbiBDb2RlXHJcbiAgICAgICAgICAgICAgPC9CdXR0b24+XHJcbiAgICAgICAgICAgIDwvRGlhbG9nRm9vdGVyPlxyXG4gICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgKSA6IChcclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS00IHB5LTJcIj5cclxuICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1zbSB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5cclxuICAgICAgICAgICAgICBFbnRlciB0aGUgNi1kaWdpdCBjb2RlIHNlbnQgdG8gPHNwYW4gY2xhc3NOYW1lPVwiZm9udC1tZWRpdW0gdGV4dC1mb3JlZ3JvdW5kXCI+e21hc2tlZEVtYWlsfTwvc3Bhbj5cclxuICAgICAgICAgICAgPC9wPlxyXG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXgganVzdGlmeS1jZW50ZXJcIj5cclxuICAgICAgICAgICAgICA8SW5wdXRcclxuICAgICAgICAgICAgICAgIHZhbHVlPXtjb2RlfVxyXG4gICAgICAgICAgICAgICAgb25DaGFuZ2U9eyhlKSA9PiBzZXRDb2RlKGUudGFyZ2V0LnZhbHVlLnJlcGxhY2UoL1xcRC9nLCBcIlwiKS5zbGljZSgwLCA2KSl9XHJcbiAgICAgICAgICAgICAgICBwbGFjZWhvbGRlcj1cIjAwMDAwMFwiXHJcbiAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJ0ZXh0LWNlbnRlciB0ZXh0LTJ4bCB0cmFja2luZy1bMC41ZW1dIGZvbnQtbW9ubyBtYXgtdy1bMjAwcHhdXCJcclxuICAgICAgICAgICAgICAgIG1heExlbmd0aD17Nn1cclxuICAgICAgICAgICAgICAgIGF1dG9Gb2N1c1xyXG4gICAgICAgICAgICAgIC8+XHJcbiAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXgganVzdGlmeS1jZW50ZXJcIj5cclxuICAgICAgICAgICAgICA8QnV0dG9uXHJcbiAgICAgICAgICAgICAgICB2YXJpYW50PVwiZ2hvc3RcIlxyXG4gICAgICAgICAgICAgICAgc2l6ZT1cInNtXCJcclxuICAgICAgICAgICAgICAgIG9uQ2xpY2s9e2hhbmRsZVJlc2VuZH1cclxuICAgICAgICAgICAgICAgIGRpc2FibGVkPXtjb3VudGRvd24gPiAwfVxyXG4gICAgICAgICAgICAgICAgY2xhc3NOYW1lPVwidGV4dC14cyB0ZXh0LW11dGVkLWZvcmVncm91bmRcIlxyXG4gICAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICAgIHtjb3VudGRvd24gPiAwID8gYFJlc2VuZCBpbiAke2NvdW50ZG93bn1zYCA6IFwiUmVzZW5kIGNvZGVcIn1cclxuICAgICAgICAgICAgICA8L0J1dHRvbj5cclxuICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgIDxEaWFsb2dGb290ZXI+XHJcbiAgICAgICAgICAgICAgPEJ1dHRvbiBvbkNsaWNrPXtoYW5kbGVWZXJpZnl9IGRpc2FibGVkPXtsb2FkaW5nIHx8IGNvZGUubGVuZ3RoICE9PSA2fSBjbGFzc05hbWU9XCJ3LWZ1bGwgZ2FwLTJcIj5cclxuICAgICAgICAgICAgICAgIHtsb2FkaW5nID8gPExvYWRlcjIgY2xhc3NOYW1lPVwiaC00IHctNCBhbmltYXRlLXNwaW5cIiAvPiA6IDxTaGllbGRDaGVjayBjbGFzc05hbWU9XCJoLTQgdy00XCIgLz59XHJcbiAgICAgICAgICAgICAgICBWZXJpZnkgJiBDb250aW51ZVxyXG4gICAgICAgICAgICAgIDwvQnV0dG9uPlxyXG4gICAgICAgICAgICA8L0RpYWxvZ0Zvb3Rlcj5cclxuICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICl9XHJcbiAgICAgIDwvRGlhbG9nQ29udGVudD5cclxuICAgIDwvRGlhbG9nPlxyXG4gICk7XHJcbn1cclxuIl0sIm5hbWVzIjpbInVzZVN0YXRlIiwidXNlRWZmZWN0IiwiRGlhbG9nIiwiRGlhbG9nQ29udGVudCIsIkRpYWxvZ0hlYWRlciIsIkRpYWxvZ1RpdGxlIiwiRGlhbG9nRm9vdGVyIiwiQnV0dG9uIiwiSW5wdXQiLCJzdXBhYmFzZSIsInRvYXN0IiwiTG9hZGVyMiIsIk1haWwiLCJTaGllbGRDaGVjayIsIlBheW1lbnRWZXJpZmljYXRpb25EaWFsb2ciLCJvcGVuIiwib25PcGVuQ2hhbmdlIiwic3RvcmVJZCIsIm9uVmVyaWZpZWQiLCJzdGVwIiwic2V0U3RlcCIsImxvYWRpbmciLCJzZXRMb2FkaW5nIiwiY29kZSIsInNldENvZGUiLCJtYXNrZWRFbWFpbCIsInNldE1hc2tlZEVtYWlsIiwiY291bnRkb3duIiwic2V0Q291bnRkb3duIiwidGltZXIiLCJzZXRUaW1lb3V0IiwiY2xlYXJUaW1lb3V0IiwiaGFuZGxlU2VuZENvZGUiLCJkYXRhIiwiZXJyb3IiLCJmdW5jdGlvbnMiLCJpbnZva2UiLCJib2R5IiwiYWN0aW9uIiwic3RvcmVfaWQiLCJFcnJvciIsImVtYWlsIiwic3VjY2VzcyIsImVyciIsIm1lc3NhZ2UiLCJoYW5kbGVWZXJpZnkiLCJsZW5ndGgiLCJoYW5kbGVSZXNlbmQiLCJjbGFzc05hbWUiLCJkaXYiLCJwIiwib25DbGljayIsImRpc2FibGVkIiwic3BhbiIsInZhbHVlIiwib25DaGFuZ2UiLCJlIiwidGFyZ2V0IiwicmVwbGFjZSIsInNsaWNlIiwicGxhY2Vob2xkZXIiLCJtYXhMZW5ndGgiLCJhdXRvRm9jdXMiLCJ2YXJpYW50Iiwic2l6ZSJdLCJtYXBwaW5ncyI6Ijs7QUFBQSxTQUFTQSxRQUFRLEVBQUVDLFNBQVMsUUFBUSxRQUFRO0FBQzVDLFNBQVNDLE1BQU0sRUFBRUMsYUFBYSxFQUFFQyxZQUFZLEVBQUVDLFdBQVcsRUFBRUMsWUFBWSxRQUFRLHlCQUF5QjtBQUN4RyxTQUFTQyxNQUFNLFFBQVEseUJBQXlCO0FBQ2hELFNBQVNDLEtBQUssUUFBUSx3QkFBd0I7QUFDOUMsU0FBU0MsUUFBUSxRQUFRLGlDQUFpQztBQUMxRCxTQUFTQyxLQUFLLFFBQVEsU0FBUztBQUMvQixTQUFTQyxPQUFPLEVBQUVDLElBQUksRUFBRUMsV0FBVyxRQUFRLGVBQWU7QUFTMUQsZUFBZSxTQUFTQywwQkFBMEIsRUFDaERDLElBQUksRUFDSkMsWUFBWSxFQUNaQyxPQUFPLEVBQ1BDLFVBQVUsRUFDcUI7O0lBQy9CLE1BQU0sQ0FBQ0MsTUFBTUMsUUFBUSxHQUFHcEIsU0FBNEI7SUFDcEQsTUFBTSxDQUFDcUIsU0FBU0MsV0FBVyxHQUFHdEIsU0FBUztJQUN2QyxNQUFNLENBQUN1QixNQUFNQyxRQUFRLEdBQUd4QixTQUFTO0lBQ2pDLE1BQU0sQ0FBQ3lCLGFBQWFDLGVBQWUsR0FBRzFCLFNBQVM7SUFDL0MsTUFBTSxDQUFDMkIsV0FBV0MsYUFBYSxHQUFHNUIsU0FBUztJQUUzQ0MsVUFBVTtRQUNSLElBQUksQ0FBQ2MsTUFBTTtZQUNUSyxRQUFRO1lBQ1JJLFFBQVE7WUFDUkksYUFBYTtRQUNmO0lBQ0YsR0FBRztRQUFDYjtLQUFLO0lBRVRkLFVBQVU7UUFDUixJQUFJMEIsWUFBWSxHQUFHO1lBQ2pCLE1BQU1FLFFBQVFDLFdBQVcsSUFBTUYsYUFBYUQsWUFBWSxJQUFJO1lBQzVELE9BQU8sSUFBTUksYUFBYUY7UUFDNUI7SUFDRixHQUFHO1FBQUNGO0tBQVU7SUFFZCxN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

@@ -2,12 +2,15 @@
  * Push Notifications Hook
  * Handles push notification registration and management for Capacitor apps
  */
-import { useState, useEffect, useCallback } from "react";
+import { createElement, useState, useEffect, useCallback, useRef } from "react";
 import { Capacitor } from "@capacitor/core";
+import { App as CapacitorApp } from "@capacitor/app";
 import { PushNotifications, Token, PushNotificationSchema, ActionPerformed } from "@capacitor/push-notifications";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import ChatNotificationToast from "@/components/chat/ChatNotificationToast";
+import { safeInternalPath } from "@/lib/urlSafety";
 
 export interface NotificationData {
   title: string;
@@ -23,8 +26,72 @@ export interface PushNotificationState {
   permission: "granted" | "denied" | "prompt" | "unknown";
 }
 
+type IncomingCallPayload = {
+  type: "incoming_call";
+  call_id?: string;
+  caller_id?: string;
+  call_type?: "voice" | "video";
+  caller_name?: string;
+  caller_avatar?: string;
+};
+
+const normalizeIncomingCallPayload = (
+  rawData: Record<string, any> | undefined,
+  fallbackTitle?: string,
+  fallbackBody?: string,
+): IncomingCallPayload | null => {
+  if (!rawData) return null;
+
+  const nested = typeof rawData.data === "object" && rawData.data !== null
+    ? rawData.data as Record<string, any>
+    : {};
+
+  const merged = { ...nested, ...rawData };
+  const type = String(merged.type || merged.notification_type || "").toLowerCase();
+
+  const hasCallHints = Boolean(merged.call_id || merged.caller_id || merged.call_type);
+  const textHint = `${fallbackTitle || ""} ${fallbackBody || ""}`.toLowerCase();
+  const looksLikeCallText = textHint.includes("calling") && textHint.includes("you");
+
+  if (type !== "incoming_call" && !(hasCallHints && looksLikeCallText)) {
+    return null;
+  }
+
+  const callType = merged.call_type === "video" ? "video" : "voice";
+
+  return {
+    type: "incoming_call",
+    call_id: typeof merged.call_id === "string" ? merged.call_id : undefined,
+    caller_id: typeof merged.caller_id === "string" ? merged.caller_id : undefined,
+    call_type: callType,
+    caller_name: typeof merged.caller_name === "string" ? merged.caller_name : fallbackTitle,
+    caller_avatar: typeof merged.caller_avatar === "string" ? merged.caller_avatar : undefined,
+  };
+};
+
+const normalizeLaunchUrl = (url: string | undefined | null): string | null => {
+  if (!url) return null;
+
+  try {
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      const parsed = new URL(url);
+      return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+    }
+
+    const schemeMatch = url.match(/^[a-z][a-z0-9+.-]*:\/\/(.*)$/i);
+    if (schemeMatch) {
+      const remainder = schemeMatch[1] || "";
+      return remainder.startsWith("/") ? remainder : `/${remainder}`;
+    }
+
+    return url.startsWith("/") ? url : `/${url}`;
+  } catch {
+    return null;
+  }
+};
+
 export const usePushNotifications = () => {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [state, setState] = useState<PushNotificationState>({
     isSupported: false,
     isRegistered: false,
@@ -32,6 +99,42 @@ export const usePushNotifications = () => {
     permission: "unknown",
   });
   const [notifications, setNotifications] = useState<PushNotificationSchema[]>([]);
+  const tokenRetryAttemptsRef = useRef<Record<string, number>>({});
+  const pendingNativeTokenRef = useRef<string | null>(null);
+  const recentIncomingPushRef = useRef<Record<string, number>>({});
+  const activeChatRef = useRef<string | null>(null);
+
+  useEffect(() => {
+    const handleChatOpen = (event: Event) => {
+      const customEvent = event as CustomEvent<{ recipientId?: string }>;
+      activeChatRef.current = customEvent.detail?.recipientId || null;
+    };
+    const handleChatClose = () => {
+      activeChatRef.current = null;
+    };
+
+    window.addEventListener("chat-opened" as any, handleChatOpen);
+    window.addEventListener("chat-closed" as any, handleChatClose);
+
+    return () => {
+      window.removeEventListener("chat-opened" as any, handleChatOpen);
+      window.removeEventListener("chat-closed" as any, handleChatClose);
+    };
+  }, []);
+
+  const showChatToast = useCallback((senderId: string, senderName: string, messageText: string, senderAvatar?: string | null) => {
+    toast.custom((toastId) => createElement(ChatNotificationToast, {
+      senderId,
+      senderName,
+      senderAvatar,
+      messageText: messageText || "Sent you a message",
+      onDismiss: () => toast.dismiss(toastId),
+      onReply: (id: string) => {
+        try { sessionStorage.setItem("pendingChatWith", id); } catch {}
+        window.location.href = `/chat?with=${encodeURIComponent(id)}`;
+      },
+    }), { duration: 5000 });
+  }, []);
 
   // Check if push notifications are supported (native or web with service worker)
   const checkSupport = useCallback(() => {
@@ -115,38 +218,86 @@ export const usePushNotifications = () => {
     return false;
   }, []);
 
-  // Save token to database via edge function
-  const saveToken = useCallback(async (token: string) => {
+  // Save token to database so server-side push delivery can target this device.
+  const saveToken = useCallback(async (token: string, saveAttempt = 0) => {
     if (!user?.id) return;
 
     try {
       const platform = Capacitor.getPlatform(); // 'ios' | 'android' | 'web'
+      const { data: { session: storedSession } } = await supabase.auth.getSession();
+      const activeSession = session ?? storedSession;
+
+      // Native auth/session hydration can lag behind registration event after app launch.
+      // Retry a few times so token registration doesn't silently fail with 401.
+      if (!activeSession?.access_token) {
+        const sessionRetryAttempt = (tokenRetryAttemptsRef.current[token] || 0) + 1;
+        tokenRetryAttemptsRef.current[token] = sessionRetryAttempt;
+
+        if (sessionRetryAttempt <= 8) {
+          setTimeout(() => {
+            void saveToken(token);
+          }, 700 * sessionRetryAttempt);
+          return;
+        }
+
+        console.error("[Push] Could not register token: auth session unavailable");
+        return;
+      }
       
       setState(prev => ({ ...prev, isRegistered: true, token }));
-      
-      // Persist token to Supabase so server can send push notifications
-      const { error } = await supabase.functions.invoke("register-push-token", {
-        body: { token, platform }
-      });
 
-      if (error) {
-        console.error("[Push] Error saving token to server:", error);
-      } else {
-        console.log(`[Push] ${platform} token registered successfully`);
+      const now = new Date().toISOString();
+      const payload = {
+        user_id: user.id,
+        token,
+        platform,
+        is_active: true,
+        last_used_at: now,
+        updated_at: now,
+      } as const;
+
+      // Prefer typed Supabase upsert to avoid REST header/on_conflict edge cases.
+      const { error: upsertError } = await (supabase as any)
+        .from("device_tokens")
+        .upsert(payload, { onConflict: "user_id,token" });
+
+      if (upsertError) {
+        const msg = String(upsertError.message || "").toLowerCase();
+        console.error("[Push] Error saving token to server:", upsertError);
+        if ((msg.includes("jwt") || msg.includes("auth") || msg.includes("expired") || msg.includes("401")) && saveAttempt < 2) {
+          setTimeout(() => {
+            void saveToken(token, saveAttempt + 1);
+          }, 800);
+        }
+        return;
       }
+
+      delete tokenRetryAttemptsRef.current[token];
+      pendingNativeTokenRef.current = null;
+      console.log(`[Push] ${platform} token registered successfully`);
     } catch (error) {
       console.error("[Push] Error saving token:", error);
     }
-  }, [user?.id]);
+  }, [session, user?.id]);
+
+  useEffect(() => {
+    if (!user?.id || !pendingNativeTokenRef.current) return;
+    void saveToken(pendingNativeTokenRef.current);
+  }, [user?.id, saveToken]);
 
   // Initialize push notifications
   useEffect(() => {
     checkSupport();
 
     if (!Capacitor.isNativePlatform()) {
-      // For web: auto-register if user is logged in
+      // Web: only auto-register if the user has already granted permission.
+      // Never call register() silently — it would trigger the browser permission
+      // prompt without the user asking. Explicit "Enable Notifications" buttons
+      // in Settings call register() directly.
       if (user?.id && "serviceWorker" in navigator && "PushManager" in window) {
-        register();
+        if (typeof Notification !== "undefined" && Notification.permission === "granted") {
+          register();
+        }
       }
       return;
     }
@@ -155,8 +306,11 @@ export const usePushNotifications = () => {
     const registrationListener = PushNotifications.addListener(
       "registration",
       (token: Token) => {
-        
-        saveToken(token.value);
+        if (!user?.id) {
+          pendingNativeTokenRef.current = token.value;
+          return;
+        }
+        void saveToken(token.value);
       }
     );
 
@@ -171,13 +325,62 @@ export const usePushNotifications = () => {
     const notificationReceivedListener = PushNotifications.addListener(
       "pushNotificationReceived",
       (notification: PushNotificationSchema) => {
-        
         setNotifications(prev => [notification, ...prev].slice(0, 50));
-        
-        // Show in-app toast for foreground notifications
-        toast.info(notification.title || "Notification", {
-          description: notification.body,
-        });
+
+        const payloadData = notification.data as Record<string, any> | undefined;
+        const nestedPayloadData = typeof payloadData?.data === "object" && payloadData.data !== null
+          ? payloadData.data as Record<string, any>
+          : {};
+        const mergedPayloadData = { ...nestedPayloadData, ...(payloadData || {}) };
+        const incomingCall = normalizeIncomingCallPayload(mergedPayloadData, notification.title, notification.body);
+
+        if (incomingCall) {
+          const dedupeKey = incomingCall.call_id || `${incomingCall.caller_id || "unknown"}:${incomingCall.call_type || "voice"}`;
+          const now = Date.now();
+          const lastSeen = recentIncomingPushRef.current[dedupeKey] || 0;
+          if (now - lastSeen < 4000) return;
+          recentIncomingPushRef.current[dedupeKey] = now;
+
+          window.dispatchEvent(new CustomEvent("incoming-call-push", {
+            detail: {
+              call_id: incomingCall.call_id,
+              caller_id: incomingCall.caller_id,
+              call_type: incomingCall.call_type,
+              caller_name: incomingCall.caller_name || notification.title,
+              caller_avatar: incomingCall.caller_avatar,
+            },
+          }));
+          return;
+        }
+
+        // For chat messages, show actionable toast with profile avatar.
+        const notifType = String(mergedPayloadData.type || mergedPayloadData.notification_type || "").toLowerCase();
+        const chatSenderId = mergedPayloadData.sender_id || mergedPayloadData.senderId || mergedPayloadData.from_user_id;
+        const chatSenderName = mergedPayloadData.sender_name || mergedPayloadData.senderName || notification.title || "Someone";
+        const chatSenderAvatar = mergedPayloadData.sender_avatar_url || mergedPayloadData.senderAvatarUrl || mergedPayloadData.image_url || null;
+        const chatActionUrl = typeof mergedPayloadData.action_url === "string" ? mergedPayloadData.action_url : "";
+        const chatSenderFromUrl = (() => {
+          try { return chatActionUrl ? new URL(chatActionUrl, "https://x").searchParams.get("with") : null; } catch { return null; }
+        })();
+        const resolvedChatSenderId = chatSenderId || chatSenderFromUrl;
+        const isForegroundChat = notifType === "chat_message" || notifType === "new_message" || chatActionUrl.startsWith("/chat");
+        if (isForegroundChat && resolvedChatSenderId) {
+          const normalizedSenderId = String(resolvedChatSenderId);
+          if (normalizedSenderId === user?.id) return;
+          if (activeChatRef.current === normalizedSenderId) return;
+
+          showChatToast(
+            normalizedSenderId,
+            String(chatSenderName),
+            notification.body || "Sent you a message",
+            typeof chatSenderAvatar === "string" ? chatSenderAvatar : null,
+          );
+        } else {
+          // Show in-app toast for other foreground notifications
+          toast.info(notification.title || "Notification", {
+            description: notification.body,
+          });
+        }
       }
     );
 
@@ -189,9 +392,20 @@ export const usePushNotifications = () => {
       }
     );
 
+    const appResumeListener = CapacitorApp.addListener("appStateChange", ({ isActive }) => {
+      if (!isActive || !user?.id) return;
+      // iOS can rotate APNs tokens and background lifecycle can drop listeners.
+      // Re-register on resume to keep device_tokens fresh.
+      void register();
+    });
+
     // Auto-register if user is logged in
     if (user?.id) {
       register();
+      // Second attempt helps when iOS permission/session setup races at launch.
+      setTimeout(() => {
+        void register();
+      }, 2000);
     }
 
     return () => {
@@ -199,76 +413,144 @@ export const usePushNotifications = () => {
       registrationErrorListener.then(l => l.remove());
       notificationReceivedListener.then(l => l.remove());
       notificationActionListener.then(l => l.remove());
+      appResumeListener.then(l => l.remove());
     };
-  }, [user?.id, checkSupport, register, saveToken]);
+  }, [user?.id, checkSupport, register, saveToken, showChatToast]);
 
   // Handle notification action (when user taps notification)
   const handleNotificationAction = (action: ActionPerformed) => {
-    const data = action.notification.data as Record<string, any>;
-    
-    if (data?.type) {
-      switch (data.type) {
-        // Ride notifications
-        case "driver_assigned":
-        case "driver_en_route":
-        case "driver_arrived":
-        case "trip_started":
-        case "trip_completed":
-        case "driver_status":
-          window.location.href = data.trip_id ? `/rides/tracking/${data.trip_id}` : `/rides`;
-          break;
-        case "trip_cancelled":
-          window.location.href = `/rides`;
-          break;
+    const rawData = (action.notification.data || {}) as Record<string, any>;
+    const nestedData = typeof rawData.data === "object" && rawData.data !== null
+      ? rawData.data as Record<string, any>
+      : {};
+    const mergedData = { ...nestedData, ...rawData };
+    const incomingCall = normalizeIncomingCallPayload(mergedData, action.notification.title, action.notification.body);
+    const normalizedType = String(mergedData.type || mergedData.notification_type || "").toLowerCase();
+    const actionUrl = typeof mergedData.action_url === "string" ? mergedData.action_url
+      : typeof mergedData.actionUrl === "string" ? mergedData.actionUrl : "";
 
-        // Flight notifications
-        case "booking_confirmed":
-        case "booking_confirmation":
-        case "checkin_reminder":
-        case "gate_change":
-        case "flight_delayed":
-        case "flight_cancelled":
-        case "boarding_soon":
-        case "flight_departed":
-        case "flight_landed":
-        case "itinerary_update":
-          window.location.href = data.booking_id ? `/bookings/${data.booking_id}` : `/bookings`;
-          break;
-        case "price_drop":
-          window.location.href = `/flights`;
-          break;
-        case "refund_processed":
-        case "refund_update":
-          window.location.href = `/wallet`;
-          break;
+    // Extract sender ID from action_url (/chat?with=<id>) as a reliable fallback
+    const senderFromUrl = (() => {
+      if (!actionUrl) return null;
+      try {
+        const urlObj = new URL(actionUrl, "https://x");
+        return urlObj.searchParams.get("with");
+      } catch { return null; }
+    })();
 
-        // Food delivery
-        case "delivery_update":
-        case "order_placed":
-        case "order_confirmed":
-        case "order_preparing":
-        case "order_ready":
-        case "driver_pickup":
-        case "out_for_delivery":
-        case "order_delivered":
-        case "order_cancelled":
-        case "new_order_restaurant":
-        case "new_delivery_driver":
-          window.location.href = data.order_id ? `/eats/${data.order_id}` : `/eats`;
-          break;
-        case "pickup_reminder":
-          window.location.href = `/p2p/bookings/${data.rental_id}`;
-          break;
+    const senderId = mergedData.sender_id || mergedData.senderId || mergedData.from_user_id || mergedData.user_id || senderFromUrl;
+    const isChatAction = Boolean(
+      senderId ||
+      normalizedType === "chat_message" ||
+      normalizedType === "new_message" ||
+      normalizedType === "message_received" ||
+      actionUrl.startsWith("/chat")
+    );
 
-        // Promos
-        case "surge_alert":
-        case "promo_available":
-          window.location.href = `/rides`;
-          break;
-
-        default:
-          window.location.href = `/notifications`;
+    if (incomingCall) {
+      try {
+        sessionStorage.setItem("pendingIncomingCallPush", JSON.stringify({
+          call_id: incomingCall.call_id,
+          caller_id: incomingCall.caller_id,
+          call_type: incomingCall.call_type,
+          caller_name: incomingCall.caller_name || action.notification.title,
+          caller_avatar: incomingCall.caller_avatar,
+          ts: Date.now(),
+        }));
+      } catch {
+        // Storage can fail in some restricted contexts; fallback still dispatches event.
       }
+
+      window.dispatchEvent(new CustomEvent("incoming-call-push", {
+        detail: {
+          call_id: incomingCall.call_id,
+          caller_id: incomingCall.caller_id,
+          call_type: incomingCall.call_type,
+          caller_name: incomingCall.caller_name || action.notification.title,
+          caller_avatar: incomingCall.caller_avatar,
+        },
+      }));
+      return;
+    }
+
+    if (isChatAction) {
+      if (senderId) {
+        // Persist so ChatHubPage can open the chat even if URL param is consumed before auth is ready
+        try { sessionStorage.setItem("pendingChatWith", String(senderId)); } catch {}
+        window.location.href = `/chat?with=${encodeURIComponent(String(senderId))}`;
+        return;
+      }
+
+      if (actionUrl.startsWith("/chat")) {
+        window.location.href = actionUrl;
+        return;
+      }
+
+      window.location.href = `/chat`;
+      return;
+    }
+
+    switch (normalizedType) {
+      // Ride notifications
+      case "driver_assigned":
+      case "driver_en_route":
+      case "driver_arrived":
+      case "trip_started":
+      case "trip_completed":
+      case "driver_status":
+        window.location.href = safeInternalPath('/rides/tracking', mergedData.trip_id, '/rides');
+        break;
+      case "trip_cancelled":
+        window.location.href = `/rides`;
+        break;
+
+      // Flight notifications
+      case "booking_confirmed":
+      case "booking_confirmation":
+      case "checkin_reminder":
+      case "gate_change":
+      case "flight_delayed":
+      case "flight_cancelled":
+      case "boarding_soon":
+      case "flight_departed":
+      case "flight_landed":
+      case "itinerary_update":
+        window.location.href = safeInternalPath('/bookings', mergedData.booking_id, '/bookings');
+        break;
+      case "price_drop":
+        window.location.href = `/flights`;
+        break;
+      case "refund_processed":
+      case "refund_update":
+        window.location.href = `/wallet`;
+        break;
+
+      // Food delivery
+      case "delivery_update":
+      case "order_placed":
+      case "order_confirmed":
+      case "order_preparing":
+      case "order_ready":
+      case "driver_pickup":
+      case "out_for_delivery":
+      case "order_delivered":
+      case "order_cancelled":
+      case "new_order_restaurant":
+      case "new_delivery_driver":
+        window.location.href = safeInternalPath('/eats', mergedData.order_id, '/eats');
+        break;
+      case "pickup_reminder":
+        window.location.href = safeInternalPath('/p2p/bookings', mergedData.rental_id, '/p2p');
+        break;
+
+      // Promos
+      case "surge_alert":
+      case "promo_available":
+        window.location.href = `/rides`;
+        break;
+
+      default:
+        window.location.href = `/notifications`;
     }
   };
 

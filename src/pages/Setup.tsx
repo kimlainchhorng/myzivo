@@ -1,75 +1,200 @@
 /**
- * Setup Page — Collects first name, last name, and phone after signup.
- * Requires phone verification via Twilio Verify before completing.
+ * Setup Page — Profile picture & cover photo upload after signup.
+ * Name and phone are already collected during registration.
  */
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
+import { useState, useEffect, useRef } from "react";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
-import { Form, FormField, FormItem, FormLabel, FormControl, FormMessage } from "@/components/ui/form";
 import { toast } from "sonner";
-import { User, ArrowRight, Loader2 } from "lucide-react";
-import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
-import { PhoneVerificationDialog } from "@/components/account/PhoneVerificationDialog";
+import { User, ArrowRight, Loader2, Camera, ImagePlus } from "lucide-react";
+import { getSafeRedirectTarget, withRedirectParam } from "@/lib/authRedirect";
+import { stripImageMetadata } from "@/utils/stripImageMetadata";
 
-const setupSchema = z.object({
-  first_name: z.string().trim().min(1, "First name is required").max(50),
-  last_name: z.string().trim().min(1, "Last name is required").max(50),
-  phone: z.string().trim().min(5, "Phone number is required").max(20),
-});
-
-type SetupValues = z.infer<typeof setupSchema>;
+const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 export default function Setup() {
   const navigate = useNavigate();
-  const { user } = useAuth();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const { user, isLoading: authLoading } = useAuth();
+  const isMobile = useIsMobile();
   const [saving, setSaving] = useState(false);
-  const [showVerifyDialog, setShowVerifyDialog] = useState(false);
-  const [pendingData, setPendingData] = useState<SetupValues | null>(null);
+  const [checking, setChecking] = useState(true);
+  const redirectTo = getSafeRedirectTarget(
+    searchParams.get("redirect") ?? (location.state as { redirectTo?: string } | null)?.redirectTo,
+  );
 
-  const form = useForm<SetupValues>({
-    resolver: zodResolver(setupSchema),
-    defaultValues: {
-      first_name: user?.user_metadata?.full_name?.split(" ")[0] || "",
-      last_name: user?.user_metadata?.full_name?.split(" ").slice(1).join(" ") || "",
-      phone: "",
-    },
-  });
+  // Image state
+  const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [coverFile, setCoverFile] = useState<File | null>(null);
 
-  const onSubmit = async (data: SetupValues) => {
-    if (!user) return;
-    // Store form data and open phone verification dialog
-    setPendingData(data);
-    setShowVerifyDialog(true);
+  const avatarInputRef = useRef<HTMLInputElement>(null);
+  const coverInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    let isActive = true;
+
+    const loadProfile = async () => {
+      if (authLoading) return;
+
+      if (!user) {
+        if (isActive) setChecking(false);
+        navigate(withRedirectParam("/login", redirectTo), { replace: true });
+        return;
+      }
+
+      try {
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("setup_complete, avatar_url, cover_url")
+          .or(`user_id.eq.${user.id},id.eq.${user.id}`)
+          .maybeSingle();
+
+        if (!isActive) return;
+
+        if (profile?.setup_complete) {
+          navigate(redirectTo, { replace: true });
+          return;
+        }
+
+        if (profile?.avatar_url) setAvatarPreview(profile.avatar_url);
+        if (profile?.cover_url) setCoverPreview(profile.cover_url);
+      } catch (err) {
+        console.error("Error loading profile:", err);
+      } finally {
+        if (isActive) setChecking(false);
+      }
+    };
+
+    loadProfile();
+
+    return () => {
+      isActive = false;
+    };
+  }, [authLoading, user, navigate]);
+
+  const handleImageSelect = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    type: "avatar" | "cover"
+  ) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      toast.error("Please upload a JPG, PNG, or WebP image");
+      return;
+    }
+
+    if (file.size > MAX_FILE_SIZE) {
+      toast.error("File size must be less than 5MB");
+      return;
+    }
+
+    const previewUrl = URL.createObjectURL(file);
+
+    if (type === "avatar") {
+      setAvatarFile(file);
+      setAvatarPreview(previewUrl);
+      return;
+    }
+
+    setCoverFile(file);
+    setCoverPreview(previewUrl);
   };
 
-  const handlePhoneVerified = async () => {
-    if (!user || !pendingData) return;
+  const uploadImage = async (file: File, bucket: string, folder: string): Promise<string> => {
+    const safe = await stripImageMetadata(file);
+    const fileExt = safe.name.split(".").pop();
+    const filePath = `${folder}/${bucket}_${Date.now()}.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from(bucket)
+      .upload(filePath, safe, { upsert: true });
+
+    if (uploadError) throw uploadError;
+
+    const {
+      data: { publicUrl },
+    } = supabase.storage.from(bucket).getPublicUrl(filePath);
+
+    return publicUrl;
+  };
+
+  const persistSetup = async ({
+    includeUploads,
+    redirectTo,
+  }: {
+    includeUploads: boolean;
+    redirectTo: string;
+  }) => {
+    if (!user) {
+      navigate(withRedirectParam("/login", redirectTo), { replace: true });
+      return;
+    }
+
     setSaving(true);
 
     try {
-      const fullName = [pendingData.first_name, pendingData.last_name].filter(Boolean).join(" ");
+      let avatarUrl: string | undefined;
+      let coverUrl: string | undefined;
 
-      const { error } = await supabase
+      if (includeUploads && avatarFile) {
+        avatarUrl = await uploadImage(avatarFile, "avatars", user.id);
+      }
+
+      if (includeUploads && coverFile) {
+        coverUrl = await uploadImage(coverFile, "covers", user.id);
+      }
+
+      const metadata = user.user_metadata ?? {};
+      const fullName = typeof metadata.full_name === "string" ? metadata.full_name : null;
+      const phone = typeof metadata.phone === "string" ? metadata.phone : null;
+
+      const profileUpdate: Record<string, unknown> = {
+        setup_complete: true,
+        user_id: user.id,
+        email: user.email ?? null,
+        full_name: fullName,
+        phone,
+      };
+
+      if (avatarUrl) profileUpdate.avatar_url = avatarUrl;
+      if (coverUrl) profileUpdate.cover_url = coverUrl;
+
+      const { data: existingProfile, error: existingProfileError } = await supabase
         .from("profiles")
-        .update({
-          full_name: fullName,
-          phone: pendingData.phone,
-          phone_e164: pendingData.phone,
-          phone_verified: true,
-          phone_verified_at: new Date().toISOString(),
-          setup_complete: true,
-        })
-        .eq("user_id", user.id);
+        .select("id")
+        .or(`user_id.eq.${user.id},id.eq.${user.id}`)
+        .maybeSingle();
 
-      if (error) throw error;
+      if (existingProfileError) throw existingProfileError;
+
+      if (existingProfile) {
+        const { error: updateError } = await supabase
+          .from("profiles")
+          .update(profileUpdate)
+          .eq("id", existingProfile.id);
+
+        if (updateError) throw updateError;
+      } else {
+        const { error: insertError } = await supabase
+          .from("profiles")
+          .insert({
+            id: user.id,
+            ...profileUpdate,
+          });
+
+        if (insertError) throw insertError;
+      }
 
       toast.success("Account setup complete!");
-      navigate("/", { replace: true });
+      navigate(redirectTo, { replace: true });
     } catch (err: any) {
       console.error("Setup error:", err);
       toast.error(err?.message || "Failed to save. Please try again.");
@@ -78,108 +203,155 @@ export default function Setup() {
     }
   };
 
+  const handleContinue = async () => {
+    await persistSetup({ includeUploads: true, redirectTo });
+  };
+
+  const handleSkip = async () => {
+    await persistSetup({ includeUploads: false, redirectTo });
+  };
+
+  if (authLoading || checking) {
+    return (
+      <div className="min-h-[100dvh] flex items-center justify-center bg-gradient-to-b from-[#0a1628] to-[#0d2137]">
+        <Loader2 className="w-6 h-6 animate-spin text-white/50" />
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-gradient-to-b from-[#0a1628] to-[#0d2137] px-4">
+    <div className={isMobile ? "min-h-[100dvh] flex flex-col items-center justify-start bg-gradient-to-b from-[#0a1628] to-[#0d2137] px-4 py-6 overflow-y-auto" : "min-h-[100dvh] flex flex-col items-center justify-center bg-gradient-to-b from-[#0a1628] to-[#0d2137] px-4 py-8"}>
       <div className="w-full max-w-md">
-        <div className="relative bg-white/[0.08] backdrop-blur-2xl border border-white/[0.15] rounded-3xl p-6 sm:p-8">
-          {/* Header */}
-          <div className="text-center mb-6">
-            <h1 className="text-2xl font-bold text-white tracking-tight">Complete Your Profile</h1>
-            <p className="text-white/50 text-sm mt-1">Just a few details to get started</p>
+        <div className={isMobile ? "relative bg-white/[0.08] border border-white/[0.15] rounded-3xl overflow-hidden" : "relative bg-white/[0.08] backdrop-blur-2xl border border-white/[0.15] rounded-3xl overflow-hidden"}>
+          <div className="relative h-32 sm:h-36 bg-gradient-to-br from-primary/30 via-primary/10 to-transparent overflow-hidden group">
+            {coverPreview ? (
+              <img
+                src={coverPreview}
+                alt="Cover"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center">
+                <div className="text-center">
+                  <ImagePlus className="w-6 h-6 text-white/30 mx-auto mb-1" />
+                  <span className="text-white/30 text-xs">Add cover photo</span>
+                </div>
+              </div>
+            )}
+
+            <button
+              type="button"
+              onClick={() => coverInputRef.current?.click()}
+              className={isMobile ? "absolute inset-0 flex items-center justify-center bg-black/20 transition-colors cursor-pointer touch-manipulation" : "absolute inset-0 flex items-center justify-center bg-black/0 group-hover:bg-black/30 transition-colors cursor-pointer"}
+            >
+              <div className={isMobile ? "opacity-100 bg-black/55 rounded-full px-3 py-2" : "opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 rounded-full p-2"}>
+                <Camera className="w-5 h-5 text-white" />
+              </div>
+            </button>
+
+            <input
+              ref={coverInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              className="hidden"
+              onChange={(e) => handleImageSelect(e, "cover")}
+            />
           </div>
 
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              {/* First Name */}
-              <FormField
-                control={form.control}
-                name="first_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-white/70 text-sm">First Name</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                        <input
-                          {...field}
-                          placeholder="First name"
-                          className="w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl py-2.5 pl-10 pr-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_0_rgba(255,255,255,0.05)]"
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Last Name */}
-              <FormField
-                control={form.control}
-                name="last_name"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-white/70 text-sm">Last Name</FormLabel>
-                    <FormControl>
-                      <div className="relative">
-                        <User className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
-                        <input
-                          {...field}
-                          placeholder="Last name"
-                          className="w-full bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl py-2.5 pl-10 pr-3 text-white placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent transition-all text-sm shadow-[inset_0_2px_4px_rgba(0,0,0,0.3),0_1px_0_rgba(255,255,255,0.05)]"
-                        />
-                      </div>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              {/* Phone Number */}
-              <FormField
-                control={form.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel className="text-white/70 text-sm">Phone Number</FormLabel>
-                    <FormControl>
-                      <CountryPhoneInput
-                        value={field.value}
-                        onChange={field.onChange}
-                      />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-
-              <Button
-                type="submit"
-                disabled={saving}
-                className="w-full h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm mt-2 touch-manipulation active:scale-[0.98] transition-all"
-              >
-                {saving ? (
-                  <Loader2 className="w-4 h-4 animate-spin" />
+          <div className="relative flex justify-center -mt-12 z-10">
+            <div className="relative group">
+              <div className="w-24 h-24 rounded-full border-4 border-[#0d2137] bg-white/10 overflow-hidden shadow-lg">
+                {avatarPreview ? (
+                  <img
+                    src={avatarPreview}
+                    alt="Avatar"
+                    className="w-full h-full object-cover"
+                  />
                 ) : (
-                  <>
-                    Continue
-                    <ArrowRight className="w-4 h-4 ml-2" />
-                  </>
+                  <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/20 to-primary/5">
+                    <User className="w-10 h-10 text-white/30" />
+                  </div>
                 )}
-              </Button>
-            </form>
-          </Form>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => avatarInputRef.current?.click()}
+                className={isMobile ? "absolute inset-0 rounded-full flex items-center justify-center bg-black/20 transition-colors cursor-pointer touch-manipulation" : "absolute inset-0 rounded-full flex items-center justify-center bg-black/0 group-hover:bg-black/40 transition-colors cursor-pointer"}
+              >
+                <div className={isMobile ? "opacity-100 bg-black/55 rounded-full p-2" : "opacity-0 group-hover:opacity-100 transition-opacity bg-black/50 rounded-full p-1.5"}>
+                  <Camera className="w-4 h-4 text-white" />
+                </div>
+              </button>
+
+              <div className="absolute bottom-0 right-0 bg-primary rounded-full p-1.5 shadow-lg border-2 border-[#0d2137]">
+                <Camera className="w-3 h-3 text-primary-foreground" />
+              </div>
+
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/jpeg,image/png,image/webp"
+                className="hidden"
+                onChange={(e) => handleImageSelect(e, "avatar")}
+              />
+            </div>
+          </div>
+
+          <div className="px-6 pb-6 pt-3 sm:px-8 sm:pb-8">
+            <div className="mb-5">
+              <div className="text-center">
+                <h1 className="text-2xl font-bold text-white tracking-tight">Finish Your Setup</h1>
+                <p className="text-white/60 text-sm mt-1">No typing needed — photos are optional. Add them now or skip and continue.</p>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <button
+                type="button"
+                onClick={() => avatarInputRef.current?.click()}
+                className="rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-left touch-manipulation active:scale-[0.98] transition-transform"
+              >
+                <p className="text-sm font-semibold text-white">Profile photo</p>
+                <p className="text-xs text-white/50 mt-1">Optional</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => coverInputRef.current?.click()}
+                className="rounded-2xl border border-white/15 bg-white/5 px-4 py-3 text-left touch-manipulation active:scale-[0.98] transition-transform"
+              >
+                <p className="text-sm font-semibold text-white">Cover photo</p>
+                <p className="text-xs text-white/50 mt-1">Optional</p>
+              </button>
+            </div>
+
+            <Button
+              onClick={handleContinue}
+              disabled={saving}
+              className="w-full h-11 rounded-xl bg-primary hover:bg-primary/90 text-primary-foreground font-semibold text-sm mt-2 touch-manipulation active:scale-[0.98] transition-all"
+            >
+              {saving ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <>
+                  Continue
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </>
+              )}
+            </Button>
+
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleSkip}
+              disabled={saving}
+              className="w-full h-11 rounded-xl border-white/15 bg-white/5 text-white hover:bg-white/10 font-semibold text-sm mt-3 touch-manipulation active:scale-[0.98] transition-all"
+            >
+              Continue without photos
+            </Button>
+          </div>
         </div>
       </div>
-
-      {/* Phone Verification Dialog */}
-      {pendingData && (
-        <PhoneVerificationDialog
-          open={showVerifyDialog}
-          onOpenChange={setShowVerifyDialog}
-          phoneNumber={pendingData.phone}
-          onVerified={handlePhoneVerified}
-        />
-      )}
     </div>
   );
 }

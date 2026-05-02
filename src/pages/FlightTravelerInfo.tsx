@@ -297,7 +297,7 @@ const FlightTravelerInfo = () => {
     <div className={cn("mx-auto px-3 sm:px-4", isMobile ? "max-w-lg pb-36" : "max-w-2xl pb-36")}>
       {/* Sticky 3D header for mobile */}
       {isMobile && (
-        <div className="sticky top-0 z-20 -mx-3 px-3 mb-4">
+        <div className="sticky top-0 safe-area-top z-20 -mx-3 px-3 mb-4">
           <motion.div
             initial={{ opacity: 0, y: -12 }}
             animate={{ opacity: 1, y: 0 }}

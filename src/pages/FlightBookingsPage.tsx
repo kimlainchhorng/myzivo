@@ -3,7 +3,7 @@
  * Premium booking management with filters, status tabs, cancellation, and detail modal
  */
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useCallback } from "react";
 import { Link } from "react-router-dom";
 import {
   Plane, ArrowLeft, Clock, CheckCircle, AlertCircle, XCircle,
@@ -26,6 +26,7 @@ import { useFlightBookings, useFlightBooking, useRequestFlightRefund, canRequest
 import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import PullToRefresh from "@/components/shared/PullToRefresh";
 
 type FilterTab = "all" | "upcoming" | "issued" | "processing" | "cancelled";
 
@@ -62,6 +63,7 @@ function formatCurrency(amount: number, currency: string = "USD") {
 export default function FlightBookingsPage() {
   const { data: bookings, isLoading, error, refetch } = useFlightBookings();
   const [selectedId, setSelectedId] = useState<string | null>(null);
+  const handlePullRefresh = useCallback(async () => { await refetch(); }, [refetch]);
   const [activeTab, setActiveTab] = useState<FilterTab>("all");
   const [searchQuery, setSearchQuery] = useState("");
   const [sortNewest, setSortNewest] = useState(true);
@@ -106,7 +108,7 @@ export default function FlightBookingsPage() {
   }, [bookings, activeTab, searchQuery, sortNewest]);
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden">
+    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background relative overflow-hidden">
       <SEOHead title="My Flight Bookings – ZIVO" description="View and manage your flight bookings." />
 
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
@@ -124,7 +126,7 @@ export default function FlightBookingsPage() {
             className="flex items-center justify-between gap-3 mb-4"
           >
             <div className="flex items-center gap-3">
-              <Button variant="ghost" size="icon" asChild className="shrink-0 rounded-xl">
+              <Button aria-label="Back to flights" variant="ghost" size="icon" asChild className="shrink-0 rounded-xl">
                 <Link to="/flights"><ArrowLeft className="w-5 h-5" /></Link>
               </Button>
               <div>
@@ -135,7 +137,7 @@ export default function FlightBookingsPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="ghost" size="icon" onClick={() => refetch()} className="rounded-xl" title="Refresh">
+              <Button aria-label="Refresh" variant="ghost" size="icon" onClick={() => refetch()} className="rounded-xl" title="Refresh">
                 <RefreshCw className="w-4 h-4" />
               </Button>
               <Button asChild variant="outline" size="sm" className="border-border/40 rounded-xl">
@@ -350,7 +352,7 @@ export default function FlightBookingsPage() {
 
       <BookingDetailsModal bookingId={selectedId} onClose={() => setSelectedId(null)} />
       <Footer />
-    </div>
+    </PullToRefresh>
   );
 }
 

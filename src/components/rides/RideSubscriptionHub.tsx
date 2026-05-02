@@ -67,8 +67,28 @@ const perks = [
 
 type View = "plans" | "usage" | "perks";
 
+const SUB_KEY = "zivo_subscription";
+const PERKS_KEY = "zivo_sub_perks";
+
 export default function RideSubscriptionHub() {
   const [view, setView] = useState<View>("plans");
+  const [currentPlan, setCurrentPlan] = useState<string>(() => {
+    try { return localStorage.getItem(SUB_KEY) || "premium"; } catch { return "premium"; }
+  });
+  const [redeemedPerks, setRedeemedPerks] = useState<number[]>(() => {
+    try { return JSON.parse(localStorage.getItem(PERKS_KEY) || "[2]"); } catch { return [2]; }
+  });
+
+  const switchPlan = (planId: string, planName: string) => {
+    setCurrentPlan(planId);
+    localStorage.setItem(SUB_KEY, planId);
+    toast.success(`Switched to ${planName}!`);
+  };
+
+  const redeemPerk = (id: number, name: string) => {
+    setRedeemedPerks(prev => { const next = [...prev, id]; localStorage.setItem(PERKS_KEY, JSON.stringify(next)); return next; });
+    toast.success(`${name} activated!`);
+  };
 
   const views: { id: View; label: string; icon: typeof Crown }[] = [
     { id: "plans", label: "Plans", icon: Crown },
@@ -120,12 +140,13 @@ export default function RideSubscriptionHub() {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
           {plans.map((plan) => {
             const Icon = plan.icon;
+            const isCurrent = plan.id === currentPlan;
             return (
-              <div key={plan.id} className={cn("rounded-xl border overflow-hidden", plan.current ? plan.borderColor : "border-border/30")}>
+              <div key={plan.id} className={cn("rounded-xl border overflow-hidden", isCurrent ? plan.borderColor : "border-border/30")}>
                 {plan.popular && (
                   <div className="bg-primary text-primary-foreground text-center py-1 text-[10px] font-bold">Most Popular</div>
                 )}
-                <div className={cn("p-4 space-y-3", plan.current ? `bg-gradient-to-br ${plan.color}` : "bg-card")}>
+                <div className={cn("p-4 space-y-3", isCurrent ? `bg-gradient-to-br ${plan.color}` : "bg-card")}>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-background/80 flex items-center justify-center">
                       <Icon className={cn("w-5 h-5", plan.iconColor)} />
@@ -134,7 +155,7 @@ export default function RideSubscriptionHub() {
                       <p className="text-sm font-bold text-foreground">{plan.name}</p>
                       <p className="text-lg font-black text-foreground">{plan.price}<span className="text-xs text-muted-foreground font-normal">{plan.period}</span></p>
                     </div>
-                    {plan.current && <span className="text-[10px] bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-bold">Your Plan</span>}
+                    {isCurrent && <span className="text-[10px] bg-primary text-primary-foreground px-2 py-0.5 rounded-full font-bold">Your Plan</span>}
                   </div>
                   <div className="space-y-1.5">
                     {plan.features.map((f) => (
@@ -144,12 +165,12 @@ export default function RideSubscriptionHub() {
                       </div>
                     ))}
                   </div>
-                  {!plan.current && (
+                  {!isCurrent && (
                     <button
-                      onClick={() => toast.info(`Switching to ${plan.name}...`)}
+                      onClick={() => switchPlan(plan.id, plan.name)}
                       className="w-full py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-bold"
                     >
-                      {plans.findIndex((p) => p.id === plan.id) > plans.findIndex((p) => p.current) ? "Upgrade" : "Downgrade"}
+                      {plans.findIndex((p) => p.id === plan.id) > plans.findIndex((p) => p.id === currentPlan) ? "Upgrade" : "Downgrade"}
                     </button>
                   )}
                 </div>
@@ -189,7 +210,7 @@ export default function RideSubscriptionHub() {
               <p className="text-xs font-bold text-foreground">Member since {usageStats.memberSince}</p>
               <p className="text-[11px] text-muted-foreground">Auto-renews on {usageStats.nextBilling}</p>
             </div>
-            <button onClick={() => toast.info("Opening billing...")} className="text-xs font-bold text-primary">Manage</button>
+            <button onClick={() => setView("plans")} className="text-xs font-bold text-primary">Manage</button>
           </div>
         </motion.div>
       )}
@@ -208,11 +229,11 @@ export default function RideSubscriptionHub() {
                   <p className="text-sm font-bold text-foreground">{perk.name}</p>
                   <p className="text-xs text-muted-foreground">{perk.desc}</p>
                 </div>
-                {perk.redeemed ? (
+                {redeemedPerks.includes(perk.id) ? (
                   <span className="text-[10px] text-muted-foreground font-bold">Redeemed</span>
                 ) : (
                   <button
-                    onClick={() => toast.success(`${perk.name} activated!`)}
+                    onClick={() => redeemPerk(perk.id, perk.name)}
                     className="text-xs font-bold text-primary"
                   >
                     Redeem

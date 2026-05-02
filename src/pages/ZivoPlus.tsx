@@ -1,30 +1,20 @@
-/**
- * ZIVO Plus - Premium subscription landing page
- */
-
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import {
-  Crown,
-  Zap,
-  Bell,
-  Star,
-  Shield,
-  Headphones,
-  Sparkles,
-  Check,
-  Gift,
-  Plane,
-  ArrowRight,
-  Percent,
+  Crown, Zap, Bell, Star, Shield, Headphones, Check, ArrowRight, Percent, Loader2, CheckCircle2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import NavBar from "@/components/home/NavBar";
 import Footer from "@/components/Footer";
+import { useAuth } from "@/contexts/AuthContext";
+import { useQuery } from "@tanstack/react-query";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 const benefits = [
   {
@@ -83,11 +73,86 @@ const testimonials = [
 ];
 
 const ZivoPlus = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [isAnnual, setIsAnnual] = useState(true);
+  const [joining, setJoining] = useState(false);
 
   const monthlyPrice = 9.99;
   const annualPrice = 79.99;
   const annualSavings = Math.round((monthlyPrice * 12 - annualPrice) / (monthlyPrice * 12) * 100);
+
+  const { data: subscription, refetch: refetchSub } = useQuery({
+    queryKey: ["zivo-plus-status", user?.id],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("zivo_subscriptions")
+        .select("id, status, billing_cycle, current_period_end")
+        .eq("user_id", user!.id)
+        .neq("status", "cancelled")
+        .maybeSingle();
+      return data as { id: string; status: string; billing_cycle: string; current_period_end: string } | null;
+    },
+    enabled: !!user,
+  });
+
+  const { data: plan } = useQuery({
+    queryKey: ["zivo-plus-plan"],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("zivo_subscription_plans")
+        .select("id, name, price_monthly, price_yearly, slug")
+        .eq("slug", "zivo-plus")
+        .eq("is_active", true)
+        .maybeSingle();
+      return data as { id: string; name: string; price_monthly: number; price_yearly: number | null; slug: string } | null;
+    },
+  });
+
+  const isActive = subscription?.status === "active";
+  const isPending = subscription?.status === "pending";
+
+  const handleJoin = async () => {
+    if (!user) {
+      navigate("/login?redirect=/zivo-plus");
+      return;
+    }
+    if (isActive) {
+      navigate("/account/subscriptions");
+      return;
+    }
+    if (isPending) {
+      toast.info("Your subscription is being processed. Check your email for the payment link.");
+      return;
+    }
+    if (!plan) {
+      toast.error("Unable to start subscription. Please try again or contact support.");
+      return;
+    }
+    setJoining(true);
+    try {
+      const now = new Date();
+      const periodEnd = new Date(now);
+      periodEnd.setMonth(periodEnd.getMonth() + (isAnnual ? 12 : 1));
+
+      const { error } = await (supabase as any).from("zivo_subscriptions").insert({
+        user_id: user.id,
+        plan_id: plan.id,
+        status: "pending",
+        billing_cycle: isAnnual ? "annual" : "monthly",
+        current_period_start: now.toISOString(),
+        current_period_end: periodEnd.toISOString(),
+      });
+
+      if (error) throw error;
+      await refetchSub();
+      toast.success("Welcome to ZIVO Plus! Check your email to complete payment.", { duration: 6000 });
+    } catch {
+      toast.error("Failed to start subscription. Please try again.");
+    } finally {
+      setJoining(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -155,11 +220,31 @@ const ZivoPlus = () => {
                 </div>
 
                 {/* CTA */}
-                <Button className="w-full h-14 text-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 gap-2 shadow-[0_0_20px_hsl(38_92%_50%/0.3)] hover:shadow-[0_0_30px_hsl(38_92%_50%/0.4)] transition-shadow">
-                  <Crown className="w-5 h-5" />
-                  Join ZIVO Plus
-                </Button>
-                
+                {isActive ? (
+                  <div className="flex flex-col items-center gap-2">
+                    <div className="flex items-center gap-2 text-emerald-500 font-bold">
+                      <CheckCircle2 className="w-5 h-5" />
+                      You're a ZIVO Plus member!
+                    </div>
+                    <Button
+                      variant="outline"
+                      className="w-full h-12 rounded-xl border-amber-500/30"
+                      onClick={() => navigate("/account/subscriptions")}
+                    >
+                      Manage Subscription
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    onClick={handleJoin}
+                    disabled={joining}
+                    className="w-full h-14 text-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 gap-2 shadow-[0_0_20px_hsl(38_92%_50%/0.3)] hover:shadow-[0_0_30px_hsl(38_92%_50%/0.4)] transition-shadow"
+                  >
+                    {joining ? <Loader2 className="w-5 h-5 animate-spin" /> : <Crown className="w-5 h-5" />}
+                    {joining ? "Processing…" : isPending ? "Check Your Email" : !user ? "Sign In to Join" : "Join ZIVO Plus"}
+                  </Button>
+                )}
+
                 <p className="text-xs text-muted-foreground text-center mt-4">
                   Cancel anytime. No commitment required.
                 </p>
@@ -351,7 +436,7 @@ const ZivoPlus = () => {
                 { q: "Can I cancel anytime?", a: "Yes. Cancel with one click. No cancellation fees, ever." },
                 { q: "Do my miles expire?", a: "No. ZIVO miles never expire as long as your account is active." },
                 { q: "Is Plus available worldwide?", a: "Yes. Benefits apply to all bookings globally." },
-                { q: "Can I share with family?", a: "Currently per-account. Family plans coming Q3 2025." },
+                { q: "Can I share with family?", a: "Currently per-account. Family plan support is on our roadmap." },
               ].map(f => (
                 <Card key={f.q} className="border-border/50 hover:border-amber-500/20 transition-all">
                   <CardContent className="p-4">
@@ -373,10 +458,28 @@ const ZivoPlus = () => {
               <p className="text-muted-foreground mb-6">
                 Join thousands of members saving more on every trip.
               </p>
-              <Button size="lg" className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 gap-2 shadow-[0_0_20px_hsl(38_92%_50%/0.3)] hover:shadow-[0_0_30px_hsl(38_92%_50%/0.4)] transition-shadow">
-                Get ZIVO Plus Now
-                <ArrowRight className="w-4 h-4" />
-              </Button>
+              {isActive ? (
+                <div className="flex flex-col items-center gap-2">
+                  <div className="flex items-center gap-2 text-emerald-500 font-bold text-lg">
+                    <CheckCircle2 className="w-6 h-6" />
+                    You're already a member!
+                  </div>
+                  <Button size="lg" variant="outline" className="border-amber-500/30" onClick={() => navigate("/account/subscriptions")}>
+                    Manage Subscription
+                  </Button>
+                </div>
+              ) : (
+                <Button
+                  size="lg"
+                  onClick={handleJoin}
+                  disabled={joining}
+                  className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 gap-2 shadow-[0_0_20px_hsl(38_92%_50%/0.3)] hover:shadow-[0_0_30px_hsl(38_92%_50%/0.4)] transition-shadow"
+                >
+                  {joining ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
+                  {joining ? "Processing…" : isPending ? "Check Your Email" : "Get ZIVO Plus Now"}
+                  {!joining && !isPending && <ArrowRight className="w-4 h-4" />}
+                </Button>
+              )}
             </CardContent>
           </Card>
         </section>

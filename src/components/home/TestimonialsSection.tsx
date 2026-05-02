@@ -3,7 +3,10 @@
  */
 import { useState, useEffect, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Star, ChevronLeft, ChevronRight, Quote } from "lucide-react";
+import Star from "lucide-react/dist/esm/icons/star";
+import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left";
+import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
+import Quote from "lucide-react/dist/esm/icons/quote";
 import { cn } from "@/lib/utils";
 
 const serviceColorVars: Record<string, string> = {

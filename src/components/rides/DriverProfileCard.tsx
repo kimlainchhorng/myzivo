@@ -2,8 +2,9 @@
  * DriverProfileCard — Rich driver profile with ratings, vehicle, favorites, ride history
  */
 import { useState } from "react";
-import { motion } from "framer-motion";
-import { Star, Heart, Car, Shield, Award, Clock, ThumbsUp, MapPin, Phone, MessageSquare, ChevronRight, Sparkles, CheckCircle, Users } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { motion, AnimatePresence } from "framer-motion";
+import { Star, Heart, Car, Shield, Award, Clock, ThumbsUp, MapPin, Phone, MessageSquare, ChevronRight, Sparkles, CheckCircle, Users, Flag, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -47,9 +48,16 @@ const driverData = {
   ],
 };
 
+const PREF_DRIVERS_KEY = "zivo_preferred_drivers";
+
 export default function DriverProfileCard() {
-  const [isFavorite, setIsFavorite] = useState(false);
+  const navigate = useNavigate();
+  const [isFavorite, setIsFavorite] = useState(() => {
+    try { return (JSON.parse(localStorage.getItem(PREF_DRIVERS_KEY) || "[]") as string[]).includes(driverData.name); } catch { return false; }
+  });
   const [showReviews, setShowReviews] = useState(false);
+  const [showReport, setShowReport] = useState(false);
+  const [reportReason, setReportReason] = useState("");
 
   const d = driverData;
 
@@ -171,13 +179,54 @@ export default function DriverProfileCard() {
 
       {/* Actions */}
       <div className="flex gap-2">
-        <Button className="flex-1 h-11 rounded-xl text-xs font-bold gap-1.5" onClick={() => toast.info("Request sent to Marcus!")}>
-          <Users className="w-3.5 h-3.5" /> Request This Driver
+        <Button
+          className="flex-1 h-11 rounded-xl text-xs font-bold gap-1.5"
+          onClick={() => {
+            try {
+              const saved: string[] = JSON.parse(localStorage.getItem(PREF_DRIVERS_KEY) || "[]");
+              if (!saved.includes(d.name)) saved.push(d.name);
+              localStorage.setItem(PREF_DRIVERS_KEY, JSON.stringify(saved));
+            } catch {}
+            setIsFavorite(true);
+            toast.success(`${d.name} saved as preferred driver`);
+          }}
+        >
+          <Users className="w-3.5 h-3.5" /> {isFavorite ? "Driver Saved ✓" : "Request This Driver"}
         </Button>
-        <Button variant="outline" className="h-11 rounded-xl text-xs font-bold px-4" onClick={() => toast.info("Report submitted")}>
-          Report
+        <Button variant="outline" className="h-11 rounded-xl text-xs font-bold px-4 gap-1.5" onClick={() => setShowReport(true)}>
+          <Flag className="w-3.5 h-3.5" /> Report
         </Button>
       </div>
+
+      <AnimatePresence>
+        {showReport && (
+          <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+            className="rounded-2xl border border-destructive/20 bg-destructive/5 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <p className="text-sm font-bold text-destructive">Report Driver</p>
+              <button onClick={() => setShowReport(false)} className="p-1 rounded-lg hover:bg-muted/60"><X className="w-4 h-4 text-muted-foreground" /></button>
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {["Rude behavior", "Unsafe driving", "Wrong route", "Vehicle issue", "Other"].map((r) => (
+                <button key={r} onClick={() => setReportReason(r)}
+                  className={cn("text-[11px] px-2.5 py-1 rounded-full border transition-colors",
+                    reportReason === r ? "bg-destructive text-destructive-foreground border-destructive" : "border-border text-muted-foreground hover:border-destructive/50")}>
+                  {r}
+                </button>
+              ))}
+            </div>
+            <Button size="sm" variant="destructive" className="w-full"
+              disabled={!reportReason}
+              onClick={() => {
+                toast.success(`Report submitted: ${reportReason}`);
+                setShowReport(false);
+                setReportReason("");
+              }}>
+              Submit Report
+            </Button>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

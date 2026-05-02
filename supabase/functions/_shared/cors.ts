@@ -1,52 +1,71 @@
-/**
- * Shared CORS Module - Origin Whitelist for Sensitive Edge Functions
- * 
- * Use getCorsHeaders(req) in payment, payout, backup, and admin functions.
- * Public functions (search, exchange-rates, maps) can continue using wildcard.
- */
+// Shared CORS helpers for Supabase Edge Functions.
+//
+// Three modes:
+//  1. corsHeaders        — wildcard "*" (backward-compat, kept for public/webhook routes)
+//  2. getCorsHeaders()   — echoes caller Origin (legacy; use strictCorsHeaders on new routes)
+//  3. strictCorsHeaders() — validates Origin against allowlist; 403 for unknown origins
 
-const ALLOWED_ORIGINS = new Set([
-  // Production
-  "https://hizivo.com",
-  "https://www.hizivo.com",
-  // Legacy typo kept temporarily to avoid breaking old references
-  "https://hizovo.com",
-  "https://www.hizovo.com",
-  // Lovable preview
-  "https://id-preview--72f99340-9c9f-453a-acff-60e5a9b25774.lovable.app",
-  // Lovable alternate
-  "https://72f99340-9c9f-453a-acff-60e5a9b25774.lovableproject.com",
-  // Published
-  "https://myzivo.lovable.app",
+const ALLOWED_HEADERS =
+  "authorization, x-client-info, apikey, content-type, x-application-name, x-request-id";
+
+// Production origins.  Add staging / preview domains here as needed.
+const ALLOWED_ORIGINS = new Set<string>([
+  "https://myzivo.com",
+  "https://www.myzivo.com",
+  "https://app.myzivo.com",
+  // Supabase Studio (used by edge-function test runner)
+  "https://supabase.com",
+  // Lovable preview (development only — remove before go-live)
+  "https://lovable.dev",
 ]);
 
-const DEV_ORIGIN_PATTERN = /^http:\/\/localhost:\d+$/;
+// Domains whose origin prefixes are allowed (e.g. branch previews)
+const ALLOWED_ORIGIN_SUFFIXES = [
+  ".myzivo.com",
+  ".lovable.app",
+  ".lovable.dev",
+];
 
-const STANDARD_HEADERS = "authorization, x-client-info, apikey, content-type, stripe-signature, x-rate-limit-action, x-session-id, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version";
-
-export function isAllowedOrigin(origin: string | null): boolean {
+export function isOriginAllowed(origin: string | null): boolean {
   if (!origin) return false;
   if (ALLOWED_ORIGINS.has(origin)) return true;
-  if (DEV_ORIGIN_PATTERN.test(origin)) return true;
-  return false;
+  try {
+    const url = new URL(origin);
+    return ALLOWED_ORIGIN_SUFFIXES.some(s => url.hostname.endsWith(s));
+  } catch {
+    return false;
+  }
 }
 
-export function getCorsHeaders(req: Request): Record<string, string> {
-  const origin = req.headers.get("origin") || "";
-  const allowedOrigin = isAllowedOrigin(origin) ? origin : "";
+// ── Legacy / public-route exports (backward-compatible) ────────────────────────
+export const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Headers": ALLOWED_HEADERS,
+  "Access-Control-Allow-Methods": "POST, GET, PUT, DELETE, PATCH, OPTIONS",
+};
 
+export const publicCorsHeaders = corsHeaders;
+
+// Per-request variant (legacy): echoes Origin, falls back to "*".
+export function getCorsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get("origin") ?? "*";
   return {
-    "Access-Control-Allow-Origin": allowedOrigin,
-    "Access-Control-Allow-Headers": STANDARD_HEADERS,
-    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Origin": origin,
+    "Access-Control-Allow-Headers": ALLOWED_HEADERS,
+    "Access-Control-Allow-Methods": "POST, GET, PUT, DELETE, PATCH, OPTIONS",
     "Vary": "Origin",
   };
 }
 
-/**
- * Wildcard CORS for public, non-sensitive endpoints
- */
-export const publicCorsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": STANDARD_HEADERS,
-};
+// ── Strict origin-validated headers (use on authenticated routes) ──────────────
+export function strictCorsHeaders(req: Request): Record<string, string> | null {
+  const origin = req.headers.get("origin");
+  if (!isOriginAllowed(origin)) return null; // caller should return 403
+  return {
+    "Access-Control-Allow-Origin": origin!,
+    "Access-Control-Allow-Headers": ALLOWED_HEADERS,
+    "Access-Control-Allow-Methods": "POST, GET, OPTIONS",
+    "Access-Control-Allow-Credentials": "true",
+    "Vary": "Origin",
+  };
+}

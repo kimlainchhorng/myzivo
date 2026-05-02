@@ -2,7 +2,8 @@ import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Store, Plus, Edit, Trash2, Eye } from "lucide-react";
+import { Store, Plus, Edit, Trash2, Eye, Upload, Loader2, X, ChevronDown, ChevronUp, Mail, UserPlus, Link2, Copy, Check, Hotel } from "lucide-react";
+import { useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -14,10 +15,35 @@ import { Textarea } from "@/components/ui/textarea";
 import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { toast } from "sonner";
+import { isLodgingStoreCategory } from "@/hooks/useOwnerStoreProfile";
+
+const DAYS_OF_WEEK = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"] as const;
+const DAY_LABELS: Record<string, string> = { mon: "Monday", tue: "Tuesday", wed: "Wednesday", thu: "Thursday", fri: "Friday", sat: "Saturday", sun: "Sunday" };
+
+type DaySchedule = { open: string; close: string; closed: boolean; is24h?: boolean };
+type WeeklySchedule = Record<string, DaySchedule>;
+
+const DEFAULT_SCHEDULE: WeeklySchedule = Object.fromEntries(
+  DAYS_OF_WEEK.map(d => [d, { open: "8:00 AM", close: "5:00 PM", closed: false }])
+);
+
+const FOOD_CATEGORIES = ["restaurant", "food-market", "drink", "grocery", "supermarket"];
+
+function parseSchedule(hours: string): WeeklySchedule {
+  try {
+    const parsed = JSON.parse(hours);
+    if (parsed && typeof parsed === "object" && parsed.mon) return parsed;
+  } catch {}
+  // Legacy "7:00 AM–10:00 PM" format → apply to all days
+  const parts = hours?.split("–") || [];
+  const open = parts[0]?.trim() || "8:00 AM";
+  const close = parts[1]?.trim() || "5:00 PM";
+  return Object.fromEntries(DAYS_OF_WEEK.map(d => [d, { open, close, closed: false }]));
+}
 
 const emptyStore = {
   name: "", slug: "", description: "", logo_url: "", banner_url: "",
-  market: "KH", category: "grocery", address: "", phone: "", hours: "",
+  market: "KH", category: "grocery", address: "", phone: "", hours: JSON.stringify(DEFAULT_SCHEDULE),
   rating: 0, delivery_min: 30, is_active: true,
 };
 
@@ -29,6 +55,37 @@ export default function AdminStoresPage() {
   const [form, setForm] = useState(emptyStore);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>("all");
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingBanner, setUploadingBanner] = useState(false);
+  const [ownerDialog, setOwnerDialog] = useState<{ storeId: string; storeName: string } | null>(null);
+  const [ownerEmail, setOwnerEmail] = useState("");
+  const [assigningOwner, setAssigningOwner] = useState(false);
+  const [inviteDialog, setInviteDialog] = useState<{ storeId: string; storeName: string; storeAccountId: string } | null>(null);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteCopied, setInviteCopied] = useState(false);
+  const [sendingInvite, setSendingInvite] = useState(false);
+  const logoInputRef = useRef<HTMLInputElement>(null);
+  const bannerInputRef = useRef<HTMLInputElement>(null);
+
+  const uploadStoreImage = async (file: File, type: "logo" | "banner") => {
+    const isLogo = type === "logo";
+    isLogo ? setUploadingLogo(true) : setUploadingBanner(true);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `temp/${type}-${Date.now()}.${ext}`;
+      const { error: uploadErr } = await supabase.storage
+        .from("store-assets")
+        .upload(path, file, { upsert: true });
+      if (uploadErr) throw uploadErr;
+      const { data: urlData } = supabase.storage.from("store-assets").getPublicUrl(path);
+      updateField(isLogo ? "logo_url" : "banner_url", urlData.publicUrl);
+      toast.success(`${isLogo ? "Logo" : "Banner"} uploaded`);
+    } catch (e: any) {
+      toast.error(e.message || "Upload failed");
+    } finally {
+      isLogo ? setUploadingLogo(false) : setUploadingBanner(false);
+    }
+  };
 
   const { data: stores = [], isLoading } = useQuery({
     queryKey: ["admin-stores"],
@@ -100,7 +157,7 @@ export default function AdminStoresPage() {
       category: store.category || "grocery",
       address: store.address || "",
       phone: store.phone || "",
-      hours: store.hours || "",
+      hours: store.hours || JSON.stringify(DEFAULT_SCHEDULE),
       rating: store.rating || 0,
       delivery_min: store.delivery_min || 30,
       is_active: store.is_active ?? true,
@@ -117,6 +174,87 @@ export default function AdminStoresPage() {
   };
 
   const updateField = (field: string, value: any) => setForm(prev => ({ ...prev, [field]: value }));
+
+  const handleAssignOwner = async () => {
+    if (!ownerDialog) return;
+
+    const rawEmail = ownerEmail.trim();
+    const normalizedEmail = rawEmail.toLowerCase();
+    if (!normalizedEmail) return;
+
+    setAssigningOwner(true);
+    try {
+      let profileData: { id: string | null; user_id: string | null } | null = null;
+
+      for (const email of Array.from(new Set([normalizedEmail, rawEmail]))) {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("id, user_id")
+          .eq("email", email)
+          .maybeSingle();
+
+        if (error) throw error;
+        if (data) {
+          profileData = data;
+          break;
+        }
+      }
+
+      const targetUserId = profileData?.user_id || profileData?.id;
+      if (!targetUserId) {
+        toast.error("No user account found with this email. They need to sign up first.");
+        return;
+      }
+
+      const { error: updateError } = await supabase
+        .from("store_profiles")
+        .update({ owner_id: targetUserId })
+        .eq("id", ownerDialog.storeId);
+
+      if (updateError) throw updateError;
+
+      // Send invite email with store login link
+      const storeAccountId = getStoreAccountId(ownerDialog.storeId);
+      const loginUrl = `https://hizivo.com/partner-login?store_id=${storeAccountId}`;
+      try {
+        await supabase.functions.invoke("send-transactional-email", {
+          body: {
+            templateName: "partner-store-invite",
+            recipientEmail: normalizedEmail,
+            idempotencyKey: `partner-invite-${ownerDialog.storeId}-${targetUserId}`,
+            templateData: {
+              storeName: ownerDialog.storeName,
+              storeAccountId,
+              loginUrl,
+              supportUrl: "https://hizivo.com/help",
+            },
+          },
+        });
+      } catch (emailErr) {
+        console.error("Failed to send invite email:", emailErr);
+      }
+
+      queryClient.invalidateQueries({ queryKey: ["admin-stores"] });
+      toast.success(`Store "${ownerDialog.storeName}" linked to ${normalizedEmail} — invite email sent!`);
+      setOwnerDialog(null);
+      setOwnerEmail("");
+    } catch (e: any) {
+      toast.error(e.message || "Failed to assign owner");
+    } finally {
+      setAssigningOwner(false);
+    }
+  };
+
+  const handleCopyInviteLink = () => {
+    if (!inviteDialog) return;
+    const link = `https://hizivo.com/partner-login?store_id=${inviteDialog.storeAccountId}`;
+    navigator.clipboard.writeText(link);
+    setInviteCopied(true);
+    toast.success("Invite link copied!");
+    setTimeout(() => setInviteCopied(false), 2000);
+  };
+
+  const getStoreAccountId = (id: string) => `CBD${id.replace(/-/g, '').slice(0, 8).toUpperCase()}`;
 
   return (
     <AdminLayout title="Store Accounts">
@@ -206,7 +344,9 @@ export default function AdminStoresPage() {
               <p className="text-muted-foreground text-center py-8">No stores found in this category.</p>
             ) : (
               <div className="divide-y divide-border">
-                {filteredStores.map((store: any) => (
+                {filteredStores.map((store: any) => {
+                  const isLodging = isLodgingStoreCategory(store.category);
+                  return (
                   <div key={store.id} className="flex items-center justify-between py-4">
                     <div className="flex items-center gap-4">
                       {store.logo_url ? (
@@ -219,15 +359,33 @@ export default function AdminStoresPage() {
                       <div>
                         <p className="font-medium text-foreground">{store.name}</p>
                         <p className="text-sm text-muted-foreground">{store.market} · {STORE_CATEGORY_OPTIONS.find(o => o.value === store.category)?.label || store.category} · /{store.slug}</p>
+                        <p className="text-xs text-muted-foreground font-mono">ID: {getStoreAccountId(store.id)}</p>
+                        {store.owner_id ? (
+                          <p className="text-xs text-primary flex items-center gap-1 mt-0.5"><Check className="h-3 w-3" /> Owner linked</p>
+                        ) : (
+                          <p className="text-xs text-destructive/70 mt-0.5">No owner assigned</p>
+                        )}
+                        {isLodging && <Badge variant="secondary" className="mt-2 gap-1 text-[10px]"><Hotel className="h-3 w-3" /> Hotel Admin Ready</Badge>}
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap justify-end">
                       <Badge variant={store.is_active ? "default" : "secondary"}>
                         {store.is_active ? "Active" : "Inactive"}
                       </Badge>
+                      <Button size="sm" variant="outline" title="Assign Owner Email" onClick={() => { setOwnerDialog({ storeId: store.id, storeName: store.name }); setOwnerEmail(""); }}>
+                        <Mail className="h-4 w-4" />
+                      </Button>
+                      <Button size="sm" variant="outline" title="Invite Partner" onClick={() => { setInviteDialog({ storeId: store.id, storeName: store.name, storeAccountId: getStoreAccountId(store.id) }); setInviteEmail(""); setInviteCopied(false); }}>
+                        <UserPlus className="h-4 w-4" />
+                      </Button>
                       <Button size="sm" variant="outline" onClick={() => navigate(`/admin/stores/${store.id}`)}>
                         <Edit className="h-4 w-4" />
                       </Button>
+                      {isLodging && (
+                        <Button size="sm" onClick={() => navigate(`/admin/stores/${store.id}?tab=lodge-overview`)} className="gap-1.5">
+                          <Hotel className="h-4 w-4" /> Open Hotel Operations
+                        </Button>
+                      )}
                       <Button size="sm" variant="outline" onClick={() => navigate(`/grocery/shop/${store.slug}`)}>
                         <Eye className="h-4 w-4" />
                       </Button>
@@ -236,7 +394,7 @@ export default function AdminStoresPage() {
                       </Button>
                     </div>
                   </div>
-                ))}
+                );})}
               </div>
             )}
           </CardContent>
@@ -253,7 +411,13 @@ export default function AdminStoresPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Name *</Label>
-                <Input value={form.name} onChange={e => updateField("name", e.target.value)} placeholder="Store name" />
+                <Input value={form.name} onChange={e => {
+                  const name = e.target.value;
+                  updateField("name", name);
+                  if (!editingStore) {
+                    updateField("slug", name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/(^-|-$)/g, ""));
+                  }
+                }} placeholder="Store name" />
               </div>
               <div className="space-y-2">
                 <Label>Slug *</Label>
@@ -266,18 +430,69 @@ export default function AdminStoresPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Logo URL</Label>
-                <Input value={form.logo_url} onChange={e => updateField("logo_url", e.target.value)} placeholder="https://..." />
+                <Label>Logo</Label>
+                <input ref={logoInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadStoreImage(f, "logo"); e.target.value = ""; }} />
+                {form.logo_url ? (
+                  <div className="relative w-20 h-20 rounded-xl border border-border overflow-hidden group">
+                    <img src={form.logo_url} alt="Logo" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                      <button type="button" onClick={() => logoInputRef.current?.click()} className="h-6 w-6 rounded-full bg-background/80 flex items-center justify-center"><Upload className="h-3 w-3" /></button>
+                      <button type="button" onClick={() => updateField("logo_url", "")} className="h-6 w-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center"><X className="h-3 w-3" /></button>
+                    </div>
+                  </div>
+                ) : (
+                  <button type="button" onClick={() => logoInputRef.current?.click()} disabled={uploadingLogo} className="w-20 h-20 rounded-xl border-2 border-dashed border-border hover:border-primary/40 flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-primary transition-colors cursor-pointer">
+                    {uploadingLogo ? <Loader2 className="h-5 w-5 animate-spin" /> : <><Upload className="h-5 w-5" /><span className="text-[10px]">Upload</span></>}
+                  </button>
+                )}
               </div>
               <div className="space-y-2">
-                <Label>Banner URL</Label>
-                <Input value={form.banner_url} onChange={e => updateField("banner_url", e.target.value)} placeholder="https://..." />
+                <Label>Banner</Label>
+                <input ref={bannerInputRef} type="file" accept="image/*" className="hidden" onChange={e => { const f = e.target.files?.[0]; if (f) uploadStoreImage(f, "banner"); e.target.value = ""; }} />
+                {form.banner_url ? (
+                  <div className="relative w-full h-20 rounded-xl border border-border overflow-hidden group">
+                    <img src={form.banner_url} alt="Banner" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1">
+                      <button type="button" onClick={() => bannerInputRef.current?.click()} className="h-6 w-6 rounded-full bg-background/80 flex items-center justify-center"><Upload className="h-3 w-3" /></button>
+                      <button type="button" onClick={() => updateField("banner_url", "")} className="h-6 w-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center"><X className="h-3 w-3" /></button>
+                    </div>
+                  </div>
+                ) : (
+                  <button type="button" onClick={() => bannerInputRef.current?.click()} disabled={uploadingBanner} className="w-full h-20 rounded-xl border-2 border-dashed border-border hover:border-primary/40 flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-primary transition-colors cursor-pointer">
+                    {uploadingBanner ? <Loader2 className="h-5 w-5 animate-spin" /> : <><Upload className="h-5 w-5" /><span className="text-[10px]">Upload</span></>}
+                  </button>
+                )}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Market</Label>
-                <Input value={form.market} onChange={e => updateField("market", e.target.value)} placeholder="KH" />
+                <select
+                  value={form.market}
+                  onChange={e => updateField("market", e.target.value)}
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                >
+                  {[
+                    { code: "KH", label: "🇰🇭 Cambodia (KH)" },
+                    { code: "US", label: "🇺🇸 United States (US)" },
+                    { code: "VN", label: "🇻🇳 Vietnam (VN)" },
+                    { code: "TH", label: "🇹🇭 Thailand (TH)" },
+                    { code: "CN", label: "🇨🇳 China (CN)" },
+                    { code: "KR", label: "🇰🇷 South Korea (KR)" },
+                    { code: "JP", label: "🇯🇵 Japan (JP)" },
+                    { code: "IN", label: "🇮🇳 India (IN)" },
+                    { code: "GB", label: "🇬🇧 United Kingdom (GB)" },
+                    { code: "AU", label: "🇦🇺 Australia (AU)" },
+                    { code: "SG", label: "🇸🇬 Singapore (SG)" },
+                    { code: "MY", label: "🇲🇾 Malaysia (MY)" },
+                    { code: "PH", label: "🇵🇭 Philippines (PH)" },
+                    { code: "ID", label: "🇮🇩 Indonesia (ID)" },
+                    { code: "LA", label: "🇱🇦 Laos (LA)" },
+                    { code: "MM", label: "🇲🇲 Myanmar (MM)" },
+                  ].map(m => (
+                    <option key={m.code} value={m.code}>{m.label}</option>
+                  ))}
+                </select>
               </div>
               <div className="space-y-2">
                 <Label>Category</Label>
@@ -286,8 +501,12 @@ export default function AdminStoresPage() {
                   onChange={e => updateField("category", e.target.value)}
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 >
-                  {STORE_CATEGORY_OPTIONS.map(opt => (
-                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  {Array.from(new Set(STORE_CATEGORY_OPTIONS.map(o => o.group || "Other"))).map(group => (
+                    <optgroup key={group} label={group}>
+                      {STORE_CATEGORY_OPTIONS.filter(o => (o.group || "Other") === group).map(opt => (
+                        <option key={opt.value} value={opt.value}>{opt.label}</option>
+                      ))}
+                    </optgroup>
                   ))}
                 </select>
               </div>
@@ -296,25 +515,124 @@ export default function AdminStoresPage() {
               <Label>Address</Label>
               <Input value={form.address} onChange={e => updateField("address", e.target.value)} placeholder="Store address" />
             </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Phone</Label>
-                <Input value={form.phone} onChange={e => updateField("phone", e.target.value)} placeholder="023 900 888" />
-              </div>
-              <div className="space-y-2">
-                <Label>Hours</Label>
-                <Input value={form.hours} onChange={e => updateField("hours", e.target.value)} placeholder="7am–10pm" />
+            <div className="space-y-2">
+              <Label>Phone</Label>
+              <div className="flex gap-1">
+                <span className="flex h-10 items-center rounded-md border border-input bg-muted px-2 text-sm text-muted-foreground whitespace-nowrap">
+                  {{ KH: "+855", US: "+1", VN: "+84", TH: "+66", CN: "+86", KR: "+82", JP: "+81", IN: "+91", GB: "+44", AU: "+61", SG: "+65", MY: "+60", PH: "+63", ID: "+62", LA: "+856", MM: "+95" }[form.market] || "+855"}
+                </span>
+                <Input value={form.phone} onChange={e => updateField("phone", e.target.value)} placeholder="23 900 888" className="flex-1" />
               </div>
             </div>
+
+            {/* Weekly Hours Schedule */}
+            <div className="space-y-2">
+              <Label>Operating Hours</Label>
+              <div className="border border-border rounded-lg overflow-hidden">
+                {(() => {
+                  const schedule = parseSchedule(form.hours);
+                  const timeOptions = Array.from({ length: 48 }, (_, i) => {
+                    const h = Math.floor(i / 2);
+                    const m = i % 2 === 0 ? "00" : "30";
+                    const ampm = h < 12 ? "AM" : "PM";
+                    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+                    return `${h12}:${m} ${ampm}`;
+                  });
+                  const updateDay = (day: string, field: string, value: any) => {
+                    const updated = { ...schedule, [day]: { ...schedule[day], [field]: value } };
+                    updateField("hours", JSON.stringify(updated));
+                  };
+                  const toggle24h = (day: string, on: boolean) => {
+                    const updated = {
+                      ...schedule,
+                      [day]: on
+                        ? { open: "12:00 AM", close: "11:30 PM", closed: false, is24h: true }
+                        : { ...schedule[day], is24h: false, closed: false },
+                    };
+                    updateField("hours", JSON.stringify(updated));
+                  };
+                  const toggleClosed = (day: string, isOpen: boolean) => {
+                    // Mutually exclusive with 24h: toggling Closed on clears is24h
+                    const updated = {
+                      ...schedule,
+                      [day]: { ...schedule[day], closed: !isOpen, ...(isOpen ? {} : { is24h: false }) },
+                    };
+                    updateField("hours", JSON.stringify(updated));
+                  };
+                  return DAYS_OF_WEEK.map((day, idx) => (
+                    <div key={day} className={`flex items-center gap-2 px-3 py-2 ${idx > 0 ? "border-t border-border" : ""} ${schedule[day]?.closed ? "bg-muted/50" : ""}`}>
+                      <div className="w-16 flex-shrink-0">
+                        <span className="text-xs font-medium">{DAY_LABELS[day].slice(0, 3)}</span>
+                      </div>
+                      <Switch
+                        checked={!schedule[day]?.closed}
+                        onCheckedChange={(open) => toggleClosed(day, open)}
+                        className="scale-75"
+                      />
+                      {schedule[day]?.closed ? (
+                        <span className="text-xs text-muted-foreground italic flex-1">Closed</span>
+                      ) : schedule[day]?.is24h ? (
+                        <div className="flex items-center gap-2 flex-1">
+                          <span className="text-xs font-semibold text-primary">Open 24 hours</span>
+                          <div className="flex items-center gap-1 opacity-50 cursor-not-allowed pointer-events-none">
+                            <select disabled value="12:00 AM" className="flex h-8 rounded-md border border-input bg-background px-1.5 text-xs">
+                              <option>12:00 AM</option>
+                            </select>
+                            <span className="text-xs text-muted-foreground">to</span>
+                            <select disabled value="11:30 PM" className="flex h-8 rounded-md border border-input bg-background px-1.5 text-xs">
+                              <option>11:30 PM</option>
+                            </select>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-1 flex-1">
+                          <select
+                            value={schedule[day]?.open || "8:00 AM"}
+                            onChange={e => updateDay(day, "open", e.target.value)}
+                            className="flex h-8 rounded-md border border-input bg-background px-1.5 text-xs ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                          >
+                            {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                          </select>
+                          <span className="text-xs text-muted-foreground">to</span>
+                          <select
+                            value={schedule[day]?.close || "5:00 PM"}
+                            onChange={e => updateDay(day, "close", e.target.value)}
+                            className="flex h-8 rounded-md border border-input bg-background px-1.5 text-xs ring-offset-background focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+                          >
+                            {timeOptions.map(t => <option key={t} value={t}>{t}</option>)}
+                          </select>
+                        </div>
+                      )}
+                      {!schedule[day]?.closed && (
+                        <label className="flex items-center gap-1 ml-1 cursor-pointer">
+                          <Switch
+                            checked={!!schedule[day]?.is24h}
+                            onCheckedChange={(on) => toggle24h(day, on)}
+                            className="scale-75"
+                          />
+                          <span className="text-[10px] font-semibold text-muted-foreground">24h</span>
+                        </label>
+                      )}
+                    </div>
+                  ));
+                })()}
+              </div>
+              <p className="text-[11px] text-muted-foreground">
+                Toggle <strong>24h</strong> for always-open days. Toggle <strong>Closed</strong> to mark a day off.
+              </p>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label>Rating</Label>
                 <Input type="number" step="0.1" min="0" max="5" value={form.rating} onChange={e => updateField("rating", parseFloat(e.target.value) || 0)} />
               </div>
-              <div className="space-y-2">
-                <Label>Delivery Min (minutes)</Label>
-                <Input type="number" value={form.delivery_min} onChange={e => updateField("delivery_min", parseInt(e.target.value) || 0)} />
-              </div>
+              {FOOD_CATEGORIES.includes(form.category) && (
+                <div className="space-y-2">
+                  <Label>Delivery Time (minutes)</Label>
+                  <Input type="number" value={form.delivery_min} onChange={e => updateField("delivery_min", parseInt(e.target.value) || 0)} />
+                </div>
+              )}
             </div>
             <div className="flex items-center gap-3">
               <Switch checked={form.is_active} onCheckedChange={v => updateField("is_active", v)} />
@@ -342,6 +660,71 @@ export default function AdminStoresPage() {
             <Button variant="destructive" onClick={() => deleteConfirm && deleteMutation.mutate(deleteConfirm)} disabled={deleteMutation.isPending}>
               {deleteMutation.isPending ? "Deleting..." : "Delete"}
             </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Assign Owner Dialog */}
+      <Dialog open={!!ownerDialog} onOpenChange={() => setOwnerDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Assign Owner to "{ownerDialog?.storeName}"</DialogTitle>
+          </DialogHeader>
+          <p className="text-sm text-muted-foreground">Enter the partner's email address. They must have a ZIVO account already.</p>
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label>Owner Email</Label>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                <Input
+                  type="email"
+                  placeholder="partner@business.com"
+                  value={ownerEmail}
+                  onChange={e => setOwnerEmail(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOwnerDialog(null)}>Cancel</Button>
+            <Button onClick={handleAssignOwner} disabled={assigningOwner || !ownerEmail.trim()} className="gap-2">
+              {assigningOwner ? <Loader2 className="h-4 w-4 animate-spin" /> : <Link2 className="h-4 w-4" />}
+              {assigningOwner ? "Linking..." : "Link Owner"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Invite Partner Dialog */}
+      <Dialog open={!!inviteDialog} onOpenChange={() => setInviteDialog(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Invite Partner to "{inviteDialog?.storeName}"</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="p-3 rounded-lg bg-muted/50 border border-border">
+              <p className="text-xs text-muted-foreground mb-1">Store Account ID</p>
+              <p className="font-mono font-bold text-foreground">{inviteDialog?.storeAccountId}</p>
+            </div>
+            <div className="space-y-2">
+              <Label>Partner Login Link</Label>
+              <div className="flex gap-2">
+                <Input
+                  readOnly
+                  value={inviteDialog ? `https://hizivo.com/partner-login?store_id=${inviteDialog.storeAccountId}` : ""}
+                  className="text-xs font-mono"
+                />
+                <Button size="sm" variant="outline" onClick={handleCopyInviteLink} className="shrink-0 gap-1.5">
+                  {inviteCopied ? <Check className="h-4 w-4 text-primary" /> : <Copy className="h-4 w-4" />}
+                  {inviteCopied ? "Copied" : "Copy"}
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">Share this link with the partner. They can sign in or create an account using this link.</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setInviteDialog(null)}>Close</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

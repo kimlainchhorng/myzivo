@@ -21,6 +21,10 @@ export interface StoreProfile {
   delivery_min: number | null;
   gallery_images: string[] | null;
   is_active: boolean;
+  facebook_url: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  payment_types: string[];
 }
 
 export interface StoreProductItem {

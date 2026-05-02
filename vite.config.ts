@@ -3,17 +3,31 @@ import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
+import { createRequire } from "module";
+const _require = createRequire(import.meta.url);
+const pkg = _require("./package.json") as { version: string };
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  define: {
+    "import.meta.env.VITE_APP_VERSION": JSON.stringify(pkg.version),
+  },
   server: {
     host: "::",
-    port: 8080,
+    port: 8081,
     hmr: {
       overlay: false,
     },
   },
+  optimizeDeps: {
+    exclude: ["@ffmpeg/ffmpeg", "@ffmpeg/util", "@ffmpeg/core"],
+  },
   build: {
+    target: "es2020",
+    minify: "esbuild",
+    cssMinify: "esbuild",
+    reportCompressedSize: false,
+    chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
         manualChunks: {
@@ -22,23 +36,34 @@ export default defineConfig(({ mode }) => ({
           "vendor-motion": ["framer-motion"],
           "vendor-stripe": ["@stripe/stripe-js", "@stripe/react-stripe-js"],
           "vendor-supabase": ["@supabase/supabase-js"],
+          "vendor-query": ["@tanstack/react-query"],
+          "vendor-icons": ["lucide-react"],
+          // Keep all Radix in ONE chunk — splitting causes shared internals
+          // (react-primitive, use-callback-ref, etc.) to be evaluated out of
+          // order across chunks, producing runtime "on is not a function".
           "vendor-radix": [
             "@radix-ui/react-dialog",
             "@radix-ui/react-popover",
             "@radix-ui/react-dropdown-menu",
+            "@radix-ui/react-toast",
             "@radix-ui/react-tabs",
             "@radix-ui/react-select",
             "@radix-ui/react-accordion",
             "@radix-ui/react-tooltip",
-            "@radix-ui/react-toast",
           ],
           "vendor-forms": ["react-hook-form", "@hookform/resolvers", "zod"],
           "vendor-maps": ["@react-google-maps/api"],
+          "vendor-dates": ["date-fns"],
+          "vendor-carousel": ["embla-carousel-react", "embla-carousel-autoplay"],
         },
       },
     },
     cssCodeSplit: true,
-    sourcemap: false,
+    sourcemap: 'hidden',
+  },
+  esbuild: {
+    drop: mode === "production" ? ["console", "debugger"] : [],
+    legalComments: "none",
   },
   plugins: [
     react(),
@@ -167,8 +192,9 @@ export default defineConfig(({ mode }) => ({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "@radix-ui/react-slot": path.resolve(__dirname, "./node_modules/@radix-ui/react-slot"),
     },
     // Prevent duplicate React copies (fixes "Cannot read properties of null (reading 'useEffect')")
-    dedupe: ["react", "react-dom"],
+    dedupe: ["react", "react-dom", "@radix-ui/react-slot"],
   },
 }));

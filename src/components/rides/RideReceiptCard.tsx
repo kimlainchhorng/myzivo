@@ -59,6 +59,43 @@ export default function RideReceiptCard({ receipt = defaultReceipt }: { receipt?
   const offsetCost = 0.25;
   const treesEquiv = (receipt.co2Kg / 22).toFixed(3); // avg tree absorbs 22kg/year
 
+  const handleDownload = () => {
+    const text = [
+      `ZIVO Receipt — ${receipt.tripId}`,
+      `Date: ${receipt.date}`,
+      `From: ${receipt.pickup}`,
+      `To: ${receipt.dropoff}`,
+      `Distance: ${receipt.distance} · ${receipt.duration}`,
+      `Driver: ${receipt.driverName} · ${receipt.vehicleType}`,
+      `---`,
+      `Base fare: $${receipt.baseFare.toFixed(2)}`,
+      `Distance charge: $${receipt.distanceCharge.toFixed(2)}`,
+      `Time charge: $${receipt.timeCharge.toFixed(2)}`,
+      receipt.surgeAmount ? `Surge (${receipt.surgeMultiplier}x): $${receipt.surgeAmount.toFixed(2)}` : null,
+      receipt.discount ? `Discount: $${receipt.discount.toFixed(2)}` : null,
+      `Tip: $${receipt.tip.toFixed(2)}`,
+      `TOTAL: $${receipt.total.toFixed(2)}`,
+      `Payment: ${receipt.paymentMethod}`,
+    ].filter(Boolean).join("\n");
+    const blob = new Blob([text], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${receipt.tripId}-receipt.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Receipt downloaded");
+  };
+
+  const handleShare = () => {
+    const text = `ZIVO Ride Receipt ${receipt.tripId}: ${receipt.pickup} → ${receipt.dropoff} · $${receipt.total.toFixed(2)}`;
+    if (navigator.share) {
+      navigator.share({ title: "ZIVO Receipt", text }).catch(() => {});
+    } else {
+      navigator.clipboard.writeText(text).then(() => toast.success("Receipt copied to clipboard")).catch(() => toast.success("Receipt copied!"));
+    }
+  };
+
   const handleOffset = (checked: boolean) => {
     setOffsetEnabled(checked);
     if (checked) toast.success("Carbon offset added! 🌱");
@@ -188,10 +225,10 @@ export default function RideReceiptCard({ receipt = defaultReceipt }: { receipt?
 
       {/* Actions */}
       <div className="flex gap-2 px-4 pb-4 pt-2">
-        <Button variant="outline" size="sm" className="flex-1 h-9 text-xs" onClick={() => toast.success("Receipt downloaded")}>
+        <Button variant="outline" size="sm" className="flex-1 h-9 text-xs" onClick={handleDownload}>
           <Download className="w-3.5 h-3.5 mr-1.5" /> Download
         </Button>
-        <Button variant="outline" size="sm" className="flex-1 h-9 text-xs" onClick={() => toast.success("Receipt shared")}>
+        <Button variant="outline" size="sm" className="flex-1 h-9 text-xs" onClick={handleShare}>
           <Share2 className="w-3.5 h-3.5 mr-1.5" /> Share
         </Button>
       </div>

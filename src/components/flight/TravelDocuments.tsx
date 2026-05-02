@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,8 @@ import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   FileText,
   Upload,
@@ -53,8 +55,6 @@ interface TravelDocumentsProps {
   className?: string;
   destinationCode?: string;
 }
-
-// TODO: Fetch user documents from database
 
 const VISA_REQUIREMENTS: VisaRequirement[] = [
   { country: 'United Kingdom', type: 'visa-free', maxDays: 180, notes: 'Electronic Travel Authorization (ETA) required' },
@@ -134,11 +134,26 @@ const getVisaStatusColor = (type: VisaRequirement['type']) => {
 };
 
 export const TravelDocuments = ({ className, destinationCode }: TravelDocumentsProps) => {
+  const { user } = useAuth();
   const [documents, setDocuments] = useState<Document[]>([]);
   const [activeTab, setActiveTab] = useState("all");
   const [selectedDoc, setSelectedDoc] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
   const [showVisaInfo, setShowVisaInfo] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("user_documents").select("id, doc_type, expires_at, file_url, status").eq("user_id", user.id).then(({ data }) => {
+      if (data) setDocuments(data.map(d => ({
+        id: d.id,
+        type: d.doc_type as Document["type"],
+        name: d.doc_type.charAt(0).toUpperCase() + d.doc_type.slice(1),
+        expiryDate: d.expires_at ? new Date(d.expires_at) : undefined,
+        status: d.status as Document["status"],
+        fileUrl: d.file_url,
+      })));
+    });
+  }, [user]);
 
   const validCount = documents.filter(d => d.status === 'valid').length;
   const expiringCount = documents.filter(d => d.status === 'expiring').length;

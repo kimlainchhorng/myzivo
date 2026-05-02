@@ -1,0 +1,989 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/admin/store/lodging/LodgingPoliciesSection.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"]; const _Fragment = __vite__cjsImport0_react_jsxDevRuntime["Fragment"];
+var _s = $RefreshSig$();
+import __vite__cjsImport1_react from "/node_modules/.vite/deps/react.js?v=7fd9520c"; const useEffect = __vite__cjsImport1_react["useEffect"]; const useState = __vite__cjsImport1_react["useState"];
+import { ShieldCheck, Save } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+import { Input } from "/src/components/ui/input.tsx";
+import { Label } from "/src/components/ui/label.tsx";
+import { Textarea } from "/src/components/ui/textarea.tsx";
+import { Button } from "/src/components/ui/button.tsx";
+import { Switch } from "/src/components/ui/switch.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "/src/components/ui/select.tsx";
+import { LoadingPanel, NextActions, SectionShell, StatCard, money, useLodgingOpsData } from "/src/components/admin/store/lodging/LodgingOperationsShared.tsx";
+import { CatalogTable, EditorDialog } from "/src/components/admin/store/lodging/CatalogTable.tsx";
+import { useLodgingCatalog } from "/src/hooks/lodging/useLodgingCatalog.ts";
+import { useLodgePropertyProfile } from "/src/hooks/lodging/useLodgePropertyProfile.ts";
+import { toast } from "/node_modules/.vite/deps/sonner.js?v=7fd9520c";
+import LodgingQuickJump from "/src/components/admin/store/lodging/LodgingQuickJump.tsx";
+import LodgingSectionStatusBanner from "/src/components/admin/store/lodging/LodgingSectionStatusBanner.tsx";
+const FEE_TYPES = [
+    "tax",
+    "service_charge",
+    "resort_fee",
+    "city_tax",
+    "tourism_tax"
+];
+const BASES = [
+    "percent",
+    "per_night",
+    "per_stay",
+    "per_guest",
+    "per_guest_per_night"
+];
+const APPLIES = [
+    "room",
+    "room_and_addons",
+    "total"
+];
+const blank = {
+    name: "VAT",
+    fee_type: "tax",
+    basis: "percent",
+    rate_value: 10,
+    applies_to: "room",
+    inclusive: false,
+    active: true
+};
+const CANCEL_PRESETS = [
+    {
+        value: "flexible",
+        label: "Flexible (free until 24h before)"
+    },
+    {
+        value: "moderate",
+        label: "Moderate (free until 5 days before)"
+    },
+    {
+        value: "strict",
+        label: "Strict (50% refund until 7 days before)"
+    },
+    {
+        value: "non_refundable",
+        label: "Non-refundable"
+    }
+];
+const asObj = (v)=>v && typeof v === "object" && !Array.isArray(v) ? v : {};
+const asStr = (v, fallback = "")=>typeof v === "string" ? v : v == null ? fallback : String(v);
+export default function LodgingPoliciesSection({ storeId }) {
+    _s();
+    const opsData = useLodgingOpsData(storeId);
+    const profileQ = useLodgePropertyProfile(storeId);
+    const taxes = useLodgingCatalog("lodging_taxes_fees", storeId);
+    const [editing, setEditing] = useState(null);
+    const [policyDraft, setPolicyDraft] = useState({
+        cancellation_policy: "flexible",
+        deposit_percent: 0,
+        child_policy: "",
+        pet_policy: "",
+        smoking_policy: "non_smoking",
+        quiet_hours_from: "22:00",
+        quiet_hours_to: "07:00",
+        parties_allowed: false
+    });
+    useEffect(()=>{
+        const p = profileQ.data;
+        if (!p) return;
+        const houseRules = asObj(p.house_rules);
+        const childPolicy = asObj(p.child_policy);
+        const petPolicy = asObj(p.pet_policy);
+        setPolicyDraft({
+            cancellation_policy: asStr(p.cancellation_policy, "flexible"),
+            deposit_percent: Number(p.deposit_percent ?? 0) || 0,
+            child_policy: asStr(childPolicy.text, ""),
+            pet_policy: asStr(petPolicy.text, ""),
+            smoking_policy: asStr(houseRules.smoking_policy, "non_smoking"),
+            quiet_hours_from: asStr(houseRules.quiet_hours_from, "22:00"),
+            quiet_hours_to: asStr(houseRules.quiet_hours_to, "07:00"),
+            parties_allowed: Boolean(houseRules.parties_allowed)
+        });
+    }, [
+        profileQ.data
+    ]);
+    const handleSavePolicies = async ()=>{
+        const existingHouseRules = asObj(profileQ.data?.house_rules);
+        try {
+            await profileQ.upsert.mutateAsync({
+                cancellation_policy: policyDraft.cancellation_policy,
+                deposit_percent: policyDraft.deposit_percent,
+                child_policy: {
+                    text: policyDraft.child_policy
+                },
+                pet_policy: {
+                    text: policyDraft.pet_policy
+                },
+                house_rules: {
+                    ...existingHouseRules,
+                    smoking_policy: policyDraft.smoking_policy,
+                    quiet_hours_from: policyDraft.quiet_hours_from,
+                    quiet_hours_to: policyDraft.quiet_hours_to,
+                    parties_allowed: policyDraft.parties_allowed
+                }
+            });
+            toast.success("Policies saved");
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : "Save failed");
+        }
+    };
+    const taxRows = taxes.list.data || [];
+    const isLoading = opsData.isLoading || profileQ.isLoading || taxes.list.isLoading;
+    return /*#__PURE__*/ _jsxDEV(SectionShell, {
+        title: "Policies & Rules",
+        subtitle: "Cancellation, deposits, child & pet policies, smoking, quiet hours, and tax/fee setup.",
+        icon: ShieldCheck,
+        children: [
+            /*#__PURE__*/ _jsxDEV(LodgingQuickJump, {
+                active: "lodge-policies"
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                lineNumber: 116,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV(LodgingSectionStatusBanner, {
+                title: "Policies & Rules",
+                icon: ShieldCheck,
+                countLabel: "Active taxes & fees",
+                countValue: taxRows.filter((r)=>r.active !== false).length,
+                fixLabel: "Open Amenities",
+                fixTab: "lodge-amenities"
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                lineNumber: 117,
+                columnNumber: 7
+            }, this),
+            isLoading ? /*#__PURE__*/ _jsxDEV(LoadingPanel, {}, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                lineNumber: 118,
+                columnNumber: 20
+            }, this) : /*#__PURE__*/ _jsxDEV(_Fragment, {
+                children: [
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "grid gap-3 sm:grid-cols-3",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(StatCard, {
+                                label: "Active taxes/fees",
+                                value: String(taxRows.filter((r)=>r.active !== false).length),
+                                icon: ShieldCheck
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                lineNumber: 120,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(StatCard, {
+                                label: "Cancellation",
+                                value: (policyDraft.cancellation_policy || "—").replace(/_/g, " "),
+                                icon: ShieldCheck
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                lineNumber: 121,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(StatCard, {
+                                label: "Deposit %",
+                                value: `${policyDraft.deposit_percent || 0}%`,
+                                icon: ShieldCheck
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                lineNumber: 122,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                        lineNumber: 119,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "rounded-lg border border-border bg-card p-4 space-y-3",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("p", {
+                                className: "text-sm font-semibold",
+                                children: "House policies"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                lineNumber: 127,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "grid gap-3 sm:grid-cols-2",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(Label, {
+                                                children: "Cancellation policy"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                lineNumber: 130,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV(Select, {
+                                                value: policyDraft.cancellation_policy,
+                                                onValueChange: (v)=>setPolicyDraft({
+                                                        ...policyDraft,
+                                                        cancellation_policy: v
+                                                    }),
+                                                children: [
+                                                    /*#__PURE__*/ _jsxDEV(SelectTrigger, {
+                                                        children: /*#__PURE__*/ _jsxDEV(SelectValue, {}, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                            lineNumber: 132,
+                                                            columnNumber: 32
+                                                        }, this)
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                        lineNumber: 132,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ _jsxDEV(SelectContent, {
+                                                        children: CANCEL_PRESETS.map((p)=>/*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                                value: p.value,
+                                                                children: p.label
+                                                            }, p.value, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                                lineNumber: 133,
+                                                                columnNumber: 59
+                                                            }, this))
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                        lineNumber: 133,
+                                                        columnNumber: 17
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                lineNumber: 131,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                        lineNumber: 129,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(Label, {
+                                                children: "Deposit (%)"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                lineNumber: 137,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV(Input, {
+                                                type: "number",
+                                                min: 0,
+                                                max: 100,
+                                                value: policyDraft.deposit_percent || 0,
+                                                onChange: (e)=>setPolicyDraft({
+                                                        ...policyDraft,
+                                                        deposit_percent: parseInt(e.target.value || "0", 10)
+                                                    })
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                lineNumber: 138,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                        lineNumber: 136,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(Label, {
+                                                children: "Child policy"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                lineNumber: 141,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV(Textarea, {
+                                                rows: 2,
+                                                value: policyDraft.child_policy,
+                                                onChange: (e)=>setPolicyDraft({
+                                                        ...policyDraft,
+                                                        child_policy: e.target.value
+                                                    }),
+                                                placeholder: "Children under 6 stay free; cribs available on request."
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                lineNumber: 142,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                        lineNumber: 140,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(Label, {
+                                                children: "Pet policy"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                lineNumber: 145,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV(Textarea, {
+                                                rows: 2,
+                                                value: policyDraft.pet_policy,
+                                                onChange: (e)=>setPolicyDraft({
+                                                        ...policyDraft,
+                                                        pet_policy: e.target.value
+                                                    }),
+                                                placeholder: "No pets / Pets allowed (max 1, $20/night)"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                lineNumber: 146,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                        lineNumber: 144,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(Label, {
+                                                children: "Smoking"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                lineNumber: 149,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV(Select, {
+                                                value: policyDraft.smoking_policy,
+                                                onValueChange: (v)=>setPolicyDraft({
+                                                        ...policyDraft,
+                                                        smoking_policy: v
+                                                    }),
+                                                children: [
+                                                    /*#__PURE__*/ _jsxDEV(SelectTrigger, {
+                                                        children: /*#__PURE__*/ _jsxDEV(SelectValue, {}, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                            lineNumber: 151,
+                                                            columnNumber: 32
+                                                        }, this)
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                        lineNumber: 151,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ _jsxDEV(SelectContent, {
+                                                        children: [
+                                                            /*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                                value: "non_smoking",
+                                                                children: "Non-smoking property"
+                                                            }, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                                lineNumber: 153,
+                                                                columnNumber: 19
+                                                            }, this),
+                                                            /*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                                value: "designated_areas",
+                                                                children: "Designated areas only"
+                                                            }, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                                lineNumber: 154,
+                                                                columnNumber: 19
+                                                            }, this),
+                                                            /*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                                value: "smoking_allowed",
+                                                                children: "Smoking allowed"
+                                                            }, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                                lineNumber: 155,
+                                                                columnNumber: 19
+                                                            }, this)
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                        lineNumber: 152,
+                                                        columnNumber: 17
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                lineNumber: 150,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                        lineNumber: 148,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        className: "flex items-end gap-3",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV("div", {
+                                                className: "flex-1",
+                                                children: [
+                                                    /*#__PURE__*/ _jsxDEV(Label, {
+                                                        children: "Quiet hours from"
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                        lineNumber: 161,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ _jsxDEV(Input, {
+                                                        type: "time",
+                                                        value: policyDraft.quiet_hours_from,
+                                                        onChange: (e)=>setPolicyDraft({
+                                                                ...policyDraft,
+                                                                quiet_hours_from: e.target.value
+                                                            })
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                        lineNumber: 162,
+                                                        columnNumber: 17
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                lineNumber: 160,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV("div", {
+                                                className: "flex-1",
+                                                children: [
+                                                    /*#__PURE__*/ _jsxDEV(Label, {
+                                                        children: "to"
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                        lineNumber: 165,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ _jsxDEV(Input, {
+                                                        type: "time",
+                                                        value: policyDraft.quiet_hours_to,
+                                                        onChange: (e)=>setPolicyDraft({
+                                                                ...policyDraft,
+                                                                quiet_hours_to: e.target.value
+                                                            })
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                        lineNumber: 166,
+                                                        columnNumber: 17
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                lineNumber: 164,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                        lineNumber: 159,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("label", {
+                                        className: "sm:col-span-2 flex items-center gap-3 rounded-md border border-border p-3",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(Switch, {
+                                                checked: policyDraft.parties_allowed,
+                                                onCheckedChange: (v)=>setPolicyDraft({
+                                                        ...policyDraft,
+                                                        parties_allowed: v
+                                                    })
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                lineNumber: 170,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV("span", {
+                                                className: "text-sm",
+                                                children: "Parties / events allowed"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                lineNumber: 171,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                        lineNumber: 169,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                lineNumber: 128,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(Button, {
+                                size: "sm",
+                                onClick: handleSavePolicies,
+                                disabled: profileQ.upsert.isPending,
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(Save, {
+                                        className: "mr-1.5 h-4 w-4"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                        lineNumber: 175,
+                                        columnNumber: 13
+                                    }, this),
+                                    " ",
+                                    profileQ.upsert.isPending ? "Saving…" : "Save policies"
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                lineNumber: 174,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                        lineNumber: 126,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "rounded-lg border border-border bg-card p-4 space-y-3",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "flex items-center justify-between",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV("p", {
+                                        className: "text-sm font-semibold",
+                                        children: "Taxes & fees"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                        lineNumber: 182,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("span", {
+                                        className: "text-xs text-muted-foreground",
+                                        children: [
+                                            taxRows.length,
+                                            " item",
+                                            taxRows.length === 1 ? "" : "s"
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                        lineNumber: 183,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                lineNumber: 181,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(CatalogTable, {
+                                rows: taxRows,
+                                isLoading: taxes.list.isLoading,
+                                emptyTitle: "No taxes or fees configured",
+                                emptyBody: "Add VAT, tourism tax, service charge, or resort fees that apply to bookings.",
+                                addLabel: "Add tax / fee",
+                                onAddClick: ()=>setEditing({
+                                        ...blank
+                                    }),
+                                onEdit: (r)=>setEditing(r),
+                                onDelete: (id)=>taxes.remove.mutate(id),
+                                onToggleActive: (r)=>taxes.toggleActive.mutate({
+                                        id: r.id,
+                                        active: r.active === false
+                                    }),
+                                columns: [
+                                    {
+                                        key: "name",
+                                        label: "Name",
+                                        render: (r)=>/*#__PURE__*/ _jsxDEV(_Fragment, {
+                                                children: [
+                                                    /*#__PURE__*/ _jsxDEV("span", {
+                                                        className: "font-semibold",
+                                                        children: r.name
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                        lineNumber: 196,
+                                                        columnNumber: 62
+                                                    }, this),
+                                                    /*#__PURE__*/ _jsxDEV("p", {
+                                                        className: "text-xs text-muted-foreground capitalize",
+                                                        children: r.fee_type.replace(/_/g, " ")
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                        lineNumber: 196,
+                                                        columnNumber: 109
+                                                    }, this)
+                                                ]
+                                            }, void 0, true)
+                                    },
+                                    {
+                                        key: "rate",
+                                        label: "Rate",
+                                        className: "w-32",
+                                        render: (r)=>r.basis === "percent" ? `${r.rate_value}%` : `${money(Math.round(r.rate_value * 100))} ${r.basis.replace(/_/g, " ")}`
+                                    },
+                                    {
+                                        key: "applies",
+                                        label: "Applies to",
+                                        className: "w-32",
+                                        render: (r)=>r.applies_to.replace(/_/g, " ")
+                                    },
+                                    {
+                                        key: "inclusive",
+                                        label: "Inclusive",
+                                        className: "w-20",
+                                        render: (r)=>r.inclusive ? "Yes" : "No"
+                                    }
+                                ]
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                lineNumber: 185,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                        lineNumber: 180,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(NextActions, {
+                        actions: [
+                            {
+                                label: "Update property profile",
+                                tab: "lodge-property",
+                                hint: "Add contact info, ID requirements, and Wi-Fi details."
+                            },
+                            {
+                                label: "Edit amenities & services",
+                                tab: "lodge-amenities",
+                                hint: "Mark parking, internet, and other extras."
+                            },
+                            {
+                                label: "Review reservations",
+                                tab: "lodge-reservations",
+                                hint: "Verify policies are visible on bookings."
+                            }
+                        ]
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                        lineNumber: 204,
+                        columnNumber: 9
+                    }, this),
+                    editing && /*#__PURE__*/ _jsxDEV(EditorDialog, {
+                        open: true,
+                        onOpenChange: (v)=>!v && setEditing(null),
+                        title: editing.id ? "Edit tax / fee" : "New tax / fee",
+                        saving: taxes.upsert.isPending,
+                        onSave: ()=>{
+                            if (!editing.name?.trim()) return;
+                            taxes.upsert.mutate(editing, {
+                                onSuccess: ()=>setEditing(null)
+                            });
+                        },
+                        children: /*#__PURE__*/ _jsxDEV("div", {
+                            className: "grid gap-3 sm:grid-cols-2",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "sm:col-span-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Label, {
+                                            children: "Name"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                            lineNumber: 223,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV(Input, {
+                                            value: editing.name || "",
+                                            onChange: (e)=>setEditing({
+                                                    ...editing,
+                                                    name: e.target.value
+                                                }),
+                                            placeholder: "VAT 10%"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                            lineNumber: 224,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                    lineNumber: 222,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Label, {
+                                            children: "Type"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                            lineNumber: 227,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV(Select, {
+                                            value: editing.fee_type,
+                                            onValueChange: (v)=>setEditing({
+                                                    ...editing,
+                                                    fee_type: v
+                                                }),
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV(SelectTrigger, {
+                                                    children: /*#__PURE__*/ _jsxDEV(SelectValue, {}, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                        lineNumber: 229,
+                                                        columnNumber: 34
+                                                    }, this)
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                    lineNumber: 229,
+                                                    columnNumber: 19
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV(SelectContent, {
+                                                    children: FEE_TYPES.map((t)=>/*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                            value: t,
+                                                            className: "capitalize",
+                                                            children: t.replace(/_/g, " ")
+                                                        }, t, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                            lineNumber: 230,
+                                                            columnNumber: 56
+                                                        }, this))
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                    lineNumber: 230,
+                                                    columnNumber: 19
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                            lineNumber: 228,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                    lineNumber: 226,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Label, {
+                                            children: "Basis"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                            lineNumber: 234,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV(Select, {
+                                            value: editing.basis,
+                                            onValueChange: (v)=>setEditing({
+                                                    ...editing,
+                                                    basis: v
+                                                }),
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV(SelectTrigger, {
+                                                    children: /*#__PURE__*/ _jsxDEV(SelectValue, {}, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                        lineNumber: 236,
+                                                        columnNumber: 34
+                                                    }, this)
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                    lineNumber: 236,
+                                                    columnNumber: 19
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV(SelectContent, {
+                                                    children: BASES.map((t)=>/*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                            value: t,
+                                                            className: "capitalize",
+                                                            children: t.replace(/_/g, " ")
+                                                        }, t, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                            lineNumber: 237,
+                                                            columnNumber: 52
+                                                        }, this))
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                    lineNumber: 237,
+                                                    columnNumber: 19
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                            lineNumber: 235,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                    lineNumber: 233,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Label, {
+                                            children: "Rate / amount"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                            lineNumber: 241,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV(Input, {
+                                            type: "number",
+                                            min: 0,
+                                            step: "0.01",
+                                            value: editing.rate_value || 0,
+                                            onChange: (e)=>setEditing({
+                                                    ...editing,
+                                                    rate_value: parseFloat(e.target.value || "0")
+                                                })
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                            lineNumber: 242,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("p", {
+                                            className: "mt-1 text-xs text-muted-foreground",
+                                            children: editing.basis === "percent" ? "Enter as percent (e.g. 10 = 10%)" : "Enter currency amount"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                            lineNumber: 243,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                    lineNumber: 240,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Label, {
+                                            children: "Applies to"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                            lineNumber: 246,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV(Select, {
+                                            value: editing.applies_to,
+                                            onValueChange: (v)=>setEditing({
+                                                    ...editing,
+                                                    applies_to: v
+                                                }),
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV(SelectTrigger, {
+                                                    children: /*#__PURE__*/ _jsxDEV(SelectValue, {}, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                        lineNumber: 248,
+                                                        columnNumber: 34
+                                                    }, this)
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                    lineNumber: 248,
+                                                    columnNumber: 19
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV(SelectContent, {
+                                                    children: APPLIES.map((t)=>/*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                            value: t,
+                                                            className: "capitalize",
+                                                            children: t.replace(/_/g, " ")
+                                                        }, t, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                            lineNumber: 249,
+                                                            columnNumber: 54
+                                                        }, this))
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                                    lineNumber: 249,
+                                                    columnNumber: 19
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                            lineNumber: 247,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                    lineNumber: 245,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("label", {
+                                    className: "sm:col-span-2 flex items-center gap-3 rounded-md border border-border p-3",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Switch, {
+                                            checked: Boolean(editing.inclusive),
+                                            onCheckedChange: (v)=>setEditing({
+                                                    ...editing,
+                                                    inclusive: v
+                                                })
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                            lineNumber: 253,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("span", {
+                                            className: "text-sm",
+                                            children: "Already included in displayed price"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                            lineNumber: 254,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                                    lineNumber: 252,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                            lineNumber: 221,
+                            columnNumber: 13
+                        }, this)
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+                        lineNumber: 211,
+                        columnNumber: 11
+                    }, this)
+                ]
+            }, void 0, true)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx",
+        lineNumber: 115,
+        columnNumber: 5
+    }, this);
+}
+_s(LodgingPoliciesSection, "juJFl0ljC+oQ1vpx37MS2UUXm7A=", false, function() {
+    return [
+        useLodgingOpsData,
+        useLodgePropertyProfile,
+        useLodgingCatalog
+    ];
+});
+_c = LodgingPoliciesSection;
+var _c;
+$RefreshReg$(_c, "LodgingPoliciesSection");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingPoliciesSection.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIkxvZGdpbmdQb2xpY2llc1NlY3Rpb24udHN4Il0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB7IHVzZUVmZmVjdCwgdXNlU3RhdGUgfSBmcm9tIFwicmVhY3RcIjtcclxuaW1wb3J0IHsgU2hpZWxkQ2hlY2ssIFNhdmUgfSBmcm9tIFwibHVjaWRlLXJlYWN0XCI7XHJcbmltcG9ydCB7IElucHV0IH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9pbnB1dFwiO1xyXG5pbXBvcnQgeyBMYWJlbCB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvbGFiZWxcIjtcclxuaW1wb3J0IHsgVGV4dGFyZWEgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL3RleHRhcmVhXCI7XHJcbmltcG9ydCB7IEJ1dHRvbiB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvYnV0dG9uXCI7XHJcbmltcG9ydCB7IFN3aXRjaCB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvc3dpdGNoXCI7XHJcbmltcG9ydCB7IFNlbGVjdCwgU2VsZWN0Q29udGVudCwgU2VsZWN0SXRlbSwgU2VsZWN0VHJpZ2dlciwgU2VsZWN0VmFsdWUgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL3NlbGVjdFwiO1xyXG5pbXBvcnQgeyBMb2FkaW5nUGFuZWwsIE5leHRBY3Rpb25zLCBTZWN0aW9uU2hlbGwsIFN0YXRDYXJkLCBtb25leSwgdXNlTG9kZ2luZ09wc0RhdGEgfSBmcm9tIFwiLi9Mb2RnaW5nT3BlcmF0aW9uc1NoYXJlZFwiO1xyXG5pbXBvcnQgeyBDYXRhbG9nVGFibGUsIEVkaXRvckRpYWxvZyB9IGZyb20gXCIuL0NhdGFsb2dUYWJsZVwiO1xyXG5pbXBvcnQgeyB1c2VMb2RnaW5nQ2F0YWxvZyB9IGZyb20gXCJAL2hvb2tzL2xvZGdpbmcvdXNlTG9kZ2luZ0NhdGFsb2dcIjtcclxuaW1wb3J0IHsgdXNlTG9kZ2VQcm9wZXJ0eVByb2ZpbGUgfSBmcm9tIFwiQC9ob29rcy9sb2RnaW5nL3VzZUxvZGdlUHJvcGVydHlQcm9maWxlXCI7XHJcbmltcG9ydCB7IHRvYXN0IH0gZnJvbSBcInNvbm5lclwiO1xyXG5pbXBvcnQgTG9kZ2luZ1F1aWNrSnVtcCBmcm9tIFwiLi9Mb2RnaW5nUXVpY2tKdW1wXCI7XHJcbmltcG9ydCBMb2RnaW5nU2VjdGlvblN0YXR1c0Jhbm5lciBmcm9tIFwiLi9Mb2RnaW5nU2VjdGlvblN0YXR1c0Jhbm5lclwiO1xyXG5cclxuaW50ZXJmYWNlIFRheEZlZSB7XHJcbiAgaWQ6IHN0cmluZztcclxuICBzdG9yZV9pZDogc3RyaW5nO1xyXG4gIG5hbWU6IHN0cmluZztcclxuICBmZWVfdHlwZTogc3RyaW5nO1xyXG4gIGJhc2lzOiBzdHJpbmc7XHJcbiAgcmF0ZV92YWx1ZTogbnVtYmVyO1xyXG4gIGFwcGxpZXNfdG86IHN0cmluZztcclxuICBpbmNsdXNpdmU6IGJvb2xlYW47XHJcbiAgYWN0aXZlOiBib29sZWFuO1xyXG59XHJcblxyXG5jb25zdCBGRUVfVFlQRVMgPSBbXCJ0YXhcIiwgXCJzZXJ2aWNlX2NoYXJnZVwiLCBcInJlc29ydF9mZWVcIiwgXCJjaXR5X3RheFwiLCBcInRvdXJpc21fdGF4XCJdO1xyXG5jb25zdCBCQVNFUyA9IFtcInBlcmNlbnRcIiwgXCJwZXJfbmlnaHRcIiwgXCJwZXJfc3RheVwiLCBcInBlcl9ndWVzdFwiLCBcInBlcl9ndWVzdF9wZXJfbmlnaHRcIl07XHJcbmNvbnN0IEFQUExJRVMgPSBbXCJyb29tXCIsIFwicm9vbV9hbmRfYWRkb25zXCIsIFwidG90YWxcIl07XHJcbmNvbnN0IGJsYW5rOiBQYXJ0aWFsPFRheEZlZT4gPSB7IG5hbWU6IFwiVkFUXCIsIGZlZV90eXBlOiBcInRheFwiLCBiYXNpczogXCJwZXJjZW50XCIsIHJhdGVfdmFsdWU6IDEwLCBhcHBsaWVzX3RvOiBcInJvb21cIiwgaW5jbHVzaXZlOiBmYWxzZSwgYWN0aXZlOiB0cnVlIH07XHJcblxyXG5jb25zdCBDQU5DRUxfUFJFU0VUUyA9IFtcclxuICB7IHZhbHVlOiBcImZsZXhpYmxlXCIsIGxhYmVsOiBcIkZsZXhpYmxlIChmcmVlIHVudGlsIDI0aCBiZWZvcmUpXCIgfSxcclxuICB7IHZhbHVlOiBcIm1vZGVyYXRlXCIsIGxhYmVsOiBcIk1vZGVyYXRlIChmcmVlIHVudGlsIDUgZGF5cyBiZWZvcmUpXCIgfSxcclxuICB7IHZhbHVlOiBcInN0cmljdFwiLCBsYWJlbDogXCJTdHJpY3QgKDUwJSByZWZ1bmQgdW50aWwgNyBkYXlzIGJlZm9yZSlcIiB9LFxyXG4gIHsgdmFsdWU6IFwibm9uX3JlZnVuZGFibGVcIiwgbGFiZWw6IFwiTm9uLXJlZnVuZGFibGVcIiB9LFxyXG5dO1xyXG5cclxudHlwZSBKc29uaXNoID0gUmVjb3JkPHN0cmluZywgdW5rbm93bj47XHJcbmNvbnN0IGFzT2JqID0gKHY6IHVua25vd24pOiBKc29uaXNoID0+ICh2ICYmIHR5cGVvZiB2ID09PSBcIm9iamVjdFwiICYmICFBcnJheS5pc0FycmF5KHYpID8gKHYgYXMgSnNvbmlzaCkgOiB7fSk7XHJcbmNvbnN0IGFzU3RyID0gKHY6IHVua25vd24sIGZhbGxiYWNrID0gXCJcIik6IHN0cmluZyA9PiAodHlwZW9mIHYgPT09IFwic3RyaW5nXCIgPyB2IDogdiA9PSBudWxsID8gZmFsbGJhY2sgOiBTdHJpbmcodikpO1xyXG5cclxuZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gTG9kZ2luZ1BvbGljaWVzU2VjdGlvbih7IHN0b3JlSWQgfTogeyBzdG9yZUlkOiBzdHJpbmcgfSkge1xyXG4gIGNvbnN0IG9wc0RhdGEgPSB1c2VMb2RnaW5nT3BzRGF0YShzdG9yZUlkKTtcclxuICBjb25zdCBwcm9maWxlUSA9IHVzZUxvZGdlUHJvcGVydHlQcm9maWxlKHN0b3JlSWQpO1xyXG4gIGNvbnN0IHRheGVzID0gdXNlTG9kZ2luZ0NhdGFsb2c8VGF4RmVlPihcImxvZGdpbmdfdGF4ZXNfZmVlc1wiLCBzdG9yZUlkKTtcclxuICBjb25zdCBbZWRpdGluZywgc2V0RWRpdGluZ10gPSB1c2VTdGF0ZTxQYXJ0aWFsPFRheEZlZT4gfCBudWxsPihudWxsKTtcclxuICBjb25zdCBbcG9saWN5RHJhZnQsIHNldFBvbGljeURyYWZ0XSA9IHVzZVN0YXRlPHtcclxuICAgIGNhbmNlbGxhdGlvbl9wb2xpY3k6IHN0cmluZztcclxuICAgIGRlcG9zaXRfcGVyY2VudDogbnVtYmVyO1xyXG4gICAgY2hpbGRfcG9saWN5OiBzdHJpbmc7XHJcbiAgICBwZXRfcG9saWN5OiBzdHJpbmc7XHJcbiAgICBzbW9raW5nX3BvbGljeTogc3RyaW5nO1xyXG4gICAgcXVpZXRfaG91cnNfZnJvbTogc3RyaW5nO1xyXG4gICAgcXVpZXRfaG91cnNfdG86IHN0cmluZztcclxuICAgIHBhcnRpZXNfYWxsb3dlZDogYm9vbGVhbjtcclxuICB9Pih7XHJcbiAgICBjYW5jZWxsYXRpb25fcG9saWN5OiBcImZsZXhpYmxlXCIsXHJcbiAgICBkZXBvc2l0X3BlcmNlbnQ6IDAsXHJcbiAgICBjaGlsZF9wb2xpY3k6IFwiXCIsXHJcbiAgICBwZXRfcG9saWN5OiBcIlwiLFxyXG4gICAgc21va2luZ19wb2xpY3k6IFwibm9uX3Ntb2tpbmdcIixcclxuICAgIHF1aWV0X2hvdXJzX2Zyb206IFwiMjI6MDBcIixcclxuICAgIHF1aWV0X2hvdXJzX3RvOiBcIjA3OjAwXCIsXHJcbiAgICBwYXJ0aWVzX2FsbG93ZWQ6IGZhbHNlLFxyXG4gIH0pO1xyXG5cclxuICB1c2VFZmZlY3QoKCkgPT4ge1xyXG4gICAgY29uc3QgcCA9IHByb2ZpbGVRLmRhdGE7XHJcbiAgICBpZiAoIXApIHJldHVybjtcclxuICAgIGNvbnN0IGhvdXNlUnVsZXMgPSBhc09iaigocCBhcyB7IGhvdXNlX3J1bGVzPzogdW5rbm93biB9KS5ob3VzZV9ydWxlcyk7XHJcbiAgICBjb25zdCBjaGlsZFBvbGljeSA9IGFzT2JqKChwIGFzIHsgY2hpbGRfcG9saWN5PzogdW5rbm93biB9KS5jaGlsZF9wb2xpY3kpO1xyXG4gICAgY29uc3QgcGV0UG9saWN5ID0gYXNPYmooKHAgYXMgeyBwZXRfcG9saWN5PzogdW5rbm93biB9KS5wZXRfcG9saWN5KTtcclxuICAgIHNldFBvbGljeURyYWZ0KHtcclxuICAgICAgY2FuY2VsbGF0aW9uX3BvbGljeTogYXNTdHIoKHAgYXMgeyBjYW5jZWxsYXRpb25fcG9saWN5PzogdW5rbm93biB9KS5jYW5jZWxsYXRpb25fcG9saWN5LCBcImZsZXhpYmxlXCIpLFxyXG4gICAgICBkZXBvc2l0X3BlcmNlbnQ6IE51bWJlcigocCBhcyB7IGRlcG9zaXRfcGVyY2VudD86IHVua25vd24gfSkuZGVwb3NpdF9wZXJjZW50ID8/IDApIHx8IDAsXHJcbiAgICAgIGNoaWxkX3BvbGljeTogYXNTdHIoY2hpbGRQb2xpY3kudGV4dCwgXCJcIiksXHJcbiAgICAgIHBldF9wb2xpY3k6IGFzU3RyKHBldFBvbGljeS50ZXh0LCBcIlwiKSxcclxuICAgICAgc21va2luZ19wb2xpY3k6IGFzU3RyKGhvdXNlUnVsZXMuc21va2luZ19wb2xpY3ksIFwibm9uX3Ntb2tpbmdcIiksXHJcbiAgICAgIHF1aWV0X2hvdXJzX2Zyb206IGFzU3RyKGhvdXNlUnVsZXMucXVpZXRfaG91cnNfZnJvbSwgXCIyMjowMFwiKSxcclxuICAgICAgcXVpZXRfaG91cnNfdG86IGFzU3RyKGhvdXNlUnVsZXMucXVpZXRfaG91cnNfdG8sIFwiMDc6MDBcIiksXHJcbiAgICAgIHBhcnRpZXNfYWxsb3dlZDogQm9vbGVhbihob3VzZVJ1bGVzLnBhcnRpZXNfYWxsb3dlZCksXHJcbiAgICB9KTtcclxuICB9LCBbcHJvZmlsZVEuZGF0YV0pO1xyXG5cclxuICBjb25zdCBoYW5kbGVTYXZlUG9saWNpZXMgPSBhc3luYyAoKSA9PiB7XHJcbiAgICBjb25zdCBleGlzdGluZ0hvdXNlUnVsZXMgPSBhc09iaigocHJvZmlsZVEuZGF0YSBhcyB7IGhvdXNlX3J1bGVzPzogdW5rbm93biB9IHwgbnVsbCB8IHVuZGVmaW5lZCk/LmhvdXNlX3J1bGVzKTtcclxuICAgIHRyeSB7XHJcbiAgICAgIGF3YWl0IHByb2ZpbGVRLnVwc2VydC5tdXRhdGVBc3luYyh7XHJcbiAgICAgICAgY2FuY2VsbGF0aW9uX3BvbGljeTogcG9saWN5RHJhZnQuY2FuY2VsbGF0aW9uX3BvbGljeSxcclxuICAgICAgICBkZXBvc2l0X3BlcmNlbnQ6IHBvbGljeURyYWZ0LmRlcG9zaXRfcGVyY2VudCxcclxuICAgICAgICBjaGlsZF9wb2xpY3k6IHsgdGV4dDogcG9saWN5RHJhZnQuY2hpbGRfcG9saWN5IH0gYXMgbmV2ZXIsXHJcbiAgICAgICAgcGV0X3BvbGljeTogeyB0ZXh0OiBwb2xpY3lEcmFmdC5wZXRfcG9saWN5IH0gYXMgbmV2ZXIsXHJcbiAgICAgICAgaG91c2VfcnVsZXM6IHtcclxuICAgICAgICAgIC4uLmV4aXN0aW5nSG91c2VSdWxlcyxcclxuICAgICAgICAgIHNtb2tpbmdfcG9saWN5OiBwb2xpY3lEcmFmdC5zbW9raW5nX3BvbGljeSxcclxuICAgICAgICAgIHF1aWV0X2hvdXJzX2Zyb206IHBvbGljeURyYWZ0LnF1aWV0X2hvdXJzX2Zyb20sXHJcbiAgICAgICAgICBxdWlldF9ob3Vyc190bzogcG9saWN5RHJhZnQucXVpZXRfaG91cnNfdG8sXHJcbiAgICAgICAgICBwYXJ0aWVzX2FsbG93ZWQ6IHBvbGljeURyYWZ0LnBhcnRpZXNfYWxsb3dlZCxcclxuICAgICAgICB9IGFzIG5ldmVyLFxyXG4gICAgICB9KTtcclxuICAgICAgdG9hc3Quc3VjY2VzcyhcIlBvbGljaWVzIHNhdmVkXCIpO1xyXG4gICAgfSBjYXRjaCAoZSkge1xyXG4gICAgICB0b2FzdC5lcnJvcihlIGluc3RhbmNlb2YgRXJyb3IgPyBlLm1lc3NhZ2UgOiBcIlNhdmUgZmFpbGVkXCIpO1xyXG4gICAgfVxyXG4gIH07XHJcblxyXG5cclxuICBjb25zdCB0YXhSb3dzID0gdGF4ZXMubGlzdC5kYXRhIHx8IFtdO1xyXG4gIGNvbnN0IGlzTG9hZGluZyA9IG9wc0RhdGEuaXNMb2FkaW5nIHx8IHByb2ZpbGVRLmlzTG9hZGluZyB8fCB0YXhlcy5saXN0LmlzTG9hZGluZztcclxuXHJcbiAgcmV0dXJuIChcclxuICAgIDxTZWN0aW9uU2hlbGwgdGl0bGU9XCJQb2xpY2llcyAmIFJ1bGVzXCIgc3VidGl0bGU9XCJDYW5jZWxsYXRpb24sIGRlcG9zaXRzLCBjaGlsZCAmIHBldCBwb2xpY2llcywgc21va2luZywgcXVpZXQgaG91cnMsIGFuZCB0YXgvZmVlIHNldHVwLlwiIGljb249e1NoaWVsZENoZWNrfT5cclxuICAgICAgPExvZGdpbmdRdWlja0p1bXAgYWN0aXZlPVwibG9kZ2UtcG9saWNpZXNcIiAvPlxyXG4gICAgICA8TG9kZ2luZ1NlY3Rpb25TdGF0dXNCYW5uZXIgdGl0bGU9XCJQb2xpY2llcyAmIFJ1bGVzXCIgaWNvbj17U2hpZWxkQ2hlY2t9IGNvdW50TGFiZWw9XCJBY3RpdmUgdGF4ZXMgJiBmZWVzXCIgY291bnRWYWx1ZT17dGF4Um93cy5maWx0ZXIoKHIpID0+IHIuYWN0aXZlICE9PSBmYWxzZSkubGVuZ3RofSBmaXhMYWJlbD1cIk9wZW4gQW1lbml0aWVzXCIgZml4VGFiPVwibG9kZ2UtYW1lbml0aWVzXCIgLz5cclxuICAgICAge2lzTG9hZGluZyA/IDxMb2FkaW5nUGFuZWwgLz4gOiA8PlxyXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZ3JpZCBnYXAtMyBzbTpncmlkLWNvbHMtM1wiPlxyXG4gICAgICAgICAgPFN0YXRDYXJkIGxhYmVsPVwiQWN0aXZlIHRheGVzL2ZlZXNcIiB2YWx1ZT17U3RyaW5nKHRheFJvd3MuZmlsdGVyKChyKSA9PiByLmFjdGl2ZSAhPT0gZmFsc2UpLmxlbmd0aCl9IGljb249e1NoaWVsZENoZWNrfSAvPlxyXG4gICAgICAgICAgPFN0YXRDYXJkIGxhYmVsPVwiQ2FuY2VsbGF0aW9uXCIgdmFsdWU9eyhwb2xpY3lEcmFmdC5jYW5jZWxsYXRpb25fcG9saWN5IHx8IFwi4oCUXCIpLnJlcGxhY2UoL18vZywgXCIgXCIpfSBpY29uPXtTaGllbGRDaGVja30gLz5cclxuICAgICAgICAgIDxTdGF0Q2FyZCBsYWJlbD1cIkRlcG9zaXQgJVwiIHZhbHVlPXtgJHtwb2xpY3lEcmFmdC5kZXBvc2l0X3BlcmNlbnQgfHwgMH0lYH0gaWNvbj17U2hpZWxkQ2hlY2t9IC8+XHJcbiAgICAgICAgPC9kaXY+XHJcblxyXG4gICAgICAgIHsvKiBIb3VzZSBwb2xpY2llcyBlZGl0b3IgKi99XHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJyb3VuZGVkLWxnIGJvcmRlciBib3JkZXItYm9yZGVyIGJnLWNhcmQgcC00IHNwYWNlLXktM1wiPlxyXG4gICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1zbSBmb250LXNlbWlib2xkXCI+SG91c2UgcG9saWNpZXM8L3A+XHJcbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImdyaWQgZ2FwLTMgc206Z3JpZC1jb2xzLTJcIj5cclxuICAgICAgICAgICAgPGRpdj5cclxuICAgICAgICAgICAgICA8TGFiZWw+Q2FuY2VsbGF0aW9uIHBvbGljeTwvTGFiZWw+XHJcbiAgICAgICAgICAgICAgPFNlbGVjdCB2YWx1ZT17cG9saWN5RHJhZnQuY2FuY2VsbGF0aW9uX3BvbGljeX0gb25WYWx1ZUNoYW5nZT17KHYpID0+IHNldFBvbGljeURyYWZ0KHsgLi4ucG9saWN5RHJhZnQsIGNhbmNlbGxhdGlvbl9wb2xpY3k6IHYgfSl9PlxyXG4gICAgICAgICAgICAgICAgPFNlbGVjdFRyaWdnZXI+PFNlbGVjdFZhbHVlIC8+PC9TZWxlY3RUcmlnZ2VyPlxyXG4gICAgICAgICAgICAgICAgPFNlbGVjdENvbnRlbnQ+e0NBTkNFTF9QUkVTRVRTLm1hcCgocCkgPT4gPFNlbGVjdEl0ZW0ga2V5PXtwLnZhbHVlfSB2YWx1ZT17cC52YWx1ZX0+e3AubGFiZWx9PC9TZWxlY3RJdGVtPil9PC9TZWxlY3RDb250ZW50PlxyXG4gICAgICAgICAgICAgIDwvU2VsZWN0PlxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgPGRpdj5cclxuICAgICAgICAgICAgICA8TGFiZWw+RGVwb3NpdCAoJSk8L0xhYmVsPlxyXG4gICAgICAgICAgICAgIDxJbnB1dCB0eXBlPVwibnVtYmVyXCIgbWluPXswfSBtYXg9ezEwMH0gdmFsdWU9e3BvbGljeURyYWZ0LmRlcG9zaXRfcGVyY2VudCB8fCAwfSBvbkNoYW5nZT17KGUpID0+IHNldFBvbGljeURyYWZ0KHsgLi4ucG9saWN5RHJhZnQsIGRlcG9zaXRfcGVyY2VudDogcGFyc2VJbnQoZS50YXJnZXQudmFsdWUgfHwgXCIwXCIsIDEwKSB9KX0gLz5cclxuICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgIDxkaXY+XHJcbiAgICAgICAgICAgICAgPExhYmVsPkNoaWxkIHBvbGljeTwvTGFiZWw+XHJcbiAgICAgICAgICAgICAgPFRleHRhcmVhIHJvd3M9ezJ9IHZhbHVlPXtwb2xpY3lEcmFmdC5jaGlsZF9wb2xpY3l9IG9uQ2hhbmdlPXsoZSkgPT4gc2V0UG9saWN5RHJhZnQoeyAuLi5wb2xpY3lEcmFmdCwgY2hpbGRfcG9saWN5OiBlLnRhcmdldC52YWx1ZSB9KX0gcGxhY2Vob2xkZXI9XCJDaGlsZHJlbiB1bmRlciA2IHN0YXkgZnJlZTsgY3JpYnMgYXZhaWxhYmxlIG9uIHJlcXVlc3QuXCIgLz5cclxuICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgIDxkaXY+XHJcbiAgICAgICAgICAgICAgPExhYmVsPlBldCBwb2xpY3k8L0xhYmVsPlxyXG4gICAgICAgICAgICAgIDxUZXh0YXJlYSByb3dzPXsyfSB2YWx1ZT17cG9saWN5RHJhZnQucGV0X3BvbGljeX0gb25DaGFuZ2U9eyhlKSA9PiBzZXRQb2xpY3lEcmFmdCh7IC4uLnBvbGljeURyYWZ0LCBwZXRfcG9saWN5OiBlLnRhcmdldC52YWx1ZSB9KX0gcGxhY2Vob2xkZXI9XCJObyBwZXRzIC8gUGV0cyBhbGxvd2VkIChtYXggMSwgJDIwL25pZ2h0KVwiIC8+XHJcbiAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICA8ZGl2PlxyXG4gICAgICAgICAgICAgIDxMYWJlbD5TbW9raW5nPC9MYWJlbD5cclxuICAgICAgICAgICAgICA8U2VsZWN0IHZhbHVlPXtwb2xpY3lEcmFmdC5zbW9raW5nX3BvbGljeX0gb25WYWx1ZUNoYW5nZT17KHYpID0+IHNldFBvbGljeURyYWZ0KHsgLi4ucG9saWN5RHJhZnQsIHNtb2tpbmdfcG9saWN5OiB2IH0pfT5cclxuICAgICAgICAgICAgICAgIDxTZWxlY3RUcmlnZ2VyPjxTZWxlY3RWYWx1ZSAvPjwvU2VsZWN0VHJpZ2dlcj5cclxuICAgICAgICAgICAgICAgIDxTZWxlY3RDb250ZW50PlxyXG4gICAgICAgICAgICAgICAgICA8U2VsZWN0SXRlbSB2YWx1ZT1cIm5vbl9zbW9raW5nXCI+Tm9uLXNtb2tpbmcgcHJvcGVydHk8L1NlbGVjdEl0ZW0+XHJcbiAgICAgICAgICAgICAgICAgIDxTZWxlY3RJdGVtIHZhbHVlPVwiZGVzaWduYXRlZF9hcmVhc1wiPkRlc2lnbmF0ZWQgYXJlYXMgb25seTwvU2VsZWN0SXRlbT5cclxuICAgICAgICAgICAgICAgICAgPFNlbGVjdEl0ZW0gdmFsdWU9XCJzbW9raW5nX2FsbG93ZWRcIj5TbW9raW5nIGFsbG93ZWQ8L1NlbGVjdEl0ZW0+XHJcbiAgICAgICAgICAgICAgICA8L1NlbGVjdENvbnRlbnQ+XHJcbiAgICAgICAgICAgICAgPC9TZWxlY3Q+XHJcbiAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtZW5kIGdhcC0zXCI+XHJcbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4LTFcIj5cclxuICAgICAgICAgICAgICAgIDxMYWJlbD5RdWlldCBob3VycyBmcm9tPC9MYWJlbD5cclxuICAgICAgICAgICAgICAgIDxJbnB1dCB0eXBlPVwidGltZVwiIHZhbHVlPXtwb2xpY3lEcmFmdC5xdWlldF9ob3Vyc19mcm9tfSBvbkNoYW5nZT17KGUpID0+IHNldFBvbGljeURyYWZ0KHsgLi4ucG9saWN5RHJhZnQsIHF1aWV0X2hvdXJzX2Zyb206IGUudGFyZ2V0LnZhbHVlIH0pfSAvPlxyXG4gICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleC0xXCI+XHJcbiAgICAgICAgICAgICAgICA8TGFiZWw+dG88L0xhYmVsPlxyXG4gICAgICAgICAgICAgICAgPElucHV0IHR5cGU9XCJ0aW1lXCIgdmFsdWU9e3BvbGljeURyYWZ0LnF1aWV0X2hvdXJzX3RvfSBvbkNoYW5nZT17KGUpID0+IHNldFBvbGljeURyYWZ0KHsgLi4ucG9saWN5RHJhZnQsIHF1aWV0X2hvdXJzX3RvOiBlLnRhcmdldC52YWx1ZSB9KX0gLz5cclxuICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgIDxsYWJlbCBjbGFzc05hbWU9XCJzbTpjb2wtc3Bhbi0yIGZsZXggaXRlbXMtY2VudGVyIGdhcC0zIHJvdW5kZWQtbWQgYm9yZGVyIGJvcmRlci1ib3JkZXIgcC0zXCI+XHJcbiAgICAgICAgICAgICAgPFN3aXRjaCBjaGVja2VkPXtwb2xpY3lEcmFmdC5wYXJ0aWVzX2FsbG93ZWR9IG9uQ2hlY2tlZENoYW5nZT17KHYpID0+IHNldFBvbGljeURyYWZ0KHsgLi4ucG9saWN5RHJhZnQsIHBhcnRpZXNfYWxsb3dlZDogdiB9KX0gLz5cclxuICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJ0ZXh0LXNtXCI+UGFydGllcyAvIGV2ZW50cyBhbGxvd2VkPC9zcGFuPlxyXG4gICAgICAgICAgICA8L2xhYmVsPlxyXG4gICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICA8QnV0dG9uIHNpemU9XCJzbVwiIG9uQ2xpY2s9e2hhbmRsZVNhdmVQb2xpY2llc30gZGlzYWJsZWQ9e3Byb2ZpbGVRLnVwc2VydC5pc1BlbmRpbmd9PlxyXG4gICAgICAgICAgICA8U2F2ZSBjbGFzc05hbWU9XCJtci0xLjUgaC00IHctNFwiIC8+IHtwcm9maWxlUS51cHNlcnQuaXNQZW5kaW5nID8gXCJTYXZpbmfigKZcIiA6IFwiU2F2ZSBwb2xpY2llc1wifVxyXG4gICAgICAgICAgPC9CdXR0b24+XHJcbiAgICAgICAgPC9kaXY+XHJcblxyXG4gICAgICAgIHsvKiBUYXhlcyAmIGZlZXMgKi99XHJcbiAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJyb3VuZGVkLWxnIGJvcmRlciBib3JkZXItYm9yZGVyIGJnLWNhcmQgcC00IHNwYWNlLXktM1wiPlxyXG4gICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWJldHdlZW5cIj5cclxuICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1zbSBmb250LXNlbWlib2xkXCI+VGF4ZXMgJiBmZWVzPC9wPlxyXG4gICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJ0ZXh0LXhzIHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiPnt0YXhSb3dzLmxlbmd0aH0gaXRlbXt0YXhSb3dzLmxlbmd0aCA9PT0gMSA/IFwiXCIgOiBcInNcIn08L3NwYW4+XHJcbiAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgIDxDYXRhbG9nVGFibGVcclxuICAgICAgICAgICAgcm93cz17dGF4Um93c31cclxuICAgICAgICAgICAgaXNMb2FkaW5nPXt0YXhlcy5saXN0LmlzTG9hZGluZ31cclxuICAgICAgICAgICAgZW1wdHlUaXRsZT1cIk5vIHRheGVzIG9yIGZlZXMgY29uZmlndXJlZFwiXHJcbiAgICAgICAgICAgIGVtcHR5Qm9keT1cIkFkZCBWQVQsIHRvdXJpc20gdGF4LCBzZXJ2aWNlIGNoYXJnZSwgb3IgcmVzb3J0IGZlZXMgdGhhdCBhcHBseSB0byBib29raW5ncy5cIlxyXG4gICAgICAgICAgICBhZGRMYWJlbD1cIkFkZCB0YXggLyBmZWVcIlxyXG4gICAgICAgICAgICBvbkFkZENsaWNrPXsoKSA9PiBzZXRFZGl0aW5nKHsgLi4uYmxhbmsgfSl9XHJcbiAgICAgICAgICAgIG9uRWRpdD17KHIpID0+IHNldEVkaXRpbmcocil9XHJcbiAgICAgICAgICAgIG9uRGVsZXRlPXsoaWQpID0+IHRheGVzLnJlbW92ZS5tdXRhdGUoaWQpfVxyXG4gICAgICAgICAgICBvblRvZ2dsZUFjdGl2ZT17KHIpID0+IHRheGVzLnRvZ2dsZUFjdGl2ZS5tdXRhdGUoeyBpZDogci5pZCwgYWN0aXZlOiByLmFjdGl2ZSA9PT0gZmFsc2UgfSl9XHJcbiAgICAgICAgICAgIGNvbHVtbnM9e1tcclxuICAgICAgICAgICAgICB7IGtleTogXCJuYW1lXCIsIGxhYmVsOiBcIk5hbWVcIiwgcmVuZGVyOiAocikgPT4gPD48c3BhbiBjbGFzc05hbWU9XCJmb250LXNlbWlib2xkXCI+e3IubmFtZX08L3NwYW4+PHAgY2xhc3NOYW1lPVwidGV4dC14cyB0ZXh0LW11dGVkLWZvcmVncm91bmQgY2FwaXRhbGl6ZVwiPntyLmZlZV90eXBlLnJlcGxhY2UoL18vZywgXCIgXCIpfTwvcD48Lz4gfSxcclxuICAgICAgICAgICAgICB7IGtleTogXCJyYXRlXCIsIGxhYmVsOiBcIlJhdGVcIiwgY2xhc3NOYW1lOiBcInctMzJcIiwgcmVuZGVyOiAocikgPT4gci5iYXNpcyA9PT0gXCJwZXJjZW50XCIgPyBgJHtyLnJhdGVfdmFsdWV9JWAgOiBgJHttb25leShNYXRoLnJvdW5kKHIucmF0ZV92YWx1ZSAqIDEwMCkpfSAke3IuYmFzaXMucmVwbGFjZSgvXy9nLCBcIiBcIil9YCB9LFxyXG4gICAgICAgICAgICAgIHsga2V5OiBcImFwcGxpZXNcIiwgbGFiZWw6IFwiQXBwbGllcyB0b1wiLCBjbGFzc05hbWU6IFwidy0zMlwiLCByZW5kZXI6IChyKSA9PiByLmFwcGxpZXNfdG8ucmVwbGFjZSgvXy9nLCBcIiBcIikgfSxcclxuICAgICAgICAgICAgICB7IGtleTogXCJpbmNsdXNpdmVcIiwgbGFiZWw6IFwiSW5jbHVzaXZlXCIsIGNsYXNzTmFtZTogXCJ3LTIwXCIsIHJlbmRlcjogKHIpID0+IHIuaW5jbHVzaXZlID8gXCJZZXNcIiA6IFwiTm9cIiB9LFxyXG4gICAgICAgICAgICBdfVxyXG4gICAgICAgICAgLz5cclxuICAgICAgICA8L2Rpdj5cclxuXHJcbiAgICAgICAgPE5leHRBY3Rpb25zIGFjdGlvbnM9e1tcclxuICAgICAgICAgIHsgbGFiZWw6IFwiVXBkYXRlIHByb3BlcnR5IHByb2ZpbGVcIiwgdGFiOiBcImxvZGdlLXByb3BlcnR5XCIsIGhpbnQ6IFwiQWRkIGNvbnRhY3QgaW5mbywgSUQgcmVxdWlyZW1lbnRzLCBhbmQgV2ktRmkgZGV0YWlscy5cIiB9LFxyXG4gICAgICAgICAgeyBsYWJlbDogXCJFZGl0IGFtZW5pdGllcyAmIHNlcnZpY2VzXCIsIHRhYjogXCJsb2RnZS1hbWVuaXRpZXNcIiwgaGludDogXCJNYXJrIHBhcmtpbmcsIGludGVybmV0LCBhbmQgb3RoZXIgZXh0cmFzLlwiIH0sXHJcbiAgICAgICAgICB7IGxhYmVsOiBcIlJldmlldyByZXNlcnZhdGlvbnNcIiwgdGFiOiBcImxvZGdlLXJlc2VydmF0aW9uc1wiLCBoaW50OiBcIlZlcmlmeSBwb2xpY2llcyBhcmUgdmlzaWJsZSBvbiBib29raW5ncy5cIiB9LFxyXG4gICAgICAgIF19IC8+XHJcblxyXG4gICAgICAgIHtlZGl0aW5nICYmIChcclxuICAgICAgICAgIDxFZGl0b3JEaWFsb2dcclxuICAgICAgICAgICAgb3BlblxyXG4gICAgICAgICAgICBvbk9wZW5DaGFuZ2U9eyh2KSA9PiAhdiAmJiBzZXRFZGl0aW5nKG51bGwpfVxyXG4gICAgICAgICAgICB0aXRsZT17ZWRpdGluZy5pZCA/IFwiRWRpdCB0YXggLyBmZWVcIiA6IFwiTmV3IHRheCAvIGZlZVwifVxyXG4gICAgICAgICAgICBzYXZpbmc9e3RheGVzLnVwc2VydC5pc1BlbmRpbmd9XHJcbiAgICAgICAgICAgIG9uU2F2ZT17KCkgPT4ge1xyXG4gICAgICAgICAgICAgIGlmICghZWRpdGluZy5uYW1lPy50cmltKCkpIHJldHVybjtcclxuICAgICAgICAgICAgICB0YXhlcy51cHNlcnQubXV0YXRlKGVkaXRpbmcgYXMgVGF4RmVlLCB7IG9uU3VjY2VzczogKCkgPT4gc2V0RWRpdGluZyhudWxsKSB9KTtcclxuICAgICAgICAgICAgfX1cclxuICAgICAgICAgID5cclxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJncmlkIGdhcC0zIHNtOmdyaWQtY29scy0yXCI+XHJcbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJzbTpjb2wtc3Bhbi0yXCI+XHJcbiAgICAgICAgICAgICAgICA8TGFiZWw+TmFtZTwvTGFiZWw+XHJcbiAgICAgICAgICAgICAgICA8SW5wdXQgdmFsdWU9e2VkaXRpbmcubmFtZSB8fCBcIlwifSBvbkNoYW5nZT17KGUpID0+IHNldEVkaXRpbmcoeyAuLi5lZGl0aW5nLCBuYW1lOiBlLnRhcmdldC52YWx1ZSB9KX0gcGxhY2Vob2xkZXI9XCJWQVQgMTAlXCIgLz5cclxuICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICA8ZGl2PlxyXG4gICAgICAgICAgICAgICAgPExhYmVsPlR5cGU8L0xhYmVsPlxyXG4gICAgICAgICAgICAgICAgPFNlbGVjdCB2YWx1ZT17ZWRpdGluZy5mZWVfdHlwZX0gb25WYWx1ZUNoYW5nZT17KHYpID0+IHNldEVkaXRpbmcoeyAuLi5lZGl0aW5nLCBmZWVfdHlwZTogdiB9KX0+XHJcbiAgICAgICAgICAgICAgICAgIDxTZWxlY3RUcmlnZ2VyPjxTZWxlY3RWYWx1ZSAvPjwvU2VsZWN0VHJpZ2dlcj5cclxuICAgICAgICAgICAgICAgICAgPFNlbGVjdENvbnRlbnQ+e0ZFRV9UWVBFUy5tYXAoKHQpID0+IDxTZWxlY3RJdGVtIGtleT17dH0gdmFsdWU9e3R9IGNsYXNzTmFtZT1cImNhcGl0YWxpemVcIj57dC5yZXBsYWNlKC9fL2csIFwiIFwiKX08L1NlbGVjdEl0ZW0+KX08L1NlbGVjdENvbnRlbnQ+XHJcbiAgICAgICAgICAgICAgICA8L1NlbGVjdD5cclxuICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICA8ZGl2PlxyXG4gICAgICAgICAgICAgICAgPExhYmVsPkJhc2lzPC9MYWJlbD5cclxuICAgICAgICAgICAgICAgIDxTZWxlY3QgdmFsdWU9e2VkaXRpbmcuYmFzaXN9IG9uVmFsdWVDaGFuZ2U9eyh2KSA9PiBzZXRFZGl0aW5nKHsgLi4uZWRpdGluZywgYmFzaXM6IHYgfSl9PlxyXG4gICAgICAgICAgICAgICAgICA8U2VsZWN0VHJpZ2dlcj48U2VsZWN0VmFsdWUgLz48L1NlbGVjdFRyaWdnZXI+XHJcbiAgICAgICAgICAgICAgICAgIDxTZWxlY3RDb250ZW50PntCQVNFUy5tYXAoKHQpID0+IDxTZWxlY3RJdGVtIGtleT17dH0gdmFsdWU9e3R9IGNsYXNzTmFtZT1cImNhcGl0YWxpemVcIj57dC5yZXBsYWNlKC9fL2csIFwiIFwiKX08L1NlbGVjdEl0ZW0+KX08L1NlbGVjdENvbnRlbnQ+XHJcbiAgICAgICAgICAgICAgICA8L1NlbGVjdD5cclxuICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICA8ZGl2PlxyXG4gICAgICAgICAgICAgICAgPExhYmVsPlJhdGUgLyBhbW91bnQ8L0xhYmVsPlxyXG4gICAgICAgICAgICAgICAgPElucHV0IHR5cGU9XCJudW1iZXJcIiBtaW49ezB9IHN0ZXA9XCIwLjAxXCIgdmFsdWU9e2VkaXRpbmcucmF0ZV92YWx1ZSB8fCAwfSBvbkNoYW5nZT17KGUpID0+IHNldEVkaXRpbmcoeyAuLi5lZGl0aW5nLCByYXRlX3ZhbHVlOiBwYXJzZUZsb2F0KGUudGFyZ2V0LnZhbHVlIHx8IFwiMFwiKSB9KX0gLz5cclxuICAgICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cIm10LTEgdGV4dC14cyB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj57ZWRpdGluZy5iYXNpcyA9PT0gXCJwZXJjZW50XCIgPyBcIkVudGVyIGFzIHBlcmNlbnQgKGUuZy4gMTAgPSAxMCUpXCIgOiBcIkVudGVyIGN1cnJlbmN5IGFtb3VudFwifTwvcD5cclxuICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICA8ZGl2PlxyXG4gICAgICAgICAgICAgICAgPExhYmVsPkFwcGxpZXMgdG88L0xhYmVsPlxyXG4gICAgICAgICAgICAgICAgPFNlbGVjdCB2YWx1ZT17ZWRpdGluZy5hcHBsaWVzX3RvfSBvblZhbHVlQ2hhbmdlPXsodikgPT4gc2V0RWRpdGluZyh7IC4uLmVkaXRpbmcsIGFwcGxpZXNfdG86IHYgfSl9PlxyXG4gICAgICAgICAgICAgICAgICA8U2VsZWN0VHJpZ2dlcj48U2VsZWN0VmFsdWUgLz48L1NlbGVjdFRyaWdnZXI+XHJcbiAgICAgICAgICAgICAgICAgIDxTZWxlY3RDb250ZW50PntBUFBMSUVTLm1hcCgodCkgPT4gPFNlbGVjdEl0ZW0ga2V5PXt0fSB2YWx1ZT17dH0gY2xhc3NOYW1lPVwiY2FwaXRhbGl6ZVwiPnt0LnJlcGxhY2UoL18vZywgXCIgXCIpfTwvU2VsZWN0SXRlbT4pfTwvU2VsZWN0Q29udGVudD5cclxuICAgICAgICAgICAgICAgIDwvU2VsZWN0PlxyXG4gICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgIDxsYWJlbCBjbGFzc05hbWU9XCJzbTpjb2wtc3Bhbi0yIGZsZXggaXRlbXMtY2VudGVyIGdhcC0zIHJvdW5kZWQtbWQgYm9yZGVyIGJvcmRlci1ib3JkZXIgcC0zXCI+XHJcbiAgICAgICAgICAgICAgICA8U3dpdGNoIGNoZWNrZWQ9e0Jvb2xlYW4oZWRpdGluZy5pbmNsdXNpdmUpfSBvbkNoZWNrZWRDaGFuZ2U9eyh2KSA9PiBzZXRFZGl0aW5nKHsgLi4uZWRpdGluZywgaW5jbHVzaXZlOiB2IH0pfSAvPlxyXG4gICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwidGV4dC1zbVwiPkFscmVhZHkgaW5jbHVkZWQgaW4gZGlzcGxheWVkIHByaWNlPC9zcGFuPlxyXG4gICAgICAgICAgICAgIDwvbGFiZWw+XHJcbiAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgPC9FZGl0b3JEaWFsb2c+XHJcbiAgICAgICAgKX1cclxuICAgICAgPC8+fVxyXG4gICAgPC9TZWN0aW9uU2hlbGw+XHJcbiAgKTtcclxufVxyXG4iXSwibmFtZXMiOlsidXNlRWZmZWN0IiwidXNlU3RhdGUiLCJTaGllbGRDaGVjayIsIlNhdmUiLCJJbnB1dCIsIkxhYmVsIiwiVGV4dGFyZWEiLCJCdXR0b24iLCJTd2l0Y2giLCJTZWxlY3QiLCJTZWxlY3RDb250ZW50IiwiU2VsZWN0SXRlbSIsIlNlbGVjdFRyaWdnZXIiLCJTZWxlY3RWYWx1ZSIsIkxvYWRpbmdQYW5lbCIsIk5leHRBY3Rpb25zIiwiU2VjdGlvblNoZWxsIiwiU3RhdENhcmQiLCJtb25leSIsInVzZUxvZGdpbmdPcHNEYXRhIiwiQ2F0YWxvZ1RhYmxlIiwiRWRpdG9yRGlhbG9nIiwidXNlTG9kZ2luZ0NhdGFsb2ciLCJ1c2VMb2RnZVByb3BlcnR5UHJvZmlsZSIsInRvYXN0IiwiTG9kZ2luZ1F1aWNrSnVtcCIsIkxvZGdpbmdTZWN0aW9uU3RhdHVzQmFubmVyIiwiRkVFX1RZUEVTIiwiQkFTRVMiLCJBUFBMSUVTIiwiYmxhbmsiLCJuYW1lIiwiZmVlX3R5cGUiLCJiYXNpcyIsInJhdGVfdmFsdWUiLCJhcHBsaWVzX3RvIiwiaW5jbHVzaXZlIiwiYWN0aXZlIiwiQ0FOQ0VMX1BSRVNFVFMiLCJ2YWx1ZSIsImxhYmVsIiwiYXNPYmoiLCJ2IiwiQXJyYXkiLCJpc0FycmF5IiwiYXNTdHIiLCJmYWxsYmFjayIsIlN0cmluZyIsIkxvZGdpbmdQb2xpY2llc1NlY3Rpb24iLCJzdG9yZUlkIiwib3BzRGF0YSIsInByb2ZpbGVRIiwidGF4ZXMiLCJlZGl0aW5nIiwic2V0RWRpdGluZyIsInBvbGljeURyYWZ0Iiwic2V0UG9saWN5RHJhZnQiLCJjYW5jZWxsYXRpb25fcG9saWN5IiwiZGVwb3NpdF9wZXJjZW50IiwiY2hpbGRfcG9saWN5IiwicGV0X3BvbGljeSIsInNtb2tpbmdfcG9saWN5IiwicXVpZXRfaG91cnNfZnJvbSIsInF1aWV0X2hvdXJzX3RvIiwicGFydGllc19hbGxvd2VkIiwicCIsImRhdGEiLCJob3VzZVJ1bGVzIiwiaG91c2VfcnVsZXMiLCJjaGlsZFBvbGljeSIsInBldFBvbGljeSIsIk51bWJlciIsInRleHQiLCJCb29sZWFuIiwiaGFuZGxlU2F2ZVBvbGljaWVzIiwiZXhpc3RpbmdIb3VzZVJ1bGVzIiwidXBzZXJ0IiwibXV0YXRlQXN5bmMiLCJzdWNjZXNzIiwiZSIsImVycm9yIiwiRXJyb3IiLCJtZXNzYWdlIiwidGF4Um93cyIsImxpc3QiLCJpc0xvYWRpbmciLCJ0aXRsZSIsInN1YnRpdGxlIiwiaWNvbiIsImNvdW50TGFiZWwiLCJjb3VudFZhbHVlIiwiZmlsdGVyIiwiciIsImxlbmd0aCIsImZpeExhYmVsIiwiZml4VGFiIiwiZGl2IiwiY2xhc3NOYW1lIiwicmVwbGFjZSIsIm9uVmFsdWVDaGFuZ2UiLCJtYXAiLCJ0eXBlIiwibWluIiwibWF4Iiwib25DaGFuZ2UiLCJwYXJzZUludCIsInRhcmdldCIsInJvd3MiLCJwbGFjZWhvbGRlciIsImNoZWNrZWQiLCJvbkNoZWNrZWRDaGFuZ2UiLCJzcGFuIiwic2l6ZSIsIm9uQ2xpY2siLCJkaXNhYmxlZCIsImlzUGVuZGluZyIsImVtcHR5VGl0bGUiLCJlbXB0eUJvZHkiLCJhZGRMYWJlbCIsIm9uQWRkQ2xpY2siLCJvbkVkaXQiLCJvbkRlbGV0ZSIsImlkIiwicmVtb3ZlIiwibXV0YXRlIiwib25Ub2dnbGVBY3RpdmUiLCJ0b2dnbGVBY3RpdmUiLCJjb2x1bW5zIiwia2V5IiwicmVuZGVyIiwiTWF0aCIsInJvdW5kIiwiYWN0aW9ucyIsInRhYiIsImhpbnQiLCJvcGVuIiwib25PcGVuQ2hhbmdlIiwic2F2aW5nIiwib25TYXZlIiwidHJpbSIsIm9uU3VjY2VzcyIsInQiLCJzdGVwIiwicGFyc2VGbG9hdCJdLCJtYXBwaW5ncyI6Ijs7QUFBQSxTQUFTQSxTQUFTLEVBQUVDLFFBQVEsUUFBUSxRQUFRO0FBQzVDLFNBQVNDLFdBQVcsRUFBRUMsSUFBSSxRQUFRLGVBQWU7QUFDakQsU0FBU0MsS0FBSyxRQUFRLHdCQUF3QjtBQUM5QyxTQUFTQyxLQUFLLFFBQVEsd0JBQXdCO0FBQzlDLFNBQVND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

@@ -30,6 +30,11 @@ export function PWAInstallBanner() {
     if (!isMobile) return;
     // Don't interrupt full-screen ride booking flows
     if (location.pathname.startsWith("/rides")) return;
+    // Don't cover chat / call surfaces (they own the bottom of the screen)
+    if (location.pathname.startsWith("/chat")) return;
+    // Never show on auth routes — must not block input focus
+    const authRoutes = ["/login", "/signup", "/verify-email", "/verify-otp", "/verify-new-device", "/forgot-password", "/reset-password", "/setup"];
+    if (authRoutes.some((r) => location.pathname.startsWith(r))) return;
     // Don't show if dismissed recently (7 days)
     const dismissed = localStorage.getItem("pwa_banner_dismissed");
     if (dismissed && Date.now() - Number(dismissed) < 7 * 24 * 60 * 60 * 1000) return;
@@ -37,15 +42,14 @@ export function PWAInstallBanner() {
     const handler = (e: Event) => {
       e.preventDefault();
       setDeferredPrompt(e as BeforeInstallPromptEvent);
+      // Only show once we actually have an install prompt to offer.
+      // Add a small delay so it doesn't compete with first paint / LCP.
+      setTimeout(() => setShow(true), 8000);
     };
     window.addEventListener("beforeinstallprompt", handler);
 
-    // Show after 30s of browsing
-    const timer = setTimeout(() => setShow(true), 30000);
-
     return () => {
       window.removeEventListener("beforeinstallprompt", handler);
-      clearTimeout(timer);
     };
   }, [isMobile, location.pathname]);
 
@@ -67,6 +71,13 @@ export function PWAInstallBanner() {
 
   // Only show in mobile browsers, never in native Capacitor apps or standalone PWA
   if (!isMobile || Capacitor.isNativePlatform() || window.matchMedia("(display-mode: standalone)").matches) return null;
+  // Require a real install prompt — avoids a confusing banner that can't install on iOS Safari
+  if (!deferredPrompt) return null;
+  // Never render on auth routes
+  const authRoutes = ["/login", "/signup", "/verify-email", "/verify-otp", "/verify-new-device", "/forgot-password", "/reset-password", "/setup"];
+  if (authRoutes.some((r) => location.pathname.startsWith(r))) return null;
+  // Never render over chat or ride flows (they own the bottom of the viewport)
+  if (location.pathname.startsWith("/chat") || location.pathname.startsWith("/rides")) return null;
 
   return (
     <AnimatePresence>

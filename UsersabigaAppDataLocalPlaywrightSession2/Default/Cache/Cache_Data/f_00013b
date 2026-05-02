@@ -1,0 +1,368 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/admin/store/lodging/RevenuePulseCard.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+var _s = $RefreshSig$();
+import __vite__cjsImport1_react from "/node_modules/.vite/deps/react.js?v=7fd9520c"; const useMemo = __vite__cjsImport1_react["useMemo"];
+import { useLodgeReports } from "/src/hooks/lodging/useLodgeReports.ts";
+import { useLodgeReservations } from "/src/hooks/lodging/useLodgeReservations.ts";
+import { TrendingUp, DollarSign, Percent, BedDouble, ArrowDownToLine, ArrowUpFromLine, BarChart3 } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+const money = (cents)=>`$${(cents / 100).toFixed(0)}`;
+const pct = (n)=>`${n.toFixed(1)}%`;
+const todayISO = ()=>new Date().toISOString().slice(0, 10);
+const daysAgo = (n)=>new Date(Date.now() - n * 86400000).toISOString().slice(0, 10);
+export default function RevenuePulseCard({ storeId }) {
+    _s();
+    const r7 = useLodgeReports(storeId, daysAgo(7), todayISO());
+    const r30 = useLodgeReports(storeId, daysAgo(30), todayISO());
+    const { data: reservations = [] } = useLodgeReservations(storeId, "all");
+    const today = todayISO();
+    const arrivals = reservations.filter((r)=>r.check_in?.slice(0, 10) === today).length;
+    const departures = reservations.filter((r)=>r.check_out?.slice(0, 10) === today).length;
+    const inHouse = reservations.filter((r)=>r.status === "checked_in").length;
+    // Sparkline: per-day occupancy estimate over last 14 days (simple proxy from reservations)
+    const sparkData = useMemo(()=>{
+        const buckets = Array(14).fill(0);
+        const start = Date.now() - 13 * 86400000;
+        reservations.forEach((res)=>{
+            const ci = new Date(res.check_in || 0).getTime();
+            const co = new Date(res.check_out || 0).getTime();
+            if (!ci || !co) return;
+            for(let i = 0; i < 14; i++){
+                const day = start + i * 86400000;
+                if (day >= ci && day < co && ![
+                    "cancelled",
+                    "no_show"
+                ].includes(res.status)) buckets[i] += 1;
+            }
+        });
+        const max = Math.max(1, ...buckets);
+        return buckets.map((v)=>Math.round(v / max * 100));
+    }, [
+        reservations
+    ]);
+    return /*#__PURE__*/ _jsxDEV("div", {
+        className: "rounded-xl border border-border bg-gradient-to-br from-primary/5 via-card to-card p-3",
+        children: [
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "mb-2 flex items-center justify-between",
+                children: [
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "flex items-center gap-2",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("span", {
+                                className: "rounded-md bg-primary/10 p-1.5 text-primary",
+                                children: /*#__PURE__*/ _jsxDEV(TrendingUp, {
+                                    className: "h-3.5 w-3.5"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx",
+                                    lineNumber: 42,
+                                    columnNumber: 73
+                                }, this)
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx",
+                                lineNumber: 42,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("p", {
+                                className: "text-[13px] font-bold text-foreground",
+                                children: "Revenue Pulse"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx",
+                                lineNumber: 43,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("span", {
+                                className: "rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wider text-primary",
+                                children: "Live"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx",
+                                lineNumber: 44,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx",
+                        lineNumber: 41,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("p", {
+                        className: "text-[10px] text-muted-foreground",
+                        children: "Last 7 / 30 days"
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx",
+                        lineNumber: 46,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx",
+                lineNumber: 40,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "grid gap-2 sm:grid-cols-4",
+                children: [
+                    /*#__PURE__*/ _jsxDEV(KpiTile, {
+                        icon: Percent,
+                        label: "Occupancy",
+                        v7: pct(r7.data?.occupancyPct ?? 0),
+                        v30: pct(r30.data?.occupancyPct ?? 0)
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx",
+                        lineNumber: 50,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(KpiTile, {
+                        icon: DollarSign,
+                        label: "ADR",
+                        v7: money(r7.data?.adrCents ?? 0),
+                        v30: money(r30.data?.adrCents ?? 0)
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx",
+                        lineNumber: 51,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(KpiTile, {
+                        icon: BarChart3,
+                        label: "RevPAR",
+                        v7: money(r7.data?.revparCents ?? 0),
+                        v30: money(r30.data?.revparCents ?? 0)
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx",
+                        lineNumber: 52,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(KpiTile, {
+                        icon: BedDouble,
+                        label: "Revenue",
+                        v7: money(r7.data?.totalRevenueCents ?? 0),
+                        v30: money(r30.data?.totalRevenueCents ?? 0)
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx",
+                        lineNumber: 53,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx",
+                lineNumber: 49,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "mt-3 grid gap-2 sm:grid-cols-3",
+                children: [
+                    /*#__PURE__*/ _jsxDEV(MiniTile, {
+                        icon: ArrowDownToLine,
+                        label: "Arrivals today",
+                        value: String(arrivals)
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx",
+                        lineNumber: 57,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(MiniTile, {
+                        icon: BedDouble,
+                        label: "In-house now",
+                        value: String(inHouse)
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx",
+                        lineNumber: 58,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(MiniTile, {
+                        icon: ArrowUpFromLine,
+                        label: "Departures today",
+                        value: String(departures)
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx",
+                        lineNumber: 59,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx",
+                lineNumber: 56,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "mt-3 rounded-md border border-border/60 bg-background/50 p-2",
+                children: [
+                    /*#__PURE__*/ _jsxDEV("p", {
+                        className: "mb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground",
+                        children: "Last 14 days · occupancy trend"
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx",
+                        lineNumber: 63,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "flex h-10 items-end gap-0.5",
+                        children: sparkData.map((h, i)=>/*#__PURE__*/ _jsxDEV("div", {
+                                className: "flex-1 rounded-sm bg-primary/70 transition-all",
+                                style: {
+                                    height: `${Math.max(4, h)}%`
+                                },
+                                title: `${h}%`
+                            }, i, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx",
+                                lineNumber: 66,
+                                columnNumber: 13
+                            }, this))
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx",
+                        lineNumber: 64,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx",
+                lineNumber: 62,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx",
+        lineNumber: 39,
+        columnNumber: 5
+    }, this);
+}
+_s(RevenuePulseCard, "13X3Y0j9jzsP9EGx+46Vwqazij8=", false, function() {
+    return [
+        useLodgeReports,
+        useLodgeReports,
+        useLodgeReservations
+    ];
+});
+_c = RevenuePulseCard;
+function KpiTile({ icon: Icon, label, v7, v30 }) {
+    return /*#__PURE__*/ _jsxDEV("div", {
+        className: "rounded-lg border border-border bg-background/60 p-2.5",
+        children: [
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "flex items-center justify-between",
+                children: [
+                    /*#__PURE__*/ _jsxDEV("p", {
+                        className: "text-[10px] font-semibold uppercase tracking-wider text-muted-foreground",
+                        children: label
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx",
+                        lineNumber: 78,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(Icon, {
+                        className: "h-3 w-3 text-primary"
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx",
+                        lineNumber: 79,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx",
+                lineNumber: 77,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV("p", {
+                className: "mt-1 text-lg font-bold leading-tight text-foreground",
+                children: v7
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx",
+                lineNumber: 81,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV("p", {
+                className: "text-[10px] text-muted-foreground",
+                children: [
+                    "30d: ",
+                    /*#__PURE__*/ _jsxDEV("span", {
+                        className: "font-semibold text-foreground/80",
+                        children: v30
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx",
+                        lineNumber: 82,
+                        columnNumber: 61
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx",
+                lineNumber: 82,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx",
+        lineNumber: 76,
+        columnNumber: 5
+    }, this);
+}
+_c1 = KpiTile;
+function MiniTile({ icon: Icon, label, value }) {
+    return /*#__PURE__*/ _jsxDEV("div", {
+        className: "flex items-center gap-2 rounded-md border border-border bg-background/60 p-2",
+        children: [
+            /*#__PURE__*/ _jsxDEV(Icon, {
+                className: "h-3.5 w-3.5 text-primary"
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx",
+                lineNumber: 90,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "min-w-0 flex-1",
+                children: [
+                    /*#__PURE__*/ _jsxDEV("p", {
+                        className: "text-[10px] font-semibold uppercase tracking-wider text-muted-foreground",
+                        children: label
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx",
+                        lineNumber: 92,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("p", {
+                        className: "text-sm font-bold text-foreground",
+                        children: value
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx",
+                        lineNumber: 93,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx",
+                lineNumber: 91,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx",
+        lineNumber: 89,
+        columnNumber: 5
+    }, this);
+}
+_c2 = MiniTile;
+var _c, _c1, _c2;
+$RefreshReg$(_c, "RevenuePulseCard");
+$RefreshReg$(_c1, "KpiTile");
+$RefreshReg$(_c2, "MiniTile");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/RevenuePulseCard.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIlJldmVudWVQdWxzZUNhcmQudHN4Il0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB7IHVzZU1lbW8gfSBmcm9tIFwicmVhY3RcIjtcclxuaW1wb3J0IHsgdXNlTG9kZ2VSZXBvcnRzIH0gZnJvbSBcIkAvaG9va3MvbG9kZ2luZy91c2VMb2RnZVJlcG9ydHNcIjtcclxuaW1wb3J0IHsgdXNlTG9kZ2VSZXNlcnZhdGlvbnMgfSBmcm9tIFwiQC9ob29rcy9sb2RnaW5nL3VzZUxvZGdlUmVzZXJ2YXRpb25zXCI7XHJcbmltcG9ydCB7IFRyZW5kaW5nVXAsIERvbGxhclNpZ24sIFBlcmNlbnQsIEJlZERvdWJsZSwgQXJyb3dEb3duVG9MaW5lLCBBcnJvd1VwRnJvbUxpbmUsIEJhckNoYXJ0MyB9IGZyb20gXCJsdWNpZGUtcmVhY3RcIjtcclxuXHJcbmNvbnN0IG1vbmV5ID0gKGNlbnRzOiBudW1iZXIpID0+IGAkJHsoY2VudHMgLyAxMDApLnRvRml4ZWQoMCl9YDtcclxuY29uc3QgcGN0ID0gKG46IG51bWJlcikgPT4gYCR7bi50b0ZpeGVkKDEpfSVgO1xyXG5jb25zdCB0b2RheUlTTyA9ICgpID0+IG5ldyBEYXRlKCkudG9JU09TdHJpbmcoKS5zbGljZSgwLCAxMCk7XHJcbmNvbnN0IGRheXNBZ28gPSAobjogbnVtYmVyKSA9PiBuZXcgRGF0ZShEYXRlLm5vdygpIC0gbiAqIDg2NDAwMDAwKS50b0lTT1N0cmluZygpLnNsaWNlKDAsIDEwKTtcclxuXHJcbmV4cG9ydCBkZWZhdWx0IGZ1bmN0aW9uIFJldmVudWVQdWxzZUNhcmQoeyBzdG9yZUlkIH06IHsgc3RvcmVJZDogc3RyaW5nIH0pIHtcclxuICBjb25zdCByNyA9IHVzZUxvZGdlUmVwb3J0cyhzdG9yZUlkLCBkYXlzQWdvKDcpLCB0b2RheUlTTygpKTtcclxuICBjb25zdCByMzAgPSB1c2VMb2RnZVJlcG9ydHMoc3RvcmVJZCwgZGF5c0FnbygzMCksIHRvZGF5SVNPKCkpO1xyXG4gIGNvbnN0IHsgZGF0YTogcmVzZXJ2YXRpb25zID0gW10gfSA9IHVzZUxvZGdlUmVzZXJ2YXRpb25zKHN0b3JlSWQsIFwiYWxsXCIpO1xyXG5cclxuICBjb25zdCB0b2RheSA9IHRvZGF5SVNPKCk7XHJcbiAgY29uc3QgYXJyaXZhbHMgPSByZXNlcnZhdGlvbnMuZmlsdGVyKChyOiBhbnkpID0+IHIuY2hlY2tfaW4/LnNsaWNlKDAsIDEwKSA9PT0gdG9kYXkpLmxlbmd0aDtcclxuICBjb25zdCBkZXBhcnR1cmVzID0gcmVzZXJ2YXRpb25zLmZpbHRlcigocjogYW55KSA9PiByLmNoZWNrX291dD8uc2xpY2UoMCwgMTApID09PSB0b2RheSkubGVuZ3RoO1xyXG4gIGNvbnN0IGluSG91c2UgPSByZXNlcnZhdGlvbnMuZmlsdGVyKChyOiBhbnkpID0+IHIuc3RhdHVzID09PSBcImNoZWNrZWRfaW5cIikubGVuZ3RoO1xyXG5cclxuICAvLyBTcGFya2xpbmU6IHBlci1kYXkgb2NjdXBhbmN5IGVzdGltYXRlIG92ZXIgbGFzdCAxNCBkYXlzIChzaW1wbGUgcHJveHkgZnJvbSByZXNlcnZhdGlvbnMpXHJcbiAgY29uc3Qgc3BhcmtEYXRhID0gdXNlTWVtbygoKSA9PiB7XHJcbiAgICBjb25zdCBidWNrZXRzOiBudW1iZXJbXSA9IEFycmF5KDE0KS5maWxsKDApO1xyXG4gICAgY29uc3Qgc3RhcnQgPSBEYXRlLm5vdygpIC0gMTMgKiA4NjQwMDAwMDtcclxuICAgIHJlc2VydmF0aW9ucy5mb3JFYWNoKChyZXM6IGFueSkgPT4ge1xyXG4gICAgICBjb25zdCBjaSA9IG5ldyBEYXRlKHJlcy5jaGVja19pbiB8fCAwKS5nZXRUaW1lKCk7XHJcbiAgICAgIGNvbnN0IGNvID0gbmV3IERhdGUocmVzLmNoZWNrX291dCB8fCAwKS5nZXRUaW1lKCk7XHJcbiAgICAgIGlmICghY2kgfHwgIWNvKSByZXR1cm47XHJcbiAgICAgIGZvciAobGV0IGkgPSAwOyBpIDwgMTQ7IGkrKykge1xyXG4gICAgICAgIGNvbnN0IGRheSA9IHN0YXJ0ICsgaSAqIDg2NDAwMDAwO1xyXG4gICAgICAgIGlmIChkYXkgPj0gY2kgJiYgZGF5IDwgY28gJiYgIVtcImNhbmNlbGxlZFwiLCBcIm5vX3Nob3dcIl0uaW5jbHVkZXMocmVzLnN0YXR1cykpIGJ1Y2tldHNbaV0gKz0gMTtcclxuICAgICAgfVxyXG4gICAgfSk7XHJcbiAgICBjb25zdCBtYXggPSBNYXRoLm1heCgxLCAuLi5idWNrZXRzKTtcclxuICAgIHJldHVybiBidWNrZXRzLm1hcCgodikgPT4gTWF0aC5yb3VuZCgodiAvIG1heCkgKiAxMDApKTtcclxuICB9LCBbcmVzZXJ2YXRpb25zXSk7XHJcblxyXG4gIHJldHVybiAoXHJcbiAgICA8ZGl2IGNsYXNzTmFtZT1cInJvdW5kZWQteGwgYm9yZGVyIGJvcmRlci1ib3JkZXIgYmctZ3JhZGllbnQtdG8tYnIgZnJvbS1wcmltYXJ5LzUgdmlhLWNhcmQgdG8tY2FyZCBwLTNcIj5cclxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJtYi0yIGZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktYmV0d2VlblwiPlxyXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTJcIj5cclxuICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInJvdW5kZWQtbWQgYmctcHJpbWFyeS8xMCBwLTEuNSB0ZXh0LXByaW1hcnlcIj48VHJlbmRpbmdVcCBjbGFzc05hbWU9XCJoLTMuNSB3LTMuNVwiIC8+PC9zcGFuPlxyXG4gICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1bMTNweF0gZm9udC1ib2xkIHRleHQtZm9yZWdyb3VuZFwiPlJldmVudWUgUHVsc2U8L3A+XHJcbiAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJyb3VuZGVkLWZ1bGwgYmctcHJpbWFyeS8xMCBweC0xLjUgcHktMC41IHRleHQtWzlweF0gZm9udC1zZW1pYm9sZCB1cHBlcmNhc2UgdHJhY2tpbmctd2lkZXIgdGV4dC1wcmltYXJ5XCI+TGl2ZTwvc3Bhbj5cclxuICAgICAgICA8L2Rpdj5cclxuICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LVsxMHB4XSB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5MYXN0IDcgLyAzMCBkYXlzPC9wPlxyXG4gICAgICA8L2Rpdj5cclxuXHJcbiAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZ3JpZCBnYXAtMiBzbTpncmlkLWNvbHMtNFwiPlxyXG4gICAgICAgIDxLcGlUaWxlIGljb249e1BlcmNlbnR9IGxhYmVsPVwiT2NjdXBhbmN5XCIgdjc9e3BjdChyNy5kYXRhPy5vY2N1cGFuY3lQY3QgPz8gMCl9IHYzMD17cGN0KHIzMC5kYXRhPy5vY2N1cGFuY3lQY3QgPz8gMCl9IC8+XHJcbiAgICAgICAgPEtwaVRpbGUgaWNvbj17RG9sbGFyU2lnbn0gbGFiZWw9XCJBRFJcIiB2Nz17bW9uZXkocjcuZGF0YT8uYWRyQ2VudHMgPz8gMCl9IHYzMD17bW9uZXkocjMwLmRhdGE/LmFkckNlbnRzID8/IDApfSAvPlxyXG4gICAgICAgIDxLcGlUaWxlIGljb249e0JhckNoYXJ0M30gbGFiZWw9XCJSZXZQQVJcIiB2Nz17bW9uZXkocjcuZGF0YT8ucmV2cGFyQ2VudHMgPz8gMCl9IHYzMD17bW9uZXkocjMwLmRhdGE/LnJldnBhckNlbnRzID8/IDApfSAvPlxyXG4gICAgICAgIDxLcGlUaWxlIGljb249e0JlZERvdWJsZX0gbGFiZWw9XCJSZXZlbnVlXCIgdjc9e21vbmV5KHI3LmRhdGE/LnRvdGFsUmV2ZW51ZUNlbnRzID8/IDApfSB2MzA9e21vbmV5KHIzMC5kYXRhPy50b3RhbFJldmVudWVDZW50cyA/PyAwKX0gLz5cclxuICAgICAgPC9kaXY+XHJcblxyXG4gICAgICA8ZGl2IGNsYXNzTmFtZT1cIm10LTMgZ3JpZCBnYXAtMiBzbTpncmlkLWNvbHMtM1wiPlxyXG4gICAgICAgIDxNaW5pVGlsZSBpY29uPXtBcnJvd0Rvd25Ub0xpbmV9IGxhYmVsPVwiQXJyaXZhbHMgdG9kYXlcIiB2YWx1ZT17U3RyaW5nKGFycml2YWxzKX0gLz5cclxuICAgICAgICA8TWluaVRpbGUgaWNvbj17QmVkRG91YmxlfSBsYWJlbD1cIkluLWhvdXNlIG5vd1wiIHZhbHVlPXtTdHJpbmcoaW5Ib3VzZSl9IC8+XHJcbiAgICAgICAgPE1pbmlUaWxlIGljb249e0Fycm93VXBGcm9tTGluZX0gbGFiZWw9XCJEZXBhcnR1cmVzIHRvZGF5XCIgdmFsdWU9e1N0cmluZyhkZXBhcnR1cmVzKX0gLz5cclxuICAgICAgPC9kaXY+XHJcblxyXG4gICAgICA8ZGl2IGNsYXNzTmFtZT1cIm10LTMgcm91bmRlZC1tZCBib3JkZXIgYm9yZGVyLWJvcmRlci82MCBiZy1iYWNrZ3JvdW5kLzUwIHAtMlwiPlxyXG4gICAgICAgIDxwIGNsYXNzTmFtZT1cIm1iLTEgdGV4dC1bMTBweF0gZm9udC1zZW1pYm9sZCB1cHBlcmNhc2UgdHJhY2tpbmctd2lkZXIgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+TGFzdCAxNCBkYXlzIMK3IG9jY3VwYW5jeSB0cmVuZDwvcD5cclxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaC0xMCBpdGVtcy1lbmQgZ2FwLTAuNVwiPlxyXG4gICAgICAgICAge3NwYXJrRGF0YS5tYXAoKGgsIGkpID0+IChcclxuICAgICAgICAgICAgPGRpdiBrZXk9e2l9IGNsYXNzTmFtZT1cImZsZXgtMSByb3VuZGVkLXNtIGJnLXByaW1hcnkvNzAgdHJhbnNpdGlvbi1hbGxcIiBzdHlsZT17eyBoZWlnaHQ6IGAke01hdGgubWF4KDQsIGgpfSVgIH19IHRpdGxlPXtgJHtofSVgfSAvPlxyXG4gICAgICAgICAgKSl9XHJcbiAgICAgICAgPC9kaXY+XHJcbiAgICAgIDwvZGl2PlxyXG4gICAgPC9kaXY+XHJcbiAgKTtcclxufVxyXG5cclxuZnVuY3Rpb24gS3BpVGlsZSh7IGljb246IEljb24sIGxhYmVsLCB2NywgdjMwIH06IHsgaWNvbjogYW55OyBsYWJlbDogc3RyaW5nOyB2Nzogc3RyaW5nOyB2MzA6IHN0cmluZyB9KSB7XHJcbiAgcmV0dXJuIChcclxuICAgIDxkaXYgY2xhc3NOYW1lPVwicm91bmRlZC1sZyBib3JkZXIgYm9yZGVyLWJvcmRlciBiZy1iYWNrZ3JvdW5kLzYwIHAtMi41XCI+XHJcbiAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1iZXR3ZWVuXCI+XHJcbiAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1bMTBweF0gZm9udC1zZW1pYm9sZCB1cHBlcmNhc2UgdHJhY2tpbmctd2lkZXIgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+e2xhYmVsfTwvcD5cclxuICAgICAgICA8SWNvbiBjbGFzc05hbWU9XCJoLTMgdy0zIHRleHQtcHJpbWFyeVwiIC8+XHJcbiAgICAgIDwvZGl2PlxyXG4gICAgICA8cCBjbGFzc05hbWU9XCJtdC0xIHRleHQtbGcgZm9udC1ib2xkIGxlYWRpbmctdGlnaHQgdGV4dC1mb3JlZ3JvdW5kXCI+e3Y3fTwvcD5cclxuICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1bMTBweF0gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+MzBkOiA8c3BhbiBjbGFzc05hbWU9XCJmb250LXNlbWlib2xkIHRleHQtZm9yZWdyb3VuZC84MFwiPnt2MzB9PC9zcGFuPjwvcD5cclxuICAgIDwvZGl2PlxyXG4gICk7XHJcbn1cclxuXHJcbmZ1bmN0aW9uIE1pbmlUaWxlKHsgaWNvbjogSWNvbiwgbGFiZWwsIHZhbHVlIH06IHsgaWNvbjogYW55OyBsYWJlbDogc3RyaW5nOyB2YWx1ZTogc3RyaW5nIH0pIHtcclxuICByZXR1cm4gKFxyXG4gICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMiByb3VuZGVkLW1kIGJvcmRlciBib3JkZXItYm9yZGVyIGJnLWJhY2tncm91bmQvNjAgcC0yXCI+XHJcbiAgICAgIDxJY29uIGNsYXNzTmFtZT1cImgtMy41IHctMy41IHRleHQtcHJpbWFyeVwiIC8+XHJcbiAgICAgIDxkaXYgY2xhc3NOYW1lPVwibWluLXctMCBmbGV4LTFcIj5cclxuICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LVsxMHB4XSBmb250LXNlbWlib2xkIHVwcGVyY2FzZSB0cmFja2luZy13aWRlciB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj57bGFiZWx9PC9wPlxyXG4gICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtc20gZm9udC1ib2xkIHRleHQtZm9yZWdyb3VuZFwiPnt2YWx1ZX08L3A+XHJcbiAgICAgIDwvZGl2PlxyXG4gICAgPC9kaXY+XHJcbiAgKTtcclxufVxyXG4iXSwibmFtZXMiOlsidXNlTWVtbyIsInVzZUxvZGdlUmVwb3J0cyIsInVzZUxvZGdlUmVzZXJ2YXRpb25zIiwiVHJlbmRpbmdVcCIsIkRvbGxhclNpZ24iLCJQZXJjZW50IiwiQmVkRG91YmxlIiwiQXJyb3dEb3duVG9MaW5lIiwiQXJyb3dVcEZyb21MaW5lIiwiQmFyQ2hhcnQzIiwibW9uZXkiLCJjZW50cyIsInRvRml4ZWQiLCJwY3QiLCJuIiwidG9kYXlJU08iLCJEYXRlIiwidG9JU09TdHJpbmciLCJzbGljZSIsImRheXNBZ28iLCJub3ciLCJSZXZlbnVlUHVsc2VDYXJkIiwic3RvcmVJZCIsInI3IiwicjMwIiwiZGF0YSIsInJlc2VydmF0aW9ucyIsInRvZGF5IiwiYXJyaXZhbHMiLCJmaWx0ZXIiLCJyIiwiY2hlY2tfaW4iLCJsZW5ndGgiLCJkZXBhcnR1cmVzIiwiY2hlY2tfb3V0IiwiaW5Ib3VzZSIsInN0YXR1cyIsInNwYXJrRGF0YSIsImJ1Y2tldHMiLCJBcnJheSIsImZpbGwiLCJzdGFydCIsImZvckVhY2giLCJyZXMiLCJjaSIsImdldFRpbWUiLCJjbyIsImkiLCJkYXkiLCJpbmNsdWRlcyIsIm1heCIsIk1hdGgiLCJtYXAiLCJ2Iiwicm91bmQiLCJkaXYiLCJjbGFzc05hbWUiLCJzcGFuIiwicCIsIktwaVRpbGUiLCJpY29uIiwibGFiZWwiLCJ2NyIsIm9jY3VwYW5jeVBjdCIsInYzMCIsImFkckNlbnRzIiwicmV2cGFyQ2VudHMiLCJ0b3RhbFJldmVudWVDZW50cyIsIk1pbmlUaWxlIiwidmFsdWUiLCJT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

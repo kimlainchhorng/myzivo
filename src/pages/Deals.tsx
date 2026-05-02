@@ -5,6 +5,8 @@
  */
 
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
@@ -13,37 +15,35 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { motion } from "framer-motion";
-import {
-  Flame,
-  Search,
-  Bell,
-  Sparkles,
-  Clock,
-  Gift,
-  Plane,
-  BedDouble,
-  Car,
-  Timer,
-  ArrowRight,
-  Crown,
-  Zap,
-  Shield,
-  TrendingUp,
-  TrendingDown,
-  BarChart3,
-  Star,
-  MapPin,
-  Calendar,
-  ChevronRight,
-  Heart,
-  Eye,
-  DollarSign,
-  Percent,
-  Target,
-  Leaf,
-  Loader2,
-  Package,
-} from "lucide-react";
+import Flame from "lucide-react/dist/esm/icons/flame";
+import Search from "lucide-react/dist/esm/icons/search";
+import Bell from "lucide-react/dist/esm/icons/bell";
+import Sparkles from "lucide-react/dist/esm/icons/sparkles";
+import Clock from "lucide-react/dist/esm/icons/clock";
+import Gift from "lucide-react/dist/esm/icons/gift";
+import Plane from "lucide-react/dist/esm/icons/plane";
+import BedDouble from "lucide-react/dist/esm/icons/bed-double";
+import Car from "lucide-react/dist/esm/icons/car";
+import Timer from "lucide-react/dist/esm/icons/timer";
+import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
+import Crown from "lucide-react/dist/esm/icons/crown";
+import Zap from "lucide-react/dist/esm/icons/zap";
+import Shield from "lucide-react/dist/esm/icons/shield";
+import TrendingUp from "lucide-react/dist/esm/icons/trending-up";
+import TrendingDown from "lucide-react/dist/esm/icons/trending-down";
+import BarChart3 from "lucide-react/dist/esm/icons/bar-chart-3";
+import Star from "lucide-react/dist/esm/icons/star";
+import MapPin from "lucide-react/dist/esm/icons/map-pin";
+import Calendar from "lucide-react/dist/esm/icons/calendar";
+import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
+import Heart from "lucide-react/dist/esm/icons/heart";
+import Eye from "lucide-react/dist/esm/icons/eye";
+import DollarSign from "lucide-react/dist/esm/icons/dollar-sign";
+import Percent from "lucide-react/dist/esm/icons/percent";
+import Target from "lucide-react/dist/esm/icons/target";
+import Leaf from "lucide-react/dist/esm/icons/leaf";
+import Loader2 from "lucide-react/dist/esm/icons/loader-2";
+import Package from "lucide-react/dist/esm/icons/package";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useRecommendedDeals, type DealCategory } from "@/hooks/useRecommendedDeals";
@@ -61,8 +61,10 @@ const categoryConfig: Record<DealCategoryType, { label: string; icon: typeof Pla
 };
 
 export default function Deals() {
+  const navigate = useNavigate();
   const [activeCategory, setActiveCategory] = useState<DealCategoryType>('all');
   const [email, setEmail] = useState("");
+  const [submittingDeals, setSubmittingDeals] = useState(false);
 
   // Fetch live deals from Supabase
   const apiCategory = activeCategory === 'last-minute' ? 'all' : activeCategory as DealCategory;
@@ -73,10 +75,27 @@ export default function Deals() {
     ? allDeals.filter(d => d.deal_type === 'last-minute' || d.deal_type === 'flash')
     : allDeals;
 
-  const handleSubscribe = (e: React.FormEvent) => {
+  const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("You'll be notified of new deals!");
-    setEmail("");
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      toast.error("Please enter a valid email");
+      return;
+    }
+    setSubmittingDeals(true);
+    try {
+      const { error } = await supabase.from("feedback_submissions").insert({
+        category: "deals_alert_signup",
+        subject: "Deals page alert signup",
+        message: `Email: ${email}\nCategory: ${activeCategory}`,
+      });
+      if (error) throw error;
+      toast.success("You'll be notified of new deals!");
+      setEmail("");
+    } catch (err: any) {
+      toast.error(err?.message || "Could not subscribe. Please try again.");
+    } finally {
+      setSubmittingDeals(false);
+    }
   };
 
   return (
@@ -142,13 +161,14 @@ export default function Deals() {
                     required
                   />
                 </div>
-                <Button 
-                  type="submit" 
-                  size="lg" 
+                <Button
+                  type="submit"
+                  size="lg"
+                  disabled={submittingDeals}
                   className="h-13 px-6 rounded-2xl font-bold shadow-lg shadow-primary/20 bg-gradient-to-r from-primary to-emerald-500 hover:from-primary/90 hover:to-emerald-500/90 text-primary-foreground active:scale-[0.98] transition-all"
                 >
                   <Bell className="w-4 h-4 mr-2" />
-                  Notify Me
+                  {submittingDeals ? "Subscribing…" : "Notify Me"}
                 </Button>
               </motion.form>
             </div>
@@ -246,8 +266,9 @@ export default function Deals() {
                 ZIVO Plus members get 24-hour early access to flash deals, 
                 priority price alerts, and exclusive member discounts.
               </p>
-              <Button 
-                size="lg" 
+              <Button
+                size="lg"
+                onClick={() => navigate("/zivo-plus")}
                 className="gap-2 rounded-2xl font-bold shadow-lg shadow-primary/25 bg-gradient-to-r from-primary to-emerald-500 hover:from-primary/90 hover:to-emerald-500/90 text-primary-foreground active:scale-[0.98] transition-all h-13 px-8"
               >
                 <Gift className="w-5 h-5" />

@@ -1,0 +1,1246 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/admin/store/StoreEmployeeRulesSection.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"]; const _Fragment = __vite__cjsImport0_react_jsxDevRuntime["Fragment"];
+var _s = $RefreshSig$();
+import __vite__cjsImport1_react from "/node_modules/.vite/deps/react.js?v=7fd9520c"; const useMemo = __vite__cjsImport1_react["useMemo"]; const useState = __vite__cjsImport1_react["useState"];
+import { cn } from "/src/lib/utils.ts";
+import { Badge } from "/src/components/ui/badge.tsx";
+import { Button } from "/src/components/ui/button.tsx";
+import { Input } from "/src/components/ui/input.tsx";
+import { Switch } from "/src/components/ui/switch.tsx";
+import { Skeleton } from "/src/components/ui/skeleton.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "/src/components/ui/dialog.tsx";
+import { Label } from "/src/components/ui/label.tsx";
+import { Textarea } from "/src/components/ui/textarea.tsx";
+import { Shield, Lock, Eye, Clock, AlertTriangle, Plus, Search, CheckCircle2, Edit, Trash2, Users, FileText, Sparkles } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+import { toast } from "/node_modules/.vite/deps/sonner.js?v=7fd9520c";
+import { useStoreEmployeeRules } from "/src/hooks/store/useStoreEmployeeRules.ts";
+const SEVERITY_CONFIG = {
+    low: {
+        label: "Low",
+        tone: "bg-muted text-muted-foreground"
+    },
+    medium: {
+        label: "Medium",
+        tone: "bg-primary/10 text-primary"
+    },
+    high: {
+        label: "High",
+        tone: "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+    },
+    critical: {
+        label: "Critical",
+        tone: "bg-destructive/10 text-destructive"
+    }
+};
+const CATEGORY_OPTIONS = [
+    "Workplace Conduct",
+    "Attendance",
+    "Security & Access",
+    "Dress Code",
+    "Communication",
+    "Safety",
+    "Data & Privacy"
+];
+const DEFAULT_RULES = [
+    {
+        title: "Clock In/Out Required",
+        category: "Attendance",
+        description: "All employees must clock in and out for every shift. Failure to do so will result in a warning.",
+        severity: "high",
+        applies_to: "All Staff"
+    },
+    {
+        title: "Uniform Policy",
+        category: "Dress Code",
+        description: "Employees must wear the provided company uniform during work hours. Name badge must be visible at all times.",
+        severity: "medium",
+        applies_to: "All Staff"
+    },
+    {
+        title: "No Personal Phone Usage",
+        category: "Workplace Conduct",
+        description: "Personal phones must be kept in lockers during shift. Emergency calls are permitted in break areas.",
+        severity: "medium",
+        applies_to: "Floor Staff"
+    },
+    {
+        title: "Cash Register Access",
+        category: "Security & Access",
+        description: "Only authorized personnel may access cash registers. Each employee has a unique PIN.",
+        severity: "critical",
+        applies_to: "Cashiers"
+    },
+    {
+        title: "Break Schedule",
+        category: "Attendance",
+        description: "15-minute break for 4-hour shifts, 30-minute break for 6+ hour shifts. Breaks must be taken at designated times.",
+        severity: "low",
+        applies_to: "All Staff"
+    },
+    {
+        title: "Customer Data Privacy",
+        category: "Data & Privacy",
+        description: "Employee must not share, copy, or discuss customer information outside of work. Violation results in immediate termination.",
+        severity: "critical",
+        applies_to: "All Staff"
+    },
+    {
+        title: "Safety Equipment Required",
+        category: "Safety",
+        description: "Appropriate PPE must be worn in storage and kitchen areas at all times.",
+        severity: "high",
+        applies_to: "Kitchen & Storage"
+    },
+    {
+        title: "Social Media Policy",
+        category: "Communication",
+        description: "Employees may not post about internal operations, customers, or proprietary info on social media.",
+        severity: "medium",
+        applies_to: "All Staff",
+        is_active: false
+    }
+];
+const ACCESS_LEVELS = [
+    {
+        role: "Manager",
+        permissions: [
+            "Full POS Access",
+            "Employee Management",
+            "Reports",
+            "Settings",
+            "Inventory",
+            "Refunds"
+        ],
+        tone: "text-primary"
+    },
+    {
+        role: "Supervisor",
+        permissions: [
+            "POS Access",
+            "View Reports",
+            "Inventory",
+            "Refunds up to $50"
+        ],
+        tone: "text-primary/80"
+    },
+    {
+        role: "Cashier",
+        permissions: [
+            "POS Access",
+            "View Own Schedule",
+            "Clock In/Out"
+        ],
+        tone: "text-emerald-600 dark:text-emerald-400"
+    },
+    {
+        role: "Staff",
+        permissions: [
+            "View Own Schedule",
+            "Clock In/Out",
+            "View Tasks"
+        ],
+        tone: "text-muted-foreground"
+    }
+];
+const STARTER_POLICIES = [
+    {
+        title: "Employee Handbook",
+        version: "v3.2",
+        updated: "2026-03-01",
+        pages: 42
+    },
+    {
+        title: "Code of Conduct",
+        version: "v2.1",
+        updated: "2026-02-15",
+        pages: 12
+    },
+    {
+        title: "Health & Safety Policy",
+        version: "v1.8",
+        updated: "2026-01-20",
+        pages: 18
+    },
+    {
+        title: "Anti-Harassment Policy",
+        version: "v2.0",
+        updated: "2026-03-10",
+        pages: 8
+    },
+    {
+        title: "Data Protection Guidelines",
+        version: "v1.5",
+        updated: "2026-03-01",
+        pages: 15
+    }
+];
+const blankForm = {
+    title: "",
+    category: "Workplace Conduct",
+    description: "",
+    severity: "medium",
+    applies_to: "All Staff"
+};
+export default function StoreEmployeeRulesSection({ storeId }) {
+    _s();
+    const { list, upsert, remove, toggleActive, seedDefaults } = useStoreEmployeeRules(storeId);
+    const rules = list.data || [];
+    const [tab, setTab] = useState("rules");
+    const [search, setSearch] = useState("");
+    const [categoryFilter, setCategoryFilter] = useState("All");
+    const [showCreate, setShowCreate] = useState(false);
+    const [editingId, setEditingId] = useState(null);
+    const [form, setForm] = useState(blankForm);
+    const activeRules = rules.filter((r)=>r.is_active).length;
+    const criticalRules = rules.filter((r)=>r.severity === "critical" && r.is_active).length;
+    const categories = useMemo(()=>Array.from(new Set(rules.map((r)=>r.category))), [
+        rules
+    ]);
+    const stats = [
+        {
+            icon: Shield,
+            label: "Total Rules",
+            value: rules.length,
+            tone: "bg-primary/10 text-primary"
+        },
+        {
+            icon: CheckCircle2,
+            label: "Active",
+            value: activeRules,
+            tone: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+        },
+        {
+            icon: AlertTriangle,
+            label: "Critical",
+            value: criticalRules,
+            tone: "bg-destructive/10 text-destructive"
+        },
+        {
+            icon: FileText,
+            label: "Categories",
+            value: categories.length,
+            tone: "bg-muted text-foreground/70"
+        }
+    ];
+    const filtered = rules.filter((r)=>(categoryFilter === "All" || r.category === categoryFilter) && (r.title.toLowerCase().includes(search.toLowerCase()) || r.description.toLowerCase().includes(search.toLowerCase())));
+    const openCreate = ()=>{
+        setEditingId(null);
+        setForm(blankForm);
+        setShowCreate(true);
+    };
+    const openEdit = (r)=>{
+        setEditingId(r.id);
+        setForm({
+            id: r.id,
+            title: r.title,
+            category: r.category,
+            description: r.description,
+            severity: r.severity,
+            applies_to: r.applies_to,
+            is_active: r.is_active
+        });
+        setShowCreate(true);
+    };
+    const handleSave = async ()=>{
+        if (!form.title.trim()) {
+            toast.error("Title required");
+            return;
+        }
+        try {
+            await upsert.mutateAsync(editingId ? {
+                ...form,
+                id: editingId
+            } : form);
+            toast.success(editingId ? "Rule updated" : "Rule created");
+            setShowCreate(false);
+            setEditingId(null);
+            setForm(blankForm);
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : "Save failed");
+        }
+    };
+    const handleToggle = async (r)=>{
+        try {
+            await toggleActive.mutateAsync({
+                id: r.id,
+                is_active: r.is_active
+            });
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : "Update failed");
+        }
+    };
+    const handleDelete = async (id)=>{
+        try {
+            await remove.mutateAsync(id);
+            toast.success("Rule deleted");
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : "Delete failed");
+        }
+    };
+    const handleSeed = async ()=>{
+        try {
+            await seedDefaults.mutateAsync(DEFAULT_RULES);
+            toast.success("Default rules added");
+        } catch (e) {
+            toast.error(e instanceof Error ? e.message : "Seed failed");
+        }
+    };
+    return /*#__PURE__*/ _jsxDEV("div", {
+        className: "space-y-6",
+        children: [
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "grid grid-cols-2 lg:grid-cols-4 gap-4",
+                children: stats.map((s)=>/*#__PURE__*/ _jsxDEV("div", {
+                        className: "rounded-xl border border-border/40 bg-card p-4",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "flex items-center gap-3 mb-2",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        className: cn("w-10 h-10 rounded-full flex items-center justify-center", s.tone),
+                                        children: /*#__PURE__*/ _jsxDEV(s.icon, {
+                                            className: "w-5 h-5"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                            lineNumber: 151,
+                                            columnNumber: 17
+                                        }, this)
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                        lineNumber: 150,
+                                        columnNumber: 15
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("span", {
+                                        className: "text-xs text-muted-foreground",
+                                        children: s.label
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                        lineNumber: 153,
+                                        columnNumber: 15
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                lineNumber: 149,
+                                columnNumber: 13
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("p", {
+                                className: "text-2xl font-bold",
+                                children: s.value
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                lineNumber: 155,
+                                columnNumber: 13
+                            }, this)
+                        ]
+                    }, s.label, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                        lineNumber: 148,
+                        columnNumber: 11
+                    }, this))
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                lineNumber: 146,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "flex items-center gap-1 bg-muted/50 rounded-lg p-1 w-fit",
+                children: [
+                    {
+                        id: "rules",
+                        label: "Rules",
+                        icon: Shield
+                    },
+                    {
+                        id: "access",
+                        label: "Access Levels",
+                        icon: Lock
+                    },
+                    {
+                        id: "policies",
+                        label: "Policies",
+                        icon: FileText
+                    }
+                ].map((t)=>/*#__PURE__*/ _jsxDEV("button", {
+                        onClick: ()=>setTab(t.id),
+                        className: cn("flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all", tab === t.id ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"),
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(t.icon, {
+                                className: "w-3.5 h-3.5"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                lineNumber: 175,
+                                columnNumber: 13
+                            }, this),
+                            " ",
+                            t.label
+                        ]
+                    }, t.id, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                        lineNumber: 167,
+                        columnNumber: 11
+                    }, this))
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                lineNumber: 161,
+                columnNumber: 7
+            }, this),
+            tab === "rules" && /*#__PURE__*/ _jsxDEV(_Fragment, {
+                children: [
+                    list.isLoading && /*#__PURE__*/ _jsxDEV("div", {
+                        className: "space-y-2",
+                        children: Array.from({
+                            length: 4
+                        }).map((_, i)=>/*#__PURE__*/ _jsxDEV(Skeleton, {
+                                className: "h-20 w-full rounded-xl"
+                            }, i, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                lineNumber: 186,
+                                columnNumber: 17
+                            }, this))
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                        lineNumber: 184,
+                        columnNumber: 13
+                    }, this),
+                    !list.isLoading && rules.length === 0 && /*#__PURE__*/ _jsxDEV("div", {
+                        className: "rounded-xl border border-dashed border-border bg-card p-8 text-center space-y-3",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "mx-auto w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center",
+                                children: /*#__PURE__*/ _jsxDEV(Shield, {
+                                    className: "w-6 h-6 text-primary"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                    lineNumber: 195,
+                                    columnNumber: 17
+                                }, this)
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                lineNumber: 194,
+                                columnNumber: 15
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV("h3", {
+                                        className: "font-semibold text-sm",
+                                        children: "No employee rules yet"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                        lineNumber: 198,
+                                        columnNumber: 17
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("p", {
+                                        className: "text-xs text-muted-foreground mt-1",
+                                        children: "Add your first rule, or start with our recommended defaults."
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                        lineNumber: 199,
+                                        columnNumber: 17
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                lineNumber: 197,
+                                columnNumber: 15
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "flex items-center justify-center gap-2 pt-2",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(Button, {
+                                        onClick: openCreate,
+                                        variant: "outline",
+                                        size: "sm",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(Plus, {
+                                                className: "w-4 h-4 mr-1.5"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                                lineNumber: 203,
+                                                columnNumber: 19
+                                            }, this),
+                                            " Add Rule"
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                        lineNumber: 202,
+                                        columnNumber: 17
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV(Button, {
+                                        onClick: handleSeed,
+                                        disabled: seedDefaults.isPending,
+                                        size: "sm",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(Sparkles, {
+                                                className: "w-4 h-4 mr-1.5"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                                lineNumber: 206,
+                                                columnNumber: 19
+                                            }, this),
+                                            seedDefaults.isPending ? "Adding…" : "Seed defaults"
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                        lineNumber: 205,
+                                        columnNumber: 17
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                lineNumber: 201,
+                                columnNumber: 15
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                        lineNumber: 193,
+                        columnNumber: 13
+                    }, this),
+                    !list.isLoading && rules.length > 0 && /*#__PURE__*/ _jsxDEV(_Fragment, {
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "flex items-center gap-2 flex-wrap",
+                                children: [
+                                    "All",
+                                    ...categories
+                                ].map((c)=>/*#__PURE__*/ _jsxDEV("button", {
+                                        onClick: ()=>setCategoryFilter(c),
+                                        className: cn("px-3 py-1.5 rounded-lg text-xs font-medium border transition-all", categoryFilter === c ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground hover:bg-muted"),
+                                        children: c
+                                    }, c, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                        lineNumber: 218,
+                                        columnNumber: 19
+                                    }, this))
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                lineNumber: 216,
+                                columnNumber: 15
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "flex items-center gap-3 flex-wrap",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        className: "relative flex-1 min-w-[200px]",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(Search, {
+                                                className: "absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                                lineNumber: 232,
+                                                columnNumber: 19
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV(Input, {
+                                                placeholder: "Search rules...",
+                                                value: search,
+                                                onChange: (e)=>setSearch(e.target.value),
+                                                className: "pl-9"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                                lineNumber: 233,
+                                                columnNumber: 19
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                        lineNumber: 231,
+                                        columnNumber: 17
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV(Button, {
+                                        onClick: openCreate,
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(Plus, {
+                                                className: "w-4 h-4 mr-1.5"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                                lineNumber: 236,
+                                                columnNumber: 19
+                                            }, this),
+                                            " Add Rule"
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                        lineNumber: 235,
+                                        columnNumber: 17
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                lineNumber: 230,
+                                columnNumber: 15
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "space-y-2",
+                                children: [
+                                    filtered.map((r)=>/*#__PURE__*/ _jsxDEV("div", {
+                                            className: cn("rounded-xl border bg-card p-4 transition-all", r.is_active ? "border-border/40" : "border-border/20 opacity-60"),
+                                            children: /*#__PURE__*/ _jsxDEV("div", {
+                                                className: "flex items-start justify-between gap-3",
+                                                children: [
+                                                    /*#__PURE__*/ _jsxDEV("div", {
+                                                        className: "flex-1 min-w-0",
+                                                        children: [
+                                                            /*#__PURE__*/ _jsxDEV("div", {
+                                                                className: "flex items-center gap-2 mb-1 flex-wrap",
+                                                                children: [
+                                                                    /*#__PURE__*/ _jsxDEV("h3", {
+                                                                        className: "font-semibold text-sm",
+                                                                        children: r.title
+                                                                    }, void 0, false, {
+                                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                                                        lineNumber: 252,
+                                                                        columnNumber: 27
+                                                                    }, this),
+                                                                    /*#__PURE__*/ _jsxDEV("span", {
+                                                                        className: cn("text-[10px] px-2 py-0.5 rounded-full font-medium", SEVERITY_CONFIG[r.severity].tone),
+                                                                        children: SEVERITY_CONFIG[r.severity].label
+                                                                    }, void 0, false, {
+                                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                                                        lineNumber: 253,
+                                                                        columnNumber: 27
+                                                                    }, this),
+                                                                    /*#__PURE__*/ _jsxDEV(Badge, {
+                                                                        variant: "outline",
+                                                                        className: "text-[10px]",
+                                                                        children: r.category
+                                                                    }, void 0, false, {
+                                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                                                        lineNumber: 256,
+                                                                        columnNumber: 27
+                                                                    }, this)
+                                                                ]
+                                                            }, void 0, true, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                                                lineNumber: 251,
+                                                                columnNumber: 25
+                                                            }, this),
+                                                            /*#__PURE__*/ _jsxDEV("p", {
+                                                                className: "text-xs text-muted-foreground mb-2 whitespace-pre-wrap",
+                                                                children: r.description
+                                                            }, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                                                lineNumber: 258,
+                                                                columnNumber: 25
+                                                            }, this),
+                                                            /*#__PURE__*/ _jsxDEV("div", {
+                                                                className: "flex items-center gap-3 text-[10px] text-muted-foreground",
+                                                                children: [
+                                                                    /*#__PURE__*/ _jsxDEV("span", {
+                                                                        className: "flex items-center gap-1",
+                                                                        children: [
+                                                                            /*#__PURE__*/ _jsxDEV(Users, {
+                                                                                className: "w-3 h-3"
+                                                                            }, void 0, false, {
+                                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                                                                lineNumber: 260,
+                                                                                columnNumber: 69
+                                                                            }, this),
+                                                                            " ",
+                                                                            r.applies_to
+                                                                        ]
+                                                                    }, void 0, true, {
+                                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                                                        lineNumber: 260,
+                                                                        columnNumber: 27
+                                                                    }, this),
+                                                                    /*#__PURE__*/ _jsxDEV("span", {
+                                                                        className: "flex items-center gap-1",
+                                                                        children: [
+                                                                            /*#__PURE__*/ _jsxDEV(Clock, {
+                                                                                className: "w-3 h-3"
+                                                                            }, void 0, false, {
+                                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                                                                lineNumber: 261,
+                                                                                columnNumber: 69
+                                                                            }, this),
+                                                                            " ",
+                                                                            new Date(r.created_at).toLocaleDateString()
+                                                                        ]
+                                                                    }, void 0, true, {
+                                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                                                        lineNumber: 261,
+                                                                        columnNumber: 27
+                                                                    }, this)
+                                                                ]
+                                                            }, void 0, true, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                                                lineNumber: 259,
+                                                                columnNumber: 25
+                                                            }, this)
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                                        lineNumber: 250,
+                                                        columnNumber: 23
+                                                    }, this),
+                                                    /*#__PURE__*/ _jsxDEV("div", {
+                                                        className: "flex items-center gap-2 shrink-0",
+                                                        children: [
+                                                            /*#__PURE__*/ _jsxDEV(Switch, {
+                                                                checked: r.is_active,
+                                                                onCheckedChange: ()=>handleToggle(r),
+                                                                className: "scale-90"
+                                                            }, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                                                lineNumber: 265,
+                                                                columnNumber: 25
+                                                            }, this),
+                                                            /*#__PURE__*/ _jsxDEV(Button, {
+                                                                variant: "ghost",
+                                                                size: "icon",
+                                                                className: "h-7 w-7",
+                                                                onClick: ()=>openEdit(r),
+                                                                children: /*#__PURE__*/ _jsxDEV(Edit, {
+                                                                    className: "w-3.5 h-3.5"
+                                                                }, void 0, false, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                                                    lineNumber: 267,
+                                                                    columnNumber: 27
+                                                                }, this)
+                                                            }, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                                                lineNumber: 266,
+                                                                columnNumber: 25
+                                                            }, this),
+                                                            /*#__PURE__*/ _jsxDEV(Button, {
+                                                                variant: "ghost",
+                                                                size: "icon",
+                                                                className: "h-7 w-7 text-destructive",
+                                                                onClick: ()=>handleDelete(r.id),
+                                                                children: /*#__PURE__*/ _jsxDEV(Trash2, {
+                                                                    className: "w-3.5 h-3.5"
+                                                                }, void 0, false, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                                                    lineNumber: 270,
+                                                                    columnNumber: 27
+                                                                }, this)
+                                                            }, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                                                lineNumber: 269,
+                                                                columnNumber: 25
+                                                            }, this)
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                                        lineNumber: 264,
+                                                        columnNumber: 23
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                                lineNumber: 249,
+                                                columnNumber: 21
+                                            }, this)
+                                        }, r.id, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                            lineNumber: 242,
+                                            columnNumber: 19
+                                        }, this)),
+                                    filtered.length === 0 && /*#__PURE__*/ _jsxDEV("p", {
+                                        className: "text-xs text-muted-foreground text-center py-6",
+                                        children: "No rules match your filters."
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                        lineNumber: 277,
+                                        columnNumber: 19
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                lineNumber: 240,
+                                columnNumber: 15
+                            }, this)
+                        ]
+                    }, void 0, true)
+                ]
+            }, void 0, true),
+            tab === "access" && /*#__PURE__*/ _jsxDEV("div", {
+                className: "space-y-4",
+                children: ACCESS_LEVELS.map((a)=>/*#__PURE__*/ _jsxDEV("div", {
+                        className: "rounded-xl border border-border/40 bg-card p-4",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "flex items-center gap-3 mb-3",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        className: "w-10 h-10 rounded-full bg-muted flex items-center justify-center",
+                                        children: /*#__PURE__*/ _jsxDEV(Lock, {
+                                            className: cn("w-5 h-5", a.tone)
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                            lineNumber: 291,
+                                            columnNumber: 19
+                                        }, this)
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                        lineNumber: 290,
+                                        columnNumber: 17
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV("h3", {
+                                                className: "font-semibold text-sm",
+                                                children: a.role
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                                lineNumber: 294,
+                                                columnNumber: 19
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV("p", {
+                                                className: "text-[10px] text-muted-foreground",
+                                                children: [
+                                                    a.permissions.length,
+                                                    " permissions"
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                                lineNumber: 295,
+                                                columnNumber: 19
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                        lineNumber: 293,
+                                        columnNumber: 17
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                lineNumber: 289,
+                                columnNumber: 15
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "flex flex-wrap gap-1.5",
+                                children: a.permissions.map((p)=>/*#__PURE__*/ _jsxDEV("span", {
+                                        className: "flex items-center gap-1 text-[10px] px-2 py-1 rounded-md bg-muted/50 text-muted-foreground",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(CheckCircle2, {
+                                                className: "w-3 h-3 text-emerald-600 dark:text-emerald-400"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                                lineNumber: 301,
+                                                columnNumber: 21
+                                            }, this),
+                                            " ",
+                                            p
+                                        ]
+                                    }, p, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                        lineNumber: 300,
+                                        columnNumber: 19
+                                    }, this))
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                lineNumber: 298,
+                                columnNumber: 15
+                            }, this)
+                        ]
+                    }, a.role, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                        lineNumber: 288,
+                        columnNumber: 13
+                    }, this))
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                lineNumber: 286,
+                columnNumber: 9
+            }, this),
+            tab === "policies" && /*#__PURE__*/ _jsxDEV("div", {
+                className: "space-y-3",
+                children: [
+                    STARTER_POLICIES.map((p)=>/*#__PURE__*/ _jsxDEV("div", {
+                            className: "rounded-xl border border-border/40 bg-card p-4 flex items-center justify-between",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "flex items-center gap-3",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV("div", {
+                                            className: "w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center",
+                                            children: /*#__PURE__*/ _jsxDEV(FileText, {
+                                                className: "w-5 h-5 text-primary"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                                lineNumber: 316,
+                                                columnNumber: 19
+                                            }, this)
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                            lineNumber: 315,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("div", {
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV("h3", {
+                                                    className: "font-medium text-sm",
+                                                    children: p.title
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                                    lineNumber: 319,
+                                                    columnNumber: 19
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV("p", {
+                                                    className: "text-[10px] text-muted-foreground",
+                                                    children: [
+                                                        p.version,
+                                                        " • ",
+                                                        p.pages,
+                                                        " pages • Updated ",
+                                                        p.updated
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                                    lineNumber: 320,
+                                                    columnNumber: 19
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                            lineNumber: 318,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                    lineNumber: 314,
+                                    columnNumber: 15
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "flex items-center gap-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Button, {
+                                            variant: "outline",
+                                            size: "sm",
+                                            className: "text-xs",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV(Eye, {
+                                                    className: "w-3 h-3 mr-1"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                                    lineNumber: 324,
+                                                    columnNumber: 73
+                                                }, this),
+                                                " View"
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                            lineNumber: 324,
+                                            columnNumber: 17
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV(Button, {
+                                            variant: "outline",
+                                            size: "sm",
+                                            className: "text-xs",
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV(Edit, {
+                                                    className: "w-3 h-3 mr-1"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                                    lineNumber: 325,
+                                                    columnNumber: 73
+                                                }, this),
+                                                " Edit"
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                            lineNumber: 325,
+                                            columnNumber: 17
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                    lineNumber: 323,
+                                    columnNumber: 15
+                                }, this)
+                            ]
+                        }, p.title, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                            lineNumber: 313,
+                            columnNumber: 13
+                        }, this)),
+                    /*#__PURE__*/ _jsxDEV("p", {
+                        className: "text-[11px] text-muted-foreground text-center pt-2",
+                        children: "Document library coming next — these are templates only."
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                        lineNumber: 329,
+                        columnNumber: 11
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                lineNumber: 311,
+                columnNumber: 9
+            }, this),
+            /*#__PURE__*/ _jsxDEV(Dialog, {
+                open: showCreate,
+                onOpenChange: (v)=>{
+                    setShowCreate(v);
+                    if (!v) {
+                        setEditingId(null);
+                        setForm(blankForm);
+                    }
+                },
+                children: /*#__PURE__*/ _jsxDEV(DialogContent, {
+                    className: "max-w-md",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV(DialogHeader, {
+                            children: /*#__PURE__*/ _jsxDEV(DialogTitle, {
+                                children: editingId ? "Edit Rule" : "Add Rule"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                lineNumber: 338,
+                                columnNumber: 25
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                            lineNumber: 338,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "space-y-4 py-2",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "space-y-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Label, {
+                                            children: "Title"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                            lineNumber: 341,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV(Input, {
+                                            value: form.title,
+                                            onChange: (e)=>setForm((p)=>({
+                                                        ...p,
+                                                        title: e.target.value
+                                                    })),
+                                            placeholder: "e.g. No Late Arrivals"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                            lineNumber: 342,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                    lineNumber: 340,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "space-y-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Label, {
+                                            children: "Category"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                            lineNumber: 345,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("select", {
+                                            value: form.category,
+                                            onChange: (e)=>setForm((p)=>({
+                                                        ...p,
+                                                        category: e.target.value
+                                                    })),
+                                            className: "w-full border border-border rounded-lg px-3 py-2 text-sm bg-background",
+                                            children: CATEGORY_OPTIONS.map((c)=>/*#__PURE__*/ _jsxDEV("option", {
+                                                    children: c
+                                                }, c, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                                    lineNumber: 351,
+                                                    columnNumber: 46
+                                                }, this))
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                            lineNumber: 346,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                    lineNumber: 344,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "space-y-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Label, {
+                                            children: "Severity"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                            lineNumber: 355,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("div", {
+                                            className: "flex gap-2 flex-wrap",
+                                            children: [
+                                                "low",
+                                                "medium",
+                                                "high",
+                                                "critical"
+                                            ].map((s)=>/*#__PURE__*/ _jsxDEV("button", {
+                                                    onClick: ()=>setForm((p)=>({
+                                                                ...p,
+                                                                severity: s
+                                                            })),
+                                                    className: cn("px-3 py-1.5 rounded-lg text-xs font-medium border transition-all", form.severity === s ? cn("border-transparent", SEVERITY_CONFIG[s].tone) : "border-border text-muted-foreground"),
+                                                    children: SEVERITY_CONFIG[s].label
+                                                }, s, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                                    lineNumber: 358,
+                                                    columnNumber: 19
+                                                }, this))
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                            lineNumber: 356,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                    lineNumber: 354,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "space-y-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Label, {
+                                            children: "Applies To"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                            lineNumber: 372,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV(Input, {
+                                            value: form.applies_to,
+                                            onChange: (e)=>setForm((p)=>({
+                                                        ...p,
+                                                        applies_to: e.target.value
+                                                    })),
+                                            placeholder: "e.g. All Staff"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                            lineNumber: 373,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                    lineNumber: 371,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "space-y-2",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Label, {
+                                            children: "Description"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                            lineNumber: 376,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV(Textarea, {
+                                            value: form.description,
+                                            onChange: (e)=>setForm((p)=>({
+                                                        ...p,
+                                                        description: e.target.value
+                                                    })),
+                                            rows: 3
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                            lineNumber: 377,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                    lineNumber: 375,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                            lineNumber: 339,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV(DialogFooter, {
+                            children: [
+                                /*#__PURE__*/ _jsxDEV(Button, {
+                                    variant: "outline",
+                                    onClick: ()=>{
+                                        setShowCreate(false);
+                                        setEditingId(null);
+                                        setForm(blankForm);
+                                    },
+                                    children: "Cancel"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                    lineNumber: 381,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV(Button, {
+                                    onClick: handleSave,
+                                    disabled: upsert.isPending,
+                                    children: upsert.isPending ? "Saving…" : editingId ? "Save" : "Create"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                                    lineNumber: 382,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                            lineNumber: 380,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                    lineNumber: 337,
+                    columnNumber: 9
+                }, this)
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+                lineNumber: 336,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx",
+        lineNumber: 144,
+        columnNumber: 5
+    }, this);
+}
+_s(StoreEmployeeRulesSection, "BxDsPNqnY0xzxUq9s2sOjxMiMcA=", false, function() {
+    return [
+        useStoreEmployeeRules
+    ];
+});
+_c = StoreEmployeeRulesSection;
+var _c;
+$RefreshReg$(_c, "StoreEmployeeRulesSection");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/StoreEmployeeRulesSection.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIlN0b3JlRW1wbG95ZWVSdWxlc1NlY3Rpb24udHN4Il0sInNvdXJjZXNDb250ZW50IjpbImltcG9ydCB7IHVzZU1lbW8sIHVzZVN0YXRlIH0gZnJvbSBcInJlYWN0XCI7XHJcbmltcG9ydCB7IGNuIH0gZnJvbSBcIkAvbGliL3V0aWxzXCI7XHJcbmltcG9ydCB7IEJhZGdlIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9iYWRnZVwiO1xyXG5pbXBvcnQgeyBCdXR0b24gfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2J1dHRvblwiO1xyXG5pbXBvcnQgeyBJbnB1dCB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvaW5wdXRcIjtcclxuaW1wb3J0IHsgU3dpdGNoIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9zd2l0Y2hcIjtcclxuaW1wb3J0IHsgU2tlbGV0b24gfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL3NrZWxldG9uXCI7XHJcbmltcG9ydCB7IERpYWxvZywgRGlhbG9nQ29udGVudCwgRGlhbG9nSGVhZGVyLCBEaWFsb2dUaXRsZSwgRGlhbG9nRm9vdGVyIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9kaWFsb2dcIjtcclxuaW1wb3J0IHsgTGFiZWwgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2xhYmVsXCI7XHJcbmltcG9ydCB7IFRleHRhcmVhIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS90ZXh0YXJlYVwiO1xyXG5pbXBvcnQge1xyXG4gIFNoaWVsZCwgTG9jaywgRXllLCBDbG9jaywgQWxlcnRUcmlhbmdsZSwgUGx1cywgU2VhcmNoLFxyXG4gIENoZWNrQ2lyY2xlMiwgRWRpdCwgVHJhc2gyLCBVc2VycywgRmlsZVRleHQsIFNwYXJrbGVzLFxyXG59IGZyb20gXCJsdWNpZGUtcmVhY3RcIjtcclxuaW1wb3J0IHsgdG9hc3QgfSBmcm9tIFwic29ubmVyXCI7XHJcbmltcG9ydCB7IHVzZVN0b3JlRW1wbG95ZWVSdWxlcywgdHlwZSBSdWxlU2V2ZXJpdHksIHR5cGUgU3RvcmVFbXBsb3llZVJ1bGUsIHR5cGUgUnVsZURyYWZ0IH0gZnJvbSBcIkAvaG9va3Mvc3RvcmUvdXNlU3RvcmVFbXBsb3llZVJ1bGVzXCI7XHJcblxyXG5pbnRlcmZhY2UgUHJvcHMgeyBzdG9yZUlkOiBzdHJpbmc7IH1cclxuXHJcbmNvbnN0IFNFVkVSSVRZX0NPTkZJRzogUmVjb3JkPFJ1bGVTZXZlcml0eSwgeyBsYWJlbDogc3RyaW5nOyB0b25lOiBzdHJpbmcgfT4gPSB7XHJcbiAgbG93OiB7IGxhYmVsOiBcIkxvd1wiLCB0b25lOiBcImJnLW11dGVkIHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiIH0sXHJcbiAgbWVkaXVtOiB7IGxhYmVsOiBcIk1lZGl1bVwiLCB0b25lOiBcImJnLXByaW1hcnkvMTAgdGV4dC1wcmltYXJ5XCIgfSxcclxuICBoaWdoOiB7IGxhYmVsOiBcIkhpZ2hcIiwgdG9uZTogXCJiZy1hbWJlci01MDAvMTAgdGV4dC1hbWJlci02MDAgZGFyazp0ZXh0LWFtYmVyLTQwMFwiIH0sXHJcbiAgY3JpdGljYWw6IHsgbGFiZWw6IFwiQ3JpdGljYWxcIiwgdG9uZTogXCJiZy1kZXN0cnVjdGl2ZS8xMCB0ZXh0LWRlc3RydWN0aXZlXCIgfSxcclxufTtcclxuXHJcbmNvbnN0IENBVEVHT1JZX09QVElPTlMgPSBbXCJXb3JrcGxhY2UgQ29uZHVjdFwiLCBcIkF0dGVuZGFuY2VcIiwgXCJTZWN1cml0eSAmIEFjY2Vzc1wiLCBcIkRyZXNzIENvZGVcIiwgXCJDb21tdW5pY2F0aW9uXCIsIFwiU2FmZXR5XCIsIFwiRGF0YSAmIFByaXZhY3lcIl07XHJcblxyXG5jb25zdCBERUZBVUxUX1JVTEVTOiBSdWxlRHJhZnRbXSA9IFtcclxuICB7IHRpdGxlOiBcIkNsb2NrIEluL091dCBSZXF1aXJlZFwiLCBjYXRlZ29yeTogXCJBdHRlbmRhbmNlXCIsIGRlc2NyaXB0aW9uOiBcIkFsbCBlbXBsb3llZXMgbXVzdCBjbG9jayBpbiBhbmQgb3V0IGZvciBldmVyeSBzaGlmdC4gRmFpbHVyZSB0byBkbyBzbyB3aWxsIHJlc3VsdCBpbiBhIHdhcm5pbmcuXCIsIHNldmVyaXR5OiBcImhpZ2hcIiwgYXBwbGllc190bzogXCJBbGwgU3RhZmZcIiB9LFxyXG4gIHsgdGl0bGU6IFwiVW5pZm9ybSBQb2xpY3lcIiwgY2F0ZWdvcnk6IFwiRHJlc3MgQ29kZVwiLCBkZXNjcmlwdGlvbjogXCJFbXBsb3llZXMgbXVzdCB3ZWFyIHRoZSBwcm92aWRlZCBjb21wYW55IHVuaWZvcm0gZHVyaW5nIHdvcmsgaG91cnMuIE5hbWUgYmFkZ2UgbXVzdCBiZSB2aXNpYmxlIGF0IGFsbCB0aW1lcy5cIiwgc2V2ZXJpdHk6IFwibWVkaXVtXCIsIGFwcGxpZXNfdG86IFwiQWxsIFN0YWZmXCIgfSxcclxuICB7IHRpdGxlOiBcIk5vIFBlcnNvbmFsIFBob25lIFVzYWdlXCIsIGNhdGVnb3J5OiBcIldvcmtwbGFjZSBDb25kdWN0XCIsIGRlc2NyaXB0aW9uOiBcIlBlcnNvbmFsIHBob25lcyBtdXN0IGJlIGtlcHQgaW4gbG9ja2VycyBkdXJpbmcgc2hpZnQuIEVtZXJnZW5jeSBjYWxscyBhcmUgcGVybWl0dGVkIGluIGJyZWFrIGFyZWFzLlwiLCBzZXZlcml0eTogXCJtZWRpdW1cIiwgYXBwbGllc190bzogXCJGbG9vciBTdGFmZlwiIH0sXHJcbiAgeyB0aXRsZTogXCJDYXNoIFJlZ2lzdGVyIEFjY2Vzc1wiLCBjYXRlZ29yeTogXCJTZWN1cml0eSAmIEFjY2Vzc1wiLCBkZXNjcmlwdGlvbjogXCJPbmx5IGF1dGhvcml6ZWQgcGVyc29ubmVsIG1heSBhY2Nlc3MgY2FzaCByZWdpc3RlcnMuIEVhY2ggZW1wbG95ZWUgaGFzIGEgdW5pcXVlIFBJTi5cIiwgc2V2ZXJpdHk6IFwiY3JpdGljYWxcIiwgYXBwbGllc190bzogXCJDYXNoaWVyc1wiIH0sXHJcbiAgeyB0aXRsZTogXCJCcmVhayBTY2hlZHVsZVwiLCBjYXRlZ29yeTogXCJBdHRlbmRhbmNlXCIsIGRlc2NyaXB0aW9uOiBcIjE1LW1pbnV0ZSBicmVhayBmb3IgNC1ob3VyIHNoaWZ0cywgMzAtbWludXRlIGJyZWFrIGZvciA2KyBob3VyIHNoaWZ0cy4gQnJlYWtzIG11c3QgYmUgdGFrZW4gYXQgZGVzaWduYXRlZCB0aW1lcy5cIiwgc2V2ZXJpdHk6IFwibG93XCIsIGFwcGxpZXNfdG86IFwiQWxsIFN0YWZmXCIgfSxcclxuICB7IHRpdGxlOiBcIkN1c3RvbWVyIERhdGEgUHJpdmFjeVwiLCBjYXRlZ29yeTogXCJEYXRhICYgUHJpdmFjeVwiLCBkZXNjcmlwdGlvbjogXCJFbXBsb3llZSBtdXN0IG5vdCBzaGFyZSwgY29weSwgb3IgZGlzY3VzcyBjdXN0b21lciBpbmZvcm1hdGlvbiBvdXRzaWRlIG9mIHdvcmsuIFZpb2xhdGlvbiByZXN1bHRzIGluIGltbWVkaWF0ZSB0ZXJtaW5hdGlvbi5cIiwgc2V2ZXJpdHk6IFwiY3JpdGljYWxcIiwgYXBwbGllc190bzogXCJBbGwgU3RhZmZcIiB9LFxyXG4gIHsgdGl0bGU6IFwiU2FmZXR5IEVxdWlwbWVudCBSZXF1aXJlZFwiLCBjYXRlZ29yeTogXCJTYWZldHlcIiwgZGVzY3JpcHRpb246IFwiQXBwcm9wcmlhdGUgUFBFIG11c3QgYmUgd29ybiBpbiBzdG9yYWdlIGFuZCBraXRjaGVuIGFyZWFzIGF0IGFsbCB0aW1lcy5cIiwgc2V2ZXJpdHk6IFwiaGlnaFwiLCBhcHBsaWVzX3RvOiBcIktpdGNoZW4gJiBTdG9yYWdlXCIgfSxcclxuICB7IHRpdGxlOiBcIlNvY2lhbCBNZWRpYSBQb2xpY3lcIiwgY2F0ZWdvcnk6IFwiQ29tbXVuaWNhdGlvblwiLCBkZXNjcmlwdGlvbjogXCJFbXBsb3llZXMgbWF5IG5vdCBwb3N0IGFib3V0IGludGVybmFsIG9wZXJhdGlvbnMsIGN1c3RvbWVycywgb3IgcHJvcHJpZXRhcnkgaW5mbyBvbiBzb2NpYWwgbWVkaWEuXCIsIHNldmVyaXR5OiBcIm1lZGl1bVwiLCBhcHBsaWVzX3RvOiBcIkFsbCBTdGFmZlwiLCBpc19hY3RpdmU6IGZhbHNlIH0sXHJcbl07XHJcblxyXG5jb25zdCBBQ0NFU1NfTEVWRUxTID0gW1xyXG4gIHsgcm9sZTogXCJNYW5hZ2VyXCIsIHBlcm1pc3Npb25zOiBbXCJGdWxsIFBPUyBBY2Nlc3NcIiwgXCJFbXBsb3llZSBNYW5hZ2VtZW50XCIsIFwiUmVwb3J0c1wiLCBcIlNldHRpbmdzXCIsIFwiSW52ZW50b3J5XCIsIFwiUmVmdW5kc1wiXSwgdG9uZTogXCJ0ZXh0LXByaW1hcnlcIiB9LFxyXG4gIHsgcm9sZTogXCJTdXBlcnZpc29yXCIsIHBlcm1pc3Npb25zOiBbXCJQT1MgQWNjZXNzXCIsIFwiVmlldyBSZXBvcnRzXCIsIFwiSW52ZW50b3J5XCIsIFwiUmVmdW5kcyB1cCB0byAkNTBcIl0sIHRvbmU6IFwidGV4dC1wcmltYXJ5LzgwXCIgfSxcclxuICB7IHJvbGU6IFwiQ2FzaGllclwiLCBwZXJtaXNzaW9uczogW1wiUE9TIEFjY2Vzc1wiLCBcIlZpZXcgT3duIFNjaGVkdWxlXCIsIFwiQ2xvY2sgSW4vT3V0XCJdLCB0b25lOiBcInRleHQtZW1lcmFsZC02MDAgZGFyazp0ZXh0LWVtZXJhbGQtNDAwXCIgfSxcclxuICB7IHJvbGU6IFwiU3RhZmZcIiwgcGVybWlzc2lvbnM6IFtcIlZpZXcgT3duIFNjaGVkdWxlXCIsIFwiQ2xvY2sgSW4vT3V0XCIsIFwiVmlldyBUYXNrc1wiXSwgdG9uZTogXCJ0ZXh0LW11dGVkLWZvcmVncm91bmRcIiB9LFxyXG5dO1xyXG5cclxuY29uc3QgU1RBUlRFUl9QT0xJQ0lFUyA9IFtcclxuICB7IHRpdGxlOiBcIkVtcGxveWVlIEhhbmRib29rXCIsIHZlcnNpb246IFwidjMuMlwiLCB1cGRhdGVkOiBcIjIwMjYtMDMtMDFcIiwgcGFnZXM6IDQyIH0sXHJcbiAgeyB0aXRsZTogXCJDb2RlIG9mIENvbmR1Y3RcIiwgdmVyc2lvbjogXCJ2Mi4xXCIsIHVwZGF0ZWQ6IFwiMjAyNi0wMi0xNVwiLCBwYWdlczogMTIgfSxcclxuICB7IHRpdGxlOiBcIkhlYWx0aCAmIFNhZmV0eSBQb2xpY3lcIiwgdmVyc2lvbjogXCJ2MS44XCIsIHVwZGF0ZWQ6IFwiMjAyNi0wMS0yMFwiLCBwYWdlczogMTggfSxcclxuICB7IHRpdGxlOiBcIkFudGktSGFyYXNzbWVudCBQb2xpY3lcIiwgdmVyc2lvbjogXCJ2Mi4wXCIsIHVwZGF0ZWQ6IFwiMjAyNi0wMy0xMFwiLCBwYWdlczogOCB9LFxyXG4gIHsgdGl0bGU6IFwiRGF0YSBQcm90ZWN0aW9uIEd1aWRlbGluZXNcIiwgdmVyc2lvbjogXCJ2MS41XCIsIHVwZGF0ZWQ6IFwiMjAyNi0wMy0wMVwiLCBwYWdlczogMTUgfSxcclxuXTtcclxuXHJcbmNvbnN0IGJsYW5rRm9ybTogUnVsZURyYWZ0ID0geyB0aXRsZTogXCJcIiwgY2F0ZWdvcnk6IFwiV29ya3BsYWNlIENvbmR1Y3RcIiwgZGVzY3JpcHRpb246IFwiXCIsIHNldmVyaXR5OiBcIm1lZGl1bVwiLCBhcHBsaWVzX3RvOiBcIkFsbCBTdGFmZlwiIH07XHJcblxyXG5leHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBTdG9yZUVtcGxveWVlUnVsZXNTZWN0aW9uKHsgc3RvcmVJZCB9OiBQcm9wcykge1xyXG4gIGNvbnN0IHsgbGlzdCwgdXBzZXJ0LCByZW1vdmUsIHRvZ2dsZUFjdGl2ZSwgc2VlZERlZmF1bHRzIH0gPSB1c2VTdG9yZUVtcGxveWVlUnVsZXMoc3RvcmVJZCk7XHJcbiAgY29uc3QgcnVsZXMgPSBsaXN0LmRhdGEgfHwgW107XHJcblxyXG4gIGNvbnN0IFt0YWIsIHNldFRhYl0gPSB1c2VTdGF0ZTxcInJ1bGVzXCIgfCBcImFjY2Vzc1wiIHwgXCJwb2xpY2llc1wiPihcInJ1bGVzXCIpO1xyXG4gIGNvbnN0IFtzZWFyY2gsIHNldFNlYXJjaF0gPSB1c2VTdGF0ZShcIlwiKTtcclxuICBjb25zdCBbY2F0ZWdvcnlGaWx0ZXIsIHNldENhdGVnb3J5RmlsdGVyXSA9IHVzZVN0YXRlKFwiQWxsXCIpO1xyXG4gIGNvbnN0IFtzaG93Q3JlYXRlLCBzZXRTaG93Q3JlYXRlXSA9IHVzZVN0YXRlKGZhbHNlKTtcclxuICBjb25zdCBbZWRpdGluZ0lkLCBzZXRFZGl0aW5nSWRdID0gdXNlU3RhdGU8c3RyaW5nIHwgbnVsbD4obnVsbCk7XHJcbiAgY29uc3QgW2Zvcm0sIHNldEZvcm1dID0gdXNlU3RhdGU8UnVsZURyYWZ0PihibGFua0Zvcm0pO1xyXG5cclxuICBjb25zdCBhY3RpdmVSdWxlcyA9IHJ1bGVzLmZpbHRlcigocikgPT4gci5pc19hY3RpdmUpLmxlbmd0aDtcclxuICBjb25zdCBjcml0aWNhbFJ1bGVzID0gcnVsZXMuZmlsdGVyKChyKSA9PiByLnNldmVyaXR5ID09PSBcImNyaXRpY2FsXCIgJiYgci5pc19hY3RpdmUpLmxlbmd0aDtcclxuICBjb25zdCBjYXRlZ29yaWVzID0gdXNlTWVtbygoKSA9PiBBcnJheS5mcm9tKG5ldyBTZXQocnVsZXMubWFwKChyKSA9PiByLmNhdGVnb3J5KSkpLCBbcnVsZXNdKTtcclxuXHJcbiAgY29uc3Qgc3RhdHMgPSBbXHJcbiAgICB7IGljb246IFNoaWVsZCwgbGFiZWw6IFwiVG90YWwgUnVsZXNcIiwgdmFsdWU6IHJ1bGVzLmxlbmd0aCwgdG9uZTogXCJiZy1wcmltYXJ5LzEwIHRleHQtcHJpbWFyeVwiIH0sXHJcbiAgICB7IGljb246IENoZWNrQ2lyY2xlMiwgbGFiZWw6IFwiQWN0aXZlXCIsIHZhbHVlOiBhY3RpdmVSdWxlcywgdG9uZTogXCJiZy1lbWVyYWxkLTUwMC8xMCB0ZXh0LWVtZXJhbGQtNjAwIGRhcms6dGV4dC1lbWVyYWxkLTQwMFwiIH0sXHJcbiAgICB7IGljb246IEFsZXJ0VHJpYW5nbGUsIGxhYmVsOiBcIkNyaXRpY2FsXCIsIHZhbHVlOiBjcml0aWNhbFJ1bGVzLCB0b25lOiBcImJnLWRlc3RydWN0aXZlLzEwIHRleHQtZGVzdHJ1Y3RpdmVcIiB9LFxyXG4gICAgeyBpY29uOiBGaWxlVGV4dCwgbGFiZWw6IFwiQ2F0ZWdvcmllc1wiLCB2YWx1ZTogY2F0ZWdvcmllcy5sZW5ndGgsIHRvbmU6IFwiYmctbXV0ZWQgdGV4dC1mb3JlZ3JvdW5kLzcwXCIgfSxcclxuICBdO1xyXG5cclxuICBjb25zdCBmaWx0ZXJlZCA9IHJ1bGVzLmZpbHRlcigocikgPT5cclxuICAgIChjYXRlZ29yeUZpbHRlciA9PT0gXCJBbGxcIiB8fCByLmNhdGVnb3J5ID09PSBjYXRlZ29yeUZpbHRlcikgJiZcclxuICAgIChyLnRpdGxlLnRvTG93ZXJDYXNlKCkuaW5jbHVkZXMoc2VhcmNoLnRvTG93ZXJDYXNlKCkpIHx8IHIuZGVzY3JpcHRpb24udG9Mb3dlckNhc2UoKS5pbmNsdWRlcyhzZWFyY2gudG9Mb3dlckNhc2UoKSkpXHJcbiAgKTtcclxuXHJcbiAgY29uc3Qgb3BlbkNyZWF0ZSA9ICgpID0+IHtcclxuICAgIHNldEVkaXRpbmdJZChudWxsKTtcclxuICAgIHNldEZvcm0oYmxhbmtGb3JtKTtcclxuICAgIHNldFNob3dDcmVhdGUodHJ1ZSk7XHJcbiAgfTtcclxuXHJcbiAgY29uc3Qgb3BlbkVkaXQgPSAocjogU3RvcmVFbXBsb3llZVJ1bGUpID0+IHtcclxuICAgIHNldEVkaXRpbmdJZChyLmlkKTtcclxuICAgIHNldEZvcm0oe1xyXG4gICAgICBpZDogci5pZCxcclxuICAgICAgdGl0bGU6IHIudGl0bGUsXHJcbiAgICAgIGNhdGVnb3J5OiByLmNhdGVnb3J5LFxyXG4gICAgICBkZXNjcmlwdGlvbjogci5kZXNjcmlwdGlvbixcclxuICAgICAgc2V2ZXJpdHk6IHIuc2V2ZXJpdHksXHJcbiAgICAgIGFwcGxpZXNfdG86IHIuYXBwbGllc190byxcclxuICAgICAgaXNfYWN0aXZlOiByLmlzX2FjdGl2ZSxcclxuICAgIH0pO1xyXG4gICAgc2V0U2hvd0NyZWF0ZSh0cnVlKTtcclxuICB9O1xyXG5cclxuICBjb25zdCBoYW5kbGVTYXZlID0gYXN5bmMgKCkgPT4ge1xyXG4gICAgaWYgKCFmb3JtLnRpdGxlLnRyaW0oKSkgeyB0b2FzdC5lcnJvcihcIlRpdGxlIHJlcXVpcmVkXCIpOyByZXR1cm47IH1cclxuICAgIHRyeSB7XHJcbiAgICAgIGF3YWl0IHVwc2VydC5tdXRhdGVBc3luYyhlZGl0aW5nSWQgPyB7IC4uLmZvcm0sIGlkOiBlZGl0aW5nSWQgfSA6IGZvcm0pO1xyXG4gICAgICB0b2FzdC5zdWNjZXNzKGVkaXRpbmdJZCA/IFwiUnVsZSB1cGRhdGVkXCIgOiBcIlJ1bGUgY3JlYXRlZFwiKTtcclxuICAgICAgc2V0U2hvd0NyZWF0ZShmYWxzZSk7XHJcbiAgICAgIHNldEVkaXRpbmdJZChudWxsKTtcclxuICAgICAgc2V0Rm9ybShibGFua0Zvcm0pO1xyXG4gICAgfSBjYXRjaCAoZSkge1xyXG4gICAgICB0b2FzdC5lcnJvcihlIGluc3RhbmNlb2YgRXJyb3IgPyBlLm1lc3NhZ2UgOiBcIlNhdmUgZmFpbGVkXCIpO1xyXG4gICAgfVxyXG4gIH07XHJcblxyXG4gIGNvbnN0IGhhbmRsZVRvZ2dsZSA9IGFzeW5jIChyOiBTdG9yZUVtcGxveWVlUnVsZSkgPT4ge1xyXG4gICAgdHJ5IHtcclxuICAgICAgYXdhaXQgdG9nZ2xlQWN0aXZlLm11dGF0ZUFzeW5jKHsgaWQ6IHIuaWQsIGlzX2FjdGl2ZTogci5pc19hY3RpdmUgfSk7XHJcbiAgICB9IGNhdGNoIChlKSB7XHJcbiAgICAgIHRvYXN0LmVycm9yKGUgaW5zdGFuY2VvZiBFcnJvciA/IGUubWVzc2FnZSA6IFwiVXBkYXRlIGZhaWxlZFwiKTtcclxuICAgIH1cclxuICB9O1xyXG5cclxuICBjb25zdCBoYW5kbGVEZWxldGUgPSBhc3luYyAoaWQ6IHN0cmluZykgPT4ge1xyXG4gICAgdHJ5IHtcclxuICAgICAgYXdhaXQgcmVtb3ZlLm11dGF0ZUFzeW5jKGlkKTtcclxuICAgICAgdG9hc3Quc3VjY2VzcyhcIlJ1bGUgZGVsZXRlZFwiKTtcclxuICAgIH0gY2F0Y2ggKGUpIHtcclxuICAgICAgdG9hc3QuZXJyb3IoZSBpbnN0YW5jZW9mIEVycm9yID8gZS5tZXNzYWdlIDogXCJEZWxldGUgZmFpbGVkXCIpO1xyXG4gICAgfVxyXG4gIH07XHJcblxyXG4gIGNvbnN0IGhhbmRsZVNlZWQgPSBhc3luYyAoKSA9PiB7XHJcbiAgICB0cnkge1xyXG4gICAgICBhd2FpdCBzZWVkRGVmYXVsdHMubXV0YXRlQXN5bmMoREVGQVVMVF9SVUxFUyk7XHJcbiAgICAgIHRvYXN0LnN1Y2Nlc3MoXCJEZWZhdWx0IHJ1bGVzIGFkZGVkXCIpO1xyXG4gICAgfSBjYXRjaCAoZSkge1xyXG4gICAgICB0b2FzdC5lcnJvcihlIGluc3RhbmNlb2YgRXJyb3IgPyBlLm1lc3NhZ2UgOiBcIlNlZWQgZmFpbGVkXCIpO1xyXG4gICAgfVxyXG4gIH07XHJcblxyXG4gIHJldHVybiAoXHJcbiAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktNlwiPlxyXG4gICAgICB7LyogU3RhdHMgKi99XHJcbiAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZ3JpZCBncmlkLWNvbHMtMiBsZzpncmlkLWNvbHMtNCBnYXAtNFwiPlxyXG4gICAgICAgIHtzdGF0cy5tYXAoKHMpID0+IChcclxuICAgICAgICAgIDxkaXYga2V5PXtzLmxhYmVsfSBjbGFzc05hbWU9XCJyb3VuZGVkLXhsIGJvcmRlciBib3JkZXItYm9yZGVyLzQwIGJnLWNhcmQgcC00XCI+XHJcbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTMgbWItMlwiPlxyXG4gICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPXtjbihcInctMTAgaC0xMCByb3VuZGVkLWZ1bGwgZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXJcIiwgcy50b25lKX0+XHJcbiAgICAgICAgICAgICAgICA8cy5pY29uIGNsYXNzTmFtZT1cInctNSBoLTVcIiAvPlxyXG4gICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cInRleHQteHMgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+e3MubGFiZWx9PC9zcGFuPlxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC0yeGwgZm9udC1ib2xkXCI+e3MudmFsdWV9PC9wPlxyXG4gICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgKSl9XHJcbiAgICAgIDwvZGl2PlxyXG5cclxuICAgICAgey8qIFRhYnMgKi99XHJcbiAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTEgYmctbXV0ZWQvNTAgcm91bmRlZC1sZyBwLTEgdy1maXRcIj5cclxuICAgICAgICB7W1xyXG4gICAgICAgICAgeyBpZDogXCJydWxlc1wiIGFzIGNvbnN0LCBsYWJlbDogXCJSdWxlc1wiLCBpY29uOiBTaGllbGQgfSxcclxuICAgICAgICAgIHsgaWQ6IFwiYWNjZXNzXCIgYXMgY29uc3QsIGxhYmVsOiBcIkFjY2VzcyBMZXZlbHNcIiwgaWNvbjogTG9jayB9LFxyXG4gICAgICAgICAgeyBpZDogXCJwb2xpY2llc1wiIGFzIGNvbnN0LCBsYWJlbDogXCJQb2xpY2llc1wiLCBpY29uOiBGaWxlVGV4dCB9LFxyXG4gICAgICAgIF0ubWFwKCh0KSA9PiAoXHJcbiAgICAgICAgICA8YnV0dG9uXHJcbiAgICAgICAgICAgIGtleT17dC5pZH1cclxuICAgICAgICAgICAgb25DbGljaz17KCkgPT4gc2V0VGFiKHQuaWQpfVxyXG4gICAgICAgICAgICBjbGFzc05hbWU9e2NuKFxyXG4gICAgICAgICAgICAgIFwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTEuNSBweC0zIHB5LTEuNSByb3VuZGVkLW1kIHRleHQtc20gZm9udC1tZWRpdW0gdHJhbnNpdGlvbi1hbGxcIixcclxuICAgICAgICAgICAgICB0YWIgPT09IHQuaWQgPyBcImJnLWJhY2tncm91bmQgc2hhZG93LXNtIHRleHQtZm9yZWdyb3VuZFwiIDogXCJ0ZXh0LW11dGVkLWZvcmVncm91bmQgaG92ZXI6dGV4dC1mb3JlZ3JvdW5kXCJcclxuICAgICAgICAgICAgKX1cclxuICAgICAgICAgID5cclxuICAgICAgICAgICAgPHQuaWNvbiBjbGFzc05hbWU9XCJ3LTMuNSBoLTMuNVwiIC8+IHt0LmxhYmVsfVxyXG4gICAgICAgICAgPC9idXR0b24+XHJcbiAgICAgICAgKSl9XHJcbiAgICAgIDwvZGl2PlxyXG5cclxuICAgICAge3RhYiA9PT0gXCJydWxlc1wiICYmIChcclxuICAgICAgICA8PlxyXG4gICAgICAgICAgey8qIExvYWRpbmcgKi99XHJcbiAgICAgICAgICB7bGlzdC5pc0xvYWRpbmcgJiYgKFxyXG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktMlwiPlxyXG4gICAgICAgICAgICAgIHtBcnJheS5mcm9tKHsgbGVuZ3RoOiA0IH0pLm1hcCgoXywgaSkgPT4gKFxyXG4gICAgICAgICAgICAgICAgPFNrZWxldG9uIGtleT17aX0gY2xhc3NOYW1lPVwiaC0yMCB3LWZ1bGwgcm91bmRlZC14bFwiIC8+XHJcbiAgICAgICAgICAgICAgKSl9XHJcbiAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgKX1cclxuXHJcbiAgICAgICAgICB7LyogRW1wdHkgc3RhdGUgKi99XHJcbiAgICAgICAgICB7IWxpc3QuaXNMb2FkaW5nICYmIHJ1bGVzLmxlbmd0aCA9PT0gMCAmJiAoXHJcbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwicm91bmRlZC14bCBib3JkZXIgYm9yZGVyLWRhc2hlZCBib3JkZXItYm9yZGVyIGJnLWNhcmQgcC04IHRleHQtY2VudGVyIHNwYWNlLXktM1wiPlxyXG4gICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwibXgtYXV0byB3LTEyIGgtMTIgcm91bmRlZC1mdWxsIGJnLXByaW1hcnkvMTAgZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1jZW50ZXJcIj5cclxuICAgICAgICAgICAgICAgIDxTaGllbGQgY2xhc3NOYW1lPVwidy02IGgtNiB0ZXh0LXByaW1hcnlcIiAvPlxyXG4gICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgIDxkaXY+XHJcbiAgICAgICAgICAgICAgICA8aDMgY2xhc3NOYW1lPVwiZm9udC1zZW1pYm9sZCB0ZXh0LXNtXCI+Tm8gZW1wbG95ZWUgcnVsZXMgeWV0PC9oMz5cclxuICAgICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQteHMgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIG10LTFcIj5BZGQgeW91ciBmaXJzdCBydWxlLCBvciBzdGFydCB3aXRoIG91ciByZWNvbW1lbmRlZCBkZWZhdWx0cy48L3A+XHJcbiAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlciBnYXAtMiBwdC0yXCI+XHJcbiAgICAgICAgICAgICAgICA8QnV0dG9uIG9uQ2xpY2s9e29wZW5DcmVhdGV9IHZhcmlhbnQ9XCJvdXRsaW5lXCIgc2l6ZT1cInNtXCI+XHJcbiAgICAgICAgICAgICAgICAgIDxQbHVzIGNsYXNzTmFtZT1cInctNCBoLTQgbXItMS41XCIgLz4gQWRkIFJ1bGVcclxuICAgICAgICAgICAgICAgIDwvQnV0dG9uPlxyXG4gICAgICAgICAgICAgICAgPEJ1dHRvbiBvbkNsaWNrPXtoYW5kbGVTZWVkfSBkaXNhYmxlZD17c2VlZERlZmF1bHRzLmlzUGVuZGluZ30gc2l6ZT1cInNtXCI+XHJcbiAgICAgICAgICAgICAgICAgIDxTcGFya2xlcyBjbGFzc05hbWU9XCJ3LTQgaC00IG1yLTEuNVwiIC8+XHJcbiAgICAgICAgICAgICAgICAgIHtzZWVkRGVmYXVsdHMuaXNQZW5kaW5nID8gXCJBZGRpbmfigKZcIiA6IFwiU2VlZCBkZWZhdWx0c1wifVxyXG4gICAgICAgICAgICAgICAgPC9CdXR0b24+XHJcbiAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgKX1cclxuXHJcbiAgICAgICAgICB7LyogRmlsdGVycyArIGNyZWF0ZSAqL31cclxuICAgICAgICAgIHshbGlzdC5pc0xvYWRpbmcgJiYgcnVsZXMubGVuZ3RoID4gMCAmJiAoXHJcbiAgICAgICAgICAgIDw+XHJcbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMiBmbGV4LXdyYXBcIj5cclxuICAgICAgICAgICAgICAgIHtbXCJBbGxcIiwgLi4uY2F0ZWdvcmllc10ubWFwKChjKSA9PiAoXHJcbiAgICAgICAgICAgICAgICAgIDxidXR0b25cclxuICAgICAgICAgICAgICAgICAgICBrZXk9e2N9XHJcbiAgICAgICAgICAgICAgICAgICAgb25DbGljaz17KCkgPT4gc2V0Q2F0ZWdvcnlGaWx0ZXIoYyl9XHJcbiAgICAgICAgICAgICAgICAgICAgY2xhc3NOYW1lPXtjbihcclxuICAgICAgICAgICAgICAgICAgICAgIFwicHgtMyBweS0xLjUgcm91bmRlZC1sZyB0ZXh0LXhzIGZvbnQtbWVkaXVtIGJvcmRlciB0cmFuc2l0aW9uLWFsbFwiLFxyXG4gICAgICAgICAgICAgICAgICAgICAgY2F0ZWdvcnlGaWx0ZXIgPT09IGMgPyBcImJvcmRlci1wcmltYXJ5IGJnLXByaW1hcnkvMTAgdGV4dC1wcmltYXJ5XCIgOiBcImJvcmRlci1ib3JkZXIgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIGhvdmVyOmJnLW11dGVkXCJcclxuICAgICAgICAgICAgICAgICAgICApfVxyXG4gICAgICAgICAgICAgICAgICA+XHJcbiAgICAgICAgICAgICAgICAgICAge2N9XHJcbiAgICAgICAgICAgICAgICAgIDwvYnV0dG9uPlxyXG4gICAgICAgICAgICAgICAgKSl9XHJcbiAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMyBmbGV4LXdyYXBcIj5cclxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwicmVsYXRpdmUgZmxleC0xIG1pbi13LVsyMDBweF1cIj5cclxuICAgICAgICAgICAgICAgICAgPFNlYXJjaCBjbGFzc05hbWU9XCJhYnNvbHV0ZSBsZWZ0LTMgdG9wLTEvMiAtdHJhbnNsYXRlLXktMS8yIHctNCBoLTQgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCIgLz5cclxuICAgICAgICAgICAgICAgICAgPElucHV0IHBsYWNlaG9sZGVyPVwiU2VhcmNoIHJ1bGVzLi4uXCIgdmFsdWU9e3NlYXJjaH0gb25DaGFuZ2U9eyhlKSA9PiBzZXRTZWFyY2goZS50YXJnZXQudmFsdWUpfSBjbGFzc05hbWU9XCJwbC05XCIgLz5cclxuICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICAgPEJ1dHRvbiBvbkNsaWNrPXtvcGVuQ3JlYXRlfT5cclxuICAgICAgICAgICAgICAgICAgPFBsdXMgY2xhc3NOYW1lPVwidy00IGgtNCBtci0xLjVcIiAvPiBBZGQgUnVsZVxyXG4gICAgICAgICAgICAgICAgPC9CdXR0b24+XHJcbiAgICAgICAgICAgICAgPC9kaXY+XHJcblxyXG4gICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS0yXCI+XHJcbiAgICAgICAgICAgICAgICB7ZmlsdGVyZWQubWFwKChyKSA9PiAoXHJcbiAgICAgICAgICAgICAgICAgIDxkaXZcclxuICAgICAgICAgICAgICAgICAgICBrZXk9e3IuaWR9XHJcbiAgICAgICAgICAgICAgICAgICAgY2xhc3NOYW1lPXtjbihcclxuICAgICAgICAgICAgICAgICAgICAgIFwicm91bmRlZC14bCBib3JkZXIgYmctY2FyZCBwLTQgdHJhbnNpdGlvbi1hbGxcIixcclxuICAgICAgICAgICAgICAgICAgICAgIHIuaXNfYWN0aXZlID8gXCJib3JkZXItYm9yZGVyLzQwXCIgOiBcImJvcmRlci1ib3JkZXIvMjAgb3BhY2l0eS02MFwiXHJcbiAgICAgICAgICAgICAgICAgICAgKX1cclxuICAgICAgICAgICAgICAgICAgPlxyXG4gICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1zdGFydCBqdXN0aWZ5LWJldHdlZW4gZ2FwLTNcIj5cclxuICAgICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleC0xIG1pbi13LTBcIj5cclxuICAgICAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMiBtYi0xIGZsZXgtd3JhcFwiPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIDxoMyBjbGFzc05hbWU9XCJmb250LXNlbWlib2xkIHRleHQtc21cIj57ci50aXRsZX08L2gzPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT17Y24oXCJ0ZXh0LVsxMHB4XSBweC0yIHB5LTAuNSByb3VuZGVkLWZ1bGwgZm9udC1tZWRpdW1cIiwgU0VWRVJJVFlfQ09ORklHW3Iuc2V2ZXJpdHldLnRvbmUpfT5cclxuICAgICAgICAgICAgICAgICAgICAgICAgICAgIHtTRVZFUklUWV9DT05GSUdbci5zZXZlcml0eV0ubGFiZWx9XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgPC9zcGFuPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICAgIDxCYWRnZSB2YXJpYW50PVwib3V0bGluZVwiIGNsYXNzTmFtZT1cInRleHQtWzEwcHhdXCI+e3IuY2F0ZWdvcnl9PC9CYWRnZT5cclxuICAgICAgICAgICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQteHMgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kIG1iLTIgd2hpdGVzcGFjZS1wcmUtd3JhcFwiPntyLmRlc2NyaXB0aW9ufTwvcD5cclxuICAgICAgICAgICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMyB0ZXh0LVsxMHB4XSB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5cclxuICAgICAgICAgICAgICAgICAgICAgICAgICA8c3BhbiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMVwiPjxVc2VycyBjbGFzc05hbWU9XCJ3LTMgaC0zXCIgLz4ge3IuYXBwbGllc190b308L3NwYW4+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgPHNwYW4gY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTFcIj48Q2xvY2sgY2xhc3NOYW1lPVwidy0zIGgtM1wiIC8+IHtuZXcgRGF0ZShyLmNyZWF0ZWRfYXQpLnRvTG9jYWxlRGF0ZVN0cmluZygpfTwvc3Bhbj5cclxuICAgICAgICAgICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTIgc2hyaW5rLTBcIj5cclxuICAgICAgICAgICAgICAgICAgICAgICAgPFN3aXRjaCBjaGVja2VkPXtyLmlzX2FjdGl2ZX0gb25DaGVja2VkQ2hhbmdlPXsoKSA9PiBoYW5kbGVUb2dnbGUocil9IGNsYXNzTmFtZT1cInNjYWxlLTkwXCIgLz5cclxuICAgICAgICAgICAgICAgICAgICAgICAgPEJ1dHRvbiB2YXJpYW50PVwiZ2hvc3RcIiBzaXplPVwiaWNvblwiIGNsYXNzTmFtZT1cImgtNyB3LTdcIiBvbkNsaWNrPXsoKSA9PiBvcGVuRWRpdChyKX0+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgPEVkaXQgY2xhc3NOYW1lPVwidy0zLjUgaC0zLjVcIiAvPlxyXG4gICAgICAgICAgICAgICAgICAgICAgICA8L0J1dHRvbj5cclxuICAgICAgICAgICAgICAgICAgICAgICAgPEJ1dHRvbiB2YXJpYW50PVwiZ2hvc3RcIiBzaXplPVwiaWNvblwiIGNsYXNzTmFtZT1cImgtNyB3LTcgdGV4dC1kZXN0cnVjdGl2ZVwiIG9uQ2xpY2s9eygpID0+IGhhbmRsZURlbGV0ZShyLmlkKX0+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgICAgPFRyYXNoMiBjbGFzc05hbWU9XCJ3LTMuNSBoLTMuNVwiIC8+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgIDwvQnV0dG9uPlxyXG4gICAgICAgICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICAgKSl9XHJcbiAgICAgICAgICAgICAgICB7ZmlsdGVyZWQubGVuZ3RoID09PSAwICYmIChcclxuICAgICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC14cyB0ZXh0LW11dGVkLWZvcmVncm91bmQgdGV4dC1jZW50ZXIgcHktNlwiPk5vIHJ1bGVzIG1hdGNoIHlvdXIgZmlsdGVycy48L3A+XHJcbiAgICAgICAgICAgICAgICApfVxyXG4gICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICA8Lz5cclxuICAgICAgICAgICl9XHJcbiAgICAgICAgPC8+XHJcbiAgICAgICl9XHJcblxyXG4gICAgICB7dGFiID09PSBcImFjY2Vzc1wiICYmIChcclxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktNFwiPlxyXG4gICAgICAgICAge0FDQ0VTU19MRVZFTFMubWFwKChhKSA9PiAoXHJcbiAgICAgICAgICAgIDxkaXYga2V5PXthLnJvbGV9IGNsYXNzTmFtZT1cInJvdW5kZWQteGwgYm9yZGVyIGJvcmRlci1ib3JkZXIvNDAgYmctY2FyZCBwLTRcIj5cclxuICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0zIG1iLTNcIj5cclxuICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidy0xMCBoLTEwIHJvdW5kZWQtZnVsbCBiZy1tdXRlZCBmbGV4IGl0ZW1zLWNlbnRlciBqdXN0aWZ5LWNlbnRlclwiPlxyXG4gICAgICAgICAgICAgICAgICA8TG9jayBjbGFzc05hbWU9e2NuKFwidy01IGgtNVwiLCBhLnRvbmUpfSAvPlxyXG4gICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICA8ZGl2PlxyXG4gICAgICAgICAgICAgICAgICA8aDMgY2xhc3NOYW1lPVwiZm9udC1zZW1pYm9sZCB0ZXh0LXNtXCI+e2Eucm9sZX08L2gzPlxyXG4gICAgICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LVsxMHB4XSB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj57YS5wZXJtaXNzaW9ucy5sZW5ndGh9IHBlcm1pc3Npb25zPC9wPlxyXG4gICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGZsZXgtd3JhcCBnYXAtMS41XCI+XHJcbiAgICAgICAgICAgICAgICB7YS5wZXJtaXNzaW9ucy5tYXAoKHApID0+IChcclxuICAgICAgICAgICAgICAgICAgPHNwYW4ga2V5PXtwfSBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtMSB0ZXh0LVsxMHB4XSBweC0yIHB5LTEgcm91bmRlZC1tZCBiZy1tdXRlZC81MCB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5cclxuICAgICAgICAgICAgICAgICAgICA8Q2hlY2tDaXJjbGUyIGNsYXNzTmFtZT1cInctMyBoLTMgdGV4dC1lbWVyYWxkLTYwMCBkYXJrOnRleHQtZW1lcmFsZC00MDBcIiAvPiB7cH1cclxuICAgICAgICAgICAgICAgICAgPC9zcGFuPlxyXG4gICAgICAgICAgICAgICAgKSl9XHJcbiAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgKSl9XHJcbiAgICAgICAgPC9kaXY+XHJcbiAgICAgICl9XHJcblxyXG4gICAgICB7dGFiID09PSBcInBvbGljaWVzXCIgJiYgKFxyXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS0zXCI+XHJcbiAgICAgICAgICB7U1RBUlRFUl9QT0xJQ0lFUy5tYXAoKHApID0+IChcclxuICAgICAgICAgICAgPGRpdiBrZXk9e3AudGl0bGV9IGNsYXNzTmFtZT1cInJvdW5kZWQteGwgYm9yZGVyIGJvcmRlci1ib3JkZXIvNDAgYmctY2FyZCBwLTQgZmxleCBpdGVtcy1jZW50ZXIganVzdGlmeS1iZXR3ZWVuXCI+XHJcbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGl0ZW1zLWNlbnRlciBnYXAtM1wiPlxyXG4gICAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJ3LTEwIGgtMTAgcm91bmRlZC1sZyBiZy1wcmltYXJ5LzEwIGZsZXggaXRlbXMtY2VudGVyIGp1c3RpZnktY2VudGVyXCI+XHJcbiAgICAgICAgICAgICAgICAgIDxGaWxlVGV4dCBjbGFzc05hbWU9XCJ3LTUgaC01IHRleHQtcHJpbWFyeVwiIC8+XHJcbiAgICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgICAgIDxkaXY+XHJcbiAgICAgICAgICAgICAgICAgIDxoMyBjbGFzc05hbWU9XCJmb250LW1lZGl1bSB0ZXh0LXNtXCI+e3AudGl0bGV9PC9oMz5cclxuICAgICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1bMTBweF0gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+e3AudmVyc2lvbn0g4oCiIHtwLnBhZ2VzfSBwYWdlcyDigKIgVXBkYXRlZCB7cC51cGRhdGVkfTwvcD5cclxuICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTJcIj5cclxuICAgICAgICAgICAgICAgIDxCdXR0b24gdmFyaWFudD1cIm91dGxpbmVcIiBzaXplPVwic21cIiBjbGFzc05hbWU9XCJ0ZXh0LXhzXCI+PEV5ZSBjbGFzc05hbWU9XCJ3LTMgaC0zIG1yLTFcIiAvPiBWaWV3PC9CdXR0b24+XHJcbiAgICAgICAgICAgICAgICA8QnV0dG9uIHZhcmlhbnQ9XCJvdXRsaW5lXCIgc2l6ZT1cInNtXCIgY2xhc3NOYW1lPVwidGV4dC14c1wiPjxFZGl0IGNsYXNzTmFtZT1cInctMyBoLTMgbXItMVwiIC8+IEVkaXQ8L0J1dHRvbj5cclxuICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICApKX1cclxuICAgICAgICAgIDxwIGNsYXNzTmFtZT1cInRleHQtWzExcHhdIHRleHQtbXV0ZWQtZm9yZWdyb3VuZCB0ZXh0LWNlbnRlciBwdC0yXCI+XHJcbiAgICAgICAgICAgIERvY3VtZW50IGxpYnJhcnkgY29taW5nIG5leHQg4oCUIHRoZXNlIGFyZSB0ZW1wbGF0ZXMgb25seS5cclxuICAgICAgICAgIDwvcD5cclxuICAgICAgICA8L2Rpdj5cclxuICAgICAgKX1cclxuXHJcbiAgICAgIHsvKiBDcmVhdGUgLyBFZGl0IERpYWxvZyAqL31cclxuICAgICAgPERpYWxvZyBvcGVuPXtzaG93Q3JlYXRlfSBvbk9wZW5DaGFuZ2U9eyh2KSA9PiB7IHNldFNob3dDcmVhdGUodik7IGlmICghdikgeyBzZXRFZGl0aW5nSWQobnVsbCk7IHNldEZvcm0oYmxhbmtGb3JtKTsgfSB9fT5cclxuICAgICAgICA8RGlhbG9nQ29udGVudCBjbGFzc05hbWU9XCJtYXgtdy1tZFwiPlxyXG4gICAgICAgICAgPERpYWxvZ0hlYWRlcj48RGlhbG9nVGl0bGU+e2VkaXRpbmdJZCA/IFwiRWRpdCBSdWxlXCIgOiBcIkFkZCBSdWxlXCJ9PC9EaWFsb2dUaXRsZT48L0RpYWxvZ0hlYWRlcj5cclxuICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS00IHB5LTJcIj5cclxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTJcIj5cclxuICAgICAgICAgICAgICA8TGFiZWw+VGl0bGU8L0xhYmVsPlxyXG4gICAgICAgICAgICAgIDxJbnB1dCB2YWx1ZT17Zm9ybS50aXRsZX0gb25DaGFuZ2U9eyhlKSA9PiBzZXRGb3JtKChwKSA9PiAoeyAuLi5wLCB0aXRsZTogZS50YXJnZXQudmFsdWUgfSkpfSBwbGFjZWhvbGRlcj1cImUuZy4gTm8gTGF0ZSBBcnJpdmFsc1wiIC8+XHJcbiAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktMlwiPlxyXG4gICAgICAgICAgICAgIDxMYWJlbD5DYXRlZ29yeTwvTGFiZWw+XHJcbiAgICAgICAgICAgICAgPHNlbGVjdFxyXG4gICAgICAgICAgICAgICAgdmFsdWU9e2Zvcm0uY2F0ZWdvcnl9XHJcbiAgICAgICAgICAgICAgICBvbkNoYW5nZT17KGUpID0+IHNldEZvcm0oKHApID0+ICh7IC4uLnAsIGNhdGVnb3J5OiBlLnRhcmdldC52YWx1ZSB9KSl9XHJcbiAgICAgICAgICAgICAgICBjbGFzc05hbWU9XCJ3LWZ1bGwgYm9yZGVyIGJvcmRlci1ib3JkZXIgcm91bmRlZC1sZyBweC0zIHB5LTIgdGV4dC1zbSBiZy1iYWNrZ3JvdW5kXCJcclxuICAgICAgICAgICAgICA+XHJcbiAgICAgICAgICAgICAgICB7Q0FURUdPUllfT1BUSU9OUy5tYXAoKGMpID0+IDxvcHRpb24ga2V5PXtjfT57Y308L29wdGlvbj4pfVxyXG4gICAgICAgICAgICAgIDwvc2VsZWN0PlxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTJcIj5cclxuICAgICAgICAgICAgICA8TGFiZWw+U2V2ZXJpdHk8L0xhYmVsPlxyXG4gICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZmxleCBnYXAtMiBmbGV4LXdyYXBcIj5cclxuICAgICAgICAgICAgICAgIHsoW1wibG93XCIsIFwibWVkaXVtXCIsIFwiaGlnaFwiLCBcImNyaXRpY2FsXCJdIGFzIGNvbnN0KS5tYXAoKHMpID0+IChcclxuICAgICAgICAgICAgICAgICAgPGJ1dHRvblxyXG4gICAgICAgICAgICAgICAgICAgIGtleT17c31cclxuICAgICAgICAgICAgICAgICAgICBvbkNsaWNrPXsoKSA9PiBzZXRGb3JtKChwKSA9PiAoeyAuLi5wLCBzZXZlcml0eTogcyB9KSl9XHJcbiAgICAgICAgICAgICAgICAgICAgY2xhc3NOYW1lPXtjbihcclxuICAgICAgICAgICAgICAgICAgICAgIFwicHgtMyBweS0xLjUgcm91bmRlZC1sZyB0ZXh0LXhzIGZvbnQtbWVkaXVtIGJvcmRlciB0cmFuc2l0aW9uLWFsbFwiLFxyXG4gICAgICAgICAgICAgICAgICAgICAgZm9ybS5zZXZlcml0eSA9PT0gcyA/IGNuKFwiYm9yZGVyLXRyYW5zcGFyZW50XCIsIFNFVkVSSVRZX0NPTkZJR1tzXS50b25lKSA6IFwiYm9yZGVyLWJvcmRlciB0ZXh0LW11dGVkLWZvcmVncm91bmRcIlxyXG4gICAgICAgICAgICAgICAgICAgICl9XHJcbiAgICAgICAgICAgICAgICAgID5cclxuICAgICAgICAgICAgICAgICAgICB7U0VWRVJJVFlfQ09ORklHW3NdLmxhYmVsfVxyXG4gICAgICAgICAgICAgICAgICA8L2J1dHRvbj5cclxuICAgICAgICAgICAgICAgICkpfVxyXG4gICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTJcIj5cclxuICAgICAgICAgICAgICA8TGFiZWw+QXBwbGllcyBUbzwvTGFiZWw+XHJcbiAgICAgICAgICAgICAgPElucHV0IHZhbHVlPXtmb3JtLmFwcGxpZXNfdG99IG9uQ2hhbmdlPXsoZSkgPT4gc2V0Rm9ybSgocCkgPT4gKHsgLi4ucCwgYXBwbGllc190bzogZS50YXJnZXQudmFsdWUgfSkpfSBwbGFjZWhvbGRlcj1cImUuZy4gQWxsIFN0YWZmXCIgLz5cclxuICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwic3BhY2UteS0yXCI+XHJcbiAgICAgICAgICAgICAgPExhYmVsPkRlc2NyaXB0aW9uPC9MYWJlbD5cclxuICAgICAgICAgICAgICA8VGV4dGFyZWEgdmFsdWU9e2Zvcm0uZGVzY3JpcHRpb259IG9uQ2hhbmdlPXsoZSkgPT4gc2V0Rm9ybSgocCkgPT4gKHsgLi4ucCwgZGVzY3JpcHRpb246IGUudGFyZ2V0LnZhbHVlIH0pKX0gcm93cz17M30gLz5cclxuICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgIDxEaWFsb2dGb290ZXI+XHJcbiAgICAgICAgICAgIDxCdXR0b24gdmFyaWFudD1cIm91dGxpbmVcIiBvbkNsaWNrPXsoKSA9PiB7IHNldFNob3dDcmVhdGUoZmFsc2UpOyBzZXRFZGl0aW5nSWQobnVsbCk7IHNldEZvcm0oYmxhbmtGb3JtKTsgfX0+Q2FuY2VsPC9CdXR0b24+XHJcbiAgICAgICAgICAgIDxCdXR0b24gb25DbGljaz17aGFuZGxlU2F2ZX0gZGlzYWJsZWQ9e3Vwc2VydC5pc1BlbmRpbmd9PlxyXG4gICAgICAgICAgICAgIHt1cHNlcnQuaXNQZW5kaW5nID8gXCJTYXZpbmfigKZcIiA6IGVkaXRpbmdJZCA/IFwiU2F2ZVwiIDogXCJDcmVhdGVcIn1cclxuICAgICAgICAgICAgPC9CdXR0b24+XHJcbiAgICAgICAgICA8L0RpYWxvZ0Zvb3Rlcj5cclxuICAgICAgICA8L0RpYWxvZ0NvbnRlbnQ+XHJcbiAgICAgIDwvRGlhbG9nPlxyXG4gICAgPC9kaXY+XHJcbiAgKTtcclxufVxyXG4iXSwibmFtZXMiOlsidXNlTWVtbyIsInVzZVN0YXRlIiwiY24iLCJCYWRnZSIsIkJ1dHRvbiIsIklucHV0IiwiU3dpdGNoIiwiU2tlbGV0b24iLCJEaWFsb2ciLCJEaWFsb2dDb250ZW50IiwiRGlhbG9nSGVhZGVyIiwiRGlhbG9nVGl0bGUiLCJEaWFsb2dGb290ZXIiLCJMYWJlbCIsIlRleHRhcmVhIiwiU2hpZWxkIiwiTG9jayIsIkV5ZSIsIkNsb2NrIiwiQWxlcnRUcmlhbmdsZSIsIlBsdXMiLCJTZWFyY2giLCJDaGVja0NpcmNsZTIiLCJFZGl0IiwiVHJhc2gyIiwiVXNlcnMiLCJGaWxlVGV4dCIsIlNwYXJrbGVzIiwidG9hc3QiLCJ1c2VTdG9yZUVtcGxveWVlUnVsZXMiLCJTRVZFUklUWV9DT05GSUciLCJsb3ciLCJsYWJlbCIsInRvbmUiLCJtZWRpdW0iLCJoaWdoIiwiY3JpdGljYWwiLCJDQVRFR09SWV9PUFRJT05TIiwiREVGQVVMVF9SVUxFUyIsInRpdGxlIiwiY2F0ZWdvcnkiLCJkZXNjcmlwdGlvbiIsInNldmVyaXR5IiwiYXBwbGllc190byIsImlzX2FjdGl2ZSIsIkFDQ0VTU19MRVZFTFMiLCJyb2xlIiwicGVybWlzc2lvbnMiLCJTVEFSVEVSX1BPTElDSUVTIiwidmVyc2lvbiIsInVwZGF0ZWQiLCJwYWdlcyIsImJsYW5rRm9ybSIsIlN0b3JlRW1wbG95ZWVSdWxlc1NlY3Rpb24iLCJzdG9yZUlkIiwibGlzdCIsInVwc2VydCIsInJlbW92ZSIsInRvZ2dsZUFjdGl2ZSIsInNlZWREZWZhdWx0cyIsInJ1bGVzIiwiZGF0YSIsInRhYiIsInNldFRhYiIsInNlYXJjaCIsInNldFNlYXJjaCIsImNhdGVnb3J5RmlsdGVyIiwic2V0Q2F0ZWdvcnlGaWx0ZXIiLCJzaG93Q3JlYXRlIiwic2V0U2hvd0NyZWF0ZSIsImVkaXRpbmdJZCIsInNldEVkaXRpbmdJZCIsImZvcm0iLCJzZXRGb3JtIiwiYWN0aXZlUnVsZXMiLCJmaWx0ZXIiLCJyIiwibGVuZ3RoIiwiY3JpdGljYWxSdWxlcyIsImNhdGVnb3JpZXMiLCJBcnJheSIsImZyb20iLCJTZXQiLCJtYXAiLCJzdGF0cyIsImljb24iLCJ2YWx1ZSIsImZpbHRlcmVkIiwidG9Mb3dlckNhc2UiLCJpbmNsdWRlcyIsIm9wZW5DcmVhdGUiLCJvcGVuRWRpdCIsImlkIiwiaGFuZGxlU2F2ZSIsInRyaW0iLCJlcnJvciIsIm11dGF0ZUFzeW5jIiwic3VjY2VzcyIsImUiLCJFcnJvciIsIm1lc3NhZ2UiLCJoYW5kbGVUb2dnbGUiLCJoYW5kbGVEZWxldGUiLCJoYW5kbGVTZWVkIiwiZGl2IiwiY2xhc3NOYW1lIiwicyIsInNwYW4iLCJwIiwidCIsImJ1dHRvbiIsIm9uQ2xpY2siLCJpc0xvYWRpbmciLCJfIiwiaSIsImgzIiwidmFyaWFudCIsInNpemUiLCJkaXNhYmxlZCIsImlzUGVuZGluZyIsImMiLCJwbGFjZWhvbGRlciIsIm9uQ2hhbmdlIiwidGFyZ2V0IiwiRGF0ZSIsImNyZWF0ZWRfYXQiLCJ0b0xvY2FsZURhdGVTdHJpbmciLCJjaGVja2VkIiwib25DaGVja2VkQ2hhbmdlIiwiYSIsIm9wZW4iLCJvbk9wZW5DaGFuZ2UiLCJ2Iiwic2VsZWN0Iiwib3B0aW9uIiwicm93cyJdLCJtYXBwaW5ncyI6Ijs7QUFBQSxTQUFTQSxPQUFPLEVBQUVDLFFBQVEsUUFBUSxRQUFRO0FBQzFDLFNBQVNDLEVBQUUsUUFBUSxjQUFjO0FBQ2pDLFNBQVNDLEtBQUssUUFBUSx3QkFBd0I7QUFDOUMsU0FBU0MsTUFBTSxRQUFRLHlCQUF5QjtBQUNoRCxTQUFTQyxLQUFLLFFBQVEsd0JBQXdCO0FBQzlDLFNBQVNDLE1BQU0sUUFBUSx5QkFBeUI7QUFDaEQsU0FBU0MsUUFBUSxRQUFRLDJCQUEyQjtBQUNwRCxTQUFTQyxNQUFNLEVBQUVDLGFBQWEsRUFBRUMsWUFBWSxFQUFFQyxXQUFXLEVBQUVDLFlBQVksUUFBUSx5QkFBeUI7QUFDeEcsU0FBU0MsS0FBSyxRQUFRLHdCQUF3QjtBQUM5QyxTQUFTQyxRQUFRLFFBQVEsMkJBQTJCO0FBQ3BELFNBQ0VDLE1BQU0sRUFBRUMsSUFBSSxFQUFFQyxHQUFHLEVBQUVDLEtBQUssRUFBRUMsYUFBYSxFQUFFQyxJQUFJLEVBQUVDLE1BQU0sRUFDckRDLFlBQVksRUFBRUMsSUFBSSxFQUFFQyxNQUFNLEVBQUVDLEtBQUssRUFBRUMsUUFBUSxFQUFFQyxRQUFRLFFBQ2hELGVBQWU7QUFDdEIsU0FBU0MsS0FBSyxRQUFRLFNBQVM7QUFDL0IsU0FBU0MscUJBQXFCLFFBQW1FLHNDQUFzQztBQUl2SSxNQUFNQyxrQkFBeUU7SUFDN0VDLEtBQUs7UUFBRUMsT0FBTztRQUFPQyxNQUFNO0lBQWlDO0lBQzVEQyxRQUFRO1FBQUVGLE9BQU87UUFBVUMsTUFBTTtJQUE2QjtJQUM5REUsTUFBTTtRQUFFSCxPQUFPO1FB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

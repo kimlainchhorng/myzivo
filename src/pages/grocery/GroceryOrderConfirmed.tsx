@@ -5,6 +5,7 @@
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
+import { getPublicOrigin } from "@/lib/getPublicOrigin";
 import {
   CheckCircle, ShoppingCart, ArrowLeft, Clock, Truck, CreditCard,
   Package, MapPin, Sparkles, ShoppingBag, ChevronRight, Shield,
@@ -78,7 +79,7 @@ export default function GroceryOrderConfirmed() {
         await navigator.share({
           title: "ZIVO Grocery Order",
           text: `My grocery order from ${order?.store || "ZIVO"} is on its way!`,
-          url: window.location.href,
+          url: `${getPublicOrigin()}/grocery/orders`,
         });
       } catch {}
     } else {
@@ -89,7 +90,7 @@ export default function GroceryOrderConfirmed() {
   const itemTotal = order?.items?.reduce((s, i) => s + (i.quantity || 1), 0) || 0;
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden pb-24">
+    <div className="min-h-screen bg-background relative overflow-hidden pb-24 safe-area-top">
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-40 left-1/2 -translate-x-1/2 h-80 w-80 rounded-full bg-emerald-500/8 blur-[80px]" />
         <div className="absolute bottom-1/4 -left-20 h-48 w-48 rounded-full bg-primary/6 blur-[60px]" />

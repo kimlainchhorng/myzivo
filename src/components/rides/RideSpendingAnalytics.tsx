@@ -35,6 +35,32 @@ const savingsHighlights = [
 export default function RideSpendingAnalytics() {
   const [period, setPeriod] = useState<"month" | "quarter" | "year">("month");
   const maxSpend = Math.max(...monthlySpending.map(m => m.amount));
+
+  const downloadCSV = () => {
+    const rows = [["Month", "Amount"], ...monthlySpending.map(m => [m.month, `$${m.amount.toFixed(2)}`])];
+    const csv = rows.map(r => r.join(",")).join("\n");
+    const blob = new Blob([csv], { type: "text/csv" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = "zivo-spending.csv"; a.click();
+    URL.revokeObjectURL(url);
+    toast.success("CSV exported!");
+  };
+
+  const downloadPDF = () => {
+    const content = [
+      "ZIVO Spending Report",
+      `Period: ${period}`,
+      "",
+      ...monthlySpending.map(m => `${m.month}: $${m.amount.toFixed(2)}`),
+      "",
+      `Total: $${monthlySpending.reduce((s, m) => s + m.amount, 0).toFixed(2)}`,
+    ].join("\n");
+    const blob = new Blob([content], { type: "text/plain" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a"); a.href = url; a.download = "zivo-spending-report.txt"; a.click();
+    URL.revokeObjectURL(url);
+    toast.success("Report downloaded!");
+  };
   const currentSpend = monthlySpending[monthlySpending.length - 1].amount;
   const prevSpend = monthlySpending[monthlySpending.length - 2].amount;
   const spendChange = ((currentSpend - prevSpend) / prevSpend * 100).toFixed(0);
@@ -148,10 +174,10 @@ export default function RideSpendingAnalytics() {
 
       {/* Export */}
       <div className="flex gap-2">
-        <Button variant="outline" className="flex-1 h-10 rounded-xl text-xs font-bold gap-1.5" onClick={() => toast.success("PDF report downloading...")}>
+        <Button variant="outline" className="flex-1 h-10 rounded-xl text-xs font-bold gap-1.5" onClick={downloadPDF}>
           <Download className="w-3.5 h-3.5" /> Download PDF
         </Button>
-        <Button variant="outline" className="flex-1 h-10 rounded-xl text-xs font-bold gap-1.5" onClick={() => toast.success("CSV exported!")}>
+        <Button variant="outline" className="flex-1 h-10 rounded-xl text-xs font-bold gap-1.5" onClick={downloadCSV}>
           <Download className="w-3.5 h-3.5" /> Export CSV
         </Button>
       </div>

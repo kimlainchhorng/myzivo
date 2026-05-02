@@ -12,6 +12,7 @@ import {
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
 import Flight3DSkyHeader from "@/components/flight/Flight3DSkyHeader";
+import BundleProgressBanner from "@/components/shared/BundleProgressBanner";
 
 import miamiImg from "@/assets/destinations/miami.jpg";
 import sfImg from "@/assets/destinations/san-francisco.jpg";
@@ -75,9 +76,9 @@ function ScrollReveal3D({ children, className, delay = 0 }: { children: React.Re
 
 /* ─── Cinematic hero backgrounds ─── */
 const heroSlides = [
-  { src: heroFlights, accent: "210 100% 55%", label: "Explore the Skies", sub: "500+ airlines worldwide" },
-  { src: heroHotels, accent: "38 90% 55%", label: "Dream Destinations", sub: "Best prices guaranteed" },
-  { src: heroCars, accent: "270 70% 55%", label: "Travel Your Way", sub: "Search. Compare. Save." },
+  { src: heroFlights, accent: "210 100% 55%", label: "Search & Compare Flights", sub: "500+ airlines, one search" },
+  { src: heroHotels, accent: "210 90% 55%", label: "Find Your Next Trip", sub: "Best fares, real-time pricing" },
+  { src: heroCars, accent: "210 80% 55%", label: "Fly Smarter with ZIVO", sub: "Trusted licensed partners" },
 ];
 
 /* ─── Fallback routes ─── */
@@ -380,10 +381,10 @@ function DesktopCinematicHero() {
       </div>
 
       {/* ── Content ── */}
-      <div className="relative z-10 pt-20 sm:pt-24">
+      <div className="relative z-10 pt-12 sm:pt-14">
         <div className="container mx-auto px-4">
           {/* Hero text */}
-          <motion.div className="max-w-3xl mx-auto text-center mb-8" style={{ y: textY }}>
+          <motion.div className="max-w-3xl mx-auto text-center mb-6" style={{ y: textY }}>
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -419,19 +420,7 @@ function DesktopCinematicHero() {
               </AnimatePresence>
             </motion.div>
 
-            {/* Slide indicators */}
-            <div className="flex justify-center gap-2 mt-4">
-              {heroSlides.map((_, i) => (
-                <button
-                  key={i}
-                  onClick={() => setCurrentSlide(i)}
-                  className={cn(
-                    "h-1.5 rounded-full transition-all duration-500",
-                    i === currentSlide ? "w-8 bg-primary" : "w-3 bg-muted-foreground/30 hover:bg-muted-foreground/50"
-                  )}
-                />
-              ))}
-            </div>
+            {/* Slide indicators removed for a cleaner hero */}
           </motion.div>
 
           {/* ── Search Form — 3D floating card ── */}
@@ -442,13 +431,13 @@ function DesktopCinematicHero() {
             style={{ transformStyle: "preserve-3d", scale: formScale }}
             className="max-w-3xl mx-auto relative"
           >
-            {/* Outer glow */}
+            {/* Outer glow — subtle */}
             <motion.div
-              className="absolute -inset-2 rounded-3xl blur-xl opacity-40"
+              className="absolute -inset-1 rounded-3xl blur-lg opacity-20"
               animate={{
                 background: [
-                  `linear-gradient(135deg, hsl(${currentAccent} / 0.3), hsl(var(--primary) / 0.2))`,
-                  `linear-gradient(225deg, hsl(var(--primary) / 0.3), hsl(${currentAccent} / 0.2))`,
+                  `linear-gradient(135deg, hsl(${currentAccent} / 0.25), hsl(var(--primary) / 0.15))`,
+                  `linear-gradient(225deg, hsl(var(--primary) / 0.25), hsl(${currentAccent} / 0.15))`,
                 ],
               }}
               transition={{ duration: 3, repeat: Infinity, repeatType: "reverse" }}
@@ -468,7 +457,7 @@ function DesktopCinematicHero() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4, duration: 0.5 }}
-            className="flex items-center justify-center gap-6 mt-6 text-[11px] text-muted-foreground"
+            className="flex items-center justify-center gap-4 mt-6 text-[11px] text-muted-foreground"
           >
             {[
               { icon: Sparkles, label: "500+ Airlines" },
@@ -479,10 +468,10 @@ function DesktopCinematicHero() {
               <motion.span
                 key={item.label}
                 className="flex items-center gap-1.5"
-                whileHover={{ scale: 1.08, y: -2 }}
+                whileHover={{ scale: 1.06, y: -1 }}
                 transition={{ type: "spring", stiffness: 400, damping: 20 }}
               >
-                {i > 0 && <span className="w-1 h-1 rounded-full bg-border mr-4" />}
+                {i > 0 && <span className="w-0.5 h-0.5 rounded-full bg-muted-foreground/40 mr-3" />}
                 <item.icon className="w-3.5 h-3.5 text-primary/60" /> {item.label}
               </motion.span>
             ))}
@@ -555,8 +544,15 @@ const FlightLanding = () => {
   if (isMobile) {
     return (
       <>
-        <SEOHead title="Search Flights – ZIVO" description="Search and compare flights from 500+ airlines." />
+        <SEOHead
+          title="Search Flights – ZIVO | Compare 500+ Airlines"
+          description="Find the best flight deals from 500+ airlines worldwide. Compare prices, book flights, and track price drops — all on ZIVO."
+          canonical="/flights"
+          ogImage="/og-flights.jpg"
+          appLink="zivo://flights"
+        />
         <AppLayout title="Flights" headerRightAction={undefined}>
+          <BundleProgressBanner step="flight" />
           <Flight3DSkyHeader className="-mt-1" />
           <div className="relative overflow-hidden">
             <Animated3DBackground />
@@ -569,7 +565,55 @@ const FlightLanding = () => {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
-      <SEOHead title="Search Flights – ZIVO" description="Search and compare flights from 500+ airlines. Find the best deals." />
+      <BundleProgressBanner step="flight" />
+      <SEOHead
+        title="Search Flights – ZIVO | Compare 500+ Airlines"
+        description="Find the best flight deals from 500+ airlines worldwide. Compare prices, book flights, and track price drops — all on ZIVO."
+        canonical="/flights"
+        ogImage="/og-flights.jpg"
+        appLink="zivo://flights"
+        structuredData={[
+          {
+            "@context": "https://schema.org",
+            "@type": "WebPage",
+            "name": "Search Flights – ZIVO",
+            "description": "Find the best flight deals from 500+ airlines worldwide.",
+            "url": "https://hizivo.com/flights",
+            "isPartOf": { "@type": "WebSite", "url": "https://hizivo.com", "name": "ZIVO" },
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": "https://hizivo.com/flights/results?origin={origin}&destination={destination}&date={date}",
+              "query-input": "required name=origin required name=destination required name=date"
+            }
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              { "@type": "ListItem", "position": 1, "name": "Home", "item": "https://hizivo.com/" },
+              { "@type": "ListItem", "position": 2, "name": "Flights", "item": "https://hizivo.com/flights" }
+            ]
+          },
+          {
+            "@context": "https://schema.org",
+            "@type": "ItemList",
+            "name": "Popular flight destinations on ZIVO",
+            "itemListOrder": "https://schema.org/ItemListOrderAscending",
+            "itemListElement": [
+              { "@type": "ListItem", "position": 1,  "name": "New York",    "url": "https://hizivo.com/flights/to-new-york" },
+              { "@type": "ListItem", "position": 2,  "name": "Los Angeles", "url": "https://hizivo.com/flights/to-los-angeles" },
+              { "@type": "ListItem", "position": 3,  "name": "London",      "url": "https://hizivo.com/flights/to-london" },
+              { "@type": "ListItem", "position": 4,  "name": "Paris",       "url": "https://hizivo.com/flights/to-paris" },
+              { "@type": "ListItem", "position": 5,  "name": "Tokyo",       "url": "https://hizivo.com/flights/to-tokyo" },
+              { "@type": "ListItem", "position": 6,  "name": "Dubai",       "url": "https://hizivo.com/flights/to-dubai" },
+              { "@type": "ListItem", "position": 7,  "name": "Bangkok",     "url": "https://hizivo.com/flights/to-bangkok" },
+              { "@type": "ListItem", "position": 8,  "name": "Singapore",   "url": "https://hizivo.com/flights/to-singapore" },
+              { "@type": "ListItem", "position": 9,  "name": "Bali",        "url": "https://hizivo.com/flights/to-bali" },
+              { "@type": "ListItem", "position": 10, "name": "Sydney",      "url": "https://hizivo.com/flights/to-sydney" }
+            ]
+          }
+        ]}
+      />
       <Header />
       <main className="pt-16 sm:pt-20">
         <DesktopCinematicHero />

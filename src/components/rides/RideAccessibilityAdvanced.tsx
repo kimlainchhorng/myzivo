@@ -2,6 +2,7 @@
  * RideAccessibilityAdvanced — Wheelchair vehicles, hearing/vision assist, companion booking, special needs
  */
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Accessibility, Eye, Ear, Users, Heart, CheckCircle, Plus, Settings, Volume2, VolumeX, Type, Contrast, Hand, UserPlus, Shield, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -20,6 +21,7 @@ interface AccessibilityPreference {
 }
 
 export default function RideAccessibilityAdvanced() {
+  const navigate = useNavigate();
   const [section, setSection] = useState<"wheelchair" | "sensory" | "companion" | "profile">("wheelchair");
 
   const [preferences, setPreferences] = useState<AccessibilityPreference[]>([
@@ -104,7 +106,7 @@ export default function RideAccessibilityAdvanced() {
                   </div>
 
                   {v.available && (
-                    <Button className="w-full h-10 rounded-xl text-xs font-bold" onClick={() => toast.success(`${v.type} booked!`)}>
+                    <Button className="w-full h-10 rounded-xl text-xs font-bold" onClick={() => navigate("/rides", { state: { vehicleType: v.type, accessible: true } })}>
                       Book {v.type}
                     </Button>
                   )}

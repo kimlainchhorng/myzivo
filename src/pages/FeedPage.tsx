@@ -1,16 +1,112 @@
 /**
- * FeedPage — Social media style feed showing store posts (photos & videos)
- * Customers can browse content posted by stores
+ * FeedPage — TikTok / Facebook Reels style full-screen vertical feed
+ * Each post fills the entire viewport. Swipe up/down to navigate.
+ * Videos auto-play when scrolled into view, pause when scrolled away.
  */
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { lazy, Suspense } from "react";
+const UnifiedShareSheet = lazy(() => import("@/components/shared/ShareSheet"));
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
 import { useI18n } from "@/hooks/useI18n";
-import ZivoMobileNav from "@/components/app/ZivoMobileNav";
-import { Loader2, Heart, MessageCircle, Share2, Store, Play, Volume2, VolumeX } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router-dom";
+const ZivoMobileNav = lazy(() => import("@/components/app/ZivoMobileNav"));
+const NavBar = lazy(() => import("@/components/home/NavBar"));
+import SEOHead from "@/components/SEOHead";
+import VerifiedBadge from "@/components/VerifiedBadge";
+import { isBlueVerified } from "@/lib/verification";
+const CreatePostModal = lazy(() => import("@/components/social/CreatePostModal"));
+const FeedSidebar = lazy(() => import("@/components/social/FeedSidebar"));
+const SafeCaption = lazy(() => import("@/components/social/SafeCaption"));
+const SuggestedUsersCarousel = lazy(() => import("@/components/social/SuggestedUsersCarousel"));
+const FeedSkeleton = lazy(() => import("@/components/social/FeedSkeleton"));
+const NewPostsPill = lazy(() => import("@/components/social/NewPostsPill"));
+const PostActionsMenu = lazy(() => import("@/components/social/PostActionsMenu"));
+const ReactionPicker = lazy(() => import("@/components/social/ReactionPicker"));
+const CommentPreview = lazy(() => import("@/components/social/CommentPreview"));
+const ReactionSummary = lazy(() => import("@/components/social/ReactionSummary"));
+const RepostDialog = lazy(() => import("@/components/social/RepostDialog"));
+const PostInsights = lazy(() => import("@/components/social/PostInsights"));
+const CaptionEditDialog = lazy(() => import("@/components/social/CaptionEditDialog"));
+const MentionPicker = lazy(() => import("@/components/social/MentionPicker"));
+const CommentHeartButton = lazy(() => import("@/components/social/CommentHeartButton"));
+const CommentRowActions = lazy(() => import("@/components/social/CommentRowActions"));
+const ReelsCoachmarks = lazy(() => import("@/components/social/ReelsCoachmarks"));
+import TrendingHashtags, { postHasHashtag } from "@/components/social/TrendingHashtags";
+import { detectMention, applyMention } from "@/components/social/MentionPicker";
+import { usePostActions, type PostActionTarget } from "@/hooks/usePostActions";
+import { usePostReactions } from "@/hooks/usePostReactions";
+import { usePostReposts } from "@/hooks/usePostReposts";
+import { usePostViewTracking } from "@/hooks/usePostViewTracking";
+import { useHiddenPosts } from "@/hooks/useHiddenPosts";
+import type { ReactionEmoji } from "@/components/social/ReactionPicker";
+import { topicForUserSync } from "@/lib/security/channelName";
+import { confirmContentSafe } from "@/lib/security/contentLinkValidation";
+import Loader2 from "lucide-react/dist/esm/icons/loader-2";
+import Heart from "lucide-react/dist/esm/icons/heart";
+import MessageCircle from "lucide-react/dist/esm/icons/message-circle";
+import Repeat2 from "lucide-react/dist/esm/icons/repeat-2";
+import Store from "lucide-react/dist/esm/icons/store";
+import Play from "lucide-react/dist/esm/icons/play";
+import Volume2 from "lucide-react/dist/esm/icons/volume-2";
+import VolumeX from "lucide-react/dist/esm/icons/volume-x";
+import RefreshCw from "lucide-react/dist/esm/icons/refresh-cw";
+import Send from "lucide-react/dist/esm/icons/send";
+import XIcon from "lucide-react/dist/esm/icons/x";
+import Eye from "lucide-react/dist/esm/icons/eye";
+import Copy from "lucide-react/dist/esm/icons/copy";
+import Link2 from "lucide-react/dist/esm/icons/link-2";
+import ShieldCheck from "lucide-react/dist/esm/icons/shield-check";
+import Search from "lucide-react/dist/esm/icons/search";
+import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
+import UserCircle from "lucide-react/dist/esm/icons/user-circle";
+import MoreHorizontal from "lucide-react/dist/esm/icons/more-horizontal";
+import Bookmark from "lucide-react/dist/esm/icons/bookmark";
+import Flag from "lucide-react/dist/esm/icons/flag";
+import EyeOff from "lucide-react/dist/esm/icons/eye-off";
+import ChevronUp from "lucide-react/dist/esm/icons/chevron-up";
+import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
+import Music from "lucide-react/dist/esm/icons/music";
+import Flame from "lucide-react/dist/esm/icons/flame";
+import Languages from "lucide-react/dist/esm/icons/languages";
+import Gauge from "lucide-react/dist/esm/icons/gauge";
+import PictureInPicture from "lucide-react/dist/esm/icons/picture-in-picture-2";
+import MapPin from "lucide-react/dist/esm/icons/map-pin";
+import UserPlus from "lucide-react/dist/esm/icons/user-plus";
+import UserCheck from "lucide-react/dist/esm/icons/user-check";
+import Radio from "lucide-react/dist/esm/icons/radio";
+import Gift from "lucide-react/dist/esm/icons/gift";
+import Film from "lucide-react/dist/esm/icons/film";
+import Scissors from "lucide-react/dist/esm/icons/scissors";
+import Download from "lucide-react/dist/esm/icons/download";
+import FileText from "lucide-react/dist/esm/icons/file-text";
+import ImageOff from "lucide-react/dist/esm/icons/image-off";
+import Pin from "lucide-react/dist/esm/icons/pin";
+import Layers from "lucide-react/dist/esm/icons/layers";
+import Tv2 from "lucide-react/dist/esm/icons/tv-2";
+import Plane from "lucide-react/dist/esm/icons/plane";
+import Building2 from "lucide-react/dist/esm/icons/building-2";
+import UtensilsCrossed from "lucide-react/dist/esm/icons/utensils-crossed";
+import Car from "lucide-react/dist/esm/icons/car";
+import Briefcase from "lucide-react/dist/esm/icons/briefcase";
+import ShoppingBag from "lucide-react/dist/esm/icons/shopping-bag";
+import Plus from "lucide-react/dist/esm/icons/plus";
+import { motion, AnimatePresence, MotionConfig } from "framer-motion";
+import type * as React from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, memo } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { getPostShareUrl } from "@/lib/getPublicOrigin";
+import { shouldSendLikeNotification } from "@/lib/social/likeNotificationGuard";
+import { useOwnerStoreProfile } from "@/hooks/useOwnerStoreProfile";
+import { useHaptic } from "@/hooks/useHaptic";
+import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+const ReelSocialProof = lazy(() => import("@/components/reels/ReelSocialProof"));
+import RelativeTime from "@/components/social/RelativeTime";
+import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
+import { useLodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile";
+import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
+// videoRepair is heavy (FFmpeg WASM) — dynamic import only when needed
 
 interface FeedPost {
   id: string;
@@ -23,45 +119,347 @@ interface FeedPost {
   store_name?: string;
   store_logo?: string;
   store_slug?: string;
+  likes_count?: number;
+  comments_count?: number;
+  shares_count?: number;
+  reposts_count?: number;
+  view_count?: number;
+  audio_name?: string | null;
+  source?: "store" | "user";
+  author_id?: string;
+  author_name?: string;
+  author_avatar?: string | null;
+  author_is_verified?: boolean;
+  store_is_verified?: boolean;
+  location?: string | null;
 }
 
-function timeAgo(dateStr: string): string {
-  const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
-  if (seconds < 60) return "just now";
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours}h`;
-  const days = Math.floor(hours / 24);
-  if (days < 7) return `${days}d`;
-  return new Date(dateStr).toLocaleDateString();
+/* ── Scrolling music ticker ───────────────────────────────────── */
+/**
+ * IntersectionObserver-based sentinel rendered at the end of the feed.
+ * When it scrolls into view, fires `onReachEnd` (debounced via isFetching).
+ * Renders a small "Loading more…" indicator while the next page is in flight.
+ */
+function InfiniteScrollSentinel({
+  isFetching,
+  onReachEnd,
+  totalCount,
+  onRefresh,
+  onBackToTop,
+  onSwitchMode,
+  feedMode,
+}: {
+  isFetching: boolean;
+  onReachEnd: () => void;
+  totalCount?: number;
+  onRefresh?: () => void;
+  onBackToTop?: () => void;
+  onSwitchMode?: () => void;
+  feedMode?: "foryou" | "following";
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+  const lastFiredAt = useRef(0);
+
+  useEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting && !isFetching) {
+          // Throttle to once per second
+          const now = Date.now();
+          if (now - lastFiredAt.current < 1000) return;
+          lastFiredAt.current = now;
+          onReachEnd();
+        }
+      },
+      { threshold: 0.5 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [isFetching, onReachEnd]);
+
+  return (
+    <div
+      ref={ref}
+      className="w-full h-full snap-start flex items-center justify-center bg-gradient-to-b from-black via-zinc-950 to-black px-6"
+    >
+      {isFetching ? (
+        <div className="flex flex-col items-center gap-3 text-white/70">
+          <Loader2 className="h-8 w-8 animate-spin" />
+          <span className="text-sm font-medium">Loading more reels…</span>
+        </div>
+      ) : (
+        <div className="flex flex-col items-center gap-5 max-w-sm text-center">
+          {/* Hero icon */}
+          <div className="relative">
+            <div className="h-20 w-20 rounded-full bg-gradient-to-br from-primary/30 via-primary/10 to-transparent flex items-center justify-center border border-white/10">
+              <span className="text-4xl">🎬</span>
+            </div>
+            <span className="absolute -top-1 -right-1 text-2xl">✨</span>
+          </div>
+
+          <div>
+            <h3 className="text-white font-bold text-lg mb-1">You're all caught up</h3>
+            <p className="text-white/60 text-sm leading-relaxed">
+              {typeof totalCount === "number" && totalCount > 0
+                ? `You've watched all ${totalCount} reel${totalCount === 1 ? "" : "s"} in your feed.`
+                : "You've reached the end of your feed."}
+            </p>
+          </div>
+
+          {/* Actions */}
+          <div className="flex flex-col gap-2 w-full">
+            {onRefresh && (
+              <button
+                type="button"
+                onClick={onRefresh}
+                className="w-full py-3 rounded-full bg-primary text-primary-foreground text-sm font-bold active:scale-95 transition-transform shadow-lg shadow-primary/30"
+              >
+                Check for new reels
+              </button>
+            )}
+            <div className="flex gap-2">
+              {onBackToTop && (
+                <button
+                  type="button"
+                  onClick={onBackToTop}
+                  className="flex-1 py-2.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/15 text-white text-sm font-semibold active:scale-95 transition-transform"
+                >
+                  Back to top
+                </button>
+              )}
+              {onSwitchMode && feedMode && (
+                <button
+                  type="button"
+                  onClick={onSwitchMode}
+                  className="flex-1 py-2.5 rounded-full bg-white/10 backdrop-blur-sm border border-white/15 text-white text-sm font-semibold active:scale-95 transition-transform"
+                >
+                  Try {feedMode === "foryou" ? "Following" : "For You"}
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
 }
 
-function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: string }) {
-  const [activeIndex, setActiveIndex] = useState(0);
+function MusicTicker({ name, onClick }: { name: string; onClick?: () => void }) {
+  return (
+    <button
+      type="button"
+      onClick={(e) => { e.stopPropagation(); onClick?.(); }}
+      className="flex items-center gap-2 max-w-[65%] overflow-hidden active:opacity-70"
+    >
+      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-white/20 to-white/5 border border-white/20 flex items-center justify-center shrink-0 animate-[spin_3s_linear_infinite]">
+        <svg viewBox="0 0 24 24" className="w-4 h-4 fill-white">
+          <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+        </svg>
+      </div>
+      <div className="overflow-hidden">
+        <div className="whitespace-nowrap animate-[marquee_8s_linear_infinite] text-white text-xs font-medium drop-shadow">
+          {name} &nbsp;&nbsp; • &nbsp;&nbsp; {name}
+        </div>
+      </div>
+    </button>
+  );
+}
+
+function looksPlayableVideoElement(video: HTMLVideoElement) {
+  const hasDuration = Number.isFinite(video.duration) && video.duration > 0;
+  const hasDimensions = video.videoWidth > 0 && video.videoHeight > 0;
+  const hasDecodedFrame = video.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA;
+
+  return hasDuration && hasDimensions && hasDecodedFrame;
+}
+
+// ── Individual reel card ──────────────────────────────────────────────────────
+
+function ReelCard({
+  post,
+  isActive,
+  globalMuted,
+  onToggleMute,
+  onNavigate,
+  userId,
+  userLikedPostIds,
+  onToggleLike,
+  onOpenComments,
+  onOpenShare,
+  onOpenSound,
+  onOpenActions,
+  currentReaction,
+  onSetReaction,
+  onOpenRepost,
+  isReposted,
+  shouldPreload = false,
+  onAutoSkip,
+}: {
+  post: FeedPost;
+  isActive: boolean;
+  globalMuted: boolean;
+  onToggleMute: () => void;
+  onNavigate: (slug: string) => void;
+  userId: string | null;
+  userLikedPostIds: Set<string>;
+  onToggleLike: (postId: string, currentlyLiked: boolean) => void;
+  onOpenComments: (postId: string) => void;
+  onOpenShare: (postId: string) => void;
+  onOpenSound: (soundName: string) => void;
+  onOpenActions?: () => void;
+  currentReaction?: ReactionEmoji | null;
+  onSetReaction?: (emoji: ReactionEmoji) => void;
+  onOpenRepost?: () => void;
+  isReposted?: boolean;
+  /** True when this reel is the next one in the snap-scroller, so its
+   *  video can begin loading before the user actually swipes. */
+  shouldPreload?: boolean;
+  /** Called when the reel has been in a playback-error state for 5+ s and
+   *  the user hasn't tapped to retry — used by the parent to auto-scroll
+   *  to the next reel rather than strand the user on a broken video. */
+  onAutoSkip?: () => void;
+}) {
+  const navigate = useNavigate();
+  const haptic = useHaptic();
   const videoRef = useRef<HTMLVideoElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
   const [posterUrl, setPosterUrl] = useState<string | null>(null);
-  const [isMediaLoading, setIsMediaLoading] = useState(false);
+  const [hasPlaybackError, setHasPlaybackError] = useState(false);
+  const [hasImageError, setHasImageError] = useState(false);
+  const [showCaptions, setShowCaptions] = useState(false);
+  const [isRepairing, setIsRepairing] = useState(false);
+  const [isBlobLoading, setIsBlobLoading] = useState(false);
+  const [saved, setSaved] = useState(false);
+  const [showDoubleTapHeart, setShowDoubleTapHeart] = useState(false);
+  // Long-press → open reaction picker instead of plain like
+  const [showReactionPicker, setShowReactionPicker] = useState(false);
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const isVideo = (url: string) => /\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i.test(url) || /\.(mp4|mov|webm|avi|mkv)/i.test(url);
+  // Track view: counts after the post stays active in the viewport for 1.5s
+  const rawPostId = post.id.startsWith("u-") ? post.id.slice(2) : post.id;
+  usePostViewTracking(rawPostId, post.source ?? "store", isActive);
+  const [videoProgress, setVideoProgress] = useState(0); // 0..1
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
+  const [captionExpanded, setCaptionExpanded] = useState(false);
+  const [translatedCaption, setTranslatedCaption] = useState<string | null>(null);
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [isScrubbing, setIsScrubbing] = useState(false);
+  const [showLikeBurst, setShowLikeBurst] = useState(false);
+  const [heartParticles, setHeartParticles] = useState<{ id: number; x: number; size: number; rotate: number; delay: number; emoji?: string }[]>([]);
+  const [videoDuration, setVideoDuration] = useState(0);
+  const [bufferedProgress, setBufferedProgress] = useState(0);
+  const [isBuffering, setIsBuffering] = useState(false);
+  // Track connectivity inside the card so the buffering spinner can hide
+  // when the page-level offline banner is already explaining the issue.
+  const [cardIsOnline, setCardIsOnline] = useState<boolean>(() => typeof navigator === "undefined" ? true : navigator.onLine);
+  useEffect(() => {
+    const onOnline = () => setCardIsOnline(true);
+    const onOffline = () => setCardIsOnline(false);
+    window.addEventListener("online", onOnline);
+    window.addEventListener("offline", onOffline);
+    return () => {
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("offline", onOffline);
+    };
+  }, []);
 
-  const ensureVisibleFrame = (video: HTMLVideoElement) => {
-    if (!Number.isFinite(video.duration) || video.duration <= 0) return;
-
-    const targetTime = Math.min(1, Math.max(video.duration * 0.1, 0.25));
-    if (Math.abs(video.currentTime - targetTime) < 0.01) return;
-
+  // Auto-resume on reconnect — when connectivity returns and this reel is
+  // the active one, retry play() so users don't have to manually tap to
+  // un-stall the video. Browsers may naturally resume buffering, but the
+  // play() call ensures we don't sit on a frozen frame.
+  useEffect(() => {
+    if (!cardIsOnline || !isActive) return;
+    const v = videoRef.current;
+    if (!v || !v.paused) return;
+    void v.play().then(() => setIsPlaying(true)).catch(() => {});
+  }, [cardIsOnline, isActive]);
+  const [authorIsLive, setAuthorIsLive] = useState(false);
+  const [liveAlertDismissed, setLiveAlertDismissed] = useState(false);
+  const [topComment, setTopComment] = useState<{ author_name: string; author_avatar: string | null; content: string; likes_count: number } | null>(null);
+  const [isHoldingFastForward, setIsHoldingFastForward] = useState(false);
+  const [playbackSpeed, setPlaybackSpeed] = useState<number>(() => {
+    // Persist user's chosen speed across reels/sessions. Bound to the four
+    // values exposed in the picker so a malformed/stored string can't slip
+    // through and break <video>.playbackRate.
+    if (typeof window === "undefined") return 1.0;
     try {
-      video.currentTime = targetTime;
-    } catch {
-      // Ignore seek failures on restrictive browsers.
+      const stored = localStorage.getItem("zivo_reel_speed");
+      const n = stored ? parseFloat(stored) : 1.0;
+      return [0.5, 1.0, 1.5, 2.0].includes(n) ? n : 1.0;
+    } catch { return 1.0; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem("zivo_reel_speed", String(playbackSpeed)); } catch {}
+  }, [playbackSpeed]);
+  const [showSpeedPicker, setShowSpeedPicker] = useState(false);
+  const fastForwardTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const suppressNextClickRef = useRef(false);
+  const progressBarRef = useRef<HTMLDivElement>(null);
+  const wasPlayingBeforeScrub = useRef(false);
+  const lastTapRef = useRef(0);
+  const savingBookmarkRef = useRef(false);
+
+  const formatVideoTime = (seconds: number): string => {
+    if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
+    const m = Math.floor(seconds / 60);
+    const s = Math.floor(seconds % 60);
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
+  const [blobSrc, setBlobSrc] = useState<string | null>(null);
+  const [triedBlobFallback, setTriedBlobFallback] = useState(false);
+  const [triedFFmpegRepair, setTriedFFmpegRepair] = useState(false);
+  const [hasLoadedFrame, setHasLoadedFrame] = useState(false);
+  const viewTracked = useRef(false);
+
+  // Follow state
+  const authorId = post.source === "user" ? post.author_id : null;
+  const isSelf = !!userId && userId === authorId;
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
+
+  // Check follow status on mount
+  useEffect(() => {
+    if (!userId || !authorId || isSelf) return;
+    supabase.rpc("is_following" as any, { target_user_id: authorId })
+      .then(({ data }: any) => { if (typeof data === "boolean") setIsFollowing(data); });
+  }, [userId, authorId, isSelf]);
+
+  const handleFollow = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (!userId || !authorId || followLoading) return;
+    setFollowLoading(true);
+    try {
+      if (isFollowing) {
+        await supabase.from("user_followers" as any).delete()
+          .eq("follower_id", userId).eq("following_id", authorId);
+        setIsFollowing(false);
+      } else {
+        await (supabase as any).from("user_followers").insert({
+          follower_id: userId,
+          following_id: authorId,
+        });
+        setIsFollowing(true);
+        // Notify new follower (best-effort — failure here must not roll back the follow)
+        try {
+          const { data: sp } = await supabase.from("profiles").select("full_name, avatar_url").eq("user_id", userId).single();
+          await supabase.functions.invoke("send-push-notification", {
+            body: { user_id: authorId, notification_type: "new_follower", title: "New Follower 🔔", body: `${sp?.full_name || "Someone"} started following you`, data: { type: "new_follower", follower_id: userId, avatar_url: sp?.avatar_url, action_url: `/user/${userId}` } },
+          });
+        } catch (notifyErr) {
+          console.warn("[ReelCard] follow push notify failed", notifyErr);
+        }
+      }
+    } catch (err) {
+      console.error("[ReelCard] follow toggle failed", err);
+      toast.error("Couldn't update follow. Try again.");
+    } finally {
+      setFollowLoading(false);
     }
   };
 
-  const capturePosterFrame = (video: HTMLVideoElement) => {
-    if (video.videoWidth === 0 || video.videoHeight === 0) return;
+  const liked = userLikedPostIds.has(post.id);
 
     try {
       const canvas = document.createElement("canvas");
@@ -76,45 +474,356 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
     } catch {
       // Ignore poster extraction failures and fall back to video surface.
     }
-  };
+  }, [isActive, isVideoPost]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const playCurrentVideo = async () => {
+  // Auto-pause when the tab/window becomes hidden (Page Visibility API).
+  // Without this, videos keep playing in background tabs and burn battery.
+  // Only the active reel is touched — inactive ones are already paused.
+  useEffect(() => {
+    if (!isActive || !isVideoPost) return;
+    const handleVisibility = () => {
+      const video = videoRef.current;
+      if (!video) return;
+      if (document.hidden) {
+        if (!video.paused) {
+          video.pause();
+          setIsPlaying(false);
+        }
+      } else {
+        // Tab back in focus — resume only if user hasn't manually paused.
+        if (video.paused && !isScrubbing) {
+          void video.play().then(() => setIsPlaying(true)).catch(() => {});
+        }
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, [isActive, isVideoPost, isScrubbing]);
+
+  // Re-attempt play whenever the video source changes (e.g. after blob/repair recovery).
+  // When <video key={currentSrc}> remounts with a new src the isActive effect above
+  // does NOT re-run (its deps are unchanged), so this dedicated effect fills that gap.
+  // globalMuted is intentionally excluded — mute sync is handled by its own effect.
+  useEffect(() => {
+    if (!isActive || !isVideoPost || !currentSrc) return;
     const video = videoRef.current;
     if (!video) return;
+    video.muted = globalMuted;
+    void video.play().then(() => setIsPlaying(true)).catch(() => {});
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentSrc]);
+
+  // Track view when post becomes active (once per post per session).
+  // User reels are stored in user_posts and need a separate RPC because
+  // the column is named views_count (vs. store_posts.view_count).
+  useEffect(() => {
+    if (!isActive || viewTracked.current) return;
+    viewTracked.current = true;
+    (async () => {
+      try {
+        if (post.source === "user") {
+          const rawId = post.id.startsWith("u-") ? post.id.slice(2) : post.id;
+          const { error } = await supabase.rpc("increment_user_post_view_count" as any, { p_post_id: rawId });
+          if (error) console.warn("[ReelCard] user view-count rpc error", error);
+        } else {
+          const { error } = await supabase.rpc("increment_store_post_view_count" as any, { p_post_id: post.id });
+          if (error) console.warn("[ReelCard] store view-count rpc error", error);
+        }
+      } catch (err) {
+        console.warn("[ReelCard] view-count rpc failed", err);
+      }
+    })();
+  }, [isActive, post.id, post.source]);
+
+  // Bridge the top-right Speed/PiP buttons (page-level) to the active reel
+  // via window events. Only the active card listens, so multi-reel pages
+  // don't fight over a single dispatch.
+  useEffect(() => {
+    if (!isActive) return;
+    const onOpenSpeed = () => setShowSpeedPicker(true);
+    const onTogglePip = async () => {
+      const v = videoRef.current;
+      if (!v) return;
+      try {
+        const doc = document as any;
+        if (doc.pictureInPictureElement) await doc.exitPictureInPicture();
+        else if ((v as any).requestPictureInPicture) await (v as any).requestPictureInPicture();
+        else toast.error("Picture-in-picture isn't supported on this device");
+      } catch { toast.error("Couldn't open picture-in-picture"); }
+    };
+    window.addEventListener("zivo-reel-open-speed", onOpenSpeed);
+    window.addEventListener("zivo-reel-toggle-pip", onTogglePip);
+    return () => {
+      window.removeEventListener("zivo-reel-open-speed", onOpenSpeed);
+      window.removeEventListener("zivo-reel-toggle-pip", onTogglePip);
+    };
+  }, [isActive]);
+
+  // Auto-skip safety net — if a reel has been in a playback-error state
+  // for 5+ seconds AND the user is the active viewer AND we haven't already
+  // skipped this reel, advance to the next one. Once-per-card so a chain of
+  // broken videos can't cause runaway scrolling.
+  const autoSkippedRef = useRef(false);
+  useEffect(() => {
+    if (!isActive || !hasPlaybackError || !onAutoSkip) return;
+    if (autoSkippedRef.current) return;
+    const timer = window.setTimeout(() => {
+      autoSkippedRef.current = true;
+      toast("Skipped — that reel couldn't load");
+      onAutoSkip();
+    }, 5000);
+    return () => window.clearTimeout(timer);
+  }, [isActive, hasPlaybackError, onAutoSkip]);
+
+  // Cleanup: if the user unmounts mid-hold, kill the timer + reset speed.
+  useEffect(() => {
+    return () => {
+      if (fastForwardTimerRef.current) clearTimeout(fastForwardTimerRef.current);
+      const v = videoRef.current;
+      if (v) { try { v.playbackRate = 1.0; } catch {} }
+    };
+  }, []);
+
+  // Apply the user's chosen playback speed whenever it changes (and not
+  // currently in a long-press fast-forward, which temporarily overrides).
+  useEffect(() => {
+    const v = videoRef.current;
+    if (!v) return;
+    if (isHoldingFastForward) return;
+    try { v.playbackRate = playbackSpeed; } catch {}
+  }, [playbackSpeed, isHoldingFastForward, currentSrc]);
+
+  // Media Session metadata — when a reel becomes active, surface its
+  // author + caption to the OS so lock screens, Bluetooth headphones, and
+  // Control Center / Android media notification show the right thing
+  // (and skip-track buttons advance through the feed).
+  useEffect(() => {
+    if (!isActive) return;
+    const ms = (typeof navigator !== "undefined" ? navigator.mediaSession : undefined);
+    if (!ms) return;
+    try {
+      const author = post.source === "user" ? post.author_name : post.store_name;
+      const avatar = (post.source === "user" ? post.author_avatar : post.store_logo) || undefined;
+      ms.metadata = new window.MediaMetadata({
+        title: post.caption?.trim() || "ZIVO Reel",
+        artist: author || "ZIVO",
+        album: "ZIVO",
+        artwork: avatar
+          ? [
+              { src: avatar, sizes: "96x96", type: "image/jpeg" },
+              { src: avatar, sizes: "192x192", type: "image/jpeg" },
+              { src: avatar, sizes: "512x512", type: "image/jpeg" },
+            ]
+          : [],
+      });
+      ms.setActionHandler("play", () => { void videoRef.current?.play().catch(() => {}); });
+      ms.setActionHandler("pause", () => { videoRef.current?.pause(); });
+      ms.setActionHandler("nexttrack", () => {
+        window.dispatchEvent(new CustomEvent("zivo-reel-next"));
+      });
+      ms.setActionHandler("previoustrack", () => {
+        window.dispatchEvent(new CustomEvent("zivo-reel-prev"));
+      });
+    } catch { /* MediaSession is best-effort */ }
+    return () => {
+      try {
+        ms.setActionHandler("play", null);
+        ms.setActionHandler("pause", null);
+        ms.setActionHandler("nexttrack", null);
+        ms.setActionHandler("previoustrack", null);
+      } catch {}
+    };
+  }, [isActive, post.id, post.caption, post.author_name, post.store_name, post.author_avatar, post.store_logo, post.source]);
+
+  // Live ring: check if the author has an active live stream when this reel
+  // becomes active. Only fires for active reels to avoid spamming the DB
+  // with N queries per feed page.
+  useEffect(() => {
+    if (!isActive || !post.author_id) { setAuthorIsLive(false); return; }
+    let alive = true;
+    (supabase as any)
+      .from("live_streams")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", post.author_id)
+      .eq("status", "live")
+      .then(({ count }: any) => {
+        if (alive) setAuthorIsLive((count || 0) > 0);
+      });
+    return () => { alive = false; };
+  }, [isActive, post.author_id]);
 
     try {
-      await video.play();
-      setIsPlaying(true);
+      if (next) {
+        const { error } = await (supabase as any).from("bookmarks").upsert(
+          {
+            user_id: userId,
+            item_id: post.id,
+            item_type: "post",
+            title: post.caption || `Reel by ${post.source === "user" ? post.author_name : post.store_name}`,
+            collection_name: "Reels",
+          },
+          { onConflict: "user_id,item_id", ignoreDuplicates: true },
+        );
+        if (error && !String(error.message || "").toLowerCase().includes("duplicate")) throw error;
+        toast.success("Saved", {
+          action: { label: "View", onClick: () => navigate("/saved") },
+        });
+      } else {
+        await (supabase as any).from("bookmarks").delete().eq("user_id", userId).eq("item_id", post.id);
+        toast.success("Removed from saved");
+      }
     } catch {
+      setSaved(!next);
+      toast.error("Couldn't update saved");
+    } finally {
+      savingBookmarkRef.current = false;
+    }
+  };
+
+  // Double-tap on the video to like — TikTok signature interaction.
+  // Wraps the existing tap-to-toggle: if two taps land within 280ms,
+  // we skip the play/pause and fire a like instead.
+  // Spawn 6–8 floating particles that drift up and fade — fired whenever
+  // the user likes / reacts to a post. Pass an emoji string to use that
+  // instead of the default heart (e.g. "🔥" when the user picks the fire
+  // reaction from the long-press picker).
+  const spawnFloatingHearts = (emoji?: string) => {
+    const count = 6 + Math.floor(Math.random() * 3);
+    const now = Date.now();
+    const next = Array.from({ length: count }).map((_, i) => ({
+      id: now + i,
+      x: 30 + Math.random() * 40, // 30–70% from left, clusters near center
+      size: 22 + Math.random() * 20, // 22–42px (emoji needs a bit more room)
+      rotate: -25 + Math.random() * 50,
+      delay: Math.random() * 0.25,
+      emoji,
+    }));
+    setHeartParticles((prev) => [...prev, ...next]);
+    // Garbage-collect each batch after the longest possible animation finishes
+    window.setTimeout(() => {
+      setHeartParticles((prev) => prev.filter((h) => !next.some((n) => n.id === h.id)));
+    }, 1900);
+  };
+
+  const handleVideoClick = () => {
+    const now = Date.now();
+    if (now - lastTapRef.current < 280) {
+      lastTapRef.current = 0;
+      if (!liked) {
+        haptic("medium");
+        onToggleLike(post.id, false);
+        spawnFloatingHearts();
+      }
+      setShowDoubleTapHeart(true);
+      window.setTimeout(() => setShowDoubleTapHeart(false), 700);
+      return;
+    }
+    lastTapRef.current = now;
+    togglePlay();
+  };
+
+  // Reset per-post playback state when source changes
+  useEffect(() => {
+    setIsPlaying(false);
+    setHasPlaybackError(false);
+    setIsRepairing(false);
+    setIsBlobLoading(false);
+    setTriedBlobFallback(false);
+    setTriedFFmpegRepair(false);
+    setHasLoadedFrame(false);
+    viewTracked.current = false;
+    if (blobSrc) {
+      URL.revokeObjectURL(blobSrc);
+      setBlobSrc(null);
+    }
+  }, [post.id, sourceUrl]);
+
+  // Sync global mute toggle
+  useEffect(() => {
+    const video = videoRef.current;
+    if (video) video.muted = globalMuted;
+  }, [globalMuted]);
+
+  // Cleanup blob URL
+  useEffect(() => {
+    return () => {
+      if (blobSrc) URL.revokeObjectURL(blobSrc);
+    };
+  }, [blobSrc]);
+
+  useEffect(() => {
+    if (!isVideoPost || blobSrc || triedBlobFallback || !sourceUrl) return;
+    if (!/^https?:\/\//i.test(sourceUrl)) return;
+
+    // Capacitor iOS WebView is more reliable with same-origin blob URLs for remote videos.
+    void tryBlobFallback(sourceUrl);
+  }, [blobSrc, isVideoPost, sourceUrl, triedBlobFallback]);
+
+  const togglePlay = () => {
+    const video = videoRef.current;
+    if (!video) return;
+    if (video.paused) {
+      void video.play().then(() => setIsPlaying(true)).catch(() => {});
+    } else {
+      video.pause();
       setIsPlaying(false);
     }
   };
 
-  const pauseVideo = () => {
+  const handleMuteToggle = () => {
     const video = videoRef.current;
+    const nextMuted = !globalMuted;
+
+    haptic("light");
+    onToggleMute();
+
     if (!video) return;
 
-    video.pause();
-    setIsPlaying(false);
-  };
-
-  const toggleMute = () => {
-    const video = videoRef.current;
-    if (!video) return;
-
-    const nextMuted = !video.muted;
     video.muted = nextMuted;
-    setIsMuted(nextMuted);
+    video.defaultMuted = nextMuted;
+    video.volume = 1;
+
+    if (!nextMuted) {
+      void video.play()
+        .then(() => setIsPlaying(true))
+        .catch(() => {
+          toast.error("Tap video once to enable sound");
+        });
+    }
   };
 
-  const toggleVideo = () => {
-    const video = videoRef.current;
-    if (!video) return;
+  const capturePoster = (video: HTMLVideoElement) => {
+    if (video.videoWidth === 0) return;
+    // Skip the black frame that exists before the seek settles at a real position.
+    if (video.currentTime < 0.5) return;
+    try {
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth;
+      canvas.height = video.videoHeight;
+      canvas.getContext("2d")?.drawImage(video, 0, 0);
+      setPosterUrl(canvas.toDataURL("image/jpeg", 0.8));
+    } catch (err) {
+      // On CORS canvas taint, fall back to blob so the next capture succeeds.
+      if (err instanceof DOMException && err.name === "SecurityError") {
+        void tryBlobFallback(blobSrc ?? sourceUrl ?? "");
+      }
+    }
+  };
 
-    if (video.paused) {
-      void playCurrentVideo();
-    } else {
-      pauseVideo();
+  const tryBlobFallback = async (url: string) => {
+    if (triedBlobFallback) return;
+    setTriedBlobFallback(true);
+    setIsBlobLoading(true);
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error("fetch failed");
+      const blob = await resp.blob();
+      setBlobSrc(URL.createObjectURL(new Blob([blob], { type: blob.type || "video/mp4" })));
+      setHasPlaybackError(false);
+    } catch {
+      // Keep quiet here; FFmpeg repair is attempted next.
+    } finally {
+      setIsBlobLoading(false);
     }
   };
 
@@ -174,214 +883,4029 @@ function FeedMediaCarousel({ urls, mediaType }: { urls: string[]; mediaType: str
               onError={() => { setIsPlaying(false); setIsMediaLoading(false); }}
             />
             <button
-              type="button"
-              onClick={toggleVideo}
-              className="absolute inset-0 z-10"
-              aria-label={isPlaying ? "Pause video" : "Play video"}
-            />
-            {!isPlaying && !isMediaLoading && (
-              <button
-                type="button"
-                onClick={toggleVideo}
-                className="absolute inset-0 z-20 flex items-center justify-center bg-black/20"
-                aria-label="Play video"
-              >
-                <div className="w-14 h-14 rounded-full bg-white/90 flex items-center justify-center shadow-lg">
-                  <Play className="w-6 h-6 text-foreground ml-0.5" fill="currentColor" />
-                </div>
-              </button>
-            )}
-            {isMediaLoading && (
-              <div className="absolute inset-0 z-20 flex items-center justify-center bg-foreground/10 backdrop-blur-sm">
-                <Loader2 className="h-8 w-8 animate-spin text-background" />
-              </div>
-            )}
-            <button
-              type="button"
-              onClick={toggleMute}
-              className="absolute right-3 bottom-3 z-30 flex h-10 w-10 items-center justify-center rounded-full bg-background/70 text-foreground backdrop-blur-sm"
-              aria-label={isMuted ? "Unmute video" : "Mute video"}
+              onClick={(e) => { e.stopPropagation(); navigate(`/live/${post.author_id}`); }}
+              className="shrink-0 px-3 py-1 rounded-full bg-red-500 text-white text-[11px] font-bold active:scale-95 transition-transform"
             >
-              {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+              Join
             </button>
-          </div>
-        ) : (
-          <img
-            src={urls[activeIndex]}
-            alt=""
-            className="w-full h-full object-cover"
-            loading="lazy"
-          />
-        )}
-      </div>
-
-      {/* Dots indicator */}
-      {urls.length > 1 && (
-        <div className="absolute bottom-3 left-0 right-0 flex items-center justify-center gap-1.5">
-          {urls.map((_, i) => (
             <button
-              key={i}
-              onClick={() => setActiveIndex(i)}
-              className={cn(
-                "w-1.5 h-1.5 rounded-full transition-all duration-200",
-                i === activeIndex
-                  ? "bg-white w-4 shadow-md"
-                  : "bg-white/50"
+              onClick={(e) => { e.stopPropagation(); setLiveAlertDismissed(true); }}
+              className="shrink-0 p-1"
+              aria-label="Dismiss"
+            >
+              <XIcon className="h-3.5 w-3.5 text-white/60" />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Media */}
+      {isVideoPost ? (
+        <video
+          ref={videoRef}
+          key={currentSrc}
+          src={renderSrc || undefined}
+          poster={posterUrl ?? undefined}
+          className="absolute inset-0 w-full h-full object-cover"
+          playsInline
+          loop
+          muted={globalMuted}
+          preload={isActive ? "auto" : shouldPreload ? "metadata" : "none"}
+          onLoadedData={(e) => {
+            setHasLoadedFrame(true);
+            setHasPlaybackError(false);
+            capturePoster(e.currentTarget);
+            if (isActive) {
+              e.currentTarget.muted = globalMuted;
+              void e.currentTarget.play().then(() => setIsPlaying(true)).catch(() => {});
+            }
+          }}
+          onCanPlay={(e) => {
+            setIsBuffering(false);
+            if (!looksPlayableVideoElement(e.currentTarget)) return;
+            setHasLoadedFrame(true);
+            setHasPlaybackError(false);
+            if (isActive) {
+              e.currentTarget.muted = globalMuted;
+              void e.currentTarget.play().then(() => setIsPlaying(true)).catch(() => {});
+            }
+          }}
+          onLoadedMetadata={(e) => {
+            // Seek to 10% of duration, at least 1.5 s, capped at 3 s — skips dark iPhone intros.
+            const dur = e.currentTarget.duration;
+            if (Number.isFinite(dur) && dur > 0) {
+              setVideoDuration(dur);
+              const t = Math.min(3, Math.max(dur * 0.1, 1.5));
+              try { e.currentTarget.currentTime = t; } catch { /* ignore */ }
+            }
+          }}
+          onDurationChange={(e) => {
+            // Some streams emit duration after metadata; pick it up here too.
+            const dur = e.currentTarget.duration;
+            if (Number.isFinite(dur) && dur > 0) setVideoDuration(dur);
+          }}
+          onSeeked={(e) => {
+            capturePoster(e.currentTarget);
+          }}
+          onPlay={() => { setIsPlaying(true); setIsBuffering(false); }}
+          onPause={() => setIsPlaying(false)}
+          onWaiting={() => setIsBuffering(true)}
+          onPlaying={() => setIsBuffering(false)}
+          onTimeUpdate={(e) => {
+            const v = e.currentTarget;
+            if (Number.isFinite(v.duration) && v.duration > 0) {
+              setVideoProgress(Math.min(1, v.currentTime / v.duration));
+            }
+          }}
+          onProgress={(e) => {
+            // Update buffered range whenever the browser reports progress.
+            // We use the buffered range that contains the current playhead so
+            // the indicator always reflects what's available "ahead" of the
+            // user, not just the largest accidental island.
+            const v = e.currentTarget;
+            if (!Number.isFinite(v.duration) || v.duration <= 0) return;
+            const buf = v.buffered;
+            for (let i = 0; i < buf.length; i++) {
+              if (buf.start(i) <= v.currentTime && v.currentTime <= buf.end(i)) {
+                setBufferedProgress(Math.min(1, buf.end(i) / v.duration));
+                return;
+              }
+            }
+            // Fallback to the last buffered range
+            if (buf.length > 0) {
+              setBufferedProgress(Math.min(1, buf.end(buf.length - 1) / v.duration));
+            }
+          }}
+          onError={async () => {
+            setIsPlaying(false);
+            if (isBlobLoading) return;
+            await runRecovery();
+          }}
+        />
+      ) : firstUrl && !hasImageError ? (
+        <img
+          src={firstUrl}
+          alt=""
+          className="absolute inset-0 w-full h-full object-cover"
+          loading={isActive ? "eager" : "lazy"}
+          onError={() => setHasImageError(true)}
+        />
+      ) : (
+        /* Text-only post or broken image — readable gradient card */
+        <div className="absolute inset-0 flex flex-col items-center justify-center px-8 bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-900">
+          <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center mb-5 backdrop-blur-sm border border-white/10">
+            {hasImageError
+              ? <ImageOff className="h-7 w-7 text-white/70" />
+              : <FileText className="h-7 w-7 text-white/70" />
+            }
+          </div>
+          {post.caption && (
+            <p className="text-white text-center text-lg sm:text-xl font-semibold leading-snug line-clamp-6 drop-shadow-lg">
+              {post.caption}
+            </p>
+          )}
+          {hasImageError && (
+            <p className="mt-3 text-white/50 text-xs">Image could not be loaded</p>
+          )}
+        </div>
+      )}
+
+      {/* Tap-to-play/pause · double-tap-to-like · long-press-to-2x.
+          - Pointer down starts a 350ms timer that, on fire, kicks the
+            video to 2× speed and shows the FF badge.
+          - Pointer up before the timer fires falls through to the click
+            handler (single/double-tap detection).
+          - Pointer up after the timer fires resets to 1× and suppresses
+            the click so we don't toggle play/pause on release. */}
+      {isVideoPost && !hasPlaybackError && !isRepairing && !isBlobLoading && (
+        <button
+          type="button"
+          onClick={(e) => {
+            if (suppressNextClickRef.current) {
+              suppressNextClickRef.current = false;
+              return;
+            }
+            handleVideoClick();
+          }}
+          onPointerDown={() => {
+            if (fastForwardTimerRef.current) clearTimeout(fastForwardTimerRef.current);
+            fastForwardTimerRef.current = setTimeout(() => {
+              const v = videoRef.current;
+              if (!v) return;
+              try { v.playbackRate = 2.0; } catch {}
+              setIsHoldingFastForward(true);
+              suppressNextClickRef.current = true;
+              haptic("heavy"); // tactile cue that 2× kicked in
+            }, 350);
+          }}
+          onPointerUp={() => {
+            if (fastForwardTimerRef.current) {
+              clearTimeout(fastForwardTimerRef.current);
+              fastForwardTimerRef.current = null;
+            }
+            if (isHoldingFastForward) {
+              const v = videoRef.current;
+              if (v) { try { v.playbackRate = playbackSpeed; } catch {} }
+              setIsHoldingFastForward(false);
+            }
+          }}
+          onPointerCancel={() => {
+            if (fastForwardTimerRef.current) {
+              clearTimeout(fastForwardTimerRef.current);
+              fastForwardTimerRef.current = null;
+            }
+            if (isHoldingFastForward) {
+              const v = videoRef.current;
+              if (v) { try { v.playbackRate = playbackSpeed; } catch {} }
+              setIsHoldingFastForward(false);
+            }
+          }}
+          onPointerLeave={() => {
+            // If the user drags off the video while holding, treat as cancel.
+            if (fastForwardTimerRef.current) {
+              clearTimeout(fastForwardTimerRef.current);
+              fastForwardTimerRef.current = null;
+            }
+            if (isHoldingFastForward) {
+              const v = videoRef.current;
+              if (v) { try { v.playbackRate = playbackSpeed; } catch {} }
+              setIsHoldingFastForward(false);
+            }
+          }}
+          className="absolute inset-0 z-10"
+          aria-label={isPlaying ? "Pause" : "Play"}
+        />
+      )}
+
+      {/* 2× fast-forward badge — pulses while the user holds */}
+      <AnimatePresence>
+        {isHoldingFastForward && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.85, y: -10 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.85 }}
+            transition={{ duration: 0.18 }}
+            className="absolute left-1/2 -translate-x-1/2 z-30 px-3 py-1.5 rounded-full bg-black/70 backdrop-blur-md flex items-center gap-1.5 pointer-events-none"
+            style={{ top: "calc(env(safe-area-inset-top, 0px) + 84px)" }}
+          >
+            <span className="text-white text-sm font-bold tabular-nums">2×</span>
+            <span className="text-white text-xs">▶▶</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Double-tap heart burst */}
+      <AnimatePresence>
+        {showDoubleTapHeart && (
+          <motion.div
+            initial={{ scale: 0, opacity: 0 }}
+            animate={{ scale: 1.2, opacity: 1 }}
+            exit={{ scale: 1.6, opacity: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="absolute inset-0 z-30 flex items-center justify-center pointer-events-none"
+          >
+            <Heart className="w-32 h-32 text-white fill-destructive drop-shadow-2xl" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Floating reaction particles — spawns on like or reaction, drifts
+          up + fades. Pointer-events disabled so it doesn't block anything.
+          Particles render either the user's chosen emoji (when reacting)
+          or a red Heart icon (default like). */}
+      {heartParticles.length > 0 && (
+        <div className="absolute inset-0 z-30 pointer-events-none overflow-hidden">
+          {heartParticles.map((p) => (
+            <motion.div
+              key={p.id}
+              initial={{ opacity: 0, scale: 0, y: 0, rotate: p.rotate }}
+              animate={{
+                opacity: [0, 1, 1, 0],
+                scale: [0, 1, 1, 0.6],
+                y: [-20, -120 - Math.random() * 80, -200 - Math.random() * 120, -300 - Math.random() * 160],
+                x: [0, (Math.random() - 0.5) * 40, (Math.random() - 0.5) * 80, (Math.random() - 0.5) * 60],
+              }}
+              transition={{ duration: 1.6, delay: p.delay, ease: "easeOut" }}
+              style={{
+                position: "absolute",
+                left: `${p.x}%`,
+                bottom: "30%",
+              }}
+            >
+              {p.emoji ? (
+                <span
+                  className="drop-shadow-lg leading-none"
+                  style={{ fontSize: p.size }}
+                  aria-hidden
+                >
+                  {p.emoji}
+                </span>
+              ) : (
+                <Heart
+                  className="text-destructive fill-destructive drop-shadow-lg"
+                  style={{ width: p.size, height: p.size }}
+                />
               )}
-            />
+            </motion.div>
           ))}
         </div>
+      )}
+
+      {/* Mid-playback buffering spinner — only shown when the user has
+          actually started watching but the network stalled. Hidden during
+          the initial-load and FFmpeg-repair flows (they have their own UI),
+          and hidden when offline (the top banner already explains it). */}
+      {isVideoPost && isBuffering && isActive && cardIsOnline && !hasPlaybackError && !isRepairing && !isBlobLoading && hasLoadedFrame && (
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-30 pointer-events-none">
+          <div className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-black/60 backdrop-blur-md">
+            <Loader2 className="w-4 h-4 text-white animate-spin" />
+            <span className="text-white text-[11px] font-semibold">Buffering…</span>
+          </div>
+        </div>
+      )}
+
+      {/* Paused indicator */}
+      {isVideoPost && !isPlaying && !hasPlaybackError && !isRepairing && !isBlobLoading && (
+        <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
+          <div className="w-16 h-16 rounded-full bg-black/40 flex items-center justify-center">
+            <Play className="w-7 h-7 text-white ml-1" fill="white" />
+          </div>
+        </div>
+      )}
+
+      {/* Converting overlay */}
+      {(isRepairing || isBlobLoading) && (
+        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-black/70">
+          <RefreshCw className="w-10 h-10 text-white animate-spin" />
+          <p className="text-sm text-white font-medium">{isBlobLoading ? "Loading video..." : "Converting video..."}</p>
+        </div>
+      )}
+
+      {/* Playback error */}
+      {hasPlaybackError && !isRepairing && !isBlobLoading && (
+        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-2 bg-black/70 px-8 text-center">
+          <p className="text-sm font-semibold text-white">Video is loading slowly</p>
+          <p className="text-xs text-white/70">
+            Tap once to retry playback.
+          </p>
+        </div>
+      )}
+
+      {/* Gradient for readability */}
+      <div className="absolute inset-0 z-20 pointer-events-none bg-gradient-to-t from-black/65 via-transparent to-black/10" />
+
+      {/* CC subtitle overlay — shows caption as bottom subtitle bar */}
+      <AnimatePresence>
+        {showCaptions && post.caption && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            transition={{ duration: 0.2 }}
+            className="absolute left-4 right-16 z-25 pointer-events-none"
+            style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 160px)" }}
+          >
+            <div className="bg-black/80 backdrop-blur-sm rounded-lg px-3 py-2">
+              <p className="text-white text-[13px] sm:text-sm font-medium leading-snug text-center">
+                {post.caption}
+              </p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Bottom-left: store info + caption */}
+      <div
+        className="absolute bottom-0 left-0 right-16 z-30 px-4"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 88px)" }}
+      >
+        {/* Owner-only insights pill — small "Your reel · X views" affordance
+            that takes the creator to their post analytics on tap. */}
+        {userId && post.author_id && userId === post.author_id && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              const rawId = post.id.startsWith("u-") ? post.id.slice(2) : post.id;
+              navigate(`/u/post/${rawId}/insights`);
+            }}
+            className="inline-flex items-center gap-1.5 mb-2 px-2.5 py-1 rounded-full bg-white/15 backdrop-blur-md border border-white/20 active:scale-95 transition-transform"
+          >
+            <Eye className="w-3 h-3 text-white" />
+            <span className="text-white text-[11px] font-semibold">
+              Your reel · {(post.view_count || 0) > 999 ? `${((post.view_count || 0) / 1000).toFixed(1)}k` : (post.view_count || 0)} views
+            </span>
+          </button>
+        )}
+
+        <div className="flex items-center gap-2.5 mb-2.5">
+          <button
+            type="button"
+            onClick={() => {
+              if (post.source === "user" && post.author_id) {
+                onNavigate(`__user__${post.author_id}`);
+              } else if (post.store_slug) {
+                onNavigate(post.store_slug);
+              }
+            }}
+            className="flex items-center gap-2.5 active:opacity-70"
+          >
+            <div className="relative flex-shrink-0">
+              <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-white/80 bg-black/40">
+                {(post.source === "user" ? post.author_avatar : post.store_logo) ? (
+                  <img src={(post.source === "user" ? post.author_avatar : post.store_logo)!} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <Store className="w-5 h-5 text-white" />
+                  </div>
+                )}
+              </div>
+              {/* TikTok-style + badge on avatar */}
+              {authorId && !isSelf && !isFollowing && (
+                <div className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-5 h-5 rounded-full bg-primary flex items-center justify-center border-2 border-black">
+                  <span className="text-primary-foreground text-[10px] font-bold leading-none">+</span>
+                </div>
+              )}
+            </div>
+            <span className="text-white font-bold text-sm sm:text-[15px] lg:text-base drop-shadow-lg inline-flex items-center gap-1">
+              {post.source === "user" ? post.author_name : post.store_name}
+              {(post.source === "user" ? isBlueVerified(post.author_is_verified) : isBlueVerified(post.store_is_verified)) && (
+                <VerifiedBadge size={16} />
+              )}
+            </span>
+          </button>
+
+          {/* Live social-proof ticker — store posts only, self-hides when quiet */}
+          {post.source === "store" && post.store_id && (
+            <Suspense fallback={null}>
+              <ReelSocialProof storeId={post.store_id} postId={post.id} />
+            </Suspense>
+          )}
+
+          {/* Trending badge — engagement signal blended with recency.
+              Shown when (likes·1 + comments·2 + shares·3 + views·0.05) is
+              high relative to age, capping at "very recent + very engaging". */}
+          {(() => {
+            const ageHours = Math.max(1, (Date.now() - new Date(post.created_at || Date.now()).getTime()) / 3_600_000);
+            const score =
+              (post.likes_count || 0)
+              + (post.comments_count || 0) * 2
+              + (post.view_count || 0) * 0.05;
+            const trendingScore = score / Math.max(1, Math.log2(2 + ageHours));
+            const isTrending = trendingScore >= 50;
+            if (!isTrending) return null;
+            return (
+              <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-orange-500/90 to-rose-500/90 backdrop-blur-sm border border-white/20 shadow-lg">
+                <Flame className="w-3 h-3 text-white" />
+                <span className="text-white text-[10px] font-bold leading-none">Trending</span>
+              </span>
+            );
+          })()}
+
+          {/* Follow / Following button */}
+          {authorId && !isSelf && (
+            <button
+              type="button"
+              onClick={handleFollow}
+              disabled={followLoading}
+              className={cn(
+                "px-3.5 py-1 rounded-md text-xs font-semibold transition-all active:scale-95 border backdrop-blur-sm",
+                isFollowing
+                  ? "bg-white/10 border-white/30 text-white"
+                  : "bg-primary border-primary text-primary-foreground"
+              )}
+            >
+              {followLoading ? (
+                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              ) : isFollowing ? (
+                <span className="flex items-center gap-1"><UserCheck className="w-3.5 h-3.5" /> Following</span>
+              ) : (
+                "Follow"
+              )}
+            </button>
+          )}
+        </div>
+        {/* Posted-time + location row */}
+        {(post.location || post.created_at) && (
+          <div className="flex items-center gap-2 mb-1.5 text-white/80 text-[11px] drop-shadow">
+            {post.created_at && <RelativeTime date={post.created_at} />}
+            {post.location && post.created_at && <span className="text-white/50">·</span>}
+            {post.location && (
+              <span className="flex items-center gap-1 truncate">
+                <MapPin className="w-3 h-3 shrink-0" />
+                <span className="truncate">{post.location}</span>
+              </span>
+            )}
+          </div>
+        )}
+        {post.caption && (() => {
+          const isLong = post.caption.length > 90;
+          // Detect non-Latin scripts (Khmer, Thai, Lao, Burmese, Chinese, Japanese,
+          // Korean, Arabic, Hebrew, Cyrillic, Devanagari, etc.). When present and
+          // the user's locale is en-*, offer a translate shortcut.
+          const hasNonLatin = /[؀-ۿ֐-׿ऀ-ॿ฀-๿຀-໿က-႟ក-៿぀-ゟ゠-ヿ一-鿿가-힯Ѐ-ӿ]/.test(post.caption);
+          const userLang = (typeof navigator !== "undefined" ? navigator.language : "en").toLowerCase();
+          const showTranslate = hasNonLatin && userLang.startsWith("en");
+          return (
+            <>
+              <button
+                type="button"
+                onClick={(e) => { e.stopPropagation(); if (isLong) setCaptionExpanded((v) => !v); }}
+                className={cn(
+                  "block w-full text-left text-white text-sm sm:text-[15px] lg:text-base drop-shadow leading-snug mb-1",
+                  !captionExpanded && "line-clamp-2",
+                  isLong ? "cursor-pointer" : "cursor-default",
+                )}
+                aria-expanded={captionExpanded}
+              >
+                <Suspense fallback={<span>{post.caption}</span>}>
+                  <SafeCaption text={post.caption} />
+                </Suspense>
+                {isLong && (
+                  <span className="text-white/70 ml-1 font-semibold">
+                    {captionExpanded ? " less" : " …more"}
+                  </span>
+                )}
+              </button>
+              {showTranslate && translatedCaption && (
+                <div className="mb-2 rounded-lg bg-black/40 border border-white/10 backdrop-blur-sm px-2.5 py-1.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-white/60 mb-0.5">Translated</p>
+                  <p className="text-[12px] text-white leading-snug">{translatedCaption}</p>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setTranslatedCaption(null); }}
+                    className="text-[11px] text-white/80 mt-1 font-semibold underline decoration-white/40 underline-offset-2"
+                  >
+                    Hide translation
+                  </button>
+                </div>
+              )}
+              {showTranslate && !translatedCaption && (
+                <button
+                  type="button"
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    if (isTranslating) return;
+                    setIsTranslating(true);
+                    try {
+                      const q = encodeURIComponent(post.caption!);
+                      const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=en&dt=t&q=${q}`);
+                      const data = await res.json();
+                      const text = (data[0] as [string, string][]).map((s) => s[0]).join("");
+                      setTranslatedCaption(text);
+                    } catch {
+                      toast.error("Translation unavailable");
+                    } finally {
+                      setIsTranslating(false);
+                    }
+                  }}
+                  disabled={isTranslating}
+                  className="inline-flex items-center gap-1 mb-2 text-white/80 active:scale-95 transition-transform disabled:opacity-50"
+                  title="Translate caption to English"
+                >
+                  <Languages className="w-3 h-3" />
+                  <span className="text-[11px] font-semibold underline decoration-white/40 underline-offset-2">
+                    {isTranslating ? "Translating..." : "See translation"}
+                  </span>
+                </button>
+              )}
+            </>
+          );
+        })()}
+
+        {/* Hashtag chips — extracted from caption, rendered as primary-colored
+            pills below the caption so they're easier to tap on a tall reel.
+            Deduped + capped at 6 to avoid clutter. */}
+        {post.caption && (() => {
+          const matches = post.caption.match(/#[a-zA-Z0-9_]{2,30}/g);
+          if (!matches || matches.length === 0) return null;
+          const seen = new Set<string>();
+          const tags = matches.filter((t) => {
+            const k = t.toLowerCase();
+            if (seen.has(k)) return false;
+            seen.add(k);
+            return true;
+          }).slice(0, 6);
+          const isChallenge = tags.some((t) => /challenge|duet|trend|viral/i.test(t));
+          return (
+            <>
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                {tags.map((tag) => (
+                  <button
+                    key={tag}
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      navigate(`/explore?tag=${encodeURIComponent(tag.slice(1))}`);
+                    }}
+                    className="px-2.5 py-1 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-white text-[11px] font-semibold active:scale-95 transition-transform"
+                  >
+                    {tag}
+                  </button>
+                ))}
+              </div>
+              {isChallenge && (
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const challengeTag = tags.find((t) => /challenge|duet|trend|viral/i.test(t));
+                    navigate(`/explore?tag=${encodeURIComponent((challengeTag || tags[0]).slice(1))}`);
+                    toast.success("Join the challenge — create your own video with this sound!");
+                  }}
+                  className="flex items-center gap-1.5 mb-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-primary to-violet-500 text-white text-[11px] font-bold active:scale-95 transition-transform shadow-lg"
+                >
+                  <Flame className="w-3.5 h-3.5" />
+                  <span>Join Challenge</span>
+                </button>
+              )}
+            </>
+          );
+        })()}
+
+        {/* Reaction summary + top comment preview */}
+        <div className="mb-2 flex items-start justify-between gap-3">
+          <Suspense fallback={null}>
+            <CommentPreview
+              postId={rawPostId}
+              source={post.source ?? "store"}
+              totalCount={post.comments_count ?? 0}
+              onOpen={() => onOpenComments(post.id)}
+            />
+          </Suspense>
+          <Suspense fallback={null}>
+            <ReactionSummary postId={rawPostId} source={post.source ?? "store"} />
+          </Suspense>
+        </div>
+
+        {/* Top comment preview — surfaces the most-liked comment so users
+            get social proof of engagement without opening the comment sheet.
+            Tap routes to the full comments. */}
+        {topComment && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onOpenComments(post.id); }}
+            className="flex items-start gap-2 mb-2 max-w-full text-left active:opacity-70"
+          >
+            <div className="w-6 h-6 rounded-full overflow-hidden bg-white/15 border border-white/20 shrink-0">
+              {topComment.author_avatar ? (
+                <img src={topComment.author_avatar} alt="" className="w-full h-full object-cover" />
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-white text-[10px] font-bold">
+                  {topComment.author_name[0]?.toUpperCase()}
+                </div>
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-white/90 text-[12px] leading-snug drop-shadow line-clamp-2">
+                <span className="font-bold mr-1">{topComment.author_name}</span>
+                {topComment.content}
+              </p>
+            </div>
+            {topComment.likes_count > 0 && (
+              <div className="flex items-center gap-0.5 shrink-0 text-white/70 text-[11px] font-semibold drop-shadow">
+                <Heart className="w-3 h-3 fill-white/70" />
+                <span>{topComment.likes_count > 999 ? `${(topComment.likes_count / 1000).toFixed(1)}k` : topComment.likes_count}</span>
+              </div>
+            )}
+          </button>
+        )}
+
+        {/* "View N comments" inline link — Instagram/TikTok pattern.
+            Opens the existing comment sheet without forcing a trip to the
+            right column. */}
+        {(post.comments_count || 0) > 0 && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onOpenComments(post.id); }}
+            className="block text-white/80 text-xs font-medium drop-shadow mb-2 active:opacity-70"
+          >
+            View {post.comments_count === 1
+              ? "1 comment"
+              : `all ${post.comments_count! > 999 ? `${(post.comments_count! / 1000).toFixed(1)}k` : post.comments_count} comments`}
+          </button>
+        )}
+
+        {/* Music ticker */}
+        <MusicTicker
+          name={post.audio_name || `Original Sound - ${post.source === "user" ? post.author_name || "ZIVO" : post.store_name || "ZIVO"}`}
+          onClick={() => {
+            const soundLabel = post.audio_name || `Original Sound - ${post.source === "user" ? post.author_name || "ZIVO" : post.store_name || "ZIVO"}`;
+            onOpenSound(soundLabel);
+          }}
+        />
+      </div>
+
+      {/* Right-side action buttons (TikTok-style) — responsive scale.
+          - smallest (<sm, e.g. iPhone SE): tight gap-3, Views row hidden
+            (it's display-only) so the column fits a 568-px-tall viewport
+            without clipping the avatar off the top.
+          - tablet (≥sm):  gap-5, all items
+          - desktop (≥lg): gap-6, larger icons */}
+      <div
+        className="absolute right-2 sm:right-3 lg:right-4 z-30 flex flex-col items-center gap-3 sm:gap-5 lg:gap-6"
+        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 88px)" }}
+      >
+        {/* Author avatar with follow badge — TikTok-style.
+            When the author is live, the avatar's ring turns red + pulses,
+            and a tap routes to the live stream instead of the profile. */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (authorIsLive && post.author_id) {
+              navigate(`/live/${post.author_id}`);
+              return;
+            }
+            if (post.source === "user" && post.author_id) {
+              onNavigate(`__user__${post.author_id}`);
+            } else if (post.store_slug) {
+              onNavigate(post.store_slug);
+            }
+          }}
+          className={cn(
+            "relative mb-1",
+            authorIsLive && "after:absolute after:inset-0 after:rounded-full after:ring-2 after:ring-red-500 after:animate-ping after:pointer-events-none"
+          )}
+          aria-label={authorIsLive
+            ? `${post.source === "user" ? post.author_name : post.store_name} is live — tap to watch`
+            : `View ${post.source === "user" ? post.author_name : post.store_name}'s profile`}
+        >
+          <div className={cn(
+            "w-11 h-11 sm:w-12 sm:h-12 lg:w-14 lg:h-14 rounded-full overflow-hidden bg-black/40 border-2",
+            authorIsLive ? "border-red-500" : "border-white",
+          )}>
+            {(post.source === "user" ? post.author_avatar : post.store_logo) ? (
+              <img
+                src={(post.source === "user" ? post.author_avatar : post.store_logo)!}
+                alt=""
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-white text-base font-bold">
+                {((post.source === "user" ? post.author_name : post.store_name) || "?").slice(0, 1).toUpperCase()}
+              </div>
+            )}
+          </div>
+          {/* LIVE pill — replaces the follow badge while streaming */}
+          {authorIsLive && (
+            <span className="absolute -top-1 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded-full bg-red-500 text-white text-[9px] font-bold leading-none border-2 border-black">
+              LIVE
+            </span>
+          )}
+          {/* + button when not yet following — suppressed while LIVE pill is showing */}
+          {!authorIsLive && authorId && !isSelf && !isFollowing && !followLoading && (
+            <span
+              onClick={(e) => { e.stopPropagation(); void handleFollow(e as any); }}
+              className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-primary flex items-center justify-center border-2 border-black cursor-pointer"
+            >
+              <span className="text-primary-foreground text-sm font-bold leading-none">+</span>
+            </span>
+          )}
+          {/* Checkmark when following */}
+          {!authorIsLive && authorId && !isSelf && isFollowing && (
+            <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-emerald-500 flex items-center justify-center border-2 border-black">
+              <UserCheck className="w-3 h-3 text-white" strokeWidth={3} />
+            </span>
+          )}
+          {/* Loading spinner during follow toggle */}
+          {!authorIsLive && authorId && !isSelf && followLoading && (
+            <span className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-6 h-6 rounded-full bg-primary flex items-center justify-center border-2 border-black">
+              <Loader2 className="w-3 h-3 text-primary-foreground animate-spin" />
+            </span>
+          )}
+        </button>
+
+        {/* Mute/Unmute with sound wave */}
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); handleMuteToggle(); }}
+          className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
+          aria-label={globalMuted ? "Unmute" : "Mute"}
+          title={`${globalMuted ? "Unmute" : "Mute"} (M)`}
+        >
+          <div className="w-11 h-11 lg:w-12 lg:h-12 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center relative overflow-hidden border border-white/10">
+            {globalMuted ? (
+              <VolumeX className="w-5 h-5 text-white/70" />
+            ) : (
+              <>
+                <Volume2 className="w-5 h-5 text-white z-10" />
+                {/* Animated sound bars */}
+                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex items-end gap-[2px]">
+                  {[1, 2, 3].map((i) => (
+                    <div
+                      key={i}
+                      className="w-[2px] bg-primary rounded-full"
+                      style={{
+                        animation: `soundbar 0.${4 + i}s ease-in-out infinite alternate`,
+                        height: `${4 + i * 2}px`,
+                      }}
+                    />
+                  ))}
+                </div>
+              </>
+            )}
+          </div>
+        </button>
+
+        {/* Like / Reaction (long-press for emoji picker) */}
+        <div className="relative">
+          {onSetReaction && (
+            <Suspense fallback={null}>
+              <ReactionPicker
+                open={showReactionPicker}
+                onClose={() => setShowReactionPicker(false)}
+                onPick={(emoji) => {
+                  haptic("medium");
+                  onSetReaction(emoji);
+                  spawnFloatingHearts(emoji);
+                }}
+              />
+            </Suspense>
+          )}
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              haptic(liked ? "light" : "medium");
+              // Burst only when transitioning unliked → liked (matches TikTok)
+              if (!liked) {
+                setShowLikeBurst(true);
+                spawnFloatingHearts();
+                window.setTimeout(() => setShowLikeBurst(false), 600);
+              }
+              onToggleLike(post.id, liked);
+            }}
+            onPointerDown={(e) => {
+              if (!onSetReaction) return;
+              e.stopPropagation();
+              if (longPressTimer.current) clearTimeout(longPressTimer.current);
+              longPressTimer.current = setTimeout(() => setShowReactionPicker(true), 350);
+            }}
+            onPointerUp={() => {
+              if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
+            }}
+            onPointerLeave={() => {
+              if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
+            }}
+            onContextMenu={(e) => { e.preventDefault(); if (onSetReaction) setShowReactionPicker(true); }}
+            className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
+            aria-label={currentReaction ? `Reacted ${currentReaction}` : "Like"}
+            title="Like (L)"
+          >
+            {currentReaction ? (
+              <span className="text-3xl drop-shadow-lg leading-none transition-transform active:scale-125" aria-hidden>
+                {currentReaction}
+              </span>
+            ) : (
+              <Heart
+                className={cn(
+                  "w-9 h-9 lg:w-10 lg:h-10 drop-shadow-lg transition-transform active:scale-125",
+                  liked ? "text-destructive fill-destructive" : "text-white",
+                )}
+              />
+            )}
+            <motion.span
+              key={liveLikesCount}
+              initial={{ scale: 1.3, color: "#ef4444" }}
+              animate={{ scale: 1, color: "#ffffff" }}
+              transition={{ duration: 0.3 }}
+              className="text-xs font-semibold drop-shadow tabular-nums"
+            >
+              {liveLikesCount > 999 ? `${(liveLikesCount / 1000).toFixed(1)}k` : liveLikesCount}
+            </motion.span>
+          </button>
+        </div>
+
+        {/* Comment */}
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onOpenComments(post.id); }}
+          className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
+          aria-label="Comment"
+          title="Comments"
+        >
+          <MessageCircle className="w-9 h-9 lg:w-10 lg:h-10 text-white drop-shadow-lg" />
+          <motion.span
+            key={liveCommentsCount}
+            initial={{ scale: 1.3 }}
+            animate={{ scale: 1 }}
+            transition={{ duration: 0.3 }}
+            className="text-white text-xs font-semibold drop-shadow tabular-nums"
+          >
+            {liveCommentsCount > 999 ? `${(liveCommentsCount / 1000).toFixed(1)}k` : liveCommentsCount}
+          </motion.span>
+        </button>
+
+        {/* Views — display-only, hidden on smallest phones so the right
+            column fits the 568-px iPhone SE viewport without clipping. */}
+        <div className="hidden sm:flex flex-col items-center gap-1">
+          <Eye className="w-9 h-9 lg:w-10 lg:h-10 text-white drop-shadow-lg" />
+          <span className="text-white text-xs font-semibold drop-shadow">
+            {post.view_count || 0}
+          </span>
+        </div>
+
+        {/* Repost */}
+        {onOpenRepost && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onOpenRepost(); }}
+            className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
+            aria-label={isReposted ? "Reposted" : "Repost"}
+          >
+            <Repeat2 className={cn(
+              "w-9 h-9 drop-shadow-lg",
+              isReposted ? "text-emerald-400 fill-emerald-400/20" : "text-white",
+            )} />
+            <span className="text-white text-xs font-semibold drop-shadow">
+              {(post.reposts_count || 0) > 0
+                ? (post.reposts_count! > 999 ? `${(post.reposts_count! / 1000).toFixed(1)}k` : post.reposts_count)
+                : isReposted ? "Reposted" : "Repost"}
+            </span>
+          </button>
+        )}
+
+        {/* Share */}
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onOpenShare(post.id); }}
+          className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
+          aria-label="Share"
+          title="Share"
+        >
+          <Send className="w-9 h-9 lg:w-10 lg:h-10 text-white drop-shadow-lg" />
+          <span className="text-white text-xs font-semibold drop-shadow">
+            {(post.shares_count || 0) > 0
+              ? (post.shares_count! > 999 ? `${(post.shares_count! / 1000).toFixed(1)}k` : post.shares_count)
+              : "Share"}
+          </span>
+        </button>
+
+        {/* Save / Bookmark */}
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); handleSaveToggle(); }}
+          className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
+          aria-label={saved ? "Remove from saved" : "Save reel"}
+          title={saved ? "Saved" : "Save"}
+        >
+          <Bookmark
+            className={cn(
+              "w-9 h-9 drop-shadow-lg transition-transform active:scale-125",
+              saved ? "text-amber-400 fill-amber-400" : "text-white",
+            )}
+          />
+          <span className="text-white text-xs font-semibold drop-shadow">
+            {saved ? "Saved" : "Save"}
+          </span>
+        </button>
+
+        {/* CC / Subtitles toggle */}
+        {post.caption && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setShowCaptions((v) => !v); }}
+            className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
+            aria-label={showCaptions ? "Hide captions" : "Show captions"}
+            title="Captions"
+          >
+            <div className={cn(
+              "w-11 h-11 rounded-full flex items-center justify-center border transition-all",
+              showCaptions
+                ? "bg-white border-white"
+                : "bg-black/40 backdrop-blur-sm border-white/10",
+            )}>
+              <span className={cn(
+                "text-[11px] font-black tracking-tight leading-none",
+                showCaptions ? "text-black" : "text-white",
+              )}>CC</span>
+            </div>
+            <span className="text-white text-xs font-semibold drop-shadow">
+              {showCaptions ? "On" : "Off"}
+            </span>
+          </button>
+        )}
+
+        {/* Duet quick button — video posts by others only */}
+        {!isSelf && isVideoPost && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              toast.success("Starting duet…");
+              if (onOpenActions) onOpenActions();
+            }}
+            className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
+            aria-label="Duet this video"
+            title="Duet"
+          >
+            <Scissors className="w-7 h-7 text-white drop-shadow-lg" />
+            <span className="text-white text-xs font-semibold drop-shadow">Duet</span>
+          </button>
+        )}
+
+        {/* Gift / Tip creator — non-own posts only */}
+        {!isSelf && post.source === "user" && post.author_id && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              toast.success("Opening tip jar for " + (post.author_name || "this creator") + "…");
+              if (onOpenActions) onOpenActions();
+            }}
+            className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
+            aria-label="Send a gift to this creator"
+            title="Gift creator"
+          >
+            <Gift className="w-7 h-7 text-amber-400 drop-shadow-lg" />
+            <span className="text-white text-xs font-semibold drop-shadow">Gift</span>
+          </button>
+        )}
+
+        {/* More options (3-dot) → opens unified PostActionsMenu */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            if (onOpenActions) onOpenActions();
+            else setShowMoreMenu(true);
+          }}
+          className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
+          aria-label="More options"
+          title="More options"
+        >
+          <div className="w-11 h-11 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center border border-white/10">
+            <MoreHorizontal className="w-5 h-5 text-white" />
+          </div>
+        </button>
+
+        {/* Rotating sound disk — TikTok-signature album art. Spins only while
+            the video is playing; tap to open the sound's reels feed. */}
+        <button
+          type="button"
+          onClick={(e) => {
+            e.stopPropagation();
+            const soundLabel = post.audio_name || `Original Sound - ${post.source === "user" ? post.author_name || "ZIVO" : post.store_name || "ZIVO"}`;
+            onOpenSound(soundLabel);
+          }}
+          className="mt-1 relative"
+          aria-label="Sound details"
+        >
+          <div
+            className={cn(
+              "w-11 h-11 rounded-full overflow-hidden border-2 border-black bg-gradient-to-br from-zinc-700 via-zinc-900 to-black flex items-center justify-center",
+              isActive && isPlaying && "animate-[spin_5s_linear_infinite]",
+            )}
+          >
+            {(post.source === "user" ? post.author_avatar : post.store_logo) ? (
+              <img
+                src={(post.source === "user" ? post.author_avatar : post.store_logo)!}
+                alt=""
+                className="w-7 h-7 rounded-full object-cover"
+              />
+            ) : (
+              <Music className="w-4 h-4 text-white" />
+            )}
+          </div>
+          {/* "Use sound" shortcut badge */}
+          <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-white flex items-center justify-center shadow-md border border-black/10">
+            <Plus className="w-3 h-3 text-black" />
+          </span>
+        </button>
+      </div>
+
+      {/* Scrub timecode — appears in the center of the screen while dragging
+          the progress bar so the user can land on a specific moment. */}
+      <AnimatePresence>
+        {isScrubbing && videoDuration > 0 && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            transition={{ duration: 0.15 }}
+            className="absolute left-1/2 -translate-x-1/2 z-30 px-4 py-2 rounded-2xl bg-black/70 backdrop-blur-md flex items-baseline gap-1 pointer-events-none"
+            style={{ top: "40%" }}
+          >
+            <span className="text-white text-2xl font-bold tabular-nums">
+              {formatVideoTime(videoProgress * videoDuration)}
+            </span>
+            <span className="text-white/50 text-sm tabular-nums">
+              / {formatVideoTime(videoDuration)}
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Video progress bar — drag-to-seek (TikTok style).
+          The wrapper is a tall invisible touch target so users can grab it
+          easily, while the visible bar stays thin (or grows when scrubbing). */}
+      {isVideoPost && !hasPlaybackError && (
+        <div
+          ref={progressBarRef}
+          className="absolute inset-x-0 bottom-0 z-25 h-6 flex items-end touch-none select-none"
+          onPointerDown={(e) => {
+            if (!progressBarRef.current || !videoRef.current) return;
+            (e.currentTarget as HTMLDivElement).setPointerCapture(e.pointerId);
+            const rect = progressBarRef.current.getBoundingClientRect();
+            const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            wasPlayingBeforeScrub.current = !videoRef.current.paused;
+            videoRef.current.pause();
+            setIsScrubbing(true);
+            setVideoProgress(ratio);
+            if (Number.isFinite(videoRef.current.duration)) {
+              videoRef.current.currentTime = ratio * videoRef.current.duration;
+            }
+          }}
+          onPointerMove={(e) => {
+            if (!isScrubbing || !progressBarRef.current || !videoRef.current) return;
+            const rect = progressBarRef.current.getBoundingClientRect();
+            const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            setVideoProgress(ratio);
+            if (Number.isFinite(videoRef.current.duration)) {
+              videoRef.current.currentTime = ratio * videoRef.current.duration;
+            }
+          }}
+          onPointerUp={(e) => {
+            (e.currentTarget as HTMLDivElement).releasePointerCapture(e.pointerId);
+            setIsScrubbing(false);
+            if (wasPlayingBeforeScrub.current) {
+              void videoRef.current?.play().catch(() => {});
+            }
+          }}
+          onPointerCancel={() => {
+            setIsScrubbing(false);
+            if (wasPlayingBeforeScrub.current) {
+              void videoRef.current?.play().catch(() => {});
+            }
+          }}
+        >
+          <div
+            className={cn(
+              "relative w-full bg-white/15 transition-[height] duration-150",
+              isScrubbing ? "h-1" : "h-0.5",
+            )}
+          >
+            {/* Buffered range — sits beneath the playhead fill so the user
+                can see how much is ready ahead of where they're watching. */}
+            <div
+              className="absolute inset-y-0 left-0 bg-white/30 transition-[width] duration-200 ease-out"
+              style={{ width: `${bufferedProgress * 100}%` }}
+            />
+            {/* Played fill */}
+            <div
+              className="absolute inset-y-0 left-0 bg-white/90"
+              style={{ width: `${videoProgress * 100}%` }}
+            />
+            {isScrubbing && (
+              <div
+                className="absolute -top-1.5 w-4 h-4 -ml-2 rounded-full bg-white shadow-lg"
+                style={{ left: `${videoProgress * 100}%` }}
+              />
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Like-tap heart burst — single-tap on the like button (right column).
+          Distinct from the double-tap-on-video burst — this one is small + on
+          the side. */}
+      <AnimatePresence>
+        {showLikeBurst && (
+          <motion.div
+            initial={{ scale: 0, opacity: 1, y: 0 }}
+            animate={{ scale: 1.1, opacity: 0, y: -40 }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
+            className="absolute right-6 z-40 pointer-events-none"
+            style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 270px)" }}
+          >
+            <Heart className="w-12 h-12 text-destructive fill-destructive drop-shadow-lg" />
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* More-options bottom sheet */}
+      <AnimatePresence>
+        {showMoreMenu && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowMoreMenu(false)}
+              className="fixed inset-0 z-[80] bg-black/60"
+            />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 320 }}
+              className="fixed inset-x-0 bottom-0 z-[81] bg-background rounded-t-2xl pb-[env(safe-area-inset-bottom,16px)]"
+            >
+              <div className="flex justify-center pt-2 pb-1">
+                <div className="w-10 h-1 rounded-full bg-muted-foreground/20" />
+              </div>
+              <div className="px-2 py-2 space-y-0.5">
+                <button
+                  onClick={() => {
+                    setShowMoreMenu(false);
+                    const url = `${window.location.origin}/reels/${post.id}`;
+                    try {
+                      const ta = document.createElement("textarea");
+                      ta.value = url;
+                      ta.style.cssText = "position:fixed;opacity:0;left:-9999px";
+                      document.body.appendChild(ta);
+                      ta.select();
+                      document.execCommand("copy");
+                      document.body.removeChild(ta);
+                      toast.success("Link copied");
+                    } catch { toast.info("Long-press URL bar to copy"); }
+                  }}
+                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl"
+                >
+                  <Link2 className="h-5 w-5 text-foreground" />
+                  <span className="text-sm font-medium text-foreground">Copy link</span>
+                </button>
+                <button
+                  onClick={() => { setShowMoreMenu(false); setShowSpeedPicker(true); }}
+                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl"
+                >
+                  <Gauge className="h-5 w-5 text-foreground" />
+                  <span className="text-sm font-medium text-foreground flex-1 text-left">Playback speed</span>
+                  <span className="text-xs font-semibold text-muted-foreground tabular-nums">{playbackSpeed}×</span>
+                </button>
+                <button
+                  onClick={async () => {
+                    setShowMoreMenu(false);
+                    const v = videoRef.current;
+                    if (!v) return;
+                    try {
+                      const doc = document as any;
+                      if (doc.pictureInPictureElement) {
+                        await doc.exitPictureInPicture();
+                      } else if ((v as any).requestPictureInPicture) {
+                        await (v as any).requestPictureInPicture();
+                      } else {
+                        toast.error("Picture-in-picture isn't supported on this device");
+                      }
+                    } catch {
+                      toast.error("Couldn't open picture-in-picture");
+                    }
+                  }}
+                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl"
+                >
+                  <PictureInPicture className="h-5 w-5 text-foreground" />
+                  <span className="text-sm font-medium text-foreground">Picture-in-picture</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setShowMoreMenu(false);
+                    if (!userId) { toast.error("Please sign in to send a tip"); return; }
+                    if (post.source === "user" && post.author_id && post.author_id !== userId) {
+                      navigate(`/user/${post.author_id}`);
+                    } else if (post.source === "store" && post.store_slug) {
+                      navigate(`/grocery/shop/${post.store_slug}`);
+                    } else {
+                      toast.info("Support creators by sending tips on their profile!");
+                    }
+                  }}
+                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl"
+                >
+                  <Gift className="h-5 w-5 text-amber-500" />
+                  <span className="text-sm font-medium text-foreground">Tip Creator</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setShowMoreMenu(false);
+                    toast.success("Duet — record your response and tag the original creator!");
+                    const authorName = post.source === "user" ? post.author_name : post.store_name;
+                    navigate("/feed", { state: { openCreate: true, duetWith: post.id, duetAuthor: authorName } });
+                  }}
+                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl"
+                >
+                  <Film className="h-5 w-5 text-foreground" />
+                  <span className="text-sm font-medium text-foreground">Duet</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setShowMoreMenu(false);
+                    toast.success("Stitch — clip this reel and record your take on it!");
+                    const authorName = post.source === "user" ? post.author_name : post.store_name;
+                    navigate("/feed", { state: { openCreate: true, stitchWith: post.id, stitchAuthor: authorName } });
+                  }}
+                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl"
+                >
+                  <Scissors className="h-5 w-5 text-foreground" />
+                  <span className="text-sm font-medium text-foreground">Stitch</span>
+                </button>
+                <button
+                  onClick={async () => {
+                    setShowMoreMenu(false);
+                    const mediaUrl = post.media_urls?.[0];
+                    if (!mediaUrl) { toast.error("No media to download"); return; }
+                    try {
+                      const a = document.createElement("a");
+                      a.href = mediaUrl;
+                      a.download = `zivo-reel-${post.id}.${post.media_type === "video" ? "mp4" : "jpg"}`;
+                      a.target = "_blank";
+                      a.rel = "noopener noreferrer";
+                      document.body.appendChild(a);
+                      a.click();
+                      document.body.removeChild(a);
+                      toast.success("Download started");
+                    } catch {
+                      toast.error("Couldn't download — try saving from full-screen");
+                    }
+                  }}
+                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl"
+                >
+                  <Download className="h-5 w-5 text-foreground" />
+                  <span className="text-sm font-medium text-foreground">Download</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setShowMoreMenu(false);
+                    navigate("/feed", { state: { openCreate: true, shareToStory: true, storyMedia: post.media_urls?.[0], storyPostId: post.id } });
+                    toast.success("Add to your story");
+                  }}
+                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl"
+                >
+                  <Layers className="h-5 w-5 text-foreground" />
+                  <span className="text-sm font-medium text-foreground">Share to Story</span>
+                </button>
+                {userId && post.author_id && userId === post.author_id && (
+                  <button
+                    onClick={async () => {
+                      setShowMoreMenu(false);
+                      const rawId = post.id.startsWith("u-") ? post.id.slice(2) : post.id;
+                      const table = post.source === "user" ? "user_posts" : "store_posts";
+                      await (supabase as any).from(table).update({ is_pinned: true }).eq("id", rawId);
+                      toast.success("Pinned to your profile");
+                    }}
+                    className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl"
+                  >
+                    <Pin className="h-5 w-5 text-foreground" />
+                    <span className="text-sm font-medium text-foreground">Pin to Profile</span>
+                  </button>
+                )}
+                <button
+                  onClick={() => {
+                    setShowMoreMenu(false);
+                    window.dispatchEvent(new CustomEvent("zivo-reel-hide", { detail: { postId: post.id } }));
+                  }}
+                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl"
+                >
+                  <EyeOff className="h-5 w-5 text-foreground" />
+                  <span className="text-sm font-medium text-foreground">Not interested</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setShowMoreMenu(false);
+                    if (!userId) { toast.error("Please sign in to report"); return; }
+                    window.dispatchEvent(new CustomEvent("zivo-reel-report", { detail: { postId: post.id } }));
+                  }}
+                  className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl"
+                >
+                  <Flag className="h-5 w-5 text-destructive" />
+                  <span className="text-sm font-medium text-destructive">Report</span>
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Speed-picker bottom sheet */}
+      <AnimatePresence>
+        {showSpeedPicker && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowSpeedPicker(false)}
+              className="fixed inset-0 z-[80] bg-black/60"
+            />
+            <motion.div
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 30, stiffness: 320 }}
+              className="fixed inset-x-0 bottom-0 z-[81] bg-background rounded-t-2xl pb-[env(safe-area-inset-bottom,16px)]"
+            >
+              <div className="flex justify-center pt-2 pb-1">
+                <div className="w-10 h-1 rounded-full bg-muted-foreground/20" />
+              </div>
+              <p className="px-5 py-2 text-xs font-bold text-muted-foreground uppercase tracking-wider">Playback speed</p>
+              <div className="px-2 pb-2 grid grid-cols-4 gap-2">
+                {[0.5, 1.0, 1.5, 2.0].map((rate) => {
+                  const active = Math.abs(playbackSpeed - rate) < 0.01;
+                  return (
+                    <button
+                      key={rate}
+                      onClick={() => { haptic("selection"); setPlaybackSpeed(rate); setShowSpeedPicker(false); }}
+                      className={cn(
+                        "py-3 rounded-xl text-sm font-bold tabular-nums transition-all active:scale-95",
+                        active ? "bg-primary text-primary-foreground" : "bg-muted/40 text-foreground hover:bg-muted",
+                      )}
+                    >
+                      {rate}×
+                    </button>
+                  );
+                })}
+              </div>
+              <p className="px-5 pb-3 text-[11px] text-muted-foreground">
+                Tip: tap and hold the video for a quick 2× boost.
+              </p>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
+      {/* Speed badge — tappable shortcut to the speed picker. Shown whenever
+          playback isn't 1× and the user isn't long-pressing (FF badge wins). */}
+      {playbackSpeed !== 1.0 && !isHoldingFastForward && (
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); setShowSpeedPicker(true); }}
+          aria-label="Change playback speed"
+          title="Change playback speed"
+          className="absolute right-3 z-30 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-sm border border-white/10 active:scale-95 transition-transform"
+          style={{ top: "calc(env(safe-area-inset-top, 0px) + 80px)" }}
+        >
+          <span className="text-white text-[11px] font-bold tabular-nums">{playbackSpeed}×</span>
+        </button>
       )}
     </div>
   );
 }
 
-export default function FeedPage() {
-  const { t } = useI18n();
-  const navigate = useNavigate();
-  const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
+// Memoized export — prevents off-screen reels from re-rendering when an
+// unrelated parent state (mute, current speed, search overlay, etc.) flips.
+// Custom comparator skips the heavy props that don't affect this card's
+// output (e.g. `userLikedPostIds` only matters when it includes this post).
+const MemoReelCard = memo(ReelCard, (prev, next) => {
+  if (prev.post.id !== next.post.id) return false;
+  if (prev.isActive !== next.isActive) return false;
+  if (prev.shouldPreload !== next.shouldPreload) return false;
+  if (prev.globalMuted !== next.globalMuted) return false;
+  if (prev.userId !== next.userId) return false;
+  // Only re-render when our own like state changes, not when any user's does.
+  const prevLiked = prev.userLikedPostIds.has(prev.post.id);
+  const nextLiked = next.userLikedPostIds.has(next.post.id);
+  if (prevLiked !== nextLiked) return false;
+  // Counts/captions can update via the realtime channel inside the card —
+  // no need to bust memo when post object reference changes if id is stable.
+  return true;
+});
 
-  const { data: posts = [], isLoading } = useQuery({
-    queryKey: ["customer-feed"],
+// ── Comment Sheet ────────────────────────────────────────────────────────────
+
+function CommentSheet({
+  postId,
+  userId,
+  onClose,
+}: {
+  postId: string;
+  userId: string | null;
+  onClose: () => void;
+}) {
+  const [commentText, setCommentText] = useState("");
+  const [submitting, setSubmitting] = useState(false);
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  // Inline edit state for own comments
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editingText, setEditingText] = useState("");
+  // Reply state: when set, the next submitted comment is a reply to this id
+  const [replyTo, setReplyTo] = useState<{ id: string; authorName: string } | null>(null);
+  // Per-thread expand state: which top-level comments have their replies open
+  const [expandedThreads, setExpandedThreads] = useState<Set<string>>(new Set());
+  // Comment sort: "newest" (default) or "top" (by likes_count desc)
+  const [commentSort, setCommentSort] = useState<"newest" | "top">("newest");
+  // Caller owns the post? Drives the Pin / Unpin row visibility.
+  const [isPostAuthor, setIsPostAuthor] = useState(false);
+  const queryClient = useQueryClient();
+
+  // Route comments to the right table based on the post id prefix.
+  // User posts are passed with a "u-" prefix; everything else is a store post.
+  const isUserPost  = postId.startsWith("u-");
+  const rawPostId   = isUserPost ? postId.slice(2) : postId;
+  const targetTable = isUserPost ? "user_post_comments" : "store_post_comments";
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  // Check if user has a verified account (phone_verified)
+  const { data: isVerified } = useQuery({
+    queryKey: ["user-verified", userId],
     queryFn: async () => {
-      // Fetch posts with store info
-      const { data: postsData, error } = await supabase
-        .from("store_posts")
+      if (!userId) return false;
+      const { data } = await supabase
+        .from("profiles")
+        .select("phone_verified")
+        .eq("user_id", userId)
+        .single();
+      return data?.phone_verified ?? false;
+    },
+    enabled: !!userId,
+  });
+
+  const { data: comments = [], isLoading } = useQuery({
+    queryKey: ["post-comments", targetTable, rawPostId],
+    queryFn: async () => {
+      const { data: rawComments, error } = await (supabase as any)
+        .from(targetTable)
         .select("*")
-        .eq("is_published", true)
-        .order("created_at", { ascending: false })
-        .limit(50);
+        .eq("post_id", rawPostId)
+        .order("created_at", { ascending: true });
       if (error) throw error;
+      if (!rawComments || rawComments.length === 0) return [];
 
-      // Get unique store IDs
-      const storeIds = [...new Set((postsData || []).map((p: any) => p.store_id))];
-      if (storeIds.length === 0) return [];
+      // Fetch profiles from public_profiles view (no RLS restriction)
+      const userIds = [...new Set(rawComments.map((c: any) => c.user_id).filter(Boolean))];
+      const { data: profiles } = await supabase
+        .from("public_profiles")
+        .select("id, full_name, avatar_url")
+        .in("id", userIds as string[]);
 
-      const { data: stores } = await supabase
-        .from("store_profiles")
-        .select("id, name, logo_url, slug")
-        .in("id", storeIds);
+      const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
 
-      const storeMap = new Map((stores || []).map((s: any) => [s.id, s]));
+      // Aggregate comment_likes counts so the "Top" sort actually works.
+      // The comment tables don't have a denormalized likes_count, so we count
+      // here and attach to each row as `like_count`.
+      const commentIds = rawComments.map((c: any) => c.id);
+      const likeCounts = new Map<string, number>();
+      if (commentIds.length > 0) {
+        const { data: likeRows } = await (supabase as any)
+          .from("comment_likes")
+          .select("comment_id")
+          .eq("target_table", targetTable)
+          .in("comment_id", commentIds);
+        for (const r of likeRows ?? []) {
+          likeCounts.set(r.comment_id, (likeCounts.get(r.comment_id) ?? 0) + 1);
+        }
+      }
 
-      return (postsData || []).map((post: any) => {
-        const store = storeMap.get(post.store_id);
-        return {
-          ...post,
-          store_name: store?.name || "Store",
-          store_logo: store?.logo_url,
-          store_slug: store?.slug,
-        } as FeedPost;
-      });
+      // Normalize text column — store_post_comments uses `content`, user_post_comments may use `comment`
+      return rawComments.map((c: any) => ({
+        ...c,
+        content: c.content ?? c.comment ?? c.text ?? c.body ?? "",
+        profiles: profileMap.get(c.user_id) || null,
+        like_count: likeCounts.get(c.id) ?? 0,
+      }));
     },
   });
 
-  const toggleLike = (postId: string) => {
-    setLikedPosts(prev => {
-      const next = new Set(prev);
-      if (next.has(postId)) next.delete(postId);
-      else next.add(postId);
-      return next;
+  // Resolve "am I the post author?" so we can show Pin/Unpin on every comment
+  useEffect(() => {
+    if (!userId || !rawPostId) { setIsPostAuthor(false); return; }
+    let cancelled = false;
+    (async () => {
+      if (isUserPost) {
+        const { data } = await (supabase as any)
+          .from("user_posts")
+          .select("user_id")
+          .eq("id", rawPostId)
+          .maybeSingle();
+        if (!cancelled) setIsPostAuthor(!!data && data.user_id === userId);
+      } else {
+        // Store post → caller must own the linked store
+        const { data } = await (supabase as any)
+          .from("store_posts")
+          .select("store_id")
+          .eq("id", rawPostId)
+          .maybeSingle();
+        if (!data?.store_id) { if (!cancelled) setIsPostAuthor(false); return; }
+        const { data: store } = await (supabase as any)
+          .from("store_profiles")
+          .select("owner_id")
+          .eq("id", data.store_id)
+          .maybeSingle();
+        if (!cancelled) setIsPostAuthor(!!store?.owner_id && store.owner_id === userId);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [userId, rawPostId, isUserPost]);
+
+  const handleTogglePin = async (commentId: string) => {
+    if (!userId) return;
+    const { error } = await (supabase as any).rpc("toggle_comment_pin", {
+      _comment_id:   commentId,
+      _target_table: targetTable,
     });
+    if (error) {
+      toast.error(/only the post author/i.test(error.message ?? "")
+        ? "Only the post author can pin comments"
+        : "Couldn't update pin");
+      return;
+    }
+    queryClient.invalidateQueries({ queryKey: ["post-comments", targetTable, rawPostId] });
   };
 
+  const handleSubmit = async () => {
+    if (!commentText.trim() || !userId) {
+      if (!userId) toast.error("Please sign in to comment");
+      return;
+    }
+    if (!confirmContentSafe(commentText, "comment")) return;
+    setSubmitting(true);
+    // user_post_comments uses `comment`; store_post_comments uses `content`.
+    const insertPayload: Record<string, unknown> = {
+      post_id: rawPostId,
+      user_id: userId,
+    };
+    if (isUserPost) insertPayload.comment = commentText.trim();
+    else            insertPayload.content = commentText.trim();
+    if (replyTo) insertPayload.parent_id = replyTo.id;
+    const { error } = await (supabase as any).from(targetTable).insert(insertPayload);
+    if (error) {
+      console.error("[CommentSheet] insert failed", error);
+      const msg = (error.message || "").toLowerCase();
+      if (msg.includes("auth") || msg.includes("permission") || msg.includes("rls")) {
+        toast.error("You need to be signed in to comment");
+      } else if (msg.includes("network") || msg.includes("fetch")) {
+        toast.error("Network error. Check your connection.");
+      } else if (msg.includes("rate") || msg.includes("too many")) {
+        toast.error("Too many comments — wait a moment and try again");
+      } else {
+        toast.error("Couldn't post comment. Try again.");
+      }
+    } else {
+      setCommentText("");
+      // Auto-expand the thread we just replied into so the new reply is visible
+      if (replyTo) {
+        setExpandedThreads((prev) => new Set(prev).add(replyTo.id));
+      }
+      setReplyTo(null);
+      queryClient.invalidateQueries({ queryKey: ["post-comments", targetTable, rawPostId] });
+      queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
+    }
+    setSubmitting(false);
+  };
+
+  // Edit / delete handlers for own comments
+  const handleEditComment = async (commentId: string, nextContent: string) => {
+    if (!userId || !nextContent.trim()) return;
+    if (!confirmContentSafe(nextContent, "comment")) return;
+    const updatePayload: Record<string, unknown> = isUserPost
+      ? { comment: nextContent.trim() }
+      : { content: nextContent.trim() };
+    const { error } = await (supabase as any)
+      .from(targetTable)
+      .update(updatePayload)
+      .eq("id", commentId)
+      .eq("user_id", userId); // RLS-style guard
+    if (error) {
+      toast.error("Couldn't save edit");
+      return;
+    }
+    setEditingId(null);
+    setEditingText("");
+    queryClient.invalidateQueries({ queryKey: ["post-comments", targetTable, rawPostId] });
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!userId) return;
+    const { error } = await (supabase as any)
+      .from(targetTable)
+      .delete()
+      .eq("id", commentId)
+      .eq("user_id", userId);
+    if (error) {
+      toast.error("Couldn't delete comment");
+      return;
+    }
+    toast.success("Comment deleted");
+    queryClient.invalidateQueries({ queryKey: ["post-comments", targetTable, rawPostId] });
+    queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
+  };
+
+  useEffect(() => {
+    inputRef.current?.focus();
+  }, []);
+
   return (
-    <div className="min-h-screen bg-background pb-24">
-      {/* Header */}
-      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30">
-        <div className="flex items-center justify-center h-12 max-w-lg mx-auto px-4">
-          <h1 className="text-lg font-bold text-foreground tracking-tight">{t("nav.feed")}</h1>
+    <div
+      className="fixed inset-0 z-[60] flex flex-col justify-end"
+      onClick={onClose}
+    >
+      {/* Backdrop */}
+      <div className="absolute inset-0 bg-black/50" />
+
+      {/* Sheet */}
+      <div
+        className="relative bg-background rounded-t-2xl max-h-[65vh] flex flex-col animate-in slide-in-from-bottom duration-300"
+        onClick={(e) => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+          <span className="font-semibold text-foreground">Comments ({comments.length})</span>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted"
+          >
+            <XIcon className="w-4 h-4 text-muted-foreground" />
+          </button>
+        </div>
+
+        {/* Sort toggle (only shown when there are at least 2 top-level comments) */}
+        {comments.filter((c: any) => !c.parent_id).length >= 2 && (
+          <div className="px-4 pt-2 flex items-center gap-2 text-xs">
+            <span className="text-muted-foreground font-medium">Sort by:</span>
+            <button
+              type="button"
+              onClick={() => setCommentSort("newest")}
+              className={cn(
+                "rounded-full px-3 py-1 font-semibold transition-colors active:scale-95",
+                commentSort === "newest"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80",
+              )}
+              aria-pressed={commentSort === "newest"}
+            >
+              Newest
+            </button>
+            <button
+              type="button"
+              onClick={() => setCommentSort("top")}
+              className={cn(
+                "rounded-full px-3 py-1 font-semibold transition-colors active:scale-95",
+                commentSort === "top"
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted text-muted-foreground hover:bg-muted/80",
+              )}
+              aria-pressed={commentSort === "top"}
+            >
+              Top
+            </button>
+          </div>
+        )}
+
+        {/* Comments list */}
+        <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3">
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
+            </div>
+          ) : comments.length === 0 ? (
+            <p className="text-center text-muted-foreground text-sm py-8">No comments yet. Be the first!</p>
+          ) : (() => {
+            // Group comments into top-level + replies-by-parent
+            const topLevel: any[] = [];
+            const replyMap = new Map<string, any[]>();
+            for (const c of comments) {
+              if (c.parent_id) {
+                const arr = replyMap.get(c.parent_id) ?? [];
+                arr.push(c);
+                replyMap.set(c.parent_id, arr);
+              } else {
+                topLevel.push(c);
+              }
+            }
+            // Sort top-level: pinned first, then by chosen sort.
+            // Replies inside each thread always render oldest-first so the
+            // conversation reads top-to-bottom.
+            topLevel.sort((a, b) => {
+              if (a.is_pinned && !b.is_pinned) return -1;
+              if (!a.is_pinned && b.is_pinned) return 1;
+              if (commentSort === "top") {
+                // `like_count` is aggregated from comment_likes in the query above
+                return (b.like_count ?? 0) - (a.like_count ?? 0)
+                  || new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+              }
+              return new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+            });
+
+            const renderRow = (c: any, isReply: boolean) => {
+              const prof = c.profiles;
+              const name = prof?.full_name || "User";
+              const initials = name.split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2);
+              const avatarSize = isReply ? "w-7 h-7" : "w-8 h-8";
+              return (
+                <div key={c.id} className={`flex gap-2 ${isReply ? "ml-9" : ""}`}>
+                  <div className={`${avatarSize} rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-0.5 overflow-hidden`}>
+                    {prof?.avatar_url ? (
+                      <img src={prof.avatar_url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <span className="text-xs font-bold text-muted-foreground">{initials}</span>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5 mb-0.5">
+                      <p className="text-xs font-semibold text-foreground">{name}</p>
+                      {c.is_pinned && !isReply && (
+                        <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/15 px-1.5 py-0.5 text-[9px] font-bold uppercase tracking-wide text-primary">
+                          📌 Pinned
+                        </span>
+                      )}
+                    </div>
+                    {editingId === c.id ? (
+                      <div className="flex flex-col gap-1.5">
+                        <textarea
+                          value={editingText}
+                          onChange={(e) => setEditingText(e.target.value)}
+                          autoFocus
+                          rows={2}
+                          className="w-full rounded-lg border border-border bg-background px-2 py-1.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/40 resize-none"
+                        />
+                        <div className="flex gap-2">
+                          <button
+                            type="button"
+                            onClick={() => { setEditingId(null); setEditingText(""); }}
+                            className="rounded-lg px-3 py-1 text-xs font-medium text-muted-foreground hover:bg-muted active:scale-95"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleEditComment(c.id, editingText)}
+                            disabled={!editingText.trim() || editingText.trim() === c.content}
+                            className="rounded-lg bg-primary px-3 py-1 text-xs font-semibold text-primary-foreground disabled:opacity-40 active:scale-95"
+                          >
+                            Save
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="text-sm text-foreground">
+                          <Suspense fallback={<span>{c.content}</span>}>
+                            <SafeCaption text={c.content} />
+                          </Suspense>
+                        </p>
+                        <div className="mt-0.5 flex items-center gap-3 text-xs text-muted-foreground">
+                          <span>{new Date(c.created_at).toLocaleDateString()}</span>
+                          {!isReply && userId && (
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setReplyTo({ id: c.id, authorName: name });
+                                requestAnimationFrame(() => inputRef.current?.focus());
+                              }}
+                              className="font-semibold text-foreground/70 hover:text-foreground active:scale-95 transition-transform"
+                            >
+                              Reply
+                            </button>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  <div className={`flex items-start gap-1 ${editingId === c.id ? "hidden" : ""}`}>
+                    <Suspense fallback={null}>
+                      <CommentHeartButton
+                        commentId={c.id}
+                        targetTable={targetTable}
+                        userId={userId}
+                        variant="light"
+                      />
+                    </Suspense>
+                    <Suspense fallback={null}>
+                      <CommentRowActions
+                        canManage={!!userId && c.user_id === userId}
+                        variant="light"
+                        onEditStart={() => { setEditingId(c.id); setEditingText(c.content || ""); }}
+                        onDelete={() => handleDeleteComment(c.id)}
+                        canPin={isPostAuthor && !isReply}
+                        isPinned={!!c.is_pinned}
+                        onTogglePin={() => handleTogglePin(c.id)}
+                      />
+                    </Suspense>
+                  </div>
+                </div>
+              );
+            };
+
+            return (
+              <>
+                {topLevel.map((c: any) => {
+                  const replies = replyMap.get(c.id) ?? [];
+                  const isExpanded = expandedThreads.has(c.id);
+                  return (
+                    <div key={c.id} className="flex flex-col gap-2">
+                      {renderRow(c, false)}
+                      {replies.length > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => setExpandedThreads((prev) => {
+                            const next = new Set(prev);
+                            if (next.has(c.id)) next.delete(c.id);
+                            else next.add(c.id);
+                            return next;
+                          })}
+                          className="ml-9 self-start text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                          aria-expanded={isExpanded}
+                        >
+                          <span className="inline-block w-6 border-t border-muted-foreground/30" />
+                          {isExpanded
+                            ? `Hide replies`
+                            : `View ${replies.length} ${replies.length === 1 ? "reply" : "replies"}`}
+                        </button>
+                      )}
+                      {isExpanded && replies.map((r: any) => renderRow(r, true))}
+                    </div>
+                  );
+                })}
+              </>
+            );
+          })()}
+        </div>
+
+        {/* Input */}
+        <div className="px-4 py-3 border-t border-border" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}>
+          {!userId ? (
+            <p className="text-center text-sm text-muted-foreground py-1">Sign in to comment</p>
+          ) : !isVerified ? (
+            <div className="flex items-center gap-2 justify-center py-1">
+              <ShieldCheck className="w-4 h-4 text-muted-foreground" />
+              <p className="text-sm text-muted-foreground">Only verified accounts can comment</p>
+            </div>
+          ) : (
+            <>
+              {/* "Replying to @name" badge */}
+              {replyTo && (
+                <div className="mb-2 flex items-center justify-between rounded-full bg-primary/10 px-3 py-1.5">
+                  <span className="text-xs text-primary">
+                    Replying to <span className="font-semibold">@{replyTo.authorName}</span>
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setReplyTo(null)}
+                    className="rounded-full p-1 text-primary hover:bg-primary/20 active:scale-90 transition-transform"
+                    aria-label="Cancel reply"
+                  >
+                    <XIcon className="h-3.5 w-3.5" />
+                  </button>
+                </div>
+              )}
+              <div className="relative flex gap-2">
+              {/* @-mention autocomplete (anchors above the input) */}
+              <Suspense fallback={null}>
+                <MentionPicker
+                  query={mentionQuery}
+                  onSelect={(r) => {
+                    if (!inputRef.current) return;
+                    const caret = inputRef.current.selectionStart ?? commentText.length;
+                    const handle = r.username || r.fullName || "";
+                    if (!handle) return;
+                    const next = applyMention(commentText, caret, handle);
+                    setCommentText(next.value);
+                    setMentionQuery(null);
+                    requestAnimationFrame(() => {
+                      inputRef.current?.focus();
+                      inputRef.current?.setSelectionRange(next.caret, next.caret);
+                    });
+                  }}
+                  onClose={() => setMentionQuery(null)}
+                />
+              </Suspense>
+              <input
+                ref={inputRef}
+                type="text"
+                value={commentText}
+                onChange={(e) => {
+                  setCommentText(e.target.value);
+                  const caret = e.target.selectionStart ?? e.target.value.length;
+                  setMentionQuery(detectMention(e.target.value, caret));
+                }}
+                onKeyDown={(e) => {
+                  // Picker handles Enter while open; only submit when no picker
+                  if (e.key === "Enter" && mentionQuery == null) handleSubmit();
+                }}
+                placeholder={replyTo ? `Reply to @${replyTo.authorName}…` : "Add a comment..."}
+                className="flex-1 h-11 sm:h-10 rounded-full bg-muted px-4 text-base sm:text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/40 transition-shadow"
+                disabled={submitting}
+              />
+              <button
+                type="button"
+                onClick={handleSubmit}
+                disabled={!commentText.trim() || submitting}
+                className="w-11 h-11 sm:w-10 sm:h-10 rounded-full bg-primary flex items-center justify-center disabled:opacity-40 active:scale-95 transition-transform"
+                aria-label="Send comment"
+              >
+                <Send className="w-4 h-4 text-primary-foreground" />
+              </button>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+
+
+// ── Feed Search Overlay ──────────────────────────────────────────────────────
+
+function FeedSearchOverlay({ onClose, onNavigate }: { onClose: () => void; onNavigate: (path: string) => void }) {
+  const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => { inputRef.current?.focus(); }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedQuery(query.trim()), 300);
+    return () => clearTimeout(t);
+  }, [query]);
+
+  // Search stores
+  const { data: storeResults = [], isLoading: storesLoading } = useQuery({
+    queryKey: ["feed-search-stores", debouncedQuery],
+    queryFn: async () => {
+      if (!debouncedQuery) return [];
+      const { data } = await supabase
+        .from("store_profiles")
+        .select("id, name, logo_url, slug, category")
+        .ilike("name", `%${debouncedQuery}%`)
+        .limit(10);
+      return data || [];
+    },
+    enabled: debouncedQuery.length >= 1,
+  });
+
+  // Search people — split words so "chhorng kim" matches "kimlain Chhorng"
+  const { data: profileResults = [], isLoading: profilesLoading } = useQuery({
+    queryKey: ["feed-search-profiles", debouncedQuery],
+    queryFn: async () => {
+      if (!debouncedQuery) return [];
+      const words = debouncedQuery.split(/\s+/).filter(Boolean);
+      let q = supabase
+        .from("public_profiles")
+        .select("id, full_name, avatar_url");
+      for (const word of words) {
+        q = q.ilike("full_name", `%${word}%`);
+      }
+      const { data } = await q.limit(10);
+      return data || [];
+    },
+    enabled: debouncedQuery.length >= 1,
+  });
+
+  const isLoading = storesLoading || profilesLoading;
+  const hasResults = storeResults.length > 0 || profileResults.length > 0;
+  const hasQuery = debouncedQuery.length >= 1;
+
+  return (
+    <div className="fixed inset-0 z-[70] bg-background flex flex-col">
+      {/* Search header */}
+      <div className="flex items-center gap-2 px-3 py-2.5 border-b border-border/50">
+        <button type="button" onClick={onClose} className="p-2 rounded-full hover:bg-muted/50">
+          <ArrowLeft className="w-5 h-5 text-foreground" />
+        </button>
+        <div className="flex-1 relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <input
+            ref={inputRef}
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search shops, people..."
+            className="w-full h-10 pl-9 pr-9 rounded-full bg-muted/40 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+          />
+          {query && (
+            <button type="button" onClick={() => setQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2">
+              <XIcon className="w-4 h-4 text-muted-foreground" />
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Feed content */}
-      <div className="max-w-lg mx-auto">
-        {isLoading ? (
-          <div className="flex items-center justify-center py-20">
-            <Loader2 className="h-7 w-7 animate-spin text-primary" />
+      {/* Results */}
+      <div className="flex-1 overflow-y-auto">
+        {!hasQuery && (
+          <div className="flex flex-col items-center justify-center h-full text-center px-8 gap-3">
+            <Search className="w-12 h-12 text-muted-foreground/30" />
+            <p className="text-sm text-muted-foreground">Search for shops, restaurants, or people</p>
           </div>
-        ) : posts.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-20 px-6 text-center">
-            <Store className="h-12 w-12 text-muted-foreground/20 mb-4" />
-            <p className="text-base font-medium text-foreground mb-1">{t("feed.no_posts")}</p>
-            <p className="text-sm text-muted-foreground">{t("feed.no_posts_desc")}</p>
+        )}
+
+        {hasQuery && isLoading && (
+          <div className="flex items-center justify-center py-12">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
           </div>
-        ) : (
-          <div className="divide-y divide-border/30">
-            <AnimatePresence>
-              {posts.map((post, index) => (
-                <motion.article
-                  key={post.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.05, duration: 0.3 }}
-                  className="bg-background"
-                >
-                  {/* Post header - store info */}
-                  <div
-                    className="flex items-center gap-3 px-4 py-3 cursor-pointer"
-                    onClick={() => post.store_slug && navigate(`/grocery/shop/${post.store_slug}`)}
-                  >
-                    <div className="w-9 h-9 rounded-full overflow-hidden bg-muted border border-border/50 flex-shrink-0">
-                      {post.store_logo ? (
-                        <img src={post.store_logo} alt="" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Store className="w-4 h-4 text-muted-foreground" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="min-w-0 flex-1">
-                      <p className="text-sm font-semibold text-foreground truncate">{post.store_name}</p>
-                    </div>
-                    <span className="text-xs text-muted-foreground flex-shrink-0">{timeAgo(post.created_at)}</span>
-                  </div>
+        )}
 
-                  {/* Media */}
-                  <FeedMediaCarousel urls={post.media_urls} mediaType={post.media_type} />
+        {hasQuery && !isLoading && !hasResults && (
+          <div className="flex flex-col items-center justify-center py-16 gap-2">
+            <Search className="w-10 h-10 text-muted-foreground/20" />
+            <p className="text-sm text-muted-foreground">No results for "{debouncedQuery}"</p>
+          </div>
+        )}
 
-                  {/* Actions */}
-                  <div className="px-4 pt-3 pb-1 flex items-center gap-5">
-                    <button
-                      onClick={() => toggleLike(post.id)}
-                      className="touch-manipulation active:scale-90 transition-transform"
-                    >
-                      <Heart
-                        className={cn(
-                          "w-6 h-6 transition-colors",
-                          likedPosts.has(post.id)
-                            ? "text-red-500 fill-red-500"
-                            : "text-foreground"
-                        )}
-                      />
-                    </button>
-                    <button className="touch-manipulation active:scale-90 transition-transform">
-                      <MessageCircle className="w-6 h-6 text-foreground" />
-                    </button>
-                    <button className="touch-manipulation active:scale-90 transition-transform">
-                      <Share2 className="w-6 h-6 text-foreground" />
-                    </button>
-                  </div>
-
-                  {/* Caption */}
-                  {post.caption && (
-                    <div className="px-4 pb-3 pt-1">
-                      <p className="text-sm text-foreground">
-                        <span className="font-semibold mr-1.5">{post.store_name}</span>
-                        {post.caption}
-                      </p>
-                    </div>
+        {storeResults.length > 0 && (
+          <div className="px-4 pt-3">
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Shops</p>
+            {storeResults.map((store: any) => (
+              <button
+                key={store.id}
+                type="button"
+                onClick={() => { onNavigate(`/grocery/shop/${store.slug}`); onClose(); }}
+                className="w-full flex items-center gap-3 py-3 px-2 rounded-xl hover:bg-muted/40 transition-colors"
+              >
+                <div className="w-11 h-11 rounded-full bg-muted/30 border border-border/30 flex items-center justify-center overflow-hidden shrink-0">
+                  {store.logo_url ? (
+                    <img src={store.logo_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <Store className="w-5 h-5 text-muted-foreground" />
                   )}
+                </div>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-sm font-semibold truncate">{store.name}</p>
+                  {store.category && <p className="text-[11px] text-muted-foreground">{store.category}</p>}
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
 
-                  {!post.caption && <div className="pb-2" />}
-                </motion.article>
-              ))}
-            </AnimatePresence>
+        {profileResults.length > 0 && (
+          <div className="px-4 pt-3">
+            <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">People</p>
+            {profileResults.map((person: any) => (
+              <button
+                key={person.id}
+                type="button"
+                onClick={() => { onNavigate(`/user/${person.id}`); onClose(); }}
+                className="w-full flex items-center gap-3 py-3 px-2 rounded-xl hover:bg-muted/40 transition-colors"
+              >
+                <div className="w-11 h-11 rounded-full bg-muted/30 border border-border/30 flex items-center justify-center overflow-hidden shrink-0">
+                  {person.avatar_url ? (
+                    <img src={person.avatar_url} alt="" className="w-full h-full object-cover" />
+                  ) : (
+                    <UserCircle className="w-6 h-6 text-muted-foreground" />
+                  )}
+                </div>
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-sm font-semibold truncate">{person.full_name || "User"}</p>
+                </div>
+              </button>
+            ))}
           </div>
         )}
       </div>
+    </div>
+  );
+}
 
+/* ── Sound Overlay (bottom sheet over reels) ─────────────────── */
+function SoundOverlay({
+  soundName,
+  onClose,
+  onNavigateToReel,
+  onUseSound,
+  currentPosts,
+}: {
+  soundName: string;
+  onClose: () => void;
+  onNavigateToReel: (postId: string) => void;
+  onUseSound: () => void;
+  currentPosts: FeedPost[];
+}) {
+  // Check if this is a generated "Original Sound" name (not stored in DB)
+  const isOriginalSound = soundName.startsWith("Original Sound - ");
+
+  const { data: dbReels = [], isLoading } = useQuery({
+    queryKey: ["sound-overlay-reels", soundName],
+    queryFn: async () => {
+      if (isOriginalSound) return []; // These aren't stored — we use currentPosts instead
+      const db = supabase as any;
+      const { data: storePosts } = await db
+        .from("store_posts")
+        .select("id, media_urls, media_type, view_count, store_profiles(name)")
+        .eq("is_published", true)
+        .eq("audio_name", soundName)
+        .order("created_at", { ascending: false })
+        .limit(30);
+
+      const { data: userPosts } = await db
+        .from("user_posts")
+        .select("id, media_urls, media_type, profiles(full_name, username)")
+        .eq("audio_name", soundName)
+        .order("created_at", { ascending: false })
+        .limit(30);
+
+      return [
+        ...(storePosts || []).map((p: any) => ({
+          id: p.id, media_urls: p.media_urls || [], media_type: p.media_type,
+          views: p.view_count || 0, author: p.store_profiles?.name || "Shop",
+        })),
+        ...(userPosts || []).map((p: any) => ({
+          id: p.id, media_urls: p.media_urls || [], media_type: p.media_type,
+          views: 0, author: p.profiles?.full_name || p.profiles?.username || "User",
+        })),
+      ];
+    },
+    enabled: !isOriginalSound,
+  });
+
+  // For "Original Sound" names, pull matching reels from the already-loaded feed
+  const reels = isOriginalSound
+    ? currentPosts
+        .filter((p) => {
+          const label = p.audio_name || `Original Sound - ${p.store_name || "ZIVO"}`;
+          return label === soundName;
+        })
+        .map((p) => ({
+          id: p.id, media_urls: p.media_urls, media_type: p.media_type,
+          views: p.view_count || 0, author: p.store_name || "User",
+        }))
+    : dbReels;
+
+  const reelCount = reels.length;
+
+  return (
+    <>
+      <SEOHead
+        title="ZIVO Feed – Short Videos, Reels & Stories"
+        description="Watch and share short videos, reels, and stories from creators around the world. Like, comment, follow, and discover trending content on ZIVO."
+        canonical="/feed"
+      />
+      {/* Backdrop */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        onClick={onClose}
+        className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
+      />
+      {/* Centered modal — responsive */}
+      <motion.div
+        initial={{ opacity: 0, scale: 0.92, y: 20 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.92, y: 20 }}
+        transition={{ type: "spring", damping: 28, stiffness: 320 }}
+        className="fixed inset-0 z-[61] flex items-center justify-center pointer-events-none p-4"
+      >
+        <div className="pointer-events-auto flex flex-col bg-background rounded-3xl overflow-hidden shadow-2xl border border-border/30 w-[94%] max-w-[480px] max-h-[75vh]">
+          {/* Drag handle */}
+          <div className="flex justify-center pt-3 pb-1">
+            <div className="w-10 h-1 rounded-full bg-muted-foreground/20" />
+          </div>
+
+          {/* Sound info header */}
+          <div className="px-5 pt-2 pb-3 flex items-center gap-3.5">
+            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/10 flex items-center justify-center shrink-0">
+              <motion.div animate={{ rotate: 360 }} transition={{ duration: 3, repeat: Infinity, ease: "linear" }}>
+                <svg viewBox="0 0 24 24" className="w-7 h-7 fill-primary">
+                  <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+                </svg>
+              </motion.div>
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="font-bold text-sm text-foreground leading-tight line-clamp-2">{soundName}</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {reelCount} reel{reelCount !== 1 ? "s" : ""} • Tap to watch
+              </p>
+            </div>
+            <button onClick={onClose} className="p-2 -mr-1 rounded-full hover:bg-muted/60 transition-colors">
+              <XIcon className="h-5 w-5 text-muted-foreground" />
+            </button>
+          </div>
+
+          {/* Use this sound button */}
+          <div className="px-5 pb-3">
+            <button
+              onClick={() => {
+                onClose();
+                onUseSound();
+              }}
+              className="w-full flex items-center justify-center gap-2 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:opacity-90 active:scale-[0.98] transition-all"
+            >
+              <Music className="h-4 w-4" />
+              Use this sound
+            </button>
+          </div>
+
+          {/* Divider */}
+          <div className="h-px bg-border/40 mx-5" />
+
+          {/* Reels grid */}
+          <div className="flex-1 overflow-y-auto p-3 pb-safe">
+            {isLoading && !isOriginalSound ? (
+              <div className="flex justify-center py-10">
+                <Loader2 className="h-6 w-6 animate-spin text-primary" />
+              </div>
+            ) : reelCount === 0 ? (
+              <div className="flex flex-col items-center justify-center py-10 gap-2">
+                <div className="w-12 h-12 rounded-full bg-muted/60 flex items-center justify-center">
+                  <Play className="h-5 w-5 text-muted-foreground/50" />
+                </div>
+                <p className="text-sm text-muted-foreground">No reels with this sound yet</p>
+              </div>
+            ) : (
+              <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {reels.map((reel) => {
+                  const thumb = (reel.media_urls || []).map((u: string) => normalizeStorePostMediaUrl(u)).filter(Boolean)[0];
+                  return (
+                    <button
+                      key={reel.id}
+                      onClick={() => onNavigateToReel(reel.id)}
+                      className="relative aspect-[9/16] bg-muted/80 overflow-hidden group rounded-xl"
+                    >
+                      {thumb ? (
+                        <>
+                          <img
+                            src={thumb}
+                            alt=""
+                            className="w-full h-full object-cover"
+                            onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="w-10 h-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+                              <Play className="h-5 w-5 text-white fill-white ml-0.5" />
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center bg-muted">
+                          <Play className="h-5 w-5 text-muted-foreground/40" />
+                        </div>
+                      )}
+                      {/* Gradient overlay at bottom */}
+                      <div className="absolute inset-x-0 bottom-0 h-12 bg-gradient-to-t from-black/60 to-transparent" />
+                      {reel.views > 0 && (
+                        <div className="absolute bottom-2 left-2 flex items-center gap-1 text-white text-[11px] font-semibold drop-shadow-lg">
+                          <Play className="h-3 w-3 fill-white" />
+                          {reel.views > 1000 ? `${(reel.views / 1000).toFixed(1)}K` : reel.views}
+                        </div>
+                      )}
+                      {reel.author && (
+                        <div className="absolute bottom-2 right-2 text-white text-[9px] font-medium drop-shadow-lg truncate max-w-[60%] text-right">
+                          @{reel.author}
+                        </div>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+      </motion.div>
+    </>
+  );
+}
+
+// ── Discover People Overlay ─────────────────────────────────────────────────
+function DiscoverPeopleOverlay({ onClose, onNavigate }: { onClose: () => void; onNavigate: (path: string) => void }) {
+  const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
+  const [userId, setUserId] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => setUserId(data.user?.id || null));
+  }, []);
+
+  const { data: profiles = [], isLoading } = useQuery({
+    queryKey: ["discover-people-reel", userId],
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("profiles")
+        .select("id, full_name, avatar_url, bio, is_verified")
+        .neq("id", userId || "")
+        .limit(20);
+      return (data || []).sort(() => Math.random() - 0.5);
+    },
+    enabled: !!userId,
+  });
+
+  const handleFollow = async (profileId: string) => {
+    if (!userId) return;
+    try {
+      const { error } = await (supabase as any).from("user_followers").insert({
+        follower_id: userId,
+        following_id: profileId,
+      });
+      if (error) throw error;
+      setFollowingIds((prev) => new Set([...prev, profileId]));
+    } catch (err) {
+      console.warn("[DiscoverPeopleOverlay] follow failed", err);
+      toast.error("Couldn't follow. Try again.");
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 z-[70] bg-background flex flex-col"
+    >
+      <div data-testid="feed-discover-header" className="flex items-center gap-3 px-4 py-3 border-b border-border/30" style={{ paddingTop: 'var(--zivo-safe-top-sticky)' }}>
+        <button onClick={onClose} className="p-2 rounded-full hover:bg-muted/50">
+          <ArrowLeft className="w-5 h-5 text-foreground" />
+        </button>
+        <div>
+          <h2 className="text-lg font-bold text-foreground">Discover People</h2>
+          <p className="text-xs text-muted-foreground">Find people to follow on ZIVO</p>
+        </div>
+      </div>
+
+      <div className="flex-1 overflow-y-auto px-4 py-4">
+        {isLoading ? (
+          <div className="flex justify-center py-16">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-3">
+            {profiles.map((profile: any) => (
+              <motion.div
+                key={profile.id}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-card rounded-2xl border border-border/30 p-4 text-center"
+              >
+                <div onClick={() => { onClose(); onNavigate(`/user/${profile.id}`); }} className="cursor-pointer">
+                  <div className="w-16 h-16 mx-auto mb-2 rounded-full overflow-hidden bg-muted ring-2 ring-primary/10">
+                    {profile.avatar_url ? (
+                      <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-primary font-bold text-xl bg-primary/10">
+                        {profile.full_name?.[0]?.toUpperCase() || "?"}
+                      </div>
+                    )}
+                  </div>
+                  <p className="text-sm font-semibold text-foreground truncate">{profile.full_name || "User"}</p>
+                  {profile.bio && (
+                    <p className="text-[10px] text-muted-foreground line-clamp-2 mt-0.5 leading-tight">
+                      <Suspense fallback={<span>{profile.bio}</span>}>
+                        <SafeCaption text={profile.bio} />
+                      </Suspense>
+                    </p>
+                  )}
+                </div>
+                <button
+                  onClick={() => handleFollow(profile.id)}
+                  disabled={followingIds.has(profile.id)}
+                  className={`w-full mt-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
+                    followingIds.has(profile.id)
+                      ? "bg-muted text-muted-foreground"
+                      : "bg-primary text-primary-foreground"
+                  }`}
+                >
+                  {followingIds.has(profile.id) ? "Following" : "Follow"}
+                </button>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
+    </motion.div>
+  );
+}
+
+// ── Report Dialog ─────────────────────────────────────────────────────────────
+
+const REPORT_REASONS = [
+  "Spam or misleading",
+  "Sexual content",
+  "Hate speech or harassment",
+  "Violence or dangerous acts",
+  "Misinformation",
+  "Intellectual property",
+  "Other",
+];
+
+function ReelReportDialog({
+  postId,
+  reporterId,
+  onClose,
+  onReported,
+}: {
+  postId: string;
+  reporterId: string;
+  onClose: () => void;
+  onReported: () => void;
+}) {
+  const [reason, setReason] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+
+  const submit = async () => {
+    if (!reason || submitting) return;
+    setSubmitting(true);
+    try {
+      const rawId = postId.startsWith("u-") ? postId.slice(2) : postId;
+      const { error } = await (supabase as any).from("post_reports").insert({
+        post_id: rawId,
+        reporter_id: reporterId,
+        reason,
+      });
+      if (error) throw error;
+      toast.success("Report submitted. Thank you.");
+      onReported();
+    } catch (err) {
+      console.error("[ReelReportDialog] submit failed", err);
+      toast.error("Couldn't submit report. Try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      onClick={(e) => { e.stopPropagation(); onClose(); }}
+      className="fixed inset-0 z-[80] flex items-end justify-center bg-black/60"
+    >
+      <motion.div
+        initial={{ y: 80 }}
+        animate={{ y: 0 }}
+        exit={{ y: 80 }}
+        onClick={(e) => e.stopPropagation()}
+        className="w-full max-w-md bg-background rounded-t-2xl border-t border-border/30"
+        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)" }}
+      >
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+          <span className="font-semibold text-foreground">Report post</span>
+          <button
+            type="button"
+            onClick={onClose}
+            className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted"
+            aria-label="Close report dialog"
+          >
+            <XIcon className="w-4 h-4 text-muted-foreground" />
+          </button>
+        </div>
+        <p className="px-4 pt-3 text-xs text-muted-foreground">Why are you reporting this post?</p>
+        <div className="px-2 py-2">
+          {REPORT_REASONS.map((r) => (
+            <button
+              key={r}
+              type="button"
+              onClick={() => setReason(r)}
+              className={cn(
+                "w-full text-left px-3 py-3 rounded-xl text-sm transition-colors",
+                reason === r ? "bg-primary/10 text-primary font-semibold" : "text-foreground hover:bg-muted/40",
+              )}
+            >
+              {r}
+            </button>
+          ))}
+        </div>
+        <div className="px-4 pt-2 pb-3">
+          <button
+            type="button"
+            disabled={!reason || submitting}
+            onClick={submit}
+            className="w-full h-11 rounded-xl bg-destructive text-destructive-foreground font-semibold disabled:opacity-40"
+          >
+            {submitting ? "Submitting…" : "Submit report"}
+          </button>
+        </div>
+      </motion.div>
+    </motion.div>
+  );
+}
+
+
+export default function FeedPage() {
+  const { t } = useI18n();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { postId: routePostId } = useParams<{ postId?: string }>();
+  // True when we arrived via a deep link (path /reels/:postId OR ?post=)
+  // so the resume-position effect can step aside and let the link win.
+  const hasDeepLink = Boolean(routePostId) || Boolean(new URLSearchParams(location.search).get("post"));
+  // On `/reels` we render the TikTok-style hero — hide the desktop side rails
+  // so the video can fill the viewport. `/feed` keeps the 3-column layout.
+  const isReelsRoute = location.pathname.startsWith("/reels");
+  const [globalMuted, setGlobalMuted] = useState<boolean>(() => {
+    // Persist mute preference — autoplay policies require starting muted on
+    // some browsers, but we still respect the user's last choice when they
+    // explicitly unmuted (so they don't have to re-tap on every visit).
+    if (typeof window === "undefined") return true;
+    try {
+      const stored = localStorage.getItem("zivo_reel_muted");
+      return stored === null ? true : stored === "1";
+    } catch { return true; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem("zivo_reel_muted", globalMuted ? "1" : "0"); } catch {}
+  }, [globalMuted]);
+  const [activeIndex, setActiveIndex] = useState(() => {
+    // Resume the last-watched reel index from this session so navigating
+    // away (e.g. into a profile) and coming back doesn't snap to the top.
+    if (typeof window === "undefined") return 0;
+    try {
+      const stored = sessionStorage.getItem("zivo_reel_active_index");
+      const n = stored ? parseInt(stored, 10) : 0;
+      return Number.isFinite(n) && n >= 0 ? n : 0;
+    } catch { return 0; }
+  });
+  // Persist activeIndex AND active post ID. Index is used as a fallback if
+  // the post ID has dropped out of the feed (rare — would mean unpublished
+  // or RLS visibility flipped).
+  useEffect(() => {
+    try { sessionStorage.setItem("zivo_reel_active_index", String(activeIndex)); } catch {}
+  }, [activeIndex]);
+  const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  const [commentPostId, setCommentPostId] = useState<string | null>(null);
+  const [sharePostId, setSharePostId] = useState<string | null>(null);
+  const [soundOverlayName, setSoundOverlayName] = useState<string | null>(null);
+  const [showSearch, setShowSearch] = useState(false);
+  const [showDiscover, setShowDiscover] = useState(false);
+  const [showCreatePost, setShowCreatePost] = useState(false);
+  const [createWithAudio, setCreateWithAudio] = useState<string | null>(null);
+  const queryClient = useQueryClient();
+  const [userId, setUserId] = useState<string | null>(null);
+  const [userProfile, setUserProfile] = useState<{ name: string; avatar: string | null } | null>(null);
+  const [userLikedPostIds, setUserLikedPostIds] = useState<Set<string>>(new Set());
+  const [feedMode, setFeedMode] = useState<"foryou" | "following">(() => {
+    // Persist tab preference — TikTok remembers For You vs Following, so
+    // users who actively curate their following feed don't have to re-pick
+    // it every time they enter Reels.
+    if (typeof window === "undefined") return "foryou";
+    try {
+      const stored = localStorage.getItem("zivo_reel_mode");
+      return stored === "following" ? "following" : "foryou";
+    } catch { return "foryou"; }
+  });
+  useEffect(() => {
+    try { localStorage.setItem("zivo_reel_mode", feedMode); } catch {}
+  }, [feedMode]);
+  const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
+  const [showSwipeHint, setShowSwipeHint] = useState(false);
+  const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
+  // Twitter-style "double-tap active tab to refresh + scroll to top".
+  const lastTabTapRef = useRef<{ mode: string; at: number }>({ mode: "", at: 0 });
+  const [isOnline, setIsOnline] = useState<boolean>(() => typeof navigator === "undefined" ? true : navigator.onLine);
+  // Listen for connectivity changes so we can show a banner when offline +
+  // a brief toast when reconnecting. Useful on flaky cellular / subway wifi.
+  useEffect(() => {
+    const onOnline = () => {
+      setIsOnline(true);
+      toast.success("Back online");
+    };
+    const onOffline = () => setIsOnline(false);
+    window.addEventListener("online", onOnline);
+    window.addEventListener("offline", onOffline);
+    return () => {
+      window.removeEventListener("online", onOnline);
+      window.removeEventListener("offline", onOffline);
+    };
+  }, []);
+  // Post actions (bookmark / mute / block / report) + 3-dot menu
+  const postActions = usePostActions(userId);
+  const [actionsTarget, setActionsTarget] = useState<{ target: PostActionTarget; authorName?: string; shareUrl?: string } | null>(null);
+  // Realtime new-posts banner
+  const [newPostsCount, setNewPostsCount] = useState(0);
+  // Pull-to-refresh state
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const pullStartY = useRef<number | null>(null);
+  const [pullDelta, setPullDelta] = useState(0);
+  // Multi-emoji reactions
+  const reactions = usePostReactions(userId);
+  // Reposts
+  const reposts = usePostReposts(userId);
+  const [repostTarget, setRepostTarget] = useState<{
+    postId: string; source: "store" | "user"; authorName?: string; preview?: string | null;
+  } | null>(null);
+  // Author-only insights drawer
+  const [insightsTarget, setInsightsTarget] = useState<{
+    postId: string; source: "store" | "user";
+  } | null>(null);
+  // Author-only caption editor
+  const [editCaptionTarget, setEditCaptionTarget] = useState<{
+    postId: string; initialCaption: string;
+  } | null>(null);
+  // Posts the user has deleted, removed from view immediately while DB catches up
+  const [deletedPostIds, setDeletedPostIds] = useState<Set<string>>(new Set());
+  const hiddenPosts = useHiddenPosts();
+  const [selectedHashtag, setSelectedHashtag] = useState<string | null>(null);
+  // Infinite scroll — multiplier on the base page size
+  const [pageMultiplier, setPageMultiplier] = useState(1);
+  // Posts the user just blocked, removed from view immediately
+  const [hiddenAuthorIds, setHiddenAuthorIds] = useState<Set<string>>(new Set());
+  // Active report dialog (set by `zivo-reel-report` event from a card's More menu)
+  const [reportPostId, setReportPostId] = useState<string | null>(null);
+  const { data: ownerStore } = useOwnerStoreProfile();
+  const lodgingRooms = useLodgeRooms(ownerStore?.isLodging ? ownerStore.id : "");
+  const lodgingProfile = useLodgePropertyProfile(ownerStore?.isLodging ? ownerStore.id : "");
+  const lodgingCompletion = ownerStore?.isLodging ? getLodgingCompletion({ rooms: lodgingRooms.data || [], profile: lodgingProfile.data, addons: [], housekeepingCount: 0, maintenanceReady: true, reportsReady: Boolean((lodgingRooms.data || []).length) }) : null;
+
+  // Get current user + profile
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      const uid = data.user?.id || null;
+      setUserId(uid);
+      if (uid) {
+        supabase.from("profiles").select("full_name, avatar_url").eq("id", uid).maybeSingle()
+          .then(({ data: p }) => {
+            if (p) setUserProfile({
+              name: (p as any).full_name || "You",
+              avatar: (p as any).avatar_url || null,
+            });
+          });
+      }
+    });
+  }, []);
+
+  // First-visit swipe-up hint — auto-dismisses after 3 s and on any user
+  // interaction (scroll, key press, click). Persisted in localStorage so
+  // returning users don't see it again.
+  useEffect(() => {
+    try {
+      if (localStorage.getItem("zivo_reel_onboarded") === "1") return;
+    } catch { /* private mode etc. — just show the hint */ }
+    setShowSwipeHint(true);
+    const dismiss = () => {
+      setShowSwipeHint(false);
+      try { localStorage.setItem("zivo_reel_onboarded", "1"); } catch {}
+      window.removeEventListener("keydown", dismiss);
+      window.removeEventListener("click", dismiss);
+      window.removeEventListener("wheel", dismiss);
+      window.removeEventListener("touchstart", dismiss);
+    };
+    window.addEventListener("keydown", dismiss);
+    window.addEventListener("click", dismiss);
+    window.addEventListener("wheel", dismiss, { passive: true });
+    window.addEventListener("touchstart", dismiss, { passive: true });
+    const timer = window.setTimeout(dismiss, 3500);
+    return () => {
+      window.clearTimeout(timer);
+      window.removeEventListener("keydown", dismiss);
+      window.removeEventListener("click", dismiss);
+      window.removeEventListener("wheel", dismiss);
+      window.removeEventListener("touchstart", dismiss);
+    };
+  }, []);
+
+  // Followed user IDs — drives the "Following" tab filter
+  useEffect(() => {
+    if (!userId) { setFollowingIds(new Set()); return; }
+    let alive = true;
+    (supabase as any)
+      .from("user_followers")
+      .select("following_id")
+      .eq("follower_id", userId)
+      .then(({ data }: any) => {
+        if (!alive) return;
+        setFollowingIds(new Set((data || []).map((r: any) => r.following_id)));
+      });
+    return () => { alive = false; };
+  }, [userId]);
+
+  const { data: posts = [], isLoading, isFetching } = useQuery({
+    queryKey: ["customer-feed", userId, pageMultiplier],
+    queryFn: async () => {
+      // Pull the muted/blocked author list first so we can filter the feed
+      // server-side. Defence-in-depth: client also filters in case RLS isn't
+      // wired for these tables yet (the migration is included in this branch).
+      let mutedAuthorIds = new Set<string>();
+      if (userId) {
+        const { data: safety } = await (supabase as any)
+          .from("user_safety_actions")
+          .select("target_user_id, action")
+          .eq("user_id", userId);
+        mutedAuthorIds = new Set((safety ?? []).map((s: any) => s.target_user_id));
+      }
+
+      // Fetch store posts and user video posts in parallel.
+      // Page size grows with `pageMultiplier` so "load more" reveals additional content.
+      const STORE_PAGE = 50;
+      const USER_PAGE  = 30;
+      const [{ data: postsData, error }, { data: userVideos }] = await Promise.all([
+        supabase
+          .from("store_posts")
+          .select("*")
+          .eq("is_published", true)
+          .order("created_at", { ascending: false })
+          .limit(STORE_PAGE * pageMultiplier),
+        (supabase as any)
+          .from("user_posts")
+          .select("id, user_id, media_url, media_urls, media_type, caption, likes_count, comments_count, shares_count, views_count, created_at, audio_name, location")
+          .eq("is_published", true)
+          .in("media_type", ["video", "reel"])
+          .order("created_at", { ascending: false })
+          .limit(USER_PAGE * pageMultiplier),
+      ]);
+      if (error) throw error;
+
+      // Strip muted/blocked authors from user video posts
+      const filteredUserVideos = (userVideos ?? []).filter(
+        (p: any) => !mutedAuthorIds.has(p.user_id)
+      );
+
+      const storeIds = [...new Set((postsData || []).map((p: any) => p.store_id))];
+      const userIds = [...new Set(filteredUserVideos.map((p: any) => p.user_id))];
+
+      const [{ data: stores }, { data: profiles }] = await Promise.all([
+        storeIds.length
+          ? supabase.from("store_profiles").select("id, name, logo_url, slug, is_verified").in("id", storeIds)
+          : Promise.resolve({ data: [] as any[] }),
+        userIds.length
+          ? supabase.from("profiles").select("id, user_id, full_name, username, avatar_url, is_verified").or(`user_id.in.(${(userIds as string[]).join(",")}),id.in.(${(userIds as string[]).join(",")})`)
+          : Promise.resolve({ data: [] as any[] }),
+      ]);
+
+      const storeMap = new Map((stores || []).map((s: any) => [s.id, s]));
+      const profileMap = new Map<string, any>();
+      (profiles || []).forEach((p: any) => {
+        if (p.id) profileMap.set(p.id, p);
+        if (p.user_id) profileMap.set(p.user_id, p);
+      });
+
+      const allPosts: FeedPost[] = [];
+
+      // Store posts
+      for (const post of postsData || []) {
+        const store = storeMap.get(post.store_id);
+        allPosts.push({
+          ...post,
+          source: "store",
+          store_name: store?.name || "Store",
+          store_logo: store?.logo_url,
+          store_slug: store?.slug,
+          store_is_verified: (store as any)?.is_verified === true,
+        });
+      }
+
+      // User video posts (already filtered for muted/blocked authors above)
+      for (const post of filteredUserVideos) {
+        const profile = profileMap.get(post.user_id);
+        const urls: string[] = Array.isArray(post.media_urls) && post.media_urls.length > 0
+          ? post.media_urls
+          : post.media_url ? [post.media_url] : [];
+        if (!urls.length) continue;
+        allPosts.push({
+          id: `u-${post.id}`,
+          store_id: "",
+          caption: post.caption,
+          media_urls: urls,
+          media_type: "video",
+          is_published: true,
+          created_at: post.created_at,
+          likes_count: post.likes_count || 0,
+          comments_count: post.comments_count || 0,
+          shares_count: post.shares_count || 0,
+          view_count: post.views_count || 0,
+          audio_name: post.audio_name || null,
+          source: "user",
+          author_id: post.user_id,
+          author_name: profile?.full_name || profile?.username || "User",
+          author_avatar: profile?.avatar_url || null,
+          author_is_verified: !!profile?.is_verified,
+          location: post.location || null,
+        });
+      }
+
+      // Facebook-style algorithmic feed: blend engagement + recency + randomness
+      const now = Date.now();
+      const ONE_HOUR = 3_600_000;
+      const seededRandom = (id: string) => {
+        let h = 0;
+        for (let i = 0; i < id.length; i++) h = ((h << 5) - h + id.charCodeAt(i)) | 0;
+        return ((h >>> 0) % 1000) / 1000;
+      };
+      const dayKey = Math.floor(now / 86_400_000);
+
+      allPosts.forEach((item: any) => {
+        const ageHours = (now - new Date(item.created_at).getTime()) / ONE_HOUR;
+        const recencyScore = 1 / (1 + ageHours / 6);
+        const totalEngagement = (item.likes_count || 0) + (item.comments_count || 0) * 2 + (item.view_count || 0) * 0.1;
+        const engagementScore = Math.log2(1 + totalEngagement) / 10;
+        const randomFactor = seededRandom(item.id + dayKey) * 0.15;
+        item._feedScore = recencyScore * 0.45 + engagementScore * 0.3 + randomFactor;
+      });
+
+      allPosts.sort((a: any, b: any) => (b._feedScore || 0) - (a._feedScore || 0));
+      return allPosts;
+    },
+  });
+
+  // Posts shown in the snap-scroller — filtered by For You / Following + hashtag.
+  // Memoized so cardRefs / activeIndex stay aligned with what's rendered.
+  const visiblePosts = useMemo(() => {
+    let list = posts;
+    if (feedMode === "following" && userId) {
+      list = list.filter((p) => p.author_id && followingIds.has(p.author_id));
+    }
+    if (hiddenAuthorIds.size > 0) {
+      list = list.filter((p) => !p.author_id || !hiddenAuthorIds.has(p.author_id));
+    }
+    if (deletedPostIds.size > 0) {
+      list = list.filter((p) => !deletedPostIds.has(p.id));
+    }
+    if (hiddenPosts.hidden.size > 0) {
+      list = list.filter((p) => !hiddenPosts.isHidden(p.id));
+    }
+    if (selectedHashtag) {
+      list = list.filter((p) => postHasHashtag(p.caption, selectedHashtag));
+    }
+    return list;
+  }, [posts, feedMode, userId, followingIds, hiddenAuthorIds, deletedPostIds, hiddenPosts, selectedHashtag]);
+
+  // Fetch user's liked post IDs
+  useEffect(() => {
+    if (!userId || posts.length === 0) return;
+    const postIds = posts.map((p) => p.id);
+    supabase
+      .from("store_post_likes")
+      .select("post_id")
+      .eq("user_id", userId)
+      .in("post_id", postIds)
+      .then(({ data }) => {
+        setUserLikedPostIds(new Set((data || []).map((d: any) => d.post_id)));
+      });
+  }, [userId, posts]);
+
+  // ── Realtime: count new posts that arrive while user is mid-feed ────────────
+  // Channel name is opaque (per security guidance) — uses topicForUserSync so
+  // the leaked topic-name metadata doesn't reveal the user ID.
+  useEffect(() => {
+    const channelName = userId ? topicForUserSync(userId, "feed-new-posts") : "feed-new-posts:anon";
+    const channel = supabase
+      .channel(channelName)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "user_posts" }, (payload: any) => {
+        // Skip the user's own posts (they'll see them via the optimistic update)
+        if (payload?.new?.user_id === userId) return;
+        if (payload?.new?.is_published === false) return;
+        setNewPostsCount((c) => c + 1);
+      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "store_posts" }, (payload: any) => {
+        if (payload?.new?.is_published === false) return;
+        setNewPostsCount((c) => c + 1);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [userId]);
+
+  // Tapping the pill: scroll to top, refetch, clear count
+  const handleShowNewPosts = useCallback(() => {
+    setNewPostsCount(0);
+    queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
+    cardRefs.current[0]?.scrollIntoView({ behavior: "smooth" });
+    setActiveIndex(0);
+  }, [queryClient]);
+
+  // ── Pull-to-refresh: simple touch-driven swipe-down at the top ─────────────
+  const handleTouchStart = useCallback((e: React.TouchEvent) => {
+    // Only begin pull if we're already at the top of the scroll container
+    const scroller = (e.currentTarget as HTMLDivElement);
+    if (scroller.scrollTop > 0) return;
+    pullStartY.current = e.touches[0].clientY;
+  }, []);
+
+  const handleTouchMove = useCallback((e: React.TouchEvent) => {
+    if (pullStartY.current == null) return;
+    const delta = e.touches[0].clientY - pullStartY.current;
+    if (delta > 0) setPullDelta(Math.min(delta, 120));
+  }, []);
+
+  const handleTouchEnd = useCallback(async () => {
+    if (pullStartY.current == null) return;
+    const triggered = pullDelta > 70;
+    pullStartY.current = null;
+    setPullDelta(0);
+    if (triggered && !isRefreshing) {
+      setIsRefreshing(true);
+      try {
+        await queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
+        setNewPostsCount(0);
+        toast.success("Feed refreshed");
+      } finally {
+        setIsRefreshing(false);
+      }
+    }
+  }, [pullDelta, isRefreshing, queryClient]);
+
+  const handleToggleLike = useCallback(async (postId: string, currentlyLiked: boolean) => {
+    if (!userId) {
+      toast.error("Please sign in to like posts");
+      return;
+    }
+    setUserLikedPostIds((prev) => {
+      const next = new Set(prev);
+      if (currentlyLiked) next.delete(postId);
+      else next.add(postId);
+      return next;
+    });
+
+    if (currentlyLiked) {
+      await supabase.from("store_post_likes").delete().eq("post_id", postId).eq("user_id", userId);
+    } else {
+      await supabase.from("store_post_likes").insert({ post_id: postId, user_id: userId });
+      // Push notification to post author — once per post per session.
+      const post = posts.find(p => p.id === postId);
+      const authorId = post?.author_id;
+      if (authorId && authorId !== userId && shouldSendLikeNotification(postId)) {
+        try {
+          const { data: sp } = await supabase.from("profiles").select("full_name").eq("user_id", userId).single();
+          await supabase.functions.invoke("send-push-notification", {
+            body: { user_id: authorId, notification_type: "post_liked", title: "New Like ❤️", body: `${sp?.full_name || "Someone"} liked your post`, data: { type: "post_liked", post_id: postId, liker_id: userId, action_url: `/feed?post=${postId}` } },
+          });
+        } catch (notifyErr) {
+          console.warn("[FeedPage] like push notify failed", notifyErr);
+        }
+      }
+    }
+    queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
+  }, [userId, queryClient, posts]);
+
+  // Media Session bridge — the active ReelCard exposes nexttrack/previoustrack
+  // handlers via window events so the OS-level skip buttons (Bluetooth,
+  // lock screen, Control Center) navigate the feed.
+  useEffect(() => {
+    const onNext = () => {
+      if (activeIndex < visiblePosts.length - 1) {
+        cardRefs.current[activeIndex + 1]?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    };
+    const onPrev = () => {
+      if (activeIndex > 0) {
+        cardRefs.current[activeIndex - 1]?.scrollIntoView({ behavior: "smooth", block: "start" });
+      }
+    };
+    window.addEventListener("zivo-reel-next", onNext);
+    window.addEventListener("zivo-reel-prev", onPrev);
+    return () => {
+      window.removeEventListener("zivo-reel-next", onNext);
+      window.removeEventListener("zivo-reel-prev", onPrev);
+    };
+  }, [activeIndex, visiblePosts.length]);
+
+  // Reel-card overflow menu bridge: Not interested → hide locally;
+  // Report → open the centralized report dialog.
+  useEffect(() => {
+    const onHide = (e: Event) => {
+      const postId = (e as CustomEvent<{ postId: string }>).detail?.postId;
+      if (!postId) return;
+      setDeletedPostIds((prev) => {
+        if (prev.has(postId)) return prev;
+        const next = new Set(prev);
+        next.add(postId);
+        return next;
+      });
+      toast.success("We'll show fewer posts like this");
+    };
+    const onReport = (e: Event) => {
+      const postId = (e as CustomEvent<{ postId: string }>).detail?.postId;
+      if (!postId) return;
+      setReportPostId(postId);
+    };
+    window.addEventListener("zivo-reel-hide", onHide);
+    window.addEventListener("zivo-reel-report", onReport);
+    return () => {
+      window.removeEventListener("zivo-reel-hide", onHide);
+      window.removeEventListener("zivo-reel-report", onReport);
+    };
+  }, []);
+
+  // Keyboard shortcuts for the reel viewer (desktop power-user).
+  // Skipped while typing in any input/textarea so we don't hijack typing.
+  // - Space / K  → play / pause active reel
+  // - M          → toggle mute
+  // - L          → like / unlike active reel
+  // - ↓ / J      → next reel
+  // - ↑          → previous reel
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || target?.isContentEditable) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+
+      const currentPost = visiblePosts[activeIndex];
+      const currentCard = cardRefs.current[activeIndex];
+
+      switch (e.key) {
+        case " ":
+        case "k":
+        case "K": {
+          e.preventDefault();
+          const video = currentCard?.querySelector("video");
+          if (video) {
+            if (video.paused) void video.play().catch(() => {});
+            else video.pause();
+          }
+          break;
+        }
+        case "m":
+        case "M": {
+          e.preventDefault();
+          setGlobalMuted((m) => !m);
+          break;
+        }
+        case "l":
+        case "L": {
+          if (!currentPost || !userId) return;
+          e.preventDefault();
+          handleToggleLike(currentPost.id, userLikedPostIds.has(currentPost.id));
+          break;
+        }
+        case "ArrowDown":
+        case "j":
+        case "J": {
+          if (activeIndex < visiblePosts.length - 1) {
+            e.preventDefault();
+            cardRefs.current[activeIndex + 1]?.scrollIntoView({ behavior: "smooth" });
+          }
+          break;
+        }
+        case "ArrowUp": {
+          if (activeIndex > 0) {
+            e.preventDefault();
+            cardRefs.current[activeIndex - 1]?.scrollIntoView({ behavior: "smooth" });
+          }
+          break;
+        }
+        case "?": {
+          e.preventDefault();
+          setShowShortcutsHelp((v) => !v);
+          break;
+        }
+        case "Escape": {
+          if (showShortcutsHelp) {
+            e.preventDefault();
+            setShowShortcutsHelp(false);
+          }
+          break;
+        }
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [activeIndex, visiblePosts, userId, userLikedPostIds, showShortcutsHelp]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Persist the active post's ID so resume survives feed re-shuffling
+  // (the algorithmic feed reorders results; a stored index could land on
+  // a different reel after a refresh).
+  useEffect(() => {
+    if (visiblePosts.length === 0) return;
+    const activePost = visiblePosts[activeIndex];
+    if (!activePost) return;
+    try { sessionStorage.setItem("zivo_reel_active_id", activePost.id); } catch {}
+  }, [activeIndex, visiblePosts]);
+
+  // On first paint after the visible list arrives, scroll to the resumed
+  // reel. Prefer matching by stored post ID (survives reordering); fall
+  // back to stored index if the post is no longer in the feed.
+  // Skipped when arriving via a deep link — the link's target wins.
+  const didRestorePosition = useRef(false);
+  useEffect(() => {
+    if (didRestorePosition.current) return;
+    if (visiblePosts.length === 0) return;
+    if (hasDeepLink) {
+      didRestorePosition.current = true;
+      return;
+    }
+
+    let safeIndex = -1;
+    try {
+      const storedId = sessionStorage.getItem("zivo_reel_active_id");
+      if (storedId) {
+        safeIndex = visiblePosts.findIndex((p) => p.id === storedId);
+      }
+    } catch { /* ignore */ }
+    if (safeIndex < 0) {
+      // ID lookup failed — fall back to bounded index
+      safeIndex = Math.min(activeIndex, visiblePosts.length - 1);
+    } else if (safeIndex !== activeIndex) {
+      // Sync the index state to the matched ID's position
+      setActiveIndex(safeIndex);
+    }
+
+    if (safeIndex <= 0) {
+      didRestorePosition.current = true;
+      return;
+    }
+    didRestorePosition.current = true;
+    requestAnimationFrame(() => {
+      cardRefs.current[safeIndex]?.scrollIntoView({ block: "start" });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [visiblePosts.length, hasDeepLink]);
+
+  // IntersectionObserver — re-attach when the visible list changes (e.g.
+  // toggling For You / Following) so we observe the freshly-rendered cards
+  // instead of stale DOM nodes from the previous list.
+  useEffect(() => {
+    if (visiblePosts.length === 0) return;
+    const observers: IntersectionObserver[] = [];
+
+    cardRefs.current.forEach((card, index) => {
+      if (!card) return;
+      const obs = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
+            setActiveIndex(index);
+          }
+        },
+        { threshold: 0.6 },
+      );
+      obs.observe(card);
+      observers.push(obs);
+    });
+
+    return () => observers.forEach((o) => o.disconnect());
+  }, [visiblePosts.length]);
+
+  useEffect(() => {
+    // Path param /reels/:postId takes priority; falls back to ?post= query.
+    // Path postId is raw (no `u-` prefix) — match against either form.
+    const params = new URLSearchParams(location.search);
+    const sharedPostId = routePostId || params.get("post");
+    if (!sharedPostId || visiblePosts.length === 0) return;
+
+    // Try exact match, then `u-`-prefixed user-post id, then unprefixed id.
+    let targetIndex = visiblePosts.findIndex((post) => post.id === sharedPostId);
+    if (targetIndex < 0) targetIndex = visiblePosts.findIndex((post) => post.id === `u-${sharedPostId}`);
+    if (targetIndex < 0) targetIndex = visiblePosts.findIndex((post) => post.id.replace(/^u-/, "") === sharedPostId);
+    if (targetIndex < 0) return;
+
+    setActiveIndex(targetIndex);
+    const matchedPost = visiblePosts[targetIndex];
+    requestAnimationFrame(() => {
+      cardRefs.current[targetIndex]?.scrollIntoView({ block: "start" });
+      // ?comments=1 (typically from a "new comment" notification tap) →
+      // auto-open the comment sheet on the matched reel after the scroll.
+      // Slight delay so the snap-scroll lands first.
+      if (params.get("comments") === "1" && matchedPost) {
+        window.setTimeout(() => setCommentPostId(matchedPost.id), 250);
+      }
+    });
+  }, [visiblePosts, location.search, routePostId]);
+
+  if (isLoading) {
+    return (
+      <Suspense fallback={
+        <div className="fixed inset-0 bg-black z-50" aria-busy="true" aria-label="Loading reels" />
+      }>
+        <FeedSkeleton />
+      </Suspense>
+    );
+  }
+
+  if (posts.length === 0) {
+    return (
+      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-4 z-50">
+        <Store className="h-14 w-14 text-white/20" />
+        <p className="text-white font-semibold">{t("feed.no_posts")}</p>
+        <p className="text-white/50 text-sm text-center px-8">{t("feed.no_posts_desc")}</p>
+        <ZivoMobileNav />
+      </div>
+    );
+  }
+
+  // Hashtag filter narrowed to zero — let the user clear it without leaving the page.
+  if (selectedHashtag && visiblePosts.length === 0) {
+    return (
+      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-4 z-50 px-8 text-center">
+        <p className="text-white font-semibold">No reels with #{selectedHashtag} yet</p>
+        <p className="text-white/50 text-sm">Try a different tag, or clear the filter to see all reels.</p>
+        <button
+          onClick={() => setSelectedHashtag(null)}
+          className="mt-2 px-5 py-2 rounded-full bg-white text-black text-sm font-bold active:scale-95 transition-transform"
+        >
+          Clear filter
+        </button>
+        <ZivoMobileNav />
+      </div>
+    );
+  }
+
+  // Following tab with no matching reels — distinct empty state.
+  if (feedMode === "following" && visiblePosts.length === 0 && userId) {
+    return (
+      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-4 z-50 px-8 text-center">
+        <UserPlus className="h-14 w-14 text-white/20" />
+        <p className="text-white font-semibold">No reels from people you follow</p>
+        <p className="text-white/50 text-sm">Follow creators to see their reels here, or switch back to For You to discover new ones.</p>
+        <button
+          onClick={() => setFeedMode("foryou")}
+          className="mt-2 px-5 py-2 rounded-full bg-white text-black text-sm font-bold active:scale-95 transition-transform"
+        >
+          Back to For You
+        </button>
+        <button
+          onClick={() => setShowDiscover(true)}
+          className="text-white/70 text-sm underline"
+        >
+          Discover creators
+        </button>
+        <ZivoMobileNav />
+      </div>
+    );
+  }
+
+  return (
+    <MotionConfig reducedMotion="user">
+    <Suspense fallback={null}><ReelsCoachmarks /></Suspense>
+    <div className="fixed inset-0 bg-black lg:flex lg:flex-col">
+      {/* Desktop NavBar */}
+      <div className="hidden lg:block relative z-[1200] shrink-0">
+        <NavBar />
+      </div>
+      {/* Offline banner — slides down from the top when we lose connectivity.
+          Wrapped in a centered max-w container so it aligns with the phone
+          frame on iPad/desktop. */}
+      <AnimatePresence>
+        {!isOnline && (
+          <motion.div
+            initial={{ y: -40, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -40, opacity: 0 }}
+            transition={{ type: "spring", damping: 24, stiffness: 320 }}
+            className="absolute inset-x-0 z-[55] mx-auto md:max-w-[420px] pointer-events-none"
+            style={{ top: 'max(var(--zivo-safe-top-overlay, 12px), 16px)' }}
+            role="status"
+            aria-live="polite"
+          >
+            <div className="mx-3 px-4 py-2 rounded-full bg-zinc-900/95 backdrop-blur-md border border-white/15 shadow-xl flex items-center justify-center gap-2 pointer-events-auto">
+              <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
+              <span className="text-white text-xs font-semibold">You're offline — reels will resume when you reconnect</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* For You / Following tabs — TikTok-style top center segmented control.
+          On iPad+ the phone frame starts at 16px from the viewport top (md:my-4),
+          so we max() the safe-area inset with 16px so the tabs sit inside the
+          frame instead of floating above it on tablets without a notch. */}
+      {userId && (
+        <div
+          className="absolute left-1/2 -translate-x-1/2 z-50 flex items-center gap-5 sm:gap-6 lg:gap-8"
+          style={{ top: 'max(var(--zivo-safe-top-overlay, 12px), 16px)' }}
+        >
+          {(["foryou", "following"] as const).map((mode) => (
+            <button
+              key={mode}
+              type="button"
+              onClick={() => {
+                const now = Date.now();
+                // Double-tap the SAME tab within 400ms → refresh + scroll to top
+                if (
+                  feedMode === mode &&
+                  lastTabTapRef.current.mode === mode &&
+                  now - lastTabTapRef.current.at < 400
+                ) {
+                  lastTabTapRef.current = { mode: "", at: 0 };
+                  void queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
+                  cardRefs.current[0]?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  toast.success("Refreshing…");
+                  return;
+                }
+                lastTabTapRef.current = { mode, at: now };
+                setFeedMode(mode);
+                setActiveIndex(0);
+                requestAnimationFrame(() => cardRefs.current[0]?.scrollIntoView({ block: "start" }));
+              }}
+              className={cn(
+                "relative py-2 px-1 min-h-[44px] text-sm sm:text-[15px] lg:text-base font-bold transition-colors drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)] active:scale-95",
+                feedMode === mode ? "text-white" : "text-white/60",
+              )}
+            >
+              {mode === "foryou" ? "For You" : "Following"}
+              {feedMode === mode && (
+                <motion.span
+                  layoutId="reel-tab-underline"
+                  transition={{ type: "spring", damping: 26, stiffness: 380 }}
+                  className="absolute bottom-1 left-1/2 -translate-x-1/2 w-6 lg:w-8 h-0.5 lg:h-1 rounded-full bg-white"
+                />
+              )}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Trending hashtag chips overlay — TikTok-style filter bar.
+          Extract from the unfiltered posts list so chips don't disappear
+          once you select one. */}
+      <TrendingHashtags
+        posts={posts}
+        selected={selectedHashtag}
+        onSelect={setSelectedHashtag}
+        variant="overlay"
+        limit={8}
+      />
+
+      {/* Discover + Search + Live buttons — hide on desktop.
+          Wrapped in a centered container so on iPad (md+), where the reel
+          sits in a 420-px-wide phone frame, the buttons hug the right edge
+          of the frame instead of floating in the black gutter outside it. */}
+      <div
+        className="absolute inset-x-0 z-50 mx-auto md:max-w-[420px] pointer-events-none lg:hidden"
+        style={{ top: 'max(var(--zivo-safe-top-overlay, 12px), 16px)' }}
+      >
+      <div data-testid="feed-floating-actions" className="flex justify-end gap-2 sm:gap-2.5 px-3 sm:px-4 pointer-events-auto">
+        {/* Live entry — also reachable via the bottom nav, so hide on the
+            smallest phones (<sm) where the row would collide with center tabs. */}
+        <button
+          type="button"
+          onClick={() => navigate("/live")}
+          aria-label="Watch live"
+          title="Live"
+          className="hidden sm:flex w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 backdrop-blur-sm items-center justify-center active:scale-95 transition-transform border border-white/10"
+        >
+          <Radio className="w-5 h-5 text-red-400" />
+        </button>
+        {/* Discover people — hidden on smallest phones to keep clearance for
+            the centered tabs; reachable from the search overlay anyway. */}
+        <button
+          type="button"
+          onClick={() => setShowDiscover(true)}
+          aria-label="Discover people"
+          title="Discover people"
+          className="hidden sm:flex w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 backdrop-blur-sm items-center justify-center active:scale-95 transition-transform border border-white/10"
+        >
+          <UserPlus className="w-5 h-5 text-white" />
+        </button>
+        <button
+          type="button"
+          onClick={() => setShowSearch(true)}
+          aria-label="Search"
+          title="Search"
+          className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform border border-white/10"
+        >
+          <Search className="w-5 h-5 text-white" />
+        </button>
+        {userId && (
+          <button
+            type="button"
+            onClick={() => setShowCreatePost(true)}
+            aria-label="Create post"
+            title="Create"
+            className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-primary/90 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform border border-primary/40 shadow-lg shadow-primary/30"
+          >
+            <Plus className="w-5 h-5 text-primary-foreground" />
+          </button>
+        )}
+        {/* Playback speed — bridges to the active ReelCard via window event.
+            Hidden on the smallest phones (<sm) so the 5-button row doesn't
+            collide with the centered For You / Following tabs at 320px. The
+            speed badge in the corner remains tappable on those screens, and
+            long-press on the video still gives a quick 2× boost. */}
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new CustomEvent("zivo-reel-open-speed"))}
+          aria-label="Playback speed"
+          title="Playback speed"
+          className="hidden sm:flex w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 backdrop-blur-sm items-center justify-center active:scale-95 transition-transform border border-white/10"
+        >
+          <Gauge className="w-5 h-5 text-white" />
+        </button>
+        {/* Picture-in-picture — toggles native PiP on the active video.
+            Hidden on smallest phones (PiP is unreliable on those anyway). */}
+        <button
+          type="button"
+          onClick={() => window.dispatchEvent(new CustomEvent("zivo-reel-toggle-pip"))}
+          aria-label="Picture-in-picture"
+          title="Picture-in-picture"
+          className="hidden sm:flex w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 backdrop-blur-sm items-center justify-center active:scale-95 transition-transform border border-white/10"
+        >
+          <PictureInPicture className="w-5 h-5 text-white" />
+        </button>
+      </div>
+      </div>
+
+      {/* Search overlay */}
+      {showSearch && (
+        <FeedSearchOverlay onClose={() => setShowSearch(false)} onNavigate={navigate} />
+      )}
+
+      {/* Discover People overlay */}
+      <AnimatePresence>
+        {showDiscover && (
+          <DiscoverPeopleOverlay onClose={() => setShowDiscover(false)} onNavigate={navigate} />
+        )}
+      </AnimatePresence>
+
+      {/* Snap-scroll reel container */}
+      <div
+        className="relative w-full h-full md:flex md:items-stretch md:justify-center md:gap-6 lg:flex-1 lg:min-h-0 lg:h-0 lg:px-6 xl:px-10"
+      >
+        {/* Desktop LEFT rail — navigation + services.
+            Hidden on `/reels` so the TikTok-style hero can fill the viewport. */}
+        {!isReelsRoute && (
+          <aside className="hidden lg:flex lg:flex-col lg:w-[260px] xl:w-[300px] shrink-0 h-full overflow-y-auto py-6 pr-2 bg-background/40 backdrop-blur-sm border-r border-border/20 rounded-r-2xl">
+            <Suspense fallback={<div className="h-32" />}>
+              <FeedSidebar />
+            </Suspense>
+          </aside>
+        )}
+
+        {/* Phone-frame on tablet, full-width on desktop.
+            On `/reels` we widen the frame since the side rails are hidden. */}
+        <div className={cn(
+          "w-full h-full md:mx-auto md:rounded-2xl md:overflow-hidden md:shadow-2xl md:border md:border-white/10 md:h-[calc(100%-2rem)] md:w-auto md:aspect-[9/16] md:max-w-[420px] lg:my-4",
+          isReelsRoute ? "lg:max-w-[520px] xl:max-w-[560px]" : "lg:max-w-[460px] xl:max-w-[500px]",
+        )}>
+          <div
+            className="w-full h-full overflow-y-scroll snap-y snap-mandatory relative"
+            style={{
+              scrollbarWidth: "none",
+              WebkitOverflowScrolling: "touch",
+              transform: pullDelta > 0 ? `translateY(${pullDelta}px)` : undefined,
+              transition: pullDelta === 0 ? "transform 200ms ease-out" : undefined,
+            } as React.CSSProperties}
+            onTouchStart={handleTouchStart}
+            onTouchMove={handleTouchMove}
+            onTouchEnd={handleTouchEnd}
+          >
+            {/* Pull-to-refresh indicator */}
+            {(pullDelta > 0 || isRefreshing) && (
+              <div
+                className="pointer-events-none absolute left-1/2 z-50 -translate-x-1/2 flex items-center justify-center"
+                style={{ top: Math.max(20, pullDelta - 30) }}
+              >
+                <div
+                  className={cn(
+                    "rounded-full bg-white/15 backdrop-blur-md p-2 transition-transform",
+                    isRefreshing && "animate-spin",
+                  )}
+                  style={{ transform: !isRefreshing ? `rotate(${pullDelta * 3}deg)` : undefined }}
+                >
+                  <RefreshCw className="h-5 w-5 text-white" />
+                </div>
+              </div>
+            )}
+
+            {/* New posts pill */}
+            <Suspense fallback={null}>
+              <NewPostsPill count={newPostsCount} onClick={handleShowNewPosts} />
+            </Suspense>
+
+            {/* Empty state when Following tab returns no results */}
+            {visiblePosts.length === 0 && feedMode === "following" && userId && (
+              <div className="w-full h-full snap-start flex flex-col items-center justify-center px-8 text-center bg-black">
+                <div className="text-5xl mb-4">👥</div>
+                <p className="text-white font-semibold text-lg mb-1">Your following feed is empty</p>
+                <p className="text-white/60 text-sm max-w-xs">
+                  Follow some creators or shops and their posts will show up here.
+                </p>
+                <button
+                  onClick={() => setShowDiscover(true)}
+                  className="mt-5 rounded-full bg-emerald-500 px-5 py-2 text-sm font-semibold text-white"
+                >
+                  Discover people
+                </button>
+              </div>
+            )}
+
+            {visiblePosts.map((post, index) => (
+              <div key={post.id} className="contents">
+                <div
+                  ref={(el) => { cardRefs.current[index] = el; }}
+                  className="w-full h-full snap-start"
+                >
+                  <ErrorBoundary
+                    fallback={
+                      <div className="w-full h-full bg-black flex items-center justify-center px-6">
+                        <div className="text-center max-w-xs">
+                          <div className="w-14 h-14 rounded-full bg-white/10 flex items-center justify-center mx-auto mb-4 border border-white/15">
+                            <span className="text-2xl">⚠️</span>
+                          </div>
+                          <p className="text-white font-semibold mb-1">This reel couldn't load</p>
+                          <p className="text-white/60 text-sm mb-4">Something went wrong rendering this reel. Swipe to keep watching.</p>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              cardRefs.current[index + 1]?.scrollIntoView({ behavior: "smooth", block: "start" });
+                            }}
+                            className="px-4 py-2 rounded-full bg-white text-black text-sm font-bold active:scale-95"
+                          >
+                            Skip to next
+                          </button>
+                        </div>
+                      </div>
+                    }
+                  >
+                    <MemoReelCard
+                      post={post}
+                      isActive={activeIndex === index}
+                      shouldPreload={index === activeIndex + 1 || index === activeIndex - 1}
+                    globalMuted={globalMuted}
+                    onToggleMute={() => setGlobalMuted((m) => !m)}
+                    onNavigate={(slug) => slug.startsWith("__user__") ? navigate(`/user/${slug.replace("__user__", "")}`) : navigate(`/grocery/shop/${slug}`)}
+                    userId={userId}
+                    userLikedPostIds={userLikedPostIds}
+                    onToggleLike={handleToggleLike}
+                    onOpenComments={(id) => setCommentPostId(id)}
+                    onOpenShare={(id) => setSharePostId(id)}
+                    onOpenSound={(name) => setSoundOverlayName(name)}
+                    onOpenActions={() => {
+                      const rawId = post.id.startsWith("u-") ? post.id.slice(2) : post.id;
+                      setActionsTarget({
+                        target: {
+                          postId: rawId,
+                          source: post.source ?? "store",
+                          authorId: post.author_id ?? undefined,
+                        },
+                        authorName: post.author_name ?? post.store_name,
+                        shareUrl: getPostShareUrl(post.id),
+                      });
+                    }}
+                    currentReaction={(() => {
+                      const rawId = post.id.startsWith("u-") ? post.id.slice(2) : post.id;
+                      return reactions.reactionFor(rawId, post.source ?? "store");
+                    })()}
+                    onSetReaction={(emoji) => {
+                      const rawId = post.id.startsWith("u-") ? post.id.slice(2) : post.id;
+                      void reactions.setReaction(rawId, post.source ?? "store", emoji);
+                    }}
+                    onOpenRepost={() => {
+                      const rawId = post.id.startsWith("u-") ? post.id.slice(2) : post.id;
+                      setRepostTarget({
+                        postId: rawId,
+                        source: post.source ?? "store",
+                        authorName: post.author_name ?? post.store_name,
+                        preview: post.caption,
+                      });
+                    }}
+                    isReposted={(() => {
+                      const rawId = post.id.startsWith("u-") ? post.id.slice(2) : post.id;
+                      return reposts.isReposted(rawId, post.source ?? "store");
+                    })()}
+                    onAutoSkip={() => {
+                      // Snap to the next reel; if we're at the end, fall
+                      // back to the InfiniteScrollSentinel which loads more.
+                      const next = index + 1;
+                      requestAnimationFrame(() => {
+                        cardRefs.current[next]?.scrollIntoView({ behavior: "smooth", block: "start" });
+                      });
+                    }}
+                    />
+                  </ErrorBoundary>
+                </div>
+              </div>
+            ))}
+
+            {/* Infinite-scroll sentinel: when the user reaches the last card,
+                bump the page multiplier so the next refetch loads more.
+                Also serves as the polished "you're all caught up" end-of-feed
+                screen with refresh / back-to-top / mode-switch actions. */}
+            {visiblePosts.length > 0 && (
+              <InfiniteScrollSentinel
+                isFetching={isFetching}
+                onReachEnd={() => setPageMultiplier((m) => m + 1)}
+                totalCount={visiblePosts.length}
+                onRefresh={() => {
+                  void queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
+                  requestAnimationFrame(() => cardRefs.current[0]?.scrollIntoView({ block: "start" }));
+                }}
+                onBackToTop={() => {
+                  cardRefs.current[0]?.scrollIntoView({ block: "start", behavior: "smooth" });
+                }}
+                onSwitchMode={userId ? () => {
+                  setFeedMode((m) => (m === "foryou" ? "following" : "foryou"));
+                  requestAnimationFrame(() => cardRefs.current[0]?.scrollIntoView({ block: "start" }));
+                } : undefined}
+                feedMode={feedMode}
+              />
+            )}
+          </div>
+        </div>
+
+        {/* Desktop RIGHT rail — suggested people + trending.
+            Hidden on `/reels` so the TikTok-style hero can fill the viewport.
+            Hotel Admin / Run QA are operator tools — never shown on the
+            consumer reels page; on `/feed` they only render for lodging owners. */}
+        {!isReelsRoute && (
+          <aside className="hidden lg:flex lg:flex-col lg:w-[300px] xl:w-[340px] shrink-0 h-full overflow-y-auto py-6 px-3 bg-background/40 backdrop-blur-sm border-l border-border/20 rounded-l-2xl gap-4">
+            {ownerStore?.isLodging && lodgingCompletion && (
+              <div className="rounded-xl border border-primary/30 bg-card/70 p-3">
+                <div className="flex items-start justify-between gap-2"><div><h3 className="text-sm font-semibold text-foreground">Hotel / Resort Admin</h3><p className="mt-0.5 text-xs text-muted-foreground truncate">{ownerStore.name}</p></div><span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{lodgingCompletion.percent}%</span></div>
+                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${lodgingCompletion.percent}%` }} /></div>
+                <p className="mt-2 text-[11px] text-muted-foreground">Next: {lodgingCompletion.nextBestAction.actionLabel}</p>
+                <div className="mt-3 grid grid-cols-2 gap-2 text-xs"><button onClick={() => navigate(`/admin/stores/${ownerStore.id}?tab=lodge-overview`)} className="rounded-lg bg-primary px-2 py-2 font-semibold text-primary-foreground">Open Hotel Admin</button><button onClick={() => navigate("/admin/lodging/qa-checklist")} className="rounded-lg bg-muted px-2 py-2 font-semibold text-foreground">Run QA</button><button onClick={() => navigate("/admin/lodging/qa-checklist")} className="col-span-2 rounded-lg bg-muted px-2 py-2 font-semibold text-foreground">View QA Report</button></div>
+              </div>
+            )}
+            <div className="px-1">
+              <h3 className="text-sm font-semibold text-foreground mb-2">Suggested for you</h3>
+              <Suspense fallback={<div className="h-40" />}>
+                <SuggestedUsersCarousel variant="inline" />
+              </Suspense>
+            </div>
+            <div className="mt-2 rounded-xl border border-border/30 bg-card/40 p-3">
+              <h3 className="text-sm font-semibold text-foreground mb-2">Quick links</h3>
+              <div className="grid grid-cols-2 gap-2 text-xs">
+                <button onClick={() => navigate("/flights")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left flex items-center gap-2"><Plane className="w-4 h-4 text-primary shrink-0" /> Flights</button>
+                <button onClick={() => navigate("/hotels")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left flex items-center gap-2"><Building2 className="w-4 h-4 text-primary shrink-0" /> Hotels</button>
+                <button onClick={() => navigate("/eats")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left flex items-center gap-2"><UtensilsCrossed className="w-4 h-4 text-primary shrink-0" /> Eats</button>
+                <button onClick={() => navigate("/rides")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left flex items-center gap-2"><Car className="w-4 h-4 text-primary shrink-0" /> Rides</button>
+                <button onClick={() => navigate("/jobs")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left flex items-center gap-2"><Briefcase className="w-4 h-4 text-primary shrink-0" /> Jobs</button>
+                <button onClick={() => navigate("/shop")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left flex items-center gap-2"><ShoppingBag className="w-4 h-4 text-primary shrink-0" /> Shop</button>
+              </div>
+            </div>
+            <p className="text-[11px] text-muted-foreground/70 mt-auto px-1 pt-4">© ZIVO LLC · hizivo.com</p>
+          </aside>
+        )}
+
+        {/* Desktop up/down navigation buttons */}
+        <div className="hidden md:flex flex-col gap-3 absolute right-8 top-1/2 -translate-y-1/2 z-50">
+          <button
+            onClick={() => {
+              if (activeIndex > 0) {
+                cardRefs.current[activeIndex - 1]?.scrollIntoView({ behavior: "smooth" });
+              }
+            }}
+            disabled={activeIndex === 0}
+            className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+            aria-label="Previous reel"
+          >
+            <ChevronUp className="w-6 h-6" />
+          </button>
+          <button
+            onClick={() => {
+              if (activeIndex < visiblePosts.length - 1) {
+                cardRefs.current[activeIndex + 1]?.scrollIntoView({ behavior: "smooth" });
+              }
+            }}
+            disabled={activeIndex >= visiblePosts.length - 1}
+            className="w-12 h-12 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 flex items-center justify-center text-white hover:bg-white/20 transition-all disabled:opacity-30 disabled:cursor-not-allowed"
+            aria-label="Next reel"
+          >
+            <ChevronDown className="w-6 h-6" />
+          </button>
+        </div>
+      </div>
+
+      {/* Comment sheet */}
+      {commentPostId && (
+        <CommentSheet
+          postId={commentPostId}
+          userId={userId}
+          onClose={() => setCommentPostId(null)}
+        />
+      )}
+
+      {/* 3-dot post actions menu (save / mute / block / report / why) */}
+      <Suspense fallback={null}>
+        {actionsTarget && (
+          <PostActionsMenu
+            open={!!actionsTarget}
+            onClose={() => setActionsTarget(null)}
+            target={actionsTarget.target}
+            authorName={actionsTarget.authorName}
+            shareUrl={actionsTarget.shareUrl}
+            isBookmarked={postActions.isBookmarked(actionsTarget.target)}
+            onToggleBookmark={() => postActions.toggleBookmark(actionsTarget.target)}
+            onMute={() => {
+              if (actionsTarget.target.authorId) {
+                setHiddenAuthorIds((prev) => new Set(prev).add(actionsTarget.target.authorId!));
+              }
+              postActions.muteAuthor(actionsTarget.target);
+            }}
+            onBlock={() => {
+              if (actionsTarget.target.authorId) {
+                setHiddenAuthorIds((prev) => new Set(prev).add(actionsTarget.target.authorId!));
+              }
+              postActions.blockAuthor(actionsTarget.target);
+            }}
+            onReport={(reason) => postActions.reportPost(actionsTarget.target, reason)}
+            onNotInterested={() => {
+              const feedId = actionsTarget.target.source === "user"
+                ? `u-${actionsTarget.target.postId}`
+                : actionsTarget.target.postId;
+              hiddenPosts.hide(feedId);
+              toast.success("We'll show fewer like this");
+            }}
+            isOwnPost={!!userId && actionsTarget.target.source === "user" && actionsTarget.target.authorId === userId}
+            onViewInsights={() => setInsightsTarget({ postId: actionsTarget.target.postId, source: actionsTarget.target.source })}
+            onEditCaption={() => {
+              // Find the prefixed feed id and the current caption
+              const feedId = `u-${actionsTarget.target.postId}`;
+              const post = posts.find((p) => p.id === feedId);
+              setEditCaptionTarget({
+                postId: actionsTarget.target.postId,
+                initialCaption: post?.caption ?? "",
+              });
+            }}
+            onDeletePost={async () => {
+              if (!userId) return;
+              const rawId = actionsTarget.target.postId;
+              const feedId = `u-${rawId}`;
+              // Optimistic remove from view
+              setDeletedPostIds((prev) => new Set(prev).add(feedId));
+              const { error } = await (supabase as any)
+                .from("user_posts")
+                .delete()
+                .eq("id", rawId)
+                .eq("user_id", userId);
+              if (error) {
+                // Roll back
+                setDeletedPostIds((prev) => {
+                  const next = new Set(prev);
+                  next.delete(feedId);
+                  return next;
+                });
+                toast.error("Couldn't delete post");
+                return;
+              }
+              toast.success("Post deleted");
+              queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
+            }}
+          />
+        )}
+      </Suspense>
+
+      {/* Author-only insights drawer */}
+      <Suspense fallback={null}>
+        {insightsTarget && (
+          <PostInsights
+            open={!!insightsTarget}
+            onClose={() => setInsightsTarget(null)}
+            postId={insightsTarget.postId}
+            source={insightsTarget.source}
+          />
+        )}
+      </Suspense>
+
+      {/* Caption editor (own user posts only) */}
+      <Suspense fallback={null}>
+        {editCaptionTarget && (
+          <CaptionEditDialog
+            open={!!editCaptionTarget}
+            onClose={() => setEditCaptionTarget(null)}
+            initialCaption={editCaptionTarget.initialCaption}
+            onSave={async (next) => {
+              if (!userId) return;
+              const { error } = await (supabase as any)
+                .from("user_posts")
+                .update({ caption: next })
+                .eq("id", editCaptionTarget.postId)
+                .eq("user_id", userId);
+              if (error) {
+                toast.error("Couldn't save caption");
+                throw error;
+              }
+              toast.success("Caption updated");
+              queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
+            }}
+          />
+        )}
+      </Suspense>
+
+      {/* Repost dialog */}
+      <Suspense fallback={null}>
+        {repostTarget && (
+          <RepostDialog
+            open={!!repostTarget}
+            onClose={() => setRepostTarget(null)}
+            authorName={repostTarget.authorName}
+            postPreview={repostTarget.preview}
+            alreadyReposted={reposts.isReposted(repostTarget.postId, repostTarget.source)}
+            onConfirm={async (quoteText) => {
+              const nowReposted = await reposts.toggleRepost(
+                repostTarget.postId,
+                repostTarget.source,
+                quoteText,
+              );
+              toast.success(nowReposted ? "Reposted to your profile" : "Repost removed");
+            }}
+          />
+        )}
+      </Suspense>
+
+      {/* Share sheet */}
+      {sharePostId && (() => {
+        const sharePost = posts.find((p) => p.id === sharePostId);
+        const sharePostSource = sharePost?.source ?? "store";
+        const sharePostRawId = sharePostId.startsWith("u-") ? sharePostId.slice(2) : sharePostId;
+        return (
+          <UnifiedShareSheet
+            shareUrl={getPostShareUrl(sharePostId)}
+            shareText={sharePost?.caption || "Check out this post!"}
+            onClose={() => {
+              // Log the share so the count actually moves. Channel is "other"
+              // because the unified sheet doesn't tell us which target was used;
+              // we'll segment in a future improvement.
+              (supabase as any).rpc("record_post_share", {
+                _post_id: sharePostRawId,
+                _source: sharePostSource,
+                _channel: "other",
+              }).catch(() => { /* fire-and-forget */ });
+              setSharePostId(null);
+            }}
+          />
+        );
+      })()}
+
+      {/* Report dialog (opened by `zivo-reel-report` event from a reel's overflow menu) */}
+      <AnimatePresence>
+        {reportPostId && userId && (
+          <ReelReportDialog
+            postId={reportPostId}
+            reporterId={userId}
+            onClose={() => setReportPostId(null)}
+            onReported={() => {
+              const id = reportPostId;
+              setReportPostId(null);
+              if (id) {
+                setDeletedPostIds((prev) => {
+                  if (prev.has(id)) return prev;
+                  const next = new Set(prev);
+                  next.add(id);
+                  return next;
+                });
+              }
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Sound overlay */}
+      <AnimatePresence>
+        {soundOverlayName && (
+          <SoundOverlay
+            soundName={soundOverlayName}
+            onClose={() => setSoundOverlayName(null)}
+            onNavigateToReel={(postId) => {
+              setSoundOverlayName(null);
+              navigate(`/reels/${postId}`);
+            }}
+            onUseSound={() => {
+              const name = soundOverlayName;
+              setSoundOverlayName(null);
+              setCreateWithAudio(name);
+            }}
+            currentPosts={posts}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Create post modal — standalone FAB trigger */}
+      <AnimatePresence>
+        {showCreatePost && userId && (
+          <CreatePostModal
+            userId={userId}
+            userProfile={userProfile}
+            onClose={() => setShowCreatePost(false)}
+            onCreated={() => {
+              setShowCreatePost(false);
+              toast.success("Reel posted!");
+              void queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
+            }}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Create post modal with pre-filled audio */}
+      <AnimatePresence>
+        {createWithAudio && userId && (
+          <CreatePostModal
+            userId={userId}
+            userProfile={userProfile}
+            onClose={() => setCreateWithAudio(null)}
+            onCreated={() => {
+              setCreateWithAudio(null);
+              toast.success("Reel posted with sound!");
+            }}
+            initialAudioName={createWithAudio}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* First-visit swipe-up hint — animated chevron + label, dismisses on
+          any interaction or after 3.5 s. */}
+      <AnimatePresence>
+        {showSwipeHint && (
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            transition={{ duration: 0.35 }}
+            className="absolute left-1/2 -translate-x-1/2 z-[55] pointer-events-none flex flex-col items-center gap-2"
+            style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 140px)" }}
+          >
+            <motion.div
+              animate={{ y: [0, -8, 0] }}
+              transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+              className="w-12 h-12 rounded-full bg-white/15 backdrop-blur-md border border-white/30 flex items-center justify-center shadow-lg"
+            >
+              <ChevronUp className="w-7 h-7 text-white" strokeWidth={2.5} />
+            </motion.div>
+            <span className="text-white text-xs font-semibold drop-shadow-[0_1px_4px_rgba(0,0,0,0.7)] px-3 py-1 rounded-full bg-black/40 backdrop-blur-sm">
+              Swipe up for more
+            </span>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Keyboard shortcuts help overlay — desktop power-user feature.
+          Triggered by `?` key, dismissed by `?` toggle, Escape, or click. */}
+      <AnimatePresence>
+        {showShortcutsHelp && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setShowShortcutsHelp(false)}
+            className="fixed inset-0 z-[1500] bg-black/70 backdrop-blur-sm flex items-center justify-center p-6"
+            role="dialog"
+            aria-label="Keyboard shortcuts"
+          >
+            <motion.div
+              initial={{ scale: 0.92, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.92, opacity: 0 }}
+              transition={{ type: "spring", damping: 26, stiffness: 320 }}
+              onClick={(e) => e.stopPropagation()}
+              className="w-full max-w-md rounded-2xl bg-background border border-border/30 shadow-2xl p-5"
+            >
+              <div className="flex items-start justify-between mb-4">
+                <h2 className="text-base font-bold text-foreground">Keyboard shortcuts</h2>
+                <button
+                  type="button"
+                  onClick={() => setShowShortcutsHelp(false)}
+                  aria-label="Close"
+                  className="text-muted-foreground hover:text-foreground -m-1 p-1"
+                >
+                  <XIcon className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="space-y-2 text-sm">
+                {[
+                  { keys: ["Space", "K"], action: "Play / pause" },
+                  { keys: ["M"], action: "Toggle mute" },
+                  { keys: ["L"], action: "Like / unlike" },
+                  { keys: ["↓", "J"], action: "Next reel" },
+                  { keys: ["↑"], action: "Previous reel" },
+                  { keys: ["?"], action: "Toggle this help" },
+                  { keys: ["Esc"], action: "Close overlays" },
+                ].map((row) => (
+                  <div key={row.action} className="flex items-center justify-between gap-3 py-1.5 border-b border-border/20 last:border-b-0">
+                    <span className="text-muted-foreground">{row.action}</span>
+                    <div className="flex items-center gap-1.5">
+                      {row.keys.map((k, i) => (
+                        <span
+                          key={i}
+                          className="inline-flex items-center justify-center min-w-[28px] h-7 px-2 rounded-md bg-muted border border-border/40 text-xs font-mono font-semibold text-foreground"
+                        >
+                          {k}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="mt-4 text-[11px] text-muted-foreground/70">
+                Press <span className="font-mono font-semibold">?</span> at any time to reopen this list.
+              </p>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* a11y live region — announces the active reel to screen readers
+          without disrupting sighted users. polite tone so it queues with
+          other announcements rather than interrupting. */}
+      <div role="status" aria-live="polite" aria-atomic="true" className="sr-only">
+        {visiblePosts[activeIndex] && (
+          <>
+            Reel by {visiblePosts[activeIndex].source === "user"
+              ? visiblePosts[activeIndex].author_name
+              : visiblePosts[activeIndex].store_name}
+            {visiblePosts[activeIndex].caption ? `: ${visiblePosts[activeIndex].caption.slice(0, 120)}` : ""}
+          </>
+        )}
+      </div>
+
+      {/* Bottom navigation overlaid on top */}
       <ZivoMobileNav />
     </div>
+    </MotionConfig>
   );
 }

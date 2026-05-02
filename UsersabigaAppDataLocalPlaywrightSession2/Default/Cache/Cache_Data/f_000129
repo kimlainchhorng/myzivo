@@ -1,0 +1,195 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/lodging/BedConfigBuilder.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+/**
+ * BedConfigBuilder - structured editor for room sleeping arrangements.
+ * Replaces the free-text "Beds" field. Drives auto "Sleeps X" when needed.
+ */ import { Plus, Trash2 } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+import { Button } from "/src/components/ui/button.tsx";
+import { Input } from "/src/components/ui/input.tsx";
+export const BED_TYPES = [
+    "King",
+    "Queen",
+    "Double",
+    "Single",
+    "Sofa bed",
+    "Bunk bed",
+    "Crib"
+];
+export function BedConfigBuilder({ value, onChange }) {
+    const update = (idx, patch)=>{
+        const next = [
+            ...value
+        ];
+        next[idx] = {
+            ...next[idx],
+            ...patch
+        };
+        onChange(next);
+    };
+    const add = (type = "Queen")=>onChange([
+            ...value,
+            {
+                type,
+                qty: 1
+            }
+        ]);
+    const remove = (idx)=>onChange(value.filter((_, i)=>i !== idx));
+    return /*#__PURE__*/ _jsxDEV("div", {
+        className: "space-y-2",
+        children: [
+            value.length === 0 && /*#__PURE__*/ _jsxDEV("p", {
+                className: "text-xs text-muted-foreground",
+                children: 'No beds configured. Add at least one to power "Sleeps X" badges.'
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/lodging/BedConfigBuilder.tsx",
+                lineNumber: 29,
+                columnNumber: 9
+            }, this),
+            value.map((slot, i)=>/*#__PURE__*/ _jsxDEV("div", {
+                    className: "grid grid-cols-12 gap-1.5 items-center p-2 rounded-lg border border-border bg-muted/20",
+                    children: [
+                        /*#__PURE__*/ _jsxDEV("select", {
+                            className: "col-span-6 h-8 rounded-md border border-input bg-background px-2 text-xs",
+                            value: slot.type,
+                            onChange: (e)=>update(i, {
+                                    type: e.target.value
+                                }),
+                            children: BED_TYPES.map((t)=>/*#__PURE__*/ _jsxDEV("option", {
+                                    value: t,
+                                    children: t
+                                }, t, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/lodging/BedConfigBuilder.tsx",
+                                    lineNumber: 38,
+                                    columnNumber: 33
+                                }, this))
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/lodging/BedConfigBuilder.tsx",
+                            lineNumber: 33,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV(Input, {
+                            className: "col-span-3 h-8 text-xs",
+                            type: "number",
+                            inputMode: "numeric",
+                            min: 1,
+                            value: slot.qty,
+                            onChange: (e)=>update(i, {
+                                    qty: Math.max(1, parseInt(e.target.value) || 1)
+                                })
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/lodging/BedConfigBuilder.tsx",
+                            lineNumber: 40,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("span", {
+                            className: "col-span-2 text-[10px] text-muted-foreground",
+                            children: [
+                                "× ",
+                                slot.type.toLowerCase()
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/lodging/BedConfigBuilder.tsx",
+                            lineNumber: 46,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV(Button, {
+                            type: "button",
+                            size: "icon",
+                            variant: "ghost",
+                            className: "col-span-1 h-8 w-8",
+                            onClick: ()=>remove(i),
+                            children: /*#__PURE__*/ _jsxDEV(Trash2, {
+                                className: "h-3.5 w-3.5 text-destructive"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/lodging/BedConfigBuilder.tsx",
+                                lineNumber: 48,
+                                columnNumber: 13
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/lodging/BedConfigBuilder.tsx",
+                            lineNumber: 47,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, i, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/lodging/BedConfigBuilder.tsx",
+                    lineNumber: 32,
+                    columnNumber: 9
+                }, this)),
+            /*#__PURE__*/ _jsxDEV("div", {
+                className: "flex flex-wrap gap-1.5 pt-1",
+                children: BED_TYPES.map((t)=>/*#__PURE__*/ _jsxDEV("button", {
+                        type: "button",
+                        onClick: ()=>add(t),
+                        className: "px-2 py-1 rounded-full text-[11px] border border-border bg-background hover:border-primary/40 hover:bg-primary/5 inline-flex items-center gap-1",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(Plus, {
+                                className: "h-3 w-3"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/lodging/BedConfigBuilder.tsx",
+                                lineNumber: 60,
+                                columnNumber: 13
+                            }, this),
+                            " ",
+                            t
+                        ]
+                    }, t, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/lodging/BedConfigBuilder.tsx",
+                        lineNumber: 54,
+                        columnNumber: 11
+                    }, this))
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/lodging/BedConfigBuilder.tsx",
+                lineNumber: 52,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/lodging/BedConfigBuilder.tsx",
+        lineNumber: 27,
+        columnNumber: 5
+    }, this);
+}
+_c = BedConfigBuilder;
+export function bedConfigSummary(slots) {
+    if (!slots || slots.length === 0) return "";
+    return slots.map((s)=>`${s.qty} ${s.type}${s.qty > 1 ? "s" : ""}`).join(" · ");
+}
+export function bedConfigSleeps(slots) {
+    if (!slots || slots.length === 0) return 0;
+    const cap = {
+        King: 2,
+        Queen: 2,
+        Double: 2,
+        Single: 1,
+        "Sofa bed": 2,
+        "Bunk bed": 2,
+        Crib: 0
+    };
+    return slots.reduce((sum, s)=>sum + (cap[s.type] ?? 1) * s.qty, 0);
+}
+var _c;
+$RefreshReg$(_c, "BedConfigBuilder");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/lodging/BedConfigBuilder.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/lodging/BedConfigBuilder.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/lodging/BedConfigBuilder.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIkJlZENvbmZpZ0J1aWxkZXIudHN4Il0sInNvdXJjZXNDb250ZW50IjpbIi8qKlxyXG4gKiBCZWRDb25maWdCdWlsZGVyIC0gc3RydWN0dXJlZCBlZGl0b3IgZm9yIHJvb20gc2xlZXBpbmcgYXJyYW5nZW1lbnRzLlxyXG4gKiBSZXBsYWNlcyB0aGUgZnJlZS10ZXh0IFwiQmVkc1wiIGZpZWxkLiBEcml2ZXMgYXV0byBcIlNsZWVwcyBYXCIgd2hlbiBuZWVkZWQuXHJcbiAqL1xyXG5pbXBvcnQgeyBQbHVzLCBUcmFzaDIgfSBmcm9tIFwibHVjaWRlLXJlYWN0XCI7XHJcbmltcG9ydCB7IEJ1dHRvbiB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvYnV0dG9uXCI7XHJcbmltcG9ydCB7IElucHV0IH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9pbnB1dFwiO1xyXG5pbXBvcnQgdHlwZSB7IEJlZFNsb3QgfSBmcm9tIFwiQC9ob29rcy9sb2RnaW5nL3VzZUxvZGdlUm9vbXNcIjtcclxuXHJcbmV4cG9ydCBjb25zdCBCRURfVFlQRVMgPSBbXCJLaW5nXCIsIFwiUXVlZW5cIiwgXCJEb3VibGVcIiwgXCJTaW5nbGVcIiwgXCJTb2ZhIGJlZFwiLCBcIkJ1bmsgYmVkXCIsIFwiQ3JpYlwiXTtcclxuXHJcbmludGVyZmFjZSBQcm9wcyB7XHJcbiAgdmFsdWU6IEJlZFNsb3RbXTtcclxuICBvbkNoYW5nZTogKG5leHQ6IEJlZFNsb3RbXSkgPT4gdm9pZDtcclxufVxyXG5cclxuZXhwb3J0IGZ1bmN0aW9uIEJlZENvbmZpZ0J1aWxkZXIoeyB2YWx1ZSwgb25DaGFuZ2UgfTogUHJvcHMpIHtcclxuICBjb25zdCB1cGRhdGUgPSAoaWR4OiBudW1iZXIsIHBhdGNoOiBQYXJ0aWFsPEJlZFNsb3Q+KSA9PiB7XHJcbiAgICBjb25zdCBuZXh0ID0gWy4uLnZhbHVlXTtcclxuICAgIG5leHRbaWR4XSA9IHsgLi4ubmV4dFtpZHhdLCAuLi5wYXRjaCB9O1xyXG4gICAgb25DaGFuZ2UobmV4dCk7XHJcbiAgfTtcclxuICBjb25zdCBhZGQgPSAodHlwZSA9IFwiUXVlZW5cIikgPT4gb25DaGFuZ2UoWy4uLnZhbHVlLCB7IHR5cGUsIHF0eTogMSB9XSk7XHJcbiAgY29uc3QgcmVtb3ZlID0gKGlkeDogbnVtYmVyKSA9PiBvbkNoYW5nZSh2YWx1ZS5maWx0ZXIoKF8sIGkpID0+IGkgIT09IGlkeCkpO1xyXG5cclxuICByZXR1cm4gKFxyXG4gICAgPGRpdiBjbGFzc05hbWU9XCJzcGFjZS15LTJcIj5cclxuICAgICAge3ZhbHVlLmxlbmd0aCA9PT0gMCAmJiAoXHJcbiAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC14cyB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5ObyBiZWRzIGNvbmZpZ3VyZWQuIEFkZCBhdCBsZWFzdCBvbmUgdG8gcG93ZXIgXCJTbGVlcHMgWFwiIGJhZGdlcy48L3A+XHJcbiAgICAgICl9XHJcbiAgICAgIHt2YWx1ZS5tYXAoKHNsb3QsIGkpID0+IChcclxuICAgICAgICA8ZGl2IGtleT17aX0gY2xhc3NOYW1lPVwiZ3JpZCBncmlkLWNvbHMtMTIgZ2FwLTEuNSBpdGVtcy1jZW50ZXIgcC0yIHJvdW5kZWQtbGcgYm9yZGVyIGJvcmRlci1ib3JkZXIgYmctbXV0ZWQvMjBcIj5cclxuICAgICAgICAgIDxzZWxlY3RcclxuICAgICAgICAgICAgY2xhc3NOYW1lPVwiY29sLXNwYW4tNiBoLTggcm91bmRlZC1tZCBib3JkZXIgYm9yZGVyLWlucHV0IGJnLWJhY2tncm91bmQgcHgtMiB0ZXh0LXhzXCJcclxuICAgICAgICAgICAgdmFsdWU9e3Nsb3QudHlwZX1cclxuICAgICAgICAgICAgb25DaGFuZ2U9e2UgPT4gdXBkYXRlKGksIHsgdHlwZTogZS50YXJnZXQudmFsdWUgfSl9XHJcbiAgICAgICAgICA+XHJcbiAgICAgICAgICAgIHtCRURfVFlQRVMubWFwKHQgPT4gPG9wdGlvbiBrZXk9e3R9IHZhbHVlPXt0fT57dH08L29wdGlvbj4pfVxyXG4gICAgICAgICAgPC9zZWxlY3Q+XHJcbiAgICAgICAgICA8SW5wdXRcclxuICAgICAgICAgICAgY2xhc3NOYW1lPVwiY29sLXNwYW4tMyBoLTggdGV4dC14c1wiXHJcbiAgICAgICAgICAgIHR5cGU9XCJudW1iZXJcIiBpbnB1dE1vZGU9XCJudW1lcmljXCIgbWluPXsxfVxyXG4gICAgICAgICAgICB2YWx1ZT17c2xvdC5xdHl9XHJcbiAgICAgICAgICAgIG9uQ2hhbmdlPXtlID0+IHVwZGF0ZShpLCB7IHF0eTogTWF0aC5tYXgoMSwgcGFyc2VJbnQoZS50YXJnZXQudmFsdWUpIHx8IDEpIH0pfVxyXG4gICAgICAgICAgLz5cclxuICAgICAgICAgIDxzcGFuIGNsYXNzTmFtZT1cImNvbC1zcGFuLTIgdGV4dC1bMTBweF0gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+w5cge3Nsb3QudHlwZS50b0xvd2VyQ2FzZSgpfTwvc3Bhbj5cclxuICAgICAgICAgIDxCdXR0b24gdHlwZT1cImJ1dHRvblwiIHNpemU9XCJpY29uXCIgdmFyaWFudD1cImdob3N0XCIgY2xhc3NOYW1lPVwiY29sLXNwYW4tMSBoLTggdy04XCIgb25DbGljaz17KCkgPT4gcmVtb3ZlKGkpfT5cclxuICAgICAgICAgICAgPFRyYXNoMiBjbGFzc05hbWU9XCJoLTMuNSB3LTMuNSB0ZXh0LWRlc3RydWN0aXZlXCIgLz5cclxuICAgICAgICAgIDwvQnV0dG9uPlxyXG4gICAgICAgIDwvZGl2PlxyXG4gICAgICApKX1cclxuICAgICAgPGRpdiBjbGFzc05hbWU9XCJmbGV4IGZsZXgtd3JhcCBnYXAtMS41IHB0LTFcIj5cclxuICAgICAgICB7QkVEX1RZUEVTLm1hcCh0ID0+IChcclxuICAgICAgICAgIDxidXR0b25cclxuICAgICAgICAgICAga2V5PXt0fVxyXG4gICAgICAgICAgICB0eXBlPVwiYnV0dG9uXCJcclxuICAgICAgICAgICAgb25DbGljaz17KCkgPT4gYWRkKHQpfVxyXG4gICAgICAgICAgICBjbGFzc05hbWU9XCJweC0yIHB5LTEgcm91bmRlZC1mdWxsIHRleHQtWzExcHhdIGJvcmRlciBib3JkZXItYm9yZGVyIGJnLWJhY2tncm91bmQgaG92ZXI6Ym9yZGVyLXByaW1hcnkvNDAgaG92ZXI6YmctcHJpbWFyeS81IGlubGluZS1mbGV4IGl0ZW1zLWNlbnRlciBnYXAtMVwiXHJcbiAgICAgICAgICA+XHJcbiAgICAgICAgICAgIDxQbHVzIGNsYXNzTmFtZT1cImgtMyB3LTNcIiAvPiB7dH1cclxuICAgICAgICAgIDwvYnV0dG9uPlxyXG4gICAgICAgICkpfVxyXG4gICAgICA8L2Rpdj5cclxuICAgIDwvZGl2PlxyXG4gICk7XHJcbn1cclxuXHJcbmV4cG9ydCBmdW5jdGlvbiBiZWRDb25maWdTdW1tYXJ5KHNsb3RzOiBCZWRTbG90W10gfCB1bmRlZmluZWQpOiBzdHJpbmcge1xyXG4gIGlmICghc2xvdHMgfHwgc2xvdHMubGVuZ3RoID09PSAwKSByZXR1cm4gXCJcIjtcclxuICByZXR1cm4gc2xvdHMubWFwKHMgPT4gYCR7cy5xdHl9ICR7cy50eXBlfSR7cy5xdHkgPiAxID8gXCJzXCIgOiBcIlwifWApLmpvaW4oXCIgwrcgXCIpO1xyXG59XHJcblxyXG5leHBvcnQgZnVuY3Rpb24gYmVkQ29uZmlnU2xlZXBzKHNsb3RzOiBCZWRTbG90W10gfCB1bmRlZmluZWQpOiBudW1iZXIge1xyXG4gIGlmICghc2xvdHMgfHwgc2xvdHMubGVuZ3RoID09PSAwKSByZXR1cm4gMDtcclxuICBjb25zdCBjYXA6IFJlY29yZDxzdHJpbmcsIG51bWJlcj4gPSB7XHJcbiAgICBLaW5nOiAyLCBRdWVlbjogMiwgRG91YmxlOiAyLCBTaW5nbGU6IDEsIFwiU29mYSBiZWRcIjogMiwgXCJCdW5rIGJlZFwiOiAyLCBDcmliOiAwLFxyXG4gIH07XHJcbiAgcmV0dXJuIHNsb3RzLnJlZHVjZSgoc3VtLCBzKSA9PiBzdW0gKyAoY2FwW3MudHlwZV0gPz8gMSkgKiBzLnF0eSwgMCk7XHJcbn1cclxuIl0sIm5hbWVzIjpbIlBsdXMiLCJUcmFzaDIiLCJCdXR0b24iLCJJbnB1dCIsIkJFRF9UWVBFUyIsIkJlZENvbmZpZ0J1aWxkZXIiLCJ2YWx1ZSIsIm9uQ2hhbmdlIiwidXBkYXRlIiwiaWR4IiwicGF0Y2giLCJuZXh0IiwiYWRkIiwidHlwZSIsInF0eSIsInJlbW92ZSIsImZpbHRlciIsIl8iLCJpIiwiZGl2IiwiY2xhc3NOYW1lIiwibGVuZ3RoIiwicCIsIm1hcCIsInNsb3QiLCJzZWxlY3QiLCJlIiwidGFyZ2V0IiwidCIsIm9wdGlvbiIsImlucHV0TW9kZSIsIm1pbiIsIk1hdGgiLCJtYXgiLCJwYXJzZUludCIsInNwYW4iLCJ0b0xvd2VyQ2FzZSIsInNpemUiLCJ2YXJpYW50Iiwib25DbGljayIsImJ1dHRvbiIsImJlZENvbmZpZ1N1bW1hcnkiLCJzbG90cyIsInMiLCJqb2luIiwiYmVkQ29uZmlnU2xlZXBzIiwiY2FwIiwiS2luZyIsIlF1ZWVuIiwiRG91YmxlIiwiU2luZ2xlIiwiQ3JpYiIsInJlZHVjZSIsInN1bSJdLCJtYXBwaW5ncyI6IjtBQUFBOzs7Q0FHQyxHQUNELFNBQVNBLElBQUksRUFBRUMsTUFBTSxRQUFRLGVBQWU7QUFDNUMsU0FBU0MsTUFBTSxRQUFRLHlCQUF5QjtBQUNoRCxTQUFTQyxLQUFLLFFBQVEsd0JBQXdCO0FBRzlDLE9BQU8sTUFBTUMsWUFBWTtJQUFDO0lBQVE7SUFBUztJQUFVO0lBQVU7SUFBWTtJQUFZO0NBQU8sQ0FBQztBQU8vRixPQUFPLFNBQVNDLGlCQUFpQixFQUFFQyxLQUFLLEVBQUVDLFFBQVEsRUFBUztJQUN6RCxNQUFNQyxTQUFTLENBQUNDLEtBQWFDO1FBQzNCLE1BQU1DLE9BQU87ZUFBSUw7U0FBTTtRQUN2QkssSUFBSSxDQUFDRixJQUFJLEdBQUc7WUFBRSxHQUFHRSxJQUFJLENBQUNGLElBQUk7WUFBRSxHQUFHQyxLQUFLO1FBQUM7UUFDckNILFNBQVNJO0lBQ1g7SUFDQSxNQUFNQyxNQUFNLENBQUNDLE9BQU8sT0FBTyxHQUFLTixTQUFTO2VBQUlEO1lBQU87Z0JBQUVPO2dCQUFNQyxLQUFLO1lBQUU7U0FBRTtJQUNyRSxNQUFNQyxT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

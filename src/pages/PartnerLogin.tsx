@@ -12,16 +12,18 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Loader2, Mail, Lock, ArrowRight, Home, Store, Briefcase, Globe, CheckCircle } from "lucide-react";
+import { Loader2, Mail, Lock, ArrowRight, Home, Store, Briefcase, Globe, CheckCircle, Hash } from "lucide-react";
 import { toast } from "sonner";
 import { motion, useMotionValue, useTransform, useSpring } from "framer-motion";
 import SEOHead from "@/components/SEOHead";
 import { useI18n } from "@/hooks/useI18n";
 import { cn } from "@/lib/utils";
+import { isLodgingStoreCategory } from "@/hooks/useOwnerStoreProfile";
 
 const partnerLoginSchema = z.object({
   email: z.string().email("Please enter a valid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
+  store_id: z.string().optional(),
 });
 
 type PartnerLoginData = z.infer<typeof partnerLoginSchema>;
@@ -51,7 +53,7 @@ export default function PartnerLogin() {
 
   const form = useForm<PartnerLoginData>({
     resolver: zodResolver(partnerLoginSchema),
-    defaultValues: { email: "", password: "" },
+    defaultValues: { email: "", password: "", store_id: "" },
   });
 
   const onSubmit = async (data: PartnerLoginData) => {
@@ -60,7 +62,11 @@ export default function PartnerLogin() {
 
     if (error) {
       setIsLoading(false);
-      toast.error(error.message || "Failed to sign in");
+      if (error.message === "DRIVER_ACCOUNT") {
+        toast.error("This is a ZIVO Driver account and cannot access the partner portal. Please use the ZIVO Driver app.");
+      } else {
+        toast.error(error.message || "Failed to sign in");
+      }
       return;
     }
 
@@ -71,12 +77,36 @@ export default function PartnerLogin() {
       return;
     }
 
+    // If store ID provided, validate and redirect to that store
+    const storeIdInput = data.store_id?.replace(/^CBD/i, "").trim();
+    if (storeIdInput && storeIdInput.length >= 8) {
+      // Find store by matching first 8 chars of UUID (without dashes)
+      const { data: stores } = await supabase.from("store_profiles").select("id, name, category, setup_complete, owner_id").eq("owner_id", user.id);
+      const matchedStore = stores?.find((s: any) => s.id.replace(/-/g, "").toUpperCase().startsWith(storeIdInput.toUpperCase()));
+
+      if (matchedStore) {
+        setIsLoading(false);
+        toast.success(`Welcome back! Opening ${matchedStore.name}`);
+        if (!matchedStore.setup_complete) {
+          navigate("/store/setup", { replace: true });
+        } else {
+          navigate(`/admin/stores/${matchedStore.id}${isLodgingStoreCategory(matchedStore.category) ? "?tab=lodge-overview" : ""}`, { replace: true });
+        }
+        return;
+      } else {
+        setIsLoading(false);
+        toast.error("Store ID not found or not linked to your account");
+        return;
+      }
+    }
+
     // Check partner roles: restaurant owner, hotel owner, car rental owner, store merchant
-    const [restaurant, hotel, carRentals, adminRole] = await Promise.all([
+    const [restaurant, hotel, carRentals, adminRole, storeProfile] = await Promise.all([
       supabase.from("restaurants").select("id").eq("owner_id", user.id).maybeSingle(),
       supabase.from("hotels").select("id").eq("owner_id", user.id).maybeSingle(),
       supabase.from("rental_cars").select("id").eq("owner_id", user.id).limit(1),
       supabase.rpc("check_user_role", { _user_id: user.id, _role: "admin" }),
+      supabase.from("store_profiles").select("id, category, setup_complete").eq("owner_id", user.id).maybeSingle(),
     ]);
 
     setIsLoading(false);
@@ -85,6 +115,13 @@ export default function PartnerLogin() {
     if (adminRole.data) {
       toast.success("Welcome back, Admin!");
       navigate("/admin/analytics", { replace: true });
+    } else if (storeProfile.data) {
+      toast.success("Welcome back, Partner!");
+      if (!storeProfile.data.setup_complete) {
+        navigate("/store/setup", { replace: true });
+      } else {
+        navigate(`/admin/stores/${storeProfile.data.id}${isLodgingStoreCategory(storeProfile.data.category) ? "?tab=lodge-overview" : ""}`, { replace: true });
+      }
     } else if (restaurant.data) {
       toast.success("Welcome back, Partner!");
       navigate("/restaurant/dashboard", { replace: true });
@@ -95,9 +132,9 @@ export default function PartnerLogin() {
       toast.success("Welcome back, Partner!");
       navigate("/car-rental/dashboard", { replace: true });
     } else {
-      // No partner role found — still logged in, send to store/business setup
+      // No partner role found — send to store setup
       toast.info("No partner account found. Please set up your business first.");
-      navigate("/partner-with-zivo", { replace: true });
+      navigate("/store/setup", { replace: true });
     }
   };
 
@@ -215,6 +252,67 @@ export default function PartnerLogin() {
                         <input type="password" placeholder="••••••••" autoComplete="current-password" className={input3D} {...field} />
                       </div>
                     </FormControl>
+                    <FormMessage className="text-red-400 text-xs" />
+                  </FormItem>
+                )} />
+
+                {/* Store Account ID */}
+                <FormField control={form.control} name="store_id" render={({ field }) => (
+                  <FormItem className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <FormLabel className="text-white/70 text-xs font-medium">Store Account ID</FormLabel>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const email = form.getValues("email").trim();
+                          if (!email) {
+                            toast.error("Please enter your business email first");
+                            return;
+                          }
+                          const loadingToast = toast.loading("Looking up your Store Account ID...");
+                          try {
+                            const { data, error } = await supabase.functions.invoke("lookup-store-id", {
+                              body: { email },
+                            });
+
+                            if (error || data?.error) {
+                              toast.dismiss(loadingToast);
+                              toast.error(data?.error || "Could not find a store for this email");
+                              return;
+                            }
+
+                            if (data?.stores?.length > 0) {
+                              const stores = data.stores.map((store: { name: string; full_id: string }) => ({
+                                name: store.name,
+                                accountId: `CBD${store.full_id.replace(/-/g, "").slice(0, 8).toUpperCase()}`,
+                              }));
+
+                              form.setValue("store_id", stores[0].accountId, { shouldDirty: true });
+
+                              toast.dismiss(loadingToast);
+                              toast.success(`Found: ${stores[0].name} — Store ID: ${stores[0].accountId} (auto-filled below)`, { duration: 6000 });
+                              return;
+                            }
+
+                            toast.dismiss(loadingToast);
+                            toast.error("Could not find a store for this email");
+                          } catch {
+                            toast.dismiss(loadingToast);
+                            toast.error("Failed to send Store ID. Please try again.");
+                          }
+                        }}
+                        className="text-[11px] font-semibold text-primary hover:text-primary/80 transition-colors"
+                      >
+                        Forgot ID?
+                      </button>
+                    </div>
+                    <FormControl>
+                      <div className="relative">
+                        <Hash className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/40" />
+                        <input type="text" placeholder="CBD12345678" autoComplete="off" className={cn(input3D, "uppercase font-mono tracking-wider")} {...field} onChange={e => field.onChange(e.target.value.toUpperCase())} />
+                      </div>
+                    </FormControl>
+                    <p className="text-white/30 text-[10px]">Enter your store ID (e.g. CBD12345678) — optional for non-store partners</p>
                     <FormMessage className="text-red-400 text-xs" />
                   </FormItem>
                 )} />

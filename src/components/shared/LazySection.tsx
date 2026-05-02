@@ -19,13 +19,6 @@ export default function LazySection({ children, fallback, rootMargin = "200px", 
     const el = ref.current;
     if (!el) return;
 
-    // Check if already in viewport (handles fast scroll / anchor jump)
-    const rect = el.getBoundingClientRect();
-    if (rect.top < window.innerHeight + 200 && rect.bottom > -200) {
-      setVisible(true);
-      return;
-    }
-
     const obs = new IntersectionObserver(
       ([entry]) => { if (entry.isIntersecting) { setVisible(true); obs.disconnect(); } },
       { rootMargin }

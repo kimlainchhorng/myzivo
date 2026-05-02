@@ -55,6 +55,8 @@ export const TripSharing = ({
   const [inviteEmail, setInviteEmail] = useState("");
   const [sharedUsers, setSharedUsers] = useState<SharedUser[]>([]);
   const [invitePermission, setInvitePermission] = useState<'view' | 'edit'>('view');
+  const [showQr, setShowQr] = useState(false);
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(shareLink)}`;
 
   const copyLink = () => {
     navigator.clipboard.writeText(shareLink);
@@ -181,17 +183,21 @@ export const TripSharing = ({
               variant="outline" 
               size="icon"
               aria-label="Generate QR code"
-              onClick={() => toast.info("QR code generated! Share this with travel companions.")}
+              onClick={() => setShowQr(prev => !prev)}
             >
               <QrCode className="w-4 h-4" />
             </Button>
           </div>
-          
+
           {/* QR Code Display */}
           <div className="flex items-center justify-center p-4 rounded-xl bg-white">
-            <div className="w-24 h-24 bg-gradient-to-br from-violet-500 to-purple-500 rounded-xl flex items-center justify-center">
-              <QrCode className="w-16 h-16 text-primary-foreground" />
-            </div>
+            {showQr ? (
+              <img src={qrUrl} alt="QR code for trip link" className="w-[180px] h-[180px] rounded-xl" />
+            ) : (
+              <div className="w-24 h-24 bg-gradient-to-br from-violet-500 to-purple-500 rounded-xl flex items-center justify-center cursor-pointer" onClick={() => setShowQr(true)}>
+                <QrCode className="w-16 h-16 text-primary-foreground" />
+              </div>
+            )}
           </div>
         </div>
 

@@ -1,0 +1,750 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"];
+var _s = $RefreshSig$();
+/**
+ * Auto Repair Finance — Payments Received
+ * Shows ar_invoice_payments rows + manual record-payment.
+ */ import __vite__cjsImport1_react from "/node_modules/.vite/deps/react.js?v=7fd9520c"; const useMemo = __vite__cjsImport1_react["useMemo"]; const useState = __vite__cjsImport1_react["useState"];
+import { useQuery, useMutation, useQueryClient } from "/node_modules/.vite/deps/@tanstack_react-query.js?v=7fd9520c";
+import { supabase } from "/src/integrations/supabase/client.ts";
+import { Card, CardContent, CardHeader, CardTitle } from "/src/components/ui/card.tsx";
+import { Button } from "/src/components/ui/button.tsx";
+import { Input } from "/src/components/ui/input.tsx";
+import { Label } from "/src/components/ui/label.tsx";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "/src/components/ui/select.tsx";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "/src/components/ui/dialog.tsx";
+import { Banknote, Plus } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+import { toast } from "/node_modules/.vite/deps/sonner.js?v=7fd9520c";
+const fmt = (cents)=>`$${((cents ?? 0) / 100).toLocaleString(undefined, {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    })}`;
+export default function FinancePaymentsSection({ storeId }) {
+    _s();
+    const qc = useQueryClient();
+    const [open, setOpen] = useState(false);
+    const [methodFilter, setMethodFilter] = useState("all");
+    const [form, setForm] = useState({
+        invoice_id: "",
+        amount: "",
+        method: "cash",
+        reference: "",
+        notes: ""
+    });
+    const { data: payments = [] } = useQuery({
+        queryKey: [
+            "ar-fin-payments",
+            storeId
+        ],
+        queryFn: async ()=>{
+            const { data, error } = await supabase.from("ar_invoice_payments").select("id,amount_cents,method,reference,notes,paid_at,invoice_id").eq("store_id", storeId).order("paid_at", {
+                ascending: false
+            });
+            if (error) throw error;
+            return data;
+        }
+    });
+    const { data: invoices = [] } = useQuery({
+        queryKey: [
+            "ar-fin-payments-invoices",
+            storeId
+        ],
+        queryFn: async ()=>{
+            const { data, error } = await supabase.from("ar_invoices").select("id,number,total_cents,amount_paid_cents,customer_name").eq("store_id", storeId).neq("status", "void").order("created_at", {
+                ascending: false
+            });
+            if (error) throw error;
+            return data;
+        }
+    });
+    const create = useMutation({
+        mutationFn: async ()=>{
+            const cents = Math.round((parseFloat(form.amount) || 0) * 100);
+            if (!form.invoice_id) throw new Error("Pick an invoice");
+            if (cents <= 0) throw new Error("Amount must be greater than zero");
+            const { data: { user } } = await supabase.auth.getUser();
+            const { error } = await supabase.from("ar_invoice_payments").insert({
+                store_id: storeId,
+                invoice_id: form.invoice_id,
+                amount_cents: cents,
+                method: form.method,
+                reference: form.reference || null,
+                notes: form.notes || null,
+                created_by: user?.id
+            });
+            if (error) throw error;
+        },
+        onSuccess: ()=>{
+            toast.success("Payment recorded");
+            setOpen(false);
+            setForm({
+                invoice_id: "",
+                amount: "",
+                method: "cash",
+                reference: "",
+                notes: ""
+            });
+            qc.invalidateQueries({
+                queryKey: [
+                    "ar-fin-payments",
+                    storeId
+                ]
+            });
+            qc.invalidateQueries({
+                queryKey: [
+                    "ar-fin-payments-invoices",
+                    storeId
+                ]
+            });
+        },
+        onError: (e)=>toast.error(e.message || "Failed")
+    });
+    const filtered = useMemo(()=>methodFilter === "all" ? payments : payments.filter((p)=>p.method === methodFilter), [
+        payments,
+        methodFilter
+    ]);
+    const total = filtered.reduce((s, p)=>s + (p.amount_cents ?? 0), 0);
+    const invoiceMap = useMemo(()=>{
+        const m = new Map();
+        invoices.forEach((i)=>m.set(i.id, i));
+        return m;
+    }, [
+        invoices
+    ]);
+    return /*#__PURE__*/ _jsxDEV("div", {
+        className: "space-y-4",
+        children: [
+            /*#__PURE__*/ _jsxDEV(Card, {
+                children: [
+                    /*#__PURE__*/ _jsxDEV(CardHeader, {
+                        className: "pb-3 flex flex-row items-center justify-between",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(CardTitle, {
+                                className: "text-base flex items-center gap-2",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(Banknote, {
+                                        className: "w-4 h-4 text-primary"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                        lineNumber: 96,
+                                        columnNumber: 13
+                                    }, this),
+                                    " Payments Received"
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                lineNumber: 95,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(Button, {
+                                size: "sm",
+                                onClick: ()=>setOpen(true),
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(Plus, {
+                                        className: "w-4 h-4 mr-1"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                        lineNumber: 98,
+                                        columnNumber: 59
+                                    }, this),
+                                    " Record payment"
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                lineNumber: 98,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                        lineNumber: 94,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(CardContent, {
+                        className: "space-y-3",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "grid grid-cols-2 md:grid-cols-3 gap-3",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        className: "rounded-md border p-3",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV("div", {
+                                                className: "text-xs text-muted-foreground",
+                                                children: "Filtered total"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                lineNumber: 103,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV("div", {
+                                                className: "text-xl font-semibold",
+                                                children: fmt(total)
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                lineNumber: 104,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                        lineNumber: 102,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        className: "rounded-md border p-3",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV("div", {
+                                                className: "text-xs text-muted-foreground",
+                                                children: "Payment count"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                lineNumber: 107,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV("div", {
+                                                className: "text-xl font-semibold",
+                                                children: filtered.length
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                lineNumber: 108,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                        lineNumber: 106,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        className: "rounded-md border p-3",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV("div", {
+                                                className: "text-xs text-muted-foreground",
+                                                children: "Avg payment"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                lineNumber: 111,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV("div", {
+                                                className: "text-xl font-semibold",
+                                                children: fmt(filtered.length ? total / filtered.length : 0)
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                lineNumber: 112,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                        lineNumber: 110,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                lineNumber: 101,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("div", {
+                                className: "flex items-center gap-2",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV(Label, {
+                                        className: "text-xs",
+                                        children: "Method"
+                                    }, void 0, false, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                        lineNumber: 116,
+                                        columnNumber: 13
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV(Select, {
+                                        value: methodFilter,
+                                        onValueChange: setMethodFilter,
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(SelectTrigger, {
+                                                className: "h-8 w-40",
+                                                children: /*#__PURE__*/ _jsxDEV(SelectValue, {}, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                    lineNumber: 118,
+                                                    columnNumber: 51
+                                                }, this)
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                lineNumber: 118,
+                                                columnNumber: 15
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV(SelectContent, {
+                                                children: [
+                                                    /*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                        value: "all",
+                                                        children: "All methods"
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                        lineNumber: 120,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                        value: "cash",
+                                                        children: "Cash"
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                        lineNumber: 121,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                        value: "card",
+                                                        children: "Card"
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                        lineNumber: 122,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                        value: "check",
+                                                        children: "Check"
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                        lineNumber: 123,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                        value: "aba",
+                                                        children: "ABA"
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                        lineNumber: 124,
+                                                        columnNumber: 17
+                                                    }, this),
+                                                    /*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                        value: "other",
+                                                        children: "Other"
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                        lineNumber: 125,
+                                                        columnNumber: 17
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                lineNumber: 119,
+                                                columnNumber: 15
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                        lineNumber: 117,
+                                        columnNumber: 13
+                                    }, this)
+                                ]
+                            }, void 0, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                lineNumber: 115,
+                                columnNumber: 11
+                            }, this),
+                            filtered.length === 0 ? /*#__PURE__*/ _jsxDEV("p", {
+                                className: "text-sm text-muted-foreground py-6 text-center",
+                                children: "No payments recorded yet."
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                lineNumber: 130,
+                                columnNumber: 13
+                            }, this) : /*#__PURE__*/ _jsxDEV("ul", {
+                                className: "divide-y",
+                                children: filtered.map((p)=>{
+                                    const inv = invoiceMap.get(p.invoice_id);
+                                    return /*#__PURE__*/ _jsxDEV("li", {
+                                        className: "py-2 flex justify-between gap-3 text-sm",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV("div", {
+                                                className: "min-w-0",
+                                                children: [
+                                                    /*#__PURE__*/ _jsxDEV("div", {
+                                                        className: "font-medium",
+                                                        children: [
+                                                            inv?.number ?? "(invoice removed)",
+                                                            " · ",
+                                                            inv?.customer_name || "—"
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                        lineNumber: 138,
+                                                        columnNumber: 23
+                                                    }, this),
+                                                    /*#__PURE__*/ _jsxDEV("div", {
+                                                        className: "text-xs text-muted-foreground",
+                                                        children: [
+                                                            p.method.toUpperCase(),
+                                                            " · ",
+                                                            new Date(p.paid_at).toLocaleString(),
+                                                            " ",
+                                                            p.reference && `· ${p.reference}`
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                        lineNumber: 139,
+                                                        columnNumber: 23
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                lineNumber: 137,
+                                                columnNumber: 21
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV("div", {
+                                                className: "font-medium tabular-nums",
+                                                children: fmt(p.amount_cents)
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                lineNumber: 143,
+                                                columnNumber: 21
+                                            }, this)
+                                        ]
+                                    }, p.id, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                        lineNumber: 136,
+                                        columnNumber: 19
+                                    }, this);
+                                })
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                lineNumber: 132,
+                                columnNumber: 13
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                        lineNumber: 100,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                lineNumber: 93,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV(Dialog, {
+                open: open,
+                onOpenChange: setOpen,
+                children: /*#__PURE__*/ _jsxDEV(DialogContent, {
+                    children: [
+                        /*#__PURE__*/ _jsxDEV(DialogHeader, {
+                            children: /*#__PURE__*/ _jsxDEV(DialogTitle, {
+                                children: "Record Payment"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                lineNumber: 154,
+                                columnNumber: 25
+                            }, this)
+                        }, void 0, false, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                            lineNumber: 154,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV("div", {
+                            className: "space-y-3",
+                            children: [
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Label, {
+                                            className: "text-xs",
+                                            children: "Invoice"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                            lineNumber: 157,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV(Select, {
+                                            value: form.invoice_id,
+                                            onValueChange: (v)=>setForm({
+                                                    ...form,
+                                                    invoice_id: v
+                                                }),
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV(SelectTrigger, {
+                                                    children: /*#__PURE__*/ _jsxDEV(SelectValue, {
+                                                        placeholder: "Select invoice"
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                        lineNumber: 159,
+                                                        columnNumber: 32
+                                                    }, this)
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                    lineNumber: 159,
+                                                    columnNumber: 17
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV(SelectContent, {
+                                                    children: invoices.map((i)=>{
+                                                        const balance = (i.total_cents ?? 0) - (i.amount_paid_cents ?? 0);
+                                                        return /*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                            value: i.id,
+                                                            children: [
+                                                                i.number,
+                                                                " — ",
+                                                                i.customer_name || "—",
+                                                                " (",
+                                                                fmt(balance),
+                                                                " due)"
+                                                            ]
+                                                        }, i.id, true, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                            lineNumber: 164,
+                                                            columnNumber: 23
+                                                        }, this);
+                                                    })
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                    lineNumber: 160,
+                                                    columnNumber: 17
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                            lineNumber: 158,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                    lineNumber: 156,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    className: "grid grid-cols-2 gap-3",
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV("div", {
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV(Label, {
+                                                    className: "text-xs",
+                                                    children: "Amount (USD)"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                    lineNumber: 174,
+                                                    columnNumber: 17
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV(Input, {
+                                                    type: "number",
+                                                    step: "0.01",
+                                                    value: form.amount,
+                                                    onChange: (e)=>setForm({
+                                                            ...form,
+                                                            amount: e.target.value
+                                                        })
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                    lineNumber: 175,
+                                                    columnNumber: 17
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                            lineNumber: 173,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV("div", {
+                                            children: [
+                                                /*#__PURE__*/ _jsxDEV(Label, {
+                                                    className: "text-xs",
+                                                    children: "Method"
+                                                }, void 0, false, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                    lineNumber: 178,
+                                                    columnNumber: 17
+                                                }, this),
+                                                /*#__PURE__*/ _jsxDEV(Select, {
+                                                    value: form.method,
+                                                    onValueChange: (v)=>setForm({
+                                                            ...form,
+                                                            method: v
+                                                        }),
+                                                    children: [
+                                                        /*#__PURE__*/ _jsxDEV(SelectTrigger, {
+                                                            children: /*#__PURE__*/ _jsxDEV(SelectValue, {}, void 0, false, {
+                                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                                lineNumber: 180,
+                                                                columnNumber: 34
+                                                            }, this)
+                                                        }, void 0, false, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                            lineNumber: 180,
+                                                            columnNumber: 19
+                                                        }, this),
+                                                        /*#__PURE__*/ _jsxDEV(SelectContent, {
+                                                            children: [
+                                                                /*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                                    value: "cash",
+                                                                    children: "Cash"
+                                                                }, void 0, false, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                                    lineNumber: 182,
+                                                                    columnNumber: 21
+                                                                }, this),
+                                                                /*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                                    value: "card",
+                                                                    children: "Card"
+                                                                }, void 0, false, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                                    lineNumber: 183,
+                                                                    columnNumber: 21
+                                                                }, this),
+                                                                /*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                                    value: "check",
+                                                                    children: "Check"
+                                                                }, void 0, false, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                                    lineNumber: 184,
+                                                                    columnNumber: 21
+                                                                }, this),
+                                                                /*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                                    value: "aba",
+                                                                    children: "ABA"
+                                                                }, void 0, false, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                                    lineNumber: 185,
+                                                                    columnNumber: 21
+                                                                }, this),
+                                                                /*#__PURE__*/ _jsxDEV(SelectItem, {
+                                                                    value: "other",
+                                                                    children: "Other"
+                                                                }, void 0, false, {
+                                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                                    lineNumber: 186,
+                                                                    columnNumber: 21
+                                                                }, this)
+                                                            ]
+                                                        }, void 0, true, {
+                                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                            lineNumber: 181,
+                                                            columnNumber: 19
+                                                        }, this)
+                                                    ]
+                                                }, void 0, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                                    lineNumber: 179,
+                                                    columnNumber: 17
+                                                }, this)
+                                            ]
+                                        }, void 0, true, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                            lineNumber: 177,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                    lineNumber: 172,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV("div", {
+                                    children: [
+                                        /*#__PURE__*/ _jsxDEV(Label, {
+                                            className: "text-xs",
+                                            children: "Reference (optional)"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                            lineNumber: 192,
+                                            columnNumber: 15
+                                        }, this),
+                                        /*#__PURE__*/ _jsxDEV(Input, {
+                                            value: form.reference,
+                                            onChange: (e)=>setForm({
+                                                    ...form,
+                                                    reference: e.target.value
+                                                }),
+                                            placeholder: "Check #, txn ID, etc"
+                                        }, void 0, false, {
+                                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                            lineNumber: 193,
+                                            columnNumber: 15
+                                        }, this)
+                                    ]
+                                }, void 0, true, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                    lineNumber: 191,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                            lineNumber: 155,
+                            columnNumber: 11
+                        }, this),
+                        /*#__PURE__*/ _jsxDEV(DialogFooter, {
+                            children: [
+                                /*#__PURE__*/ _jsxDEV(Button, {
+                                    variant: "outline",
+                                    onClick: ()=>setOpen(false),
+                                    children: "Cancel"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                    lineNumber: 197,
+                                    columnNumber: 13
+                                }, this),
+                                /*#__PURE__*/ _jsxDEV(Button, {
+                                    onClick: ()=>create.mutate(),
+                                    disabled: create.isPending,
+                                    children: "Record"
+                                }, void 0, false, {
+                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                                    lineNumber: 198,
+                                    columnNumber: 13
+                                }, this)
+                            ]
+                        }, void 0, true, {
+                            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                            lineNumber: 196,
+                            columnNumber: 11
+                        }, this)
+                    ]
+                }, void 0, true, {
+                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                    lineNumber: 153,
+                    columnNumber: 9
+                }, this)
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+                lineNumber: 152,
+                columnNumber: 7
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx",
+        lineNumber: 92,
+        columnNumber: 5
+    }, this);
+}
+_s(FinancePaymentsSection, "MJ+zm/nZ+4+OYNuemg1d/svKj4I=", false, function() {
+    return [
+        useQueryClient,
+        useQuery,
+        useQuery,
+        useMutation
+    ];
+});
+_c = FinancePaymentsSection;
+var _c;
+$RefreshReg$(_c, "FinancePaymentsSection");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/autorepair/finance/FinancePaymentsSection.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIkZpbmFuY2VQYXltZW50c1NlY3Rpb24udHN4Il0sInNvdXJjZXNDb250ZW50IjpbIi8qKlxyXG4gKiBBdXRvIFJlcGFpciBGaW5hbmNlIOKAlCBQYXltZW50cyBSZWNlaXZlZFxyXG4gKiBTaG93cyBhcl9pbnZvaWNlX3BheW1lbnRzIHJvd3MgKyBtYW51YWwgcmVjb3JkLXBheW1lbnQuXHJcbiAqL1xyXG5pbXBvcnQgeyB1c2VNZW1vLCB1c2VTdGF0ZSB9IGZyb20gXCJyZWFjdFwiO1xyXG5pbXBvcnQgeyB1c2VRdWVyeSwgdXNlTXV0YXRpb24sIHVzZVF1ZXJ5Q2xpZW50IH0gZnJvbSBcIkB0YW5zdGFjay9yZWFjdC1xdWVyeVwiO1xyXG5pbXBvcnQgeyBzdXBhYmFzZSB9IGZyb20gXCJAL2ludGVncmF0aW9ucy9zdXBhYmFzZS9jbGllbnRcIjtcclxuaW1wb3J0IHsgQ2FyZCwgQ2FyZENvbnRlbnQsIENhcmRIZWFkZXIsIENhcmRUaXRsZSB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvY2FyZFwiO1xyXG5pbXBvcnQgeyBCdXR0b24gfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2J1dHRvblwiO1xyXG5pbXBvcnQgeyBJbnB1dCB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvaW5wdXRcIjtcclxuaW1wb3J0IHsgTGFiZWwgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL2xhYmVsXCI7XHJcbmltcG9ydCB7IFNlbGVjdCwgU2VsZWN0Q29udGVudCwgU2VsZWN0SXRlbSwgU2VsZWN0VHJpZ2dlciwgU2VsZWN0VmFsdWUgfSBmcm9tIFwiQC9jb21wb25lbnRzL3VpL3NlbGVjdFwiO1xyXG5pbXBvcnQgeyBEaWFsb2csIERpYWxvZ0NvbnRlbnQsIERpYWxvZ0hlYWRlciwgRGlhbG9nVGl0bGUsIERpYWxvZ0Zvb3RlciB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvZGlhbG9nXCI7XHJcbmltcG9ydCB7IEJhbmtub3RlLCBQbHVzIH0gZnJvbSBcImx1Y2lkZS1yZWFjdFwiO1xyXG5pbXBvcnQgeyB0b2FzdCB9IGZyb20gXCJzb25uZXJcIjtcclxuXHJcbmludGVyZmFjZSBQcm9wcyB7IHN0b3JlSWQ6IHN0cmluZyB9XHJcbmNvbnN0IGZtdCA9IChjZW50czogbnVtYmVyKSA9PiBgJCR7KChjZW50cyA/PyAwKSAvIDEwMCkudG9Mb2NhbGVTdHJpbmcodW5kZWZpbmVkLCB7IG1pbmltdW1GcmFjdGlvbkRpZ2l0czogMiwgbWF4aW11bUZyYWN0aW9uRGlnaXRzOiAyIH0pfWA7XHJcblxyXG5leHBvcnQgZGVmYXVsdCBmdW5jdGlvbiBGaW5hbmNlUGF5bWVudHNTZWN0aW9uKHsgc3RvcmVJZCB9OiBQcm9wcykge1xyXG4gIGNvbnN0IHFjID0gdXNlUXVlcnlDbGllbnQoKTtcclxuICBjb25zdCBbb3Blbiwgc2V0T3Blbl0gPSB1c2VTdGF0ZShmYWxzZSk7XHJcbiAgY29uc3QgW21ldGhvZEZpbHRlciwgc2V0TWV0aG9kRmlsdGVyXSA9IHVzZVN0YXRlKFwiYWxsXCIpO1xyXG4gIGNvbnN0IFtmb3JtLCBzZXRGb3JtXSA9IHVzZVN0YXRlKHsgaW52b2ljZV9pZDogXCJcIiwgYW1vdW50OiBcIlwiLCBtZXRob2Q6IFwiY2FzaFwiLCByZWZlcmVuY2U6IFwiXCIsIG5vdGVzOiBcIlwiIH0pO1xyXG5cclxuICBjb25zdCB7IGRhdGE6IHBheW1lbnRzID0gW10gfSA9IHVzZVF1ZXJ5KHtcclxuICAgIHF1ZXJ5S2V5OiBbXCJhci1maW4tcGF5bWVudHNcIiwgc3RvcmVJZF0sXHJcbiAgICBxdWVyeUZuOiBhc3luYyAoKSA9PiB7XHJcbiAgICAgIGNvbnN0IHsgZGF0YSwgZXJyb3IgfSA9IGF3YWl0IHN1cGFiYXNlXHJcbiAgICAgICAgLmZyb20oXCJhcl9pbnZvaWNlX3BheW1lbnRzXCIgYXMgYW55KVxyXG4gICAgICAgIC5zZWxlY3QoXCJpZCxhbW91bnRfY2VudHMsbWV0aG9kLHJlZmVyZW5jZSxub3RlcyxwYWlkX2F0LGludm9pY2VfaWRcIilcclxuICAgICAgICAuZXEoXCJzdG9yZV9pZFwiLCBzdG9yZUlkKVxyXG4gICAgICAgIC5vcmRlcihcInBhaWRfYXRcIiwgeyBhc2NlbmRpbmc6IGZhbHNlIH0pO1xyXG4gICAgICBpZiAoZXJyb3IpIHRocm93IGVycm9yO1xyXG4gICAgICByZXR1cm4gZGF0YSBhcyBhbnlbXTtcclxuICAgIH0sXHJcbiAgfSk7XHJcblxyXG4gIGNvbnN0IHsgZGF0YTogaW52b2ljZXMgPSBbXSB9ID0gdXNlUXVlcnkoe1xyXG4gICAgcXVlcnlLZXk6IFtcImFyLWZpbi1wYXltZW50cy1pbnZvaWNlc1wiLCBzdG9yZUlkXSxcclxuICAgIHF1ZXJ5Rm46IGFzeW5jICgpID0+IHtcclxuICAgICAgY29uc3QgeyBkYXRhLCBlcnJvciB9ID0gYXdhaXQgc3VwYWJhc2VcclxuICAgICAgICAuZnJvbShcImFyX2ludm9pY2VzXCIgYXMgYW55KVxyXG4gICAgICAgIC5zZWxlY3QoXCJpZCxudW1iZXIsdG90YWxfY2VudHMsYW1vdW50X3BhaWRfY2VudHMsY3VzdG9tZXJfbmFtZVwiKVxyXG4gICAgICAgIC5lcShcInN0b3JlX2lkXCIsIHN0b3JlSWQpXHJcbiAgICAgICAgLm5lcShcInN0YXR1c1wiLCBcInZvaWRcIilcclxuICAgICAgICAub3JkZXIoXCJjcmVhdGVkX2F0XCIsIHsgYXNjZW5kaW5nOiBmYWxzZSB9KTtcclxuICAgICAgaWYgKGVycm9yKSB0aHJvdyBlcnJvcjtcclxuICAgICAgcmV0dXJuIGRhdGEgYXMgYW55W107XHJcbiAgICB9LFxyXG4gIH0pO1xyXG5cclxuICBjb25zdCBjcmVhdGUgPSB1c2VNdXRhdGlvbih7XHJcbiAgICBtdXRhdGlvbkZuOiBhc3luYyAoKSA9PiB7XHJcbiAgICAgIGNvbnN0IGNlbnRzID0gTWF0aC5yb3VuZCgocGFyc2VGbG9hdChmb3JtLmFtb3VudCkgfHwgMCkgKiAxMDApO1xyXG4gICAgICBpZiAoIWZvcm0uaW52b2ljZV9pZCkgdGhyb3cgbmV3IEVycm9yKFwiUGljayBhbiBpbnZvaWNlXCIpO1xyXG4gICAgICBpZiAoY2VudHMgPD0gMCkgdGhyb3cgbmV3IEVycm9yKFwiQW1vdW50IG11c3QgYmUgZ3JlYXRlciB0aGFuIHplcm9cIik7XHJcbiAgICAgIGNvbnN0IHsgZGF0YTogeyB1c2VyIH0gfSA9IGF3YWl0IHN1cGFiYXNlLmF1dGguZ2V0VXNlcigpO1xyXG4gICAgICBjb25zdCB7IGVycm9yIH0gPSBhd2FpdCBzdXBhYmFzZS5mcm9tKFwiYXJfaW52b2ljZV9wYXltZW50c1wiIGFzIGFueSkuaW5zZXJ0KHtcclxuICAgICAgICBzdG9yZV9pZDogc3RvcmVJZCxcclxuICAgICAgICBpbnZvaWNlX2lkOiBmb3JtLmludm9pY2VfaWQsXHJcbiAgICAgICAgYW1vdW50X2NlbnRzOiBjZW50cyxcclxuICAgICAgICBtZXRob2Q6IGZvcm0ubWV0aG9kLFxyXG4gICAgICAgIHJlZmVyZW5jZTogZm9ybS5yZWZlcmVuY2UgfHwgbnVsbCxcclxuICAgICAgICBub3RlczogZm9ybS5ub3RlcyB8fCBudWxsLFxyXG4gICAgICAgIGNyZWF0ZWRfYnk6IHVzZXI/LmlkLFxyXG4gICAgICB9KTtcclxuICAgICAgaWYgKGVycm9yKSB0aHJvdyBlcnJvcjtcclxuICAgIH0sXHJcbiAgICBvblN1Y2Nlc3M6ICgpID0+IHtcclxuICAgICAgdG9hc3Quc3VjY2VzcyhcIlBheW1lbnQgcmVjb3JkZWRcIik7XHJcbiAgICAgIHNldE9wZW4oZmFsc2UpO1xyXG4gICAgICBzZXRGb3JtKHsgaW52b2ljZV9pZDogXCJcIiwgYW1vdW50OiBcIlwiLCBtZXRob2Q6IFwiY2FzaFwiLCByZWZlcmVuY2U6IFwiXCIsIG5vdGVzOiBcIlwiIH0pO1xyXG4gICAgICBxYy5pbnZhbGlkYXRlUXVlcmllcyh7IHF1ZXJ5S2V5OiBbXCJhci1maW4tcGF5bWVudHNcIiwgc3RvcmVJZF0gfSk7XHJcbiAgICAgIHFjLmludmFsaWRhdGVRdWVyaWVzKHsgcXVlcnlLZXk6IFtcImFyLWZpbi1wYXltZW50cy1pbnZvaWNlc1wiLCBzdG9yZUlkXSB9KTtcclxuICAgIH0sXHJcbiAgICBvbkVycm9yOiAoZTogYW55KSA9PiB0b2FzdC5lcnJvcihlLm1lc3NhZ2UgfHwgXCJGYWlsZWRcIiksXHJcbiAgfSk7XHJcblxyXG4gIGNvbnN0IGZpbHRlcmVkID0gdXNlTWVtbyhcclxuICAgICgpID0+IG1ldGhvZEZpbHRlciA9PT0gXCJhbGxcIiA/IHBheW1lbnRzIDogcGF5bWVudHMuZmlsdGVyKChwOiBhbnkpID0+IHAubWV0aG9kID09PSBtZXRob2RGaWx0ZXIpLFxyXG4gICAgW3BheW1lbnRzLCBtZXRob2RGaWx0ZXJdXHJcbiAgKTtcclxuICBjb25zdCB0b3RhbCA9IGZpbHRlcmVkLnJlZHVjZSgocywgcDogYW55KSA9PiBzICsgKHAuYW1vdW50X2NlbnRzID8/IDApLCAwKTtcclxuICBjb25zdCBpbnZvaWNlTWFwID0gdXNlTWVtbygoKSA9PiB7XHJcbiAgICBjb25zdCBtID0gbmV3IE1hcDxzdHJpbmcsIGFueT4oKTtcclxuICAgIGludm9pY2VzLmZvckVhY2goKGk6IGFueSkgPT4gbS5zZXQoaS5pZCwgaSkpO1xyXG4gICAgcmV0dXJuIG07XHJcbiAgfSwgW2ludm9pY2VzXSk7XHJcblxyXG4gIHJldHVybiAoXHJcbiAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktNFwiPlxyXG4gICAgICA8Q2FyZD5cclxuICAgICAgICA8Q2FyZEhlYWRlciBjbGFzc05hbWU9XCJwYi0zIGZsZXggZmxleC1yb3cgaXRlbXMtY2VudGVyIGp1c3RpZnktYmV0d2VlblwiPlxyXG4gICAgICAgICAgPENhcmRUaXRsZSBjbGFzc05hbWU9XCJ0ZXh0LWJhc2UgZmxleCBpdGVtcy1jZW50ZXIgZ2FwLTJcIj5cclxuICAgICAgICAgICAgPEJhbmtub3RlIGNsYXNzTmFtZT1cInctNCBoLTQgdGV4dC1wcmltYXJ5XCIgLz4gUGF5bWVudHMgUmVjZWl2ZWRcclxuICAgICAgICAgIDwvQ2FyZFRpdGxlPlxyXG4gICAgICAgICAgPEJ1dHRvbiBzaXplPVwic21cIiBvbkNsaWNrPXsoKSA9PiBzZXRPcGVuKHRydWUpfT48UGx1cyBjbGFzc05hbWU9XCJ3LTQgaC00IG1yLTFcIiAvPiBSZWNvcmQgcGF5bWVudDwvQnV0dG9uPlxyXG4gICAgICAgIDwvQ2FyZEhlYWRlcj5cclxuICAgICAgICA8Q2FyZENvbnRlbnQgY2xhc3NOYW1lPVwic3BhY2UteS0zXCI+XHJcbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImdyaWQgZ3JpZC1jb2xzLTIgbWQ6Z3JpZC1jb2xzLTMgZ2FwLTNcIj5cclxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJyb3VuZGVkLW1kIGJvcmRlciBwLTNcIj5cclxuICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInRleHQteHMgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+RmlsdGVyZWQgdG90YWw8L2Rpdj5cclxuICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInRleHQteGwgZm9udC1zZW1pYm9sZFwiPntmbXQodG90YWwpfTwvZGl2PlxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJyb3VuZGVkLW1kIGJvcmRlciBwLTNcIj5cclxuICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInRleHQteHMgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+UGF5bWVudCBjb3VudDwvZGl2PlxyXG4gICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwidGV4dC14bCBmb250LXNlbWlib2xkXCI+e2ZpbHRlcmVkLmxlbmd0aH08L2Rpdj5cclxuICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwicm91bmRlZC1tZCBib3JkZXIgcC0zXCI+XHJcbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJ0ZXh0LXhzIHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiPkF2ZyBwYXltZW50PC9kaXY+XHJcbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJ0ZXh0LXhsIGZvbnQtc2VtaWJvbGRcIj57Zm10KGZpbHRlcmVkLmxlbmd0aCA/IHRvdGFsIC8gZmlsdGVyZWQubGVuZ3RoIDogMCl9PC9kaXY+XHJcbiAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtY2VudGVyIGdhcC0yXCI+XHJcbiAgICAgICAgICAgIDxMYWJlbCBjbGFzc05hbWU9XCJ0ZXh0LXhzXCI+TWV0aG9kPC9MYWJlbD5cclxuICAgICAgICAgICAgPFNlbGVjdCB2YWx1ZT17bWV0aG9kRmlsdGVyfSBvblZhbHVlQ2hhbmdlPXtzZXRNZXRob2RGaWx0ZXJ9PlxyXG4gICAgICAgICAgICAgIDxTZWxlY3RUcmlnZ2VyIGNsYXNzTmFtZT1cImgtOCB3LTQwXCI+PFNlbGVjdFZhbHVlIC8+PC9TZWxlY3RUcmlnZ2VyPlxyXG4gICAgICAgICAgICAgIDxTZWxlY3RDb250ZW50PlxyXG4gICAgICAgICAgICAgICAgPFNlbGVjdEl0ZW0gdmFsdWU9XCJhbGxcIj5BbGwgbWV0aG9kczwvU2VsZWN0SXRlbT5cclxuICAgICAgICAgICAgICAgIDxTZWxlY3RJdGVtIHZhbHVlPVwiY2FzaFwiPkNhc2g8L1NlbGVjdEl0ZW0+XHJcbiAgICAgICAgICAgICAgICA8U2VsZWN0SXRlbSB2YWx1ZT1cImNhcmRcIj5DYXJkPC9TZWxlY3RJdGVtPlxyXG4gICAgICAgICAgICAgICAgPFNlbGVjdEl0ZW0gdmFsdWU9XCJjaGVja1wiPkNoZWNrPC9TZWxlY3RJdGVtPlxyXG4gICAgICAgICAgICAgICAgPFNlbGVjdEl0ZW0gdmFsdWU9XCJhYmFcIj5BQkE8L1NlbGVjdEl0ZW0+XHJcbiAgICAgICAgICAgICAgICA8U2VsZWN0SXRlbSB2YWx1ZT1cIm90aGVyXCI+T3RoZXI8L1NlbGVjdEl0ZW0+XHJcbiAgICAgICAgICAgICAgPC9TZWxlY3RDb250ZW50PlxyXG4gICAgICAgICAgICA8L1NlbGVjdD5cclxuICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAge2ZpbHRlcmVkLmxlbmd0aCA9PT0gMCA/IChcclxuICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidGV4dC1zbSB0ZXh0LW11dGVkLWZvcmVncm91bmQgcHktNiB0ZXh0LWNlbnRlclwiPk5vIHBheW1lbnRzIHJlY29yZGVkIHlldC48L3A+XHJcbiAgICAgICAgICApIDogKFxyXG4gICAgICAgICAgICA8dWwgY2xhc3NOYW1lPVwiZGl2aWRlLXlcIj5cclxuICAgICAgICAgICAgICB7ZmlsdGVyZWQubWFwKChwOiBhbnkpID0+IHtcclxuICAgICAgICAgICAgICAgIGNvbnN0IGludiA9IGludm9pY2VNYXAuZ2V0KHAuaW52b2ljZV9pZCk7XHJcbiAgICAgICAgICAgICAgICByZXR1cm4gKFxyXG4gICAgICAgICAgICAgICAgICA8bGkga2V5PXtwLmlkfSBjbGFzc05hbWU9XCJweS0yIGZsZXgganVzdGlmeS1iZXR3ZWVuIGdhcC0zIHRleHQtc21cIj5cclxuICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cIm1pbi13LTBcIj5cclxuICAgICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZm9udC1tZWRpdW1cIj57aW52Py5udW1iZXIgPz8gXCIoaW52b2ljZSByZW1vdmVkKVwifSDCtyB7aW52Py5jdXN0b21lcl9uYW1lIHx8IFwi4oCUXCJ9PC9kaXY+XHJcbiAgICAgICAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInRleHQteHMgdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgIHtwLm1ldGhvZC50b1VwcGVyQ2FzZSgpfSDCtyB7bmV3IERhdGUocC5wYWlkX2F0KS50b0xvY2FsZVN0cmluZygpfSB7cC5yZWZlcmVuY2UgJiYgYMK3ICR7cC5yZWZlcmVuY2V9YH1cclxuICAgICAgICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZm9udC1tZWRpdW0gdGFidWxhci1udW1zXCI+e2ZtdChwLmFtb3VudF9jZW50cyl9PC9kaXY+XHJcbiAgICAgICAgICAgICAgICAgIDwvbGk+XHJcbiAgICAgICAgICAgICAgICApO1xyXG4gICAgICAgICAgICAgIH0pfVxyXG4gICAgICAgICAgICA8L3VsPlxyXG4gICAgICAgICAgKX1cclxuICAgICAgICA8L0NhcmRDb250ZW50PlxyXG4gICAgICA8L0NhcmQ+XHJcblxyXG4gICAgICA8RGlhbG9nIG9wZW49e29wZW59IG9uT3BlbkNoYW5nZT17c2V0T3Blbn0+XHJcbiAgICAgICAgPERpYWxvZ0NvbnRlbnQ+XHJcbiAgICAgICAgICA8RGlhbG9nSGVhZGVyPjxEaWFsb2dUaXRsZT5SZWNvcmQgUGF5bWVudDwvRGlhbG9nVGl0bGU+PC9EaWFsb2dIZWFkZXI+XHJcbiAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cInNwYWNlLXktM1wiPlxyXG4gICAgICAgICAgICA8ZGl2PlxyXG4gICAgICAgICAgICAgIDxMYWJlbCBjbGFzc05hbWU9XCJ0ZXh0LXhzXCI+SW52b2ljZTwvTGFiZWw+XHJcbiAgICAgICAgICAgICAgPFNlbGVjdCB2YWx1ZT17Zm9ybS5pbnZvaWNlX2lkfSBvblZhbHVlQ2hhbmdlPXsodikgPT4gc2V0Rm9ybSh7IC4uLmZvcm0sIGludm9pY2VfaWQ6IHYgfSl9PlxyXG4gICAgICAgICAgICAgICAgPFNlbGVjdFRyaWdnZXI+PFNlbGVjdFZhbHVlIHBsYWNlaG9sZGVyPVwiU2VsZWN0IGludm9pY2VcIiAvPjwvU2VsZWN0VHJpZ2dlcj5cclxuICAgICAgICAgICAgICAgIDxTZWxlY3RDb250ZW50PlxyXG4gICAgICAgICAgICAgICAgICB7aW52b2ljZXMubWFwKChpOiBhbnkpID0+IHtcclxuICAgICAgICAgICAgICAgICAgICBjb25zdCBiYWxhbmNlID0gKGkudG90YWxfY2VudHMgPz8gMCkgLSAoaS5hbW91bnRfcGFpZF9jZW50cyA/PyAwKTtcclxuICAgICAgICAgICAgICAgICAgICByZXR1cm4gKFxyXG4gICAgICAgICAgICAgICAgICAgICAgPFNlbGVjdEl0ZW0ga2V5PXtpLmlkfSB2YWx1ZT17aS5pZH0+XHJcbiAgICAgICAgICAgICAgICAgICAgICAgIHtpLm51bWJlcn0g4oCUIHtpLmN1c3RvbWVyX25hbWUgfHwgXCLigJRcIn0gKHtmbXQoYmFsYW5jZSl9IGR1ZSlcclxuICAgICAgICAgICAgICAgICAgICAgIDwvU2VsZWN0SXRlbT5cclxuICAgICAgICAgICAgICAgICAgICApO1xyXG4gICAgICAgICAgICAgICAgICB9KX1cclxuICAgICAgICAgICAgICAgIDwvU2VsZWN0Q29udGVudD5cclxuICAgICAgICAgICAgICA8L1NlbGVjdD5cclxuICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZ3JpZCBncmlkLWNvbHMtMiBnYXAtM1wiPlxyXG4gICAgICAgICAgICAgIDxkaXY+XHJcbiAgICAgICAgICAgICAgICA8TGFiZWwgY2xhc3NOYW1lPVwidGV4dC14c1wiPkFtb3VudCAoVVNEKTwvTGFiZWw+XHJcbiAgICAgICAgICAgICAgICA8SW5wdXQgdHlwZT1cIm51bWJlclwiIHN0ZXA9XCIwLjAxXCIgdmFsdWU9e2Zvcm0uYW1vdW50fSBvbkNoYW5nZT17KGUpID0+IHNldEZvcm0oeyAuLi5mb3JtLCBhbW91bnQ6IGUudGFyZ2V0LnZhbHVlIH0pfSAvPlxyXG4gICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgIDxkaXY+XHJcbiAgICAgICAgICAgICAgICA8TGFiZWwgY2xhc3NOYW1lPVwidGV4dC14c1wiPk1ldGhvZDwvTGFiZWw+XHJcbiAgICAgICAgICAgICAgICA8U2VsZWN0IHZhbHVlPXtmb3JtLm1ldGhvZH0gb25WYWx1ZUNoYW5nZT17KHYpID0+IHNldEZvcm0oeyAuLi5mb3JtLCBtZXRob2Q6IHYgfSl9PlxyXG4gICAgICAgICAgICAgICAgICA8U2VsZWN0VHJpZ2dlcj48U2VsZWN0VmFsdWUgLz48L1NlbGVjdFRyaWdnZXI+XHJcbiAgICAgICAgICAgICAgICAgIDxTZWxlY3RDb250ZW50PlxyXG4gICAgICAgICAgICAgICAgICAgIDxTZWxlY3RJdGVtIHZhbHVlPVwiY2FzaFwiPkNhc2g8L1NlbGVjdEl0ZW0+XHJcbiAgICAgICAgICAgICAgICAgICAgPFNlbGVjdEl0ZW0gdmFsdWU9XCJjYXJkXCI+Q2FyZDwvU2VsZWN0SXRlbT5cclxuICAgICAgICAgICAgICAgICAgICA8U2VsZWN0SXRlbSB2YWx1ZT1cImNoZWNrXCI+Q2hlY2s8L1NlbGVjdEl0ZW0+XHJcbiAgICAgICAgICAgICAgICAgICAgPFNlbGVjdEl0ZW0gdmFsdWU9XCJhYmFcIj5BQkE8L1NlbGVjdEl0ZW0+XHJcbiAgICAgICAgICAgICAgICAgICAgPFNlbGVjdEl0ZW0gdmFsdWU9XCJvdGhlclwiPk90aGVyPC9TZWxlY3RJdGVtPlxyXG4gICAgICAgICAgICAgICAgICA8L1NlbGVjdENvbnRlbnQ+XHJcbiAgICAgICAgICAgICAgICA8L1NlbGVjdD5cclxuICAgICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgIDxkaXY+XHJcbiAgICAgICAgICAgICAgPExhYmVsIGNsYXNzTmFtZT1cInRleHQteHNcIj5SZWZlcmVuY2UgKG9wdGlvbmFsKTwvTGFiZWw+XHJcbiAgICAgICAgICAgICAgPElucHV0IHZhbHVlPXtmb3JtLnJlZmVyZW5jZX0gb25DaGFuZ2U9eyhlKSA9PiBzZXRGb3JtKHsgLi4uZm9ybSwgcmVmZXJlbmNlOiBlLnRhcmdldC52YWx1ZSB9KX0gcGxhY2Vob2xkZXI9XCJDaGVjayAjLCB0eG4gSUQsIGV0Y1wiIC8+XHJcbiAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICA8RGlhbG9nRm9vdGVyPlxyXG4gICAgICAgICAgICA8QnV0dG9uIHZhcmlhbnQ9XCJvdXRsaW5lXCIgb25DbGljaz17KCkgPT4gc2V0T3BlbihmYWxzZSl9PkNhbmNlbDwvQnV0dG9uPlxyXG4gICAgICAgICAgICA8QnV0dG9uIG9uQ2xpY2s9eygpID0+IGNyZWF0ZS5tdXRhdGUoKX0gZGlzYWJsZWQ9e2NyZWF0ZS5pc1BlbmRpbmd9PlJlY29yZDwvQnV0dG9uPlxyXG4gICAgICAgICAgPC9EaWFsb2dGb290ZXI+XHJcbiAgICAgICAgPC9EaWFsb2dDb250ZW50PlxyXG4gICAgICA8L0RpYWxvZz5cclxuICAgIDwvZGl2PlxyXG4gICk7XHJcbn1cclxuIl0sIm5hbWVzIjpbInVzZU1lbW8iLCJ1c2VTdGF0ZSIsInVzZVF1ZXJ5IiwidXNlTXV0YXRpb24iLCJ1c2VRdWVyeUNsaWVudCIsInN1cGFiYXNlIiwiQ2FyZCIsIkNhcmRDb250ZW50IiwiQ2FyZEhlYWRlciIsIkNhcmRUaXRsZSIsIkJ1dHRvbiIsIklucHV0IiwiTGFiZWwiLCJTZWxlY3QiLCJTZWxlY3RDb250ZW50IiwiU2VsZWN0SXRlbSIsIlNlbGVjdFRyaWdnZXIiLCJTZWxlY3RWYWx1ZSIsIkRpYWxvZyIsIkRpYWxvZ0NvbnRlbnQiLCJEaWFsb2dIZWFkZXIiLCJEaWFsb2dUaXRsZSIsIkRpYWxvZ0Zvb3RlciIsIkJhbmtub3RlIiwiUGx1cyIsInRvYXN0IiwiZm10IiwiY2VudHMiLCJ0b0xvY2FsZVN0cmluZyIsInVuZGVmaW5lZCIsIm1pbmltdW1GcmFjdGlvbkRpZ2l0cyIsIm1heGltdW1GcmFjdGlvbkRpZ2l0cyIsIkZpbmFuY2VQYXltZW50c1NlY3Rpb24iLCJzdG9yZUlkIiwicWMiLCJvcGVuIiwic2V0T3BlbiIsIm1ldGhvZEZpbHRlciIsInNldE1ldGhvZEZpbHRlciIsImZvcm0iLCJzZXRGb3JtIiwiaW52b2ljZV9pZCIsImFtb3VudCIsIm1ldGhvZCIsInJlZmVyZW5jZSIsIm5vdGVzIiwiZGF0YSIsInBheW1lbnRzIiwicXVlcnlLZXkiLCJxdWVyeUZuIiwiZXJyb3IiLCJmcm9tIiwic2VsZWN0IiwiZXEiLCJvcmRlciIsImFzY2VuZGluZyIsImludm9pY2VzIiwibmVxIiwiY3JlYXRlIiwibXV0YXRpb25GbiIsIk1hdGgiLCJyb3VuZCIsInBhcnNlRmxvYXQiLCJFcnJvciIsInVzZXIiLCJhdXRoIiwiZ2V0VXNlciIsImluc2VydCIsInN0b3JlX2lkIiwiYW1vdW50X2NlbnRzIiwiY3JlYXRlZF9ieSIsImlkIiwib25TdWNjZXNzIiwic3VjY2VzcyIsImludmFsaWRhdGVRdWVyaWVzIiwib25FcnJvciIsImUiLCJtZXNzYWdlIiwiZmlsdGVyZWQiLCJmaWx0ZXIiLCJwIiwidG90YWwiLCJyZWR1Y2UiLCJzIiwiaW52b2ljZU1hcCIsIm0iLCJNYXAiLCJmb3JFYWNoIiwiaSIsInNldCIsImRpdiIsImNsYXNzTmFtZSIsInNpemUiLCJvbkNsaWNrIiwibGVuZ3RoIiwidmFsdWUiLCJvblZhbHVlQ2hhbmdlIiwidWwiLCJtYXAiLCJpbnYiLCJnZXQiLCJsaSIsIm51bWJlciIsImN1c3RvbWVyX25hbWUiLCJ0b1VwcGVyQ2FzZSIsIkRhdGUiLCJwYWlkX2F0Iiwib25PcGVuQ2hhbmdlIiwidiIsInBsYWNlaG9sZGVyIiwiYmFsYW5jZSIsInRvdGFsX2NlbnRzIiwiYW1vdW50X3BhaWRfY2VudHMiLCJ0eXBlIiwic3RlcCIsIm9uQ2hhbmdlIiwidGFyZ2V0IiwidmFyaWFudCIsIm11dGF0ZSIsImRpc2FibGVkIiwiaXNQZW5kaW5nIl0sIm1hcHBpbmdzIjoiOztBQUFBOzs7Q0FHQyxHQUNELFNBQVNBLE9BQU8sRUFBRUMsUUFBUSxRQUFRLFFBQVE7QUFDMUMsU0FBU0MsUUFBUSxFQUFFQyxXQUFXLEVBQUVDLGNBQWMsUUFBUSx3QkFBd0I7QUFDOUUsU0FBU0MsUUFBUSxRQUFRLGlDQUFpQztBQUMxRCxTQUFTQyxJQUFJLEVBQUVDLFdBQVcsRUFBRUMsVUFBVSxFQUFFQyxTQUFTLFFBQVEsdUJBQXVCO0FBQ2hGLFNBQVNDLE1BQU0sUUFBUSx5QkFBeUI7QUFDaEQsU0FBU0MsS0FBSyxRQUFRLHdCQUF3QjtBQUM5QyxTQUFTQyxLQUFLLFFBQVEs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

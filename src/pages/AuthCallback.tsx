@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useExchangeAuthToken } from "@/hooks/useCrossAppAuth";
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { getSafeRedirectTarget, withRedirectParam } from "@/lib/authRedirect";
 
 const AuthCallback = () => {
   const [searchParams] = useSearchParams();
@@ -13,6 +14,7 @@ const AuthCallback = () => {
   const { exchangeToken, isExchanging, error } = useExchangeAuthToken();
   const [status, setStatus] = useState<"loading" | "success" | "error">("loading");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const redirectTo = getSafeRedirectTarget(searchParams.get("redirect"));
 
   // Parse hash fragment for OAuth errors (Supabase returns errors in hash, not query)
   const getHashParams = () => {
@@ -33,7 +35,7 @@ const AuthCallback = () => {
       const { data: profile } = await supabase
         .from("profiles")
         .select("setup_complete, email_verified")
-        .eq("user_id", userId)
+        .or(`user_id.eq.${userId},id.eq.${userId}`)
         .maybeSingle();
 
       let resolvedProfile = profile;
@@ -65,7 +67,7 @@ const AuthCallback = () => {
           const { data: retryProfile } = await supabase
             .from("profiles")
             .select("setup_complete, email_verified")
-            .eq("user_id", userId)
+            .or(`user_id.eq.${userId},id.eq.${userId}`)
             .maybeSingle();
 
           if (retryProfile) {
@@ -74,7 +76,10 @@ const AuthCallback = () => {
             // Even if profile creation fails, don't block the user.
             // Redirect to setup so they can complete their profile.
             setStatus("success");
-            setTimeout(() => navigate("/setup", { replace: true }), 200);
+            setTimeout(() => navigate(withRedirectParam("/setup", redirectTo), {
+              replace: true,
+              state: { redirectTo },
+            }), 200);
             return;
           }
         } else {
@@ -82,13 +87,27 @@ const AuthCallback = () => {
         }
       }
 
-      // OAuth providers (apple, google, etc.) already verify the user's email —
-      // skip our custom OTP verification for them.
+      // OAuth providers already verify email, and email confirmation links
+      // update auth.users.email_confirmed_at even if our profile flag lags behind.
       const provider = user.app_metadata?.provider;
-      const isOAuthUser = provider && provider !== "email";
-      const needsVerification = !isOAuthUser && resolvedProfile.email_verified !== true;
+      const isOAuthUser = Boolean(provider && provider !== "email");
+      const isEmailConfirmedInAuth = Boolean(user.email_confirmed_at);
+      const isEmailVerified = isOAuthUser || isEmailConfirmedInAuth || resolvedProfile.email_verified === true;
 
-      if (needsVerification && user.email) {
+      if (isEmailConfirmedInAuth && resolvedProfile.email_verified !== true) {
+        const { error: syncProfileError } = await supabase
+          .from("profiles")
+          .update({ email_verified: true })
+          .or(`user_id.eq.${userId},id.eq.${userId}`);
+
+        if (syncProfileError) {
+          console.error("Failed to sync profile email verification:", syncProfileError);
+        } else {
+          resolvedProfile = { ...resolvedProfile, email_verified: true };
+        }
+      }
+
+      if (!isEmailVerified && user.email) {
         // Send OTP for verification — but don't block if it fails
         try {
           const { data: otpResponse, error: otpError } = await supabase.functions.invoke(
@@ -99,7 +118,10 @@ const AuthCallback = () => {
           if (!otpError && otpResponse?.success) {
             setStatus("success");
             setTimeout(() => {
-              navigate("/verify-otp", { state: { email: user.email, userId: user.id }, replace: true });
+              navigate(withRedirectParam("/verify-otp", redirectTo), {
+                state: { email: user.email, userId: user.id, redirectTo },
+                replace: true,
+              });
             }, 200);
             return;
           }
@@ -109,14 +131,17 @@ const AuthCallback = () => {
         
         // OTP failed — still redirect, don't show error
         setStatus("success");
-        setTimeout(() => navigate("/verify-email", { replace: true }), 200);
+        setTimeout(() => navigate(withRedirectParam("/login", redirectTo), { replace: true }), 200);
         return;
       }
 
       // If setup is not complete, redirect to setup page
       if (!resolvedProfile.setup_complete) {
         setStatus("success");
-        setTimeout(() => navigate("/setup", { replace: true }), 200);
+        setTimeout(() => navigate(withRedirectParam("/setup", redirectTo), {
+          replace: true,
+          state: { redirectTo },
+        }), 200);
         return;
       }
 
@@ -126,12 +151,12 @@ const AuthCallback = () => {
         _role: "admin",
       });
       setStatus("success");
-      setTimeout(() => navigate(isAdminUser ? "/admin/analytics" : "/", { replace: true }), 200);
+      setTimeout(() => navigate(isAdminUser ? "/admin/analytics" : redirectTo, { replace: true }), 200);
     } catch (err) {
       console.error("Error checking setup status:", err);
       // User IS authenticated — never show an error. Redirect to home.
       setStatus("success");
-      setTimeout(() => navigate("/", { replace: true }), 200);
+      setTimeout(() => navigate(redirectTo, { replace: true }), 200);
     }
   };
 
@@ -190,7 +215,9 @@ const AuthCallback = () => {
         const redirectUrl = await exchangeToken(token);
 
         if (redirectUrl) {
-          window.location.href = redirectUrl;
+          // Validate the redirect URL is internal to prevent open redirect
+          const safeTarget = getSafeRedirectTarget(redirectUrl);
+          navigate(safeTarget, { replace: true });
         } else {
           setStatus("error");
         }
@@ -326,7 +353,7 @@ const AuthCallback = () => {
               <Button variant="outline" onClick={() => navigate("/")} className="rounded-xl touch-manipulation active:scale-95">
                 Go Home
               </Button>
-              <Button onClick={() => navigate("/login")} className="rounded-xl touch-manipulation active:scale-95">
+              <Button onClick={() => navigate(withRedirectParam("/login", redirectTo))} className="rounded-xl touch-manipulation active:scale-95">
                 Sign In
               </Button>
             </div>

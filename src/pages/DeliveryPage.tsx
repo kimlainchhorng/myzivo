@@ -3,17 +3,22 @@
  * Premium ZIVO super-app style with map, scheduling, and confirmation
  */
 import { useState, useEffect } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowLeft, MapPin, Package, Loader2, Clock, DollarSign, CreditCard, Shield, CheckCircle, Zap, Scale, Ruler, Box, Truck, Navigation, AlertTriangle, Calendar, Camera, PartyPopper, Phone, MessageSquare, Gift, Tag, Copy, Share2, Star, RefreshCw, Bell, Users, RotateCcw, Percent, ThumbsUp, Award, ChevronRight, History, X, Info, Plus, Thermometer, Lock as LockIcon, BarChart3 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { getPublicOrigin } from "@/lib/getPublicOrigin";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { useEatsNotifications } from "@/hooks/useEatsNotifications";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import SEOHead from "@/components/SEOHead";
 import RideMap from "@/components/maps/RideMap";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const packageSizes = [
   { id: "envelope", name: "Envelope", description: "Documents, letters", icon: "📄", maxWeight: "0.5 lb", price: 5.99 },
@@ -171,6 +176,7 @@ function PriceEstimate({ basePrice, speed, fragile, signature, insurance, packag
 export default function DeliveryPage() {
   const navigate = useNavigate();
   const { notify: notifyEats } = useEatsNotifications();
+  const { user } = useAuth();
   const [step, setStep] = useState<"address" | "package" | "review" | "confirmation">("address");
 
   // Address
@@ -255,11 +261,25 @@ export default function DeliveryPage() {
   const [recipientPhone, setRecipientPhone] = useState("");
   const [recipientEmail, setRecipientEmail] = useState("");
   const [showDeliveryHistory, setShowDeliveryHistory] = useState(false);
-  const [pastDeliveries] = useState([
-    { id: "1", to: "123 Main St", status: "Delivered", date: "Yesterday", tracking: "ZD-A1B2C3" },
-    { id: "2", to: "456 Oak Ave", status: "Delivered", date: "3 days ago", tracking: "ZD-D4E5F6" },
-    { id: "3", to: "789 Pine Rd", status: "In Transit", date: "Today", tracking: "ZD-G7H8I9" },
-  ]);
+  const { data: pastDeliveries = [] } = useQuery({
+    queryKey: ["past-deliveries", user?.id],
+    enabled: !!user?.id,
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("deliveries")
+        .select("id, dropoff_location, status, created_at")
+        .eq("customer_user_id", user!.id)
+        .order("created_at", { ascending: false })
+        .limit(10);
+      return (data || []).map((d: any) => ({
+        id: d.id,
+        to: (d.dropoff_location as any)?.address ?? "—",
+        status: d.status === "delivered" ? "Delivered" : d.status === "pending" ? "Pending" : d.status ?? "—",
+        date: d.created_at ? new Date(d.created_at).toLocaleDateString() : "—",
+        tracking: d.id.slice(0, 8).toUpperCase(),
+      }));
+    },
+  });
   const [expressPickup, setExpressPickup] = useState(false);
   const [holdAtFacility, setHoldAtFacility] = useState(false);
   const [saturdayDelivery, setSaturdayDelivery] = useState(false);
@@ -268,11 +288,7 @@ export default function DeliveryPage() {
   // === NEW: Roadie-inspired features ===
   const [peerDelivery, setPeerDelivery] = useState(false);
   const [showDriverBids, setShowDriverBids] = useState(false);
-  const [driverBids] = useState([
-    { id: "b1", name: "Alex M.", rating: 4.9, vehicle: "SUV", price: 18.99, eta: "45 min", trips: 342 },
-    { id: "b2", name: "Jordan K.", rating: 4.7, vehicle: "Sedan", price: 15.99, eta: "55 min", trips: 128 },
-    { id: "b3", name: "Sam R.", rating: 4.8, vehicle: "Truck", price: 22.99, eta: "35 min", trips: 567 },
-  ]);
+  const [driverBids] = useState<Array<{ id: string; name: string; rating: number; vehicle: string; price: number; eta: string; trips: number }>>([]);
   const [selectedBid, setSelectedBid] = useState<string | null>(null);
   const [vehicleTypeForDelivery, setVehicleTypeForDelivery] = useState<"any" | "sedan" | "suv" | "truck" | "van">("any");
   const [itemPhotos, setItemPhotos] = useState<string[]>([]);
@@ -389,9 +405,22 @@ export default function DeliveryPage() {
     setStep("review");
   };
 
-  const handlePlaceOrder = () => {
-    notifyEats("order_placed");
-    setStep("confirmation");
+  const handlePlaceOrder = async () => {
+    if (!user) { toast.error("Please sign in to place a delivery"); return; }
+    try {
+      const { error } = await supabase.from("deliveries").insert({
+        customer_user_id: user.id,
+        pickup_location: { address: pickupAddress, name: senderName, phone: senderPhone },
+        dropoff_location: { address: dropoffAddress, name: recipientName, phone: recipientPhone },
+        delivery_fee: totalPrice,
+        status: "pending",
+      });
+      if (error) throw error;
+      notifyEats("order_placed");
+      setStep("confirmation");
+    } catch {
+      toast.error("Failed to place order. Please try again.");
+    }
   };
 
   const handleApplyPromo = () => {
@@ -410,7 +439,7 @@ export default function DeliveryPage() {
 
   const handleShareTracking = () => {
     if (navigator.share) {
-      navigator.share({ title: "ZIVO Delivery", text: `Track my package: ${trackingId}`, url: window.location.href });
+      navigator.share({ title: "ZIVO Delivery", text: `Track my package: ${trackingId}`, url: `${getPublicOrigin()}/delivery/track/${trackingId}` });
     } else {
       handleCopyTracking();
     }
@@ -429,6 +458,21 @@ export default function DeliveryPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SEOHead
+        title="Package Delivery – ZIVO | Same-Day & Scheduled Delivery"
+        description="Send packages across town or schedule a delivery with ZIVO. Real-time tracking, secure delivery, and fast couriers available 24/7."
+        canonical="/delivery"
+        ogImage="/og-delivery.jpg"
+        structuredData={{
+          "@context": "https://schema.org",
+          "@type": "Service",
+          "name": "ZIVO Package Delivery",
+          "description": "Same-day and scheduled package delivery service",
+          "provider": { "@type": "Organization", "name": "ZIVO" },
+          "areaServed": "Worldwide",
+          "serviceType": "Package Delivery",
+        }}
+      />
       {/* Map Preview */}
       {step === "address" && (
         <div className="relative h-[25vh] min-h-[180px]">
@@ -445,7 +489,7 @@ export default function DeliveryPage() {
 
       {/* Header */}
       {step !== "address" && step !== "confirmation" && (
-        <div className="sticky top-0 z-20 bg-background/95 backdrop-blur-2xl border-b border-border/30">
+        <div className="sticky top-0 safe-area-top z-20 bg-background/95 backdrop-blur-2xl border-b border-border/30">
           <div className="px-4 py-3 flex items-center gap-3 safe-area-top">
             <motion.button whileTap={{ scale: 0.88 }} onClick={handleBack}
               className="w-10 h-10 rounded-xl bg-card/80 border border-border/40 flex items-center justify-center touch-manipulation">
@@ -908,6 +952,12 @@ export default function DeliveryPage() {
                       <p className="text-xs font-bold text-foreground">🚗 Driver Offers ({driverBids.length})</p>
                       <span className="text-[10px] text-amber-500 font-bold animate-pulse">Expires in {bidExpiry} min</span>
                     </div>
+                    {driverBids.length === 0 && (
+                      <div className="rounded-xl bg-muted/30 border border-border/30 p-4 text-center">
+                        <p className="text-xs text-muted-foreground">Waiting for nearby drivers to bid…</p>
+                        <p className="text-[10px] text-muted-foreground/70 mt-1">First offers usually arrive within a few minutes.</p>
+                      </div>
+                    )}
                     {driverBids.map(bid => (
                       <button key={bid.id} onClick={() => { setSelectedBid(bid.id); toast.success(`Selected ${bid.name}'s offer!`); }}
                         className={cn("w-full flex items-center gap-3 p-3 rounded-xl border transition-all touch-manipulation active:scale-[0.98] text-left",
@@ -1312,6 +1362,12 @@ export default function DeliveryPage() {
                   {showDeliveryHistory && (
                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="overflow-hidden">
                       <div className="space-y-2 mt-3">
+                        {pastDeliveries.length === 0 && (
+                          <div className="rounded-xl bg-muted/30 p-4 text-center">
+                            <p className="text-xs text-muted-foreground">No past deliveries yet.</p>
+                            <p className="text-[10px] text-muted-foreground/70 mt-1">Your delivery history will appear here.</p>
+                          </div>
+                        )}
                         {pastDeliveries.map(d => (
                           <div key={d.id} className="rounded-xl bg-muted/30 p-3">
                             <div className="flex justify-between items-center">

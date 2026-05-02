@@ -8,8 +8,6 @@ import { Link } from "react-router-dom";
 import { useMyTrips } from "@/hooks/useMyTrips";
 import { format, differenceInHours, differenceInMinutes, isTomorrow, isToday } from "date-fns";
 
-// TODO: Fetch real weather data from weather API
-// Returns a generic placeholder until API integration
 function getWeatherForCity(_city: string) {
   return { temp: "--", condition: "N/A", Icon: Sun };
 }
@@ -162,7 +160,6 @@ export function TripTimeline() {
     }
   }
 
-  // TODO: Load flight data from travel_order_items of type "flight"
   const flightData: FlightCardProps | null = null;
 
   if (isLoading) {

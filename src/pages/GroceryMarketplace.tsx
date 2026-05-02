@@ -34,13 +34,16 @@ const cardVariant = {
 };
 
 /* ─── Live status dot ─── */
-function StatusDot({ isOpen }: { isOpen: boolean }) {
+function StatusDot({ status }: { status: "open" | "closing-soon" | "almost-open" | "closed"; isOpen?: boolean }) {
+  const dotColor = status === "open" ? "bg-emerald-500" : status === "closing-soon" || status === "almost-open" ? "bg-amber-500" : "bg-red-500";
+  const pingColor = status === "open" ? "bg-emerald-400" : status === "closing-soon" || status === "almost-open" ? "bg-amber-400" : "bg-red-400";
+  const shouldPing = status !== "closed";
   return (
     <span className="relative flex h-2 w-2">
-      {isOpen && (
-        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
+      {shouldPing && (
+        <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${pingColor} opacity-75`} />
       )}
-      <span className={`relative inline-flex rounded-full h-2 w-2 ${isOpen ? "bg-emerald-500" : "bg-muted-foreground/40"}`} />
+      <span className={`relative inline-flex rounded-full h-2 w-2 ${dotColor}`} />
     </span>
   );
 }
@@ -48,7 +51,7 @@ function StatusDot({ isOpen }: { isOpen: boolean }) {
 /* ─── Featured spotlight card with real location ─── */
 function FeaturedStore({ store, eta, location }: { store: StoreConfig; eta: number; location?: NearbyStoreLocation }) {
   const navigate = useNavigate();
-  const status = getStoreStatus(store.hours);
+  const status = getStoreStatus(store.hours, "US");
 
   return (
     <motion.button
@@ -68,8 +71,8 @@ function FeaturedStore({ store, eta, location }: { store: StoreConfig; eta: numb
         </div>
         <div className="flex-1 min-w-0 text-left">
           <div className="flex items-center gap-2 mb-1">
-            <StatusDot isOpen={status.isOpen} />
-            <span className={`text-[11px] font-semibold ${status.isOpen ? "text-emerald-500" : "text-muted-foreground/50"}`}>
+            <StatusDot status={status.status} />
+            <span className={`text-[11px] font-semibold ${status.status === "open" ? "text-emerald-500" : status.status === "closed" ? "text-red-500" : "text-amber-500"}`}>
               {status.label}
             </span>
             {store.promo && (
@@ -112,7 +115,7 @@ function FeaturedStore({ store, eta, location }: { store: StoreConfig; eta: numb
 /* ─── Store card with real location ─── */
 function StoreCardWithLocation({ store, eta, location }: { store: StoreConfig; eta: number; location?: NearbyStoreLocation }) {
   const navigate = useNavigate();
-  const status = getStoreStatus(store.hours);
+  const status = getStoreStatus(store.hours, "US");
 
   return (
     <motion.button
@@ -129,7 +132,7 @@ function StoreCardWithLocation({ store, eta, location }: { store: StoreConfig; e
       <div className="relative h-14 w-14 rounded-2xl bg-background border border-border/25 flex items-center justify-center p-2 shadow-sm group-hover:shadow-md group-hover:scale-105 transition-all duration-300 shrink-0">
         <img src={store.logo} alt={store.name} className="h-full w-full object-contain" />
         <div className="absolute -top-0.5 -right-0.5">
-          <StatusDot isOpen={status.isOpen} />
+          <StatusDot status={status.status} />
         </div>
       </div>
       <div className="flex-1 min-w-0 text-left">
@@ -142,11 +145,13 @@ function StoreCardWithLocation({ store, eta, location }: { store: StoreConfig; e
               {store.promo}
             </span>
           )}
-          {location?.open_now === true && (
-            <span className="px-1.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-500 text-[8px] font-bold">
-              Open
-            </span>
-          )}
+          <span className={`px-1.5 py-0.5 rounded-full text-[8px] font-bold ${
+            status.status === "open" ? "bg-emerald-500/10 text-emerald-500" :
+            status.status === "closed" ? "bg-red-500/10 text-red-500" :
+            "bg-amber-500/10 text-amber-500"
+          }`}>
+            {status.label}
+          </span>
         </div>
         {location && (
           <p className="text-[10px] text-muted-foreground truncate mt-0.5 flex items-center gap-1">
@@ -278,17 +283,20 @@ export default function GroceryMarketplace() {
 
   // Category counts
   const categoryCounts = useMemo(() => {
-    const counts: Record<string, number> = { all: availableStores.length };
+    const counts: Record<string, number> = { all: availableStores.length + dbStores.length };
     availableStores.forEach((s) => {
       counts[s.category] = (counts[s.category] || 0) + 1;
     });
+    dbStores.forEach((s) => {
+      if (s.category) counts[s.category] = (counts[s.category] || 0) + 1;
+    });
     return counts;
-  }, [availableStores]);
+  }, [availableStores, dbStores]);
 
   // Featured store = closest open store
   const featuredStore = useMemo(() => {
     if (filter.trim() || category !== "all") return null;
-    return filteredStores.filter((s) => getStoreStatus(s.hours).isOpen)[0] || null;
+    return filteredStores.filter((s) => getStoreStatus(s.hours, country).isOpen)[0] || null;
   }, [filter, category, filteredStores]);
 
   const nonFeaturedStores = useMemo(() => {
@@ -313,7 +321,7 @@ export default function GroceryMarketplace() {
       </div>
 
       {/* Sticky header */}
-      <div className="sticky top-0 z-30 bg-background/70 backdrop-blur-2xl border-b border-border/20">
+      <div className="sticky top-0 safe-area-top z-30 bg-background/70 backdrop-blur-2xl border-b border-border/20">
         <div className="flex items-center gap-3 px-4 py-3">
           <motion.button
             whileTap={{ scale: 0.9 }}
@@ -394,6 +402,115 @@ export default function GroceryMarketplace() {
         </motion.div>
       ) : (
         <>
+          {/* Featured spotlight — closest store */}
+          {featuredStore && (
+            <div className="px-4 pt-4">
+              <div className="flex items-center gap-1.5 mb-2.5">
+                <Sparkles className="h-3.5 w-3.5 text-primary" />
+                <h2 className="text-sm font-bold text-foreground/80 uppercase tracking-wider">
+                  {hasAddress ? "Nearest Store" : "Featured"}
+                </h2>
+              </div>
+              <FeaturedStore
+                store={featuredStore}
+                eta={etas[featuredStore.slug] ?? featuredStore.deliveryMin}
+                location={nearbyBySlug[featuredStore.slug]}
+              />
+            </div>
+          )}
+
+          {/* Recent stores */}
+          <GroceryRecentStores />
+
+          {/* Deals carousel */}
+          <GroceryPromos />
+
+          {/* Order Again */}
+          <GroceryReorder />
+
+          {/* Database-backed stores (e.g. Cambodia local stores) */}
+          {dbStores.filter((ds) => category === "all" || ds.category === category).filter((ds) => !filter.trim() || ds.name.toLowerCase().includes(filter.toLowerCase())).length > 0 && (
+            <div className="px-4 pt-5">
+              <div className="flex items-center gap-1.5 mb-2.5">
+                <Store className="h-3.5 w-3.5 text-primary" />
+                <h2 className="text-sm font-bold text-foreground/80 uppercase tracking-wider">Local Stores</h2>
+              </div>
+              <motion.div variants={container} initial="hidden" animate="show" className="space-y-2">
+                {dbStores
+                  .filter((ds) => category === "all" || ds.category === category)
+                  .filter((ds) => !filter.trim() || ds.name.toLowerCase().includes(filter.toLowerCase()))
+                  .map((ds) => (
+                  <motion.button
+                    key={ds.id}
+                    variants={cardVariant}
+                    onClick={() => navigate(`/grocery/shop/${ds.slug}`)}
+                    className="w-full rounded-2xl bg-card border border-border/30 hover:border-primary/20 hover:shadow-lg transition-all text-left group overflow-hidden"
+                  >
+                    {/* Cover / Banner */}
+                    {ds.banner_url ? (
+                      <div className="h-24 w-full relative">
+                        <img src={ds.banner_url} alt="" className="h-full w-full object-cover" loading="lazy" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-card/80 to-transparent" />
+                      </div>
+                    ) : (
+                      <div className="h-16 w-full bg-gradient-to-r from-primary/10 via-primary/5 to-muted/10" />
+                    )}
+
+                    {/* Info row with overlapping profile logo */}
+                    <div className="flex items-center gap-3 px-3 pb-3 -mt-5 relative">
+                      <div className="h-14 w-14 rounded-xl bg-background border-2 border-card shadow-md overflow-hidden flex items-center justify-center shrink-0">
+                        {ds.logo_url ? (
+                          <img src={ds.logo_url} alt={ds.name} className="h-full w-full object-contain p-1" loading="lazy" />
+                        ) : (
+                          <Store className="h-6 w-6 text-muted-foreground/30" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0 pt-5">
+                        {(() => {
+                          const status = ds.hours ? getStoreStatus(ds.hours, ds.market) : { status: "open" as const, label: "Open", formattedHours: undefined };
+                          const dotColor = status.status === "open" ? "bg-emerald-500" : status.status === "closing-soon" ? "bg-amber-500" : status.status === "almost-open" ? "bg-amber-500" : "bg-red-500";
+                          const pingColor = status.status === "open" ? "bg-emerald-400" : status.status === "closing-soon" ? "bg-amber-400" : status.status === "almost-open" ? "bg-amber-400" : "bg-red-400";
+                          const textColor = status.status === "open" ? "text-emerald-600" : status.status === "closing-soon" ? "text-amber-600" : status.status === "almost-open" ? "text-amber-600" : "text-red-500";
+                          const shouldPing = status.status !== "closed";
+                          return (
+                            <>
+                              <div className="flex items-center gap-2">
+                                <span className="relative flex h-2 w-2">
+                                  {shouldPing && <span className={`animate-ping absolute inline-flex h-full w-full rounded-full ${pingColor} opacity-75`} />}
+                                  <span className={`relative inline-flex rounded-full h-2 w-2 ${dotColor}`} />
+                                </span>
+                                <span className={`text-[10px] font-medium ${textColor}`}>{status.label}</span>
+                              </div>
+                              <p className="text-sm font-bold text-foreground truncate">{ds.name}</p>
+                              <div className="flex items-center gap-2 mt-0.5">
+                                {ds.delivery_min != null && ds.delivery_min > 0 && (
+                                  <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                                    <Clock className="h-2.5 w-2.5" /> {ds.delivery_min}m
+                                  </span>
+                                )}
+                                {ds.rating != null && ds.rating > 0 && (
+                                  <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
+                                    <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" /> {ds.rating}
+                                  </span>
+                                )}
+                                {('formattedHours' in status && status.formattedHours) ? (
+                                  <span className="text-[10px] text-muted-foreground">{status.formattedHours}</span>
+                                ) : ds.hours ? (
+                                  <span className="text-[10px] text-muted-foreground">{ds.hours}</span>
+                                ) : null}
+                              </div>
+                            </>
+                          );
+                        })()}
+                      </div>
+                      <ChevronRight className="h-4 w-4 text-muted-foreground/25 group-hover:text-primary/60 transition-colors shrink-0" />
+                    </div>
+                  </motion.button>
+                ))}
+              </motion.div>
+            </div>
+          )}
+
           {/* Hero banner */}
           <motion.div
             style={{ y: heroY, scale: heroScale }}
@@ -469,86 +586,6 @@ export default function GroceryMarketplace() {
                 </div>
               </div>
             </motion.div>
-          )}
-
-          {/* Featured spotlight — closest store */}
-          {featuredStore && (
-            <div className="px-4 pt-4">
-              <div className="flex items-center gap-1.5 mb-2.5">
-                <Sparkles className="h-3.5 w-3.5 text-primary" />
-                <h2 className="text-sm font-bold text-foreground/80 uppercase tracking-wider">
-                  {hasAddress ? "Nearest Store" : "Featured"}
-                </h2>
-              </div>
-              <FeaturedStore
-                store={featuredStore}
-                eta={etas[featuredStore.slug] ?? featuredStore.deliveryMin}
-                location={nearbyBySlug[featuredStore.slug]}
-              />
-            </div>
-          )}
-
-          {/* Recent stores */}
-          <GroceryRecentStores />
-
-          {/* Deals carousel */}
-          <GroceryPromos />
-
-          {/* Order Again */}
-          <GroceryReorder />
-
-          {/* Database-backed stores (e.g. Cambodia local stores) */}
-          {dbStores.length > 0 && (
-            <div className="px-4 pt-5">
-              <div className="flex items-center gap-1.5 mb-2.5">
-                <Store className="h-3.5 w-3.5 text-primary" />
-                <h2 className="text-sm font-bold text-foreground/80 uppercase tracking-wider">Local Stores</h2>
-              </div>
-              <motion.div variants={container} initial="hidden" animate="show" className="space-y-2">
-                {dbStores.map((ds) => (
-                  <motion.button
-                    key={ds.id}
-                    variants={cardVariant}
-                    onClick={() => navigate(`/grocery/shop/${ds.slug}`)}
-                    className="w-full flex items-center gap-3 p-3 rounded-2xl bg-card border border-border/30 hover:border-primary/20 hover:shadow-lg transition-all text-left group"
-                  >
-                    <div className="h-14 w-14 rounded-xl bg-background border border-border/20 overflow-hidden flex items-center justify-center shrink-0">
-                      {ds.logo_url ? (
-                        <img src={ds.logo_url} alt={ds.name} className="h-full w-full object-contain p-1" loading="lazy" />
-                      ) : (
-                        <Store className="h-6 w-6 text-muted-foreground/30" />
-                      )}
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2">
-                        <span className="relative flex h-2 w-2">
-                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75" />
-                          <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500" />
-                        </span>
-                        <span className="text-[10px] font-medium text-emerald-600">Open</span>
-                      </div>
-                      <p className="text-sm font-bold text-foreground truncate">{ds.name}</p>
-                      <div className="flex items-center gap-2 mt-0.5">
-                        {ds.delivery_min && (
-                          <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
-                            <Clock className="h-2.5 w-2.5" /> {ds.delivery_min}m
-                          </span>
-                        )}
-                        {ds.rating && (
-                          <span className="flex items-center gap-0.5 text-[10px] text-muted-foreground">
-                            <Star className="h-2.5 w-2.5 fill-amber-400 text-amber-400" /> {ds.rating}
-                          </span>
-                        )}
-                        {ds.hours && (
-                          <span className="text-[10px] text-muted-foreground">{ds.hours}</span>
-                        )}
-                      </div>
-                    </div>
-                    <ChevronRight className="h-4 w-4 text-muted-foreground/25 group-hover:text-primary/60 transition-colors shrink-0" />
-                  </motion.button>
-                ))}
-              </motion.div>
-            </div>
           )}
           {nonFeaturedStores.length > 0 && (
             <>

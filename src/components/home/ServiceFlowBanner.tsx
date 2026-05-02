@@ -2,7 +2,13 @@
  * ServiceFlowBanner - Cross-service connection with accent-colored icons
  */
 import { motion } from "framer-motion";
-import { Plane, Hotel, CarFront, Car, UtensilsCrossed, ArrowRight, Zap } from "lucide-react";
+import Plane from "lucide-react/dist/esm/icons/plane";
+import Hotel from "lucide-react/dist/esm/icons/hotel";
+import CarFront from "lucide-react/dist/esm/icons/car-front";
+import Car from "lucide-react/dist/esm/icons/car";
+import UtensilsCrossed from "lucide-react/dist/esm/icons/utensils-crossed";
+import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
+import Zap from "lucide-react/dist/esm/icons/zap";
 import { Link } from "react-router-dom";
 
 const flowSteps = [

@@ -3,7 +3,8 @@
  * Premium 2026-era traveler profile with glassmorphism
  */
 import { useState } from "react";
-import { Navigate, Link } from "react-router-dom";
+import { Navigate, Link, useLocation } from "react-router-dom";
+import { withRedirectParam } from "@/lib/authRedirect";
 import { useAuth } from "@/contexts/AuthContext";
 import { TripTimeline, AIConciergeTrigger } from "@/components/profile";
 import MobileBottomNav from "@/components/shared/MobileBottomNav";
@@ -24,6 +25,7 @@ import {
 } from "lucide-react";
 
 export default function TravelerDashboard() {
+  const location = useLocation();
   const { user, isLoading } = useAuth();
   const [showBucketList, setShowBucketList] = useState(false);
   const [showTravelMap, setShowTravelMap] = useState(false);
@@ -32,7 +34,8 @@ export default function TravelerDashboard() {
   const { bookings, isLoading: bookingsLoading } = useBookingHistory();
 
   if (!isLoading && !user) {
-    return <Navigate to="/login" replace />;
+    const redirectTarget = `${location.pathname}${location.search ?? ""}`;
+    return <Navigate to={withRedirectParam("/login", redirectTarget)} replace />;
   }
 
   const firstName = user?.user_metadata?.full_name?.split(" ")[0] || user?.email?.split("@")[0] || "Traveler";
@@ -68,7 +71,7 @@ export default function TravelerDashboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-background pb-24 relative overflow-hidden">
+    <div className="min-h-screen bg-background pb-24 relative overflow-hidden safe-area-top">
       <SEOHead title="My Dashboard – ZIVO" description="View your travel overview, achievements, and upcoming trips on ZIVO." noIndex={true} />
       <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[radial-gradient(circle,hsl(var(--primary)/0.04)_0%,transparent_70%)] pointer-events-none" />
 

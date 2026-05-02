@@ -3,7 +3,13 @@
  */
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { ArrowRight, Play, Plane, Hotel, CarFront, UtensilsCrossed, Car } from "lucide-react";
+import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
+import Play from "lucide-react/dist/esm/icons/play";
+import Plane from "lucide-react/dist/esm/icons/plane";
+import Hotel from "lucide-react/dist/esm/icons/hotel";
+import CarFront from "lucide-react/dist/esm/icons/car-front";
+import UtensilsCrossed from "lucide-react/dist/esm/icons/utensils-crossed";
+import Car from "lucide-react/dist/esm/icons/car";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 

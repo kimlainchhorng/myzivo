@@ -1,5 +1,7 @@
 import { Star, ThumbsUp, MessageSquare, ChevronRight, Verified, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { StarRating } from "@/components/shared/StarRating";
+import SafeCaption from "@/components/social/SafeCaption";
 import { Button } from "@/components/ui/button";
 import { useState } from "react";
 import { useReviews } from "@/hooks/useReviews";
@@ -39,13 +41,9 @@ const FlightReviewsWidget = () => {
     setNewRating(5);
   };
 
-  const renderStars = (count: number, size = "w-3 h-3") =>
-    Array.from({ length: 5 }, (_, i) => (
-      <Star
-        key={i}
-        className={cn(size, i < count ? "fill-amber-400 text-amber-400" : "text-muted-foreground")}
-      />
-    ));
+  const renderStars = (count: number, size: "xs" | "sm" | "md" | "lg" = "xs") => (
+    <StarRating value={count} size={size} reviewCount={totalReviews} />
+  );
 
   const avatarColors = [
     "bg-sky-500/20 text-sky-400",
@@ -74,7 +72,7 @@ const FlightReviewsWidget = () => {
                 {totalReviews > 0 ? averageRating.toFixed(1) : "—"}
               </p>
               <div className="flex justify-center gap-1 mb-2">
-                {renderStars(Math.round(averageRating))}
+                <StarRating value={averageRating} size="md" reviewCount={totalReviews} />
               </div>
               <p className="text-sm text-muted-foreground">
                 {totalReviews > 0
@@ -174,13 +172,13 @@ const FlightReviewsWidget = () => {
                       </Badge>
                     </div>
                     <div className="flex items-center gap-3 text-xs text-muted-foreground mb-2">
-                      <div className="flex gap-0.5">{renderStars(review.rating)}</div>
+                      <StarRating value={review.rating} size="xs" />
                       <span>•</span>
                       <span>{review.service_type ?? "flight"}</span>
                       <span>•</span>
                       <span>{review.created_at ? new Date(review.created_at).toLocaleDateString() : ""}</span>
                     </div>
-                    {review.comment && <p className="text-sm text-muted-foreground">{review.comment}</p>}
+                    {review.comment && <p className="text-sm text-muted-foreground"><SafeCaption text={review.comment} /></p>}
                     <div className="flex items-center gap-4 mt-3">
                       <button
                         onClick={() => handleHelpful(review.id)}

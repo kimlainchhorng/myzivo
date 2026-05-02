@@ -1,0 +1,418 @@
+import { createHotContext as __vite__createHotContext } from "/@vite/client";import.meta.hot = __vite__createHotContext("/src/components/admin/store/lodging/LodgingRatePlansSection.tsx");import __vite__cjsImport0_react_jsxDevRuntime from "/node_modules/.vite/deps/react_jsx-dev-runtime.js?v=7fd9520c"; const _jsxDEV = __vite__cjsImport0_react_jsxDevRuntime["jsxDEV"]; const _Fragment = __vite__cjsImport0_react_jsxDevRuntime["Fragment"];
+var _s = $RefreshSig$();
+import { Badge } from "/src/components/ui/badge.tsx";
+import { Button } from "/src/components/ui/button.tsx";
+import { BedDouble, CalendarDays, DollarSign } from "/node_modules/.vite/deps/lucide-react.js?v=7fd9520c";
+import { EmptyPanel, LoadingPanel, NextActions, SectionShell, StatCard, money } from "/src/components/admin/store/lodging/LodgingOperationsShared.tsx";
+import { useLodgeRooms } from "/src/hooks/lodging/useLodgeRooms.ts";
+import LodgingQuickJump from "/src/components/admin/store/lodging/LodgingQuickJump.tsx";
+import LodgingSectionStatusBanner from "/src/components/admin/store/lodging/LodgingSectionStatusBanner.tsx";
+const weekdays = [
+    "Sun",
+    "Mon",
+    "Tue",
+    "Wed",
+    "Thu",
+    "Fri",
+    "Sat"
+];
+const goRooms = ()=>window.dispatchEvent(new CustomEvent("lodge-set-tab", {
+        detail: {
+            tab: "lodge-rooms"
+        }
+    }));
+export default function LodgingRatePlansSection({ storeId }) {
+    _s();
+    const { data: rooms = [], isLoading } = useLodgeRooms(storeId);
+    const activeRooms = rooms.filter((room)=>room.is_active);
+    const seasonalCount = rooms.reduce((sum, room)=>sum + (room.seasonal_rates?.length || 0), 0);
+    const avgBase = activeRooms.length ? activeRooms.reduce((sum, room)=>sum + (room.base_rate_cents || 0), 0) / activeRooms.length : 0;
+    return /*#__PURE__*/ _jsxDEV(SectionShell, {
+        title: "Rate Plans & Availability",
+        subtitle: "Room pricing, inventory, seasonal rates, discounts, and stay restrictions from Rooms & Rates.",
+        icon: CalendarDays,
+        actions: /*#__PURE__*/ _jsxDEV(Button, {
+            size: "sm",
+            onClick: goRooms,
+            children: "Edit Rooms & Rates"
+        }, void 0, false, {
+            fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+            lineNumber: 19,
+            columnNumber: 187
+        }, this),
+        children: [
+            /*#__PURE__*/ _jsxDEV(LodgingQuickJump, {
+                active: "lodge-rate-plans"
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                lineNumber: 20,
+                columnNumber: 7
+            }, this),
+            /*#__PURE__*/ _jsxDEV(LodgingSectionStatusBanner, {
+                title: "Rate Plans & Availability",
+                icon: CalendarDays,
+                countLabel: "Active room types",
+                countValue: activeRooms.length,
+                fixLabel: "Open Rooms",
+                fixTab: "lodge-rooms"
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                lineNumber: 21,
+                columnNumber: 7
+            }, this),
+            isLoading ? /*#__PURE__*/ _jsxDEV(LoadingPanel, {}, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                lineNumber: 22,
+                columnNumber: 20
+            }, this) : rooms.length === 0 ? /*#__PURE__*/ _jsxDEV(EmptyPanel, {
+                title: "No rooms to price yet",
+                body: "Create room types first, then add base rates, weekend pricing, seasonal rules, and unit inventory.",
+                actionLabel: "Open Rooms & Rates",
+                tab: "lodge-rooms"
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                lineNumber: 22,
+                columnNumber: 60
+            }, this) : /*#__PURE__*/ _jsxDEV(_Fragment, {
+                children: [
+                    activeRooms.some((room)=>!room.base_rate_cents || !room.units_total) && /*#__PURE__*/ _jsxDEV("div", {
+                        className: "rounded-lg border border-primary/20 bg-primary/5 p-3",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV("p", {
+                                className: "text-sm font-semibold text-foreground",
+                                children: "Rate readiness needs attention"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                                lineNumber: 23,
+                                columnNumber: 154
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV("p", {
+                                className: "mt-1 text-xs text-muted-foreground",
+                                children: "Add base rates and unit inventory to every active room so availability and booking flows stay accurate."
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                                lineNumber: 23,
+                                columnNumber: 241
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(Button, {
+                                size: "sm",
+                                className: "mt-3 h-8",
+                                onClick: goRooms,
+                                children: "Update room pricing"
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                                lineNumber: 23,
+                                columnNumber: 398
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                        lineNumber: 23,
+                        columnNumber: 84
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "grid gap-3 sm:grid-cols-2 xl:grid-cols-4",
+                        children: [
+                            /*#__PURE__*/ _jsxDEV(StatCard, {
+                                label: "Active room types",
+                                value: String(activeRooms.length),
+                                icon: BedDouble
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                                lineNumber: 25,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(StatCard, {
+                                label: "Total units",
+                                value: String(rooms.reduce((sum, room)=>sum + (room.units_total || 0), 0)),
+                                icon: BedDouble
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                                lineNumber: 26,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(StatCard, {
+                                label: "Average base rate",
+                                value: money(avgBase),
+                                icon: DollarSign
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                                lineNumber: 27,
+                                columnNumber: 11
+                            }, this),
+                            /*#__PURE__*/ _jsxDEV(StatCard, {
+                                label: "Seasonal plans",
+                                value: String(seasonalCount),
+                                icon: CalendarDays
+                            }, void 0, false, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                                lineNumber: 28,
+                                columnNumber: 11
+                            }, this)
+                        ]
+                    }, void 0, true, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                        lineNumber: 24,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV("div", {
+                        className: "grid gap-3 lg:grid-cols-2",
+                        children: rooms.map((room)=>/*#__PURE__*/ _jsxDEV("div", {
+                                className: "rounded-lg border border-border bg-card p-3",
+                                children: [
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        className: "flex items-start justify-between gap-3",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV("div", {
+                                                className: "min-w-0",
+                                                children: [
+                                                    /*#__PURE__*/ _jsxDEV("p", {
+                                                        className: "truncate text-sm font-semibold text-foreground",
+                                                        children: room.name
+                                                    }, void 0, false, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                                                        lineNumber: 35,
+                                                        columnNumber: 19
+                                                    }, this),
+                                                    /*#__PURE__*/ _jsxDEV("p", {
+                                                        className: "text-xs text-muted-foreground",
+                                                        children: [
+                                                            room.units_total || 0,
+                                                            " unit",
+                                                            room.units_total === 1 ? "" : "s",
+                                                            " · up to ",
+                                                            room.max_guests,
+                                                            " guests"
+                                                        ]
+                                                    }, void 0, true, {
+                                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                                                        lineNumber: 36,
+                                                        columnNumber: 19
+                                                    }, this)
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                                                lineNumber: 34,
+                                                columnNumber: 17
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV(Badge, {
+                                                variant: room.is_active ? "secondary" : "outline",
+                                                children: room.is_active ? "Active" : "Hidden"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                                                lineNumber: 38,
+                                                columnNumber: 17
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                                        lineNumber: 33,
+                                        columnNumber: 15
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        className: "mt-3 grid grid-cols-2 gap-2 text-xs",
+                                        children: [
+                                            /*#__PURE__*/ _jsxDEV(RateMetric, {
+                                                label: "Base",
+                                                value: money(room.base_rate_cents)
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                                                lineNumber: 41,
+                                                columnNumber: 17
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV(RateMetric, {
+                                                label: "Weekend",
+                                                value: money(room.weekend_rate_cents || room.base_rate_cents)
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                                                lineNumber: 42,
+                                                columnNumber: 17
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV(RateMetric, {
+                                                label: "Weekly",
+                                                value: `${room.weekly_discount_pct || 0}% off`
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                                                lineNumber: 43,
+                                                columnNumber: 17
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV(RateMetric, {
+                                                label: "Monthly",
+                                                value: `${room.monthly_discount_pct || 0}% off`
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                                                lineNumber: 44,
+                                                columnNumber: 17
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV(RateMetric, {
+                                                label: "Min stay",
+                                                value: `${room.min_stay || 1} night${(room.min_stay || 1) === 1 ? "" : "s"}`
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                                                lineNumber: 45,
+                                                columnNumber: 17
+                                            }, this),
+                                            /*#__PURE__*/ _jsxDEV(RateMetric, {
+                                                label: "Max stay",
+                                                value: room.max_stay ? `${room.max_stay} nights` : "No max"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                                                lineNumber: 46,
+                                                columnNumber: 17
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                                        lineNumber: 40,
+                                        columnNumber: 15
+                                    }, this),
+                                    /*#__PURE__*/ _jsxDEV("div", {
+                                        className: "mt-3 flex flex-wrap gap-1.5",
+                                        children: [
+                                            (room.seasonal_rates || []).length ? /*#__PURE__*/ _jsxDEV(Badge, {
+                                                variant: "outline",
+                                                children: [
+                                                    room.seasonal_rates?.length,
+                                                    " seasonal rate",
+                                                    room.seasonal_rates?.length === 1 ? "" : "s"
+                                                ]
+                                            }, void 0, true, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                                                lineNumber: 49,
+                                                columnNumber: 55
+                                            }, this) : /*#__PURE__*/ _jsxDEV(Badge, {
+                                                variant: "outline",
+                                                children: "No seasonal rates"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                                                lineNumber: 49,
+                                                columnNumber: 180
+                                            }, this),
+                                            (room.no_arrival_weekdays || []).length ? room.no_arrival_weekdays?.map((day)=>/*#__PURE__*/ _jsxDEV(Badge, {
+                                                    variant: "outline",
+                                                    children: [
+                                                        "No ",
+                                                        weekdays[day]
+                                                    ]
+                                                }, day, true, {
+                                                    fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                                                    lineNumber: 50,
+                                                    columnNumber: 99
+                                                }, this)) : /*#__PURE__*/ _jsxDEV(Badge, {
+                                                variant: "outline",
+                                                children: "All arrival days"
+                                            }, void 0, false, {
+                                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                                                lineNumber: 50,
+                                                columnNumber: 164
+                                            }, this)
+                                        ]
+                                    }, void 0, true, {
+                                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                                        lineNumber: 48,
+                                        columnNumber: 15
+                                    }, this)
+                                ]
+                            }, room.id, true, {
+                                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                                lineNumber: 32,
+                                columnNumber: 13
+                            }, this))
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                        lineNumber: 30,
+                        columnNumber: 9
+                    }, this),
+                    /*#__PURE__*/ _jsxDEV(NextActions, {
+                        actions: [
+                            {
+                                label: "Edit room inventory",
+                                tab: "lodge-rooms",
+                                hint: "Update units, base rates, discounts, and stay rules."
+                            },
+                            {
+                                label: "Open availability calendar",
+                                tab: "lodge-calendar",
+                                hint: "Review active inventory and arrival restrictions."
+                            },
+                            {
+                                label: "Check reservations",
+                                tab: "lodge-reservations",
+                                hint: "Confirm rates are visible in booking workflows."
+                            }
+                        ]
+                    }, void 0, false, {
+                        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                        lineNumber: 55,
+                        columnNumber: 9
+                    }, this)
+                ]
+            }, void 0, true)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+        lineNumber: 19,
+        columnNumber: 5
+    }, this);
+}
+_s(LodgingRatePlansSection, "Tk+qmHesT7vG679vdUs8ByC0kj0=", false, function() {
+    return [
+        useLodgeRooms
+    ];
+});
+_c = LodgingRatePlansSection;
+function RateMetric({ label, value }) {
+    return /*#__PURE__*/ _jsxDEV("div", {
+        className: "rounded-md bg-muted/30 p-2",
+        children: [
+            /*#__PURE__*/ _jsxDEV("p", {
+                className: "text-[10px] font-semibold uppercase tracking-[0.12em] text-muted-foreground",
+                children: label
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                lineNumber: 62,
+                columnNumber: 54
+            }, this),
+            /*#__PURE__*/ _jsxDEV("p", {
+                className: "mt-1 font-semibold text-foreground",
+                children: value
+            }, void 0, false, {
+                fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+                lineNumber: 62,
+                columnNumber: 156
+            }, this)
+        ]
+    }, void 0, true, {
+        fileName: "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx",
+        lineNumber: 62,
+        columnNumber: 10
+    }, this);
+}
+_c1 = RateMetric;
+var _c, _c1;
+$RefreshReg$(_c, "LodgingRatePlansSection");
+$RefreshReg$(_c1, "RateMetric");
+
+
+import * as RefreshRuntime from "/@react-refresh";
+const inWebWorker = typeof WorkerGlobalScope !== 'undefined' && self instanceof WorkerGlobalScope;
+if (import.meta.hot && !inWebWorker) {
+  if (!window.$RefreshReg$) {
+    throw new Error(
+      "@vitejs/plugin-react-swc can't detect preamble. Something is wrong."
+    );
+  }
+
+  RefreshRuntime.__hmr_import(import.meta.url).then((currentExports) => {
+    RefreshRuntime.registerExportsForReactRefresh("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx", currentExports);
+    import.meta.hot.accept((nextExports) => {
+      if (!nextExports) return;
+      const invalidateMessage = RefreshRuntime.validateRefreshBoundaryAndEnqueueUpdate("C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx", currentExports, nextExports);
+      if (invalidateMessage) import.meta.hot.invalidate(invalidateMessage);
+    });
+  });
+}
+function $RefreshReg$(type, id) { return RefreshRuntime.register(type, "C:/Users/abiga/OneDrive/Documents/GitHub/myzivo/src/components/admin/store/lodging/LodgingRatePlansSection.tsx" + ' ' + id) }
+function $RefreshSig$() { return RefreshRuntime.createSignatureFunctionForTransform(); }
+
+//# sourceMappingURL=data:application/json;base64,eyJ2ZXJzaW9uIjozLCJzb3VyY2VzIjpbIkxvZGdpbmdSYXRlUGxhbnNTZWN0aW9uLnRzeCJdLCJzb3VyY2VzQ29udGVudCI6WyJpbXBvcnQgeyBCYWRnZSB9IGZyb20gXCJAL2NvbXBvbmVudHMvdWkvYmFkZ2VcIjtcclxuaW1wb3J0IHsgQnV0dG9uIH0gZnJvbSBcIkAvY29tcG9uZW50cy91aS9idXR0b25cIjtcclxuaW1wb3J0IHsgQmVkRG91YmxlLCBDYWxlbmRhckRheXMsIERvbGxhclNpZ24gfSBmcm9tIFwibHVjaWRlLXJlYWN0XCI7XHJcbmltcG9ydCB7IEVtcHR5UGFuZWwsIExvYWRpbmdQYW5lbCwgTmV4dEFjdGlvbnMsIFNlY3Rpb25TaGVsbCwgU3RhdENhcmQsIG1vbmV5IH0gZnJvbSBcIi4vTG9kZ2luZ09wZXJhdGlvbnNTaGFyZWRcIjtcclxuaW1wb3J0IHsgdXNlTG9kZ2VSb29tcyB9IGZyb20gXCJAL2hvb2tzL2xvZGdpbmcvdXNlTG9kZ2VSb29tc1wiO1xyXG5pbXBvcnQgTG9kZ2luZ1F1aWNrSnVtcCBmcm9tIFwiLi9Mb2RnaW5nUXVpY2tKdW1wXCI7XHJcbmltcG9ydCBMb2RnaW5nU2VjdGlvblN0YXR1c0Jhbm5lciBmcm9tIFwiLi9Mb2RnaW5nU2VjdGlvblN0YXR1c0Jhbm5lclwiO1xyXG5cclxuY29uc3Qgd2Vla2RheXMgPSBbXCJTdW5cIiwgXCJNb25cIiwgXCJUdWVcIiwgXCJXZWRcIiwgXCJUaHVcIiwgXCJGcmlcIiwgXCJTYXRcIl07XHJcbmNvbnN0IGdvUm9vbXMgPSAoKSA9PiB3aW5kb3cuZGlzcGF0Y2hFdmVudChuZXcgQ3VzdG9tRXZlbnQoXCJsb2RnZS1zZXQtdGFiXCIsIHsgZGV0YWlsOiB7IHRhYjogXCJsb2RnZS1yb29tc1wiIH0gfSkpO1xyXG5cclxuZXhwb3J0IGRlZmF1bHQgZnVuY3Rpb24gTG9kZ2luZ1JhdGVQbGFuc1NlY3Rpb24oeyBzdG9yZUlkIH06IHsgc3RvcmVJZDogc3RyaW5nIH0pIHtcclxuICBjb25zdCB7IGRhdGE6IHJvb21zID0gW10sIGlzTG9hZGluZyB9ID0gdXNlTG9kZ2VSb29tcyhzdG9yZUlkKTtcclxuICBjb25zdCBhY3RpdmVSb29tcyA9IHJvb21zLmZpbHRlcigocm9vbSkgPT4gcm9vbS5pc19hY3RpdmUpO1xyXG4gIGNvbnN0IHNlYXNvbmFsQ291bnQgPSByb29tcy5yZWR1Y2UoKHN1bSwgcm9vbSkgPT4gc3VtICsgKHJvb20uc2Vhc29uYWxfcmF0ZXM/Lmxlbmd0aCB8fCAwKSwgMCk7XHJcbiAgY29uc3QgYXZnQmFzZSA9IGFjdGl2ZVJvb21zLmxlbmd0aCA/IGFjdGl2ZVJvb21zLnJlZHVjZSgoc3VtLCByb29tKSA9PiBzdW0gKyAocm9vbS5iYXNlX3JhdGVfY2VudHMgfHwgMCksIDApIC8gYWN0aXZlUm9vbXMubGVuZ3RoIDogMDtcclxuXHJcbiAgcmV0dXJuIChcclxuICAgIDxTZWN0aW9uU2hlbGwgdGl0bGU9XCJSYXRlIFBsYW5zICYgQXZhaWxhYmlsaXR5XCIgc3VidGl0bGU9XCJSb29tIHByaWNpbmcsIGludmVudG9yeSwgc2Vhc29uYWwgcmF0ZXMsIGRpc2NvdW50cywgYW5kIHN0YXkgcmVzdHJpY3Rpb25zIGZyb20gUm9vbXMgJiBSYXRlcy5cIiBpY29uPXtDYWxlbmRhckRheXN9IGFjdGlvbnM9ezxCdXR0b24gc2l6ZT1cInNtXCIgb25DbGljaz17Z29Sb29tc30+RWRpdCBSb29tcyAmIFJhdGVzPC9CdXR0b24+fT5cclxuICAgICAgPExvZGdpbmdRdWlja0p1bXAgYWN0aXZlPVwibG9kZ2UtcmF0ZS1wbGFuc1wiIC8+XHJcbiAgICAgIDxMb2RnaW5nU2VjdGlvblN0YXR1c0Jhbm5lciB0aXRsZT1cIlJhdGUgUGxhbnMgJiBBdmFpbGFiaWxpdHlcIiBpY29uPXtDYWxlbmRhckRheXN9IGNvdW50TGFiZWw9XCJBY3RpdmUgcm9vbSB0eXBlc1wiIGNvdW50VmFsdWU9e2FjdGl2ZVJvb21zLmxlbmd0aH0gZml4TGFiZWw9XCJPcGVuIFJvb21zXCIgZml4VGFiPVwibG9kZ2Utcm9vbXNcIiAvPlxyXG4gICAgICB7aXNMb2FkaW5nID8gPExvYWRpbmdQYW5lbCAvPiA6IHJvb21zLmxlbmd0aCA9PT0gMCA/IDxFbXB0eVBhbmVsIHRpdGxlPVwiTm8gcm9vbXMgdG8gcHJpY2UgeWV0XCIgYm9keT1cIkNyZWF0ZSByb29tIHR5cGVzIGZpcnN0LCB0aGVuIGFkZCBiYXNlIHJhdGVzLCB3ZWVrZW5kIHByaWNpbmcsIHNlYXNvbmFsIHJ1bGVzLCBhbmQgdW5pdCBpbnZlbnRvcnkuXCIgYWN0aW9uTGFiZWw9XCJPcGVuIFJvb21zICYgUmF0ZXNcIiB0YWI9XCJsb2RnZS1yb29tc1wiIC8+IDogPD5cclxuICAgICAgICB7YWN0aXZlUm9vbXMuc29tZSgocm9vbSkgPT4gIXJvb20uYmFzZV9yYXRlX2NlbnRzIHx8ICFyb29tLnVuaXRzX3RvdGFsKSAmJiA8ZGl2IGNsYXNzTmFtZT1cInJvdW5kZWQtbGcgYm9yZGVyIGJvcmRlci1wcmltYXJ5LzIwIGJnLXByaW1hcnkvNSBwLTNcIj48cCBjbGFzc05hbWU9XCJ0ZXh0LXNtIGZvbnQtc2VtaWJvbGQgdGV4dC1mb3JlZ3JvdW5kXCI+UmF0ZSByZWFkaW5lc3MgbmVlZHMgYXR0ZW50aW9uPC9wPjxwIGNsYXNzTmFtZT1cIm10LTEgdGV4dC14cyB0ZXh0LW11dGVkLWZvcmVncm91bmRcIj5BZGQgYmFzZSByYXRlcyBhbmQgdW5pdCBpbnZlbnRvcnkgdG8gZXZlcnkgYWN0aXZlIHJvb20gc28gYXZhaWxhYmlsaXR5IGFuZCBib29raW5nIGZsb3dzIHN0YXkgYWNjdXJhdGUuPC9wPjxCdXR0b24gc2l6ZT1cInNtXCIgY2xhc3NOYW1lPVwibXQtMyBoLThcIiBvbkNsaWNrPXtnb1Jvb21zfT5VcGRhdGUgcm9vbSBwcmljaW5nPC9CdXR0b24+PC9kaXY+fVxyXG4gICAgICAgIDxkaXYgY2xhc3NOYW1lPVwiZ3JpZCBnYXAtMyBzbTpncmlkLWNvbHMtMiB4bDpncmlkLWNvbHMtNFwiPlxyXG4gICAgICAgICAgPFN0YXRDYXJkIGxhYmVsPVwiQWN0aXZlIHJvb20gdHlwZXNcIiB2YWx1ZT17U3RyaW5nKGFjdGl2ZVJvb21zLmxlbmd0aCl9IGljb249e0JlZERvdWJsZX0gLz5cclxuICAgICAgICAgIDxTdGF0Q2FyZCBsYWJlbD1cIlRvdGFsIHVuaXRzXCIgdmFsdWU9e1N0cmluZyhyb29tcy5yZWR1Y2UoKHN1bSwgcm9vbSkgPT4gc3VtICsgKHJvb20udW5pdHNfdG90YWwgfHwgMCksIDApKX0gaWNvbj17QmVkRG91YmxlfSAvPlxyXG4gICAgICAgICAgPFN0YXRDYXJkIGxhYmVsPVwiQXZlcmFnZSBiYXNlIHJhdGVcIiB2YWx1ZT17bW9uZXkoYXZnQmFzZSl9IGljb249e0RvbGxhclNpZ259IC8+XHJcbiAgICAgICAgICA8U3RhdENhcmQgbGFiZWw9XCJTZWFzb25hbCBwbGFuc1wiIHZhbHVlPXtTdHJpbmcoc2Vhc29uYWxDb3VudCl9IGljb249e0NhbGVuZGFyRGF5c30gLz5cclxuICAgICAgICA8L2Rpdj5cclxuICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImdyaWQgZ2FwLTMgbGc6Z3JpZC1jb2xzLTJcIj5cclxuICAgICAgICAgIHtyb29tcy5tYXAoKHJvb20pID0+IChcclxuICAgICAgICAgICAgPGRpdiBrZXk9e3Jvb20uaWR9IGNsYXNzTmFtZT1cInJvdW5kZWQtbGcgYm9yZGVyIGJvcmRlci1ib3JkZXIgYmctY2FyZCBwLTNcIj5cclxuICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cImZsZXggaXRlbXMtc3RhcnQganVzdGlmeS1iZXR3ZWVuIGdhcC0zXCI+XHJcbiAgICAgICAgICAgICAgICA8ZGl2IGNsYXNzTmFtZT1cIm1pbi13LTBcIj5cclxuICAgICAgICAgICAgICAgICAgPHAgY2xhc3NOYW1lPVwidHJ1bmNhdGUgdGV4dC1zbSBmb250LXNlbWlib2xkIHRleHQtZm9yZWdyb3VuZFwiPntyb29tLm5hbWV9PC9wPlxyXG4gICAgICAgICAgICAgICAgICA8cCBjbGFzc05hbWU9XCJ0ZXh0LXhzIHRleHQtbXV0ZWQtZm9yZWdyb3VuZFwiPntyb29tLnVuaXRzX3RvdGFsIHx8IDB9IHVuaXR7cm9vbS51bml0c190b3RhbCA9PT0gMSA/IFwiXCIgOiBcInNcIn0gwrcgdXAgdG8ge3Jvb20ubWF4X2d1ZXN0c30gZ3Vlc3RzPC9wPlxyXG4gICAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgICA8QmFkZ2UgdmFyaWFudD17cm9vbS5pc19hY3RpdmUgPyBcInNlY29uZGFyeVwiIDogXCJvdXRsaW5lXCJ9Pntyb29tLmlzX2FjdGl2ZSA/IFwiQWN0aXZlXCIgOiBcIkhpZGRlblwifTwvQmFkZ2U+XHJcbiAgICAgICAgICAgICAgPC9kaXY+XHJcbiAgICAgICAgICAgICAgPGRpdiBjbGFzc05hbWU9XCJtdC0zIGdyaWQgZ3JpZC1jb2xzLTIgZ2FwLTIgdGV4dC14c1wiPlxyXG4gICAgICAgICAgICAgICAgPFJhdGVNZXRyaWMgbGFiZWw9XCJCYXNlXCIgdmFsdWU9e21vbmV5KHJvb20uYmFzZV9yYXRlX2NlbnRzKX0gLz5cclxuICAgICAgICAgICAgICAgIDxSYXRlTWV0cmljIGxhYmVsPVwiV2Vla2VuZFwiIHZhbHVlPXttb25leShyb29tLndlZWtlbmRfcmF0ZV9jZW50cyB8fCByb29tLmJhc2VfcmF0ZV9jZW50cyl9IC8+XHJcbiAgICAgICAgICAgICAgICA8UmF0ZU1ldHJpYyBsYWJlbD1cIldlZWtseVwiIHZhbHVlPXtgJHtyb29tLndlZWtseV9kaXNjb3VudF9wY3QgfHwgMH0lIG9mZmB9IC8+XHJcbiAgICAgICAgICAgICAgICA8UmF0ZU1ldHJpYyBsYWJlbD1cIk1vbnRobHlcIiB2YWx1ZT17YCR7cm9vbS5tb250aGx5X2Rpc2NvdW50X3BjdCB8fCAwfSUgb2ZmYH0gLz5cclxuICAgICAgICAgICAgICAgIDxSYXRlTWV0cmljIGxhYmVsPVwiTWluIHN0YXlcIiB2YWx1ZT17YCR7cm9vbS5taW5fc3RheSB8fCAxfSBuaWdodCR7KHJvb20ubWluX3N0YXkgfHwgMSkgPT09IDEgPyBcIlwiIDogXCJzXCJ9YH0gLz5cclxuICAgICAgICAgICAgICAgIDxSYXRlTWV0cmljIGxhYmVsPVwiTWF4IHN0YXlcIiB2YWx1ZT17cm9vbS5tYXhfc3RheSA/IGAke3Jvb20ubWF4X3N0YXl9IG5pZ2h0c2AgOiBcIk5vIG1heFwifSAvPlxyXG4gICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICAgIDxkaXYgY2xhc3NOYW1lPVwibXQtMyBmbGV4IGZsZXgtd3JhcCBnYXAtMS41XCI+XHJcbiAgICAgICAgICAgICAgICB7KHJvb20uc2Vhc29uYWxfcmF0ZXMgfHwgW10pLmxlbmd0aCA/IDxCYWRnZSB2YXJpYW50PVwib3V0bGluZVwiPntyb29tLnNlYXNvbmFsX3JhdGVzPy5sZW5ndGh9IHNlYXNvbmFsIHJhdGV7cm9vbS5zZWFzb25hbF9yYXRlcz8ubGVuZ3RoID09PSAxID8gXCJcIiA6IFwic1wifTwvQmFkZ2U+IDogPEJhZGdlIHZhcmlhbnQ9XCJvdXRsaW5lXCI+Tm8gc2Vhc29uYWwgcmF0ZXM8L0JhZGdlPn1cclxuICAgICAgICAgICAgICAgIHsocm9vbS5ub19hcnJpdmFsX3dlZWtkYXlzIHx8IFtdKS5sZW5ndGggPyByb29tLm5vX2Fycml2YWxfd2Vla2RheXM/Lm1hcCgoZGF5KSA9PiA8QmFkZ2Uga2V5PXtkYXl9IHZhcmlhbnQ9XCJvdXRsaW5lXCI+Tm8ge3dlZWtkYXlzW2RheV19PC9CYWRnZT4pIDogPEJhZGdlIHZhcmlhbnQ9XCJvdXRsaW5lXCI+QWxsIGFycml2YWwgZGF5czwvQmFkZ2U+fVxyXG4gICAgICAgICAgICAgIDwvZGl2PlxyXG4gICAgICAgICAgICA8L2Rpdj5cclxuICAgICAgICAgICkpfVxyXG4gICAgICAgIDwvZGl2PlxyXG4gICAgICAgIDxOZXh0QWN0aW9ucyBhY3Rpb25zPXtbeyBsYWJlbDogXCJFZGl0IHJvb20gaW52ZW50b3J5XCIsIHRhYjogXCJsb2RnZS1yb29tc1wiLCBoaW50OiBcIlVwZGF0ZSB1bml0cywgYmFzZSByYXRlcywgZGlzY291bnRzLCBhbmQgc3RheSBydWxlcy5cIiB9LCB7IGxhYmVsOiBcIk9wZW4gYXZhaWxhYmlsaXR5IGNhbGVuZGFyXCIsIHRhYjogXCJsb2RnZS1jYWxlbmRhclwiLCBoaW50OiBcIlJldmlldyBhY3RpdmUgaW52ZW50b3J5IGFuZCBhcnJpdmFsIHJlc3RyaWN0aW9ucy5cIiB9LCB7IGxhYmVsOiBcIkNoZWNrIHJlc2VydmF0aW9uc1wiLCB0YWI6IFwibG9kZ2UtcmVzZXJ2YXRpb25zXCIsIGhpbnQ6IFwiQ29uZmlybSByYXRlcyBhcmUgdmlzaWJsZSBpbiBib29raW5nIHdvcmtmbG93cy5cIiB9XX0gLz5cclxuICAgICAgPC8+fVxyXG4gICAgPC9TZWN0aW9uU2hlbGw+XHJcbiAgKTtcclxufVxyXG5cclxuZnVuY3Rpb24gUmF0ZU1ldHJpYyh7IGxhYmVsLCB2YWx1ZSB9OiB7IGxhYmVsOiBzdHJpbmc7IHZhbHVlOiBzdHJpbmcgfSkge1xyXG4gIHJldHVybiA8ZGl2IGNsYXNzTmFtZT1cInJvdW5kZWQtbWQgYmctbXV0ZWQvMzAgcC0yXCI+PHAgY2xhc3NOYW1lPVwidGV4dC1bMTBweF0gZm9udC1zZW1pYm9sZCB1cHBlcmNhc2UgdHJhY2tpbmctWzAuMTJlbV0gdGV4dC1tdXRlZC1mb3JlZ3JvdW5kXCI+e2xhYmVsfTwvcD48cCBjbGFzc05hbWU9XCJtdC0xIGZvbnQtc2VtaWJvbGQgdGV4dC1mb3JlZ3JvdW5kXCI+e3ZhbHVlfTwvcD48L2Rpdj47XHJcbn1cclxuIl0sIm5hbWVzIjpbIkJhZGdlIiwiQnV0dG9uIiwiQmVkRG91YmxlIiwiQ2FsZW5kYXJEYXlzIiwiRG9sbGFyU2lnbiIsIkVtcHR5UGFuZWwiLCJMb2FkaW5nUGFuZWwiLCJOZXh0QWN0aW9ucyIsIlNlY3Rpb25TaGVsbCIsIlN0YXRDYXJkIiwibW9uZXkiLCJ1c2VMb2RnZVJvb21zIiwiTG9kZ2luZ1F1aWNrSnVtcCIsIkxvZGdpbmdTZWN0aW9uU3RhdHVzQmFubmVyIiwid2Vla2RheXMiLCJnb1Jvb21zIiwid2luZG93IiwiZGlzcGF0Y2hFdmVudCIsIkN1c3RvbUV2ZW50IiwiZGV0YWlsIiwidGFiIiwiTG9kZ2luZ1JhdGVQbGFuc1NlY3Rpb24iLCJzdG9yZUlkIiwiZGF0YSIsInJvb21zIiwiaXNMb2FkaW5nIiwiYWN0aXZlUm9vbXMiLCJmaWx0ZXIiLCJyb29tIiwiaXNfYWN0aXZlIiwic2Vhc29uYWxDb3VudCIsInJlZHVjZSIsInN1bSIsInNlYXNvbmFsX3JhdGVzIiwibGVuZ3RoIiwiYXZnQmFzZSIsImJhc2VfcmF0ZV9jZW50cyIsInRpdGxlIiwic3VidGl0bGUiLCJpY29uIiwiYWN0aW9ucyIsInNpemUiLCJvbkNsaWNrIiwiYWN0aXZlIiwiY291bnRMYWJlbCIsImNvdW50VmFsdWUiLCJmaXhMYWJlbCIsImZpeFRhYiIsImJvZHkiLCJhY3Rpb25MYWJlbCIsInNvbWUiLCJ1bml0c190b3RhbCIsImRpdiIsImNsYXNzTmFtZSIsInAiLCJsYWJlbCIsInZhbHVlIiwiU3RyaW5nIiwibWFwIiwibmFtZSIsIm1heF9ndWVzdHMiLCJ2YXJpYW50IiwiUmF0ZU1ldHJpYyIsIndlZWtlbmRfcmF0ZV9jZW50cyIsIndlZWtseV9kaXNjb3VudF9wY3QiLCJtb250aGx5X2Rpc2NvdW50X3BjdCIsIm1pbl9zdGF5IiwibWF4X3N0YXkiLCJub19hcnJpdmFsX3dlZWtkYXlzIiwiZGF5IiwiaWQiLCJoaW50Il0sIm1hcHBpbmdzIjoiOztBQUFBLFNBQVNBLEtBQUssUUFBUSx3QkFBd0I7QUFDOUMsU0FBU0MsTUFBTSxRQUFRLHlCQUF5QjtBQUNoRCxTQUFTQyxTQUFTLEVBQUVDLFlBQVksRUFBRUMsVUFBVSxRQUFRLGVBQWU7QUFDbkUsU0FBU0MsVUFBVSxFQUFFQyxZQUFZLEVBQUVDLFdBQVcsRUFBRUMsWUFBWSxFQUFFQyxRQUFRLEVBQUVDLEtBQUssUUFBUSw0QkFBNEI7QUFDakgsU0FBU0MsYUFBYSxRQUFRLGdDQUFnQztBQUM5RCxPQUFPQyxzQkFBc0IscUJBQXFCO0FBQ2xELE9BQU9DLGdDQUFnQywrQkFBK0I7QUFFdEUsTUFBTUMsV0FBVztJQUFDO0lBQU87SUFBTztJQUFPO0lBQU87SUFBTztJQUFPO0NBQU07QUFDbEUsTUFBTUMsVUFBVSxJQUFNQyxPQUFPQyxhQUFhLENBQUMsSUFBSUMsWUFBWSxpQkFBaUI7UUFBRUMsUUFBUTtZQUFFQyxLQUFLO1FBQWM7SUFBRTtBQUU3RyxlQUFlLFNBQVNDLHdCQUF3QixFQUFFQyxPQUFPLEVBQXVCOztJQUM5RSxNQUFNLEVBQUVDLE1BQU1DLFFBQVEsRUFBRSxFQUFFQyxTQUFTLEVBQUUsR0FBR2QsY0FBY1c7SUFDdEQsTUFBTUksY0FBY0YsTUFBTUcsTUFBTSxDQUFDLENBQUNDLE9BQVNBLEtBQUtDLFNBQVM7SUFDekQsTUFBTUMsZ0JBQWdCTixNQUFNTyxNQUFNLENBQUMsQ0FBQ0MsS0FBS0osT0FBU0ksTUFBT0osQ0FBQUEsS0FBS0ssY0FBYyxFQUFFQyxVQUFVLENBQUEsR0FBSTtJQUM1RixNQUFNQyxVQUFVVCxZQUFZUSxNQUFNLEdBQUdSLFlBQVlLLE1BQU0sQ0FBQyxDQUFDQyxLQUFLSixPQUFTSSxNQUFPSixDQUFBQSxLQUFLUSxlQUFlLElBQUksQ0FBQSxHQUFJLEtBQUtWLFlBQVlRLE1BQU0sR0FBRztJQUVwSSxxQkFDRSxRQUFDMUI7UUFBYTZCLE9BQU07UUFBNEJDLFVBQVM7UUFBZ0dDLE1BQU1wQztRQUFjcUMsdUJBQVMsUUFBQ3ZDO1lBQU93QyxNQUFLO1lBQUtDLFNBQVMzQjtzQkFBUzs7Ozs7OzswQkFDeE4sUUFBQ0g7Z0JBQWlCK0IsUUFBTzs7Ozs7OzBCQUN6QixRQUFDOUI7Z0JBQTJCd0IsT0FBTTtnQkFBNEJFLE1BQU1wQztnQkFBY3lDLFlBQVc7Z0JBQW9CQyxZQUFZbkIsWUFBWVEsTUFBTTtnQkFBRVksVUFBUztnQkFBYUMsUUFBTzs7Ozs7O1lBQzdLdEIsMEJBQVksUUFBQ25COzs7O3VCQUFrQmtCLE1BQU1VLE1BQU0sS0FBSyxrQkFBSSxRQUFDN0I7Z0JBQVdnQyxPQUFNO2dCQUF3QlcsTUFBSztnQkFBcUdDLGFBQVk7Z0JBQXFCN0IsS0FBSTs7Ozs7cUNBQW1COztvQkFDOVBNLFlBQVl3QixJQUFJLENBQUMsQ0FBQ3RCLE9BQVMsQ0FBQ0EsS0FBS1EsZUFBZSxJQUFJLENBQUNSLEtBQUt1QixXQUFXLG1CQUFLLFFBQUNDO3dCQUFJQyxXQUFVOzswQ0FBdUQsUUFBQ0M7Z0NBQUVELFdBQVU7MENBQXdDOzs7Ozs7MENBQWtDLFFBQUNDO2dDQUFFRCxXQUFVOzBDQUFxQzs7Ozs7OzBDQUEyRyxRQUFDcEQ7Z0NBQU93QyxNQUFLO2dDQUFLWSxXQUFVO2dDQUFXWCxTQUFTM0I7MENBQVM7Ozs7Ozs7Ozs7OztrQ0FDOWIsUUFBQ3FDO3dCQUFJQyxXQUFVOzswQ0FDYixRQUFDNUM7Z0NBQVM4QyxPQUFNO2dDQUFvQkMsT0FBT0MsT0FBTy9CLFlBQVlRLE1BQU07Z0NBQUdLLE1BQU1yQzs7Ozs7OzBDQUM3RSxRQUFDTztnQ0FBUzhDLE9BQU07Z0NBQWNDLE9BQU9DLE9BQU9qQyxNQUFNTyxNQUFNLENBQUMsQ0FBQ0MsS0FBS0osT0FBU0ksTUFBT0osQ0FBQUEsS0FBS3VCLFdBQVcsSUFBSSxDQUFBLEdBQUk7Z0NBQUtaLE1BQU1yQzs7Ozs7OzBDQUNsSCxRQUFDTztnQ0FBUzhDLE9BQU07Z0NBQW9CQyxPQUFPOUMsTUFBTXlCO2dDQUFVSSxNQUFNbkM7Ozs7OzswQ0FDakUsUUFBQ0s7Z0NBQVM4QyxPQUFNO2dDQUFpQkMsT0FBT0MsT0FBTzNCO2dDQUFnQlMsTUFBTXBDOzs7Ozs7Ozs7Ozs7a0NBRXZFLFFBQUNpRDt3QkFBSUMsV0FBVTtrQ0FDWjdCLE1BQU1rQyxHQUFHLENBQUMsQ0FBQzlCLHFCQUNWLFFBQUN3QjtnQ0FBa0JDLFdBQVU7O2tEQUMzQixRQUFDRDt3Q0FBSUMsV0FBVTs7MERBQ2IsUUFBQ0Q7Z0RBQUlDLFdBQVU7O2tFQUNiLFFBQUNDO3dEQUFFRCxXQUFVO2tFQUFrRHpCLEtBQUsrQixJQUFJOzs7Ozs7a0VBQ3hFLFFBQUNMO3dEQUFFRCxXQUFVOzs0REFBaUN6QixLQUFLdUIsV0FBVyxJQUFJOzREQUFFOzREQUFNdkIsS0FBS3VCLFdBQVcsS0FBSyxJQUFJLEtBQUs7NERBQUk7NERBQVV2QixLQUFLZ0MsVUFBVTs0REFBQzs7Ozs7Ozs7Ozs7OzswREFFeEksUUFBQzVEO2dEQUFNNkQsU0FBU2pDLEtBQUtDLFNBQVMsR0FBRyxjQUFjOzBEQUFZRCxLQUFLQyxTQUFTLEdBQUcsV0FBVzs7Ozs7Ozs7Ozs7O2tEQUV6RixRQUFDdUI7d0NBQUlDLFdBQVU7OzBEQUNiLFFBQUNTO2dEQUFXUCxPQUFNO2dEQUFPQyxPQUFPOUMsTUFBTWtCLEtBQUtRLGVBQWU7Ozs7OzswREFDMUQsUUFBQzBCO2dEQUFXUCxPQUFNO2dEQUFVQyxPQUFPOUMsTUFBTWtCLEtBQUttQyxrQkFBa0IsSUFBSW5DLEtBQUtRLGVBQWU7Ozs7OzswREFDeEYsUUFBQzBCO2dEQUFXUCxPQUFNO2dEQUFTQyxPQUFPLEdBQUc1QixLQUFLb0MsbUJBQW1CLElBQUksRUFBRSxLQUFLLENBQUM7Ozs7OzswREFDekUsUUFBQ0Y7Z0RBQVdQLE9BQU07Z0RBQVVDLE9BQU8sR0FBRzVCLEtBQUtxQyxvQkFBb0IsSUFBSSxFQUFFLEtBQUssQ0FBQzs7Ozs7OzBEQUMzRSxRQUFDSDtnREFBV1AsT0FBTTtnREFBV0MsT0FBTyxHQUFHNUIsS0FBS3NDLFFBQVEsSUFBSSxFQUFFLE1BQU0sRUFBRSxBQUFDdEMsQ0FBQUEsS0FBS3NDLFFBQVEsSUFBSSxDQUFBLE1BQU8sSUFBSSxLQUFLLEtBQUs7Ozs7OzswREFDekcsUUFBQ0o7Z0RBQVdQLE9BQU07Z0RBQVdDLE9BQU81QixLQUFLdUMsUUFBUSxHQUFHLEdBQUd2QyxLQUFLdUMsUUFBUSxDQUFDLE9BQU8sQ0FBQyxHQUFHOzs7Ozs7Ozs7Ozs7a0RBRWxGLFFBQUNmO3dDQUFJQyxXQUFVOzs0Q0FDWHpCLENBQUFBLEtBQUtLLGNBQWMsSUFBSSxFQUFFLEFBQUQsRUFBR0MsTUFBTSxpQkFBRyxRQUFDbEM7Z0RBQU02RCxTQUFROztvREFBV2pDLEtBQUtLLGNBQWMsRUFBRUM7b0RBQU87b0RBQWVOLEtBQUtLLGNBQWMsRUFBRUMsV0FBVyxJQUFJLEtBQUs7Ozs7OztxRUFBZSxRQUFDbEM7Z0RBQU02RCxTQUFROzBEQUFVOzs7Ozs7NENBQzFMakMsQ0FBQUEsS0FBS3dDLG1CQUFtQixJQUFJLEVBQUUsQUFBRCxFQUFHbEMsTUFBTSxHQUFHTixLQUFLd0MsbUJBQW1CLEVBQUVWLElBQUksQ0FBQ1csb0JBQVEsUUFBQ3JFO29EQUFnQjZELFNBQVE7O3dEQUFVO3dEQUFJL0MsUUFBUSxDQUFDdUQsSUFBSTs7bURBQXhDQTs7OzswRUFBcUQsUUFBQ3JFO2dEQUFNNkQsU0FBUTswREFBVTs7Ozs7Ozs7Ozs7OzsrQkFsQnRLakMsS0FBSzBDLEVBQUU7Ozs7Ozs7Ozs7a0NBdUJyQixRQUFDL0Q7d0JBQVlpQyxTQUFTOzRCQUFDO2dDQUFFZSxPQUFPO2dDQUF1Qm5DLEtBQUs7Z0NBQWVtRCxNQUFNOzRCQUF1RDs0QkFBRztnQ0FBRWhCLE9BQU87Z0NBQThCbkMsS0FBSztnQ0FBa0JtRCxNQUFNOzRCQUFvRDs0QkFBRztnQ0FBRWhCLE9BQU87Z0NBQXNCbkMsS0FBSztnQ0FBc0JtRCxNQUFNOzRCQUFrRDt5QkFBRTs7Ozs7Ozs7Ozs7Ozs7QUFJbFk7R0EvQ3dCbEQ7O1FBQ2tCVjs7O0tBRGxCVTtBQWlEeEIsU0FBU3lDLFdBQVcsRUFBRVAsS0FBSyxFQUFFQyxLQUFLLEVBQW9DO0lBQ3BFLHFCQUFPLFFBQUNKO1FBQUlDLFdBQVU7OzBCQUE2QixRQUFDQztnQkFBRUQsV0FBVTswQkFBK0VFOzs7Ozs7MEJBQVUsUUFBQ0Q7Z0JBQUVELFdBQVU7MEJBQXNDRzs7Ozs7Ozs7Ozs7O0FBQzlNO01BRlNNIn0=

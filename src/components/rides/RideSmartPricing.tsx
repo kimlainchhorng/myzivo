@@ -2,6 +2,7 @@
  * RideSmartPricing — Dynamic fare estimates, surge alerts, price lock & fare splitting
  */
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { DollarSign, Lock, TrendingUp, TrendingDown, Users, Bell, Zap, Clock, Shield } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -27,6 +28,7 @@ const fareBreakdown = [
 ];
 
 export default function RideSmartPricing() {
+  const navigate = useNavigate();
   const [priceLocked, setPriceLocked] = useState(false);
   const [surgeAlerts, setSurgeAlerts] = useState(true);
   const [splitCount, setSplitCount] = useState(1);
@@ -211,7 +213,7 @@ export default function RideSmartPricing() {
                   ))}
                 </div>
 
-                <Button className="w-full" onClick={() => toast.success(`Split request sent to ${splitCount} riders`)}>
+                <Button className="w-full" onClick={() => navigate("/chat", { state: { splitRequest: { amount: perPerson, riders: splitCount } } })}>
                   <Users className="w-4 h-4 mr-2" /> Send Split Request
                 </Button>
               </CardContent>

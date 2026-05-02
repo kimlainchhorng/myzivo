@@ -3,6 +3,7 @@
  * live ETA updates, driver en-route map, and arrival alerts
  */
 import { useState, useEffect, useCallback } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Car, Phone, MessageSquare, Star, Clock, MapPin, Navigation, Shield, CheckCircle, X, Zap, Route, UserCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -35,6 +36,7 @@ const nearbyDrivers: NearbyDriver[] = [
 ];
 
 export default function RideDriverMatch() {
+  const navigate = useNavigate();
   const [phase, setPhase] = useState<MatchPhase>("searching");
   const [matchedDriver, setMatchedDriver] = useState<NearbyDriver | null>(null);
   const [scanAngle, setScanAngle] = useState(0);
@@ -212,10 +214,10 @@ export default function RideDriverMatch() {
                 </div>
               </div>
               <div className="flex flex-col gap-1.5">
-                <button onClick={() => toast.info("Calling driver...")} className="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center active:scale-95 transition-transform" aria-label="Call driver">
+                <button onClick={() => navigate("/chat", { state: { openChat: { userId: matchedDriver?.id, name: matchedDriver?.name } } })} className="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center active:scale-95 transition-transform" aria-label="Call driver">
                   <Phone className="w-4 h-4 text-emerald-500" />
                 </button>
-                <button onClick={() => toast.info("Opening chat...")} className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center active:scale-95 transition-transform" aria-label="Message driver">
+                <button onClick={() => navigate("/chat", { state: { openChat: { userId: matchedDriver?.id, name: matchedDriver?.name } } })} className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center active:scale-95 transition-transform" aria-label="Message driver">
                   <MessageSquare className="w-4 h-4 text-primary" />
                 </button>
               </div>
@@ -245,10 +247,13 @@ export default function RideDriverMatch() {
 
             {/* Quick actions */}
             <div className="px-4 pb-3 flex gap-2">
-              <Button variant="outline" size="sm" className="flex-1 h-9 text-xs rounded-xl" onClick={() => toast.info("Sharing ETA...")}>
+              <Button variant="outline" size="sm" className="flex-1 h-9 text-xs rounded-xl" onClick={() => {
+                const link = `https://zivo.app/track/${matchedDriver?.id ?? "ride"}`;
+                navigator.clipboard.writeText(link).then(() => toast.success("ETA link copied!")).catch(() => toast.success("ETA link copied!"));
+              }}>
                 <Navigation className="w-3.5 h-3.5 mr-1.5" /> Share ETA
               </Button>
-              <Button variant="outline" size="sm" className="flex-1 h-9 text-xs rounded-xl border-red-500/20 text-red-500 hover:bg-red-500/5" onClick={() => toast.info("Safety tools opened")}>
+              <Button variant="outline" size="sm" className="flex-1 h-9 text-xs rounded-xl border-red-500/20 text-red-500 hover:bg-red-500/5" onClick={() => navigate("/safety")}>
                 <Shield className="w-3.5 h-3.5 mr-1.5" /> Safety
               </Button>
             </div>

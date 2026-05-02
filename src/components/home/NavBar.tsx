@@ -5,13 +5,36 @@
 import { useNavigate, Link, useLocation } from "react-router-dom";
 import { forwardRef } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Plane, Hotel, CarFront, Car, UtensilsCrossed, Package,
-  Menu, X, User, ChevronDown, HelpCircle,
-  Sparkles, Users, Award, Crown, LogOut, UserCircle, Briefcase, Globe, Check
-} from "lucide-react";
+import Plane from "lucide-react/dist/esm/icons/plane";
+import Hotel from "lucide-react/dist/esm/icons/hotel";
+import CarFront from "lucide-react/dist/esm/icons/car-front";
+import Car from "lucide-react/dist/esm/icons/car";
+import UtensilsCrossed from "lucide-react/dist/esm/icons/utensils-crossed";
+import Package from "lucide-react/dist/esm/icons/package";
+import Menu from "lucide-react/dist/esm/icons/menu";
+import X from "lucide-react/dist/esm/icons/x";
+import User from "lucide-react/dist/esm/icons/user";
+import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
+import HelpCircle from "lucide-react/dist/esm/icons/help-circle";
+import Sparkles from "lucide-react/dist/esm/icons/sparkles";
+import Users from "lucide-react/dist/esm/icons/users";
+import Award from "lucide-react/dist/esm/icons/award";
+import Crown from "lucide-react/dist/esm/icons/crown";
+import LogOut from "lucide-react/dist/esm/icons/log-out";
+import UserCircle from "lucide-react/dist/esm/icons/user-circle";
+import Briefcase from "lucide-react/dist/esm/icons/briefcase";
+import Building2 from "lucide-react/dist/esm/icons/building-2";
+import Globe from "lucide-react/dist/esm/icons/globe";
+import Check from "lucide-react/dist/esm/icons/check";
+import Newspaper from "lucide-react/dist/esm/icons/newspaper";
+import Film from "lucide-react/dist/esm/icons/film";
+import MapPin from "lucide-react/dist/esm/icons/map-pin";
+import MessageCircle from "lucide-react/dist/esm/icons/message-circle";
+import Rss from "lucide-react/dist/esm/icons/rss";
+import Search from "lucide-react/dist/esm/icons/search";
 import { useState, useRef, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { useMembership } from "@/hooks/useMembership";
 import { ZivoPlusBadge } from "@/components/premium/ZivoPlusBadge";
 import {
@@ -24,23 +47,35 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import ZivoLogo from "@/components/ZivoLogo";
 import { cn } from "@/lib/utils";
+import { optimizeAvatar } from "@/utils/optimizeAvatar";
 import { motion, AnimatePresence } from "framer-motion";
 import CurrencySelector from "@/components/shared/CurrencySelector";
 import { useI18n } from "@/hooks/useI18n";
 import { useSupportedLanguages } from "@/hooks/useGlobalExpansion";
 
-import tabFlightsBg from "@/assets/tab-flights-bg.jpg";
-import tabHotelsBg from "@/assets/tab-hotels-bg.jpg";
-import tabCarsBg from "@/assets/tab-cars-bg.jpg";
-import tabRidesBg from "@/assets/tab-rides-bg.jpg";
-import tabEatsBg from "@/assets/tab-eats-bg.jpg";
+import { withRedirectParam } from "@/lib/authRedirect";
+import { useOwnerStores } from "@/hooks/useOwnerStoreProfile";
+import { resolveBusinessDashboardRoute } from "@/lib/business/dashboardRoute";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import Plus from "lucide-react/dist/esm/icons/plus";
 
 const serviceNavItems = [
-  { label: "Flights", href: "/flights", icon: Plane, cssVar: "var(--flights)", bg: tabFlightsBg },
-  { label: "Hotels", href: "/hotels", icon: Hotel, cssVar: "var(--hotels)", bg: tabHotelsBg },
-  { label: "Cars", href: "/rent-car", icon: CarFront, cssVar: "var(--cars)", bg: tabCarsBg },
-  { label: "Rides", href: "/rides", icon: Car, cssVar: "var(--rides)", bg: tabRidesBg },
-  { label: "Eats", href: "/eats", icon: UtensilsCrossed, cssVar: "var(--eats)", bg: tabEatsBg },
+  { label: "Flights", href: "/flights", icon: Plane, cssVar: "var(--flights)" },
+  { label: "Hotels", href: "/hotels", icon: Hotel, cssVar: "var(--hotels)" },
+  { label: "Cars", href: "/rent-car", icon: CarFront, cssVar: "var(--cars)" },
+];
+
+const directNavItems = [
+  { label: "Feed", href: "/feed", icon: Newspaper, cssVar: "var(--flights)" },
+  { label: "Reel", href: "/reels", icon: Film, cssVar: "var(--eats)" },
+  { label: "Chat", href: "__chat__", icon: MessageCircle, cssVar: "var(--rides)" },
+];
+
+const communityNavItems = [
+  { label: "Feed", description: "Posts & updates", href: "/feed", icon: Newspaper, color: "text-blue-500" },
+  { label: "Reels", description: "Short videos", href: "/reels", icon: Film, color: "text-pink-500" },
+  { label: "Chat", description: "Messages & conversations", href: "/chat", icon: MessageCircle, color: "text-emerald-500" },
+  { label: "Map", description: "Explore nearby stores", href: "/store-map", icon: MapPin, color: "text-orange-500" },
 ];
 
 const moreItems = [
@@ -62,16 +97,42 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
   const location = useLocation();
   const { user, signOut } = useAuth();
   const { isActive: isMember } = useMembership();
+  const { data: ownerStores = [] } = useOwnerStores();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [moreOpen, setMoreOpen] = useState(false);
+  const [socialOpen, setSocialOpen] = useState(false);
+  const [servicesOpen, setServicesOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isLangOpen, setIsLangOpen] = useState(false);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
   const { currentLanguage, changeLanguage, t } = useI18n();
   const { data: supportedLanguages } = useSupportedLanguages(true);
   const activeLanguages = (supportedLanguages || []).filter((l) => l.is_active);
   const currentLangData = activeLanguages.find((l) => l.code === currentLanguage);
 
+  // Fetch user profile avatar
+  useEffect(() => {
+    if (!user?.id) { setAvatarUrl(null); setUserName(null); return; }
+    
+    // Try metadata first as immediate fallback
+    const metaAvatar = user.user_metadata?.avatar_url || user.user_metadata?.picture;
+    const metaName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0];
+    if (metaAvatar) setAvatarUrl(metaAvatar);
+    if (metaName) setUserName(metaName);
+
+    supabase.from("profiles").select("avatar_url, full_name").or(`id.eq.${user.id},user_id.eq.${user.id}`).limit(1).single()
+      .then(({ data }) => {
+        if (data) {
+          if (data.avatar_url) setAvatarUrl(data.avatar_url);
+          if (data.full_name) setUserName(data.full_name);
+        }
+      });
+  }, [user?.id]);
+
   const moreRef = useRef<HTMLDivElement>(null);
+  const socialRef = useRef<HTMLDivElement>(null);
+  const servicesRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -86,6 +147,12 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
       if (moreRef.current && !moreRef.current.contains(event.target as Node)) {
         setMoreOpen(false);
       }
+      if (socialRef.current && !socialRef.current.contains(event.target as Node)) {
+        setSocialOpen(false);
+      }
+      if (servicesRef.current && !servicesRef.current.contains(event.target as Node)) {
+        setServicesOpen(false);
+      }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
@@ -96,7 +163,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
   return (
     <>
       {/* 3D Perspective wrapper */}
-      <div className="fixed top-0 left-0 right-0 z-50 overflow-x-clip" style={{ perspective: "1200px" }}>
+      <div className="fixed top-0 left-0 right-0 z-50 overflow-x-clip safe-area-top" style={{ perspective: "1200px" }}>
         <motion.header
           ref={ref}
           initial={{ rotateX: -3, y: -10, opacity: 0 }}
@@ -127,8 +194,8 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
               animation: "shimmer 4s linear infinite",
             }}
           />
-          <div className="container mx-auto px-6">
-            <div className="flex items-center justify-between h-[72px]">
+          <div className="mx-auto px-2 sm:px-4 max-w-[1400px]">
+            <div className="flex items-center gap-3 h-[60px]">
               {/* Logo — 3D float */}
               <motion.div
                 className="cursor-pointer shrink-0"
@@ -137,212 +204,73 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                 whileTap={{ scale: 0.95 }}
                 style={{ transformStyle: "preserve-3d" }}
               >
-                <ZivoLogo size="md" />
+                <ZivoLogo size="sm" />
               </motion.div>
 
-              {/* Center: 3D Service Tabs with colored pill backgrounds */}
+              {/* Center: Page title + nav pills */}
               <nav
-                className="hidden lg:flex items-center gap-1.5 px-1 py-1"
+                className="hidden lg:flex items-center gap-3 px-1 py-1"
                 role="tablist"
-                aria-label="Travel services"
-                style={{ transformStyle: "preserve-3d" }}
+                aria-label="Navigation"
               >
-                {serviceNavItems.map((item) => {
-                  const isActive = location.pathname.startsWith(item.href);
+
+                {/* Direct nav pills: Feed, Reel */}
+                {directNavItems.map((item) => {
+                  const isChat = item.href === "__chat__";
+                  const isActive = !isChat && location.pathname.startsWith(item.href);
                   return (
                     <motion.div
                       key={item.href}
-                      whileHover={{ y: -3, scale: 1.06 }}
-                      whileTap={{ scale: 0.94 }}
-                      transition={{ type: "spring", stiffness: 400, damping: 20 }}
-                      style={{ transformStyle: "preserve-3d" }}
+                      whileHover={{ y: -2, scale: 1.04 }}
+                      whileTap={{ scale: 0.95 }}
+                      transition={{ type: "spring", stiffness: 400, damping: 22 }}
                     >
-                      <Link
-                        to={item.href}
-                        className="relative flex items-center gap-2 px-5 py-2.5 rounded-full text-[13px] font-bold tracking-wide transition-all duration-300 overflow-hidden"
-                      >
-                        {/* Background image */}
-                        <span
-                          className="absolute inset-0 rounded-full overflow-hidden"
+                      {isChat ? (
+                        <button
+                          onClick={() => window.dispatchEvent(new CustomEvent("zivo-toggle-chat"))}
+                          className="flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold tracking-wide transition-all duration-300 whitespace-nowrap"
                           style={{
-                            transform: isActive ? "translateZ(8px)" : "translateZ(0)",
+                            border: `1.5px solid hsl(${item.cssVar} / 0.12)`,
+                            color: `hsl(${item.cssVar})`,
                           }}
                         >
-                          <img
-                            src={item.bg}
-                            alt=""
-                            className="absolute inset-0 w-full h-full object-cover"
-                            style={{
-                              opacity: isActive ? 0.85 : 0.3,
-                              transition: "opacity 0.3s ease",
-                            }}
-                          />
-                          {/* Color overlay */}
-                          <span
-                            className="absolute inset-0"
-                            style={{
-                              background: isActive
-                                ? `linear-gradient(135deg, hsl(${item.cssVar} / 0.55), hsl(${item.cssVar} / 0.35))`
-                                : `hsl(${item.cssVar} / 0.06)`,
-                              transition: "background 0.3s ease",
-                            }}
-                          />
-                        </span>
-                        {/* Border & shadow */}
-                        <span
-                          className="absolute inset-0 rounded-full pointer-events-none"
+                          <item.icon className="w-4 h-4" />
+                          {item.label}
+                        </button>
+                      ) : (
+                        <Link
+                          to={item.href}
+                          className="flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold tracking-wide transition-all duration-300 whitespace-nowrap"
                           style={{
-                            border: `1.5px solid hsl(${item.cssVar} / ${isActive ? "0.5" : "0.2"})`,
+                            background: isActive
+                              ? `linear-gradient(135deg, hsl(${item.cssVar} / 0.15), hsl(${item.cssVar} / 0.08))`
+                              : "transparent",
+                            border: `1.5px solid hsl(${item.cssVar} / ${isActive ? "0.3" : "0.12"})`,
                             boxShadow: isActive
-                              ? [
-                                  `0 4px 16px -2px hsl(${item.cssVar} / 0.4)`,
-                                  `0 8px 28px -6px hsl(${item.cssVar} / 0.2)`,
-                                  `inset 0 1px 2px rgba(255,255,255,0.2)`,
-                                ].join(", ")
-                              : `0 2px 8px -3px hsl(${item.cssVar} / 0.12)`,
+                              ? `0 2px 12px -3px hsl(${item.cssVar} / 0.25)`
+                              : "none",
+                            color: `hsl(${item.cssVar})`,
                           }}
-                        />
-                        {/* Top glare */}
-                        {isActive && (
-                          <span
-                            className="absolute inset-0 rounded-full pointer-events-none"
-                            style={{
-                              background: "linear-gradient(180deg, rgba(255,255,255,0.2) 0%, transparent 40%)",
-                            }}
-                          />
-                        )}
-                        <span className="relative z-10 flex items-center gap-2">
-                          <item.icon
-                            className="w-4 h-4"
-                            style={{
-                              color: isActive ? "white" : `hsl(${item.cssVar})`,
-                              filter: isActive
-                                ? "drop-shadow(0 1px 3px rgba(0,0,0,0.4))"
-                                : `drop-shadow(0 1px 2px hsl(${item.cssVar} / 0.3))`,
-                            }}
-                          />
-                          <span
-                            style={{
-                              color: isActive ? "white" : `hsl(${item.cssVar})`,
-                              textShadow: isActive ? "0 1px 3px rgba(0,0,0,0.35)" : "none",
-                            }}
-                          >
-                            {item.label}
-                          </span>
-                        </span>
-                      </Link>
+                        >
+                          <item.icon className="w-4 h-4" />
+                          {item.label}
+                        </Link>
+                      )}
                     </motion.div>
                   );
                 })}
-                {/* More Dropdown */}
-                <div ref={moreRef} className="relative">
-                  <motion.button
-                    onClick={() => setMoreOpen(!moreOpen)}
-                    whileHover={{ y: -2 }}
-                    whileTap={{ scale: 0.96 }}
-                    className={cn(
-                      "flex items-center gap-1 px-4 py-2 rounded-full text-[13px] font-semibold tracking-wide transition-all duration-300",
-                      moreOpen
-                        ? "text-foreground"
-                        : scrolled || !isHomePage
-                          ? "text-muted-foreground hover:text-foreground"
-                          : "text-foreground/70 hover:text-foreground"
-                    )}
-                  >
-                    More
-                    <ChevronDown className={cn("w-3 h-3 transition-transform duration-300", moreOpen && "rotate-180")} />
-                  </motion.button>
-
-                  <AnimatePresence>
-                    {moreOpen && (
-                      <motion.div
-                        initial={{ opacity: 0, y: 12, rotateX: -8, scale: 0.95 }}
-                        animate={{ opacity: 1, y: 0, rotateX: 0, scale: 1 }}
-                        exit={{ opacity: 0, y: 12, rotateX: -8, scale: 0.95 }}
-                        transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
-                        className="absolute top-full right-0 mt-3 w-[280px] p-2 overflow-hidden rounded-2xl"
-                        style={{
-                          background: "hsl(var(--card) / 0.85)",
-                          backdropFilter: "blur(40px) saturate(1.5)",
-                          border: "1px solid hsl(var(--border) / 0.25)",
-                          boxShadow: [
-                            "0 24px 80px -12px hsl(var(--foreground) / 0.12)",
-                            "0 8px 24px -4px hsl(var(--primary) / 0.06)",
-                            "inset 0 1px 1px hsl(var(--background) / 0.5)",
-                          ].join(", "),
-                          transformStyle: "preserve-3d",
-                        }}
-                      >
-                        {moreItems.map((item) => (
-                          <Link
-                            key={item.href}
-                            to={item.href}
-                            onClick={() => setMoreOpen(false)}
-                            className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/80 transition-all duration-200 group"
-                          >
-                            <div
-                              className={cn(
-                                "w-9 h-9 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-200",
-                                item.color
-                              )}
-                              style={{
-                                background: "hsl(var(--muted) / 0.6)",
-                                boxShadow: "0 2px 8px -2px hsl(var(--foreground) / 0.06), inset 0 1px 1px hsl(var(--background) / 0.4)",
-                              }}
-                            >
-                              <item.icon className="w-4 h-4" />
-                            </div>
-                            <div>
-                              <p className="font-semibold text-[13px]">{item.label}</p>
-                              <p className="text-[11px] text-muted-foreground">{item.description}</p>
-                            </div>
-                          </Link>
-                        ))}
-
-                        <div className="border-t border-border/30 my-1.5" />
-
-                        <Link
-                          to="/help"
-                          onClick={() => setMoreOpen(false)}
-                          className="flex items-center gap-3 p-3 rounded-xl hover:bg-muted/80 transition-all duration-200"
-                        >
-                          <div
-                            className="w-9 h-9 rounded-xl flex items-center justify-center"
-                            style={{
-                              background: "hsl(var(--muted) / 0.6)",
-                              boxShadow: "0 2px 8px -2px hsl(var(--foreground) / 0.06)",
-                            }}
-                          >
-                            <HelpCircle className="w-4 h-4 text-muted-foreground" />
-                          </div>
-                          <div>
-                            <p className="font-semibold text-[13px]">Help Center</p>
-                            <p className="text-[11px] text-muted-foreground">FAQs & support</p>
-                          </div>
-                        </Link>
-
-                        <div className="border-t border-border/30 my-1.5" />
-
-                        <div className="px-3 py-2">
-                          <p className="text-[9px] uppercase tracking-[0.15em] text-muted-foreground/70 mb-2 font-medium">Legal</p>
-                          <div className="flex flex-wrap gap-x-3 gap-y-1">
-                            {legalItems.map((item) => (
-                              <Link
-                                key={item.href}
-                                to={item.href}
-                                onClick={() => setMoreOpen(false)}
-                                className="text-[11px] text-muted-foreground hover:text-primary transition-all duration-200"
-                              >
-                                {item.label}
-                              </Link>
-                            ))}
-                          </div>
-                        </div>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
-                </div>
               </nav>
+
+              {/* Search Bar */}
+              <div className="hidden lg:flex flex-1 max-w-md ml-auto mr-3 relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
+                <input
+                  placeholder="Search people..."
+                  className="w-full pl-9 pr-4 py-2 rounded-full bg-muted/40 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"
+                  onFocus={() => navigate("/feed")}
+                  readOnly
+                />
+              </div>
 
               {/* Right: Language, Currency, Auth */}
               <div className="hidden md:flex items-center gap-2" style={{ transformStyle: "preserve-3d" }}>
@@ -410,15 +338,6 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                   </PopoverContent>
                 </Popover>
 
-                <CurrencySelector
-                  variant="compact"
-                  className={cn(
-                    "rounded-full transition-all duration-200",
-                    scrolled || !isHomePage
-                      ? "text-muted-foreground hover:text-foreground hover:bg-muted/50"
-                      : "text-foreground/85 hover:text-foreground hover:bg-foreground/5"
-                  )}
-                />
 
                 {user ? (
                   <DropdownMenu>
@@ -426,7 +345,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                       <motion.button
                         whileHover={{ scale: 1.05, z: 10 }}
                         whileTap={{ scale: 0.95 }}
-                        className="flex items-center gap-2 px-2 py-1.5 rounded-full transition-all duration-200 group"
+                        className="lg:hidden flex items-center gap-2 px-2 py-1.5 rounded-full transition-all duration-200 group"
                         style={{
                           background: "hsl(var(--muted) / 0.3)",
                           boxShadow: "0 2px 10px -2px hsl(var(--foreground) / 0.06), inset 0 1px 1px hsl(var(--background) / 0.4)",
@@ -434,14 +353,20 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                       >
                         <div className="relative">
                           <div className={cn(
-                            "w-9 h-9 rounded-full flex items-center justify-center transition-all duration-300",
+                            "w-9 h-9 rounded-full overflow-hidden flex items-center justify-center transition-all duration-300",
                             isMember
-                              ? "bg-gradient-to-br from-amber-400/20 to-amber-600/20 border-2 border-amber-400/40"
-                              : "bg-primary/10 border-2 border-primary/20 group-hover:border-primary/40"
+                              ? "border-2 border-amber-400/40"
+                              : "border-2 border-primary/20 group-hover:border-primary/40"
                           )}
                             style={{ boxShadow: isMember ? "0 0 12px hsl(45 90% 50% / 0.15)" : "0 0 8px hsl(var(--primary) / 0.1)" }}
                           >
-                            <User className={cn("h-4 w-4", isMember ? "text-amber-600" : "text-primary")} />
+                            {avatarUrl ? (
+                              <img src={optimizeAvatar(avatarUrl, 72) || avatarUrl || undefined} alt={userName || ""} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className={cn("w-full h-full flex items-center justify-center", isMember ? "bg-gradient-to-br from-amber-400/20 to-amber-600/20" : "bg-primary/10")}>
+                                <User className={cn("h-4 w-4", isMember ? "text-amber-600" : "text-primary")} />
+                              </div>
+                            )}
                           </div>
                           {isMember && (
                             <div className="absolute -top-1 -right-1">
@@ -449,7 +374,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                             </div>
                           )}
                         </div>
-                        <ChevronDown className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                        <ChevronDown className="w-3.5 h-3.5 text-muted-foreground group-hover:text-foreground transition-colors lg:hidden" />
                       </motion.button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
@@ -465,38 +390,86 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                         background: "hsl(var(--card) / 0.9)",
                       }}
                     >
-                      <div className="px-3 py-2.5 mb-1">
-                        <p className="text-sm font-semibold text-foreground truncate">{user.email}</p>
-                        {isMember && (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 mt-0.5">
-                            <Crown className="w-3 h-3" /> ZIVO+ Member
-                          </span>
-                        )}
+                      {/* Email + My Profile + My Trips — mobile only.
+                          On lg+ the sidebar already shows identity + profile actions. */}
+                      <div className="lg:hidden">
+                        <div className="px-3 py-2.5 mb-1">
+                          <p className="text-sm font-semibold text-foreground truncate">{user.email}</p>
+                          {isMember && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-amber-600 mt-0.5">
+                              <Crown className="w-3 h-3" /> ZIVO+ Member
+                            </span>
+                          )}
+                        </div>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => navigate("/profile")} className="cursor-pointer rounded-lg py-2.5 gap-2.5">
+                          <UserCircle className="w-4 h-4 text-muted-foreground" /> My Profile
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate("/trips")} className="cursor-pointer rounded-lg py-2.5 gap-2.5">
+                          <Briefcase className="w-4 h-4 text-muted-foreground" /> My Trips
+                        </DropdownMenuItem>
+                        <DropdownMenuSeparator />
                       </div>
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem onClick={() => navigate("/profile")} className="cursor-pointer rounded-lg py-2.5 gap-2.5">
-                        <UserCircle className="w-4 h-4 text-muted-foreground" /> My Profile
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate("/trips")} className="cursor-pointer rounded-lg py-2.5 gap-2.5">
-                        <Briefcase className="w-4 h-4 text-muted-foreground" /> My Trips
-                      </DropdownMenuItem>
-                      {!isMember && (
-                        <DropdownMenuItem onClick={() => navigate("/membership")} className="cursor-pointer rounded-lg py-2.5 gap-2.5 text-amber-600">
-                          <Crown className="w-4 h-4" /> Join ZIVO+
+                      {/* Business Pages, Membership, Sign out — shown on mobile only.
+                          On lg+ these live in the left FeedSidebar to avoid duplication. */}
+                      <div className="lg:hidden">
+                        <div className="px-3 pt-1.5 pb-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                          Your Business Pages
+                        </div>
+                        {ownerStores.length > 0 ? (
+                          ownerStores.map((store) => (
+                            <DropdownMenuItem
+                              key={store.id}
+                              onClick={() => {
+                                const { path } = resolveBusinessDashboardRoute(store.category, store.id);
+                                navigate(path);
+                              }}
+                              className="cursor-pointer rounded-lg py-2 gap-2.5"
+                            >
+                              <Avatar className="w-6 h-6 shrink-0">
+                                <AvatarImage src={store.logo_url || undefined} alt={store.name || "Business"} />
+                                <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
+                                  {(store.name || "B").charAt(0).toUpperCase()}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium text-foreground truncate">{store.name || "Untitled page"}</p>
+                                {store.normalizedCategory && (
+                                  <p className="text-[10px] text-muted-foreground capitalize truncate">{store.normalizedCategory}</p>
+                                )}
+                              </div>
+                            </DropdownMenuItem>
+                          ))
+                        ) : (
+                          <DropdownMenuItem onClick={() => navigate("/business")} className="cursor-pointer rounded-lg py-2.5 gap-2.5">
+                            <Building2 className="w-4 h-4 text-muted-foreground" /> Business Page
+                          </DropdownMenuItem>
+                        )}
+                        {ownerStores.length > 0 && <DropdownMenuSeparator />}
+                        <DropdownMenuItem
+                          onClick={() => navigate("/business/new?new=1")}
+                          className="cursor-pointer rounded-lg py-2 gap-2.5 text-black focus:text-black"
+                        >
+                          <Building2 className="w-4 h-4 text-black" /> Create new Business
                         </DropdownMenuItem>
-                      )}
-                      {isMember && (
-                        <DropdownMenuItem onClick={() => navigate("/account/membership")} className="cursor-pointer rounded-lg py-2.5 gap-2.5">
-                          <Crown className="w-4 h-4 text-amber-500" /> Membership
+                        {!isMember && (
+                          <DropdownMenuItem onClick={() => navigate("/membership")} className="cursor-pointer rounded-lg py-2.5 gap-2.5 text-amber-600">
+                            <Crown className="w-4 h-4" /> Join ZIVO+
+                          </DropdownMenuItem>
+                        )}
+                        {isMember && (
+                          <DropdownMenuItem onClick={() => navigate("/account/membership")} className="cursor-pointer rounded-lg py-2.5 gap-2.5">
+                            <Crown className="w-4 h-4 text-amber-500" /> Membership
+                          </DropdownMenuItem>
+                        )}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => signOut()}
+                          className="cursor-pointer rounded-lg py-2.5 gap-2.5 text-destructive focus:text-destructive"
+                        >
+                          <LogOut className="w-4 h-4" /> Sign out
                         </DropdownMenuItem>
-                      )}
-                      <DropdownMenuSeparator />
-                      <DropdownMenuItem
-                        onClick={() => signOut()}
-                        className="cursor-pointer rounded-lg py-2.5 gap-2.5 text-destructive focus:text-destructive"
-                      >
-                        <LogOut className="w-4 h-4" /> Sign out
-                      </DropdownMenuItem>
+                      </div>
                     </DropdownMenuContent>
                   </DropdownMenu>
                 ) : (
@@ -505,7 +478,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => navigate("/login")}
+                        onClick={() => navigate(withRedirectParam("/login", location.pathname === "/" ? null : `${location.pathname}${location.search ?? ""}`))}
                         className={cn(
                           "rounded-full font-semibold text-[13px] px-5 h-9 transition-all duration-300",
                           scrolled || !isHomePage
@@ -654,7 +627,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                       variant="outline"
                       className="w-full rounded-xl"
                       onClick={() => {
-                        navigate("/login");
+                        navigate(withRedirectParam("/login", location.pathname === "/" ? null : `${location.pathname}${location.search ?? ""}`));
                         setIsMobileMenuOpen(false);
                       }}
                     >

@@ -4,7 +4,8 @@
  */
 import { useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, MapPin, Home, Briefcase, Pin, Plus, Pencil, Trash2, Star, Loader2, Navigation } from "lucide-react";
+import { ArrowLeft, MapPin, Home, Briefcase, Pin, Plus, Pencil, Trash2, Star, Loader2, Navigation, Lock, ShieldCheck, FileText } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from "@/components/ui/sheet";
 import { motion } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -175,7 +176,7 @@ export default function AddressesPage() {
       />
 
       {/* Header */}
-      <div className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b">
+      <div className="sticky top-0 safe-area-top z-50 bg-background/80 backdrop-blur-xl border-b">
         <div className="flex items-center justify-between px-6 py-4 max-w-2xl mx-auto">
           <button
             onClick={() => navigate(-1)}
@@ -197,6 +198,62 @@ export default function AddressesPage() {
           <Plus className="w-5 h-5" />
           {t("address.add_new")}
         </Button>
+
+        {/* Privacy Notice */}
+        <div className="flex gap-3 p-3 rounded-xl bg-muted/50 border border-border/50">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+            <Lock className="w-4 h-4 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-xs font-semibold mb-0.5">Private to you</p>
+            <p className="text-[11px] text-muted-foreground leading-relaxed mb-2">
+              Your saved addresses are visible only to you and are used solely to fulfill your orders and deliveries.
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <Sheet>
+                <SheetTrigger asChild>
+                  <button type="button" className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline">
+                    <ShieldCheck className="w-3 h-3" /> Privacy Policy
+                  </button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto">
+                  <SheetHeader className="text-left">
+                    <SheetTitle className="flex items-center gap-2"><ShieldCheck className="w-5 h-5 text-primary" /> Address Privacy</SheetTitle>
+                    <SheetDescription>How ZIVO handles your saved addresses.</SheetDescription>
+                  </SheetHeader>
+                  <div className="mt-4 space-y-3 text-sm leading-relaxed">
+                    <p><strong>Visibility.</strong> Your saved addresses are visible only to you on your signed-in account. They are never shown on your public profile, in search, or to other users.</p>
+                    <p><strong>Use.</strong> Addresses are used only when you choose one for an order, ride, or delivery — to route the driver, calculate fees, and complete fulfillment.</p>
+                    <p><strong>Sharing with partners.</strong> When you place an order, the address you select is shared only with the assigned driver or merchant for that specific order, and only for the time needed to complete it.</p>
+                    <p><strong>Storage.</strong> Addresses are stored securely with row-level access controls so only your account can read or edit them.</p>
+                    <p><strong>Control.</strong> You can edit or delete any saved address at any time from this page. Deletion is immediate.</p>
+                  </div>
+                </SheetContent>
+              </Sheet>
+              <span className="text-[11px] text-muted-foreground">·</span>
+              <Sheet>
+                <SheetTrigger asChild>
+                  <button type="button" className="inline-flex items-center gap-1 text-[11px] font-medium text-primary hover:underline">
+                    <FileText className="w-3 h-3" /> Terms
+                  </button>
+                </SheetTrigger>
+                <SheetContent side="bottom" className="max-h-[85vh] overflow-y-auto">
+                  <SheetHeader className="text-left">
+                    <SheetTitle className="flex items-center gap-2"><FileText className="w-5 h-5 text-primary" /> Address Terms</SheetTitle>
+                    <SheetDescription>Your responsibilities when saving addresses.</SheetDescription>
+                  </SheetHeader>
+                  <div className="mt-4 space-y-3 text-sm leading-relaxed">
+                    <p><strong>Accuracy.</strong> You agree to provide accurate address information. ZIVO is not responsible for failed deliveries caused by incorrect or outdated addresses.</p>
+                    <p><strong>Authorization.</strong> You confirm that you are authorized to receive deliveries at any address you save (e.g., your home, your workplace).</p>
+                    <p><strong>Prohibited use.</strong> Do not save addresses you do not own or have permission to use, and do not use saved addresses to harass or surveil others.</p>
+                    <p><strong>Service limits.</strong> Some addresses may be outside our service area; orders to those addresses may be rejected or cancelled.</p>
+                    <p><strong>Updates.</strong> Keep your default address current to avoid order issues. You can change the default at any time.</p>
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </div>
+          </div>
+        </div>
 
         {/* Loading */}
         {isLoading && (

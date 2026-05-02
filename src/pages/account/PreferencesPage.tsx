@@ -1,6 +1,7 @@
 import { useNavigate } from "react-router-dom";
-import { useRef, useCallback } from "react";
-import { ArrowLeft, Globe, DollarSign, Check, Palette, Sparkles } from "lucide-react";
+import { useRef, useCallback, useEffect } from "react";
+import { ArrowLeft, Globe, DollarSign, Check, Palette, Sparkles, Ruler, Thermometer, Clock, CalendarDays, Accessibility, Languages, Type, Eye, Zap } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { motion, useScroll, useTransform } from "framer-motion";
 import { useI18n } from "@/hooks/useI18n";
@@ -11,6 +12,9 @@ import { SUPPORTED_CURRENCIES } from "@/config/currencies";
 import { toast } from "sonner";
 import { ThemeToggle } from "@/components/shared/ThemeToggle";
 import { useSupportedLanguages } from "@/hooks/useGlobalExpansion";
+import { useUnitPreferences, type DistanceUnit, type TemperatureUnit, type TimeFormat, type DateFormat } from "@/hooks/useUnitPreferences";
+import { useAccessibilityPrefs, type FontScale } from "@/hooks/useAccessibilityPrefs";
+import { useTranslationPrefs } from "@/hooks/useTranslationPrefs";
 
 const use3DTilt = (ref: React.RefObject<HTMLElement | null>) => {
   const handleMove = useCallback((clientX: number, clientY: number) => {
@@ -87,6 +91,45 @@ const PreferencesPage = () => {
   const { updateSettings } = usePersonalizationSettings();
   const { data: supportedLanguages } = useSupportedLanguages(true);
   const activeLanguages = (supportedLanguages || []).filter(l => l.is_active);
+  const { prefs: unitPrefs, update: updateUnitPref } = useUnitPreferences();
+  const { prefs: a11yPrefs, update: updateA11yPref } = useAccessibilityPrefs();
+  const { prefs: translationPrefs, update: updateTranslationPref } = useTranslationPrefs();
+
+  // Hash-anchor scrolling (e.g. /account/preferences#translation)
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const hash = window.location.hash?.replace("#", "");
+    if (!hash) return;
+    const t = setTimeout(() => {
+      document.getElementById(hash)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 300);
+    return () => clearTimeout(t);
+  }, []);
+
+  const fontScaleOptions: { value: FontScale; label: string; sub: string }[] = [
+    { value: "sm", label: "Small", sub: "92%" },
+    { value: "md", label: "Default", sub: "100%" },
+    { value: "lg", label: "Large", sub: "110%" },
+    { value: "xl", label: "Extra large", sub: "120%" },
+  ];
+
+  const distanceOptions: { value: DistanceUnit; label: string; sub: string }[] = [
+    { value: "km", label: "Kilometers", sub: "km" },
+    { value: "mi", label: "Miles", sub: "mi" },
+  ];
+  const temperatureOptions: { value: TemperatureUnit; label: string; sub: string }[] = [
+    { value: "c", label: "Celsius", sub: "°C" },
+    { value: "f", label: "Fahrenheit", sub: "°F" },
+  ];
+  const timeFormatOptions: { value: TimeFormat; label: string; sub: string }[] = [
+    { value: "24h", label: "24-hour", sub: "14:30" },
+    { value: "12h", label: "12-hour", sub: "2:30 PM" },
+  ];
+  const dateFormatOptions: { value: DateFormat; label: string; sub: string }[] = [
+    { value: "ymd", label: "YYYY-MM-DD", sub: "2026-04-29" },
+    { value: "dmy", label: "DD/MM/YYYY", sub: "29/04/2026" },
+    { value: "mdy", label: "MM/DD/YYYY", sub: "04/29/2026" },
+  ];
 
   const { scrollYProgress } = useScroll({ container: scrollRef });
   const headerY = useTransform(scrollYProgress, [0, 0.15], [0, -20]);
@@ -153,7 +196,7 @@ const PreferencesPage = () => {
                 transition={{ duration: 0.5, delay: 0.1 }}
                 className="text-muted-foreground text-xs sm:text-sm"
               >
-                Appearance, language & currency
+                Appearance, language, currency & units
               </motion.p>
             </div>
           </motion.div>
@@ -240,6 +283,189 @@ const PreferencesPage = () => {
                 ))}
               </div>
             </Section3D>
+
+            {/* Distance */}
+            <Section3D icon={Ruler} title="Distance" subtitle="Used in maps, rides & deliveries" delay={0.4} iconColor="text-primary">
+              <div className="grid grid-cols-2 gap-2">
+                {distanceOptions.map((opt) => {
+                  const active = unitPrefs.distance === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      onClick={() => { updateUnitPref("distance", opt.value); toast.success(`Distance: ${opt.label}`); }}
+                      className={`flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl transition-all duration-200 active:scale-[0.97] ${active ? "bg-primary/10 text-primary ring-1 ring-primary/25" : "bg-muted/30 hover:bg-muted/60"}`}
+                    >
+                      <div className="text-left">
+                        <p className="font-semibold text-sm">{opt.label}</p>
+                        <p className="text-xs text-muted-foreground">{opt.sub}</p>
+                      </div>
+                      {active && <Check className="w-4 h-4 text-primary" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </Section3D>
+
+            {/* Temperature */}
+            <Section3D icon={Thermometer} title="Temperature" subtitle="Weather and forecasts" delay={0.45} iconColor="text-primary">
+              <div className="grid grid-cols-2 gap-2">
+                {temperatureOptions.map((opt) => {
+                  const active = unitPrefs.temperature === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      onClick={() => { updateUnitPref("temperature", opt.value); toast.success(`Temperature: ${opt.label}`); }}
+                      className={`flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl transition-all duration-200 active:scale-[0.97] ${active ? "bg-primary/10 text-primary ring-1 ring-primary/25" : "bg-muted/30 hover:bg-muted/60"}`}
+                    >
+                      <div className="text-left">
+                        <p className="font-semibold text-sm">{opt.label}</p>
+                        <p className="text-xs text-muted-foreground">{opt.sub}</p>
+                      </div>
+                      {active && <Check className="w-4 h-4 text-primary" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </Section3D>
+
+            {/* Time format */}
+            <Section3D icon={Clock} title="Time format" subtitle="How times are displayed" delay={0.5} iconColor="text-primary">
+              <div className="grid grid-cols-2 gap-2">
+                {timeFormatOptions.map((opt) => {
+                  const active = unitPrefs.timeFormat === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      onClick={() => { updateUnitPref("timeFormat", opt.value); toast.success(`Time format: ${opt.label}`); }}
+                      className={`flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl transition-all duration-200 active:scale-[0.97] ${active ? "bg-primary/10 text-primary ring-1 ring-primary/25" : "bg-muted/30 hover:bg-muted/60"}`}
+                    >
+                      <div className="text-left">
+                        <p className="font-semibold text-sm">{opt.label}</p>
+                        <p className="text-xs text-muted-foreground">{opt.sub}</p>
+                      </div>
+                      {active && <Check className="w-4 h-4 text-primary" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </Section3D>
+
+            {/* Date format */}
+            <Section3D icon={CalendarDays} title="Date format" subtitle="How dates are displayed" delay={0.55} iconColor="text-primary">
+              <div className="space-y-1.5">
+                {dateFormatOptions.map((opt) => {
+                  const active = unitPrefs.dateFormat === opt.value;
+                  return (
+                    <button
+                      key={opt.value}
+                      onClick={() => { updateUnitPref("dateFormat", opt.value); toast.success(`Date format: ${opt.label}`); }}
+                      className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl transition-all duration-200 active:scale-[0.99] ${active ? "bg-primary/10 text-primary ring-1 ring-primary/25" : "bg-muted/30 hover:bg-muted/60"}`}
+                    >
+                      <div className="text-left">
+                        <p className="font-semibold text-sm">{opt.label}</p>
+                        <p className="text-xs text-muted-foreground">{opt.sub}</p>
+                      </div>
+                      {active && <Check className="w-4 h-4 text-primary" />}
+                    </button>
+                  );
+                })}
+              </div>
+            </Section3D>
+
+            {/* Accessibility */}
+            <div id="accessibility" className="scroll-mt-24">
+              <Section3D icon={Accessibility} title="Accessibility" subtitle="Make ZIVO easier to use" delay={0.6} iconColor="text-primary">
+                <div className="space-y-4">
+                  {/* Font size */}
+                  <div className="space-y-2">
+                    <p className="text-xs font-semibold flex items-center gap-1.5"><Type className="h-3.5 w-3.5 text-muted-foreground" /> Text size</p>
+                    <div className="grid grid-cols-4 gap-2">
+                      {fontScaleOptions.map((opt) => {
+                        const active = a11yPrefs.fontScale === opt.value;
+                        return (
+                          <button
+                            key={opt.value}
+                            onClick={() => { updateA11yPref("fontScale", opt.value); toast.success(`Text size: ${opt.label}`); }}
+                            className={`flex flex-col items-center justify-center gap-0.5 px-2 py-2.5 rounded-xl transition-all active:scale-[0.97] ${active ? "bg-primary/10 text-primary ring-1 ring-primary/25" : "bg-muted/30 hover:bg-muted/60"}`}
+                          >
+                            <span className="text-[11px] font-semibold">{opt.label}</span>
+                            <span className="text-[10px] text-muted-foreground">{opt.sub}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Toggles */}
+                  <div className="space-y-2 pt-2 border-t border-border/30">
+                    <div className="flex items-center justify-between gap-3">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <Zap className="h-4 w-4 text-amber-500 shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold">Reduce motion</p>
+                          <p className="text-[11px] text-muted-foreground">Minimize animations & transitions</p>
+                        </div>
+                      </div>
+                      <Switch checked={a11yPrefs.reducedMotion} onCheckedChange={(v) => { updateA11yPref("reducedMotion", v); toast.success(v ? "Motion reduced" : "Motion restored"); }} />
+                    </div>
+
+                    <div className="flex items-center justify-between gap-3 pt-2 border-t border-border/20">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <Eye className="h-4 w-4 text-violet-500 shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold">High contrast</p>
+                          <p className="text-[11px] text-muted-foreground">Stronger borders & text contrast</p>
+                        </div>
+                      </div>
+                      <Switch checked={a11yPrefs.highContrast} onCheckedChange={(v) => { updateA11yPref("highContrast", v); toast.success(v ? "High contrast on" : "High contrast off"); }} />
+                    </div>
+
+                    <div className="flex items-center justify-between gap-3 pt-2 border-t border-border/20">
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <Globe className="h-4 w-4 text-sky-500 shrink-0" />
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold">Underline links</p>
+                          <p className="text-[11px] text-muted-foreground">Always show link underlines</p>
+                        </div>
+                      </div>
+                      <Switch checked={a11yPrefs.underlineLinks} onCheckedChange={(v) => updateA11yPref("underlineLinks", v)} />
+                    </div>
+                  </div>
+                </div>
+              </Section3D>
+            </div>
+
+            {/* Auto-Translate */}
+            <div id="translation" className="scroll-mt-24">
+              <Section3D icon={Languages} title="Auto-Translate" subtitle="Translate messages & posts on the fly" delay={0.65} iconColor="text-primary">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold">Translate messages</p>
+                      <p className="text-[11px] text-muted-foreground">Auto-translate chats not in your language</p>
+                    </div>
+                    <Switch checked={translationPrefs.autoTranslateMessages} onCheckedChange={(v) => { updateTranslationPref("autoTranslateMessages", v); toast.success(v ? "Messages will auto-translate" : "Auto-translate disabled"); }} />
+                  </div>
+                  <div className="flex items-center justify-between gap-3 pt-2 border-t border-border/20">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold">Translate posts</p>
+                      <p className="text-[11px] text-muted-foreground">Auto-translate posts in your feed</p>
+                    </div>
+                    <Switch checked={translationPrefs.autoTranslatePosts} onCheckedChange={(v) => updateTranslationPref("autoTranslatePosts", v)} />
+                  </div>
+                  <div className="flex items-center justify-between gap-3 pt-2 border-t border-border/20">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold">Show original toggle</p>
+                      <p className="text-[11px] text-muted-foreground">Add a "Show original" link to translations</p>
+                    </div>
+                    <Switch checked={translationPrefs.showOriginalToggle} onCheckedChange={(v) => updateTranslationPref("showOriginalToggle", v)} />
+                  </div>
+                  <p className="text-[10px] text-muted-foreground pt-2">
+                    Target language: <span className="font-medium text-foreground">{translationPrefs.targetLanguage === "auto" ? `Auto (${currentLanguage.toUpperCase()})` : translationPrefs.targetLanguage.toUpperCase()}</span>
+                  </p>
+                </div>
+              </Section3D>
+            </div>
           </div>
         </div>
       </div>

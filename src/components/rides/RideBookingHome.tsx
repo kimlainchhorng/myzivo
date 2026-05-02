@@ -5,17 +5,52 @@
 import { useState, useCallback, useEffect, useRef, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence, useDragControls, PanInfo } from "framer-motion";
-import {
-  MapPin, Navigation, ChevronRight, ArrowLeft, Home,
-  Building2, Car, Crown, Users, Zap,
-  CheckCircle, History, ChevronDown, Clock,
-  CreditCard, User, CalendarClock, Map,
-  Star, Phone, MessageSquare, Shield, Banknote,
-  Smartphone, Wallet, X, Baby, Sparkles,
-  Route, Timer, Bell, Package, Plane, Hotel, TrendingDown, Gem,
-  PawPrint, Accessibility, Plus, ShoppingCart, Fuel, UtensilsCrossed, Store, Pill,
-  Globe
-} from "lucide-react";
+import MapPin from "lucide-react/dist/esm/icons/map-pin";
+import Navigation from "lucide-react/dist/esm/icons/navigation";
+import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
+import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
+import Home from "lucide-react/dist/esm/icons/home";
+import Building2 from "lucide-react/dist/esm/icons/building-2";
+import Car from "lucide-react/dist/esm/icons/car";
+import Crown from "lucide-react/dist/esm/icons/crown";
+import Users from "lucide-react/dist/esm/icons/users";
+import Zap from "lucide-react/dist/esm/icons/zap";
+import CheckCircle from "lucide-react/dist/esm/icons/check-circle";
+import History from "lucide-react/dist/esm/icons/history";
+import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
+import Clock from "lucide-react/dist/esm/icons/clock";
+import CreditCard from "lucide-react/dist/esm/icons/credit-card";
+import User from "lucide-react/dist/esm/icons/user";
+import CalendarClock from "lucide-react/dist/esm/icons/calendar-clock";
+import Map from "lucide-react/dist/esm/icons/map";
+import Star from "lucide-react/dist/esm/icons/star";
+import Phone from "lucide-react/dist/esm/icons/phone";
+import MessageSquare from "lucide-react/dist/esm/icons/message-square";
+import Shield from "lucide-react/dist/esm/icons/shield";
+import Banknote from "lucide-react/dist/esm/icons/banknote";
+import Smartphone from "lucide-react/dist/esm/icons/smartphone";
+import Wallet from "lucide-react/dist/esm/icons/wallet";
+import X from "lucide-react/dist/esm/icons/x";
+import Baby from "lucide-react/dist/esm/icons/baby";
+import Sparkles from "lucide-react/dist/esm/icons/sparkles";
+import Route from "lucide-react/dist/esm/icons/route";
+import Timer from "lucide-react/dist/esm/icons/timer";
+import Bell from "lucide-react/dist/esm/icons/bell";
+import Package from "lucide-react/dist/esm/icons/package";
+import Plane from "lucide-react/dist/esm/icons/plane";
+import Hotel from "lucide-react/dist/esm/icons/hotel";
+import TrendingDown from "lucide-react/dist/esm/icons/trending-down";
+import Gem from "lucide-react/dist/esm/icons/gem";
+import PawPrint from "lucide-react/dist/esm/icons/paw-print";
+import Accessibility from "lucide-react/dist/esm/icons/accessibility";
+import Plus from "lucide-react/dist/esm/icons/plus";
+import ShoppingCart from "lucide-react/dist/esm/icons/shopping-cart";
+import Fuel from "lucide-react/dist/esm/icons/fuel";
+import UtensilsCrossed from "lucide-react/dist/esm/icons/utensils-crossed";
+import Store from "lucide-react/dist/esm/icons/store";
+import Pill from "lucide-react/dist/esm/icons/pill";
+import Globe from "lucide-react/dist/esm/icons/globe";
+import Bike from "lucide-react/dist/esm/icons/bike";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
@@ -37,7 +72,10 @@ import RidePaymentSection from "@/components/rides/RidePaymentSection";
 import CancelRideModal from "@/components/rides/CancelRideModal";
 import { Input } from "@/components/ui/input";
 import { CountryPhoneInput } from "@/components/auth/CountryPhoneInput";
-import { Tag, Percent, CheckCircle2, Loader2 } from "lucide-react";
+import Tag from "lucide-react/dist/esm/icons/tag";
+import Percent from "lucide-react/dist/esm/icons/percent";
+import CheckCircle2 from "lucide-react/dist/esm/icons/check-circle-2";
+import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import PlaceLogo from "@/components/rides/PlaceLogo";
 import { useCityPricing } from "@/hooks/useCityPricing";
 import { useDriverLocation } from "@/hooks/useDriverLocation";
@@ -60,6 +98,7 @@ interface RouteData {
   duration_in_traffic_minutes?: number | null;
   polyline: string | null;
   traffic_level?: string;
+  traffic_segments?: { startPolylinePointIndex: number; endPolylinePointIndex: number; speed: string }[] | null;
 }
 
 /** Detect if user is in Cambodia based on pickup address or coordinates */
@@ -127,7 +166,6 @@ type ViewStep =
   | "tracking"
   | "complete";
 
-type RideTab = "book" | "reserve" | "map" | "history";
 
 /* ─── Data ─── */
 /* Saved places & recent destinations now loaded from Supabase */
@@ -141,7 +179,8 @@ const ICON_MAP: Record<string, React.ElementType> = {
 const DEFAULT_VEHICLE_OPTIONS = [
   // Popular
   { id: "economy", category: "popular", name: "ZIVO Economy", desc: "Affordable everyday rides", etaMin: 4, pricePerMile: 1.50, basePrice: 3.50, perMinute: 0.35, bookingFee: 2.50, minimumFare: 7.00, capacity: 3, icon: Car, carSeat: false, surgeMultiplier: 1.0 },
-  { id: "share", category: "popular", name: "ZIVO Share", desc: "Share a ride, save money", etaMin: 6, pricePerMile: 1.00, basePrice: 2.00, perMinute: 0.20, bookingFee: 1.50, minimumFare: 4.00, capacity: 2, icon: Users, carSeat: false, surgeMultiplier: 0.7 },
+  { id: "moto", category: "popular", name: "ZIVO Moto", desc: "Fast motorcycle rides", etaMin: 3, pricePerMile: 0.80, basePrice: 1.50, perMinute: 0.15, bookingFee: 0.13, minimumFare: 0.25, capacity: 1, icon: Bike, carSeat: false, surgeMultiplier: 1.0 },
+  { id: "share", category: "popular", name: "ZIVO Share", desc: "Share a ride, save money", etaMin: 6, pricePerMile: 1.00, basePrice: 2.00, perMinute: 0.20, bookingFee: 1.50, minimumFare: 4.00, capacity: 2, icon: Users, carSeat: false, surgeMultiplier: 1.0 },
   { id: "comfort", category: "popular", name: "ZIVO Comfort", desc: "Top-rated drivers, extra legroom", etaMin: 5, pricePerMile: 2.50, basePrice: 5.00, perMinute: 0.50, bookingFee: 3.00, minimumFare: 10.00, capacity: 3, icon: Sparkles, carSeat: false, surgeMultiplier: 1.0 },
   { id: "ev", category: "popular", name: "ZIVO EV", desc: "Electric, zero-emission rides", etaMin: 5, pricePerMile: 2.00, basePrice: 4.00, perMinute: 0.40, bookingFee: 2.50, minimumFare: 8.00, capacity: 3, icon: Zap, carSeat: false, surgeMultiplier: 1.0 },
   { id: "xl", category: "popular", name: "ZIVO XL", desc: "Extra space for groups", etaMin: 5, pricePerMile: 2.75, basePrice: 5.50, perMinute: 0.55, bookingFee: 3.00, minimumFare: 11.00, capacity: 5, icon: Car, carSeat: false, surgeMultiplier: 1.0 },
@@ -202,6 +241,7 @@ function MapSection({
   driverNavigationTarget,
   userLocation,
   routePolyline,
+  trafficSegments,
   nearbyDrivers,
   onLocateUser,
   onCenterChanged,
@@ -220,6 +260,7 @@ function MapSection({
   driverNavigationTarget?: { lat: number; lng: number } | null;
   userLocation?: { lat: number; lng: number } | null;
   routePolyline?: string | null;
+  trafficSegments?: { startPolylinePointIndex: number; endPolylinePointIndex: number; speed: string }[] | null;
   nearbyDrivers?: { lat: number; lng: number }[];
   onLocateUser?: () => void;
   onCenterChanged?: (center: { lat: number; lng: number }) => void;
@@ -276,6 +317,7 @@ function MapSection({
           nearbyDrivers={nearbyDrivers}
           showUserLocationDot={showUserLocationDot}
           routePolyline={routePolyline || null}
+          trafficSegments={trafficSegments}
           onMapReady={(map) => { mapRef.current = map; onMapReadyExtra?.(map); }}
           onCenterChanged={onCenterChanged}
           suppressAutoViewport={suppressAutoViewport}
@@ -452,16 +494,19 @@ const VEHICLE_IMAGES: Record<string, string> = {
   "luxury-xl": "/vehicles/luxury-car-v2.png",
   "pet":       "/vehicles/pet-car-v2.png",
   "wheelchair": "/vehicles/wheelchair-car-v2.png",
+  "moto":      "/vehicles/zivo-moto-v2.png",
 };
 
 /* Cambodia-specific overrides */
 const CAMBODIA_VEHICLE_IMAGES: Record<string, string> = {
   "economy": "/vehicles/zivo-tuktuk.png",
   "share": "/vehicles/zivo-ev-tuktuk.png",
+  "moto": "/vehicles/zivo-moto-v2.png",
 };
 const CAMBODIA_VEHICLE_NAMES: Record<string, string> = {
   "economy": "ZIVO Tuk Tuk",
   "share": "ZIVO EV Tuk Tuk",
+  "moto": "ZIVO Moto",
 };
 const CAMBODIA_VEHICLE_DESCS: Record<string, string> = {
   "economy": "ការធ្វើដំណើរប្រចាំថ្ងៃតម្លៃសមរម្យ",
@@ -469,10 +514,12 @@ const CAMBODIA_VEHICLE_DESCS: Record<string, string> = {
   "comfort": "អ្នកបើកបរល្អបំផុត កន្លែងដាក់ជើងទូលាយ",
   "ev": "អគ្គិសនី សូន្យការបំភាយ",
   "xl": "កន្លែងបន្ថែមសម្រាប់ក្រុម",
+  "moto": "ម៉ូតូរហ័សនិងសន្សំសំចៃ",
 };
 const CAMBODIA_VEHICLE_CAPACITY: Record<string, number> = {
   "economy": 3,
   "share": 3,
+  "moto": 1,
 };
 const CAMBODIA_BOOKING_FEE = 0.13;
 const CAMBODIA_PER_KM_KHR = 1550; // KHR per km
@@ -695,7 +742,6 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
 
   const [viewStep, setViewStep] = useState<ViewStep>("search");
-  const [activeTab, setActiveTab] = useState<RideTab>("book");
   const [pickup, setPickup] = useState<PlaceData | null>(null);
   const [destination, setDestination] = useState<PlaceData | null>(null);
 
@@ -763,12 +809,25 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
         surgeMultiplier: 1.0,
       }));
     }
+    // Filter: moto only available in Cambodia
+    if (!useKm) {
+      options = options.filter((v) => v.id !== "moto");
+    } else {
+      // Cambodia: put moto at the top of the list
+      const CAMBODIA_ORDER = ["moto", "economy", "share", "comfort", "ev", "xl", "pet", "wheelchair", "black-lane", "black-xl", "luxury-xl"];
+      options = [...options].sort((a, b) => {
+        const ai = CAMBODIA_ORDER.indexOf(a.id);
+        const bi = CAMBODIA_ORDER.indexOf(b.id);
+        return (ai === -1 ? 999 : ai) - (bi === -1 ? 999 : bi);
+      });
+    }
     return options;
   }, [cityPricingMap, currentLanguage]);
   const [stops, setStops] = useState<{ id: string; place: PlaceData | null; display: string }[]>([]);
   const stopsRef = useRef(stops);
   stopsRef.current = stops;
   const [selectedVehicle, setSelectedVehicle] = useState("economy");
+  const hasAutoSelectedDefaultVehicleRef = useRef(false);
   const [rideRequestId, setRideRequestId] = useState<string | null>(null);
   const [activeJobId, setActiveJobId] = useState<string | null>(null);
   const [nearbyDriverCount, setNearbyDriverCount] = useState(0);
@@ -863,6 +922,29 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
   // Route data
   const [routeData, setRouteData] = useState<RouteData | null>(null);
   const [isLoadingRoute, setIsLoadingRoute] = useState(false);
+
+  useEffect(() => {
+    if (!vehicleOptions.length) return;
+
+    const selectedStillExists = vehicleOptions.some((vehicle) => vehicle.id === selectedVehicle);
+    if (!selectedStillExists) {
+      setSelectedVehicle(vehicleOptions[0].id);
+      return;
+    }
+
+    if (
+      !hasAutoSelectedDefaultVehicleRef.current &&
+      isCambodiaCountry &&
+      selectedVehicle === "economy" &&
+      vehicleOptions.some((vehicle) => vehicle.id === "moto")
+    ) {
+      hasAutoSelectedDefaultVehicleRef.current = true;
+      setSelectedVehicle("moto");
+      return;
+    }
+
+    hasAutoSelectedDefaultVehicleRef.current = true;
+  }, [vehicleOptions, isCambodiaCountry, selectedVehicle]);
 
   const COLLAPSED_SHEET_HEIGHT = 330 + stops.length * 56 + (routeData ? 48 : 0);
   const EXPANDED_SHEET_HEIGHT = Math.min(viewportHeight * 0.62, 560); // kept for future use
@@ -1522,20 +1604,18 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
     setPromoError(null);
     const code = promoInput.trim().toUpperCase();
 
-    // Hard-coded FREE promo: 100% off, restricted to specific email
+    // FREE promo: 100% off, USA rides only
     if (code === "FREE") {
-      const userEmail = user?.email?.toLowerCase() || "";
-      if (userEmail === "chhorngkimlain1@gmail.com") {
-        setAppliedPromo({ code: "FREE", description: "100% discount — Free ride!" });
-        setPromoDiscount(currentPrice);
-        toast.success("FREE promo applied — enjoy your free ride!");
-        setPromoValidating(false);
-        return;
-      } else {
-        setPromoError("This promo code is not available for your account");
+      if (useKm) {
+        setPromoError("This promo code is only available for rides in the USA");
         setPromoValidating(false);
         return;
       }
+      setAppliedPromo({ code: "FREE", description: "100% discount — Free ride!" });
+      setPromoDiscount(currentPrice);
+      toast.success("FREE promo applied — enjoy your free ride!");
+      setPromoValidating(false);
+      return;
     }
 
     try {
@@ -1560,12 +1640,6 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
     }
   }, [promoInput, currentPrice, user?.id, user?.email]);
 
-  const handleTabChange = (tab: RideTab) => {
-    setActiveTab(tab);
-    if (tab === "reserve") navigate("/rides/reserve");
-    else if (tab === "history") navigate("/rides/history");
-  };
-
   /* ─── Back navigation ─── */
   const handleBack = () => {
     if (viewStep === "search") {
@@ -1578,8 +1652,8 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
       setViewStep("home");
     }
     else if (viewStep === "route-preview") setViewStep("search");
-    else if (viewStep === "rider-info") setViewStep("route-preview");
-    else if (viewStep === "ride-options") setViewStep(useKm ? "rider-info" : "route-preview");
+    else if (viewStep === "rider-info") setViewStep("search");
+    else if (viewStep === "ride-options") setViewStep(useKm ? "rider-info" : "search");
     else if (viewStep === "confirm-ride") setViewStep("ride-options");
     else if (
       viewStep === "driver-assigned" ||
@@ -1797,6 +1871,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
           duration_in_traffic_minutes: data.duration_in_traffic_minutes ?? null,
           polyline: data.polyline,
           traffic_level: data.traffic_level,
+          traffic_segments: data.traffic_segments ?? null,
         });
       } else {
         // Fallback: haversine including waypoints
@@ -1829,7 +1904,15 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
       setIsLoadingRoute(false);
     }
     setSheetExpanded(false);
-    setViewStep("route-preview");
+    // Skip route-preview, go directly to ride options (or rider-info for KM)
+    if (useKm) {
+      setRiderName(userProfile?.full_name || "");
+      const ph = userProfile?.phone || "";
+      setRiderPhone(ph.startsWith("+855") ? ph : "");
+      setViewStep("rider-info");
+    } else {
+      setViewStep("ride-options");
+    }
   };
 
   const handleConfirmSearch = () => {
@@ -2204,7 +2287,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
   const filteredVehiclesByCategory = vehicleOptions.filter((v) => v.category === rideCategory);
 
   return (
-    <div className="relative h-full safe-area-top overflow-hidden bg-background flex flex-col">
+    <div className="relative h-full overflow-hidden bg-background flex flex-col">
 
       {/* ═══════ GPS Permission Prompt ═══════ */}
       {locationPermission === "prompt" && (
@@ -2257,7 +2340,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
         </div>
       )}
       {/* ═══════ 1. HEADER — visible on non-home steps ═══════ */}
-      {viewStep !== "home" && viewStep !== "trip-complete" && (
+      {viewStep !== "home" && viewStep !== "trip-complete" && viewStep !== "confirm-ride" && (
         <div className="relative z-50 flex items-center h-14 px-4 bg-background/95 backdrop-blur-xl border-b border-border/10">
           <button
             onClick={handleBack}
@@ -2343,6 +2426,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
               showUserLocationDot={!pickup}
               onLocateUser={handleLocateUser}
               routePolyline={viewStep === "search" && pinPlacementMode ? null : (routeData?.polyline || null)}
+              trafficSegments={viewStep === "search" && pinPlacementMode ? null : (routeData?.traffic_segments || null)}
               onCenterChanged={handleMapCenterChanged}
               suppressAutoViewport={viewStep === "search" && (!pickupConfirmed || !!pinPlacementMode)}
               mapInteractive={viewStep !== "search" || !pickupConfirmed || !!pinPlacementMode}
@@ -3376,7 +3460,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
                       </div>
                     </div>
                     <p className="text-xs text-muted-foreground mt-1 leading-snug">
-                      {etaTime(v.etaMin)} · {getVehicleDesc(v.id, v.desc, isCambodiaCountry)}
+                      {etaTime(v.etaMin + (routeData?.duration_in_traffic_minutes ?? routeData?.duration_minutes ?? 0))} · {getVehicleDesc(v.id, v.desc, isCambodiaCountry)}
                     </p>
                   </div>
 
@@ -3674,30 +3758,55 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
               )}
             </div>
 
-            {/* Payment Section — fills remaining space */}
+            {/* Payment Section — skip if free ride */}
             <div className="shrink-0 pb-6">
-              <RidePaymentSection
-                price={(() => {
-                  const base = appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice;
-                  const cardFee = selectedCambodiaPayment === "card" && (currentVehicle as any).cardFeePct > 0
-                    ? base * ((currentVehicle as any).cardFeePct / 100) : 0;
-                  return base + cardFee;
-                })()}
-                vehicleName={getVehicleName(selectedVehicle, currentVehicle.name, isCambodiaCountry)}
-                isSubmitting={isSubmitting}
-                onAuthorizeWithSavedCard={(pmId) => handleRequestRide(pmId)}
-                onAuthorizeWithNewCard={() => handleRequestRide()}
-                clientSecret={clientSecret}
-                onPaymentSuccess={handlePaymentSuccess}
-                paymentFailed={paymentStep === "failed"}
-                onClearError={() => setPaymentStep("idle")}
-                isCambodia={useKm}
-                cashAllowed={cashAllowed}
-                onCashConfirm={handleCashRide}
-                onAbaConfirm={handleAbaRide}
-                onBackToMethods={() => { setClientSecret(null); setPaymentStep("idle"); }}
-                onPaymentMethodChange={(m) => setSelectedCambodiaPayment(m)}
-              />
+              {(() => {
+                const base = appliedPromo ? Math.max(0, currentPrice - promoDiscount) : currentPrice;
+                const cardFee = selectedCambodiaPayment === "card" && (currentVehicle as any).cardFeePct > 0
+                  ? base * ((currentVehicle as any).cardFeePct / 100) : 0;
+                const finalPrice = base + cardFee;
+
+                if (finalPrice <= 0) {
+                  return (
+                    <div className="space-y-3">
+                      <div className="rounded-2xl border-2 border-primary/30 bg-primary/5 p-4 text-center space-y-1">
+                        <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-2">
+                          <CheckCircle2 className="w-6 h-6 text-primary" />
+                        </div>
+                        <p className="text-sm font-bold text-foreground">No payment needed</p>
+                        <p className="text-xs text-muted-foreground">This ride is completely free with your promo code!</p>
+                      </div>
+                      <Button
+                        className="w-full h-14 rounded-2xl text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 active:scale-[0.98] transition-all shadow-lg shadow-primary/20"
+                        disabled={isSubmitting}
+                        onClick={() => handleRequestRide()}
+                      >
+                        {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : `Book Free ${getVehicleName(selectedVehicle, currentVehicle.name, isCambodiaCountry)}`}
+                      </Button>
+                    </div>
+                  );
+                }
+
+                return (
+                  <RidePaymentSection
+                    price={finalPrice}
+                    vehicleName={getVehicleName(selectedVehicle, currentVehicle.name, isCambodiaCountry)}
+                    isSubmitting={isSubmitting}
+                    onAuthorizeWithSavedCard={(pmId) => handleRequestRide(pmId)}
+                    onAuthorizeWithNewCard={() => handleRequestRide()}
+                    clientSecret={clientSecret}
+                    onPaymentSuccess={handlePaymentSuccess}
+                    paymentFailed={paymentStep === "failed"}
+                    onClearError={() => setPaymentStep("idle")}
+                    isCambodia={useKm}
+                    cashAllowed={cashAllowed}
+                    onCashConfirm={handleCashRide}
+                    onAbaConfirm={handleAbaRide}
+                    onBackToMethods={() => { setClientSecret(null); setPaymentStep("idle"); }}
+                    onPaymentMethodChange={(m) => setSelectedCambodiaPayment(m)}
+                  />
+                );
+              })()}
             </div>
           </div>
         </div>
@@ -3893,7 +4002,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
             <Button
               variant="outline"
               className="flex-1 h-10 rounded-xl gap-1.5 text-sm"
-              onClick={() => toast.info("Opening chat...")}
+              onClick={() => navigate("/chat", { state: { openChat: { userId: assignedDriver.id, name: assignedDriver.name } } })}
             >
               <MessageSquare className="w-4 h-4" />
               {t("ride.message")}
@@ -3901,7 +4010,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
             <Button
               variant="outline"
               className="flex-1 h-10 rounded-xl gap-1.5 text-sm"
-              onClick={() => toast.info("Calling driver...")}
+              onClick={() => assignedDriver.phone ? window.location.href = `tel:${assignedDriver.phone}` : toast.info("Driver phone not available")}
             >
               <Phone className="w-4 h-4" />
               {t("ride.call")}
@@ -3943,7 +4052,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
             <Button
               variant="outline"
               className="flex-1 h-10 rounded-xl gap-1.5 text-sm"
-              onClick={() => toast.info("Opening chat...")}
+              onClick={() => navigate("/chat", { state: { openChat: { userId: assignedDriver.id, name: assignedDriver.name } } })}
             >
               <MessageSquare className="w-4 h-4" />
               {t("ride.message")}
@@ -3951,7 +4060,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
             <Button
               variant="outline"
               className="flex-1 h-10 rounded-xl gap-1.5 text-sm"
-              onClick={() => toast.info("Calling driver...")}
+              onClick={() => assignedDriver.phone ? window.location.href = `tel:${assignedDriver.phone}` : toast.info("Driver phone not available")}
             >
               <Phone className="w-4 h-4" />
               {t("ride.call")}
@@ -3996,7 +4105,10 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
             <Button
               variant="outline"
               className="flex-1 h-10 rounded-xl gap-1.5 text-sm"
-              onClick={() => toast.info("Trip link copied!")}
+              onClick={() => {
+                const link = `${window.location.origin}/rides/track/${rideRequestId ?? ""}`;
+                navigator.clipboard.writeText(link).then(() => toast.success("Trip link copied!")).catch(() => toast.info(link));
+              }}
             >
               <Route className="w-4 h-4" />
               Share Trip
@@ -4004,7 +4116,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
             <Button
               variant="outline"
               className="flex-1 h-10 rounded-xl gap-1.5 text-sm"
-              onClick={() => toast.info("Calling driver...")}
+              onClick={() => assignedDriver.phone ? window.location.href = `tel:${assignedDriver.phone}` : toast.info("Driver phone not available")}
             >
               <Phone className="w-4 h-4" />
               Call
@@ -4012,7 +4124,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
             <Button
               variant="outline"
               className="flex-1 h-10 rounded-xl gap-1.5 text-sm"
-              onClick={() => toast.info("Safety center opened")}
+              onClick={() => navigate("/safety")}
             >
               <Shield className="w-4 h-4" />
               Safety

@@ -71,7 +71,7 @@ serve(async (req) => {
 
     // Log email send attempt (actual email integration can be added later)
     if (giftCard.recipient_email) {
-      console.log(`Gift card ${giftCard.code} should be emailed to ${giftCard.recipient_email}`);
+      console.log(`Gift card delivery queued for recipient`);
     }
 
     return new Response(
