@@ -6,7 +6,7 @@
  */
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Loader2, Mail, Lock, ArrowRight, Eye, EyeOff, Sparkles, UserPlus, X, ChevronLeft, Car } from "lucide-react";
+import { Loader2, Mail, Lock, ArrowRight, Eye, EyeOff, Sparkles, UserPlus, X, ChevronLeft, Car, AlertTriangle } from "lucide-react";
 import { supabase, setRememberMePreference } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -74,7 +74,28 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [capsLockOn, setCapsLockOn] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  const canSubmit =
+    !submitting &&
+    password.length > 0 &&
+    (mode === "password" ? !!selectedAccount : email.trim().length > 0);
+
+  const passwordKeyHandlers = {
+    onKeyUp: (e: React.KeyboardEvent<HTMLInputElement>) =>
+      setCapsLockOn(e.getModifierState("CapsLock")),
+    onKeyDown: (e: React.KeyboardEvent<HTMLInputElement>) =>
+      setCapsLockOn(e.getModifierState("CapsLock")),
+    onBlur: () => setCapsLockOn(false),
+  };
+
+  const capsLockNotice = capsLockOn ? (
+    <p role="alert" className="flex items-center gap-1.5 text-xs text-amber-400 mt-1">
+      <AlertTriangle className="w-3.5 h-3.5" />
+      Caps Lock is on
+    </p>
+  ) : null;
 
   useEffect(() => {
     if (!authLoading && user) navigate(redirect, { replace: true });
@@ -287,6 +308,7 @@ const Login = () => {
                       autoFocus
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      {...passwordKeyHandlers}
                       placeholder="Your password"
                       disabled={submitting}
                       className="w-full h-12 pl-10 pr-11 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
@@ -301,6 +323,7 @@ const Login = () => {
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
+                  {capsLockNotice}
                   <div className="text-right">
                     <Link to="/forgot-password" className="text-xs font-medium text-emerald-400 hover:text-emerald-300">
                       Forgot password?
@@ -310,8 +333,8 @@ const Login = () => {
 
                 <Button
                   type="submit"
-                  disabled={submitting}
-                  className="w-full h-12 rounded-xl text-base font-semibold bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30"
+                  disabled={!canSubmit}
+                  className="w-full h-12 rounded-xl text-base font-semibold bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Continue <ArrowRight className="w-4 h-4 ml-1" /></>}
                 </Button>
@@ -368,6 +391,7 @@ const Login = () => {
                       autoComplete="current-password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
+                      {...passwordKeyHandlers}
                       placeholder="Your password"
                       disabled={submitting}
                       className="w-full h-12 pl-10 pr-11 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
@@ -382,12 +406,13 @@ const Login = () => {
                       {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                     </button>
                   </div>
+                  {capsLockNotice}
                 </div>
 
                 <Button
                   type="submit"
-                  disabled={submitting}
-                  className="w-full h-12 rounded-xl text-base font-semibold bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30"
+                  disabled={!canSubmit}
+                  className="w-full h-12 rounded-xl text-base font-semibold bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Sign In <ArrowRight className="w-4 h-4 ml-1" /></>}
                 </Button>
