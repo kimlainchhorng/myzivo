@@ -167,6 +167,23 @@ Use `scripts/security/compute-spki-pin.sh <hostname>` to compute or refresh
 pins. Always ship with primary + backup pins; the backup is what keeps the app
 working when the leaf certificate rotates.
 
+## Threat intelligence + auto-block (2026-05-01)
+
+Unified attacker-history layer that aggregates signals from every existing
+security table into one decision point. "Check history before protect" — the
+edge layer self-blocks IPs that already have documented hostile behaviour.
+
+- **Migrations**: `20260501100000_threat_intel.sql`, `20260501110000_auto_block_threat.sql`, `20260501120000_blocklist_cleanup.sql`.
+- **`public.ip_blocklist`**: admin-curated hard-block list keyed by SHA-256 of IP (matches the `blocked_link_attempts.ip_hash` convention so entries correlate). RLS forced; admin RW, anon/authenticated revoked.
+- **`public.is_ip_blocked(ip_hash)`**: SECURITY DEFINER, fast lookup. Edge functions call it via `_shared/threatIntel.ts`'s `isIpBlocked(ip)` with a 60s in-isolate cache.
+- **`public.get_threat_history(ip, ip_hash, user_id, hours)`**: admin-only RPC that aggregates `security_events`, `blocked_link_attempts`, `security_incidents`, `chat_security_events`, and `ip_blocklist` for a given subject. Returns counts, max severity, last-seen, and a 5-row sample per source.
+- **`public.auto_block_if_high_threat(...)`**: service-role RPC that computes the score in-DB and inserts an `ip_blocklist` row when score ≥ threshold (default 75 over 24h). Idempotent; logs to `security_events` as `ip_blocklist.auto_added`. Wired into `withSecurity` so any WAF block or scanner-UA hit auto-escalates if the IP already has prior history.
+- **`public.admin_audit_unforced_rls()`**: admin tool to find tables with RLS ENABLED but not FORCED — these allow owner/superuser bypass.
+- **`public.prune_expired_ip_blocklist(_retain_days)`**: housekeeping. Deletes rows whose `expires_at` is older than 90 days (configurable). Admin or service_role.
+- **Admin UI**: `/admin/security/threat-history` — search by raw IP (hashed client-side), IP hash, or user UUID; aggregated signals with a 0-100 threat score; one-click block (24h/7d/30d/permanent) with required reason; current-blocklist viewer with one-click unblock.
+- **Inbound chat phishing**: `assessIncomingChatRisk(text)` in `src/lib/security/chatContentSafety.ts` runs the full `assessLinkSync` rule set (typosquats, shorteners, suspicious TLDs, raw IP, oversized URLs, embedded credentials, punycode) on **received** messages. Wired into `ChatMessageBubble.tsx`: blocked URLs trigger a red "Phishing/impersonation link blocked" warning and suppress the rich link preview; suspicious URLs surface an amber "Open carefully" warning.
+- **Tests**: `src/lib/security/chatContentSafety.test.ts` — 17 tests covering typosquats, shorteners, raw IPs, suspicious TLDs, sanitization, partner allowlist.
+
 ## Known Open Risks (tracked)
 
 - **Channel-topic migration**: `useChatPresence` and `useGroupCall` are now opaque, but `messages` Realtime subscriptions (postgres_changes) still expose table-level metadata. Switching to per-room channels with opaque names is tracked.
