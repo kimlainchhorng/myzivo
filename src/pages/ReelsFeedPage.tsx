@@ -102,9 +102,23 @@ import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import PullToRefresh from "@/components/shared/PullToRefresh";
+import { useHiddenPosts } from "@/hooks/useHiddenPosts";
+import { useHaptic } from "@/hooks/useHaptic";
+import RelativeTime from "@/components/social/RelativeTime";
+import { topicForUserSync } from "@/lib/security/channelName";
+const NewPostsPill = lazy(() => import("@/components/social/NewPostsPill"));
+const FeedGreeting = lazy(() => import("@/components/social/FeedGreeting"));
+const ReelsPreviewRow = lazy(() => import("@/components/social/ReelsPreviewRow"));
+const FeaturedCreatorsRow = lazy(() => import("@/components/social/FeaturedCreatorsRow"));
+const FollowSuggestions = lazy(() => import("@/components/social/FollowSuggestions"));
+const SavedPostsLink = lazy(() => import("@/components/social/SavedPostsLink"));
+const ProfileCompletionNudge = lazy(() => import("@/components/social/ProfileCompletionNudge"));
 const FloatingProductCard = lazy(() => import("@/components/reels/FloatingProductCard"));
 const CommentsSheet = lazy(() => import("@/components/social/CommentsSheet"));
 const FeedStoryRing = lazy(() => import("@/components/social/FeedStoryRing"));
+const OnThisDay = lazy(() => import("@/components/social/OnThisDay"));
+import TrendingHashtags, { postHasHashtag } from "@/components/social/TrendingHashtags";
+const ScrollToTopFab = lazy(() => import("@/components/social/ScrollToTopFab"));
 const SuggestedUsersCarousel = lazy(() => import("@/components/social/SuggestedUsersCarousel"));
 const CreatePostModal = lazy(() => import("@/components/social/CreatePostModal"));
 const PollPostCard = lazy(() => import("@/components/social/PollPostCard"));
@@ -117,9 +131,7 @@ import { shouldSendLikeNotification } from "@/lib/social/likeNotificationGuard";
 import { EngagementSkeleton } from "@/components/social/EngagementSkeleton";
 import SwipeableSheet from "@/components/social/SwipeableSheet";
 const FeedSidebar = lazy(() => import("@/components/social/FeedSidebar"));
-const ReactionSummary = lazy(() => import("@/components/social/ReactionSummary"));
 const CommentPreview = lazy(() => import("@/components/social/CommentPreview"));
-const ReelsPreviewRow = lazy(() => import("@/components/social/ReelsPreviewRow"));
 import { optimizeAvatar } from "@/utils/optimizeAvatar";
 import { useSwipeDownClose } from "@/components/social/useSwipeDownClose";
 import { SwipeGrabHandle } from "@/components/social/SwipeGrabHandle";
@@ -278,6 +290,9 @@ const recordShareForFeedItem = (item: FeedItem, channel: ShareChannel) => {
 export default function ReelsFeedPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const hiddenPosts = useHiddenPosts();
+  const [selectedHashtag, setSelectedHashtag] = useState<string | null>(null);
+  const [newPostsCount, setNewPostsCount] = useState(0);
   const [showCreate, setShowCreate] = useState(false);
   const [shareForPost, setShareForPost] = useState<{ shareUrl: string; shareText: string; shareMediaUrl?: string; shareMediaType?: "image" | "video"; sharePostId?: string; sharePostAuthorId?: string; sharePostAuthorName?: string } | null>(null);
   const [commerceDraft, setCommerceDraft] = useState<{
@@ -302,18 +317,35 @@ export default function ReelsFeedPage() {
   const [storeSearchResults, setStoreSearchResults] = useState<any[]>([]);
   const [searchLoading, setSearchLoading] = useState(false);
   const [feedFilter, setFeedFilter] = useState<"all" | "photos" | "videos" | "text">("all");
-  const [feedTab, setFeedTab] = useState<"For You" | "Friends" | "Following">("For You");
+  const [feedTab, setFeedTab] = useState<"For You" | "Friends" | "Following">(() => {
+    try {
+      const v = localStorage.getItem("zivo:feed-tab-v1");
+      if (v === "For You" || v === "Friends" || v === "Following") return v;
+    } catch { /* ignore */ }
+    return "For You";
+  });
+  useEffect(() => {
+    try { localStorage.setItem("zivo:feed-tab-v1", feedTab); } catch { /* ignore */ }
+  }, [feedTab]);
+  // Scroll to top when the user actually switches tabs or filters — skip the
+  // initial mount so a remembered tab from localStorage doesn't yank the page.
+  const tabMountedRef = useRef(false);
+  useEffect(() => {
+    if (!tabMountedRef.current) {
+      tabMountedRef.current = true;
+      return;
+    }
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [feedTab, feedFilter, selectedHashtag]);
   const [sidebarContacts, setSidebarContacts] = useState<Array<{ id: string; name: string; avatar: string | null }>>([]);
   const [trendingTags, setTrendingTags] = useState<string[]>([]);
   const [friendIds, setFriendIds] = useState<Set<string>>(new Set());
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
-  const [selectedHashtag, setSelectedHashtag] = useState<string | null>(null);
   const PAGE_INCREMENT = 25;
   const PAGE_MAX = 500;
   const [pageSize, setPageSize] = useState(50);
   const loadMoreRef = useRef<HTMLDivElement>(null);
   const feedTopRef = useRef<HTMLDivElement>(null);
-  const [newPostsCount, setNewPostsCount] = useState(0);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const location = useLocation();
@@ -437,6 +469,30 @@ export default function ReelsFeedPage() {
       setTrendingTags(Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([t]) => t));
     })();
   }, [userId]);
+
+  // Realtime: count new posts that arrive while the user is mid-feed.
+  useEffect(() => {
+    const channelName = userId ? topicForUserSync(userId, "reels-feed-new-posts") : "reels-feed-new-posts:anon";
+    const channel = supabase
+      .channel(channelName)
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "user_posts" }, (payload: any) => {
+        if (payload?.new?.user_id === userId) return;
+        if (payload?.new?.is_published === false) return;
+        setNewPostsCount((c) => c + 1);
+      })
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "store_posts" }, (payload: any) => {
+        if (payload?.new?.is_published === false) return;
+        setNewPostsCount((c) => c + 1);
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [userId]);
+
+  const handleShowNewPosts = useCallback(() => {
+    setNewPostsCount(0);
+    queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }, [queryClient]);
 
   // Active live-stream count — drives the visibility + label of the Live Now
   // banner so we don't promote a discovery surface that has nothing to show.
@@ -1238,7 +1294,10 @@ export default function ReelsFeedPage() {
                   onClick={() => setShowCreate(true)}
                   className="flex-1 text-left px-4 py-2 rounded-full bg-muted/40 border border-border/30 text-sm text-muted-foreground hover:bg-muted/60 transition-colors"
                 >
-                  What's on your mind?
+                  {(() => {
+                    const first = (userProfile?.name || "").trim().split(/\s+/)[0];
+                    return first ? `What's on your mind, ${first}?` : "What's on your mind?";
+                  })()}
                 </button>
               </div>
               <div className="border-t border-border/20 pt-1.5 flex overflow-x-auto scrollbar-hide">
@@ -1313,13 +1372,83 @@ export default function ReelsFeedPage() {
             </button>
           )}
 
+          {/* Personalized greeting (mobile only) */}
+          <Suspense fallback={null}>
+            <FeedGreeting name={userProfile?.name} />
+          </Suspense>
+
+          {/* Active filter summary — shown when any filter narrows the feed */}
+          {(selectedHashtag || feedTab !== "For You" || feedFilter !== "all") && (
+            <div className="mx-3 mt-2 mb-1 flex items-center justify-between gap-2 rounded-full bg-muted/60 px-3 py-1.5">
+              <div className="flex items-center gap-1.5 min-w-0 text-[12px] text-foreground">
+                <span className="text-muted-foreground">Filtered:</span>
+                {feedTab !== "For You" && (
+                  <span className="font-semibold">{feedTab}</span>
+                )}
+                {feedFilter !== "all" && (
+                  <>
+                    {feedTab !== "For You" && <span className="text-muted-foreground">·</span>}
+                    <span className="font-semibold capitalize">{feedFilter}</span>
+                  </>
+                )}
+                {selectedHashtag && (
+                  <>
+                    {(feedTab !== "For You" || feedFilter !== "all") && <span className="text-muted-foreground">·</span>}
+                    <span className="font-semibold text-primary truncate">#{selectedHashtag}</span>
+                  </>
+                )}
+              </div>
+              <button
+                onClick={() => {
+                  setSelectedHashtag(null);
+                  setFeedTab("For You");
+                  setFeedFilter("all");
+                }}
+                className="shrink-0 text-[11px] font-semibold text-primary active:opacity-70"
+              >
+                Clear all
+              </button>
+            </div>
+          )}
+
+          {/* Profile completion nudge — auto-hides once avatar + bio are set */}
+          <Suspense fallback={null}>
+            <ProfileCompletionNudge />
+          </Suspense>
+
+          {/* Saved posts entry — only shows when user has bookmarks */}
+          <Suspense fallback={null}>
+            <SavedPostsLink />
+          </Suspense>
+
+          {/* New posts pill — appears when realtime detects fresh inserts */}
+          <Suspense fallback={null}>
+            <NewPostsPill count={newPostsCount} onClick={handleShowNewPosts} />
+          </Suspense>
+
+          {/* On this day — Facebook-style memories */}
+          <Suspense fallback={null}><OnThisDay /></Suspense>
+
+          {/* Trending hashtag chips — tap to filter the feed */}
+          <div className="px-3 pt-1.5 pb-1">
+            <TrendingHashtags
+              posts={items}
+              selected={selectedHashtag}
+              onSelect={setSelectedHashtag}
+              variant="inline"
+            />
+          </div>
+
+          {/* Scroll-to-top FAB (renders portal-ish via fixed positioning) */}
+          <Suspense fallback={null}><ScrollToTopFab /></Suspense>
+
           {/* Story Rings */}
            <Suspense fallback={null}><FeedStoryRing /></Suspense>
 
            {/* Quick feature access — Facebook-style shortcut bar */}
            <div className="flex gap-4 px-3 py-2.5 overflow-x-auto scrollbar-hide border-b border-border/10">
              {[
-               { label: "Watch", icon: Film, path: "/feed", bg: "bg-violet-500" },
+               { label: "Watch", icon: Film, path: "/reels", bg: "bg-violet-500" },
                { label: "Marketplace", icon: Package, path: "/marketplace", bg: "bg-amber-500" },
                { label: "Groups", icon: Users, path: "/communities", bg: "bg-blue-500" },
                { label: "Events", icon: Calendar, path: "/explore", bg: "bg-emerald-500" },
@@ -1395,18 +1524,60 @@ export default function ReelsFeedPage() {
               )}
             </div>
           ) : (() => {
-            const tabItems = feedTab === "Friends"
-              ? items.filter(i => i.author_id && friendIds.has(i.author_id))
-              : feedTab === "Following"
-              ? items.filter(i => i.author_id && followingIds.has(i.author_id))
+            const hiddenFiltered = hiddenPosts.hidden.size > 0
+              ? items.filter(i => !hiddenPosts.isHidden(i.id))
               : items;
+            const baseItems = selectedHashtag
+              ? hiddenFiltered.filter(i => postHasHashtag(i.caption, selectedHashtag))
+              : hiddenFiltered;
+            const tabItems = feedTab === "Friends"
+              ? baseItems.filter(i => i.author_id && friendIds.has(i.author_id))
+              : feedTab === "Following"
+              ? baseItems.filter(i => i.author_id && followingIds.has(i.author_id))
+              : baseItems;
             const filteredItems = feedFilter === "all" ? tabItems
               : feedFilter === "photos" ? tabItems.filter(i => i.media_type === "image" && i.media_urls.length > 0)
               : feedFilter === "videos" ? tabItems.filter(i => i.media_type === "video")
               : tabItems.filter(i => !i.media_urls.length || !i.media_urls[0]);
             return filteredItems.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-40 text-muted-foreground/50">
-                <p className="text-sm">No {feedFilter} posts found</p>
+              <div className="flex flex-col items-center justify-center gap-3 min-h-48 py-6 px-6 text-center">
+                {selectedHashtag ? (
+                  <>
+                    <p className="text-sm text-muted-foreground">
+                      No posts with <span className="font-semibold text-foreground">#{selectedHashtag}</span> yet
+                    </p>
+                    <button
+                      onClick={() => setSelectedHashtag(null)}
+                      className="rounded-full bg-primary text-primary-foreground text-xs font-semibold px-4 py-2 active:scale-95 transition-transform"
+                    >
+                      Clear filter
+                    </button>
+                  </>
+                ) : feedTab === "Following" || feedTab === "Friends" ? (
+                  <div className="w-full max-w-md">
+                    <div className="flex flex-col items-center gap-2 text-center mb-2">
+                      <p className="text-sm text-foreground font-medium">
+                        Nothing in {feedTab} yet
+                      </p>
+                      <p className="text-xs text-muted-foreground max-w-[260px]">
+                        {feedTab === "Following"
+                          ? "Follow creators to see their posts here."
+                          : "Add friends or follow more people to fill this tab."}
+                      </p>
+                      <button
+                        onClick={() => setFeedTab("For You")}
+                        className="rounded-full bg-primary text-primary-foreground text-xs font-semibold px-4 py-2 active:scale-95 transition-transform"
+                      >
+                        Back to For You
+                      </button>
+                    </div>
+                    <Suspense fallback={null}>
+                      <FollowSuggestions />
+                    </Suspense>
+                  </div>
+                ) : (
+                  <p className="text-sm text-muted-foreground/70">No {feedFilter} posts found</p>
+                )}
               </div>
             ) : (
             <div className="divide-y divide-border/20">
@@ -1514,6 +1685,10 @@ export default function ReelsFeedPage() {
                   )}
                   {/* Interactive community poll after 9th post */}
                   {idx === 8 && <FeedPollCard />}
+                  {/* Trending reels strip — TikTok cross-promotion within feed */}
+                  {idx === 5 && <Suspense fallback={null}><ReelsPreviewRow /></Suspense>}
+                  {/* Featured creators row — Facebook-style discovery */}
+                  {idx === 10 && <Suspense fallback={null}><FeaturedCreatorsRow /></Suspense>}
                   {/* Inject Marketplace banner after 8th post */}
                   {idx === 7 && (
                     <button
@@ -2049,6 +2224,7 @@ export default function ReelsFeedPage() {
 function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUserId: string | null; onClose: () => void }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const haptic = useHaptic();
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -2204,6 +2380,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
     }
 
     const newLiked = !liked;
+    haptic(newLiked ? "medium" : "light");
     setLiked(newLiked);
     setLocalLikes((prev) => Math.max(0, prev + (newLiked ? 1 : -1)));
 
@@ -2241,13 +2418,6 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
 
   // Comments are now handled by CommentsSheet
 
-  const timeAgo = (() => {
-    try {
-      return formatDistanceToNow(new Date(item.created_at), { addSuffix: true });
-    } catch {
-      return "";
-    }
-  })();
 
   const shareUrl = getPostShareUrl(getReelsSharePostId(item));
   const shareText = encodeURIComponent(item.caption || `Check out this post by ${item.author_name}`);
@@ -2564,7 +2734,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
                   </div>
                   <div className="min-w-0 text-left">
                     <p className="truncate text-white text-sm font-bold drop-shadow-lg">{displayName}</p>
-                    <p className="text-white/60 text-[10px] drop-shadow">{timeAgo}</p>
+                    <p className="text-white/60 text-[10px] drop-shadow"><RelativeTime date={item.created_at} /></p>
                   </div>
                 </button>
                 {/* Follow button next to author */}
@@ -2763,6 +2933,8 @@ function FeedPollCard() {
 function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detailMode }: { item: FeedItem; currentUserId: string | null; onOpenFullscreen?: () => void; autoPlayVideo?: boolean; detailMode?: boolean }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const hiddenPosts = useHiddenPosts();
+  const haptic = useHaptic();
   const [liked, setLiked] = useState(false);
   const [saved, setSaved] = useState(false);
   const [muted, setMuted] = useState(true);
@@ -2799,6 +2971,10 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
   const containerRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef(0);
   const touchDeltaX = useRef(0);
+  // Long-press on Like opens the FB-style reaction picker; when it fires we
+  // suppress the trailing click so the post doesn't also get a plain Like.
+  const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const longPressFired = useRef(false);
 
   const handleTouchStart = (e: React.TouchEvent) => {
     touchStartX.current = e.touches[0].clientX;
@@ -3010,13 +3186,6 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
     }
   };
 
-  const timeAgo = (() => {
-    try {
-      return formatDistanceToNow(new Date(item.created_at), { addSuffix: true });
-    } catch {
-      return "";
-    }
-  })();
 
   // Auto-play videos when visible or when autoPlayVideo is set
   useEffect(() => {
@@ -3083,6 +3252,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
     }
 
     const newLiked = !liked;
+    haptic(newLiked ? "medium" : "light");
     setLiked(newLiked);
     setLocalLikes((prev) => Math.max(0, prev + (newLiked ? 1 : -1)));
 
@@ -3167,6 +3337,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
   };
 
   const handleShare = async () => {
+    haptic("selection");
     const text = item.caption || `Check out this post by ${item.author_name}`;
     try {
       if (typeof navigator !== "undefined" && (navigator as any).share) {
@@ -3264,6 +3435,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
       toast.info("Polls can't be saved yet");
       return;
     }
+    haptic(saved ? "light" : "medium");
     // Prevent rapid double-tap from triggering two writes — the second
     // INSERT would 409 against the unique (user_id, post_id, source) constraint.
     if (savingBookmark.current) return;
@@ -3356,6 +3528,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
       toast.error("Comments are turned off for this post");
       return;
     }
+    haptic("selection");
     if (!currentUserId) {
       toast.error("Please sign in to comment");
       return;
@@ -3404,7 +3577,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
                     {isBlueVerified(item.author_is_verified) && <VerifiedBadge size={13} />}
                   </p>
                   <div className="flex items-center gap-1 flex-wrap">
-                    <p className="text-[10px] text-muted-foreground">{timeAgo}</p>
+                    <p className="text-[10px] text-muted-foreground"><RelativeTime date={item.created_at} /></p>
                     <span className="text-[10px] text-muted-foreground">·</span>
                     <Globe className="h-2.5 w-2.5 text-muted-foreground" />
                     {item.is_pinned && (
@@ -3618,7 +3791,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
                     )}
                   </p>
                   <div className="flex items-center gap-1">
-                    <p className="text-[10px] text-muted-foreground">{timeAgo}</p>
+                    <p className="text-[10px] text-muted-foreground"><RelativeTime date={item.created_at} /></p>
                     {item.source === "store" && (
                       <>
                         <span className="text-[10px] text-muted-foreground">·</span>
@@ -3907,31 +4080,6 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
         </>
       )}
 
-      {/* Emoji reaction bar (long-press activated) */}
-      <AnimatePresence>
-        {showReactionPicker && (
-          <motion.div
-            initial={{ opacity: 0, y: 10, scale: 0.9 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.9 }}
-            className="flex items-center gap-1 px-3 py-2 mx-3 mt-1 bg-card rounded-full shadow-lg border border-border/30 w-fit"
-          >
-            {REACTIONS.map((emoji) => (
-              <button
-                key={emoji}
-                onClick={() => handleReaction(emoji)}
-                className={cn(
-                  "text-xl p-1.5 rounded-full transition-all active:scale-125 hover:bg-muted",
-                  selectedReaction === emoji && "bg-primary/10 ring-2 ring-primary/30"
-                )}
-              >
-                {emoji}
-              </button>
-            ))}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
       {/* Facebook-style engagement summary row */}
       {(localLikes > 0 || localComments > 0 || (item.shares_count || 0) > 0) && (
         <div className="px-3 pb-1 pt-0.5 space-y-0.5">
@@ -4004,25 +4152,78 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
       {/* Action buttons — enhanced with counts */}
       <div className="flex items-center px-2.5 sm:px-3 py-1.5">
         <div className="flex items-center gap-1 flex-1">
-          <button
-            onClick={handleLike}
-            onContextMenu={(e) => { e.preventDefault(); setShowReactionPicker(!showReactionPicker); }}
-            aria-label={liked ? `Unlike post${!item.hide_like_counts && formatCount(localLikes) ? `, ${formatCount(localLikes)} likes` : ""}` : `Like post${!item.hide_like_counts && formatCount(localLikes) ? `, ${formatCount(localLikes)} likes` : ""}`}
-            aria-pressed={liked}
-            style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none", userSelect: "none", WebkitTapHighlightColor: "transparent" } as React.CSSProperties}
-            className="min-h-[44px] min-w-[36px] sm:min-w-[40px] flex items-center justify-center gap-1 group"
-          >
-            {selectedReaction ? (
-              <span className="text-lg" aria-hidden>{selectedReaction}</span>
-            ) : (
-              <Heart aria-hidden className={cn("h-[22px] w-[22px] transition-all", liked ? "text-destructive fill-destructive scale-110" : "text-foreground group-active:scale-125")} />
-            )}
-            {!item.hide_like_counts && formatCount(localLikes) && (
-              <span aria-hidden className={cn("text-[12px] font-semibold whitespace-nowrap", liked || selectedReaction ? "text-destructive" : "text-muted-foreground")}>
-                {formatCount(localLikes)}
-              </span>
-            )}
-          </button>
+          <div className="relative">
+            {/* FB-style reaction popover anchored above the Like button.
+                Opens on long-press (touch) or right-click (desktop). */}
+            <AnimatePresence>
+              {showReactionPicker && (
+                <motion.div
+                  initial={{ opacity: 0, y: 12, scale: 0.7 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 8, scale: 0.7 }}
+                  transition={{ type: "spring", damping: 16, stiffness: 420, mass: 0.7 }}
+                  className="absolute bottom-full left-0 mb-3 z-50 flex items-center gap-0.5 px-2.5 py-1.5 bg-card rounded-full shadow-2xl border border-border/40"
+                >
+                  {REACTIONS.map((emoji, i) => (
+                    <motion.button
+                      key={emoji}
+                      initial={{ scale: 0, y: 16 }}
+                      animate={{ scale: 1, y: 0 }}
+                      transition={{ delay: i * 0.04, type: "spring", damping: 14, stiffness: 500 }}
+                      onClick={(e) => { e.stopPropagation(); handleReaction(emoji); }}
+                      className={cn(
+                        "text-3xl leading-none p-1.5 rounded-full transition-transform hover:scale-[1.35] active:scale-110 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                        selectedReaction === emoji && "bg-primary/10 ring-2 ring-primary/30"
+                      )}
+                      aria-label={emoji}
+                    >
+                      {emoji}
+                    </motion.button>
+                  ))}
+                </motion.div>
+              )}
+            </AnimatePresence>
+            <button
+              onClick={() => {
+                if (longPressFired.current) { longPressFired.current = false; return; }
+                handleLike();
+              }}
+              onPointerDown={() => {
+                if (longPressTimer.current) clearTimeout(longPressTimer.current);
+                longPressFired.current = false;
+                longPressTimer.current = setTimeout(() => {
+                  longPressFired.current = true;
+                  haptic("medium");
+                  setShowReactionPicker(true);
+                }, 350);
+              }}
+              onPointerUp={() => {
+                if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
+              }}
+              onPointerLeave={() => {
+                if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
+              }}
+              onPointerCancel={() => {
+                if (longPressTimer.current) { clearTimeout(longPressTimer.current); longPressTimer.current = null; }
+              }}
+              onContextMenu={(e) => { e.preventDefault(); setShowReactionPicker(!showReactionPicker); }}
+              aria-label={liked ? `Unlike post${!item.hide_like_counts && formatCount(localLikes) ? `, ${formatCount(localLikes)} likes` : ""}` : `Like post${!item.hide_like_counts && formatCount(localLikes) ? `, ${formatCount(localLikes)} likes` : ""}`}
+              aria-pressed={liked}
+              style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none", userSelect: "none", WebkitTapHighlightColor: "transparent" } as React.CSSProperties}
+              className="min-h-[44px] min-w-[36px] sm:min-w-[40px] flex items-center justify-center gap-1 group"
+            >
+              {selectedReaction ? (
+                <span className="text-lg" aria-hidden>{selectedReaction}</span>
+              ) : (
+                <Heart aria-hidden className={cn("h-[22px] w-[22px] transition-all", liked ? "text-destructive fill-destructive scale-110" : "text-foreground group-active:scale-125")} />
+              )}
+              {!item.hide_like_counts && formatCount(localLikes) && (
+                <span aria-hidden className={cn("text-[12px] font-semibold whitespace-nowrap", liked || selectedReaction ? "text-destructive" : "text-muted-foreground")}>
+                  {formatCount(localLikes)}
+                </span>
+              )}
+            </button>
+          </div>
           {commentSetting !== "off" && (
             <button
               onClick={handleComment}
@@ -4144,16 +4345,28 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
           <p className="text-[12px] text-muted-foreground/60">Comments are turned off</p>
         </div>
       ) : localComments > 0 ? (
-        <a
-          href={`?post=${encodeURIComponent(interactionPostId)}&src=${item.source}&comments=1`}
-          onClick={(e) => { e.preventDefault(); handleComment(); }}
-          aria-label={`View all ${formatCount(localComments) ?? localComments} comments on this post`}
-          className="block px-3 pb-2 text-left active:opacity-70"
-        >
-          <p className="text-[13px] text-muted-foreground font-medium hover:text-foreground transition-colors">
-            {commentsLinkLabel(localComments)}
-          </p>
-        </a>
+        <>
+          <div className="px-3 pb-1">
+            <Suspense fallback={null}>
+              <CommentPreview
+                postId={interactionPostId}
+                source={item.source === "store" ? "store" : "user"}
+                totalCount={localComments}
+                onOpen={handleComment}
+              />
+            </Suspense>
+          </div>
+          <a
+            href={`?post=${encodeURIComponent(interactionPostId)}&src=${item.source}&comments=1`}
+            onClick={(e) => { e.preventDefault(); handleComment(); }}
+            aria-label={`View all ${formatCount(localComments) ?? localComments} comments on this post`}
+            className="block px-3 pb-2 text-left active:opacity-70"
+          >
+            <p className="text-[13px] text-muted-foreground font-medium hover:text-foreground transition-colors">
+              {commentsLinkLabel(localComments)}
+            </p>
+          </a>
+        </>
       ) : null}
 
       {/* Comments Sheet — only mount when open */}
@@ -4286,7 +4499,11 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
             <span className="text-sm font-medium text-foreground">Copy link</span>
           </button>
           <button
-            onClick={() => { setShowPostMenu(false); toast.success("You won't see posts like this anymore"); }}
+            onClick={() => {
+              setShowPostMenu(false);
+              hiddenPosts.hide(item.id);
+              toast.success("We'll show fewer like this");
+            }}
             className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
           >
             <EyeOff className="h-5 w-5 text-foreground" />
