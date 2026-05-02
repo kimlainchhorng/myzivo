@@ -77,11 +77,14 @@ import { isBlueVerified } from "@/lib/verification";
 import { LIVE_FEATURE_FLAGS } from "@/config/liveFeatureFlags";
 import { useRecentlyWatchedLive } from "@/hooks/useRecentlyWatchedLive";
 import { useTopLiveGifters } from "@/hooks/useTopLiveGifters";
+import { useStreamTopGifters } from "@/hooks/useStreamTopGifters";
 
 const ZivoMobileNav = lazy(() =>import("@/components/app/ZivoMobileNav"));
 const GiftAnimationOverlay = lazy(() =>import("@/components/live/GiftAnimationOverlay"));
 const CoinRechargeSheet = lazy(() =>import("@/components/live/CoinRechargeSheet"));
 const LiveWebRTCVideo = lazy(() =>import("@/components/live/LiveWebRTCVideo"));
+const DailyRewardCard = lazy(() =>import("@/components/live/DailyRewardCard"));
+const StreamTopGiftersPanel = lazy(() =>import("@/components/live/StreamTopGiftersPanel"));
 
 interface LiveStream {
  id: string;
@@ -132,6 +135,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
  const [showRechargeSheet, setShowRechargeSheet] = useState(false);
  const [sending, setSending] = useState(false);
  const [showViewerList, setShowViewerList] = useState(false);
+ const [showTopGifters, setShowTopGifters] = useState(false);
  const [viewerNames, setViewerNames] = useState<{ user_id: string; name: string; avatar: string | null; is_verified?: boolean }[]>([]);
  // Cache of resolved verified flags so chat/gift inserts can hydrate the badge without flicker
  const verifiedCacheRef = useRef<Map<string, boolean>>(new Map());
@@ -187,6 +191,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
  const lastTapRef = useRef<number>(0);
  const chatEndRef = useRef<HTMLDivElement>(null);
  const { activeGift: activeGiftAnim, comboCount: giftCombo, enqueue: enqueueGiftAnim, onComplete: onGiftAnimComplete } = useGiftAnimationQueue();
+ const { data: streamTopGifters, loading: topGiftersLoading } = useStreamTopGifters(stream.id, 10);
  const allGifts = useMemo(() =>giftCatalog, []);
 
  // ── Stream timer ──
@@ -656,10 +661,34 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
 <Eye className="h-4 w-4 text-white/70" />
 <span className="text-[7px] text-white/50 -mt-0.5">{viewerCount >999 ? `${(viewerCount / 1000).toFixed(1)}k` : viewerCount}</span>
 </button>
+<button
+ onClick={() =>setShowTopGifters((s) =>!s)}
+ className="w-11 h-11 rounded-full bg-black/30 backdrop-blur-sm flex flex-col items-center justify-center"
+ aria-label="Top supporters"
+ >
+<Trophy className="h-4 w-4 text-amber-300" />
+ {streamTopGifters.length >0 && (
+<span className="text-[7px] text-white/50 -mt-0.5">{streamTopGifters.length}</span>
+ )}
+</button>
 <button onClick={() =>setShowGiftPanel(true)} className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/30 animate-pulse">
 <Gift className="h-5 w-5 text-white" />
 </button>
 </div>
+
+ {/* Top gifters slide-in panel */}
+<AnimatePresence>
+ {showTopGifters && (
+<Suspense fallback={null}>
+<StreamTopGiftersPanel
+ open={showTopGifters}
+ onClose={() =>setShowTopGifters(false)}
+ gifters={streamTopGifters}
+ loading={topGiftersLoading}
+ />
+</Suspense>
+ )}
+</AnimatePresence>
 
  {/* Viewer list */}
 <AnimatePresence>
@@ -1151,6 +1180,11 @@ export default function LiveStreamPage() {
   <span className="text-[10px] font-black tracking-[0.2em] text-muted-foreground/80 uppercase">Community</span>
   <div className="h-px flex-1 bg-gradient-to-l from-transparent to-blue-500/30" />
 </div>
+
+ {/* Daily login coin bonus (real DB) */}
+<Suspense fallback={null}>
+<DailyRewardCard />
+</Suspense>
 
  {/* ─── Recently Watched / Continue Watching (real data) ─── */}
 {LIVE_FEATURE_FLAGS.recentlyWatched && recentlyWatched.length > 0 && (
