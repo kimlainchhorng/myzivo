@@ -8,8 +8,9 @@
  * Dashboard" band at the bottom.
  */
 import { useEffect, useMemo, useState } from "react";
-import { Helmet } from "react-helmet-async";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import SEOHead from "@/components/SEOHead";
+import { lodgingSchema } from "@/utils/seoSchemas";
 import SafeCaption from "@/components/social/SafeCaption";
 import { motion } from "framer-motion";
 import { format, addDays, differenceInCalendarDays, parseISO, isValid } from "date-fns";
@@ -304,19 +305,34 @@ export default function HotelResortDetailPage() {
     );
   }
 
+  // LodgingBusiness structured data — drives Google's hotel rich card with
+  // images, location, and (when available) star rating + price tier. Built only
+  // when we have a real store record so we never publish empty schema.
+  const hotelStructuredData = store
+    ? lodgingSchema({
+        name: store.name || "Hotel on ZIVO",
+        description:
+          store.description?.slice(0, 280) ||
+          `Discover ${store.name || "this hotel"} on ZIVO — rooms, amenities, location and contact.`,
+        image: cover || `${window.location.origin}/og-hotels.jpg`,
+        url: `https://hizivo.com/hotel/${storeId}`,
+        address: location ? { street: location } : undefined,
+        priceRange: undefined, // wire when store_profiles exposes a price tier
+      })
+    : undefined;
+
   return (
     <div className="min-h-dvh bg-background pb-32 md:pb-12">
-      <Helmet>
-        <title>{store?.name ? `${store.name} — ZIVO` : "Hotel & Resort — ZIVO"}</title>
-        <meta
-          name="description"
-          content={
-            store?.description?.slice(0, 155) ||
-            `Discover ${store?.name || "this hotel"} on ZIVO — rooms, amenities, location and contact.`
-          }
-        />
-        <link rel="canonical" href={`https://hizivo.com/hotel/${storeId}`} />
-      </Helmet>
+      <SEOHead
+        title={store?.name ? `${store.name} — Hotel on ZIVO` : "Hotel & Resort — ZIVO"}
+        description={
+          store?.description?.slice(0, 155) ||
+          `Discover ${store?.name || "this hotel"} on ZIVO — rooms, amenities, location and contact.`
+        }
+        canonical={`https://hizivo.com/hotel/${storeId}`}
+        ogImage={cover || undefined}
+        structuredData={hotelStructuredData}
+      />
 
       {/* Hero / Cover */}
       <div className="relative">

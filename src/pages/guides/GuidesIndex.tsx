@@ -3,16 +3,16 @@
  * Hub for all travel guides and content
  */
 
-import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
-import { 
-  Plane, Hotel, Car, MapPin, Clock, DollarSign, 
-  Calendar, Globe, BookOpen, ArrowRight, Search 
+import {
+  Plane, Hotel, Car, MapPin, Clock, DollarSign,
+  Calendar, Globe, BookOpen, ArrowRight, Search
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import NavBar from "@/components/home/NavBar";
 import Footer from "@/components/Footer";
+import SEOHead from "@/components/SEOHead";
 
 const GUIDE_CATEGORIES = [
   {
@@ -72,15 +72,45 @@ const GUIDE_CATEGORIES = [
 ];
 
 export default function GuidesIndex() {
+  // CollectionPage schema lists every guide as an item so Google can show this
+  // page as a hub in search results and surface individual guides in
+  // sitelinks. Re-derived from GUIDE_CATEGORIES so it stays in sync with the
+  // visible content automatically.
+  const collectionSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'CollectionPage',
+    '@id': 'https://hizivo.com/guides#collection',
+    url: 'https://hizivo.com/guides',
+    name: 'Travel Guides & Tips',
+    description:
+      'Expert travel guides, booking tips, and destination information to help you plan your perfect trip.',
+    isPartOf: { '@id': 'https://hizivo.com/#website' },
+    publisher: { '@type': 'Organization', name: 'ZIVO', url: 'https://hizivo.com' },
+    mainEntity: {
+      '@type': 'ItemList',
+      itemListElement: GUIDE_CATEGORIES.flatMap((cat, ci) =>
+        cat.guides.map((g, gi) => ({
+          '@type': 'ListItem',
+          position: ci * 10 + gi + 1,
+          name: g.title,
+          url: g.isAirport
+            ? `https://hizivo.com/airports/${g.slug}`
+            : cat.title === 'Destination Guides'
+              ? `https://hizivo.com/guides/${g.slug}`
+              : `https://hizivo.com/guides/${g.slug}`,
+        })),
+      ),
+    },
+  };
+
   return (
     <>
-      <Helmet>
-        <title>Travel Guides & Tips | ZIVO</title>
-        <meta 
-          name="description" 
-          content="Expert travel guides, booking tips, and destination information to help you plan your perfect trip." 
-        />
-      </Helmet>
+      <SEOHead
+        title="Travel Guides & Tips | ZIVO"
+        description="Expert travel guides, booking tips, and destination information to help you plan your perfect trip."
+        canonical="https://hizivo.com/guides"
+        structuredData={collectionSchema}
+      />
 
       <NavBar />
 

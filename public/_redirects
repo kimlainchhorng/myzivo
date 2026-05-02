@@ -1,1 +1,57 @@
-/* /index.html 200
+# =============================================================================
+# ZIVO (hizivo.com) — Netlify _redirects
+#
+# Order matters: specific rules first, then the SPA catch-all.
+# Status codes:
+#   301! = permanent redirect, force even if a matching file exists
+#   200  = rewrite (no client-visible URL change), used for SPA fallback
+# =============================================================================
+
+# -----------------------------------------------------------------------------
+# Domain canonicalization — keep ALL link equity on the apex domain so Google
+# doesn't split rankings between www.hizivo.com and hizivo.com.
+# -----------------------------------------------------------------------------
+https://www.hizivo.com/*   https://hizivo.com/:splat   301!
+http://www.hizivo.com/*    https://hizivo.com/:splat   301!
+
+# -----------------------------------------------------------------------------
+# Common typo / legacy URL fixes — recover lost traffic and pass it through
+# with a 301 so search engines update the index.
+# -----------------------------------------------------------------------------
+/fligths/*       /flights/:splat       301
+/flight          /flights              301
+/hotel           /hotels               301
+/car             /rent-car             301
+/rent-cars/*     /rent-car/:splat      301
+/restaurants     /eats                 301
+/restaurants/*   /eats/:splat          301
+/download        /install              301
+/get-app         /install              301
+/app-download    /install              301
+
+# -----------------------------------------------------------------------------
+# .well-known passthrough — these are flat files, NOT SPA routes. Without
+# explicit rules they would otherwise be swallowed by the catch-all below
+# and break Universal Links / App Links / security.txt discovery.
+# -----------------------------------------------------------------------------
+/.well-known/apple-app-site-association   /.well-known/apple-app-site-association   200
+/.well-known/assetlinks.json              /.well-known/assetlinks.json              200
+/.well-known/security.txt                 /.well-known/security.txt                 200
+
+# -----------------------------------------------------------------------------
+# SEO discovery files — same reason: serve the file, do not fall through to
+# the SPA which would return index.html with the wrong content-type.
+# -----------------------------------------------------------------------------
+/sitemap.xml         /sitemap.xml         200
+/sitemap-index.xml   /sitemap-index.xml   200
+/robots.txt          /robots.txt          200
+/llms.txt            /llms.txt            200
+/humans.txt          /humans.txt          200
+/security.txt        /security.txt        200
+/manifest.webmanifest /manifest.webmanifest 200
+
+# -----------------------------------------------------------------------------
+# SPA fallback — every other route renders the React shell with a 200 so
+# crawlers index the page (a 404 here would tell Google to drop the URL).
+# -----------------------------------------------------------------------------
+/*   /index.html   200

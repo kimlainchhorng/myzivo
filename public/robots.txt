@@ -97,11 +97,66 @@ Allow: /eats
 Allow: /about
 Allow: /how-it-works
 Allow: /partners
+Allow: /partners/join
+Allow: /partner-with-zivo
+Allow: /become-partner
+Allow: /affiliate-hub
+Allow: /api-partners
+Allow: /enterprise-ready
+Allow: /enterprise-trust
+Allow: /for-customers
+Allow: /developers
+Allow: /connect-website
+Allow: /data-insights
+Allow: /compliance
 Allow: /creators
 Allow: /creators/*
 Allow: /contact
 Allow: /help
+Allow: /help-center
+Allow: /support
 Allow: /faq
+Allow: /safety
+Allow: /status
+Allow: /mission
+Allow: /refund-policy
+Allow: /install
+
+# Lifestyle / Discover verticals
+Allow: /events
+Allow: /experiences
+Allow: /places
+Allow: /dating
+Allow: /wellness
+Allow: /wellness/*
+Allow: /food
+Allow: /podcasts
+Allow: /live
+Allow: /watch-party
+Allow: /sounds
+Allow: /link-hub
+
+# Travel / Service verticals (publicly browsable hubs)
+Allow: /ai-trip-planner
+Allow: /business-travel
+Allow: /multi-city-builder
+Allow: /cars
+Allow: /cars/search
+Allow: /how-to-rent
+Allow: /insurance
+Allow: /concierge
+Allow: /auto-repair
+Allow: /package-delivery
+Allow: /move
+Allow: /ride
+Allow: /services
+
+# Marketplace & creator monetization
+Allow: /marketplace
+Allow: /monetization
+Allow: /digital-products
+Allow: /promote
+Allow: /brand-deals
 
 # Legal Pages
 Allow: /terms

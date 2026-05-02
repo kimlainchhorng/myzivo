@@ -6,12 +6,13 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
 import { motion } from "framer-motion";
-import { 
-  Download, Smartphone, Share, Plus, Check, 
+import {
+  Download, Smartphone, Share, Plus, Check,
   Plane, Car, Utensils, BedDouble, ChevronRight,
   Zap, Wifi, Bell
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import SEOHead from "@/components/SEOHead";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
@@ -74,8 +75,56 @@ const Install = () => {
     { icon: Bell, label: "Push Alerts", desc: "Price drop notifications" },
   ];
 
+  // Structured data for the install page — combines a WebPage schema with two
+  // MobileApplication offers (iOS + Android) so Google can route iPhone users
+  // to App Store results and Android users to Play Store results.
+  const installSchema = [
+    {
+      '@context': 'https://schema.org',
+      '@type': 'WebPage',
+      '@id': 'https://hizivo.com/install#webpage',
+      url: 'https://hizivo.com/install',
+      name: 'Install the ZIVO App – iOS, Android & Web',
+      description:
+        'Get the free ZIVO app on iOS, Android, or use it as a web app. One account for travel, social, shop, jobs, and more.',
+      isPartOf: { '@id': 'https://hizivo.com/#website' },
+      primaryImageOfPage: {
+        '@type': 'ImageObject',
+        url: 'https://hizivo.com/og-homepage.jpg',
+        width: 1200,
+        height: 630,
+      },
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'MobileApplication',
+      name: 'ZIVO',
+      operatingSystem: 'iOS 14+',
+      applicationCategory: 'LifestyleApplication',
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+      downloadUrl: 'https://apps.apple.com/app/id6759480121',
+      installUrl: 'https://apps.apple.com/app/id6759480121',
+    },
+    {
+      '@context': 'https://schema.org',
+      '@type': 'MobileApplication',
+      name: 'ZIVO',
+      operatingSystem: 'Android 8+',
+      applicationCategory: 'LifestyleApplication',
+      offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+      downloadUrl: 'https://play.google.com/store/apps/details?id=com.zivo.app',
+      installUrl: 'https://play.google.com/store/apps/details?id=com.zivo.app',
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <SEOHead
+        title="Install the ZIVO App – iOS, Android & Web | Free Download"
+        description="Get the free ZIVO super-app on iOS, Android, or use it as a web app. One account for travel, social, shop, jobs, creators and more — install in seconds."
+        canonical="https://hizivo.com/install"
+        structuredData={installSchema}
+      />
       {/* Header */}
       <div className="px-6 pt-12 pb-8 text-center safe-area-top">
         <motion.div

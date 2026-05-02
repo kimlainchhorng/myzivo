@@ -84,6 +84,10 @@
     <meta name="keywords" content="ZIVO, hizivo, ZIVO LLC, super app, social network, short video, reels, creator platform, fan subscriptions, online shop, POS, business tools, jobs, hiring, find employees, apply for jobs, flights, hotels, car rentals, ride share, food delivery, chat, video call" />
     
     <!-- PWA Meta Tags -->
+    <!-- Adaptive theme color: matches the app shell in both light and dark mode
+         so the mobile browser chrome blends with the page on every device. -->
+    <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0D0D0F" media="(prefers-color-scheme: dark)" />
     <meta name="theme-color" content="#0D0D0F" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -126,14 +130,24 @@
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://hizivo.com/" />
     <meta property="og:image" content="https://hizivo.com/og-image.png" />
+    <meta property="og:image:secure_url" content="https://hizivo.com/og-image.png" />
+    <meta property="og:image:type" content="image/png" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
     <meta property="og:image:alt" content="ZIVO - Compare Flights, Hotels & Car Rentals" />
+    <!-- og:updated_time forces social platforms to refresh their preview cache
+         when content changes. Bump alongside meaningful content updates. -->
+    <meta property="og:updated_time" content="2026-05-02T00:00:00Z" />
     <meta property="og:site_name" content="ZIVO" />
     <meta property="og:locale" content="en_US" />
     <meta property="og:locale:alternate" content="km_KH" />
     <meta property="og:locale:alternate" content="ar_AR" />
     <meta property="og:locale:alternate" content="fr_FR" />
+    <!-- Tells social platforms about ZIVO's parent corporate site so previews
+         and shares can surface it as a related/official link. -->
+    <meta property="og:see_also" content="https://zivollc.com" />
+    <meta property="og:see_also" content="https://apps.apple.com/app/id6759480121" />
+    <meta property="og:see_also" content="https://play.google.com/store/apps/details?id=com.zivo.app" />
 
     <!-- Twitter Card - Enhanced -->
     <meta name="twitter:card" content="summary_large_image" />
@@ -177,13 +191,26 @@
           "contactType": "general inquiries"
         }
       ],
+      "parentOrganization": {
+        "@type": "Corporation",
+        "name": "ZIVO LLC",
+        "url": "https://zivollc.com",
+        "sameAs": ["https://www.zivollc.com"]
+      },
       "sameAs": [
         "https://zivollc.com",
         "https://www.zivollc.com",
-        "https://apps.apple.com/app/id6759480121"
+        "https://apps.apple.com/app/id6759480121",
+        "https://play.google.com/store/apps/details?id=com.zivo.app",
+        "https://www.instagram.com/hizivo",
+        "https://www.tiktok.com/@hizivo",
+        "https://x.com/ZivoApp",
+        "https://www.youtube.com/@hizivo",
+        "https://www.facebook.com/hizivo",
+        "https://www.linkedin.com/company/zivo-llc"
       ]
     }
-    </script>
+</script>
 
     <!-- WebSite Schema with SearchAction -->
     <script type="application/ld+json">
@@ -213,13 +240,13 @@
     }
     </script>
 
-    <!-- MobileApplication Schema -->
+    <!-- MobileApplication Schema (iOS) -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "MobileApplication",
       "name": "ZIVO",
-      "operatingSystem": "iOS, Android, Web",
+      "operatingSystem": "iOS 14+",
       "applicationCategory": "LifestyleApplication",
       "applicationSubCategory": "Super App – Travel, Social, Commerce, Jobs",
       "offers": {
@@ -228,6 +255,32 @@
         "priceCurrency": "USD"
       },
       "downloadUrl": "https://apps.apple.com/app/id6759480121",
+      "installUrl": "https://apps.apple.com/app/id6759480121",
+      "screenshot": "https://hizivo.com/og-image.png",
+      "publisher": {
+        "@type": "Organization",
+        "name": "ZIVO"
+      }
+    }
+    </script>
+
+    <!-- MobileApplication Schema (Android) — paired with the iOS entry so Google
+         can surface a Play Store result for Android searchers. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "MobileApplication",
+      "name": "ZIVO",
+      "operatingSystem": "Android 8+",
+      "applicationCategory": "LifestyleApplication",
+      "applicationSubCategory": "Super App – Travel, Social, Commerce, Jobs",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "downloadUrl": "https://play.google.com/store/apps/details?id=com.zivo.app",
+      "installUrl": "https://play.google.com/store/apps/details?id=com.zivo.app",
       "screenshot": "https://hizivo.com/og-image.png",
       "publisher": {
         "@type": "Organization",
@@ -304,6 +357,48 @@
     }
     </script>
 
+    <!-- WebPage schema — names the homepage, links it to the Organization,
+         and points Google at the primary content area inside #root. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebPage",
+      "@id": "https://hizivo.com/#webpage",
+      "url": "https://hizivo.com/",
+      "name": "ZIVO – Free Super-App: Travel, Social, Shop, Jobs & Creators",
+      "description": "All-in-one free app: book flights, hotels & cars, order rides & food, share reels, follow creators, open a shop, post or apply for jobs, chat & call. Join free.",
+      "inLanguage": "en",
+      "isPartOf": { "@id": "https://hizivo.com/#website" },
+      "about": { "@type": "Organization", "name": "ZIVO", "url": "https://hizivo.com" },
+      "primaryImageOfPage": {
+        "@type": "ImageObject",
+        "url": "https://hizivo.com/og-homepage.jpg",
+        "width": 1200,
+        "height": 630
+      },
+      "mainContentOfPage": { "@type": "WebPageElement", "cssSelector": "#root" }
+    }
+    </script>
+
+    <!-- BreadcrumbList — top-level site structure for SERP breadcrumb rich results. -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        { "@type": "ListItem", "position": 1, "name": "ZIVO",     "item": "https://hizivo.com/" },
+        { "@type": "ListItem", "position": 2, "name": "Flights",  "item": "https://hizivo.com/flights" },
+        { "@type": "ListItem", "position": 3, "name": "Hotels",   "item": "https://hizivo.com/hotels" },
+        { "@type": "ListItem", "position": 4, "name": "Cars",     "item": "https://hizivo.com/rent-car" },
+        { "@type": "ListItem", "position": 5, "name": "Rides",    "item": "https://hizivo.com/rides" },
+        { "@type": "ListItem", "position": 6, "name": "Eats",     "item": "https://hizivo.com/eats" },
+        { "@type": "ListItem", "position": 7, "name": "Reels",    "item": "https://hizivo.com/reels" },
+        { "@type": "ListItem", "position": 8, "name": "Shop",     "item": "https://hizivo.com/shop" },
+        { "@type": "ListItem", "position": 9, "name": "Jobs",     "item": "https://hizivo.com/jobs" }
+      ]
+    }
+    </script>
+
     <!-- FAQ Schema for homepage rich results -->
     <script type="application/ld+json">
     {
@@ -346,7 +441,12 @@
     }
     </script>
 
-  <link rel="icon" type="image/png" href="/pwa-icons/icon-192x192.png" />
+  <!-- Favicons — explicit size hints so browsers and SERP listings pick the right
+       resolution instead of guessing. .ico is the universal fallback. -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/pwa-icons/icon-192x192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="/pwa-icons/icon-512x512.png" />
+  <link rel="shortcut icon" href="/favicon.ico" />
 
   <!-- Open Graph & Twitter titles — kept consistent with the main <title> so social previews
        (FB, IG, X, LinkedIn, WhatsApp, iMessage) advertise the full super-app, not just travel. -->
@@ -362,12 +462,71 @@
   <link rel="alternate" hreflang="km" href="https://hizivo.com/?lang=km" />
   <link rel="alternate" hreflang="ar" href="https://hizivo.com/?lang=ar" />
   <link rel="alternate" hreflang="fr" href="https://hizivo.com/?lang=fr" />
+
+  <!-- IndieWeb rel=me — lets Mastodon, Bluesky, GitHub, and other identity-aware
+       platforms verify ZIVO's official social presence. Each profile must link
+       back to https://hizivo.com to complete bidirectional verification. -->
+  <link rel="me" href="https://zivollc.com" />
+  <link rel="me" href="https://www.instagram.com/hizivo" />
+  <link rel="me" href="https://www.tiktok.com/@hizivo" />
+  <link rel="me" href="https://x.com/ZivoApp" />
+  <link rel="me" href="https://www.youtube.com/@hizivo" />
+  <link rel="me" href="https://www.facebook.com/hizivo" />
+  <link rel="me" href="https://www.linkedin.com/company/zivo-llc" />
+  <link rel="me" href="mailto:info@hizivo.com" />
 </head>
 
   <body>
     <noscript><img height="1" width="1" style="display:none"
     src="https://www.facebook.com/tr?id=2304266847061310&ev=PageView&noscript=1"
     /></noscript>
+
+    <!--
+      <noscript> SEO fallback — non-JS crawlers (Bing, some social previewers,
+      WhatsApp link expander, AI scrapers without a headless browser) see this
+      content. Gives them a real H1, a one-paragraph pitch, and crawlable links
+      to every top-level vertical so the site doesn't look empty without JS.
+      Hidden from JS users via the <noscript> tag itself.
+    -->
+    <noscript>
+      <style>
+        .nojs { max-width: 720px; margin: 40px auto; padding: 24px; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif; line-height: 1.55; }
+        .nojs h1 { font-size: 28px; margin: 0 0 12px; }
+        .nojs p  { opacity: 0.85; margin: 0 0 24px; }
+        .nojs ul { padding: 0; list-style: none; display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px 16px; }
+        .nojs ul a { color: inherit; text-decoration: none; padding: 6px 0; display: block; border-bottom: 1px solid rgba(255,255,255,0.1); }
+        .nojs .cta { display: inline-block; margin-top: 24px; padding: 12px 24px; background: #10b981; color: #0D0D0F; border-radius: 999px; text-decoration: none; font-weight: 600; }
+      </style>
+      <main class="nojs">
+        <h1>ZIVO – the free all-in-one super-app</h1>
+        <p>ZIVO combines travel booking (flights, hotels, car rentals), rides and food delivery, social feed and short-form video reels, creator subscriptions and live streaming, online shop and POS, jobs and hiring, plus chat with voice and video calls — one free account for everything. ZIVO works on iOS, Android, and the web.</p>
+        <h2>Browse ZIVO</h2>
+        <ul>
+          <li><a href="/flights">Flights</a></li>
+          <li><a href="/hotels">Hotels</a></li>
+          <li><a href="/rent-car">Car Rental</a></li>
+          <li><a href="/rides">Rides</a></li>
+          <li><a href="/eats">Food Delivery</a></li>
+          <li><a href="/grocery">Grocery</a></li>
+          <li><a href="/reels">Reels</a></li>
+          <li><a href="/feed">Feed</a></li>
+          <li><a href="/creators">Creators</a></li>
+          <li><a href="/shop">Shop</a></li>
+          <li><a href="/marketplace">Marketplace</a></li>
+          <li><a href="/jobs">Jobs</a></li>
+          <li><a href="/business">Business</a></li>
+          <li><a href="/events">Events</a></li>
+          <li><a href="/experiences">Experiences</a></li>
+          <li><a href="/wellness">Wellness</a></li>
+          <li><a href="/about">About ZIVO</a></li>
+          <li><a href="/help">Help</a></li>
+          <li><a href="/contact">Contact</a></li>
+          <li><a href="/install">Get the app</a></li>
+        </ul>
+        <a class="cta" href="/install">Install the ZIVO app</a>
+      </main>
+    </noscript>
+
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
     

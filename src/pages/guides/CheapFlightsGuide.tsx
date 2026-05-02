@@ -3,15 +3,16 @@
  * SEO content page for finding cheap flights
  */
 
-import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
-import { 
-  Plane, Calendar, Bell, Clock, DollarSign, 
-  CheckCircle, ArrowRight, Lightbulb, TrendingDown 
+import {
+  Plane, Calendar, Bell, Clock, DollarSign,
+  CheckCircle, ArrowRight, Lightbulb, TrendingDown
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import NavBar from "@/components/home/NavBar";
 import Footer from "@/components/Footer";
+import SEOHead from "@/components/SEOHead";
+import { articleSchema } from "@/utils/seoSchemas";
 
 const TIPS = [
   {
@@ -55,25 +56,32 @@ const BEST_TIMES = [
 ];
 
 export default function CheapFlightsGuide() {
+  // Article structured data so Google promotes this guide in Top Stories /
+  // "Helpful content" panels. Using the seoSchemas helper means every required
+  // field (publisher logo, mainEntityOfPage, dates) is populated correctly —
+  // the previous hand-rolled object was missing the fields Google requires.
+  const article = articleSchema({
+    headline: "How to Find Cheap Flights in 2024",
+    description:
+      "Expert tips and strategies to find the cheapest flights. Learn when to book, how to use price alerts, alternative airports, and more — save money on your next trip.",
+    image: "/og-flights.jpg",
+    url: "/guides/cheap-flights",
+    datePublished: "2024-01-15",
+    dateModified: "2026-05-02",
+    authorName: "ZIVO Travel Editors",
+  });
+
   return (
     <>
-      <Helmet>
-        <title>How to Find Cheap Flights in 2024 | ZIVO Travel Guide</title>
-        <meta 
-          name="description" 
-          content="Expert tips and strategies to find the cheapest flights. Learn when to book, how to use price alerts, and save money on your next trip." 
-        />
-        <script type="application/ld+json">
-          {JSON.stringify({
-            "@context": "https://schema.org",
-            "@type": "Article",
-            "headline": "How to Find Cheap Flights in 2024",
-            "description": "Expert tips and strategies to find the cheapest flights",
-            "author": { "@type": "Organization", "name": "ZIVO" },
-            "publisher": { "@type": "Organization", "name": "ZIVO" },
-          })}
-        </script>
-      </Helmet>
+      <SEOHead
+        title="How to Find Cheap Flights in 2024 | ZIVO Travel Guide"
+        description="Expert tips and strategies to find the cheapest flights. Learn when to book, how to use price alerts, and save money on your next trip."
+        canonical="https://hizivo.com/guides/cheap-flights"
+        type="article"
+        publishedTime="2024-01-15T00:00:00Z"
+        modifiedTime="2026-05-02T00:00:00Z"
+        structuredData={article}
+      />
 
       <NavBar />
 

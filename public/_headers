@@ -63,3 +63,44 @@
 # Service worker — never cache
 /sw.js
   Cache-Control: no-cache, no-store, must-revalidate
+
+# =============================================================================
+# SEO discovery files — short cache so refreshed sitemaps, robots, llms.txt,
+# humans.txt and the manifest reach crawlers within an hour. CDNs may keep a
+# stale copy briefly under stale-while-revalidate.
+# =============================================================================
+/sitemap.xml
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+  Content-Type: application/xml; charset=utf-8
+  X-Robots-Tag: noindex
+/sitemap-index.xml
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+  Content-Type: application/xml; charset=utf-8
+  X-Robots-Tag: noindex
+/robots.txt
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+  Content-Type: text/plain; charset=utf-8
+/llms.txt
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+  Content-Type: text/plain; charset=utf-8
+/humans.txt
+  Cache-Control: public, max-age=86400
+  Content-Type: text/plain; charset=utf-8
+/security.txt
+  Cache-Control: public, max-age=86400
+  Content-Type: text/plain; charset=utf-8
+/.well-known/security.txt
+  Cache-Control: public, max-age=86400
+  Content-Type: text/plain; charset=utf-8
+/manifest.webmanifest
+  Cache-Control: public, max-age=3600, stale-while-revalidate=86400
+  Content-Type: application/manifest+json; charset=utf-8
+
+# .well-known mobile-app linking files — Apple/Android refetch on app install,
+# so a short cache is fine. MUST be served as application/json (Apple is picky).
+/.well-known/apple-app-site-association
+  Cache-Control: public, max-age=3600
+  Content-Type: application/json
+/.well-known/assetlinks.json
+  Cache-Control: public, max-age=3600
+  Content-Type: application/json

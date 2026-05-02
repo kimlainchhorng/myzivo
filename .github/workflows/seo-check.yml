@@ -1,0 +1,111 @@
+name: SEO check
+
+# Catches sitemap drift before it reaches production. Runs on every PR that
+# touches a route, the sitemap generator, or any of the SEO discovery files.
+
+on:
+  pull_request:
+    paths:
+      - 'src/App.tsx'
+      - 'src/pages/**'
+      - 'src/components/SEOHead.tsx'
+      - 'public/sitemap.xml'
+      - 'public/sitemap-index.xml'
+      - 'public/robots.txt'
+      - 'public/llms.txt'
+      - 'public/manifest.webmanifest'
+      - 'public/.well-known/**'
+      - 'scripts/generate-sitemap.mjs'
+      - '.github/workflows/seo-check.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  sitemap-drift:
+    name: sitemap is up to date
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Verify sitemap matches generator output
+        run: node scripts/generate-sitemap.mjs --check
+
+  json-validity:
+    name: JSON-LD and manifest are valid JSON
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Validate every JSON-LD block in index.html and 404.html
+        run: |
+          node -e "
+          const fs = require('fs');
+          let bad = 0;
+          for (const file of ['index.html', 'public/404.html']) {
+            const html = fs.readFileSync(file, 'utf8');
+            const blocks = [...html.matchAll(/<script type=\"application\\/ld\\+json\">([\\s\\S]*?)<\\/script>/g)];
+            blocks.forEach((m, i) => {
+              try { JSON.parse(m[1]); }
+              catch (e) { console.error(file + ' block ' + (i+1) + ': ' + e.message); bad++; }
+            });
+            console.log(file + ': ' + blocks.length + ' JSON-LD blocks');
+          }
+          if (bad > 0) process.exit(1);
+          "
+
+      - name: Validate manifest, app-site-association, assetlinks
+        run: |
+          node -e "JSON.parse(require('fs').readFileSync('public/manifest.webmanifest','utf8'))" \
+            && echo "manifest.webmanifest: VALID"
+          node -e "JSON.parse(require('fs').readFileSync('public/.well-known/apple-app-site-association','utf8'))" \
+            && echo "apple-app-site-association: VALID"
+          node -e "JSON.parse(require('fs').readFileSync('public/.well-known/assetlinks.json','utf8'))" \
+            && echo "assetlinks.json: VALID"
+
+  xml-validity:
+    name: sitemap and sitemap-index are valid XML
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install xmllint
+        run: sudo apt-get update -qq && sudo apt-get install -qq libxml2-utils
+
+      - name: Validate sitemap XML
+        run: xmllint --noout public/sitemap.xml public/sitemap-index.xml
+
+  app-links-not-placeholder:
+    name: App-links files don't contain placeholders
+    runs-on: ubuntu-latest
+    # CRITICAL: iOS Universal Links and Android App Links break silently if these
+    # placeholders ship to production — a tap on a hizivo.com link in iMessage
+    # opens mobile Safari instead of the app, killing conversion.
+    #
+    # Marked continue-on-error so the workflow still reports a result while the
+    # placeholders exist; flip this to false once TEAM_ID and the SHA256
+    # fingerprint are filled in to make it a hard block.
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Fail if placeholders are present
+        run: |
+          set -e
+          if grep -q "TEAM_ID" public/.well-known/apple-app-site-association; then
+            echo "::error file=public/.well-known/apple-app-site-association::TEAM_ID placeholder still present — Universal Links are broken."
+            exit 1
+          fi
+          if grep -q "REPLACE_WITH_YOUR_SHA256_FINGERPRINT" public/.well-known/assetlinks.json; then
+            echo "::error file=public/.well-known/assetlinks.json::SHA256 placeholder still present — Android App Links are broken."
+            exit 1
+          fi
+          echo "✓ no placeholders detected"

@@ -3,15 +3,16 @@
  * SEO content page for optimal booking timing
  */
 
-import { Helmet } from "react-helmet-async";
 import { Link } from "react-router-dom";
-import { 
-  Calendar, Clock, Plane, TrendingDown, 
-  AlertCircle, CheckCircle, ArrowRight 
+import {
+  Calendar, Clock, Plane, TrendingDown,
+  AlertCircle, CheckCircle, ArrowRight
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import NavBar from "@/components/home/NavBar";
 import Footer from "@/components/Footer";
+import SEOHead from "@/components/SEOHead";
+import { articleSchema } from "@/utils/seoSchemas";
 
 const BOOKING_WINDOWS = [
   {
@@ -52,15 +53,31 @@ const DAY_RECOMMENDATIONS = [
 ];
 
 export default function BestTimeToBook() {
+  // Article schema unlocks Top Stories / Helpful Content panels for this guide.
+  // Using the helper guarantees publisher.logo, mainEntityOfPage and dates are
+  // populated correctly — Google rejects Article markup missing those fields.
+  const article = articleSchema({
+    headline: "Best Time to Book Flights & Hotels",
+    description:
+      "Learn when to book flights and hotels for the lowest prices. Expert timing strategies for domestic, international travel, and accommodations.",
+    image: "/og-flights.jpg",
+    url: "/guides/best-time-to-book",
+    datePublished: "2024-01-20",
+    dateModified: "2026-05-02",
+    authorName: "ZIVO Travel Editors",
+  });
+
   return (
     <>
-      <Helmet>
-        <title>Best Time to Book Flights & Hotels | ZIVO Travel Guide</title>
-        <meta 
-          name="description" 
-          content="Learn when to book flights and hotels for the lowest prices. Expert timing strategies for domestic, international travel, and accommodations." 
-        />
-      </Helmet>
+      <SEOHead
+        title="Best Time to Book Flights & Hotels | ZIVO Travel Guide"
+        description="Learn when to book flights and hotels for the lowest prices. Expert timing strategies for domestic, international travel, and accommodations."
+        canonical="https://hizivo.com/guides/best-time-to-book"
+        type="article"
+        publishedTime="2024-01-20T00:00:00Z"
+        modifiedTime="2026-05-02T00:00:00Z"
+        structuredData={article}
+      />
 
       <NavBar />
 

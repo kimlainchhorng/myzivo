@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+
+  <!-- noindex this page so it never competes with real ZIVO routes in SERP. -->
+  <meta name="robots" content="noindex, follow" />
+  <meta name="theme-color" content="#FFFFFF" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0D0D0F" media="(prefers-color-scheme: dark)" />
+
+  <title>Page not found · ZIVO</title>
+  <meta name="description" content="The page you were looking for doesn't exist on ZIVO. Try search or jump to flights, hotels, cars, rides, food, reels, shop or jobs." />
+  <link rel="canonical" href="https://hizivo.com/404" />
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" sizes="any" />
+  <link rel="icon" type="image/png" sizes="192x192" href="/pwa-icons/icon-192x192.png" />
+  <link rel="apple-touch-icon" href="/pwa-icons/icon-192x192.png" />
+
+  <style>
+    :root { color-scheme: light dark; }
+    html, body { margin: 0; padding: 0; min-height: 100vh; min-height: 100dvh; }
+    body {
+      background: #0D0D0F;
+      color: #FFFFFF;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 24px; box-sizing: border-box; text-align: center;
+    }
+    .code {
+      font-size: 96px; font-weight: 700; letter-spacing: -4px; line-height: 1;
+      background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      margin-bottom: 16px;
+    }
+    h1 { font-size: 28px; font-weight: 700; margin: 0 0 12px; }
+    p  { font-size: 16px; line-height: 1.55; max-width: 480px; opacity: 0.85; margin: 0 0 32px; }
+    .cta {
+      display: inline-block; padding: 14px 28px; border-radius: 999px;
+      background: #10b981; color: #0D0D0F; font-weight: 600; text-decoration: none;
+      transition: transform 120ms ease, background 120ms ease;
+    }
+    .cta:hover { background: #34d399; transform: translateY(-1px); }
+    .quick { margin-top: 40px; display: flex; flex-wrap: wrap; gap: 8px 12px; justify-content: center; max-width: 540px; }
+    .quick a {
+      color: #FFFFFF; opacity: 0.7; text-decoration: none; font-size: 14px;
+      padding: 6px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,0.12);
+      transition: opacity 120ms ease, border-color 120ms ease;
+    }
+    .quick a:hover { opacity: 1; border-color: rgba(255,255,255,0.24); }
+    @media (prefers-color-scheme: light) {
+      body { background: #FFFFFF; color: #0D0D0F; }
+      .cta { color: #FFFFFF; }
+      .quick a { color: #0D0D0F; border-color: rgba(0,0,0,0.12); }
+      .quick a:hover { border-color: rgba(0,0,0,0.24); }
+    }
+  </style>
+
+  <!-- BreadcrumbList so even error pages give Google a sane structure. -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      { "@type": "ListItem", "position": 1, "name": "ZIVO", "item": "https://hizivo.com/" },
+      { "@type": "ListItem", "position": 2, "name": "Page not found" }
+    ]
+  }
+  </script>
+</head>
+<body>
+  <div class="code" aria-hidden="true">404</div>
+  <h1>Page not found</h1>
+  <p>The page you were looking for doesn't exist or moved. Head back to ZIVO and pick up where you left off.</p>
+  <a class="cta" href="/">Go to ZIVO home</a>
+
+  <nav class="quick" aria-label="Quick links">
+    <a href="/flights">Flights</a>
+    <a href="/hotels">Hotels</a>
+    <a href="/rent-car">Cars</a>
+    <a href="/rides">Rides</a>
+    <a href="/eats">Eats</a>
+    <a href="/reels">Reels</a>
+    <a href="/shop">Shop</a>
+    <a href="/jobs">Jobs</a>
+    <a href="/install">Install app</a>
+    <a href="/help">Help</a>
+  </nav>
+</body>
+</html>
