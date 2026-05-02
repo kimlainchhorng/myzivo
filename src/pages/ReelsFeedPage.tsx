@@ -1812,7 +1812,7 @@ export default function ReelsFeedPage() {
                   {/* Inject On This Day memory card after 16th post */}
                   {idx === 15 && (
                     <button
-                      onClick={() => navigate("/bookmarks")}
+                      onClick={() => navigate("/saved")}
                       className="block w-full bg-gradient-to-r from-violet-500/10 via-card to-indigo-500/10 border-b border-border/10 px-3 py-3 text-left active:opacity-70 transition-opacity"
                     >
                       <div className="flex items-center gap-3">
@@ -2100,7 +2100,7 @@ export default function ReelsFeedPage() {
             <div>
               <div className="flex items-center justify-between mb-2 px-1">
                 <h3 className="text-sm font-semibold text-foreground">Contacts</h3>
-                <button onClick={() => navigate("/friends")} className="text-[11px] text-primary hover:underline">See all</button>
+                <button onClick={() => navigate("/chat/contacts")} className="text-[11px] text-primary hover:underline">See all</button>
               </div>
               <div className="space-y-0.5">
                 {sidebarContacts.map((c) => (
@@ -2608,7 +2608,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
           }}
           className="flex flex-col items-center gap-1 min-h-[44px] min-w-[44px] justify-center"
         >
-          <Share2 className="h-7 w-7 text-white drop-shadow-lg" />
+          <Send className="h-7 w-7 text-white drop-shadow-lg" />
           <span className="text-white text-[10px] font-medium drop-shadow">Share</span>
         </button>
 
@@ -4218,7 +4218,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
               aria-label={`Share post${formatCount(item.shares_count) ? `, ${formatCount(item.shares_count)} shares` : ""}`}
               className="min-h-[44px] min-w-[36px] sm:min-w-[40px] flex items-center justify-center text-foreground gap-1"
             >
-              <Share2 aria-hidden className="h-[22px] w-[22px]" />
+              <Send aria-hidden className="h-[22px] w-[22px]" />
               {formatCount(item.shares_count) && (
                 <span aria-hidden className="text-[12px] text-muted-foreground font-semibold whitespace-nowrap">
                   {formatCount(item.shares_count)}

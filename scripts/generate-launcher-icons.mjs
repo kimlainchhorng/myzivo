@@ -1,5 +1,5 @@
 import sharp from 'sharp';
-import { copyFileSync } from 'fs';
+import { copyFileSync } from 'node:fs';
 
 const src = 'android/store-listing/icon-512.png';
 

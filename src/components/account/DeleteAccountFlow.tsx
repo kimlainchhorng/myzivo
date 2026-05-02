@@ -245,7 +245,7 @@ export default function DeleteAccountFlow({ open, onOpenChange }: Props) {
                     <button
                       onClick={() => {
                         onOpenChange(false);
-                        navigate("/account/support");
+                        navigate("/support");
                       }}
                       className="w-full flex items-start gap-3 p-3 rounded-xl border hover:bg-muted/50 text-left"
                     >

@@ -7,11 +7,11 @@
  *   SUPABASE_SERVICE_ROLE_KEY=eyJ...
  */
 
-import { execSync } from "child_process";
-import { readFileSync, writeFileSync, unlinkSync, existsSync } from "fs";
-import { readFile } from "fs/promises";
-import { fileURLToPath } from "url";
-import { dirname, join } from "path";
+import { execSync } from "node:child_process";
+import { readFileSync, writeFileSync, unlinkSync, existsSync } from "node:fs";
+import { readFile } from "node:fs/promises";
+import { fileURLToPath } from "node:url";
+import { dirname, join } from "node:path";
 import { createClient } from "@supabase/supabase-js";
 import { config } from "dotenv";
 

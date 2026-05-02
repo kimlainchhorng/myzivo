@@ -41,7 +41,7 @@ export default function LockedMediaPricePicker({ open, onClose, onConfirm }: Pro
         animate={{ y: 0 }}
         exit={{ y: "100%" }}
         transition={{ type: "spring", damping: 28, stiffness: 350 }}
-        className="fixed bottom-0 left-0 right-0 z-50 bg-background rounded-t-3xl shadow-2xl max-h-[70vh] overflow-y-auto"
+        className="fixed bottom-0 left-0 right-0 z-50 bg-background rounded-t-3xl shadow-2xl max-h-[70vh] overflow-y-auto safe-area-bottom"
       >
         <div className="p-5 space-y-4">
           {/* Handle */}

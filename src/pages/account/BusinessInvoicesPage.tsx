@@ -129,7 +129,7 @@ export default function BusinessInvoicesPage() {
           <p className="text-muted-foreground text-sm mb-6 max-w-sm mx-auto">
             Join a company account to view invoices billed to your organization.
           </p>
-          <Button onClick={() => navigate("/account/business")}>
+          <Button onClick={() => navigate("/business/account")}>
             Join Business Account
           </Button>
         </div>

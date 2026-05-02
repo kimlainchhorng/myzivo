@@ -170,7 +170,7 @@ export default function AppSettingsPage() {
             <Button variant="outline" className="w-full gap-2 text-foreground" onClick={() => navigate("/profile")}>
               <LogOut className="h-4 w-4" /> Log Out
             </Button>
-            <Button variant="destructive" className="w-full gap-2" onClick={() => navigate("/profile/delete")}>
+            <Button variant="destructive" className="w-full gap-2" onClick={() => navigate("/profile/delete-account")}>
               <Trash2 className="h-4 w-4" /> Delete Account
             </Button>
           </Card>

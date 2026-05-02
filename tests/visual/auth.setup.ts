@@ -11,6 +11,11 @@
 import { test as setup, expect } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+// __dirname isn't defined in ESM scope; reconstruct from import.meta.url
+// (same fix as safe-area.spec.ts).
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const STATE_DIR = path.join(__dirname, ".auth");
 const STATE_PATH = path.join(STATE_DIR, "state.json");

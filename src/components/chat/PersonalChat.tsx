@@ -2215,7 +2215,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                             onResend={csid && msg._upload_status === "failed" ? () => retryVoiceSend(csid) : undefined}
                             onDiscard={csid && (msg._upload_status === "uploading" || msg._upload_status === "failed") ? () => discardVoiceSend(csid) : undefined}
                             onDeleteForEveryone={!isOpt && isMe ? () => handleDelete(msg.id) : undefined}
-                            onDeleteForMe={!isOpt ? () => handleDelete(msg.id) : undefined}
+                            onDeleteForMe={!isOpt && !isMe ? () => handleDelete(msg.id) : undefined}
                             onReact={!isOpt ? (emoji) => toggleMessageReaction(msg.id, emoji) : undefined}
                           />
                         );

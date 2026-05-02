@@ -118,7 +118,7 @@ const ZivoPlus = () => {
       return;
     }
     if (isActive) {
-      navigate("/account/subscription");
+      navigate("/account/subscriptions");
       return;
     }
     if (isPending) {
@@ -229,7 +229,7 @@ const ZivoPlus = () => {
                     <Button
                       variant="outline"
                       className="w-full h-12 rounded-xl border-amber-500/30"
-                      onClick={() => navigate("/account/subscription")}
+                      onClick={() => navigate("/account/subscriptions")}
                     >
                       Manage Subscription
                     </Button>
@@ -464,7 +464,7 @@ const ZivoPlus = () => {
                     <CheckCircle2 className="w-6 h-6" />
                     You're already a member!
                   </div>
-                  <Button size="lg" variant="outline" className="border-amber-500/30" onClick={() => navigate("/account/subscription")}>
+                  <Button size="lg" variant="outline" className="border-amber-500/30" onClick={() => navigate("/account/subscriptions")}>
                     Manage Subscription
                   </Button>
                 </div>

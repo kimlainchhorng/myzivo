@@ -190,7 +190,7 @@ export default function EnterpriseTrust() {
                     <ArrowRight className="w-4 h-4" />
                   </Button>
                 </Link>
-                <Link to="/business/partner-audit">
+                <Link to="/partner-audit-docs">
                   <Button variant="outline" className="gap-2">
                     Partner Audit Docs
                     <ArrowRight className="w-4 h-4" />

@@ -941,7 +941,7 @@ export default function GoLivePage() {
  {phase === "setup" && (
 <div className="relative z-10 w-full h-full flex flex-col lg:max-w-md lg:mx-auto lg:my-6 lg:rounded-[32px] lg:overflow-hidden">
 <div className="relative z-10 flex items-center gap-2 px-3 pt-2" style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)" }}>
-<button type="button" onClick={goBack} className="relative z-20 w-9 h-9 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center shrink-0 pointer-events-auto">
+<button type="button" onClick={goBack} aria-label="Back" className="relative z-20 min-w-[44px] min-h-[44px] rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center shrink-0 pointer-events-auto">
 <ArrowLeft className="h-5 w-5 text-white" />
 </button>
  {isPaired ? (
@@ -2467,7 +2467,7 @@ export default function GoLivePage() {
 </div>
 <div className="flex-1" />
 <span className="text-white font-mono text-[10px] bg-black/50 backdrop-blur-sm rounded-full px-2 py-1 drop-shadow">{formatTime(elapsed)}</span>
-<button onClick={() =>setShowEndConfirm(true)} className="w-8 h-8 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center shadow-lg">
+<button onClick={() =>setShowEndConfirm(true)} aria-label="End stream" className="min-w-[44px] min-h-[44px] -my-1.5 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center shadow-lg">
 <X className="h-4 w-4 text-white drop-shadow" />
 </button>
 </div>
@@ -2510,26 +2510,26 @@ export default function GoLivePage() {
  className="absolute right-2.5 z-10 flex flex-col gap-1.5 items-center bg-black/35 backdrop-blur-md rounded-full px-1.5 py-2 border border-white/10 shadow-xl shadow-black/40"
  style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)" }}
  >
-<button onClick={toggleMic} className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/15 active:scale-95 transition flex items-center justify-center">
+<button onClick={toggleMic} className="w-11 h-11 rounded-full bg-white/5 hover:bg-white/15 active:scale-95 transition flex items-center justify-center">
  {micOn ?<Mic className="h-4 w-4 text-white" />:<MicOff className="h-4 w-4 text-red-400" />}
 </button>
-<button onClick={toggleCamera} className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/15 active:scale-95 transition flex items-center justify-center">
+<button onClick={toggleCamera} className="w-11 h-11 rounded-full bg-white/5 hover:bg-white/15 active:scale-95 transition flex items-center justify-center">
  {cameraOn ?<Camera className="h-4 w-4 text-white" />:<CameraOff className="h-4 w-4 text-red-400" />}
 </button>
-<button onClick={flipCamera} className="w-9 h-9 rounded-full bg-white/5 hover:bg-white/15 active:scale-95 transition flex items-center justify-center">
+<button onClick={flipCamera} className="w-11 h-11 rounded-full bg-white/5 hover:bg-white/15 active:scale-95 transition flex items-center justify-center">
 <RotateCcw className="h-4 w-4 text-white" />
 </button>
 <button
  onClick={() =>setShowBgSheet(true)}
  className={cn(
- "w-9 h-9 rounded-full active:scale-95 transition flex flex-col items-center justify-center",
+ "w-11 h-11 rounded-full active:scale-95 transition flex flex-col items-center justify-center",
  bgChoice.kind !== "off" ? "bg-red-500/40 border border-red-400/60" : "bg-white/5 hover:bg-white/15",
  )}
  >
 <ImageIcon className="h-3.5 w-3.5 text-white" />
 <span className="text-[7px] text-white/90 -mt-0.5 font-semibold">BG</span>
 </button>
-<button onClick={() =>setShowRechargeSheet(true)} className="w-9 h-9 rounded-full bg-amber-500/40 hover:bg-amber-500/55 border border-amber-400/60 active:scale-95 transition flex flex-col items-center justify-center">
+<button onClick={() =>setShowRechargeSheet(true)} className="w-11 h-11 rounded-full bg-amber-500/40 hover:bg-amber-500/55 border border-amber-400/60 active:scale-95 transition flex flex-col items-center justify-center">
 <img src={goldCoinIcon} alt="" className="h-3.5 w-3.5" />
 <span className="text-[7px] text-amber-100 -mt-0.5 font-bold">+Coin</span>
 </button>

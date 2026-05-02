@@ -422,6 +422,8 @@ const TransportationDisclaimer = lazy(() => import("./pages/legal/Transportation
 const CarRentalDisclaimer = lazy(() => import("./pages/legal/CarRentalDisclaimer"));
 const InsuranceDisclaimer = lazy(() => import("./pages/legal/InsuranceDisclaimer"));
 const DamagePolicy = lazy(() => import("./pages/legal/DamagePolicy"));
+const OwnerTerms = lazy(() => import("./pages/legal/OwnerTerms"));
+const RenterTerms = lazy(() => import("./pages/legal/RenterTerms"));
 const GenericLegalPage = lazy(() => import("./pages/legal/GenericLegalPage"));
 
 const AffiliateDisclosure = lazy(() => import("./pages/AffiliateDisclosure"));
@@ -1171,6 +1173,8 @@ const App = () => (
                 <Route path="/legal/car-rental-disclaimer" element={<CarRentalDisclaimer />} />
                 <Route path="/legal/insurance-disclaimer" element={<InsuranceDisclaimer />} />
                 <Route path="/legal/damage-policy" element={<DamagePolicy />} />
+                <Route path="/terms/owner" element={<OwnerTerms />} />
+                <Route path="/terms/renter" element={<RenterTerms />} />
                 <Route path="/legal/meta-privacy" element={<MetaPrivacyDisclosure />} />
                 <Route path="/legal/*" element={<GenericLegalPage />} />
                 <Route path="/cookies" element={<CookiePolicy />} />

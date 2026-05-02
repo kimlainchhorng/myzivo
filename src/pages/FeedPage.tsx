@@ -45,7 +45,6 @@ import { confirmContentSafe } from "@/lib/security/contentLinkValidation";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import Heart from "lucide-react/dist/esm/icons/heart";
 import MessageCircle from "lucide-react/dist/esm/icons/message-circle";
-import Share2 from "lucide-react/dist/esm/icons/share-2";
 import Repeat2 from "lucide-react/dist/esm/icons/repeat-2";
 import Store from "lucide-react/dist/esm/icons/store";
 import Play from "lucide-react/dist/esm/icons/play";
@@ -1931,7 +1930,7 @@ function ReelCard({
           aria-label="Share"
           title="Share"
         >
-          <Share2 className="w-9 h-9 lg:w-10 lg:h-10 text-white drop-shadow-lg" />
+          <Send className="w-9 h-9 lg:w-10 lg:h-10 text-white drop-shadow-lg" />
           <span className="text-white text-xs font-semibold drop-shadow">
             {(post.shares_count || 0) > 0
               ? (post.shares_count! > 999 ? `${(post.shares_count! / 1000).toFixed(1)}k` : post.shares_count)
