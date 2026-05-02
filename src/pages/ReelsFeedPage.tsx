@@ -1812,7 +1812,7 @@ export default function ReelsFeedPage() {
                   {/* Inject On This Day memory card after 16th post */}
                   {idx === 15 && (
                     <button
-                      onClick={() => navigate("/bookmarks")}
+                      onClick={() => navigate("/saved")}
                       className="block w-full bg-gradient-to-r from-violet-500/10 via-card to-indigo-500/10 border-b border-border/10 px-3 py-3 text-left active:opacity-70 transition-opacity"
                     >
                       <div className="flex items-center gap-3">
@@ -2100,7 +2100,7 @@ export default function ReelsFeedPage() {
             <div>
               <div className="flex items-center justify-between mb-2 px-1">
                 <h3 className="text-sm font-semibold text-foreground">Contacts</h3>
-                <button onClick={() => navigate("/friends")} className="text-[11px] text-primary hover:underline">See all</button>
+                <button onClick={() => navigate("/chat/contacts")} className="text-[11px] text-primary hover:underline">See all</button>
               </div>
               <div className="space-y-0.5">
                 {sidebarContacts.map((c) => (
