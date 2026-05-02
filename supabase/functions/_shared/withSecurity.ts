@@ -11,6 +11,8 @@ import { inspectRequest, clientIp } from './waf.ts';
 import { newCorrelationId, makeLogger, type Logger } from './logger.ts';
 import { recordSecurityEvent } from './audit.ts';
 import { rateLimit, rateLimitHeaders, type LimitCategory } from './rateLimiter.ts';
+import { isIpBlocked, autoBlockIfHighThreat } from './threatIntel.ts';
+import { detectBot } from './botDetection.ts';
 
 export interface SecurityContext {
   log: Logger;
@@ -48,8 +50,9 @@ function applySecurityHeaders(res: Response): void {
   }
 }
 
-// Suspicious User-Agent patterns (scanners, exploit frameworks)
-const SCANNER_UA = /sqlmap|nikto|nessus|openvas|masscan|zgrab|nuclei|dirbuster|gobuster|wfuzz|ffuf|burpsuite|nmap|acunetix|netsparker|w3af|skipfish|arachni/i;
+// Bot detection now delegates to _shared/botDetection.ts (`detectBot`), which
+// covers 17 scrapers + 15 scanner UAs and missing-UA. The richer ruleset
+// supersedes the legacy SCANNER_UA regex that lived here.
 
 export function withSecurity(
   route: string,
@@ -65,11 +68,11 @@ export function withSecurity(
     const log = makeLogger({ correlationId, route, ip, method: req.method });
     const ctx: SecurityContext = { log, correlationId, ip, userAgent, route, startedAt: Date.now() };
 
-    // 1) Block known scanner User-Agents
-    if (userAgent && SCANNER_UA.test(userAgent)) {
-      log.warn('scanner_blocked', { ua: userAgent.slice(0, 80) });
+    // 0) Hard-blocklist (admin-curated). One cached RPC, no body work on hit.
+    if (ip && await isIpBlocked(ip)) {
+      log.warn('ip_blocklist_hit', { ip });
       recordSecurityEvent({
-        eventType: 'scanner.blocked',
+        eventType: 'ip_blocklist.hit',
         severity: 'warn',
         ip,
         userAgent,
@@ -81,6 +84,31 @@ export function withSecurity(
       res.headers.set('x-request-id', correlationId);
       applySecurityHeaders(res);
       return res;
+    }
+
+    // 1) Block scanner / scraper / missing-UA bots. We hard-block "scanner"
+    //    (security tools) and "scraper" (curl/wget/python-requests/etc).
+    //    "missing_accept" is a softer signal we let through here — it would
+    //    false-positive on legitimate fetch() callers.
+    {
+      const bot = detectBot(req.headers);
+      if (bot.isBot && (bot.reason === 'scanner' || bot.reason === 'scraper' || bot.reason === 'missing_ua')) {
+        log.warn('bot_blocked', { reason: bot.reason, ua: bot.ua.slice(0, 80) });
+        recordSecurityEvent({
+          eventType: `bot.${bot.reason}`,
+          severity: 'warn',
+          ip,
+          userAgent,
+          route,
+          blocked: true,
+          data: { correlationId },
+        }).catch(() => {});
+        autoBlockIfHighThreat({ ip, reason: `bot_${bot.reason}_repeat` }).catch(() => {});
+        const res = err(req, 'Forbidden', 403, { correlationId });
+        res.headers.set('x-request-id', correlationId);
+        applySecurityHeaders(res);
+        return res;
+      }
     }
 
     // 2) WAF
@@ -97,6 +125,7 @@ export function withSecurity(
           blocked: true,
           data: { method: req.method, url: req.url, correlationId },
         }).catch(() => {});
+        autoBlockIfHighThreat({ ip, reason: `waf_${waf.reason}` }).catch(() => {});
         const res = err(req, 'Request blocked', 400, { correlationId });
         res.headers.set('x-request-id', correlationId);
         applySecurityHeaders(res);
