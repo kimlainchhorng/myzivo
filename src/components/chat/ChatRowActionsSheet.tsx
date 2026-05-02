@@ -4,6 +4,7 @@ import Pin from "lucide-react/dist/esm/icons/pin";
 import BellOff from "lucide-react/dist/esm/icons/bell-off";
 import Bell from "lucide-react/dist/esm/icons/bell";
 import CheckCheck from "lucide-react/dist/esm/icons/check-check";
+import Circle from "lucide-react/dist/esm/icons/circle";
 import Archive from "lucide-react/dist/esm/icons/archive";
 import ArchiveRestore from "lucide-react/dist/esm/icons/archive-restore";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
@@ -19,6 +20,8 @@ export interface ChatRowActionsTarget {
   isMuted: boolean;
   isArchived: boolean;
   hasUnread: boolean;
+  /** True if the chat has been manually marked unread (no real unread messages). */
+  isMarkedUnread?: boolean;
 }
 
 interface Props {
@@ -29,6 +32,7 @@ interface Props {
   onTogglePin: () => void;
   onToggleMute: () => void;
   onMarkRead: () => void;
+  onMarkUnread?: () => void;
   onToggleArchive: () => void;
   onClearHistory: () => void;
   onDelete: () => void;
@@ -39,7 +43,7 @@ interface Props {
 export default function ChatRowActionsSheet({
   customFolders = [],
   folderMembership,
-  target, onClose, onTogglePin, onToggleMute, onMarkRead,
+  target, onClose, onTogglePin, onToggleMute, onMarkRead, onMarkUnread,
   onToggleArchive, onClearHistory, onDelete, onAddToFolder, onRemoveFromFolder,
 }: Props) {
   const [showFolderMenu, setShowFolderMenu] = useState(false);
@@ -56,10 +60,19 @@ export default function ChatRowActionsSheet({
     else folderSummary = `${joined[0]} +${joined.length - 1}`;
   }
 
+  // Show "Mark as read" when the chat actually has unread messages or is manually flagged.
+  // Show "Mark as unread" otherwise — Telegram parity for "come back to this later".
+  const showMarkUnread = !target.hasUnread && !target.isMarkedUnread && !!onMarkUnread;
+  const showMarkRead = target.hasUnread || target.isMarkedUnread;
   const items = [
     { key: "pin", label: target.isPinned ? "Unpin" : "Pin to top", icon: Pin, onClick: onTogglePin },
     { key: "mute", label: target.isMuted ? "Unmute" : "Mute notifications", icon: target.isMuted ? Bell : BellOff, onClick: onToggleMute },
-    { key: "read", label: "Mark as read", icon: CheckCheck, onClick: onMarkRead, disabled: !target.hasUnread },
+    ...(showMarkRead
+      ? [{ key: "read", label: "Mark as read", icon: CheckCheck, onClick: onMarkRead }]
+      : []),
+    ...(showMarkUnread && onMarkUnread
+      ? [{ key: "unread", label: "Mark as unread", icon: Circle, onClick: onMarkUnread }]
+      : []),
     { key: "archive", label: target.isArchived ? "Unarchive" : "Archive chat", icon: target.isArchived ? ArchiveRestore : Archive, onClick: onToggleArchive },
     { key: "clear", label: "Clear history", icon: Eraser, onClick: onClearHistory },
     { key: "delete", label: "Delete chat", icon: Trash2, onClick: onDelete, destructive: true },
