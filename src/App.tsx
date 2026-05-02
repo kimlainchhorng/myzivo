@@ -123,6 +123,15 @@ const RideTrackingPage = lazy(() => import("./pages/app/RideTrackingPage"));
 const RideHubPage = lazy(() => import("./pages/app/RideHubPage"));
 const EatsLanding = lazy(() => import("./pages/EatsLanding"));
 const EatsTrackingPage = lazy(() => import("./pages/EatsTrackingPage"));
+const ReservationPage = lazy(() => import("./pages/ReservationPage"));
+const BecomePartnerPage = lazy(() => import("./pages/BecomePartnerPage"));
+const NetworkPlacesPage = lazy(() => import("./pages/NetworkPlacesPage"));
+const SavedFavoritesPage = lazy(() => import("./pages/SavedFavoritesPage"));
+const ConciergePage = lazy(() => import("./pages/ConciergePage"));
+const PublicTripSharePage = lazy(() => import("./pages/PublicTripSharePage"));
+const MultiStopRideBuilder = lazy(() => import("./pages/MultiStopRideBuilder"));
+const PublicOrderSharePage = lazy(() => import("./pages/PublicOrderSharePage"));
+const ShareWatchlistPage = lazy(() => import("./pages/ShareWatchlistPage"));
 const EatsOrdersPage = lazy(() => import("./pages/EatsOrdersPage"));
 const EatsRestaurantDashboard = lazy(() => import("./pages/EatsRestaurantDashboard"));
 const EatsDriverDeliveryPage = lazy(() => import("./pages/EatsDriverDeliveryPage"));
@@ -163,6 +172,8 @@ const CreatorDashboardPage = lazy(() => import("./pages/CreatorDashboardPage"));
 const CreatorAnalyticsPage = lazy(() => import("./pages/CreatorAnalyticsPage"));
 const CreatorSetupPage = lazy(() => import("./pages/CreatorSetupPage"));
 const CreatorLiveEarningsPage = lazy(() => import("./pages/CreatorLiveEarningsPage"));
+const CreatorSubscribersPage = lazy(() => import("./pages/CreatorSubscribersPage"));
+const CreatorTipsPage = lazy(() => import("./pages/CreatorTipsPage"));
 const AffiliateHubPage = lazy(() => import("./pages/AffiliateHubPage"));
 const DigitalProductsPage = lazy(() => import("./pages/DigitalProductsPage"));
 const MonetizationPage = lazy(() => import("./pages/MonetizationPage"));
@@ -239,6 +250,11 @@ const HotelAdminLaunchPage = lazy(() => import("./pages/admin/HotelAdminLaunchPa
 const AdminLodgingQAChecklistPage = lazy(() => import("./pages/admin/AdminLodgingQAChecklistPage"));
 const AdminLodgingCompletionVerificationPage = lazy(() => import("./pages/admin/AdminLodgingCompletionVerificationPage"));
 const AdminBlockedLinksPage = lazy(() => import("./pages/admin/AdminBlockedLinksPage"));
+const AdminThreatHistoryPage = lazy(() => import("./pages/admin/AdminThreatHistoryPage"));
+const AdminCspViolationsPage = lazy(() => import("./pages/admin/AdminCspViolationsPage"));
+const AdminSecurityAuditPage = lazy(() => import("./pages/admin/AdminSecurityAuditPage"));
+const AdminSecurityNotificationsPage = lazy(() => import("./pages/admin/AdminSecurityNotificationsPage"));
+const AdminSecurityOverviewPage = lazy(() => import("./pages/admin/AdminSecurityOverviewPage"));
 const AdminLodgingReservationDetailPage = lazy(() => import("./pages/admin/lodging/AdminLodgingReservationDetailPage"));
 const AdminLodgingWiringCheckPage = lazy(() => import("./pages/admin/AdminLodgingWiringCheckPage"));
 const AdminLodgingWebhookEventsPage = lazy(() => import("./pages/admin/AdminLodgingWebhookEventsPage"));
@@ -456,6 +472,7 @@ const AccountSettingsPage = lazy(() => import("./pages/account/AccountSettingsPa
 const LegalPoliciesPage = lazy(() => import("./pages/account/LegalPoliciesPage"));
 const ProfileEditPage = lazy(() => import("./pages/account/ProfileEditPage"));
 const AccountSecurity = lazy(() => import("./pages/account/AccountSecurity"));
+const AccountSessionsPage = lazy(() => import("./pages/account/AccountSessionsPage"));
 const LinkedDevicesPage = lazy(() => import("./pages/account/LinkedDevicesPage"));
 const LinkDevicePage = lazy(() => import("./pages/account/LinkDevicePage"));
 const ScanDevicePage = lazy(() => import("./pages/account/ScanDevicePage"));
@@ -465,6 +482,8 @@ const PrivacyControls = lazy(() => import("./pages/account/PrivacyControls"));
 const NotificationSettings = lazy(() => import("./pages/account/NotificationSettings"));
 const AccountReferralsPage = lazy(() => import("./pages/account/ReferralsPage"));
 const AccountWalletPage = lazy(() => import("./pages/account/WalletPage"));
+const AccountSubscriptionsPage = lazy(() => import("./pages/account/AccountSubscriptionsPage"));
+const AccountTipsPage = lazy(() => import("./pages/account/AccountTipsPage"));
 const CoinPurchaseSuccess = lazy(() => import("./pages/CoinPurchaseSuccess"));
 const GuestProfilePreview = lazy(() => import("./components/auth/GuestProfilePreview"));
 const GiftCardsPage = lazy(() => import("./pages/account/GiftCardsPage"));
@@ -776,6 +795,8 @@ const App = () => (
                 <Route path="/ride" element={<PreserveQueryRedirect to="/rides" />} />
                 <Route path="/eats" element={<ProtectedRoute><PhoneRequiredGate><EatsLanding /></PhoneRequiredGate></ProtectedRoute>} />
                 <Route path="/eats/restaurant/:id" element={<ProtectedRoute><EatsLanding /></ProtectedRoute>} />
+                <Route path="/eats/reserve" element={<ProtectedRoute><PhoneRequiredGate><ReservationPage /></PhoneRequiredGate></ProtectedRoute>} />
+                <Route path="/eats/reserve/:restaurantId" element={<ProtectedRoute><PhoneRequiredGate><ReservationPage /></PhoneRequiredGate></ProtectedRoute>} />
                 <Route path="/eats/track/:orderId" element={<ProtectedRoute><EatsTrackingPage /></ProtectedRoute>} />
                 <Route path="/eats/orders" element={<ProtectedRoute><EatsOrdersPage /></ProtectedRoute>} />
                 <Route path="/eats/restaurant-dashboard" element={<AdminShellRoute vertical="restaurant" nav={restaurantNav} title="Restaurant Dashboard | ZIVO Admin"><EatsRestaurantDashboard /></AdminShellRoute>} />
@@ -802,6 +823,7 @@ const App = () => (
                 <Route path="/shop/:storeId" element={<StoreProfilePage />} />
                 <Route path="/refer" element={<ProtectedRoute><ReferAFriendPage /></ProtectedRoute>} />
                 <Route path="/chat" element={<ChatHubPage />} />
+                <Route path="/chat/saved" element={<ProtectedRoute><ChatHubPage /></ProtectedRoute>} />
                 <Route path="/chat/contacts" element={<ProtectedRoute><ContactsPage /></ProtectedRoute>} />
                 <Route path="/chat/contacts/requests" element={<ProtectedRoute><ContactRequestsPage /></ProtectedRoute>} />
                 <Route path="/chat/nearby" element={<ProtectedRoute><NearbyChatPage /></ProtectedRoute>} />
@@ -833,6 +855,8 @@ const App = () => (
                 <Route path="/creator/setup" element={<ProtectedRoute><CreatorSetupPage /></ProtectedRoute>} />
                 <Route path="/creator-analytics" element={<ProtectedRoute><CreatorAnalyticsPage /></ProtectedRoute>} />
                 <Route path="/creator/live-earnings" element={<ProtectedRoute><CreatorLiveEarningsPage /></ProtectedRoute>} />
+                <Route path="/creator/subscribers" element={<ProtectedRoute><CreatorSubscribersPage /></ProtectedRoute>} />
+                <Route path="/creator/tips" element={<ProtectedRoute><CreatorTipsPage /></ProtectedRoute>} />
                 <Route path="/affiliate-hub" element={<ProtectedRoute><AffiliateHubPage /></ProtectedRoute>} />
                 <Route path="/digital-products" element={<ProtectedRoute><DigitalProductsPage /></ProtectedRoute>} />
                 <Route path="/monetization" element={<ProtectedRoute><MonetizationPage /></ProtectedRoute>} />
@@ -937,6 +961,11 @@ const App = () => (
                 <Route path="/admin/lodging/qa-checklist" element={<ProtectedRoute requireAdmin={true}><AdminLodgingQAChecklistPage /></ProtectedRoute>} />
                 <Route path="/admin/lodging/completion-verification" element={<ProtectedRoute requireAdmin={true}><AdminLodgingCompletionVerificationPage /></ProtectedRoute>} />
                 <Route path="/admin/security/blocked-links" element={<ProtectedRoute requireAdmin={true}><AdminBlockedLinksPage /></ProtectedRoute>} />
+                <Route path="/admin/security/threat-history" element={<ProtectedRoute requireAdmin={true}><AdminThreatHistoryPage /></ProtectedRoute>} />
+                <Route path="/admin/security/csp-violations" element={<ProtectedRoute requireAdmin={true}><AdminCspViolationsPage /></ProtectedRoute>} />
+                <Route path="/admin/security/audit" element={<ProtectedRoute requireAdmin={true}><AdminSecurityAuditPage /></ProtectedRoute>} />
+                <Route path="/admin/security/notifications" element={<ProtectedRoute requireAdmin={true}><AdminSecurityNotificationsPage /></ProtectedRoute>} />
+                <Route path="/admin/security" element={<ProtectedRoute requireAdmin={true}><AdminSecurityOverviewPage /></ProtectedRoute>} />
                 <Route path="/admin/lodging/wiring-check" element={<ProtectedRoute requireAdmin={true}><AdminLodgingWiringCheckPage /></ProtectedRoute>} />
                 <Route path="/admin/lodging/webhook-events" element={<ProtectedRoute requireAdmin={true}><AdminLodgingWebhookEventsPage /></ProtectedRoute>} />
                 <Route path="/store/setup" element={<ProtectedRoute><StoreSetup /></ProtectedRoute>} />
@@ -1044,6 +1073,7 @@ const App = () => (
                 <Route path="/account/legal" element={<LegalPoliciesPage />} />
                 <Route path="/account/profile-edit" element={<ProtectedRoute><ProfileEditPage /></ProtectedRoute>} />
                 <Route path="/account/security" element={<ProtectedRoute><AccountSecurity /></ProtectedRoute>} />
+                <Route path="/account/sessions" element={<ProtectedRoute><AccountSessionsPage /></ProtectedRoute>} />
                 <Route path="/account/linked-devices" element={<ProtectedRoute><LinkedDevicesPage /></ProtectedRoute>} />
                 <Route path="/account/link-device" element={<ProtectedRoute><LinkDevicePage /></ProtectedRoute>} />
                 <Route path="/account/scan-device" element={<ProtectedRoute><ScanDevicePage /></ProtectedRoute>} />
@@ -1086,7 +1116,8 @@ const App = () => (
                 <Route path="/account/tax" element={<ProtectedRoute><ComingSoonPage title="Tax Info" description="Tax forms, 1099s, and reporting." /></ProtectedRoute>} />
                 <Route path="/account/receipts" element={<ProtectedRoute><ComingSoonPage title="Receipts" description="Past payments and order receipts." /></ProtectedRoute>} />
                 <Route path="/account/reviews" element={<ProtectedRoute><ComingSoonPage title="My Reviews" description="Ratings and reviews you've left." /></ProtectedRoute>} />
-                <Route path="/account/subscriptions" element={<ProtectedRoute><ComingSoonPage title="Subscriptions" description="Active plans and renewals." /></ProtectedRoute>} />
+                <Route path="/account/subscriptions" element={<ProtectedRoute><AccountSubscriptionsPage /></ProtectedRoute>} />
+                <Route path="/account/tips" element={<ProtectedRoute><AccountTipsPage /></ProtectedRoute>} />
 
                 {/* Trip Itineraries */}
                 <Route path="/trips" element={<ProtectedRoute><TripsListPage /></ProtectedRoute>} />
@@ -1154,7 +1185,8 @@ const App = () => (
                 <Route path="/company" element={<Company />} />
                 <Route path="/security" element={<Security />} />
                 <Route path="/security-status" element={<SecurityStatus />} />
-                <Route path="/saved" element={<ProtectedRoute><SavedPostsPage /></ProtectedRoute>} />
+                {/* /saved is taken by BookmarksPage above; tile-grid view lives at /saved-posts */}
+                <Route path="/saved-posts" element={<ProtectedRoute><SavedPostsPage /></ProtectedRoute>} />
                 <Route path="/tag/:tag" element={<HashtagPage />} />
                 <Route path="/ai-trip-planner" element={<AITripPlanner />} />
                 <Route path="/multi-city-builder" element={<MultiCityBuilder />} />
@@ -1205,6 +1237,17 @@ const App = () => (
 
                 {/* Business */}
                 <Route path="/partner-with-zivo" element={<PartnerOnboardingDispatcher />} />
+                <Route path="/become-partner" element={<BecomePartnerPage />} />
+                <Route path="/partners/join" element={<PreserveQueryRedirect to="/become-partner" />} />
+                <Route path="/network" element={<NetworkPlacesPage />} />
+                <Route path="/places" element={<PreserveQueryRedirect to="/network" />} />
+                <Route path="/network/saved" element={<SavedFavoritesPage />} />
+                <Route path="/favorites/network" element={<PreserveQueryRedirect to="/network/saved" />} />
+                <Route path="/concierge" element={<ConciergePage />} />
+                <Route path="/share/trip/:tripId" element={<PublicTripSharePage />} />
+                <Route path="/rides/multi-stop" element={<ProtectedRoute><PhoneRequiredGate><MultiStopRideBuilder /></PhoneRequiredGate></ProtectedRoute>} />
+                <Route path="/share/order/:orderId" element={<PublicOrderSharePage />} />
+                <Route path="/share/with-me" element={<ShareWatchlistPage />} />
                 <Route path="/partner-login" element={<PartnerLogin />} />
                 <Route path="/partners" element={<PartnerWithZivo />} />
                 <Route path="/business" element={<BusinessLandingPage />} />
