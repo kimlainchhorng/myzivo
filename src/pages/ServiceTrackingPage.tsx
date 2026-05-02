@@ -91,6 +91,16 @@ export default function ServiceTrackingPage() {
               <Clock className="h-3 w-3" /> ETA {etaText}
             </p>
           )}
+          {order.status === "searching" && order.dispatch_attempts > 0 && (
+            <p className="text-xs text-muted-foreground mt-1">
+              Searching for a driver — attempt {order.dispatch_attempts} of 4
+            </p>
+          )}
+          {order.status === "cancelled" && order.cancellation_reason === "no_drivers_available" && (
+            <p className="text-xs text-amber-600 mt-1">
+              No drivers were available. You weren't charged. Please try again in a few minutes.
+            </p>
+          )}
         </CardHeader>
         <CardContent>
           <ServiceOrderProgressBar kind={order.kind} status={order.status} />

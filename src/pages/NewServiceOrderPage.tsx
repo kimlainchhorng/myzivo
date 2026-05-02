@@ -13,8 +13,10 @@ import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCreateServiceOrder, type CreateServiceOrderInput } from "@/hooks/useCreateServiceOrder";
+import { useFareQuote } from "@/hooks/useFareQuote";
 import LegalAcknowledgment from "@/components/legal/LegalAcknowledgment";
 import PromoCodeField from "@/components/service/PromoCodeField";
+import FareEstimateCard from "@/components/service/FareEstimateCard";
 import type { ServiceOrderItem } from "@/types/serviceOrder";
 
 const PIPELINE_LEGAL_VERSION = "1.0.0";
@@ -40,6 +42,7 @@ export default function NewServiceOrderPage() {
   const { mutate, isPending, error } = useCreateServiceOrder();
   const [legalAccepted, setLegalAccepted] = useState(false);
   const [promo, setPromo] = useState<{ code: string; discount_cents: number } | null>(null);
+  const [useEstimate, setUseEstimate] = useState(true);
 
   // Ride form
   const [pickupAddr, setPickupAddr] = useState("");
@@ -106,6 +109,41 @@ export default function NewServiceOrderPage() {
     .map((m) => ({ ...m, qty: cart[m.id] ?? 0 }))
     .filter((m) => m.qty > 0), [menu, cart]);
   const cartSubtotal = cartLines.reduce((s, l) => s + l.qty * l.price_cents, 0);
+
+  // Live fare estimates ─────────────────────────────────────────────
+  const ridePickup = useMemo(() => {
+    const lat = parseFloat(pickupLat); const lng = parseFloat(pickupLng);
+    return Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
+  }, [pickupLat, pickupLng]);
+  const rideDropoff = useMemo(() => {
+    const lat = parseFloat(dropoffLat); const lng = parseFloat(dropoffLng);
+    return Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
+  }, [dropoffLat, dropoffLng]);
+  const rideQuote = useFareQuote({ kind: "ride", pickup: ridePickup, dropoff: rideDropoff });
+
+  useEffect(() => {
+    if (useEstimate && rideQuote.quote && rideQuote.quote.kind === "ride") {
+      setFarePrice((rideQuote.quote.subtotal_cents / 100).toFixed(2));
+    }
+  }, [useEstimate, rideQuote.quote]);
+
+  const deliveryShop = useMemo(() => shops.find((s) => s.id === selectedShop) ?? null, [shops, selectedShop]);
+  const deliveryPickupCoords = useMemo(() =>
+    deliveryShop?.lat != null && deliveryShop?.lng != null
+      ? { lat: deliveryShop.lat, lng: deliveryShop.lng }
+      : null,
+  [deliveryShop?.lat, deliveryShop?.lng]);
+  const deliveryDropoff = useMemo(() => {
+    const lat = parseFloat(deliveryLat); const lng = parseFloat(deliveryLng);
+    return Number.isFinite(lat) && Number.isFinite(lng) ? { lat, lng } : null;
+  }, [deliveryLat, deliveryLng]);
+  const deliveryQuote = useFareQuote({ kind: "delivery", pickup: deliveryPickupCoords, dropoff: deliveryDropoff });
+
+  useEffect(() => {
+    if (useEstimate && deliveryQuote.quote && deliveryQuote.quote.kind === "delivery") {
+      setDeliveryFee((deliveryQuote.quote.delivery_fee_cents / 100).toFixed(2));
+    }
+  }, [useEstimate, deliveryQuote.quote]);
 
   if (!user) {
     return (
@@ -219,10 +257,29 @@ export default function NewServiceOrderPage() {
             </CardContent>
           </Card>
 
+          <FareEstimateCard
+            quote={rideQuote.quote}
+            isLoading={rideQuote.isLoading}
+            error={rideQuote.error}
+            emptyHint="Enter pickup + drop-off coordinates above to see a live fare estimate."
+          />
+
           <Card>
-            <CardContent className="pt-6">
-              <Label htmlFor="ride-fare">Fare (USD)</Label>
-              <Input id="ride-fare" value={farePrice} onChange={(e) => setFarePrice(e.target.value)} inputMode="decimal" />
+            <CardContent className="pt-6 space-y-2">
+              <div className="flex items-center justify-between">
+                <Label htmlFor="ride-fare">Fare (USD)</Label>
+                <label className="text-xs text-muted-foreground inline-flex items-center gap-1.5 cursor-pointer">
+                  <input type="checkbox" checked={useEstimate} onChange={(e) => setUseEstimate(e.target.checked)} />
+                  Use estimate
+                </label>
+              </div>
+              <Input
+                id="ride-fare"
+                value={farePrice}
+                onChange={(e) => { setUseEstimate(false); setFarePrice(e.target.value); }}
+                inputMode="decimal"
+                disabled={useEstimate && rideQuote.quote != null}
+              />
             </CardContent>
           </Card>
 
@@ -297,10 +354,31 @@ export default function NewServiceOrderPage() {
                 <div><Label htmlFor="del-lat">Latitude (opt)</Label><Input id="del-lat" value={deliveryLat} onChange={(e) => setDeliveryLat(e.target.value)} inputMode="decimal" /></div>
                 <div><Label htmlFor="del-lng">Longitude (opt)</Label><Input id="del-lng" value={deliveryLng} onChange={(e) => setDeliveryLng(e.target.value)} inputMode="decimal" /></div>
               </div>
-              <div><Label htmlFor="del-fee">Delivery fee (USD)</Label><Input id="del-fee" value={deliveryFee} onChange={(e) => setDeliveryFee(e.target.value)} inputMode="decimal" /></div>
+              <div>
+                <div className="flex items-center justify-between">
+                  <Label htmlFor="del-fee">Delivery fee (USD)</Label>
+                  <label className="text-xs text-muted-foreground inline-flex items-center gap-1.5 cursor-pointer">
+                    <input type="checkbox" checked={useEstimate} onChange={(e) => setUseEstimate(e.target.checked)} />
+                    Use estimate
+                  </label>
+                </div>
+                <Input
+                  id="del-fee" value={deliveryFee}
+                  onChange={(e) => { setUseEstimate(false); setDeliveryFee(e.target.value); }}
+                  inputMode="decimal"
+                  disabled={useEstimate && deliveryQuote.quote != null}
+                />
+              </div>
               <div><Label htmlFor="del-notes">Notes (opt)</Label><Textarea id="del-notes" value={notes} onChange={(e) => setNotes(e.target.value)} rows={2} /></div>
             </CardContent>
           </Card>
+
+          <FareEstimateCard
+            quote={deliveryQuote.quote}
+            isLoading={deliveryQuote.isLoading}
+            error={deliveryQuote.error}
+            emptyHint={selectedShop ? "Enter the drop-off coordinates above to see delivery distance + ETA." : "Pick a shop and enter drop-off to estimate."}
+          />
 
           <Card>
             <CardHeader className="pb-2"><CardTitle className="text-base flex items-center gap-1"><Tag className="h-4 w-4" /> Promo</CardTitle></CardHeader>
