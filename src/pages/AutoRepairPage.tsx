@@ -103,7 +103,7 @@ export default function AutoRepairPage() {
       </div>
 
       {/* Mobile header */}
-      <div className="md:hidden sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/20">
+      <div className="md:hidden sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/20 safe-area-top">
         <div className="flex items-center gap-3 px-4 py-3">
           <button onClick={() => navigate(-1)} className="p-1.5 rounded-full hover:bg-muted/60 transition-colors">
             <ChevronLeft className="h-5 w-5" />
