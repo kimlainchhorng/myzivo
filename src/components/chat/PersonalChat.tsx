@@ -38,6 +38,11 @@ import Shield from "lucide-react/dist/esm/icons/shield";
 import Video from "lucide-react/dist/esm/icons/video";
 import History from "lucide-react/dist/esm/icons/history";
 import FileText from "lucide-react/dist/esm/icons/file-text";
+import Bookmark from "lucide-react/dist/esm/icons/bookmark";
+import Timer from "lucide-react/dist/esm/icons/timer";
+import Sparkles from "lucide-react/dist/esm/icons/sparkles";
+import Ban from "lucide-react/dist/esm/icons/ban";
+import Flag from "lucide-react/dist/esm/icons/flag";
 import MoreVertical from "lucide-react/dist/esm/icons/more-vertical";
 import PhoneCall from "lucide-react/dist/esm/icons/phone-call";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
@@ -52,6 +57,7 @@ import ChatAttachMenu from "./ChatAttachMenu";
 import ChatPollCreator, { type PollDraft } from "./ChatPollCreator";
 import ChatQuickReplies from "./ChatQuickReplies";
 import ChatContactPicker, { type SharedContact } from "./ChatContactPicker";
+import ChatSocialShareSheet from "./ChatSocialShareSheet";
 import SmartReplyBar from "./SmartReplyBar";
 const ChatGiftPanel = lazy(() => import("./ChatGiftPanel"));
 const ChatWalletSheet = lazy(() => import("./ChatWalletSheet"));
@@ -59,6 +65,7 @@ const CoinTransferBubble = lazy(() => import("./CoinTransferBubble"));
 const DocumentScanner = lazy(() => import("./DocumentScanner"));
 import { useChatFiles } from "@/hooks/useChatFiles";
 import type { StickerSendPayload } from "./StickerKeyboard";
+import { suggestStickersFor } from "@/lib/stickerSuggest";
 import { getWallpaperClass, getWallpaperStyle } from "./chatPersonalizationStyles";
 import CallEventBubble from "./CallEventBubble";
 import VoiceMessageBubble from "./VoiceMessageBubble";
@@ -114,6 +121,8 @@ interface PersonalChatProps {
   recipientName: string;
   recipientAvatar?: string | null;
   recipientIsVerified?: boolean;
+  /** Pre-seed the composer with this text once on mount (e.g. quoted from "Reply Privately"). */
+  prefillInput?: string;
   onClose: () => void;
   autoStartCall?: "voice" | "video" | null;
   onCallStarted?: () => void;
@@ -141,6 +150,7 @@ interface Message {
   is_read: boolean;
   locked_price_cents?: number | null;
   edited_at?: string | null;
+  forwarded_from_user_id?: string | null;
   file_payload?: FileBubbleData | null;
   gift_payload?: {
     amount?: number | string;
@@ -233,8 +243,10 @@ function formatMsgTime(dateStr: string) {
   return format(d, "MMM d, h:mm a");
 }
 
-export default function PersonalChat({ recipientId, recipientName, recipientAvatar, recipientIsVerified, onClose, autoStartCall, onCallStarted, inline = false }: PersonalChatProps) {
+export default function PersonalChat({ recipientId, recipientName, recipientAvatar, recipientIsVerified, prefillInput, onClose, autoStartCall, onCallStarted, inline = false }: PersonalChatProps) {
   const { user } = useAuth();
+  const isSelfChat = !!user?.id && recipientId === user.id;
+  const displayName = isSelfChat ? "Saved Messages" : recipientName;
 
   // Notify global listener that this chat is open
   useEffect(() => {
@@ -243,7 +255,26 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       window.dispatchEvent(new CustomEvent("chat-closed"));
     };
   }, [recipientId]);
+
+  // Seed the composer once when the chat is opened with a prefill (e.g. "Reply Privately")
+  const prefilledRef = useRef(false);
+  useEffect(() => {
+    if (prefilledRef.current) return;
+    if (!prefillInput) return;
+    prefilledRef.current = true;
+    setInput(prefillInput);
+    requestAnimationFrame(() => {
+      inputRef.current?.focus();
+      try {
+        const len = prefillInput.length;
+        inputRef.current?.setSelectionRange(len, len);
+      } catch { /* ignore */ }
+    });
+  }, [prefillInput]);
   const [messages, setMessages] = useState<Message[]>([]);
+  // Display-name lookup for original senders of forwarded messages, populated lazily
+  // when new forwarded_from_user_ids appear in the timeline.
+  const [forwardedNames, setForwardedNames] = useState<Record<string, string>>({});
   const [reactionsMap, setReactionsMap] = useState<Record<string, { emoji: string; count: number; reactedByMe: boolean }[]>>({});
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(true);
@@ -260,8 +291,58 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [highlightedMsgId, setHighlightedMsgId] = useState<string | null>(null);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
   // Auto-delete (chat-wide disappearing). null = off, otherwise seconds. Cycles 1d→7d→30d→off.
+  // Persisted per conversation in localStorage so it survives page reloads.
   const [disappearingSec, setDisappearingSec] = useState<number | null>(null);
   const disappearingMode = disappearingSec != null;
+  const autoDeleteStorageKey = user?.id && recipientId ? `chat:autoDelete:${user.id}:${recipientId}` : null;
+  // Hydrate from localStorage when the conversation pair is known
+  useEffect(() => {
+    if (!autoDeleteStorageKey) return;
+    try {
+      const raw = localStorage.getItem(autoDeleteStorageKey);
+      if (raw == null) { setDisappearingSec(null); return; }
+      const parsed = Number(raw);
+      setDisappearingSec(Number.isFinite(parsed) && parsed > 0 ? parsed : null);
+    } catch { /* ignore */ }
+  }, [autoDeleteStorageKey]);
+  // Setter that also persists. Use this everywhere instead of setDisappearingSec directly.
+  const persistAutoDelete = useCallback((next: number | null) => {
+    setDisappearingSec(next);
+    if (!autoDeleteStorageKey) return;
+    try {
+      if (next == null) localStorage.removeItem(autoDeleteStorageKey);
+      else localStorage.setItem(autoDeleteStorageKey, String(next));
+    } catch { /* ignore */ }
+  }, [autoDeleteStorageKey]);
+  // Cycle Off → 1d → 7d → 30d → Off (Telegram parity)
+  const cycleAutoDelete = useCallback(() => {
+    const next = disappearingSec == null
+      ? 24 * 60 * 60
+      : disappearingSec === 24 * 60 * 60
+      ? 7 * 24 * 60 * 60
+      : disappearingSec === 7 * 24 * 60 * 60
+      ? 30 * 24 * 60 * 60
+      : null;
+    persistAutoDelete(next);
+    toast.success(
+      next == null
+        ? "Auto-delete: Off"
+        : next === 24 * 60 * 60
+        ? "Auto-delete: 1 day"
+        : next === 7 * 24 * 60 * 60
+        ? "Auto-delete: 7 days"
+        : "Auto-delete: 30 days"
+    );
+  }, [disappearingSec, persistAutoDelete]);
+  const autoDeleteLabel = disappearingSec == null
+    ? "Off"
+    : disappearingSec === 24 * 60 * 60
+    ? "1 day"
+    : disappearingSec === 7 * 24 * 60 * 60
+    ? "7 days"
+    : disappearingSec === 30 * 24 * 60 * 60
+    ? "30 days"
+    : "On";
   const [showNotifSettings, setShowNotifSettings] = useState(false);
   const [showMediaGallery, setShowMediaGallery] = useState(false);
   const [mediaGalleryTab, setMediaGalleryTab] = useState<"photos" | "videos" | "voice" | "files" | "links">("photos");
@@ -280,6 +361,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [showPollCreator, setShowPollCreator] = useState(false);
   const [showQuickReplies, setShowQuickReplies] = useState(false);
   const [showContactPicker, setShowContactPicker] = useState(false);
+  const [showSocialShare, setShowSocialShare] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
 
   // Desktop keyboard shortcuts:
@@ -305,6 +387,14 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [callEvents, setCallEvents] = useState<CallEvent[]>([]);
   const [dismissedMissedCallId, setDismissedMissedCallId] = useState<string | null>(null);
   const [activeEffect, setActiveEffect] = useState<EffectType>(null);
+  // Manually-armed send effect; overrides detectMessageEffect for the next message
+  const [pendingEffect, setPendingEffect] = useState<EffectType>(null);
+  const [showEffectPicker, setShowEffectPicker] = useState(false);
+  // Slash-command popover state — non-null when input starts with `/`
+  const [slashQuery, setSlashQuery] = useState<string | null>(null);
+  const [slashIndex, setSlashIndex] = useState(0);
+  // Sticker auto-suggestions when input ends with a known emoji
+  const stickerSuggestions = useMemo(() => suggestStickersFor(input), [input]);
   const [visibleTimelineCount, setVisibleTimelineCount] = useState(INITIAL_VISIBLE_TIMELINE_ITEMS);
   const [showJumpToLatest, setShowJumpToLatest] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -544,7 +634,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     initialScrollDone.current = false;
     const load = async () => {
       setLoading(true);
-      const msgColumns = "id,sender_id,receiver_id,message,image_url,video_url,voice_url,message_type,delivered_at,reply_to_id,location_lat,location_lng,location_label,is_pinned,expires_at,created_at,is_read,locked_price_cents,edited_at,file_payload,gift_payload";
+      const msgColumns = "id,sender_id,receiver_id,message,image_url,video_url,voice_url,message_type,delivered_at,reply_to_id,location_lat,location_lng,location_label,is_pinned,expires_at,created_at,is_read,locked_price_cents,edited_at,forwarded_from_user_id,file_payload,gift_payload";
       const callColumns = "id,caller_id,callee_id,call_type,status,duration_seconds,created_at";
       const [msgRes, callRes] = await Promise.all([
         dbFrom("direct_messages")
@@ -677,7 +767,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   useEffect(() => {
     if (!user?.id || !recipientId) return;
 
-    const msgColumns = "id,sender_id,receiver_id,message,image_url,video_url,voice_url,message_type,delivered_at,reply_to_id,location_lat,location_lng,location_label,is_pinned,expires_at,created_at,is_read,locked_price_cents,edited_at,file_payload,gift_payload";
+    const msgColumns = "id,sender_id,receiver_id,message,image_url,video_url,voice_url,message_type,delivered_at,reply_to_id,location_lat,location_lng,location_label,is_pinned,expires_at,created_at,is_read,locked_price_cents,edited_at,forwarded_from_user_id,file_payload,gift_payload";
 
     const tick = async () => {
       const latestCreatedAt = latestMessageCreatedAtRef.current;
@@ -740,6 +830,33 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       appResumeListener.then((l) => l.remove());
     };
   }, [recipientId, scrollToBottom, user?.id]);
+
+  // Resolve display names for forwarded-from senders (Telegram-style "Forwarded from X" header).
+  // Runs whenever messages change and lazily fetches profile rows for any new sender ids.
+  useEffect(() => {
+    const ids = new Set<string>();
+    for (const m of messages) {
+      const fid = m.forwarded_from_user_id;
+      if (fid && !forwardedNames[fid]) ids.add(fid);
+    }
+    if (ids.size === 0) return;
+    let cancelled = false;
+    (async () => {
+      const { data } = await supabase
+        .from("profiles")
+        .select("user_id, full_name")
+        .in("user_id", Array.from(ids));
+      if (cancelled || !data) return;
+      setForwardedNames((prev) => {
+        const next = { ...prev };
+        for (const row of data as { user_id: string; full_name: string | null }[]) {
+          next[row.user_id] = row.full_name || "Unknown";
+        }
+        return next;
+      });
+    })();
+    return () => { cancelled = true; };
+  }, [messages, forwardedNames]);
 
   useEffect(() => {
     if (!user?.id) return;
@@ -820,9 +937,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     scrollToBottom(true);
     setTyping(false);
 
-    // Trigger message effect if detected
-    const effect = detectMessageEffect(text);
+    // Trigger message effect — manually-armed effect wins over keyword auto-detect
+    const effect = pendingEffect ?? detectMessageEffect(text);
     if (effect) setActiveEffect(effect);
+    if (pendingEffect) setPendingEffect(null);
 
     try {
       const insertData: DirectMessageInsert = {
@@ -1288,6 +1406,52 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     if (msg) setForwardingMsg(msg);
   }, [messages]);
 
+  // Save to Saved Messages — Telegram-style one-tap save (forward to self)
+  const handleSave = useCallback(async (id: string) => {
+    if (!user?.id) return;
+    const msg = messages.find((m) => m.id === id);
+    if (!msg) return;
+    const ok = await forwardMessage(msg as DirectMessage, [user.id]);
+    if (ok) toast.success("Saved");
+  }, [forwardMessage, messages, user?.id]);
+
+  // Block & report — duplicates the logic in ChatContactInfo so users can block/report
+  // in one tap from the chat header without first opening the contact sheet.
+  const handleBlockContact = useCallback(() => {
+    if (!user?.id) return;
+    toast.info(`Block ${recipientName}?`, {
+      action: {
+        label: "Block",
+        onClick: async () => {
+          const { error } = await dbFrom("blocked_users")
+            .insert({ blocker_id: user.id, blocked_id: recipientId });
+          if (error) { toast.error("Could not block"); return; }
+          toast.success(`${recipientName} blocked`);
+          onClose?.();
+        },
+      },
+    });
+  }, [user?.id, recipientId, recipientName, onClose]);
+
+  const handleReportContact = useCallback(() => {
+    if (!user?.id) return;
+    toast.info(`Report ${recipientName}?`, {
+      action: {
+        label: "Report",
+        onClick: async () => {
+          const { error } = await dbFrom("user_reports").insert({
+            reporter_id: user.id,
+            reported_id: recipientId,
+            reason: "chat_profile",
+            details: `Reported from chat header for ${recipientName}`,
+          });
+          if (error) { toast.error("Could not submit report"); return; }
+          toast.success("Report submitted");
+        },
+      },
+    });
+  }, [user?.id, recipientId, recipientName]);
+
   // Pin/unpin
   const handlePin = useCallback(async (id: string, pinned: boolean) => {
     setMessages((prev) => prev.map((m) => m.id === id ? { ...m, is_pinned: pinned } : m));
@@ -1381,6 +1545,14 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     const val = e.target.value;
     setInput(val);
     updateDraft(val);
+    // Slash-command detection — only when the very first character is `/`
+    // and there's no whitespace yet (so "type / and a name").
+    if (val.startsWith("/") && !/\s/.test(val)) {
+      setSlashQuery(val.slice(1).toLowerCase());
+      setSlashIndex(0);
+    } else if (slashQuery != null) {
+      setSlashQuery(null);
+    }
     // Debounce typing indicator to reduce Supabase presence updates
     if (typingTimerRef.current) clearTimeout(typingTimerRef.current);
     const hasText = !!val.trim();
@@ -1401,7 +1573,35 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         }
       }, 3000);
     }
-  }, [updateDraft, setTyping, user?.id, recipientId]);
+  }, [updateDraft, setTyping, user?.id, recipientId, slashQuery]);
+
+  // Slash-command catalog — wires existing sheet/handlers to a quick keyboard menu.
+  // Disabled in self-chat where most of these don't apply.
+  const slashCommands = useMemo(() => {
+    if (isSelfChat) return [] as Array<{ id: string; label: string; hint: string; run: () => void }>;
+    return [
+      { id: "location", label: "/location", hint: "Share your current location", run: () => handleLocationShare() },
+      { id: "gift", label: "/gift", hint: "Send a coin gift", run: () => setShowGiftPanel(true) },
+      { id: "wallet", label: "/wallet", hint: "Open the wallet sheet", run: () => setShowWalletSheet(true) },
+      { id: "schedule", label: "/schedule", hint: "Schedule a message for later", run: () => setShowScheduler(true) },
+      { id: "scan", label: "/scan", hint: "Scan a document", run: () => setShowScanner(true) },
+      { id: "sticker", label: "/sticker", hint: "Open the sticker keyboard", run: () => setShowStickerKeyboard(true) },
+      { id: "miniapp", label: "/miniapp", hint: "Open mini apps", run: () => setShowMiniApps(true) },
+    ];
+  }, [isSelfChat]);
+
+  const slashCandidates = useMemo(() => {
+    if (slashQuery == null) return [];
+    if (!slashQuery) return slashCommands;
+    return slashCommands.filter((c) => c.id.startsWith(slashQuery) || c.label.includes(slashQuery));
+  }, [slashCommands, slashQuery]);
+
+  const runSlashCommand = useCallback((cmd: { run: () => void }) => {
+    setInput("");
+    setSlashQuery(null);
+    setSlashIndex(0);
+    cmd.run();
+  }, []);
 
   const handleQuickPanelSend = useCallback(async (payload: StickerSendPayload) => {
     if (!user?.id || sending) return;
@@ -1542,21 +1742,29 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
           <div className="relative shrink-0">
-            <Avatar className="h-11 w-11 ring-2 ring-border/10">
-              <AvatarImage src={recipientAvatar || undefined} />
-              <AvatarFallback className="text-xs font-bold bg-primary/8 text-primary">{initials}</AvatarFallback>
-            </Avatar>
-            {recipientOnline && (
+            {isSelfChat ? (
+              <div className="h-11 w-11 rounded-full bg-emerald-500 flex items-center justify-center shadow-sm">
+                <Bookmark className="h-5 w-5 text-white" />
+              </div>
+            ) : (
+              <Avatar className="h-11 w-11 ring-2 ring-border/10">
+                <AvatarImage src={recipientAvatar || undefined} />
+                <AvatarFallback className="text-xs font-bold bg-primary/8 text-primary">{initials}</AvatarFallback>
+              </Avatar>
+            )}
+            {!isSelfChat && recipientOnline && (
               <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-500 border-2 border-background" />
             )}
           </div>
-          <div className="min-w-0 flex-1 cursor-pointer" onClick={() => setShowContactInfo(true)}>
+          <div className="min-w-0 flex-1 cursor-pointer" onClick={() => { if (!isSelfChat) setShowContactInfo(true); }}>
             <p className="text-[15px] font-semibold text-foreground truncate leading-tight inline-flex items-center gap-1">
-              <span className="truncate">{recipientName}</span>
-              {isBlueVerified(recipientIsVerified) && <VerifiedBadge size={14} interactive={false} />}
+              <span className="truncate">{displayName}</span>
+              {!isSelfChat && isBlueVerified(recipientIsVerified) && <VerifiedBadge size={14} interactive={false} />}
             </p>
             <p className="text-[11px] text-muted-foreground/70 leading-tight mt-0.5">
-              {recipientTyping ? (
+              {isSelfChat ? (
+                <span className="text-muted-foreground">Notes, links and reminders for yourself</span>
+              ) : recipientTyping ? (
                 <span className="inline-flex items-center gap-[3px] text-primary font-medium">
                   typing
                   {[0,1,2].map(i => (
@@ -1575,24 +1783,28 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
           {/* Action buttons */}
           <div className="flex items-center gap-0.5">
-            <motion.button
-              whileTap={{ scale: 0.85 }}
-              onClick={() => { void primeCallAudio(); void handleStartCall("video"); }}
-              className="h-11 w-11 rounded-full flex items-center justify-center hover:bg-blue-500/10 active:bg-blue-500/15 transition-colors"
-              aria-label="Video call"
-              title="Video call"
-            >
-              <Video className="h-5 w-5 text-blue-500" />
-            </motion.button>
-            <motion.button
-              whileTap={{ scale: 0.85 }}
-              onClick={() => { void primeCallAudio(); void handleStartCall("voice"); }}
-              className="h-11 w-11 rounded-full flex items-center justify-center hover:bg-emerald-500/10 active:bg-emerald-500/15 transition-colors"
-              aria-label="Voice call"
-              title="Voice call"
-            >
-              <Phone className="h-[19px] w-[19px] text-emerald-500" />
-            </motion.button>
+            {!isSelfChat && (
+              <>
+                <motion.button
+                  whileTap={{ scale: 0.85 }}
+                  onClick={() => { void primeCallAudio(); void handleStartCall("video"); }}
+                  className="h-11 w-11 rounded-full flex items-center justify-center hover:bg-blue-500/10 active:bg-blue-500/15 transition-colors"
+                  aria-label="Video call"
+                  title="Video call"
+                >
+                  <Video className="h-5 w-5 text-blue-500" />
+                </motion.button>
+                <motion.button
+                  whileTap={{ scale: 0.85 }}
+                  onClick={() => { void primeCallAudio(); void handleStartCall("voice"); }}
+                  className="h-11 w-11 rounded-full flex items-center justify-center hover:bg-emerald-500/10 active:bg-emerald-500/15 transition-colors"
+                  aria-label="Voice call"
+                  title="Voice call"
+                >
+                  <Phone className="h-[19px] w-[19px] text-emerald-500" />
+                </motion.button>
+              </>
+            )}
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -1626,12 +1838,32 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               <DropdownMenuItem onClick={() => setShowSecurity(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
                 <Shield className="w-[18px] h-[18px] text-muted-foreground" /> Privacy
               </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={cycleAutoDelete}
+                className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer"
+                onSelect={(e) => { e.preventDefault(); }}
+              >
+                <Timer className="w-[18px] h-[18px] text-muted-foreground" />
+                <span className="flex-1">Auto-Delete Timer</span>
+                <span className={`text-[11px] tabular-nums ${disappearingMode ? "text-amber-500 font-semibold" : "text-muted-foreground"}`}>{autoDeleteLabel}</span>
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setShowScheduledSheet(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
                 <Clock className="w-[18px] h-[18px] text-muted-foreground" /> Scheduled
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setShowContactInfo(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
                 <FileText className="w-[18px] h-[18px] text-muted-foreground" /> Contact Info
               </DropdownMenuItem>
+              {!isSelfChat && (
+                <>
+                  <DropdownMenuSeparator className="my-1.5 bg-border/15" />
+                  <DropdownMenuItem onClick={handleReportContact} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer text-destructive focus:text-destructive">
+                    <Flag className="w-[18px] h-[18px]" /> Report
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={handleBlockContact} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer text-destructive focus:text-destructive">
+                    <Ban className="w-[18px] h-[18px]" /> Block contact
+                  </DropdownMenuItem>
+                </>
+              )}
             </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -1836,8 +2068,20 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           </div>
         ) : messages.length === 0 && callEvents.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-40 text-muted-foreground/50">
-            <p className="text-sm">No messages yet</p>
-            <p className="text-xs mt-1">Say hello to {recipientName}!</p>
+            {isSelfChat ? (
+              <>
+                <Bookmark className="h-7 w-7 mb-2 text-emerald-500/70" />
+                <p className="text-sm font-medium text-foreground/70">Saved Messages</p>
+                <p className="text-xs mt-1 max-w-[260px] text-center">
+                  Forward messages here to keep them. Send notes, links, photos and reminders to yourself.
+                </p>
+              </>
+            ) : (
+              <>
+                <p className="text-sm">No messages yet</p>
+                <p className="text-xs mt-1">Say hello to {recipientName}!</p>
+              </>
+            )}
           </div>
         ) : (
           <div ref={timelineRef} className="mt-auto space-y-2">
@@ -2008,6 +2252,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                         onForward={handleForward}
                         onPin={handlePin}
                         onEdit={handleEdit}
+                        onSave={handleSave}
+                        hideSave={isSelfChat}
+                        forwardedFromUserId={msg.forwarded_from_user_id ?? null}
+                        forwardedFromName={msg.forwarded_from_user_id ? (forwardedNames[msg.forwarded_from_user_id] ?? null) : null}
                       />
                     )}
 
@@ -2026,7 +2274,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             </AnimatePresence>
 
             {/* Typing indicator — 2026 style */}
-            {recipientTyping && (
+            {recipientTyping && !isSelfChat && (
               <div className="flex justify-start px-1 animate-in fade-in slide-in-from-bottom-2 duration-200">
                 <div className="bg-muted/70 backdrop-blur-xl rounded-[22px] rounded-bl-[6px] px-4 py-3 flex items-center gap-2 shadow-sm border border-border/10">
                   <div className="flex items-center gap-1">
@@ -2109,10 +2357,17 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       {/* Smart reply suggestions — chips above the composer */}
       <SmartReplyBar
         lastIncomingMessage={(() => {
-          // Only suggest replies when the LAST message is from the partner —
-          // if the user has already responded, the bar should hide.
-          const last = messages[messages.length - 1];
-          if (!last || last.sender_id === user?.id) return null;
+          // Only suggest replies when the LAST timeline item is from the partner —
+          // if the user has already responded, the bar should hide. Includes call
+          // events so a missed call surfaces "call back" suggestions.
+          const last = timeline[timeline.length - 1];
+          if (!last) return null;
+          if (isCallEvent(last)) {
+            if (last.caller_id === user?.id) return null;
+            const isMissed = last.status === "missed" || last.status === "no_answer" || last.status === "declined";
+            return isMissed ? "Missed call" : null;
+          }
+          if (last.sender_id === user?.id) return null;
           return last.message || null;
         })()}
         userTyping={input.trim().length > 0 || !!editingId || !!replyTo}
@@ -2123,6 +2378,27 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       />
 
       <div className="bg-background/80 backdrop-blur-2xl border-t border-border/5 px-2.5 py-2 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
+          {/* Sticker auto-suggestions (Telegram parity) — shown when the user types an emoji
+              and there are matching illustrated stickers. Hidden during slash mode so the popovers don't fight. */}
+          {stickerSuggestions.length > 0 && slashQuery == null && !editingId && (
+            <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 -mx-1 px-1">
+              {stickerSuggestions.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  onClick={() => {
+                    void handleQuickPanelSend({ text: `[sticker:${s.id}]`, messageType: "sticker" });
+                    setInput("");
+                  }}
+                  className="shrink-0 w-16 h-16 rounded-xl bg-muted/50 hover:bg-muted active:scale-95 transition-all flex items-center justify-center p-1"
+                  aria-label={`Send sticker: ${s.alt}`}
+                  title={s.alt}
+                >
+                  <img src={s.src} alt={s.alt} className="w-full h-full object-contain" loading="lazy" />
+                </button>
+              ))}
+            </div>
+          )}
           <div className="flex items-end gap-1.5">
             {/* Action buttons — attach + emoji picker; extra tools accessible via attach menu */}
             <div className="flex items-end gap-0.5 shrink-0">
@@ -2146,26 +2422,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                   onImageSelect={() => fileInputRef.current?.click()}
                   onVideoSelect={() => videoInputRef.current?.click()}
                   onLocationShare={handleLocationShare}
-                  onToggleDisappearing={() => {
-                    // Cycle Off → 1d → 7d → 30d → Off
-                    const next = disappearingSec == null
-                      ? 24 * 60 * 60
-                      : disappearingSec === 24 * 60 * 60
-                      ? 7 * 24 * 60 * 60
-                      : disappearingSec === 7 * 24 * 60 * 60
-                      ? 30 * 24 * 60 * 60
-                      : null;
-                    setDisappearingSec(next);
-                    toast.success(
-                      next == null
-                        ? "Auto-delete: Off"
-                        : next === 24 * 60 * 60
-                        ? "Auto-delete: 1 day"
-                        : next === 7 * 24 * 60 * 60
-                        ? "Auto-delete: 7 days"
-                        : "Auto-delete: 30 days"
-                    );
-                  }}
+                  onToggleDisappearing={cycleAutoDelete}
                   disappearingEnabled={disappearingMode}
                   disappearingLabel={
                     disappearingSec == null ? "Off" :
@@ -2181,6 +2438,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                   onFileSelect={() => filePickerTriggerRef.current?.()}
                   onCreatePoll={() => setShowPollCreator(true)}
                   onShareContact={() => setShowContactPicker(true)}
+                  onShareSocial={() => setShowSocialShare(true)}
                 />
               </div>
 
@@ -2241,19 +2499,107 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
             {/* Input field */}
             <div className="flex-1 relative">
+              {/* Slash-command popover */}
+              {slashQuery != null && slashCandidates.length > 0 && (
+                <>
+                  <div className="fixed inset-0 z-30" onClick={() => setSlashQuery(null)} />
+                  <div className="absolute bottom-full left-0 right-0 mb-2 bg-background/95 backdrop-blur-xl border border-border/40 rounded-xl shadow-lg shadow-black/10 overflow-hidden z-40">
+                    <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/30">
+                      Commands
+                    </div>
+                    {slashCandidates.map((cmd, i) => (
+                      <button
+                        key={cmd.id}
+                        type="button"
+                        onMouseDown={(e) => { e.preventDefault(); runSlashCommand(cmd); }}
+                        onMouseEnter={() => setSlashIndex(i)}
+                        className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors ${i === slashIndex ? "bg-muted/60" : "hover:bg-muted/40"}`}
+                      >
+                        <span className="text-[13px] font-mono font-semibold text-primary">{cmd.label}</span>
+                        <span className="text-[12px] text-muted-foreground truncate">{cmd.hint}</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
               <input
                 ref={inputRef}
                 value={input}
                 onChange={handleInputChange}
-                onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && (editingId ? handleSaveEdit() : handleSend())}
+                onKeyDown={(e) => {
+                  if (slashQuery != null && slashCandidates.length > 0) {
+                    if (e.key === "ArrowDown") { e.preventDefault(); setSlashIndex((i) => (i + 1) % slashCandidates.length); return; }
+                    if (e.key === "ArrowUp") { e.preventDefault(); setSlashIndex((i) => (i - 1 + slashCandidates.length) % slashCandidates.length); return; }
+                    if (e.key === "Enter" || e.key === "Tab") {
+                      e.preventDefault();
+                      runSlashCommand(slashCandidates[slashIndex]);
+                      return;
+                    }
+                    if (e.key === "Escape") { e.preventDefault(); setSlashQuery(null); return; }
+                  }
+                  if (e.key === "Enter" && !e.shiftKey) (editingId ? handleSaveEdit() : handleSend());
+                }}
                 placeholder={disappearingMode ? "Disappearing message..." : "Message..."}
-                className={`w-full h-12 pl-4 pr-14 rounded-full text-[15px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none transition-all ${
+                className={`w-full h-12 pl-4 pr-24 rounded-full text-[15px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none transition-all ${
                   disappearingMode
                     ? "bg-amber-500/5 border border-amber-500/15 focus:ring-2 focus:ring-amber-500/10"
                     : "bg-muted/30 border border-border/10 focus:ring-2 focus:ring-primary/15 focus:border-primary/20"
                 }`}
               />
               <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center">
+                <div className="relative">
+                  <button
+                    onClick={() => setShowEffectPicker((s) => !s)}
+                    className={`h-9 w-9 rounded-full flex items-center justify-center transition-all active:scale-90 ${
+                      pendingEffect ? "text-amber-500 bg-amber-500/10" : "text-muted-foreground/40 hover:text-muted-foreground"
+                    }`}
+                    aria-label="Send effect"
+                    title={pendingEffect ? `Effect: ${pendingEffect}` : "Send effect"}
+                  >
+                    {pendingEffect === "celebration" ? <span className="text-base">🎉</span>
+                      : pendingEffect === "fireworks" ? <span className="text-base">🎆</span>
+                      : pendingEffect === "hearts" ? <span className="text-base">❤️</span>
+                      : pendingEffect === "confetti" ? <span className="text-base">🎊</span>
+                      : pendingEffect === "lasers" ? <span className="text-base">⚡</span>
+                      : <Sparkles className="h-5 w-5" />}
+                  </button>
+                  {showEffectPicker && (
+                    <>
+                      <div className="fixed inset-0 z-30" onClick={() => setShowEffectPicker(false)} />
+                      <div className="absolute bottom-full right-0 mb-2 w-48 bg-background/95 backdrop-blur-xl border border-border/40 rounded-xl shadow-lg shadow-black/10 overflow-hidden z-40">
+                        <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/30">
+                          Send with effect
+                        </div>
+                        {([
+                          { id: "celebration", emoji: "🎉", label: "Celebration" },
+                          { id: "fireworks", emoji: "🎆", label: "Fireworks" },
+                          { id: "hearts", emoji: "❤️", label: "Hearts" },
+                          { id: "confetti", emoji: "🎊", label: "Confetti" },
+                          { id: "lasers", emoji: "⚡", label: "Lasers" },
+                        ] as const).map((opt) => (
+                          <button
+                            key={opt.id}
+                            type="button"
+                            onClick={() => { setPendingEffect(opt.id); setShowEffectPicker(false); }}
+                            className={`w-full flex items-center gap-2.5 px-3 py-2 text-left text-[14px] transition-colors ${pendingEffect === opt.id ? "bg-amber-500/10 text-amber-700 font-medium" : "hover:bg-muted/50 text-foreground"}`}
+                          >
+                            <span className="text-base">{opt.emoji}</span>
+                            <span>{opt.label}</span>
+                          </button>
+                        ))}
+                        {pendingEffect && (
+                          <button
+                            type="button"
+                            onClick={() => { setPendingEffect(null); setShowEffectPicker(false); }}
+                            className="w-full flex items-center gap-2.5 px-3 py-2 text-left text-[13px] text-muted-foreground hover:bg-muted/50 border-t border-border/30"
+                          >
+                            Clear effect
+                          </button>
+                        )}
+                      </div>
+                    </>
+                  )}
+                </div>
                 <button
                   onClick={() => setShowStickerKeyboard(!showStickerKeyboard)}
                   className={`h-9 w-9 rounded-full flex items-center justify-center transition-all active:scale-90 ${
@@ -2610,6 +2956,16 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             return;
           }
           toast.success("Contact shared");
+        }}
+      />
+
+      {/* Social profile share sheet — Facebook, OnlyFans, Instagram, X, TikTok, etc. */}
+      <ChatSocialShareSheet
+        open={showSocialShare}
+        onClose={() => setShowSocialShare(false)}
+        onShareLink={(url) => {
+          setInput((prev) => (prev.trim() ? `${prev.trim()} ${url}` : url));
+          setTimeout(() => inputRef.current?.focus(), 0);
         }}
       />
 
