@@ -13,6 +13,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import SEOHead from "@/components/SEOHead";
 import { LegalPreviewLink } from "@/components/legal/LegalPreviewSheet";
+import { analyzePassword, checkPasswordBreach } from "@/lib/security/passwordStrength";
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -29,6 +30,9 @@ const Signup = () => {
   const [agree, setAgree] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [sentTo, setSentTo] = useState<string | null>(null);
+  // Honeypot — invisible to humans, irresistible to naive form-filling bots.
+  // If it has a value at submit time, the request is from a bot. Silent reject.
+  const [companyWebsite, setCompanyWebsite] = useState("");
 
   useEffect(() => {
     if (!authLoading && user) navigate(redirect, { replace: true });
@@ -37,6 +41,14 @@ const Signup = () => {
   const onSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (submitting) return;
+
+    // Honeypot trip → silently abort with a benign-looking success path so the
+    // bot can't tell its trip was detected. No real account gets created.
+    if (companyWebsite.trim() !== "") {
+      toast.success("Account created! Check your email for a 6-digit code.");
+      navigate("/login");
+      return;
+    }
 
     if (!firstName.trim() || !lastName.trim()) {
       toast.error("Please enter your first and last name.");
@@ -55,7 +67,26 @@ const Signup = () => {
       return;
     }
 
+    // Strength gate: refuse weak passwords up-front (local rules, no network).
+    const analysis = analyzePassword(password);
+    if (analysis.strength === "weak") {
+      toast.error(`Password too weak. ${analysis.feedback[0] ?? "Try a longer, more varied password."}`);
+      return;
+    }
+
     setSubmitting(true);
+
+    // Breach gate: HIBP k-anonymity. Fails open on network error so signup
+    // isn't held hostage by a third-party outage.
+    const breach = await checkPasswordBreach(password);
+    if (breach.breached) {
+      setSubmitting(false);
+      toast.error(
+        `This password appears in ${breach.count.toLocaleString()} known data breaches. Please choose a different one.`,
+      );
+      return;
+    }
+
     const fullName = `${firstName.trim()} ${lastName.trim()}`;
     const { error } = await signUp(email.trim(), password, fullName);
     setSubmitting(false);
@@ -125,6 +156,22 @@ const Signup = () => {
           onSubmit={onSubmit}
           className="rounded-2xl bg-[#0a1f1a]/85 backdrop-blur-2xl p-4 space-y-2.5"
         >
+          {/* Honeypot — visually + AT-hidden, but bots still fill it. */}
+          <div aria-hidden="true" style={{
+            position: "absolute", left: "-10000px", top: "auto",
+            width: "1px", height: "1px", overflow: "hidden",
+          }}>
+            <label htmlFor="company-website">Company website (leave blank)</label>
+            <input
+              id="company-website"
+              type="text"
+              tabIndex={-1}
+              autoComplete="off"
+              value={companyWebsite}
+              onChange={(e) => setCompanyWebsite(e.target.value)}
+            />
+          </div>
+
           {/* Names */}
           <div className="grid grid-cols-2 gap-2">
             <div className="space-y-1">
