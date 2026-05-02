@@ -15,6 +15,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { format, addDays } from "date-fns";
+import { useAuth } from "@/contexts/AuthContext";
+import { getUserScopedJSON, setUserScopedJSON } from "@/lib/userScopedStorage";
 
 type SearchTab = "flights" | "hotels" | "cars";
 
@@ -95,22 +97,18 @@ export default function PremiumSearchOverlay({
 }: PremiumSearchOverlayProps) {
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement>(null);
-  
+  const { user } = useAuth();
+  const userId = user?.id ?? null;
+
   const [activeTab, setActiveTab] = useState<SearchTab>(defaultTab);
   const [destination, setDestination] = useState("");
   const [recentSearches, setRecentSearches] = useState<RecentSearch[]>([]);
-  
-  // Load recent searches from localStorage
+
+  // Load recent searches from per-user-scoped storage (one-shot migrates legacy
+  // unscoped key into the current user's scope on first read).
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem(RECENT_SEARCHES_KEY);
-      if (stored) {
-        setRecentSearches(JSON.parse(stored));
-      }
-    } catch (e) {
-      console.error("Failed to load recent searches:", e);
-    }
-  }, []);
+    setRecentSearches(getUserScopedJSON<RecentSearch[]>(RECENT_SEARCHES_KEY, userId, []));
+  }, [userId]);
 
   // Focus input when overlay opens
   useEffect(() => {
@@ -141,19 +139,15 @@ export default function PremiumSearchOverlay({
     };
   }, [isOpen]);
 
-  // Save recent search
+  // Save recent search (per-user-scoped)
   const saveRecentSearch = useCallback((search: RecentSearch) => {
     setRecentSearches(prev => {
       const filtered = prev.filter(s => s.query !== search.query);
       const updated = [search, ...filtered].slice(0, MAX_RECENT_SEARCHES);
-      try {
-        localStorage.setItem(RECENT_SEARCHES_KEY, JSON.stringify(updated));
-      } catch (e) {
-        console.error("Failed to save recent searches:", e);
-      }
+      setUserScopedJSON(RECENT_SEARCHES_KEY, userId, updated);
       return updated;
     });
-  }, []);
+  }, [userId]);
 
   // Handle search submission
   const handleSearch = useCallback(() => {

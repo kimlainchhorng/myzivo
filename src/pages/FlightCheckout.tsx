@@ -22,6 +22,7 @@ import InlineLegalSheet, { useLegalSheet } from "@/components/checkout/InlineLeg
 
 import FlightInlinePaymentForm from "@/components/flight/FlightInlinePaymentForm";
 import { useAuth } from "@/contexts/AuthContext";
+import { getUserScoped } from "@/lib/userScopedStorage";
 import { useToast } from "@/hooks/use-toast";
 import { useFlightNotifications } from "@/hooks/useFlightNotifications";
 import { supabase } from "@/integrations/supabase/client";
@@ -55,7 +56,9 @@ const FlightCheckout = () => {
 
   const offerRaw = sessionStorage.getItem("zivo_selected_offer");
   const searchRaw = sessionStorage.getItem("zivo_search_params");
-  const passengersRaw = sessionStorage.getItem("zivo_passengers");
+  // Per-user scope: passenger PII (names, DOBs, passport details) must not
+  // leak across accounts on the same device.
+  const passengersRaw = getUserScoped("zivo_passengers", user?.id ?? null, "session");
 
   const offer: DuffelOffer | null = offerRaw ? JSON.parse(offerRaw) : null;
   const search = searchRaw ? JSON.parse(searchRaw) : null;

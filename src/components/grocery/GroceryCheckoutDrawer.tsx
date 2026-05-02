@@ -31,6 +31,11 @@ import { getRoute, getPlaceDetails, forwardGeocode } from "@/services/mapsApi";
 import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 import { useI18n } from "@/hooks/useI18n";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useAuth } from "@/contexts/AuthContext";
+import { getUserScoped, getUserScopedJSON, setUserScoped, setUserScopedJSON } from "@/lib/userScopedStorage";
+
+const ADDRESSES_KEY = "zivo_delivery_addresses";
+const SELECTED_ADDRESS_KEY = "zivo_selected_address";
 import { useCurrentLocation } from "@/hooks/useCurrentLocation";
 import { useCountry } from "@/hooks/useCountry";
 import { CheckoutPinMap } from "@/components/grocery/CheckoutPinMap";
@@ -45,19 +50,13 @@ interface SavedDeliveryAddress {
   isDefault: boolean;
 }
 
-function getAllSavedAddresses(): SavedDeliveryAddress[] {
-  try {
-    const raw = localStorage.getItem("zivo_delivery_addresses");
-    if (raw) {
-      const parsed = JSON.parse(raw);
-      if (Array.isArray(parsed)) return parsed;
-    }
-  } catch {}
-  return [];
+function getAllSavedAddresses(userId: string | null): SavedDeliveryAddress[] {
+  const list = getUserScopedJSON<SavedDeliveryAddress[]>(ADDRESSES_KEY, userId, []);
+  return Array.isArray(list) ? list : [];
 }
 
-function persistAddresses(addresses: SavedDeliveryAddress[]) {
-  localStorage.setItem("zivo_delivery_addresses", JSON.stringify(addresses));
+function persistAddresses(userId: string | null, addresses: SavedDeliveryAddress[]) {
+  setUserScopedJSON(ADDRESSES_KEY, userId, addresses);
 }
 
 interface GroceryCheckoutDrawerProps {
@@ -79,20 +78,15 @@ interface GroceryRouteMetrics {
 
 type SubstitutionPref = "contact_me" | "best_match" | "refund";
 
-function getSavedAddress(): { address: string; label: string } | null {
-  try {
-    const selectedId = localStorage.getItem("zivo_selected_address");
-    const addressesRaw = localStorage.getItem("zivo_delivery_addresses");
-    if (addressesRaw) {
-      const addresses = JSON.parse(addressesRaw);
-      if (Array.isArray(addresses) && addresses.length > 0) {
-        const match = selectedId
-          ? addresses.find((a: any) => a.id === selectedId)
-          : addresses.find((a: any) => a.isDefault) || addresses[0];
-        if (match) return { address: match.address || "", label: match.label || "" };
-      }
-    }
-  } catch {}
+function getSavedAddress(userId: string | null): { address: string; label: string } | null {
+  const selectedId = getUserScoped(SELECTED_ADDRESS_KEY, userId);
+  const addresses = getUserScopedJSON<any[]>(ADDRESSES_KEY, userId, []);
+  if (Array.isArray(addresses) && addresses.length > 0) {
+    const match = selectedId
+      ? addresses.find((a: any) => a.id === selectedId)
+      : addresses.find((a: any) => a.isDefault) || addresses[0];
+    if (match) return { address: match.address || "", label: match.label || "" };
+  }
   return null;
 }
 
@@ -106,9 +100,11 @@ function getSavedProfile(): { name: string; phone: string; subPref: Substitution
 
 export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, onRemoveItem, onUpdateQuantity, storeCoords, storeName: storeNameProp, storePaymentTypes = ["cash", "card"] }: GroceryCheckoutDrawerProps) {
   const { t } = useI18n();
+  const { user } = useAuth();
+  const userId = user?.id ?? null;
   const { data: userProfile } = useUserProfile();
   const { getCurrentLocation, reverseGeocode, isGettingLocation } = useCurrentLocation();
-  const savedAddr = getSavedAddress();
+  const savedAddr = getSavedAddress(userId);
   const savedProfile = getSavedProfile();
 
   const [address, setAddress] = useState(savedAddr?.address || "");
@@ -122,7 +118,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
   const [gpsAutoFilled, setGpsAutoFilled] = useState(false);
   const [profileAutoFilled, setProfileAutoFilled] = useState(false);
   const [showPinMap, setShowPinMap] = useState(false);
-  const [savedAddresses, setSavedAddresses] = useState<SavedDeliveryAddress[]>(getAllSavedAddresses);
+  const [savedAddresses, setSavedAddresses] = useState<SavedDeliveryAddress[]>(() => getAllSavedAddresses(userId));
   const [showSavedPicker, setShowSavedPicker] = useState(false);
   const [saveLabel, setSaveLabel] = useState<"home" | "work" | "other">("home");
   const [showSaveForm, setShowSaveForm] = useState(false);
@@ -649,7 +645,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                                 setAddress(sa.address);
                                 const coords = await forwardGeocode(sa.address);
                                 if (coords) setAddressCoords(coords);
-                                localStorage.setItem("zivo_selected_address", sa.id);
+                                setUserScoped(SELECTED_ADDRESS_KEY, userId, sa.id);
                                 setShowSavedPicker(false);
                               }}
                               className={`flex-1 flex items-center gap-2.5 px-3 py-2.5 rounded-xl border transition-all text-left ${
@@ -668,7 +664,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                               onClick={() => {
                                 const updated = savedAddresses.filter((a) => a.id !== sa.id);
                                 setSavedAddresses(updated);
-                                persistAddresses(updated);
+                                persistAddresses(userId, updated);
                                 toast.success("Address removed");
                               }}
                               className="p-2 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
@@ -807,8 +803,8 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                               };
                               const updated = [...savedAddresses, newAddr];
                               setSavedAddresses(updated);
-                              persistAddresses(updated);
-                              localStorage.setItem("zivo_selected_address", newAddr.id);
+                              persistAddresses(userId, updated);
+                              setUserScoped(SELECTED_ADDRESS_KEY, userId, newAddr.id);
                               setShowSaveForm(false);
                               toast.success("Address saved!");
                             }}

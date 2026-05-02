@@ -5,6 +5,7 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { getUserScoped, getUserScopedJSON, setUserScoped, setUserScopedJSON } from "@/lib/userScopedStorage";
 
 export interface DeliveryAddress {
   id: string;
@@ -20,21 +21,12 @@ export interface DeliveryAddress {
 const STORAGE_KEY = "zivo_delivery_addresses";
 const SELECTED_KEY = "zivo_selected_address";
 
-function loadLocalAddresses(): DeliveryAddress[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
+function loadLocalAddresses(userId: string | null): DeliveryAddress[] {
+  return getUserScopedJSON<DeliveryAddress[]>(STORAGE_KEY, userId, []);
 }
 
-function loadSelectedId(): string | null {
-  try {
-    return localStorage.getItem(SELECTED_KEY);
-  } catch {
-    return null;
-  }
+function loadSelectedId(userId: string | null): string | null {
+  return getUserScoped(SELECTED_KEY, userId);
 }
 
 function labelToIcon(label: string): string {
@@ -51,10 +43,21 @@ function iconToLabel(icon: string): "Home" | "Work" | "Other" {
 
 export function useDeliveryAddress() {
   const { user } = useAuth();
-  const [addresses, setAddresses] = useState<DeliveryAddress[]>(loadLocalAddresses);
-  const [selectedId, setSelectedIdState] = useState<string | null>(loadSelectedId);
+  const userId = user?.id ?? null;
+  // Hydrate lazily once we know the user (or lack thereof). Initial state is
+  // empty to avoid loading the wrong user's cached addresses on first render
+  // (the previous version called loadLocalAddresses() at module scope which
+  // returned the global key — the cross-account leak this commit fixes).
+  const [addresses, setAddresses] = useState<DeliveryAddress[]>([]);
+  const [selectedId, setSelectedIdState] = useState<string | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
   const syncingRef = useRef(false);
+
+  // Hydrate addresses + selectedId from per-user-scoped storage when userId resolves.
+  useEffect(() => {
+    setAddresses(loadLocalAddresses(userId));
+    setSelectedIdState(loadSelectedId(userId));
+  }, [userId]);
 
   // Load from Supabase when user logs in
   useEffect(() => {
@@ -83,10 +86,11 @@ export function useDeliveryAddress() {
             lng: loc.lng,
           }));
           setAddresses(mapped);
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(mapped));
+          setUserScopedJSON(STORAGE_KEY, user.id, mapped);
         } else {
-          // If Supabase is empty but localStorage has addresses, migrate them up
-          const local = loadLocalAddresses();
+          // If Supabase is empty but local cache has addresses (this user's,
+          // post-migration), push them up.
+          const local = loadLocalAddresses(user.id);
           if (local.length > 0) {
             await migrateLocalToSupabase(user.id, local);
           }
@@ -101,15 +105,15 @@ export function useDeliveryAddress() {
     loadFromSupabase();
   }, [user?.id]);
 
-  // Persist selected ID to localStorage
+  // Persist selected ID per-user
   useEffect(() => {
-    if (selectedId) localStorage.setItem(SELECTED_KEY, selectedId);
-  }, [selectedId]);
+    if (selectedId) setUserScoped(SELECTED_KEY, userId, selectedId);
+  }, [selectedId, userId]);
 
-  // Keep localStorage in sync
+  // Keep per-user cache in sync
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(addresses));
-  }, [addresses]);
+    setUserScopedJSON(STORAGE_KEY, userId, addresses);
+  }, [addresses, userId]);
 
   const selectedAddress = addresses.find((a) => a.id === selectedId)
     ?? addresses.find((a) => a.isDefault)

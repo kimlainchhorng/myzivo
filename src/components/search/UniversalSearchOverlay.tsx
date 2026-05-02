@@ -16,6 +16,7 @@ import {
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { getUserScopedJSON, setUserScopedJSON, removeUserScoped } from "@/lib/userScopedStorage";
 
 interface UniversalSearchOverlayProps {
   isOpen: boolean;
@@ -89,27 +90,19 @@ interface RecentSearch {
   timestamp?: number;
 }
 
-function getRecentSearches(): RecentSearch[] {
-  try {
-    const raw = localStorage.getItem(RECENT_KEY);
-    if (!raw) return [];
-    return JSON.parse(raw).slice(0, 8);
-  } catch {
-    return [];
-  }
+function getRecentSearches(userId: string | null): RecentSearch[] {
+  return getUserScopedJSON<RecentSearch[]>(RECENT_KEY, userId, []).slice(0, 8);
 }
 
-function saveRecentSearch(query: string) {
-  try {
-    const existing = getRecentSearches();
-    const filtered = existing.filter((s) => s.query.toLowerCase() !== query.toLowerCase());
-    filtered.unshift({ query, timestamp: Date.now() });
-    localStorage.setItem(RECENT_KEY, JSON.stringify(filtered.slice(0, 10)));
-  } catch {}
+function saveRecentSearch(query: string, userId: string | null) {
+  const existing = getUserScopedJSON<RecentSearch[]>(RECENT_KEY, userId, []);
+  const filtered = existing.filter((s) => s.query.toLowerCase() !== query.toLowerCase());
+  filtered.unshift({ query, timestamp: Date.now() });
+  setUserScopedJSON(RECENT_KEY, userId, filtered.slice(0, 10));
 }
 
-function clearRecentSearches() {
-  localStorage.removeItem(RECENT_KEY);
+function clearRecentSearches(userId: string | null) {
+  removeUserScoped(RECENT_KEY, userId);
 }
 
 export default function UniversalSearchOverlay({ isOpen, onClose }: UniversalSearchOverlayProps) {
@@ -131,7 +124,7 @@ export default function UniversalSearchOverlay({ isOpen, onClose }: UniversalSea
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = "hidden";
-      setRecentSearches(getRecentSearches());
+      setRecentSearches(getRecentSearches(user?.id ?? null));
       setTimeout(() => inputRef.current?.focus(), 100);
     } else {
       document.body.style.overflow = "";
@@ -140,7 +133,7 @@ export default function UniversalSearchOverlay({ isOpen, onClose }: UniversalSea
       setActiveTab("all");
     }
     return () => { document.body.style.overflow = ""; };
-  }, [isOpen]);
+  }, [isOpen, user?.id]);
 
   // ESC to close
   useEffect(() => {
@@ -244,16 +237,16 @@ export default function UniversalSearchOverlay({ isOpen, onClose }: UniversalSea
     : [];
 
   const handleNavigate = useCallback((path: string) => {
-    if (query.trim()) saveRecentSearch(query.trim());
+    if (query.trim()) saveRecentSearch(query.trim(), user?.id ?? null);
     onClose();
     window.scrollTo(0, 0);
     navigate(path);
-  }, [navigate, onClose, query]);
+  }, [navigate, onClose, query, user?.id]);
 
   const handleClearHistory = useCallback(() => {
-    clearRecentSearches();
+    clearRecentSearches(user?.id ?? null);
     setRecentSearches([]);
-  }, []);
+  }, [user?.id]);
 
   const hasQuery = debouncedQuery.length >= 2;
 

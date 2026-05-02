@@ -28,6 +28,7 @@ import {
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
+import { getUserScoped, setUserScoped } from "@/lib/userScopedStorage";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { type DuffelOffer, useDuffelOffer } from "@/hooks/useDuffelFlights";
 import { FLIGHT_CONSENT, FLIGHT_DISCLAIMERS } from "@/config/flightCompliance";
@@ -150,10 +151,13 @@ const FlightTravelerInfo = () => {
   }, [search]);
 
   const [passengers, setPassengers] = useState<PassengerForm[]>(() => {
-    const saved = sessionStorage.getItem("zivo_passengers");
+    // Per-user scope: passenger PII must not leak across accounts on the same device.
+    const saved = getUserScoped("zivo_passengers", user?.id ?? null, "session");
     if (saved) {
-      const parsed = JSON.parse(saved);
-      return parsed.map((p: any) => ({ ...emptyPassenger(), ...p }));
+      try {
+        const parsed = JSON.parse(saved);
+        return parsed.map((p: any) => ({ ...emptyPassenger(), ...p }));
+      } catch { /* fall through to default */ }
     }
     const list = Array.from({ length: totalPassengers }, () => emptyPassenger());
     if (user?.email) list[0].email = user.email;
@@ -289,7 +293,7 @@ const FlightTravelerInfo = () => {
       email: i === 0 ? p.email : passengers[0].email,
       phone_number: i === 0 ? p.phone_number : passengers[0].phone_number,
     }));
-    sessionStorage.setItem("zivo_passengers", JSON.stringify(withContact));
+    setUserScoped("zivo_passengers", user?.id ?? null, JSON.stringify(withContact), "session");
     navigate("/flights/checkout");
   };
 

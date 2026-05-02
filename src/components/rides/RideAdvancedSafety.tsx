@@ -6,6 +6,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Shield, Share2, AlertTriangle, Users, Key, MapPin, Phone, Eye, Lock, CheckCircle, Clock, Bell, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { useAuth } from "@/contexts/AuthContext";
+import { getUserScopedJSON, setUserScopedJSON } from "@/lib/userScopedStorage";
+
+const TRUSTED_CONTACTS_KEY = "zivo_trusted_contacts";
 
 interface TrustedContact { id: number; name: string; phone: string; active: boolean }
 
@@ -23,19 +27,21 @@ const recentAlerts = [
 type Tab = "share" | "panic" | "contacts" | "verify";
 
 export default function RideAdvancedSafety() {
+  const { user } = useAuth();
+  const userId = user?.id ?? null;
   const [activeTab, setActiveTab] = useState<Tab>("share");
   const [liveSharing, setLiveSharing] = useState(false);
   const [panicCountdown, setPanicCountdown] = useState<number | null>(null);
   const [verificationCode] = useState("4829");
-  const [contacts, setContacts] = useState<TrustedContact[]>(() => {
-    try { return JSON.parse(localStorage.getItem("zivo_trusted_contacts") || "null") ?? DEFAULT_CONTACTS; } catch { return DEFAULT_CONTACTS; }
-  });
+  const [contacts, setContacts] = useState<TrustedContact[]>(() =>
+    getUserScopedJSON<TrustedContact[]>(TRUSTED_CONTACTS_KEY, userId, DEFAULT_CONTACTS),
+  );
   const [showAddContact, setShowAddContact] = useState(false);
   const [newContact, setNewContact] = useState({ name: "", phone: "" });
 
   const saveContacts = (updated: TrustedContact[]) => {
     setContacts(updated);
-    localStorage.setItem("zivo_trusted_contacts", JSON.stringify(updated));
+    setUserScopedJSON(TRUSTED_CONTACTS_KEY, userId, updated);
   };
 
   const toggleContact = (id: number) => {

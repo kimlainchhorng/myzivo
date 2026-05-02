@@ -11,7 +11,10 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { getUserScopedJSON, setUserScopedJSON, removeUserScoped } from "@/lib/userScopedStorage";
 import SEOHead from "@/components/SEOHead";
+
+const RECENT_SEARCHES_KEY = "zivo_recent_searches";
 
 interface UserResult { id: string; name: string; username: string | null; bio: string | null; avatar: string | null; }
 interface PostResult { id: string; author: string; content: string; }
@@ -33,9 +36,9 @@ export default function SmartSearchPage() {
   const [activeTab, setActiveTab] = useState("all");
   const [results, setResults] = useState<Results | null>(null);
   const [loading, setLoading] = useState(false);
-  const [recentSearches, setRecentSearches] = useState<string[]>(() => {
-    try { return JSON.parse(localStorage.getItem("zivo_recent_searches") ?? "[]"); } catch { return []; }
-  });
+  const [recentSearches, setRecentSearches] = useState<string[]>(() =>
+    getUserScopedJSON<string[]>(RECENT_SEARCHES_KEY, user?.id ?? null, []),
+  );
 
   const { data: trendingTags = [] } = useQuery({
     queryKey: ["smart-search-trending-tags"],
@@ -120,11 +123,11 @@ export default function SmartSearchPage() {
     if (!q.trim()) return;
     const updated = [q, ...recentSearches.filter(s => s !== q)].slice(0, 5);
     setRecentSearches(updated);
-    localStorage.setItem("zivo_recent_searches", JSON.stringify(updated));
+    setUserScopedJSON(RECENT_SEARCHES_KEY, user?.id ?? null, updated);
   };
 
   const handleSelectSearch = (s: string) => { setQuery(s); saveSearch(s); };
-  const clearRecent = () => { setRecentSearches([]); localStorage.removeItem("zivo_recent_searches"); };
+  const clearRecent = () => { setRecentSearches([]); removeUserScoped(RECENT_SEARCHES_KEY, user?.id ?? null); };
 
   const totalResults = results ? Object.values(results).reduce((sum, arr) => sum + arr.length, 0) : 0;
   const hasResults = debouncedQuery.length >= 2;
