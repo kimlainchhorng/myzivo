@@ -256,7 +256,8 @@ export function QRScannerModal({ open, onClose, onScan, title = "Scan QR Code" }
           </DialogTitle>
           <button
             onClick={handleClose}
-            className="absolute right-3 top-3 w-7 h-7 rounded-full bg-white/10 flex items-center justify-center"
+            aria-label="Close scanner"
+            className="absolute right-3 top-3 min-w-[44px] min-h-[44px] -m-2 rounded-full bg-white/10 flex items-center justify-center"
           >
             <X className="w-3.5 h-3.5 text-white" />
           </button>

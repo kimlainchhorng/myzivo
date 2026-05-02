@@ -1768,7 +1768,7 @@ function ComposerForm({
               style={{ filter: COMPOSER_FILTERS[activeFilter]?.css || "none" }}
             />
           )}
-            <button onClick={clearMediaPreview} className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/60 flex items-center justify-center">
+            <button onClick={clearMediaPreview} aria-label="Remove media" className="absolute top-2 right-2 min-w-[44px] min-h-[44px] -m-2 rounded-full bg-black/60 flex items-center justify-center">
             <X className="w-4 h-4 text-white" />
           </button>
         </div>
