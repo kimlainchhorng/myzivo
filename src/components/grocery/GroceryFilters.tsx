@@ -140,7 +140,7 @@ export function GroceryFilters({ isOpen, onClose, filters, onApply, products }: 
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
-            className="fixed bottom-0 left-0 right-0 z-50 bg-background rounded-t-3xl border-t border-border/30 shadow-2xl max-h-[80vh] flex flex-col"
+            className="fixed bottom-0 left-0 right-0 z-50 bg-background rounded-t-3xl border-t border-border/30 shadow-2xl max-h-[80vh] flex flex-col safe-area-bottom"
           >
             {/* Handle */}
             <div className="flex justify-center pt-2 pb-1">

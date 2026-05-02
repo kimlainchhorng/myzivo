@@ -123,7 +123,7 @@ export function GroceryProductDetail({
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ type: "spring", damping: 30, stiffness: 320 }}
-            className="fixed inset-x-0 bottom-0 z-50 max-h-[88vh] bg-card rounded-t-[32px] overflow-hidden flex flex-col"
+            className="fixed inset-x-0 bottom-0 z-50 max-h-[88vh] bg-card rounded-t-[32px] overflow-hidden flex flex-col safe-area-bottom"
             style={{ boxShadow: "0 -8px 40px -8px hsl(var(--foreground) / 0.12)" }}
           >
             {/* Handle */}
