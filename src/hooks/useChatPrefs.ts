@@ -1,5 +1,5 @@
 /**
- * useChatPrefs — Local pin / mute / archive preferences for chats.
+ * useChatPrefs — Local pin / mute / archive / mark-unread preferences for chats.
  * Stored in localStorage per user. v1 — cross-device sync is a follow-up.
  */
 import { useCallback, useEffect, useState } from "react";
@@ -10,9 +10,10 @@ interface ChatPrefs {
   pinned: PrefMap;
   muted: PrefMap;
   archived: PrefMap;
+  unread: PrefMap;
 }
 
-const EMPTY: ChatPrefs = { pinned: {}, muted: {}, archived: {} };
+const EMPTY: ChatPrefs = { pinned: {}, muted: {}, archived: {}, unread: {} };
 
 function storageKey(userId: string | undefined) {
   return `zivo:chat-prefs:${userId || "anon"}`;
@@ -27,6 +28,7 @@ function load(userId: string | undefined): ChatPrefs {
       pinned: parsed.pinned || {},
       muted: parsed.muted || {},
       archived: parsed.archived || {},
+      unread: parsed.unread || {},
     };
   } catch {
     return { ...EMPTY };
@@ -68,14 +70,31 @@ export function useChatPrefs(userId: string | undefined) {
     [userId]
   );
 
+  const setBucket = useCallback(
+    (bucket: keyof ChatPrefs, chatId: string, value: boolean) => {
+      setPrefs((prev) => {
+        const map = { ...prev[bucket] };
+        if (value) map[chatId] = true;
+        else delete map[chatId];
+        const next = { ...prev, [bucket]: map };
+        save(userId, next);
+        return next;
+      });
+    },
+    [userId]
+  );
+
   return {
     prefs,
     isPinned: (id: string) => !!prefs.pinned[id],
     isMuted: (id: string) => !!prefs.muted[id],
     isArchived: (id: string) => !!prefs.archived[id],
+    isMarkedUnread: (id: string) => !!prefs.unread[id],
     togglePin: (id: string) => toggle("pinned", id),
     toggleMute: (id: string) => toggle("muted", id),
     toggleArchive: (id: string) => toggle("archived", id),
+    toggleMarkUnread: (id: string) => toggle("unread", id),
+    setMarkedUnread: (id: string, value: boolean) => setBucket("unread", id, value),
     setPrefs: update,
   };
 }
