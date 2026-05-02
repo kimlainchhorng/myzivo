@@ -265,7 +265,7 @@ export default function AutoRepairLaborTimeSection({ storeId }: Props) {
     setDlgOpen(true);
   };
 
-  const useGuideEntry = (g: typeof LABOR_GUIDE[0]) => {
+  const applyGuideEntry = (g: typeof LABOR_GUIDE[0]) => {
     setForm(f => ({ ...f, labor_type: g.category, duration_minutes: String(Math.round(g.baseHours * 60)), notes: g.service + (g.notes ? `. Note: ${g.notes}` : "") }));
     setDlgOpen(true);
     toast.info(`Loaded "${g.service}" — ${g.baseHours}h standard`);
@@ -654,7 +654,7 @@ export default function AutoRepairLaborTimeSection({ storeId }: Props) {
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                           <span className="text-sm font-bold text-foreground tabular-nums">{g.baseHours}h</span>
-                          <Button size="sm" variant="outline" className="h-7 text-xs gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => useGuideEntry(g)}>
+                          <Button size="sm" variant="outline" className="h-7 text-xs gap-1 opacity-0 group-hover:opacity-100 transition-opacity" onClick={() => applyGuideEntry(g)}>
                             <Copy className="h-3 w-3" /> Use
                           </Button>
                         </div>

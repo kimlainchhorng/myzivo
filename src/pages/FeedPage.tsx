@@ -84,8 +84,6 @@ import FileText from "lucide-react/dist/esm/icons/file-text";
 import ImageOff from "lucide-react/dist/esm/icons/image-off";
 import Pin from "lucide-react/dist/esm/icons/pin";
 import Layers from "lucide-react/dist/esm/icons/layers";
-import Smile from "lucide-react/dist/esm/icons/smile";
-import ThumbsUp from "lucide-react/dist/esm/icons/thumbs-up";
 import Tv2 from "lucide-react/dist/esm/icons/tv-2";
 import Plane from "lucide-react/dist/esm/icons/plane";
 import Building2 from "lucide-react/dist/esm/icons/building-2";
@@ -1684,37 +1682,6 @@ function ReelCard({
               : `all ${post.comments_count! > 999 ? `${(post.comments_count! / 1000).toFixed(1)}k` : post.comments_count} comments`}
           </button>
         )}
-
-        {/* Quick reactions row — 4 one-tap shortcuts so users don't have to long-press */}
-        <div className="flex items-center gap-5 mb-3">
-          {([
-            { Icon: Heart, fill: "fill-red-500", stroke: "text-red-500", emoji: "❤️" as const },
-            { Icon: Flame, fill: "fill-orange-400", stroke: "text-orange-400", emoji: "🔥" as const },
-            { Icon: Smile, fill: "", stroke: "text-yellow-300", emoji: "😂" as const },
-            { Icon: ThumbsUp, fill: "fill-sky-400", stroke: "text-sky-400", emoji: "👍" as const },
-          ]).map(({ Icon, fill, stroke, emoji }) => {
-            const isChosen = currentReaction === emoji;
-            return (
-              <button
-                key={emoji}
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onSetReaction?.(emoji as any);
-                }}
-                className="active:scale-125 transition-transform"
-                aria-label={emoji}
-              >
-                <Icon
-                  className={cn(
-                    "w-[22px] h-[22px] drop-shadow",
-                    isChosen ? `${stroke} ${fill}` : "text-white/70",
-                  )}
-                />
-              </button>
-            );
-          })}
-        </div>
 
         {/* Music ticker */}
         <MusicTicker

@@ -88,6 +88,10 @@ export function useAffiliateRedirect(options: UseAffiliateRedirectOptions) {
  * ZIVO is the Merchant of Record for all flight bookings via Duffel API.
  */
 export function useFlightRedirect(source: string, ctaType?: CTAType) {
+  // Hook must be called unconditionally to satisfy rules-of-hooks. Result is
+  // unused in OTA mode but the call order has to stay stable across renders.
+  const { redirectToFlights, redirectSimple } = useAffiliateRedirect({ source, ctaType });
+
   // OTA MODE: Return no-op functions for flights
   if (isFlightsOTAMode()) {
     return {
@@ -102,9 +106,6 @@ export function useFlightRedirect(source: string, ctaType?: CTAType) {
     };
   }
 
-  // Legacy code - never executes in OTA mode
-  const { redirectToFlights, redirectSimple } = useAffiliateRedirect({ source, ctaType });
-  
   return {
     redirectWithParams: redirectToFlights,
     redirectSimple: () => redirectSimple('flights'),
