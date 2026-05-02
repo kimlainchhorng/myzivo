@@ -185,6 +185,24 @@ export default function CommentsSheet({
         </div>
       )}
 
+      {/* Quick emoji bar */}
+      <div className={cn("flex items-center gap-1.5 px-3 py-1.5 border-t overflow-x-auto scrollbar-none", border)}>
+        {["😂", "❤️", "🔥", "👏", "😮", "😢"].map((e) => (
+          <button
+            key={e}
+            type="button"
+            onClick={() => {
+              setText((prev) => prev + e);
+              inputRef.current?.focus();
+            }}
+            className="h-9 w-9 shrink-0 rounded-full text-xl flex items-center justify-center hover:bg-muted/50 active:scale-90 transition-transform"
+            aria-label={`Insert ${e}`}
+          >
+            {e}
+          </button>
+        ))}
+      </div>
+
       {/* Input */}
       <div
         className={cn("flex items-center gap-2 px-4 py-3 border-t", border)}
