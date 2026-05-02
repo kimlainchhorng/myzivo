@@ -18,6 +18,12 @@
 import { test, expect, devices } from "@playwright/test";
 import fs from "node:fs";
 import path from "node:path";
+import { fileURLToPath } from "node:url";
+
+// __dirname isn't defined in ESM scope; reconstruct from import.meta.url so
+// Playwright can load this file (otherwise it ReferenceErrors during test
+// collection and reports "No tests found").
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 const AUTH_STATE = path.join(__dirname, ".auth", "state.json");
 const HAS_AUTH = fs.existsSync(AUTH_STATE);
