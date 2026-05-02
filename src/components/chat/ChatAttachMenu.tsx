@@ -15,6 +15,7 @@ import ScanLine from "lucide-react/dist/esm/icons/scan-line";
 import FileUp from "lucide-react/dist/esm/icons/file-up";
 import BarChart3 from "lucide-react/dist/esm/icons/bar-chart-3";
 import UserSquare from "lucide-react/dist/esm/icons/user-square";
+import Share2 from "lucide-react/dist/esm/icons/share-2";
 import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -34,6 +35,7 @@ interface ChatAttachMenuProps {
   onFileSelect?: () => void;
   onCreatePoll?: () => void;
   onShareContact?: () => void;
+  onShareSocial?: () => void;
   disappearingEnabled: boolean;
   /** Override label of the disappearing-messages menu item (e.g. "1d", "7d", "30d", "Off"). Defaults to "24h". */
   disappearingLabel?: string;
@@ -47,6 +49,7 @@ const menuItems = [
   { id: "location", label: "Location", icon: MapPin, color: "bg-blue-500" },
   { id: "contact", label: "Contact", icon: UserSquare, color: "bg-indigo-500" },
   { id: "poll", label: "Poll", icon: BarChart3, color: "bg-fuchsia-500" },
+  { id: "social", label: "Social", icon: Share2, color: "bg-gradient-to-br from-[#1877F2] to-[#00AFF0]" },
   { id: "gift", label: "Gift", icon: Gift, color: "bg-gradient-to-br from-amber-500 to-pink-500" },
   { id: "money", label: "Money", icon: Coins, color: "bg-gradient-to-br from-emerald-500 to-teal-500" },
   { id: "locked", label: "Locked", icon: Lock, color: "bg-rose-500" },
@@ -58,7 +61,7 @@ const LOCK_UNLOCK_PLANS = new Set(["chat", "pro"]);
 
 export default function ChatAttachMenu({
   open, onClose, onImageSelect, onVideoSelect, onLocationShare, onToggleDisappearing, onLockedImageSelect,
-  onSendGift, onOpenWallet, onScanDocument, onFileSelect, onCreatePoll, onShareContact, disappearingEnabled, disappearingLabel,
+  onSendGift, onOpenWallet, onScanDocument, onFileSelect, onCreatePoll, onShareContact, onShareSocial, disappearingEnabled, disappearingLabel,
 }: ChatAttachMenuProps) {
   const { isPlus, plan } = useZivoPlus();
   const navigate = useNavigate();
@@ -96,6 +99,7 @@ export default function ChatAttachMenu({
       case "file": onFileSelect?.(); break;
       case "poll": onCreatePoll?.(); break;
       case "contact": onShareContact?.(); break;
+      case "social": onShareSocial?.(); break;
       case "image": onImageSelect(); break;
       case "video": onVideoSelect(); break;
       case "location": onLocationShare(); break;
