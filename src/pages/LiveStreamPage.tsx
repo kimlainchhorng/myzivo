@@ -555,7 +555,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
  className="relative z-20 flex items-center gap-2 px-3 pt-2"
  style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)" }}
  >
-<button onClick={onLeave} className="w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+<button onClick={onLeave} aria-label="Leave stream" className="min-w-[44px] min-h-[44px] -my-1.5 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
 <X className="h-4 w-4 text-white" />
 </button>
 
@@ -642,17 +642,17 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
  className="absolute right-3 z-20 flex flex-col gap-2.5 items-center"
  style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 160px)" }}
  >
-<button onClick={() =>setMuted(!muted)} className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
+<button onClick={() =>setMuted(!muted)} className="w-11 h-11 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
  {muted ?<VolumeX className="h-4 w-4 text-white/70" />:<Volume2 className="h-4 w-4 text-white/70" />}
 </button>
-<button onClick={handleShare} className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
+<button onClick={handleShare} className="w-11 h-11 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
 <Share2 className="h-4 w-4 text-white" />
 </button>
-<button onClick={sendLike} className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex flex-col items-center justify-center">
+<button onClick={sendLike} className="w-11 h-11 rounded-full bg-black/30 backdrop-blur-sm flex flex-col items-center justify-center">
 <Heart className="h-4 w-4 text-red-400 fill-red-400" />
  {likes >0 &&<span className="text-[8px] text-white/60 -mt-0.5">{likes >999 ? `${(likes / 1000).toFixed(1)}k` : likes}</span>}
 </button>
-<button onClick={() =>setShowViewerList((s) =>!s)} className="w-10 h-10 rounded-full bg-black/30 backdrop-blur-sm flex flex-col items-center justify-center">
+<button onClick={() =>setShowViewerList((s) =>!s)} className="w-11 h-11 rounded-full bg-black/30 backdrop-blur-sm flex flex-col items-center justify-center">
 <Eye className="h-4 w-4 text-white/70" />
 <span className="text-[7px] text-white/50 -mt-0.5">{viewerCount >999 ? `${(viewerCount / 1000).toFixed(1)}k` : viewerCount}</span>
 </button>
@@ -734,10 +734,10 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
  className="w-full px-3 py-2 rounded-full bg-white/10 backdrop-blur-sm text-white text-sm placeholder:text-white/30 focus:outline-none focus:ring-1 focus:ring-white/20 border border-white/10 disabled:opacity-50"
  />
 </div>
-<button onClick={() =>setShowGiftPanel(true)} className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/20">
+<button onClick={() =>setShowGiftPanel(true)} aria-label="Send gift" className="w-11 h-11 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/20">
 <Gift className="h-4 w-4 text-white" />
 </button>
-<button onClick={sendChat} className="w-9 h-9 rounded-full bg-primary flex items-center justify-center shrink-0">
+<button onClick={sendChat} aria-label="Send" className="w-11 h-11 rounded-full bg-primary flex items-center justify-center shrink-0">
 <Send className="h-4 w-4 text-primary-foreground" />
 </button>
 </div>
