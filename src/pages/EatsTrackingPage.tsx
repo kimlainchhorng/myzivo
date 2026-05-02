@@ -15,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import CrossServiceCTAs from "@/components/shared/CrossServiceCTAs";
 
 type OrderStatus =
   | "pending" | "confirmed" | "preparing" | "ready"
@@ -328,6 +329,54 @@ export default function EatsTrackingPage() {
               ))}
             </div>
           </motion.div>
+        )}
+
+        {/* Cross-service follow-ups (reserve table next time, plan a getaway) */}
+        {isDelivered && (
+          <CrossServiceCTAs
+            variant="after-eats-order"
+            title="Liked it? Make it a habit."
+            context={{
+              restaurantId: order.restaurant_id,
+              restaurantName: restaurantName,
+            }}
+          />
+        )}
+
+        {/* Share live order link — only while it's still in progress */}
+        {!isDelivered && !isCancelled && (
+          <button
+            onClick={async () => {
+              const url = `${window.location.origin}/share/order/${order.id}`;
+              try {
+                if ((navigator as any).share) {
+                  await (navigator as any).share({
+                    title: "Track my ZIVO order",
+                    text: "Following my food order — take a peek.",
+                    url,
+                  });
+                } else {
+                  await navigator.clipboard.writeText(url);
+                  toast.success("Order share link copied");
+                }
+              } catch {
+                toast.error("Could not share order");
+              }
+            }}
+            className="w-full flex items-center gap-3 rounded-2xl border border-orange-500/30 bg-orange-500/10 p-3 text-left active:scale-[0.99] transition-transform touch-manipulation"
+          >
+            <div className="w-11 h-11 rounded-xl bg-orange-500/20 text-orange-600 flex items-center justify-center text-lg">
+              🔗
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[10px] font-bold uppercase tracking-wider text-orange-700">
+                Share live order
+              </div>
+              <div className="text-sm font-bold text-foreground">
+                Send a public link so a friend can follow along
+              </div>
+            </div>
+          </button>
         )}
 
         {/* Actions */}
