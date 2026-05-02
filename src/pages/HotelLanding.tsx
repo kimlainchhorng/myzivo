@@ -8,6 +8,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import GlobalTrustBar from "@/components/shared/GlobalTrustBar";
+import BundleProgressBanner from "@/components/shared/BundleProgressBanner";
 import TravelFAQ from "@/components/shared/TravelFAQ";
 import { InternalLinkGrid, BreadcrumbSchema } from "@/components/seo";
 import HotelExperienceGallery from "@/components/hotel/HotelExperienceGallery";
@@ -62,6 +63,7 @@ export default function HotelLanding() {
 
   return (
     <div className="min-h-screen bg-background">
+      <BundleProgressBanner step="hotel" />
       <SEOHead
         title={pageTitle}
         description={pageDescription}
