@@ -27,6 +27,9 @@ import CheckoutTrustFooter from "@/components/checkout/CheckoutTrustFooter";
 import { useFlightBooking, getTicketingStatusInfo } from "@/hooks/useFlightBooking";
 import { cn } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
+import CrossServiceCTAs from "@/components/shared/CrossServiceCTAs";
+import { downloadICS } from "@/lib/buildICS";
+import CalendarPlus from "lucide-react/dist/esm/icons/calendar-plus";
 
 const CONFIRM_STEPS = [
   { label: "Search", completed: true, active: false },
@@ -468,8 +471,51 @@ const FlightConfirmation = () => {
                 </motion.div>
               )}
 
+              {/* Unified cross-service follow-ups (ride to airport + hotel) */}
+              {isIssued && (
+                <motion.div
+                  initial={{ opacity: 0, y: 12 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.55 }}
+                  className="mb-6"
+                >
+                  <CrossServiceCTAs
+                    variant="after-flight"
+                    title="Round out your trip"
+                    context={{
+                      destinationCity: booking.destination,
+                      airportCode: booking.origin,
+                      departureDate: booking.departure_date,
+                      arrivalDate: booking.departure_date,
+                    }}
+                  />
+                </motion.div>
+              )}
+
               {/* Primary actions */}
               <div className="flex flex-col gap-3 mb-8">
+                {isIssued && booking?.departure_date && (
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      downloadICS(
+                        {
+                          title: `Flight ${booking.origin} → ${booking.destination}`,
+                          description: `Booking ref ${booking.booking_reference} · Booked via ZIVO`,
+                          start: `${booking.departure_date}T08:00:00`,
+                          end: `${booking.departure_date}T11:00:00`,
+                          location: booking.origin,
+                          url: typeof window !== "undefined" ? window.location.href : undefined,
+                          uid: `flight-${booking.id}@zivo.app`,
+                        },
+                        `zivo-flight-${booking.booking_reference}`,
+                      )
+                    }
+                    className="w-full h-12 rounded-xl border-border/40 gap-2"
+                  >
+                    <CalendarPlus className="w-4 h-4" /> Add to calendar
+                  </Button>
+                )}
                 <Button asChild className="w-full h-12 bg-[hsl(var(--flights))] hover:bg-[hsl(var(--flights))]/90 rounded-xl font-bold active:scale-[0.98] transition-all">
                   <Link to="/flights/bookings">My Bookings</Link>
                 </Button>
