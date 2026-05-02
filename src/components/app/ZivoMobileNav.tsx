@@ -15,6 +15,8 @@ import { useI18n } from "@/hooks/useI18n";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useLiveActivityCount } from "@/hooks/useLiveActivityCount";
+import { useChatPrefs } from "@/hooks/useChatPrefs";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import navHomeBg from "@/assets/nav-home-bg.jpg";
@@ -42,21 +44,37 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
   const { user } = useAuth();
   const { data: profile } = useUserProfile();
   const { unreadCount: notificationUnread } = useNotifications(20);
+  const liveActivity = useLiveActivityCount();
 
-  const { data: chatUnread = 0 } = useQuery({
+  // Count distinct chats with unread direct messages (Telegram-style — one badge unit per chat).
+  // (Was previously hitting the unrelated `messages` table, which has different columns —
+  // the badge silently always returned 0.)
+  const { data: unreadChatIds } = useQuery({
     queryKey: ["nav-chat-unread", user?.id],
     queryFn: async () => {
-      const { count } = await (supabase as any)
-        .from("messages")
-        .select("*", { count: "exact", head: true })
-        .neq("sender_id", user!.id)
+      const { data } = await supabase
+        .from("direct_messages")
+        .select("sender_id")
+        .eq("receiver_id", user!.id)
         .eq("is_read", false);
-      return count || 0;
+      return new Set((data ?? []).map((r: { sender_id: string }) => r.sender_id));
     },
     enabled: !!user,
     refetchInterval: 30000,
     staleTime: 15000,
   });
+
+  // Manually marked-unread chats (localStorage-backed). Don't double-count chats that
+  // already have real unread messages.
+  const { prefs: chatPrefs } = useChatPrefs(user?.id);
+  const chatUnread = (() => {
+    const real = unreadChatIds ?? new Set<string>();
+    let manualOnly = 0;
+    for (const id of Object.keys(chatPrefs.unread)) {
+      if (!real.has(id)) manualOnly++;
+    }
+    return real.size + manualOnly;
+  })();
 
   const gated = (path: string) =>
     user ? path : `/login?redirect=${encodeURIComponent(path)}`;
@@ -65,7 +83,7 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
     { id: "live", labelKey: "nav.live", icon: Radio, path: gated("/live"), bg: navAlertsBg, cssVar: "var(--cars)" },
     { id: "feed", labelKey: "nav.feed", icon: Newspaper, path: gated("/feed"), bg: navSearchBg, cssVar: "var(--flights)" },
     { id: "reels", labelKey: "nav.reel", icon: Film, path: gated("/reels"), bg: navSearchBg, cssVar: "var(--flights)" },
-    { id: "home", labelKey: "nav.home", icon: Home, path: "/", bg: navHomeBg, cssVar: "var(--primary)" },
+    { id: "home", labelKey: "nav.home", icon: Home, path: "/", bg: navHomeBg, cssVar: "var(--primary)", badge: liveActivity.total },
     { id: "map", labelKey: "nav.map", icon: MapPin, path: gated("/store-map"), bg: navTripsBg, cssVar: "var(--hotels)" },
     { id: "chat", labelKey: "nav.chat", icon: MessageCircle, path: gated("/chat"), bg: navAlertsBg, cssVar: "var(--cars)", badge: chatUnread },
     { id: "account", labelKey: "nav.account", icon: User, path: gated("/profile"), bg: navAccountBg, cssVar: "var(--primary)", badge: notificationUnread },
