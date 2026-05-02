@@ -16,6 +16,7 @@ const baseProfile: UserProfile = {
   status: null,
   bio: null,
   social_facebook: null,
+  social_onlyfans: null,
   social_instagram: null,
   social_tiktok: null,
   social_snapchat: null,
