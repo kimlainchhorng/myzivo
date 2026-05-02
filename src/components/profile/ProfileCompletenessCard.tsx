@@ -43,6 +43,7 @@ type Props = {
 
 const SOCIAL_KEYS: (keyof UserProfile)[] = [
   "social_facebook",
+  "social_onlyfans",
   "social_instagram",
   "social_tiktok",
   "social_snapchat",
