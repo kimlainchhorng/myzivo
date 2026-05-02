@@ -18,7 +18,7 @@ import { isBlueVerified } from "@/lib/verification";
 import {
   ArrowLeft, Loader2, User, ImageIcon, Film, Grid3X3, UserPlus, UserCheck, UserX,
   Heart, MessageCircle, Lock, ShieldCheck, Users, Share2, Play, Eye, Bookmark, Globe,
-  Phone, Video,
+  Phone, Video, Gift,
 } from "lucide-react";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
@@ -36,6 +36,8 @@ import ReelThumbnail from "@/components/social/ReelThumbnail";
 import { resolveSharedOrigins, type SharedOriginInfo } from "@/lib/social/resolveSharedOrigins";
 import { toUserPostInteractionId } from "@/lib/social/postInteraction";
 import CreatorTiersSubscribe from "@/components/creator/CreatorTiersSubscribe";
+import TopSupporters from "@/components/creator/TopSupporters";
+import TipSheet from "@/components/social/TipSheet";
 import { useSwipeDownClose } from "@/components/social/useSwipeDownClose";
 import { SwipeGrabHandle } from "@/components/social/SwipeGrabHandle";
 
@@ -225,6 +227,7 @@ export default function PublicProfilePage() {
   const queryClient = useQueryClient();
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [confirmAction, setConfirmAction] = useState<null | { action: "cancel" | "unfriend" | "unfollow"; label: string }>(null);
+  const [tipOpen, setTipOpen] = useState(false);
   const [postTab, setPostTab] = useState<PostTab>("all");
   const [commentPost, setCommentPost] = useState<any>(null);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
@@ -943,6 +946,15 @@ export default function PublicProfilePage() {
                   className={`h-11 w-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${friendshipStatus === "friends" ? "bg-primary text-primary-foreground" : "bg-muted border border-border text-muted-foreground opacity-60"}`}>
                   <MessageCircle className="h-4 w-4" />
                 </motion.button>
+                <motion.button whileTap={{ scale: 0.95 }}
+                  onClick={() => {
+                    if (!user) { toast.error("Sign in to tip"); navigate("/auth"); return; }
+                    setTipOpen(true);
+                  }}
+                  aria-label={`Send a tip to ${resolvedProfile?.full_name || "this creator"}`}
+                  className="h-11 w-11 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-md hover:opacity-95 active:scale-95 transition-all">
+                  <Gift className="h-4 w-4" />
+                </motion.button>
               </div>
             )}
             {isOwnProfile && (
@@ -973,6 +985,9 @@ export default function PublicProfilePage() {
             </div>
           ) : (
             <>
+              {/* Top supporters strip */}
+              {targetUserId && <TopSupporters creatorId={targetUserId} />}
+
               {/* Creator subscription tiers */}
               {targetUserId && (
                 <CreatorTiersSubscribe
@@ -1350,6 +1365,16 @@ export default function PublicProfilePage() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      {targetUserId && (
+        <TipSheet
+          open={tipOpen}
+          onClose={() => setTipOpen(false)}
+          creatorId={targetUserId}
+          creatorName={resolvedProfile?.full_name || "Creator"}
+          creatorAvatar={resolvedProfile?.avatar_url}
+        />
+      )}
 
       <ZivoMobileNav />
     </PullToRefresh>
