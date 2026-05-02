@@ -12,6 +12,7 @@ import {
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
 import Flight3DSkyHeader from "@/components/flight/Flight3DSkyHeader";
+import BundleProgressBanner from "@/components/shared/BundleProgressBanner";
 
 import miamiImg from "@/assets/destinations/miami.jpg";
 import sfImg from "@/assets/destinations/san-francisco.jpg";
@@ -551,6 +552,7 @@ const FlightLanding = () => {
           appLink="zivo://flights"
         />
         <AppLayout title="Flights" headerRightAction={undefined}>
+          <BundleProgressBanner step="flight" />
           <Flight3DSkyHeader className="-mt-1" />
           <div className="relative overflow-hidden">
             <Animated3DBackground />
@@ -563,6 +565,7 @@ const FlightLanding = () => {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden">
+      <BundleProgressBanner step="flight" />
       <SEOHead
         title="Search Flights – ZIVO | Compare 500+ Airlines"
         description="Find the best flight deals from 500+ airlines worldwide. Compare prices, book flights, and track price drops — all on ZIVO."
