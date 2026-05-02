@@ -15,6 +15,7 @@ import {
   Handshake, Car, Wrench, UtensilsCrossed, Building2, Truck, Phone, AlertCircle, Bell, MoreHorizontal,
   Pencil, RotateCcw, Share2, BarChart3, Link as LinkIcon, QrCode, Copy,
   Repeat, DollarSign, Briefcase, User as UserIcon,
+  Heart, Lock, Gift, MessageCircle, Video, TrendingUp,
 } from "lucide-react";
 import { useHaptics } from "@/hooks/useHaptics";
 import { Button } from "@/components/ui/button";
@@ -1407,17 +1408,18 @@ const Profile = () => {
 
       {/* Mode Switch bottom sheet — placeholder for future per-mode routing */}
       <Sheet open={modeOpen} onOpenChange={setModeOpen}>
-        <SheetContent side="bottom" className="rounded-t-3xl pb-10">
+        <SheetContent side="bottom" className="rounded-t-3xl pb-10 max-h-[88vh] overflow-y-auto">
           <SheetHeader className="pb-3">
             <SheetTitle className="text-base font-bold">Switch mode</SheetTitle>
           </SheetHeader>
           <div className="flex flex-col gap-2">
             {[
               { id: "personal", label: "Personal", desc: "Your everyday account", icon: UserIcon, route: "/profile" },
+              { id: "fan", label: "Fan", desc: "Subscribe to creators & unlock content", icon: Heart, route: "/account/subscriptions" },
+              { id: "creator", label: "Creator", desc: "Subscriptions, PPV & tips", icon: Sparkles, route: "/creator-dashboard" },
               { id: "business", label: "Business", desc: "Manage company travel & teams", icon: Briefcase, route: "/business" },
               { id: "driver", label: "Driver", desc: "Go online and accept rides", icon: Car, route: "/driver/home" },
               { id: "shop", label: "Shop Partner", desc: "Open your store dashboard", icon: Store, route: getShopDashboardPath() },
-              { id: "creator", label: "Creator", desc: "Manage content & monetisation", icon: Sparkles, route: "/creator-dashboard" },
             ].map((m) => {
               const active = activeMode === m.id;
               const Icon = m.icon;
@@ -1449,6 +1451,75 @@ const Profile = () => {
               );
             })}
           </div>
+
+          {activeMode === "creator" && (
+            <div className="mt-5 pt-4 border-t border-border/40">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Creator tools</span>
+                <button
+                  type="button"
+                  onClick={() => { setModeOpen(false); navigate("/monetization"); }}
+                  className="text-[11px] font-semibold text-primary"
+                >
+                  See all
+                </button>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { label: "Subscribers", icon: Users, route: "/creator/subscribers" },
+                  { label: "PPV posts", icon: Lock, route: "/monetization" },
+                  { label: "Tips", icon: Gift, route: "/creator/tips" },
+                  { label: "Mass DM", icon: MessageCircle, route: "/chat" },
+                  { label: "Earnings", icon: TrendingUp, route: "/creator-analytics" },
+                  { label: "Go live", icon: Video, route: "/live" },
+                ].map((a) => {
+                  const Icon = a.icon;
+                  return (
+                    <button
+                      key={a.label}
+                      type="button"
+                      onClick={() => { setModeOpen(false); navigate(a.route); }}
+                      className="flex flex-col items-center gap-1.5 rounded-2xl border border-border/40 bg-muted/30 p-3 active:scale-[0.97] transition-transform"
+                    >
+                      <Icon className="h-5 w-5 text-primary" />
+                      <span className="text-[11px] font-semibold text-center leading-tight">{a.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {activeMode === "fan" && (
+            <div className="mt-5 pt-4 border-t border-border/40">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">My fan activity</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { label: "Subscriptions", icon: Heart, route: "/account/subscriptions" },
+                  { label: "Unlocked", icon: Lock, route: "/account/subscriptions" },
+                  { label: "Tips sent", icon: Gift, route: "/account/tips" },
+                  { label: "DMs", icon: MessageCircle, route: "/chat" },
+                  { label: "Wallet", icon: DollarSign, route: "/wallet" },
+                  { label: "Discover", icon: Sparkles, route: "/feed?tab=foryou" },
+                ].map((a) => {
+                  const Icon = a.icon;
+                  return (
+                    <button
+                      key={a.label}
+                      type="button"
+                      onClick={() => { setModeOpen(false); navigate(a.route); }}
+                      className="flex flex-col items-center gap-1.5 rounded-2xl border border-border/40 bg-muted/30 p-3 active:scale-[0.97] transition-transform"
+                    >
+                      <Icon className="h-5 w-5 text-primary" />
+                      <span className="text-[11px] font-semibold text-center leading-tight">{a.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </SheetContent>
       </Sheet>
 
