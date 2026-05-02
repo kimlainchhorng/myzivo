@@ -28,6 +28,30 @@ interface Rule {
 
 // Order matters — first matching rule wins, so put the most specific first.
 const RULES: Rule[] = [
+  // Missed call (synthesized by PersonalChat when last timeline item is a missed call from partner)
+  {
+    match: [/\bmissed call\b/i, /\btried to call\b/i, /\bcall (me )?back\b/i],
+    replies: ["Calling you back 📞", "Sorry I missed your call", "Can you call again?", "Free in 5 min"],
+  },
+  // Shared social profile / music link
+  {
+    match: [
+      /https?:\/\/[^\s]*(facebook|fb)\.com\//i,
+      /https?:\/\/[^\s]*onlyfans\.com\//i,
+      /https?:\/\/[^\s]*instagram\.com\//i,
+      /https?:\/\/[^\s]*tiktok\.com\//i,
+      /https?:\/\/[^\s]*(x\.com|twitter\.com)\//i,
+      /https?:\/\/[^\s]*youtube\.com\//i,
+      /https?:\/\/[^\s]*youtu\.be\//i,
+      /https?:\/\/[^\s]*snapchat\.com\//i,
+      /https?:\/\/[^\s]*linkedin\.com\//i,
+      /https?:\/\/[^\s]*t\.me\//i,
+      /https?:\/\/[^\s]*spotify\.com\//i,
+      /https?:\/\/[^\s]*music\.apple\.com\//i,
+      /https?:\/\/[^\s]*soundcloud\.com\//i,
+    ],
+    replies: ["Following you ✓", "Cool, will check 🔗", "Nice, sending mine back", "Loved it 🔥"],
+  },
   // Yes/no questions
   {
     match: [/\?$/, /\bis it\b/i, /\bdo you\b/i, /\bcan you\b/i, /\bwill you\b/i, /\bare you\b/i, /\bshould\b/i],
