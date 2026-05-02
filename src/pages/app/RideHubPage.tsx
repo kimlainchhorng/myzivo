@@ -14,6 +14,9 @@ import {
   ChevronLeft,
 } from "lucide-react";
 import AppLayout from "@/components/app/AppLayout";
+import BundleProgressBanner from "@/components/shared/BundleProgressBanner";
+import HeartedDestinationsRail from "@/components/rides/HeartedDestinationsRail";
+import LocalSavedPlacesRow from "@/components/rides/LocalSavedPlacesRow";
 import RideHistoryInsights from "@/components/rides/RideHistoryInsights";
 import RidePassPlans from "@/components/rides/RidePassPlans";
 import LostItemReport from "@/components/rides/LostItemReport";
@@ -392,6 +395,14 @@ export default function RideHubPage() {
         activeTab === "book" ? "overflow-hidden !pb-0" : isFullScreen ? "overflow-hidden" : "",
       )}
     >
+      <BundleProgressBanner step="ride" />
+      {/* Hearted destinations rail — only shown in non-fullscreen tab views */}
+      {activeTab !== "book" && (
+        <div className="px-4 pt-3 pb-1 space-y-2">
+          <LocalSavedPlacesRow />
+          <HeartedDestinationsRail />
+        </div>
+      )}
       {/* Tab bar — hidden when in full-screen book mode */}
       {activeTab !== "book" && (
         <div className={cn("z-20 bg-background/95 backdrop-blur-lg border-b border-border/30 shrink-0", isFullScreen ? "" : "sticky top-14")}>
