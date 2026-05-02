@@ -50,7 +50,7 @@ export default function MyChannelsStrip() {
         {channels.slice(0, 12).map((c) => (
           <button
             key={c.id}
-            onClick={() => nav(`/channel/${c.handle}`)}
+            onClick={() => nav(`/c/${c.handle}`)}
             className="flex flex-col items-center gap-1 w-[68px] shrink-0 group active:scale-95 transition-transform"
           >
             <Avatar className="w-12 h-12 ring-2 ring-primary/20">
