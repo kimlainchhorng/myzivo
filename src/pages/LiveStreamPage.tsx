@@ -661,29 +661,6 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
 </div>
 </div>
 
- {/* Quick reactions bar (above chat input) */}
-<div className="absolute left-0 right-0 z-30 px-3 flex items-center gap-1.5 overflow-x-auto scrollbar-hide" style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 56px)" }}>
-  {[
-    { label: "Heart", icon: Heart, color: "text-rose-400" },
-    { label: "Fire", icon: Flame, color: "text-orange-400" },
-    { label: "Star", icon: Sparkles, color: "text-amber-300" },
-    { label: "Like", icon: Heart, color: "text-pink-400" },
-    { label: "Wow", icon: Eye, color: "text-cyan-300" },
-    { label: "Crown", icon: Crown, color: "text-yellow-300" },
-    { label: "Trophy", icon: Trophy, color: "text-amber-400" },
-    { label: "Gift", icon: Gift, color: "text-purple-300" },
-  ].map((r) => (
-    <button
-      key={r.label}
-      onClick={() => sendLike()}
-      className="shrink-0 w-8 h-8 rounded-full bg-black/40 backdrop-blur-sm border border-white/10 flex items-center justify-center active:scale-90 transition-transform"
-      aria-label={`React with ${r.label}`}
-    >
-      <r.icon className={cn("w-4 h-4", r.color)} />
-    </button>
-  ))}
-</div>
-
  {/* Bottom input */}
 <div className="absolute left-0 right-0 z-30 px-3 pb-3 flex items-center gap-2" style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 0px)" }}>
 <div className="flex-1 relative">
