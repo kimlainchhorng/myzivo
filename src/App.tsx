@@ -123,6 +123,8 @@ const RideTrackingPage = lazy(() => import("./pages/app/RideTrackingPage"));
 const RideHubPage = lazy(() => import("./pages/app/RideHubPage"));
 const EatsLanding = lazy(() => import("./pages/EatsLanding"));
 const EatsTrackingPage = lazy(() => import("./pages/EatsTrackingPage"));
+const NewServiceOrderPage = lazy(() => import("./pages/NewServiceOrderPage"));
+const ServiceTrackingPage = lazy(() => import("./pages/ServiceTrackingPage"));
 const ReservationPage = lazy(() => import("./pages/ReservationPage"));
 const BecomePartnerPage = lazy(() => import("./pages/BecomePartnerPage"));
 const NetworkPlacesPage = lazy(() => import("./pages/NetworkPlacesPage"));
@@ -800,6 +802,8 @@ const App = () => (
                 <Route path="/eats/reserve" element={<ProtectedRoute><PhoneRequiredGate><ReservationPage /></PhoneRequiredGate></ProtectedRoute>} />
                 <Route path="/eats/reserve/:restaurantId" element={<ProtectedRoute><PhoneRequiredGate><ReservationPage /></PhoneRequiredGate></ProtectedRoute>} />
                 <Route path="/eats/track/:orderId" element={<ProtectedRoute><EatsTrackingPage /></ProtectedRoute>} />
+                <Route path="/service/new" element={<ProtectedRoute><NewServiceOrderPage /></ProtectedRoute>} />
+                <Route path="/service/track/:orderId" element={<ProtectedRoute><ServiceTrackingPage /></ProtectedRoute>} />
                 <Route path="/eats/orders" element={<ProtectedRoute><EatsOrdersPage /></ProtectedRoute>} />
                 <Route path="/eats/restaurant-dashboard" element={<AdminShellRoute vertical="restaurant" nav={restaurantNav} title="Restaurant Dashboard | ZIVO Admin"><EatsRestaurantDashboard /></AdminShellRoute>} />
                 <Route path="/eats/driver-deliveries" element={<ProtectedRoute><EatsDriverDeliveryPage /></ProtectedRoute>} />
