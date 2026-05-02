@@ -19,6 +19,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import NavBar from "@/components/home/NavBar";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
+import PartnerBadge from "@/components/shared/PartnerBadge";
+import { useNetworkFavorites } from "@/hooks/useNetworkFavorites";
 
 // ─── Types ───────────────────────────────────────────────────────────
 type Step = "browse" | "restaurant" | "cart" | "checkout";
@@ -100,8 +102,8 @@ export default function EatsLanding() {
   const [specialInstructions, setSpecialInstructions] = useState<Record<string, string>>({});
   const [paymentType, setPaymentType] = useState<"cash" | "card" | "wallet">("card");
 
-  // Favorites (local)
-  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  // Favorites — persisted via localStorage and shared across the app
+  const { favorites, toggle: toggleFavoriteHook } = useNetworkFavorites("restaurant");
 
   // ─── Derived Data ────────────────────────────────────────────────
   const currentRestaurant = useMemo(
@@ -203,13 +205,7 @@ export default function EatsLanding() {
     }
   };
 
-  const toggleFavorite = (id: string) => {
-    setFavorites(prev => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id); else next.add(id);
-      return next;
-    });
-  };
+  const toggleFavorite = (id: string) => toggleFavoriteHook(id);
 
   // ─── Render ──────────────────────────────────────────────────────
   return (
@@ -307,6 +303,7 @@ export default function EatsLanding() {
                                 <Truck className="w-3 h-3" /> Free Delivery
                               </span>
                             )}
+                            <PartnerBadge size="xs" className="absolute bottom-3 left-3 shadow-sm" />
                             {!restaurant.is_open && (
                               <span className="absolute top-3 right-3 text-[10px] font-bold px-2 py-0.5 rounded-full bg-destructive text-destructive-foreground">Closed</span>
                             )}
@@ -324,6 +321,15 @@ export default function EatsLanding() {
                               )}
                             </div>
                           </div>
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            navigate(`/eats/reserve?restaurantId=${restaurant.id}&restaurantName=${encodeURIComponent(restaurant.name)}`);
+                          }}
+                          className="absolute bottom-3 right-3 text-[10px] font-bold px-2.5 py-1.5 rounded-full bg-orange-500/15 text-orange-600 hover:bg-orange-500/25 active:scale-95 transition-all touch-manipulation flex items-center gap-1"
+                        >
+                          📅 Reserve table
                         </button>
                         <button onClick={(e) => { e.stopPropagation(); toggleFavorite(restaurant.id); }}
                           className="absolute top-3 right-3 w-8 h-8 rounded-full bg-card/80 backdrop-blur flex items-center justify-center touch-manipulation active:scale-90 shadow-sm">
@@ -384,6 +390,50 @@ export default function EatsLanding() {
                   <Badge className="bg-primary text-primary-foreground text-[10px] font-bold gap-1"><Truck className="w-3 h-3" /> Free Delivery</Badge>
                 )}
                 <Badge variant="outline" className="bg-card/80 backdrop-blur text-[10px] font-bold gap-1"><Timer className="w-3 h-3" /> {currentRestaurant.avg_prep_time ?? 25}m prep</Badge>
+              </div>
+            </div>
+
+            {/* Quick actions: Reserve · Ride · Save */}
+            <div className="px-4 pt-4 max-w-lg mx-auto">
+              <div className="grid grid-cols-3 gap-2">
+                <button
+                  onClick={() =>
+                    navigate(
+                      `/eats/reserve?restaurantId=${currentRestaurant.id}&restaurantName=${encodeURIComponent(currentRestaurant.name)}`,
+                    )
+                  }
+                  className="flex flex-col items-center gap-1 rounded-2xl border border-border/50 bg-card hover:bg-muted/40 active:scale-[0.98] transition-all py-3 touch-manipulation"
+                >
+                  <span className="text-base">📅</span>
+                  <span className="text-[11px] font-bold text-foreground">Reserve</span>
+                </button>
+                <button
+                  onClick={() =>
+                    navigate(
+                      `/rides?dropoff=${encodeURIComponent(currentRestaurant.name)}`,
+                    )
+                  }
+                  className="flex flex-col items-center gap-1 rounded-2xl border border-border/50 bg-card hover:bg-muted/40 active:scale-[0.98] transition-all py-3 touch-manipulation"
+                >
+                  <span className="text-base">🚗</span>
+                  <span className="text-[11px] font-bold text-foreground">Ride here</span>
+                </button>
+                <button
+                  onClick={() => toggleFavorite(currentRestaurant.id)}
+                  className="flex flex-col items-center gap-1 rounded-2xl border border-border/50 bg-card hover:bg-muted/40 active:scale-[0.98] transition-all py-3 touch-manipulation"
+                >
+                  <Heart
+                    className={cn(
+                      "w-4 h-4 transition-all",
+                      favorites.has(currentRestaurant.id)
+                        ? "fill-red-500 text-red-500"
+                        : "text-foreground",
+                    )}
+                  />
+                  <span className="text-[11px] font-bold text-foreground">
+                    {favorites.has(currentRestaurant.id) ? "Saved" : "Save"}
+                  </span>
+                </button>
               </div>
             </div>
 
