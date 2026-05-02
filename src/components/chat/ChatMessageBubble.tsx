@@ -7,11 +7,11 @@ import { useState, useEffect, useRef, useCallback, useMemo, memo, lazy, Suspense
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
 import Reply from "lucide-react/dist/esm/icons/reply";
-import Check from "lucide-react/dist/esm/icons/check";
-import CheckCheck from "lucide-react/dist/esm/icons/check-check";
+import ReadReceipt, { type ReadReceiptStatus } from "@/components/chat/ReadReceipt";
 import Copy from "lucide-react/dist/esm/icons/copy";
 import Forward from "lucide-react/dist/esm/icons/forward";
 import Pin from "lucide-react/dist/esm/icons/pin";
+import Bookmark from "lucide-react/dist/esm/icons/bookmark";
 import Timer from "lucide-react/dist/esm/icons/timer";
 import Play from "lucide-react/dist/esm/icons/play";
 import X from "lucide-react/dist/esm/icons/x";
@@ -35,12 +35,13 @@ import { Capacitor } from "@capacitor/core";
 import { openExternalUrl } from "@/lib/openExternalUrl";
 import ExternalLinkWarning from "@/components/security/ExternalLinkWarning";
 import { assessLinkSync } from "@/hooks/useLinkRisk";
-import { assessChatMessageRisk } from "@/lib/security/chatContentSafety";
+import { assessChatMessageRisk, assessIncomingChatRisk } from "@/lib/security/chatContentSafety";
 
 import { ILLUSTRATED_PACKS } from "@/config/illustratedStickers";
 import { getAnimatedStickerUrl } from "@/config/animatedStickerMap";
 import { getStickerMotionSpec } from "./stickerMotion";
 import SpoilerText from "./SpoilerText";
+import onlyfansBrandLogo from "@/assets/brand-logos/onlyfans.png";
 
 // Lazy-load TransparentStickerVideo — heavy chroma-key/WebGL component
 const TransparentStickerVideo = lazy(() => import("./TransparentStickerVideo").then(m => ({ default: m.TransparentStickerVideo })));
@@ -210,20 +211,33 @@ interface ChatMessageBubbleProps {
   onForward?: (id: string, message: string) => void;
   onPin?: (id: string, pinned: boolean) => void;
   onEdit?: (id: string, currentText: string) => void;
+  /** Save (forward to Saved Messages). Hidden when the chat IS Saved Messages. */
+  onSave?: (id: string) => void;
+  /** True when the current chat is the user's own Saved Messages. */
+  hideSave?: boolean;
+  /** Display name of the original sender, when this message was forwarded. */
+  forwardedFromName?: string | null;
+  /** User id of the original sender, used to navigate to their profile from the header. */
+  forwardedFromUserId?: string | null;
 }
 
 const ChatMessageBubble = memo(function ChatMessageBubble({
   id, message, time, isMe, isRead, isDelivered, imageUrl, videoUrl, isPinned, expiresAt, messageType, senderId, lockedPriceCents,
   editedAt, createdAt,
   initialReactions,
-  onReply, onDelete, onForward, onPin, onEdit,
+  onReply, onDelete, onForward, onPin, onEdit, onSave, hideSave, forwardedFromName, forwardedFromUserId,
 }: ChatMessageBubbleProps) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [showActions, setShowActions] = useState(false);
   const [showReactions, setShowReactions] = useState(false);
   const [showDeleteSub, setShowDeleteSub] = useState(false);
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   const messageRisk = useMemo(() => isMe ? { warnings: [] } : assessChatMessageRisk(message || ""), [message, isMe]);
+  const incomingRisk = useMemo(
+    () => isMe ? null : assessIncomingChatRisk(message || ""),
+    [message, isMe],
+  );
   const isLockedType = messageType === "locked_image" || messageType === "locked_video";
   const [isLocked, setIsLocked] = useState(isLockedType && !isMe);
   const [unlockLoading, setUnlockLoading] = useState(false);
@@ -468,6 +482,13 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
 
   const isOptimistic = id.startsWith("opt-");
   const isDisappearing = !!expiresAt;
+  const receiptStatus: ReadReceiptStatus = isOptimistic
+    ? "sending"
+    : isRead
+    ? "read"
+    : isDelivered
+    ? "delivered"
+    : "sent";
 
   return (
     <div
@@ -497,6 +518,23 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
             <Pin className="w-2.5 h-2.5" />
             <span className="font-medium">Pinned</span>
           </div>
+        )}
+
+        {/* Forwarded-from header — Telegram parity. Shown when this message
+            was created via a forward action (forwarded_from_user_id is set). */}
+        {forwardedFromName && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation();
+              if (forwardedFromUserId) navigate(`/user/${forwardedFromUserId}`);
+            }}
+            className={`flex items-center gap-1 mb-1 text-[10.5px] text-muted-foreground/90 hover:text-foreground transition-colors ${isMe ? "justify-end ml-auto" : "justify-start"}`}
+          >
+            <Forward className="w-2.5 h-2.5 opacity-60" />
+            <span className="italic">Forwarded from</span>
+            <span className="font-semibold not-italic">{forwardedFromName}</span>
+          </button>
         )}
 
         {/* Video — compact reel-style thumbnail (normal or locked) */}
@@ -691,7 +729,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
                 </motion.div>
                 <div className="flex items-center gap-1 justify-end px-1 pb-1 mt-1">
                   <span className={`text-[10px] ${isMe ? "text-muted-foreground/60" : "text-muted-foreground/60"}`}>{time}</span>
-                  {isMe && (isRead ? <CheckCheck className="h-3 w-3 text-blue-400" /> : isDelivered ? <CheckCheck className="h-3 w-3 text-muted-foreground/40" /> : <Check className="h-3 w-3 text-muted-foreground/40" />)}
+                  {isMe && <ReadReceipt status={receiptStatus} className="h-3 w-3" />}
                 </div>
               </div>
             );
@@ -732,14 +770,19 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
                 </p>
               )}
 
-              {!isMe && messageRisk.warnings.length > 0 && (
-                <p className={`px-4 pb-1 text-[10px] font-medium ${isMe ? "text-primary-foreground/70" : "text-amber-600"}`}>
+              {!isMe && incomingRisk?.hasBlocked && (
+                <p className="px-4 pb-1 text-[10px] font-semibold text-red-600">
+                  Phishing/impersonation link blocked — do not click.
+                </p>
+              )}
+              {!isMe && !incomingRisk?.hasBlocked && (incomingRisk?.hasSuspicious || messageRisk.warnings.length > 0) && (
+                <p className="px-4 pb-1 text-[10px] font-medium text-amber-600">
                   Suspicious link pattern detected. Open carefully.
                 </p>
               )}
 
-              {/* Rich link preview */}
-              {linkUrl && (
+              {/* Rich link preview — suppressed when inbound scan flagged the link as blocked */}
+              {linkUrl && !(incomingRisk?.hasBlocked) && (
                 <LinkPreviewCard url={linkUrl} isMe={isMe} hasText={!!textWithoutUrl} messageText={message} />
               )}
 
@@ -776,13 +819,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
                 <span className={`text-[10px] font-medium ${isMe ? "text-primary-foreground/50" : "text-muted-foreground/50"}`}>
                   {time}
                 </span>
-                {isMe && !isOptimistic && (
-                  isRead
-                    ? <CheckCheck className="h-3.5 w-3.5 text-sky-300" />
-                    : isDelivered
-                    ? <CheckCheck className="h-3.5 w-3.5 text-primary-foreground/35" />
-                    : <Check className="h-3.5 w-3.5 text-primary-foreground/35" />
-                )}
+                {isMe && <ReadReceipt status={receiptStatus} tone="onPrimary" />}
               </div>
             </div>
           );
@@ -850,6 +887,9 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
                       )}
                       <MsgMenuItem icon={Copy} label="Copy" onClick={handleCopy} />
                       <MsgMenuItem icon={Forward} label="Forward" onClick={handleForward} />
+                      {onSave && !hideSave && (
+                        <MsgMenuItem icon={Bookmark} label="Save" onClick={() => { onSave(id); setShowActions(false); setShowReactions(false); }} />
+                      )}
                       <MsgMenuItem icon={Pin} label={isPinned ? "Unpin" : "Pin"} onClick={handlePin} active={isPinned} />
                       <MsgMenuItem icon={Trash2} label="Delete" onClick={() => setShowDeleteSub(true)} destructive chevron />
                     </motion.div>
@@ -1154,6 +1194,24 @@ function parseLegacyMusicShare(messageText?: string | null): LegacyMusicShareMet
 }
 
 /* ── Link Preview Card ─────────────────────────────────────────── */
+type SocialPlatformId = "facebook" | "onlyfans" | "instagram" | "x" | "tiktok" | "youtube" | "snapchat" | "telegram" | "linkedin";
+
+const SOCIAL_HOST_MAP: { match: RegExp; id: SocialPlatformId; label: string; color: string; textColor: string; brandImage?: string }[] = [
+  { match: /(^|\.)facebook\.com$|(^|\.)fb\.com$/i,    id: "facebook",  label: "Facebook",  color: "bg-[#1877F2]", textColor: "text-white" },
+  { match: /(^|\.)onlyfans\.com$/i,                    id: "onlyfans",  label: "OnlyFans",  color: "bg-white",     textColor: "text-[#00AFF0]", brandImage: onlyfansBrandLogo },
+  { match: /(^|\.)instagram\.com$/i,                   id: "instagram", label: "Instagram", color: "bg-gradient-to-br from-[#F58529] via-[#DD2A7B] to-[#8134AF]", textColor: "text-white" },
+  { match: /(^|\.)(x\.com|twitter\.com)$/i,            id: "x",         label: "X",         color: "bg-black", textColor: "text-white" },
+  { match: /(^|\.)tiktok\.com$/i,                      id: "tiktok",    label: "TikTok",    color: "bg-black", textColor: "text-white" },
+  { match: /(^|\.)(youtube\.com|youtu\.be)$/i,         id: "youtube",   label: "YouTube",   color: "bg-[#FF0000]", textColor: "text-white" },
+  { match: /(^|\.)snapchat\.com$/i,                    id: "snapchat",  label: "Snapchat",  color: "bg-[#FFFC00]", textColor: "text-black" },
+  { match: /(^|\.)t\.me$|(^|\.)telegram\.me$/i,        id: "telegram",  label: "Telegram",  color: "bg-[#229ED9]", textColor: "text-white" },
+  { match: /(^|\.)linkedin\.com$/i,                    id: "linkedin",  label: "LinkedIn",  color: "bg-[#0A66C2]", textColor: "text-white" },
+];
+
+function detectSocialPlatform(host: string) {
+  return SOCIAL_HOST_MAP.find((p) => p.match.test(host)) || null;
+}
+
 function LinkPreviewCard({ url, isMe, hasText, messageText }: { url: string; isMe: boolean; hasText: boolean; messageText?: string }) {
   const navigate = useNavigate();
   const [warnOpen, setWarnOpen] = useState(false);
@@ -1165,6 +1223,7 @@ function LinkPreviewCard({ url, isMe, hasText, messageText }: { url: string; isM
     authorName?: string;
     authorAvatar?: string | null;
     internalPath?: string;
+    socialPlatform?: { id: SocialPlatformId; label: string; color: string; textColor: string; brandImage?: string };
   } | null>(null);
 
   useEffect(() => {
@@ -1173,6 +1232,21 @@ function LinkPreviewCard({ url, isMe, hasText, messageText }: { url: string; isM
       try {
         const u = new URL(url);
         const p = u.pathname + u.search;
+
+        // Detect known external social platforms — render as a colored chip card.
+        const social = detectSocialPlatform(u.hostname);
+        if (social) {
+          const handle = u.pathname.replace(/^\/+/, "").replace(/^@/, "").split(/[/?#]/)[0];
+          if (alive) {
+            setPreview({
+              label: handle ? `@${handle}` : social.label,
+              description: handle ? social.label : `Open on ${social.label}`,
+              socialPlatform: social,
+            });
+          }
+          return;
+        }
+
         const legacyMusicShare = parseLegacyMusicShare(messageText);
         const soundSlugMatch = p.match(/\/sound\/([^/?#]+)/i);
 
@@ -1364,15 +1438,24 @@ function LinkPreviewCard({ url, isMe, hasText, messageText }: { url: string; isM
         </div>
       )}
 
-      {/* If no media, show gradient placeholder */}
+      {/* If no media, show gradient placeholder — themed for known social platforms */}
       {!hasMedia && (
         <div className={`h-14 flex items-center justify-center relative ${
-          isMe ? "bg-primary-foreground/[0.06]" : "bg-foreground/[0.04]"
+          preview.socialPlatform ? preview.socialPlatform.color : (isMe ? "bg-primary-foreground/[0.06]" : "bg-foreground/[0.04]")
         }`}>
+          {preview.socialPlatform?.brandImage && (
+            <img
+              src={preview.socialPlatform.brandImage}
+              alt={preview.socialPlatform.label}
+              className="h-9 w-auto object-contain"
+            />
+          )}
           <div className={`absolute top-2 right-2 px-2 py-0.5 rounded-full text-[9px] font-bold tracking-wide uppercase ${
-            isMe ? "bg-primary-foreground/20 text-primary-foreground/60" : "bg-foreground/10 text-foreground/40"
+            preview.socialPlatform
+              ? `bg-black/25 ${preview.socialPlatform.textColor}`
+              : (isMe ? "bg-primary-foreground/20 text-primary-foreground/60" : "bg-foreground/10 text-foreground/40")
           }`}>
-            ZIVO
+            {preview.socialPlatform ? preview.socialPlatform.label : "ZIVO"}
           </div>
         </div>
       )}
