@@ -1,7 +1,8 @@
 /**
  * GroupChat — Group conversation with multiple participants
  */
-import { useState, useEffect, useRef, useCallback, lazy, Suspense } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { signedUrlFor } from "@/lib/security/signedMedia";
@@ -9,6 +10,7 @@ import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
 import Send from "lucide-react/dist/esm/icons/send";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import Users from "lucide-react/dist/esm/icons/users";
+import MessageCircle from "lucide-react/dist/esm/icons/message-circle";
 import ImagePlus from "lucide-react/dist/esm/icons/image-plus";
 import Plus from "lucide-react/dist/esm/icons/plus";
 import Smile from "lucide-react/dist/esm/icons/smile";
@@ -46,6 +48,7 @@ import { primeCallAudio } from "@/lib/callAudio";
 import Link2 from "lucide-react/dist/esm/icons/link-2";
 const StickerKeyboard = lazy(() => import("./StickerKeyboard"));
 import type { StickerSendPayload } from "./StickerKeyboard";
+import { suggestStickersFor } from "@/lib/stickerSuggest";
 
 interface GroupChatProps {
   groupId: string;
@@ -119,8 +122,66 @@ function formatTime(dateStr: string) {
   return format(d, "MMM d, h:mm a");
 }
 
+// Split a message into plain-text and @mention segments. A mention is recognized only
+// when it matches a real group member's name (longest-match wins so "@John Doe" beats "@John").
+function renderMessageWithMentions(
+  text: string,
+  members: Array<{ user_id: string; name: string }>,
+  currentUserId: string | undefined,
+  onMentionClick: (userId: string) => void,
+  isMe: boolean,
+): React.ReactNode {
+  if (!text) return text;
+  if (members.length === 0 || !text.includes("@")) return text;
+  // Sort longest-first so multi-word names match before their first-name prefix
+  const sorted = [...members].sort((a, b) => b.name.length - a.name.length);
+  const out: React.ReactNode[] = [];
+  let i = 0;
+  let key = 0;
+  while (i < text.length) {
+    const at = text.indexOf("@", i);
+    if (at < 0) { out.push(text.slice(i)); break; }
+    // Mentions must be at start or after whitespace
+    if (at > 0 && !/\s/.test(text[at - 1])) {
+      out.push(text.slice(i, at + 1));
+      i = at + 1;
+      continue;
+    }
+    if (at > i) out.push(text.slice(i, at));
+    let matched: { user_id: string; name: string } | null = null;
+    for (const m of sorted) {
+      const candidate = text.slice(at + 1, at + 1 + m.name.length);
+      if (candidate === m.name) { matched = m; break; }
+    }
+    if (matched) {
+      const isSelf = matched.user_id === currentUserId;
+      const onClick = (e: React.MouseEvent) => { e.stopPropagation(); onMentionClick(matched!.user_id); };
+      out.push(
+        <button
+          key={`m-${key++}`}
+          type="button"
+          onClick={onClick}
+          className={`font-semibold underline-offset-2 hover:underline ${
+            isSelf
+              ? (isMe ? "text-amber-200" : "text-amber-600")
+              : (isMe ? "text-primary-foreground/90" : "text-primary")
+          }`}
+        >
+          @{matched.name}
+        </button>
+      );
+      i = at + 1 + matched.name.length;
+    } else {
+      out.push("@");
+      i = at + 1;
+    }
+  }
+  return out;
+}
+
 export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: GroupChatProps) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [messages, setMessages] = useState<GroupMessage[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [input, setInput] = useState("");
@@ -146,6 +207,15 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
     try { return localStorage.getItem(`zivo:group-muted:${groupId}`) === "1"; } catch { return false; }
   });
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  // @mention autocomplete state
+  const [mentionQuery, setMentionQuery] = useState<string | null>(null);
+  const [mentionStart, setMentionStart] = useState<number>(-1);
+  const [mentionIndex, setMentionIndex] = useState(0);
+  // Slash-command popover state
+  const [slashQuery, setSlashQuery] = useState<string | null>(null);
+  const [slashIndex, setSlashIndex] = useState(0);
+  // Sticker auto-suggestions when input ends with a known emoji
+  const stickerSuggestions = useMemo(() => suggestStickersFor(input), [input]);
   const voice = useVoiceRecorder();
   const voiceUploadInFlightRef = useRef(false);
   const voiceJobsRef = useRef<Map<string, {
@@ -162,6 +232,72 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
     requestAnimationFrame(() => {
       bottomAnchorRef.current?.scrollIntoView({ block: "end" });
     });
+  }, []);
+
+  // Detect an in-progress @mention based on caret position. Returns {start, query}
+  // when the caret is inside a token of shape `@xxx` at start-of-input or after whitespace.
+  const detectMention = useCallback((value: string, caret: number) => {
+    if (caret <= 0) return null;
+    const before = value.slice(0, caret);
+    const at = before.lastIndexOf("@");
+    if (at < 0) return null;
+    // Must be at start or preceded by whitespace
+    if (at > 0 && !/\s/.test(before[at - 1])) return null;
+    const token = before.slice(at + 1);
+    // No spaces or @ inside the token; allow letters, digits, underscore, dot
+    if (!/^[\w.]*$/.test(token)) return null;
+    return { start: at, query: token };
+  }, []);
+
+  // Filtered member suggestions for the active @query (excludes self, max 6)
+  const mentionCandidates = useMemo(() => {
+    if (mentionQuery == null) return [];
+    const q = mentionQuery.toLowerCase();
+    return members
+      .filter((m) => m.user_id !== user?.id)
+      .filter((m) => !q || m.name.toLowerCase().includes(q))
+      .slice(0, 6);
+  }, [members, mentionQuery, user?.id]);
+
+  // Replace `@partial` with `@DisplayName ` and re-focus the input at the new caret
+  const applyMention = useCallback((memberName: string) => {
+    if (mentionStart < 0) return;
+    const tokenLen = (mentionQuery ?? "").length;
+    const before = input.slice(0, mentionStart);
+    const after = input.slice(mentionStart + 1 + tokenLen);
+    const insert = `@${memberName} `;
+    const next = before + insert + after;
+    setInput(next);
+    setMentionQuery(null);
+    setMentionStart(-1);
+    setMentionIndex(0);
+    requestAnimationFrame(() => {
+      inputRef.current?.focus();
+      const caret = (before + insert).length;
+      try { inputRef.current?.setSelectionRange(caret, caret); } catch { /* ignore */ }
+    });
+  }, [input, mentionQuery, mentionStart]);
+
+  // Slash-command catalog — wires existing group sheet/handlers to a quick keyboard menu.
+  const slashCommands = useMemo(() => [
+    { id: "members",  label: "/members",  hint: "View group members",            run: () => setShowMembers(true) },
+    { id: "invite",   label: "/invite",   hint: "Invite people to this group",   run: () => setShowInvites(true) },
+    { id: "search",   label: "/search",   hint: "Search messages in this group", run: () => { setShowGroupSearch(true); setGroupSearchQ(""); } },
+    { id: "location", label: "/location", hint: "Share your current location",   run: () => handleLocationShare() },
+    { id: "sticker",  label: "/sticker",  hint: "Open the sticker keyboard",     run: () => setShowStickerKeyboard(true) },
+  ], []);
+
+  const slashCandidates = useMemo(() => {
+    if (slashQuery == null) return [];
+    if (!slashQuery) return slashCommands;
+    return slashCommands.filter((c) => c.id.startsWith(slashQuery) || c.label.includes(slashQuery));
+  }, [slashCommands, slashQuery]);
+
+  const runSlashCommand = useCallback((cmd: { run: () => void }) => {
+    setInput("");
+    setSlashQuery(null);
+    setSlashIndex(0);
+    cmd.run();
   }, []);
 
   // Load members
@@ -912,7 +1048,15 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
                         isMe ? "bg-primary text-primary-foreground rounded-br-md" : "bg-muted text-foreground rounded-bl-md"
                       }`}
                     >
-                      <p className="whitespace-pre-wrap break-words">{msg.message}</p>
+                      <p className="whitespace-pre-wrap break-words">
+                        {renderMessageWithMentions(
+                          msg.message,
+                          members,
+                          user?.id,
+                          (uid) => navigate(`/user/${uid}`),
+                          isMe,
+                        )}
+                      </p>
                       <span className={`text-[9px] block text-right mt-0.5 ${isMe ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
                         {formatTime(msg.created_at)}
                       </span>
@@ -1009,6 +1153,32 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
               <div className="grid grid-cols-4 gap-3">
                 {[
                   { label: "Reply", icon: Reply, color: "bg-blue-500", action: () => { setReplyTo({ id: actionTarget.id, message: actionTarget.message || "📷 Media", senderName: getSenderName(actionTarget.sender_id) }); setActionTarget(null); } },
+                  // Reply Privately — open a 1:1 with the sender, pre-quote the original message.
+                  // Hidden when the message is from the current user (you can't DM yourself from this).
+                  ...(actionTarget.sender_id !== user?.id ? [{
+                    label: "Reply Privately",
+                    icon: MessageCircle,
+                    color: "bg-amber-500",
+                    action: () => {
+                      const senderName = getSenderName(actionTarget.sender_id);
+                      const senderAvatar = getSenderAvatar(actionTarget.sender_id);
+                      const original = (actionTarget.message || "📷 Media").trim();
+                      // Truncate very long messages so the prefill stays manageable
+                      const quoted = original.length > 280 ? original.slice(0, 280) + "…" : original;
+                      const prefill = `> ${quoted}\n\n`;
+                      setActionTarget(null);
+                      navigate("/chat", {
+                        state: {
+                          openChat: {
+                            recipientId: actionTarget.sender_id,
+                            recipientName: senderName,
+                            recipientAvatar: senderAvatar,
+                            prefillInput: prefill,
+                          },
+                        },
+                      });
+                    },
+                  }] : []),
                   { label: "Copy", icon: Copy, color: "bg-emerald-500", action: () => { navigator.clipboard?.writeText(actionTarget.message || "").then(() => toast.success("Copied")).catch(() => toast.error("Copy failed")); setActionTarget(null); } },
                   { label: "Forward", icon: Forward, color: "bg-violet-500", action: () => { navigator.clipboard?.writeText(actionTarget.message || ""); toast.success("Copied to forward"); setActionTarget(null); } },
                   { label: "Delete", icon: Trash2, color: "bg-red-500", action: () => { void handleDeleteMsg(actionTarget.id); setActionTarget(null); } },
@@ -1029,6 +1199,27 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
 
       {/* Input */}
       <div className="bg-background/80 backdrop-blur-2xl border-t border-border/5 px-2.5 py-2 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
+        {/* Sticker auto-suggestions (Telegram parity) — shown when the user types an emoji.
+            Hidden during slash mode so the popovers don't fight. */}
+        {stickerSuggestions.length > 0 && slashQuery == null && (
+          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 -mx-1 px-1">
+            {stickerSuggestions.map((s) => (
+              <button
+                key={s.id}
+                type="button"
+                onClick={() => {
+                  void handleStickerSend({ text: `[sticker:${s.id}]`, messageType: "sticker" });
+                  setInput("");
+                }}
+                className="shrink-0 w-16 h-16 rounded-xl bg-muted/50 hover:bg-muted active:scale-95 transition-all flex items-center justify-center p-1"
+                aria-label={`Send sticker: ${s.alt}`}
+                title={s.alt}
+              >
+                <img src={s.src} alt={s.alt} className="w-full h-full object-contain" loading="lazy" />
+              </button>
+            ))}
+          </div>
+        )}
         <div className="flex items-end gap-1.5">
           {/* Attach button with full attach menu */}
           <div className="relative shrink-0">
@@ -1065,11 +1256,114 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
 
           {/* Text input */}
           <div className="flex-1 relative">
+            {/* @mention suggestions popover */}
+            {mentionQuery != null && mentionCandidates.length > 0 && (
+              <div className="absolute bottom-full left-0 right-0 mb-2 bg-background/95 backdrop-blur-xl border border-border/40 rounded-xl shadow-lg shadow-black/10 overflow-hidden z-20">
+                <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/30">
+                  Mention
+                </div>
+                {mentionCandidates.map((m, i) => (
+                  <button
+                    key={m.user_id}
+                    type="button"
+                    onMouseDown={(e) => { e.preventDefault(); applyMention(m.name); }}
+                    onMouseEnter={() => setMentionIndex(i)}
+                    className={`w-full flex items-center gap-2 px-3 py-2 text-left transition-colors ${i === mentionIndex ? "bg-muted/60" : "hover:bg-muted/40"}`}
+                  >
+                    <div className="h-8 w-8 rounded-full bg-primary/10 flex items-center justify-center text-[11px] font-bold text-primary overflow-hidden shrink-0">
+                      {m.avatar ? (
+                        <img src={m.avatar} alt="" className="w-full h-full object-cover" />
+                      ) : (
+                        m.name.slice(0, 2).toUpperCase()
+                      )}
+                    </div>
+                    <span className="text-[14px] text-foreground truncate">{m.name}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+            {/* Slash-command popover */}
+            {slashQuery != null && slashCandidates.length > 0 && (
+              <>
+                <div className="fixed inset-0 z-30" onClick={() => setSlashQuery(null)} />
+                <div className="absolute bottom-full left-0 right-0 mb-2 bg-background/95 backdrop-blur-xl border border-border/40 rounded-xl shadow-lg shadow-black/10 overflow-hidden z-40">
+                  <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/30">
+                    Group commands
+                  </div>
+                  {slashCandidates.map((cmd, i) => (
+                    <button
+                      key={cmd.id}
+                      type="button"
+                      onMouseDown={(e) => { e.preventDefault(); runSlashCommand(cmd); }}
+                      onMouseEnter={() => setSlashIndex(i)}
+                      className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors ${i === slashIndex ? "bg-muted/60" : "hover:bg-muted/40"}`}
+                    >
+                      <span className="text-[13px] font-mono font-semibold text-primary">{cmd.label}</span>
+                      <span className="text-[12px] text-muted-foreground truncate">{cmd.hint}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
+            )}
             <input
               ref={inputRef}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && !e.shiftKey && handleSend()}
+              onChange={(e) => {
+                const v = e.target.value;
+                setInput(v);
+                // Slash-command detection — only when input starts with `/` and has no whitespace yet
+                if (v.startsWith("/") && !/\s/.test(v)) {
+                  setSlashQuery(v.slice(1).toLowerCase());
+                  setSlashIndex(0);
+                } else if (slashQuery != null) {
+                  setSlashQuery(null);
+                }
+                const caret = e.target.selectionStart ?? v.length;
+                const m = detectMention(v, caret);
+                if (m) {
+                  setMentionQuery(m.query);
+                  setMentionStart(m.start);
+                  setMentionIndex(0);
+                } else if (mentionQuery != null) {
+                  setMentionQuery(null);
+                  setMentionStart(-1);
+                }
+              }}
+              onSelect={(e) => {
+                const target = e.currentTarget;
+                const caret = target.selectionStart ?? target.value.length;
+                const m = detectMention(target.value, caret);
+                if (m) {
+                  setMentionQuery(m.query);
+                  setMentionStart(m.start);
+                } else if (mentionQuery != null) {
+                  setMentionQuery(null);
+                  setMentionStart(-1);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (slashQuery != null && slashCandidates.length > 0) {
+                  if (e.key === "ArrowDown") { e.preventDefault(); setSlashIndex((i) => (i + 1) % slashCandidates.length); return; }
+                  if (e.key === "ArrowUp") { e.preventDefault(); setSlashIndex((i) => (i - 1 + slashCandidates.length) % slashCandidates.length); return; }
+                  if (e.key === "Enter" || e.key === "Tab") {
+                    e.preventDefault();
+                    runSlashCommand(slashCandidates[slashIndex]);
+                    return;
+                  }
+                  if (e.key === "Escape") { e.preventDefault(); setSlashQuery(null); return; }
+                }
+                if (mentionQuery != null && mentionCandidates.length > 0) {
+                  if (e.key === "ArrowDown") { e.preventDefault(); setMentionIndex((i) => (i + 1) % mentionCandidates.length); return; }
+                  if (e.key === "ArrowUp") { e.preventDefault(); setMentionIndex((i) => (i - 1 + mentionCandidates.length) % mentionCandidates.length); return; }
+                  if (e.key === "Enter" || e.key === "Tab") {
+                    e.preventDefault();
+                    applyMention(mentionCandidates[mentionIndex].name);
+                    return;
+                  }
+                  if (e.key === "Escape") { e.preventDefault(); setMentionQuery(null); setMentionStart(-1); return; }
+                }
+                if (e.key === "Enter" && !e.shiftKey) handleSend();
+              }}
               placeholder={disappearingSec != null ? "Disappearing message..." : "Message..."}
               className={`w-full h-12 pl-4 pr-14 rounded-full text-[15px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none transition-all ${
                 disappearingSec != null ? "bg-amber-500/5 border border-amber-500/15 focus:ring-2 focus:ring-amber-500/10" : "bg-muted/30 border border-border/10 focus:ring-2 focus:ring-primary/15 focus:border-primary/20"
