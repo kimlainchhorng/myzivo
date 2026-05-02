@@ -9,8 +9,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import {
-  Plus, MapPin, Calendar, DollarSign, Trash2, Plane, Share2, MoreHorizontal, Ticket, Clock, CheckCircle, AlertCircle, Loader2,
+  Plus, MapPin, Calendar, DollarSign, Trash2, Plane, Share2, MoreHorizontal, Ticket, Clock, CheckCircle, AlertCircle, Loader2, LayoutList,
 } from "lucide-react";
+import UnifiedActivityTimeline from "@/components/shared/UnifiedActivityTimeline";
 import { cn } from "@/lib/utils";
 import { getPublicOrigin } from "@/lib/getPublicOrigin";
 import { useTripItineraries, useCreateTrip, useDeleteTrip, TripItinerary } from "@/hooks/useTripItineraries";
@@ -34,7 +35,7 @@ export default function TripsListPage() {
   const [newTitle, setNewTitle] = useState("");
   const [newDestination, setNewDestination] = useState("");
   const [dialogOpen, setDialogOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState("bookings");
+  const [activeTab, setActiveTab] = useState("everything");
 
   const handlePullRefresh = useCallback(async () => {
     await Promise.all([refetchTrips(), refetchBookings()]);
@@ -102,16 +103,25 @@ export default function TripsListPage() {
         </div>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 mb-6">
+          <TabsList className="grid w-full grid-cols-3 mb-6">
+            <TabsTrigger value="everything" className="gap-2">
+              <LayoutList className="w-4 h-4" />
+              Everything
+            </TabsTrigger>
             <TabsTrigger value="bookings" className="gap-2">
               <Ticket className="w-4 h-4" />
-              Bookings {flightBookings.length > 0 && `(${flightBookings.length})`}
+              Flights {flightBookings.length > 0 && `(${flightBookings.length})`}
             </TabsTrigger>
             <TabsTrigger value="itineraries" className="gap-2">
               <MapPin className="w-4 h-4" />
-              Itineraries {trips.length > 0 && `(${trips.length})`}
+              Plans {trips.length > 0 && `(${trips.length})`}
             </TabsTrigger>
           </TabsList>
+
+          {/* Unified Everything Tab */}
+          <TabsContent value="everything">
+            <UnifiedActivityTimeline />
+          </TabsContent>
 
           {/* Flight Bookings Tab */}
           <TabsContent value="bookings">
