@@ -123,8 +123,13 @@ const ROWS: CheckRow[] = [
 
 export default function PostMenuRegressionPage() {
   // Hard 404 in production so this page never ships to end users.
+  // The dev-only body lives in an inner component so hooks always run in the
+  // same order under the same component identity (rules-of-hooks).
   if (!import.meta.env.DEV) return <NotFound />;
+  return <PostMenuRegressionPageInner />;
+}
 
+function PostMenuRegressionPageInner() {
   const { user } = useAuth();
   const [results, setResults] = useState<Record<string, CheckResult>>(() =>
     Object.fromEntries(ROWS.map((r) => [r.id, { state: "idle" } as CheckResult])),

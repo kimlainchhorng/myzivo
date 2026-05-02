@@ -53,7 +53,6 @@ import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
 import MessageSquareOff from "lucide-react/dist/esm/icons/message-square-off";
 import MessageSquare from "lucide-react/dist/esm/icons/message-square";
 import UserCheck from "lucide-react/dist/esm/icons/user-check";
-import Smile from "lucide-react/dist/esm/icons/smile";
 import Calendar from "lucide-react/dist/esm/icons/calendar";
 import Gift from "lucide-react/dist/esm/icons/gift";
 import TrendingUp from "lucide-react/dist/esm/icons/trending-up";
@@ -71,8 +70,6 @@ import BarChart2 from "lucide-react/dist/esm/icons/bar-chart-2";
 import Zap from "lucide-react/dist/esm/icons/zap";
 import QrCode from "lucide-react/dist/esm/icons/qr-code";
 import Download from "lucide-react/dist/esm/icons/download";
-import Flame from "lucide-react/dist/esm/icons/flame";
-import ThumbsUp from "lucide-react/dist/esm/icons/thumbs-up";
 import Tv2 from "lucide-react/dist/esm/icons/tv-2";
 import HandHeart from "lucide-react/dist/esm/icons/hand-heart";
 import Activity from "lucide-react/dist/esm/icons/activity";
@@ -4125,29 +4122,6 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
           </div>
         </div>
       )}
-
-      {/* Quick reactions strip — one-tap shortcuts above action bar */}
-      <div className="flex items-center gap-3 px-3 pt-2 pb-0.5">
-        {([
-          { Icon: Heart, activeColor: "text-red-500 fill-red-500", emoji: "❤️" },
-          { Icon: ThumbsUp, activeColor: "text-sky-500 fill-sky-500", emoji: "👍" },
-          { Icon: Smile, activeColor: "text-yellow-400", emoji: "😂" },
-          { Icon: Flame, activeColor: "text-orange-400 fill-orange-400", emoji: "🔥" },
-        ] as const).map(({ Icon, activeColor, emoji }) => {
-          const isChosen = selectedReaction === emoji;
-          return (
-            <button
-              key={emoji}
-              type="button"
-              onClick={() => setSelectedReaction(isChosen ? null : emoji)}
-              className="active:scale-125 transition-transform"
-              aria-label={emoji}
-            >
-              <Icon className={cn("h-5 w-5", isChosen ? activeColor : "text-muted-foreground/60")} />
-            </button>
-          );
-        })}
-      </div>
 
       {/* Action buttons — enhanced with counts */}
       <div className="flex items-center px-2.5 sm:px-3 py-1.5">
