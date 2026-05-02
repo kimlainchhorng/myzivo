@@ -1,6 +1,6 @@
 import { chromium } from 'playwright';
-import path from 'path';
-import { fileURLToPath } from 'url';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const AAB_PATH = path.resolve(__dirname, '../android/app/build/outputs/bundle/release/app-release.aab');
