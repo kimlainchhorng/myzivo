@@ -72,7 +72,8 @@ export function AIConciergeTrigger() {
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
           onClick={() => setIsOpen(true)}
-          className="fixed bottom-8 right-8 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-[0_0_30px_hsl(var(--primary)/0.3)] flex items-center justify-center z-50 group"
+          className="fixed right-4 sm:right-8 w-14 h-14 bg-primary text-primary-foreground rounded-full shadow-[0_0_30px_hsl(var(--primary)/0.3)] flex items-center justify-center z-50 group"
+          style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 96px)" }}
         >
           {/* Notification Badge */}
           {alertCount > 0 && (
@@ -95,7 +96,8 @@ export function AIConciergeTrigger() {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className="fixed bottom-6 right-6 z-50 w-[360px] h-[500px] bg-card/95 backdrop-blur-xl border border-border/50 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+            className="fixed right-2 sm:right-6 z-50 w-[calc(100vw-1rem)] sm:w-[360px] max-w-[360px] h-[min(500px,calc(100vh-12rem))] bg-card/95 backdrop-blur-xl border border-border/50 rounded-2xl shadow-2xl flex flex-col overflow-hidden"
+            style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 96px)" }}
           >
             {/* Header */}
             <div className="p-4 bg-gradient-to-r from-primary to-accent flex items-center justify-between">
