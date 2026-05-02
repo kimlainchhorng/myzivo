@@ -82,6 +82,7 @@ const ZivoMobileNav = lazy(() =>import("@/components/app/ZivoMobileNav"));
 const GiftAnimationOverlay = lazy(() =>import("@/components/live/GiftAnimationOverlay"));
 const CoinRechargeSheet = lazy(() =>import("@/components/live/CoinRechargeSheet"));
 const LiveWebRTCVideo = lazy(() =>import("@/components/live/LiveWebRTCVideo"));
+const DailyRewardCard = lazy(() =>import("@/components/live/DailyRewardCard"));
 
 interface LiveStream {
  id: string;
@@ -1151,6 +1152,11 @@ export default function LiveStreamPage() {
   <span className="text-[10px] font-black tracking-[0.2em] text-muted-foreground/80 uppercase">Community</span>
   <div className="h-px flex-1 bg-gradient-to-l from-transparent to-blue-500/30" />
 </div>
+
+ {/* Daily login coin bonus (real DB) */}
+<Suspense fallback={null}>
+<DailyRewardCard />
+</Suspense>
 
  {/* ─── Recently Watched / Continue Watching (real data) ─── */}
 {LIVE_FEATURE_FLAGS.recentlyWatched && recentlyWatched.length > 0 && (
