@@ -4,7 +4,7 @@
  */
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Bookmark, BookmarkCheck, VolumeX, UserX, Flag, Link2, Info, X, BarChart3, Pencil, Trash2 } from "lucide-react";
+import { Bookmark, BookmarkCheck, VolumeX, UserX, Flag, Link2, Info, X, BarChart3, Pencil, Trash2, EyeOff } from "lucide-react";
 import { toast } from "sonner";
 import type { PostActionTarget } from "@/hooks/usePostActions";
 
@@ -24,6 +24,8 @@ interface Props {
   onViewInsights?: () => void;
   onEditCaption?: () => void;
   onDeletePost?: () => void;
+  /** Hide this post locally (Not interested). Hidden when caller authored the post. */
+  onNotInterested?: () => void;
 }
 
 const REPORT_REASONS = [
@@ -42,6 +44,7 @@ export default function PostActionsMenu({
   onToggleBookmark, onMute, onBlock, onReport,
   shareUrl, authorName,
   isOwnPost, onViewInsights, onEditCaption, onDeletePost,
+  onNotInterested,
 }: Props) {
   const [view, setView] = useState<"main" | "report" | "why" | "confirm-delete">("main");
 
@@ -130,6 +133,14 @@ export default function PostActionsMenu({
                   label="Why am I seeing this?"
                   onClick={() => setView("why")}
                 />
+                {!isOwnPost && onNotInterested && (
+                  <MenuRow
+                    icon={<EyeOff className="h-5 w-5" />}
+                    label="Not interested"
+                    sub="Hide this post and show fewer like it"
+                    onClick={() => { onNotInterested(); handleClose(); }}
+                  />
+                )}
                 <hr className="my-2 border-border/50" />
                 {target.authorId && (
                   <>
