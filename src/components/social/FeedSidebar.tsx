@@ -376,7 +376,7 @@ export default function FeedSidebar() {
 
                 {isDriver && (
                   <button
-                    onClick={() => { setShowSwitch(false); navigate("/driver/dashboard"); }}
+                    onClick={() => { setShowSwitch(false); navigate("/driver/home"); }}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
                   >
                     <CarTaxiFront className="h-5 w-5 text-sky-500" />
@@ -386,7 +386,7 @@ export default function FeedSidebar() {
 
                 {isRestaurantOwner && (
                   <button
-                    onClick={() => { setShowSwitch(false); navigate("/restaurant/dashboard"); }}
+                    onClick={() => { setShowSwitch(false); navigate("/eats/restaurant-dashboard"); }}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
                   >
                     <ChefHat className="h-5 w-5 text-orange-500" />
