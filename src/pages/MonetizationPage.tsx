@@ -402,7 +402,7 @@ export default function MonetizationPage() {
                 key={item.step}
                 onClick={() => item.href && navigate(item.href)}
                 className="flex items-center gap-3 w-full text-left touch-manipulation"
-                disabled={!item.href && item.done}
+                disabled={!item.href || item.done}
               >
                 <div className={`w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-xs font-bold ${
                   item.done ? "bg-primary text-primary-foreground" : "bg-muted/50 text-muted-foreground"
