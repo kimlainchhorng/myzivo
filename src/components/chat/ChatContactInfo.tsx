@@ -4,7 +4,7 @@
  * Enhanced with shared media thumbnails, mutual friends, favorites
  */
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -13,8 +13,8 @@ import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import SafeCaption from "@/components/social/SafeCaption";
-import { Switch } from "@/components/ui/switch";
 import ChatBackupExport from "./ChatBackupExport";
+import MuteDurationSheet from "./MuteDurationSheet";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
 import Bell from "lucide-react/dist/esm/icons/bell";
 import BellOff from "lucide-react/dist/esm/icons/bell-off";
@@ -41,7 +41,22 @@ import StarOff from "lucide-react/dist/esm/icons/star-off";
 import Users from "lucide-react/dist/esm/icons/users";
 import Copy from "lucide-react/dist/esm/icons/copy";
 import ExternalLink from "lucide-react/dist/esm/icons/external-link";
+import Facebook from "lucide-react/dist/esm/icons/facebook";
+import Instagram from "lucide-react/dist/esm/icons/instagram";
+import Twitter from "lucide-react/dist/esm/icons/twitter";
+import Linkedin from "lucide-react/dist/esm/icons/linkedin";
+import Music2 from "lucide-react/dist/esm/icons/music-2";
+import Ghost from "lucide-react/dist/esm/icons/ghost";
+import Send from "lucide-react/dist/esm/icons/send";
+import Heart from "lucide-react/dist/esm/icons/heart";
 import { toast } from "sonner";
+import { openExternalUrl } from "@/lib/openExternalUrl";
+import onlyfansLogo from "@/assets/brand-logos/onlyfans.png";
+import Pin from "lucide-react/dist/esm/icons/pin";
+import Archive from "lucide-react/dist/esm/icons/archive";
+import Mail from "lucide-react/dist/esm/icons/mail";
+import { useThreadSettings, buildThreadId } from "@/hooks/useThreadSettings";
+import { useChatPrefs } from "@/hooks/useChatPrefs";
 
 type SharedMediaRow = {
   id: string;
@@ -75,6 +90,15 @@ type RecipientProfileRow = {
   email: string | null;
   city: string | null;
   country: string | null;
+  social_links_visible: boolean | null;
+  social_facebook: string | null;
+  social_onlyfans: string | null;
+  social_instagram: string | null;
+  social_tiktok: string | null;
+  social_snapchat: string | null;
+  social_x: string | null;
+  social_linkedin: string | null;
+  social_telegram: string | null;
 };
 
 const dbFrom = (table: string): any => (supabase as any).from(table);
@@ -116,11 +140,36 @@ export default function ChatContactInfo({
   onOpenFiles,
   onOpenLinks,
 }: ChatContactInfoProps) {
-  const [muteNotifs, setMuteNotifs] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [favoriteBusy, setFavoriteBusy] = useState(false);
   const [showExport, setShowExport] = useState(false);
+  const [showMuteSheet, setShowMuteSheet] = useState(false);
+
+  useEffect(() => {
+    if (!user?.id) return;
+    let alive = true;
+    (async () => {
+      const { data } = await dbFrom("user_favorites")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("item_type", "chat_user")
+        .eq("item_id", recipientId)
+        .maybeSingle();
+      if (alive) setIsFavorite(!!data);
+    })();
+    return () => { alive = false; };
+  }, [user?.id, recipientId]);
   const navigate = useNavigate();
   const { user } = useAuth();
+  const threadId = buildThreadId("dm", recipientId);
+  const { isPinned, isArchived, isMuted, pin, unpin, archive, unarchive, mute, setMode, get: getThread } = useThreadSettings();
+  const localPrefs = useChatPrefs(user?.id);
+  // Hub list reads useChatPrefs (localStorage, raw recipient id). Mirror state from there
+  // so the toggles below stay correct even before the cross-device row hydrates.
+  const pinned = isPinned(threadId) || localPrefs.isPinned(recipientId);
+  const archived = isArchived(threadId) || localPrefs.isArchived(recipientId);
+  const muted = isMuted(threadId) || localPrefs.isMuted(recipientId);
+  const notifMode = getThread(threadId).notification_mode;
 
   const initials = (recipientName || "U")
     .split(" ")
@@ -189,12 +238,33 @@ export default function ChatContactInfo({
     queryKey: ["recipient-profile", recipientId],
     queryFn: async () => {
       const { data } = await dbFrom("profiles")
-        .select("user_id, full_name, avatar_url, bio, email, city, country")
+        .select("user_id, full_name, avatar_url, bio, email, city, country, social_links_visible, social_facebook, social_onlyfans, social_instagram, social_tiktok, social_snapchat, social_x, social_linkedin, social_telegram")
         .eq("user_id", recipientId)
         .maybeSingle();
       return (data || null) as RecipientProfileRow | null;
     },
   });
+
+  const socialLinks = (() => {
+    if (!recipientProfile || recipientProfile.social_links_visible === false) return [] as { id: string; label: string; url: string }[];
+    const buildUrl = (raw: string | null, prefix: string): string | null => {
+      const v = (raw || "").trim();
+      if (!v) return null;
+      if (/^https?:\/\//i.test(v)) return v;
+      return prefix + v.replace(/^@/, "");
+    };
+    const items = [
+      { id: "facebook",  label: "Facebook",  url: buildUrl(recipientProfile.social_facebook,  "https://facebook.com/") },
+      { id: "onlyfans",  label: "OnlyFans",  url: buildUrl(recipientProfile.social_onlyfans,  "https://onlyfans.com/") },
+      { id: "instagram", label: "Instagram", url: buildUrl(recipientProfile.social_instagram, "https://instagram.com/") },
+      { id: "x",         label: "X",         url: buildUrl(recipientProfile.social_x,         "https://x.com/") },
+      { id: "tiktok",    label: "TikTok",    url: buildUrl(recipientProfile.social_tiktok,    "https://tiktok.com/@") },
+      { id: "snapchat",  label: "Snapchat",  url: buildUrl(recipientProfile.social_snapchat,  "https://snapchat.com/add/") },
+      { id: "linkedin",  label: "LinkedIn",  url: buildUrl(recipientProfile.social_linkedin,  "https://linkedin.com/in/") },
+      { id: "telegram",  label: "Telegram",  url: buildUrl(recipientProfile.social_telegram,  "https://t.me/") },
+    ];
+    return items.filter((x): x is { id: string; label: string; url: string } => !!x.url);
+  })();
 
   const handleViewProfile = () => {
     onClose();
@@ -203,6 +273,7 @@ export default function ChatContactInfo({
 
   const handleBlock = () => {
     toast.info(`Block ${recipientName}?`, {
+      description: "Conversation will also be archived and muted.",
       action: {
         label: "Block",
         onClick: async () => {
@@ -213,6 +284,12 @@ export default function ChatContactInfo({
             toast.error("Could not block");
             return;
           }
+          // Defensive UX: hide the conversation and silence pings on block.
+          try {
+            if (!localPrefs.isArchived(recipientId)) localPrefs.toggleArchive(recipientId);
+            if (!localPrefs.isMuted(recipientId)) localPrefs.toggleMute(recipientId);
+            await Promise.all([archive(threadId), mute(threadId, 0)]);
+          } catch { /* non-fatal; block already succeeded */ }
           toast.success(`${recipientName} blocked`);
         },
       },
@@ -235,7 +312,13 @@ export default function ChatContactInfo({
             toast.error("Could not submit report");
             return;
           }
-          toast.success("Report submitted");
+          toast.success("Report submitted", {
+            description: `Want to block ${recipientName} too?`,
+            action: {
+              label: "Block",
+              onClick: handleBlock,
+            },
+          });
         },
       },
     });
@@ -280,9 +363,36 @@ export default function ChatContactInfo({
     toast.success("Profile link copied");
   };
 
-  const toggleFavorite = () => {
-    setIsFavorite(!isFavorite);
-    toast.success(isFavorite ? "Removed from favorites" : "Added to favorites");
+  const toggleFavorite = async () => {
+    if (!user?.id || favoriteBusy) return;
+    setFavoriteBusy(true);
+    const next = !isFavorite;
+    setIsFavorite(next);
+    try {
+      if (next) {
+        const { error } = await dbFrom("user_favorites").insert({
+          user_id: user.id,
+          item_type: "chat_user",
+          item_id: recipientId,
+          item_data: { name: recipientName, avatar_url: recipientAvatar },
+        });
+        if (error && !String(error.message).match(/duplicate|unique/i)) throw error;
+        toast.success("Added to favorites");
+      } else {
+        const { error } = await dbFrom("user_favorites")
+          .delete()
+          .eq("user_id", user.id)
+          .eq("item_type", "chat_user")
+          .eq("item_id", recipientId);
+        if (error) throw error;
+        toast.success("Removed from favorites");
+      }
+    } catch (e) {
+      setIsFavorite(!next);
+      toast.error("Couldn't update favorite");
+    } finally {
+      setFavoriteBusy(false);
+    }
   };
 
   return (
@@ -432,6 +542,55 @@ export default function ChatContactInfo({
           </>
         )}
 
+        {/* Social Links — recipient's external profiles (Facebook, OnlyFans, Instagram, etc.) */}
+        {socialLinks.length > 0 && (
+          <>
+            <Section title="Social Links">
+              <div className="px-4 pb-3 grid grid-cols-2 gap-2">
+                {socialLinks.map((link) => {
+                  const meta = SOCIAL_META[link.id];
+                  if (!meta) return null;
+                  const Icon = meta.icon;
+                  return (
+                    <button
+                      key={link.id}
+                      onClick={async () => {
+                        try { await openExternalUrl(link.url); }
+                        catch { toast.error("Couldn't open link"); }
+                      }}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-muted/40 active:scale-[0.98] active:bg-muted/60 transition-all"
+                    >
+                      <div className={`w-9 h-9 rounded-xl ${meta.color} flex items-center justify-center flex-shrink-0 overflow-hidden ${meta.brandImage ? "border border-border/40" : ""}`}>
+                        {meta.brandImage ? (
+                          <img src={meta.brandImage} alt={link.label} className="w-7 h-7 object-contain" />
+                        ) : (
+                          <Icon className="w-[16px] h-[16px] text-white" />
+                        )}
+                      </div>
+                      <div className="min-w-0 flex-1 text-left">
+                        <p className="text-[13px] font-semibold text-foreground">{link.label}</p>
+                        <p className="text-[11px] text-muted-foreground truncate">{link.url.replace(/^https?:\/\//, "")}</p>
+                      </div>
+                      <ExternalLink className="w-3.5 h-3.5 text-muted-foreground/60 flex-shrink-0" />
+                    </button>
+                  );
+                })}
+              </div>
+              <button
+                onClick={() => {
+                  const text = socialLinks.map((l) => `${l.label}: ${l.url}`).join("\n");
+                  navigator.clipboard.writeText(text);
+                  toast.success(`Copied ${socialLinks.length} link${socialLinks.length > 1 ? "s" : ""}`);
+                }}
+                className="w-full px-4 pb-3 -mt-1 text-[12px] font-semibold text-primary text-center active:opacity-70"
+              >
+                Copy all links
+              </button>
+            </Section>
+            <div className="h-[6px] bg-muted/30" />
+          </>
+        )}
+
         {/* Mutual Friends */}
         {mutualFriends.length > 0 && (
           <>
@@ -486,6 +645,45 @@ export default function ChatContactInfo({
 
           {/* Customize section */}
           <Section title="Customize Chat">
+            <SectionButton
+              icon={Pin}
+              label={pinned ? "Unpin Conversation" : "Pin Conversation"}
+              onClick={async () => {
+                if (pinned) {
+                  if (localPrefs.isPinned(recipientId)) localPrefs.togglePin(recipientId);
+                  await unpin(threadId);
+                  toast.success("Conversation unpinned");
+                } else {
+                  if (!localPrefs.isPinned(recipientId)) localPrefs.togglePin(recipientId);
+                  await pin(threadId);
+                  toast.success("Pinned to top");
+                }
+              }}
+            />
+            <SectionButton
+              icon={Mail}
+              label={localPrefs.isMarkedUnread(recipientId) ? "Mark as Read" : "Mark as Unread"}
+              onClick={() => {
+                const wasUnread = localPrefs.isMarkedUnread(recipientId);
+                localPrefs.toggleMarkUnread(recipientId);
+                toast.success(wasUnread ? "Marked as read" : "Marked as unread");
+              }}
+            />
+            <SectionButton
+              icon={Archive}
+              label={archived ? "Unarchive Conversation" : "Archive Conversation"}
+              onClick={async () => {
+                if (archived) {
+                  if (localPrefs.isArchived(recipientId)) localPrefs.toggleArchive(recipientId);
+                  await unarchive(threadId);
+                  toast.success("Restored from archive");
+                } else {
+                  if (!localPrefs.isArchived(recipientId)) localPrefs.toggleArchive(recipientId);
+                  await archive(threadId);
+                  toast.success("Conversation archived");
+                }
+              }}
+            />
             <SectionButton icon={Palette} label="Theme & Wallpaper" chevron onClick={onOpenPersonalization} />
             <SectionButton icon={Zap} label="Mini Apps" chevron onClick={onOpenMiniApps} />
             <SectionButton icon={History} label="Call History" chevron onClick={onOpenCallHistory} />
@@ -498,26 +696,71 @@ export default function ChatContactInfo({
 
           {/* Notifications */}
           <Section title="Notifications">
-            <div className="flex items-center justify-between px-4 py-3.5">
+            <button
+              onClick={() => setShowMuteSheet(true)}
+              className="w-full flex items-center justify-between px-4 py-3.5 active:bg-muted/40 transition-colors"
+            >
               <div className="flex items-center gap-3.5">
                 <div className="h-10 w-10 rounded-full bg-muted/50 flex items-center justify-center">
-                  {muteNotifs ? (
+                  {muted ? (
                     <BellOff className="h-[16px] w-[16px] text-muted-foreground" />
                   ) : (
                     <Bell className="h-[16px] w-[16px] text-muted-foreground" />
                   )}
                 </div>
-                <span className="text-[14.5px] font-medium text-foreground">
-                  Mute Notifications
-                </span>
+                <div className="text-left">
+                  <p className="text-[14.5px] font-medium text-foreground">
+                    {muted ? "Notifications muted" : "Mute Notifications"}
+                  </p>
+                  {muted && (() => {
+                    const until = getThread(threadId).muted_until;
+                    if (!until) return null;
+                    if (until.startsWith("2099")) return <p className="text-[11px] text-muted-foreground mt-0.5">Forever — tap to change</p>;
+                    return <p className="text-[11px] text-muted-foreground mt-0.5">Until {new Date(until).toLocaleString(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" })}</p>;
+                  })()}
+                </div>
               </div>
-              <Switch
-                checked={muteNotifs}
-                onCheckedChange={(v) => {
-                  setMuteNotifs(v);
-                  toast.success(v ? "Notifications muted" : "Notifications unmuted");
-                }}
-              />
+              <ChevronRight className="h-[18px] w-[18px] text-muted-foreground/40" />
+            </button>
+            <MuteDurationSheet
+              open={showMuteSheet}
+              onClose={() => setShowMuteSheet(false)}
+              isMuted={muted}
+              threadName={recipientName}
+              onPick={async (hours) => {
+                if (hours < 0) {
+                  if (localPrefs.isMuted(recipientId)) localPrefs.toggleMute(recipientId);
+                  await mute(threadId, -1);
+                  toast.success("Unmuted");
+                } else {
+                  if (!localPrefs.isMuted(recipientId)) localPrefs.toggleMute(recipientId);
+                  await mute(threadId, hours);
+                  toast.success(hours === 0 ? "Muted forever" : `Muted for ${hours < 24 ? `${hours}h` : hours === 24 ? "1 day" : `${hours / 24} days`}`);
+                }
+              }}
+            />
+            <div className="px-4 py-3 flex items-center justify-between gap-3">
+              <span className="text-[12.5px] font-semibold text-muted-foreground uppercase tracking-wide">
+                Notification Mode
+              </span>
+              <div className="flex bg-muted/40 rounded-full p-0.5">
+                {(["all", "mentions", "none"] as const).map((m) => (
+                  <button
+                    key={m}
+                    onClick={async () => {
+                      await setMode(threadId, m);
+                      toast.success(m === "all" ? "All messages" : m === "mentions" ? "Mentions only" : "Silenced");
+                    }}
+                    className={`px-3 py-1.5 rounded-full text-[12px] font-semibold transition-colors ${
+                      notifMode === m
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                    }`}
+                  >
+                    {m === "all" ? "All" : m === "mentions" ? "Mentions" : "Off"}
+                  </button>
+                ))}
+              </div>
             </div>
             <SectionButton
               icon={MessageCircle}
@@ -565,6 +808,17 @@ export default function ChatContactInfo({
 }
 
 /* ─── Helpers ─── */
+
+const SOCIAL_META: Record<string, { icon: React.ComponentType<{ className?: string }>; color: string; brandImage?: string }> = {
+  facebook:  { icon: Facebook,  color: "bg-[#1877F2]" },
+  onlyfans:  { icon: Heart,     color: "bg-white", brandImage: onlyfansLogo },
+  instagram: { icon: Instagram, color: "bg-gradient-to-br from-[#F58529] via-[#DD2A7B] to-[#8134AF]" },
+  x:         { icon: Twitter,   color: "bg-black" },
+  tiktok:    { icon: Music2,    color: "bg-black" },
+  snapchat:  { icon: Ghost,     color: "bg-[#FFFC00]" },
+  linkedin:  { icon: Linkedin,  color: "bg-[#0A66C2]" },
+  telegram:  { icon: Send,      color: "bg-[#229ED9]" },
+};
 
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
