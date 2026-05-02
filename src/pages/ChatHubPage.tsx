@@ -311,7 +311,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string; category: ChatCategory } | null>(null);
   const [swipedId, setSwipedId] = useState<string | null>(null);
   const [openShopChat, setOpenShopChat] = useState<{ storeId: string; name: string; logo?: string | null } | null>(null);
-  const [openPersonalChat, setOpenPersonalChat] = useState<{ id: string; name: string; avatar?: string | null; isVerified?: boolean } | null>(null);
+  const [openPersonalChat, setOpenPersonalChat] = useState<{ id: string; name: string; avatar?: string | null; isVerified?: boolean; prefillInput?: string } | null>(null);
   const [openGroupChat, setOpenGroupChat] = useState<{ id: string; name: string; avatar?: string | null } | null>(null);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const location = useLocation();
@@ -385,13 +385,18 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   const hasRestoredLastChatRef = useRef(false);
   useEffect(() => {
     const state = location.state as {
-      openChat?: { recipientId: string; recipientName: string; recipientAvatar?: string | null };
+      openChat?: { recipientId: string; recipientName: string; recipientAvatar?: string | null; prefillInput?: string };
       startCall?: "voice" | "video";
       shareUrl?: string;
       shareText?: string;
     } | null;
     if (state?.openChat) {
-      setOpenPersonalChat({ id: state.openChat.recipientId, name: state.openChat.recipientName, avatar: state.openChat.recipientAvatar });
+      setOpenPersonalChat({
+        id: state.openChat.recipientId,
+        name: state.openChat.recipientName,
+        avatar: state.openChat.recipientAvatar,
+        prefillInput: state.openChat.prefillInput,
+      });
       if (state.startCall) {
         setPendingCall(state.startCall);
       }
@@ -402,7 +407,12 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
       setActive("personal");
       window.history.replaceState({}, document.title);
     }
-  }, [location.state]);
+    // Deep-link: /chat/saved opens the self-chat (Saved Messages)
+    if (location.pathname === "/chat/saved" && user?.id) {
+      setActive("personal");
+      setOpenPersonalChat({ id: user.id, name: "Saved Messages", avatar: null, isVerified: false });
+    }
+  }, [location.state, location.pathname, user?.id]);
 
   useEffect(() => {
     if (hasRestoredLastChatRef.current || !user?.id) return;
@@ -822,7 +832,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   }, [actionsTarget, customFolders, customFolderMemberMap]);
 
   const currentCategory = categories.find((c) => c.id === active)!;
-  const { prefs, isPinned, isMuted, isArchived, togglePin, toggleMute, toggleArchive, setPrefs } = useChatPrefs(user?.id);
+  const { prefs, isPinned, isMuted, isArchived, isMarkedUnread, togglePin, toggleMute, toggleArchive, toggleMarkUnread, setMarkedUnread, setPrefs } = useChatPrefs(user?.id);
 
   // Live presence dots for visible personal partners
   const personalPartnerIds = useMemo(
@@ -910,7 +920,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
       const members = customFolderMemberMap.get(customFolderId);
       return members?.has(c.id) === true;
     }
-    if (folder === "unread") return (c.unread || 0) > 0;
+    if (folder === "unread") return (c.unread || 0) > 0 || isMarkedUnread(c.id);
     if (folder === "personal") return !(c as any).isGroup;
     if (folder === "groups") return !!(c as any).isGroup;
     return true;
@@ -1903,6 +1913,8 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                     handleShareToContact(chat.id, chat.name, chat.avatar);
                                     return;
                                   }
+                                  // Opening a chat clears any "marked unread" flag (Telegram parity)
+                                  if (isMarkedUnread(chat.id)) setMarkedUnread(chat.id, false);
                                   if (active === "shop") {
                                     setOpenShopChat({ storeId: chat.storeId, name: chat.name, logo: chat.avatar });
                                   } else if (active === "personal") {
@@ -2001,6 +2013,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                                 isMuted: muted,
                                                 isArchived: isArchived(chat.id),
                                                 hasUnread: (chat.unread || 0) > 0,
+                                                isMarkedUnread: isMarkedUnread(chat.id),
                                               });
                                             }}
                                             className="ml-0.5 w-6 h-6 rounded-full hover:bg-muted flex items-center justify-center cursor-pointer"
@@ -2089,14 +2102,23 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                         );
                                       })()}
                                     </div>
-                                    {chat.unread > 0 && (
+                                    {chat.unread > 0 ? (
                                       <span className={cn(
                                         "min-w-[22px] h-[22px] px-1.5 text-[11px] font-bold rounded-full flex items-center justify-center flex-shrink-0 shadow-sm",
                                         muted ? "bg-muted-foreground/30 text-foreground" : "bg-primary text-primary-foreground"
                                       )}>
                                         {chat.unread > 99 ? "99+" : chat.unread}
                                       </span>
-                                    )}
+                                    ) : isMarkedUnread(chat.id) ? (
+                                      // Manually marked unread — small dot, no count (Telegram parity)
+                                      <span
+                                        className={cn(
+                                          "w-2.5 h-2.5 rounded-full flex-shrink-0",
+                                          muted ? "bg-muted-foreground/40" : "bg-primary"
+                                        )}
+                                        aria-label="Marked as unread"
+                                      />
+                                    ) : null}
                                   </div>
                                 </div>
                               </button>
@@ -2317,10 +2339,17 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
         onToggleMute={() => actionsTarget && (toggleMute(actionsTarget.id), toast.success(actionsTarget.isMuted ? "Unmuted" : "Muted"))}
         onMarkRead={async () => {
           if (!actionsTarget || !user) return;
+          // Clear the manual flag too so toggling read drops the unread dot
+          if (isMarkedUnread(actionsTarget.id)) setMarkedUnread(actionsTarget.id, false);
           await supabase.from("direct_messages").update({ is_read: true })
             .eq("receiver_id", user.id).eq("sender_id", actionsTarget.id).eq("is_read", false);
           queryClient.invalidateQueries({ queryKey: ["chat-hub-personal"] });
           toast.success("Marked as read");
+        }}
+        onMarkUnread={() => {
+          if (!actionsTarget) return;
+          toggleMarkUnread(actionsTarget.id);
+          toast.success("Marked as unread");
         }}
         onToggleArchive={() => actionsTarget && (toggleArchive(actionsTarget.id), toast.success(actionsTarget.isArchived ? "Unarchived" : "Archived"))}
         onClearHistory={async () => {
@@ -2471,6 +2500,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
               recipientName={openPersonalChat.name}
               recipientAvatar={openPersonalChat.avatar}
               recipientIsVerified={openPersonalChat.isVerified === true}
+              prefillInput={openPersonalChat.prefillInput}
               onClose={() => { setOpenPersonalChat(null); setPendingCall(null); queryClient.invalidateQueries({ queryKey: ["chat-hub-personal"] }); }}
               autoStartCall={pendingCall}
               onCallStarted={() => setPendingCall(null)}
