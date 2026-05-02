@@ -46,6 +46,16 @@ const TravelItineraryCard = lazy(() => import("@/components/home/widgets/TravelI
 const ActivityTimeline = lazy(() => import("@/components/shared/ActivityTimeline"));
 const ZivoMobileNav = lazy(() => import("@/components/app/ZivoMobileNav"));
 const UniversalSearchOverlay = lazy(() => import("@/components/search/UniversalSearchOverlay"));
+const ServicesHubGrid = lazy(() => import("@/components/home/ServicesHubGrid"));
+const PlanTripBundle = lazy(() => import("@/components/home/PlanTripBundle"));
+const SmartIntentSearch = lazy(() => import("@/components/home/SmartIntentSearch"));
+const NetworkPromoStrip = lazy(() => import("@/components/home/NetworkPromoStrip"));
+const ConciergeLauncher = lazy(() => import("@/components/home/ConciergeLauncher"));
+const TodayPlanWidget = lazy(() => import("@/components/home/TodayPlanWidget"));
+const NotificationsPeek = lazy(() => import("@/components/home/NotificationsPeek"));
+const SpendTrackerWidget = lazy(() => import("@/components/home/SpendTrackerWidget"));
+const QuickReorderWidget = lazy(() => import("@/components/home/QuickReorderWidget"));
+const InsightsCard = lazy(() => import("@/components/home/InsightsCard"));
 
 // Icons used below-fold (still small, but needed)
 import Utensils from "lucide-react/dist/esm/icons/utensils";
@@ -90,6 +100,7 @@ import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { useSavedLocations } from "@/hooks/useSavedLocations";
 import { useCustomerActivityFeed } from "@/hooks/useCustomerActivityFeed";
 import { destinationPhotos } from "@/config/photos";
+import PartnerBadge from "@/components/shared/PartnerBadge";
 import { useDestinationPrices } from "@/hooks/useDestinationPrices";
 import { useHotDeals, type HotDeal } from "@/hooks/useHotDeals";
 import { getRestaurantPhoto } from "@/config/restaurantPhotos";
@@ -162,6 +173,7 @@ const RestaurantCard = ({ restaurant, onNavigate }: { restaurant: HomeRestaurant
           <span className="text-[10px] font-bold text-primary-foreground">{restaurant.rating.toFixed(1)}</span>
         </div>
       )}
+      <PartnerBadge size="xs" className="absolute top-2 left-2 shadow-sm" />
       <div className="absolute top-2 right-2 w-7 h-7 rounded-full bg-white/10 backdrop-blur-xl flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
         <Heart className="w-3.5 h-3.5 text-primary-foreground" />
       </div>
@@ -527,6 +539,56 @@ const AppHome = () => {
               </div>
             </motion.button>
           </div>
+
+          {/* ─── SMART INTENT SEARCH ─── */}
+          <Suspense fallback={<div className="h-[68px]" />}>
+            <SmartIntentSearch />
+          </Suspense>
+
+          {/* ─── TODAY'S PLAN ─── */}
+          <Suspense fallback={null}>
+            <TodayPlanWidget />
+          </Suspense>
+
+          {/* ─── UNIFIED SERVICES HUB (Rides · Eats · Flights · Hotels) ─── */}
+          <Suspense fallback={<div className="h-[120px]" />}>
+            <ServicesHubGrid />
+          </Suspense>
+
+          {/* ─── ZIVO CONCIERGE ─── */}
+          <Suspense fallback={<div className="h-[140px]" />}>
+            <ConciergeLauncher />
+          </Suspense>
+
+          {/* ─── PLAN A TRIP BUNDLE ─── */}
+          <Suspense fallback={<div className="h-[140px]" />}>
+            <PlanTripBundle />
+          </Suspense>
+
+          {/* ─── ZIVO NETWORK PROMO ─── */}
+          <Suspense fallback={<div className="h-[68px]" />}>
+            <NetworkPromoStrip />
+          </Suspense>
+
+          {/* ─── RECENT ACTIVITY PEEK ─── */}
+          <Suspense fallback={null}>
+            <NotificationsPeek />
+          </Suspense>
+
+          {/* ─── QUICK REORDER (last delivered meal) ─── */}
+          <Suspense fallback={null}>
+            <QuickReorderWidget />
+          </Suspense>
+
+          {/* ─── SPEND TRACKER (this month) ─── */}
+          <Suspense fallback={null}>
+            <SpendTrackerWidget />
+          </Suspense>
+
+          {/* ─── BUNDLE INSIGHTS ─── */}
+          <Suspense fallback={null}>
+            <InsightsCard />
+          </Suspense>
 
           {/* ─── SAVED PLACES QUICK ACCESS ─── */}
           {user && savedLocations && savedLocations.length > 0 && (
