@@ -13,7 +13,7 @@ import {
   Headphones, MessageSquare, UserPlus, Wallet, Car, Map, UserCheck, UserX,
   PhoneOff, Megaphone, Globe, BarChart2, Film, Flag, ShieldAlert, MessageCircle,
   ShieldCheck, Lock, UserCog, Sliders, Rocket, Smartphone, Monitor, CheckCircle,
-  Package, RotateCcw, Zap, Eye, Radio, TrendingUp, Inbox,
+  Package, RotateCcw, Zap, Eye, Radio, TrendingUp, Inbox, History as HistoryIcon, Ban,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -103,9 +103,15 @@ const adminNavEntries: NavEntry[] = [
 
   {
     label: "Security", icon: ShieldAlert, children: [
+      { label: "Overview", icon: ShieldCheck, path: "/admin/security" },
       { label: "Chat Security", icon: MessageCircle, path: "/admin/chat-security" },
       { label: "Sentinel", icon: ShieldCheck, path: "/admin/security-sentinel" },
       { label: "Auth Shield", icon: Lock, path: "/admin/auth-shield" },
+      { label: "Blocked Links", icon: Ban, path: "/admin/security/blocked-links" },
+      { label: "Threat History", icon: HistoryIcon, path: "/admin/security/threat-history" },
+      { label: "CSP Violations", icon: ShieldAlert, path: "/admin/security/csp-violations" },
+      { label: "Audit Log", icon: Activity, path: "/admin/security/audit" },
+      { label: "Notifications", icon: Bell, path: "/admin/security/notifications" },
     ],
   },
 
