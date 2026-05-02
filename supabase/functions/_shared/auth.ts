@@ -8,7 +8,8 @@
  * `withErrorHandling` from ./errors.ts to translate into a 401 response.
  */
 import { createClient, type SupabaseClient } from "./deps.ts";
-import { UnauthorizedError } from "./errors.ts";
+import { HttpError, UnauthorizedError } from "./errors.ts";
+import { isUserBlocked } from "./threatIntel.ts";
 
 export interface AuthContext {
   userId: string;
@@ -102,10 +103,26 @@ export function requireAal2(claims: Record<string, unknown>): void {
 }
 
 /**
- * Convenience: authenticate AND enforce AAL2 in one call.
+ * Throws HttpError(403) if the authenticated user is on the user_blocklist.
+ *
+ * Reuse this anywhere a handler has resolved a userId — it short-circuits
+ * suspended/compromised accounts before they can do any further work. The
+ * lookup is cheap (in-isolate cache, ~60s TTL) and fails open on RPC error.
+ */
+export async function requireUserNotBlocked(userId: string): Promise<void> {
+  if (await isUserBlocked(userId)) {
+    throw new HttpError(403, "Account suspended", { code: "user_blocked" });
+  }
+}
+
+/**
+ * Convenience: authenticate, enforce user-blocklist, AND enforce AAL2 in one
+ * call. The blocklist check runs before AAL2 so a suspended account can't
+ * progress to MFA prompts.
  */
 export async function requireUserMfa(req: Request): Promise<AuthContext> {
   const ctx = await requireUser(req);
+  await requireUserNotBlocked(ctx.userId);
   requireAal2(ctx.claims);
   return ctx;
 }
