@@ -4,10 +4,10 @@
  * or initiate Stripe checkout for paid tiers.
  */
 import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Crown, Check, Sparkles, Loader2, Gift } from "lucide-react";
+import { Crown, Check, Sparkles, Loader2, Gift, BadgeCheck, Settings2 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -25,8 +25,10 @@ interface Props {
 export default function CreatorTiersSubscribe({ creatorId, creatorName, isOwnProfile }: Props) {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [joining, setJoining] = useState<string | null>(null);
   const [pwywTier, setPwywTier] = useState<any | null>(null);
+  const [welcomeFor, setWelcomeFor] = useState<{ name: string; message: string } | null>(null);
   const [pwywAmount, setPwywAmount] = useState("");
 
   const { data: tiers = [], isLoading } = useQuery({
@@ -43,6 +45,24 @@ export default function CreatorTiersSubscribe({ creatorId, creatorName, isOwnPro
     },
     enabled: !!creatorId,
   });
+
+  const { data: mySubscription } = useQuery({
+    queryKey: ["my-active-subscription", creatorId, user?.id],
+    queryFn: async () => {
+      const { data, error } = await (supabase as any)
+        .from("creator_subscriptions")
+        .select("id, tier_id, expires_at")
+        .eq("creator_id", creatorId)
+        .eq("subscriber_id", user!.id)
+        .eq("status", "active")
+        .maybeSingle();
+      if (error) throw error;
+      return data as { id: string; tier_id: string | null; expires_at: string | null } | null;
+    },
+    enabled: !!creatorId && !!user && !isOwnProfile,
+  });
+
+  const subscribedTierId = mySubscription?.tier_id ?? null;
 
   if (isLoading || tiers.length === 0) return null;
 
@@ -73,6 +93,14 @@ export default function CreatorTiersSubscribe({ creatorId, creatorName, isOwnPro
         });
         if (error) throw error;
         toast.success(`Joined ${tier.name}`);
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["my-active-subscription", creatorId, user?.id] }),
+          queryClient.invalidateQueries({ queryKey: ["my-subscriptions", user?.id] }),
+          queryClient.invalidateQueries({ queryKey: ["creator-top-supporters", creatorId] }),
+        ]);
+        if (tier.welcome_message) {
+          setWelcomeFor({ name: tier.name, message: tier.welcome_message });
+        }
       } else {
         const { data, error } = await (supabase as any).functions.invoke("subscribe-to-tier", {
           body: {
@@ -87,6 +115,14 @@ export default function CreatorTiersSubscribe({ creatorId, creatorName, isOwnPro
           return;
         }
         toast.success("Subscription started");
+        await Promise.all([
+          queryClient.invalidateQueries({ queryKey: ["my-active-subscription", creatorId, user?.id] }),
+          queryClient.invalidateQueries({ queryKey: ["my-subscriptions", user?.id] }),
+          queryClient.invalidateQueries({ queryKey: ["creator-top-supporters", creatorId] }),
+        ]);
+        if (tier.welcome_message) {
+          setWelcomeFor({ name: tier.name, message: tier.welcome_message });
+        }
       }
     } catch (e: any) {
       toast.error(e.message || "Failed to subscribe");
@@ -171,21 +207,33 @@ export default function CreatorTiersSubscribe({ creatorId, creatorName, isOwnPro
           )}
 
           {!isOwnProfile && (
-            <button
-              onClick={() => handleSubscribe(tier)}
-              disabled={joining === tier.id}
-              className="w-full mt-4 bg-white text-black font-extrabold uppercase tracking-wide rounded-full py-3 text-sm hover:bg-white/90 active:scale-[0.99] transition shadow disabled:opacity-60 flex items-center justify-center gap-2"
-            >
-              {joining === tier.id ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
-              ) : tier.is_free ? (
-                "JOIN FOR FREE"
-              ) : tier.trial_days > 0 ? (
-                `START ${tier.trial_days}-DAY FREE TRIAL`
-              ) : (
-                "SUBSCRIBE"
-              )}
-            </button>
+            subscribedTierId === tier.id ? (
+              <button
+                onClick={() => navigate("/account/subscriptions")}
+                className="w-full mt-4 bg-white/15 backdrop-blur text-white font-extrabold uppercase tracking-wide rounded-full py-3 text-sm border border-white/30 active:scale-[0.99] transition flex items-center justify-center gap-2"
+              >
+                <BadgeCheck className="w-4 h-4" />
+                Subscribed · Manage
+              </button>
+            ) : (
+              <button
+                onClick={() => handleSubscribe(tier)}
+                disabled={joining === tier.id || !!subscribedTierId}
+                className="w-full mt-4 bg-white text-black font-extrabold uppercase tracking-wide rounded-full py-3 text-sm hover:bg-white/90 active:scale-[0.99] transition shadow disabled:opacity-60 flex items-center justify-center gap-2"
+              >
+                {joining === tier.id ? (
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                ) : subscribedTierId ? (
+                  "SWITCH TIER"
+                ) : tier.is_free ? (
+                  "JOIN FOR FREE"
+                ) : tier.trial_days > 0 ? (
+                  `START ${tier.trial_days}-DAY FREE TRIAL`
+                ) : (
+                  "SUBSCRIBE"
+                )}
+              </button>
+            )
           )}
         </div>
       </motion.div>
@@ -221,13 +269,23 @@ export default function CreatorTiersSubscribe({ creatorId, creatorName, isOwnPro
           </p>
         </div>
         {!isOwnProfile && (
-          <button
-            onClick={() => handleSubscribe(tier)}
-            disabled={joining === tier.id}
-            className="text-[11px] font-extrabold uppercase tracking-wide px-3 py-2 rounded-full bg-foreground text-background hover:opacity-90 active:scale-95 transition disabled:opacity-50 flex items-center gap-1"
-          >
-            {joining === tier.id ? <Loader2 className="w-3 h-3 animate-spin" /> : tier.is_free ? "Join" : "Subscribe"}
-          </button>
+          subscribedTierId === tier.id ? (
+            <button
+              onClick={() => navigate("/account/subscriptions")}
+              className="text-[11px] font-extrabold uppercase tracking-wide px-3 py-2 rounded-full bg-emerald-500/15 text-emerald-600 border border-emerald-500/30 active:scale-95 transition flex items-center gap-1"
+            >
+              <BadgeCheck className="w-3 h-3" />
+              Joined
+            </button>
+          ) : (
+            <button
+              onClick={() => handleSubscribe(tier)}
+              disabled={joining === tier.id || !!subscribedTierId}
+              className="text-[11px] font-extrabold uppercase tracking-wide px-3 py-2 rounded-full bg-foreground text-background hover:opacity-90 active:scale-95 transition disabled:opacity-50 flex items-center gap-1"
+            >
+              {joining === tier.id ? <Loader2 className="w-3 h-3 animate-spin" /> : subscribedTierId ? "Switch" : tier.is_free ? "Join" : "Subscribe"}
+            </button>
+          )
         )}
       </div>
     );
@@ -237,17 +295,34 @@ export default function CreatorTiersSubscribe({ creatorId, creatorName, isOwnPro
     <div className="px-4 max-w-3xl mx-auto mt-4 mb-6">
       <div className="flex items-center justify-between mb-3">
         <h3 className="text-sm font-extrabold uppercase tracking-wider flex items-center gap-1.5">
-          <Crown className="w-4 h-4 text-primary" />
-          Subscribe
+          {subscribedTierId ? (
+            <>
+              <BadgeCheck className="w-4 h-4 text-emerald-500" />
+              Your subscription
+            </>
+          ) : (
+            <>
+              <Crown className="w-4 h-4 text-primary" />
+              Subscribe
+            </>
+          )}
         </h3>
-        {isOwnProfile && (
+        {isOwnProfile ? (
           <button
             onClick={() => navigate("/creator/setup?step=tier")}
             className="text-[11px] font-semibold text-primary hover:underline"
           >
             Manage tiers
           </button>
-        )}
+        ) : subscribedTierId ? (
+          <button
+            onClick={() => navigate("/account/subscriptions")}
+            className="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1"
+          >
+            <Settings2 className="w-3 h-3" />
+            Manage
+          </button>
+        ) : null}
       </div>
 
       {featured && <FeaturedCard tier={featured} />}
@@ -299,6 +374,31 @@ export default function CreatorTiersSubscribe({ creatorId, creatorName, isOwnPro
               className="font-bold"
             >
               {joining === pwywTier?.id ? <Loader2 className="w-4 h-4 animate-spin" /> : "Continue"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Welcome message dialog from creator */}
+      <Dialog open={!!welcomeFor} onOpenChange={(o) => !o && setWelcomeFor(null)}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Gift className="w-5 h-5 text-rose-500" />
+              Welcome to {welcomeFor?.name}
+            </DialogTitle>
+          </DialogHeader>
+          <div className="rounded-2xl border border-border/40 bg-gradient-to-br from-rose-500/10 via-amber-500/5 to-transparent p-4">
+            <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground mb-1.5">
+              A note from {creatorName || "the creator"}
+            </p>
+            <p className="text-sm text-foreground/90 leading-relaxed whitespace-pre-wrap break-words">
+              {welcomeFor?.message}
+            </p>
+          </div>
+          <DialogFooter>
+            <Button onClick={() => setWelcomeFor(null)} className="font-bold w-full">
+              Thanks!
             </Button>
           </DialogFooter>
         </DialogContent>
