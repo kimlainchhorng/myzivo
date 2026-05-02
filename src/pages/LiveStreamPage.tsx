@@ -78,6 +78,10 @@ import { LIVE_FEATURE_FLAGS } from "@/config/liveFeatureFlags";
 import { useRecentlyWatchedLive } from "@/hooks/useRecentlyWatchedLive";
 import { useTopLiveGifters } from "@/hooks/useTopLiveGifters";
 import { useStreamTopGifters } from "@/hooks/useStreamTopGifters";
+import { useStreamGoalAndPin } from "@/hooks/useStreamGoalAndPin";
+import { useHostFanTiers } from "@/hooks/useHostFanTiers";
+import TierBadge from "@/components/live/TierBadge";
+import Pin from "lucide-react/dist/esm/icons/pin";
 
 const ZivoMobileNav = lazy(() =>import("@/components/app/ZivoMobileNav"));
 const GiftAnimationOverlay = lazy(() =>import("@/components/live/GiftAnimationOverlay"));
@@ -85,6 +89,7 @@ const CoinRechargeSheet = lazy(() =>import("@/components/live/CoinRechargeSheet"
 const LiveWebRTCVideo = lazy(() =>import("@/components/live/LiveWebRTCVideo"));
 const DailyRewardCard = lazy(() =>import("@/components/live/DailyRewardCard"));
 const StreamTopGiftersPanel = lazy(() =>import("@/components/live/StreamTopGiftersPanel"));
+const ScheduledStreamsRail = lazy(() =>import("@/components/live/ScheduledStreamsRail"));
 
 interface LiveStream {
  id: string;
@@ -192,6 +197,12 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
  const chatEndRef = useRef<HTMLDivElement>(null);
  const { activeGift: activeGiftAnim, comboCount: giftCombo, enqueue: enqueueGiftAnim, onComplete: onGiftAnimComplete } = useGiftAnimationQueue();
  const { data: streamTopGifters, loading: topGiftersLoading } = useStreamTopGifters(stream.id, 10);
+ const { coinGoal: hostGoal, coinsEarned: hostCoinsEarned, pinned: hostPinned } = useStreamGoalAndPin(stream.id);
+ const visibleChatUserIds = useMemo(
+ () =>chatMessages.slice(-10).map((m) =>m.user_id).filter((u) =>u && !u.startsWith("gift-")),
+ [chatMessages]
+ );
+ const fanTiers = useHostFanTiers(stream.user_id, visibleChatUserIds, stream.id);
  const allGifts = useMemo(() =>giftCatalog, []);
 
  // ── Stream timer ──
@@ -612,6 +623,46 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
 </div>
 </div>
 
+ {/* Coin goal progress (host-set, viewer-visible) */}
+ {hostGoal >0 && (
+<div className="relative z-20 px-3 mt-2">
+<div className="rounded-2xl border border-amber-400/30 bg-gradient-to-r from-amber-500/15 via-orange-500/10 to-amber-500/15 backdrop-blur-md p-2">
+<div className="flex items-center gap-1.5 mb-1">
+<Target className="w-3 h-3 text-amber-300" />
+<span className="text-[10px] font-bold text-white">
+ Stream goal · {Math.min(100, Math.round((hostCoinsEarned / Math.max(1, hostGoal)) * 100))}%
+</span>
+<span className="ml-auto text-[10px] font-mono text-amber-300 tabular-nums">
+ {hostCoinsEarned.toLocaleString()} / {hostGoal.toLocaleString()}
+</span>
+</div>
+<div className="relative h-1.5 rounded-full overflow-hidden bg-black/40">
+<motion.div
+ className="absolute inset-y-0 left-0 bg-gradient-to-r from-amber-400 via-orange-400 to-rose-400"
+ initial={false}
+ animate={{ width: `${Math.min(100, (hostCoinsEarned / Math.max(1, hostGoal)) * 100)}%` }}
+ transition={{ type: "spring", damping: 20, stiffness: 180 }}
+ />
+</div>
+</div>
+</div>
+ )}
+
+ {/* Pinned message */}
+ {hostPinned && (
+<div className="relative z-20 px-3 mt-2">
+<div className="rounded-2xl bg-gradient-to-r from-blue-500/15 via-indigo-500/10 to-blue-500/15 backdrop-blur-md border border-blue-400/30 p-2.5 flex items-center gap-2">
+<Pin className="w-3.5 h-3.5 text-blue-300 shrink-0" />
+<div className="flex-1 min-w-0">
+<p className="text-[10px] font-bold text-blue-200 leading-tight">
+ Pinned · {hostPinned.user_name ?? "Host"}
+</p>
+<p className="text-[12px] text-white leading-tight line-clamp-2">{hostPinned.content}</p>
+</div>
+</div>
+</div>
+ )}
+
 
  {/* Floating like hearts */}
 <div className="absolute right-4 bottom-48 z-30 w-14 pointer-events-none">
@@ -740,6 +791,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
  className="bg-black/40 backdrop-blur-sm rounded-2xl px-2.5 py-1.5 max-w-full"
  >
 <span className="text-[10px] font-bold text-amber-300 mr-1.5 inline-flex items-center gap-0.5">
+<TierBadge coinsTotal={fanTiers.get(msg.user_id) ?? 0} className="mr-0.5" />
  {msg.user_name}
  {isBlueVerified(msg.user_is_verified) &&<VerifiedBadge size={10} interactive={false} />}
 </span>
@@ -1184,6 +1236,11 @@ export default function LiveStreamPage() {
  {/* Daily login coin bonus (real DB) */}
 <Suspense fallback={null}>
 <DailyRewardCard />
+</Suspense>
+
+ {/* Upcoming scheduled streams + RSVP */}
+<Suspense fallback={null}>
+<ScheduledStreamsRail />
 </Suspense>
 
  {/* ─── Recently Watched / Continue Watching (real data) ─── */}
