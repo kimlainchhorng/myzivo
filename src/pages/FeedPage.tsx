@@ -31,11 +31,14 @@ const CaptionEditDialog = lazy(() => import("@/components/social/CaptionEditDial
 const MentionPicker = lazy(() => import("@/components/social/MentionPicker"));
 const CommentHeartButton = lazy(() => import("@/components/social/CommentHeartButton"));
 const CommentRowActions = lazy(() => import("@/components/social/CommentRowActions"));
+const ReelsCoachmarks = lazy(() => import("@/components/social/ReelsCoachmarks"));
+import TrendingHashtags, { postHasHashtag } from "@/components/social/TrendingHashtags";
 import { detectMention, applyMention } from "@/components/social/MentionPicker";
 import { usePostActions, type PostActionTarget } from "@/hooks/usePostActions";
 import { usePostReactions } from "@/hooks/usePostReactions";
 import { usePostReposts } from "@/hooks/usePostReposts";
 import { usePostViewTracking } from "@/hooks/usePostViewTracking";
+import { useHiddenPosts } from "@/hooks/useHiddenPosts";
 import type { ReactionEmoji } from "@/components/social/ReactionPicker";
 import { topicForUserSync } from "@/lib/security/channelName";
 import { confirmContentSafe } from "@/lib/security/contentLinkValidation";
@@ -98,10 +101,11 @@ import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { getPostShareUrl } from "@/lib/getPublicOrigin";
 import { shouldSendLikeNotification } from "@/lib/social/likeNotificationGuard";
-import { formatDistanceToNow } from "date-fns";
 import { useOwnerStoreProfile } from "@/hooks/useOwnerStoreProfile";
 import { useHaptic } from "@/hooks/useHaptic";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
+const ReelSocialProof = lazy(() => import("@/components/reels/ReelSocialProof"));
+import RelativeTime from "@/components/social/RelativeTime";
 import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
 import { useLodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile";
 import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
@@ -342,6 +346,8 @@ function ReelCard({
   const [videoProgress, setVideoProgress] = useState(0); // 0..1
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [captionExpanded, setCaptionExpanded] = useState(false);
+  const [translatedCaption, setTranslatedCaption] = useState<string | null>(null);
+  const [isTranslating, setIsTranslating] = useState(false);
   const [isScrubbing, setIsScrubbing] = useState(false);
   const [showLikeBurst, setShowLikeBurst] = useState(false);
   const [heartParticles, setHeartParticles] = useState<{ id: number; x: number; size: number; rotate: number; delay: number; emoji?: string }[]>([]);
@@ -1428,6 +1434,13 @@ function ReelCard({
             </span>
           </button>
 
+          {/* Live social-proof ticker — store posts only, self-hides when quiet */}
+          {post.source === "store" && post.store_id && (
+            <Suspense fallback={null}>
+              <ReelSocialProof storeId={post.store_id} postId={post.id} />
+            </Suspense>
+          )}
+
           {/* Trending badge — engagement signal blended with recency.
               Shown when (likes·1 + comments·2 + shares·3 + views·0.05) is
               high relative to age, capping at "very recent + very engaging". */}
@@ -1474,11 +1487,7 @@ function ReelCard({
         {/* Posted-time + location row */}
         {(post.location || post.created_at) && (
           <div className="flex items-center gap-2 mb-1.5 text-white/80 text-[11px] drop-shadow">
-            {post.created_at && (() => {
-              try {
-                return <span>{formatDistanceToNow(new Date(post.created_at), { addSuffix: true })}</span>;
-              } catch { return null; }
-            })()}
+            {post.created_at && <RelativeTime date={post.created_at} />}
             {post.location && post.created_at && <span className="text-white/50">·</span>}
             {post.location && (
               <span className="flex items-center gap-1 truncate">
@@ -1517,20 +1526,45 @@ function ReelCard({
                   </span>
                 )}
               </button>
-              {showTranslate && (
+              {showTranslate && translatedCaption && (
+                <div className="mb-2 rounded-lg bg-black/40 border border-white/10 backdrop-blur-sm px-2.5 py-1.5">
+                  <p className="text-[10px] font-semibold uppercase tracking-wide text-white/60 mb-0.5">Translated</p>
+                  <p className="text-[12px] text-white leading-snug">{translatedCaption}</p>
+                  <button
+                    type="button"
+                    onClick={(e) => { e.stopPropagation(); setTranslatedCaption(null); }}
+                    className="text-[11px] text-white/80 mt-1 font-semibold underline decoration-white/40 underline-offset-2"
+                  >
+                    Hide translation
+                  </button>
+                </div>
+              )}
+              {showTranslate && !translatedCaption && (
                 <button
                   type="button"
-                  onClick={(e) => {
+                  onClick={async (e) => {
                     e.stopPropagation();
-                    const url = `https://translate.google.com/?sl=auto&tl=en&text=${encodeURIComponent(post.caption!)}&op=translate`;
-                    window.open(url, "_blank", "noopener,noreferrer");
+                    if (isTranslating) return;
+                    setIsTranslating(true);
+                    try {
+                      const q = encodeURIComponent(post.caption!);
+                      const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=en&dt=t&q=${q}`);
+                      const data = await res.json();
+                      const text = (data[0] as [string, string][]).map((s) => s[0]).join("");
+                      setTranslatedCaption(text);
+                    } catch {
+                      toast.error("Translation unavailable");
+                    } finally {
+                      setIsTranslating(false);
+                    }
                   }}
-                  className="inline-flex items-center gap-1 mb-2 text-white/80 active:scale-95 transition-transform"
+                  disabled={isTranslating}
+                  className="inline-flex items-center gap-1 mb-2 text-white/80 active:scale-95 transition-transform disabled:opacity-50"
                   title="Translate caption to English"
                 >
                   <Languages className="w-3 h-3" />
                   <span className="text-[11px] font-semibold underline decoration-white/40 underline-offset-2">
-                    See translation
+                    {isTranslating ? "Translating..." : "See translation"}
                   </span>
                 </button>
               )}
@@ -3667,6 +3701,8 @@ export default function FeedPage() {
   } | null>(null);
   // Posts the user has deleted, removed from view immediately while DB catches up
   const [deletedPostIds, setDeletedPostIds] = useState<Set<string>>(new Set());
+  const hiddenPosts = useHiddenPosts();
+  const [selectedHashtag, setSelectedHashtag] = useState<string | null>(null);
   // Infinite scroll — multiplier on the base page size
   const [pageMultiplier, setPageMultiplier] = useState(1);
   // Posts the user just blocked, removed from view immediately
@@ -3881,8 +3917,14 @@ export default function FeedPage() {
     if (deletedPostIds.size > 0) {
       list = list.filter((p) => !deletedPostIds.has(p.id));
     }
+    if (hiddenPosts.hidden.size > 0) {
+      list = list.filter((p) => !hiddenPosts.isHidden(p.id));
+    }
+    if (selectedHashtag) {
+      list = list.filter((p) => postHasHashtag(p.caption, selectedHashtag));
+    }
     return list;
-  }, [posts, feedMode, userId, followingIds, hiddenAuthorIds, deletedPostIds]);
+  }, [posts, feedMode, userId, followingIds, hiddenAuthorIds, deletedPostIds, hiddenPosts, selectedHashtag]);
 
   // Fetch user's liked post IDs
   useEffect(() => {
@@ -4236,6 +4278,23 @@ export default function FeedPage() {
     );
   }
 
+  // Hashtag filter narrowed to zero — let the user clear it without leaving the page.
+  if (selectedHashtag && visiblePosts.length === 0) {
+    return (
+      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-4 z-50 px-8 text-center">
+        <p className="text-white font-semibold">No reels with #{selectedHashtag} yet</p>
+        <p className="text-white/50 text-sm">Try a different tag, or clear the filter to see all reels.</p>
+        <button
+          onClick={() => setSelectedHashtag(null)}
+          className="mt-2 px-5 py-2 rounded-full bg-white text-black text-sm font-bold active:scale-95 transition-transform"
+        >
+          Clear filter
+        </button>
+        <ZivoMobileNav />
+      </div>
+    );
+  }
+
   // Following tab with no matching reels — distinct empty state.
   if (feedMode === "following" && visiblePosts.length === 0 && userId) {
     return (
@@ -4262,6 +4321,7 @@ export default function FeedPage() {
 
   return (
     <MotionConfig reducedMotion="user">
+    <Suspense fallback={null}><ReelsCoachmarks /></Suspense>
     <div className="fixed inset-0 bg-black lg:flex lg:flex-col">
       {/* Desktop NavBar */}
       <div className="hidden lg:block relative z-[1200] shrink-0">
@@ -4339,6 +4399,17 @@ export default function FeedPage() {
           ))}
         </div>
       )}
+
+      {/* Trending hashtag chips overlay — TikTok-style filter bar.
+          Extract from the unfiltered posts list so chips don't disappear
+          once you select one. */}
+      <TrendingHashtags
+        posts={posts}
+        selected={selectedHashtag}
+        onSelect={setSelectedHashtag}
+        variant="overlay"
+        limit={8}
+      />
 
       {/* Discover + Search + Live buttons — hide on desktop.
           Wrapped in a centered container so on iPad (md+), where the reel
@@ -4714,6 +4785,13 @@ export default function FeedPage() {
               postActions.blockAuthor(actionsTarget.target);
             }}
             onReport={(reason) => postActions.reportPost(actionsTarget.target, reason)}
+            onNotInterested={() => {
+              const feedId = actionsTarget.target.source === "user"
+                ? `u-${actionsTarget.target.postId}`
+                : actionsTarget.target.postId;
+              hiddenPosts.hide(feedId);
+              toast.success("We'll show fewer like this");
+            }}
             isOwnPost={!!userId && actionsTarget.target.source === "user" && actionsTarget.target.authorId === userId}
             onViewInsights={() => setInsightsTarget({ postId: actionsTarget.target.postId, source: actionsTarget.target.source })}
             onEditCaption={() => {
