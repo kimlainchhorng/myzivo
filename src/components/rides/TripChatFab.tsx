@@ -17,7 +17,8 @@ export default function TripChatFab({ rideRequestId, counterpartName, senderRole
       <Button
         onClick={() => setOpen(true)}
         size="icon"
-        className={`fixed bottom-24 right-4 z-40 w-12 h-12 rounded-full shadow-lg bg-emerald-500 hover:bg-emerald-600 ${className ?? ""}`}
+        className={`fixed right-4 z-40 w-12 h-12 rounded-full shadow-lg bg-emerald-500 hover:bg-emerald-600 ${className ?? ""}`}
+        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 6rem)" }}
         aria-label="Open trip chat"
       >
         <MessageCircle className="w-5 h-5 text-white" />

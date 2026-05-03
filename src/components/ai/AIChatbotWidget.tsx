@@ -145,7 +145,8 @@ export default function AIChatbotWidget() {
       <AnimatePresence>
         {isOpen && (
           <motion.div initial={{ opacity: 0, scale: 0.9, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.9, y: 20 }}
-            className="fixed bottom-20 right-4 z-50 w-[340px] max-w-[calc(100vw-2rem)]">
+            style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 5rem)" }}
+            className="fixed right-4 z-50 w-[340px] max-w-[calc(100vw-2rem)]">
             <Card className="flex flex-col h-[480px] shadow-2xl border-border overflow-hidden">
               {/* Header */}
               <div className="flex items-center justify-between p-3 bg-primary text-primary-foreground">
@@ -208,10 +209,12 @@ export default function AIChatbotWidget() {
         )}
       </AnimatePresence>
 
-      {/* FAB */}
+      {/* FAB — bottom offset includes safe-area inset so the button sits clear
+          of the iOS home indicator on devices that have one. */}
       <motion.button whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}
         onClick={() => setIsOpen(!isOpen)}
-        className="fixed bottom-4 right-4 z-50 h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center">
+        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 1rem)" }}
+        className="fixed right-4 z-50 h-12 w-12 rounded-full bg-primary text-primary-foreground shadow-lg flex items-center justify-center">
         {isOpen ? <X className="h-5 w-5" /> : <MessageCircle className="h-5 w-5" />}
       </motion.button>
     </>

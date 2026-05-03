@@ -33,6 +33,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { Capacitor } from "@capacitor/core";
 import { openExternalUrl } from "@/lib/openExternalUrl";
+import { findZivoTrackBySlug } from "@/lib/zivoSessions";
 import ExternalLinkWarning from "@/components/security/ExternalLinkWarning";
 import { assessLinkSync } from "@/hooks/useLinkRisk";
 import { assessChatMessageRisk, assessIncomingChatRisk } from "@/lib/security/chatContentSafety";
@@ -1146,6 +1147,7 @@ type LegacyMusicShareMeta = {
   genre?: string;
   duration?: string;
   soundPath: string;
+  previewUrl?: string;
 };
 
 function slugifySoundName(value: string) {
@@ -1165,6 +1167,10 @@ function humanizeSoundSlug(slug: string) {
 
 function parseLegacyMusicShare(messageText?: string | null): LegacyMusicShareMeta | null {
   if (!messageText) return null;
+
+  // Extract embedded `Preview: <url>` line BEFORE stripping URLs.
+  const previewMatch = messageText.match(/^\s*Preview:\s*(https?:\/\/\S+)\s*$/im);
+  const previewUrl = previewMatch?.[1];
 
   const cleaned = messageText
     .replace(/https?:\/\/[^\s]+/gi, "")
@@ -1192,6 +1198,7 @@ function parseLegacyMusicShare(messageText?: string | null): LegacyMusicShareMet
     genre: metaMatch?.[1]?.trim(),
     duration: metaMatch?.[2]?.trim(),
     soundPath: `/sound/${slugifySoundName(title)}`,
+    previewUrl,
   };
 }
 
@@ -1225,8 +1232,11 @@ function LinkPreviewCard({ url, isMe, hasText, messageText }: { url: string; isM
     authorName?: string;
     authorAvatar?: string | null;
     internalPath?: string;
+    audioUrl?: string;
     socialPlatform?: { id: SocialPlatformId; label: string; color: string; textColor: string; brandImage?: string };
   } | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const [isPlaying, setIsPlaying] = useState(false);
 
   useEffect(() => {
     let alive = true;
@@ -1251,19 +1261,27 @@ function LinkPreviewCard({ url, isMe, hasText, messageText }: { url: string; isM
 
         const legacyMusicShare = parseLegacyMusicShare(messageText);
         const soundSlugMatch = p.match(/\/sound\/([^/?#]+)/i);
+        // Also treat Apple Music / iTunes URLs as music shares when the
+        // message body matches the music card format.
+        const isMusicHost = /(^|\.)(music\.apple|itunes\.apple|spotify|soundcloud|youtu)\.[a-z.]+$/i.test(u.hostname) || u.hostname.includes("soundhelix");
 
-        if (soundSlugMatch || (u.hostname.includes("soundhelix") && legacyMusicShare)) {
+        if (soundSlugMatch || (isMusicHost && legacyMusicShare)) {
           const resolvedSlug = soundSlugMatch?.[1] || slugifySoundName(legacyMusicShare?.title || "original-sound");
           const soundTitle = legacyMusicShare?.title || humanizeSoundSlug(resolvedSlug);
           const soundDescription = legacyMusicShare
             ? [legacyMusicShare.artist, legacyMusicShare.genre, legacyMusicShare.duration].filter(Boolean).join(" · ")
             : "Tap to open sound on ZIVO";
 
+          const knownTrack = findZivoTrackBySlug(resolvedSlug);
+          // Prefer the embedded `Preview: <url>` line (iTunes / dynamic
+          // sources); fall back to our static catalog (Zivo Sessions).
+          const audioUrl = legacyMusicShare?.previewUrl || knownTrack?.previewUrl;
           if (alive) {
             setPreview({
               label: soundTitle,
               description: soundDescription || "Tap to open sound on ZIVO",
               internalPath: `/sound/${resolvedSlug}`,
+              audioUrl,
             });
           }
           return;
@@ -1474,6 +1492,16 @@ function LinkPreviewCard({ url, isMe, hasText, messageText }: { url: string; isM
           <p className={`text-[11px] mt-0.5 truncate ${isMe ? "text-primary-foreground/50" : "text-muted-foreground"}`}>
             {preview.description}
           </p>
+          {preview.audioUrl && (
+            <audio
+              ref={audioRef}
+              src={preview.audioUrl}
+              preload="none"
+              onPlay={() => setIsPlaying(true)}
+              onPause={() => setIsPlaying(false)}
+              onEnded={() => setIsPlaying(false)}
+            />
+          )}
           {!isInternalLink && (() => {
             const r = assessLinkSync(url);
             if (r.level === "blocked") {
@@ -1488,11 +1516,32 @@ function LinkPreviewCard({ url, isMe, hasText, messageText }: { url: string; isM
             return <p className="text-[10px] mt-1 text-muted-foreground">External link</p>;
           })()}
         </div>
-        <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
-          isMe ? "bg-primary-foreground/15" : "bg-primary/10"
-        }`}>
-          <ChevronRight className={`w-4 h-4 ${isMe ? "text-primary-foreground/60" : "text-primary"}`} />
-        </div>
+        {preview.audioUrl ? (
+          <button
+            type="button"
+            aria-label={isPlaying ? "Pause preview" : "Play preview"}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              const a = audioRef.current;
+              if (!a) return;
+              if (a.paused) { void a.play(); } else { a.pause(); }
+            }}
+            className={`w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 transition active:scale-90 ${
+              isMe ? "bg-primary-foreground/20 text-primary-foreground" : "bg-primary text-primary-foreground"
+            }`}
+          >
+            {isPlaying
+              ? <Pause className="w-4 h-4" fill="currentColor" />
+              : <Play className="w-4 h-4 ml-0.5" fill="currentColor" />}
+          </button>
+        ) : (
+          <div className={`w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0 ${
+            isMe ? "bg-primary-foreground/15" : "bg-primary/10"
+          }`}>
+            <ChevronRight className={`w-4 h-4 ${isMe ? "text-primary-foreground/60" : "text-primary"}`} />
+          </div>
+        )}
       </div>
     </div>
     </>

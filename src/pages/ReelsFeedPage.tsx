@@ -39,6 +39,14 @@ import Hash from "lucide-react/dist/esm/icons/hash";
 import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
 import Flag from "lucide-react/dist/esm/icons/flag";
 import Bell from "lucide-react/dist/esm/icons/bell";
+import Menu from "lucide-react/dist/esm/icons/menu";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import BellOff from "lucide-react/dist/esm/icons/bell-off";
 import Link2 from "lucide-react/dist/esm/icons/link-2";
 import EyeOff from "lucide-react/dist/esm/icons/eye-off";
@@ -1115,6 +1123,32 @@ export default function ReelsFeedPage() {
                 }}
               >
                 <div className="px-3 py-1 flex items-center gap-1.5">
+                  {/* Hamburger menu — Facebook-style entry point for secondary
+                      items (Complete profile, Saved posts, etc.) so the feed
+                      scroll stays focused on actual posts. */}
+                  <Sheet>
+                    <SheetTrigger asChild>
+                      <button
+                        className="shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition"
+                        aria-label="Open menu"
+                      >
+                        <Menu className="h-[18px] w-[18px]" />
+                      </button>
+                    </SheetTrigger>
+                    <SheetContent side="left" className="w-[88vw] sm:w-[400px] p-0 overflow-y-auto">
+                      <SheetHeader className="px-4 py-3 border-b border-border/30">
+                        <SheetTitle className="text-base font-bold">Menu</SheetTitle>
+                      </SheetHeader>
+                      <div className="p-3 space-y-3">
+                        <Suspense fallback={null}>
+                          <ProfileCompletionNudge />
+                        </Suspense>
+                        <Suspense fallback={null}>
+                          <SavedPostsLink />
+                        </Suspense>
+                      </div>
+                    </SheetContent>
+                  </Sheet>
                   <h1 className="text-base font-bold text-foreground shrink-0">Feed</h1>
                   <div className="flex-1 relative">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
@@ -1408,10 +1442,9 @@ export default function ReelsFeedPage() {
             </button>
           )}
 
-          {/* Personalized greeting (mobile only) */}
-          <Suspense fallback={null}>
-            <FeedGreeting name={userProfile?.name} />
-          </Suspense>
+          {/* Personalized greeting removed — duplicated the AppHome greeting
+              and pushed real feed posts further down the screen. The Feed page
+              should land users in content, not in another greeting. */}
 
           {/* Active filter summary — shown when any filter narrows the feed */}
           {(selectedHashtag || feedTab !== "For You" || feedFilter !== "all") && (
@@ -1447,15 +1480,10 @@ export default function ReelsFeedPage() {
             </div>
           )}
 
-          {/* Profile completion nudge — auto-hides once avatar + bio are set */}
-          <Suspense fallback={null}>
-            <ProfileCompletionNudge />
-          </Suspense>
-
-          {/* Saved posts entry — only shows when user has bookmarks */}
-          <Suspense fallback={null}>
-            <SavedPostsLink />
-          </Suspense>
+          {/* ProfileCompletionNudge + SavedPostsLink moved to the hamburger
+              menu in the feed header — they're secondary destinations that
+              don't need to compete with actual posts for vertical real estate.
+              Open the ≡ menu to access them. */}
 
           {/* New posts pill — appears when realtime detects fresh inserts */}
           <Suspense fallback={null}>
@@ -1481,30 +1509,12 @@ export default function ReelsFeedPage() {
           {/* Story Rings */}
            <Suspense fallback={null}><FeedStoryRing /></Suspense>
 
-           {/* Quick feature access — Facebook-style shortcut bar */}
-           <nav aria-label="Quick links" className="flex gap-4 px-3 py-2.5 overflow-x-auto scrollbar-hide border-b border-border/10">
-             {[
-               { label: "Live", icon: Radio, path: "/live", bg: "bg-rose-500" },
-               { label: "Map", icon: MapPin, path: "/store-map", bg: "bg-sky-500" },
-               { label: "Marketplace", icon: Package, path: "/marketplace", bg: "bg-amber-500" },
-               { label: "Groups", icon: Users, path: "/communities", bg: "bg-blue-500" },
-               { label: "Events", icon: Calendar, path: "/explore", bg: "bg-emerald-500" },
-               { label: "ZIVO+", icon: Crown, path: "/zivo-plus", bg: "bg-gradient-to-br from-amber-500 to-primary" },
-             ].map(({ label, icon: Icon, path, bg }) => (
-               <button
-                 key={label}
-                 type="button"
-                 onClick={() => navigate(path)}
-                 aria-label={label}
-                 className="shrink-0 flex flex-col items-center gap-1.5 active:opacity-70 transition-opacity"
-               >
-                 <div className={cn("h-11 w-11 rounded-2xl flex items-center justify-center shadow-sm", bg)} aria-hidden="true">
-                   <Icon className="h-5 w-5 text-white" />
-                 </div>
-                 <span className="text-[10px] font-semibold text-muted-foreground">{label}</span>
-               </button>
-             ))}
-           </nav>
+           {/* Facebook-style quick-link shortcut bar removed — Live / Map /
+               Marketplace / Groups / Events / ZIVO+ are navigation shortcuts
+               that belong on the Home tab and the More page. On the Feed they
+               pushed actual posts ~250px below the fold. Real content-feed
+               apps (IG, TikTok, X) put nothing between composer and first
+               post. Reaches them via bottom tabs / Home / More. */}
 
            {/* Suggested Users */}
            <Suspense fallback={null}><SuggestedUsersCarousel /></Suspense>

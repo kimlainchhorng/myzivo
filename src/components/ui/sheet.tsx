@@ -28,17 +28,22 @@ const SheetOverlay = React.forwardRef<
 ));
 SheetOverlay.displayName = SheetPrimitive.Overlay.displayName;
 
+// Each side reserves the matching safe-area inset on top of its base padding
+// so content (and the close button positioned below) never collides with the
+// iOS status bar / Dynamic Island or the Android gesture area. Without these
+// max() guards, sheets that touch the top edge get clipped by the system
+// status bar — visible on iOS as the Wi-Fi/clock icons covering the close X.
 const sheetVariants = cva(
-  "fixed z-50 gap-4 bg-background p-6 shadow-2xl transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
+  "fixed z-50 gap-4 bg-background px-6 shadow-2xl transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
   {
     variants: {
       side: {
-        top: "inset-x-0 top-0 border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top",
+        top: "inset-x-0 top-0 border-b data-[state=closed]:slide-out-to-top data-[state=open]:slide-in-from-top pt-[max(1.5rem,calc(env(safe-area-inset-top)+0.5rem))] pb-6",
         bottom:
-          "inset-x-0 bottom-0 border-t rounded-t-2xl data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom",
-        left: "inset-y-0 left-0 h-full w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm",
+          "inset-x-0 bottom-0 border-t rounded-t-2xl data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom pt-6 pb-[max(1.5rem,calc(env(safe-area-inset-bottom)+0.5rem))]",
+        left: "inset-y-0 left-0 h-full w-3/4 border-r data-[state=closed]:slide-out-to-left data-[state=open]:slide-in-from-left sm:max-w-sm pt-[max(1.5rem,calc(env(safe-area-inset-top)+0.5rem))] pb-[max(1.5rem,env(safe-area-inset-bottom))]",
         right:
-          "inset-y-0 right-0 h-full w-3/4  border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm",
+          "inset-y-0 right-0 h-full w-3/4  border-l data-[state=closed]:slide-out-to-right data-[state=open]:slide-in-from-right sm:max-w-sm pt-[max(1.5rem,calc(env(safe-area-inset-top)+0.5rem))] pb-[max(1.5rem,env(safe-area-inset-bottom))]",
       },
     },
     defaultVariants: {
@@ -61,7 +66,13 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
         <SheetOverlay className={overlayZClass} />
         <SheetPrimitive.Content ref={ref} className={cn(sheetVariants({ side }), className)} {...props}>
           {children}
-          <SheetPrimitive.Close className="absolute right-4 top-4 rounded-full w-8 h-8 flex items-center justify-center bg-muted/80 hover:bg-muted ring-offset-background transition-all active:scale-90 touch-manipulation focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none z-50">
+          {/* Close button positioned BELOW the safe-area inset so it never
+              sits behind the iOS status bar / Dynamic Island. Without this
+              calc(), the X overlaps the system Wi-Fi / clock icons. */}
+          <SheetPrimitive.Close
+            className="absolute right-4 rounded-full w-8 h-8 flex items-center justify-center bg-muted/80 hover:bg-muted ring-offset-background transition-all active:scale-90 touch-manipulation focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none z-50"
+            style={{ top: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}
+          >
             <X className="h-4 w-4" />
             <span className="sr-only">Close</span>
           </SheetPrimitive.Close>

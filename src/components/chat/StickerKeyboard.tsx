@@ -13,6 +13,7 @@ import Search from "lucide-react/dist/esm/icons/search";
 import Sparkles from "lucide-react/dist/esm/icons/sparkles";
 import Play from "lucide-react/dist/esm/icons/play";
 import Pause from "lucide-react/dist/esm/icons/pause";
+import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
 import Shuffle from "lucide-react/dist/esm/icons/shuffle";
 import Heart from "lucide-react/dist/esm/icons/heart";
 import Download from "lucide-react/dist/esm/icons/download";
@@ -207,26 +208,17 @@ const AVATAR_MOODS = [
 
 /* ═══════════════ Music Tracks ═══════════════ */
 
-interface TrackItem {
-  title: string;
-  artist: string;
-  duration: string;
-  previewUrl: string;
-  shareUrl: string;
-  genre: string;
-  coverGradient: string;
-}
+import { ZIVO_SESSIONS, type ZivoTrack } from "@/lib/zivoSessions";
+import {
+  searchITunes,
+  topChartsITunes,
+  COUNTRIES,
+  type CountryCode,
+  type RemoteTrack,
+} from "@/lib/iTunesSearch";
 
-const TRACKS: TrackItem[] = [
-  { title: "Midnight Drive", artist: "Zivo Sessions", duration: "3:20", previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3", shareUrl: "https://hizovo.com/sound/midnight-drive", genre: "Chill", coverGradient: "from-violet-600 to-indigo-800" },
-  { title: "City Lights", artist: "Zivo Sessions", duration: "3:23", previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3", shareUrl: "https://hizovo.com/sound/city-lights", genre: "Lo-fi", coverGradient: "from-amber-500 to-orange-700" },
-  { title: "Ocean Ride", artist: "Zivo Sessions", duration: "2:21", previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-3.mp3", shareUrl: "https://hizovo.com/sound/ocean-ride", genre: "Ambient", coverGradient: "from-cyan-500 to-blue-700" },
-  { title: "Sunset Loop", artist: "Zivo Sessions", duration: "2:47", previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-4.mp3", shareUrl: "https://hizovo.com/sound/sunset-loop", genre: "Beats", coverGradient: "from-rose-500 to-pink-700" },
-  { title: "Neon Streets", artist: "Zivo Sessions", duration: "4:01", previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-5.mp3", shareUrl: "https://hizovo.com/sound/neon-streets", genre: "Synth", coverGradient: "from-emerald-500 to-teal-800" },
-  { title: "Golden Hour", artist: "Zivo Sessions", duration: "3:45", previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-6.mp3", shareUrl: "https://hizovo.com/sound/golden-hour", genre: "Pop", coverGradient: "from-yellow-500 to-amber-700" },
-  { title: "Night Runner", artist: "Zivo Sessions", duration: "3:55", previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-7.mp3", shareUrl: "https://hizovo.com/sound/night-runner", genre: "Electronic", coverGradient: "from-purple-600 to-fuchsia-800" },
-  { title: "Coastal Breeze", artist: "Zivo Sessions", duration: "2:38", previewUrl: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-8.mp3", shareUrl: "https://hizovo.com/sound/coastal-breeze", genre: "Tropical", coverGradient: "from-teal-400 to-sky-600" },
-];
+type TrackItem = ZivoTrack & { artworkUrl?: string; source?: "itunes" | "zivo" };
+const ZIVO_ORIGINALS: TrackItem[] = ZIVO_SESSIONS.map((t) => ({ ...t, source: "zivo" }));
 
 /* ═══════════════ Store Packs ═══════════════ */
 
@@ -690,6 +682,12 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
   const [audioDuration, setAudioDuration] = useState(0);
   const [musicLinkInput, setMusicLinkInput] = useState("");
   const [musicLinkParsed, setMusicLinkParsed] = useState<ReturnType<typeof parseMusicLink> | null>(null);
+  const [musicCountry, setMusicCountry] = useState<CountryCode>(() => (localStorage.getItem("zivo_music_country") as CountryCode) || "KH");
+  const [chartTracks, setChartTracks] = useState<RemoteTrack[]>([]);
+  const [searchTracks, setSearchTracks] = useState<RemoteTrack[]>([]);
+  const [musicLoading, setMusicLoading] = useState(false);
+  const [musicError, setMusicError] = useState<string | null>(null);
+  const [musicSubtab, setMusicSubtab] = useState<"charts" | "originals">("charts");
   const [previewSticker, setPreviewSticker] = useState<{ id: string; src: string; alt: string } | null>(null);
   const [favoriteStickers, setFavoriteStickers] = useState<string[]>([]);
   const longPressRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -855,11 +853,47 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
     return byCategory.filter((g) => g.label.toLowerCase().includes(q) || g.altText.toLowerCase().includes(q));
   }, [gifCategory, search]);
 
-  const filteredTracks = useMemo(() => {
+  // Music tab data: when search is empty → show top charts (or Zivo Originals on
+  // the Originals subtab); when search has text → debounced iTunes API call.
+  useEffect(() => {
+    if (!open || activeTab !== "music") return;
+    if (musicSubtab !== "charts") return;
+    let cancelled = false;
+    setMusicLoading(true);
+    setMusicError(null);
+    topChartsITunes(musicCountry, 25)
+      .then((tracks) => { if (!cancelled) setChartTracks(tracks); })
+      .catch((e) => { if (!cancelled) setMusicError(e?.message || "Couldn't load charts"); })
+      .finally(() => { if (!cancelled) setMusicLoading(false); });
+    return () => { cancelled = true; };
+  }, [open, activeTab, musicSubtab, musicCountry]);
+
+  useEffect(() => {
+    if (!open || activeTab !== "music") return;
+    const q = search.trim();
+    if (!q) { setSearchTracks([]); return; }
+    let cancelled = false;
+    setMusicLoading(true);
+    setMusicError(null);
+    const handle = setTimeout(() => {
+      searchITunes(q, musicCountry, 25)
+        .then((tracks) => { if (!cancelled) setSearchTracks(tracks); })
+        .catch((e) => { if (!cancelled) setMusicError(e?.message || "Search failed"); })
+        .finally(() => { if (!cancelled) setMusicLoading(false); });
+    }, 350);
+    return () => { cancelled = true; clearTimeout(handle); };
+  }, [open, activeTab, search, musicCountry]);
+
+  useEffect(() => { localStorage.setItem("zivo_music_country", musicCountry); }, [musicCountry]);
+
+  const filteredTracks = useMemo<TrackItem[]>(() => {
     const q = search.trim().toLowerCase();
-    if (!q) return TRACKS;
-    return TRACKS.filter((t) => t.title.toLowerCase().includes(q) || t.artist.toLowerCase().includes(q) || t.genre.toLowerCase().includes(q));
-  }, [search]);
+    if (q) return searchTracks;
+    if (musicSubtab === "originals") {
+      return ZIVO_ORIGINALS;
+    }
+    return chartTracks;
+  }, [search, searchTracks, chartTracks, musicSubtab]);
 
   if (!open) return null;
 
@@ -1101,63 +1135,98 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
           {/* ═══ MUSIC — album cards + link sharing ═══ */}
           {activeTab === "music" && (
             <div className="p-3 space-y-3">
-              {/* Music link share */}
-              <div className="rounded-2xl border border-border/30 bg-gradient-to-br from-green-500/5 to-emerald-500/5 p-3">
-                <div className="flex items-center gap-2 mb-2">
-                  <Link2 className="w-4 h-4 text-green-500" />
-                  <p className="text-sm font-bold text-foreground">Share a Music Link</p>
+              {/* Sub-tabs + country selector — top of the music tab so users
+                  see them before the long results list. */}
+              <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center gap-1 rounded-full bg-muted/40 p-0.5">
+                  <button
+                    onClick={() => setMusicSubtab("charts")}
+                    className={`h-7 px-3 rounded-full text-xs font-semibold transition ${musicSubtab === "charts" && !search.trim() ? "bg-background shadow text-foreground" : "text-muted-foreground"}`}
+                  >Top Charts</button>
+                  <button
+                    onClick={() => setMusicSubtab("originals")}
+                    className={`h-7 px-3 rounded-full text-xs font-semibold transition ${musicSubtab === "originals" && !search.trim() ? "bg-background shadow text-foreground" : "text-muted-foreground"}`}
+                  >Originals</button>
                 </div>
-                <div className="flex gap-2">
-                  <input
-                    value={musicLinkInput}
-                    onChange={(e) => setMusicLinkInput(e.target.value)}
-                    placeholder="Paste Spotify or Apple Music link..."
-                    className="flex-1 h-9 rounded-full bg-muted/30 px-3 text-sm text-foreground placeholder:text-muted-foreground/60"
-                  />
-                  {musicLinkParsed?.platform ? (
-                    <button
-                      onClick={() => {
-                        quickSend(`🎵 ${musicLinkParsed.platform === "spotify" ? "🟢 Spotify" : "🍎 Apple Music"}\n${musicLinkInput.trim()}`);
-                        setMusicLinkInput("");
-                      }}
-                      className="h-9 px-3 rounded-full bg-green-500 text-white text-xs font-semibold inline-flex items-center gap-1 shrink-0"
-                    >
-                      <Send className="w-3 h-3" /> Share
-                    </button>
-                  ) : musicLinkInput.trim() ? (
-                    <button onClick={() => setMusicLinkInput("")} className="h-9 w-9 rounded-full bg-muted/40 inline-flex items-center justify-center shrink-0">
-                      <X className="w-4 h-4 text-muted-foreground" />
-                    </button>
-                  ) : null}
-                </div>
-                {musicLinkParsed?.platform && (
-                  <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="mt-2 flex items-center gap-2">
-                    <span className="text-lg">{musicLinkParsed.platform === "spotify" ? "🟢" : "🍎"}</span>
-                    <span className="text-xs text-muted-foreground">{musicLinkParsed.display}</span>
-                    <Check className="w-3.5 h-3.5 text-green-500 ml-auto" />
-                  </motion.div>
-                )}
+                <select
+                  value={musicCountry}
+                  onChange={(e) => setMusicCountry(e.target.value as CountryCode)}
+                  className="h-7 rounded-full bg-muted/40 px-2 text-xs font-semibold text-foreground"
+                  aria-label="Country"
+                >
+                  {COUNTRIES.map((c) => (
+                    <option key={c.code} value={c.code}>{c.flag} {c.label}</option>
+                  ))}
+                </select>
               </div>
 
-              <div className="flex items-center justify-between">
-                <p className="text-sm font-bold text-foreground">Browse Tracks</p>
-                <div className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                  <Volume2 className="w-3 h-3" />
-                  <span>{filteredTracks.length} tracks</span>
+              {/* Collapsible: paste-a-link for users who want to share a
+                  Spotify / Apple Music URL directly. Hidden by default since
+                  the search box above covers 99% of cases. */}
+              <details className="group rounded-xl border border-border/20 bg-muted/10">
+                <summary className="flex items-center gap-2 px-3 py-2 cursor-pointer list-none">
+                  <Link2 className="w-3.5 h-3.5 text-green-500" />
+                  <span className="text-xs font-semibold text-foreground">Or paste a Spotify / Apple Music link</span>
+                  <ChevronDown className="w-3.5 h-3.5 ml-auto text-muted-foreground transition-transform group-open:rotate-180" />
+                </summary>
+                <div className="px-3 pb-3 pt-1">
+                  <div className="flex gap-2">
+                    <input
+                      value={musicLinkInput}
+                      onChange={(e) => setMusicLinkInput(e.target.value)}
+                      placeholder="Paste link…"
+                      className="flex-1 h-9 rounded-full bg-muted/30 px-3 text-sm text-foreground placeholder:text-muted-foreground/60"
+                    />
+                    {musicLinkParsed?.platform ? (
+                      <button
+                        onClick={() => {
+                          quickSend(`🎵 ${musicLinkParsed.platform === "spotify" ? "🟢 Spotify" : "🍎 Apple Music"}\n${musicLinkInput.trim()}`);
+                          setMusicLinkInput("");
+                        }}
+                        className="h-9 px-3 rounded-full bg-green-500 text-white text-xs font-semibold inline-flex items-center gap-1 shrink-0"
+                      >
+                        <Send className="w-3 h-3" /> Share
+                      </button>
+                    ) : musicLinkInput.trim() ? (
+                      <button onClick={() => setMusicLinkInput("")} className="h-9 w-9 rounded-full bg-muted/40 inline-flex items-center justify-center shrink-0">
+                        <X className="w-4 h-4 text-muted-foreground" />
+                      </button>
+                    ) : null}
+                  </div>
+                  {musicLinkParsed?.platform && (
+                    <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="mt-2 flex items-center gap-2">
+                      <span className="text-lg">{musicLinkParsed.platform === "spotify" ? "🟢" : "🍎"}</span>
+                      <span className="text-xs text-muted-foreground">{musicLinkParsed.display}</span>
+                      <Check className="w-3.5 h-3.5 text-green-500 ml-auto" />
+                    </motion.div>
+                  )}
                 </div>
-              </div>
+              </details>
+
+              {musicLoading && filteredTracks.length === 0 && (
+                <p className="text-xs text-muted-foreground text-center py-6">Loading…</p>
+              )}
+              {musicError && !musicLoading && filteredTracks.length === 0 && (
+                <p className="text-xs text-muted-foreground text-center py-3">Couldn't load. Pull down to retry.</p>
+              )}
 
               {filteredTracks.map((track, index) => {
-                const trackKey = `track-${index}`;
+                const trackKey = track.slug || `track-${index}`;
                 const isPlaying = playingTrackId === trackKey;
                 const isFavorite = favoriteTracks.includes(trackKey);
+                const artwork = (track as any).artworkUrl as string | undefined;
 
                 return (
                   <div key={trackKey} className="rounded-2xl border border-border/30 overflow-hidden hover:border-primary/30 transition-colors">
                     <div className="flex items-center gap-3 p-3">
                       <button onClick={() => void toggleTrackPreview(trackKey, track.previewUrl)}
-                        className={`w-12 h-12 rounded-xl bg-gradient-to-br ${track.coverGradient} flex items-center justify-center shrink-0 shadow-lg`}>
-                        {isPlaying ? <Pause className="w-5 h-5 text-white" /> : <Play className="w-5 h-5 text-white ml-0.5" />}
+                        className={`relative w-12 h-12 rounded-xl bg-gradient-to-br ${track.coverGradient} flex items-center justify-center shrink-0 shadow-lg overflow-hidden`}>
+                        {artwork && (
+                          <img src={artwork} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" />
+                        )}
+                        <span className="relative z-10 flex items-center justify-center w-7 h-7 rounded-full bg-black/40 backdrop-blur-sm">
+                          {isPlaying ? <Pause className="w-4 h-4 text-white" /> : <Play className="w-4 h-4 text-white ml-0.5" />}
+                        </span>
                       </button>
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold truncate">{track.title}</p>
@@ -1172,7 +1241,13 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
                       </button>
                       <button onClick={() => {
                         registerRecentTrack(trackKey);
-                        quickSend(`🎵 ${track.title} — ${track.artist}\n${track.genre} · ${track.duration}\nListen: ${track.shareUrl}`);
+                        const lines = [
+                          `🎵 ${track.title} — ${track.artist}`,
+                          `${track.genre} · ${track.duration}`,
+                          `Listen: ${track.shareUrl || `https://hizovo.com/sound/${track.slug}`}`,
+                          `Preview: ${track.previewUrl}`,
+                        ];
+                        quickSend(lines.join("\n"));
                       }} className="h-8 px-3 rounded-full bg-primary text-primary-foreground text-xs font-semibold inline-flex items-center gap-1">
                         <Send className="w-3 h-3" /> Send
                       </button>
@@ -1192,7 +1267,9 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
                   </div>
                 );
               })}
-              {filteredTracks.length === 0 && <p className="text-xs text-muted-foreground text-center py-6">No tracks found</p>}
+              {!musicLoading && filteredTracks.length === 0 && search.trim() && (
+                <p className="text-xs text-muted-foreground text-center py-6">No songs found for “{search.trim()}”</p>
+              )}
             </div>
           )}
 
