@@ -31,22 +31,28 @@ Deno.serve(async (req) => {
 
     const form = await req.formData();
     const file = form.get("file");
+    const kindRaw = String(form.get("kind") ?? "avatar").toLowerCase();
+    const kind: "avatar" | "cover" = kindRaw === "cover" ? "cover" : "avatar";
+    const bucket = kind === "cover" ? "covers" : "avatars";
+    const profileColumn = kind === "cover" ? "cover_url" : "avatar_url";
+
     if (!(file instanceof File)) return json({ error: "Missing image file" }, 400);
 
     const allowedTypes = new Set(["image/jpeg", "image/png", "image/webp"]);
     if (!allowedTypes.has(file.type)) return json({ error: "Please upload a JPG, PNG, or WebP image" }, 400);
-    if (file.size > 5 * 1024 * 1024) return json({ error: "File size must be less than 5MB" }, 400);
+    const maxSize = kind === "cover" ? 8 * 1024 * 1024 : 5 * 1024 * 1024;
+    if (file.size > maxSize) return json({ error: `File size must be less than ${maxSize / 1024 / 1024}MB` }, 400);
 
     const ext = file.name.split(".").pop()?.toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-    const filePath = `${user.id}/avatar_${Date.now()}.${ext}`;
+    const filePath = `${user.id}/${kind}_${Date.now()}.${ext}`;
     const bytes = new Uint8Array(await file.arrayBuffer());
 
     const { error: uploadError } = await admin.storage
-      .from("avatars")
+      .from(bucket)
       .upload(filePath, bytes, { upsert: true, contentType: file.type });
     if (uploadError) throw uploadError;
 
-    const { data: publicUrlData } = admin.storage.from("avatars").getPublicUrl(filePath);
+    const { data: publicUrlData } = admin.storage.from(bucket).getPublicUrl(filePath);
     const publicUrl = publicUrlData.publicUrl;
 
     const { data: existing, error: existingError } = await admin
@@ -56,15 +62,20 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (existingError) throw existingError;
 
-    const profilePayload = { user_id: user.id, email: user.email, avatar_url: publicUrl, updated_at: new Date().toISOString() };
+    const profilePayload: Record<string, unknown> = {
+      user_id: user.id,
+      email: user.email,
+      [profileColumn]: publicUrl,
+      updated_at: new Date().toISOString(),
+    };
     const { error: profileError } = existing
       ? await admin.from("profiles").update(profilePayload).eq("id", existing.id)
       : await admin.from("profiles").insert({ id: user.id, ...profilePayload });
     if (profileError) throw profileError;
 
-    return json({ avatarUrl: publicUrl });
+    return json({ url: publicUrl, avatarUrl: kind === "avatar" ? publicUrl : undefined, coverUrl: kind === "cover" ? publicUrl : undefined });
   } catch (err) {
     console.error("[profile-avatar-upload]", err);
-    return json({ error: (err as Error).message || "Avatar upload failed" }, 500);
+    return json({ error: (err as Error).message || "Upload failed" }, 500);
   }
 });
