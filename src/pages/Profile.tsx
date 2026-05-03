@@ -25,7 +25,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
-import { useUserProfile, useUpdateUserProfile, useUploadAvatar } from "@/hooks/useUserProfile";
+import { useUserProfile, useUpdateUserProfile, useUploadAvatar, useUploadCover } from "@/hooks/useUserProfile";
 import { useUsername } from "@/hooks/useUsername";
 import { useMerchantRole } from "@/hooks/useMerchantRole";
 import { useOwnerStoreProfile } from "@/hooks/useOwnerStoreProfile";
@@ -245,6 +245,7 @@ const Profile = () => {
   const { bookings, isLoading: bookingsLoading } = useBookingHistory();
   const updateProfile = useUpdateUserProfile();
   const uploadAvatar = useUploadAvatar();
+  const uploadCover = useUploadCover();
   const langTriggerRef = useRef<HTMLButtonElement>(null);
   const { impact, selectionChanged } = useHaptics();
   const [showNotifPanel, setShowNotifPanel] = useState<boolean>(() => {
@@ -451,27 +452,20 @@ const Profile = () => {
   // Cover photo upload
   const uploadCoverFile = async (file: File) => {
     if (!user?.id) return;
-    if (file.size > 10 * 1024 * 1024) { toast.error("Cover image must be under 10MB"); return; }
     setCoverUploading(true);
     try {
-      const safe = await stripImageMetadata(file);
-      const ext = safe.name.split(".").pop() || "jpg";
-      const path = `${user.id}/cover_${Date.now()}.${ext}`;
-      // Convert to Uint8Array — WKWebView's fetch is unreliable with File/Blob
-      // bodies on iOS Capacitor; ArrayBuffer-backed bytes upload reliably.
-      const buf = new Uint8Array(await safe.arrayBuffer());
-      const { error: upErr } = await supabase.storage
-        .from("avatars")
-        .upload(path, buf, { upsert: true, contentType: safe.type || "image/jpeg" });
-      if (upErr) throw upErr;
-      const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
-      await updateProfile.mutateAsync({ cover_url: publicUrl, cover_position: 50 });
+      await uploadCover.mutateAsync(file);
+      // Edge function already persisted cover_url + email. Reset position locally;
+      // best-effort write of cover_position (silent — no extra toast).
       setCoverPosition(50);
-      toast.success("Cover photo updated!");
+      try {
+        await supabase.from("profiles").update({ cover_position: 50 }).eq("id", user.id);
+      } catch (e) {
+        console.warn("[uploadCoverFile] cover_position update skipped", e);
+      }
+      queryClient.invalidateQueries({ queryKey: ["userProfile", user.id] });
     } catch (err: any) {
       console.error("[uploadCoverFile]", err);
-      const detail = err?.statusCode || err?.error || err?.name || "";
-      toast.error(`Cover upload failed${detail ? ` (${detail})` : ""}: ${err?.message || "unknown"}`);
     } finally {
       setCoverUploading(false);
     }
