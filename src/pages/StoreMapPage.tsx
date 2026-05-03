@@ -870,7 +870,7 @@ export default function StoreMapPage() {
       }
     });
 
-    let intervalId: ReturnType<typeof window.setInterval> | null = null;
+    let intervalId: any = null;
     if (pulseCirclesRef.current.length) {
       let tick = 0;
       intervalId = window.setInterval(() => {
