@@ -221,8 +221,8 @@ export default function DocumentScanner({ open, onClose, onComplete }: DocumentS
         exit={{ opacity: 0 }}
         className="fixed inset-0 z-[1500] bg-background flex flex-col"
       >
-        {/* Header */}
-        <div className="flex items-center justify-between px-4 h-14 border-b border-border/40 shrink-0">
+        {/* Header — pt-safe pushes below the notch/Dynamic Island */}
+        <div className="flex items-center justify-between px-4 h-14 border-b border-border/40 shrink-0 pt-safe">
           <button onClick={onClose} className="h-9 w-9 rounded-full hover:bg-muted/60 flex items-center justify-center">
             <X className="h-5 w-5" />
           </button>
@@ -304,7 +304,7 @@ export default function DocumentScanner({ open, onClose, onComplete }: DocumentS
         </div>
 
         {/* Action bar */}
-        <div className="grid grid-cols-2 gap-2 p-4 pt-2 border-t border-border/40 shrink-0" style={{ paddingBottom: "calc(16px + env(safe-area-inset-bottom))" }}>
+        <div className="grid grid-cols-2 gap-2 p-4 pt-2 border-t border-border/40 shrink-0 pb-safe">
           <button
             onClick={() => cameraRef.current?.click()}
             className="h-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center gap-2 font-medium"
