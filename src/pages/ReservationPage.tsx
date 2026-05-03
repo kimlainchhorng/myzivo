@@ -107,13 +107,13 @@ export default function ReservationPage() {
         special_request: note.trim() || null,
         status: "confirmed" as const,
       };
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("restaurant_reservations")
         .insert(payload)
         .select("id")
         .maybeSingle();
       if (error) throw error;
-      setConfirmedId(data?.id ?? `local-${Date.now()}`);
+      setConfirmedId((data as any)?.id ?? `local-${Date.now()}`);
       setStep("done");
     } catch (err: any) {
       // Graceful fallback: still show a confirmation locally so the demo flow works
