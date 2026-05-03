@@ -108,7 +108,7 @@ export function useLocalSavedPlaces() {
         next = [
           {
             id: `custom-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-            kind: "custom",
+            kind: "custom" as const,
             label: baseLabel,
             address: cleanAddress,
             addedAt: Date.now(),
