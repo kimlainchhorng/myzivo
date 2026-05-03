@@ -1421,7 +1421,7 @@ const AppHome = () => {
                   </div>
                   <div>
                     <p className="text-sm font-bold text-foreground">Invite Friends, Earn Rewards</p>
-                    <p className="text-[11px] text-muted-foreground">Get ${REFERRAL_REWARDS.referrer.amount} credit per friend who joins</p>
+                    <p className="text-[11px] text-muted-foreground">Get ${REFERRAL_REWARDS.referrer.creditPerReferral} credit per friend who joins</p>
                   </div>
                 </div>
                 <div className="flex gap-2">

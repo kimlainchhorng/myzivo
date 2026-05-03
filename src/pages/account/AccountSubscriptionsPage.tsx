@@ -114,8 +114,9 @@ export default function AccountSubscriptionsPage() {
     const cents = s.price_cents ?? 0;
     const interval = (s.tier?.billing_interval || "month") as BillingInterval;
     if (interval === "year") return sum + Math.round(cents / 12);
-    if (interval === "quarter") return sum + Math.round(cents / 3);
-    if (interval === "week") return sum + Math.round(cents * 4.33);
+    if ((interval as string) === "quarter" || interval === "3_months") return sum + Math.round(cents / 3);
+    if ((interval as string) === "week") return sum + Math.round(cents * 4.33);
+    if (interval === "6_months") return sum + Math.round(cents / 6);
     return sum + cents;
   }, 0);
 
