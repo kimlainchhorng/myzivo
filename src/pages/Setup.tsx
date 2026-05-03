@@ -108,22 +108,20 @@ export default function Setup() {
     setCoverPreview(previewUrl);
   };
 
-  const uploadImage = async (file: File, bucket: string, folder: string): Promise<string> => {
+  const uploadImage = async (file: File, kind: "avatar" | "cover"): Promise<string> => {
     const safe = await stripImageMetadata(file);
-    const fileExt = safe.name.split(".").pop();
-    const filePath = `${folder}/${bucket}_${Date.now()}.${fileExt}`;
+    const form = new FormData();
+    form.append("file", safe);
+    form.append("kind", kind);
 
-    const { error: uploadError } = await supabase.storage
-      .from(bucket)
-      .upload(filePath, safe, { upsert: true });
-
-    if (uploadError) throw uploadError;
-
-    const {
-      data: { publicUrl },
-    } = supabase.storage.from(bucket).getPublicUrl(filePath);
-
-    return publicUrl;
+    const { data, error } = await supabase.functions.invoke("profile-avatar-upload", {
+      body: form,
+    });
+    if (error) throw error;
+    const url = (data as { url?: string; avatarUrl?: string; coverUrl?: string })?.url
+      ?? (kind === "cover" ? (data as { coverUrl?: string })?.coverUrl : (data as { avatarUrl?: string })?.avatarUrl);
+    if (!url) throw new Error(`${kind} upload failed`);
+    return url;
   };
 
   const persistSetup = async ({
