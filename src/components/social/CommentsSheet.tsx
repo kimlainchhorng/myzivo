@@ -110,123 +110,127 @@ export default function CommentsSheet({
       title={headerTitle}
       ariaLabel="Comments"
       maxHeightVh={70}
+      zIndex={1500}
+      safeAreaTop={false}
       className={cn(dark && "bg-black/95 text-white")}
       headerClassName={cn("border-b", border)}
     >
-      {/* Sort tabs */}
-      {/* Show sort tabs only when there are 2+ top-level comments — sorting
-          is a no-op below that threshold and the tabs add visual noise. */}
-      {comments.length >= 2 && (
-        <div className={cn("flex gap-1 px-4 pt-2 pb-1 border-b", border)}>
-          {(["recent", "top"] as const).map((s) => (
-            <button
-              key={s}
-              onClick={() => setSort(s)}
-              className={cn(
-                "px-3 py-1 rounded-full text-[11px] font-semibold capitalize transition-colors",
-                sort === s
-                  ? "bg-primary/10 text-primary"
-                  : dark ? "text-white/50 hover:text-white/80" : "text-muted-foreground hover:text-foreground"
-              )}
-            >
-              {s === "recent" ? "Most Recent" : "Top Comments"}
-            </button>
-          ))}
-        </div>
-      )}
-
-      {/* Comments List */}
-      <div ref={scrollRef} className="px-4 py-3 space-y-4 scrollbar-none">
-        {loading ? (
-          <CommentRowsSkeleton rows={4} />
-        ) : comments.length === 0 ? (
-          <div className="text-center py-12">
-            <p className={cn("text-sm", mutedText)}>No comments yet</p>
-            <p className={cn("text-xs mt-1", mutedText)}>Be the first to comment!</p>
+      {/* Wrap in a column so the comments list scrolls and the input bar
+          (emoji + reply indicator + textbox) stays pinned at the bottom. */}
+      <div className="flex flex-col h-full min-h-0">
+        {/* Sort tabs — only with 2+ top-level comments (no-op otherwise) */}
+        {comments.length >= 2 && (
+          <div className={cn("shrink-0 flex gap-1 px-4 pt-2 pb-1 border-b", border)}>
+            {(["recent", "top"] as const).map((s) => (
+              <button
+                key={s}
+                onClick={() => setSort(s)}
+                className={cn(
+                  "px-3 py-1 rounded-full text-[11px] font-semibold capitalize transition-colors",
+                  sort === s
+                    ? "bg-primary/10 text-primary"
+                    : dark ? "text-white/50 hover:text-white/80" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                {s === "recent" ? "Most Recent" : "Top Comments"}
+              </button>
+            ))}
           </div>
-        ) : (
-          [...comments]
-            .sort((a, b) => {
-              // Pinned comments always float to the top.
-              if (a.is_pinned && !b.is_pinned) return -1;
-              if (!a.is_pinned && b.is_pinned) return 1;
-              return sort === "top"
-                ? ((b.reactions?.length || 0) + (b.replies?.length || 0)) - ((a.reactions?.length || 0) + (a.replies?.length || 0))
-                : new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
-            })
-            .map((comment) => (
-            <CommentItem
-              key={comment.id}
-              comment={comment}
-              currentUserId={currentUserId}
-              isPostAuthor={isPostAuthor}
-              dark={dark}
-              onReply={(id, name) => { setReplyTo({ id, name }); inputRef.current?.focus(); }}
-              onDelete={deleteComment}
-              onEdit={editComment}
-              onTogglePin={togglePin}
-              onToggleReaction={toggleReaction}
-              showReactionsFor={showReactionsFor}
-              setShowReactionsFor={setShowReactionsFor}
-            />
-          ))
         )}
-      </div>
 
-      {/* Reply indicator */}
-      {replyTo && (
-        <div className={cn("flex items-center justify-between px-4 py-2 border-t", border)}>
-          <span className={cn("text-xs", mutedText)}>
-            Replying to <span className="font-semibold">{replyTo.name}</span>
-          </span>
-          <button onClick={() => setReplyTo(null)} aria-label="Cancel reply">
-            <X className="h-3.5 w-3.5" />
-          </button>
+        {/* Comments List — the only scroll region */}
+        <div ref={scrollRef} className="flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-3 space-y-4 scrollbar-none">
+          {loading ? (
+            <CommentRowsSkeleton rows={4} />
+          ) : comments.length === 0 ? (
+            <div className="text-center py-12">
+              <p className={cn("text-sm", mutedText)}>No comments yet</p>
+              <p className={cn("text-xs mt-1", mutedText)}>Be the first to comment!</p>
+            </div>
+          ) : (
+            [...comments]
+              .sort((a, b) => {
+                // Pinned comments always float to the top.
+                if (a.is_pinned && !b.is_pinned) return -1;
+                if (!a.is_pinned && b.is_pinned) return 1;
+                return sort === "top"
+                  ? ((b.reactions?.length || 0) + (b.replies?.length || 0)) - ((a.reactions?.length || 0) + (a.replies?.length || 0))
+                  : new Date(b.created_at).getTime() - new Date(a.created_at).getTime();
+              })
+              .map((comment) => (
+              <CommentItem
+                key={comment.id}
+                comment={comment}
+                currentUserId={currentUserId}
+                isPostAuthor={isPostAuthor}
+                dark={dark}
+                onReply={(id, name) => { setReplyTo({ id, name }); inputRef.current?.focus(); }}
+                onDelete={deleteComment}
+                onEdit={editComment}
+                onTogglePin={togglePin}
+                onToggleReaction={toggleReaction}
+                showReactionsFor={showReactionsFor}
+                setShowReactionsFor={setShowReactionsFor}
+              />
+            ))
+          )}
         </div>
-      )}
 
-      {/* Quick emoji bar */}
-      <div className={cn("flex items-center gap-1.5 px-3 py-1.5 border-t overflow-x-auto scrollbar-none", border)}>
-        {["😂", "❤️", "🔥", "👏", "😮", "😢"].map((e) => (
-          <button
-            key={e}
-            type="button"
-            onClick={() => {
-              setText((prev) => prev + e);
-              inputRef.current?.focus();
-            }}
-            className="h-9 w-9 shrink-0 rounded-full text-xl flex items-center justify-center hover:bg-muted/50 active:scale-90 transition-transform"
-            aria-label={`Insert ${e}`}
-          >
-            {e}
-          </button>
-        ))}
-      </div>
+        {/* Pinned footer: reply indicator, emoji bar, input */}
+        <div className="shrink-0">
+          {replyTo && (
+            <div className={cn("flex items-center justify-between px-4 py-2 border-t", border)}>
+              <span className={cn("text-xs", mutedText)}>
+                Replying to <span className="font-semibold">{replyTo.name}</span>
+              </span>
+              <button onClick={() => setReplyTo(null)} aria-label="Cancel reply">
+                <X className="h-3.5 w-3.5" />
+              </button>
+            </div>
+          )}
 
-      {/* Input */}
-      <div
-        className={cn("flex items-center gap-2 px-4 py-3 border-t", border)}
-        style={{ paddingBottom: "max(calc(env(safe-area-inset-bottom, 0px) + 0.75rem), 0.75rem)" }}
-      >
-        <input
-          ref={inputRef}
-          type="text"
-          placeholder={replyTo ? `Reply to ${replyTo.name}...` : "Add a comment..."}
-          value={text}
-          onChange={(e) => setText(e.target.value)}
-          onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
-          className={cn("flex-1 rounded-full px-4 py-2.5 text-[13px] outline-none", inputBg)}
-        />
-        {text.trim() && (
-          <button
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="h-9 w-9 rounded-full bg-primary flex items-center justify-center shrink-0"
-            aria-label="Send comment"
+          <div className={cn("flex items-center gap-1.5 px-3 py-1.5 border-t overflow-x-auto scrollbar-none", border)}>
+            {["😂", "❤️", "🔥", "👏", "😮", "😢"].map((e) => (
+              <button
+                key={e}
+                type="button"
+                onClick={() => {
+                  setText((prev) => prev + e);
+                  inputRef.current?.focus();
+                }}
+                className="h-9 w-9 shrink-0 rounded-full text-xl flex items-center justify-center hover:bg-muted/50 active:scale-90 transition-transform"
+                aria-label={`Insert ${e}`}
+              >
+                {e}
+              </button>
+            ))}
+          </div>
+
+          <div
+            className={cn("flex items-center gap-2 px-4 py-3 border-t", border)}
+            style={{ paddingBottom: "max(calc(env(safe-area-inset-bottom, 0px) + 0.75rem), 0.75rem)" }}
           >
-            <Send className="h-4 w-4 text-primary-foreground" />
-          </button>
-        )}
+            <input
+              ref={inputRef}
+              type="text"
+              placeholder={replyTo ? `Reply to ${replyTo.name}...` : "Add a comment..."}
+              value={text}
+              onChange={(e) => setText(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSubmit()}
+              className={cn("flex-1 rounded-full px-4 py-2.5 text-[13px] outline-none", inputBg)}
+            />
+            {text.trim() && (
+              <button
+                onClick={handleSubmit}
+                disabled={submitting}
+                className="h-9 w-9 rounded-full bg-primary flex items-center justify-center shrink-0"
+                aria-label="Send comment"
+              >
+                <Send className="h-4 w-4 text-primary-foreground" />
+              </button>
+            )}
+          </div>
+        </div>
       </div>
     </SwipeableSheet>
   );

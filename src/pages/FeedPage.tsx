@@ -4370,17 +4370,6 @@ export default function FeedPage() {
         </div>
       )}
 
-      {/* Trending hashtag chips overlay — TikTok-style filter bar.
-          Extract from the unfiltered posts list so chips don't disappear
-          once you select one. */}
-      <TrendingHashtags
-        posts={posts}
-        selected={selectedHashtag}
-        onSelect={setSelectedHashtag}
-        variant="overlay"
-        limit={8}
-      />
-
       {/* Discover + Search + Live buttons — hide on desktop.
           Wrapped in a centered container so on iPad (md+), where the reel
           sits in a 420-px-wide phone frame, the buttons hug the right edge

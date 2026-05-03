@@ -1493,16 +1493,6 @@ export default function ReelsFeedPage() {
           {/* On this day — Facebook-style memories */}
           <Suspense fallback={null}><OnThisDay /></Suspense>
 
-          {/* Trending hashtag chips — tap to filter the feed */}
-          <div className="px-3 pt-1.5 pb-1">
-            <TrendingHashtags
-              posts={items}
-              selected={selectedHashtag}
-              onSelect={setSelectedHashtag}
-              variant="inline"
-            />
-          </div>
-
           {/* Scroll-to-top FAB (renders portal-ish via fixed positioning) */}
           <Suspense fallback={null}><ScrollToTopFab /></Suspense>
 

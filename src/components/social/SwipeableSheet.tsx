@@ -14,6 +14,7 @@
  *  - Inner content scrolls naturally; only the header strip drives the drag
  */
 import { type ReactNode, useEffect, useRef, useId } from "react";
+import { createPortal } from "react-dom";
 import {
   AnimatePresence,
   motion,
@@ -165,7 +166,10 @@ export default function SwipeableSheet({
   // Snap-point max-height: never exceed viewport minus top safe-area + 24px buffer
   const maxHeightStyle = `min(${maxHeightVh}dvh, calc(100dvh - env(safe-area-inset-top, 0px) - 24px))`;
 
-  return (
+  // When using `fixed` positioning, portal to <body> so we escape any
+  // transformed ancestor (e.g. PullToRefresh) that would otherwise re-anchor
+  // position:fixed and shift the sheet off-screen.
+  const overlay = (
     <AnimatePresence>
       {open && (
         <motion.div
@@ -296,4 +300,9 @@ export default function SwipeableSheet({
       )}
     </AnimatePresence>
   );
+
+  if (positioning === "absolute" || typeof document === "undefined") {
+    return overlay;
+  }
+  return createPortal(overlay, document.body);
 }
