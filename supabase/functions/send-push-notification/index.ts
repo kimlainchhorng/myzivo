@@ -27,13 +27,34 @@ serve(async (req) => {
     return new Response(null, { headers: corsHeaders });
   }
 
-  // Internal-only: require service role key
+  // Accept either an authenticated user JWT or the service-role key (for
+  // internal callers like cron jobs / other edge functions).
   const authHeader = req.headers.get("Authorization");
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
-  if (!authHeader || !serviceKey || authHeader !== `Bearer ${serviceKey}`) {
+  const anonKey = Deno.env.get("SUPABASE_ANON_KEY");
+  const supabaseUrlEarly = Deno.env.get("SUPABASE_URL");
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
     return new Response(JSON.stringify({ error: "Authentication required" }), {
       status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
+  }
+  const isServiceCall = !!serviceKey && authHeader === `Bearer ${serviceKey}`;
+  if (!isServiceCall) {
+    if (!supabaseUrlEarly || !anonKey) {
+      return new Response(JSON.stringify({ error: "Server misconfigured" }), {
+        status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+    const userClient = createClient(supabaseUrlEarly, anonKey, {
+      global: { headers: { Authorization: authHeader } },
+    });
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claims, error: claimsErr } = await userClient.auth.getClaims(token);
+    if (claimsErr || !claims?.claims?.sub) {
+      return new Response(JSON.stringify({ error: "Authentication required" }), {
+        status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
   }
 
   try {
