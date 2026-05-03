@@ -79,8 +79,8 @@ export function CollapsibleCaption({
 
   const maskFrom =
     variant === "overlay"
-      ? "from-transparent via-black/60 to-black/80"
-      : "from-transparent via-card to-card";
+      ? "from-transparent via-black/70 to-black/90"
+      : "from-transparent via-background to-background";
 
   const linkColor =
     variant === "overlay" ? "text-white/80" : "text-muted-foreground";
@@ -112,14 +112,17 @@ export function CollapsibleCaption({
           aria-expanded={false}
           aria-label="Show full caption"
           className={cn(
-            "absolute right-0 bottom-0 pl-8 pr-0 text-[13px] font-medium max-w-[60%] text-right whitespace-nowrap",
+            "absolute right-0 bottom-0 pl-16 pr-0 text-[13px] font-medium max-w-[70%] text-right whitespace-nowrap",
             "bg-gradient-to-r",
             maskFrom,
             linkColor,
             "active:opacity-70",
           )}
         >
-          … See more
+          {"…  "}
+          <span className={variant === "overlay" ? "text-white" : "text-foreground"}>
+            See more
+          </span>
         </button>
       )}
 

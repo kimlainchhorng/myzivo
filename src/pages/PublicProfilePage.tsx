@@ -62,7 +62,9 @@ function PublicPostOverlay({
       {...motionProps}
       data-testid="public-post-overlay-body"
       className="fixed inset-0 z-[9999] bg-background/95 backdrop-blur-sm flex flex-col overflow-y-auto"
-      style={{ paddingTop: "var(--zivo-safe-top-overlay)" }}
+      style={{
+        paddingTop: "max(env(safe-area-inset-top, 0px), var(--zivo-safe-top-overlay, 60px))",
+      }}
     >
       <SwipeGrabHandle
         onStartDrag={startDrag}
@@ -1261,9 +1263,12 @@ export default function PublicProfilePage() {
                   <PublicPostOverlay onClose={() => setSelectedPost(null)}>
                     {(startDrag) => (
                       <>
-                        {/* Header bar */}
+                        {/* Header bar — relies on the overlay's outer paddingTop
+                            for safe-area clearance instead of position:sticky,
+                            which is brittle inside framer-motion transformed
+                            ancestors. */}
                         <div
-                          className="sticky top-0 z-10 flex items-center gap-3 px-4 py-2 bg-background/80 backdrop-blur-lg border-b border-border cursor-grab active:cursor-grabbing select-none pt-safe"
+                          className="z-10 flex items-center gap-3 px-4 py-2 bg-background/80 backdrop-blur-lg border-b border-border cursor-grab active:cursor-grabbing select-none shrink-0"
                           style={{ touchAction: "none" }}
                           onPointerDown={(e) => {
                             const target = e.target as HTMLElement | null;
