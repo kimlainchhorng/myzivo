@@ -142,23 +142,20 @@ serve(async (req: Request) => {
     return new Response(null, { status: 204, headers: corsHeaders });
   }
 
+  // Public endpoint — try to identify user for rate limiting, but don't require auth
   const authHeader = req.headers.get("Authorization");
-  if (!authHeader?.startsWith("Bearer ")) {
-    return new Response(JSON.stringify({ error: "Authentication required" }), {
-      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
+  let rateLimitKey = req.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "anon";
+  if (authHeader?.startsWith("Bearer ")) {
+    try {
+      const { data } = await createClient(
+        Deno.env.get("SUPABASE_URL") ?? "",
+        Deno.env.get("SUPABASE_ANON_KEY") ?? "",
+        { global: { headers: { Authorization: authHeader } } }
+      ).auth.getUser();
+      if (data?.user?.id) rateLimitKey = data.user.id;
+    } catch { /* anon ok */ }
   }
-  const { data: { user }, error: authErr } = await createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_ANON_KEY") ?? "",
-    { global: { headers: { Authorization: authHeader } } }
-  ).auth.getUser();
-  if (authErr || !user) {
-    return new Response(JSON.stringify({ error: "Authentication required" }), {
-      status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
-    });
-  }
-  const rl = await rateLimitDb(user.id, "api_general");
+  const rl = await rateLimitDb(rateLimitKey, "api_general");
   if (!rl.allowed) {
     return new Response(JSON.stringify({ error: "Too many requests. Please try again later." }), {
       status: 429, headers: { ...corsHeaders, "Content-Type": "application/json", ...rateLimitHeaders(rl, "api_general") },
