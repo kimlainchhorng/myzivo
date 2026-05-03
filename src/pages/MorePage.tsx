@@ -1604,7 +1604,7 @@ export default function MorePage() {
   const pinnedLinks = useMemo(() => {
     if (!pinnedHrefs.length) return [];
     const all = sections.flatMap((s) => s.links);
-    const byHref = new Map(all.map((l) => [l.href, l]));
+    const byHref: Map<string, QuickLink> = new (globalThis as any).Map(all.map((l) => [l.href, l]));
     return pinnedHrefs.map((h) => byHref.get(h)).filter(Boolean) as QuickLink[];
   }, [pinnedHrefs]);
 
