@@ -1409,7 +1409,7 @@ const Profile = () => {
 
       {/* Mode Switch bottom sheet — placeholder for future per-mode routing */}
       <Sheet open={modeOpen} onOpenChange={setModeOpen}>
-        <SheetContent side="bottom" className="rounded-t-3xl pb-10 max-h-[88vh] overflow-y-auto">
+        <SheetContent side="bottom" className="rounded-t-3xl pb-10 max-h-[88vh] overflow-y-auto z-[1500]">
           <SheetHeader className="pb-3">
             <SheetTitle className="text-base font-bold">Switch mode</SheetTitle>
           </SheetHeader>

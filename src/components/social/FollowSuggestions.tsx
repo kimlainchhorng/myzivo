@@ -12,6 +12,7 @@ import VerifiedBadge from "@/components/VerifiedBadge";
 import { isBlueVerified } from "@/lib/verification";
 import { useState } from "react";
 import { toast } from "sonner";
+import { MutualFollowsBadge, useMutualFollows } from "./MutualFollowsBadge";
 
 export default function FollowSuggestions() {
   const { user } = useAuth();
@@ -54,6 +55,7 @@ export default function FollowSuggestions() {
   };
 
   const visible = suggestions.filter((s: any) => !dismissed.includes(s.id));
+  const { data: mutualMap } = useMutualFollows(visible.map((s: any) => s.id));
   if (visible.length === 0) return null;
 
   return (
@@ -72,10 +74,11 @@ export default function FollowSuggestions() {
               <AvatarImage src={optimizeAvatar(s.avatar_url, 56)} loading="lazy" />
               <AvatarFallback>{(s.full_name || "U")[0]}</AvatarFallback>
             </Avatar>
-            <p className="text-xs font-medium text-foreground truncate mb-2 inline-flex items-center justify-center gap-1 w-full">
+            <p className="text-xs font-medium text-foreground truncate mb-1 inline-flex items-center justify-center gap-1 w-full">
               <span className="truncate">{s.full_name || "User"}</span>
               {isBlueVerified(s.is_verified) && <VerifiedBadge size={11} interactive={false} />}
             </p>
+            <MutualFollowsBadge mutual={mutualMap?.get(s.id)} className="mb-2 text-center" />
             <button
               onClick={() => followUser(s.id)}
               className="w-full flex items-center justify-center gap-1 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium"

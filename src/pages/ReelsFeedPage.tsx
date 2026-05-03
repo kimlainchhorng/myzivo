@@ -108,6 +108,9 @@ const FeedGreeting = lazy(() => import("@/components/social/FeedGreeting"));
 const ReelsPreviewRow = lazy(() => import("@/components/social/ReelsPreviewRow"));
 const FeaturedCreatorsRow = lazy(() => import("@/components/social/FeaturedCreatorsRow"));
 const FollowSuggestions = lazy(() => import("@/components/social/FollowSuggestions"));
+const LiveNowStrip = lazy(() => import("@/components/social/LiveNowStrip"));
+const FriendActivity = lazy(() => import("@/components/social/FriendActivity"));
+const TrendingCreators = lazy(() => import("@/components/social/TrendingCreators"));
 const SavedPostsLink = lazy(() => import("@/components/social/SavedPostsLink"));
 const ProfileCompletionNudge = lazy(() => import("@/components/social/ProfileCompletionNudge"));
 const FloatingProductCard = lazy(() => import("@/components/reels/FloatingProductCard"));
@@ -1645,6 +1648,8 @@ export default function ReelsFeedPage() {
                   )}
                   {/* Inject suggested users after 3rd post */}
                   {idx === 2 && <Suspense fallback={null}><SuggestedUsersCarousel variant="inline" /></Suspense>}
+                  {/* Trending this week — real DB-backed leaderboard, self-hides if no signal. */}
+                  {idx === 3 && <Suspense fallback={null}><TrendingCreators /></Suspense>}
                   {/* Inject Communities card after 5th post */}
                   {idx === 4 && (
                     <div className="bg-card border-b border-border/10 px-3 py-3">
@@ -1681,8 +1686,8 @@ export default function ReelsFeedPage() {
                       </div>
                     </div>
                   )}
-                  {/* Real "Live Now" surfacing is handled by the banner at the top
-                      of the feed (driven by liveStreamsCount). Mock strip removed. */}
+                  {/* Live Now strip — real DB-backed creators, self-hides if nobody is live. */}
+                  {idx === 6 && <Suspense fallback={null}><LiveNowStrip /></Suspense>}
                   {/* Interactive community poll after 9th post */}
                   {idx === 8 && <FeedPollCard />}
                   {/* Trending reels strip — TikTok cross-promotion within feed */}
@@ -1746,8 +1751,9 @@ export default function ReelsFeedPage() {
                       </div>
                     </button>
                   )}
-                  {/* Friend Activity mock removed — was hardcoded fake names/actions.
-                      Real activity already lives at /activity (ActivityFeedPage). */}
+                  {/* Friend Activity — real DB-backed. Self-hides when followed users
+                      have no recent activity. "See all" links to /activity. */}
+                  {idx === 17 && <Suspense fallback={null}><FriendActivity /></Suspense>}
                   {/* Inject On This Day memory card after 16th post */}
                   {idx === 15 && (
                     <button
@@ -1784,7 +1790,14 @@ export default function ReelsFeedPage() {
                   )}
                 </div>
               )}
-              {pageSize >= PAGE_MAX && filteredItems.length >= 20 && (
+              {pageSize >= PAGE_MAX && filteredItems.length >= 20 && (() => {
+                const uniqueAuthors = new Set(
+                  filteredItems
+                    .map((p: any) => p.author_id || p.store_slug || p.author_name)
+                    .filter(Boolean)
+                ).size;
+                const videoCount = filteredItems.filter((p: any) => p.media_type === "video").length;
+                return (
                 <div className="mx-3 my-4 rounded-2xl bg-muted/30 border border-border/20 px-4 py-5 flex flex-col items-center gap-2 text-center">
                   <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mb-1">
                     <Sparkles className="h-6 w-6 text-primary" />
@@ -1798,13 +1811,13 @@ export default function ReelsFeedPage() {
                     </div>
                     <div className="w-px h-8 bg-border" />
                     <div className="flex flex-col items-center">
-                      <span className="text-base font-bold text-foreground">{Math.max(1, Math.round(filteredItems.length * 0.3))}</span>
-                      <span className="text-[10px] text-muted-foreground">New creators</span>
+                      <span className="text-base font-bold text-foreground">{uniqueAuthors}</span>
+                      <span className="text-[10px] text-muted-foreground">{uniqueAuthors === 1 ? "Creator" : "Creators"}</span>
                     </div>
                     <div className="w-px h-8 bg-border" />
                     <div className="flex flex-col items-center">
-                      <span className="text-base font-bold text-foreground">{Math.max(1, filteredItems.filter((p: any) => p.media_type === "video").length)}</span>
-                      <span className="text-[10px] text-muted-foreground">Videos watched</span>
+                      <span className="text-base font-bold text-foreground">{videoCount}</span>
+                      <span className="text-[10px] text-muted-foreground">{videoCount === 1 ? "Video" : "Videos"}</span>
                     </div>
                   </div>
                   <button
@@ -1814,7 +1827,8 @@ export default function ReelsFeedPage() {
                     Discover more
                   </button>
                 </div>
-              )}
+                );
+              })()}
               {/* Spacer so last post clears the fixed bottom nav */}
               <div className="md:hidden" style={{ height: 'max(calc(env(safe-area-inset-bottom, 0px) + 6rem), 6rem)' }} aria-hidden="true" />
             </div>

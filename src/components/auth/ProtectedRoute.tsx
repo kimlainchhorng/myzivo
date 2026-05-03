@@ -2,6 +2,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import { withRedirectParam } from "@/lib/authRedirect";
+import AccessDenied from "@/components/auth/AccessDenied";
 
 type ProtectedRouteProps = {
   children: React.ReactNode;
@@ -31,13 +32,9 @@ const ProtectedRoute = ({ children, requireAdmin = false }: ProtectedRouteProps)
 
   if (requireAdmin && !isAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center space-y-4">
-          <h1 className="text-2xl font-bold text-destructive">Access Denied</h1>
-          <p className="text-muted-foreground">You don't have permission to access this page.</p>
-          <p className="text-sm text-muted-foreground">Contact an administrator to request access.</p>
-        </div>
-      </div>
+      <AccessDenied
+        message="You don't have permission to access this page. Contact an administrator to request access."
+      />
     );
   }
 

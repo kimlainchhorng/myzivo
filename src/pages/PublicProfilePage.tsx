@@ -15,6 +15,8 @@ import NavBar from "@/components/home/NavBar";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { formatCount } from "@/lib/social/formatCount";
 import { isBlueVerified } from "@/lib/verification";
+import { MutualFollowsBadge, useMutualFollows } from "@/components/social/MutualFollowsBadge";
+const TopFans = lazy(() => import("@/components/social/TopFans"));
 import {
   ArrowLeft, Loader2, User, ImageIcon, Film, Grid3X3, UserPlus, UserCheck, UserX,
   Heart, MessageCircle, Lock, ShieldCheck, Users, Share2, Play, Eye, Bookmark, Globe,
@@ -25,7 +27,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { useState, useCallback, useEffect, useMemo } from "react";
+import { useState, useCallback, useEffect, useMemo, lazy, Suspense } from "react";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -466,6 +468,13 @@ export default function PublicProfilePage() {
     enabled: !!targetUserId && !!user && !isOwnProfile,
   });
 
+  // Mutual followers — "Followed by Alice + 3 others". Self-hides when
+  // the visitor has no overlap, when this is their own profile, or when
+  // the profile is locked.
+  const mutualTargets = (!isOwnProfile && !isLocked && targetUserId) ? [targetUserId] : [];
+  const { data: mutualMap } = useMutualFollows(mutualTargets);
+  const mutual = mutualMap?.get(targetUserId);
+
   // Follow mutation
   const followMutation = useMutation({
     mutationFn: async () => {
@@ -904,6 +913,9 @@ export default function PublicProfilePage() {
               <div className="mt-3 text-sm text-muted-foreground">— followers · — following · — posts</div>
             )}
 
+            {/* Social proof: mutual followers between visitor and this profile. */}
+            <MutualFollowsBadge mutual={mutual} className="mt-2 text-center text-[11px]" />
+
             {/* Actions */}
             {!isOwnProfile && user && (
               <div className="flex gap-2.5 mt-5 w-full max-w-sm px-2">
@@ -964,6 +976,15 @@ export default function PublicProfilePage() {
               </div>
             )}
           </div>
+
+          {/* Top fans — only on own profile, self-hides when no engagement signal. */}
+          {isOwnProfile && targetUserId && (
+            <div className="px-4 mt-4 max-w-3xl mx-auto w-full">
+              <Suspense fallback={null}>
+                <TopFans creatorId={targetUserId} />
+              </Suspense>
+            </div>
+          )}
 
           {/* Locked */}
           {isLocked ? (

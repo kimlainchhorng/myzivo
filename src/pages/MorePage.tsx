@@ -55,24 +55,6 @@ import { Badge } from "@/components/ui/badge";
 import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 
 /* ============================================= */
-/*  QUOTES OF THE DAY (rotates by day-of-year)    */
-/* ============================================= */
-const dailyQuotes: { quote: string; author: string }[] = [
-  { quote: "The world is a book and those who do not travel read only one page.", author: "Augustine" },
-  { quote: "Life is short and the world is wide.", author: "Anonymous" },
-  { quote: "Travel makes one modest. You see what a tiny place you occupy in the world.", author: "Flaubert" },
-  { quote: "Adventure is worthwhile.", author: "Aesop" },
-  { quote: "Not all those who wander are lost.", author: "J.R.R. Tolkien" },
-  { quote: "We travel not to escape life, but for life not to escape us.", author: "Anonymous" },
-  { quote: "The journey of a thousand miles begins with a single step.", author: "Lao Tzu" },
-  { quote: "Wherever you go, go with all your heart.", author: "Confucius" },
-  { quote: "Once a year, go someplace you've never been before.", author: "Dalai Lama" },
-  { quote: "Travel far enough, you meet yourself.", author: "David Mitchell" },
-  { quote: "Stuff your eyes with wonder.", author: "Ray Bradbury" },
-  { quote: "Take only memories, leave only footprints.", author: "Chief Seattle" },
-];
-
-/* ============================================= */
 /*  DAILY CHALLENGES (gamification)               */
 /* ============================================= */
 const dailyChallenges: { id: string; icon: any; label: string; href: string; reward: number }[] = [
@@ -80,92 +62,6 @@ const dailyChallenges: { id: string; icon: any; label: string; href: string; rew
   { id: "watch_reel", icon: Camera, label: "Watch a reel", href: "/reels", reward: 5 },
   { id: "send_message", icon: MessageCircle, label: "Send a message", href: "/chat", reward: 10 },
   { id: "check_deals", icon: Flame, label: "View today's deals", href: "/deals", reward: 5 },
-];
-
-/* ============================================= */
-/*  FEATURED CREATORS (curated)                   */
-/* ============================================= */
-const featuredCreators: { handle: string; name: string; tagline: string; gradient: string }[] = [
-  { handle: "explore_with_mira", name: "Mira K.", tagline: "Travel & food", gradient: "from-rose-500 to-pink-500" },
-  { handle: "techbites_alex", name: "Alex Chen", tagline: "Gear reviews", gradient: "from-blue-500 to-indigo-500" },
-  { handle: "cookwithriri", name: "Riri", tagline: "30-min meals", gradient: "from-orange-500 to-red-500" },
-  { handle: "fit_with_jay", name: "Jay Park", tagline: "Daily workouts", gradient: "from-emerald-500 to-teal-500" },
-  { handle: "soundscape_lia", name: "Lia M.", tagline: "Lo-fi & ambient", gradient: "from-violet-500 to-fuchsia-500" },
-  { handle: "moneymindset", name: "Diego R.", tagline: "Personal finance", gradient: "from-amber-500 to-yellow-500" },
-];
-
-/* ============================================= */
-/*  HOLIDAY COUNTDOWN (curated 2026 dates)        */
-/* ============================================= */
-const holidays2026 = [
-  { name: "Valentine's Day", date: "2026-02-14", emoji: "💝" },
-  { name: "St. Patrick's Day", date: "2026-03-17", emoji: "🍀" },
-  { name: "Easter Sunday", date: "2026-04-05", emoji: "🐰" },
-  { name: "Mother's Day", date: "2026-05-10", emoji: "💐" },
-  { name: "Memorial Day", date: "2026-05-25", emoji: "🇺🇸" },
-  { name: "Father's Day", date: "2026-06-21", emoji: "👔" },
-  { name: "Independence Day", date: "2026-07-04", emoji: "🎆" },
-  { name: "Labor Day", date: "2026-09-07", emoji: "🛠️" },
-  { name: "Halloween", date: "2026-10-31", emoji: "🎃" },
-  { name: "Thanksgiving", date: "2026-11-26", emoji: "🦃" },
-  { name: "Black Friday", date: "2026-11-27", emoji: "🛍️" },
-  { name: "Christmas", date: "2026-12-25", emoji: "🎄" },
-  { name: "New Year's Eve", date: "2026-12-31", emoji: "🎉" },
-];
-
-/* ============================================= */
-/*  SEASONAL BANNERS (one per month, 0 = January) */
-/* ============================================= */
-const seasonalBanners: { icon: any; title: string; desc: string; href: string; gradient: string; emoji: string }[] = [
-  { emoji: "🎉", icon: Sparkles, title: "New Year, New Trips", desc: "Start 2026 with 25% off flights", href: "/flights", gradient: "from-violet-500 via-fuchsia-500 to-pink-500" },
-  { emoji: "💝", icon: Heart, title: "February Romance", desc: "Couples retreats up to 40% off", href: "/hotels", gradient: "from-rose-500 via-pink-500 to-red-400" },
-  { emoji: "🍀", icon: Sparkle, title: "March Adventures", desc: "Spring break deals are live", href: "/things-to-do", gradient: "from-emerald-500 via-teal-500 to-green-500" },
-  { emoji: "🌸", icon: Flame, title: "Spring Sale", desc: "Up to 50% off across categories", href: "/deals", gradient: "from-pink-500 via-fuchsia-500 to-purple-500" },
-  { emoji: "🌴", icon: Plane, title: "Summer Kickoff", desc: "Beach & island stays from $59", href: "/hotels", gradient: "from-cyan-500 via-sky-500 to-blue-500" },
-  { emoji: "☀️", icon: Sun, title: "Summer Sale 2026", desc: "Best prices of the year", href: "/deals", gradient: "from-orange-500 via-amber-500 to-yellow-400" },
-  { emoji: "🎆", icon: Sparkles, title: "Independence Week", desc: "Domestic getaways 30% off", href: "/flights", gradient: "from-blue-500 via-indigo-500 to-violet-500" },
-  { emoji: "🏝️", icon: Mountain, title: "Late Summer Escapes", desc: "Last-call beach deals", href: "/things-to-do", gradient: "from-teal-500 via-cyan-500 to-blue-500" },
-  { emoji: "🍂", icon: Compass, title: "Autumn Adventures", desc: "Foliage tours & city breaks", href: "/experiences", gradient: "from-amber-500 via-orange-500 to-red-500" },
-  { emoji: "🎃", icon: Tv, title: "Spooky Season", desc: "Watch parties & themed events", href: "/watch-party", gradient: "from-orange-600 via-amber-500 to-yellow-400" },
-  { emoji: "🦃", icon: UtensilsCrossed, title: "Holiday Feasts", desc: "Pre-order Thanksgiving meals", href: "/eats", gradient: "from-red-500 via-orange-500 to-amber-500" },
-  { emoji: "🎄", icon: Gift, title: "Holiday Gifts", desc: "Wrap up shopping with ZIVO", href: "/marketplace", gradient: "from-rose-600 via-red-500 to-emerald-500" },
-];
-
-/* ============================================= */
-/*  TRENDING TAGS                                 */
-/* ============================================= */
-const trendingTags = [
-  "travel", "summer2026", "deals", "foodie", "wellness",
-  "creators", "ai", "marketplace", "fitness", "nightlife",
-];
-
-/* ============================================= */
-/*  FEATURED DEALS (rotates daily)                */
-/* ============================================= */
-const featuredDeals: { icon: any; title: string; desc: string; href: string; gradient: string; cta: string }[] = [
-  { icon: Plane, title: "Flight Deals", desc: "Up to 60% off select routes", href: "/flights", cta: "Browse flights", gradient: "from-sky-600 via-blue-500 to-indigo-500" },
-  { icon: Hotel, title: "Hotel Steals", desc: "Boutique stays from $49", href: "/hotels", cta: "Find a hotel", gradient: "from-rose-500 via-pink-500 to-fuchsia-500" },
-  { icon: UtensilsCrossed, title: "$0 Delivery", desc: "Free delivery on first 5 orders", href: "/eats", cta: "Order food", gradient: "from-orange-500 via-red-500 to-rose-500" },
-  { icon: Car, title: "Ride Credits", desc: "$15 off your next 3 rides", href: "/rides/hub", cta: "Book a ride", gradient: "from-amber-500 via-orange-500 to-red-500" },
-  { icon: ShoppingBag, title: "Marketplace Sale", desc: "Trending items 30% off", href: "/marketplace", cta: "Shop now", gradient: "from-emerald-500 via-teal-500 to-cyan-500" },
-  { icon: Crown, title: "ZIVO Plus Trial", desc: "30 days free, cancel anytime", href: "/zivo-plus", cta: "Start free trial", gradient: "from-amber-500 via-yellow-500 to-orange-500" },
-  { icon: Heart, title: "Wellness Bundle", desc: "Telehealth + nutrition $9.99/mo", href: "/wellness", cta: "Try wellness", gradient: "from-emerald-400 via-teal-400 to-cyan-400" },
-];
-
-/* ============================================= */
-/*  TIPS OF THE DAY (curated, rotates by date)    */
-/* ============================================= */
-const dailyTips: { icon: any; title: string; desc: string; href: string; gradient: string }[] = [
-  { icon: Sparkles, title: "Try AI Trip Planner", desc: "Plan a full itinerary in 30s with AI", href: "/ai-trip-planner", gradient: "from-fuchsia-500 to-purple-500" },
-  { icon: Crown, title: "Unlock ZIVO Plus", desc: "Earn 2× coins on every booking", href: "/zivo-plus", gradient: "from-amber-500 to-orange-500" },
-  { icon: Gift, title: "Refer & earn", desc: "Get $25 for each friend who joins", href: "/referrals", gradient: "from-emerald-500 to-teal-500" },
-  { icon: QrCode, title: "Share your QR", desc: "Connect with friends instantly", href: "/qr-profile", gradient: "from-blue-500 to-indigo-500" },
-  { icon: Plane, title: "Track a flight live", desc: "Real-time status on any route", href: "/flights/live", gradient: "from-sky-500 to-blue-500" },
-  { icon: ShoppingBag, title: "Browse Marketplace", desc: "Buy & sell with verified sellers", href: "/marketplace", gradient: "from-orange-500 to-amber-500" },
-  { icon: Heart, title: "Try Wellness", desc: "Track vitals, meds, workouts", href: "/wellness", gradient: "from-rose-500 to-pink-500" },
-  { icon: Tv, title: "Go Live now", desc: "Stream to your followers in HD", href: "/go-live", gradient: "from-red-500 to-rose-500" },
-  { icon: Briefcase, title: "Find your next job", desc: "AI-matched roles in your city", href: "/personal/apply-job", gradient: "from-indigo-500 to-violet-500" },
-  { icon: Camera, title: "Make a Reel", desc: "Post a short video, earn views", href: "/reels", gradient: "from-pink-500 to-fuchsia-500" },
 ];
 
 /* ============================================= */
@@ -244,23 +140,6 @@ const quickActions = [
   { icon: Bell, label: "Alerts", href: "/notification-center", accent: "hsl(45 93% 58%)" },
   { icon: MessageCircle, label: "Chat", href: "/chat", accent: "hsl(221 83% 53%)" },
   { icon: Search, label: "Search", href: "/smart-search", accent: "hsl(263 70% 58%)" },
-];
-
-/* ============================================= */
-/*  SPOTLIGHT — featured top cards               */
-/* ============================================= */
-const spotlightCards: { icon: any; label: string; desc: string; href: string; gradient: string; isNew?: boolean }[] = [
-  { icon: Crown, label: "ZIVO Plus", desc: "Unlock premium perks", href: "/zivo-plus", gradient: "from-amber-500 via-yellow-400 to-orange-400" },
-  { icon: Rocket, label: "Creator Hub", desc: "Grow & monetize", href: "/creator-dashboard", gradient: "from-violet-500 via-purple-500 to-fuchsia-500" },
-  { icon: Sparkles, label: "AI Tools", desc: "Plan & create with AI", href: "/ai-trip-planner", gradient: "from-fuchsia-500 via-purple-500 to-indigo-500", isNew: true },
-  { icon: DollarSign, label: "Money Hub", desc: "Wallet & earnings", href: "/wallet", gradient: "from-green-500 via-emerald-400 to-teal-400", isNew: true },
-  { icon: Heart, label: "Wellness", desc: "Stay healthy", href: "/wellness", gradient: "from-emerald-500 via-teal-400 to-cyan-400", isNew: true },
-  { icon: Briefcase, label: "Jobs Hub", desc: "Find work", href: "/personal-dashboard", gradient: "from-blue-500 via-indigo-500 to-violet-500", isNew: true },
-  { icon: Tv, label: "Live", desc: "Watch & broadcast", href: "/live", gradient: "from-rose-500 via-pink-500 to-red-400", isNew: true },
-  { icon: ShoppingBag, label: "Marketplace", desc: "Buy & sell items", href: "/marketplace", gradient: "from-orange-500 via-amber-400 to-yellow-400" },
-  { icon: UtensilsCrossed, label: "Eats", desc: "Order food fast", href: "/eats", gradient: "from-red-500 via-orange-400 to-amber-400" },
-  { icon: Gem, label: "Rewards", desc: "Earn points daily", href: "/rewards", gradient: "from-pink-500 via-fuchsia-500 to-purple-500" },
-  { icon: Trophy, label: "Membership", desc: "Exclusive tiers", href: "/membership", gradient: "from-yellow-500 via-amber-400 to-orange-400" },
 ];
 
 /* ============================================= */
@@ -808,20 +687,6 @@ export default function MorePage() {
     return { kind, platform: browser };
   }, []);
 
-  // ===== Upcoming holiday countdown =====
-  const upcomingHoliday = useMemo(() => {
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    for (const h of holidays2026) {
-      const d = new Date(h.date + "T00:00:00");
-      if (d.getTime() >= today.getTime()) {
-        const days = Math.round((d.getTime() - today.getTime()) / 86_400_000);
-        return { ...h, days };
-      }
-    }
-    return null;
-  }, []);
-
   // ===== Beta / Labs opt-in =====
   const BETA_KEY = "zivo:more:beta";
   const [betaOptIn, setBetaOptIn] = useState<boolean>(() => {
@@ -869,70 +734,6 @@ export default function MorePage() {
     { code: "AU", flag: "🇦🇺", label: "Australia" },
     { code: "SG", flag: "🇸🇬", label: "Singapore" },
   ];
-
-  // ===== Seasonal banner (rotates by month) =====
-  const seasonalBanner = useMemo(() => {
-    const month = new Date().getMonth();
-    return seasonalBanners[month];
-  }, []);
-
-  // ===== Time-of-day suggestion chips =====
-  const timeOfDayChips = useMemo(() => {
-    const h = new Date().getHours();
-    if (h < 11) {
-      return {
-        title: "Good morning ideas",
-        chips: [
-          { icon: Coffee, label: "Coffee nearby", href: "/eats" },
-          { icon: UtensilsCrossed, label: "Breakfast", href: "/eats" },
-          { icon: Activity, label: "Morning workout", href: "/wellness/workouts" },
-          { icon: Plane, label: "Plan a trip", href: "/ai-trip-planner" },
-        ],
-      };
-    }
-    if (h < 14) {
-      return {
-        title: "Lunch break ideas",
-        chips: [
-          { icon: UtensilsCrossed, label: "Lunch spots", href: "/eats" },
-          { icon: ShoppingBag, label: "Quick errands", href: "/grocery" },
-          { icon: Compass, label: "Things nearby", href: "/nearby" },
-          { icon: Tv, label: "Watch live", href: "/live" },
-        ],
-      };
-    }
-    if (h < 18) {
-      return {
-        title: "Afternoon picks",
-        chips: [
-          { icon: Coffee, label: "Coffee break", href: "/eats" },
-          { icon: Camera, label: "Watch reels", href: "/reels" },
-          { icon: Briefcase, label: "Job openings", href: "/personal-dashboard" },
-          { icon: Mountain, label: "Plan weekend", href: "/things-to-do" },
-        ],
-      };
-    }
-    if (h < 22) {
-      return {
-        title: "Tonight's vibe",
-        chips: [
-          { icon: UtensilsCrossed, label: "Dinner spots", href: "/eats" },
-          { icon: Tv, label: "Watch party", href: "/watch-party" },
-          { icon: Megaphone, label: "Live events", href: "/events" },
-          { icon: Radio, label: "Audio spaces", href: "/spaces" },
-        ],
-      };
-    }
-    return {
-      title: "Wind down",
-      chips: [
-        { icon: Brain, label: "Mindfulness", href: "/wellness/mindfulness" },
-        { icon: Mic, label: "Podcasts", href: "/podcasts" },
-        { icon: Film, label: "Reels", href: "/reels" },
-        { icon: BookOpen, label: "Saved reads", href: "/saved" },
-      ],
-    };
-  }, []);
 
   // ===== Voice search (Web Speech API) =====
   const [isListening, setIsListening] = useState(false);
@@ -988,22 +789,6 @@ export default function MorePage() {
     { code: "zh", flag: "🇨🇳", label: "中文" },
     { code: "ar", flag: "🇸🇦", label: "العربية" },
   ];
-
-  // ===== Rating prompt (after 5 visits, hidden once dismissed/rated) =====
-  const RATING_VISIT_KEY = "zivo:more:visits";
-  const RATING_DONE_KEY = "zivo:more:rated";
-  const [showRating, setShowRating] = useState<boolean>(false);
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (window.localStorage.getItem(RATING_DONE_KEY) === "1") return;
-    const visits = parseInt(window.localStorage.getItem(RATING_VISIT_KEY) || "0", 10) + 1;
-    window.localStorage.setItem(RATING_VISIT_KEY, String(visits));
-    if (visits >= 5) setShowRating(true);
-  }, []);
-  const dismissRating = () => {
-    setShowRating(false);
-    try { window.localStorage.setItem(RATING_DONE_KEY, "1"); } catch {}
-  };
 
   // ===== PWA install prompt (beforeinstallprompt) =====
   const [installPrompt, setInstallPrompt] = useState<any>(null);
@@ -1170,14 +955,6 @@ export default function MorePage() {
       return "comfortable";
     }
   });
-  const toggleDensity = () => {
-    setDensity((prev) => {
-      const next = prev === "compact" ? "comfortable" : "compact";
-      try { window.localStorage.setItem(DENSITY_KEY, next); } catch {}
-      return next;
-    });
-  };
-
   // ===== Recently Used (localStorage) =====
   const RECENT_KEY = "zivo:more:recent";
   const [recentHrefs, setRecentHrefs] = useState<string[]>(() => {
@@ -1216,24 +993,13 @@ export default function MorePage() {
     });
   };
 
-  // Day-of-year (used by daily tip & featured deal rotation)
-  const dayOfYear = useMemo(() => {
-    const now = new Date();
-    const start = new Date(now.getFullYear(), 0, 0);
-    return Math.floor((now.getTime() - start.getTime()) / 86_400_000);
-  }, []);
-  const dailyTip = dailyTips[dayOfYear % dailyTips.length];
-  const featuredDeal = featuredDeals[dayOfYear % featuredDeals.length];
-  const dailyQuote = dailyQuotes[dayOfYear % dailyQuotes.length];
-
   // Time-based greeting
   const greeting = useMemo(() => {
     const h = new Date().getHours();
     if (h < 5) return "Still up";
     if (h < 12) return "Good morning";
     if (h < 17) return "Good afternoon";
-    if (h < 22) return "Good evening";
-    return "Good night";
+    return "Good evening";
   }, []);
 
   // Shared profile data — same source as /profile, so the name/badge stay in sync
@@ -1683,37 +1449,6 @@ export default function MorePage() {
     </motion.div>
   );
 
-  /* --- Spotlight Cards --- */
-  const renderSpotlight = () => (
-    <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1 -mx-1 px-1 mb-6">
-      {spotlightCards.map((card, i) => (
-        <Link key={card.label} to={card.href} className="flex-shrink-0 relative">
-          {card.isNew && (
-            <span className="absolute -top-1 -right-1 z-10 text-[8px] font-bold tracking-wide px-1.5 py-0.5 rounded-full bg-white text-rose-600 shadow-md ring-1 ring-rose-500/30">
-              NEW
-            </span>
-          )}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: i * 0.06, type: "spring", stiffness: 300, damping: 25 }}
-            className={cn(
-              "w-[120px] h-[92px] rounded-[20px] bg-gradient-to-br p-3 flex flex-col justify-between",
-              "shadow-lg active:scale-95 transition-transform touch-manipulation",
-              card.gradient
-            )}
-          >
-            <card.icon className="w-5 h-5 text-white/90" />
-            <div>
-              <p className="text-white font-bold text-[12px] leading-tight">{card.label}</p>
-              <p className="text-white/70 text-[9px] mt-0.5">{card.desc}</p>
-            </div>
-          </motion.div>
-        </Link>
-      ))}
-    </div>
-  );
-
   /* --- Link Row --- */
   const renderLink = (link: QuickLink, i: number) => {
     const isPartner = link.href === "#partner";
@@ -1876,16 +1611,6 @@ export default function MorePage() {
     return pinnedHrefs.map((h) => byHref.get(h)).filter(Boolean) as QuickLink[];
   }, [pinnedHrefs]);
 
-  /* --- Curated for You: 4 unvisited features (deterministic per day, deduped) --- */
-  const curatedForYou = useMemo(() => {
-    const all = sections.flatMap((s) => s.links).filter((l) => !l.href.startsWith("#"));
-    const seen = new Set<string>([...pinnedHrefs, ...recentHrefs]);
-    const unseen = all.filter((l) => !seen.has(l.href));
-    // Deterministic shuffle by day-of-year so the "for you" set is stable each day
-    const offset = dayOfYear * 7 % Math.max(unseen.length, 1);
-    return [...unseen.slice(offset), ...unseen.slice(0, offset)].slice(0, 4);
-  }, [pinnedHrefs, recentHrefs, dayOfYear]);
-
   /* --- Recent links (last 8 clicks, dedup against pinned) --- */
   const recentLinks = useMemo(() => {
     if (!recentHrefs.length) return [];
@@ -1919,15 +1644,6 @@ export default function MorePage() {
       setExpandedSection(next ? "__all__" : "Essentials");
       return next;
     });
-  };
-
-  // Surprise me: navigate to a random link
-  const surpriseMe = () => {
-    const all = sections.flatMap((s) => s.links).filter((l) => !l.href.startsWith("#"));
-    if (!all.length) return;
-    const pick = all[Math.floor(Math.random() * all.length)];
-    trackRecent(pick.href);
-    navigate(pick.href);
   };
 
   const handleConfirm = () => {
@@ -2321,30 +2037,6 @@ export default function MorePage() {
             </motion.div>
           )}
 
-          {/* Holiday countdown */}
-          {upcomingHoliday && (
-            <Link to="/deals" className="block mb-4">
-              <motion.div
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                whileTap={{ scale: 0.98 }}
-                className="zivo-card-organic flex items-center gap-3 p-3 active:scale-[0.99] transition-transform bg-gradient-to-br from-fuchsia-500/5 to-pink-500/5 border-fuchsia-500/20"
-              >
-                <span className="text-3xl shrink-0">{upcomingHoliday.emoji}</span>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-fuchsia-500">
-                    {upcomingHoliday.days === 0 ? "Today" : `${upcomingHoliday.days} day${upcomingHoliday.days === 1 ? "" : "s"} away`}
-                  </p>
-                  <p className="font-bold text-[14px] truncate">{upcomingHoliday.name}</p>
-                  <p className="text-[11px] text-muted-foreground truncate">
-                    {upcomingHoliday.days === 0 ? "Happy holiday — check today's deals" : "Plan ahead with curated deals"}
-                  </p>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground/30 shrink-0" />
-              </motion.div>
-            </Link>
-          )}
-
           {/* Language switcher chips */}
           {user && (
             <div className="flex items-center gap-1.5 mb-4 overflow-x-auto scrollbar-hide -mx-1 px-1">
@@ -2423,39 +2115,6 @@ export default function MorePage() {
             </div>
           )}
 
-          {/* Rating prompt (after 5 visits) */}
-          {showRating && (
-            <motion.div
-              initial={{ opacity: 0, y: -6 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="zivo-card-organic flex items-center gap-3 p-3 mb-4 bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border-amber-500/20"
-            >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-yellow-500 flex items-center justify-center shrink-0">
-                <Star className="w-5 h-5 text-white fill-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-bold text-[13px]">Enjoying ZIVO?</p>
-                <p className="text-[11px] text-muted-foreground truncate">
-                  Rate us — it takes 10 seconds
-                </p>
-              </div>
-              <Link
-                to="/feedback"
-                onClick={dismissRating}
-                className="px-3 py-1.5 rounded-full bg-amber-500 text-white font-bold text-[11px] active:scale-95 transition-transform"
-              >
-                Rate
-              </Link>
-              <button
-                onClick={dismissRating}
-                aria-label="Dismiss"
-                className="p-1 -mr-1 rounded-full hover:bg-muted/60 active:scale-90 transition-transform"
-              >
-                <X className="w-4 h-4 text-muted-foreground" />
-              </button>
-            </motion.div>
-          )}
-
           {/* PWA install banner (only when installable & not dismissed) */}
           {installPrompt && !installDismissed && (
             <motion.div
@@ -2488,202 +2147,6 @@ export default function MorePage() {
             </motion.div>
           )}
 
-          {/* Daily check-in (logged-in users only) */}
-          {user && (
-            <motion.div
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              className={cn(
-                "zivo-card-organic flex items-center gap-3 p-3 mb-4",
-                claimedToday ? "bg-emerald-500/5 border-emerald-500/20" : "bg-amber-500/5 border-amber-500/20",
-              )}
-            >
-              <div className={cn(
-                "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
-                claimedToday ? "bg-emerald-500/15" : "bg-amber-500/15",
-              )}>
-                {claimedToday
-                  ? <BadgeCheck className="w-5 h-5 text-emerald-500" />
-                  : <Gift className="w-5 h-5 text-amber-500" />}
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-bold text-[13px]">
-                  {claimedToday ? "Checked in today" : "Daily check-in"}
-                </p>
-                <p className="text-[11px] text-muted-foreground truncate">
-                  {claimedToday
-                    ? `Come back tomorrow • ${streak.days} day streak 🔥`
-                    : "Earn 10 ZIVO coins for visiting today"}
-                </p>
-              </div>
-              {!claimedToday && (
-                <button
-                  onClick={claimCheckin}
-                  className="px-3 py-1.5 rounded-full bg-amber-500 text-white font-bold text-[11px] active:scale-95 transition-transform"
-                >
-                  Claim
-                </button>
-              )}
-            </motion.div>
-          )}
-
-          {/* Seasonal banner (rotates monthly) */}
-          <Link to={seasonalBanner.href} className="block mb-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              whileTap={{ scale: 0.98 }}
-              className={cn(
-                "rounded-2xl p-4 bg-gradient-to-r shadow-md flex items-center gap-3 active:scale-[0.99] transition-transform relative overflow-hidden",
-                seasonalBanner.gradient,
-              )}
-            >
-              <span className="text-3xl shrink-0 relative z-10">{seasonalBanner.emoji}</span>
-              <div className="flex-1 min-w-0 relative z-10">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-white/80">
-                  Seasonal pick
-                </p>
-                <p className="font-bold text-[14px] text-white truncate">{seasonalBanner.title}</p>
-                <p className="text-[11px] text-white/85 truncate">{seasonalBanner.desc}</p>
-              </div>
-              <ArrowRight className="w-4 h-4 text-white/80 shrink-0 relative z-10" />
-            </motion.div>
-          </Link>
-
-          {/* Time-of-day suggestion chips */}
-          <div className="mb-5">
-            <p className="text-[11px] font-bold text-muted-foreground/80 mb-2 uppercase tracking-wider flex items-center gap-1.5">
-              <Clock className="w-3 h-3" />
-              {timeOfDayChips.title}
-            </p>
-            <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1 -mx-1 px-1">
-              {timeOfDayChips.chips.map((chip) => (
-                <Link
-                  key={chip.label}
-                  to={chip.href}
-                  onClick={() => trackRecent(chip.href)}
-                  className="shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-muted/50 hover:bg-muted active:scale-95 transition text-[12px] font-semibold text-foreground/80"
-                >
-                  <chip.icon className="w-3.5 h-3.5 text-primary" />
-                  {chip.label}
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {/* Featured deal of the day */}
-          <Link to={featuredDeal.href} className="block mb-4">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.98 }}
-              animate={{ opacity: 1, scale: 1 }}
-              whileTap={{ scale: 0.98 }}
-              className={cn(
-                "rounded-2xl p-4 bg-gradient-to-br shadow-lg flex items-center gap-3 active:scale-[0.99] transition-transform relative overflow-hidden",
-                featuredDeal.gradient,
-              )}
-            >
-              <div className="absolute -bottom-6 -right-6 w-32 h-32 rounded-full bg-white/10 blur-2xl" />
-              <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0 relative z-10">
-                <featuredDeal.icon className="w-6 h-6 text-white" />
-              </div>
-              <div className="flex-1 min-w-0 relative z-10">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-white/80">
-                  Featured deal
-                </p>
-                <p className="font-bold text-[15px] text-white truncate">{featuredDeal.title}</p>
-                <p className="text-[11px] text-white/85 truncate">{featuredDeal.desc}</p>
-              </div>
-              <span className="bg-white/25 backdrop-blur-sm px-3 py-1.5 rounded-full text-[11px] font-bold text-white whitespace-nowrap relative z-10">
-                {featuredDeal.cta}
-              </span>
-            </motion.div>
-          </Link>
-
-          {/* Spotlight Cards */}
-          {renderSpotlight()}
-
-          {/* Curated for You (logged-in only, when we have suggestions) */}
-          {user && curatedForYou.length > 0 && (
-            <motion.div
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="mb-5"
-            >
-              <div className="flex items-center justify-between mb-2.5">
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-fuchsia-500/15 flex items-center justify-center">
-                    <Sparkle className="w-3.5 h-3.5 text-fuchsia-500" />
-                  </div>
-                  <h2 className="font-bold text-[15px]">Curated for You</h2>
-                </div>
-                <span className="text-[10px] font-medium text-muted-foreground">
-                  Discover something new
-                </span>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                {curatedForYou.map((link) => (
-                  <Link
-                    key={link.href}
-                    to={link.href}
-                    onClick={() => trackRecent(link.href)}
-                    className="zivo-card-organic flex items-center gap-2.5 p-3 active:scale-[0.97] transition-transform"
-                  >
-                    <div
-                      className="w-9 h-9 rounded-xl flex items-center justify-center shrink-0"
-                      style={{ color: link.accent, background: `${link.accent}15` }}
-                    >
-                      <link.icon className="w-4 h-4" style={{ color: link.accent }} />
-                    </div>
-                    <div className="min-w-0">
-                      <p className="font-semibold text-[12px] leading-tight truncate">{link.label}</p>
-                      <p className="text-[10px] text-muted-foreground truncate mt-0.5">{link.description}</p>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </motion.div>
-          )}
-
-          {/* Featured creators carousel */}
-          <div className="mb-5">
-            <div className="flex items-center justify-between mb-2.5">
-              <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-violet-500/15 flex items-center justify-center">
-                  <Sparkles className="w-3.5 h-3.5 text-violet-500" />
-                </div>
-                <h2 className="font-bold text-[15px]">Featured creators</h2>
-              </div>
-              <Link to="/creators" className="text-[11px] font-semibold text-primary">See all</Link>
-            </div>
-            <div className="flex gap-2.5 overflow-x-auto scrollbar-hide pb-1 -mx-1 px-1">
-              {featuredCreators.map((c) => (
-                <Link
-                  key={c.handle}
-                  to={`/c/${c.handle}`}
-                  className="shrink-0 flex flex-col items-center gap-1.5 active:scale-95 transition-transform"
-                  style={{ width: 76 }}
-                >
-                  <div className={cn(
-                    "w-16 h-16 rounded-full bg-gradient-to-br p-[2px]",
-                    c.gradient,
-                  )}>
-                    <div className="w-full h-full rounded-full bg-card flex items-center justify-center">
-                      <span className="font-bold text-lg text-foreground">
-                        {c.name.charAt(0)}
-                      </span>
-                    </div>
-                  </div>
-                  <p className="text-[11px] font-bold leading-tight text-center truncate w-full">
-                    {c.name}
-                  </p>
-                  <p className="text-[9px] text-muted-foreground text-center truncate w-full -mt-1">
-                    {c.tagline}
-                  </p>
-                </Link>
-              ))}
-            </div>
-          </div>
-
           {/* Notifications preview (last 3 unread) */}
           {user && notifPreview.length > 0 && (
             <motion.div
@@ -2693,8 +2156,8 @@ export default function MorePage() {
             >
               <div className="flex items-center justify-between mb-2.5">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-rose-500/15 flex items-center justify-center">
-                    <Bell className="w-3.5 h-3.5 text-rose-500" />
+                  <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center">
+                    <Bell className="w-3.5 h-3.5 text-foreground" strokeWidth={1.8} />
                   </div>
                   <h2 className="font-bold text-[15px]">Latest alerts</h2>
                   <span className="text-[10px] text-muted-foreground/60 font-medium bg-muted/40 px-1.5 py-0.5 rounded-full">
@@ -2723,110 +2186,6 @@ export default function MorePage() {
               </div>
             </motion.div>
           )}
-
-          {/* Premium upsell (non-Plus users only) */}
-          {user && !isPlus && (
-            <Link to="/zivo-plus" className="block mb-5">
-              <motion.div
-                initial={{ opacity: 0, y: 4 }}
-                animate={{ opacity: 1, y: 0 }}
-                whileTap={{ scale: 0.99 }}
-                className="rounded-2xl p-4 bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500 shadow-lg active:scale-[0.99] transition-transform relative overflow-hidden"
-              >
-                <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full bg-white/10 blur-3xl" />
-                <div className="relative z-10 flex items-start gap-3 mb-3">
-                  <div className="w-12 h-12 rounded-xl bg-white/25 backdrop-blur-sm flex items-center justify-center shrink-0">
-                    <Crown className="w-6 h-6 text-white" />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-white/85">
-                      30 days free
-                    </p>
-                    <p className="font-bold text-[16px] text-white leading-tight">Try ZIVO Plus</p>
-                    <p className="text-[11px] text-white/85 mt-0.5">Then $9.99/mo · cancel anytime</p>
-                  </div>
-                </div>
-                <ul className="space-y-1 mb-2 relative z-10">
-                  {[
-                    "2× ZIVO coins on every booking",
-                    "Free flight changes & priority support",
-                    "Exclusive deals & member-only experiences",
-                    "Ad-free everywhere",
-                  ].map((b) => (
-                    <li key={b} className="flex items-center gap-2 text-[12px] text-white/95">
-                      <BadgeCheck className="w-3.5 h-3.5 text-white shrink-0" />
-                      {b}
-                    </li>
-                  ))}
-                </ul>
-                <span className="inline-flex items-center gap-1 mt-1 px-3 py-1.5 rounded-full bg-white text-amber-600 font-bold text-[12px] relative z-10">
-                  Start free trial <ArrowRight className="w-3 h-3" />
-                </span>
-              </motion.div>
-            </Link>
-          )}
-
-          {/* Quote of the day */}
-          <div className="mb-5 zivo-card-organic p-4 relative overflow-hidden">
-            <BookOpen className="absolute top-3 right-3 w-5 h-5 text-primary/15" />
-            <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-1.5">
-              Quote of the day
-            </p>
-            <p className="font-semibold text-[14px] text-foreground/90 italic leading-relaxed">
-              "{dailyQuote.quote}"
-            </p>
-            <p className="text-[11px] text-muted-foreground mt-2">— {dailyQuote.author}</p>
-          </div>
-
-          {/* Trending hashtags */}
-          <div className="mb-5">
-            <div className="flex items-center justify-between mb-2.5">
-              <div className="flex items-center gap-2.5">
-                <div className="w-7 h-7 rounded-lg bg-rose-500/15 flex items-center justify-center">
-                  <Flame className="w-3.5 h-3.5 text-rose-500" />
-                </div>
-                <h2 className="font-bold text-[15px]">Trending now</h2>
-              </div>
-              <Link to="/trending" className="text-[11px] font-semibold text-primary">See all</Link>
-            </div>
-            <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1 -mx-1 px-1">
-              {trendingTags.map((tag) => (
-                <Link
-                  key={tag}
-                  to={`/tag/${tag}`}
-                  className="shrink-0 flex items-center gap-1 px-3 py-1.5 rounded-full bg-muted/50 hover:bg-muted active:scale-95 transition text-[12px] font-semibold text-foreground/80"
-                >
-                  <Hash className="w-3 h-3 text-primary" />
-                  {tag}
-                </Link>
-              ))}
-            </div>
-          </div>
-
-          {/* Tip of the Day */}
-          <Link to={dailyTip.href} className="block mb-5">
-            <motion.div
-              initial={{ opacity: 0, y: 6 }}
-              animate={{ opacity: 1, y: 0 }}
-              whileTap={{ scale: 0.98 }}
-              className={cn(
-                "rounded-2xl p-4 bg-gradient-to-br shadow-md flex items-center gap-3 active:scale-[0.99] transition-transform",
-                dailyTip.gradient,
-              )}
-            >
-              <div className="w-11 h-11 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
-                <dailyTip.icon className="w-5 h-5 text-white" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[10px] font-bold uppercase tracking-wider text-white/70">
-                  Tip of the day
-                </p>
-                <p className="font-bold text-[14px] text-white truncate">{dailyTip.title}</p>
-                <p className="text-[11px] text-white/85 truncate">{dailyTip.desc}</p>
-              </div>
-              <ArrowRight className="w-4 h-4 text-white/80 shrink-0" />
-            </motion.div>
-          </Link>
 
           {/* Search */}
           <div className="relative mb-2">
@@ -2919,7 +2278,7 @@ export default function MorePage() {
             </div>
           )}
 
-          {/* Toolbar: Expand all + Density + Surprise me */}
+          {/* Toolbar: Expand all + Privacy + Share */}
           {!searchResults && (
             <div className="flex items-center justify-between mb-3 px-1">
               <div className="flex items-center gap-3">
@@ -2929,14 +2288,6 @@ export default function MorePage() {
                 >
                   <Layers className="w-3.5 h-3.5" />
                   {allExpanded ? "Collapse all" : "Expand all"}
-                </button>
-                <button
-                  onClick={toggleDensity}
-                  className="flex items-center gap-1.5 text-[12px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
-                  aria-label="Toggle density"
-                >
-                  <Sliders className="w-3.5 h-3.5" />
-                  {density === "compact" ? "Comfortable" : "Compact"}
                 </button>
                 <button
                   onClick={togglePrivacy}
@@ -2959,13 +2310,6 @@ export default function MorePage() {
                 >
                   <Share2 className="w-3.5 h-3.5" />
                   Share
-                </button>
-                <button
-                  onClick={surpriseMe}
-                  className="flex items-center gap-1.5 text-[12px] font-semibold text-primary active:scale-95 transition-transform"
-                >
-                  <Sparkle className="w-3.5 h-3.5" />
-                  Surprise me
                 </button>
               </div>
             </div>

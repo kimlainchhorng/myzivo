@@ -43,9 +43,20 @@ import Timer from "lucide-react/dist/esm/icons/timer";
 import Sparkles from "lucide-react/dist/esm/icons/sparkles";
 import Ban from "lucide-react/dist/esm/icons/ban";
 import Flag from "lucide-react/dist/esm/icons/flag";
+import Eraser from "lucide-react/dist/esm/icons/eraser";
 import MoreVertical from "lucide-react/dist/esm/icons/more-vertical";
 import PhoneCall from "lucide-react/dist/esm/icons/phone-call";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from "@/components/ui/dropdown-menu";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { format, isToday, isYesterday } from "date-fns";
@@ -112,6 +123,7 @@ const ForwardPickerSheet = lazy(() => import("./ForwardPickerSheet"));
 const ScheduledMessagesSheet = lazy(() => import("./ScheduledMessagesSheet"));
 const PollCreatorSheet = lazy(() => import("./PollCreatorSheet"));
 import { useMessageActions, type DirectMessage } from "@/hooks/useMessageActions";
+import { useLocalChatHide } from "@/hooks/useLocalChatHide";
 
 const INITIAL_VISIBLE_TIMELINE_ITEMS = 25;
 const VISIBLE_TIMELINE_STEP = 30;
@@ -272,6 +284,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     });
   }, [prefillInput]);
   const [messages, setMessages] = useState<Message[]>([]);
+  const { hideMessage, clearChatBefore, isHidden, isClearedFor } = useLocalChatHide(user?.id);
   // Display-name lookup for original senders of forwarded messages, populated lazily
   // when new forwarded_from_user_ids appear in the timeline.
   const [forwardedNames, setForwardedNames] = useState<Record<string, string>>({});
@@ -352,6 +365,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [showSecurity, setShowSecurity] = useState(false);
   const [showCallHistory, setShowCallHistory] = useState(false);
   const [showContactInfo, setShowContactInfo] = useState(false);
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
   const [showScheduler, setShowScheduler] = useState(false);
   const [showPinnedPanel, setShowPinnedPanel] = useState(false);
   const [showLockedPricePicker, setShowLockedPricePicker] = useState(false);
@@ -1520,6 +1534,19 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     }
   }, [user?.id, recipientId]);
 
+  // Telegram-style "Delete for me" — hide from this device only, no server delete.
+  const handleDeleteForMe = useCallback((id: string) => {
+    hideMessage(id);
+    toast.success("Removed from your chat");
+  }, [hideMessage]);
+
+  // Telegram-style "Clear history" — locally hide every message up to now.
+  const handleClearHistory = useCallback(() => {
+    if (!recipientId) return;
+    clearChatBefore(recipientId);
+    toast.success("Chat history cleared");
+  }, [recipientId, clearChatBefore]);
+
   // Toggle a reaction on any message (used by the voice-bubble long-press menu).
   const toggleMessageReaction = useCallback(async (messageId: string, emoji: string) => {
     if (!user?.id || messageId.startsWith("opt-")) return;
@@ -1662,12 +1689,19 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     return new Map(messages.map((message) => [message.id, message]));
   }, [messages]);
 
-  // Memoize merged + sorted timeline to avoid re-sorting on every render
+  // Memoize merged + sorted timeline to avoid re-sorting on every render.
+  // Locally hidden messages (Delete-for-me) and pre-cleared messages
+  // (Clear-history) are filtered out before render — server data is untouched.
   const timeline = useMemo<TimelineItem[]>(() => {
-    return [...messages, ...callEvents].sort(
+    const visible = messages.filter((m) => {
+      if (isHidden(m.id)) return false;
+      if (recipientId && isClearedFor(recipientId, m.created_at)) return false;
+      return true;
+    });
+    return [...visible, ...callEvents].sort(
       (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
     );
-  }, [messages, callEvents]);
+  }, [messages, callEvents, isHidden, isClearedFor, recipientId]);
 
   // Keep ref in sync for handleScroll
   useEffect(() => { timelineLengthRef.current = timeline.length; }, [timeline.length]);
@@ -1852,6 +1886,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setShowContactInfo(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
                 <FileText className="w-[18px] h-[18px] text-muted-foreground" /> Contact Info
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setShowClearConfirm(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
+                <Eraser className="w-[18px] h-[18px] text-muted-foreground" /> Clear history
               </DropdownMenuItem>
               {!isSelfChat && (
                 <>
@@ -2215,7 +2252,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                             onResend={csid && msg._upload_status === "failed" ? () => retryVoiceSend(csid) : undefined}
                             onDiscard={csid && (msg._upload_status === "uploading" || msg._upload_status === "failed") ? () => discardVoiceSend(csid) : undefined}
                             onDeleteForEveryone={!isOpt && isMe ? () => handleDelete(msg.id) : undefined}
-                            onDeleteForMe={!isOpt && !isMe ? () => handleDelete(msg.id) : undefined}
+                            onDeleteForMe={!isOpt ? () => handleDeleteForMe(msg.id) : undefined}
                             onReact={!isOpt ? (emoji) => toggleMessageReaction(msg.id, emoji) : undefined}
                           />
                         );
@@ -2249,6 +2286,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                         createdAt={msg.created_at}
                         onReply={handleReply}
                         onDelete={handleDelete}
+                        onDeleteForMe={handleDeleteForMe}
                         onForward={handleForward}
                         onPin={handlePin}
                         onEdit={handleEdit}
@@ -2968,6 +3006,23 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           setTimeout(() => inputRef.current?.focus(), 0);
         }}
       />
+
+      <AlertDialog open={showClearConfirm} onOpenChange={setShowClearConfirm}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear chat history?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This hides every message in this chat from your device. {recipientName} will still see the conversation on their side.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleClearHistory} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Clear
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
     </motion.div>
   );

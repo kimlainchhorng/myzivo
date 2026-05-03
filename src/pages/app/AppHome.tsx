@@ -4,7 +4,7 @@
  * quick actions, promos, rewards, and personalized content.
  * @module AppHome
  */
-import React, { useState, useEffect, lazy, Suspense } from "react";
+import React, { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { useI18n } from "@/hooks/useI18n";
 import { useCountry } from "@/hooks/useCountry";
@@ -46,6 +46,7 @@ const ZivoMobileNav = lazy(() => import("@/components/app/ZivoMobileNav"));
 const UniversalSearchOverlay = lazy(() => import("@/components/search/UniversalSearchOverlay"));
 const PlanTripBundle = lazy(() => import("@/components/home/PlanTripBundle"));
 const SmartIntentSearch = lazy(() => import("@/components/home/SmartIntentSearch"));
+const StoriesRail = lazy(() => import("@/components/home/StoriesRail"));
 const NetworkPromoStrip = lazy(() => import("@/components/home/NetworkPromoStrip"));
 const ConciergeLauncher = lazy(() => import("@/components/home/ConciergeLauncher"));
 const TodayPlanWidget = lazy(() => import("@/components/home/TodayPlanWidget"));
@@ -72,6 +73,9 @@ import Calendar from "lucide-react/dist/esm/icons/calendar";
 import Bell from "lucide-react/dist/esm/icons/bell";
 import Sparkles from "lucide-react/dist/esm/icons/sparkles";
 import Coffee from "lucide-react/dist/esm/icons/coffee";
+import Target from "lucide-react/dist/esm/icons/target";
+import Trophy from "lucide-react/dist/esm/icons/trophy";
+import Flame from "lucide-react/dist/esm/icons/flame";
 import Sunrise from "lucide-react/dist/esm/icons/sunrise";
 import Sun from "lucide-react/dist/esm/icons/sun";
 import Sunset from "lucide-react/dist/esm/icons/sunset";
@@ -262,14 +266,11 @@ const SmartNowCard = ({ onNavigate }: { onNavigate: (to: string) => void }) => {
       <motion.div
         initial={{ opacity: 0, y: 6 }}
         animate={{ opacity: 1, y: 0 }}
-        className={cn(
-          "relative overflow-hidden rounded-2xl border border-border/40 bg-gradient-to-r p-4 shadow-sm",
-          cfg.gradient
-        )}
+        className="relative rounded-lg border border-border bg-card p-4"
       >
         <div className="flex items-center gap-3">
-          <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", cfg.iconBg)}>
-            <Icon className={cn("w-5 h-5", cfg.iconColor)} />
+          <div className="w-10 h-10 rounded-full bg-muted flex items-center justify-center shrink-0">
+            <Icon className="w-5 h-5 text-foreground" strokeWidth={1.8} />
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">{cfg.greeting}</p>
@@ -288,13 +289,234 @@ const SmartNowCard = ({ onNavigate }: { onNavigate: (to: string) => void }) => {
               key={chip.label}
               whileTap={{ scale: 0.96 }}
               onClick={() => onNavigate(chip.to)}
-              className="text-[11px] font-semibold text-foreground bg-background/70 backdrop-blur border border-border/50 rounded-full px-2.5 py-1 touch-manipulation hover:border-primary/30 transition-colors"
+              className="text-[11px] font-semibold text-foreground bg-muted border border-border rounded-full px-2.5 py-1 touch-manipulation active:bg-muted/70 transition-colors"
             >
               {chip.label}
             </motion.button>
           ))}
         </div>
       </motion.div>
+    </div>
+  );
+};
+
+type QuickPick = {
+  icon: LucideIcon;
+  label: string;
+  to: string;
+  iconColor: string;
+  iconBg: string;
+};
+
+const QUICK_PICKS: QuickPick[] = [
+  { icon: MapPin,          label: "Home",   to: "/rides?destination=home",   iconColor: "text-emerald-500", iconBg: "bg-emerald-500/10" },
+  { icon: Briefcase,       label: "Work",   to: "/rides?destination=work",   iconColor: "text-sky-500",     iconBg: "bg-sky-500/10" },
+  { icon: Coffee,          label: "Coffee", to: "/eats?q=coffee",             iconColor: "text-amber-600",   iconBg: "bg-amber-500/10" },
+  { icon: UtensilsCrossed, label: "Pizza",  to: "/eats?q=pizza",              iconColor: "text-orange-500",  iconBg: "bg-orange-500/10" },
+  { icon: Plane,           label: "Flights",to: "/flights",                   iconColor: "text-indigo-500",  iconBg: "bg-indigo-500/10" },
+  { icon: Hotel,           label: "Hotels", to: "/hotels",                    iconColor: "text-violet-500",  iconBg: "bg-violet-500/10" },
+];
+
+const QuickPicksBar = ({ onNavigate }: { onNavigate: (to: string) => void }) => (
+  <div className="px-4 pb-3">
+    <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1" style={{ WebkitOverflowScrolling: "touch" }}>
+      {QUICK_PICKS.map((p) => {
+        const Icon = p.icon;
+        return (
+          <motion.button
+            key={p.label}
+            whileTap={{ scale: 0.94 }}
+            onClick={() => onNavigate(p.to)}
+            className="shrink-0 flex items-center gap-1.5 bg-card border border-border rounded-full pl-1.5 pr-3 py-1.5 touch-manipulation active:bg-muted/50 transition-colors"
+          >
+            <span className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
+              <Icon className="w-3.5 h-3.5 text-foreground" strokeWidth={1.8} />
+            </span>
+            <span className="text-xs font-semibold text-foreground whitespace-nowrap">{p.label}</span>
+          </motion.button>
+        );
+      })}
+      <motion.button
+        whileTap={{ scale: 0.94 }}
+        onClick={() => onNavigate("/account/addresses")}
+        className="shrink-0 flex items-center gap-1.5 bg-muted/50 border border-dashed border-border/50 rounded-full px-3 py-1.5 touch-manipulation"
+        aria-label="Add a quick pick"
+      >
+        <Plus className="w-3 h-3 text-muted-foreground" />
+        <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Add</span>
+      </motion.button>
+    </div>
+  </div>
+);
+
+type DailyMission = {
+  icon: LucideIcon;
+  title: string;
+  reward: string;
+  cta: string;
+  to: string;
+  accent: string;
+};
+
+const DAILY_MISSIONS: DailyMission[] = [
+  // Sunday → adventurous start
+  { icon: Plane, title: "Browse a new flight destination", reward: "+30 miles", cta: "Explore", to: "/flights", accent: "sky" },
+  // Monday → commute / ride
+  { icon: Target, title: "Take a ride this week", reward: "+50 miles", cta: "Book a ride", to: "/rides", accent: "emerald" },
+  // Tuesday → eats
+  { icon: UtensilsCrossed, title: "Try a new restaurant on Eats", reward: "+30 miles + free delivery", cta: "Order now", to: "/eats", accent: "orange" },
+  // Wednesday → social
+  { icon: Gift, title: "Refer a friend today", reward: "+200 miles", cta: "Share invite", to: "/refer", accent: "violet" },
+  // Thursday → reservations
+  { icon: Calendar, title: "Reserve a table for the weekend", reward: "+40 miles", cta: "Find a spot", to: "/eats", accent: "rose" },
+  // Friday → hotels / stays
+  { icon: Hotel, title: "Plan a weekend stay", reward: "+80 miles", cta: "Browse hotels", to: "/hotels", accent: "indigo" },
+  // Saturday → bundle
+  { icon: Trophy, title: "Bundle a flight + hotel", reward: "Up to $50 off", cta: "See bundles", to: "/flights?bundle=1", accent: "amber" },
+];
+
+const ACCENT_STYLES: Record<string, { iconBg: string; iconColor: string; gradient: string; ringColor: string; ctaBg: string }> = {
+  sky:      { iconBg: "bg-sky-500/15",     iconColor: "text-sky-500",     gradient: "from-sky-500/12 via-sky-500/5 to-transparent",         ringColor: "border-sky-500/25",     ctaBg: "bg-sky-500 text-white" },
+  emerald:  { iconBg: "bg-emerald-500/15", iconColor: "text-emerald-500", gradient: "from-emerald-500/12 via-emerald-500/5 to-transparent", ringColor: "border-emerald-500/25", ctaBg: "bg-emerald-500 text-white" },
+  orange:   { iconBg: "bg-orange-500/15",  iconColor: "text-orange-500",  gradient: "from-orange-500/12 via-orange-500/5 to-transparent",   ringColor: "border-orange-500/25",  ctaBg: "bg-orange-500 text-white" },
+  violet:   { iconBg: "bg-violet-500/15",  iconColor: "text-violet-500",  gradient: "from-violet-500/12 via-violet-500/5 to-transparent",   ringColor: "border-violet-500/25",  ctaBg: "bg-violet-500 text-white" },
+  rose:     { iconBg: "bg-rose-500/15",    iconColor: "text-rose-500",    gradient: "from-rose-500/12 via-rose-500/5 to-transparent",       ringColor: "border-rose-500/25",    ctaBg: "bg-rose-500 text-white" },
+  indigo:   { iconBg: "bg-indigo-500/15",  iconColor: "text-indigo-500",  gradient: "from-indigo-500/12 via-indigo-500/5 to-transparent",   ringColor: "border-indigo-500/25",  ctaBg: "bg-indigo-500 text-white" },
+  amber:    { iconBg: "bg-amber-500/15",   iconColor: "text-amber-600",   gradient: "from-amber-500/12 via-amber-500/5 to-transparent",     ringColor: "border-amber-500/25",   ctaBg: "bg-amber-500 text-white" },
+};
+
+const DailyMissionCard = ({ onNavigate }: { onNavigate: (to: string) => void }) => {
+  const mission = useMemo(() => DAILY_MISSIONS[new Date().getDay()], []);
+  const Icon = mission.icon;
+  const dayLabel = useMemo(() =>
+    new Date().toLocaleDateString("en-US", { weekday: "long" }).toUpperCase(),
+  []);
+
+  return (
+    <div className="px-4 pb-3">
+      <motion.div
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative rounded-lg border border-border bg-card p-4"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-11 h-11 rounded-full bg-muted flex items-center justify-center shrink-0">
+            <Icon className="w-5 h-5 text-foreground" strokeWidth={1.8} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5">
+              <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-ig-gradient">{dayLabel} MISSION</p>
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-border text-foreground">{mission.reward}</span>
+            </div>
+            <p className="mt-0.5 text-sm font-semibold text-foreground truncate">{mission.title}</p>
+          </div>
+        </div>
+        <motion.button
+          whileTap={{ scale: 0.97 }}
+          onClick={() => onNavigate(mission.to)}
+          className="mt-3 w-full flex items-center justify-center gap-1.5 rounded-lg py-2.5 text-xs font-semibold bg-primary text-primary-foreground active:opacity-80 transition-opacity touch-manipulation"
+        >
+          {mission.cta}
+          <ChevronRight className="w-3.5 h-3.5" />
+        </motion.button>
+      </motion.div>
+    </div>
+  );
+};
+
+const STREAK_KEY = "zivo:streak:v1";
+const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100];
+const DAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"]; // Sun → Sat to match getDay()
+
+type StreakState = { count: number; lastVisitISO: string };
+
+const readStreak = (): StreakState => {
+  try {
+    const raw = typeof window !== "undefined" ? window.localStorage.getItem(STREAK_KEY) : null;
+    if (raw) return JSON.parse(raw);
+  } catch { /* ignore */ }
+  return { count: 0, lastVisitISO: "" };
+};
+
+const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
+
+const StreakCard = ({ onNavigate }: { onNavigate: (to: string) => void }) => {
+  const [state, setState] = useState<StreakState>(() => readStreak());
+
+  useEffect(() => {
+    const todayKey = startOfDay(new Date());
+    const last = state.lastVisitISO ? startOfDay(new Date(state.lastVisitISO)) : 0;
+    if (todayKey === last) return; // already counted today
+    const diffDays = last ? Math.round((todayKey - last) / 86_400_000) : Infinity;
+    const next: StreakState = {
+      count: diffDays === 1 ? state.count + 1 : 1, // continue or reset
+      lastVisitISO: new Date().toISOString(),
+    };
+    setState(next);
+    try { window.localStorage.setItem(STREAK_KEY, JSON.stringify(next)); } catch { /* ignore */ }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const todayDow = new Date().getDay(); // 0..6, Sun..Sat
+  const completedThisWeek = Math.min(state.count, todayDow + 1);
+  const earliestCompletedIdx = todayDow - completedThisWeek + 1;
+  const nextMilestone = STREAK_MILESTONES.find((m) => m > state.count) ?? STREAK_MILESTONES[STREAK_MILESTONES.length - 1];
+  const toGo = Math.max(0, nextMilestone - state.count);
+
+  return (
+    <div className="px-4 pb-3">
+      <motion.button
+        type="button"
+        onClick={() => onNavigate("/rewards")}
+        whileTap={{ scale: 0.98 }}
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full text-left relative overflow-hidden rounded-2xl border border-orange-500/25 bg-gradient-to-br from-orange-500/12 via-amber-500/6 to-transparent p-4 shadow-sm touch-manipulation"
+      >
+        <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full bg-orange-500/10 blur-2xl pointer-events-none" />
+        <div className="relative flex items-center gap-3">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-orange-500/30 to-amber-500/15 flex items-center justify-center shrink-0 shadow-inner">
+            <Flame className="w-6 h-6 text-orange-500" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-orange-600">Daily streak</p>
+            <p className="text-base font-extrabold text-foreground leading-tight">
+              {state.count} {state.count === 1 ? "day" : "days"} <span className="text-xs font-semibold text-muted-foreground">in a row</span>
+            </p>
+          </div>
+          <div className="text-right shrink-0">
+            <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">Next</p>
+            <p className="text-xs font-bold text-amber-600">{toGo === 0 ? "Reached!" : `${toGo}d → ${nextMilestone}d`}</p>
+          </div>
+        </div>
+
+        {/* 7-day dots */}
+        <div className="relative mt-3 flex items-center justify-between">
+          {DAY_LABELS.map((d, i) => {
+            const isToday = i === todayDow;
+            const isFuture = i > todayDow;
+            const isComplete = !isFuture && i >= earliestCompletedIdx;
+            return (
+              <div key={i} className="flex flex-col items-center gap-1">
+                <div
+                  className={cn(
+                    "w-6 h-6 rounded-full flex items-center justify-center text-[9px] font-bold transition-all",
+                    isFuture
+                      ? "bg-muted/40 text-muted-foreground/50"
+                      : isComplete
+                        ? "bg-orange-500 text-white shadow-md shadow-orange-500/30"
+                        : "bg-muted/60 text-muted-foreground border border-dashed border-orange-500/40",
+                    isToday && "ring-2 ring-orange-500/40 ring-offset-2 ring-offset-background scale-110",
+                  )}
+                >
+                  {isComplete && !isFuture ? "✓" : d}
+                </div>
+                <span className={cn("text-[8px] font-bold", isToday ? "text-orange-600" : "text-muted-foreground/60")}>{d}</span>
+              </div>
+            );
+          })}
+        </div>
+      </motion.button>
     </div>
   );
 };
@@ -622,6 +844,11 @@ const AppHome = () => {
             </motion.button>
           </div>
 
+          {/* ─── STORIES RAIL — Instagram signature ─── */}
+          <Suspense fallback={<div className="h-[100px]" />}>
+            <StoriesRail />
+          </Suspense>
+
           {/* ─── SMART INTENT SEARCH ─── */}
           <Suspense fallback={<div className="h-[68px]" />}>
             <SmartIntentSearch />
@@ -634,6 +861,15 @@ const AppHome = () => {
 
           {/* ─── SMART NOW (time-aware suggestion) ─── */}
           <SmartNowCard onNavigate={navigate} />
+
+          {/* ─── QUICK PICKS (fast-access shortcut chips) ─── */}
+          <QuickPicksBar onNavigate={navigate} />
+
+          {/* ─── DAILY MISSION (rotates by day of week, ties into rewards) ─── */}
+          {user && <DailyMissionCard onNavigate={navigate} />}
+
+          {/* ─── DAILY STREAK (engagement loop, persists in localStorage) ─── */}
+          {user && <StreakCard onNavigate={navigate} />}
 
           {/* ─── LIVE TRIP TRACKER (moved up — surface active trip ASAP) ─── */}
           <div className="px-5 pb-3">

@@ -54,6 +54,7 @@ import SuggestedContactsRow from "@/components/chat/SuggestedContactsRow";
 import { useChatPrefs } from "@/hooks/useChatPrefs";
 import { useBulkPresence } from "@/hooks/useBulkPresence";
 import { useTypingBus } from "@/hooks/useTypingBus";
+import { useLocalChatHide } from "@/hooks/useLocalChatHide";
 import { useContactRequests } from "@/hooks/useContactRequests";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -843,6 +844,9 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
 
   // Live "typing…" preview from other users
   const typingFrom = useTypingBus(user?.id);
+
+  // Local-only message hides (Delete-for-me, Clear-history) — Telegram parity.
+  const { clearChatBefore: localClearChatBefore } = useLocalChatHide(user?.id);
 
   const [showAddContact, setShowAddContact] = useState(false);
   const [selectionMode, setSelectionMode] = useState(false);
@@ -2352,12 +2356,12 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
           toast.success("Marked as unread");
         }}
         onToggleArchive={() => actionsTarget && (toggleArchive(actionsTarget.id), toast.success(actionsTarget.isArchived ? "Unarchived" : "Archived"))}
-        onClearHistory={async () => {
+        onClearHistory={() => {
           if (!actionsTarget || !user) return;
-          await supabase.from("direct_messages").delete()
-            .or(`and(sender_id.eq.${user.id},receiver_id.eq.${actionsTarget.id}),and(sender_id.eq.${actionsTarget.id},receiver_id.eq.${user.id})`);
-          queryClient.invalidateQueries({ queryKey: ["chat-hub-personal"] });
-          toast.success("History cleared");
+          // Local-only clear (Telegram parity): only hides on this device.
+          // The other side keeps the conversation untouched.
+          localClearChatBefore(actionsTarget.id);
+          toast.success("History cleared on this device");
         }}
         onDelete={() => actionsTarget && setDeleteConfirm({ id: actionsTarget.id, name: actionsTarget.name, category: "personal" })}
         onAddToFolder={(folderId) => { if (actionsTarget) void handleAddChatToFolder(folderId, actionsTarget.id); }}

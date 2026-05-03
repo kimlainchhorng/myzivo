@@ -10,6 +10,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { X, Users } from "lucide-react";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { isBlueVerified } from "@/lib/verification";
+import { MutualFollowsBadge, useMutualFollows } from "./MutualFollowsBadge";
 import { useState, memo, forwardRef } from "react";
 import SafeCaption from "@/components/social/SafeCaption";
 import { useNavigate } from "react-router-dom";
@@ -77,6 +78,7 @@ const SuggestedUsersCarousel = memo(forwardRef<HTMLDivElement, SuggestedUsersCar
   };
 
   const visible = suggestions.filter((s: any) => !dismissed.has(s.id));
+  const { data: mutualMap } = useMutualFollows(visible.map((s: any) => s.id));
 
   if (!user || visible.length === 0) return null;
 
@@ -115,6 +117,7 @@ const SuggestedUsersCarousel = memo(forwardRef<HTMLDivElement, SuggestedUsersCar
                     </p>
                     {isBlueVerified(profile.is_verified) && <VerifiedBadge size={12} interactive={false} />}
                   </div>
+                  <MutualFollowsBadge mutual={mutualMap?.get(profile.id)} className="mt-0.5" />
                 </div>
                 <button
                   onClick={() => handleFollow(profile.id)}
@@ -191,13 +194,14 @@ const SuggestedUsersCarousel = memo(forwardRef<HTMLDivElement, SuggestedUsersCar
                 )}
 
                 {/* Follower / posts hint */}
-                <p className="text-[9px] text-muted-foreground/70 mb-1.5">
+                <p className="text-[9px] text-muted-foreground/70 mb-0.5">
                   {profile.follower_count > 0
                     ? `${profile.follower_count >= 1000 ? `${(profile.follower_count / 1000).toFixed(1)}k` : profile.follower_count} followers`
                     : profile.posts_count > 0
                     ? `${profile.posts_count} posts`
                     : "New member"}
                 </p>
+                <MutualFollowsBadge mutual={mutualMap?.get(profile.id)} className="mb-1.5 text-center text-[9px]" />
               </div>
 
               {/* Follow button */}

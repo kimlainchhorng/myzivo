@@ -9,6 +9,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useHaptic } from "@/hooks/useHaptic";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import { MutualFollowsBadge, useMutualFollows } from "./MutualFollowsBadge";
 import UserPlus from "lucide-react/dist/esm/icons/user-plus";
 import UserCheck from "lucide-react/dist/esm/icons/user-check";
 import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
@@ -159,6 +160,8 @@ export default function FeaturedCreatorsRow({ fullBleed = true }: Props) {
     }
   };
 
+  const { data: mutualMap } = useMutualFollows((creators ?? []).map((c) => c.id));
+
   if (creators !== null && creators.length === 0) return null;
 
   const formatFollowers = (n: number) =>
@@ -236,6 +239,7 @@ export default function FeaturedCreatorsRow({ fullBleed = true }: Props) {
                     <span className="mt-1 text-[11px] text-white/70 block">
                       {formatFollowers(c.followers)} followers
                     </span>
+                    <MutualFollowsBadge mutual={mutualMap?.get(c.id)} className="text-[10px] text-white/60 text-center mt-0.5" />
                   </div>
                 </button>
                 <button

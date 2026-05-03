@@ -8,6 +8,7 @@ import { Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserAccess, type UserAccess } from "@/hooks/useUserAccess";
 import { withRedirectParam } from "@/lib/authRedirect";
+import AccessDenied from "@/components/auth/AccessDenied";
 import type { AdminVertical } from "./useAdminContext";
 
 interface Props {
@@ -49,14 +50,9 @@ export function ProtectedAdminRoute({ vertical, children }: Props) {
 
   if (!allowed) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="text-center space-y-3 p-6">
-          <h1 className="text-2xl font-bold text-destructive">Access Denied</h1>
-          <p className="text-muted-foreground">
-            You don't have permission to access the {vertical} admin dashboard.
-          </p>
-        </div>
-      </div>
+      <AccessDenied
+        message={`You don't have permission to access the ${vertical} admin dashboard.`}
+      />
     );
   }
 

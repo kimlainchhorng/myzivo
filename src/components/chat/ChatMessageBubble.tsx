@@ -208,6 +208,8 @@ interface ChatMessageBubbleProps {
   initialReactions?: { emoji: string; count: number; reactedByMe: boolean }[];
   onReply: (id: string, message: string, isMe: boolean) => void;
   onDelete: (id: string) => void;
+  /** Optional Telegram-style "Delete for me" — hides only on this device. */
+  onDeleteForMe?: (id: string) => void;
   onForward?: (id: string, message: string) => void;
   onPin?: (id: string, pinned: boolean) => void;
   onEdit?: (id: string, currentText: string) => void;
@@ -225,7 +227,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
   id, message, time, isMe, isRead, isDelivered, imageUrl, videoUrl, isPinned, expiresAt, messageType, senderId, lockedPriceCents,
   editedAt, createdAt,
   initialReactions,
-  onReply, onDelete, onForward, onPin, onEdit, onSave, hideSave, forwardedFromName, forwardedFromUserId,
+  onReply, onDelete, onDeleteForMe, onForward, onPin, onEdit, onSave, hideSave, forwardedFromName, forwardedFromUserId,
 }: ChatMessageBubbleProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -898,7 +900,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
                       {isMe && (
                         <MsgMenuItem icon={Trash2} label="Delete for everyone" onClick={() => { onDelete(id); setShowActions(false); setShowReactions(false); setShowDeleteSub(false); }} destructive />
                       )}
-                      <MsgMenuItem icon={Trash2} label="Delete for me" onClick={() => { onDelete(id); setShowActions(false); setShowReactions(false); setShowDeleteSub(false); }} destructive />
+                      <MsgMenuItem icon={Trash2} label="Delete for me" onClick={() => { (onDeleteForMe ?? onDelete)(id); setShowActions(false); setShowReactions(false); setShowDeleteSub(false); }} destructive />
                       <div className="border-t border-border/30">
                         <button
                           onClick={(e) => { e.stopPropagation(); setShowDeleteSub(false); }}

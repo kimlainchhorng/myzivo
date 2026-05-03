@@ -53,11 +53,8 @@ interface SheetContentProps
 
 const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Content>, SheetContentProps>(
   ({ side = "right", className, children, ...props }, ref) => {
-    const overlayZClass = className?.includes("z-[1300]")
-      ? "z-[1290]"
-      : className?.includes("z-[60]")
-        ? "z-[59]"
-        : undefined;
+    const zMatch = className?.match(/(?:^|\s)z-\[(\d+)\]/);
+    const overlayZClass = zMatch ? `z-[${Math.max(0, parseInt(zMatch[1], 10) - 1)}]` : undefined;
 
     return (
       <SheetPortal>

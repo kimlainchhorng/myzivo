@@ -109,8 +109,8 @@ export default function QuickReorderCarousel() {
     <div>
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-sm font-bold text-foreground flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-primary/15 to-primary/5 flex items-center justify-center shadow-sm">
-            <RotateCcw className="w-3.5 h-3.5 text-primary" />
+          <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center">
+            <RotateCcw className="w-3.5 h-3.5 text-foreground" strokeWidth={1.8} />
           </div>
           Quick Rebook
           <Badge variant="secondary" className="text-[9px] font-bold bg-primary/10 text-primary border-0 px-1.5 py-0">
