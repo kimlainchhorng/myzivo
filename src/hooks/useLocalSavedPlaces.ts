@@ -32,7 +32,8 @@ function readAll(): SavedPlace[] {
     if (!Array.isArray(parsed)) return [];
     return parsed.filter(
       (p): p is SavedPlace =>
-        p && typeof p.id === "string" && typeof p.address === "string" && typeof p.kind === "string",
+        p && typeof p.id === "string" && typeof p.address === "string" &&
+        (p.kind === "home" || p.kind === "work" || p.kind === "custom"),
     );
   } catch {
     return [];
@@ -107,7 +108,7 @@ export function useLocalSavedPlaces() {
         next = [
           {
             id: `custom-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`,
-            kind: "custom",
+            kind: "custom" as const,
             label: baseLabel,
             address: cleanAddress,
             addedAt: Date.now(),

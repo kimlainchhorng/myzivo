@@ -39,27 +39,29 @@ export function useLiveActivityCount(): LiveActivity {
 
     const refetch = async () => {
       const today = new Date().toISOString().slice(0, 10);
+      const sb = supabase as unknown as {
+        from: (t: string) => {
+          select: (c: string, o: { count: "exact"; head: true }) => {
+            eq: (col: string, v: string) => {
+              in: (col: string, v: string[]) => Promise<{ count: number | null }>;
+              gte: (col: string, v: string) => Promise<{ count: number | null }>;
+            };
+          };
+        };
+      };
       const [rides, orders, flights, hotels] = await Promise.all([
-        supabase
-          .from("trips")
-          .select("id", { count: "exact", head: true })
+        sb.from("trips").select("id", { count: "exact", head: true })
           .eq("rider_id", user.id)
           .in("status", ["accepted", "en_route", "arriving", "in_progress"]),
-        supabase
-          .from("food_orders")
-          .select("id", { count: "exact", head: true })
+        sb.from("food_orders").select("id", { count: "exact", head: true })
           .eq("customer_id", user.id)
           .in("status", ["confirmed", "preparing", "ready", "out_for_delivery"]),
-        supabase
-          .from("flight_bookings")
-          .select("id", { count: "exact", head: true })
-          .eq("user_id", user.id)
+        sb.from("flight_bookings").select("id", { count: "exact", head: true })
+          .eq("customer_id", user.id)
           .gte("departure_date", today),
-        supabase
-          .from("hotel_bookings")
-          .select("id", { count: "exact", head: true })
-          .eq("user_id", user.id)
-          .gte("check_in", today),
+        sb.from("hotel_bookings").select("id", { count: "exact", head: true })
+          .eq("customer_id", user.id)
+          .gte("check_in_date", today),
       ]);
 
       if (cancelled) return;
