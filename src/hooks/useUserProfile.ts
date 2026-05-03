@@ -180,53 +180,16 @@ export const useUploadAvatar = () => {
       }
 
       const safe = await stripImageMetadata(file);
-      const fileExt = safe.name.split(".").pop();
-      const filePath = `${user.id}/avatar_${Date.now()}.${fileExt}`;
+      const form = new FormData();
+      form.append("file", safe);
 
-      // Convert to Uint8Array — WKWebView's fetch is unreliable with File/Blob
-      // bodies on iOS Capacitor; ArrayBuffer-backed bytes upload reliably.
-      const buf = new Uint8Array(await safe.arrayBuffer());
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(filePath, buf, { upsert: true, contentType: safe.type || "image/jpeg" });
+      const { data, error } = await supabase.functions.invoke("profile-avatar-upload", {
+        body: form,
+      });
 
-      if (uploadError) throw uploadError;
-
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from("avatars").getPublicUrl(filePath);
-
-      const { data: existing, error: existingError } = await supabase
-        .from("profiles")
-        .select("id, user_id")
-        .or(`user_id.eq.${user.id},id.eq.${user.id}`)
-        .maybeSingle();
-
-      if (existingError) throw existingError;
-
-      if (existing) {
-        const { error } = await supabase
-          .from("profiles")
-          .update({
-            avatar_url: publicUrl,
-            user_id: user.id,
-            email: user.email,
-          })
-          .eq("id", existing.id);
-
-        if (error) throw error;
-      } else {
-        const { error } = await supabase
-          .from("profiles")
-          .insert({
-            id: user.id,
-            user_id: user.id,
-            email: user.email,
-            avatar_url: publicUrl,
-          });
-
-        if (error) throw error;
-      }
+      if (error) throw error;
+      const publicUrl = (data as { avatarUrl?: string })?.avatarUrl;
+      if (!publicUrl) throw new Error("Avatar upload failed");
 
       return publicUrl;
     },
