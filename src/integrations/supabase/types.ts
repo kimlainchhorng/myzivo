@@ -19327,6 +19327,70 @@ export type Database = {
         }
         Relationships: []
       }
+      eats_paypal_webhook_events: {
+        Row: {
+          error_message: string | null
+          event_created_at: string | null
+          event_type: string
+          id: string
+          order_id: string | null
+          payload: Json | null
+          paypal_capture_id: string | null
+          paypal_event_id: string
+          paypal_order_id: string | null
+          processing_status: string
+          received_at: string
+        }
+        Insert: {
+          error_message?: string | null
+          event_created_at?: string | null
+          event_type: string
+          id?: string
+          order_id?: string | null
+          payload?: Json | null
+          paypal_capture_id?: string | null
+          paypal_event_id: string
+          paypal_order_id?: string | null
+          processing_status?: string
+          received_at?: string
+        }
+        Update: {
+          error_message?: string | null
+          event_created_at?: string | null
+          event_type?: string
+          id?: string
+          order_id?: string | null
+          payload?: Json | null
+          paypal_capture_id?: string | null
+          paypal_event_id?: string
+          paypal_order_id?: string | null
+          processing_status?: string
+          received_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eats_paypal_webhook_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eats_paypal_webhook_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eats_paypal_webhook_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       eats_reviews: {
         Row: {
           accuracy_rating: number | null
@@ -19430,6 +19494,70 @@ export type Database = {
             columns: ["restaurant_id"]
             isOneToOne: false
             referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      eats_square_webhook_events: {
+        Row: {
+          error_message: string | null
+          event_created_at: string | null
+          event_type: string
+          id: string
+          order_id: string | null
+          payload: Json | null
+          processing_status: string
+          received_at: string
+          square_checkout_id: string | null
+          square_event_id: string
+          square_payment_id: string | null
+        }
+        Insert: {
+          error_message?: string | null
+          event_created_at?: string | null
+          event_type: string
+          id?: string
+          order_id?: string | null
+          payload?: Json | null
+          processing_status?: string
+          received_at?: string
+          square_checkout_id?: string | null
+          square_event_id: string
+          square_payment_id?: string | null
+        }
+        Update: {
+          error_message?: string | null
+          event_created_at?: string | null
+          event_type?: string
+          id?: string
+          order_id?: string | null
+          payload?: Json | null
+          processing_status?: string
+          received_at?: string
+          square_checkout_id?: string | null
+          square_event_id?: string
+          square_payment_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eats_square_webhook_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eats_square_webhook_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eats_square_webhook_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
             referencedColumns: ["id"]
           },
         ]
@@ -22782,6 +22910,7 @@ export type Database = {
           items: Json
           last_driver_lat: number | null
           last_driver_lng: number | null
+          last_payment_error: string | null
           last_progress_at: string | null
           membership_applied: boolean | null
           membership_discount_cents: number | null
@@ -22791,6 +22920,7 @@ export type Database = {
           order_source: string | null
           paid_at: string | null
           participant_count: number | null
+          payment_provider: string | null
           payment_status: string | null
           payment_type: string | null
           payout_at: string | null
@@ -22802,6 +22932,8 @@ export type Database = {
           payout_idempotency_key: string | null
           payout_status: string | null
           payout_transfer_id: string | null
+          paypal_capture_id: string | null
+          paypal_order_id: string | null
           per_mile_rate: number | null
           per_minute_rate: number | null
           picked_up_at: string | null
@@ -22859,8 +22991,10 @@ export type Database = {
           sla_prep_by: string | null
           sla_status: string | null
           special_instructions: string | null
+          square_checkout_id: string | null
           square_location_id: string | null
           square_order_id: string | null
+          square_payment_id: string | null
           status: Database["public"]["Enums"]["booking_status"] | null
           stop_sequence: number | null
           stripe_checkout_session_id: string | null
@@ -22960,6 +23094,7 @@ export type Database = {
           items: Json
           last_driver_lat?: number | null
           last_driver_lng?: number | null
+          last_payment_error?: string | null
           last_progress_at?: string | null
           membership_applied?: boolean | null
           membership_discount_cents?: number | null
@@ -22969,6 +23104,7 @@ export type Database = {
           order_source?: string | null
           paid_at?: string | null
           participant_count?: number | null
+          payment_provider?: string | null
           payment_status?: string | null
           payment_type?: string | null
           payout_at?: string | null
@@ -22980,6 +23116,8 @@ export type Database = {
           payout_idempotency_key?: string | null
           payout_status?: string | null
           payout_transfer_id?: string | null
+          paypal_capture_id?: string | null
+          paypal_order_id?: string | null
           per_mile_rate?: number | null
           per_minute_rate?: number | null
           picked_up_at?: string | null
@@ -23037,8 +23175,10 @@ export type Database = {
           sla_prep_by?: string | null
           sla_status?: string | null
           special_instructions?: string | null
+          square_checkout_id?: string | null
           square_location_id?: string | null
           square_order_id?: string | null
+          square_payment_id?: string | null
           status?: Database["public"]["Enums"]["booking_status"] | null
           stop_sequence?: number | null
           stripe_checkout_session_id?: string | null
@@ -23138,6 +23278,7 @@ export type Database = {
           items?: Json
           last_driver_lat?: number | null
           last_driver_lng?: number | null
+          last_payment_error?: string | null
           last_progress_at?: string | null
           membership_applied?: boolean | null
           membership_discount_cents?: number | null
@@ -23147,6 +23288,7 @@ export type Database = {
           order_source?: string | null
           paid_at?: string | null
           participant_count?: number | null
+          payment_provider?: string | null
           payment_status?: string | null
           payment_type?: string | null
           payout_at?: string | null
@@ -23158,6 +23300,8 @@ export type Database = {
           payout_idempotency_key?: string | null
           payout_status?: string | null
           payout_transfer_id?: string | null
+          paypal_capture_id?: string | null
+          paypal_order_id?: string | null
           per_mile_rate?: number | null
           per_minute_rate?: number | null
           picked_up_at?: string | null
@@ -23215,8 +23359,10 @@ export type Database = {
           sla_prep_by?: string | null
           sla_status?: string | null
           special_instructions?: string | null
+          square_checkout_id?: string | null
           square_location_id?: string | null
           square_order_id?: string | null
+          square_payment_id?: string | null
           status?: Database["public"]["Enums"]["booking_status"] | null
           stop_sequence?: number | null
           stripe_checkout_session_id?: string | null
@@ -28758,6 +28904,65 @@ export type Database = {
           },
         ]
       }
+      lodge_payout_ledger: {
+        Row: {
+          amount_cents: number
+          commission_cents: number
+          commission_rate: number | null
+          created_at: string
+          direction: string
+          error_message: string | null
+          id: string
+          reservation_id: string
+          status: string
+          store_id: string
+          stripe_account_id: string
+          stripe_reversal_id: string | null
+          stripe_transfer_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          commission_cents?: number
+          commission_rate?: number | null
+          created_at?: string
+          direction: string
+          error_message?: string | null
+          id?: string
+          reservation_id: string
+          status?: string
+          store_id: string
+          stripe_account_id: string
+          stripe_reversal_id?: string | null
+          stripe_transfer_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          commission_cents?: number
+          commission_rate?: number | null
+          created_at?: string
+          direction?: string
+          error_message?: string | null
+          id?: string
+          reservation_id?: string
+          status?: string
+          store_id?: string
+          stripe_account_id?: string
+          stripe_reversal_id?: string | null
+          stripe_transfer_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lodge_payout_ledger_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "lodge_reservations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lodge_payout_requests: {
         Row: {
           admin_note: string | null
@@ -29303,7 +29508,12 @@ export type Database = {
           paid_cents: number
           payment_lock_expires_at: string | null
           payment_lock_token: string | null
+          payment_provider: string | null
           payment_status: string | null
+          paypal_capture_id: string | null
+          paypal_last_event_at: string | null
+          paypal_last_event_type: string | null
+          paypal_order_id: string | null
           policy_consent: Json | null
           policy_consent_version: string | null
           rate_cents: number | null
@@ -29311,6 +29521,10 @@ export type Database = {
           room_number: string | null
           signature_url: string | null
           source: string | null
+          square_checkout_id: string | null
+          square_last_event_at: string | null
+          square_last_event_type: string | null
+          square_payment_id: string | null
           status: string
           store_id: string
           stripe_last_event_at: string | null
@@ -29347,7 +29561,12 @@ export type Database = {
           paid_cents?: number
           payment_lock_expires_at?: string | null
           payment_lock_token?: string | null
+          payment_provider?: string | null
           payment_status?: string | null
+          paypal_capture_id?: string | null
+          paypal_last_event_at?: string | null
+          paypal_last_event_type?: string | null
+          paypal_order_id?: string | null
           policy_consent?: Json | null
           policy_consent_version?: string | null
           rate_cents?: number | null
@@ -29355,6 +29574,10 @@ export type Database = {
           room_number?: string | null
           signature_url?: string | null
           source?: string | null
+          square_checkout_id?: string | null
+          square_last_event_at?: string | null
+          square_last_event_type?: string | null
+          square_payment_id?: string | null
           status?: string
           store_id: string
           stripe_last_event_at?: string | null
@@ -29391,7 +29614,12 @@ export type Database = {
           paid_cents?: number
           payment_lock_expires_at?: string | null
           payment_lock_token?: string | null
+          payment_provider?: string | null
           payment_status?: string | null
+          paypal_capture_id?: string | null
+          paypal_last_event_at?: string | null
+          paypal_last_event_type?: string | null
+          paypal_order_id?: string | null
           policy_consent?: Json | null
           policy_consent_version?: string | null
           rate_cents?: number | null
@@ -29399,6 +29627,10 @@ export type Database = {
           room_number?: string | null
           signature_url?: string | null
           source?: string | null
+          square_checkout_id?: string | null
+          square_last_event_at?: string | null
+          square_last_event_type?: string | null
+          square_payment_id?: string | null
           status?: string
           store_id?: string
           stripe_last_event_at?: string | null
@@ -30124,6 +30356,56 @@ export type Database = {
         }
         Relationships: []
       }
+      lodging_paypal_webhook_events: {
+        Row: {
+          error_message: string | null
+          event_created_at: string | null
+          event_type: string
+          id: string
+          payload: Json | null
+          paypal_capture_id: string | null
+          paypal_event_id: string
+          paypal_order_id: string | null
+          processing_status: string
+          received_at: string
+          reservation_id: string | null
+        }
+        Insert: {
+          error_message?: string | null
+          event_created_at?: string | null
+          event_type: string
+          id?: string
+          payload?: Json | null
+          paypal_capture_id?: string | null
+          paypal_event_id: string
+          paypal_order_id?: string | null
+          processing_status?: string
+          received_at?: string
+          reservation_id?: string | null
+        }
+        Update: {
+          error_message?: string | null
+          event_created_at?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json | null
+          paypal_capture_id?: string | null
+          paypal_event_id?: string
+          paypal_order_id?: string | null
+          processing_status?: string
+          received_at?: string
+          reservation_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lodging_paypal_webhook_events_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "lodge_reservations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lodging_promotions: {
         Row: {
           active: boolean
@@ -30271,6 +30553,56 @@ export type Database = {
             columns: ["store_id"]
             isOneToOne: false
             referencedRelation: "store_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lodging_square_webhook_events: {
+        Row: {
+          error_message: string | null
+          event_created_at: string | null
+          event_type: string
+          id: string
+          payload: Json | null
+          processing_status: string
+          received_at: string
+          reservation_id: string | null
+          square_checkout_id: string | null
+          square_event_id: string
+          square_payment_id: string | null
+        }
+        Insert: {
+          error_message?: string | null
+          event_created_at?: string | null
+          event_type: string
+          id?: string
+          payload?: Json | null
+          processing_status?: string
+          received_at?: string
+          reservation_id?: string | null
+          square_checkout_id?: string | null
+          square_event_id: string
+          square_payment_id?: string | null
+        }
+        Update: {
+          error_message?: string | null
+          event_created_at?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json | null
+          processing_status?: string
+          received_at?: string
+          reservation_id?: string | null
+          square_checkout_id?: string | null
+          square_event_id?: string
+          square_payment_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lodging_square_webhook_events_reservation_id_fkey"
+            columns: ["reservation_id"]
+            isOneToOne: false
+            referencedRelation: "lodge_reservations"
             referencedColumns: ["id"]
           },
         ]
@@ -39704,6 +40036,7 @@ export type Database = {
           content: string
           created_at: string
           id: string
+          is_pinned: boolean
           likes_count: number
           parent_id: string | null
           post_id: string
@@ -39715,6 +40048,7 @@ export type Database = {
           content: string
           created_at?: string
           id?: string
+          is_pinned?: boolean
           likes_count?: number
           parent_id?: string | null
           post_id: string
@@ -39726,6 +40060,7 @@ export type Database = {
           content?: string
           created_at?: string
           id?: string
+          is_pinned?: boolean
           likes_count?: number
           parent_id?: string | null
           post_id?: string
@@ -44267,6 +44602,7 @@ export type Database = {
           auto_pause_enabled: boolean | null
           auto_pause_order_threshold: number | null
           auto_pause_prep_threshold_minutes: number | null
+          auto_payout_enabled: boolean
           avg_prep_time: number | null
           avg_rating: number | null
           bank_connected: boolean | null
@@ -44358,6 +44694,7 @@ export type Database = {
           auto_pause_enabled?: boolean | null
           auto_pause_order_threshold?: number | null
           auto_pause_prep_threshold_minutes?: number | null
+          auto_payout_enabled?: boolean
           avg_prep_time?: number | null
           avg_rating?: number | null
           bank_connected?: boolean | null
@@ -44449,6 +44786,7 @@ export type Database = {
           auto_pause_enabled?: boolean | null
           auto_pause_order_threshold?: number | null
           auto_pause_prep_threshold_minutes?: number | null
+          auto_payout_enabled?: boolean
           avg_prep_time?: number | null
           avg_rating?: number | null
           bank_connected?: boolean | null
@@ -57387,6 +57725,7 @@ export type Database = {
           created_at: string | null
           filter_css: string | null
           id: string
+          is_pinned: boolean
           is_published: boolean | null
           likes_count: number | null
           location: string | null
@@ -57408,6 +57747,7 @@ export type Database = {
           created_at?: string | null
           filter_css?: string | null
           id?: string
+          is_pinned?: boolean
           is_published?: boolean | null
           likes_count?: number | null
           location?: string | null
@@ -57429,6 +57769,7 @@ export type Database = {
           created_at?: string | null
           filter_css?: string | null
           id?: string
+          is_pinned?: boolean
           is_published?: boolean | null
           likes_count?: number | null
           location?: string | null
@@ -65760,6 +66101,12 @@ export type Database = {
           }
       sync_customer_phone_verified: { Args: never; Returns: Json }
       sync_driver_phone_verified: { Args: never; Returns: Json }
+      toggle_unified_comment_pin: {
+        Args: { _comment_id: string }
+        Returns: {
+          pinned: boolean
+        }[]
+      }
       touch_live_stream_heartbeat: {
         Args: { p_stream_id: string }
         Returns: undefined
