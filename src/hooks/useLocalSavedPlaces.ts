@@ -32,7 +32,8 @@ function readAll(): SavedPlace[] {
     if (!Array.isArray(parsed)) return [];
     return parsed.filter(
       (p): p is SavedPlace =>
-        p && typeof p.id === "string" && typeof p.address === "string" && typeof p.kind === "string",
+        p && typeof p.id === "string" && typeof p.address === "string" &&
+        (p.kind === "home" || p.kind === "work" || p.kind === "custom"),
     );
   } catch {
     return [];
