@@ -23,6 +23,7 @@ import bgLang from "@/assets/bg-language-selector.jpg";
 
 import { NotificationBell } from "./notifications/NotificationBell";
 import { PremiumSearchOverlay } from "@/components/search";
+import { Capacitor } from "@capacitor/core";
 import { useI18n } from "@/hooks/useI18n";
 import { useSupportedLanguages } from "@/hooks/useGlobalExpansion";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -310,4 +311,14 @@ const Header = () => {
   );
 };
 
-export default Header;
+// Desktop chrome — hamburger, dropdown menus, currency/language selectors,
+// search overlay. On native iOS/Android the bottom tab bar already handles
+// primary navigation, so render nothing instead of stealing screen real
+// estate. Wrapped at the export boundary so the inner component's hooks
+// always run consistently (rules-of-hooks).
+const HeaderWrapper = () => {
+  if (Capacitor.isNativePlatform()) return null;
+  return <Header />;
+};
+
+export default HeaderWrapper;

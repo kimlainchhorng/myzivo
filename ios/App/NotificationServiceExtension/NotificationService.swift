@@ -2,15 +2,24 @@ import UserNotifications
 import Intents
 
 class NotificationService: UNNotificationServiceExtension {
-    
+
     var contentHandler: ((UNNotificationContent) -> Void)?
     var bestAttemptContent: UNMutableNotificationContent?
-    
+    private var downloadTask: URLSessionTask?
+
+    private static let downloadSession: URLSession = {
+        let cfg = URLSessionConfiguration.ephemeral
+        cfg.timeoutIntervalForRequest = 6
+        cfg.timeoutIntervalForResource = 8
+        cfg.waitsForConnectivity = false
+        return URLSession(configuration: cfg)
+    }()
+
     override func didReceive(_ request: UNNotificationRequest,
                              withContentHandler contentHandler: @escaping (UNNotificationContent) -> Void) {
         self.contentHandler = contentHandler
         bestAttemptContent = (request.content.mutableCopy() as? UNMutableNotificationContent)
-        
+
         guard let bestAttemptContent = bestAttemptContent else {
             contentHandler(request.content)
             return
@@ -53,9 +62,18 @@ class NotificationService: UNNotificationServiceExtension {
     }
     
     override func serviceExtensionTimeWillExpire() {
+        downloadTask?.cancel()
         if let contentHandler = contentHandler, let bestAttemptContent = bestAttemptContent {
+            // Deliver original content as-is — never surface attachment fetch errors to the user.
+            bestAttemptContent.attachments = []
             contentHandler(bestAttemptContent)
         }
+    }
+
+    private func isAllowedImageURL(_ url: URL) -> Bool {
+        guard let scheme = url.scheme?.lowercased(), scheme == "https" else { return false }
+        guard let host = url.host, !host.isEmpty else { return false }
+        return true
     }
     
     // MARK: - Communication Notification
@@ -122,33 +140,32 @@ class NotificationService: UNNotificationServiceExtension {
     // MARK: - Avatar Download
     
     private func downloadAvatar(from urlString: String, completion: @escaping (INImage?) -> Void) {
-        guard !urlString.isEmpty, let url = URL(string: urlString) else {
-            NSLog("[NotificationService] No avatar URL provided")
+        guard !urlString.isEmpty,
+              let url = URL(string: urlString),
+              isAllowedImageURL(url) else {
             completion(nil)
             return
         }
-        
-        let task = URLSession.shared.dataTask(with: url) { data, response, error in
-            if let error = error {
-                NSLog("[NotificationService] Avatar download error: \(error.localizedDescription)")
-                completion(nil)
-                return
-            }
+
+        let task = NotificationService.downloadSession.dataTask(with: url) { data, _, _ in
             guard let data = data, !data.isEmpty else {
-                NSLog("[NotificationService] Avatar data empty for \(urlString)")
                 completion(nil)
                 return
             }
-            NSLog("[NotificationService] Avatar downloaded: \(data.count) bytes")
             completion(INImage(imageData: data))
         }
+        downloadTask = task
         task.resume()
     }
     
     // MARK: - Image Attachment (for non-chat notifications)
     
     private func downloadImage(from url: URL, completion: @escaping (UNNotificationAttachment?) -> Void) {
-        let task = URLSession.shared.downloadTask(with: url) { localURL, response, error in
+        guard isAllowedImageURL(url) else {
+            completion(nil)
+            return
+        }
+        let task = NotificationService.downloadSession.downloadTask(with: url) { localURL, response, error in
             guard let localURL = localURL, error == nil else {
                 completion(nil)
                 return
@@ -178,6 +195,7 @@ class NotificationService: UNNotificationServiceExtension {
                 completion(nil)
             }
         }
+        downloadTask = task
         task.resume()
     }
 }

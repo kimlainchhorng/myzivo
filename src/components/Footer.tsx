@@ -16,6 +16,7 @@ import {
 import ZivoLogo from "./ZivoLogo";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { Capacitor } from "@capacitor/core";
 
 const footerSections = [
   {
@@ -83,6 +84,12 @@ const socialLinks = [
 ];
 
 const Footer = ({ className }: { className?: string }) => {
+  // The marketing footer (App Store CTA, social links, sitemap columns) is
+  // built for the web. On native iOS/Android the bottom tab bar already
+  // handles navigation, and "App Store" links from inside an installed app
+  // are nonsensical — so render nothing on native.
+  if (Capacitor.isNativePlatform()) return null;
+
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   const handleAppStore = (store: string) => {

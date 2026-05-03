@@ -19,12 +19,9 @@ const quickLinks = [
   { icon: CarFront, label: "Cars", href: "/rent-car", color: "text-[hsl(var(--cars))]", bg: "bg-[hsl(var(--cars-light))]" },
 ];
 
-const trending = [
-  "Flights to Miami",
-  "Hotels in New York",
-  "Car rental Los Angeles",
-  "Cheap flights to London",
-];
+// Trending searches will be populated from analytics; empty until that
+// pipeline exists so we never show fabricated suggestions.
+const trending: string[] = [];
 
 export function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOverlayProps) {
   const [query, setQuery] = useState("");
@@ -107,24 +104,26 @@ export function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOverlayProp
             </div>
           </div>
 
-          {/* Trending */}
-          <div className="px-4 py-2">
-            <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1.5">
-              <TrendingUp className="w-3.5 h-3.5" /> Trending
-            </p>
-            <div className="space-y-1">
-              {trending.map((item) => (
-                <button
-                  key={item}
-                  onClick={() => { setQuery(item); }}
-                  className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-muted/50 touch-manipulation active:scale-[0.98] transition-transform"
-                >
-                  <Clock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                  <span className="text-sm text-foreground">{item}</span>
-                </button>
-              ))}
+          {/* Trending — hidden until backed by real analytics data */}
+          {trending.length > 0 && (
+            <div className="px-4 py-2">
+              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                <TrendingUp className="w-3.5 h-3.5" /> Trending
+              </p>
+              <div className="space-y-1">
+                {trending.map((item) => (
+                  <button
+                    key={item}
+                    onClick={() => { setQuery(item); }}
+                    className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-muted/50 touch-manipulation active:scale-[0.98] transition-transform"
+                  >
+                    <Clock className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                    <span className="text-sm text-foreground">{item}</span>
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
         </motion.div>
       )}
     </AnimatePresence>

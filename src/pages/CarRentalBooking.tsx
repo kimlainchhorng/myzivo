@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import Header from "@/components/Header";
+import NativeBackButton from "@/components/shared/NativeBackButton";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
@@ -134,12 +135,12 @@ const CarRentalBooking = () => {
     { id: "keyless", label: "Keyless Entry", icon: "🔑" },
   ];
 
-  // Mock host profiles (Turo)
-  const hostProfiles = [
-    { name: "Michael S.", rating: 4.9, trips: 342, responseTime: "< 1 hour", superhost: true, joined: "2021" },
-    { name: "Sarah K.", rating: 4.8, trips: 189, responseTime: "< 2 hours", superhost: true, joined: "2022" },
-    { name: "James R.", rating: 4.7, trips: 98, responseTime: "< 3 hours", superhost: false, joined: "2023" },
-  ];
+  // Host profiles will be populated from real Turo-style listings; empty
+  // until that pipeline exists so we never display fabricated hosts.
+  const hostProfiles: Array<{
+    name: string; rating: number; trips: number;
+    responseTime: string; superhost: boolean; joined: string;
+  }> = [];
 
   // === NEW Wave 2: More Turo features ===
   const [showDamageInspection, setShowDamageInspection] = useState(false);
@@ -224,12 +225,11 @@ const CarRentalBooking = () => {
     { feature: "Trip interruption", icon: "🏨", included: false, premium: true },
   ];
 
-  // Car reviews
-  const carReviews = [
-    { name: "David M.", car: "Tesla Model 3", rating: 5, text: "Incredible car! Supercharger was free. Host was amazing.", date: "3 days ago" },
-    { name: "Lisa K.", car: "BMW X5", rating: 4, text: "Clean, well-maintained. Pickup was seamless.", date: "1 week ago" },
-    { name: "Tom R.", car: "Jeep Wrangler", rating: 5, text: "Perfect for our mountain trip. Would book again!", date: "5 days ago" },
-  ];
+  // Real renter reviews will be sourced from a reviews table; empty until
+  // that data exists so we never show fabricated reviews/ratings.
+  const carReviews: Array<{
+    name: string; car: string; rating: number; text: string; date: string;
+  }> = [];
 
   // Handle airport selection from autocomplete
   const handleAirportChange = (airport: Airport | null, displayValue: string) => {
@@ -310,7 +310,8 @@ const CarRentalBooking = () => {
       />
       <OGImageMeta pageType="cars" />
       <Header />
-      
+      <NativeBackButton />
+
       <main className="pb-32 lg:pb-20">
         {/* Car Rental Disclaimer Banner - LOCKED TEXT */}
         <section className="border-b border-violet-500/20 py-2.5 bg-violet-500/5">
@@ -635,7 +636,8 @@ const CarRentalBooking = () => {
           </div>
         </section>
 
-        {/* Host Profiles (Turo) */}
+        {/* Host Profiles (Turo) — hidden until real host data exists */}
+        {hostProfiles.length > 0 && (
         <section className="py-8 border-b border-border/30 bg-muted/5">
           <div className="container mx-auto px-4">
             <h2 className="text-xl font-bold text-foreground flex items-center gap-2 mb-6">
@@ -662,6 +664,7 @@ const CarRentalBooking = () => {
             </div>
           </div>
         </section>
+        )}
 
         {/* Long-Term Discount Banner (Turo) */}
         <section className="py-6 border-b border-border/30 bg-gradient-to-r from-violet-500/5 to-purple-500/5">
@@ -756,13 +759,13 @@ const CarRentalBooking = () => {
           </div>
         </section>
 
-        {/* Car Reviews */}
+        {/* Car Reviews — hidden until real reviews exist */}
+        {carReviews.length > 0 && (
         <section className="py-8 border-b border-border/30 bg-muted/10">
           <div className="container mx-auto px-4">
             <button onClick={() => setShowCarReviews(!showCarReviews)}
               className="flex items-center gap-2 text-sm font-bold text-foreground hover:text-primary transition-all mb-4">
               <Star className="w-5 h-5 text-amber-500" /> Renter Reviews
-              <Badge className="bg-amber-500/10 text-amber-500 border-0 text-[9px]">4.8 ★</Badge>
               <ChevronRight className={cn("w-4 h-4 transition-transform", showCarReviews && "rotate-90")} />
             </button>
             {showCarReviews && (
@@ -788,6 +791,7 @@ const CarRentalBooking = () => {
             )}
           </div>
         </section>
+        )}
 
         {/* === WAVE 4: Road Trip Intelligence === */}
         <section className="py-12 bg-muted/20">

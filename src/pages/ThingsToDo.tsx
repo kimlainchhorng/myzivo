@@ -49,116 +49,21 @@ const ThingsToDo = () => {
     { id: "food", label: "Food & Drink", icon: Utensils },
   ];
 
-  const featuredExperiences = [
-    {
-      id: 1,
-      title: "Skip-the-Line Eiffel Tower Summit Access",
-      location: "Paris, France",
-      category: "attractions",
-      rating: 4.9,
-      reviews: 12500,
-      duration: "2-3 hours",
-      priceFrom: 69,
-      image: "https://images.unsplash.com/photo-1511739001486-6bfe10ce65f4?w=800&h=500&fit=crop",
-      badge: "Bestseller",
-      instant: true,
-    },
-    {
-      id: 2,
-      title: "Grand Canyon Helicopter Tour with Landing",
-      location: "Las Vegas, USA",
-      category: "outdoor",
-      rating: 4.8,
-      reviews: 8900,
-      duration: "4 hours",
-      priceFrom: 399,
-      image: "https://images.unsplash.com/photo-1474044159687-1ee9f3a51722?w=800&h=500&fit=crop",
-      badge: "Top Rated",
-      instant: true,
-    },
-    {
-      id: 3,
-      title: "Rome Colosseum Underground & Arena Floor",
-      location: "Rome, Italy",
-      category: "tours",
-      rating: 4.9,
-      reviews: 15200,
-      duration: "3 hours",
-      priceFrom: 89,
-      image: "https://images.unsplash.com/photo-1552832230-c0197dd311b5?w=800&h=500&fit=crop",
-      badge: "Exclusive",
-      instant: true,
-    },
-  ];
+  // Featured experiences will be sourced from a real activities API
+  // (Tiqets/Viator/etc.); empty until that integration ships so we never
+  // display fabricated tours and prices.
+  const featuredExperiences: Array<{
+    id: number; title: string; location: string; category: string;
+    rating: number; reviews: number; duration: string; priceFrom: number;
+    image: string; badge: string; instant: boolean;
+  }> = [];
 
-  const popularActivities = [
-    {
-      id: 4,
-      title: "Tokyo Food Tour: Tsukiji & Ginza",
-      location: "Tokyo, Japan",
-      category: "food",
-      rating: 4.8,
-      reviews: 3200,
-      duration: "3.5 hours",
-      priceFrom: 85,
-      image: "https://images.unsplash.com/photo-1540189549336-e6e99c3679fe?w=400&h=300&fit=crop",
-    },
-    {
-      id: 5,
-      title: "Santorini Sunset Catamaran Cruise",
-      location: "Santorini, Greece",
-      category: "outdoor",
-      rating: 4.9,
-      reviews: 4500,
-      duration: "5 hours",
-      priceFrom: 120,
-      image: "https://images.unsplash.com/photo-1570077188670-e3a8d69ac5ff?w=400&h=300&fit=crop",
-    },
-    {
-      id: 6,
-      title: "Dubai Desert Safari with BBQ Dinner",
-      location: "Dubai, UAE",
-      category: "outdoor",
-      rating: 4.7,
-      reviews: 9800,
-      duration: "6 hours",
-      priceFrom: 65,
-      image: "https://images.unsplash.com/photo-1451337516015-6b6e9a44a8a3?w=400&h=300&fit=crop",
-    },
-    {
-      id: 7,
-      title: "NYC Statue of Liberty & Ellis Island",
-      location: "New York, USA",
-      category: "attractions",
-      rating: 4.6,
-      reviews: 7200,
-      duration: "4 hours",
-      priceFrom: 49,
-      image: "https://images.unsplash.com/photo-1503174971373-b1f69850bded?w=400&h=300&fit=crop",
-    },
-    {
-      id: 8,
-      title: "Barcelona Gothic Quarter Walking Tour",
-      location: "Barcelona, Spain",
-      category: "tours",
-      rating: 4.8,
-      reviews: 5600,
-      duration: "2.5 hours",
-      priceFrom: 35,
-      image: "https://images.unsplash.com/photo-1583422409516-2895a77efded?w=400&h=300&fit=crop",
-    },
-    {
-      id: 9,
-      title: "Bali Rice Terraces & Temples Tour",
-      location: "Bali, Indonesia",
-      category: "tours",
-      rating: 4.9,
-      reviews: 4100,
-      duration: "10 hours",
-      priceFrom: 55,
-      image: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=400&h=300&fit=crop",
-    },
-  ];
+  // Same as above — populated from a real activities feed once available.
+  const popularActivities: Array<{
+    id: number; title: string; location: string; category: string;
+    rating: number; reviews: number; duration: string; priceFrom: number;
+    image: string;
+  }> = [];
 
   const handleBookActivity = () => {
     openAffiliateLink("activities");
@@ -274,7 +179,8 @@ const ThingsToDo = () => {
           </div>
         </section>
 
-        {/* Featured Experiences */}
+        {/* Featured Experiences — hidden until real activities feed exists */}
+        {featuredExperiences.length > 0 && (
         <section className="py-10 sm:py-16">
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between mb-6 sm:mb-10">
@@ -365,8 +271,10 @@ const ThingsToDo = () => {
             </div>
           </div>
         </section>
+        )}
 
-        {/* Category Tabs & Popular Activities */}
+        {/* Category Tabs & Popular Activities — hidden until real data exists */}
+        {popularActivities.length > 0 && (
         <section className="py-10 sm:py-16 lg:py-20 bg-muted/30">
           <div className="container mx-auto px-4">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between sm:gap-6 mb-6 sm:mb-10">
@@ -474,6 +382,7 @@ const ThingsToDo = () => {
             </div>
           </div>
         </section>
+        )}
 
         {/* Booking Partners Section */}
         <section className="py-10 sm:py-16">

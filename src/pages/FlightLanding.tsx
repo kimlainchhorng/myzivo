@@ -13,6 +13,7 @@ import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion"
 import Header from "@/components/Header";
 import Flight3DSkyHeader from "@/components/flight/Flight3DSkyHeader";
 import BundleProgressBanner from "@/components/shared/BundleProgressBanner";
+import NativeBackButton from "@/components/shared/NativeBackButton";
 
 import miamiImg from "@/assets/destinations/miami.jpg";
 import sfImg from "@/assets/destinations/san-francisco.jpg";
@@ -615,6 +616,7 @@ const FlightLanding = () => {
         ]}
       />
       <Header />
+      <NativeBackButton />
       <main className="pt-16 sm:pt-20">
         <DesktopCinematicHero />
       </main>

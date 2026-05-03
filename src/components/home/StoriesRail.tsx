@@ -2,52 +2,44 @@
  * StoriesRail — Instagram-style horizontal stories carousel for Home.
  *
  * Renders the user's "Your story" entry first (with a `+` add affordance)
- * followed by recently-active people. Unwatched stories show the IG
- * gradient ring; watched ones fall back to a hairline gray ring.
- *
- * Mock data only for now — wire to real recent-friend activity later.
+ * followed by the latest unexpired story per followed user. Unwatched
+ * stories show the IG gradient ring; watched ones fall back to a hairline
+ * gray ring. When there are no real stories from followed users, only
+ * "Your story" is shown — no placeholder faces.
  */
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import Plus from "lucide-react/dist/esm/icons/plus";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useAuth } from "@/contexts/AuthContext";
 import { useUserProfile } from "@/hooks/useUserProfile";
+import { useStoriesFeed } from "@/hooks/useStoriesFeed";
 import { cn } from "@/lib/utils";
-
-interface Story {
-  id: string;
-  name: string;
-  avatarUrl?: string;
-  watched: boolean;
-}
-
-// Placeholder — swap for a real `useRecentFriends()` hook when ready.
-const MOCK_STORIES: Story[] = [
-  { id: "s1", name: "kim_l", avatarUrl: "https://i.pravatar.cc/100?img=12", watched: false },
-  { id: "s2", name: "alex.t", avatarUrl: "https://i.pravatar.cc/100?img=32", watched: false },
-  { id: "s3", name: "mira", avatarUrl: "https://i.pravatar.cc/100?img=48", watched: false },
-  { id: "s4", name: "jonas", avatarUrl: "https://i.pravatar.cc/100?img=15", watched: false },
-  { id: "s5", name: "sara_w", avatarUrl: "https://i.pravatar.cc/100?img=21", watched: true },
-  { id: "s6", name: "dani", avatarUrl: "https://i.pravatar.cc/100?img=33", watched: true },
-  { id: "s7", name: "rey", avatarUrl: "https://i.pravatar.cc/100?img=55", watched: true },
-];
 
 export default function StoriesRail() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: profile } = useUserProfile();
-  const [watched, setWatched] = useState<Set<string>>(
-    () => new Set(MOCK_STORIES.filter((s) => s.watched).map((s) => s.id)),
+  const { data: stories = [], isLoading } = useStoriesFeed();
+
+  // Local optimistic-watch overlay so a tap immediately desaturates the ring,
+  // even before the story_views write round-trips.
+  const [locallyWatched, setLocallyWatched] = useState<Set<string>>(new Set());
+  const initialWatched = useMemo(
+    () => new Set(stories.filter(s => s.watched).map(s => s.id)),
+    [stories],
   );
 
-  const stories = MOCK_STORIES;
   const yourInitial = (profile?.full_name?.[0] || user?.email?.[0] || "Z").toUpperCase();
   const yourName = profile?.full_name?.split(" ")[0] || "Your story";
 
+  // Hide the rail's bottom border when there's nothing but "Your story" — keeps
+  // the home screen clean instead of leaving an orphan divider.
+  const hasOthers = stories.length > 0 || isLoading;
+
   return (
-    <div className="border-b border-border">
+    <div className={cn(hasOthers && "border-b border-border")}>
       <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 py-3">
         {/* "Your story" — always first, never has a story-ring */}
         <button
@@ -74,25 +66,25 @@ export default function StoriesRail() {
           </span>
         </button>
 
-        {stories.map((s) => {
-          const seen = watched.has(s.id);
+        {stories.map(s => {
+          const seen = initialWatched.has(s.id) || locallyWatched.has(s.id);
           return (
             <motion.button
               key={s.id}
               type="button"
               whileTap={{ scale: 0.94 }}
-              onClick={() =>
-                setWatched((w) => {
+              onClick={() => {
+                setLocallyWatched(w => {
                   if (w.has(s.id)) return w;
                   const next = new Set(w);
                   next.add(s.id);
                   return next;
-                })
-              }
+                });
+                navigate(`/stories/${s.id}`);
+              }}
               className="shrink-0 flex flex-col items-center gap-1 touch-manipulation"
               aria-label={`Open ${s.name}'s story`}
             >
-              {/* IG gradient ring on unwatched, hairline gray on watched */}
               <span
                 className={cn(
                   "rounded-full p-[2px]",

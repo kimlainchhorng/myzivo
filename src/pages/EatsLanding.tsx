@@ -13,6 +13,7 @@ import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { useEatsRestaurants, useEatsMenu, type EatsCartItem } from "@/hooks/useEatsData";
 import { supabase } from "@/integrations/supabase/client";
+import { Capacitor } from "@capacitor/core";
 import { useEatsOrder } from "@/hooks/useEatsOrder";
 import { getWalletBalance } from "@/hooks/useWalletPayment";
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,10 +21,51 @@ import NavBar from "@/components/home/NavBar";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import PartnerBadge from "@/components/shared/PartnerBadge";
+import NativeBackButton from "@/components/shared/NativeBackButton";
 import { useNetworkFavorites } from "@/hooks/useNetworkFavorites";
 
 // ─── Types ───────────────────────────────────────────────────────────
 type Step = "browse" | "restaurant" | "cart" | "checkout";
+
+// Canonicalize merchant-typed cuisine labels so common typos / aliases
+// collapse into one chip (e.g. "Asain food" + "Asian" → "Asian"). The DB
+// keeps the original value; this only affects the display label.
+const CUISINE_ALIASES: Record<string, string> = {
+  "asain": "Asian",
+  "asain food": "Asian",
+  "asian food": "Asian",
+  "italan": "Italian",
+  "itialian": "Italian",
+  "japenese": "Japanese",
+  "chineese": "Chinese",
+  "mexican food": "Mexican",
+  "thai food": "Thai",
+  "indian food": "Indian",
+};
+function canonicalCuisine(raw: string): string {
+  const trimmed = (raw || "").trim();
+  if (!trimmed) return "";
+  const key = trimmed.toLowerCase();
+  if (CUISINE_ALIASES[key]) return CUISINE_ALIASES[key];
+  return trimmed.charAt(0).toUpperCase() + trimmed.slice(1).toLowerCase();
+}
+
+// Cuisine emoji for empty-image fallbacks so cards look intentional
+// rather than broken when a merchant hasn't uploaded a cover photo.
+const CUISINE_EMOJI: Record<string, string> = {
+  asian: "🥢", chinese: "🥡", japanese: "🍱", thai: "🍜", korean: "🍲",
+  indian: "🍛", italian: "🍝", mexican: "🌮", american: "🍔", french: "🥖",
+  greek: "🥙", mediterranean: "🥗", vietnamese: "🍲", pizza: "🍕",
+  burger: "🍔", coffee: "☕", dessert: "🍰", bakery: "🥐", seafood: "🦐",
+  vegan: "🥗", vegetarian: "🥗", bbq: "🍖", breakfast: "🥞", sushi: "🍣",
+};
+function cuisineEmoji(raw: string): string {
+  const key = (raw || "").toLowerCase().trim();
+  for (const k of Object.keys(CUISINE_EMOJI)) {
+    if (key.includes(k)) return CUISINE_EMOJI[k];
+  }
+  return "🍽️";
+}
 
 const tipOptions = [
   { id: "none", label: "No tip", pct: 0 },
@@ -111,18 +153,27 @@ export default function EatsLanding() {
     [restaurants, selectedRestaurantId]
   );
 
+  // Normalize cuisine types: canonicalize known aliases (Asain → Asian)
+  // then dedupe by display label so each chip appears once.
   const categories = useMemo(() => {
-    const types = new Set(restaurants.map(r => r.cuisine_type));
-    return ["All", ...Array.from(types).sort()];
+    const seen = new Set<string>();
+    for (const r of restaurants) {
+      const display = canonicalCuisine(r.cuisine_type || "");
+      if (display) seen.add(display);
+    }
+    return ["All", ...Array.from(seen).sort()];
   }, [restaurants]);
 
   const filtered = useMemo(() => {
     return restaurants
       .filter(r => {
-        if (activeCategory !== "All" && r.cuisine_type !== activeCategory) return false;
+        if (
+          activeCategory !== "All" &&
+          canonicalCuisine(r.cuisine_type || "") !== activeCategory
+        ) return false;
         if (searchQuery) {
           const q = searchQuery.toLowerCase();
-          return r.name.toLowerCase().includes(q) || r.cuisine_type.toLowerCase().includes(q);
+          return r.name.toLowerCase().includes(q) || (r.cuisine_type || "").toLowerCase().includes(q);
         }
         return true;
       })
@@ -215,21 +266,22 @@ export default function EatsLanding() {
         description="Order from your favorite local restaurants. Fast delivery, real-time tracking, and exclusive deals on ZIVO Eats."
         canonical="/eats"
       />
-      {step === "browse" && <NavBar />}
+      {step === "browse" && !Capacitor.isNativePlatform() && <NavBar />}
+      {step === "browse" && <NativeBackButton />}
 
       <AnimatePresence mode="wait">
         {/* ═══ BROWSE ═══ */}
         {step === "browse" && (
           <motion.div key="browse" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-            <section className="relative pt-24 pb-12 overflow-hidden">
+            <section className="relative pt-6 sm:pt-24 pb-6 sm:pb-12 overflow-hidden safe-area-top">
               <div className="absolute inset-0 bg-gradient-to-b from-primary/8 via-primary/3 to-transparent" />
               <div className="container mx-auto px-4 relative z-10">
-                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl mx-auto text-center mb-8">
-                  <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center mx-auto mb-6 shadow-xl shadow-orange-500/20">
-                    <UtensilsCrossed className="w-8 h-8 text-primary-foreground" />
+                <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="max-w-2xl mx-auto text-center mb-4 sm:mb-8">
+                  <div className="w-10 h-10 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-gradient-to-br from-orange-500 to-red-500 flex items-center justify-center mx-auto mb-2 sm:mb-6 shadow-lg shadow-orange-500/20">
+                    <UtensilsCrossed className="w-5 h-5 sm:w-8 sm:h-8 text-primary-foreground" />
                   </div>
-                  <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-3">ZIVO <span className="text-primary">Eats</span></h1>
-                  <p className="text-muted-foreground text-lg">Delicious food from local restaurants, delivered fast.</p>
+                  <h1 className="text-2xl sm:text-5xl font-bold tracking-tight mb-1 sm:mb-3">ZIVO <span className="text-primary">Eats</span></h1>
+                  <p className="text-muted-foreground text-xs sm:text-lg">Delicious food from local restaurants, delivered fast.</p>
                 </motion.div>
 
                 <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="max-w-xl mx-auto space-y-3">
@@ -293,8 +345,9 @@ export default function EatsLanding() {
                             {restaurant.cover_image_url ? (
                               <img src={restaurant.cover_image_url} alt={restaurant.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
                             ) : (
-                              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 to-orange-500/10">
-                                <UtensilsCrossed className="w-10 h-10 text-muted-foreground/30" />
+                              <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-orange-500/15 via-amber-500/10 to-rose-500/15">
+                                <span className="text-5xl">{cuisineEmoji(restaurant.cuisine_type)}</span>
+                                <span className="text-[10px] font-bold uppercase tracking-wider text-foreground/50">{canonicalCuisine(restaurant.cuisine_type)}</span>
                               </div>
                             )}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent opacity-50" />
@@ -312,13 +365,17 @@ export default function EatsLanding() {
                             <div className="flex items-center justify-between mb-1">
                               <h3 className="font-bold text-sm">{restaurant.name}</h3>
                             </div>
-                            <p className="text-xs text-muted-foreground mb-2">{restaurant.cuisine_type}</p>
+                            <p className="text-xs text-muted-foreground mb-2">{canonicalCuisine(restaurant.cuisine_type)}</p>
                             <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                              <span className="flex items-center gap-1"><Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" /> {restaurant.rating?.toFixed(1) ?? "New"}</span>
-                              <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {restaurant.avg_prep_time ?? 25}-{(restaurant.avg_prep_time ?? 25) + 15} min</span>
-                              {restaurant.rating_count != null && restaurant.rating_count > 0 && (
-                                <span className="text-muted-foreground/60">({restaurant.rating_count})</span>
+                              {restaurant.rating != null && restaurant.rating > 0 && (restaurant.rating_count ?? 0) > 0 ? (
+                                <>
+                                  <span className="flex items-center gap-1"><Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" /> {restaurant.rating.toFixed(1)}</span>
+                                  <span className="text-muted-foreground/60">({restaurant.rating_count})</span>
+                                </>
+                              ) : (
+                                <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600">New</span>
                               )}
+                              <span className="flex items-center gap-1"><Clock className="w-3.5 h-3.5" /> {restaurant.avg_prep_time ?? 25}-{(restaurant.avg_prep_time ?? 25) + 15} min</span>
                             </div>
                           </div>
                         </button>
@@ -362,15 +419,19 @@ export default function EatsLanding() {
                 </motion.button>
                 <div className="flex-1">
                   <h1 className="text-base font-bold text-foreground">{currentRestaurant.name}</h1>
-                  <p className="text-[10px] text-muted-foreground">{currentRestaurant.cuisine_type} · {currentRestaurant.avg_prep_time ?? 25}-{(currentRestaurant.avg_prep_time ?? 25) + 15} min</p>
+                  <p className="text-[10px] text-muted-foreground">{canonicalCuisine(currentRestaurant.cuisine_type)} · {currentRestaurant.avg_prep_time ?? 25}-{(currentRestaurant.avg_prep_time ?? 25) + 15} min</p>
                 </div>
                 <button onClick={() => toggleFavorite(currentRestaurant.id)}
                   className="w-10 h-10 rounded-xl bg-card/80 border border-border/40 flex items-center justify-center touch-manipulation">
                   <Heart className={cn("w-5 h-5", favorites.has(currentRestaurant.id) ? "fill-red-500 text-red-500" : "text-muted-foreground")} />
                 </button>
-                <div className="flex items-center gap-1 text-xs font-bold text-amber-500">
-                  <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" /> {currentRestaurant.rating?.toFixed(1) ?? "New"}
-                </div>
+                {currentRestaurant.rating != null && currentRestaurant.rating > 0 && (currentRestaurant.rating_count ?? 0) > 0 ? (
+                  <div className="flex items-center gap-1 text-xs font-bold text-amber-500">
+                    <Star className="w-3.5 h-3.5 fill-amber-400 text-amber-400" /> {currentRestaurant.rating.toFixed(1)}
+                  </div>
+                ) : (
+                  <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-600">New</span>
+                )}
               </div>
               <EatsStepIndicator currentStep="restaurant" />
             </div>

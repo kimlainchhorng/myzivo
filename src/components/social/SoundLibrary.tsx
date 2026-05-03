@@ -15,16 +15,10 @@ interface SoundItem {
   category: string;
 }
 
-const DEMO_SOUNDS: SoundItem[] = [
-  { id: "1", title: "Sunset Vibes", artist: "Chill Beats", duration: "0:30", usageCount: 12400, category: "trending" },
-  { id: "2", title: "Urban Flow", artist: "City Sound", duration: "0:15", usageCount: 8900, category: "trending" },
-  { id: "3", title: "Ocean Waves", artist: "Nature FX", duration: "0:45", usageCount: 6200, category: "ambient" },
-  { id: "4", title: "Epic Drop", artist: "Bass Nation", duration: "0:20", usageCount: 15600, category: "trending" },
-  { id: "5", title: "Acoustic Morning", artist: "Indie Folk", duration: "0:35", usageCount: 4300, category: "chill" },
-  { id: "6", title: "Lo-fi Study", artist: "Beats Lab", duration: "1:00", usageCount: 22100, category: "chill" },
-  { id: "7", title: "Dance Break", artist: "Club Mix", duration: "0:15", usageCount: 31000, category: "trending" },
-  { id: "8", title: "Cinematic Rise", artist: "Film Score", duration: "0:25", usageCount: 7800, category: "dramatic" },
-];
+// Sounds catalog will be populated from a real audio_tracks table when
+// that backend ships; empty until then so we never display fabricated
+// trending audio with fake usage counts.
+const DEMO_SOUNDS: SoundItem[] = [];
 
 interface SoundLibraryProps {
   open: boolean;

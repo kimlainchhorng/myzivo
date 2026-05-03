@@ -48,7 +48,13 @@ const SuggestedUsersCarousel = memo(forwardRef<HTMLDivElement, SuggestedUsersCar
         .limit(40);
       if (error) throw error;
       const filtered = (data || []).filter((p: any) => !followedIds.has(p.id));
-      return filtered.sort(() => Math.random() - 0.5).slice(0, 12);
+      // Fisher-Yates shuffle — `sort(() => Math.random() - 0.5)` is biased
+      // (V8 in particular pins elements and produces non-uniform orderings).
+      for (let i = filtered.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [filtered[i], filtered[j]] = [filtered[j], filtered[i]];
+      }
+      return filtered.slice(0, 12);
     },
     enabled: !!user,
     staleTime: 5 * 60_000,

@@ -2317,3 +2317,13 @@ html.underline-links a:not([class*="no-underline"]):not(button) {
   text-decoration: underline;
   text-underline-offset: 2px;
 }
+
+/* Sonner toaster — force safe-area top offset.
+   Sonner's `offset` prop only accepts numbers in some versions; CSS string
+   values get silently ignored. Override its internal --offset/--mobile-offset
+   variables so toasts always clear the Dynamic Island / notch. */
+[data-sonner-toaster][data-y-position="top"] {
+  --offset: var(--zivo-safe-top-sticky, 60px) !important;
+  --mobile-offset: var(--zivo-safe-top-sticky, 60px) !important;
+  top: var(--zivo-safe-top-sticky, 60px) !important;
+}

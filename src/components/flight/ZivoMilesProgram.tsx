@@ -110,8 +110,6 @@ const TIERS: TierInfo[] = [
   },
 ];
 
-const MOCK_TRANSACTIONS: MilesTransaction[] = [];
-
 const REDEMPTION_OPTIONS: RedemptionOption[] = [
   { id: '1', title: 'Flight Upgrade', description: 'Upgrade to Business Class', milesRequired: 25000, value: '$800', category: 'flights', icon: Plane, popular: true },
   { id: '2', title: 'Lounge Access', description: 'Priority Pass - 1 Visit', milesRequired: 5000, value: '$50', category: 'lounges', icon: Star },
@@ -137,7 +135,7 @@ export const ZivoMilesProgram = ({ className }: ZivoMilesProgramProps) => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [transferAmount, setTransferAmount] = useState('');
-  const [transactions, setTransactions] = useState<MilesTransaction[]>(MOCK_TRANSACTIONS);
+  const [transactions, setTransactions] = useState<MilesTransaction[]>([]);
 
   // User's miles data from loyalty_points
   const [currentMiles, setCurrentMiles] = useState(0);
@@ -291,17 +289,17 @@ export const ZivoMilesProgram = ({ className }: ZivoMilesProgramProps) => {
             <div className="grid grid-cols-3 gap-3">
               <div className="p-3 rounded-lg bg-muted/30 border border-border/50 text-center">
                 <TrendingUp className="w-5 h-5 mx-auto mb-1 text-emerald-400" />
-                <p className="text-lg font-semibold">+12%</p>
+                <p className="text-lg font-semibold">—</p>
                 <p className="text-xs text-muted-foreground">This Month</p>
               </div>
               <div className="p-3 rounded-lg bg-muted/30 border border-border/50 text-center">
                 <Calendar className="w-5 h-5 mx-auto mb-1 text-sky-400" />
-                <p className="text-lg font-semibold">{MOCK_TRANSACTIONS.length}</p>
+                <p className="text-lg font-semibold">{transactions.length}</p>
                 <p className="text-xs text-muted-foreground">Transactions</p>
               </div>
               <div className="p-3 rounded-lg bg-muted/30 border border-border/50 text-center">
                 <Gift className="w-5 h-5 mx-auto mb-1 text-purple-400" />
-                <p className="text-lg font-semibold">3</p>
+                <p className="text-lg font-semibold">—</p>
                 <p className="text-xs text-muted-foreground">Rewards Used</p>
               </div>
             </div>
@@ -468,7 +466,12 @@ export const ZivoMilesProgram = ({ className }: ZivoMilesProgramProps) => {
           </TabsContent>
 
           <TabsContent value="history" className="space-y-2 mt-0">
-            {MOCK_TRANSACTIONS.map((tx, i) => (
+            {transactions.length === 0 && (
+              <div className="text-center py-12 text-sm text-muted-foreground">
+                No transactions yet
+              </div>
+            )}
+            {transactions.map((tx, i) => (
               <motion.div
                 key={tx.id}
                 initial={{ opacity: 0 }}

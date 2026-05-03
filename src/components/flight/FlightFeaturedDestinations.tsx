@@ -27,104 +27,17 @@ export default function FlightFeaturedDestinations({
   const [hoveredId, setHoveredId] = useState<string | null>(null);
   const [likedDestinations, setLikedDestinations] = useState<Set<string>>(new Set());
 
-  const featuredDestinations = [
-    {
-      id: "paris",
-      city: "Paris",
-      country: "France",
-      code: "CDG",
-      price: 449,
-      originalPrice: 599,
-      image: "https://images.unsplash.com/photo-1502602898657-3e91760cbb34?w=600&h=400&fit=crop",
-      rating: 4.9,
-      reviews: 12500,
-      flightTime: "7h 30m",
-      badge: "Most Popular",
-      badgeColor: "bg-sky-500",
-      highlight: "Romantic getaway with direct flights",
-      tags: ["Culture", "Food", "Romance"],
-    },
-    {
-      id: "tokyo",
-      city: "Tokyo",
-      country: "Japan",
-      code: "NRT",
-      price: 799,
-      originalPrice: 1099,
-      image: "https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=600&h=400&fit=crop",
-      rating: 4.8,
-      reviews: 9800,
-      flightTime: "13h 45m",
-      badge: "Best Value",
-      badgeColor: "bg-emerald-500",
-      highlight: "Cherry blossom season specials",
-      tags: ["Technology", "Culture", "Food"],
-    },
-    {
-      id: "dubai",
-      city: "Dubai",
-      country: "UAE",
-      code: "DXB",
-      price: 549,
-      originalPrice: 749,
-      image: "https://images.unsplash.com/photo-1512453979798-5ea266f8880c?w=600&h=400&fit=crop",
-      rating: 4.9,
-      reviews: 15200,
-      flightTime: "14h 20m",
-      badge: "Luxury",
-      badgeColor: "bg-amber-500",
-      highlight: "Premium cabin upgrades available",
-      tags: ["Luxury", "Shopping", "Beach"],
-    },
-    {
-      id: "bali",
-      city: "Bali",
-      country: "Indonesia",
-      code: "DPS",
-      price: 699,
-      originalPrice: 899,
-      image: "https://images.unsplash.com/photo-1537996194471-e657df975ab4?w=600&h=400&fit=crop",
-      rating: 4.7,
-      reviews: 8600,
-      flightTime: "18h 30m",
-      badge: "Trending",
-      badgeColor: "bg-pink-500",
-      highlight: "Paradise beaches await",
-      tags: ["Beach", "Nature", "Wellness"],
-    },
-    {
-      id: "london",
-      city: "London",
-      country: "United Kingdom",
-      code: "LHR",
-      price: 399,
-      originalPrice: 549,
-      image: "https://images.unsplash.com/photo-1513635269975-59663e0ac1ad?w=600&h=400&fit=crop",
-      rating: 4.8,
-      reviews: 18900,
-      flightTime: "7h 00m",
-      badge: "Flash Sale",
-      badgeColor: "bg-orange-500",
-      highlight: "West End shows included packages",
-      tags: ["Culture", "History", "Theatre"],
-    },
-    {
-      id: "maldives",
-      city: "Maldives",
-      country: "Maldives",
-      code: "MLE",
-      price: 899,
-      originalPrice: 1299,
-      image: "https://images.unsplash.com/photo-1514282401047-d79a71a590e8?w=600&h=400&fit=crop",
-      rating: 5.0,
-      reviews: 6200,
-      flightTime: "16h 15m",
-      badge: "Honeymoon",
-      badgeColor: "bg-rose-500",
-      highlight: "Overwater villa packages",
-      tags: ["Luxury", "Beach", "Romance"],
-    },
-  ];
+  // Featured destinations should come from a live flight-deals feed (cached
+  // best fares per city). Empty until that backend exists — never display
+  // fabricated prices.
+  const featuredDestinations: Array<{
+    id: string; city: string; country: string; code: string;
+    price: number; originalPrice: number; image: string;
+    rating: number; reviews: number; flightTime: string;
+    badge: string; badgeColor: string; highlight: string; tags: string[];
+  }> = [];
+
+  if (featuredDestinations.length === 0) return null;
 
   const toggleLike = (id: string) => {
     setLikedDestinations(prev => {
