@@ -7,7 +7,7 @@
  */
 import { useMemo, useState } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { Loader2, Wallet, ShieldCheck, Banknote, Landmark, AlertCircle } from "lucide-react";
+import { Loader2, Wallet, ShieldCheck, Banknote, Landmark, AlertCircle, Square, Building } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,7 +38,7 @@ interface MethodRow {
 }
 
 const RAIL_ICON: Record<PayoutRail, typeof Banknote> = {
-  stripe: ShieldCheck, aba: Banknote, bank_wire: Landmark, paypal: Wallet,
+  stripe: ShieldCheck, aba: Banknote, bank_wire: Landmark, paypal: Wallet, square: Square, mercury: Building,
 };
 
 export default function LodgingRequestPayoutSheet({ storeId, storeCountry, availableCents, open, onOpenChange }: Props) {

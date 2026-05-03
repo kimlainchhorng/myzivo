@@ -11,6 +11,7 @@ import { useConnectStatus, useConnectOnboard } from "@/hooks/useStripeConnect";
 import LodgingPayoutAccountCard from "./LodgingPayoutAccountCard";
 import PayoutInstructionsPanel from "./PayoutInstructionsPanel";
 import LodgingPayoutHistoryTable from "./LodgingPayoutHistoryTable";
+import LodgingAutoPayoutLedger from "./LodgingAutoPayoutLedger";
 import LodgingRequestPayoutSheet from "./LodgingRequestPayoutSheet";
 import { supabase } from "@/integrations/supabase/client";
 import { recommendedRail, normalizeCountry } from "@/lib/payouts/payoutRails";
@@ -210,7 +211,10 @@ export default function LodgingPayoutsSection({ storeId }: { storeId: string }) 
           )}
         </div>
 
-        {/* Real payout history with status badges + failure reasons */}
+        {/* Automatic Stripe Connect transfers (auto-paid on every Stripe-paid booking) */}
+        <LodgingAutoPayoutLedger storeId={storeId} />
+
+        {/* Manual payout request history with status badges + failure reasons */}
         <LodgingPayoutHistoryTable storeId={storeId} />
 
         <NextActions actions={[

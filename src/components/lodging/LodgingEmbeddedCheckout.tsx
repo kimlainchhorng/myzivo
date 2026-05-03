@@ -21,7 +21,7 @@ import {
 } from "@stripe/react-stripe-js";
 import {
   Loader2, AlertTriangle, Lock, RefreshCw, CheckCircle2, CreditCard,
-  Smartphone, Wallet, ShieldCheck, XCircle, Clock, ReceiptText,
+  Smartphone, Wallet, ShieldCheck, XCircle, Clock, ReceiptText, ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -29,7 +29,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { getStripe } from "@/lib/stripe";
 import { cn } from "@/lib/utils";
 
-export type PaymentMethodChoice = "card" | "wallet" | "cash";
+export type PaymentMethodChoice = "card" | "wallet" | "cash" | "paypal" | "square";
 
 interface Props {
   reservationId: string;
@@ -102,7 +102,13 @@ export function LodgingEmbeddedCheckout({
 
   // ---------- Derive view state from inputs ----------
   const view: ViewState = useMemo(() => {
-    if (method === "cash") return "ready"; // cash panel is rendered separately
+    // Cash / PayPal / Square panels render their own UI; the only shared
+    // terminal states we surface are succeeded/failed.
+    if (method === "cash" || method === "paypal" || method === "square") {
+      if (paymentStatus === "authorized" || paymentStatus === "paid" || paymentStatus === "captured") return "succeeded";
+      if (paymentStatus === "failed") return "failed";
+      return "ready";
+    }
     // Realtime terminal states win.
     if (paymentStatus === "authorized" || paymentStatus === "paid" || paymentStatus === "captured") return "succeeded";
     if (paymentStatus === "failed") return "failed";
@@ -151,7 +157,7 @@ export function LodgingEmbeddedCheckout({
 
   // Initial + reload-key triggered fetches. Skip when method !== card/wallet.
   useEffect(() => {
-    if (method === "cash") return;
+    if (method === "cash" || method === "paypal" || method === "square") return;
     fetchClientSecret(reloadKey > 0);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reloadKey, method]);
@@ -200,6 +206,45 @@ export function LodgingEmbeddedCheckout({
 
   const handleSwitchToCash = () => setMethod("cash");
 
+  const [redirectingProvider, setRedirectingProvider] = useState<"paypal" | "square" | null>(null);
+
+  const handlePayWithPayPal = useCallback(async () => {
+    setRedirectingProvider("paypal");
+    setError(null);
+    try {
+      const returnUrl = `${window.location.origin}${window.location.pathname}?paypal_return=${reservationId}`;
+      const cancelUrl = `${window.location.origin}${window.location.pathname}?paypal_cancel=${reservationId}`;
+      const { data, error: fnErr } = await supabase.functions.invoke("create-lodging-paypal-order", {
+        body: { reservation_id: reservationId, store_id: storeId, amount_cents: amountCents, mode, return_url: returnUrl, cancel_url: cancelUrl },
+      });
+      if (fnErr) throw fnErr;
+      const approveUrl = (data as any)?.approve_url;
+      if (!approveUrl) throw new Error("PayPal did not return an approval URL");
+      window.location.assign(approveUrl);
+    } catch (e: any) {
+      setRedirectingProvider(null);
+      setError(e?.message || "Could not start PayPal checkout");
+    }
+  }, [reservationId, storeId, amountCents, mode]);
+
+  const handlePayWithSquare = useCallback(async () => {
+    setRedirectingProvider("square");
+    setError(null);
+    try {
+      const returnUrl = `${window.location.origin}${window.location.pathname}?square_return=${reservationId}`;
+      const { data, error: fnErr } = await supabase.functions.invoke("create-lodging-square-checkout", {
+        body: { reservation_id: reservationId, amount_cents: amountCents, return_url: returnUrl },
+      });
+      if (fnErr) throw fnErr;
+      const url = (data as any)?.url;
+      if (!url) throw new Error("Square did not return a checkout URL");
+      window.location.assign(url);
+    } catch (e: any) {
+      setRedirectingProvider(null);
+      setError(e?.message || "Could not start Square checkout");
+    }
+  }, [reservationId, amountCents]);
+
   // ---------- Render helpers ----------
   const headerTitle =
     method === "cash" ? "Pay at check-in" :
@@ -233,7 +278,7 @@ export function LodgingEmbeddedCheckout({
     >
       {/* ---- Method toggle ---- */}
       {!hideMethodToggle && (
-        <div role="tablist" aria-label="Payment method" className="flex items-center gap-1 p-1.5 border-b border-border bg-muted/30">
+        <div role="tablist" aria-label="Payment method" className="grid grid-cols-5 gap-1 p-1.5 border-b border-border bg-muted/30">
           <MethodTab
             active={method === "card"}
             onClick={() => setMethod("card")}
@@ -244,8 +289,20 @@ export function LodgingEmbeddedCheckout({
             active={method === "wallet"}
             onClick={() => setMethod("wallet")}
             icon={Smartphone}
-            label="Apple / Google Pay"
-            hint="(via card form)"
+            label="Pay"
+            hint="Apple/Google"
+          />
+          <MethodTab
+            active={method === "paypal"}
+            onClick={() => setMethod("paypal")}
+            icon={Wallet}
+            label="PayPal"
+          />
+          <MethodTab
+            active={method === "square"}
+            onClick={() => setMethod("square")}
+            icon={CreditCard}
+            label="Square"
           />
           <MethodTab
             active={method === "cash"}
@@ -289,6 +346,65 @@ export function LodgingEmbeddedCheckout({
             <p className="text-[11px] text-muted-foreground">
               Prefer to lock it in now? Switch to Card or Apple/Google Pay above.
             </p>
+          </div>
+        )}
+
+        {/* PAYPAL PANEL */}
+        {method === "paypal" && view !== "succeeded" && view !== "failed" && (
+          <div
+            aria-live="polite"
+            className="rounded-xl bg-[#FFF9E6] dark:bg-[#0a1929] border border-[#FFC439]/40 p-4 text-sm space-y-3"
+          >
+            <div className="flex items-center gap-2 font-bold text-[#003087] dark:text-[#79b7ff]">
+              <Wallet className="h-4 w-4" aria-hidden /> PayPal
+            </div>
+            <p className="text-xs text-foreground/80">
+              You'll be redirected to PayPal to confirm <strong>{fmt(amountCents)}</strong>.
+              On approval you return here automatically.
+            </p>
+            {error && method === "paypal" && (
+              <p className="text-[11px] text-destructive">{error}</p>
+            )}
+            <Button
+              size="sm"
+              onClick={handlePayWithPayPal}
+              disabled={redirectingProvider === "paypal"}
+              className="w-full bg-[#FFC439] hover:bg-[#F0B82E] text-[#003087] font-bold gap-2 border border-[#FFC439]/60"
+            >
+              {redirectingProvider === "paypal"
+                ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Opening PayPal…</>
+                : <><Wallet className="h-3.5 w-3.5" />Continue to PayPal<ExternalLink className="h-3 w-3" /></>
+              }
+            </Button>
+          </div>
+        )}
+
+        {/* SQUARE PANEL */}
+        {method === "square" && view !== "succeeded" && view !== "failed" && (
+          <div
+            aria-live="polite"
+            className="rounded-xl bg-slate-50 dark:bg-slate-950/40 border border-slate-300/60 dark:border-slate-800/60 p-4 text-sm space-y-3"
+          >
+            <div className="flex items-center gap-2 font-bold text-slate-900 dark:text-slate-100">
+              <CreditCard className="h-4 w-4" aria-hidden /> Square Checkout
+            </div>
+            <p className="text-xs text-foreground/80">
+              You'll pay <strong>{fmt(amountCents)}</strong> on Square's secure page (card or Cash App). On completion you'll come right back.
+            </p>
+            {error && method === "square" && (
+              <p className="text-[11px] text-destructive">{error}</p>
+            )}
+            <Button
+              size="sm"
+              onClick={handlePayWithSquare}
+              disabled={redirectingProvider === "square"}
+              className="w-full bg-slate-900 hover:bg-slate-800 text-white font-bold gap-2"
+            >
+              {redirectingProvider === "square"
+                ? <><Loader2 className="h-3.5 w-3.5 animate-spin" />Opening Square…</>
+                : <><CreditCard className="h-3.5 w-3.5" />Continue to Square<ExternalLink className="h-3 w-3" /></>
+              }
+            </Button>
           </div>
         )}
 

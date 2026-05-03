@@ -40,7 +40,15 @@ async function sha256Hex(bytes: Uint8Array) {
   const hash = await crypto.subtle.digest("SHA-256", bytes);
   return Array.from(new Uint8Array(hash)).map((b) => b.toString(16).padStart(2, "0")).join("");
 }
+const PROVIDER_LABELS: Record<string, string> = {
+  stripe: "Card (Stripe)",
+  paypal: "PayPal",
+  square: "Square",
+  cash: "Cash on arrival",
+};
+
 function linesFromSnapshot(snapshot: any) {
+  const providerLabel = snapshot.paymentProvider ? (PROVIDER_LABELS[snapshot.paymentProvider] || snapshot.paymentProvider) : null;
   return [
     `Property: ${snapshot.propertyName || "ZIVO property"}`,
     `Reservation: ${snapshot.reservationNumber || ""}`,
@@ -49,6 +57,8 @@ function linesFromSnapshot(snapshot: any) {
     `Room: ${snapshot.roomLabel || "Assigned room"}`,
     `Reservation status: ${snapshot.status || ""}`,
     `Payment status: ${snapshot.paymentStatus || "pending"}`,
+    ...(providerLabel ? [`Payment method: ${providerLabel}`] : []),
+    ...(snapshot.providerReference ? [`Payment reference: ${snapshot.providerReference}`] : []),
     `Total: ${money(snapshot.totalCents)}`,
     `Paid: ${money(snapshot.paidCents)}`,
     `Deposit: ${money(snapshot.depositCents)}`,
@@ -96,7 +106,7 @@ Deno.serve(async (req) => {
 
     const { data: r, error } = await admin
       .from("lodge_reservations")
-      .select("id, store_id, room_id, guest_id, number, guest_name, guest_email, check_in, check_out, nights, room_number, status, payment_status, total_cents, paid_cents, deposit_cents, extras_cents, tax_cents, addons, addon_selections, fee_breakdown")
+      .select("id, store_id, room_id, guest_id, number, guest_name, guest_email, check_in, check_out, nights, room_number, status, payment_status, total_cents, paid_cents, deposit_cents, extras_cents, tax_cents, addons, addon_selections, fee_breakdown, payment_provider, stripe_payment_intent_id, paypal_order_id, paypal_capture_id, square_payment_id")
       .eq("id", reservationId)
       .maybeSingle();
     if (error || !r) return new Response(JSON.stringify({ error: "not_found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -122,6 +132,12 @@ Deno.serve(async (req) => {
       roomLabel: r.room_number || room?.name || room?.room_type || "Assigned room",
       status: r.status,
       paymentStatus: r.payment_status || "pending",
+      paymentProvider: (r as any).payment_provider || null,
+      providerReference:
+        (r as any).payment_provider === "stripe" ? (r as any).stripe_payment_intent_id ?? null :
+        (r as any).payment_provider === "paypal" ? (r as any).paypal_capture_id ?? (r as any).paypal_order_id ?? null :
+        (r as any).payment_provider === "square" ? (r as any).square_payment_id ?? null :
+        null,
       totalCents: r.total_cents,
       paidCents: r.paid_cents,
       depositCents: r.deposit_cents,

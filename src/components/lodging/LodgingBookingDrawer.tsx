@@ -820,8 +820,8 @@ export function LodgingBookingDrawer({
           <div className="space-y-4 py-2">
             <div className="flex flex-col items-center text-center gap-2">
               <div className="relative">
-                <div className="absolute inset-0 rounded-full bg-emerald-500/20 blur-xl" />
-                <div className="relative h-20 w-20 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center shadow-lg shadow-emerald-500/30">
+                <div className="absolute inset-0 rounded-full bg-ig-gradient opacity-30 blur-xl" />
+                <div className="relative h-20 w-20 rounded-full bg-ig-gradient flex items-center justify-center shadow-lg shadow-black/10 ring-2 ring-background">
                   <CheckCircle2 className="h-11 w-11 text-white" strokeWidth={2.5} />
                 </div>
               </div>
@@ -829,10 +829,10 @@ export function LodgingBookingDrawer({
               <p className="font-bold text-lg">{storeName}</p>
             </div>
 
-            <div className="p-4 rounded-2xl border-2 border-dashed border-emerald-500/30 bg-gradient-to-br from-emerald-50/50 to-card dark:from-emerald-950/20 text-center">
+            <div className="p-4 rounded-2xl border-2 border-dashed border-foreground/15 bg-gradient-to-br from-muted/40 to-card text-center">
               <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground font-bold">Reference</p>
               <div className="flex items-center justify-center gap-2 mt-1.5">
-                <p className="font-extrabold text-2xl tracking-wider text-foreground">{reference}</p>
+                <p className="font-extrabold text-2xl tracking-wider text-ig-gradient">{reference}</p>
                 <Button size="icon" variant="ghost" className="h-8 w-8 rounded-full" onClick={copyRef}>
                   <Copy className="h-4 w-4" />
                 </Button>

@@ -9,6 +9,7 @@
  */
 import { createClient } from "../_shared/deps.ts";
 import Stripe from "../_shared/stripe.ts";
+import { notifyLodgingBookingConfirmed } from "../_shared/lodging-notifications.ts";
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") {
@@ -39,6 +40,142 @@ Deno.serve(async (req) => {
   const admin = createClient(supabaseUrl, serviceKey);
   const eventType = event.type as string;
   const eventStamp = new Date().toISOString();
+
+  /**
+   * Auto-transfer the hotel's share to their Connect account on a successful
+   * payment. Idempotent — UNIQUE(reservation_id, direction) on the ledger
+   * means a webhook redelivery can't double-transfer. If the hotel hasn't
+   * onboarded Connect (or has opted out), we no-op and the existing manual
+   * `lodge-payout-request` flow still works.
+   */
+  const queueAutoTransfer = async (reservationId: string) => {
+    const { data: r } = await admin
+      .from("lodge_reservations")
+      .select("id, store_id, paid_cents, total_cents, payment_provider, stripe_payment_intent_id")
+      .eq("id", reservationId)
+      .maybeSingle();
+    if (!r || (r as any).payment_provider !== "stripe") return;
+    const settled = (r as any).paid_cents || (r as any).total_cents || 0;
+    if (!settled) return;
+
+    const { data: store } = await admin
+      .from("restaurants")
+      .select("id, stripe_account_id, commission_rate, auto_payout_enabled")
+      .eq("id", (r as any).store_id)
+      .maybeSingle();
+    if (!store?.stripe_account_id || (store as any).auto_payout_enabled === false) return;
+
+    const rate = Number((store as any).commission_rate ?? 0.10);
+    const commissionCents = Math.round(settled * rate);
+    const transferCents = Math.max(0, settled - commissionCents);
+    if (transferCents <= 0) return;
+
+    // Reserve the ledger row first so duplicates fail the UNIQUE constraint.
+    const { error: insertErr } = await admin
+      .from("lodge_payout_ledger")
+      .insert({
+        reservation_id: reservationId,
+        store_id: (r as any).store_id,
+        stripe_account_id: (store as any).stripe_account_id,
+        direction: "transfer",
+        amount_cents: transferCents,
+        commission_cents: commissionCents,
+        commission_rate: rate,
+        status: "queued",
+      });
+    if (insertErr) {
+      // 23505 = unique violation — we've already done this transfer.
+      if ((insertErr as any).code === "23505") return;
+      console.error("[stripe-lodging-webhook] ledger reserve failed", insertErr);
+      return;
+    }
+
+    try {
+      const transfer = await stripe.transfers.create(
+        {
+          amount: transferCents,
+          currency: "usd",
+          destination: (store as any).stripe_account_id,
+          source_transaction: undefined, // direct platform balance transfer
+          transfer_group: `lodging-${reservationId}`,
+          metadata: {
+            reservation_id: reservationId,
+            store_id: (r as any).store_id,
+            commission_cents: String(commissionCents),
+            type: "lodging_auto_transfer",
+          },
+        },
+        { idempotencyKey: `lodging-transfer-${reservationId}` },
+      );
+      await admin
+        .from("lodge_payout_ledger")
+        .update({ status: "created", stripe_transfer_id: transfer.id, updated_at: new Date().toISOString() })
+        .eq("reservation_id", reservationId)
+        .eq("direction", "transfer");
+    } catch (e: any) {
+      const msg = String(e?.message || e);
+      console.error("[stripe-lodging-webhook] auto-transfer failed", msg);
+      await admin
+        .from("lodge_payout_ledger")
+        .update({ status: "failed", error_message: msg, updated_at: new Date().toISOString() })
+        .eq("reservation_id", reservationId)
+        .eq("direction", "transfer");
+    }
+  };
+
+  /**
+   * Reverse the auto-transfer when a refund is issued. Stripe transfer
+   * reversals pull money back from the connected account onto our platform
+   * balance so the refund doesn't come out of our pocket.
+   */
+  const queueAutoReversal = async (reservationId: string, reason: string) => {
+    const { data: ledger } = await admin
+      .from("lodge_payout_ledger")
+      .select("id, stripe_transfer_id, amount_cents")
+      .eq("reservation_id", reservationId)
+      .eq("direction", "transfer")
+      .eq("status", "created")
+      .maybeSingle();
+    if (!ledger || !(ledger as any).stripe_transfer_id) return;
+
+    const { error: insertErr } = await admin
+      .from("lodge_payout_ledger")
+      .insert({
+        reservation_id: reservationId,
+        store_id: null as any, // copied from transfer row below
+        stripe_account_id: "",
+        direction: "reversal",
+        amount_cents: (ledger as any).amount_cents,
+        commission_cents: 0,
+        status: "queued",
+      });
+    if (insertErr) {
+      if ((insertErr as any).code === "23505") return;
+      console.error("[stripe-lodging-webhook] reversal reserve failed", insertErr);
+      return;
+    }
+
+    try {
+      const reversal = await stripe.transfers.createReversal(
+        (ledger as any).stripe_transfer_id,
+        { amount: (ledger as any).amount_cents, metadata: { reservation_id: reservationId, reason } },
+        { idempotencyKey: `lodging-reversal-${reservationId}` },
+      );
+      await admin
+        .from("lodge_payout_ledger")
+        .update({ status: "created", stripe_reversal_id: reversal.id, updated_at: new Date().toISOString() })
+        .eq("reservation_id", reservationId)
+        .eq("direction", "reversal");
+    } catch (e: any) {
+      const msg = String(e?.message || e);
+      console.error("[stripe-lodging-webhook] auto-reversal failed", msg);
+      await admin
+        .from("lodge_payout_ledger")
+        .update({ status: "failed", error_message: msg, updated_at: new Date().toISOString() })
+        .eq("reservation_id", reservationId)
+        .eq("direction", "reversal");
+    }
+  };
 
   // Pull common identifiers off the event for the log row
   const obj = event.data?.object || {};
@@ -147,6 +284,21 @@ Deno.serve(async (req) => {
       case "payment_intent.succeeded": {
         const pi = event.data.object;
         await updateByPI(pi.id, "captured", { last_payment_error: null });
+        if (resolvedReservationId) {
+          // Guest confirmation email + SMS (idempotent — keyed on paid amount).
+          try {
+            await notifyLodgingBookingConfirmed(admin, resolvedReservationId, "Card");
+          } catch (e) {
+            console.warn("[stripe-lodging-webhook] confirmation email skipped", e);
+          }
+          // Auto-transfer the hotel's share via Stripe Connect (idempotent —
+          // ledger UNIQUE(reservation_id, direction) blocks double-transfer).
+          try {
+            await queueAutoTransfer(resolvedReservationId);
+          } catch (e) {
+            console.warn("[stripe-lodging-webhook] auto-transfer skipped", e);
+          }
+        }
         processingStatus = "applied";
         break;
       }
@@ -174,6 +326,9 @@ Deno.serve(async (req) => {
             await updateByPI(piId, "refund_pending");
           } else if (refund.status === "succeeded") {
             await updateByPI(piId, "refunded");
+            if (resolvedReservationId) {
+              try { await queueAutoReversal(resolvedReservationId, "refund.updated"); } catch (e) { console.warn("[stripe-lodging-webhook] reversal skipped", e); }
+            }
           } else if (refund.status === "failed" || refund.status === "canceled") {
             await updateByPI(piId, "captured", { last_payment_error: `Refund ${refund.status}` });
           }
@@ -186,6 +341,9 @@ Deno.serve(async (req) => {
         const piId = typeof charge.payment_intent === "string" ? charge.payment_intent : charge.payment_intent?.id;
         if (piId) {
           await updateByPI(piId, "refunded");
+          if (resolvedReservationId) {
+            try { await queueAutoReversal(resolvedReservationId, "charge.refunded"); } catch (e) { console.warn("[stripe-lodging-webhook] reversal skipped", e); }
+          }
           processingStatus = "applied";
         }
         break;

@@ -21,6 +21,7 @@ import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { CustomerCityProvider } from "@/contexts/CustomerCityContext";
 import { BrandProvider } from "@/contexts/BrandContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
+import { PaymentReturnHandler } from "@/components/lodging/PaymentReturnHandler";
 import GuestOrUser from "@/components/auth/GuestOrUser";
 import PhoneRequiredGate from "@/components/auth/PhoneRequiredGate";
 import { ErrorBoundary } from "./components/shared/ErrorBoundary";
@@ -573,10 +574,16 @@ const PageLoader = forwardRef<HTMLDivElement>(function PageLoader(_, ref) {
   return (
   <div ref={ref} className="min-h-screen bg-background flex items-center justify-center">
     <div className="flex flex-col items-center gap-4">
-      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-lg shadow-primary/20">
-        <svg className="w-6 h-6 text-primary-foreground animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/></svg>
+      <div className="relative">
+        <div className="absolute inset-0 rounded-2xl bg-ig-gradient opacity-30 blur-xl animate-pulse" />
+        <div className="relative w-14 h-14 rounded-2xl bg-ig-gradient flex items-center justify-center shadow-lg shadow-black/10">
+          <svg className="w-7 h-7 text-white animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle className="opacity-30" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="3"/>
+            <path className="opacity-90" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"/>
+          </svg>
+        </div>
       </div>
-      <p className="text-sm text-foreground font-semibold tracking-tight">ZIVO</p>
+      <p className="text-sm font-semibold tracking-[0.18em] text-ig-gradient">ZIVO</p>
     </div>
   </div>
   );
@@ -712,11 +719,12 @@ const App = () => (
               <Toaster />
               <Sonner />
               <BrowserRouter>
-                
+
                 <DeferredPageViewTracker />
                 <DeferredGeoDetector />
                 <OTAUpdateBootstrap />
                 <Suspense fallback={null}><RoutePrefetcher /></Suspense>
+                <PaymentReturnHandler />
                 <AuthProvider>
                   <AuthBackgroundServices />
                    <RemoteConfigProvider>

@@ -22,6 +22,14 @@ const STRIPE_COUNTRIES = new Set([
   "AU","NZ","HK","JP","SG","MY","TH","ID","PH","IN","AE",
 ]);
 
+// Square Payouts (Cash App / seller deposit) supported countries.
+const SQUARE_COUNTRIES = new Set(["US","CA","GB","AU","JP","IE","ES","FR"]);
+
+// Mercury disburses to US bank accounts only (ACH / wire).
+const MERCURY_COUNTRIES = new Set(["US"]);
+
+const ALLOWED_RAILS = new Set(["stripe","aba","bank_wire","paypal","square","mercury"]);
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
@@ -76,9 +84,18 @@ serve(async (req) => {
     const country = String(store.market || method.country_code || "US").toUpperCase().slice(0, 2);
     const rail = (method.rail || method.method_type || "bank_wire") as string;
 
-    // Defence-in-depth: a Stripe rail must be in a Stripe-supported country.
+    // Defence-in-depth: validate rail name + country eligibility.
+    if (!ALLOWED_RAILS.has(rail)) {
+      return json({ error: `Unsupported payout rail "${rail}".` }, 400);
+    }
     if (rail === "stripe" && !STRIPE_COUNTRIES.has(country)) {
-      return json({ error: `Stripe Connect is not available in ${country}. Please use ABA, bank wire, or PayPal.` }, 400);
+      return json({ error: `Stripe Connect is not available in ${country}. Please use ABA, bank wire, PayPal, Square, or Mercury.` }, 400);
+    }
+    if (rail === "square" && !SQUARE_COUNTRIES.has(country)) {
+      return json({ error: `Square Payouts are not available in ${country}. Please use Stripe, PayPal, ABA, or bank wire.` }, 400);
+    }
+    if (rail === "mercury" && !MERCURY_COUNTRIES.has(country)) {
+      return json({ error: `Mercury (US ACH) requires a US bank account. Please use a different rail.` }, 400);
     }
 
     // Insert request

@@ -1,6 +1,7 @@
 import { createClient } from "./deps.ts";
 
 export type LodgingNotificationEvent =
+  | "booking_confirmed"
   | "receipt_ready"
   | "receipt_shared"
   | "addon_success"
@@ -41,6 +42,54 @@ async function sendSms(to: string, body: string) {
   const data = await res.json().catch(() => ({}));
   if (!res.ok) throw new Error(JSON.stringify(data));
   return { skipped: false, provider_id: data.sid as string | undefined };
+}
+
+/**
+ * Convenience wrapper used by every payment webhook (Stripe / PayPal / Square)
+ * once a reservation flips to `payment_status='paid'`. Idempotent — the
+ * idempotency key is derived from the reservation + paid_cents, so replays of
+ * the same webhook event do not double-send.
+ */
+export async function notifyLodgingBookingConfirmed(
+  admin: ReturnType<typeof createClient>,
+  reservationId: string,
+  paymentMethodLabel: string,
+) {
+  const { data: r } = await admin
+    .from("lodge_reservations")
+    .select("id, number, paid_cents, total_cents, deposit_cents, check_in, check_out, adults, children, store_id")
+    .eq("id", reservationId)
+    .maybeSingle();
+  if (!r) return;
+
+  const ci = r.check_in ? new Date(r.check_in) : null;
+  const co = r.check_out ? new Date(r.check_out) : null;
+  const nights = ci && co ? Math.max(1, Math.round((co.getTime() - ci.getTime()) / 86400000)) : null;
+  const guests = (r.adults ?? 0) + (r.children ?? 0);
+  const paidCents = r.paid_cents || r.deposit_cents || r.total_cents || 0;
+  const paidAmount = paidCents > 0 ? `$${(paidCents / 100).toFixed(2)}` : null;
+
+  const { data: store } = await admin.from("restaurants").select("name, phone").eq("id", r.store_id).maybeSingle();
+
+  await notifyLodgingReservation(admin, {
+    reservationId,
+    event: "booking_confirmed",
+    templateName: "lodging-booking-confirmed",
+    idempotencyKey: `booking-confirmed-${reservationId}-${paidCents}`,
+    title: `Booking confirmed at ${store?.name || "your stay"}`,
+    message: "We received your payment and locked in your stay. Save this email — you may need the reservation number at check-in.",
+    templateData: {
+      checkIn: ci ? ci.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : null,
+      checkOut: co ? co.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }) : null,
+      nights,
+      guestsCount: guests,
+      paidAmount,
+      paymentMethod: paymentMethodLabel,
+      hostPhone: store?.phone || null,
+      manageUrl: `${Deno.env.get("PUBLIC_APP_URL") || "https://hizivo.com"}/trips`,
+    },
+    smsBody: `ZIVO: Your stay at ${store?.name || "the property"} is confirmed (ref ${r.number}). ${paidAmount ? `Paid ${paidAmount}.` : ""} Check-in ${ci ? ci.toLocaleDateString() : ""}.`,
+  });
 }
 
 export async function notifyLodgingReservation(admin: ReturnType<typeof createClient>, options: NotifyOptions) {

@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
 
     const { data: r } = await supabase
       .from("lodge_reservations")
-      .select("id, store_id, check_in, status, paid_cents, guest_id, stripe_payment_intent_id, payment_status")
+      .select("id, store_id, check_in, status, paid_cents, guest_id, stripe_payment_intent_id, payment_status, payment_provider, paypal_capture_id, paypal_order_id, square_payment_id")
       .eq("id", reservation_id)
       .maybeSingle();
     if (!r) return new Response(JSON.stringify({ error: "not_found" }), { status: 404, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -96,17 +96,99 @@ Deno.serve(async (req) => {
 
     let paymentStatus = policy.refundCents > 0 ? "refund_pending" : "cancelled_no_refund";
     let stripeRefundId: string | null = null;
+    let paypalRefundId: string | null = null;
+    let squareRefundId: string | null = null;
+    let providerRefundError: string | null = null;
 
-    if (r.stripe_payment_intent_id) {
-      const pi = await stripe.paymentIntents.retrieve(r.stripe_payment_intent_id);
-      if (["requires_capture", "requires_payment_method", "requires_confirmation", "requires_action", "processing"].includes(pi.status)) {
-        if (pi.status === "requires_capture") await stripe.paymentIntents.cancel(pi.id);
+    // Resolve which provider actually holds the funds. Prefer the explicit
+    // payment_provider column (added by the multi-provider migration); fall
+    // back to inferring from whichever provider id is stamped.
+    const provider =
+      (r as any).payment_provider ||
+      (r.stripe_payment_intent_id ? "stripe"
+        : (r as any).paypal_capture_id || (r as any).paypal_order_id ? "paypal"
+        : (r as any).square_payment_id ? "square"
+        : null);
+
+    try {
+      if (provider === "stripe" && r.stripe_payment_intent_id) {
+        const pi = await stripe.paymentIntents.retrieve(r.stripe_payment_intent_id);
+        if (["requires_capture", "requires_payment_method", "requires_confirmation", "requires_action", "processing"].includes(pi.status)) {
+          if (pi.status === "requires_capture") await stripe.paymentIntents.cancel(pi.id);
+          paymentStatus = policy.refundCents > 0 ? "refunded" : "unpaid";
+        } else if (policy.refundCents > 0 && pi.status === "succeeded") {
+          const refund = await stripe.refunds.create({ payment_intent: pi.id, amount: policy.refundCents, metadata: { reservation_id: r.id, type: "lodging_cancel" } });
+          stripeRefundId = refund.id;
+          paymentStatus = refund.status === "succeeded" ? "refunded" : "refund_pending";
+        }
+      } else if (provider === "paypal" && policy.refundCents > 0 && (r as any).paypal_capture_id) {
+        // PayPal capture refund: POST /v2/payments/captures/{capture_id}/refund
+        const ppMode = Deno.env.get("PAYPAL_MODE") ?? "live";
+        const ppBase = ppMode === "sandbox" ? "https://api-m.sandbox.paypal.com" : "https://api-m.paypal.com";
+        const ppId = Deno.env.get("PAYPAL_CLIENT_ID");
+        const ppSecret = Deno.env.get("PAYPAL_CLIENT_SECRET");
+        if (!ppId || !ppSecret) throw new Error("PayPal credentials not configured");
+        const tokenRes = await fetch(`${ppBase}/v1/oauth2/token`, {
+          method: "POST",
+          headers: { Authorization: `Basic ${btoa(`${ppId}:${ppSecret}`)}`, "Content-Type": "application/x-www-form-urlencoded" },
+          body: "grant_type=client_credentials",
+        });
+        if (!tokenRes.ok) throw new Error(`PayPal auth failed: ${await tokenRes.text()}`);
+        const accessToken = (await tokenRes.json()).access_token;
+
+        const refundRes = await fetch(`${ppBase}/v2/payments/captures/${(r as any).paypal_capture_id}/refund`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+            "PayPal-Request-Id": `refund-${reservation_id}-${policy.refundCents}`,
+          },
+          body: JSON.stringify({
+            amount: { value: (policy.refundCents / 100).toFixed(2), currency_code: "USD" },
+            note_to_payer: "ZIVO lodging cancellation refund",
+            invoice_id: reservation_id,
+          }),
+        });
+        const refundJson = await refundRes.json();
+        if (!refundRes.ok) throw new Error(refundJson?.message || refundJson?.details?.[0]?.description || "PayPal refund failed");
+        paypalRefundId = refundJson.id ?? null;
+        // PayPal returns status COMPLETED|PENDING|CANCELLED|FAILED
+        paymentStatus = refundJson.status === "COMPLETED" ? "refunded" : refundJson.status === "PENDING" ? "refund_pending" : "refund_pending";
+      } else if (provider === "square" && policy.refundCents > 0 && (r as any).square_payment_id) {
+        // Square refund: POST /v2/refunds
+        const sqMode = Deno.env.get("SQUARE_MODE") ?? "production";
+        const sqBase = sqMode === "sandbox" ? "https://connect.squareupsandbox.com" : "https://connect.squareup.com";
+        const sqToken = Deno.env.get("SQUARE_ACCESS_TOKEN");
+        if (!sqToken) throw new Error("Square access token not configured");
+        const refundRes = await fetch(`${sqBase}/v2/refunds`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${sqToken}`,
+            "Content-Type": "application/json",
+            "Square-Version": "2025-01-22",
+          },
+          body: JSON.stringify({
+            idempotency_key: `refund-${reservation_id}-${policy.refundCents}`,
+            payment_id: (r as any).square_payment_id,
+            amount_money: { amount: policy.refundCents, currency: "USD" },
+            reason: "ZIVO lodging cancellation",
+          }),
+        });
+        const refundJson = await refundRes.json();
+        if (!refundRes.ok) throw new Error(refundJson?.errors?.[0]?.detail || `Square refund failed (${refundRes.status})`);
+        squareRefundId = refundJson.refund?.id ?? null;
+        const sqStatus = refundJson.refund?.status; // PENDING | COMPLETED | REJECTED | FAILED
+        paymentStatus = sqStatus === "COMPLETED" ? "refunded" : "refund_pending";
+      } else if (provider === "cash" || !provider) {
+        // Cash on arrival or no provider — nothing to refund through a gateway.
         paymentStatus = policy.refundCents > 0 ? "refunded" : "unpaid";
-      } else if (policy.refundCents > 0 && pi.status === "succeeded") {
-        const refund = await stripe.refunds.create({ payment_intent: pi.id, amount: policy.refundCents, metadata: { reservation_id: r.id, type: "lodging_cancel" } });
-        stripeRefundId = refund.id;
-        paymentStatus = refund.status === "succeeded" ? "refunded" : "refund_pending";
       }
+    } catch (refundErr: any) {
+      providerRefundError = String(refundErr?.message || refundErr);
+      console.error("[cancel-lodging-reservation] refund failed", provider, providerRefundError);
+      // Surface the failure but still proceed to mark the reservation as
+      // cancelled — the operations team can retry the refund manually.
+      paymentStatus = "refund_pending";
     }
 
     const now = new Date().toISOString();
@@ -123,14 +205,37 @@ Deno.serve(async (req) => {
       decided_at: now,
       applied_at: now,
       payment_status: paymentStatus,
-      addon_payload: { policy_percent: policy.percent, policy_label: policy.label, non_refundable_cents: policy.nonRefundableCents, payment_method_outcome: paymentOutcome(policy, piStatus, Boolean(r.stripe_payment_intent_id)), stripe_refund_id: stripeRefundId },
+      addon_payload: {
+        policy_percent: policy.percent,
+        policy_label: policy.label,
+        non_refundable_cents: policy.nonRefundableCents,
+        payment_method_outcome: paymentOutcome(policy, piStatus, Boolean(r.stripe_payment_intent_id)),
+        provider,
+        stripe_refund_id: stripeRefundId,
+        paypal_refund_id: paypalRefundId,
+        square_refund_id: squareRefundId,
+        provider_refund_error: providerRefundError,
+      },
     });
 
     await admin.from("lodge_reservations").update({ status: "cancelled", payment_status: paymentStatus, last_payment_error: null }).eq("id", reservation_id);
     await admin.from("lodge_reservation_audit").insert({ reservation_id, store_id: r.store_id, action: "cancelled", actor_id: user.id, notes: reason || null, metadata: { refund_cents: policy.refundCents, non_refundable_cents: policy.nonRefundableCents, payment_status: paymentStatus } }).then(() => null);
     await notifyLodgingReservation(admin, { reservationId: r.id, event: "cancellation_update", templateName: "lodging-cancellation-update", idempotencyKey: `cancel-${reservation_id}-${paymentStatus}`, title: "Reservation cancelled", message: policy.refundCents > 0 ? "Your cancellation was processed and refund handling has started." : "Your cancellation was processed. No refund is due under the current policy.", templateData: { refundCents: policy.refundCents, paymentStatus }, smsBody: `ZIVO: Reservation cancelled. Refund status: ${paymentStatus.replace(/_/g, " ")}.` });
 
-    return new Response(JSON.stringify({ ok: true, status: "cancelled", refund_cents: policy.refundCents, non_refundable_cents: policy.nonRefundableCents, refund_percent: policy.percent, refund_label: policy.label, payment_status: paymentStatus }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
+    return new Response(JSON.stringify({
+      ok: true,
+      status: "cancelled",
+      refund_cents: policy.refundCents,
+      non_refundable_cents: policy.nonRefundableCents,
+      refund_percent: policy.percent,
+      refund_label: policy.label,
+      payment_status: paymentStatus,
+      provider,
+      stripe_refund_id: stripeRefundId,
+      paypal_refund_id: paypalRefundId,
+      square_refund_id: squareRefundId,
+      provider_refund_error: providerRefundError,
+    }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
     return new Response(JSON.stringify({ error: String((err as Error).message || err) }), { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } });
   }

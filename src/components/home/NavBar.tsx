@@ -58,6 +58,8 @@ import { useOwnerStores } from "@/hooks/useOwnerStoreProfile";
 import { resolveBusinessDashboardRoute } from "@/lib/business/dashboardRoute";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Plus from "lucide-react/dist/esm/icons/plus";
+import Bell from "lucide-react/dist/esm/icons/bell";
+import { useNotifications } from "@/hooks/useNotifications";
 
 const serviceNavItems = [
   { label: "Flights", href: "/flights", icon: Plane, cssVar: "var(--flights)" },
@@ -107,6 +109,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
   const { currentLanguage, changeLanguage, t } = useI18n();
+  const { unreadCount: notificationUnread } = useNotifications(20);
   const { data: supportedLanguages } = useSupportedLanguages(true);
   const activeLanguages = (supportedLanguages || []).filter((l) => l.is_active);
   const currentLangData = activeLanguages.find((l) => l.code === currentLanguage);
@@ -274,6 +277,24 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
 
               {/* Right: Language, Currency, Auth */}
               <div className="hidden md:flex items-center gap-2" style={{ transformStyle: "preserve-3d" }}>
+                {/* Notification bell — desktop entry point for /account/notifications.
+                    Mobile gets a bell in the FeedPage sticky header instead. */}
+                {user && (
+                  <button
+                    type="button"
+                    onClick={() => navigate("/notifications")}
+                    className="hidden lg:flex relative w-9 h-9 rounded-full items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors active:scale-95"
+                    aria-label={notificationUnread > 0 ? `Notifications, ${notificationUnread} unread` : "Notifications"}
+                    title="Notifications"
+                  >
+                    <Bell className="w-[18px] h-[18px]" />
+                    {notificationUnread > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-[9px] font-bold text-white flex items-center justify-center leading-none">
+                        {notificationUnread > 99 ? "99+" : notificationUnread}
+                      </span>
+                    )}
+                  </button>
+                )}
                 <Popover open={isLangOpen} onOpenChange={setIsLangOpen}>
                   <PopoverTrigger asChild>
                     <Button

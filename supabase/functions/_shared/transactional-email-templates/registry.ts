@@ -7,6 +7,7 @@ import { template as lodgingReceiptReady } from './lodging-receipt-ready.tsx'
 import { template as lodgingAddonStatus } from './lodging-addon-status.tsx'
 import { template as lodgingCancellationUpdate } from './lodging-cancellation-update.tsx'
 import { template as lodgingRescheduleUpdate } from './lodging-reschedule-update.tsx'
+import { template as lodgingBookingConfirmed } from './lodging-booking-confirmed.tsx'
 import { template as newDeviceLogin } from './new-device-login.tsx'
 import { template as countryChangeLogin } from './country-change-login.tsx'
 
@@ -26,6 +27,7 @@ export const TEMPLATES: Record<string, TemplateEntry<any>> = {
   'lodging-addon-status': lodgingAddonStatus,
   'lodging-cancellation-update': lodgingCancellationUpdate,
   'lodging-reschedule-update': lodgingRescheduleUpdate,
+  'lodging-booking-confirmed': lodgingBookingConfirmed,
   'new-device-login': newDeviceLogin,
   'country-change-login': countryChangeLogin,
 }

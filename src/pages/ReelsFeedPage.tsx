@@ -1108,7 +1108,7 @@ export default function ReelsFeedPage() {
         <Suspense fallback={null}><FeedSidebar /></Suspense>
 
         {/* Main Feed Content */}
-        <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-20 lg:pb-0 flex-1 lg:max-w-2xl lg:mx-auto">
+        <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-20 lg:pb-0 flex-1 lg:max-w-2xl xl:max-w-3xl lg:mx-auto">
           {/* Header — hidden on desktop since the global NavBar already provides search */}
           <div
             data-testid="feed-sticky-header"
@@ -1173,7 +1173,7 @@ export default function ReelsFeedPage() {
                     <Plus className="h-[18px] w-[18px]" />
                   </button>
                   <button
-                    onClick={() => navigate("/account/notifications")}
+                    onClick={() => navigate("/notifications")}
                     className="shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition relative"
                     aria-label={notificationUnread > 0 ? `Notifications, ${notificationUnread} unread` : "Notifications"}
                   >
@@ -1370,7 +1370,7 @@ export default function ReelsFeedPage() {
                   })()}
                 </button>
               </div>
-              <div className="border-t border-border/20 pt-1.5 flex overflow-x-auto scrollbar-hide" role="toolbar" aria-label="Create post">
+              <div className="border-t border-border/20 pt-1.5 flex overflow-x-auto scrollbar-hide lg:max-w-md lg:mx-auto lg:gap-2" role="toolbar" aria-label="Create post">
                 <button type="button" onClick={() => setShowCreate(true)} aria-label="Share a photo" className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
                   <ImageIcon className="h-4 w-4 text-emerald-500" />
                   <span className="text-[10px] font-semibold text-muted-foreground">Photo</span>
@@ -1506,26 +1506,32 @@ export default function ReelsFeedPage() {
                apps (IG, TikTok, X) put nothing between composer and first
                post. Reaches them via bottom tabs / Home / More. */}
 
-           {/* Suggested Users */}
-           <Suspense fallback={null}><SuggestedUsersCarousel /></Suspense>
+           {/* Suggested Users — hidden on xl+ since the right sidebar already shows
+               "Suggested for you" there. lg (1024–1279px) and mobile keep the
+               in-feed carousel since the right rail is xl:flex only. */}
+           <div className="xl:hidden">
+             <Suspense fallback={null}><SuggestedUsersCarousel /></Suspense>
+           </div>
 
           {/* Feed mode tabs — desktop only (mobile uses the sticky header tabs) */}
           {userId && (
-            <div className="hidden lg:flex sticky lg:top-[60px] z-20 bg-background/95 backdrop-blur-xl border-b border-border/20">
-              {(["For You", "Friends", "Following"] as const).map((label) => (
-                <button
-                  key={label}
-                  onClick={() => setFeedTab(label)}
-                  className={cn(
-                    "flex-1 py-2.5 text-[13px] font-semibold transition-colors",
-                    feedTab === label
-                      ? "text-primary border-b-2 border-primary"
-                      : "text-muted-foreground hover:text-foreground"
-                  )}
-                >
-                  {label}
-                </button>
-              ))}
+            <div className="hidden lg:flex justify-center sticky lg:top-[60px] z-20 bg-background/95 backdrop-blur-xl border-b border-border/20">
+              <div className="flex gap-2">
+                {(["For You", "Friends", "Following"] as const).map((label) => (
+                  <button
+                    key={label}
+                    onClick={() => setFeedTab(label)}
+                    className={cn(
+                      "px-8 py-2.5 text-[13px] font-semibold transition-colors",
+                      feedTab === label
+                        ? "text-primary border-b-2 border-primary"
+                        : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
             </div>
           )}
 
@@ -1651,8 +1657,13 @@ export default function ReelsFeedPage() {
                       }
                     }} />
                   )}
-                  {/* Inject suggested users after 3rd post */}
-                  {idx === 2 && <Suspense fallback={null}><SuggestedUsersCarousel variant="inline" /></Suspense>}
+                  {/* Inject suggested users after 3rd post — hidden on xl+ where
+                      the right sidebar shows the same content. */}
+                  {idx === 2 && (
+                    <div className="xl:hidden">
+                      <Suspense fallback={null}><SuggestedUsersCarousel variant="inline" /></Suspense>
+                    </div>
+                  )}
                   {/* Trending this week — real DB-backed leaderboard, self-hides if no signal. */}
                   {idx === 3 && <Suspense fallback={null}><TrendingCreators /></Suspense>}
                   {/* Inject Communities card after 5th post */}
@@ -1718,8 +1729,12 @@ export default function ReelsFeedPage() {
                     </button>
                   )}
                   {/* People you may know — real DB-backed component, self-hides if empty.
-                      Replaces the previous hardcoded mock with fake names + mutual counts. */}
-                  {idx === 9 && <Suspense fallback={null}><FollowSuggestions /></Suspense>}
+                      Hidden on xl+ since the right sidebar shows "Suggested for you" there. */}
+                  {idx === 9 && (
+                    <div className="xl:hidden">
+                      <Suspense fallback={null}><FollowSuggestions /></Suspense>
+                    </div>
+                  )}
                   {/* Inject Events strip after 12th post */}
                   {idx === 11 && (
                     <button
@@ -3640,7 +3655,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
             )}
 
             {/* Original post media */}
-            <div ref={containerRef} className={cn("relative overflow-hidden", hasMedia ? (item.media_type === "video" ? "aspect-[9/16] max-h-[500px] w-auto mx-auto bg-black rounded-xl" : "") : "")}>
+            <div ref={containerRef} className={cn("relative overflow-hidden", hasMedia ? (item.media_type === "video" ? "aspect-[9/16] max-h-[500px] lg:max-h-[680px] xl:max-h-[760px] w-auto mx-auto bg-black rounded-xl" : "") : "")}>
               {hasMedia ? (
                 item.media_type === "video" ? (
                   <>
@@ -3855,7 +3870,7 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
             onTouchStart={item.media_urls.length > 1 && item.media_type !== "video" ? undefined : (item.media_urls.length > 1 ? handleTouchStart : undefined)}
             onTouchMove={item.media_urls.length > 1 && item.media_type !== "video" ? undefined : (item.media_urls.length > 1 ? handleTouchMove : undefined)}
             onTouchEnd={item.media_urls.length > 1 && item.media_type !== "video" ? undefined : (item.media_urls.length > 1 ? handleTouchEnd : undefined)}
-            className={cn("relative overflow-hidden", hasMedia ? (item.media_type === "video" ? "aspect-[9/16] max-h-[500px] w-auto mx-auto bg-black rounded-xl" : "") : "")}
+            className={cn("relative overflow-hidden", hasMedia ? (item.media_type === "video" ? "aspect-[9/16] max-h-[500px] lg:max-h-[680px] xl:max-h-[760px] w-auto mx-auto bg-black rounded-xl" : "") : "")}
           >
             {hasMedia ? (
               item.media_type === "video" ? (

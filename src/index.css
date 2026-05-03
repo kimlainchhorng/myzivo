@@ -294,6 +294,18 @@
     /* Sticky sub-headers (feed, search) */
     --zivo-safe-top-sticky: max(calc(var(--zivo-safe-top, 0px) + 0.625rem), 48px);
   }
+
+  /* Desktop has no notch — drop the 48px mobile floor so the fixed NavBar
+     stays at its intended ~60px height. The sidebars expect lg:pt-[60px] of
+     navbar clearance; with the mobile floor we end up ~108px tall and content
+     slips under the navbar. */
+  @media (min-width: 1024px) {
+    :root {
+      --zivo-safe-top-sticky: var(--zivo-safe-top, 0px);
+      --zivo-safe-top-overlay: var(--zivo-safe-top, 0px);
+      --zivo-safe-top-sheet: var(--zivo-safe-top, 0px);
+    }
+  }
 }
 
 @layer components {
