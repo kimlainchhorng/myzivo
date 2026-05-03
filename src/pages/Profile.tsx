@@ -6,6 +6,7 @@ import { useI18n } from "@/hooks/useI18n";
 import SafeCaption from "@/components/social/SafeCaption";
 import { confirmContentSafe } from "@/lib/security/contentLinkValidation";
 import { stripImageMetadata } from "@/utils/stripImageMetadata";
+import { pickImageFromLibrary } from "@/lib/imagePicker";
 
 import SEOHead from "@/components/SEOHead";
 import {
@@ -334,8 +335,6 @@ const Profile = () => {
   
   const [showLangPicker, setShowLangPicker] = useState(false);
   const profileCardRef = useRef<HTMLDivElement>(null);
-  const coverInputRef = useRef<HTMLInputElement>(null);
-  const avatarInputRef = useRef<HTMLInputElement>(null);
 
   // Cover photo state
   const [coverUploading, setCoverUploading] = useState(false);
@@ -450,44 +449,59 @@ const Profile = () => {
   };
 
   // Cover photo upload
-  const handleCoverUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = e.target;
-    const file = input.files?.[0];
-    if (!file || !user?.id) { input.value = ""; return; }
-    if (file.size > 10 * 1024 * 1024) { toast.error("Cover image must be under 10MB"); input.value = ""; return; }
+  const uploadCoverFile = async (file: File) => {
+    if (!user?.id) return;
+    if (file.size > 10 * 1024 * 1024) { toast.error("Cover image must be under 10MB"); return; }
     setCoverUploading(true);
     try {
       const safe = await stripImageMetadata(file);
-      const ext = safe.name.split(".").pop();
+      const ext = safe.name.split(".").pop() || "jpg";
       const path = `${user.id}/cover_${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("avatars").upload(path, safe, { upsert: true });
+      // Convert to Uint8Array — WKWebView's fetch is unreliable with File/Blob
+      // bodies on iOS Capacitor; ArrayBuffer-backed bytes upload reliably.
+      const buf = new Uint8Array(await safe.arrayBuffer());
+      const { error: upErr } = await supabase.storage
+        .from("avatars")
+        .upload(path, buf, { upsert: true, contentType: safe.type || "image/jpeg" });
       if (upErr) throw upErr;
       const { data: { publicUrl } } = supabase.storage.from("avatars").getPublicUrl(path);
       await updateProfile.mutateAsync({ cover_url: publicUrl, cover_position: 50 });
       setCoverPosition(50);
       toast.success("Cover photo updated!");
     } catch (err: any) {
-      toast.error(err.message || "Failed to upload cover");
+      console.error("[uploadCoverFile]", err);
+      const detail = err?.statusCode || err?.error || err?.name || "";
+      toast.error(`Cover upload failed${detail ? ` (${detail})` : ""}: ${err?.message || "unknown"}`);
     } finally {
       setCoverUploading(false);
-      input.value = "";
     }
   };
 
-  // Avatar upload
-  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const input = e.target;
-    const file = input.files?.[0];
-    if (!file) return;
+  const handleCoverPick = async () => {
+    const file = await pickImageFromLibrary();
+    if (file) await uploadCoverFile(file);
+  };
+
+
+  const uploadAvatarFile = async (file: File) => {
     try {
       const reader = new FileReader();
       reader.onload = (ev) => setAvatarPreview(ev.target?.result as string);
       reader.readAsDataURL(file);
       await uploadAvatar.mutateAsync(file);
       setAvatarPreview(null);
-    } catch { setAvatarPreview(null); }
-    finally { input.value = ""; }
+    } catch (err: any) {
+      console.error("[uploadAvatarFile]", err);
+      setAvatarPreview(null);
+      toast.error(`Avatar upload failed: ${err?.message || "unknown"}`);
+    }
   };
+
+  const handleAvatarPick = async () => {
+    const file = await pickImageFromLibrary();
+    if (file) await uploadAvatarFile(file);
+  };
+
 
   // Cover repositioning handlers
   const handleCoverDragStart = (clientY: number) => {
@@ -941,10 +955,11 @@ const Profile = () => {
                               <MoveVertical className="h-[16px] w-[16px]" />
                             </motion.button>
                           )}
-                          <label
-                            htmlFor="profile-cover-input"
+                          <button
+                            type="button"
+                            onClick={handleCoverPick}
+                            disabled={coverUploading}
                             aria-label={profile?.cover_url ? "Change cover photo" : "Add cover photo"}
-                            aria-disabled={coverUploading}
                             className={cn(
                               "inline-flex items-center gap-1.5 h-9 rounded-full bg-background/90 backdrop-blur-md text-foreground hover:bg-background shadow-lg border border-border/40 cursor-pointer active:scale-95 transition focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none",
                               profile?.cover_url ? "w-9 justify-center" : "px-3.5 text-xs font-semibold",
@@ -959,7 +974,7 @@ const Profile = () => {
                                 {!profile?.cover_url && <span>Add cover</span>}
                               </>
                             )}
-                          </label>
+                          </button>
                         </div>
                       )}
 
@@ -985,17 +1000,6 @@ const Profile = () => {
 
                     </div>
 
-                    {/* Hidden cover file input — placed OUTSIDE the cover
-                        container (which has motion transforms) so iOS/Capacitor
-                        reliably opens the file picker via the <label htmlFor>. */}
-                    <input
-                      id="profile-cover-input"
-                      ref={coverInputRef}
-                      type="file"
-                      accept="image/jpeg,image/png,image/webp"
-                      onChange={handleCoverUpload}
-                      className="sr-only"
-                    />
 
                     {/* Avatar overlapping cover */}
                     <div className="relative z-10 -mt-11 px-6">
@@ -1013,25 +1017,18 @@ const Profile = () => {
                               {getInitials()}
                             </AvatarFallback>
                           </Avatar>
-                          <label
-                            htmlFor="profile-avatar-input"
+                          <button
+                            type="button"
+                            onClick={handleAvatarPick}
+                            disabled={uploadAvatar.isPending}
                             aria-label="Change profile photo"
-                            aria-disabled={uploadAvatar.isPending}
                             className={cn(
                               "absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full shadow-xl shadow-primary/40 ring-2 ring-card cursor-pointer active:scale-90 transition focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none",
                               uploadAvatar.isPending && "opacity-50 pointer-events-none"
                             )}
                           >
                             {uploadAvatar.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
-                          </label>
-                          <input
-                            id="profile-avatar-input"
-                            ref={avatarInputRef}
-                            type="file"
-                            accept="image/jpeg,image/png,image/webp"
-                            onChange={handleAvatarUpload}
-                            className="sr-only"
-                          />
+                          </button>
                         </motion.div>
                       </div>
                     </div>

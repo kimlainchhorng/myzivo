@@ -3804,8 +3804,12 @@ export default function FeedPage() {
 
       const allPosts: FeedPost[] = [];
 
-      // Store posts
+      // Store posts — Reels is a vertical media scroller, so drop text-only
+      // store announcements (no media_urls). They have a home in /feed where
+      // text cards render correctly; here they'd just produce empty slides.
       for (const post of postsData || []) {
+        const hasMedia = Array.isArray(post.media_urls) && post.media_urls.length > 0;
+        if (!hasMedia) continue;
         const store = storeMap.get(post.store_id);
         allPosts.push({
           ...post,

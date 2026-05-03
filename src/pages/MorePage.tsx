@@ -625,15 +625,12 @@ export default function MorePage() {
   };
   const challengeProgress = Math.round((completedChallenges.length / dailyChallenges.length) * 100);
 
-  // ===== Scroll-to-top button + sticky search header visibility =====
+  // ===== Scroll-to-top button visibility =====
   const [showScrollTop, setShowScrollTop] = useState(false);
-  const [showStickySearch, setShowStickySearch] = useState(false);
   useEffect(() => {
     if (typeof window === "undefined") return;
     const onScroll = () => {
-      const y = window.scrollY;
-      setShowScrollTop(y > 1000);
-      setShowStickySearch(y > 400);
+      setShowScrollTop(window.scrollY > 1000);
     };
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
@@ -1674,28 +1671,11 @@ export default function MorePage() {
         >
           <ArrowLeft className="h-5 w-5" />
         </button>
-        {showStickySearch ? (
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-            <Input
-              placeholder="Search…"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-9 pr-9 h-9 rounded-xl bg-muted/50 border-border/40 text-sm"
-            />
-            {search && (
-              <button
-                onClick={() => setSearch("")}
-                aria-label="Clear search"
-                className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-full hover:bg-muted"
-              >
-                <X className="h-4 w-4 text-muted-foreground" />
-              </button>
-            )}
-          </div>
-        ) : (
-          <h1 className="font-bold text-[17px] flex-1">More</h1>
-        )}
+        {/* Always show title — the labeled "Search account, settings, links…"
+            field below is the canonical search. Previously this swapped to a
+            second search bar after 400px of scroll, which left two visually
+            competing search inputs on screen at the same time. */}
+        <h1 className="font-bold text-[17px] flex-1">More</h1>
       </header>
 
       <div className="flex-1 lg:flex lg:pt-16">
@@ -1955,10 +1935,12 @@ export default function MorePage() {
 
           {/* Accessibility: font size + reduced motion */}
           {user && (
+            <div className="mb-4">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground/70 mb-1.5 px-1">Display</p>
             <motion.div
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
-              className="zivo-card-organic flex items-center gap-3 p-2.5 mb-4"
+              className="zivo-card-organic flex items-center gap-3 p-2.5"
             >
               <Sliders className="w-4 h-4 text-muted-foreground shrink-0" />
               <div className="flex items-center gap-1 shrink-0">
@@ -2035,6 +2017,7 @@ export default function MorePage() {
                 </span>
               </button>
             </motion.div>
+            </div>
           )}
 
           {/* Language switcher chips */}

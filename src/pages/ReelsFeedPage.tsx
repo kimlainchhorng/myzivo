@@ -583,13 +583,18 @@ export default function ReelsFeedPage() {
         for (const post of storePosts as any[]) {
           const store = storeMap.get(post.store_id);
           const urls: string[] = (post.media_urls || []).map((u: string) => normalizeStorePostMediaUrl(u));
-          if (!urls.length) continue;
+          // Allow text-only announcements through (matches the user_posts loop
+          // below at line ~686). Previously we dropped any post without media,
+          // so store text updates never reached the feed.
+          if (!urls.length && !post.caption?.trim()) continue;
 
           allItems.push({
             id: post.id,
             source: "store",
             media_urls: urls,
-            media_type: (post.media_type === "video" || urls[0]?.match(/\.(mp4|mov|webm)/i)) ? "video" : "image",
+            media_type: urls.length === 0
+              ? "text"
+              : (post.media_type === "video" || urls[0]?.match(/\.(mp4|mov|webm)/i)) ? "video" : "image",
             caption: post.caption,
             likes_count: post.likes_count || 0,
             comments_count: post.comments_count || 0,

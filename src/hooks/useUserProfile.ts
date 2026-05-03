@@ -183,9 +183,12 @@ export const useUploadAvatar = () => {
       const fileExt = safe.name.split(".").pop();
       const filePath = `${user.id}/avatar_${Date.now()}.${fileExt}`;
 
+      // Convert to Uint8Array — WKWebView's fetch is unreliable with File/Blob
+      // bodies on iOS Capacitor; ArrayBuffer-backed bytes upload reliably.
+      const buf = new Uint8Array(await safe.arrayBuffer());
       const { error: uploadError } = await supabase.storage
         .from("avatars")
-        .upload(filePath, safe, { upsert: true });
+        .upload(filePath, buf, { upsert: true, contentType: safe.type || "image/jpeg" });
 
       if (uploadError) throw uploadError;
 

@@ -714,6 +714,20 @@ const AppHome = () => {
   return (
     <>
     <div className="relative min-h-[100dvh] bg-background font-sans text-foreground selection:bg-primary/30 overflow-x-hidden" role="main">
+      {/* Safe-area top backdrop — Capacitor's `overlaysWebView: true` lets web
+          content paint up to the very top of the screen for full-bleed cover
+          photos. Without this strip, scrolled content slides BEHIND the Dynamic
+          Island / status bar and the clock, battery, and signal icons collide
+          with whatever cards happen to be at the top of the viewport. A fixed
+          blurred bar covering exactly env(safe-area-inset-top) keeps that area
+          legible without forcing the rest of the page to lose the edge-to-edge
+          feel. */}
+      <div
+        aria-hidden
+        className="fixed top-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-xl pointer-events-none"
+        style={{ height: 'env(safe-area-inset-top, 0px)' }}
+      />
+
       {/* 3D Ambient orbs — contained within scrollable area only */}
 
       {/* Scrollable content */}
@@ -998,101 +1012,12 @@ const AppHome = () => {
             </div>
           )}
 
-          {/* What's New — recent product updates */}
-          <div className="px-4 sm:px-5 pb-4">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-[10px] uppercase font-bold text-muted-foreground/70 tracking-[0.2em]">Updates</p>
-              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-primary/15 text-primary">4 NEW</span>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-              {[
-                {
-                  to: "/rides/hub?tab=corporate",
-                  title: "What's new in Ride Hub",
-                  desc: "Live fleet tracker · Tab categories & filter · Shareable URLs",
-                  count: "3 NEW",
-                  tone: "primary",
-                  ring: "border-primary/20",
-                  bg: "from-primary/10 via-primary/5 to-transparent",
-                  iconBg: "bg-primary/15",
-                  iconColor: "text-primary",
-                  badgeBg: "bg-primary/15 text-primary",
-                  pingBg: "bg-primary",
-                },
-                {
-                  to: "/chat",
-                  title: "What's new in Chat",
-                  desc: "Auto-delete 1d/7d/30d · ⌘K shortcut · Drag & drop · Smart replies · Polls",
-                  count: "9 NEW",
-                  tone: "fuchsia",
-                  ring: "border-fuchsia-500/20",
-                  bg: "from-fuchsia-500/10 via-fuchsia-500/5 to-transparent",
-                  iconBg: "bg-fuchsia-500/15",
-                  iconColor: "text-fuchsia-500",
-                  badgeBg: "bg-fuchsia-500/15 text-fuchsia-500",
-                  pingBg: "bg-fuchsia-500",
-                },
-                {
-                  to: "/eats",
-                  title: "What's new in Eats",
-                  desc: "AI menu picks · Group order · Faster checkout · Live ETA",
-                  count: "4 NEW",
-                  tone: "orange",
-                  ring: "border-orange-500/20",
-                  bg: "from-orange-500/10 via-orange-500/5 to-transparent",
-                  iconBg: "bg-orange-500/15",
-                  iconColor: "text-orange-500",
-                  badgeBg: "bg-orange-500/15 text-orange-500",
-                  pingBg: "bg-orange-500",
-                },
-                {
-                  to: "/hotels",
-                  title: "What's new in Hotels",
-                  desc: "Map filters · Free-cancel highlights · Member rates · Bundle savings",
-                  count: "5 NEW",
-                  tone: "violet",
-                  ring: "border-violet-500/20",
-                  bg: "from-violet-500/10 via-violet-500/5 to-transparent",
-                  iconBg: "bg-violet-500/15",
-                  iconColor: "text-violet-500",
-                  badgeBg: "bg-violet-500/15 text-violet-500",
-                  pingBg: "bg-violet-500",
-                },
-              ].map((u) => (
-                <motion.button
-                  key={u.title}
-                  type="button"
-                  onClick={() => navigate(u.to)}
-                  whileTap={{ scale: 0.98 }}
-                  whileHover={{ y: -1 }}
-                  className={cn(
-                    "group relative w-full overflow-hidden rounded-2xl border bg-gradient-to-r p-3 sm:p-4 text-left shadow-sm",
-                    u.ring,
-                    u.bg
-                  )}
-                  aria-label={u.title}
-                >
-                  <div className="flex items-center gap-2.5 sm:gap-3">
-                    <div className={cn("relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0", u.iconBg)}>
-                      <Sparkles className={cn("w-4 h-4 sm:w-5 sm:h-5", u.iconColor)} />
-                      <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
-                        <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full opacity-75", u.pingBg)} />
-                        <span className={cn("relative inline-flex rounded-full h-2.5 w-2.5", u.pingBg)} />
-                      </span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <p className="text-sm font-bold text-foreground">{u.title}</p>
-                        <span className={cn("text-[9px] font-bold px-1.5 py-0.5 rounded-full", u.badgeBg)}>{u.count}</span>
-                      </div>
-                      <p className="text-xs text-muted-foreground truncate">{u.desc}</p>
-                    </div>
-                    <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 transition-transform group-hover:translate-x-0.5" />
-                  </div>
-                </motion.button>
-              ))}
-            </div>
-          </div>
+          {/* "What's New" widget removed — was a hardcoded marketing block
+              (4 cards with fake "X NEW" badges and made-up feature lists).
+              No release-notes feed backed it, so badges never updated and the
+              same "new" features would stay marked NEW indefinitely. Reclaims
+              ~250px of home-screen real estate. Wire to a real release-notes
+              table later if a fresh-features rail is desired. */}
 
           {/* ─── PROMO BANNER CAROUSEL ─── */}
           <div className="pb-4">

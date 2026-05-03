@@ -30,6 +30,8 @@
 	<string>ZIVO uses your microphone for voice and video calls between users.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>ZIVO accesses your photo library so you can select an existing photo to use as your profile picture on your account.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>ZIVO needs permission to save photos and edited images you choose for your profile to your photo library.</string>
 	<key>NSLocationWhenInUseUsageDescription</key>
 	<string>ZIVO uses your location while you use the app to find nearby airports, estimate pickups, improve delivery and ride tracking, and help drivers navigate to customers.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
