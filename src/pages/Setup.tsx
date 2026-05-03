@@ -143,11 +143,11 @@ export default function Setup() {
       let coverUrl: string | undefined;
 
       if (includeUploads && avatarFile) {
-        avatarUrl = await uploadImage(avatarFile, "avatars", user.id);
+        avatarUrl = await uploadImage(avatarFile, "avatar");
       }
 
       if (includeUploads && coverFile) {
-        coverUrl = await uploadImage(coverFile, "covers", user.id);
+        coverUrl = await uploadImage(coverFile, "cover");
       }
 
       const metadata = user.user_metadata ?? {};
