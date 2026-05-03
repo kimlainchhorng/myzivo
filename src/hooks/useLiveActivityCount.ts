@@ -50,16 +50,16 @@ export function useLiveActivityCount(): LiveActivity {
           .select("id", { count: "exact", head: true })
           .eq("customer_id", user.id)
           .in("status", ["confirmed", "preparing", "ready", "out_for_delivery"]),
-        supabase
+        (supabase
           .from("flight_bookings")
           .select("id", { count: "exact", head: true })
           .eq("user_id", user.id)
-          .gte("departure_date", today),
-        supabase
+          .gte("departure_date", today) as unknown as Promise<{ count: number | null }>),
+        (supabase
           .from("hotel_bookings")
           .select("id", { count: "exact", head: true })
-          .eq("user_id", user.id)
-          .gte("check_in", today),
+          .eq("customer_id", user.id)
+          .gte("check_in_date", today) as unknown as Promise<{ count: number | null }>),
       ]);
 
       if (cancelled) return;
