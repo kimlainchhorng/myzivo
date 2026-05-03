@@ -111,8 +111,8 @@ export default function ServicesHubGrid() {
         next.flights.status = days <= 0 ? "Today" : days === 1 ? "Tomorrow" : `In ${days} days`;
         next.flights.href = "/trips";
       }
-      if (hotel?.data?.check_in) {
-        const days = daysUntil(hotel.data.check_in);
+      if (hotel?.data?.check_in_date) {
+        const days = daysUntil(hotel.data.check_in_date);
         next.hotels.status = days <= 0 ? "Check-in today" : days === 1 ? "Check-in tomorrow" : `Stay in ${days} days`;
         next.hotels.href = "/trips";
       }
