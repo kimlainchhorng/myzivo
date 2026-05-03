@@ -18978,6 +18978,12 @@ export type Database = {
           vehicle_year: number | null
           verification_status: string | null
           zip_code: string | null
+          zivo_stripe_account_id: string | null
+          zivo_stripe_charges_enabled: boolean
+          zivo_stripe_disabled_reason: string | null
+          zivo_stripe_onboarded_at: string | null
+          zivo_stripe_payouts_enabled: boolean
+          zivo_stripe_status_synced_at: string | null
           zone_code: string | null
         }
         Insert: {
@@ -19080,6 +19086,12 @@ export type Database = {
           vehicle_year?: number | null
           verification_status?: string | null
           zip_code?: string | null
+          zivo_stripe_account_id?: string | null
+          zivo_stripe_charges_enabled?: boolean
+          zivo_stripe_disabled_reason?: string | null
+          zivo_stripe_onboarded_at?: string | null
+          zivo_stripe_payouts_enabled?: boolean
+          zivo_stripe_status_synced_at?: string | null
           zone_code?: string | null
         }
         Update: {
@@ -19182,6 +19194,12 @@ export type Database = {
           vehicle_year?: number | null
           verification_status?: string | null
           zip_code?: string | null
+          zivo_stripe_account_id?: string | null
+          zivo_stripe_charges_enabled?: boolean
+          zivo_stripe_disabled_reason?: string | null
+          zivo_stripe_onboarded_at?: string | null
+          zivo_stripe_payouts_enabled?: boolean
+          zivo_stripe_status_synced_at?: string | null
           zone_code?: string | null
         }
         Relationships: [
@@ -27335,6 +27353,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      legal_acknowledgments: {
+        Row: {
+          accepted_at: string
+          document_key: string
+          document_version: string
+          id: string
+          ip_address: unknown
+          meta: Json | null
+          role: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          accepted_at?: string
+          document_key: string
+          document_version: string
+          id?: string
+          ip_address?: unknown
+          meta?: Json | null
+          role: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          accepted_at?: string
+          document_key?: string
+          document_version?: string
+          id?: string
+          ip_address?: unknown
+          meta?: Json | null
+          role?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       legal_audit_log: {
         Row: {
@@ -47515,6 +47569,337 @@ export type Database = {
         }
         Relationships: []
       }
+      service_offers: {
+        Row: {
+          created_at: string
+          distance_km: number | null
+          driver_id: string
+          expires_at: string
+          id: string
+          order_id: string
+          payout_cents: number | null
+          responded_at: string | null
+          status: Database["public"]["Enums"]["service_offer_status"]
+        }
+        Insert: {
+          created_at?: string
+          distance_km?: number | null
+          driver_id: string
+          expires_at: string
+          id?: string
+          order_id: string
+          payout_cents?: number | null
+          responded_at?: string | null
+          status?: Database["public"]["Enums"]["service_offer_status"]
+        }
+        Update: {
+          created_at?: string
+          distance_km?: number | null
+          driver_id?: string
+          expires_at?: string
+          id?: string
+          order_id?: string
+          payout_cents?: number | null
+          responded_at?: string | null
+          status?: Database["public"]["Enums"]["service_offer_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_offers_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_offers_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_offers_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "v_admin_driver_compliance"
+            referencedColumns: ["driver_id"]
+          },
+          {
+            foreignKeyName: "service_offers_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "service_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_order_events: {
+        Row: {
+          actor_id: string | null
+          actor_role: string
+          created_at: string
+          event_type: string
+          from_status:
+            | Database["public"]["Enums"]["service_order_status"]
+            | null
+          id: string
+          meta: Json | null
+          order_id: string
+          to_status: Database["public"]["Enums"]["service_order_status"] | null
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_role: string
+          created_at?: string
+          event_type: string
+          from_status?:
+            | Database["public"]["Enums"]["service_order_status"]
+            | null
+          id?: string
+          meta?: Json | null
+          order_id: string
+          to_status?: Database["public"]["Enums"]["service_order_status"] | null
+        }
+        Update: {
+          actor_id?: string | null
+          actor_role?: string
+          created_at?: string
+          event_type?: string
+          from_status?:
+            | Database["public"]["Enums"]["service_order_status"]
+            | null
+          id?: string
+          meta?: Json | null
+          order_id?: string
+          to_status?: Database["public"]["Enums"]["service_order_status"] | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_order_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "service_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_orders: {
+        Row: {
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          completed_at: string | null
+          created_at: string
+          currency: string
+          customer_id: string
+          delivery_fee_cents: number
+          dispatch_attempts: number
+          distance_km: number | null
+          driver_assigned_at: string | null
+          driver_id: string | null
+          dropoff_address: string
+          dropoff_lat: number | null
+          dropoff_lng: number | null
+          duration_minutes: number | null
+          estimated_dropoff_at: string | null
+          estimated_pickup_at: string | null
+          eta_dropoff_at: string | null
+          eta_pickup_at: string | null
+          eta_updated_at: string | null
+          id: string
+          items: Json | null
+          kind: Database["public"]["Enums"]["service_order_kind"]
+          last_dispatch_at: string | null
+          passenger_count: number | null
+          payment_authorized_at: string | null
+          payment_captured_at: string | null
+          payment_failure_reason: string | null
+          payment_intent_id: string | null
+          payment_refunded_at: string | null
+          payment_status: string
+          picked_up_at: string | null
+          pickup_address: string | null
+          pickup_lat: number | null
+          pickup_lng: number | null
+          prepared_at: string | null
+          rating_by_customer: number | null
+          rating_by_driver: number | null
+          service_fee_cents: number
+          service_promo_code_id: string | null
+          service_promo_discount_cents: number
+          shop_accepted_at: string | null
+          shop_id: string | null
+          special_notes: string | null
+          status: Database["public"]["Enums"]["service_order_status"]
+          subtotal_cents: number
+          tip_cents: number
+          total_cents: number
+          updated_at: string
+          vehicle_class: string | null
+        }
+        Insert: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          customer_id: string
+          delivery_fee_cents?: number
+          dispatch_attempts?: number
+          distance_km?: number | null
+          driver_assigned_at?: string | null
+          driver_id?: string | null
+          dropoff_address: string
+          dropoff_lat?: number | null
+          dropoff_lng?: number | null
+          duration_minutes?: number | null
+          estimated_dropoff_at?: string | null
+          estimated_pickup_at?: string | null
+          eta_dropoff_at?: string | null
+          eta_pickup_at?: string | null
+          eta_updated_at?: string | null
+          id?: string
+          items?: Json | null
+          kind: Database["public"]["Enums"]["service_order_kind"]
+          last_dispatch_at?: string | null
+          passenger_count?: number | null
+          payment_authorized_at?: string | null
+          payment_captured_at?: string | null
+          payment_failure_reason?: string | null
+          payment_intent_id?: string | null
+          payment_refunded_at?: string | null
+          payment_status?: string
+          picked_up_at?: string | null
+          pickup_address?: string | null
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          prepared_at?: string | null
+          rating_by_customer?: number | null
+          rating_by_driver?: number | null
+          service_fee_cents?: number
+          service_promo_code_id?: string | null
+          service_promo_discount_cents?: number
+          shop_accepted_at?: string | null
+          shop_id?: string | null
+          special_notes?: string | null
+          status?: Database["public"]["Enums"]["service_order_status"]
+          subtotal_cents?: number
+          tip_cents?: number
+          total_cents?: number
+          updated_at?: string
+          vehicle_class?: string | null
+        }
+        Update: {
+          cancellation_reason?: string | null
+          cancelled_at?: string | null
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          customer_id?: string
+          delivery_fee_cents?: number
+          dispatch_attempts?: number
+          distance_km?: number | null
+          driver_assigned_at?: string | null
+          driver_id?: string | null
+          dropoff_address?: string
+          dropoff_lat?: number | null
+          dropoff_lng?: number | null
+          duration_minutes?: number | null
+          estimated_dropoff_at?: string | null
+          estimated_pickup_at?: string | null
+          eta_dropoff_at?: string | null
+          eta_pickup_at?: string | null
+          eta_updated_at?: string | null
+          id?: string
+          items?: Json | null
+          kind?: Database["public"]["Enums"]["service_order_kind"]
+          last_dispatch_at?: string | null
+          passenger_count?: number | null
+          payment_authorized_at?: string | null
+          payment_captured_at?: string | null
+          payment_failure_reason?: string | null
+          payment_intent_id?: string | null
+          payment_refunded_at?: string | null
+          payment_status?: string
+          picked_up_at?: string | null
+          pickup_address?: string | null
+          pickup_lat?: number | null
+          pickup_lng?: number | null
+          prepared_at?: string | null
+          rating_by_customer?: number | null
+          rating_by_driver?: number | null
+          service_fee_cents?: number
+          service_promo_code_id?: string | null
+          service_promo_discount_cents?: number
+          shop_accepted_at?: string | null
+          shop_id?: string | null
+          special_notes?: string | null
+          status?: Database["public"]["Enums"]["service_order_status"]
+          subtotal_cents?: number
+          tip_cents?: number
+          total_cents?: number
+          updated_at?: string
+          vehicle_class?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_orders_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_orders_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_orders_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "v_admin_driver_compliance"
+            referencedColumns: ["driver_id"]
+          },
+          {
+            foreignKeyName: "service_orders_service_promo_code_id_fkey"
+            columns: ["service_promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "zivo_service_promo_codes"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_orders_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_orders_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "restaurants_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_orders_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "v_my_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "service_orders_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "v_restaurant_rank"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       service_pricing: {
         Row: {
           base_fare: number
@@ -59970,6 +60355,56 @@ export type Database = {
         }
         Relationships: []
       }
+      zivo_notification_log: {
+        Row: {
+          body: string | null
+          channel: string
+          created_at: string
+          delivered: boolean
+          error_msg: string | null
+          id: string
+          order_id: string | null
+          payload: Json | null
+          title: string | null
+          topic: string
+          user_id: string | null
+        }
+        Insert: {
+          body?: string | null
+          channel: string
+          created_at?: string
+          delivered?: boolean
+          error_msg?: string | null
+          id?: string
+          order_id?: string | null
+          payload?: Json | null
+          title?: string | null
+          topic: string
+          user_id?: string | null
+        }
+        Update: {
+          body?: string | null
+          channel?: string
+          created_at?: string
+          delivered?: boolean
+          error_msg?: string | null
+          id?: string
+          order_id?: string | null
+          payload?: Json | null
+          title?: string | null
+          topic?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zivo_notification_log_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "service_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       zivo_partner_commissions: {
         Row: {
           commission_type: string
@@ -60065,6 +60500,47 @@ export type Database = {
           status?: string | null
         }
         Relationships: []
+      }
+      zivo_payment_events: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          currency: string
+          event_type: string
+          id: string
+          order_id: string
+          payment_intent_id: string | null
+          stripe_payload: Json | null
+        }
+        Insert: {
+          amount_cents?: number
+          created_at?: string
+          currency?: string
+          event_type: string
+          id?: string
+          order_id: string
+          payment_intent_id?: string | null
+          stripe_payload?: Json | null
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          currency?: string
+          event_type?: string
+          id?: string
+          order_id?: string
+          payment_intent_id?: string | null
+          stripe_payload?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zivo_payment_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "service_orders"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       zivo_payment_methods: {
         Row: {
@@ -60418,6 +60894,57 @@ export type Database = {
           },
         ]
       }
+      zivo_push_subscriptions: {
+        Row: {
+          apns_token: string | null
+          auth_secret: string | null
+          created_at: string
+          device_id: string | null
+          endpoint: string | null
+          fcm_token: string | null
+          id: string
+          is_active: boolean
+          last_seen_at: string
+          p256dh: string | null
+          platform: string
+          role: string
+          user_agent: string | null
+          user_id: string
+        }
+        Insert: {
+          apns_token?: string | null
+          auth_secret?: string | null
+          created_at?: string
+          device_id?: string | null
+          endpoint?: string | null
+          fcm_token?: string | null
+          id?: string
+          is_active?: boolean
+          last_seen_at?: string
+          p256dh?: string | null
+          platform: string
+          role: string
+          user_agent?: string | null
+          user_id: string
+        }
+        Update: {
+          apns_token?: string | null
+          auth_secret?: string | null
+          created_at?: string
+          device_id?: string | null
+          endpoint?: string | null
+          fcm_token?: string | null
+          id?: string
+          is_active?: boolean
+          last_seen_at?: string
+          p256dh?: string | null
+          platform?: string
+          role?: string
+          user_agent?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
       zivo_referral_codes: {
         Row: {
           code: string
@@ -60707,6 +61234,226 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: []
+      }
+      zivo_service_messages: {
+        Row: {
+          attachments: Json | null
+          audience: string
+          body: string
+          created_at: string
+          id: string
+          order_id: string
+          read_by: Json
+          sender_id: string
+          sender_role: string
+        }
+        Insert: {
+          attachments?: Json | null
+          audience?: string
+          body: string
+          created_at?: string
+          id?: string
+          order_id: string
+          read_by?: Json
+          sender_id: string
+          sender_role: string
+        }
+        Update: {
+          attachments?: Json | null
+          audience?: string
+          body?: string
+          created_at?: string
+          id?: string
+          order_id?: string
+          read_by?: Json
+          sender_id?: string
+          sender_role?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zivo_service_messages_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "service_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      zivo_service_payouts: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          currency: string
+          driver_id: string
+          failure_reason: string | null
+          id: string
+          meta: Json | null
+          order_id: string
+          paid_at: string | null
+          status: string
+          stripe_transfer_id: string | null
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          currency?: string
+          driver_id: string
+          failure_reason?: string | null
+          id?: string
+          meta?: Json | null
+          order_id: string
+          paid_at?: string | null
+          status?: string
+          stripe_transfer_id?: string | null
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          currency?: string
+          driver_id?: string
+          failure_reason?: string | null
+          id?: string
+          meta?: Json | null
+          order_id?: string
+          paid_at?: string | null
+          status?: string
+          stripe_transfer_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zivo_service_payouts_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "zivo_service_payouts_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "drivers_public"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "zivo_service_payouts_driver_id_fkey"
+            columns: ["driver_id"]
+            isOneToOne: false
+            referencedRelation: "v_admin_driver_compliance"
+            referencedColumns: ["driver_id"]
+          },
+          {
+            foreignKeyName: "zivo_service_payouts_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "service_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      zivo_service_promo_codes: {
+        Row: {
+          applies_to: string
+          code: string
+          created_at: string
+          current_redemptions: number
+          description: string | null
+          discount_flat_cents: number | null
+          discount_percent: number | null
+          discount_type: string
+          ends_at: string | null
+          first_order_only: boolean
+          id: string
+          is_active: boolean
+          max_discount_cents: number | null
+          max_per_customer: number
+          max_total_redemptions: number | null
+          min_subtotal_cents: number
+          starts_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          applies_to?: string
+          code: string
+          created_at?: string
+          current_redemptions?: number
+          description?: string | null
+          discount_flat_cents?: number | null
+          discount_percent?: number | null
+          discount_type: string
+          ends_at?: string | null
+          first_order_only?: boolean
+          id?: string
+          is_active?: boolean
+          max_discount_cents?: number | null
+          max_per_customer?: number
+          max_total_redemptions?: number | null
+          min_subtotal_cents?: number
+          starts_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          applies_to?: string
+          code?: string
+          created_at?: string
+          current_redemptions?: number
+          description?: string | null
+          discount_flat_cents?: number | null
+          discount_percent?: number | null
+          discount_type?: string
+          ends_at?: string | null
+          first_order_only?: boolean
+          id?: string
+          is_active?: boolean
+          max_discount_cents?: number | null
+          max_per_customer?: number
+          max_total_redemptions?: number | null
+          min_subtotal_cents?: number
+          starts_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      zivo_service_promo_redemptions: {
+        Row: {
+          discount_cents: number
+          id: string
+          order_id: string
+          promo_id: string
+          redeemed_at: string
+          user_id: string
+        }
+        Insert: {
+          discount_cents: number
+          id?: string
+          order_id: string
+          promo_id: string
+          redeemed_at?: string
+          user_id: string
+        }
+        Update: {
+          discount_cents?: number
+          id?: string
+          order_id?: string
+          promo_id?: string
+          redeemed_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "zivo_service_promo_redemptions_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "service_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "zivo_service_promo_redemptions_promo_id_fkey"
+            columns: ["promo_id"]
+            isOneToOne: false
+            referencedRelation: "zivo_service_promo_codes"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       zivo_subscription_plans: {
         Row: {
@@ -64808,6 +65555,66 @@ export type Database = {
         Args: { _post_id: string }
         Returns: undefined
       }
+      record_legal_acknowledgment: {
+        Args: {
+          p_document_key: string
+          p_document_version: string
+          p_meta?: Json
+          p_role: string
+        }
+        Returns: {
+          accepted_at: string
+          document_key: string
+          document_version: string
+          id: string
+          ip_address: unknown
+          meta: Json | null
+          role: string
+          user_agent: string | null
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "legal_acknowledgments"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      record_push_subscription: {
+        Args: {
+          p_apns_token?: string
+          p_auth_secret?: string
+          p_device_id?: string
+          p_endpoint?: string
+          p_fcm_token?: string
+          p_p256dh?: string
+          p_platform: string
+          p_role: string
+          p_user_agent?: string
+        }
+        Returns: {
+          apns_token: string | null
+          auth_secret: string | null
+          created_at: string
+          device_id: string | null
+          endpoint: string | null
+          fcm_token: string | null
+          id: string
+          is_active: boolean
+          last_seen_at: string
+          p256dh: string | null
+          platform: string
+          role: string
+          user_agent: string | null
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "zivo_push_subscriptions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       record_sla_metrics: { Args: { p_order_id: string }; Returns: string }
       record_withdrawal_usage: {
         Args: { p_amount: number; p_driver_id: string }
@@ -65068,6 +65875,325 @@ export type Database = {
         Args: { p_pin: string; p_trip_id: string }
         Returns: Json
       }
+      zivo_accept_offer: {
+        Args: { p_offer_id: string }
+        Returns: {
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          completed_at: string | null
+          created_at: string
+          currency: string
+          customer_id: string
+          delivery_fee_cents: number
+          dispatch_attempts: number
+          distance_km: number | null
+          driver_assigned_at: string | null
+          driver_id: string | null
+          dropoff_address: string
+          dropoff_lat: number | null
+          dropoff_lng: number | null
+          duration_minutes: number | null
+          estimated_dropoff_at: string | null
+          estimated_pickup_at: string | null
+          eta_dropoff_at: string | null
+          eta_pickup_at: string | null
+          eta_updated_at: string | null
+          id: string
+          items: Json | null
+          kind: Database["public"]["Enums"]["service_order_kind"]
+          last_dispatch_at: string | null
+          passenger_count: number | null
+          payment_authorized_at: string | null
+          payment_captured_at: string | null
+          payment_failure_reason: string | null
+          payment_intent_id: string | null
+          payment_refunded_at: string | null
+          payment_status: string
+          picked_up_at: string | null
+          pickup_address: string | null
+          pickup_lat: number | null
+          pickup_lng: number | null
+          prepared_at: string | null
+          rating_by_customer: number | null
+          rating_by_driver: number | null
+          service_fee_cents: number
+          service_promo_code_id: string | null
+          service_promo_discount_cents: number
+          shop_accepted_at: string | null
+          shop_id: string | null
+          special_notes: string | null
+          status: Database["public"]["Enums"]["service_order_status"]
+          subtotal_cents: number
+          tip_cents: number
+          total_cents: number
+          updated_at: string
+          vehicle_class: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "service_orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      zivo_driver_heartbeat: {
+        Args: { p_lat: number; p_lng: number }
+        Returns: {
+          acceptance_count: number
+          acceptance_rate: number | null
+          activity_status: string | null
+          affiliate_captured_at: string | null
+          affiliate_code: string | null
+          affiliate_partner_id: string | null
+          affiliate_partner_name: string | null
+          affiliate_signup_bonus_points: number | null
+          allowed_regions: string[] | null
+          apns_token: string | null
+          application_id: string | null
+          application_submitted_at: string | null
+          approved_at: string | null
+          approved_by: string | null
+          approved_for_blacklux: boolean | null
+          avatar_url: string | null
+          avg_delay_minutes: number | null
+          bank_connected: boolean | null
+          can_go_online: boolean
+          cancel_count: number
+          car_seat_capable: boolean
+          city: string | null
+          city_id: string | null
+          completion_rate: number | null
+          compliance_status: string | null
+          country: string | null
+          created_at: string
+          current_lat: number | null
+          current_lng: number | null
+          daily_goal: number | null
+          decline_count: number
+          device_platform: string | null
+          documents_verified: boolean | null
+          eats_enabled: boolean | null
+          email: string
+          fcm_token: string | null
+          full_name: string
+          home_city: string | null
+          id: string
+          is_online: boolean | null
+          is_suspended: boolean | null
+          is_verified: boolean | null
+          last_active_at: string | null
+          last_active_date: string | null
+          last_heading: number | null
+          last_performance_calc: string | null
+          last_speed: number | null
+          level: string | null
+          license_number: string | null
+          location_suspicious: boolean | null
+          longest_streak: number | null
+          move_enabled: boolean | null
+          on_time_rate: number | null
+          onboarding_completed_at: string | null
+          onboarding_status: string
+          onboarding_step: number | null
+          performance_score: number | null
+          phone: string
+          phone_verified: boolean | null
+          prev_lat: number | null
+          prev_lng: number | null
+          prev_location_at: string | null
+          priority_score: number | null
+          rating: number | null
+          rating_avg: number | null
+          rating_count: number | null
+          referral_code: string
+          region_id: string | null
+          rejection_reason: string | null
+          restricted_reason: string | null
+          reviewer_notes: string | null
+          rides_enabled: boolean | null
+          signup_device_fingerprint: string | null
+          signup_ip: string | null
+          ssn_last_four: string | null
+          state: string | null
+          status: Database["public"]["Enums"]["driver_status"] | null
+          streak_days: number | null
+          street_address: string | null
+          stripe_account_id: string | null
+          stripe_charges_enabled: boolean | null
+          stripe_details_submitted: boolean | null
+          stripe_last_sync: string | null
+          stripe_onboarding_complete: boolean | null
+          stripe_payouts_enabled: boolean | null
+          suspicious_count: number | null
+          tenant_id: string | null
+          tier: string | null
+          total_deliveries: number | null
+          total_trips: number | null
+          updated_at: string
+          user_id: string
+          vehicle_color: string | null
+          vehicle_model: string | null
+          vehicle_plate: string | null
+          vehicle_type: string
+          vehicle_year: number | null
+          verification_status: string | null
+          zip_code: string | null
+          zivo_stripe_account_id: string | null
+          zivo_stripe_charges_enabled: boolean
+          zivo_stripe_disabled_reason: string | null
+          zivo_stripe_onboarded_at: string | null
+          zivo_stripe_payouts_enabled: boolean
+          zivo_stripe_status_synced_at: string | null
+          zone_code: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "drivers"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      zivo_invoke_recompute_etas: { Args: never; Returns: undefined }
+      zivo_mark_messages_read: { Args: { p_order_id: string }; Returns: number }
+      zivo_nearest_drivers: {
+        Args: {
+          p_lat: number
+          p_limit?: number
+          p_lng: number
+          p_radius_km?: number
+        }
+        Returns: {
+          distance_km: number
+          driver_id: string
+          rating: number
+          user_id: string
+        }[]
+      }
+      zivo_redeem_service_promo: {
+        Args: {
+          p_discount_cents: number
+          p_order_id: string
+          p_promo_id: string
+        }
+        Returns: {
+          discount_cents: number
+          id: string
+          order_id: string
+          promo_id: string
+          redeemed_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "zivo_service_promo_redemptions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      zivo_send_service_message: {
+        Args: {
+          p_attachments?: Json
+          p_audience?: string
+          p_body: string
+          p_order_id: string
+        }
+        Returns: {
+          attachments: Json | null
+          audience: string
+          body: string
+          created_at: string
+          id: string
+          order_id: string
+          read_by: Json
+          sender_id: string
+          sender_role: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "zivo_service_messages"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      zivo_transition_status: {
+        Args: {
+          p_meta?: Json
+          p_order_id: string
+          p_to_status: Database["public"]["Enums"]["service_order_status"]
+        }
+        Returns: {
+          cancellation_reason: string | null
+          cancelled_at: string | null
+          completed_at: string | null
+          created_at: string
+          currency: string
+          customer_id: string
+          delivery_fee_cents: number
+          dispatch_attempts: number
+          distance_km: number | null
+          driver_assigned_at: string | null
+          driver_id: string | null
+          dropoff_address: string
+          dropoff_lat: number | null
+          dropoff_lng: number | null
+          duration_minutes: number | null
+          estimated_dropoff_at: string | null
+          estimated_pickup_at: string | null
+          eta_dropoff_at: string | null
+          eta_pickup_at: string | null
+          eta_updated_at: string | null
+          id: string
+          items: Json | null
+          kind: Database["public"]["Enums"]["service_order_kind"]
+          last_dispatch_at: string | null
+          passenger_count: number | null
+          payment_authorized_at: string | null
+          payment_captured_at: string | null
+          payment_failure_reason: string | null
+          payment_intent_id: string | null
+          payment_refunded_at: string | null
+          payment_status: string
+          picked_up_at: string | null
+          pickup_address: string | null
+          pickup_lat: number | null
+          pickup_lng: number | null
+          prepared_at: string | null
+          rating_by_customer: number | null
+          rating_by_driver: number | null
+          service_fee_cents: number
+          service_promo_code_id: string | null
+          service_promo_discount_cents: number
+          shop_accepted_at: string | null
+          shop_id: string | null
+          special_notes: string | null
+          status: Database["public"]["Enums"]["service_order_status"]
+          subtotal_cents: number
+          tip_cents: number
+          total_cents: number
+          updated_at: string
+          vehicle_class: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "service_orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      zivo_validate_service_promo: {
+        Args: {
+          p_code: string
+          p_delivery_fee_cents?: number
+          p_kind: string
+          p_subtotal_cents: number
+        }
+        Returns: {
+          applies_to_fee: boolean
+          description: string
+          discount_cents: number
+          promo_id: string
+        }[]
+      }
       zone_supply_count: { Args: { p_zone_id: string }; Returns: number }
     }
     Enums: {
@@ -65284,6 +66410,28 @@ export type Database = {
         | "approved"
         | "rejected"
         | "suspended"
+      service_offer_status:
+        | "pending"
+        | "accepted"
+        | "declined"
+        | "expired"
+        | "cancelled"
+      service_order_kind: "ride" | "delivery"
+      service_order_status:
+        | "requested"
+        | "shop_pending"
+        | "shop_accepted"
+        | "shop_rejected"
+        | "preparing"
+        | "ready_for_pickup"
+        | "searching"
+        | "assigned"
+        | "driver_en_route"
+        | "driver_arrived"
+        | "picked_up"
+        | "in_progress"
+        | "completed"
+        | "cancelled"
       test_booking_status: "pending" | "running" | "success" | "failed"
       travel_booking_status:
         | "pending"
@@ -65683,6 +66831,30 @@ export const Constants = {
         "approved",
         "rejected",
         "suspended",
+      ],
+      service_offer_status: [
+        "pending",
+        "accepted",
+        "declined",
+        "expired",
+        "cancelled",
+      ],
+      service_order_kind: ["ride", "delivery"],
+      service_order_status: [
+        "requested",
+        "shop_pending",
+        "shop_accepted",
+        "shop_rejected",
+        "preparing",
+        "ready_for_pickup",
+        "searching",
+        "assigned",
+        "driver_en_route",
+        "driver_arrived",
+        "picked_up",
+        "in_progress",
+        "completed",
+        "cancelled",
       ],
       test_booking_status: ["pending", "running", "success", "failed"],
       travel_booking_status: [
