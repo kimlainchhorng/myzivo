@@ -48,7 +48,7 @@ export default function FeaturedCarsSection() {
           return t.charAt(0).toUpperCase() + t.slice(1);
         }),
       ),
-    ),
+    ) as string[],
   ];
 
   const displayItems =
