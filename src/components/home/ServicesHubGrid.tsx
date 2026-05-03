@@ -90,10 +90,10 @@ export default function ServicesHubGrid() {
           .maybeSingle(),
         supabase
           .from("hotel_bookings")
-          .select("id,check_in")
-          .eq("user_id", user.id)
-          .gte("check_in", new Date().toISOString().slice(0, 10))
-          .order("check_in", { ascending: true })
+          .select("id,check_in_date")
+          .eq("customer_id", user.id)
+          .gte("check_in_date", new Date().toISOString().slice(0, 10))
+          .order("check_in_date", { ascending: true })
           .limit(1)
           .maybeSingle(),
       ]);
