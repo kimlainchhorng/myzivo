@@ -124,7 +124,7 @@ export default function AdminSecurityOverviewPage() {
       if (t.startsWith("admin."))          byCategory.admin++;
       if (t.startsWith("auth."))           byCategory.auth++;
     }
-    return { total: rows.length, ...byCategory };
+    return { total: rows.length, ...byCategory } as { total: number } & Record<string, number>;
   }, [recent24h.data]);
 
   const sevBadge = (s: string) =>

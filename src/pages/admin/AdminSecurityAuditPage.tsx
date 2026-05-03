@@ -179,7 +179,7 @@ export default function AdminSecurityAuditPage() {
               <div key={type} className="flex items-center justify-between text-sm">
                 <button
                   className="font-mono text-xs hover:underline"
-                  onClick={() => setQuickFilter("all") || setTextFilter(type)}
+                  onClick={() => { setQuickFilter("all"); setTextFilter(type); }}
                 >
                   {type}
                 </button>
