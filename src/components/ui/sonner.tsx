@@ -8,21 +8,25 @@ const Toaster = ({ ...props }: ToasterProps) => {
       theme="dark"
       className="toaster group"
       position="top-center"
-      expand
       visibleToasts={3}
       gap={8}
-      offset="calc(env(safe-area-inset-top) + 18px)"
-      style={{ zIndex: 99999 }}
+      offset="calc(env(safe-area-inset-top) + 14px)"
+      style={
+        {
+          zIndex: 99999,
+          "--width": "340px",
+        } as React.CSSProperties
+      }
       toastOptions={{
         classNames: {
           toast:
-            "group toast group-[.toaster]:rounded-[22px] group-[.toaster]:bg-zinc-950/85 group-[.toaster]:backdrop-blur-2xl group-[.toaster]:text-white group-[.toaster]:border group-[.toaster]:border-white/10 group-[.toaster]:shadow-[0_18px_50px_rgba(0,0,0,0.45)] group-[.toaster]:px-4 group-[.toaster]:py-3.5",
-          title: "group-[.toast]:text-white group-[.toast]:font-medium",
-          description: "group-[.toast]:text-white/70",
+            "group toast group-[.toaster]:rounded-2xl group-[.toaster]:bg-zinc-950/90 group-[.toaster]:backdrop-blur-2xl group-[.toaster]:text-white group-[.toaster]:border group-[.toaster]:border-white/10 group-[.toaster]:shadow-[0_14px_40px_rgba(0,0,0,0.45)] group-[.toaster]:px-3.5 group-[.toaster]:py-2.5 group-[.toaster]:gap-2",
+          title: "group-[.toast]:text-[13px] group-[.toast]:text-white group-[.toast]:font-medium group-[.toast]:leading-tight",
+          description: "group-[.toast]:text-[12px] group-[.toast]:text-white/70",
           actionButton:
-            "group-[.toast]:!bg-emerald-500 group-[.toast]:!text-zinc-950 group-[.toast]:!rounded-full group-[.toast]:!px-3.5 group-[.toast]:!py-1.5 group-[.toast]:!text-xs group-[.toast]:!font-semibold hover:group-[.toast]:!bg-emerald-400",
+            "group-[.toast]:!bg-emerald-500 group-[.toast]:!text-zinc-950 group-[.toast]:!rounded-full group-[.toast]:!px-3 group-[.toast]:!py-1 group-[.toast]:!text-[11px] group-[.toast]:!font-semibold group-[.toast]:!h-auto hover:group-[.toast]:!bg-emerald-400",
           cancelButton:
-            "group-[.toast]:!bg-white/10 group-[.toast]:!text-white/80 group-[.toast]:!rounded-full group-[.toast]:!px-3.5 group-[.toast]:!py-1.5 group-[.toast]:!text-xs",
+            "group-[.toast]:!bg-white/10 group-[.toast]:!text-white/80 group-[.toast]:!rounded-full group-[.toast]:!px-3 group-[.toast]:!py-1 group-[.toast]:!text-[11px] group-[.toast]:!h-auto",
           success: "group-[.toaster]:!text-emerald-400",
           error: "group-[.toaster]:!text-rose-400",
           warning: "group-[.toaster]:!text-amber-400",
