@@ -454,9 +454,16 @@ const Profile = () => {
     if (!user?.id) return;
     setCoverUploading(true);
     try {
-      const publicUrl = await uploadCover.mutateAsync(file);
-      await updateProfile.mutateAsync({ cover_url: publicUrl, cover_position: 50 });
+      await uploadCover.mutateAsync(file);
+      // Edge function already persisted cover_url + email. Reset position locally;
+      // best-effort write of cover_position (silent — no extra toast).
       setCoverPosition(50);
+      try {
+        await supabase.from("profiles").update({ cover_position: 50 }).eq("id", user.id);
+      } catch (e) {
+        console.warn("[uploadCoverFile] cover_position update skipped", e);
+      }
+      queryClient.invalidateQueries({ queryKey: ["userProfile", user.id] });
     } catch (err: any) {
       console.error("[uploadCoverFile]", err);
     } finally {
