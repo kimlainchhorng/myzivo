@@ -139,14 +139,15 @@ export default function ChatRowActionsSheet({
         <div className="mt-3 flex flex-col">
           {items.map((it) => {
             const Icon = it.icon;
+            const disabled = (it as { disabled?: boolean }).disabled;
             return (
               <button
                 key={it.key}
-                disabled={it.disabled}
+                disabled={disabled}
                 onClick={() => { it.onClick(); onClose(); }}
                 className={cn(
                   "flex items-center gap-3 px-2 py-3 text-left rounded-xl active:scale-[0.98] transition-all",
-                  it.disabled && "opacity-40",
+                  disabled && "opacity-40",
                   it.destructive ? "text-destructive" : "text-foreground",
                   "hover:bg-muted/60"
                 )}
