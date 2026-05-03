@@ -4205,42 +4205,6 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
         </button>
       </div>
 
-      {/* Quick DM send strip — one-tap share to a friend */}
-      {item.allow_sharing !== false && (
-        <div className="px-3 pb-2">
-          <p className="text-[11px] text-muted-foreground mb-1.5 font-semibold">Send to</p>
-          <div className="flex items-center gap-3 overflow-x-auto scrollbar-hide pb-0.5">
-            {([
-              { initials: "SK", name: "Sarah K.", color: "from-rose-500 to-pink-600" },
-              { initials: "JP", name: "James P.", color: "from-violet-500 to-purple-600" },
-              { initials: "AC", name: "Alex C.", color: "from-blue-500 to-indigo-600" },
-              { initials: "NO", name: "Nadia O.", color: "from-amber-500 to-orange-600" },
-              { initials: "LB", name: "Luca B.", color: "from-emerald-500 to-teal-600" },
-            ]).map((f) => (
-              <button
-                key={f.initials}
-                onClick={() => toast.success(`Post sent to ${f.name}`)}
-                className="shrink-0 flex flex-col items-center gap-1 active:opacity-70 transition-opacity"
-              >
-                <div className={`h-10 w-10 rounded-full bg-gradient-to-br ${f.color} flex items-center justify-center`}>
-                  <span className="text-white text-xs font-bold">{f.initials}</span>
-                </div>
-                <span className="text-[9px] text-muted-foreground font-medium leading-tight max-w-[40px] text-center line-clamp-1">{f.name}</span>
-              </button>
-            ))}
-            <button
-              onClick={() => setShowShareSheet(true)}
-              className="shrink-0 flex flex-col items-center gap-1 active:opacity-70 transition-opacity"
-            >
-              <div className="h-10 w-10 rounded-full bg-muted border border-border flex items-center justify-center">
-                <Plus className="h-4 w-4 text-muted-foreground" />
-              </div>
-              <span className="text-[9px] text-muted-foreground font-medium">More</span>
-            </button>
-          </div>
-        </div>
-      )}
-
       {/* Owner post insights — reach + engagement strip */}
       {isOwner && (item.views_count || 0) > 0 && (
         <div className="mx-3 mb-2 rounded-xl bg-muted/30 border border-border/20 px-3 py-2 flex items-center gap-3">
