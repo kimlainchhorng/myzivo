@@ -48,18 +48,19 @@ export default function InsightsCard() {
     let cancelled = false;
     (async () => {
       const monthStart = startOfMonthISO();
+      const sb = supabase as any;
       const [flights, hotels, rides] = await Promise.all([
-        supabase
+        sb
           .from("flight_bookings")
           .select("id,departure_date,destination,created_at")
-          .eq("user_id", user.id)
+          .eq("customer_id", user.id)
           .gte("created_at", monthStart),
-        supabase
+        sb
           .from("hotel_bookings")
-          .select("id,check_in,city,created_at")
-          .eq("user_id", user.id)
+          .select("id,check_in_date,city,created_at")
+          .eq("customer_id", user.id)
           .gte("created_at", monthStart),
-        supabase
+        sb
           .from("trips")
           .select("id,dropoff_address,created_at,status")
           .eq("rider_id", user.id)
