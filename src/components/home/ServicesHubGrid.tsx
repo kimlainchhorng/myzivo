@@ -63,8 +63,9 @@ export default function ServicesHubGrid() {
         hotels: { status: null, href: "/hotels" },
       };
 
+      const sb = supabase as any;
       const [ride, food, flight, hotel] = await Promise.all([
-        supabase
+        sb
           .from("trips")
           .select("id,status")
           .eq("rider_id", user.id)
@@ -72,7 +73,7 @@ export default function ServicesHubGrid() {
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle(),
-        supabase
+        sb
           .from("food_orders")
           .select("id,status")
           .eq("customer_id", user.id)
@@ -80,15 +81,15 @@ export default function ServicesHubGrid() {
           .order("created_at", { ascending: false })
           .limit(1)
           .maybeSingle(),
-        supabase
+        sb
           .from("flight_bookings")
           .select("id,departure_date")
-          .eq("user_id", user.id)
+          .eq("customer_id", user.id)
           .gte("departure_date", new Date().toISOString().slice(0, 10))
           .order("departure_date", { ascending: true })
           .limit(1)
           .maybeSingle(),
-        supabase
+        sb
           .from("hotel_bookings")
           .select("id,check_in_date")
           .eq("customer_id", user.id)
