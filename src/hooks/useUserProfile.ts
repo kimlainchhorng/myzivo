@@ -202,3 +202,46 @@ export const useUploadAvatar = () => {
     },
   });
 };
+
+export const useUploadCover = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: async (file: File) => {
+      if (!user?.id) throw new Error("Not authenticated");
+
+      if (file.size > 8 * 1024 * 1024) {
+        throw new Error("File size must be less than 8MB");
+      }
+
+      const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+      if (!allowedTypes.includes(file.type)) {
+        throw new Error("Please upload a JPG, PNG, or WebP image");
+      }
+
+      const safe = await stripImageMetadata(file);
+      const form = new FormData();
+      form.append("file", safe);
+      form.append("kind", "cover");
+
+      const { data, error } = await supabase.functions.invoke("profile-avatar-upload", {
+        body: form,
+      });
+
+      if (error) throw error;
+      const publicUrl = (data as { coverUrl?: string; url?: string })?.coverUrl
+        ?? (data as { url?: string })?.url;
+      if (!publicUrl) throw new Error("Cover upload failed");
+
+      return publicUrl;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["userProfile", user?.id] });
+      toast.success("Cover photo updated successfully");
+    },
+    onError: (error) => {
+      toast.error(error.message);
+    },
+  });
+};
