@@ -116,7 +116,7 @@ export default function SpendTrackerWidget() {
         animate={{ opacity: 1, y: 0 }}
         whileTap={{ scale: 0.99 }}
         onClick={() => navigate("/trips")}
-        className="w-full rounded-3xl border border-border/50 bg-card p-4 text-left shadow-sm active:scale-[0.99] transition-transform touch-manipulation"
+        className="w-full rounded-xl border border-border bg-card p-4 text-left active:scale-[0.99] transition-transform touch-manipulation"
       >
         <div className="flex items-center gap-2 mb-2">
           <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center">

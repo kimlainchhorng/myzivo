@@ -110,7 +110,7 @@ const FeaturedDealCard = ({ deal }: { deal: SmartDeal }) => {
       animate={{ opacity: 1, y: 0, scale: 1 }}
       whileTap={{ scale: 0.97 }}
       onClick={() => navigate(`/flights/results?origin=${deal.originCode}&destination=${deal.destinationCode}&departureDate=${deal.departureDate}&adults=1&cabinClass=economy`)}
-      className="w-full rounded-3xl overflow-hidden relative touch-manipulation text-left group h-[220px]"
+      className="w-full rounded-xl overflow-hidden relative touch-manipulation text-left group h-[220px]"
     >
       <img
         src={destPhoto?.src || "https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=600"}
@@ -232,7 +232,7 @@ const SmartDealCard = ({ deal, index }: { deal: SmartDeal; index: number }) => {
       transition={{ delay: index * 0.06 }}
       whileTap={{ scale: 0.97 }}
       onClick={() => navigate(`/flights/results?origin=${deal.originCode}&destination=${deal.destinationCode}&departureDate=${deal.departureDate}&adults=1&cabinClass=economy`)}
-      className="w-full flex rounded-2xl overflow-hidden bg-card border border-border/20 shadow-sm hover:shadow-xl hover:border-primary/20 transition-all duration-300 touch-manipulation text-left group"
+      className="w-full flex rounded-xl overflow-hidden bg-card border border-border hover:bg-secondary transition-colors duration-200 touch-manipulation text-left group"
     >
       {/* Image */}
       <div className="relative w-[100px] shrink-0 overflow-hidden">
@@ -342,14 +342,14 @@ const AITipBanner = ({ deal }: { deal: SmartDeal }) => {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.4 }}
-      className="flex items-center gap-2.5 bg-gradient-to-r from-primary/8 via-primary/5 to-transparent border border-primary/10 rounded-2xl px-3.5 py-2.5"
+      className="flex items-center gap-2.5 bg-secondary border border-border rounded-lg px-3.5 py-2.5"
     >
-      <div className="w-7 h-7 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-        <Lightbulb className="w-3.5 h-3.5 text-primary" />
+      <div className="w-7 h-7 rounded-md bg-primary/10 flex items-center justify-center shrink-0">
+        <Lightbulb className="w-3.5 h-3.5 text-primary" strokeWidth={1.75} />
       </div>
       <div className="min-w-0">
-        <div className="text-[9px] font-bold text-primary/60 uppercase tracking-wider">AI Travel Tip</div>
-        <div className="text-[11px] text-foreground/80 leading-snug">{deal.aiTip}</div>
+        <div className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">AI Travel Tip</div>
+        <div className="text-[11px] text-foreground leading-snug">{deal.aiTip}</div>
       </div>
     </motion.div>
   );
@@ -378,16 +378,16 @@ const AISmartDeals = () => {
           <motion.div
             animate={{ rotate: [0, 15, -15, 0] }}
             transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-            className="w-8 h-8 rounded-2xl bg-gradient-to-br from-primary/25 via-purple-500/15 to-sky-500/20 flex items-center justify-center shadow-md shadow-primary/10"
+            className="w-8 h-8 rounded-md bg-primary/10 flex items-center justify-center"
           >
-            <Sparkles className="w-4 h-4 text-primary" />
+            <Sparkles className="w-4 h-4 text-primary" strokeWidth={2} />
           </motion.div>
           <span>AI Smart Deals</span>
           <motion.div
             animate={{ scale: [1, 1.1, 1] }}
             transition={{ repeat: Infinity, duration: 2 }}
           >
-            <Badge className="text-[8px] font-bold bg-gradient-to-r from-primary to-emerald-500 text-primary-foreground border-0 px-2 py-0.5 shadow-sm shadow-primary/20">
+            <Badge className="text-[8px] font-bold bg-primary text-primary-foreground border-0 px-2 py-0.5">
               <Brain className="w-2.5 h-2.5 mr-0.5" /> POWERED
             </Badge>
           </motion.div>
@@ -422,10 +422,10 @@ const AISmartDeals = () => {
               whileTap={{ scale: 0.93 }}
               onClick={() => setActiveCategory(key)}
               className={cn(
-                "shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-2xl text-[11px] font-semibold transition-all border min-h-[36px]",
+                "shrink-0 flex items-center gap-1.5 px-3.5 py-2 rounded-full text-[11px] font-semibold transition-colors border min-h-[36px]",
                 isActive
-                  ? "bg-primary text-primary-foreground border-primary shadow-lg shadow-primary/25"
-                  : "bg-card text-muted-foreground border-border/30 hover:bg-muted/50 hover:border-border/60"
+                  ? "bg-foreground text-background border-foreground"
+                  : "bg-card text-foreground border-border hover:bg-secondary"
               )}
             >
               <Icon className="w-3.5 h-3.5" />
@@ -438,10 +438,10 @@ const AISmartDeals = () => {
       {/* Deals Content */}
       {isLoading && deals.length === 0 ? (
         <div className="space-y-3">
-          <div className="h-[220px] rounded-3xl bg-muted/30 animate-pulse" />
-          <div className="h-12 rounded-2xl bg-muted/20 animate-pulse" />
+          <div className="h-[220px] rounded-xl bg-muted animate-pulse" />
+          <div className="h-12 rounded-lg bg-muted animate-pulse" />
           {[1, 2, 3].map(i => (
-            <div key={i} className="h-[100px] rounded-2xl bg-muted/20 animate-pulse" />
+            <div key={i} className="h-[100px] rounded-xl bg-muted animate-pulse" />
           ))}
         </div>
       ) : deals.length > 0 ? (
@@ -466,7 +466,7 @@ const AISmartDeals = () => {
                 transition={{ delay: 0.4 }}
                 whileTap={{ scale: 0.97 }}
                 onClick={() => navigate("/flights")}
-                className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl border border-dashed border-primary/20 text-primary text-xs font-semibold hover:bg-primary/5 transition-colors touch-manipulation"
+                className="w-full flex items-center justify-center gap-2 py-3 rounded-lg border border-dashed border-border text-primary text-xs font-semibold hover:bg-secondary transition-colors touch-manipulation"
               >
                 <Sparkles className="w-3.5 h-3.5" />
                 View {deals.length - 5} more AI deals

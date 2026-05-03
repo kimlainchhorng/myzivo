@@ -1,10 +1,10 @@
 /**
  * Embedded Partner Checkout Page
  * 
- * Displays partner checkout in an iframe within Hizovo
- * User never leaves hizovo.com during checkout
+ * Displays partner checkout in an iframe within Hizivo
+ * User never leaves hizivo.com during checkout
  * 
- * IMPORTANT: Hizovo is NOT the merchant of record
+ * IMPORTANT: Hizivo is NOT the merchant of record
  * All payments handled by licensed travel partners
  */
 
@@ -77,13 +77,16 @@ const EmbeddedCheckout = () => {
     return (
       <div className="min-h-screen bg-background">
         <SEOHead 
-          title="Secure Checkout – Hizovo" 
+          title="Secure Checkout – Hizivo" 
           description="Complete your booking securely with our licensed travel partner."
           noIndex
         />
         
         {/* Locked Header */}
-        <header className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border">
+        <header
+          className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border"
+          style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+        >
           <div className="container mx-auto px-4 h-16 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <Lock className="w-5 h-5 text-emerald-500" />
@@ -96,7 +99,7 @@ const EmbeddedCheckout = () => {
           </div>
         </header>
 
-        <main className="pt-24 pb-20 flex items-center justify-center min-h-screen">
+        <main className="pt-[calc(env(safe-area-inset-top,0px)+5rem)] pb-[calc(env(safe-area-inset-bottom,0px)+5rem)] flex items-center justify-center min-h-screen">
           <div className="text-center max-w-md mx-auto px-4">
             <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-6">
               <Loader2 className="w-10 h-10 text-primary animate-spin" />
@@ -120,13 +123,16 @@ const EmbeddedCheckout = () => {
     return (
       <div className="min-h-screen bg-background">
         <SEOHead 
-          title="Checkout Issue – Hizovo" 
+          title="Checkout Issue – Hizivo" 
           description="There was an issue loading the checkout."
           noIndex
         />
         
         {/* Locked Header */}
-        <header className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border">
+        <header
+          className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border"
+          style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+        >
           <div className="container mx-auto px-4 h-16 flex items-center justify-between">
             <Button variant="ghost" onClick={() => navigate(-1)} className="gap-2">
               <ArrowLeft className="w-4 h-4" />
@@ -139,7 +145,7 @@ const EmbeddedCheckout = () => {
           </div>
         </header>
 
-        <main className="pt-24 pb-20">
+        <main className="pt-[calc(env(safe-area-inset-top,0px)+5rem)] pb-[calc(env(safe-area-inset-bottom,0px)+5rem)]">
           <div className="container mx-auto px-4 max-w-lg">
             <Card>
               <CardContent className="p-8 text-center">
@@ -185,13 +191,16 @@ const EmbeddedCheckout = () => {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <SEOHead 
-        title="Secure Checkout – Hizovo" 
+        title="Secure Checkout – Hizivo" 
         description="Complete your booking securely with our licensed travel partner."
         noIndex
       />
       
       {/* Locked Header - No navigation during checkout */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border">
+      <header
+        className="fixed top-0 left-0 right-0 z-50 bg-background border-b border-border"
+        style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+      >
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Button variant="ghost" size="sm" onClick={() => navigate(-1)} className="gap-2">
@@ -229,7 +238,7 @@ const EmbeddedCheckout = () => {
       </div>
 
       {/* Main Checkout Area */}
-      <main className="flex-1 pt-28 pb-24">
+      <main className="flex-1 pt-[calc(env(safe-area-inset-top,0px)+6rem)] pb-[calc(env(safe-area-inset-bottom,0px)+6rem)]">
         {partnerUrl ? (
           // Real iframe when URL is provided
           <div className="h-full min-h-[600px]">
@@ -259,7 +268,7 @@ const EmbeddedCheckout = () => {
                 <Alert className="text-left mb-6">
                   <Info className="w-4 h-4" />
                   <AlertDescription>
-                    <strong>How it works:</strong> When you proceed with a booking, the partner's secure checkout will load in this space. You'll complete payment directly with the licensed travel partner without leaving Hizovo.
+                    <strong>How it works:</strong> When you proceed with a booking, the partner's secure checkout will load in this space. You'll complete payment directly with the licensed travel partner without leaving Hizivo.
                   </AlertDescription>
                 </Alert>
 
@@ -274,7 +283,7 @@ const EmbeddedCheckout = () => {
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 text-left">
                     <Lock className="w-5 h-5 text-sky-500 shrink-0" />
                     <div>
-                      <p className="font-medium text-sm">Stay on Hizovo</p>
+                      <p className="font-medium text-sm">Stay on Hizivo</p>
                       <p className="text-xs text-muted-foreground">No redirects to external sites</p>
                     </div>
                   </div>
@@ -294,7 +303,10 @@ const EmbeddedCheckout = () => {
       </main>
 
       {/* Bottom Disclosure Bar */}
-      <footer className="fixed bottom-0 left-0 right-0 bg-background border-t border-border py-3 z-40">
+      <footer
+        className="fixed bottom-0 left-0 right-0 bg-background border-t border-border z-40"
+        style={{ paddingTop: "0.75rem", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.75rem)" }}
+      >
         <div className="container mx-auto px-4">
           <p className="text-center text-xs text-muted-foreground">
             {FLIGHT_DISCLAIMERS.ticketing}

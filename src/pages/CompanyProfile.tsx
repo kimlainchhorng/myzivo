@@ -30,7 +30,7 @@ import { Link } from "react-router-dom";
 
 const companyInfo = [
   { label: "Legal Name", value: "ZIVO LLC" },
-  { label: "Trading As", value: "ZIVO / Hizovo" },
+  { label: "Trading As", value: "ZIVO / Hizivo" },
   { label: "Founded", value: "2024" },
   { label: "Headquarters", value: "United States" },
   { label: "Website", value: "hizivo.com" },

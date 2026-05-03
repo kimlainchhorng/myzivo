@@ -29,12 +29,21 @@ const PADDING = 8;
 // Reserve room for the bottom mobile nav (matches ZivoMobileNav height ~64px)
 const BOTTOM_NAV_RESERVE = 72;
 
-function readInset(name: string): number {
-  if (typeof window === "undefined") return 0;
-  const v = getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-  if (!v) return 0;
-  const n = parseFloat(v);
-  return Number.isFinite(n) ? n : 0;
+function readInset(side: "top" | "bottom" | "left" | "right"): number {
+  if (typeof window === "undefined" || typeof document === "undefined") return 0;
+  // Custom CSS properties don't pre-resolve env(), so probe via a real CSS property.
+  const probe = document.createElement("div");
+  probe.style.position = "fixed";
+  probe.style.top = "0";
+  probe.style.left = "0";
+  probe.style.visibility = "hidden";
+  probe.style.pointerEvents = "none";
+  probe.style.height = `env(safe-area-inset-${side}, 0px)`;
+  probe.style.width = `env(safe-area-inset-${side}, 0px)`;
+  document.body.appendChild(probe);
+  const dim = side === "top" || side === "bottom" ? probe.offsetHeight : probe.offsetWidth;
+  document.body.removeChild(probe);
+  return Number.isFinite(dim) ? dim : 0;
 }
 
 export default function CallPiP({
@@ -60,10 +69,10 @@ export default function CallPiP({
   const getBounds = useCallback(() => {
     const vw = window.visualViewport?.width ?? window.innerWidth;
     const vh = window.visualViewport?.height ?? window.innerHeight;
-    const safeTop = Math.max(readInset("--safe-top"), 12);
-    const safeBottom = Math.max(readInset("--safe-bottom"), 12);
-    const safeLeft = Math.max(readInset("--safe-left"), 0);
-    const safeRight = Math.max(readInset("--safe-right"), 0);
+    const safeTop = Math.max(readInset("top"), 12);
+    const safeBottom = Math.max(readInset("bottom"), 12);
+    const safeLeft = Math.max(readInset("left"), 0);
+    const safeRight = Math.max(readInset("right"), 0);
     return {
       minX: safeLeft + PADDING,
       maxX: vw - safeRight - PADDING - W,

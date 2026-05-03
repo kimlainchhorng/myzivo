@@ -147,7 +147,7 @@ export default function TodayPlanWidget() {
 
   return (
     <div className="px-4 pb-3">
-      <div className="rounded-3xl border border-border/50 bg-card p-4 shadow-sm">
+      <div className="rounded-xl border border-border bg-card p-4">
         <div className="flex items-center gap-2 mb-3">
           <CalendarClock className="w-4 h-4 text-primary" />
           <h2 className="text-sm font-bold text-foreground">Today's plan</h2>
@@ -163,7 +163,7 @@ export default function TodayPlanWidget() {
             onClick={() =>
               navigate(`/rides?dropoff=${encodeURIComponent(urgentReservation.venue ?? "")}`)
             }
-            className="w-full mb-3 flex items-center gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 text-left active:scale-[0.99] transition-transform touch-manipulation"
+            className="w-full mb-3 flex items-center gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3 text-left active:scale-[0.99] transition-transform touch-manipulation"
           >
             <div className="w-10 h-10 rounded-xl bg-amber-500/20 text-amber-600 flex items-center justify-center">
               <Car className="w-5 h-5" />

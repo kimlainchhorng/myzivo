@@ -46,9 +46,6 @@ const TravelItineraryCard = lazy(() => import("@/components/home/widgets/TravelI
 const ActivityTimeline = lazy(() => import("@/components/shared/ActivityTimeline"));
 const ZivoMobileNav = lazy(() => import("@/components/app/ZivoMobileNav"));
 const UniversalSearchOverlay = lazy(() => import("@/components/search/UniversalSearchOverlay"));
-const ServicesHubGrid = lazy(() => import("@/components/home/ServicesHubGrid"));
-const PlanTripBundle = lazy(() => import("@/components/home/PlanTripBundle"));
-const SmartIntentSearch = lazy(() => import("@/components/home/SmartIntentSearch"));
 const NetworkPromoStrip = lazy(() => import("@/components/home/NetworkPromoStrip"));
 const ConciergeLauncher = lazy(() => import("@/components/home/ConciergeLauncher"));
 const TodayPlanWidget = lazy(() => import("@/components/home/TodayPlanWidget"));
@@ -60,7 +57,6 @@ const InsightsCard = lazy(() => import("@/components/home/InsightsCard"));
 // Icons used below-fold (still small, but needed)
 import Utensils from "lucide-react/dist/esm/icons/utensils";
 import History from "lucide-react/dist/esm/icons/history";
-import Hotel from "lucide-react/dist/esm/icons/hotel";
 import Gift from "lucide-react/dist/esm/icons/gift";
 import Users from "lucide-react/dist/esm/icons/users";
 import Share2 from "lucide-react/dist/esm/icons/share-2";
@@ -107,32 +103,6 @@ import { getRestaurantPhoto } from "@/config/restaurantPhotos";
 import { formatDistanceToNow, format } from "date-fns";
 import useEmblaCarousel from "embla-carousel-react";
 import { useDeviceIntegrityCheck } from "@/hooks/useDeviceIntegrityCheck";
-import { useOwnerStoreProfile } from "@/hooks/useOwnerStoreProfile";
-import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
-import { useLodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile";
-import { useLodgeReservations } from "@/hooks/lodging/useLodgeReservations";
-import { useLodgingPhase5Counts } from "@/hooks/lodging/useLodgingPhase5Counts";
-import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
-
-import tabFlightsBg from "@/assets/tab-flights-bg.jpg";
-import tabHotelsBg from "@/assets/tab-hotels-bg.jpg";
-import tabCarsBg from "@/assets/tab-cars-bg.jpg";
-import tabRidesBg from "@/assets/tab-rides-bg.jpg";
-import tabEatsBg from "@/assets/tab-eats-bg.jpg";
-
-const tabBgMap: Record<string, string> = {
-  rides: tabRidesBg,
-  eats: tabEatsBg,
-  flights: tabFlightsBg,
-  hotels: tabHotelsBg,
-};
-
-const tabCssVarMap: Record<string, string> = {
-  rides: "var(--rides)",
-  eats: "var(--eats)",
-  flights: "var(--flights)",
-  hotels: "var(--hotels)",
-};
 // ─── Saved Places Icon Map ───
 // ─── Dynamic search placeholder by tab ───
 // Search placeholder is now handled inside the component with t()
@@ -288,28 +258,7 @@ const AppHome = () => {
     return t("home.where_to");
   }
   const { recommended, favorites, orderAgain } = usePersonalizedHome();
-  const { data: profile } = useUserProfile();
-  const { data: ownerStore, isLoading: ownerStoreLoading } = useOwnerStoreProfile();
-  const lodgingStoreId = ownerStore?.isLodging ? ownerStore.id : "";
-  const lodgingRooms = useLodgeRooms(lodgingStoreId);
-  const lodgingProfile = useLodgePropertyProfile(lodgingStoreId);
-  const lodgingReservations = useLodgeReservations(lodgingStoreId, "all");
-  const lodgingPhase5 = useLodgingPhase5Counts(lodgingStoreId);
-  const lodgingCompletion = ownerStore?.isLodging ? getLodgingCompletion({
-    rooms: lodgingRooms.data || [],
-    profile: lodgingProfile.data,
-    addons: (lodgingRooms.data || []).flatMap((room: any) => room.addons || []),
-    housekeepingCount: lodgingPhase5.housekeepingCount,
-    maintenanceReady: true,
-    reportsReady: Boolean((lodgingRooms.data || []).length) || (lodgingReservations.data?.length ?? 0) > 0,
-    mealPlansCount: lodgingPhase5.mealPlansCount,
-    staffCount: lodgingPhase5.staffCount,
-    channelConnectionsCount: lodgingPhase5.channelConnectionsCount,
-    promotionsCount: lodgingPhase5.promotionsCount,
-    reviewsAwaitingReply: lodgingPhase5.reviewsAwaitingReply,
-    reservationsCount: lodgingReservations.data?.length ?? 0,
-  }) : null;
-  const lodgingProgress = lodgingCompletion ? { complete: lodgingCompletion.complete, total: lodgingCompletion.total, percent: lodgingCompletion.percent } : null;
+  useUserProfile();
   const { data: deals = [] } = useRecommendedDeals("all", 6);
   const { items: recentItems } = useRecentlyViewed();
   const { data: savedLocations } = useSavedLocations(user?.id);
@@ -370,17 +319,6 @@ const AppHome = () => {
     return () => { clearInterval(autoplay); emblaApi.off("select", onSelect); };
   }, [emblaApi]);
 
-  const greeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return t("home.good_morning");
-    if (hour < 17) return t("home.good_afternoon");
-    return t("home.good_evening");
-  };
-
-  const userName = profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || "Traveler";
-  const avatarUrl = profile?.avatar_url;
-  const initials = (profile?.full_name || user?.email || "Z").charAt(0).toUpperCase();
-
   return (
     <>
     <div className="relative min-h-[100dvh] bg-background font-sans text-foreground selection:bg-primary/30 overflow-x-hidden" role="main">
@@ -392,43 +330,32 @@ const AppHome = () => {
         {/* ─── HEADER ─── */}
         <div className="bg-background relative">
 
-          {/* ─── GREETING HEADER ─── */}
+          {/* ─── BRAND HEADER (Instagram-style: wordmark left, slim icons right) ─── */}
           {user ? (
-            <div className="flex items-center justify-between px-5 pt-safe pb-3">
-              <button onClick={() => navigate("/profile")} className="flex items-center gap-2.5 touch-manipulation active:opacity-75 transition-opacity">
-                {avatarUrl ? (
-                  <img src={avatarUrl} alt={userName} width={40} height={40} className="w-10 h-10 rounded-full object-cover ring-2 ring-primary/25" />
-                ) : (
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary/40 to-primary/15 flex items-center justify-center ring-2 ring-primary/20 shrink-0">
-                    <span className="text-sm font-bold text-primary">{initials}</span>
-                  </div>
-                )}
-                <div>
-                  <p className="text-[10px] text-muted-foreground leading-none mb-0.5">{greeting()}</p>
-                  <p className="text-sm font-bold text-foreground leading-none">{userName}</p>
-                </div>
-              </button>
-              <div className="flex items-center gap-2">
+            <div className="flex items-center justify-between px-4 pt-safe pb-3">
+              <span className="font-bold italic text-2xl tracking-tight text-foreground select-none">
+                ZIVO
+              </span>
+              <div className="flex items-center gap-1">
                 {balanceDollars != null && balanceDollars > 0 && (
                   <button
                     onClick={() => navigate("/account/wallet")}
-                    className="flex items-center gap-1.5 bg-primary/10 rounded-full px-3 py-1.5 touch-manipulation active:scale-95 transition-transform"
+                    className="flex items-center gap-1.5 bg-secondary rounded-full px-3 py-1.5 touch-manipulation active:scale-95 transition-transform"
                   >
-                    <Wallet className="w-3.5 h-3.5 text-primary" />
-                    <span className="text-xs font-bold text-primary">${balanceDollars.toFixed(2)}</span>
+                    <Wallet className="w-3.5 h-3.5 text-foreground" strokeWidth={2} />
+                    <span className="text-xs font-semibold text-foreground">${balanceDollars.toFixed(2)}</span>
                   </button>
                 )}
                 <button
                   onClick={() => navigate("/activity")}
-                  className="relative w-9 h-9 rounded-full bg-muted/50 flex items-center justify-center touch-manipulation active:scale-90 transition-transform"
+                  aria-label="Notifications"
+                  className="relative w-10 h-10 flex items-center justify-center touch-manipulation active:scale-90 transition-transform"
                 >
-                  <Bell className="w-4 h-4 text-foreground" />
+                  <Bell className="w-6 h-6 text-foreground" strokeWidth={1.75} />
                 </button>
               </div>
             </div>
-          ) : (
-            <div className="pt-safe" />
-          )}
+          ) : null}
 
           {/* Service Tabs — 3D Pill Chips */}
           <div
@@ -450,63 +377,34 @@ const AppHome = () => {
                   aria-pressed={isActive}
                   whileTap={{ scale: 0.96 }}
                   className={cn(
-                    "relative flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 touch-manipulation min-h-[44px]",
+                    "flex-1 inline-flex items-center justify-center gap-1.5 py-2 rounded-full text-[13px] font-semibold transition-colors touch-manipulation min-h-[40px] border",
                     isActive
-                      ? "text-white shadow-lg"
-                      : "text-muted-foreground"
+                      ? "bg-foreground text-background border-foreground"
+                      : "bg-card text-foreground border-border hover:bg-secondary"
                   )}
-                  style={{ overflow: "hidden" }}
                 >
-                  {/* Background image */}
-                  <img
-                    src={tabBgMap[tab.id]}
-                    alt=""
-                    width={120}
-                    height={44}
-                    className="absolute inset-0 w-full h-full object-cover rounded-full"
-                    style={{
-                      opacity: isActive ? 0.75 : 0.15,
-                      transition: "opacity 0.3s ease",
-                    }}
-                  />
-                  {/* Color overlay */}
-                  <span
-                    className="absolute inset-0 rounded-full"
-                    style={{
-                      background: isActive
-                        ? `linear-gradient(135deg, hsl(${tabCssVarMap[tab.id]} / 0.55), hsl(${tabCssVarMap[tab.id]} / 0.35))`
-                        : "hsl(var(--muted) / 0.3)",
-                      transition: "background 0.3s ease",
-                    }}
-                  />
-                  {/* Border */}
-                  <span
-                    className="absolute inset-0 rounded-full pointer-events-none"
-                    style={{
-                      border: `1.5px solid hsl(${tabCssVarMap[tab.id]} / ${isActive ? "0.5" : "0.12"})`,
-                      boxShadow: isActive
-                        ? `0 4px 12px -2px hsl(${tabCssVarMap[tab.id]} / 0.35), inset 0 1px 2px rgba(255,255,255,0.15)`
-                        : "none",
-                    }}
-                  />
-                  <span className="relative z-10 flex items-center gap-1.5">
-                    {tab.image ? (
-                      <img src={tab.image} alt={tab.label} width={20} height={20} className="w-5 h-5 object-contain" style={{ filter: isActive ? "brightness(10)" : "none" }} />
-                    ) : tab.icon ? (
-                      <tab.icon className="w-4.5 h-4.5" />
-                    ) : null}
-                    <span className="text-[13px]" style={{ textShadow: isActive ? "0 1px 3px rgba(0,0,0,0.3)" : "none" }}>{tab.label}</span>
-                  </span>
+                  {tab.image ? (
+                    <img
+                      src={tab.image}
+                      alt=""
+                      width={18}
+                      height={18}
+                      className="w-4 h-4 object-contain"
+                      style={{ filter: isActive ? "brightness(0) invert(1)" : "none" }}
+                    />
+                  ) : tab.icon ? (
+                    <tab.icon className="w-4 h-4" strokeWidth={1.75} />
+                  ) : null}
+                  <span>{tab.label}</span>
                 </motion.button>
               );
             })}
           </div>
 
-          {/* Where to? Search Bar — 3D Glass */}
-          <div className="px-5 pt-4 pb-4">
+          {/* Search bar — Instagram-style flat input */}
+          <div className="px-4 pt-3 pb-4">
             <motion.button
-              whileTap={{ scale: 0.98, rotateX: 3 }}
-              whileHover={{ y: -2, scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
               aria-label={getSearchPlaceholder(activeHomeTab)}
               onClick={() => {
                 const routes: Record<string, string> = {
@@ -518,51 +416,24 @@ const AppHome = () => {
                 navigate(routes[activeHomeTab] || "/rides");
               }}
               className="w-full touch-manipulation"
-              style={{ transformStyle: "preserve-3d" }}
             >
-              <div className="relative rounded-2xl px-5 py-4 flex items-center gap-3 min-h-[56px] shadow-lg transition-all overflow-hidden" style={{ border: `1.5px solid hsl(${tabCssVarMap[activeHomeTab]} / 0.3)`, boxShadow: `0 4px 20px -4px hsl(${tabCssVarMap[activeHomeTab]} / 0.15)` }}>
-                {/* Background image for search bar */}
-                <img
-                  src={tabBgMap[activeHomeTab]}
-                  alt=""
-                  width={390}
-                  height={56}
-                  className="absolute inset-0 w-full h-full object-cover"
-                  style={{ opacity: 0.35, transition: "opacity 0.3s" }}
-                />
-                <span className="absolute inset-0" style={{ background: `linear-gradient(135deg, hsl(var(--card) / 0.75), hsl(var(--card) / 0.65))`, backdropFilter: "blur(8px)" }} />
-                <span className="absolute inset-0" style={{ background: `linear-gradient(90deg, hsl(${tabCssVarMap[activeHomeTab]} / 0.08), transparent 60%)` }} />
-                <div className="relative z-10 w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `hsl(${tabCssVarMap[activeHomeTab]} / 0.15)` }}>
-                  <Search className="w-4.5 h-4.5" style={{ color: `hsl(${tabCssVarMap[activeHomeTab]})` }} />
-                </div>
-                <span className="relative z-10 font-medium text-[15px] flex-1 text-left" style={{ color: "hsl(var(--foreground) / 0.7)" }}>{getSearchPlaceholder(activeHomeTab)}</span>
+              <div className="flex items-center gap-2 rounded-lg bg-secondary px-3 py-2.5 min-h-[40px]">
+                <Search className="w-4 h-4 text-muted-foreground" strokeWidth={2} />
+                <span className="text-[14px] text-muted-foreground flex-1 text-left">
+                  {getSearchPlaceholder(activeHomeTab)}
+                </span>
               </div>
             </motion.button>
           </div>
-
-          {/* ─── SMART INTENT SEARCH ─── */}
-          <Suspense fallback={<div className="h-[68px]" />}>
-            <SmartIntentSearch />
-          </Suspense>
 
           {/* ─── TODAY'S PLAN ─── */}
           <Suspense fallback={null}>
             <TodayPlanWidget />
           </Suspense>
 
-          {/* ─── UNIFIED SERVICES HUB (Rides · Eats · Flights · Hotels) ─── */}
-          <Suspense fallback={<div className="h-[120px]" />}>
-            <ServicesHubGrid />
-          </Suspense>
-
           {/* ─── ZIVO CONCIERGE ─── */}
           <Suspense fallback={<div className="h-[140px]" />}>
             <ConciergeLauncher />
-          </Suspense>
-
-          {/* ─── PLAN A TRIP BUNDLE ─── */}
-          <Suspense fallback={<div className="h-[140px]" />}>
-            <PlanTripBundle />
           </Suspense>
 
           {/* ─── ZIVO NETWORK PROMO ─── */}
@@ -621,64 +492,54 @@ const AppHome = () => {
           )}
 
           {/* What's New — recent product updates */}
-          <div className="px-4 sm:px-5 pb-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <motion.button
-              type="button"
-              onClick={() => navigate("/rides/hub?tab=corporate")}
-              whileTap={{ scale: 0.98 }}
-              whileHover={{ y: -1 }}
-              className="group relative w-full overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-3 sm:p-4 text-left shadow-sm"
-              aria-label="See what's new in the Ride Hub"
-            >
-              <div className="flex items-center gap-2.5 sm:gap-3">
-                <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
-                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-                  <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary" />
-                  </span>
+          <div className="px-4 sm:px-5 pb-4">
+            <div className="rounded-2xl border border-border/50 bg-card/60 overflow-hidden shadow-sm">
+              <div className="flex items-center justify-between px-4 py-2.5 border-b border-border/30">
+                <div className="flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5 text-primary" />
+                  <p className="text-[11px] font-bold uppercase tracking-wide text-muted-foreground">What's New</p>
+                </div>
+                <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/15 text-primary">12 NEW</span>
+              </div>
+              <motion.button
+                type="button"
+                onClick={() => navigate("/rides/hub?tab=corporate")}
+                whileTap={{ scale: 0.99 }}
+                className="group w-full flex items-center gap-3 px-4 py-3 text-left active:bg-muted/30 transition-colors"
+                aria-label="See what's new in the Ride Hub"
+              >
+                <div className="w-8 h-8 rounded-lg bg-primary/15 flex items-center justify-center shrink-0">
+                  <Sparkles className="w-4 h-4 text-primary" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <p className="text-sm font-bold text-foreground">What's new in Ride Hub</p>
+                    <p className="text-sm font-semibold text-foreground">Ride Hub</p>
                     <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-primary/15 text-primary">3 NEW</span>
                   </div>
-                  <p className="text-xs text-muted-foreground truncate">
-                    Live fleet tracker · Tab categories &amp; filter · Shareable URLs
-                  </p>
+                  <p className="text-xs text-muted-foreground truncate">Live fleet tracker · Tab categories · Shareable URLs</p>
                 </div>
                 <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 transition-transform group-hover:translate-x-0.5" />
-              </div>
-            </motion.button>
-
-            <motion.button
-              type="button"
-              onClick={() => navigate("/chat")}
-              whileTap={{ scale: 0.98 }}
-              whileHover={{ y: -1 }}
-              className="group relative w-full overflow-hidden rounded-2xl border border-fuchsia-500/20 bg-gradient-to-r from-fuchsia-500/10 via-fuchsia-500/5 to-transparent p-3 sm:p-4 text-left shadow-sm"
-              aria-label="See what's new in Chat"
-            >
-              <div className="flex items-center gap-2.5 sm:gap-3">
-                <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-fuchsia-500/15 flex items-center justify-center shrink-0">
-                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-fuchsia-500" />
-                  <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-fuchsia-500 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-fuchsia-500" />
-                  </span>
+              </motion.button>
+              <motion.button
+                type="button"
+                onClick={() => navigate("/chat")}
+                whileTap={{ scale: 0.99 }}
+                className="group w-full flex items-center gap-3 px-4 py-3 text-left border-t border-border/30 active:bg-muted/30 transition-colors"
+                aria-label="See what's new in Chat"
+              >
+                <div className="w-8 h-8 rounded-lg bg-fuchsia-500/15 flex items-center justify-center shrink-0">
+                  <Sparkles className="w-4 h-4 text-fuchsia-500" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <p className="text-sm font-bold text-foreground">What's new in Chat</p>
+                    <p className="text-sm font-semibold text-foreground">Chat</p>
                     <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-fuchsia-500/15 text-fuchsia-500">9 NEW</span>
                   </div>
-                  <p className="text-xs text-muted-foreground truncate">
-                    Auto-delete 1d/7d/30d · ⌘K shortcut · Drag &amp; drop · Smart replies · Polls
-                  </p>
+                  <p className="text-xs text-muted-foreground truncate">Auto-delete · ⌘K · Drag &amp; drop · Smart replies · Polls</p>
                 </div>
                 <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 transition-transform group-hover:translate-x-0.5" />
-              </div>
-            </motion.button>
+              </motion.button>
+            </div>
           </div>
 
           {/* ─── PROMO BANNER CAROUSEL ─── */}
@@ -727,97 +588,6 @@ const AppHome = () => {
               ))}
             </div>
           </div>
-
-          <div className="px-5 pb-4">
-            {ownerStoreLoading ? (
-              <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
-                <div className="h-4 w-36 rounded-full bg-muted animate-pulse" />
-                <div className="mt-3 h-2 rounded-full bg-muted animate-pulse" />
-              </div>
-            ) : ownerStore?.isLodging ? (
-              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="overflow-hidden rounded-2xl border border-primary/20 bg-primary/8 shadow-sm">
-                {/* Tappable preview area → public hotel detail page */}
-                <button
-                  type="button"
-                  onClick={() => navigate(`/hotel/${ownerStore.id}`)}
-                  aria-label={`Open ${ownerStore.name} hotel page`}
-                  className="block w-full text-left active:opacity-90 transition"
-                >
-                  <div className="relative h-24 w-full overflow-hidden bg-muted">
-                    {ownerStore.logo_url ? (
-                      <img
-                        src={ownerStore.logo_url}
-                        alt={`${ownerStore.name} cover`}
-                        className="absolute inset-0 w-full h-full object-cover"
-                        loading="lazy"
-                      />
-                    ) : (
-                      <div className="absolute inset-0 bg-gradient-to-br from-primary/40 via-primary/15 to-transparent" />
-                    )}
-                    <div className="absolute inset-0 bg-gradient-to-t from-card/95 via-card/30 to-transparent" />
-                    <div className="absolute bottom-2 left-3 right-3 flex items-center gap-2">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-background/85 backdrop-blur text-primary"><Hotel className="h-4 w-4" /></div>
-                      <p className="truncate text-sm font-bold text-foreground drop-shadow-sm">{ownerStore.name}</p>
-                      <Badge variant="secondary" className="ml-auto shrink-0 text-[9px]">Tap to view</Badge>
-                    </div>
-                  </div>
-                </button>
-
-                <div className="p-4 pt-3">
-                  <div className="flex items-center gap-2">
-                    <p className="text-sm font-bold text-foreground">Hotel / Resort Admin</p>
-                    <Badge variant="secondary" className="shrink-0 text-[9px]">Ready</Badge>
-                  </div>
-                  <p className="mt-0.5 text-[11px] text-muted-foreground">
-                    {(lodgingRooms.data?.length ?? 0)} rooms · Setup {lodgingProgress?.percent || 0}%
-                  </p>
-                  <div className="mt-2 flex flex-wrap gap-1.5">
-                    {["Rooms", "Rates", "Guest Requests"].map((label) => <span key={label} className="rounded-full bg-background px-2 py-0.5 text-[10px] font-semibold text-primary ring-1 ring-primary/15">{label}</span>)}
-                  </div>
-                  <div className="mt-3">
-                    <div className="mb-1 flex items-center justify-between text-[10px] font-semibold text-primary"><span>Setup progress</span><span>{lodgingProgress ? `${lodgingProgress.complete}/${lodgingProgress.total} ready` : "Loading"}</span></div>
-                    <Progress value={lodgingProgress?.percent || 0} className="h-1.5 bg-primary/15" />
-                  </div>
-                  {lodgingCompletion && lodgingCompletion.percent < 100 && lodgingCompletion.nextBestAction && (
-                    <button
-                      onClick={(e) => { e.stopPropagation(); navigate(`/admin/stores/${ownerStore.id}?tab=${lodgingCompletion.nextBestAction.tab}`); }}
-                      className="mt-2 flex w-full items-center justify-between rounded-lg border border-primary/25 bg-primary/8 px-3 py-2 text-left transition-colors hover:bg-primary/12 active:scale-[0.99]"
-                    >
-                      <span className="min-w-0">
-                        <span className="block text-[10px] font-semibold uppercase tracking-wide text-primary">Next best action</span>
-                        <span className="block truncate text-xs font-bold text-foreground">{lodgingCompletion.nextBestAction.actionLabel}</span>
-                        <span className="block truncate text-[10px] text-muted-foreground">{lodgingCompletion.nextBestAction.hint}</span>
-                      </span>
-                      <ArrowRight className="ml-2 h-4 w-4 shrink-0 text-primary" />
-                    </button>
-                  )}
-                  <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
-                    <Button size="sm" className="h-9 px-2 text-xs sm:text-sm" onClick={(e) => { e.stopPropagation(); navigate(`/admin/stores/${ownerStore.id}?tab=lodge-overview`); }}>
-                      <span className="truncate">Open Ops</span>
-                      <ArrowRight className="ml-1 h-3.5 w-3.5 shrink-0" />
-                    </Button>
-                    <Button size="sm" variant="outline" className="h-9 px-2 text-xs sm:text-sm" onClick={(e) => { e.stopPropagation(); navigate("/admin/lodging/qa-checklist"); }}>
-                      <span className="truncate">Run QA</span>
-                    </Button>
-                    <Button size="sm" variant="outline" className="h-9 px-2 text-xs sm:text-sm" onClick={(e) => { e.stopPropagation(); navigate("/hotel-admin"); }}>
-                      <span className="truncate">Operations</span>
-                    </Button>
-                    <Button size="sm" variant="outline" className="h-9 px-2 text-xs sm:text-sm" onClick={(e) => { e.stopPropagation(); navigate("/admin/lodging/completion-verification"); }}>
-                      <span className="truncate">QA Report</span>
-                    </Button>
-                  </div>
-                </div>
-              </motion.div>
-            ) : (
-              <button onClick={() => navigate("/business/new")} className="flex w-full items-center justify-between rounded-2xl border border-border bg-card p-4 text-left shadow-sm active:scale-[0.99]">
-                <span className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><Briefcase className="h-5 w-5" /></span><span><span className="block text-sm font-bold text-foreground">Business Page</span><span className="block text-xs text-muted-foreground">Create your business page on Zivo</span></span></span>
-                <ArrowRight className="h-4 w-4 text-muted-foreground" />
-              </button>
-            )}
-          </div>
-
-
-
 
           {/* ─── ALL SERVICES ─── */}
           <div className="pb-5">

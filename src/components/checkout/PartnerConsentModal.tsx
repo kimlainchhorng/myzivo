@@ -142,7 +142,7 @@ export default function PartnerConsentModal({
           <Alert className="border-amber-500/30 bg-amber-500/5">
             <Info className="w-4 h-4 text-amber-500" />
             <AlertDescription className="text-sm">
-              <strong>Partner Booking Notice:</strong> Hizovo is not the merchant of record. 
+              <strong>Partner Booking Notice:</strong> Hizivo is not the merchant of record. 
               Your booking will be processed and fulfilled by {partnerName}. 
               Final pricing and terms are confirmed on the partner checkout.
             </AlertDescription>

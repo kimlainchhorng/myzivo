@@ -70,7 +70,7 @@ const SellerOfTravel = () => {
                   </div>
                   <div className="space-y-1">
                     <p className="text-sm text-muted-foreground">Operating As</p>
-                    <p className="font-semibold">Hizovo Travel / ZIVO</p>
+                    <p className="font-semibold">Hizivo Travel / ZIVO</p>
                   </div>
                 </div>
                 

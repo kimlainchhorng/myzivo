@@ -476,7 +476,10 @@ export default function LodgingPropertyProfileSection({ storeId }: { storeId: st
 
       {/* Sticky save bar */}
       {dirty && (
-        <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-border bg-background/95 backdrop-blur-md px-4 py-2.5">
+        <div
+          className="fixed bottom-0 left-0 right-0 z-30 border-t border-border bg-background/95 backdrop-blur-md px-4 pt-2.5"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.625rem)" }}
+        >
           <div className="max-w-screen-lg mx-auto flex items-center justify-between gap-3">
             <div className="text-[11px] text-muted-foreground min-w-0 truncate">
               {errors.length ? (

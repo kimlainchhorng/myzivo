@@ -112,7 +112,9 @@ const ForwardPickerSheet = lazy(() => import("./ForwardPickerSheet"));
 const ScheduledMessagesSheet = lazy(() => import("./ScheduledMessagesSheet"));
 const PollCreatorSheet = lazy(() => import("./PollCreatorSheet"));
 const ChatPollMessage = lazy(() => import("./ChatPollMessage"));
+const UserSlashCommandsSheet = lazy(() => import("./UserSlashCommandsSheet"));
 import { useMessageActions, type DirectMessage } from "@/hooks/useMessageActions";
+import { useUserSlashCommands } from "@/hooks/useUserSlashCommands";
 
 const INITIAL_VISIBLE_TIMELINE_ITEMS = 25;
 const VISIBLE_TIMELINE_STEP = 30;
@@ -394,6 +396,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   // Slash-command popover state — non-null when input starts with `/`
   const [slashQuery, setSlashQuery] = useState<string | null>(null);
   const [slashIndex, setSlashIndex] = useState(0);
+  const [showSlashManager, setShowSlashManager] = useState(false);
+  const { commands: userSlashCommands } = useUserSlashCommands(user?.id);
   // Sticker auto-suggestions when input ends with a known emoji
   const stickerSuggestions = useMemo(() => suggestStickersFor(input), [input]);
   const [visibleTimelineCount, setVisibleTimelineCount] = useState(INITIAL_VISIBLE_TIMELINE_ITEMS);
@@ -1579,17 +1583,42 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   // Slash-command catalog — wires existing sheet/handlers to a quick keyboard menu.
   // Disabled in self-chat where most of these don't apply.
   const slashCommands = useMemo(() => {
-    if (isSelfChat) return [] as Array<{ id: string; label: string; hint: string; run: () => void }>;
-    return [
-      { id: "location", label: "/location", hint: "Share your current location", run: () => handleLocationShare() },
-      { id: "gift", label: "/gift", hint: "Send a coin gift", run: () => setShowGiftPanel(true) },
-      { id: "wallet", label: "/wallet", hint: "Open the wallet sheet", run: () => setShowWalletSheet(true) },
-      { id: "schedule", label: "/schedule", hint: "Schedule a message for later", run: () => setShowScheduler(true) },
-      { id: "scan", label: "/scan", hint: "Scan a document", run: () => setShowScanner(true) },
-      { id: "sticker", label: "/sticker", hint: "Open the sticker keyboard", run: () => setShowStickerKeyboard(true) },
-      { id: "miniapp", label: "/miniapp", hint: "Open mini apps", run: () => setShowMiniApps(true) },
+    type Cmd = { id: string; label: string; hint: string; kind: "builtin" | "user"; run: () => void };
+    if (isSelfChat) return [] as Cmd[];
+    const builtins: Cmd[] = [
+      { id: "location", label: "/location", hint: "Share your current location", kind: "builtin", run: () => handleLocationShare() },
+      { id: "gift", label: "/gift", hint: "Send a coin gift", kind: "builtin", run: () => setShowGiftPanel(true) },
+      { id: "wallet", label: "/wallet", hint: "Open the wallet sheet", kind: "builtin", run: () => setShowWalletSheet(true) },
+      { id: "schedule", label: "/schedule", hint: "Schedule a message for later", kind: "builtin", run: () => setShowScheduler(true) },
+      { id: "scan", label: "/scan", hint: "Scan a document", kind: "builtin", run: () => setShowScanner(true) },
+      { id: "sticker", label: "/sticker", hint: "Open the sticker keyboard", kind: "builtin", run: () => setShowStickerKeyboard(true) },
+      { id: "miniapp", label: "/miniapp", hint: "Open mini apps", kind: "builtin", run: () => setShowMiniApps(true) },
     ];
-  }, [isSelfChat]);
+    const builtinIds = new Set(builtins.map((b) => b.id));
+    const user: Cmd[] = userSlashCommands
+      .filter((c) => !builtinIds.has(c.trigger))
+      .map((c) => ({
+        id: `user-${c.id}`,
+        label: `/${c.trigger}`,
+        hint: c.hint || "Insert template",
+        kind: "user",
+        run: () => {
+          // Insert the body into the composer; user can edit before sending.
+          setInput(c.body);
+          updateDraft(c.body);
+          // Refocus so the cursor lands at the end after the picker closes.
+          requestAnimationFrame(() => {
+            const el = inputRef.current;
+            if (el) {
+              el.focus();
+              const len = c.body.length;
+              try { el.setSelectionRange(len, len); } catch { /* readonly types */ }
+            }
+          });
+        },
+      }));
+    return [...builtins, ...user];
+  }, [isSelfChat, userSlashCommands, updateDraft]);
 
   const slashCandidates = useMemo(() => {
     if (slashQuery == null) return [];
@@ -2512,8 +2541,21 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 <>
                   <div className="fixed inset-0 z-30" onClick={() => setSlashQuery(null)} />
                   <div className="absolute bottom-full left-0 right-0 mb-2 bg-background/95 backdrop-blur-xl border border-border/40 rounded-xl shadow-lg shadow-black/10 overflow-hidden z-40">
-                    <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-muted-foreground border-b border-border/30">
-                      Commands
+                    <div className="flex items-center justify-between px-3 py-1.5 border-b border-border/30">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
+                        Commands
+                      </span>
+                      <button
+                        type="button"
+                        onMouseDown={(e) => {
+                          e.preventDefault();
+                          setSlashQuery(null);
+                          setShowSlashManager(true);
+                        }}
+                        className="text-[10px] font-semibold uppercase tracking-wider text-primary hover:text-primary/80"
+                      >
+                        Manage
+                      </button>
                     </div>
                     {slashCandidates.map((cmd, i) => (
                       <button
@@ -2750,6 +2792,17 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             onOpenNotifSettings={() => { setShowContactInfo(false); setShowNotifSettings(true); }}
             onOpenFiles={() => { setMediaGalleryTab("files"); setShowContactInfo(false); setShowMediaGallery(true); }}
             onOpenLinks={() => { setMediaGalleryTab("links"); setShowContactInfo(false); setShowMediaGallery(true); }}
+          />
+        </Suspense>
+      )}
+
+      {/* User-defined slash commands manager */}
+      {showSlashManager && (
+        <Suspense fallback={null}>
+          <UserSlashCommandsSheet
+            open={showSlashManager}
+            onClose={() => setShowSlashManager(false)}
+            userId={user?.id}
           />
         </Suspense>
       )}

@@ -74,7 +74,7 @@ const Offline = () => {
 
       {/* Disclosure */}
       <p className="text-xs text-muted-foreground mt-8 max-w-sm">
-        Hizovo is not the merchant of record. Travel bookings are fulfilled by licensed third-party providers.
+        Hizivo is not the merchant of record. Travel bookings are fulfilled by licensed third-party providers.
       </p>
     </div>
   );

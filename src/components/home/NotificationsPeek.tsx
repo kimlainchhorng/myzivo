@@ -224,7 +224,7 @@ export default function NotificationsPeek() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.04 }}
               onClick={() => navigate(p.href)}
-              className="shrink-0 w-[220px] flex items-center gap-2.5 rounded-2xl border border-border/40 bg-card p-3 text-left active:scale-[0.99] transition-transform touch-manipulation"
+              className="shrink-0 w-[220px] flex items-center gap-2.5 rounded-lg border border-border bg-card p-3 text-left active:scale-[0.99] transition-transform touch-manipulation"
             >
               <div
                 className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${meta.tone}`}

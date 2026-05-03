@@ -1,8 +1,8 @@
 /**
- * Hizovo SubID Generator
+ * Hizivo SubID Generator
  * 
  * STANDARDIZED TRACKING FORMAT:
- * utm_source=hizovo
+ * utm_source=hizivo
  * utm_medium=affiliate
  * utm_campaign=travel
  * subid={searchSessionId}

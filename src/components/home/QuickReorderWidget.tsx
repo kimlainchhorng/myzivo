@@ -90,7 +90,7 @@ export default function QuickReorderWidget() {
         onClick={() =>
           navigate(`/eats/restaurant/${last.restaurantId}?reorderFrom=${last.id}`)
         }
-        className="w-full rounded-3xl border border-orange-500/20 bg-card overflow-hidden text-left shadow-sm active:scale-[0.99] transition-transform touch-manipulation"
+        className="w-full rounded-xl border border-border bg-card overflow-hidden text-left active:scale-[0.99] transition-transform touch-manipulation"
       >
         <div className="flex">
           <div className="relative w-24 h-24 shrink-0">

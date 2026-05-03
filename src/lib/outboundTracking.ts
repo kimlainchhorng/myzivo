@@ -1,11 +1,11 @@
 /**
- * Hizovo Outbound Click Tracking
+ * Hizivo Outbound Click Tracking
  * 
  * Handles logging affiliate clicks to the database
  * and generating tracked redirect URLs
  * 
  * STANDARDIZED TRACKING PARAMS:
- * utm_source=hizovo
+ * utm_source=hizivo
  * utm_medium=affiliate
  * utm_campaign=travel
  * subid={searchSessionId}
@@ -68,7 +68,7 @@ export async function logOutboundClick(data: OutboundClickData): Promise<{
   const searchSessionId = getSearchSessionId();
   const { subid, components } = generateSubID(data.product, data.pageSource, utmParams, data.partnerId);
   
-  // Build final URL with standardized Hizovo tracking params
+  // Build final URL with standardized Hizivo tracking params
   const urlObj = new URL(data.destinationUrl);
   urlObj.searchParams.set('utm_source', HIZOVO_TRACKING_PARAMS.utm_source);
   urlObj.searchParams.set('utm_medium', HIZOVO_TRACKING_PARAMS.utm_medium);

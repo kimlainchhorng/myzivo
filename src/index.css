@@ -10,39 +10,45 @@
        ZIVO DESIGN SYSTEM - Clean, Premium, Modern
        ============================================= */
 
-    /* Base Colors */
+    /* Base Colors - Instagram (pure white surface, true-black ink) */
     --background: 0 0% 100%;
-    --foreground: 0 0% 10%;
+    --foreground: 0 0% 0%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 10%;
+    --card-foreground: 0 0% 0%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 10%;
+    --popover-foreground: 0 0% 0%;
 
-    /* Primary Brand - Verdant Green */
-    --primary: 142 71% 45%;
+    /* Primary Brand - Instagram Blue (#0095F6) */
+    --primary: 204 100% 48%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary */
-    --secondary: 142 20% 96%;
-    --secondary-foreground: 142 50% 20%;
+    /* Secondary - neutral gray surface */
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 0%;
 
-    /* Muted */
-    --muted: 210 20% 96%;
-    --muted-foreground: 215 16% 47%;
+    /* Muted - IG secondary text (#737373) on neutral gray */
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
 
-    /* Accent */
-    --accent: 142 30% 95%;
-    --accent-foreground: 142 71% 35%;
+    /* Accent - tinted IG blue for hover/selected states */
+    --accent: 204 100% 95%;
+    --accent-foreground: 204 100% 40%;
 
-    /* Destructive */
-    --destructive: 0 72% 50%;
-    --destructive-foreground: 0 85% 97%;
+    /* Destructive - Instagram Red (#ED4956) */
+    --destructive: 355 82% 61%;
+    --destructive-foreground: 0 0% 100%;
 
-    /* Borders & Inputs */
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 142 71% 45%;
+    /* Borders & Inputs - IG hairline (#DBDBDB) */
+    --border: 0 0% 86%;
+    --input: 0 0% 86%;
+    --ring: 204 100% 48%;
     --radius: 0.75rem;
+
+    /* Instagram brand gradient (logo, story rings, accents)
+       #FEDA77 -> #DD2A7B -> #515BD4 */
+    --ig-gradient-from: 38 99% 73%;
+    --ig-gradient-via: 332 73% 52%;
+    --ig-gradient-to: 234 60% 57%;
 
     /* =============================================
        PRODUCT ACCENT COLORS (HSL)
@@ -96,14 +102,14 @@
     /* =============================================
        SIDEBAR
        ============================================= */
-    --sidebar-background: 222 47% 11%;
-    --sidebar-foreground: 0 0% 9%;
-    --sidebar-primary: 142 71% 45%;
+    --sidebar-background: 0 0% 0%;
+    --sidebar-foreground: 0 0% 0%;
+    --sidebar-primary: 204 100% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 142 20% 96%;
-    --sidebar-accent-foreground: 142 50% 20%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 142 71% 45%;
+    --sidebar-accent: 0 0% 96%;
+    --sidebar-accent-foreground: 0 0% 0%;
+    --sidebar-border: 0 0% 86%;
+    --sidebar-ring: 204 100% 48%;
     --sidebar: 0 0% 98%;
 
     /* =============================================
@@ -128,38 +134,38 @@
        ZIVO DARK THEME
        ============================================= */
 
-    /* Base Colors */
-    --background: 0 0% 9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 14%;
-    --card-foreground: 0 0% 98%;
-    --popover: 0 0% 25%;
-    --popover-foreground: 0 0% 98%;
+    /* Base Colors - Instagram dark (true black, hairline-separated) */
+    --background: 0 0% 0%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 0%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 100%;
 
-    /* Primary Brand - Verdant Green */
-    --primary: 142 71% 45%;
+    /* Primary Brand - Instagram Blue (#0095F6) */
+    --primary: 204 100% 48%;
     --primary-foreground: 0 0% 100%;
 
     /* Secondary */
-    --secondary: 0 0% 20%;
-    --secondary-foreground: 0 0% 90%;
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 100%;
 
-    /* Muted */
-    --muted: 0 0% 18%;
-    --muted-foreground: 0 0% 64%;
+    /* Muted - IG dark secondary text (#A8A8A8) */
+    --muted: 0 0% 10%;
+    --muted-foreground: 0 0% 66%;
 
-    /* Accent */
-    --accent: 178 84% 10%;
-    --accent-foreground: 172 66% 50%;
+    /* Accent - dark IG blue tint */
+    --accent: 204 100% 15%;
+    --accent-foreground: 204 100% 70%;
 
-    /* Destructive */
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 85% 97%;
+    /* Destructive - Instagram Red */
+    --destructive: 355 82% 61%;
+    --destructive-foreground: 0 0% 100%;
 
-    /* Borders & Inputs */
-    --border: 0 0% 32%;
-    --input: 0 0% 32%;
-    --ring: 142 71% 45%;
+    /* Borders & Inputs - IG dark hairline (#262626) */
+    --border: 0 0% 15%;
+    --input: 0 0% 15%;
+    --ring: 204 100% 48%;
 
     /* Product Colors */
     --flights: 217 91% 60%;
@@ -189,14 +195,14 @@
     --shadow-xl: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 8px 10px -1px hsl(0 0% 0% / 0.1);
 
     /* Sidebar */
-    --sidebar: 0 0% 14%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 142 71% 45%;
+    --sidebar: 0 0% 0%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 204 100% 48%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 172 66% 50%;
-    --sidebar-accent-foreground: 178 84% 10%;
-    --sidebar-border: 0 0% 32%;
-    --sidebar-ring: 142 71% 45%;
+    --sidebar-accent: 0 0% 10%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 15%;
+    --sidebar-ring: 204 100% 48%;
     --chart-1: 156 71% 66%;
     --chart-2: 141 76% 73%;
     --chart-3: 170 76% 64%;

@@ -817,8 +817,8 @@ const App = () => (
                 <Route path="/alerts" element={<PreserveQueryRedirect to="/notifications" />} />
                 <Route path="/delivery" element={<DeliveryPage />} />
                 <Route path="/grocery" element={<GroceryMarketplace />} />
-                <Route path="/feed" element={<ReelsFeedPage />} />
-                <Route path="/reels" element={<FeedPage />} />
+                <Route path="/feed" element={<FeedPage />} />
+                <Route path="/reels" element={<ReelsFeedPage />} />
                 <Route path="/live" element={<LiveStreamPage />} />
                 <Route path="/go-live" element={<GoLivePage />} />
                 <Route path="/pair/:token" element={<PairPage />} />

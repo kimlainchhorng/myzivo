@@ -20,6 +20,20 @@ export default defineConfig(({ mode }) => ({
     },
   },
   optimizeDeps: {
+    // Pre-bundle these so they share a single React copy and don't trip
+    // "Cannot read properties of null (reading 'useEffect')" when lazy-loaded
+    // routes pull them in separately. Anything that calls a React hook from
+    // its own bundle needs to be listed here.
+    include: [
+      "react",
+      "react-dom",
+      "react-dom/client",
+      "react-router-dom",
+      "@tanstack/react-query",
+      "next-themes",
+      "react-helmet-async",
+      "@radix-ui/react-tooltip",
+    ],
     exclude: ["@ffmpeg/ffmpeg", "@ffmpeg/util", "@ffmpeg/core"],
   },
   build: {

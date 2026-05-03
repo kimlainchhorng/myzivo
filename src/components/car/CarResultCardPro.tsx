@@ -255,7 +255,7 @@ export default function CarResultCardPro({
         {/* Legal disclaimer */}
         <div className="px-4 py-2 bg-muted/40 border-t border-border/30">
           <p className="text-[10px] text-muted-foreground text-center leading-relaxed">
-            Hizovo does not issue tickets. Payment and booking fulfillment are handled by licensed travel partners.
+            Hizivo does not issue tickets. Payment and booking fulfillment are handled by licensed travel partners.
           </p>
         </div>
       </CardContent>

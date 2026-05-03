@@ -483,7 +483,7 @@ export const AFFILIATE_LINKS: Record<string, AffiliateLink> = {
 } as const;
 
 // ============================================
-// DEEP LINK BUILDERS (with standardized Hizovo tracking)
+// DEEP LINK BUILDERS (with standardized Hizivo tracking)
 // ============================================
 
 import { 
@@ -494,7 +494,7 @@ import {
 
 /**
  * Build standardized tracking query string
- * utm_source=hizovo&utm_medium=affiliate&utm_campaign=travel&subid={searchSessionId}
+ * utm_source=hizivo&utm_medium=affiliate&utm_campaign=travel&subid={searchSessionId}
  */
 function getStandardTrackingParams(): string {
   const sessionId = getSearchSessionId();
@@ -606,12 +606,12 @@ export function selectBestPartner(
 
 export const AFFILIATE_DISCLOSURE_TEXT = {
   short: "You will be redirected to our trusted travel partner to complete your booking.",
-  full: "Hizovo may earn a commission when you book through our partner links at no extra cost to you.",
-  detailed: "Hizovo acts as a search and comparison platform. When you click a booking link, you will be redirected to our trusted travel partner to complete your booking. Hizovo may earn a commission at no additional cost to you.",
+  full: "Hizivo may earn a commission when you book through our partner links at no extra cost to you.",
+  detailed: "Hizivo acts as a search and comparison platform. When you click a booking link, you will be redirected to our trusted travel partner to complete your booking. Hizivo may earn a commission at no additional cost to you.",
   payment: "All bookings, payments, refunds, and changes are handled directly by our travel partners.",
   price: "Prices shown are indicative and may change. Final price will be confirmed on partner site.",
-  legal: "Hizovo is not responsible for the content, accuracy, or practices of partner websites.",
-  hizovo: "Hizovo is not the merchant of record. Travel bookings are fulfilled by licensed third-party providers.",
+  legal: "Hizivo is not responsible for the content, accuracy, or practices of partner websites.",
+  hizovo: "Hizivo is not the merchant of record. Travel bookings are fulfilled by licensed third-party providers.",
 };
 
 // ============================================

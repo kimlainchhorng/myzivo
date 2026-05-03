@@ -15,6 +15,7 @@ const Toaster = ({ ...props }: ToasterProps) => {
       visibleToasts={3}
       gap={8}
       offset="max(env(safe-area-inset-top), 12px)"
+      mobileOffset="calc(max(env(safe-area-inset-top), 44px) + 8px)"
       style={{ zIndex: 99999 }}
       toastOptions={{
         classNames: {

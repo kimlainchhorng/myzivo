@@ -1146,7 +1146,8 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
               className="fixed inset-0 z-[200] bg-black/40" onClick={() => setActionTarget(null)} />
             <motion.div initial={{ y: 40, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 40, opacity: 0 }}
               transition={{ type: "spring", damping: 26, stiffness: 400 }}
-              className="fixed bottom-0 left-0 right-0 z-[201] bg-background rounded-t-2xl px-4 pb-8 pt-3 shadow-2xl border-t border-border/20 max-w-lg mx-auto"
+              className="fixed bottom-0 left-0 right-0 z-[201] bg-background rounded-t-2xl px-4 pt-3 shadow-2xl border-t border-border/20 max-w-lg mx-auto"
+              style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 1.5rem)" }}
             >
               <div className="w-10 h-1 bg-muted rounded-full mx-auto mb-4" />
               <p className="text-xs text-muted-foreground truncate mb-3 px-1">{actionTarget.message || "📷 Media"}</p>

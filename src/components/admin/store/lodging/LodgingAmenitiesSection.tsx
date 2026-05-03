@@ -429,7 +429,10 @@ export default function LodgingAmenitiesSection({ storeId }: { storeId: string }
 
       {/* Sticky save bar */}
       <div className="fixed bottom-0 left-0 right-0 z-30 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/70">
-        <div className="max-w-5xl mx-auto px-4 py-2.5 flex items-center justify-between gap-3">
+        <div
+          className="max-w-5xl mx-auto px-4 pt-2.5 flex items-center justify-between gap-3"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 0.625rem)" }}
+        >
           <span className="text-[11px] text-muted-foreground">
             {dirty ? (
               <span className="text-amber-600 dark:text-amber-400">Unsaved changes</span>

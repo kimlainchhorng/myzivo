@@ -23,7 +23,7 @@ export default function NetworkPromoStrip() {
       <motion.button
         whileTap={{ scale: 0.98 }}
         onClick={() => navigate("/network")}
-        className="w-full flex items-center gap-3 rounded-2xl border border-primary/30 bg-gradient-to-r from-primary/10 to-transparent p-3 text-left active:scale-[0.99] transition-transform touch-manipulation"
+        className="w-full flex items-center gap-3 rounded-xl border border-border bg-card p-3 text-left active:scale-[0.99] transition-transform touch-manipulation"
       >
         <div className="relative w-11 h-11 rounded-xl bg-primary/15 flex items-center justify-center">
           <BadgeCheck className="w-5 h-5 text-primary" />

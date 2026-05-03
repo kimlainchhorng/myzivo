@@ -1,9 +1,9 @@
 /**
- * Hizovo Standardized Tracking Parameters
+ * Hizivo Standardized Tracking Parameters
  * 
  * CRITICAL: Use this format everywhere for Duffel / CJ / Travelpayouts:
  * 
- * utm_source=hizovo
+ * utm_source=hizivo
  * utm_medium=affiliate
  * utm_campaign=travel
  * subid={searchSessionId}
@@ -16,7 +16,7 @@
 // ============================================
 
 export const HIZOVO_TRACKING_PARAMS = {
-  utm_source: 'hizovo',
+  utm_source: 'hizivo',
   utm_medium: 'affiliate',
   utm_campaign: 'travel',
 } as const;
@@ -72,10 +72,10 @@ export interface TrackingUrlParams {
 }
 
 /**
- * Build a tracked affiliate URL with standardized Hizovo parameters
+ * Build a tracked affiliate URL with standardized Hizivo parameters
  * 
  * Example output:
- * https://partner-checkout.com/book?utm_source=hizovo&utm_medium=affiliate&utm_campaign=travel&subid=SS_839201
+ * https://partner-checkout.com/book?utm_source=hizivo&utm_medium=affiliate&utm_campaign=travel&subid=SS_839201
  */
 export function buildTrackedUrl({ 
   baseUrl, 
@@ -85,7 +85,7 @@ export function buildTrackedUrl({
   try {
     const url = new URL(baseUrl);
     
-    // Add standardized Hizovo tracking params
+    // Add standardized Hizivo tracking params
     url.searchParams.set('utm_source', HIZOVO_TRACKING_PARAMS.utm_source);
     url.searchParams.set('utm_medium', HIZOVO_TRACKING_PARAMS.utm_medium);
     url.searchParams.set('utm_campaign', HIZOVO_TRACKING_PARAMS.utm_campaign);

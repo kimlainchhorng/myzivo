@@ -5,7 +5,7 @@
  */
 /* eslint-disable @typescript-eslint/no-explicit-any */
 /* eslint-disable no-empty */
-import { useState, useEffect, useMemo, useRef, lazy, Suspense } from "react";
+import { useState, useEffect, useMemo, useRef, lazy, Suspense, useDeferredValue } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import MessageCircleIcon from "lucide-react/dist/esm/icons/message-circle";
 import StoreIcon from "lucide-react/dist/esm/icons/store";
@@ -88,7 +88,15 @@ const getIllustratedPacks = () => {
 };
 
 type ChatCategory = "personal" | "shop" | "support" | "ride";
-type BuiltInChatFolder = "all" | "unread" | "personal" | "groups" | "shop" | "support" | "ride";
+type BuiltInChatFolder = "all" | "unread" | "mentions" | "personal" | "groups" | "shop" | "support" | "ride";
+
+// Telegram-style @mention detection — match `@handle` (≥2 chars, alphanumeric/underscore)
+// preceded by start-of-string or whitespace so we don't catch email addresses.
+const MENTION_RE = /(?:^|\s)@[a-zA-Z0-9_]{2,}/;
+function lastMessageHasMention(text: string | undefined | null): boolean {
+  if (!text) return false;
+  return MENTION_RE.test(text);
+}
 
 interface CategoryTab {
   id: ChatCategory;
@@ -121,6 +129,7 @@ const categories: CategoryTab[] = [
 const builtInFolders: FolderTab[] = [
   { id: "all", label: "All", category: "personal" },
   { id: "unread", label: "Unread", category: "personal" },
+  { id: "mentions", label: "@ Mentions", category: "personal" },
   { id: "personal", label: "Personal", category: "personal" },
   { id: "groups", label: "Groups", category: "personal" },
   { id: "shop", label: "Shop", category: "shop" },
@@ -143,18 +152,58 @@ function formatChatTime(dateStr: string) {
   return format(d, "MMM d");
 }
 
-const STICKER_LOOKUP = getIllustratedPacks()
-  .flatMap((p) => p.stickers)
-  .reduce<Record<string, { src: string; alt: string }>>((acc, s) => {
-    acc[s.id.toLowerCase()] = { src: s.src, alt: s.alt };
-    return acc;
-  }, {});
+// Sticker lookup is rebuilt lazily once the dynamic import of illustratedStickers
+// resolves. Previously this ran once at module load and locked in an empty map
+// because getIllustratedPacks() returns [] until the import promise resolves —
+// so sticker previews never showed their image. We invalidate when the pack
+// count changes (cheap O(1) check).
+let _stickerLookup: Record<string, { src: string; alt: string }> = {};
+let _stickerLookupSize = -1;
+function getStickerLookup() {
+  const packs = getIllustratedPacks();
+  if (packs.length !== _stickerLookupSize) {
+    _stickerLookup = packs.flatMap((p) => p.stickers).reduce<Record<string, { src: string; alt: string }>>(
+      (acc, s) => {
+        acc[s.id.toLowerCase()] = { src: s.src, alt: s.alt };
+        return acc;
+      },
+      {}
+    );
+    _stickerLookupSize = packs.length;
+  }
+  return _stickerLookup;
+}
+
+// Bounded cache for hot per-row parsing helpers. Chat lists call these once per
+// row per render, and the inputs (message strings) repeat heavily — so a small
+// LRU-ish Map gives a real win without unbounded memory growth.
+function makeBoundedCache<K, V>(capacity: number) {
+  const map = new Map<K, V>();
+  return {
+    get(key: K, compute: () => V): V {
+      const hit = map.get(key);
+      if (hit !== undefined) return hit;
+      const value = compute();
+      if (map.size >= capacity) {
+        // Drop oldest insertion (Map iteration order is insertion order).
+        const oldest = map.keys().next().value;
+        if (oldest !== undefined) map.delete(oldest);
+      }
+      map.set(key, value);
+      return value;
+    },
+  };
+}
+
+const _previewCache = makeBoundedCache<string, string>(500);
+const _iconCache = makeBoundedCache<string, JSX.Element | null>(500);
+const _typeCache = makeBoundedCache<string, { hasMedia: boolean; hasLink: boolean; hasFile: boolean }>(500);
 
 function parseStickerPreview(message: string): { src: string; alt: string } | null {
   const m = message.trim().match(/^\[sticker:([^\]:]+)(?::(.+))?\]$/i);
   if (!m) return null;
   const id = m[1].trim().toLowerCase();
-  const entry = STICKER_LOOKUP[id];
+  const entry = getStickerLookup()[id];
   if (entry) return entry;
   const explicitSrc = m[2]?.trim();
   if (explicitSrc) return { src: explicitSrc, alt: id };
@@ -169,55 +218,61 @@ function redactSpoilers(text: string): string {
 }
 
 function parseRichMessagePreview(message: string): string {
-  const trimmed = message.trim();
-  if (!trimmed) return "";
-  if (/^\[sticker:([^\]:]+)(?::(.+))?\]$/i.test(trimmed)) return "Sticker";
+  return _previewCache.get(message, () => {
+    const trimmed = message.trim();
+    if (!trimmed) return "";
+    if (/^\[sticker:([^\]:]+)(?::(.+))?\]$/i.test(trimmed)) return "Sticker";
 
-  try {
-    let parsed = JSON.parse(message);
-    if (typeof parsed === "string") parsed = JSON.parse(parsed);
-    if (parsed && parsed.__rich && parsed.payload) {
-      const { type, label } = parsed.payload;
-      switch (type) {
-        case "location": return "📍 Store Location";
-        case "qr": return "💳 Payment QR";
-        case "tracking": return "📦 Delivery Update";
-        case "product": return "🛒 Product";
-        case "order": return "📋 Order Details";
-        case "poll": return `📊 Poll: ${parsed.payload.question || ""}`;
-        default: return label || `📎 ${type || "Attachment"}`;
+    try {
+      let parsed = JSON.parse(message);
+      if (typeof parsed === "string") parsed = JSON.parse(parsed);
+      if (parsed && parsed.__rich && parsed.payload) {
+        const { type, label } = parsed.payload;
+        switch (type) {
+          case "location": return "📍 Store Location";
+          case "qr": return "💳 Payment QR";
+          case "tracking": return "📦 Delivery Update";
+          case "product": return "🛒 Product";
+          case "order": return "📋 Order Details";
+          case "poll": return `📊 Poll: ${parsed.payload.question || ""}`;
+          default: return label || `📎 ${type || "Attachment"}`;
+        }
       }
-    }
-  } catch {}
+    } catch { /* not JSON — fall through */ }
 
-  return redactSpoilers(message);
+    return redactSpoilers(message);
+  });
 }
 
 function getMessagePreviewIcon(message: string) {
-  if (message === "📷 Image" || message.includes("[image]")) return <ImageIcon className="w-3.5 h-3.5 text-muted-foreground inline mr-1 shrink-0" />;
-  if (message.includes("[voice]") || message.startsWith("🎤")) return <Mic className="w-3.5 h-3.5 text-muted-foreground inline mr-1 shrink-0" />;
-  if (message.includes("[location]") || message.startsWith("📍")) return <MapPin className="w-3.5 h-3.5 text-muted-foreground inline mr-1 shrink-0" />;
-  if (message.includes("[video]") || message.startsWith("🎥")) return <Video className="w-3.5 h-3.5 text-muted-foreground inline mr-1 shrink-0" />;
-  if (message.startsWith("📎")) return null;
-  return null;
+  return _iconCache.get(message, () => {
+    if (message === "📷 Image" || message.includes("[image]")) return <ImageIcon className="w-3.5 h-3.5 text-muted-foreground inline mr-1 shrink-0" />;
+    if (message.includes("[voice]") || message.startsWith("🎤")) return <Mic className="w-3.5 h-3.5 text-muted-foreground inline mr-1 shrink-0" />;
+    if (message.includes("[location]") || message.startsWith("📍")) return <MapPin className="w-3.5 h-3.5 text-muted-foreground inline mr-1 shrink-0" />;
+    if (message.includes("[video]") || message.startsWith("🎥")) return <Video className="w-3.5 h-3.5 text-muted-foreground inline mr-1 shrink-0" />;
+    if (message.startsWith("📎")) return null;
+    return null;
+  });
 }
 
 function detectPreviewType(message: string): { hasMedia: boolean; hasLink: boolean; hasFile: boolean } {
-  const lower = String(message || "").toLowerCase();
-  const hasLink = /https?:\/\//i.test(lower);
-  const hasMedia =
-    lower.includes("[image]") ||
-    lower.includes("📷") ||
-    lower.includes("[video]") ||
-    lower.includes("🎥") ||
-    lower.includes("sticker") ||
-    /\.(png|jpe?g|webp|gif|avif|mp4|webm|mov)(\?|#|$)/i.test(lower);
-  const hasFile =
-    lower.includes("[file]") ||
-    lower.includes("attachment") ||
-    lower.includes("document") ||
-    /\.(pdf|docx?|xlsx?|pptx?|zip|rar|txt)(\?|#|$)/i.test(lower);
-  return { hasMedia, hasLink, hasFile };
+  return _typeCache.get(message, () => {
+    const lower = String(message || "").toLowerCase();
+    const hasLink = /https?:\/\//i.test(lower);
+    const hasMedia =
+      lower.includes("[image]") ||
+      lower.includes("📷") ||
+      lower.includes("[video]") ||
+      lower.includes("🎥") ||
+      lower.includes("sticker") ||
+      /\.(png|jpe?g|webp|gif|avif|mp4|webm|mov)(\?|#|$)/i.test(lower);
+    const hasFile =
+      lower.includes("[file]") ||
+      lower.includes("attachment") ||
+      lower.includes("document") ||
+      /\.(pdf|docx?|xlsx?|pptx?|zip|rar|txt)(\?|#|$)/i.test(lower);
+    return { hasMedia, hasLink, hasFile };
+  });
 }
 
 const personalHubMenu = [
@@ -921,6 +976,11 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
       return members?.has(c.id) === true;
     }
     if (folder === "unread") return (c.unread || 0) > 0 || isMarkedUnread(c.id);
+    if (folder === "mentions") {
+      // Only flag chats where the most-recent message was *received* and contains
+      // an @handle. Self-sent messages don't count as a mention of *you*.
+      return !(c as any).isSentByMe && lastMessageHasMention((c as any).lastMessage);
+    }
     if (folder === "personal") return !(c as any).isGroup;
     if (folder === "groups") return !!(c as any).isGroup;
     return true;
@@ -931,9 +991,15 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   const visibleList = folderFiltered.filter((c: any) => !isArchived(c.id));
 
   // Per-folder unread badges (for the pill bar)
+  const mentionsUnread = (rawChatList as any[]).reduce(
+    (s: number, c: any) =>
+      s + (!c.isSentByMe && lastMessageHasMention(c.lastMessage) ? (c.unread || 0) : 0),
+    0
+  );
   const builtInFolderUnreadMap: Record<BuiltInChatFolder, number> = {
     all: personalUnread,
     unread: personalUnread,
+    mentions: mentionsUnread,
     personal: personalChats.filter((c: any) => !c.isGroup).reduce((s: number, c: any) => s + (c.unread || 0), 0),
     groups: groupChats.reduce((s: number, c: any) => s + (c.unread || 0), 0),
     shop: shopUnread,
@@ -974,7 +1040,11 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   const sortedVisible = sortByPin(visibleList);
   const archivedUnread = archivedList.reduce((s: number, c: any) => s + (c.unread || 0), 0);
 
-  const normalizedSearch = search.trim().toLowerCase();
+  // Defer the local list filter so typing in the search box stays responsive —
+  // the input updates synchronously, but the (possibly heavy) filter pass runs
+  // at a lower priority and can be interrupted.
+  const deferredSearch = useDeferredValue(search);
+  const normalizedSearch = deferredSearch.trim().toLowerCase();
   const filtered = normalizedSearch
     ? sortedVisible.filter((c: any) => {
         const preview = parseRichMessagePreview(c.lastMessage || "");
@@ -2475,7 +2545,10 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
         {openPersonalChat && (
           <Suspense fallback={
             <div className="fixed inset-0 z-[1300] bg-background flex flex-col" style={{ transform: "translateX(0)" }}>
-              <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-2xl border-b border-border/10 px-2 py-2.5 flex items-center gap-3">
+              <div
+                className="sticky top-0 z-10 bg-background/80 backdrop-blur-2xl border-b border-border/10 px-2 py-2.5 flex items-center gap-3"
+                style={{ paddingTop: "calc(var(--zivo-safe-top-sticky, env(safe-area-inset-top, 0px)) + 0.625rem)" }}
+              >
                 <button onClick={() => setOpenPersonalChat(null)} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-muted/50 active:scale-90 transition-transform">
                   <ArrowLeft className="h-5 w-5 text-foreground" />
                 </button>
@@ -2514,7 +2587,10 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
         {openGroupChat && (
           <Suspense fallback={
             <div className="fixed inset-0 z-50 bg-background flex flex-col">
-              <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-xl border-b border-border/30 px-2 py-2.5 flex items-center gap-3">
+              <div
+                className="sticky top-0 z-10 bg-background/95 backdrop-blur-xl border-b border-border/30 px-2 py-2.5 flex items-center gap-3"
+                style={{ paddingTop: "calc(var(--zivo-safe-top-sticky, env(safe-area-inset-top, 0px)) + 0.625rem)" }}
+              >
                 <button onClick={() => setOpenGroupChat(null)} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-muted/50 active:scale-90 transition-transform">
                   <ArrowLeft className="h-5 w-5 text-foreground" />
                 </button>

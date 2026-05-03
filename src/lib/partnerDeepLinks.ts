@@ -5,7 +5,7 @@
  * for Hotels and Car Rental partners
  * 
  * STANDARDIZED TRACKING:
- * - utm_source=hizovo
+ * - utm_source=hizivo
  * - utm_medium=affiliate
  * - utm_campaign=travel
  * - subid={searchSessionId}
@@ -235,7 +235,7 @@ export function getAllCarPartnerUrls(params: CarDeepLinkParams): Array<{
 // ============================================
 
 /**
- * Append Hizovo tracking params to any URL
+ * Append Hizivo tracking params to any URL
  */
 export function appendTrackingParams(baseUrl: string): string {
   const sessionId = getSearchSessionId();

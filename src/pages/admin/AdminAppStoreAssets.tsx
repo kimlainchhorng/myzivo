@@ -17,10 +17,10 @@ const APP_META = {
   category: "Travel",
   secondaryCategory: "Shopping",
   contentRating: "4+",
-  website: "https://hizovo.com",
-  supportEmail: "support@hizovo.com",
-  privacyUrl: "https://hizovo.com/privacy",
-  termsUrl: "https://hizovo.com/terms",
+  website: "https://hizivo.com",
+  supportEmail: "support@hizivo.com",
+  privacyUrl: "https://hizivo.com/privacy",
+  termsUrl: "https://hizivo.com/terms",
 };
 
 const IOS_DESCRIPTION = `ZIVO is your all-in-one travel and local commerce app. Search flights, discover nearby shops on an interactive map, order food delivery, and explore real local experiences — all in one place.

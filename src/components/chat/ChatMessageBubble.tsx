@@ -1368,7 +1368,7 @@ function LinkPreviewCard({ url, isMe, hasText, messageText }: { url: string; isM
   const isInternalLink = (() => {
     try {
       const u = new URL(url);
-      return u.hostname.includes("lovable") || u.hostname.includes("hizovo") || u.hostname === window.location.hostname;
+      return u.hostname.includes("lovable") || u.hostname.includes("hizivo") || u.hostname === window.location.hostname;
     } catch { return false; }
   })();
 

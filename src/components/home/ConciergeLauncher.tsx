@@ -26,47 +26,44 @@ export default function ConciergeLauncher() {
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-slate-900 via-indigo-950 to-violet-950 ring-1 ring-white/10 shadow-lg"
+        className="rounded-xl border border-border bg-card overflow-hidden"
       >
-        <div className="absolute -top-12 -right-12 w-44 h-44 rounded-full bg-fuchsia-500/20 blur-3xl pointer-events-none" />
-        <div className="absolute -bottom-16 -left-12 w-44 h-44 rounded-full bg-sky-500/20 blur-3xl pointer-events-none" />
-
         <button
           onClick={() => open()}
-          className="relative w-full text-left p-4 active:scale-[0.99] transition-transform touch-manipulation"
+          className="w-full text-left p-4 active:bg-secondary/50 transition-colors touch-manipulation"
         >
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 rounded-full bg-white/10 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white">
-              <Sparkles className="w-3 h-3" /> ZIVO Concierge
+            <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white bg-gradient-to-r from-ig-gradient-from via-ig-gradient-via to-ig-gradient-to">
+              <Sparkles className="w-3 h-3" strokeWidth={2} /> ZIVO Concierge
             </span>
-            <span className="text-[10px] font-semibold uppercase tracking-wider text-white/60">
+            <span className="rounded-full border border-border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
               Beta
             </span>
           </div>
-          <div className="mt-2 text-[17px] font-extrabold text-white leading-tight">
+          <div className="mt-3 text-[17px] font-semibold text-foreground leading-tight">
             Plan your day in one sentence.
           </div>
-          <div className="mt-1 text-[12px] text-white/80">
+          <div className="mt-1 text-[13px] text-muted-foreground">
             Tell us what you want — we'll line up the reservation, ride, and stay.
           </div>
         </button>
 
-        <div className="relative px-4 pb-4 flex flex-wrap gap-2">
+        <div className="px-4 pb-4 flex flex-wrap items-center gap-2">
           {SUGGESTIONS.map((s) => (
             <motion.button
               key={s}
-              whileTap={{ scale: 0.95 }}
+              whileTap={{ scale: 0.96 }}
               onClick={() => open(s)}
-              className="rounded-full bg-white/10 hover:bg-white/15 backdrop-blur px-3 py-1.5 text-[11px] font-bold text-white transition-colors"
+              className="rounded-full bg-secondary hover:bg-accent px-3 py-1.5 text-[12px] font-medium text-foreground transition-colors"
             >
               {s}
             </motion.button>
           ))}
           <button
             onClick={() => open()}
-            className="ml-auto inline-flex items-center gap-1 rounded-full bg-white text-indigo-700 px-3 py-1.5 text-[11px] font-bold shadow-md"
+            className="ml-auto inline-flex items-center gap-1 rounded-full bg-primary text-primary-foreground px-3.5 py-1.5 text-[12px] font-semibold hover:bg-primary/90 transition-colors"
           >
-            Start <ArrowRight className="w-3 h-3" />
+            Start <ArrowRight className="w-3.5 h-3.5" strokeWidth={2.25} />
           </button>
         </div>
       </motion.div>

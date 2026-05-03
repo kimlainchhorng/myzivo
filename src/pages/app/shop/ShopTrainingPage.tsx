@@ -109,8 +109,11 @@ export default function ShopTrainingPage() {
 
   return (
     <AppLayout title="Training" hideHeader>
-      <div className="flex flex-col pb-28">
-        <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-border/30 px-4 py-3 flex items-center gap-3">
+      <div className="flex flex-col pb-[calc(56px+env(safe-area-inset-bottom,0px)+24px)]">
+        <div
+          className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-border/30 px-4 py-3 flex items-center gap-3"
+          style={{ paddingTop: "calc(var(--zivo-safe-top-sticky, env(safe-area-inset-top, 0px)) + 0.75rem)" }}
+        >
           <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-full bg-muted/60 flex items-center justify-center">
             <ArrowLeft className="w-4 h-4" />
           </button>

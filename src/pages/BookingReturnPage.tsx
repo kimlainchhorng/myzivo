@@ -150,7 +150,7 @@ export default function BookingReturnPage() {
   return (
     <>
       <SEOHead
-        title={`${getPageTitle()} - Hizovo`}
+        title={`${getPageTitle()} - Hizivo`}
         description="Your flight booking redirect status with our airline partner."
         noIndex
       />
@@ -464,7 +464,7 @@ export default function BookingReturnPage() {
               </Badge>
               <Badge variant="outline" className="gap-1.5 text-xs py-1.5 px-3">
                 <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
-                No hidden fees from Hizovo
+                No hidden fees from Hizivo
               </Badge>
             </div>
           </div>

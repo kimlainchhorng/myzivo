@@ -61,11 +61,11 @@ const faqSections = [
     faqs: [
       {
         question: "How do ZIVO Rides, Eats, and Delivery work?",
-        answer: "ZIVO Rides lets you request a ride anywhere, anytime with upfront pricing. ZIVO Eats lets you order food delivery from local restaurants. Both are available directly on hizovo.com."
+        answer: "ZIVO Rides lets you request a ride anywhere, anytime with upfront pricing. ZIVO Eats lets you order food delivery from local restaurants. Both are available directly on hizivo.com."
       },
       {
         question: "Can I book rides or food directly on ZIVO??",
-        answer: "Yes! You can book rides at hizovo.com/rides and order food at hizovo.com/eats. Payments for rides and deliveries are handled by our driver partners."
+        answer: "Yes! You can book rides at hizivo.com/rides and order food at hizivo.com/eats. Payments for rides and deliveries are handled by our driver partners."
       }
     ]
   },

@@ -136,7 +136,7 @@ export default function SiteIssuesSupport() {
     <div className="min-h-screen bg-background">
       <SEOHead 
         title="Site Issues & Troubleshooting – ZIVO"
-        description="Having trouble with the Hizovo website? Follow our troubleshooting guide to resolve common issues."
+        description="Having trouble with the Hizivo website? Follow our troubleshooting guide to resolve common issues."
         canonical="https://hizivo.com/support/site-issues"
       />
       <Header />
@@ -153,7 +153,7 @@ export default function SiteIssuesSupport() {
               Site Issues & Troubleshooting
             </h1>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Having trouble with the Hizovo website? Try these steps to resolve common issues.
+              Having trouble with the Hizivo website? Try these steps to resolve common issues.
             </p>
           </div>
 

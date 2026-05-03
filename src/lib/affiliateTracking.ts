@@ -72,7 +72,7 @@ export const trackAffiliateClick = (data: Omit<AffiliateClick, "id" | "timestamp
     device_type: device,
     user_agent: navigator.userAgent,
     user_id: data.userId || null,
-    utm_source: "hizovo",
+    utm_source: "hizivo",
     utm_medium: "affiliate",
     utm_campaign: "travel",
   }).then(({ error }) => {
@@ -135,7 +135,7 @@ export const buildAffiliateUrl = (params: {
 }): string => {
   const { origin, destination, departDate, returnDate, passengers, cabinClass, partner = "skyscanner" } = params;
   const searchSessionId = getSessionId();
-  const trackingParams = `utm_source=hizovo&utm_medium=affiliate&utm_campaign=travel&subid=${searchSessionId}`;
+  const trackingParams = `utm_source=hizivo&utm_medium=affiliate&utm_campaign=travel&subid=${searchSessionId}`;
 
   switch (partner) {
     case "skyscanner": {

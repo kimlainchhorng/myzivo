@@ -168,7 +168,10 @@ export default function TrendingPage() {
 
       <div className="min-h-screen bg-background pb-24">
         {/* Header */}
-        <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/20">
+        <div
+          className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/20"
+          style={{ paddingTop: "var(--zivo-safe-top-sticky, env(safe-area-inset-top, 0px))" }}
+        >
           <div className="flex items-center gap-3 px-4 py-3 max-w-2xl mx-auto">
             <button onClick={() => navigate(-1)} className="p-1.5 rounded-full hover:bg-muted/60 transition-colors">
               <ChevronLeft className="h-5 w-5 text-foreground" />

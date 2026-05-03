@@ -42,7 +42,7 @@ const hizovoResponsibilities = [
   "Website navigation and search functionality",
   "Account issues (login, password reset)",
   "Technical problems with our site",
-  "Questions about how Hizovo works",
+  "Questions about how Hizivo works",
   "Reporting display errors or bugs",
 ];
 
@@ -94,7 +94,7 @@ export default function TravelBookingsSupport() {
           <Alert className="mb-8 border-amber-500/30 bg-amber-500/5">
             <AlertCircle className="w-5 h-5 text-amber-500" />
             <AlertDescription className="text-base">
-              <strong>Important:</strong> Hizovo is a travel search platform. All bookings are processed 
+              <strong>Important:</strong> Hizivo is a travel search platform. All bookings are processed 
               and fulfilled by our licensed travel partners. For booking changes, cancellations, or 
               refunds, you must contact the travel partner directly.
             </AlertDescription>
@@ -152,12 +152,12 @@ export default function TravelBookingsSupport() {
               </CardContent>
             </Card>
 
-            {/* Hizovo Handles */}
+            {/* Hizivo Handles */}
             <Card className="border-primary/30 hover:shadow-md transition-all duration-200">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-primary">
                   <Shield className="w-5 h-5" />
-                  Hizovo Handles
+                  Hizivo Handles
                 </CardTitle>
                 <CardDescription>Contact us for:</CardDescription>
               </CardHeader>
@@ -174,7 +174,7 @@ export default function TravelBookingsSupport() {
                   <Button asChild variant="outline" size="sm" className="w-full">
                     <Link to="/contact" className="gap-2">
                       <Mail className="w-4 h-4" />
-                      Contact Hizovo Support
+                      Contact Hizivo Support
                     </Link>
                   </Button>
                 </div>
@@ -226,7 +226,7 @@ export default function TravelBookingsSupport() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-destructive">
                 <XCircle className="w-5 h-5" />
-                What Hizovo Cannot Help With
+                What Hizivo Cannot Help With
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -258,7 +258,7 @@ export default function TravelBookingsSupport() {
           <div className="text-center p-8 rounded-2xl bg-primary/5 border border-primary/20 hover:border-primary/40 hover:shadow-md transition-all duration-200">
             <h2 className="text-xl font-bold mb-2">Having trouble with our website?</h2>
             <p className="text-muted-foreground mb-6">
-              If you're experiencing issues with the Hizovo website itself, we're here to help.
+              If you're experiencing issues with the Hizivo website itself, we're here to help.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild variant="outline">

@@ -300,7 +300,7 @@ const TravelConfirmationPage = () => {
             <Mail className="w-4 h-4" />
             {CHECKOUT_CONFIRMATION.buttons.view}
           </Button>
-          <Button variant="outline" onClick={() => window.location.href = 'mailto:support@hizovo.com'} className="gap-2">
+          <Button variant="outline" onClick={() => window.location.href = 'mailto:support@hizivo.com'} className="gap-2">
             <Headphones className="w-4 h-4" />
             {CHECKOUT_CONFIRMATION.buttons.support}
           </Button>

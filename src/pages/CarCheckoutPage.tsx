@@ -48,7 +48,10 @@ export default function CarCheckoutPage() {
       />
       
       {/* Locked Header */}
-      <header className="fixed top-0 left-0 right-0 z-50 bg-card border-b border-border/60">
+      <header
+        className="fixed top-0 left-0 right-0 z-50 bg-card border-b border-border/60"
+        style={{ paddingTop: "env(safe-area-inset-top, 0px)" }}
+      >
         <div className="container mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <Link to="/" className="font-bold text-xl text-primary">ZIVO</Link>
@@ -62,7 +65,7 @@ export default function CarCheckoutPage() {
         </div>
       </header>
 
-      <main className="pt-24 pb-16">
+      <main className="pt-[calc(env(safe-area-inset-top,0px)+5rem)] pb-[calc(env(safe-area-inset-bottom,0px)+4rem)]">
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}

@@ -60,15 +60,24 @@ export default function AddContactSheet({
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="rounded-t-3xl max-h-[85vh]">
-        <SheetHeader className="text-left">
+      {/* dvh (dynamic viewport height) shrinks when the iOS keyboard appears, so
+          the sheet doesn't get hidden behind the keyboard accessory bar.
+          flex-col + a scrollable body let the content reflow when space is tight. */}
+      <SheetContent
+        side="bottom"
+        className="rounded-t-3xl max-h-[85dvh] flex flex-col p-0"
+      >
+        <SheetHeader className="text-left shrink-0 px-6 pt-6">
           <SheetTitle className="flex items-center gap-2">
             <UserPlus className="w-5 h-5 text-primary" /> Add a contact
           </SheetTitle>
           <SheetDescription>Find people by their @username — no phone needed.</SheetDescription>
         </SheetHeader>
 
-        <div className="mt-6 space-y-4">
+        <div
+          className="mt-6 px-6 space-y-4 overflow-y-auto flex-1 overscroll-contain"
+          style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 24px)" }}
+        >
           <div className="relative">
             <AtSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input

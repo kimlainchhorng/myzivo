@@ -121,7 +121,10 @@ export default {
   			more: {
   				DEFAULT: 'hsl(var(--more))',
   				light: 'hsl(var(--more-light))'
-  			}
+  			},
+  			'ig-gradient-from': 'hsl(var(--ig-gradient-from))',
+  			'ig-gradient-via': 'hsl(var(--ig-gradient-via))',
+  			'ig-gradient-to': 'hsl(var(--ig-gradient-to))'
   		},
   		borderRadius: {
   			lg: 'var(--radius)',

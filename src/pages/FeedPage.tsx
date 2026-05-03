@@ -4,34 +4,35 @@
  * Videos auto-play when scrolled into view, pause when scrolled away.
  */
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { lazy, Suspense } from "react";
-const UnifiedShareSheet = lazy(() => import("@/components/shared/ShareSheet"));
+import { Suspense } from "react";
+import { lazyWithRetry } from "@/lib/lazyWithRetry";
+const UnifiedShareSheet = lazyWithRetry(() => import("@/components/shared/ShareSheet"));
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
 import { useI18n } from "@/hooks/useI18n";
-const ZivoMobileNav = lazy(() => import("@/components/app/ZivoMobileNav"));
-const NavBar = lazy(() => import("@/components/home/NavBar"));
+const ZivoMobileNav = lazyWithRetry(() => import("@/components/app/ZivoMobileNav"));
+const NavBar = lazyWithRetry(() => import("@/components/home/NavBar"));
 import SEOHead from "@/components/SEOHead";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { isBlueVerified } from "@/lib/verification";
-const CreatePostModal = lazy(() => import("@/components/social/CreatePostModal"));
-const FeedSidebar = lazy(() => import("@/components/social/FeedSidebar"));
-const SafeCaption = lazy(() => import("@/components/social/SafeCaption"));
-const SuggestedUsersCarousel = lazy(() => import("@/components/social/SuggestedUsersCarousel"));
-const FeedSkeleton = lazy(() => import("@/components/social/FeedSkeleton"));
-const NewPostsPill = lazy(() => import("@/components/social/NewPostsPill"));
-const PostActionsMenu = lazy(() => import("@/components/social/PostActionsMenu"));
-const ReactionPicker = lazy(() => import("@/components/social/ReactionPicker"));
-const CommentPreview = lazy(() => import("@/components/social/CommentPreview"));
-const ReactionSummary = lazy(() => import("@/components/social/ReactionSummary"));
-const RepostDialog = lazy(() => import("@/components/social/RepostDialog"));
-const PostInsights = lazy(() => import("@/components/social/PostInsights"));
-const CaptionEditDialog = lazy(() => import("@/components/social/CaptionEditDialog"));
-const MentionPicker = lazy(() => import("@/components/social/MentionPicker"));
-const CommentHeartButton = lazy(() => import("@/components/social/CommentHeartButton"));
-const CommentRowActions = lazy(() => import("@/components/social/CommentRowActions"));
-const ReelsCoachmarks = lazy(() => import("@/components/social/ReelsCoachmarks"));
+const CreatePostModal = lazyWithRetry(() => import("@/components/social/CreatePostModal"));
+const FeedSidebar = lazyWithRetry(() => import("@/components/social/FeedSidebar"));
+const SafeCaption = lazyWithRetry(() => import("@/components/social/SafeCaption"));
+const SuggestedUsersCarousel = lazyWithRetry(() => import("@/components/social/SuggestedUsersCarousel"));
+const FeedSkeleton = lazyWithRetry(() => import("@/components/social/FeedSkeleton"));
+const NewPostsPill = lazyWithRetry(() => import("@/components/social/NewPostsPill"));
+const PostActionsMenu = lazyWithRetry(() => import("@/components/social/PostActionsMenu"));
+const ReactionPicker = lazyWithRetry(() => import("@/components/social/ReactionPicker"));
+const CommentPreview = lazyWithRetry(() => import("@/components/social/CommentPreview"));
+const ReactionSummary = lazyWithRetry(() => import("@/components/social/ReactionSummary"));
+const RepostDialog = lazyWithRetry(() => import("@/components/social/RepostDialog"));
+const PostInsights = lazyWithRetry(() => import("@/components/social/PostInsights"));
+const CaptionEditDialog = lazyWithRetry(() => import("@/components/social/CaptionEditDialog"));
+const MentionPicker = lazyWithRetry(() => import("@/components/social/MentionPicker"));
+const CommentHeartButton = lazyWithRetry(() => import("@/components/social/CommentHeartButton"));
+const CommentRowActions = lazyWithRetry(() => import("@/components/social/CommentRowActions"));
+const ReelsCoachmarks = lazyWithRetry(() => import("@/components/social/ReelsCoachmarks"));
 import TrendingHashtags, { postHasHashtag } from "@/components/social/TrendingHashtags";
 import { detectMention, applyMention } from "@/components/social/MentionPicker";
 import { usePostActions, type PostActionTarget } from "@/hooks/usePostActions";
@@ -101,7 +102,7 @@ import { shouldSendLikeNotification } from "@/lib/social/likeNotificationGuard";
 import { useOwnerStoreProfile } from "@/hooks/useOwnerStoreProfile";
 import { useHaptic } from "@/hooks/useHaptic";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
-const ReelSocialProof = lazy(() => import("@/components/reels/ReelSocialProof"));
+const ReelSocialProof = lazyWithRetry(() => import("@/components/reels/ReelSocialProof"));
 import RelativeTime from "@/components/social/RelativeTime";
 import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
 import { useLodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile";
@@ -461,18 +462,29 @@ function ReelCard({
 
   const liked = userLikedPostIds.has(post.id);
 
-    try {
-      const canvas = document.createElement("canvas");
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
+  const normalizedUrls = useMemo(
+    () => (post.media_urls || []).map((u) => normalizeStorePostMediaUrl(u)).filter(Boolean),
+    [post.media_urls],
+  );
+  const firstUrl = normalizedUrls[0] || "";
+  const detectedVideoUrl = normalizedUrls.find((url) => /\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i.test(url));
+  const isVideoPost = post.media_type === "video" || Boolean(detectedVideoUrl);
+  const sourceUrl = detectedVideoUrl || firstUrl;
 
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const nextPoster = canvas.toDataURL("image/jpeg", 0.82);
-      setPosterUrl(nextPoster);
-    } catch {
-      // Ignore poster extraction failures and fall back to video surface.
+  const currentSrc = blobSrc || sourceUrl;
+  const renderSrc = blobSrc || (isBlobLoading ? "" : sourceUrl);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !isVideoPost) return;
+
+    if (isActive) {
+      video.muted = globalMuted;
+      void video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+    } else {
+      video.pause();
+      video.currentTime = 0;
+      setIsPlaying(false);
     }
   }, [isActive, isVideoPost]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -652,6 +664,11 @@ function ReelCard({
     return () => { alive = false; };
   }, [isActive, post.author_id]);
 
+  const handleSaveToggle = async () => {
+    if (savingBookmarkRef.current) return;
+    savingBookmarkRef.current = true;
+    const next = !saved;
+    setSaved(next);
     try {
       if (next) {
         const { error } = await (supabase as any).from("bookmarks").upsert(
@@ -827,61 +844,25 @@ function ReelCard({
     }
   };
 
-  // Reset player state when the active slide changes.
-  // `urls` is intentionally excluded from deps: including an array prop causes the
-  // effect to fire on every parent re-render (new reference each time) which would
-  // call video.load() mid-playback and abort it. The urls value for the current
-  // activeIndex is read inside the effect but should only react to index changes.
-  // `isVideo` and `videoRef` are stable references that never need to trigger a reset.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => {
-    setIsPlaying(false);
-    setIsMuted(true);
-    setPosterUrl(null);
-
-    const video = videoRef.current;
-    if (!video || !isVideo(urls[activeIndex] ?? "")) return;
-
-    video.pause();
-    video.currentTime = 0;
-    video.muted = true;
-    video.load();
-  }, [activeIndex]);
-
   return (
-    <div className="relative bg-muted">
-      <div className={cn("overflow-hidden bg-black", isVideo(urls[activeIndex]) ? "aspect-[9/16]" : "aspect-square")}>
-        {isVideo(urls[activeIndex]) ? (
-          <div className="relative w-full h-full">
-            <video
-              key={urls[activeIndex]}
-              ref={videoRef}
-              src={urls[activeIndex]}
-              poster={posterUrl ?? undefined}
-              className="w-full h-full object-cover"
-              playsInline
-              loop
-              muted
-              preload="metadata"
-              onClick={toggleVideo}
-              onLoadStart={() => setIsMediaLoading(true)}
-              onCanPlay={() => setIsMediaLoading(false)}
-              onLoadedMetadata={(event) => {
-                event.currentTarget.muted = isMuted;
-                ensureVisibleFrame(event.currentTarget);
-              }}
-              onLoadedData={(event) => {
-                ensureVisibleFrame(event.currentTarget);
-                capturePosterFrame(event.currentTarget);
-                setIsMediaLoading(false);
-              }}
-              onPlay={(event) => {
-                setIsMuted(event.currentTarget.muted);
-                setIsPlaying(true);
-              }}
-              onPause={() => setIsPlaying(false)}
-              onError={() => { setIsPlaying(false); setIsMediaLoading(false); }}
-            />
+    <div className="relative w-full h-[100dvh] lg:h-full bg-black overflow-hidden snap-start flex-shrink-0">
+
+      {/* Live creator alert banner */}
+      <AnimatePresence>
+        {authorIsLive && isActive && !liveAlertDismissed && (
+          <motion.div
+            key="live-banner"
+            initial={{ y: -60, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -60, opacity: 0 }}
+            transition={{ type: "spring", damping: 22, stiffness: 280 }}
+            className="absolute left-3 right-3 z-50 flex items-center gap-2.5 bg-black/80 backdrop-blur-md border border-white/10 rounded-2xl px-3 py-2.5 shadow-xl"
+            style={{ top: "calc(env(safe-area-inset-top, 0px) + 56px)" }}
+          >
+            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse shrink-0" />
+            <p className="flex-1 text-white text-[13px] font-semibold truncate">
+              {post.source === "user" ? post.author_name : post.store_name} is LIVE now
+            </p>
             <button
               onClick={(e) => { e.stopPropagation(); navigate(`/live/${post.author_id}`); }}
               className="shrink-0 px-3 py-1 rounded-full bg-red-500 text-white text-[11px] font-bold active:scale-95 transition-transform"

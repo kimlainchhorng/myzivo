@@ -1987,7 +1987,7 @@ export default function MorePage() {
 
         <main
           className={cn(
-            "flex-1 flex flex-col px-5 pb-28 pt-4 lg:pt-6 lg:pb-8 lg:max-w-3xl lg:mx-auto zivo-aurora",
+            "flex-1 flex flex-col px-5 pb-[calc(56px+env(safe-area-inset-bottom,0px)+24px)] pt-4 lg:pt-6 lg:pb-8 lg:max-w-3xl lg:mx-auto zivo-aurora",
             reducedMotion && "[&_*]:!transition-none [&_*]:!animate-none",
           )}
           style={{ fontSize: `${fontScale}rem` }}
