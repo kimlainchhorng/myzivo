@@ -39,18 +39,25 @@ serve(async (req) => {
     });
   }
   const isServiceCall = !!serviceKey && authHeader === `Bearer ${serviceKey}`;
-  if (!isServiceCall) {
+  const isAnonCall = !!anonKey && authHeader === `Bearer ${anonKey}`;
+  if (!isServiceCall && !isAnonCall) {
     if (!supabaseUrlEarly || !anonKey) {
       return new Response(JSON.stringify({ error: "Server misconfigured" }), {
         status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
-    const userClient = createClient(supabaseUrlEarly, anonKey, {
-      global: { headers: { Authorization: authHeader } },
-    });
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claims, error: claimsErr } = await userClient.auth.getClaims(token);
-    if (claimsErr || !claims?.claims?.sub) {
+    try {
+      const userClient = createClient(supabaseUrlEarly, anonKey, {
+        global: { headers: { Authorization: authHeader } },
+      });
+      const token = authHeader.replace("Bearer ", "");
+      const { data: claims, error: claimsErr } = await userClient.auth.getClaims(token);
+      if (claimsErr || !claims?.claims?.sub) {
+        return new Response(JSON.stringify({ error: "Authentication required" }), {
+          status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
+        });
+      }
+    } catch {
       return new Response(JSON.stringify({ error: "Authentication required" }), {
         status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
