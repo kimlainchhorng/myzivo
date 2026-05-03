@@ -464,6 +464,7 @@ function ReelCard({
 
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
   const normalizedUrls = useMemo(
     () => (post.media_urls || []).map((u) => normalizeStorePostMediaUrl(u)).filter(Boolean),
     [post.media_urls],
@@ -490,6 +491,8 @@ function ReelCard({
     }
   }, [isActive, isVideoPost]); // eslint-disable-line react-hooks/exhaustive-deps
 
+=======
+>>>>>>> Stashed changes
 =======
 >>>>>>> Stashed changes
 =======
@@ -853,6 +856,7 @@ function ReelCard({
   return (
 <<<<<<< Updated upstream
 <<<<<<< Updated upstream
+<<<<<<< Updated upstream
     <div className="relative w-full h-[100dvh] lg:h-full bg-black overflow-hidden snap-start flex-shrink-0">
 
       {/* Live creator alert banner */}
@@ -888,6 +892,9 @@ function ReelCard({
         )}
       </AnimatePresence>
 
+=======
+    <div className="relative bg-muted">
+>>>>>>> Stashed changes
 =======
     <div className="relative bg-muted">
 >>>>>>> Stashed changes
