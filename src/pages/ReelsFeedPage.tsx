@@ -600,9 +600,9 @@ export default function ReelsFeedPage() {
             id: post.id,
             source: "store",
             media_urls: urls,
-            media_type: urls.length === 0
-              ? "text"
-              : (post.media_type === "video" || urls[0]?.match(/\.(mp4|mov|webm)/i)) ? "video" : "image",
+            media_type: (urls.length === 0
+              ? "image"
+              : (post.media_type === "video" || urls[0]?.match(/\.(mp4|mov|webm)/i)) ? "video" : "image") as "image" | "video",
             caption: post.caption,
             likes_count: post.likes_count || 0,
             comments_count: post.comments_count || 0,
@@ -4242,17 +4242,17 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
       )}
 
       {/* Owner post insights — reach + engagement strip */}
-      {isOwner && (item.view_count || 0) > 0 && (
+      {isOwner && (item.views_count || 0) > 0 && (
         <div className="mx-3 mb-2 rounded-xl bg-muted/30 border border-border/20 px-3 py-2 flex items-center gap-3">
           <BarChart2 className="h-4 w-4 text-primary shrink-0" />
           <div className="flex-1 min-w-0">
             <p className="text-[11px] font-semibold text-foreground">
-              {(item.view_count || 0) >= 1000
-                ? `${((item.view_count || 0) / 1000).toFixed(1)}k`
-                : item.view_count} views
+              {(item.views_count || 0) >= 1000
+                ? `${((item.views_count || 0) / 1000).toFixed(1)}k`
+                : item.views_count} views
               {(item.likes_count || 0) > 0 && (
                 <span className="text-muted-foreground font-normal">
-                  {" "}· {Math.round(((item.likes_count || 0) / Math.max(1, item.view_count || 1)) * 100)}% engagement
+                  {" "}· {Math.round(((item.likes_count || 0) / Math.max(1, item.views_count || 1)) * 100)}% engagement
                 </span>
               )}
             </p>

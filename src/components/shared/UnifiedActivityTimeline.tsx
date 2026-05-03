@@ -57,36 +57,37 @@ export default function UnifiedActivityTimeline() {
       setLoading(true);
       const collected: ActivityItem[] = [];
 
+      const sb = supabase as any;
       const [rides, orders, reservations, flights, hotels] = await Promise.all([
-        supabase
+        sb
           .from("trips")
           .select("id,status,dropoff_address,pickup_address,created_at")
           .eq("rider_id", user.id)
           .order("created_at", { ascending: false })
           .limit(FETCH_LIMIT),
-        supabase
+        sb
           .from("food_orders")
           .select("id,status,delivery_address,total_amount,created_at,restaurant_id")
           .eq("customer_id", user.id)
           .order("created_at", { ascending: false })
           .limit(FETCH_LIMIT),
-        supabase
+        sb
           .from("restaurant_reservations")
           .select("id,status,reservation_date,reservation_time,party_size,restaurant_id,created_at")
           .eq("user_id", user.id)
           .order("reservation_date", { ascending: false })
           .limit(FETCH_LIMIT),
-        supabase
+        sb
           .from("flight_bookings")
           .select("id,status:ticketing_status,origin,destination,departure_date,booking_reference,created_at")
-          .eq("user_id", user.id)
+          .eq("customer_id", user.id)
           .order("departure_date", { ascending: false })
           .limit(FETCH_LIMIT),
-        supabase
+        sb
           .from("hotel_bookings")
-          .select("id,status,hotel_name,city,check_in,check_out,created_at")
-          .eq("user_id", user.id)
-          .order("check_in", { ascending: false })
+          .select("id,status,hotel_name,city,check_in_date,check_out_date,created_at")
+          .eq("customer_id", user.id)
+          .order("check_in_date", { ascending: false })
           .limit(FETCH_LIMIT),
       ]);
 

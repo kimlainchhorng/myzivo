@@ -140,6 +140,8 @@ export default function ChatContactInfo({
   onOpenFiles,
   onOpenLinks,
 }: ChatContactInfoProps) {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [isFavorite, setIsFavorite] = useState(false);
   const [favoriteBusy, setFavoriteBusy] = useState(false);
   const [showExport, setShowExport] = useState(false);
@@ -159,8 +161,6 @@ export default function ChatContactInfo({
     })();
     return () => { alive = false; };
   }, [user?.id, recipientId]);
-  const navigate = useNavigate();
-  const { user } = useAuth();
   const threadId = buildThreadId("dm", recipientId);
   const { isPinned, isArchived, isMuted, pin, unpin, archive, unarchive, mute, setMode, get: getThread } = useThreadSettings();
   const localPrefs = useChatPrefs(user?.id);

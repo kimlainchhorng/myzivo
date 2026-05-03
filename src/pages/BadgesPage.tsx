@@ -97,7 +97,7 @@ export default function BadgesPage() {
     return { progress: Math.min(val, conditionValue), max: conditionValue };
   };
 
-  const categories = ["all", ...new Set(achievements.map((a: any) => a.category).filter(Boolean))];
+  const categories: string[] = ["all", ...new Set(achievements.map((a: any) => a.category).filter(Boolean) as string[])];
   const filtered = activeCategory === "all"
     ? achievements
     : achievements.filter((a: any) => a.category === activeCategory);

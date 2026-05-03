@@ -51,32 +51,33 @@ export default function NotificationsPeek() {
     };
     const load = async () => {
       const collected: { p: Peek; ts: number }[] = [];
+      const sb = supabase as any;
       const [rides, orders, flights, hotels, reservations] = await Promise.all([
-        supabase
+        sb
           .from("trips")
           .select("id,status,dropoff_address,updated_at,created_at")
           .eq("rider_id", user.id)
           .order("updated_at", { ascending: false })
           .limit(3),
-        supabase
+        sb
           .from("food_orders")
           .select("id,status,delivery_address,updated_at,created_at,restaurant_id")
           .eq("customer_id", user.id)
           .order("updated_at", { ascending: false })
           .limit(3),
-        supabase
+        sb
           .from("flight_bookings")
           .select("id,origin,destination,booking_reference,updated_at,created_at,departure_date")
-          .eq("user_id", user.id)
+          .eq("customer_id", user.id)
           .order("updated_at", { ascending: false })
           .limit(2),
-        supabase
+        sb
           .from("hotel_bookings")
-          .select("id,hotel_name,city,check_in,updated_at,created_at")
-          .eq("user_id", user.id)
+          .select("id,hotel_name,city,check_in_date,updated_at,created_at")
+          .eq("customer_id", user.id)
           .order("updated_at", { ascending: false })
           .limit(2),
-        supabase
+        sb
           .from("restaurant_reservations")
           .select("id,reservation_date,reservation_time,party_size,restaurant_id,updated_at,created_at")
           .eq("user_id", user.id)

@@ -243,8 +243,8 @@ const Promotions = () => {
                     {activeCoupons.map((coupon) => (
                       <Card key={coupon.code} className="overflow-hidden border-0 bg-gradient-to-br from-card/90 to-card shadow-xl">
                         <div className={`h-1.5 ${
-                          coupon.service === 'rides' ? 'bg-gradient-to-r from-primary to-teal-400' :
-                          coupon.service === 'eats' ? 'bg-gradient-to-r from-eats to-orange-500' : 'bg-gradient-to-r from-violet-500 to-purple-500'
+                          (coupon.service as string) === 'rides' ? 'bg-gradient-to-r from-primary to-teal-400' :
+                          (coupon.service as string) === 'eats' ? 'bg-gradient-to-r from-eats to-orange-500' : 'bg-gradient-to-r from-violet-500 to-purple-500'
                         }`} />
                         <CardContent className="p-4 sm:p-5">
                           <div className="flex justify-between items-start mb-3 sm:mb-4">
@@ -253,7 +253,7 @@ const Promotions = () => {
                               <p className="text-sm sm:text-base text-muted-foreground">{coupon.description}</p>
                             </div>
                             <Badge variant="outline" className="shrink-0 font-semibold text-xs">
-                              {coupon.service === 'all' ? 'All' : coupon.service.toUpperCase()}
+                              {coupon.service === 'all' ? 'All' : String(coupon.service).toUpperCase()}
                             </Badge>
                           </div>
                           <div className="flex items-center justify-between gap-2">
