@@ -60,7 +60,6 @@ import Settings2 from "lucide-react/dist/esm/icons/settings-2";
 import Search from "lucide-react/dist/esm/icons/search";
 import Sparkles from "lucide-react/dist/esm/icons/sparkles";
 import History from "lucide-react/dist/esm/icons/history";
-import UserPlus from "lucide-react/dist/esm/icons/user-plus";
 import Code2 from "lucide-react/dist/esm/icons/code-2";
 import Pin from "lucide-react/dist/esm/icons/pin";
 import Dumbbell from "lucide-react/dist/esm/icons/dumbbell";
@@ -72,7 +71,6 @@ import QrCode from "lucide-react/dist/esm/icons/qr-code";
 import Download from "lucide-react/dist/esm/icons/download";
 import Tv2 from "lucide-react/dist/esm/icons/tv-2";
 import HandHeart from "lucide-react/dist/esm/icons/hand-heart";
-import Activity from "lucide-react/dist/esm/icons/activity";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
 import Plane from "lucide-react/dist/esm/icons/plane";
 import Hotel from "lucide-react/dist/esm/icons/hotel";
@@ -101,6 +99,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import PullToRefresh from "@/components/shared/PullToRefresh";
 import { useHiddenPosts } from "@/hooks/useHiddenPosts";
 import { useHaptic } from "@/hooks/useHaptic";
+import { useNotifications } from "@/hooks/useNotifications";
+import { useChatPrefs } from "@/hooks/useChatPrefs";
 import RelativeTime from "@/components/social/RelativeTime";
 import { topicForUserSync } from "@/lib/security/channelName";
 const NewPostsPill = lazy(() => import("@/components/social/NewPostsPill"));
@@ -304,6 +304,30 @@ export default function ReelsFeedPage() {
   } | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<{ name: string; avatar: string | null } | null>(null);
+  const { unreadCount: notificationUnread } = useNotifications(20);
+  const { prefs: chatPrefs } = useChatPrefs(userId ?? undefined);
+  const { data: unreadChatSenders } = useQuery({
+    queryKey: ["feed-header-chat-unread", userId],
+    queryFn: async () => {
+      const { data } = await supabase
+        .from("direct_messages")
+        .select("sender_id")
+        .eq("receiver_id", userId!)
+        .eq("is_read", false);
+      return new Set((data ?? []).map((r: { sender_id: string }) => r.sender_id));
+    },
+    enabled: !!userId,
+    refetchInterval: 30000,
+    staleTime: 15000,
+  });
+  const headerChatUnread = (() => {
+    const real = unreadChatSenders ?? new Set<string>();
+    let manualOnly = 0;
+    for (const id of Object.keys(chatPrefs.unread)) {
+      if (!real.has(id)) manualOnly++;
+    }
+    return real.size + manualOnly;
+  })();
   const [fullscreenIndex, setFullscreenIndex] = useState<number | null>(null);
   const [reelsStartIndex, setReelsStartIndex] = useState<number | null>(null);
   const reelsScrollRef = useRef<HTMLDivElement>(null);
@@ -1109,19 +1133,26 @@ export default function ReelsFeedPage() {
                   <button
                     onClick={() => navigate("/account/notifications")}
                     className="shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition relative"
-                    aria-label="Notifications"
+                    aria-label={notificationUnread > 0 ? `Notifications, ${notificationUnread} unread` : "Notifications"}
                   >
                     <Bell className="h-[18px] w-[18px]" />
-                    {newPostsCount > 0 && (
-                      <span className="absolute top-1 right-1 h-2 w-2 rounded-full bg-primary" />
+                    {notificationUnread > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-1 rounded-full bg-red-500 text-[9px] font-bold text-white flex items-center justify-center leading-none">
+                        {notificationUnread > 99 ? "99+" : notificationUnread}
+                      </span>
                     )}
                   </button>
                   <button
                     onClick={() => navigate("/chat")}
-                    className="shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition"
-                    aria-label="Messages"
+                    className="shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition relative"
+                    aria-label={headerChatUnread > 0 ? `Messages, ${headerChatUnread} unread` : "Messages"}
                   >
                     <MessageCircle className="h-[18px] w-[18px]" />
+                    {headerChatUnread > 0 && (
+                      <span className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-1 rounded-full bg-red-500 text-[9px] font-bold text-white flex items-center justify-center leading-none">
+                        {headerChatUnread > 99 ? "99+" : headerChatUnread}
+                      </span>
+                    )}
                   </button>
                 </div>
                 {/* Tab strip — For You / Friends / Following (signed-in only) */}
@@ -1297,24 +1328,24 @@ export default function ReelsFeedPage() {
                   })()}
                 </button>
               </div>
-              <div className="border-t border-border/20 pt-1.5 flex overflow-x-auto scrollbar-hide">
-                <button onClick={() => setShowCreate(true)} className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
+              <div className="border-t border-border/20 pt-1.5 flex overflow-x-auto scrollbar-hide" role="toolbar" aria-label="Create post">
+                <button type="button" onClick={() => setShowCreate(true)} aria-label="Share a photo" className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
                   <ImageIcon className="h-4 w-4 text-emerald-500" />
                   <span className="text-[10px] font-semibold text-muted-foreground">Photo</span>
                 </button>
-                <button onClick={() => setShowCreate(true)} className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
+                <button type="button" onClick={() => setShowCreate(true)} aria-label="Create a Reel" className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
                   <Film className="h-4 w-4 text-violet-500" />
-                  <span className="text-[10px] font-semibold text-muted-foreground">Reel</span>
+                  <span className="text-[10px] font-semibold text-muted-foreground">Reels</span>
                 </button>
-                <button onClick={() => setShowCreate(true)} className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
+                <button type="button" onClick={() => setShowCreate(true)} aria-label="Create a poll" className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
                   <TrendingUp className="h-4 w-4 text-amber-500" />
                   <span className="text-[10px] font-semibold text-muted-foreground">Poll</span>
                 </button>
-                <button onClick={() => navigate("/map")} className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
+                <button type="button" onClick={() => navigate("/check-in")} aria-label="Check in to a place" className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
                   <MapPin className="h-4 w-4 text-red-500" />
                   <span className="text-[10px] font-semibold text-muted-foreground">Check In</span>
                 </button>
-                <button onClick={() => navigate("/live")} className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
+                <button type="button" onClick={() => navigate("/live")} aria-label="Go live" className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
                   <Radio className="h-4 w-4 text-rose-600" />
                   <span className="text-[10px] font-semibold text-muted-foreground">Live</span>
                 </button>
@@ -1443,9 +1474,10 @@ export default function ReelsFeedPage() {
            <Suspense fallback={null}><FeedStoryRing /></Suspense>
 
            {/* Quick feature access — Facebook-style shortcut bar */}
-           <div className="flex gap-4 px-3 py-2.5 overflow-x-auto scrollbar-hide border-b border-border/10">
+           <nav aria-label="Quick links" className="flex gap-4 px-3 py-2.5 overflow-x-auto scrollbar-hide border-b border-border/10">
              {[
-               { label: "Watch", icon: Film, path: "/reels", bg: "bg-violet-500" },
+               { label: "Live", icon: Radio, path: "/live", bg: "bg-rose-500" },
+               { label: "Map", icon: MapPin, path: "/store-map", bg: "bg-sky-500" },
                { label: "Marketplace", icon: Package, path: "/marketplace", bg: "bg-amber-500" },
                { label: "Groups", icon: Users, path: "/communities", bg: "bg-blue-500" },
                { label: "Events", icon: Calendar, path: "/explore", bg: "bg-emerald-500" },
@@ -1453,16 +1485,18 @@ export default function ReelsFeedPage() {
              ].map(({ label, icon: Icon, path, bg }) => (
                <button
                  key={label}
+                 type="button"
                  onClick={() => navigate(path)}
+                 aria-label={label}
                  className="shrink-0 flex flex-col items-center gap-1.5 active:opacity-70 transition-opacity"
                >
-                 <div className={cn("h-11 w-11 rounded-2xl flex items-center justify-center shadow-sm", bg)}>
+                 <div className={cn("h-11 w-11 rounded-2xl flex items-center justify-center shadow-sm", bg)} aria-hidden="true">
                    <Icon className="h-5 w-5 text-white" />
                  </div>
                  <span className="text-[10px] font-semibold text-muted-foreground">{label}</span>
                </button>
              ))}
-           </div>
+           </nav>
 
            {/* Suggested Users */}
            <Suspense fallback={null}><SuggestedUsersCarousel /></Suspense>
@@ -1647,39 +1681,8 @@ export default function ReelsFeedPage() {
                       </div>
                     </div>
                   )}
-                  {/* Inject Live Now strip after 7th post */}
-                  {idx === 6 && (
-                    <div className="bg-card border-b border-border/10 px-3 py-3">
-                      <div className="flex items-center justify-between mb-2.5">
-                        <h3 className="text-[13px] font-bold text-foreground flex items-center gap-1.5">
-                          <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" />
-                          Live Now
-                        </h3>
-                        <button onClick={() => navigate("/live")} className="text-[12px] font-semibold text-primary">See all</button>
-                      </div>
-                      <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
-                        {[
-                          { name: "Chef Maria", viewers: "1.2k", initials: "CM", color: "from-amber-500 to-orange-500" },
-                          { name: "TechTalk", viewers: "3.8k", initials: "TT", color: "from-violet-500 to-purple-600" },
-                          { name: "Workout Jay", viewers: "890", initials: "WJ", color: "from-emerald-500 to-teal-600" },
-                          { name: "MusicVibes", viewers: "5.1k", initials: "MV", color: "from-rose-500 to-pink-600" },
-                        ].map((live) => (
-                          <button
-                            key={live.name}
-                            onClick={() => navigate("/live")}
-                            className="shrink-0 flex flex-col items-center gap-1.5 w-[80px] active:opacity-70"
-                          >
-                            <div className={`relative h-14 w-14 rounded-full bg-gradient-to-br ${live.color} flex items-center justify-center border-2 border-rose-500`}>
-                              <span className="text-white text-sm font-bold">{live.initials}</span>
-                              <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-rose-500 text-white text-[8px] font-bold px-1 rounded-full">LIVE</span>
-                            </div>
-                            <p className="text-[10px] font-semibold text-foreground text-center leading-tight line-clamp-1">{live.name}</p>
-                            <p className="text-[9px] text-muted-foreground">{live.viewers} watching</p>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  {/* Real "Live Now" surfacing is handled by the banner at the top
+                      of the feed (driven by liveStreamsCount). Mock strip removed. */}
                   {/* Interactive community poll after 9th post */}
                   {idx === 8 && <FeedPollCard />}
                   {/* Trending reels strip — TikTok cross-promotion within feed */}
@@ -1704,44 +1707,9 @@ export default function ReelsFeedPage() {
                       </div>
                     </button>
                   )}
-                  {/* Inject People You May Know after 10th post */}
-                  {idx === 9 && (
-                    <div className="bg-card border-b border-border/10 px-3 py-3">
-                      <div className="flex items-center justify-between mb-2.5">
-                        <h3 className="text-[13px] font-bold text-foreground flex items-center gap-1.5">
-                          <UserPlus className="h-4 w-4 text-primary" />
-                          People you may know
-                        </h3>
-                        <button onClick={() => navigate("/explore")} className="text-[12px] font-semibold text-primary">See all</button>
-                      </div>
-                      <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
-                        {[
-                          { name: "Alex Chen", mutual: 3, initials: "AC", color: "from-blue-500 to-indigo-600" },
-                          { name: "Sara Kim", mutual: 7, initials: "SK", color: "from-rose-500 to-pink-600" },
-                          { name: "Luca Bianchi", mutual: 1, initials: "LB", color: "from-emerald-500 to-teal-600" },
-                          { name: "Nadia Omar", mutual: 5, initials: "NO", color: "from-amber-500 to-orange-600" },
-                          { name: "James Park", mutual: 2, initials: "JP", color: "from-violet-500 to-purple-600" },
-                        ].map((person) => (
-                          <div
-                            key={person.name}
-                            className="shrink-0 flex flex-col items-center gap-2 w-[90px] p-2 rounded-xl bg-muted/30 border border-border/20"
-                          >
-                            <div className={`h-12 w-12 rounded-full bg-gradient-to-br ${person.color} flex items-center justify-center`}>
-                              <span className="text-white text-sm font-bold">{person.initials}</span>
-                            </div>
-                            <p className="text-[10px] font-semibold text-foreground text-center leading-tight line-clamp-2">{person.name}</p>
-                            <p className="text-[9px] text-muted-foreground text-center">{person.mutual} mutual friend{person.mutual !== 1 ? "s" : ""}</p>
-                            <button
-                              onClick={() => navigate("/explore")}
-                              className="w-full py-1 rounded-full bg-primary/10 text-primary text-[10px] font-bold text-center active:opacity-70"
-                            >
-                              + Follow
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  {/* People you may know — real DB-backed component, self-hides if empty.
+                      Replaces the previous hardcoded mock with fake names + mutual counts. */}
+                  {idx === 9 && <Suspense fallback={null}><FollowSuggestions /></Suspense>}
                   {/* Inject Events strip after 12th post */}
                   {idx === 11 && (
                     <button
@@ -1778,37 +1746,8 @@ export default function ReelsFeedPage() {
                       </div>
                     </button>
                   )}
-                  {/* Friend Activity card after 18th post */}
-                  {idx === 17 && (
-                    <div className="bg-card border-b border-border/10 px-3 py-3">
-                      <div className="flex items-center justify-between mb-2.5">
-                        <h3 className="text-[13px] font-bold text-foreground flex items-center gap-1.5">
-                          <Activity className="h-4 w-4 text-emerald-500" />
-                          Friend Activity
-                        </h3>
-                        <button onClick={() => navigate("/explore")} className="text-[12px] font-semibold text-primary">See all</button>
-                      </div>
-                      <div className="space-y-2.5">
-                        {[
-                          { name: "Sarah K.", action: "liked a post", time: "2m", initials: "SK", color: "from-rose-500 to-pink-600" },
-                          { name: "James P.", action: "started following someone new", time: "5m", initials: "JP", color: "from-violet-500 to-purple-600" },
-                          { name: "Alex C.", action: "commented on a reel", time: "12m", initials: "AC", color: "from-blue-500 to-indigo-600" },
-                        ].map((a) => (
-                          <div key={a.name} className="flex items-center gap-2.5">
-                            <div className={`h-9 w-9 rounded-full bg-gradient-to-br ${a.color} flex items-center justify-center shrink-0`}>
-                              <span className="text-white text-xs font-bold">{a.initials}</span>
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-[12px] text-foreground leading-tight line-clamp-1">
-                                <span className="font-semibold">{a.name}</span>{" "}{a.action}
-                              </p>
-                            </div>
-                            <span className="text-[10px] text-muted-foreground shrink-0">{a.time}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
+                  {/* Friend Activity mock removed — was hardcoded fake names/actions.
+                      Real activity already lives at /activity (ActivityFeedPage). */}
                   {/* Inject On This Day memory card after 16th post */}
                   {idx === 15 && (
                     <button

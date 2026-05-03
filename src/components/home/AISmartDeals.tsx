@@ -129,9 +129,9 @@ const FeaturedDealCard = ({ deal }: { deal: SmartDeal }) => {
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ type: "spring", delay: 0.2 }}
-              className="bg-emerald-500 backdrop-blur-sm rounded-full px-2.5 py-1 shadow-lg"
+              className="bg-foreground rounded-full px-2.5 py-1"
             >
-              <span className="text-[10px] font-bold text-white flex items-center gap-1">
+              <span className="text-[10px] font-bold text-background flex items-center gap-1">
                 <TrendingDown className="w-3 h-3" /> {deal.savingsPercent}% OFF
               </span>
             </motion.div>
@@ -342,13 +342,13 @@ const AITipBanner = ({ deal }: { deal: SmartDeal }) => {
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: 0.4 }}
-      className="flex items-center gap-2.5 bg-gradient-to-r from-primary/8 via-primary/5 to-transparent border border-primary/10 rounded-2xl px-3.5 py-2.5"
+      className="flex items-center gap-2.5 bg-card border border-border rounded-lg px-3.5 py-2.5"
     >
-      <div className="w-7 h-7 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-        <Lightbulb className="w-3.5 h-3.5 text-primary" />
+      <div className="w-7 h-7 rounded-full bg-muted flex items-center justify-center shrink-0">
+        <Lightbulb className="w-3.5 h-3.5 text-foreground" strokeWidth={1.8} />
       </div>
       <div className="min-w-0">
-        <div className="text-[9px] font-bold text-primary/60 uppercase tracking-wider">AI Travel Tip</div>
+        <div className="text-[9px] font-bold text-ig-gradient uppercase tracking-wider">AI Travel Tip</div>
         <div className="text-[11px] text-foreground/80 leading-snug">{deal.aiTip}</div>
       </div>
     </motion.div>
@@ -378,16 +378,16 @@ const AISmartDeals = () => {
           <motion.div
             animate={{ rotate: [0, 15, -15, 0] }}
             transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-            className="w-8 h-8 rounded-2xl bg-gradient-to-br from-primary/25 via-purple-500/15 to-sky-500/20 flex items-center justify-center shadow-md shadow-primary/10"
+            className="w-8 h-8 rounded-full bg-muted flex items-center justify-center"
           >
-            <Sparkles className="w-4 h-4 text-primary" />
+            <Sparkles className="w-4 h-4 text-ig-gradient" />
           </motion.div>
           <span>AI Smart Deals</span>
           <motion.div
             animate={{ scale: [1, 1.1, 1] }}
             transition={{ repeat: Infinity, duration: 2 }}
           >
-            <Badge className="text-[8px] font-bold bg-gradient-to-r from-primary to-emerald-500 text-primary-foreground border-0 px-2 py-0.5 shadow-sm shadow-primary/20">
+            <Badge className="text-[8px] font-bold bg-ig-gradient text-white border-0 px-2 py-0.5">
               <Brain className="w-2.5 h-2.5 mr-0.5" /> POWERED
             </Badge>
           </motion.div>

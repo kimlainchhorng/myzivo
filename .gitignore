@@ -30,3 +30,11 @@ dist-ssr
 
 # Claude AI workfiles
 .claude/worktrees/
+
+# Test & scratch output
+tmp/
+test-results/
+playwright-report/
+
+# Stray Playwright session profiles (Windows-style paths)
+Usersabiga*/

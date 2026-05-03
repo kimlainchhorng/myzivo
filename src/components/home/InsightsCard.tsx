@@ -136,28 +136,28 @@ export default function InsightsCard() {
         animate={{ opacity: 1, y: 0 }}
         whileTap={{ scale: 0.99 }}
         onClick={() => navigate("/trips?tab=everything")}
-        className="w-full rounded-3xl border border-emerald-500/20 bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-card p-4 text-left shadow-sm active:scale-[0.99] transition-transform touch-manipulation"
+        className="w-full rounded-lg border border-border bg-card p-4 text-left active:bg-muted/50 transition-colors touch-manipulation"
       >
         <div className="flex items-center gap-2 mb-2">
-          <div className="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-600 flex items-center justify-center">
-            <TrendingUp className="w-4 h-4" />
+          <div className="w-9 h-9 rounded-full bg-muted text-foreground flex items-center justify-center">
+            <TrendingUp className="w-4 h-4" strokeWidth={1.8} />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 flex items-center gap-1">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-ig-gradient flex items-center gap-1">
               <Sparkles className="w-3 h-3" /> Insight · {monthLabel()}
             </div>
-            <div className="text-sm font-bold text-foreground">
+            <div className="text-sm font-semibold text-foreground">
               You saved an estimated{" "}
-              <span className="text-emerald-700">${stats.estSavings}</span> by bundling
+              <span className="text-foreground font-bold">${stats.estSavings}</span> by bundling
             </div>
           </div>
           <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
         </div>
 
         <div className="grid grid-cols-3 gap-2 mt-2">
-          <Stat icon={Plane} label="Flights" value={stats.flightCount} tone="text-sky-600" />
-          <Stat icon={BedDouble} label="Hotels" value={stats.hotelCount} tone="text-violet-600" />
-          <Stat icon={Car} label="Airport rides" value={stats.airportRides} tone="text-emerald-600" />
+          <Stat icon={Plane} label="Flights" value={stats.flightCount} />
+          <Stat icon={BedDouble} label="Hotels" value={stats.hotelCount} />
+          <Stat icon={Car} label="Airport rides" value={stats.airportRides} />
         </div>
 
         {stats.bundles > 0 && (
@@ -175,18 +175,16 @@ function Stat({
   icon: Icon,
   label,
   value,
-  tone,
 }: {
   icon: any;
   label: string;
   value: number;
-  tone: string;
 }) {
   return (
-    <div className="rounded-xl border border-border/40 bg-card/80 px-2 py-2">
-      <div className={`flex items-center gap-1.5 ${tone}`}>
-        <Icon className="w-3.5 h-3.5" />
-        <span className="text-base font-extrabold tabular-nums leading-none">{value}</span>
+    <div className="rounded-lg border border-border bg-card px-2 py-2">
+      <div className="flex items-center gap-1.5 text-foreground">
+        <Icon className="w-3.5 h-3.5" strokeWidth={1.8} />
+        <span className="text-base font-bold tabular-nums leading-none">{value}</span>
       </div>
       <div className="text-[10px] text-muted-foreground mt-1">{label}</div>
     </div>

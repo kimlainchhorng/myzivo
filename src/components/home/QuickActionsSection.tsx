@@ -91,26 +91,14 @@ const QuickActionsSection = () => {
   const repeatOrders = repeatFoodOrders?.length ? repeatFoodOrders : defaultRepeatOrders;
   
   return (
-    <section className="py-10 sm:py-14 lg:py-24 relative overflow-hidden" aria-label="Quick actions">
-      {/* Enhanced Background */}
-      <div className="absolute inset-0 bg-gradient-radial from-primary/8 via-transparent to-transparent opacity-40" />
-      <div className="absolute top-1/4 right-0 w-[300px] sm:w-[400px] h-[300px] sm:h-[400px] bg-gradient-to-bl from-primary/10 to-teal-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-[200px] sm:w-[300px] h-[200px] sm:h-[300px] bg-gradient-to-tr from-violet-500/10 to-purple-500/5 rounded-full blur-3xl" />
-      
-      {/* Floating icon - CSS animated */}
-      <div className="absolute top-24 right-[10%] hidden md:block opacity-40 animate-bounce" style={{ animationDuration: '5s' }}>
-        <Zap className="w-8 h-8 text-primary" />
-      </div>
-      
+    <section className="py-10 sm:py-14 lg:py-24 relative" aria-label="Quick actions">
       <div className="container mx-auto px-4 relative z-10">
         <div className="space-y-8 sm:space-y-12">
-          {/* Header with animated icon */}
-          <div className="flex items-center justify-between animate-in fade-in slide-in-from-bottom-4 duration-500">
+          {/* Header */}
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-3 sm:gap-4">
-              <div className="relative p-2.5 sm:p-3.5 rounded-xl sm:rounded-2xl bg-gradient-to-br from-primary to-teal-400 shadow-lg sm:shadow-xl shadow-primary/30 overflow-hidden transition-transform duration-200 hover:scale-110 hover:rotate-3">
-                <Zap className="w-5 h-5 sm:w-7 sm:h-7 text-primary-foreground relative z-10" />
-                {/* CSS Shine effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/30 to-transparent animate-shine" style={{ transform: 'skewX(-15deg)' }} />
+              <div className="relative p-2.5 sm:p-3.5 rounded-full bg-foreground">
+                <Zap className="w-5 h-5 sm:w-7 sm:h-7 text-background" />
               </div>
               <div>
                 <h2 className="font-display text-xl sm:text-2xl lg:text-4xl font-bold">Quick Actions</h2>

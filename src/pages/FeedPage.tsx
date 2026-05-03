@@ -461,18 +461,31 @@ function ReelCard({
 
   const liked = userLikedPostIds.has(post.id);
 
-    try {
-      const canvas = document.createElement("canvas");
-      canvas.width = video.videoWidth;
-      canvas.height = video.videoHeight;
-      const ctx = canvas.getContext("2d");
-      if (!ctx) return;
+  const normalizedUrls = useMemo(
+    () => (post.media_urls || []).map((u) => normalizeStorePostMediaUrl(u)).filter(Boolean),
+    [post.media_urls],
+  );
+  const firstUrl = normalizedUrls[0] || "";
+  const detectedVideoUrl = normalizedUrls.find((url) => /\.(mp4|mov|webm|avi|mkv)(\?.*)?$/i.test(url));
+  const isVideoPost = post.media_type === "video" || Boolean(detectedVideoUrl);
+  const sourceUrl = detectedVideoUrl || firstUrl;
 
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-      const nextPoster = canvas.toDataURL("image/jpeg", 0.82);
-      setPosterUrl(nextPoster);
-    } catch {
-      // Ignore poster extraction failures and fall back to video surface.
+  // Must be defined before effects that reference it
+  const currentSrc = blobSrc || sourceUrl;
+  const renderSrc = blobSrc || (isBlobLoading ? "" : sourceUrl);
+
+  // Auto-play / pause when active changes
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video || !isVideoPost) return;
+
+    if (isActive) {
+      video.muted = globalMuted;
+      void video.play().then(() => setIsPlaying(true)).catch(() => setIsPlaying(false));
+    } else {
+      video.pause();
+      video.currentTime = 0;
+      setIsPlaying(false);
     }
   }, [isActive, isVideoPost]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -652,6 +665,111 @@ function ReelCard({
     return () => { alive = false; };
   }, [isActive, post.author_id]);
 
+  // Top comment preview — fetch the most-liked comment for this reel
+  // when it becomes active OR is queued up next (shouldPreload). Pre-fetching
+  // means the ribbon appears instantly on swipe instead of after the brief
+  // query. Author profile is joined from the public_profiles view.
+  useEffect(() => {
+    if (!post.id) { setTopComment(null); return; }
+    if (!isActive && !shouldPreload) return; // off-screen — don't fetch
+    let alive = true;
+    const rawId = post.id.startsWith("u-") ? post.id.slice(2) : post.id;
+    const source: "user" | "store" = post.source === "user" ? "user" : "store";
+    (async () => {
+      try {
+        const { data: cmts } = await (supabase as any)
+          .from("post_comments")
+          .select("user_id, content, likes_count")
+          .eq("post_id", rawId)
+          .eq("post_source", source)
+          .is("parent_id", null)
+          .order("likes_count", { ascending: false })
+          .order("created_at", { ascending: false })
+          .limit(1);
+        if (!alive || !cmts || cmts.length === 0) { setTopComment(null); return; }
+        const top = cmts[0];
+        const { data: profile } = await (supabase as any)
+          .from("public_profiles")
+          .select("full_name, avatar_url")
+          .eq("id", top.user_id)
+          .maybeSingle();
+        if (!alive) return;
+        setTopComment({
+          author_name: profile?.full_name || "User",
+          author_avatar: profile?.avatar_url || null,
+          content: String(top.content || "").slice(0, 80),
+          likes_count: top.likes_count || 0,
+        });
+      } catch { if (alive) setTopComment(null); }
+    })();
+    return () => { alive = false; };
+  }, [isActive, shouldPreload, post.id, post.source]);
+
+  // Realtime engagement bumps for the active reel. When other viewers like
+  // or comment on the post you're watching, the right-column counters
+  // animate up without requiring a refetch. Only subscribes for the active
+  // reel so we don't open one channel per off-screen card.
+  const [liveLikesCount, setLiveLikesCount] = useState(post.likes_count || 0);
+  const [liveCommentsCount, setLiveCommentsCount] = useState(post.comments_count || 0);
+  useEffect(() => {
+    setLiveLikesCount(post.likes_count || 0);
+    setLiveCommentsCount(post.comments_count || 0);
+  }, [post.id, post.likes_count, post.comments_count]);
+  useEffect(() => {
+    if (!isActive) return;
+    const isUser = post.source === "user";
+    const rawId = post.id.startsWith("u-") ? post.id.slice(2) : post.id;
+    const likesTable = isUser ? "post_likes" : "store_post_likes";
+    const channel = supabase
+      .channel(`reel-engagement-${post.id}`)
+      .on(
+        "postgres_changes" as any,
+        { event: "INSERT", schema: "public", table: likesTable, filter: `post_id=eq.${rawId}` },
+        () => setLiveLikesCount((n) => n + 1),
+      )
+      .on(
+        "postgres_changes" as any,
+        { event: "DELETE", schema: "public", table: likesTable, filter: `post_id=eq.${rawId}` },
+        () => setLiveLikesCount((n) => Math.max(0, n - 1)),
+      )
+      .on(
+        "postgres_changes" as any,
+        { event: "INSERT", schema: "public", table: "post_comments", filter: `post_id=eq.${rawId}` },
+        () => setLiveCommentsCount((n) => n + 1),
+      )
+      .on(
+        "postgres_changes" as any,
+        { event: "DELETE", schema: "public", table: "post_comments", filter: `post_id=eq.${rawId}` },
+        () => setLiveCommentsCount((n) => Math.max(0, n - 1)),
+      )
+      .subscribe();
+    return () => { void supabase.removeChannel(channel); };
+  }, [isActive, post.id, post.source]);
+
+  // Load existing bookmark state for this post
+  useEffect(() => {
+    if (!userId) { setSaved(false); return; }
+    let alive = true;
+    (supabase as any)
+      .from("bookmarks")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("item_id", post.id)
+      .maybeSingle()
+      .then(({ data }: any) => { if (alive && data) setSaved(true); });
+    return () => { alive = false; };
+  }, [userId, post.id]);
+
+  const handleSaveToggle = async () => {
+    if (!userId) {
+      toast.error("Please sign in to save reels");
+      return;
+    }
+    if (savingBookmarkRef.current) return;
+    savingBookmarkRef.current = true;
+    const next = !saved;
+    haptic(next ? "medium" : "light");
+    setSaved(next);
     try {
       if (next) {
         const { error } = await (supabase as any).from("bookmarks").upsert(
@@ -827,61 +945,99 @@ function ReelCard({
     }
   };
 
-  // Reset player state when the active slide changes.
-  // `urls` is intentionally excluded from deps: including an array prop causes the
-  // effect to fire on every parent re-render (new reference each time) which would
-  // call video.load() mid-playback and abort it. The urls value for the current
-  // activeIndex is read inside the effect but should only react to index changes.
-  // `isVideo` and `videoRef` are stable references that never need to trigger a reset.
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+  const tryFFmpegRepair = async (url: string) => {
+    if (triedFFmpegRepair) return;
+    setTriedFFmpegRepair(true);
+    setIsRepairing(true);
+    try {
+      const resp = await fetch(url);
+      if (!resp.ok) throw new Error("fetch failed");
+      const blob = await resp.blob();
+      const { repairVideoBlob } = await import("@/utils/videoRepair");
+      const repairedUrl = await repairVideoBlob(blob);
+      if (repairedUrl) {
+        if (blobSrc) URL.revokeObjectURL(blobSrc);
+        setBlobSrc(repairedUrl);
+        setHasPlaybackError(false);
+      } else {
+        setHasPlaybackError(false);
+      }
+    } catch {
+      setHasPlaybackError(false);
+    } finally {
+      setIsRepairing(false);
+    }
+  };
+
+  const runRecovery = async () => {
+    if (isBlobLoading) return;
+
+    if (!sourceUrl) {
+      setHasPlaybackError(true);
+      return;
+    }
+
+    if (!triedBlobFallback) {
+      await tryBlobFallback(sourceUrl);
+      return;
+    }
+
+    if (!triedFFmpegRepair) {
+      await tryFFmpegRepair(sourceUrl);
+      return;
+    }
+
+    setHasPlaybackError(false);
+  };
+
+  // Stall detection: fires once after 6 s if the video has not shown a frame.
+  // triedBlobFallback / triedFFmpegRepair are intentionally NOT in the dep array —
+  // including them caused stacked timers that prematurely set hasPlaybackError=true
+  // (as early as 5.4 s) before async recovery finished on slow connections.
+  // The stall condition avoids false positives for videos that are merely buffering.
   useEffect(() => {
-    setIsPlaying(false);
-    setIsMuted(true);
-    setPosterUrl(null);
+    if (!isActive || !isVideoPost || !currentSrc || hasLoadedFrame || isRepairing) return;
 
-    const video = videoRef.current;
-    if (!video || !isVideo(urls[activeIndex] ?? "")) return;
+    const timeoutId = window.setTimeout(() => {
+      const video = videoRef.current;
+      if (!video) return;
 
-    video.pause();
-    video.currentTime = 0;
-    video.muted = true;
-    video.load();
-  }, [activeIndex]);
+      // Only recover when the network has truly stalled, or when metadata is loaded
+      // but dimensions are zero (the iOS black-frame bug). Do NOT trigger while the
+      // browser is still buffering normally (NETWORK_LOADING).
+      const trulyStalled =
+        video.networkState === 3 /* NETWORK_STALLED is not in all TS typings */ ||
+        (video.readyState >= HTMLMediaElement.HAVE_METADATA &&
+          (video.videoWidth === 0 || video.videoHeight === 0));
+
+      if (trulyStalled) {
+        void runRecovery();
+      }
+    }, 6000);
+
+    return () => window.clearTimeout(timeoutId);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isActive, isVideoPost, currentSrc, hasLoadedFrame, isRepairing, isBlobLoading]);
 
   return (
-    <div className="relative bg-muted">
-      <div className={cn("overflow-hidden bg-black", isVideo(urls[activeIndex]) ? "aspect-[9/16]" : "aspect-square")}>
-        {isVideo(urls[activeIndex]) ? (
-          <div className="relative w-full h-full">
-            <video
-              key={urls[activeIndex]}
-              ref={videoRef}
-              src={urls[activeIndex]}
-              poster={posterUrl ?? undefined}
-              className="w-full h-full object-cover"
-              playsInline
-              loop
-              muted
-              preload="metadata"
-              onClick={toggleVideo}
-              onLoadStart={() => setIsMediaLoading(true)}
-              onCanPlay={() => setIsMediaLoading(false)}
-              onLoadedMetadata={(event) => {
-                event.currentTarget.muted = isMuted;
-                ensureVisibleFrame(event.currentTarget);
-              }}
-              onLoadedData={(event) => {
-                ensureVisibleFrame(event.currentTarget);
-                capturePosterFrame(event.currentTarget);
-                setIsMediaLoading(false);
-              }}
-              onPlay={(event) => {
-                setIsMuted(event.currentTarget.muted);
-                setIsPlaying(true);
-              }}
-              onPause={() => setIsPlaying(false)}
-              onError={() => { setIsPlaying(false); setIsMediaLoading(false); }}
-            />
+    <div className="relative w-full h-[100dvh] lg:h-full bg-black overflow-hidden snap-start flex-shrink-0">
+
+      {/* Live creator alert banner */}
+      <AnimatePresence>
+        {authorIsLive && isActive && !liveAlertDismissed && (
+          <motion.div
+            key="live-banner"
+            initial={{ y: -60, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: -60, opacity: 0 }}
+            transition={{ type: "spring", damping: 22, stiffness: 280 }}
+            className="absolute left-3 right-3 z-50 flex items-center gap-2.5 bg-black/80 backdrop-blur-md border border-white/10 rounded-2xl px-3 py-2.5 shadow-xl"
+            style={{ top: "calc(env(safe-area-inset-top, 0px) + 56px)" }}
+          >
+            <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse shrink-0" />
+            <p className="flex-1 text-white text-[13px] font-semibold truncate">
+              {post.source === "user" ? post.author_name : post.store_name} is LIVE now
+            </p>
             <button
               onClick={(e) => { e.stopPropagation(); navigate(`/live/${post.author_id}`); }}
               className="shrink-0 px-3 py-1 rounded-full bg-red-500 text-white text-[11px] font-bold active:scale-95 transition-transform"

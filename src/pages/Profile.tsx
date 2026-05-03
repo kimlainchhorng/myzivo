@@ -1005,10 +1005,11 @@ const Profile = () => {
                           whileHover={{ scale: 1.05 }}
                           transition={{ type: "spring", stiffness: 300 }}
                         >
-                          <div className="absolute -inset-2 bg-gradient-to-r from-primary via-primary/50 to-primary rounded-full blur-xl opacity-20 group-hover/avatar:opacity-40 transition-opacity" />
-                          <Avatar className="relative h-20 w-20 sm:h-24 sm:w-24 md:h-28 md:w-28 ring-4 ring-card shadow-2xl shadow-primary/20">
+                          {/* IG-style story-ring around the profile avatar */}
+                          <div className="absolute -inset-1 bg-ig-gradient rounded-full pointer-events-none" />
+                          <Avatar className="relative h-20 w-20 sm:h-24 sm:w-24 md:h-28 md:w-28 ring-2 ring-background">
                             <AvatarImage src={avatarPreview || profile?.avatar_url || undefined} alt="Profile" />
-                            <AvatarFallback className="bg-gradient-to-br from-primary to-primary/60 text-primary-foreground text-2xl font-bold">
+                            <AvatarFallback className="bg-muted text-foreground text-2xl font-bold">
                               {getInitials()}
                             </AvatarFallback>
                           </Avatar>
@@ -1058,7 +1059,7 @@ const Profile = () => {
                       {/* Email hidden — only visible to account owner in settings */}
                       <div className="flex flex-wrap items-center justify-start gap-2 mt-3">
                         {isPlus && (
-                          <Badge className="bg-gradient-to-r from-amber-500/20 to-orange-500/20 text-amber-500 border-amber-500/30 font-semibold rounded-full px-3 py-1 shadow-sm">
+                          <Badge className="bg-ig-gradient text-white border-0 font-semibold rounded-full px-3 py-1">
                             <Crown className="w-3 h-3 mr-1" /> ZIVO+ {plan === "annual" ? "Annual" : "Monthly"}
                           </Badge>
                         )}
@@ -1071,10 +1072,10 @@ const Profile = () => {
                           className={cn(
                             "group mt-3 inline-flex min-h-[36px] items-center gap-2 rounded-full border px-4 py-1.5 text-xs font-bold shadow-sm transition-all duration-200 active:scale-95 hover:shadow-md hover:-translate-y-0.5",
                             latestVerificationRequest?.status === "pending"
-                              ? "border-amber-500/30 bg-gradient-to-r from-amber-500/15 to-amber-500/5 text-amber-600"
+                              ? "border-border bg-muted text-foreground"
                               : latestVerificationRequest?.status === "rejected"
                                 ? "border-destructive/25 bg-destructive/5 text-destructive"
-                                : "border-[hsl(var(--flights)/0.35)] bg-gradient-to-r from-[hsl(var(--flights)/0.14)] via-[hsl(var(--flights)/0.06)] to-[hsl(var(--flights)/0.14)] text-[hsl(var(--flights))] shadow-[0_4px_14px_-6px_hsl(var(--flights)/0.5)]"
+                                : "border-foreground bg-foreground text-background"
                           )}
                         >
                           {latestVerificationRequest?.status === "pending" ? (

@@ -7,42 +7,50 @@
 @layer base {
   :root {
     /* =============================================
-       ZIVO DESIGN SYSTEM - Clean, Premium, Modern
+       ZIVO DESIGN SYSTEM — Instagram-style Mono
+       Pure white canvas, true-black ink, hairline
+       borders. The IG gradient lives in --ig-gradient
+       and is used only for accents (logo, story
+       rings, like burst), never for surfaces.
        ============================================= */
 
-    /* Base Colors */
+    /* Base Colors — pure mono */
     --background: 0 0% 100%;
-    --foreground: 0 0% 10%;
+    --foreground: 0 0% 0%;
     --card: 0 0% 100%;
-    --card-foreground: 0 0% 10%;
+    --card-foreground: 0 0% 0%;
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 10%;
+    --popover-foreground: 0 0% 0%;
 
-    /* Primary Brand - Verdant Green */
-    --primary: 142 71% 45%;
+    /* Primary — IG uses solid black for primary ink (text, primary buttons) */
+    --primary: 0 0% 0%;
     --primary-foreground: 0 0% 100%;
 
-    /* Secondary */
-    --secondary: 142 20% 96%;
-    --secondary-foreground: 142 50% 20%;
+    /* Secondary — neutral surface */
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 0%;
 
     /* Muted */
-    --muted: 210 20% 96%;
-    --muted-foreground: 215 16% 47%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
 
-    /* Accent */
-    --accent: 142 30% 95%;
-    --accent-foreground: 142 71% 35%;
+    /* Accent — IG action blue for inline links / "Follow" CTA */
+    --accent: 204 100% 96%;
+    --accent-foreground: 204 100% 40%;
 
     /* Destructive */
     --destructive: 0 72% 50%;
-    --destructive-foreground: 0 85% 97%;
+    --destructive-foreground: 0 0% 100%;
 
-    /* Borders & Inputs */
-    --border: 220 13% 91%;
-    --input: 220 13% 91%;
-    --ring: 142 71% 45%;
-    --radius: 0.75rem;
+    /* Borders & Inputs — IG-style hairline */
+    --border: 0 0% 88%;
+    --input: 0 0% 88%;
+    --ring: 0 0% 0%;
+    --radius: 0.5rem;
+
+    /* IG action blue (used by buttons / "Follow" links) */
+    --ig-blue: 204 100% 50%;
+    --ig-blue-foreground: 0 0% 100%;
 
     /* =============================================
        PRODUCT ACCENT COLORS (HSL)
@@ -114,8 +122,8 @@
     --chart-3: 172 66% 50%;
     --chart-4: 82 77% 55%;
     --chart-5: 0 0% 45%;
-    --font-sans: 'Work Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
-    --font-serif: 'Lora', ui-serif, Georgia, Cambria, 'Times New Roman', Times, serif;
+    --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Noto Sans', sans-serif;
+    --font-serif: 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif;
     --font-mono: 'Inconsolata', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
     --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
     --shadow-2xl: 0 1px 3px 0px hsl(0 0% 0% / 0.25);
@@ -125,41 +133,41 @@
 
   .dark {
     /* =============================================
-       ZIVO DARK THEME
+       ZIVO DARK THEME — true black for OLED
        ============================================= */
 
     /* Base Colors */
-    --background: 0 0% 9%;
+    --background: 0 0% 0%;
     --foreground: 0 0% 98%;
-    --card: 0 0% 14%;
+    --card: 0 0% 6%;
     --card-foreground: 0 0% 98%;
-    --popover: 0 0% 25%;
+    --popover: 0 0% 6%;
     --popover-foreground: 0 0% 98%;
 
-    /* Primary Brand - Verdant Green */
-    --primary: 142 71% 45%;
-    --primary-foreground: 0 0% 100%;
+    /* Primary — flips to white on dark */
+    --primary: 0 0% 100%;
+    --primary-foreground: 0 0% 0%;
 
-    /* Secondary */
-    --secondary: 0 0% 20%;
-    --secondary-foreground: 0 0% 90%;
+    /* Secondary — slightly lifted off background */
+    --secondary: 0 0% 10%;
+    --secondary-foreground: 0 0% 98%;
 
     /* Muted */
-    --muted: 0 0% 18%;
+    --muted: 0 0% 10%;
     --muted-foreground: 0 0% 64%;
 
-    /* Accent */
-    --accent: 178 84% 10%;
-    --accent-foreground: 172 66% 50%;
+    /* Accent — IG action blue, dimmed */
+    --accent: 204 60% 14%;
+    --accent-foreground: 204 100% 60%;
 
     /* Destructive */
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 85% 97%;
+    --destructive: 0 72% 55%;
+    --destructive-foreground: 0 0% 100%;
 
-    /* Borders & Inputs */
-    --border: 0 0% 32%;
-    --input: 0 0% 32%;
-    --ring: 142 71% 45%;
+    /* Borders & Inputs — IG-style hairline on near-black */
+    --border: 0 0% 16%;
+    --input: 0 0% 16%;
+    --ring: 0 0% 100%;
 
     /* Product Colors */
     --flights: 217 91% 60%;
@@ -531,14 +539,45 @@
   }
 
   /* =============================================
-     GRADIENT BACKGROUNDS (Service-specific)
+     INSTAGRAM GRADIENT — accent only
+     ---------------------------------------------
+     Reserved for: app wordmark, story-rail rings,
+     like-burst, "New" pills. Never use as a card
+     surface — that's the candy-look we just left.
      ============================================= */
-  .gradient-rides {
-    background: linear-gradient(135deg, hsl(160 84% 39%), hsl(174 72% 40%));
+  :root {
+    --ig-gradient: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
   }
 
+  .bg-ig-gradient { background: var(--ig-gradient); }
+
+  .text-ig-gradient {
+    background: var(--ig-gradient);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    color: transparent;
+  }
+
+  /* Story-ring wrapper — put avatar inside a div with this class */
+  .ring-ig-gradient {
+    background: var(--ig-gradient);
+    padding: 2px;
+    border-radius: 9999px;
+  }
+  .ring-ig-gradient > * {
+    background: hsl(var(--background));
+    padding: 2px;
+    border-radius: 9999px;
+    display: block;
+  }
+
+  /* Legacy gradient hooks — neutralized to mono so any leftover
+     references render as plain dark surfaces instead of candy. */
+  .gradient-rides,
   .gradient-eats {
-    background: linear-gradient(135deg, hsl(25 95% 53%), hsl(0 84% 60%));
+    background: hsl(var(--foreground));
+    color: hsl(var(--background));
   }
 
   /* =============================================
@@ -551,15 +590,10 @@
     border: 1px solid hsl(var(--border) / 0.3);
   }
 
-  /* =============================================
-     GLOW EFFECTS (Service-specific)
-     ============================================= */
-  .glow-rides {
-    box-shadow: 0 4px 20px hsl(160 84% 39% / 0.25);
-  }
-
+  /* Glow effects neutralized — IG uses no colored glows */
+  .glow-rides,
   .glow-eats {
-    box-shadow: 0 4px 20px hsl(25 95% 53% / 0.25);
+    box-shadow: var(--shadow-sm);
   }
 
   /* =============================================

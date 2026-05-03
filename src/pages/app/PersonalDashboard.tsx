@@ -571,7 +571,7 @@ const PersonalDashboard = () => {
 
   return (
     <AppLayout title="Personal" hideHeader>
-      <div className="flex flex-col px-4 pb-24" style={{ paddingTop: "max(calc(env(safe-area-inset-top, 0px) + 0.75rem), 12px)" }}>
+      <div className="flex flex-col px-4 pt-3 pb-24">
         {/* Header */}
         <div className="flex items-center gap-2.5 mb-3">
           <button

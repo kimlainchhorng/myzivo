@@ -34,9 +34,9 @@ interface TripGroup {
 }
 
 const itemConfig = {
-  flight: { icon: Plane, color: "text-sky-500", bg: "bg-sky-500/10", border: "border-sky-500/15" },
-  hotel: { icon: Hotel, color: "text-amber-500", bg: "bg-amber-500/10", border: "border-amber-500/15" },
-  car: { icon: Car, color: "text-emerald-500", bg: "bg-emerald-500/10", border: "border-emerald-500/15" },
+  flight: { icon: Plane },
+  hotel: { icon: Hotel },
+  car: { icon: Car },
 };
 
 // No demo trip — show empty state for guests
@@ -95,20 +95,20 @@ export default function TravelItineraryCard() {
       <motion.div
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl bg-gradient-to-br from-sky-500/8 via-amber-500/4 to-emerald-500/6 border border-sky-500/12 p-5 relative overflow-hidden shadow-sm"
+        className="rounded-lg bg-card border border-border p-5 relative"
       >
         <div className="flex items-center gap-2.5 mb-3">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500/20 to-sky-500/10 flex items-center justify-center shadow-inner">
-            <Luggage className="w-4 h-4 text-sky-500" />
+          <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center">
+            <Luggage className="w-4 h-4 text-foreground" strokeWidth={1.8} />
           </div>
           <div>
-            <span className="text-sm font-bold text-foreground">{t("home.no_trips")}</span>
+            <span className="text-sm font-semibold text-foreground">{t("home.no_trips")}</span>
             <p className="text-[10px] text-muted-foreground">{t("home.plan_adventure")}</p>
           </div>
         </div>
         <button
           onClick={() => navigate("/flights")}
-          className="w-full flex items-center justify-center gap-1.5 text-xs font-bold text-sky-500 py-2.5 rounded-xl bg-sky-500/5 border border-sky-500/15 touch-manipulation active:scale-[0.98] transition-all"
+          className="w-full flex items-center justify-center gap-1.5 text-xs font-semibold text-primary-foreground py-2.5 rounded-lg bg-primary touch-manipulation active:opacity-80 transition-opacity"
         >
           <Plane className="w-3.5 h-3.5" />
           {t("home.search_flights")}
@@ -122,25 +122,22 @@ export default function TravelItineraryCard() {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl bg-gradient-to-br from-sky-500/8 via-amber-500/4 to-emerald-500/6 border border-sky-500/12 p-5 relative overflow-hidden shadow-sm"
+      className="rounded-lg bg-card border border-border p-5 relative"
     >
-      {/* Decorative */}
-      <div className="absolute -top-10 -right-10 w-24 h-24 bg-sky-500/8 rounded-full blur-3xl" />
-
       {/* Header */}
       <div className="flex items-center justify-between mb-4 relative z-10">
         <div className="flex items-center gap-2.5">
-          <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-sky-500/20 to-sky-500/10 flex items-center justify-center shadow-inner">
-            <Luggage className="w-4 h-4 text-sky-500" />
+          <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center">
+            <Luggage className="w-4 h-4 text-foreground" strokeWidth={1.8} />
           </div>
           <div>
-            <span className="text-sm font-bold text-foreground">{t("home.upcoming_trip")}</span>
+            <span className="text-sm font-semibold text-foreground">{t("home.upcoming_trip")}</span>
             <p className="text-[10px] text-muted-foreground flex items-center gap-1">
               <MapPin className="w-2.5 h-2.5" /> {trip.destination}
             </p>
           </div>
         </div>
-        <Badge variant="outline" className="text-[10px] font-bold text-sky-500 border-sky-500/20 bg-sky-500/5">
+        <Badge variant="outline" className="text-[10px] font-bold text-foreground border-border bg-muted">
           {trip.daysUntil <= 0 ? "Today!" : `${trip.daysUntil}d away`}
         </Badge>
       </div>
@@ -156,25 +153,19 @@ export default function TravelItineraryCard() {
             <div key={item.id} className="flex gap-3">
               {/* Timeline line */}
               <div className="flex flex-col items-center">
-                <div className={`w-8 h-8 rounded-lg ${cfg.bg} ${cfg.border} border flex items-center justify-center shrink-0`}>
-                  <Icon className={`w-3.5 h-3.5 ${cfg.color}`} />
+                <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                  <Icon className="w-3.5 h-3.5 text-foreground" strokeWidth={1.8} />
                 </div>
-                {!isLast && <div className="w-px flex-1 bg-border/50 my-1" />}
+                {!isLast && <div className="w-px flex-1 bg-border my-1" />}
               </div>
 
               {/* Content */}
               <div className={`flex-1 ${!isLast ? "pb-3" : ""}`}>
                 <div className="flex items-center justify-between">
-                  <p className="text-xs font-bold text-foreground">{item.title}</p>
+                  <p className="text-xs font-semibold text-foreground">{item.title}</p>
                   <Badge
                     variant="outline"
-                    className={`text-[8px] font-bold ${
-                      item.status === "confirmed"
-                        ? "text-emerald-500 border-emerald-500/20 bg-emerald-500/5"
-                        : item.status === "pending"
-                        ? "text-amber-500 border-amber-500/20 bg-amber-500/5"
-                        : "text-muted-foreground border-border/30"
-                    }`}
+                    className="text-[8px] font-bold text-foreground border-border bg-muted"
                   >
                     {item.status}
                   </Badge>
@@ -189,7 +180,7 @@ export default function TravelItineraryCard() {
       {/* CTA */}
       <button
         onClick={() => navigate("/trips")}
-        className="mt-4 w-full flex items-center justify-center gap-1.5 text-xs font-bold text-sky-500 py-2.5 rounded-xl bg-sky-500/5 border border-sky-500/15 touch-manipulation active:scale-[0.98] transition-all relative z-10"
+        className="mt-4 w-full flex items-center justify-center gap-1.5 text-xs font-semibold text-primary-foreground py-2.5 rounded-lg bg-primary touch-manipulation active:opacity-80 transition-opacity relative z-10"
       >
         <Calendar className="w-3.5 h-3.5" />
         {t("home.view_itinerary")}

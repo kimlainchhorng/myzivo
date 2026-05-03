@@ -39,7 +39,7 @@ export default function SavedPostsLink() {
       </span>
       <span className="flex-1 text-[12px] font-medium text-foreground">
         {count === 1 ? "1 saved post" : `${count} saved posts`}
-        <span className="text-muted-foreground font-normal"> · come back later</span>
+        <span className="text-muted-foreground font-normal"> · tap to view</span>
       </span>
       <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
     </Link>

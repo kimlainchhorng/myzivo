@@ -23,40 +23,40 @@ export default function NetworkPromoStrip() {
       <motion.button
         whileTap={{ scale: 0.98 }}
         onClick={() => navigate("/network")}
-        className="w-full flex items-center gap-3 rounded-2xl border border-primary/30 bg-gradient-to-r from-primary/10 to-transparent p-3 text-left active:scale-[0.99] transition-transform touch-manipulation"
+        className="w-full flex items-center gap-3 rounded-lg border border-border bg-card p-3 text-left active:bg-muted/50 transition-colors touch-manipulation"
       >
-        <div className="relative w-11 h-11 rounded-xl bg-primary/15 flex items-center justify-center">
-          <BadgeCheck className="w-5 h-5 text-primary" />
+        <div className="relative w-11 h-11 rounded-full bg-muted flex items-center justify-center">
+          <BadgeCheck className="w-5 h-5 text-foreground" strokeWidth={1.8} />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-primary">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-ig-gradient">
               ZIVO Network
             </span>
-            <UtensilsCrossed className="w-3 h-3 text-orange-500" />
-            <BedDouble className="w-3 h-3 text-violet-500" />
+            <UtensilsCrossed className="w-3 h-3 text-muted-foreground" />
+            <BedDouble className="w-3 h-3 text-muted-foreground" />
           </div>
-          <div className="text-sm font-bold text-foreground truncate">
+          <div className="text-sm font-semibold text-foreground truncate">
             Every place here books in-app
           </div>
           <div className="text-[11px] text-muted-foreground truncate">
             Browse partner restaurants & hotels — order, reserve, or stay in one tap.
           </div>
         </div>
-        <ArrowRight className="w-4 h-4 text-primary shrink-0" />
+        <ArrowRight className="w-4 h-4 text-foreground shrink-0" />
       </motion.button>
 
       {savedCount > 0 && (
         <motion.button
           whileTap={{ scale: 0.98 }}
           onClick={() => navigate("/network/saved")}
-          className="w-full flex items-center gap-3 rounded-xl border border-border/50 bg-card/80 p-2.5 text-left active:scale-[0.99] transition-transform touch-manipulation"
+          className="w-full flex items-center gap-3 rounded-lg border border-border bg-card p-2.5 text-left active:bg-muted/50 transition-colors touch-manipulation"
         >
-          <div className="w-9 h-9 rounded-xl bg-red-500/10 flex items-center justify-center">
-            <Heart className="w-4 h-4 text-red-500 fill-red-500" />
+          <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center">
+            <Heart className="w-4 h-4 text-destructive fill-destructive" />
           </div>
           <div className="flex-1 min-w-0">
-            <div className="text-[12px] font-bold text-foreground">
+            <div className="text-[12px] font-semibold text-foreground">
               Your saved places ({savedCount})
             </div>
             <div className="text-[11px] text-muted-foreground">

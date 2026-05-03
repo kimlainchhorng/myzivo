@@ -26,7 +26,7 @@ import type { LucideIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { usePersonalizedHome, HomeRestaurant } from "@/hooks/usePersonalizedHome";
+import type { HomeRestaurant } from "@/hooks/usePersonalizedHome";
 import { useUserProfile } from "@/hooks/useUserProfile";
 import zivoRideIcon from "@/assets/zivo-ride-icon.webp";
 import zivoEatsIcon from "@/assets/zivo-eats-icon.webp";
@@ -42,24 +42,17 @@ const TrendingNearYou = lazy(() => import("@/components/home/TrendingNearYou"));
 const QuickReorderCarousel = lazy(() => import("@/components/home/widgets/QuickReorderCarousel"));
 const PriceAlertsWidget = lazy(() => import("@/components/home/widgets/PriceAlertsWidget"));
 const AISmartDeals = lazy(() => import("@/components/home/AISmartDeals"));
-const TravelItineraryCard = lazy(() => import("@/components/home/widgets/TravelItineraryCard"));
-const ActivityTimeline = lazy(() => import("@/components/shared/ActivityTimeline"));
 const ZivoMobileNav = lazy(() => import("@/components/app/ZivoMobileNav"));
 const UniversalSearchOverlay = lazy(() => import("@/components/search/UniversalSearchOverlay"));
-const ServicesHubGrid = lazy(() => import("@/components/home/ServicesHubGrid"));
 const PlanTripBundle = lazy(() => import("@/components/home/PlanTripBundle"));
 const SmartIntentSearch = lazy(() => import("@/components/home/SmartIntentSearch"));
 const NetworkPromoStrip = lazy(() => import("@/components/home/NetworkPromoStrip"));
 const ConciergeLauncher = lazy(() => import("@/components/home/ConciergeLauncher"));
 const TodayPlanWidget = lazy(() => import("@/components/home/TodayPlanWidget"));
-const NotificationsPeek = lazy(() => import("@/components/home/NotificationsPeek"));
 const SpendTrackerWidget = lazy(() => import("@/components/home/SpendTrackerWidget"));
-const QuickReorderWidget = lazy(() => import("@/components/home/QuickReorderWidget"));
-const InsightsCard = lazy(() => import("@/components/home/InsightsCard"));
 
 // Icons used below-fold (still small, but needed)
 import Utensils from "lucide-react/dist/esm/icons/utensils";
-import History from "lucide-react/dist/esm/icons/history";
 import Hotel from "lucide-react/dist/esm/icons/hotel";
 import Gift from "lucide-react/dist/esm/icons/gift";
 import Users from "lucide-react/dist/esm/icons/users";
@@ -72,15 +65,17 @@ import Timer from "lucide-react/dist/esm/icons/timer";
 import DollarSign from "lucide-react/dist/esm/icons/dollar-sign";
 import TrendingUp from "lucide-react/dist/esm/icons/trending-up";
 import Navigation from "lucide-react/dist/esm/icons/navigation";
-import Zap from "lucide-react/dist/esm/icons/zap";
 import Shield from "lucide-react/dist/esm/icons/shield";
 import Globe from "lucide-react/dist/esm/icons/globe";
 import Crown from "lucide-react/dist/esm/icons/crown";
-import Flame from "lucide-react/dist/esm/icons/flame";
 import Calendar from "lucide-react/dist/esm/icons/calendar";
-import Activity from "lucide-react/dist/esm/icons/activity";
 import Bell from "lucide-react/dist/esm/icons/bell";
 import Sparkles from "lucide-react/dist/esm/icons/sparkles";
+import Coffee from "lucide-react/dist/esm/icons/coffee";
+import Sunrise from "lucide-react/dist/esm/icons/sunrise";
+import Sun from "lucide-react/dist/esm/icons/sun";
+import Sunset from "lucide-react/dist/esm/icons/sunset";
+import Moon from "lucide-react/dist/esm/icons/moon";
 import UtensilsCrossed from "lucide-react/dist/esm/icons/utensils-crossed";
 import Tv from "lucide-react/dist/esm/icons/tv";
 import Rocket from "lucide-react/dist/esm/icons/rocket";
@@ -98,11 +93,9 @@ import { useLocalPaymentMethods } from "@/hooks/useLocalPaymentMethods";
 import { useRecommendedDeals } from "@/hooks/useRecommendedDeals";
 import { useRecentlyViewed } from "@/hooks/useRecentlyViewed";
 import { useSavedLocations } from "@/hooks/useSavedLocations";
-import { useCustomerActivityFeed } from "@/hooks/useCustomerActivityFeed";
 import { destinationPhotos } from "@/config/photos";
 import PartnerBadge from "@/components/shared/PartnerBadge";
 import { useDestinationPrices } from "@/hooks/useDestinationPrices";
-import { useHotDeals, type HotDeal } from "@/hooks/useHotDeals";
 import { getRestaurantPhoto } from "@/config/restaurantPhotos";
 import { formatDistanceToNow, format } from "date-fns";
 import useEmblaCarousel from "embla-carousel-react";
@@ -188,6 +181,124 @@ const RestaurantCard = ({ restaurant, onNavigate }: { restaurant: HomeRestaurant
 );
 
 // ─── Section Header (Premium) ───
+type SmartNowConfig = {
+  icon: LucideIcon;
+  greeting: string;
+  primary: { label: string; to: string };
+  chips: { label: string; to: string }[];
+  gradient: string;
+  iconBg: string;
+  iconColor: string;
+};
+
+const getSmartNow = (hour: number): SmartNowConfig => {
+  if (hour >= 5 && hour < 11) return {
+    icon: Sunrise,
+    greeting: "Good morning",
+    primary: { label: "Order coffee nearby", to: "/eats?q=coffee" },
+    chips: [
+      { label: "Ride to work", to: "/rides" },
+      { label: "Breakfast", to: "/eats?q=breakfast" },
+    ],
+    gradient: "from-amber-500/15 via-orange-500/8 to-transparent",
+    iconBg: "bg-amber-500/15",
+    iconColor: "text-amber-500",
+  };
+  if (hour >= 11 && hour < 14) return {
+    icon: UtensilsCrossed,
+    greeting: "Lunchtime",
+    primary: { label: "Lunch deals near you", to: "/eats?q=lunch" },
+    chips: [
+      { label: "Quick bite", to: "/eats?q=fast" },
+      { label: "Reserve a table", to: "/eats" },
+    ],
+    gradient: "from-orange-500/15 via-rose-500/8 to-transparent",
+    iconBg: "bg-orange-500/15",
+    iconColor: "text-orange-500",
+  };
+  if (hour >= 14 && hour < 17) return {
+    icon: Sun,
+    greeting: "Afternoon",
+    primary: { label: "Plan your evening", to: "/things-to-do" },
+    chips: [
+      { label: "Coffee break", to: "/eats?q=coffee" },
+      { label: "Trip ideas", to: "/flights" },
+    ],
+    gradient: "from-sky-500/15 via-cyan-500/8 to-transparent",
+    iconBg: "bg-sky-500/15",
+    iconColor: "text-sky-500",
+  };
+  if (hour >= 17 && hour < 21) return {
+    icon: Sunset,
+    greeting: "Evening",
+    primary: { label: "Order dinner", to: "/eats?q=dinner" },
+    chips: [
+      { label: "Ride home", to: "/rides" },
+      { label: "Reserve a table", to: "/eats" },
+    ],
+    gradient: "from-rose-500/15 via-fuchsia-500/8 to-transparent",
+    iconBg: "bg-rose-500/15",
+    iconColor: "text-rose-500",
+  };
+  return {
+    icon: Moon,
+    greeting: "Tonight",
+    primary: { label: "Plan tomorrow", to: "/trips" },
+    chips: [
+      { label: "Late-night eats", to: "/eats" },
+      { label: "Hotel stays", to: "/hotels" },
+    ],
+    gradient: "from-indigo-500/15 via-violet-500/8 to-transparent",
+    iconBg: "bg-indigo-500/15",
+    iconColor: "text-indigo-400",
+  };
+};
+
+const SmartNowCard = ({ onNavigate }: { onNavigate: (to: string) => void }) => {
+  const cfg = useMemo(() => getSmartNow(new Date().getHours()), []);
+  const Icon = cfg.icon;
+  return (
+    <div className="px-4 pb-3">
+      <motion.div
+        initial={{ opacity: 0, y: 6 }}
+        animate={{ opacity: 1, y: 0 }}
+        className={cn(
+          "relative overflow-hidden rounded-2xl border border-border/40 bg-gradient-to-r p-4 shadow-sm",
+          cfg.gradient
+        )}
+      >
+        <div className="flex items-center gap-3">
+          <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", cfg.iconBg)}>
+            <Icon className={cn("w-5 h-5", cfg.iconColor)} />
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">{cfg.greeting}</p>
+            <button
+              onClick={() => onNavigate(cfg.primary.to)}
+              className="mt-0.5 flex items-center gap-1 text-sm font-bold text-foreground active:opacity-70 transition-opacity touch-manipulation"
+            >
+              {cfg.primary.label}
+              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+            </button>
+          </div>
+        </div>
+        <div className="mt-3 flex gap-2 flex-wrap">
+          {cfg.chips.map((chip) => (
+            <motion.button
+              key={chip.label}
+              whileTap={{ scale: 0.96 }}
+              onClick={() => onNavigate(chip.to)}
+              className="text-[11px] font-semibold text-foreground bg-background/70 backdrop-blur border border-border/50 rounded-full px-2.5 py-1 touch-manipulation hover:border-primary/30 transition-colors"
+            >
+              {chip.label}
+            </motion.button>
+          ))}
+        </div>
+      </motion.div>
+    </div>
+  );
+};
+
 const SectionHeader = ({ icon: Icon, iconColor, title, badge, actionLabel, onSeeAll }: { icon: LucideIcon; iconColor: string; title: string; badge?: string; actionLabel?: string; onSeeAll: () => void }) => (
   <div className="flex items-center justify-between mb-4">
     <h2 className="text-sm font-bold text-foreground flex items-center gap-2.5">
@@ -287,7 +398,6 @@ const AppHome = () => {
     if (tab === "hotels") return t("home.search_hotels");
     return t("home.where_to");
   }
-  const { recommended, favorites, orderAgain } = usePersonalizedHome();
   const { data: profile } = useUserProfile();
   const { data: ownerStore, isLoading: ownerStoreLoading } = useOwnerStoreProfile();
   const lodgingStoreId = ownerStore?.isLodging ? ownerStore.id : "";
@@ -318,7 +428,6 @@ const AppHome = () => {
   const { referralCode, shareReferral } = useReferrals();
   const destKeys = isKH ? [...cambodiaDestKeysKH] : [...popularDestKeysUS];
   const { data: destPrices = {}, isLoading: destPricesLoading } = useDestinationPrices(destKeys, isKH);
-  const { data: hotDeals = [], isLoading: hotDealsLoading } = useHotDeals();
   const { data: allBookings = [] } = useScheduledBookingsQuery();
   const upcomingBookings = allBookings.filter((b: any) => {
     if (b.status !== "scheduled" && b.status !== "confirmed" && b.status !== "pending") return false;
@@ -356,7 +465,6 @@ const AppHome = () => {
       surge: isPeak,
     };
   })();
-  const { items: activityItems, hasActiveItems } = useCustomerActivityFeed();
 
   // Promo carousel
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
@@ -430,9 +538,12 @@ const AppHome = () => {
             <div className="pt-safe" />
           )}
 
-          {/* Service Tabs — 3D Pill Chips */}
+          {/* Service Tabs — Instagram story-rail style */}
           <div
-            className={cn("flex items-center gap-2 px-4 pb-2 overflow-hidden preserve-3d", user ? "pt-1" : "pt-safe")}
+            className={cn(
+              "flex items-stretch gap-1 px-4 pb-3 overflow-x-auto scrollbar-hide",
+              user ? "pt-1" : "pt-safe",
+            )}
           >
             {homeTabs.map((tab) => {
               const isActive = activeHomeTab === tab.id;
@@ -448,65 +559,48 @@ const AppHome = () => {
                   }}
                   aria-label={tab.label}
                   aria-pressed={isActive}
-                  whileTap={{ scale: 0.96 }}
-                  className={cn(
-                    "relative flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full text-sm font-semibold transition-all duration-200 touch-manipulation min-h-[44px]",
-                    isActive
-                      ? "text-white shadow-lg"
-                      : "text-muted-foreground"
-                  )}
-                  style={{ overflow: "hidden" }}
+                  whileTap={{ scale: 0.94 }}
+                  className="relative flex-1 flex flex-col items-center justify-start gap-1.5 py-1.5 touch-manipulation min-h-[64px]"
                 >
-                  {/* Background image */}
-                  <img
-                    src={tabBgMap[tab.id]}
-                    alt=""
-                    width={120}
-                    height={44}
-                    className="absolute inset-0 w-full h-full object-cover rounded-full"
-                    style={{
-                      opacity: isActive ? 0.75 : 0.15,
-                      transition: "opacity 0.3s ease",
-                    }}
-                  />
-                  {/* Color overlay */}
                   <span
-                    className="absolute inset-0 rounded-full"
-                    style={{
-                      background: isActive
-                        ? `linear-gradient(135deg, hsl(${tabCssVarMap[tab.id]} / 0.55), hsl(${tabCssVarMap[tab.id]} / 0.35))`
-                        : "hsl(var(--muted) / 0.3)",
-                      transition: "background 0.3s ease",
-                    }}
-                  />
-                  {/* Border */}
+                    className={cn(
+                      "rounded-full p-[2px] flex items-center justify-center",
+                      isActive ? "bg-ig-gradient" : "bg-border",
+                    )}
+                  >
+                    <span className="rounded-full bg-background p-[2px] flex items-center justify-center">
+                      <span className="w-[44px] h-[44px] rounded-full bg-muted flex items-center justify-center overflow-hidden">
+                        {tab.image ? (
+                          <img
+                            src={tab.image}
+                            alt={tab.label}
+                            width={28}
+                            height={28}
+                            className="w-7 h-7 object-contain"
+                          />
+                        ) : tab.icon ? (
+                          <tab.icon className="w-5 h-5 text-foreground" />
+                        ) : null}
+                      </span>
+                    </span>
+                  </span>
                   <span
-                    className="absolute inset-0 rounded-full pointer-events-none"
-                    style={{
-                      border: `1.5px solid hsl(${tabCssVarMap[tab.id]} / ${isActive ? "0.5" : "0.12"})`,
-                      boxShadow: isActive
-                        ? `0 4px 12px -2px hsl(${tabCssVarMap[tab.id]} / 0.35), inset 0 1px 2px rgba(255,255,255,0.15)`
-                        : "none",
-                    }}
-                  />
-                  <span className="relative z-10 flex items-center gap-1.5">
-                    {tab.image ? (
-                      <img src={tab.image} alt={tab.label} width={20} height={20} className="w-5 h-5 object-contain" style={{ filter: isActive ? "brightness(10)" : "none" }} />
-                    ) : tab.icon ? (
-                      <tab.icon className="w-4.5 h-4.5" />
-                    ) : null}
-                    <span className="text-[13px]" style={{ textShadow: isActive ? "0 1px 3px rgba(0,0,0,0.3)" : "none" }}>{tab.label}</span>
+                    className={cn(
+                      "text-[11px] leading-none transition-colors",
+                      isActive ? "font-semibold text-foreground" : "font-medium text-muted-foreground",
+                    )}
+                  >
+                    {tab.label}
                   </span>
                 </motion.button>
               );
             })}
           </div>
 
-          {/* Where to? Search Bar — 3D Glass */}
-          <div className="px-5 pt-4 pb-4">
+          {/* Search Bar — flat IG-style */}
+          <div className="px-4 pt-1 pb-4">
             <motion.button
-              whileTap={{ scale: 0.98, rotateX: 3 }}
-              whileHover={{ y: -2, scale: 1.01 }}
+              whileTap={{ scale: 0.99 }}
               aria-label={getSearchPlaceholder(activeHomeTab)}
               onClick={() => {
                 const routes: Record<string, string> = {
@@ -518,24 +612,12 @@ const AppHome = () => {
                 navigate(routes[activeHomeTab] || "/rides");
               }}
               className="w-full touch-manipulation"
-              style={{ transformStyle: "preserve-3d" }}
             >
-              <div className="relative rounded-2xl px-5 py-4 flex items-center gap-3 min-h-[56px] shadow-lg transition-all overflow-hidden" style={{ border: `1.5px solid hsl(${tabCssVarMap[activeHomeTab]} / 0.3)`, boxShadow: `0 4px 20px -4px hsl(${tabCssVarMap[activeHomeTab]} / 0.15)` }}>
-                {/* Background image for search bar */}
-                <img
-                  src={tabBgMap[activeHomeTab]}
-                  alt=""
-                  width={390}
-                  height={56}
-                  className="absolute inset-0 w-full h-full object-cover"
-                  style={{ opacity: 0.35, transition: "opacity 0.3s" }}
-                />
-                <span className="absolute inset-0" style={{ background: `linear-gradient(135deg, hsl(var(--card) / 0.75), hsl(var(--card) / 0.65))`, backdropFilter: "blur(8px)" }} />
-                <span className="absolute inset-0" style={{ background: `linear-gradient(90deg, hsl(${tabCssVarMap[activeHomeTab]} / 0.08), transparent 60%)` }} />
-                <div className="relative z-10 w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: `hsl(${tabCssVarMap[activeHomeTab]} / 0.15)` }}>
-                  <Search className="w-4.5 h-4.5" style={{ color: `hsl(${tabCssVarMap[activeHomeTab]})` }} />
-                </div>
-                <span className="relative z-10 font-medium text-[15px] flex-1 text-left" style={{ color: "hsl(var(--foreground) / 0.7)" }}>{getSearchPlaceholder(activeHomeTab)}</span>
+              <div className="relative rounded-lg px-4 py-3 flex items-center gap-2.5 min-h-[44px] bg-muted">
+                <Search className="w-[18px] h-[18px] text-muted-foreground shrink-0" strokeWidth={2} />
+                <span className="font-normal text-[15px] flex-1 text-left text-muted-foreground">
+                  {getSearchPlaceholder(activeHomeTab)}
+                </span>
               </div>
             </motion.button>
           </div>
@@ -550,10 +632,85 @@ const AppHome = () => {
             <TodayPlanWidget />
           </Suspense>
 
-          {/* ─── UNIFIED SERVICES HUB (Rides · Eats · Flights · Hotels) ─── */}
-          <Suspense fallback={<div className="h-[120px]" />}>
-            <ServicesHubGrid />
-          </Suspense>
+          {/* ─── SMART NOW (time-aware suggestion) ─── */}
+          <SmartNowCard onNavigate={navigate} />
+
+          {/* ─── LIVE TRIP TRACKER (moved up — surface active trip ASAP) ─── */}
+          <div className="px-5 pb-3">
+            <Suspense fallback={null}><LiveTripTracker /></Suspense>
+          </div>
+
+          {/* ─── UPCOMING BOOKINGS (moved up — show personal trips before browse) ─── */}
+          {user && upcomingBookings.length > 0 && (
+            <div className="px-5 pb-3">
+              <SectionHeader icon={Calendar} iconColor="text-sky-500" title="Upcoming Trips" badge={String(upcomingBookings.length)} actionLabel="See all" onSeeAll={() => navigate("/trips")} />
+              <div className="space-y-2">
+                {upcomingBookings.slice(0, 2).map((booking: any) => {
+                  const sd = booking.scheduledDate || booking.scheduled_date;
+                  const st = booking.scheduledTime || booking.scheduled_time;
+                  const bookingDate = new Date(`${sd}T${st}`);
+                  return (
+                    <motion.button
+                      key={booking.id}
+                      whileTap={{ scale: 0.98 }}
+                      onClick={() => navigate("/trips")}
+                      className="w-full flex items-center gap-3 bg-card border border-border/40 rounded-2xl p-4 shadow-sm text-left touch-manipulation"
+                    >
+                      <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center shrink-0 border border-sky-500/15">
+                        <Calendar className="w-5 h-5 text-sky-500" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-bold text-foreground truncate capitalize">{(booking.type || booking.service || "Trip").replace(/_/g, " ")}</p>
+                        <p className="text-[11px] text-muted-foreground">{format(bookingDate, "MMM d 'at' h:mm a")}</p>
+                      </div>
+                      <Badge variant="outline" className="text-[9px] font-bold text-sky-500 border-sky-500/20 bg-sky-500/5 shrink-0 capitalize">
+                        {booking.status || "Scheduled"}
+                      </Badge>
+                    </motion.button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* ─── FOR YOU (personalized stores — grouped with personal sections) ─── */}
+          <Suspense fallback={<div className="h-40 rounded-2xl bg-muted/30 animate-pulse mx-5" />}><TrendingNearYou /></Suspense>
+
+          {/* ─── QUICK REBOOK (moved up — personal cluster) ─── */}
+          <div className="px-5 pb-3">
+            <Suspense fallback={null}><QuickReorderCarousel /></Suspense>
+          </div>
+
+          {/* ─── RECENTLY VIEWED (moved up — personal cluster) ─── */}
+          {user && recentItems.length > 0 && (
+            <div className="px-5 pb-3">
+              <SectionHeader icon={Clock} iconColor="text-muted-foreground" title="Recently Viewed" actionLabel="Clear" onSeeAll={() => navigate("/more")} />
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-5 px-5" style={{ WebkitOverflowScrolling: "touch" }}>
+                {recentItems.slice(0, 8).map((item: any) => (
+                  <motion.button
+                    key={item.id}
+                    whileTap={{ scale: 0.96 }}
+                    onClick={() => {
+                      if (item.item_type === "restaurant") navigate(`/eats/restaurant/${item.item_id}`);
+                      else if (item.item_type === "store") navigate(`/store/${item.item_id}`);
+                      else if (item.item_type === "hotel") navigate(`/hotel/${item.item_id}`);
+                      else navigate("/more");
+                    }}
+                    className="shrink-0 flex flex-col items-center gap-1.5 touch-manipulation group"
+                  >
+                    <div className="w-[60px] h-[60px] rounded-2xl bg-card border border-border/40 shadow-sm flex items-center justify-center overflow-hidden group-hover:border-primary/30 transition-colors">
+                      {item.thumbnail_url ? (
+                        <img src={item.thumbnail_url} alt={item.title || "Item"} width={60} height={60} className="w-full h-full object-cover" loading="lazy" />
+                      ) : (
+                        <Globe className="w-5 h-5 text-muted-foreground" />
+                      )}
+                    </div>
+                    <p className="text-[10px] font-medium text-muted-foreground text-center truncate max-w-[64px]">{item.title || item.item_type}</p>
+                  </motion.button>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* ─── ZIVO CONCIERGE ─── */}
           <Suspense fallback={<div className="h-[140px]" />}>
@@ -570,24 +727,9 @@ const AppHome = () => {
             <NetworkPromoStrip />
           </Suspense>
 
-          {/* ─── RECENT ACTIVITY PEEK ─── */}
-          <Suspense fallback={null}>
-            <NotificationsPeek />
-          </Suspense>
-
-          {/* ─── QUICK REORDER (last delivered meal) ─── */}
-          <Suspense fallback={null}>
-            <QuickReorderWidget />
-          </Suspense>
-
           {/* ─── SPEND TRACKER (this month) ─── */}
           <Suspense fallback={null}>
             <SpendTrackerWidget />
-          </Suspense>
-
-          {/* ─── BUNDLE INSIGHTS ─── */}
-          <Suspense fallback={null}>
-            <InsightsCard />
           </Suspense>
 
           {/* ─── SAVED PLACES QUICK ACCESS ─── */}
@@ -621,64 +763,99 @@ const AppHome = () => {
           )}
 
           {/* What's New — recent product updates */}
-          <div className="px-4 sm:px-5 pb-4 grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <motion.button
-              type="button"
-              onClick={() => navigate("/rides/hub?tab=corporate")}
-              whileTap={{ scale: 0.98 }}
-              whileHover={{ y: -1 }}
-              className="group relative w-full overflow-hidden rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-3 sm:p-4 text-left shadow-sm"
-              aria-label="See what's new in the Ride Hub"
-            >
-              <div className="flex items-center gap-2.5 sm:gap-3">
-                <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
-                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-primary" />
-                  <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary" />
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <p className="text-sm font-bold text-foreground">What's new in Ride Hub</p>
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-primary/15 text-primary">3 NEW</span>
+          <div className="px-4 sm:px-5 pb-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[10px] uppercase font-bold text-muted-foreground/70 tracking-[0.2em]">Updates</p>
+              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-primary/15 text-primary">4 NEW</span>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              {[
+                {
+                  to: "/rides/hub?tab=corporate",
+                  title: "What's new in Ride Hub",
+                  desc: "Live fleet tracker · Tab categories & filter · Shareable URLs",
+                  count: "3 NEW",
+                  tone: "primary",
+                  ring: "border-primary/20",
+                  bg: "from-primary/10 via-primary/5 to-transparent",
+                  iconBg: "bg-primary/15",
+                  iconColor: "text-primary",
+                  badgeBg: "bg-primary/15 text-primary",
+                  pingBg: "bg-primary",
+                },
+                {
+                  to: "/chat",
+                  title: "What's new in Chat",
+                  desc: "Auto-delete 1d/7d/30d · ⌘K shortcut · Drag & drop · Smart replies · Polls",
+                  count: "9 NEW",
+                  tone: "fuchsia",
+                  ring: "border-fuchsia-500/20",
+                  bg: "from-fuchsia-500/10 via-fuchsia-500/5 to-transparent",
+                  iconBg: "bg-fuchsia-500/15",
+                  iconColor: "text-fuchsia-500",
+                  badgeBg: "bg-fuchsia-500/15 text-fuchsia-500",
+                  pingBg: "bg-fuchsia-500",
+                },
+                {
+                  to: "/eats",
+                  title: "What's new in Eats",
+                  desc: "AI menu picks · Group order · Faster checkout · Live ETA",
+                  count: "4 NEW",
+                  tone: "orange",
+                  ring: "border-orange-500/20",
+                  bg: "from-orange-500/10 via-orange-500/5 to-transparent",
+                  iconBg: "bg-orange-500/15",
+                  iconColor: "text-orange-500",
+                  badgeBg: "bg-orange-500/15 text-orange-500",
+                  pingBg: "bg-orange-500",
+                },
+                {
+                  to: "/hotels",
+                  title: "What's new in Hotels",
+                  desc: "Map filters · Free-cancel highlights · Member rates · Bundle savings",
+                  count: "5 NEW",
+                  tone: "violet",
+                  ring: "border-violet-500/20",
+                  bg: "from-violet-500/10 via-violet-500/5 to-transparent",
+                  iconBg: "bg-violet-500/15",
+                  iconColor: "text-violet-500",
+                  badgeBg: "bg-violet-500/15 text-violet-500",
+                  pingBg: "bg-violet-500",
+                },
+              ].map((u) => (
+                <motion.button
+                  key={u.title}
+                  type="button"
+                  onClick={() => navigate(u.to)}
+                  whileTap={{ scale: 0.98 }}
+                  whileHover={{ y: -1 }}
+                  className={cn(
+                    "group relative w-full overflow-hidden rounded-2xl border bg-gradient-to-r p-3 sm:p-4 text-left shadow-sm",
+                    u.ring,
+                    u.bg
+                  )}
+                  aria-label={u.title}
+                >
+                  <div className="flex items-center gap-2.5 sm:gap-3">
+                    <div className={cn("relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center shrink-0", u.iconBg)}>
+                      <Sparkles className={cn("w-4 h-4 sm:w-5 sm:h-5", u.iconColor)} />
+                      <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
+                        <span className={cn("animate-ping absolute inline-flex h-full w-full rounded-full opacity-75", u.pingBg)} />
+                        <span className={cn("relative inline-flex rounded-full h-2.5 w-2.5", u.pingBg)} />
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-sm font-bold text-foreground">{u.title}</p>
+                        <span className={cn("text-[9px] font-bold px-1.5 py-0.5 rounded-full", u.badgeBg)}>{u.count}</span>
+                      </div>
+                      <p className="text-xs text-muted-foreground truncate">{u.desc}</p>
+                    </div>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 transition-transform group-hover:translate-x-0.5" />
                   </div>
-                  <p className="text-xs text-muted-foreground truncate">
-                    Live fleet tracker · Tab categories &amp; filter · Shareable URLs
-                  </p>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 transition-transform group-hover:translate-x-0.5" />
-              </div>
-            </motion.button>
-
-            <motion.button
-              type="button"
-              onClick={() => navigate("/chat")}
-              whileTap={{ scale: 0.98 }}
-              whileHover={{ y: -1 }}
-              className="group relative w-full overflow-hidden rounded-2xl border border-fuchsia-500/20 bg-gradient-to-r from-fuchsia-500/10 via-fuchsia-500/5 to-transparent p-3 sm:p-4 text-left shadow-sm"
-              aria-label="See what's new in Chat"
-            >
-              <div className="flex items-center gap-2.5 sm:gap-3">
-                <div className="relative w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-fuchsia-500/15 flex items-center justify-center shrink-0">
-                  <Sparkles className="w-4 h-4 sm:w-5 sm:h-5 text-fuchsia-500" />
-                  <span className="absolute -top-0.5 -right-0.5 flex h-2.5 w-2.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-fuchsia-500 opacity-75" />
-                    <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-fuchsia-500" />
-                  </span>
-                </div>
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-1.5">
-                    <p className="text-sm font-bold text-foreground">What's new in Chat</p>
-                    <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full bg-fuchsia-500/15 text-fuchsia-500">9 NEW</span>
-                  </div>
-                  <p className="text-xs text-muted-foreground truncate">
-                    Auto-delete 1d/7d/30d · ⌘K shortcut · Drag &amp; drop · Smart replies · Polls
-                  </p>
-                </div>
-                <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0 transition-transform group-hover:translate-x-0.5" />
-              </div>
-            </motion.button>
+                </motion.button>
+              ))}
+            </div>
           </div>
 
           {/* ─── PROMO BANNER CAROUSEL ─── */}
@@ -944,146 +1121,8 @@ const AppHome = () => {
         {/* ─── MAIN CONTENT ─── */}
         <div className="px-5 space-y-8">
 
-          {/* ─── LIVE TRIP TRACKER ─── */}
-          <Suspense fallback={null}><LiveTripTracker /></Suspense>
-
-          {/* ─── UPCOMING BOOKINGS ─── */}
-          {user && upcomingBookings.length > 0 && (
-            <div>
-              <SectionHeader icon={Calendar} iconColor="text-sky-500" title="Upcoming Trips" badge={String(upcomingBookings.length)} actionLabel="See all" onSeeAll={() => navigate("/trips")} />
-              <div className="space-y-2">
-                {upcomingBookings.slice(0, 2).map((booking: any) => {
-                  const sd = booking.scheduledDate || booking.scheduled_date;
-                  const st = booking.scheduledTime || booking.scheduled_time;
-                  const bookingDate = new Date(`${sd}T${st}`);
-                  return (
-                    <motion.button
-                      key={booking.id}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => navigate("/trips")}
-                      className="w-full flex items-center gap-3 bg-card border border-border/40 rounded-2xl p-4 shadow-sm text-left touch-manipulation"
-                    >
-                      <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center shrink-0 border border-sky-500/15">
-                        <Calendar className="w-5 h-5 text-sky-500" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-bold text-foreground truncate capitalize">{(booking.type || booking.service || "Trip").replace(/_/g, " ")}</p>
-                        <p className="text-[11px] text-muted-foreground">{format(bookingDate, "MMM d 'at' h:mm a")}</p>
-                      </div>
-                      <Badge variant="outline" className="text-[9px] font-bold text-sky-500 border-sky-500/20 bg-sky-500/5 shrink-0 capitalize">
-                        {booking.status || "Scheduled"}
-                      </Badge>
-                    </motion.button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* ─── TRAVEL ITINERARY CARD ─── */}
-          {user && (
-            <Suspense fallback={<div className="h-36 rounded-2xl bg-muted/30 animate-pulse" />}>
-              <TravelItineraryCard />
-            </Suspense>
-          )}
-
-          {/* ─── TRENDING NEAR YOU (AI) ─── */}
-          <Suspense fallback={<div className="h-40 rounded-2xl bg-muted/30 animate-pulse" />}><TrendingNearYou /></Suspense>
-
-          {/* ─── QUICK REORDER CAROUSEL ─── */}
-          <Suspense fallback={null}><QuickReorderCarousel /></Suspense>
-
           {/* ─── PRICE ALERTS WIDGET ─── */}
           <Suspense fallback={null}><PriceAlertsWidget /></Suspense>
-
-          {/* ─── ORDER AGAIN ─── */}
-          {user && orderAgain.length > 0 && (
-            <div>
-              <SectionHeader icon={History} iconColor="text-orange-500" title={t("home.order_again")} badge="Quick" actionLabel={t("home.see_all")} onSeeAll={() => navigate("/eats")} />
-              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-5 px-5" style={{ WebkitOverflowScrolling: 'touch' }}>
-                {orderAgain.map((r) => (
-                  <motion.button
-                    key={r.id}
-                    whileTap={{ scale: 0.96 }}
-                    onClick={() => navigate(`/eats/restaurant/${r.id}`)}
-                    className="shrink-0 w-[170px] rounded-2xl overflow-hidden bg-card border border-border/40 shadow-sm hover:shadow-lg transition-all duration-300 touch-manipulation text-left group"
-                  >
-                    <div className="relative h-[100px] overflow-hidden">
-                       <img
-                         src={r.cover_image_url || r.logo_url || "https://images.unsplash.com/photo-1504674900247-0877df9cc836?auto=format&fit=crop&q=80&w=400"}
-                         alt={r.name}
-                         width={170}
-                         height={100}
-                         className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                         loading="lazy"
-                       />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent" />
-                      <div className="absolute bottom-2 right-2 bg-orange-500/90 backdrop-blur-sm rounded-full px-2.5 py-0.5 shadow-sm">
-                        <span className="text-[9px] font-bold text-primary-foreground flex items-center gap-0.5"><Zap className="w-2.5 h-2.5" /> {t("home.reorder")}</span>
-                      </div>
-                    </div>
-                    <div className="p-3">
-                      <div className="text-xs font-bold text-foreground truncate">{r.name}</div>
-                      {r.cuisine_type && (
-                        <div className="text-[10px] text-muted-foreground truncate mt-0.5">{r.cuisine_type}</div>
-                      )}
-                    </div>
-                  </motion.button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ─── RECENTLY VIEWED ─── */}
-          {user && recentItems.length > 0 && (
-            <div>
-              <SectionHeader icon={Clock} iconColor="text-muted-foreground" title="Recently Viewed" actionLabel="Clear" onSeeAll={() => navigate("/more")} />
-              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-5 px-5" style={{ WebkitOverflowScrolling: "touch" }}>
-                {recentItems.slice(0, 8).map((item: any) => (
-                  <motion.button
-                    key={item.id}
-                    whileTap={{ scale: 0.96 }}
-                    onClick={() => {
-                      if (item.item_type === "restaurant") navigate(`/eats/restaurant/${item.item_id}`);
-                      else if (item.item_type === "store") navigate(`/store/${item.item_id}`);
-                      else if (item.item_type === "hotel") navigate(`/hotel/${item.item_id}`);
-                      else navigate("/more");
-                    }}
-                    className="shrink-0 flex flex-col items-center gap-1.5 touch-manipulation group"
-                  >
-                    <div className="w-[60px] h-[60px] rounded-2xl bg-card border border-border/40 shadow-sm flex items-center justify-center overflow-hidden group-hover:border-primary/30 transition-colors">
-                      {item.thumbnail_url ? (
-                        <img src={item.thumbnail_url} alt={item.title || "Item"} width={60} height={60} className="w-full h-full object-cover" loading="lazy" />
-                      ) : (
-                        <Globe className="w-5 h-5 text-muted-foreground" />
-                      )}
-                    </div>
-                    <p className="text-[10px] font-medium text-muted-foreground text-center truncate max-w-[64px]">{item.title || item.item_type}</p>
-                  </motion.button>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* ─── RECENT ACTIVITY ─── */}
-          {user && activityItems.length > 0 && (
-            <div>
-              <SectionHeader icon={Clock} iconColor="text-primary" title={t("home.recent_activity")} actionLabel={t("home.see_all")} onSeeAll={() => navigate("/trips")} />
-              <Suspense fallback={null}><ActivityTimeline
-                items={activityItems.map((a: any) => ({
-                  id: a.id,
-                  icon: Activity,
-                  iconColor: "text-primary",
-                  title: a.eventType?.replace(/_/g, " ") || "Activity",
-                  subtitle: typeof a.eventData === "object" ? JSON.stringify(a.eventData)?.slice(0, 60) : String(a.eventData || ""),
-                  timestamp: new Date(a.createdAt || a.created_at || Date.now()),
-                  status: "completed" as const,
-                }))}
-                maxHeight="280px"
-                emptyMessage="No recent activity"
-              /></Suspense>
-            </div>
-          )}
 
           {/* ─── POPULAR NEAR YOU ─── */}
           <div>
@@ -1165,74 +1204,6 @@ const AppHome = () => {
 
           {/* ─── AI SMART DEALS ─── */}
           <Suspense fallback={<div className="h-40 rounded-2xl bg-muted/30 animate-pulse" />}><AISmartDeals /></Suspense>
-
-          {/* ─── HOT DEALS ─── */}
-          <div>
-            <SectionHeader icon={Flame} iconColor="text-orange-500" title="Hot Deals" badge="LIVE" actionLabel={t("home.see_all")} onSeeAll={() => navigate("/flights")} />
-            {hotDealsLoading ? (
-              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-5 px-5" style={{ WebkitOverflowScrolling: 'touch' }}>
-                {[1, 2, 3].map(i => (
-                  <div key={i} className="shrink-0 w-[220px] h-[140px] rounded-2xl bg-muted/40 animate-pulse" />
-                ))}
-              </div>
-            ) : hotDeals.length > 0 ? (
-              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-5 px-5" style={{ WebkitOverflowScrolling: 'touch' }}>
-                {hotDeals.map((deal, i) => {
-                  const destPhoto = destinationPhotos[deal.destinationKey as keyof typeof destinationPhotos];
-                  const formattedDate = new Date(deal.departureDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                  return (
-                    <motion.button
-                      key={`${deal.originCode}-${deal.destinationCode}-${i}`}
-                      whileTap={{ scale: 0.96 }}
-                      onClick={() => navigate(`/flights/results?origin=${deal.originCode}&destination=${deal.destinationCode}&departureDate=${deal.departureDate}&adults=1&cabinClass=economy`)}
-                      className="shrink-0 w-[220px] rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 touch-manipulation text-left group relative border border-border/20"
-                    >
-                      <div className="relative h-[140px] overflow-hidden">
-                        <img
-                          src={destPhoto?.src || `https://images.unsplash.com/photo-1507525428034-b723cf961d3e?auto=format&fit=crop&q=80&w=400`}
-                          alt={deal.destination}
-                          width={220}
-                          height={140}
-                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-                          loading="lazy"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-transparent" />
-                        <div className="absolute top-2 left-2 bg-gradient-to-r from-orange-500 to-red-500 rounded-full px-2.5 py-0.5 shadow-lg">
-                          <span className="text-[8px] font-bold text-white uppercase tracking-wider flex items-center gap-1">
-                            <Flame className="w-2.5 h-2.5" /> HOT DEAL
-                          </span>
-                        </div>
-                        <div className="absolute top-2 right-2 bg-black/50 backdrop-blur-sm rounded-full px-2 py-0.5">
-                          <span className="text-[8px] font-semibold text-white flex items-center gap-0.5">
-                            <Calendar className="w-2 h-2" /> {formattedDate}
-                          </span>
-                        </div>
-                        <div className="absolute bottom-3 left-3 right-3">
-                          <div className="flex items-end justify-between">
-                            <div>
-                              <div className="text-xs font-bold text-white">{deal.destination}</div>
-                              <div className="text-[9px] text-white/70 font-medium mt-0.5">
-                                {deal.originCode} → {deal.destinationCode} · {deal.stops === 0 ? "Nonstop" : `${deal.stops} stop`} · {deal.duration}
-                              </div>
-                              {deal.airline && (
-                                <div className="text-[8px] text-white/60 mt-0.5">{deal.airline}</div>
-                              )}
-                            </div>
-                            <div className="text-right">
-                              <div className="text-lg font-black text-white leading-none">${Math.round(deal.price)}</div>
-                              <div className="text-[8px] text-white/60">one way</div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.button>
-                  );
-                })}
-              </div>
-            ) : (
-              <p className="text-xs text-muted-foreground">No deals available right now. Check back soon!</p>
-            )}
-          </div>
 
           {/* ─── LOYALTY & REWARDS CARD ─── */}
           {user && points && (

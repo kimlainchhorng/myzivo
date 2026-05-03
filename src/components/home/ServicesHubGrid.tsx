@@ -32,52 +32,13 @@ interface ServiceTile {
   tagline: string;
   icon: LucideIcon;
   href: string;
-  gradient: string;
-  ring: string;
-  text: string;
 }
 
 const TILES: ServiceTile[] = [
-  {
-    key: "rides",
-    label: "Rides",
-    tagline: "Get a car in minutes",
-    icon: Car,
-    href: "/rides",
-    gradient: "from-emerald-500/95 to-teal-600/90",
-    ring: "ring-emerald-400/40",
-    text: "text-emerald-50",
-  },
-  {
-    key: "eats",
-    label: "Eats",
-    tagline: "Order or reserve a table",
-    icon: UtensilsCrossed,
-    href: "/eats",
-    gradient: "from-orange-500/95 to-amber-600/90",
-    ring: "ring-orange-400/40",
-    text: "text-orange-50",
-  },
-  {
-    key: "flights",
-    label: "Flights",
-    tagline: "Search & book worldwide",
-    icon: Plane,
-    href: "/flights",
-    gradient: "from-sky-500/95 to-blue-600/90",
-    ring: "ring-sky-400/40",
-    text: "text-sky-50",
-  },
-  {
-    key: "hotels",
-    label: "Hotels",
-    tagline: "Stays in our network",
-    icon: BedDouble,
-    href: "/hotels",
-    gradient: "from-violet-500/95 to-purple-600/90",
-    ring: "ring-violet-400/40",
-    text: "text-violet-50",
-  },
+  { key: "rides", label: "Rides", tagline: "Get a car in minutes", icon: Car, href: "/rides" },
+  { key: "eats", label: "Eats", tagline: "Order or reserve a table", icon: UtensilsCrossed, href: "/eats" },
+  { key: "flights", label: "Flights", tagline: "Search & book worldwide", icon: Plane, href: "/flights" },
+  { key: "hotels", label: "Hotels", tagline: "Stays in our network", icon: BedDouble, href: "/hotels" },
 ];
 
 export default function ServicesHubGrid() {
@@ -168,12 +129,12 @@ export default function ServicesHubGrid() {
   return (
     <div className="px-4 pb-3">
       <div className="flex items-center justify-between mb-2 px-1">
-        <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
-          <CalendarClock className="w-4 h-4 text-primary" /> Your services
+        <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <CalendarClock className="w-4 h-4" /> Your services
         </h2>
         <button
           onClick={() => navigate("/services")}
-          className="text-[11px] text-primary font-semibold flex items-center gap-0.5 active:scale-95 transition-transform"
+          className="text-[11px] text-foreground font-semibold flex items-center gap-0.5 active:opacity-60 transition-opacity"
         >
           See all <ChevronRight className="w-3 h-3" />
         </button>
@@ -187,36 +148,33 @@ export default function ServicesHubGrid() {
             <motion.button
               key={tile.key}
               onClick={() => navigate(s.href)}
-              whileTap={{ scale: 0.97 }}
-              whileHover={{ y: -2 }}
+              whileTap={{ scale: 0.98 }}
               initial={{ opacity: 0, y: 8 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.04 }}
-              className={`relative overflow-hidden rounded-2xl p-3.5 min-h-[96px] flex flex-col justify-between bg-gradient-to-br ${tile.gradient} text-left shadow-md ring-1 ${tile.ring} touch-manipulation`}
+              className="relative overflow-hidden rounded-lg p-3.5 min-h-[96px] flex flex-col justify-between bg-card border border-border text-left touch-manipulation active:bg-muted/50 transition-colors"
               aria-label={`Open ${tile.label}${s.status ? ` — ${s.status}` : ""}`}
             >
               {live && (
-                <span className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-white/25 backdrop-blur px-1.5 py-0.5 text-[9px] font-bold text-white">
+                <span className="absolute top-2 right-2 flex items-center gap-1 rounded-full bg-destructive px-1.5 py-0.5 text-[9px] font-bold text-destructive-foreground">
                   <span className="relative flex h-1.5 w-1.5">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-white opacity-75" />
-                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-white" />
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-destructive-foreground opacity-75" />
+                    <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-destructive-foreground" />
                   </span>
                   LIVE
                 </span>
               )}
               <div className="flex items-center gap-2">
-                <div className="w-9 h-9 rounded-xl bg-white/20 backdrop-blur flex items-center justify-center">
-                  <Icon className={`w-5 h-5 ${tile.text}`} />
+                <div className="w-9 h-9 rounded-full bg-muted flex items-center justify-center">
+                  <Icon className="w-[18px] h-[18px] text-foreground" strokeWidth={1.8} />
                 </div>
-                <div>
-                  <div className={`text-[15px] font-bold ${tile.text}`}>{tile.label}</div>
-                </div>
+                <div className="text-[15px] font-semibold text-foreground">{tile.label}</div>
               </div>
               <div>
-                <div className={`text-[11px] ${tile.text} opacity-90 line-clamp-1`}>
+                <div className="text-[11px] text-muted-foreground line-clamp-1">
                   {s.status ?? tile.tagline}
                 </div>
-                <div className={`mt-1 inline-flex items-center gap-0.5 text-[11px] font-bold ${tile.text}`}>
+                <div className="mt-1 inline-flex items-center gap-0.5 text-[11px] font-semibold text-foreground">
                   {s.status ? "Open" : "Start"} <ChevronRight className="w-3 h-3" />
                 </div>
               </div>
