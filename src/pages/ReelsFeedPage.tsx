@@ -600,9 +600,9 @@ export default function ReelsFeedPage() {
             id: post.id,
             source: "store",
             media_urls: urls,
-            media_type: urls.length === 0
-              ? "text"
-              : (post.media_type === "video" || urls[0]?.match(/\.(mp4|mov|webm)/i)) ? "video" : "image",
+            media_type: (urls.length === 0
+              ? "image"
+              : (post.media_type === "video" || urls[0]?.match(/\.(mp4|mov|webm)/i)) ? "video" : "image") as "image" | "video",
             caption: post.caption,
             likes_count: post.likes_count || 0,
             comments_count: post.comments_count || 0,
