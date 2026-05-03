@@ -56,22 +56,23 @@ export default function TodayPlanWidget() {
       const todayISO = new Date().toISOString().slice(0, 10);
       const next: PlanEntry[] = [];
 
+      const sb = supabase as any;
       const [reservations, flights, hotels] = await Promise.all([
-        supabase
+        sb
           .from("restaurant_reservations")
           .select("id,reservation_date,reservation_time,party_size,restaurant_id")
           .eq("user_id", user.id)
           .eq("reservation_date", todayISO),
-        supabase
+        sb
           .from("flight_bookings")
           .select("id,origin,destination,departure_date,booking_reference")
-          .eq("user_id", user.id)
+          .eq("customer_id", user.id)
           .eq("departure_date", todayISO),
-        supabase
+        sb
           .from("hotel_bookings")
-          .select("id,hotel_name,city,check_in")
-          .eq("user_id", user.id)
-          .eq("check_in", todayISO),
+          .select("id,hotel_name,city,check_in_date")
+          .eq("customer_id", user.id)
+          .eq("check_in_date", todayISO),
       ]);
 
       const restaurantIds = (reservations.data ?? []).map((r: any) => r.restaurant_id).filter(Boolean);
