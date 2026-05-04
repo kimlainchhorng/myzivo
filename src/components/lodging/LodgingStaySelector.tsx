@@ -146,8 +146,8 @@ export function LodgingStaySelector({
                 unavailable: "line-through text-muted-foreground/60",
               }}
               components={{
-                DayContent: ({ date }) => renderDayContent(date, "in"),
-              }}
+                DayContent: ({ date }: any) => renderDayContent(date, "in"),
+              } as any}
               initialFocus
               className={cn("p-3 pointer-events-auto", fromPriceLabel && "pt-1")}
             />
@@ -184,8 +184,8 @@ export function LodgingStaySelector({
                 unavailable: "line-through text-muted-foreground/60",
               }}
               components={{
-                DayContent: ({ date }) => renderDayContent(date, "out"),
-              }}
+                DayContent: ({ date }: any) => renderDayContent(date, "out"),
+              } as any}
               initialFocus
               className={cn("p-3 pointer-events-auto", fromPriceLabel && "pt-1")}
             />

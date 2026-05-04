@@ -313,7 +313,7 @@ export function MobileDateRangePickerSheet({
                 className="pointer-events-auto p-3"
                 classNames={calendarClassNames3DPricing}
                 components={{
-                  DayContent: ({ date }) => {
+                  DayContent: ({ date }: any) => {
                     const disabled = isBefore(date, earliestDate);
                     const level = disabled ? null : getLevel(date);
                     return (
@@ -325,7 +325,7 @@ export function MobileDateRangePickerSheet({
                       </div>
                     );
                   },
-                }}
+                } as any}
               />
             </div>
           </div>

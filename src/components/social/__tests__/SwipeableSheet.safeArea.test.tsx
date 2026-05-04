@@ -23,7 +23,7 @@ import {
 //    mirror inline style values to data-* attributes (jsdom's CSSOM drops
 //    `env()`, `dvh`, etc., so we cannot read them back from el.style).
 vi.mock("framer-motion", () => {
-  const passthrough = (tag: keyof JSX.IntrinsicElements = "div") =>
+  const passthrough = (tag: any = "div") =>
     React.forwardRef<HTMLElement, any>(
       (
         {
@@ -69,7 +69,7 @@ vi.mock("framer-motion", () => {
     {},
     {
       get: (_t, prop: string) =>
-        passthrough(prop as keyof JSX.IntrinsicElements),
+        passthrough(prop as any),
     },
   );
 
