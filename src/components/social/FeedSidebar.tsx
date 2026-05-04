@@ -21,7 +21,7 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { useUserAccess } from "@/hooks/useUserAccess";
 import { useUsername } from "@/hooks/useUsername";
 import { useOwnerStores } from "@/hooks/useOwnerStoreProfile";
-import { resolveBusinessDashboardRoute } from "@/lib/business/dashboardRoute";
+import { resolvePublicBusinessPageRoute } from "@/lib/business/dashboardRoute";
 import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 import {
   Sheet,
@@ -200,8 +200,7 @@ export default function FeedSidebar() {
               <button
                 key={store.id}
                 onClick={() => {
-                  const { path } = resolveBusinessDashboardRoute(store.category, store.id);
-                  navigate(path);
+                  navigate(resolvePublicBusinessPageRoute(store.category, store.id, (store as any).slug));
                 }}
                 className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors group"
               >
@@ -365,7 +364,7 @@ export default function FeedSidebar() {
                   <button
                     onClick={() => {
                       setShowSwitch(false);
-                      navigate(access?.storeId ? `/admin/stores/${access.storeId}` : "/shop-dashboard");
+                      navigate("/shop-dashboard");
                     }}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
                   >
