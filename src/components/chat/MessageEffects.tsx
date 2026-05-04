@@ -172,7 +172,7 @@ function FloatingHeart({ index }: { index: number }) {
 }
 
 export default function MessageEffects({ effect, onComplete }: MessageEffectsProps) {
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   useEffect(() => {
     if (!effect) return;

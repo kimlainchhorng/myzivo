@@ -4292,7 +4292,7 @@ function LiveBroadcast({
   const videoRef = useRef<HTMLVideoElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const streamRef = useRef<MediaStream | null>(null);
-  const animFrameRef = useRef<number>();
+  const animFrameRef = useRef<number>(undefined);
   const [isLive, setIsLive] = useState(false);
   const [muted, setMuted] = useState(false);
   const [facingMode, setFacingMode] = useState<"user" | "environment">("user");
@@ -4309,12 +4309,12 @@ function LiveBroadcast({
   const [isRecordingClip, setIsRecordingClip] = useState(false);
   const [recordSeconds, setRecordSeconds] = useState(0);
   const [isPublishingClip, setIsPublishingClip] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setInterval>>();
-  const recordTimerRef = useRef<ReturnType<typeof setInterval>>();
+  const timerRef = useRef<ReturnType<typeof setInterval>>(undefined);
+  const recordTimerRef = useRef<ReturnType<typeof setInterval>>(undefined);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const chunksRef = useRef<BlobPart[]>([]);
   const compositeCanvasRef = useRef<HTMLCanvasElement | null>(null);
-  const compositeAnimRef = useRef<number>();
+  const compositeAnimRef = useRef<number>(undefined);
   const [aiProcessing, setAiProcessing] = useState(false);
   const [aiResultOverlay, setAiResultOverlay] = useState<string | null>(null);
   const [aiSelectedMode, setAiSelectedMode] = useState<string | null>(null);

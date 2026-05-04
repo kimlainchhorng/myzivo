@@ -1567,7 +1567,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     }
   }, [user?.id]);
 
-  const typingTimerRef = useRef<ReturnType<typeof setTimeout>>();
+  const typingTimerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const handleInputChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setInput(val);

@@ -33,7 +33,7 @@ export default function GroceryPage() {
   const [query, setQuery] = useState("");
   const [showCart, setShowCart] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<StoreProduct | null>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const { products, isLoading, error, search, clearResults } = useStoreSearch(selectedStore);
   const cart = useGroceryCart();
 
