@@ -198,6 +198,11 @@ const CommunityDetailPage = lazy(() => import("./pages/CommunityDetailPage"));
 const MarketplacePage = lazy(() => import("./pages/MarketplacePage"));
 const ContentAnalyticsPage = lazy(() => import("./pages/ContentAnalyticsPage"));
 const MarketplaceOrdersPage = lazy(() => import("./pages/MarketplaceOrdersPage"));
+const ImportShopPage = lazy(() => import("./pages/shop/ImportShopPage"));
+const ImportProductPage = lazy(() => import("./pages/shop/ImportProductPage"));
+const ImportCartPage = lazy(() => import("./pages/shop/ImportCartPage"));
+const ImportOrdersPage = lazy(() => import("./pages/shop/ImportOrdersPage"));
+const AdminImportShopPage = lazy(() => import("./pages/admin/AdminImportShopPage"));
 const DatingPage = lazy(() => import("./pages/DatingPage"));
 const DraftsPage = lazy(() => import("./pages/DraftsPage"));
 const AudioSpacesPage = lazy(() => import("./pages/AudioSpacesPage"));
@@ -892,6 +897,12 @@ const App = () => (
                 <Route path="/communities/:id" element={<CommunityDetailPage />} />
                 <Route path="/marketplace" element={<MarketplacePage />} />
                 <Route path="/marketplace/orders" element={<ProtectedRoute><MarketplaceOrdersPage /></ProtectedRoute>} />
+                <Route path="/shop" element={<ImportShopPage />} />
+                <Route path="/shop/product/:id" element={<ImportProductPage />} />
+                <Route path="/shop/cart" element={<ImportCartPage />} />
+                <Route path="/shop/orders" element={<ProtectedRoute><ImportOrdersPage /></ProtectedRoute>} />
+                <Route path="/shop/orders/:id" element={<ProtectedRoute><ImportOrdersPage /></ProtectedRoute>} />
+                <Route path="/admin/shop" element={<ProtectedRoute requireAdmin={true}><AdminImportShopPage /></ProtectedRoute>} />
                 <Route path="/content-analytics" element={<ProtectedRoute><ContentAnalyticsPage /></ProtectedRoute>} />
                 <Route path="/dating" element={<ProtectedRoute><DatingPage /></ProtectedRoute>} />
                 <Route path="/spaces" element={<AudioSpacesPage />} />
