@@ -19,6 +19,18 @@ export type ResolvedDashboard = {
   fallback: boolean;
 };
 
+export function resolvePublicBusinessPageRoute(
+  category: StoreCategory | string | null | undefined,
+  storeId: string | undefined,
+  slug?: string | null,
+) {
+  if (category && isLodgingStoreCategory(category as StoreCategory) && storeId) {
+    return `/hotel/${storeId}`;
+  }
+
+  return slug ? `/store/${slug}` : storeId ? `/shop/${storeId}` : "/business";
+}
+
 export function resolveBusinessDashboardRoute(
   category: StoreCategory | string | null | undefined,
   storeId: string | undefined
