@@ -89,15 +89,24 @@ export default function AccountSubscriptionsPage() {
 
   const cancelMutation = useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await (supabase as any)
-        .from("creator_subscriptions")
-        .update({ status: "cancelled", cancelled_at: new Date().toISOString() })
-        .eq("id", id)
-        .eq("subscriber_id", user!.id);
+      // Calls Stripe via edge function so recurring billing actually stops.
+      // Default to cancel-at-period-end so the user keeps access until the end
+      // of the period they already paid for.
+      const { data, error } = await supabase.functions.invoke("cancel-creator-subscription", {
+        body: { subscription_id: id, immediate: false },
+      });
       if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      return data as { ok: boolean; provider_cancel: string; ends_at: string | null };
     },
-    onSuccess: () => {
-      toast.success("Subscription cancelled");
+    onSuccess: (data) => {
+      const endsAt = data?.ends_at ? new Date(data.ends_at).toLocaleDateString() : null;
+      toast.success(
+        data?.provider_cancel === "scheduled"
+          ? "Subscription will end at the next billing date"
+          : "Subscription cancelled",
+        endsAt && data?.provider_cancel === "scheduled" ? { description: `You'll keep access until ${endsAt}.` } : undefined,
+      );
       queryClient.invalidateQueries({ queryKey: ["my-subscriptions", user?.id] });
       setConfirmCancel(null);
     },

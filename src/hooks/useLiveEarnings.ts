@@ -130,13 +130,19 @@ export function useRequestLiveEarningsPayout() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (params: { amount_cents: number; method?: string; reference_id?: string }) => {
-      const { data, error } = await (supabase as any).rpc("request_live_earnings_payout", {
-        p_amount_cents: params.amount_cents,
-        p_method: params.method ?? "bank_transfer",
-        p_reference_id: params.reference_id ?? null,
+      // Calls edge function which (a) calls the validated RPC to insert the row
+      // and (b) pings finance via Telegram so ops actually processes it.
+      // Without this, requests sat in creator_payouts as 'pending' forever.
+      const { data, error } = await supabase.functions.invoke("creator-payout-request", {
+        body: {
+          amount_cents: params.amount_cents,
+          method: params.method ?? "bank_transfer",
+          reference_id: params.reference_id ?? null,
+        },
       });
       if (error) throw error;
-      return data as string;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      return (data as { payout_id: string }).payout_id;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["live-earnings-payouts"] });

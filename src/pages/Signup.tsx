@@ -30,9 +30,36 @@ const Signup = () => {
   const [agree, setAgree] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [sentTo, setSentTo] = useState<string | null>(null);
+  // Date of birth — split into M/D/Y so a single bad keystroke never invalidates
+  // the whole field, and so we can use native <select> on mobile (no calendar
+  // popover quirks). Combined into ISO YYYY-MM-DD on submit and validated 18+.
+  const [dobMonth, setDobMonth] = useState("");
+  const [dobDay, setDobDay] = useState("");
+  const [dobYear, setDobYear] = useState("");
   // Honeypot — invisible to humans, irresistible to naive form-filling bots.
   // If it has a value at submit time, the request is from a bot. Silent reject.
   const [companyWebsite, setCompanyWebsite] = useState("");
+
+  // Compute age from selected DOB. Returns null when DOB is incomplete/invalid.
+  const computedAge = (() => {
+    if (!dobMonth || !dobDay || !dobYear) return null;
+    const y = Number(dobYear), mo = Number(dobMonth), d = Number(dobDay);
+    if (!Number.isInteger(y) || !Number.isInteger(mo) || !Number.isInteger(d)) return null;
+    if (mo < 1 || mo > 12 || d < 1 || d > 31) return null;
+    const dob = new Date(Date.UTC(y, mo - 1, d));
+    if (Number.isNaN(dob.getTime())) return null;
+    // Reject impossible day-of-month (e.g. Feb 30) by round-tripping
+    if (dob.getUTCFullYear() !== y || dob.getUTCMonth() !== mo - 1 || dob.getUTCDate() !== d) return null;
+    const now = new Date();
+    let age = now.getUTCFullYear() - y;
+    const beforeBirthday = now.getUTCMonth() < mo - 1 || (now.getUTCMonth() === mo - 1 && now.getUTCDate() < d);
+    if (beforeBirthday) age -= 1;
+    return age;
+  })();
+  const isUnderage = computedAge !== null && computedAge < 18;
+  const dobIsoString = dobMonth && dobDay && dobYear
+    ? `${dobYear.padStart(4, "0")}-${dobMonth.padStart(2, "0")}-${dobDay.padStart(2, "0")}`
+    : "";
 
   useEffect(() => {
     if (!authLoading && user) navigate(redirect, { replace: true });
@@ -56,6 +83,23 @@ const Signup = () => {
     }
     if (!email.trim()) {
       toast.error("Please enter your email.");
+      return;
+    }
+    // 18+ gate (also enforced server-side in the public-signup edge function).
+    if (!dobIsoString) {
+      toast.error("Please enter your date of birth.");
+      return;
+    }
+    if (computedAge === null) {
+      toast.error("Please enter a valid date of birth.");
+      return;
+    }
+    if (computedAge < 18) {
+      toast.error("You must be 18 or older to create a ZIVO account.");
+      return;
+    }
+    if (computedAge > 120) {
+      toast.error("Please enter a valid date of birth.");
       return;
     }
     if (password.length < 8) {
@@ -88,7 +132,7 @@ const Signup = () => {
     }
 
     const fullName = `${firstName.trim()} ${lastName.trim()}`;
-    const { error } = await signUp(email.trim(), password, fullName);
+    const { error } = await signUp(email.trim(), password, fullName, dobIsoString);
     setSubmitting(false);
 
     if (error) {
@@ -230,12 +274,63 @@ const Signup = () => {
               </button>
             </div>
 
+            {/* Date of birth — 18+ gate. Three native selects so it works on
+                every mobile keyboard with no calendar quirks. */}
+            <div className="pt-2 space-y-1.5">
+              <label className="block text-[11px] font-semibold uppercase tracking-wider text-zinc-500 dark:text-zinc-400">
+                Date of birth — you must be 18+
+              </label>
+              <div className="grid grid-cols-[1.4fr_1fr_1.1fr] gap-2">
+                <select
+                  value={dobMonth}
+                  onChange={(e) => setDobMonth(e.target.value)}
+                  disabled={submitting}
+                  aria-label="Month"
+                  className={`h-11 px-2 rounded-md bg-zinc-50 dark:bg-zinc-800/60 border ${isUnderage ? "border-rose-400 dark:border-rose-500" : "border-zinc-200 dark:border-zinc-700"} focus:border-zinc-400 dark:focus:border-zinc-500 outline-none text-sm text-zinc-900 dark:text-white transition`}
+                >
+                  <option value="">Month</option>
+                  {["January","February","March","April","May","June","July","August","September","October","November","December"].map((m, i) => (
+                    <option key={m} value={String(i + 1)}>{m}</option>
+                  ))}
+                </select>
+                <select
+                  value={dobDay}
+                  onChange={(e) => setDobDay(e.target.value)}
+                  disabled={submitting}
+                  aria-label="Day"
+                  className={`h-11 px-2 rounded-md bg-zinc-50 dark:bg-zinc-800/60 border ${isUnderage ? "border-rose-400 dark:border-rose-500" : "border-zinc-200 dark:border-zinc-700"} focus:border-zinc-400 dark:focus:border-zinc-500 outline-none text-sm text-zinc-900 dark:text-white transition`}
+                >
+                  <option value="">Day</option>
+                  {Array.from({ length: 31 }, (_, i) => i + 1).map((d) => (
+                    <option key={d} value={String(d)}>{d}</option>
+                  ))}
+                </select>
+                <select
+                  value={dobYear}
+                  onChange={(e) => setDobYear(e.target.value)}
+                  disabled={submitting}
+                  aria-label="Year"
+                  className={`h-11 px-2 rounded-md bg-zinc-50 dark:bg-zinc-800/60 border ${isUnderage ? "border-rose-400 dark:border-rose-500" : "border-zinc-200 dark:border-zinc-700"} focus:border-zinc-400 dark:focus:border-zinc-500 outline-none text-sm text-zinc-900 dark:text-white transition`}
+                >
+                  <option value="">Year</option>
+                  {Array.from({ length: 100 }, (_, i) => new Date().getFullYear() - i).map((y) => (
+                    <option key={y} value={String(y)}>{y}</option>
+                  ))}
+                </select>
+              </div>
+              {isUnderage && (
+                <p className="text-[11px] font-medium text-rose-600 dark:text-rose-400">
+                  You must be at least 18 years old to use ZIVO.
+                </p>
+              )}
+            </div>
+
             <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug pt-2">
               By signing up, you agree to our{" "}
               <LegalPreviewLink kind="terms" className="font-medium text-zinc-700 dark:text-zinc-200 hover:underline">Terms</LegalPreviewLink>
               {", "}
               <LegalPreviewLink kind="privacy" className="font-medium text-zinc-700 dark:text-zinc-200 hover:underline">Privacy Policy</LegalPreviewLink>
-              {" and Cookies Policy."}
+              {" and Cookies Policy. ZIVO is for users aged 18 and over."}
             </p>
 
             <label className="flex items-start gap-2 select-none cursor-pointer pt-1">
@@ -245,13 +340,13 @@ const Signup = () => {
                 className="mt-0.5 data-[state=checked]:bg-rose-500 data-[state=checked]:border-rose-500"
               />
               <span className="text-xs text-zinc-600 dark:text-zinc-400">
-                I confirm I'm 13+ and agree to the terms above.
+                I confirm I'm 18 or older and agree to the terms above.
               </span>
             </label>
 
             <button
               type="submit"
-              disabled={submitting || !agree}
+              disabled={submitting || !agree || isUnderage}
               className="w-full h-9 mt-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md shadow-rose-500/20"
             >
               {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sign up"}

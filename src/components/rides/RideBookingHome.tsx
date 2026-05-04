@@ -2267,18 +2267,33 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
 
   const handleConfirmCancel = async (reason: string, fee: number) => {
     if (rideRequestId) {
-      await supabase.from("ride_requests").update({
-        status: "cancelled",
-        cancel_reason: reason,
-        cancel_fee_cents: Math.round(fee * 100),
-      }).eq("id", rideRequestId);
+      try {
+        const { data, error } = await supabase.functions.invoke("cancel-ride-request", {
+          body: { ride_request_id: rideRequestId, reason, cancel_fee_cents: Math.round(fee * 100) },
+        });
+        if (error) throw error;
+        if ((data as any)?.error) throw new Error((data as any).error);
+        const result = data as any;
+        const refundDollars = (result.refund_cents || 0) / 100;
+        const feeDisplay = useKm ? dualPrice(fee, true) : `$${fee.toFixed(2)}`;
+        if (refundDollars > 0) {
+          toast.success(`Ride cancelled — $${refundDollars.toFixed(2)} refunded${fee > 0 ? ` (after ${feeDisplay} fee)` : ""}`);
+        } else if (fee > 0) {
+          toast.error(`Ride cancelled — ${feeDisplay} cancellation fee applied`);
+        } else {
+          toast.info("Ride cancelled — no fee charged");
+        }
+        if (result.fee_charge_skipped) {
+          // Surface the honest gap so the rider knows we'll follow up.
+          toast.message("Heads up", { description: result.fee_charge_skipped });
+        }
+      } catch (err: any) {
+        console.error("[ride cancel] error", err);
+        toast.error(err?.message || "Could not cancel ride");
+        return; // keep modal open / state intact
+      }
     }
     setShowCancelModal(false);
-    if (fee > 0) {
-      toast.error(`Ride cancelled — ${useKm ? dualPrice(fee, true) : `$${fee.toFixed(2)}`} cancellation fee applied`);
-    } else {
-      toast.info("Ride cancelled — no fee charged");
-    }
     handleReset();
   };
 
