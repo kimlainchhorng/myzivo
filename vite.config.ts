@@ -24,6 +24,7 @@ export default defineConfig(({ mode }) => ({
   },
   build: {
     target: "es2020",
+    modulePreload: { polyfill: false },
     minify: "esbuild",
     cssMinify: "esbuild",
     reportCompressedSize: false,
