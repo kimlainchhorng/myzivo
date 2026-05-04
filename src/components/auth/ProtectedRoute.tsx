@@ -55,7 +55,7 @@ const ProtectedRoute = ({ children, requireAdmin = false, allowStoreOwner = fals
 
   if (requireAdmin && !isAdmin) {
     if (allowStoreOwner && storeId) {
-      if (ownerAccessLoading) {
+      if (shouldCheckStoreOwner && !ownerAccessResolved) {
         return (
           <div className="min-h-screen flex items-center justify-center bg-background">
             <div className="flex flex-col items-center gap-4">
