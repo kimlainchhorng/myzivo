@@ -41,6 +41,7 @@ interface StickerKeyboardProps {
   open: boolean;
   onClose: () => void;
   onSendSticker: (payload: StickerSendPayload) => void;
+  onQuickAction?: (actionId: string) => void;
   onStartVoice?: () => void;
   onOpenCamera?: () => void;
 }
@@ -667,7 +668,7 @@ function SupabaseStoreTab({ search }: { search: string }) {
 
 /* ═══════════════ Component ═══════════════ */
 
-export default function StickerKeyboard({ open, onClose, onSendSticker, onStartVoice, onOpenCamera }: StickerKeyboardProps) {
+export default function StickerKeyboard({ open, onClose, onSendSticker, onQuickAction, onStartVoice, onOpenCamera }: StickerKeyboardProps) {
   const [activeTab, setActiveTab] = useState<TabKey>("stickers");
   const [activePack, setActivePack] = useState(1000); // Default to first illustrated pack
   const [search, setSearch] = useState("");
@@ -1307,7 +1308,13 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onStartV
               </div>
               <div className="grid grid-cols-2 gap-2">
                 {FUTURE_ACTIONS.map((item) => (
-                  <button key={item.label} onClick={() => quickSend(`${item.emoji} ${item.text}`)}
+                  <button key={item.label} onClick={() => {
+                    if (onQuickAction) {
+                      onQuickAction(item.label.toLowerCase().replace(/\s+/g, "-"));
+                    } else {
+                      quickSend(`${item.emoji} ${item.text}`);
+                    }
+                  }}
                     className={`rounded-2xl bg-gradient-to-br ${item.gradient} border border-border/20 p-4 text-left hover:scale-[1.02] active:scale-95 transition-all`}>
                     <p className="text-3xl mb-2">{item.emoji}</p>
                     <p className="text-sm font-bold">{item.label}</p>

@@ -19,6 +19,7 @@ import Play from "lucide-react/dist/esm/icons/play";
 import Heart from "lucide-react/dist/esm/icons/heart";
 import MessageCircle from "lucide-react/dist/esm/icons/message-circle";
 import SEOHead from "@/components/SEOHead";
+import ReelThumbnail from "@/components/social/ReelThumbnail";
 
 interface Tile {
   feedId: string;       // id used by `/feed?post=…`
@@ -219,12 +220,19 @@ export default function HashtagPage() {
               aria-label={`Open: ${tile.caption ?? "post"}`}
             >
               {tile.thumbnail ? (
-                <img
-                  src={tile.thumbnail}
-                  alt=""
-                  loading="lazy"
-                  className="absolute inset-0 h-full w-full object-cover transition-transform group-hover:scale-105"
-                />
+                tile.isVideo ? (
+                  <ReelThumbnail
+                    url={tile.thumbnail}
+                    className="group-hover:scale-105"
+                  />
+                ) : (
+                  <img
+                    src={tile.thumbnail}
+                    alt=""
+                    loading="lazy"
+                    className="absolute inset-0 h-full w-full object-cover transition-transform group-hover:scale-105"
+                  />
+                )
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-muted">
                   <Image className="h-8 w-8 text-muted-foreground/40" />

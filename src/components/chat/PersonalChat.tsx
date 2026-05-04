@@ -360,8 +360,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [showMediaGallery, setShowMediaGallery] = useState(false);
   const [mediaGalleryTab, setMediaGalleryTab] = useState<"photos" | "videos" | "voice" | "files" | "links">("photos");
   const [showStickerKeyboard, setShowStickerKeyboard] = useState(false);
-  const [showPersonalization, setShowPersonalization] = useState(false);
+  const [showAutoDelete, setShowAutoDelete] = useState(false);
   const [showMiniApps, setShowMiniApps] = useState(false);
+  const [miniAppView, setMiniAppView] = useState<"menu" | "poll" | "todo" | "split" | "book-table" | "trip-idea">("menu");
   const [showSecurity, setShowSecurity] = useState(false);
   const [showCallHistory, setShowCallHistory] = useState(false);
   const [showContactInfo, setShowContactInfo] = useState(false);
@@ -900,22 +901,24 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     imageUrl?: string; voiceUrl?: string; videoUrl?: string;
     locationLat?: number; locationLng?: number; locationLabel?: string;
     filePayload?: FileBubbleData;
+    messageType?: string;
+    text?: string;
   }) => {
-    const text = input.trim();
-    const { imageUrl, voiceUrl, videoUrl, locationLat, locationLng, locationLabel, filePayload } = opts || {};
+    const text = opts?.text ?? input.trim();
+    const { imageUrl, voiceUrl, videoUrl, locationLat, locationLng, locationLabel, filePayload, messageType } = opts || {};
     if (!text && !imageUrl && !voiceUrl && !videoUrl && !filePayload && locationLat == null) return;
-    const isComplexSend = Boolean(imageUrl || voiceUrl || videoUrl || filePayload || locationLat != null);
+    const isComplexSend = Boolean(imageUrl || voiceUrl || videoUrl || filePayload || locationLat != null || messageType);
     if (!user?.id || (sending && isComplexSend)) return;
 
-    const msgType = voiceUrl
+    const msgType = messageType || (voiceUrl
       ? "voice"
       : filePayload
       ? "file"
       : videoUrl ? "video"
       : imageUrl ? "image"
       : locationLat != null ? "location"
-      : "text";
-    setInput("");
+      : "text");
+    if (!opts?.text) setInput("");
     clearDraft();
     const currentReply = replyTo;
     setReplyTo(null);
@@ -2294,8 +2297,11 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                         hideSave={isSelfChat}
                         forwardedFromUserId={msg.forwarded_from_user_id ?? null}
                         forwardedFromName={msg.forwarded_from_user_id ? (forwardedNames[msg.forwarded_from_user_id] ?? null) : null}
-                      />
-                    )}
+                        onMiniAppAction={(type) => {
+                          setMiniAppView(type as any);
+                          setShowMiniApps(true);
+                        }}
+                        />                    )}
 
                     {/* Aggregated emoji reactions chip row — pre-loaded to avoid N+1 queries */}
                     {!msg.id.startsWith("opt-") && (
@@ -2677,7 +2683,35 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               open={showStickerKeyboard}
               onClose={() => setShowStickerKeyboard(false)}
               onSendSticker={(payload) => { void handleQuickPanelSend(payload); }}
-              onStartVoice={() => voice.startRecording()}
+              onQuickAction={(id) => {
+                if (id === "start-poll") {
+                  setMiniAppView("poll");
+                  setShowMiniApps(true);
+                  setShowStickerKeyboard(false);
+                } else if (id === "split-fare") {
+                  setMiniAppView("split");
+                  setShowMiniApps(true);
+                  setShowStickerKeyboard(false);
+                } else if (id === "plan-weekend") {
+                  setMiniAppView("todo");
+                  setShowMiniApps(true);
+                  setShowStickerKeyboard(false);
+                } else if (id === "book-table") {
+                  setMiniAppView("book_table");
+                  setShowMiniApps(true);
+                  setShowStickerKeyboard(false);
+                } else if (id === "trip-idea") {
+                  setMiniAppView("trip_idea");
+                  setShowMiniApps(true);
+                  setShowStickerKeyboard(false);
+                } else if (id === "voice-note") {
+                  voice.startRecording();
+                  setShowStickerKeyboard(false);
+                } else {
+                  // Fallback for others
+                  void handleQuickPanelSend({ text: id.replace(/-/g, " "), messageType: "text" });
+                }
+              }}              onStartVoice={() => voice.startRecording()}
               onOpenCamera={() => fileInputRef.current?.click()}
             />
           </Suspense>
@@ -2730,6 +2764,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             onClose={() => setShowMiniApps(false)}
             chatPartnerId={recipientId}
             chatPartnerName={recipientName}
+            initialView={miniAppView}
+            onItemCreated={(text, type) => handleSend({ text, messageType: type })}
           />
         </Suspense>
       )}

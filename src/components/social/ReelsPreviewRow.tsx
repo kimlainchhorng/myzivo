@@ -10,12 +10,15 @@ import Play from "lucide-react/dist/esm/icons/play";
 import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 
+import ReelThumbnail from "./ReelThumbnail";
+
 interface PreviewReel {
   id: string;
   thumbnail: string | null;
   caption: string | null;
   views: number;
   authorName: string;
+  mediaType: string;
 }
 
 interface Props {
@@ -65,6 +68,7 @@ export default function ReelsPreviewRow({ fullBleed = true }: Props) {
             caption: r.caption,
             views: r.views_count ?? 0,
             authorName: author?.full_name ?? author?.username ?? "Creator",
+            mediaType: r.media_type,
           };
         })
         .filter((r: PreviewReel | null): r is PreviewReel => r !== null);
@@ -120,12 +124,20 @@ export default function ReelsPreviewRow({ fullBleed = true }: Props) {
               className="relative shrink-0 w-32 h-52 sm:w-40 sm:h-64 md:w-44 md:h-72 rounded-xl overflow-hidden bg-zinc-800 border border-white/10 group transition-transform hover:-translate-y-1"
             >
               {reel.thumbnail ? (
-                <img
-                  src={reel.thumbnail}
-                  alt=""
-                  loading="lazy"
-                  className="absolute inset-0 h-full w-full object-cover transition-transform group-hover:scale-105"
-                />
+                reel.mediaType === "video" || reel.mediaType === "reel" ? (
+                  <ReelThumbnail
+                    url={reel.thumbnail}
+                    className="group-hover:scale-105"
+                    iconClassName="h-8 w-8"
+                  />
+                ) : (
+                  <img
+                    src={reel.thumbnail}
+                    alt=""
+                    loading="lazy"
+                    className="absolute inset-0 h-full w-full object-cover transition-transform group-hover:scale-105"
+                  />
+                )
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <Play className="h-10 w-10 text-white/40" />

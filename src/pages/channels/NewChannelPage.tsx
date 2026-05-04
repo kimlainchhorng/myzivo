@@ -15,6 +15,13 @@ export default function NewChannelPage() {
   const goBack = useSmartBack("/channels");
   const [name, setName] = useState("");
   const [handle, setHandle] = useState("");
+  const [userHasEditedHandle, setUserHasEditedHandle] = useState(false);
+
+  useEffect(() => {
+    if (!userHasEditedHandle && name.trim()) {
+      setHandle(name.trim().toLowerCase().replace(/[^a-z0-9_]/g, "_").slice(0, 32));
+    }
+  }, [name, userHasEditedHandle]);
   const [desc, setDesc] = useState("");
   const [isPublic, setIsPublic] = useState(true);
   const [available, setAvailable] = useState<boolean | null>(null);
@@ -37,7 +44,13 @@ export default function NewChannelPage() {
   }, [handle]);
 
   const submit = async () => {
-    if (!name.trim() || !handle.trim()) {
+    let finalHandle = handle.trim().toLowerCase();
+    if (!finalHandle && name.trim()) {
+      finalHandle = name.trim().toLowerCase().replace(/[^a-z0-9_]/g, "_").slice(0, 32);
+      setHandle(finalHandle);
+    }
+
+    if (!name.trim() || !finalHandle) {
       toast.error("Name and handle are required");
       return;
     }
@@ -91,7 +104,10 @@ export default function NewChannelPage() {
           <div className="relative">
             <Input
               value={handle}
-              onChange={(e) => setHandle(e.target.value.replace(/[^a-z0-9_]/gi, "").toLowerCase())}
+              onChange={(e) => {
+                setHandle(e.target.value.replace(/[^a-z0-9_]/gi, "").toLowerCase());
+                setUserHasEditedHandle(true);
+              }}
               placeholder="myhandle"
             />
             {available !== null && (

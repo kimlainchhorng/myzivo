@@ -47,6 +47,15 @@ import GroupCallLauncher from "./call/GroupCallLauncher";
 import { primeCallAudio } from "@/lib/callAudio";
 import Link2 from "lucide-react/dist/esm/icons/link-2";
 const StickerKeyboard = lazy(() => import("./StickerKeyboard"));
+const ChatMiniApps = lazy(() => import("./ChatMiniApps"));
+const LockedMediaPricePicker = lazy(() => import("./LockedMediaPricePicker"));
+const ChatGiftPanel = lazy(() => import("./ChatGiftPanel"));
+const ChatWalletSheet = lazy(() => import("./ChatWalletSheet"));
+const ChatDocumentScanner = lazy(() => import("./DocumentScanner"));
+const ContactPickerSheet = lazy(() => import("./ChatContactPicker"));
+const ChatSocialShare = lazy(() => import("./ChatSocialShareSheet"));
+const PollCreator = lazy(() => import("./ChatPollCreator"));
+const ChatMessageBubble = lazy(() => import("./ChatMessageBubble"));
 import type { StickerSendPayload } from "./StickerKeyboard";
 import { suggestStickersFor } from "@/lib/stickerSuggest";
 
@@ -197,12 +206,23 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
   const [showInvites, setShowInvites] = useState(false);
   const [groupCall, setGroupCall] = useState<"audio" | "video" | null>(null);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
+  const [showLockedPricePicker, setShowLockedPricePicker] = useState(false);
+  const [lockedMediaFile, setLockedMediaFile] = useState<File | null>(null);
   const [showStickerKeyboard, setShowStickerKeyboard] = useState(false);
   const [disappearingSec, setDisappearingSec] = useState<number | null>(null);
+  const [showGiftPanel, setShowGiftPanel] = useState(false);
+  const [showWalletSheet, setShowWalletSheet] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
+  const [showContactPicker, setShowContactPicker] = useState(false);
+  const [showSocialShare, setShowSocialShare] = useState(false);
+  const [showPollCreator, setShowPollCreator] = useState(false);
   const videoInputRef = useRef<HTMLInputElement>(null);
+  const lockedImageInputRef = useRef<HTMLInputElement>(null);
   const [actionTarget, setActionTarget] = useState<GroupMessage | null>(null);
   const [showGroupSearch, setShowGroupSearch] = useState(false);
   const [groupSearchQ, setGroupSearchQ] = useState("");
+  const [showMiniApps, setShowMiniApps] = useState(false);
+  const [miniAppView, setMiniAppView] = useState<"menu" | "poll" | "todo" | "split" | "book_table" | "trip_idea">("menu");
   const [isMuted, setIsMuted] = useState(() => {
     try { return localStorage.getItem(`zivo:group-muted:${groupId}`) === "1"; } catch { return false; }
   });
@@ -768,10 +788,10 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
     if (videoInputRef.current) videoInputRef.current.value = "";
   };
 
-  const handleStickerSend = useCallback(async (payload: StickerSendPayload) => {
+  const handleStickerSend = useCallback(async (payload: StickerSendPayload, messageType?: string) => {
     if (!user?.id || !payload.text?.trim()) return;
     const text = payload.text.trim();
-    const msgType = payload.messageType === "sticker" || payload.messageType === "gif" ? payload.messageType : "text";
+    const msgType = messageType || (payload.messageType === "sticker" || payload.messageType === "gif" ? payload.messageType : "text");
     const optimisticId = `opt-sticker-${Date.now()}`;
     const optimisticMsg: GroupMessage = {
       id: optimisticId, group_id: groupId, sender_id: user.id,
@@ -985,111 +1005,72 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
                     <div className="h-px flex-1 bg-border/30" />
                   </div>
                 )}
-              <motion.div
-                initial={{ opacity: 0, y: 10, scale: 0.97 }}
-                animate={{ opacity: 1, y: 0, scale: 1 }}
-                transition={{ type: "spring", damping: 22, stiffness: 380, mass: 0.7 }}
-                className={`chat-no-callout flex ${isMe ? "justify-end" : "justify-start"} gap-1.5`}
-                onContextMenu={(e) => { e.preventDefault(); if (!isOptimistic) setActionTarget(msg); }}
-                style={{ WebkitTouchCallout: "none" } as React.CSSProperties}
-              >
-                {!isMe && (
-                  <Avatar className="h-6 w-6 mt-1 shrink-0">
-                    <AvatarImage src={senderAvatar || undefined} />
-                    <AvatarFallback className="text-[8px] bg-muted">{senderName[0]}</AvatarFallback>
-                  </Avatar>
-                )}
-                <div className={`max-w-[75%] ${isOptimistic ? "opacity-60" : ""}`}>
-                  {!isMe && (
-                    <p className="text-[10px] font-semibold text-primary mb-0.5 px-1">{senderName}</p>
-                  )}
-
+                <div className="space-y-1">
                   {repliedMsg && (
-                    <div className={`rounded-lg px-2.5 py-1.5 mb-0.5 border-l-2 border-primary/50 text-[10px] ${
-                      isMe ? "bg-primary/20 text-primary-foreground/70" : "bg-muted/80 text-muted-foreground"
+                    <div className={`mx-1 mb-0.5 px-2.5 py-1.5 rounded-lg border-l-2 border-primary/50 text-[10px] ${
+                      isMe ? "ml-auto max-w-[75%] bg-primary/10 text-foreground" : "max-w-[75%] bg-muted/60 text-muted-foreground"
                     }`}>
                       <span className="font-semibold">{getSenderName(repliedMsg.sender_id)}</span>
                       <p className="truncate">{repliedMsg.message || "📷 Media"}</p>
                     </div>
                   )}
 
-                  {msg.image_url && (
-                    <div className={`rounded-2xl overflow-hidden mb-1 ${isMe ? "rounded-br-md" : "rounded-bl-md"}`}>
-                      <img src={msg.image_url} alt="" className="max-w-full max-h-60 object-cover rounded-2xl" loading="lazy" />
-                    </div>
-                  )}
-
-                  {msg.message_type === "voice" && msg.voice_url && (() => {
-                    const csid = msg.file_payload?.client_send_id;
-                    const isOpt = msg.id.startsWith("opt-");
-                    return (
-                      <VoiceMessageBubble
-                        isMe={isMe}
+                  {msg.message_type === "voice" && msg.voice_url ? (
+                    (() => {
+                      const csid = msg.file_payload?.client_send_id;
+                      const isOpt = msg.id.startsWith("opt-");
+                      return (
+                        <VoiceMessageBubble
+                          isMe={isMe}
+                          time={formatTime(msg.created_at)}
+                          url={msg.voice_url}
+                          durationMs={msg.file_payload?.duration_ms}
+                          uploadStatus={msg._upload_status}
+                          uploadProgress={msg._upload_progress}
+                          uploadError={msg._upload_error}
+                          uploadEndpoint={msg._upload_endpoint}
+                          uploadStatusCode={msg._upload_status_code}
+                          uploadPhase={msg._upload_phase}
+                          uploadBody={msg._upload_body}
+                          onReply={!isOpt ? () => setReplyTo({ id: msg.id, message: "🎤 Voice message", senderName }) : undefined}
+                          onResend={csid && msg._upload_status === "failed" ? () => retryVoiceSend(csid) : undefined}
+                          onDiscard={csid && (msg._upload_status === "uploading" || msg._upload_status === "failed") ? () => discardVoiceSend(csid) : undefined}
+                        />
+                      );
+                    })()
+                  ) : (
+                    <Suspense fallback={<div className="h-10 w-full animate-pulse bg-muted/20 rounded-xl" />}>
+                      <ChatMessageBubble
+                        id={msg.id}
+                        message={msg.message}
                         time={formatTime(msg.created_at)}
-                        url={msg.voice_url}
-                        durationMs={msg.file_payload?.duration_ms}
-                        uploadStatus={msg._upload_status}
-                        uploadProgress={msg._upload_progress}
-                        uploadError={msg._upload_error}
-                        uploadEndpoint={msg._upload_endpoint}
-                        uploadStatusCode={msg._upload_status_code}
-                        uploadPhase={msg._upload_phase}
-                        uploadBody={msg._upload_body}
-                        onReply={!isOpt ? () => setReplyTo({ id: msg.id, message: "🎤 Voice message", senderName }) : undefined}
-                        onResend={csid && msg._upload_status === "failed" ? () => retryVoiceSend(csid) : undefined}
-                        onDiscard={csid && (msg._upload_status === "uploading" || msg._upload_status === "failed") ? () => discardVoiceSend(csid) : undefined}
+                        isMe={isMe}
+                        imageUrl={msg.message_type === "image" ? msg.image_url : null}
+                        videoUrl={msg.message_type === "video" ? msg.image_url : null}
+                        messageType={msg.message_type}
+                        senderId={msg.sender_id}
+                        senderName={senderName}
+                        senderAvatar={senderAvatar}
+                        createdAt={msg.created_at}
+                        onReply={(id, m, me) => setReplyTo({ id, message: m || "Media", senderName })}
+                        onDelete={handleDeleteMsg}
+                        onPin={() => {}} // Groups don't support pinning yet
+                        onForward={(id, m) => { navigator.clipboard?.writeText(m || ""); toast.success("Copied to forward"); }}
+                        onMiniAppAction={(type) => {
+                          setMiniAppView(type as any);
+                          setShowMiniApps(true);
+                        }}
                       />
-                    );
-                  })()}
-
-                  {msg.message && msg.message_type !== "voice" && (
-                    <div
-                      className={`px-3.5 py-2 rounded-2xl text-sm leading-relaxed ${
-                        isMe ? "bg-primary text-primary-foreground rounded-br-md" : "bg-muted text-foreground rounded-bl-md"
-                      }`}
-                    >
-                      <p className="whitespace-pre-wrap break-words">
-                        {renderMessageWithMentions(
-                          msg.message,
-                          members,
-                          user?.id,
-                          (uid) => navigate(`/user/${uid}`),
-                          isMe,
-                        )}
-                      </p>
-                      <span className={`text-[9px] block text-right mt-0.5 ${isMe ? "text-primary-foreground/60" : "text-muted-foreground"}`}>
-                        {formatTime(msg.created_at)}
-                      </span>
-                    </div>
+                    </Suspense>
                   )}
 
-                  {/* Reaction counts */}
-                  {!isOptimistic && (
-                    <MessageReactionsBar messageId={msg.id} align={isMe ? "right" : "left"} />
-                  )}
-
-                  {/* Quick reaction + action row */}
-                  {!isOptimistic && (
-                    <div className={`flex items-center gap-1 mt-0.5 ${isMe ? "justify-end" : "justify-start"}`}>
-                      {["❤️","😂","👍","😮"].map((emoji) => (
-                        <button key={emoji} onClick={async () => {
-                          if (!user?.id) return;
-                          try {
-                            const { data: ex } = await (supabase as any).from("message_reactions").select("id").eq("message_id", msg.id).eq("user_id", user.id).eq("emoji", emoji).maybeSingle();
-                            if (ex?.id) await (supabase as any).from("message_reactions").delete().eq("id", ex.id);
-                            else await (supabase as any).from("message_reactions").insert({ message_id: msg.id, user_id: user.id, emoji });
-                          } catch { /* ignore */ }
-                        }} className="text-base leading-none hover:scale-125 transition-transform active:scale-110" title={emoji}>
-                          {emoji}
-                        </button>
-                      ))}
-                      <button onClick={() => setActionTarget(msg)} className="h-5 w-5 rounded-full flex items-center justify-center hover:bg-muted/60 ml-0.5" aria-label="More actions">
-                        <MoreVertical className="h-3 w-3 text-muted-foreground" />
-                      </button>
+                  {/* Reaction counts (only for non-voice messages, as VoiceMessageBubble has its own footer/reactions logic usually) */}
+                  {!isOptimistic && msg.message_type !== "voice" && (
+                    <div className="px-1">
+                      <MessageReactionsBar messageId={msg.id} align={isMe ? "right" : "left"} />
                     </div>
                   )}
                 </div>
-              </motion.div>
               </div>
             );
           })}
@@ -1133,6 +1114,113 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
               onSendSticker={(payload) => { void handleStickerSend(payload); }}
               onStartVoice={() => voice.startRecording()}
               onOpenCamera={() => fileInputRef.current?.click()}
+              onQuickAction={(id) => {
+                if (id === "start-poll") {
+                  setMiniAppView("poll");
+                  setShowMiniApps(true);
+                  setShowStickerKeyboard(false);
+                } else if (id === "split-fare") {
+                  setMiniAppView("split");
+                  setShowMiniApps(true);
+                  setShowStickerKeyboard(false);
+                } else if (id === "plan-weekend") {
+                  setMiniAppView("todo");
+                  setShowMiniApps(true);
+                  setShowStickerKeyboard(false);
+                } else if (id === "book-table") {
+                  setMiniAppView("book_table");
+                  setShowMiniApps(true);
+                  setShowStickerKeyboard(false);
+                } else if (id === "trip-idea") {
+                  setMiniAppView("trip_idea");
+                  setShowMiniApps(true);
+                  setShowStickerKeyboard(false);
+                } else if (id === "voice-note") {
+                  voice.startRecording();
+                  setShowStickerKeyboard(false);
+                } else {
+                  void handleStickerSend({ text: id.replace(/-/g, " "), messageType: "text" });
+                }
+              }}
+            />
+          </Suspense>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showLockedPricePicker && (
+          <Suspense fallback={null}>
+            <LockedMediaPricePicker
+              open={showLockedPricePicker}
+              onClose={() => setShowLockedPricePicker(false)}
+              onConfirm={handleLockedMediaConfirm}
+            />
+          </Suspense>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showMiniApps && (
+          <Suspense fallback={null}>
+            <ChatMiniApps
+              open={showMiniApps}
+              onClose={() => setShowMiniApps(false)}
+              chatPartnerId={groupId}
+              chatPartnerName={groupName}
+              initialView={miniAppView}
+              onItemCreated={(text, type) => handleStickerSend({ text, messageType: "text" }, type)}
+            />
+          </Suspense>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showGiftPanel && (
+          <Suspense fallback={null}>
+            <ChatGiftPanel open={showGiftPanel} onClose={() => setShowGiftPanel(false)} />
+          </Suspense>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showWalletSheet && (
+          <Suspense fallback={null}>
+            <ChatWalletSheet open={showWalletSheet} onClose={() => setShowWalletSheet(false)} />
+          </Suspense>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showScanner && (
+          <Suspense fallback={null}>
+            <ChatDocumentScanner open={showScanner} onClose={() => setShowScanner(false)} />
+          </Suspense>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showContactPicker && (
+          <Suspense fallback={null}>
+            <ContactPickerSheet open={showContactPicker} onOpenChange={setShowContactPicker} />
+          </Suspense>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showSocialShare && (
+          <Suspense fallback={null}>
+            <ChatSocialShare open={showSocialShare} onClose={() => setShowSocialShare(false)} />
+          </Suspense>
+        )}
+      </AnimatePresence>
+
+      <AnimatePresence>
+        {showPollCreator && (
+          <Suspense fallback={null}>
+            <PollCreator
+              open={showPollCreator}
+              onClose={() => setShowPollCreator(false)}
+              onPollCreated={(q) => handleStickerSend({ text: `📊 Poll: ${q}`, messageType: "text" })}
             />
           </Suspense>
         )}
@@ -1241,6 +1329,14 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
               onImageSelect={() => fileInputRef.current?.click()}
               onVideoSelect={() => videoInputRef.current?.click()}
               onLocationShare={handleLocationShare}
+              onLockedImageSelect={() => lockedImageInputRef.current?.click()}
+              onSendGift={() => setShowGiftPanel(true)}
+              onOpenWallet={() => setShowWalletSheet(true)}
+              onScanDocument={() => setShowScanner(true)}
+              onFileSelect={() => fileInputRef.current?.click()} // Reuse image for now or add file input
+              onCreatePoll={() => setShowPollCreator(true)}
+              onShareContact={() => setShowContactPicker(true)}
+              onShareSocial={() => setShowSocialShare(true)}
               onToggleDisappearing={() => {
                 const next = disappearingSec == null ? 24 * 60 * 60 : disappearingSec === 24 * 60 * 60 ? 7 * 24 * 60 * 60 : disappearingSec === 7 * 24 * 60 * 60 ? 30 * 24 * 60 * 60 : null;
                 setDisappearingSec(next);
@@ -1253,6 +1349,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
 
           <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} title="Choose image" aria-label="Choose image" />
           <input ref={videoInputRef} type="file" accept="video/*" className="hidden" onChange={handleVideoSelect} title="Choose video" aria-label="Choose video" />
+          <input ref={lockedImageInputRef} type="file" accept="image/*,video/*" className="hidden" onChange={handleLockedMediaSelect} title="Choose locked media" aria-label="Choose locked media" />
 
           {/* Text input */}
           <div className="flex-1 relative">

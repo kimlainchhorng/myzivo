@@ -16,6 +16,8 @@ import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import Play from "lucide-react/dist/esm/icons/play";
 import Image from "lucide-react/dist/esm/icons/image";
 
+import ReelThumbnail from "@/components/social/ReelThumbnail";
+
 interface SavedTile {
   bookmarkId: string;
   postId: string;
@@ -194,12 +196,19 @@ export default function SavedPostsPage() {
               className="group relative overflow-hidden rounded-xl bg-muted aspect-[3/4]"
             >
               {tile.thumbnail ? (
-                <img
-                  src={tile.thumbnail}
-                  alt=""
-                  loading="lazy"
-                  className="h-full w-full object-cover transition-transform group-hover:scale-105"
-                />
+                tile.isVideo ? (
+                  <ReelThumbnail
+                    url={tile.thumbnail}
+                    className="group-hover:scale-105"
+                  />
+                ) : (
+                  <img
+                    src={tile.thumbnail}
+                    alt=""
+                    loading="lazy"
+                    className="h-full w-full object-cover transition-transform group-hover:scale-105"
+                  />
+                )
               ) : (
                 <div className="flex h-full w-full items-center justify-center bg-muted">
                   <Image className="h-8 w-8 text-muted-foreground/40" />

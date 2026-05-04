@@ -7,6 +7,8 @@ import X from "lucide-react/dist/esm/icons/x";
 import BarChart3 from "lucide-react/dist/esm/icons/bar-chart-3";
 import ListTodo from "lucide-react/dist/esm/icons/list-todo";
 import Receipt from "lucide-react/dist/esm/icons/receipt";
+import Utensils from "lucide-react/dist/esm/icons/utensils";
+import Map from "lucide-react/dist/esm/icons/map";
 import Plus from "lucide-react/dist/esm/icons/plus";
 import Check from "lucide-react/dist/esm/icons/check";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
@@ -21,9 +23,11 @@ interface ChatMiniAppsProps {
   onClose: () => void;
   chatPartnerId: string;
   chatPartnerName: string;
+  initialView?: MiniApp;
+  onItemCreated?: (text: string, type: string) => void;
 }
 
-type MiniApp = "menu" | "poll" | "todo" | "split";
+type MiniApp = "menu" | "poll" | "todo" | "split" | "book_table" | "trip_idea";
 
 interface Poll {
   id: string;
@@ -82,9 +86,13 @@ type SplitRow = {
 
 const dbFrom = (table: string): any => (supabase as any).from(table);
 
-export default function ChatMiniApps({ open, onClose, chatPartnerId, chatPartnerName }: ChatMiniAppsProps) {
+export default function ChatMiniApps({ open, onClose, chatPartnerId, chatPartnerName, initialView = "menu", onItemCreated }: ChatMiniAppsProps) {
   const { user } = useAuth();
-  const [view, setView] = useState<MiniApp>("menu");
+  const [view, setView] = useState<MiniApp>(initialView);
+
+  useEffect(() => {
+    if (open && initialView) setView(initialView);
+  }, [open, initialView]);
   const [polls, setPolls] = useState<Poll[]>([]);
   const [todos, setTodos] = useState<Todo[]>([]);
   const [bills, setBills] = useState<SplitBill[]>([]);
@@ -96,6 +104,10 @@ export default function ChatMiniApps({ open, onClose, chatPartnerId, chatPartner
   const [newTodoItems, setNewTodoItems] = useState([""]);
   const [newBillTitle, setNewBillTitle] = useState("");
   const [newBillAmount, setNewBillAmount] = useState("");
+  const [newBookingTitle, setNewBookingTitle] = useState("");
+  const [newBookingDate, setNewBookingDate] = useState("");
+  const [newTripTitle, setNewTripTitle] = useState("");
+  const [newTripDest, setNewTripDest] = useState("");
 
   useEffect(() => {
     if (!open || !user?.id) return;
@@ -126,6 +138,7 @@ export default function ChatMiniApps({ open, onClose, chatPartnerId, chatPartner
     });
     if (error) { toast.error("Failed to create poll"); return; }
     toast.success("Poll created!");
+    onItemCreated?.(`📊 Poll: ${newPollQ.trim()}`, "poll");
     setNewPollQ("");
     setNewPollOpts(["", ""]);
     setView("menu");
@@ -153,6 +166,7 @@ export default function ChatMiniApps({ open, onClose, chatPartnerId, chatPartner
       items,
     });
     toast.success("To-do list created!");
+    onItemCreated?.(`📝 To-Do List: ${newTodoTitle.trim()}`, "todo");
     setNewTodoTitle("");
     setNewTodoItems([""]);
     setView("menu");
@@ -185,11 +199,36 @@ export default function ChatMiniApps({ open, onClose, chatPartnerId, chatPartner
       ],
     });
     toast.success("Bill split created!");
+    onItemCreated?.(`💸 Split Bill: ${newBillTitle.trim()} ($${total.toFixed(2)})`, "split_bill");
     setNewBillTitle("");
     setNewBillAmount("");
     setView("menu");
     const { data } = await dbFrom("chat_split_bills").select("*").eq("chat_partner_id", chatPartnerId).order("created_at", { ascending: false });
     if (data) setBills(data as SplitRow[]);
+  };
+
+  const createBooking = async () => {
+    if (!newBookingTitle.trim() || !newBookingDate) {
+      toast.error("Need restaurant and date/time");
+      return;
+    }
+    onItemCreated?.(`🍽️ Table Booking: ${newBookingTitle.trim()} @ ${newBookingDate}`, "book_table");
+    toast.success("Table suggestion sent!");
+    setNewBookingTitle("");
+    setNewBookingDate("");
+    setView("menu");
+  };
+
+  const createTrip = async () => {
+    if (!newTripTitle.trim() || !newTripDest.trim()) {
+      toast.error("Need trip title and destination");
+      return;
+    }
+    onItemCreated?.(`✈️ Trip Idea: ${newTripTitle.trim()} to ${newTripDest.trim()}`, "trip_idea");
+    toast.success("Trip idea sent!");
+    setNewTripTitle("");
+    setNewTripDest("");
+    setView("menu");
   };
 
   if (!open) return null;
@@ -238,6 +277,8 @@ export default function ChatMiniApps({ open, onClose, chatPartnerId, chatPartner
                   { id: "poll" as MiniApp, icon: BarChart3, label: "Poll", count: polls.length, color: "bg-blue-500" },
                   { id: "todo" as MiniApp, icon: ListTodo, label: "To-Do", count: todos.length, color: "bg-emerald-500" },
                   { id: "split" as MiniApp, icon: Receipt, label: "Split Bill", count: bills.length, color: "bg-amber-500" },
+                  { id: "book_table" as MiniApp, icon: Utensils, label: "Book Table", count: 0, color: "bg-orange-500" },
+                  { id: "trip_idea" as MiniApp, icon: Map, label: "Trip Idea", count: 0, color: "bg-indigo-500" },
                 ].map((app) => (
                   <button
                     key={app.id}
@@ -446,6 +487,54 @@ export default function ChatMiniApps({ open, onClose, chatPartnerId, chatPartner
                     ))}
                   </div>
                 ))}
+              </div>
+            )}
+
+            {/* BOOK TABLE VIEW */}
+            {view === "book_table" && (
+              <div className="space-y-4">
+                <div className="p-4 rounded-2xl border border-border/40 space-y-3">
+                  <h4 className="text-xs font-bold text-foreground">Book a Table</h4>
+                  <input
+                    placeholder="Restaurant name..."
+                    value={newBookingTitle}
+                    onChange={(e) => setNewBookingTitle(e.target.value)}
+                    className="w-full h-10 px-3 rounded-xl border border-border/40 bg-muted/30 text-sm text-foreground placeholder:text-muted-foreground"
+                  />
+                  <input
+                    type="datetime-local"
+                    value={newBookingDate}
+                    onChange={(e) => setNewBookingDate(e.target.value)}
+                    className="w-full h-10 px-3 rounded-xl border border-border/40 bg-muted/30 text-sm text-foreground"
+                  />
+                  <button onClick={createBooking} className="w-full h-10 rounded-xl bg-orange-500 text-white text-sm font-semibold">
+                    Send Suggestion
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* TRIP IDEA VIEW */}
+            {view === "trip_idea" && (
+              <div className="space-y-4">
+                <div className="p-4 rounded-2xl border border-border/40 space-y-3">
+                  <h4 className="text-xs font-bold text-foreground">Plan a Trip</h4>
+                  <input
+                    placeholder="Trip title (e.g. Summer Vacay)"
+                    value={newTripTitle}
+                    onChange={(e) => setNewTripTitle(e.target.value)}
+                    className="w-full h-10 px-3 rounded-xl border border-border/40 bg-muted/30 text-sm text-foreground placeholder:text-muted-foreground"
+                  />
+                  <input
+                    placeholder="Destination..."
+                    value={newTripDest}
+                    onChange={(e) => setNewTripDest(e.target.value)}
+                    className="w-full h-10 px-3 rounded-xl border border-border/40 bg-muted/30 text-sm text-foreground placeholder:text-muted-foreground"
+                  />
+                  <button onClick={createTrip} className="w-full h-10 rounded-xl bg-indigo-500 text-white text-sm font-semibold">
+                    Share Idea
+                  </button>
+                </div>
               </div>
             )}
           </div>

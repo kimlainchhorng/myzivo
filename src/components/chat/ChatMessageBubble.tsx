@@ -42,7 +42,7 @@ import { ILLUSTRATED_PACKS } from "@/config/illustratedStickers";
 import { getAnimatedStickerUrl } from "@/config/animatedStickerMap";
 import { getStickerMotionSpec } from "./stickerMotion";
 import SpoilerText from "./SpoilerText";
-import onlyfansBrandLogo from "@/assets/brand-logos/onlyfans.png";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 // Lazy-load TransparentStickerVideo — heavy chroma-key/WebGL component
 const TransparentStickerVideo = lazy(() => import("./TransparentStickerVideo").then(m => ({ default: m.TransparentStickerVideo })));
@@ -222,6 +222,44 @@ interface ChatMessageBubbleProps {
   forwardedFromName?: string | null;
   /** User id of the original sender, used to navigate to their profile from the header. */
   forwardedFromUserId?: string | null;
+  onMiniAppAction?: (type: string) => void;
+  senderName?: string;
+  senderAvatar?: string | null;
+}
+
+function MiniAppCard({ type, message, isMe, time, onAction }: { type: string; message: string; isMe: boolean; time: string; onAction?: (type: string) => void }) {
+  const isPoll = type === "poll";
+  const isTodo = type === "todo";
+  const isSplit = type === "split_bill";
+  const isBook = type === "book_table";
+  const isTrip = type === "trip_idea";
+
+  const title = message.replace(/📊 Poll: |📝 To-Do List: |💸 Split Bill: |🍽️ Table Booking: |✈️ Trip Idea: /, "");
+  const icon = isPoll ? "📊" : isTodo ? "📝" : isSplit ? "💸" : isBook ? "🍽️" : "✈️";
+  const label = isPoll ? "Poll" : isTodo ? "To-Do List" : isSplit ? "Split Bill" : isBook ? "Table Booking" : "Trip Idea";
+  const buttonText = isPoll ? "View & Vote" : isTodo ? "Open List" : isSplit ? "Pay Split" : isBook ? "View Details" : "See Plan";
+  const colorClass = isPoll ? "bg-blue-500" : isTodo ? "bg-emerald-500" : isSplit ? "bg-amber-500" : isBook ? "bg-orange-500" : "bg-indigo-500";
+
+  return (
+    <div className={`p-4 rounded-2xl border ${isMe ? "bg-primary/10 border-primary/20" : "bg-muted/50 border-border/30"} space-y-3 min-w-[220px] shadow-sm`}>
+      <div className="flex items-center gap-2 mb-1">
+        <div className={`h-8 w-8 rounded-lg ${colorClass} flex items-center justify-center shadow-sm`}>
+          <span className="text-white text-sm">{icon}</span>
+        </div>
+        <div className="flex flex-col">
+          <span className="text-[10px] font-bold uppercase tracking-wider opacity-60 leading-none">{label}</span>
+          <span className="text-[10px] opacity-40 leading-none mt-0.5">{time}</span>
+        </div>
+      </div>
+      <p className="text-[15px] font-bold text-foreground leading-tight">{title}</p>
+      <button 
+        onClick={(e) => { e.stopPropagation(); onAction?.(type); }}
+        className={`w-full py-2.5 rounded-xl ${colorClass} text-white text-[13px] font-bold shadow-md active:scale-95 transition-transform`}
+      >
+        {buttonText}
+      </button>
+    </div>
+  );
 }
 
 const ChatMessageBubble = memo(function ChatMessageBubble({
@@ -229,6 +267,9 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
   editedAt, createdAt,
   initialReactions,
   onReply, onDelete, onDeleteForMe, onForward, onPin, onEdit, onSave, hideSave, forwardedFromName, forwardedFromUserId,
+  onMiniAppAction,
+  senderName,
+  senderAvatar,
 }: ChatMessageBubbleProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -496,12 +537,24 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
   return (
     <div
       ref={bubbleRef}
-      className={`chat-no-callout flex ${isMe ? "justify-end" : "justify-start"} relative px-1`}
+      className={`chat-no-callout flex ${isMe ? "justify-end" : "justify-start"} relative px-1 mb-1`}
       onContextMenu={(e) => e.preventDefault()}
       onContextMenuCapture={(e) => e.preventDefault()}
       onDragStartCapture={(e) => e.preventDefault()}
       style={{ WebkitTouchCallout: "none", WebkitTapHighlightColor: "transparent" }}
     >
+      {/* Sender Avatar for Group Chat */}
+      {!isMe && (senderName || senderAvatar) && (
+        <div className="mr-2 mt-1 shrink-0">
+          <Avatar className="h-7 w-7 border border-border/10 shadow-sm">
+            <AvatarImage src={senderAvatar || undefined} />
+            <AvatarFallback className="text-[9px] bg-muted font-bold">
+              {senderName ? senderName[0].toUpperCase() : "?"}
+            </AvatarFallback>
+          </Avatar>
+        </div>
+      )}
+
       <motion.div
         drag="x"
         dragConstraints={{ left: isMe ? -80 : 0, right: isMe ? 0 : 80 }}
@@ -515,6 +568,13 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
         onClick={handleTap}
         className={`${parsedSticker ? "w-fit max-w-none" : "max-w-[78%]"} select-none touch-pan-y ${isOptimistic ? "opacity-60" : ""}`}
       >
+        {/* Sender Name for Group Chat */}
+        {!isMe && senderName && (
+          <p className="text-[10px] font-bold text-muted-foreground/80 ml-3 mb-0.5 tracking-tight">
+            {senderName}
+          </p>
+        )}
+
         {/* Pin indicator */}
         {isPinned && (
           <div className={`flex items-center gap-1 mb-0.5 text-[9px] text-primary ${isMe ? "justify-end" : "justify-start"}`}>
@@ -664,6 +724,10 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
 
         {/* Message body */}
         {message && (() => {
+          if (messageType === "poll" || messageType === "todo" || messageType === "split_bill" || messageType === "book_table" || messageType === "trip_idea") {
+            return <MiniAppCard type={messageType} message={message} isMe={isMe} time={time} onAction={onMiniAppAction} />;
+          }
+
           // Sticker rendering (supports legacy + current formats)
           if (parsedSticker) {
             const stickerFallbackSrc =
@@ -1207,7 +1271,7 @@ type SocialPlatformId = "facebook" | "onlyfans" | "instagram" | "x" | "tiktok" |
 
 const SOCIAL_HOST_MAP: { match: RegExp; id: SocialPlatformId; label: string; color: string; textColor: string; brandImage?: string }[] = [
   { match: /(^|\.)facebook\.com$|(^|\.)fb\.com$/i,    id: "facebook",  label: "Facebook",  color: "bg-[#1877F2]", textColor: "text-white" },
-  { match: /(^|\.)onlyfans\.com$/i,                    id: "onlyfans",  label: "OnlyFans",  color: "bg-white",     textColor: "text-[#00AFF0]", brandImage: onlyfansBrandLogo },
+  { match: /(^|\.)onlyfans\.com$/i,                    id: "onlyfans",  label: "OnlyFans",  color: "bg-white",     textColor: "text-[#00AFF0]" },
   { match: /(^|\.)instagram\.com$/i,                   id: "instagram", label: "Instagram", color: "bg-gradient-to-br from-[#F58529] via-[#DD2A7B] to-[#8134AF]", textColor: "text-white" },
   { match: /(^|\.)(x\.com|twitter\.com)$/i,            id: "x",         label: "X",         color: "bg-black", textColor: "text-white" },
   { match: /(^|\.)tiktok\.com$/i,                      id: "tiktok",    label: "TikTok",    color: "bg-black", textColor: "text-white" },
