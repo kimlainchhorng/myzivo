@@ -979,7 +979,7 @@ const App = () => (
                 <Route path="/admin/flight-api" element={<ProtectedRoute requireAdmin={true}><AdminFlightApiMonitoring /></ProtectedRoute>} />
                 <Route path="/admin/flight-price-alerts" element={<ProtectedRoute requireAdmin={true}><AdminFlightPriceAlerts /></ProtectedRoute>} />
                 <Route path="/admin/stores" element={<ProtectedRoute requireAdmin={true}><AdminStoresPage /></ProtectedRoute>} />
-                <Route path="/admin/stores/:storeId" element={<ProtectedRoute requireAdmin={true}><AdminStoreEditPage /></ProtectedRoute>} />
+                <Route path="/admin/stores/:storeId" element={<ProtectedRoute requireAdmin={true} allowStoreOwner={true}><AdminStoreEditPage /></ProtectedRoute>} />
                 <Route path="/admin/stores/:storeId/upload-check" element={<ProtectedRoute requireAdmin={true}><StoreAssetsUploadCheck /></ProtectedRoute>} />
                 <Route path="/admin/stores/:storeId/lodging/reservations/:reservationId" element={<ProtectedRoute requireAdmin={true}><AdminLodgingReservationDetailPage /></ProtectedRoute>} />
                 <Route path="/admin/lodging/qa-checklist" element={<ProtectedRoute requireAdmin={true}><AdminLodgingQAChecklistPage /></ProtectedRoute>} />
