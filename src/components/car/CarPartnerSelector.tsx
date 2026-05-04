@@ -66,7 +66,7 @@ export default function CarPartnerSelector({
   return (
     <div className={cn("space-y-3 sm:space-y-4", className)}>
       <div className="flex items-center gap-2">
-        <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-violet-500" />
+        <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-foreground" />
         <h3 className="font-semibold text-sm sm:text-base">Compare Car Rental Prices</h3>
       </div>
 
@@ -98,7 +98,7 @@ export default function CarPartnerSelector({
                   </div>
                 </div>
                 {selectedPartner === partner.id && (
-                  <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-violet-500 flex items-center justify-center shrink-0">
+                  <div className="w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-foreground flex items-center justify-center shrink-0">
                     <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-primary-foreground" />
                   </div>
                 )}
@@ -138,7 +138,7 @@ export default function CarPartnerSelector({
 
       <p className="text-[9px] sm:text-[10px] text-muted-foreground text-center">
         ZIVO may earn a commission when you book through partner links.{' '}
-        <a href="/affiliate-disclosure" className="text-violet-500 hover:underline">Learn more</a>
+        <a href="/affiliate-disclosure" className="text-foreground hover:underline">Learn more</a>
       </p>
     </div>
   );

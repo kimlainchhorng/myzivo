@@ -73,9 +73,9 @@ const FlightClassComparison = () => {
     <section className="py-12 md:py-16">
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-sky-500/10 border border-sky-500/20 mb-4">
-            <Armchair className="w-4 h-4 text-sky-400" />
-            <span className="text-sm font-medium text-sky-400">Cabin Classes</span>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary border border-border mb-4">
+            <Armchair className="w-4 h-4 text-foreground" />
+            <span className="text-sm font-medium text-foreground">Cabin Classes</span>
           </div>
           <h2 className="font-display text-2xl md:text-3xl font-bold mb-2">
             Compare Flight Classes
@@ -102,7 +102,7 @@ const FlightClassComparison = () => {
                     <cabin.Icon className="w-6 h-6 text-primary-foreground" />
                   </div>
                   <h3 className="font-bold text-lg">{cabin.name}</h3>
-                  <p className="text-sky-400 font-bold">{cabin.priceRange}</p>
+                  <p className="text-foreground font-bold">{cabin.priceRange}</p>
                 </div>
 
                 <div className="space-y-4">

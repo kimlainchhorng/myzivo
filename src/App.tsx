@@ -97,6 +97,15 @@ const ShopAnalyticsPage = lazy(() => import("./pages/app/shop/ShopAnalyticsPage"
 const ShopDeliveryPage = lazy(() => import("./pages/app/shop/ShopDeliveryPage"));
 const ReferAFriendPage = lazy(() => import("./pages/app/ReferAFriendPage"));
 const MetaPrivacyDisclosure = lazy(() => import("./pages/legal/MetaPrivacyDisclosure"));
+const InsuranceDisclosure = lazy(() => import("./pages/legal/InsuranceDisclosure"));
+const InsurancePolicy = lazy(() => import("./pages/legal/InsurancePolicy"));
+const AirportTransfersPage = lazy(() => import("./pages/seo/AirportTransfersPage"));
+const CarRentalCityPage = lazy(() => import("./pages/seo/CarRentalCityPage"));
+const DestinationActivitiesPage = lazy(() => import("./pages/seo/DestinationActivitiesPage"));
+const DestinationHotelsPage = lazy(() => import("./pages/seo/DestinationHotelsPage"));
+const GroceryPage = lazy(() => import("./pages/GroceryPage"));
+const NewServiceOrderPage = lazy(() => import("./pages/NewServiceOrderPage"));
+const RequestRidePage = lazy(() => import("./pages/app/RequestRidePage"));
 const CreateCVPage = lazy(() => import("./pages/app/CreateCVPage"));
 const ConnectWebsitePage = lazy(() => import("./pages/app/ConnectWebsitePage"));
 const ApplyJobHubPage = lazy(() => import("./pages/app/personal/ApplyJobHubPage"));
@@ -1189,6 +1198,8 @@ const App = () => (
                 <Route path="/terms/owner" element={<OwnerTerms />} />
                 <Route path="/terms/renter" element={<RenterTerms />} />
                 <Route path="/legal/meta-privacy" element={<MetaPrivacyDisclosure />} />
+                <Route path="/legal/insurance-disclosure" element={<InsuranceDisclosure />} />
+                <Route path="/legal/insurance-policy" element={<InsurancePolicy />} />
                 <Route path="/legal/*" element={<GenericLegalPage />} />
                 <Route path="/cookies" element={<CookiePolicy />} />
                 <Route path="/cancellation-policy" element={<CancellationPolicy />} />
@@ -1209,6 +1220,17 @@ const App = () => (
                 <Route path="/multi-city-builder" element={<MultiCityBuilder />} />
                 {/* /zivo-plus defined above */}
                 <Route path="/vision" element={<Vision />} />
+
+                {/* SEO landing pages */}
+                <Route path="/airport-transfers" element={<AirportTransfersPage />} />
+                <Route path="/car-rental/:city" element={<CarRentalCityPage />} />
+                <Route path="/destinations/:city/activities" element={<DestinationActivitiesPage />} />
+                <Route path="/destinations/:city/hotels" element={<DestinationHotelsPage />} />
+
+                {/* Grocery + service flows */}
+                <Route path="/grocery" element={<GroceryPage />} />
+                <Route path="/services/new-order" element={<ProtectedRoute><NewServiceOrderPage /></ProtectedRoute>} />
+                <Route path="/app/request-ride" element={<ProtectedRoute><RequestRidePage /></ProtectedRoute>} />
                 <Route path="/press" element={<Press />} />
                 <Route path="/for-customers" element={<ForCustomers />} />
                 <Route path="/promotions" element={<Promotions />} />

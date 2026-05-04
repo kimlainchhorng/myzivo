@@ -193,7 +193,7 @@ export default function MultiStopRideBuilder() {
         <section>
           <div className="flex items-center justify-between mb-2 px-1">
             <Label className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-              <MapPin className="w-3.5 h-3.5 text-rose-500" /> Stops
+              <MapPin className="w-3.5 h-3.5 text-foreground" /> Stops
             </Label>
             <span className="text-[11px] text-muted-foreground">
               up to {MAX_STOPS - 1}
@@ -228,7 +228,7 @@ export default function MultiStopRideBuilder() {
                     ↓
                   </button>
                   <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-rose-500/15 text-rose-600 text-[10px] font-bold">
+                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-secondary text-foreground text-[10px] font-bold">
                       {i + 1}
                     </span>
                     <Input

@@ -27,7 +27,7 @@ interface StickySearchSummaryProps {
 
 const serviceColors = {
   flights: {
-    gradient: "from-sky-950/40 to-background",
+    gradient: "from-muted to-muted",
     accent: "text-sky-500",
     badge: "bg-sky-500/10 text-sky-500 border-sky-500/20",
     button: "hover:bg-sky-500/10 hover:text-sky-500 hover:border-sky-500/50",
@@ -39,7 +39,7 @@ const serviceColors = {
     button: "hover:bg-amber-500/10 hover:text-amber-500 hover:border-amber-500/50",
   },
   cars: {
-    gradient: "from-violet-950/40 to-background",
+    gradient: "from-muted to-muted",
     accent: "text-violet-500",
     badge: "bg-violet-500/10 text-violet-500 border-violet-500/20",
     button: "hover:bg-violet-500/10 hover:text-violet-500 hover:border-violet-500/50",

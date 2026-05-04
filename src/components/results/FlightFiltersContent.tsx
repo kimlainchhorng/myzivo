@@ -123,7 +123,7 @@ export function FlightFiltersContent({
         </Label>
         <div className="px-1">
           <div className="flex justify-center mb-2">
-            <span className="text-2xl font-bold text-sky-500">{formatPrice(filters.maxPrice)}</span>
+            <span className="text-2xl font-bold text-foreground">{formatPrice(filters.maxPrice)}</span>
           </div>
           <Slider
             value={[filters.maxPrice]}
@@ -162,10 +162,10 @@ export function FlightFiltersContent({
       {availableAirlines.length > 0 && (
         <div>
           <Label className="text-sm font-semibold mb-3 flex items-center gap-2">
-            <Plane className="w-4 h-4 text-sky-500" />
+            <Plane className="w-4 h-4 text-foreground" />
             Airlines
             {filters.airlines.length > 0 && (
-              <span className="text-xs text-sky-500 font-normal">({filters.airlines.length} selected)</span>
+              <span className="text-xs text-foreground font-normal">({filters.airlines.length} selected)</span>
             )}
           </Label>
           <div className="space-y-2">
@@ -197,7 +197,7 @@ export function FlightFiltersContent({
           {availableAirlines.length > 6 && (
             <button
               onClick={() => setShowAllAirlines(!showAllAirlines)}
-              className="flex items-center gap-1 text-sm text-sky-500 hover:text-sky-400 mt-2 font-medium"
+              className="flex items-center gap-1 text-sm text-foreground hover:text-foreground mt-2 font-medium"
             >
               {showAllAirlines ? (
                 <>
@@ -307,7 +307,7 @@ export function FlightFiltersContent({
       {/* Baggage Included Toggle */}
       <div className="flex items-center justify-between py-3 px-4 bg-muted/30 rounded-xl border border-border/50">
         <div className="flex items-center gap-2">
-          <Luggage className="w-4 h-4 text-sky-500" />
+          <Luggage className="w-4 h-4 text-foreground" />
           <Label className="text-sm font-medium cursor-pointer">Checked bag included</Label>
         </div>
         <Switch

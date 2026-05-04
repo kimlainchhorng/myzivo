@@ -218,10 +218,10 @@ export default function ConciergePage() {
             </Button>
           </div>
           {listening && (
-            <div className="mt-2 text-[11px] font-bold text-rose-600 flex items-center gap-1.5">
+            <div className="mt-2 text-[11px] font-bold text-foreground flex items-center gap-1.5">
               <span className="relative flex h-2 w-2">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-rose-500 opacity-60 animate-ping" />
-                <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500" />
+                <span className="absolute inline-flex h-full w-full rounded-full bg-foreground opacity-60 animate-ping" />
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-foreground" />
               </span>
               Listening… speak naturally, we'll plan it
             </div>

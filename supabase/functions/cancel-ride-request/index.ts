@@ -14,6 +14,7 @@
 import { createClient } from "../_shared/deps.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
 import Stripe from "../_shared/stripe.ts";
+import { cascadeCancellationToDriver } from "../_shared/cancellation-cascade.ts";
 
 Deno.serve(async (req) => {
   const cors = getCorsHeaders(req);
@@ -111,6 +112,14 @@ Deno.serve(async (req) => {
         cancelled_at: new Date().toISOString(),
       } as any)
       .eq("id", ride_request_id);
+
+    // Cascade to service_orders + jobs + notify the assigned driver so they
+    // know to abort the trip.
+    try {
+      await cascadeCancellationToDriver(admin, ride_request_id, "ride");
+    } catch (e) {
+      console.warn("[cancel-ride-request] driver cascade skipped", e);
+    }
 
     return new Response(JSON.stringify({
       ok: true,

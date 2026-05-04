@@ -23,7 +23,7 @@ const TripPlanner = () => {
     <section className="py-12 px-4">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
-          <Badge className="mb-3 bg-violet-500/20 text-violet-400 border-violet-500/30">
+          <Badge className="mb-3 bg-secondary text-foreground border-border">
             <Calendar className="w-3 h-3 mr-1" /> Trip Planner
           </Badge>
           <h2 className="text-2xl md:text-3xl font-display font-bold mb-2">

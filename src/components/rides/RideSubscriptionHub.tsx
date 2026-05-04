@@ -102,7 +102,7 @@ export default function RideSubscriptionHub() {
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-r from-primary/20 via-purple-500/15 to-primary/20 rounded-2xl p-4 border border-primary/20"
+        className="bg-gradient-to-r from-primary/20 to-primary/20 rounded-2xl p-4 border border-primary/20"
       >
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">

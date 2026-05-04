@@ -292,7 +292,7 @@ export default function CommunityDetailPage() {
                   </p>
                   {post.like_count > 0 && (
                     <div className="flex items-center gap-1 mt-2 text-[11px] text-muted-foreground">
-                      <Heart className="w-3.5 h-3.5 text-rose-400 fill-rose-400" />
+                      <Heart className="w-3.5 h-3.5 text-foreground fill-rose-400" />
                       <span>{post.like_count}</span>
                     </div>
                   )}

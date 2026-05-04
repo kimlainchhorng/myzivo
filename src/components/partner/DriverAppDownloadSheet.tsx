@@ -58,9 +58,9 @@ export default function DriverAppDownloadSheet({
         className="rounded-t-3xl max-h-[92dvh] overflow-auto p-0 border-0"
       >
         {/* Hero gradient */}
-        <div className="relative bg-gradient-to-br from-blue-600 via-blue-700 to-indigo-800 px-6 pt-7 pb-8 text-white overflow-hidden">
+        <div className="relative bg-gradient-to-br from-blue-600 via-blue-700 px-6 pt-7 pb-8 text-white overflow-hidden">
           <div className="absolute -top-16 -right-16 w-44 h-44 rounded-full bg-white/10 blur-2xl" />
-          <div className="absolute -bottom-12 -left-12 w-36 h-36 rounded-full bg-cyan-400/15 blur-2xl" />
+          <div className="absolute -bottom-12 -left-12 w-36 h-36 rounded-full bg-secondary blur-2xl" />
 
           {/* Close button */}
           <button

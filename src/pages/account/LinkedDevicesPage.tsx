@@ -244,7 +244,7 @@ export default function LinkedDevicesPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="h-9 rounded-full px-3 text-xs gap-1 shrink-0 text-rose-500 hover:bg-rose-500/10 hover:text-rose-500 border-rose-500/30"
+                  className="h-9 rounded-full px-3 text-xs gap-1 shrink-0 text-foreground hover:bg-secondary hover:text-foreground border-border"
                   disabled={signingOutOthers || otherCount === 0}
                 >
                   {signingOutOthers ? <Loader2 className="h-3 w-3 animate-spin" /> : <ShieldOff className="h-3 w-3" />}
@@ -261,7 +261,7 @@ export default function LinkedDevicesPage() {
                 </AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction onClick={handleSignOutOthers} className="bg-rose-500 hover:bg-rose-600">
+                  <AlertDialogAction onClick={handleSignOutOthers} className="bg-foreground hover:bg-foreground">
                     Sign out others
                   </AlertDialogAction>
                 </AlertDialogFooter>

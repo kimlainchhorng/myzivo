@@ -131,7 +131,7 @@ export default function ChatPollCreator({ open, onClose, onSubmit }: ChatPollCre
                 <X className="w-4 h-4" />
               </button>
               <div className="flex items-center gap-2">
-                <BarChart3 className="w-4 h-4 text-fuchsia-500" />
+                <BarChart3 className="w-4 h-4 text-foreground" />
                 <p className="text-sm font-bold">New Poll</p>
               </div>
               <Button

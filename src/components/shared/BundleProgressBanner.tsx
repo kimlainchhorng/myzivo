@@ -56,7 +56,7 @@ export default function BundleProgressBanner({ step, completed }: Props) {
     <motion.div
       initial={{ y: -10, opacity: 0 }}
       animate={{ y: 0, opacity: 1 }}
-      className="sticky top-0 z-40 bg-gradient-to-r from-indigo-600 via-violet-600 to-fuchsia-600 text-white shadow-md pt-safe"
+      className="sticky top-0 z-40 text-white shadow-md pt-safe bg-foreground"
     >
       <div className="max-w-screen-md mx-auto px-4 py-2.5 flex items-center gap-3">
         <span className="inline-flex items-center gap-1 rounded-full bg-white/20 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider">

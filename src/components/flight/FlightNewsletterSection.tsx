@@ -36,20 +36,20 @@ export default function FlightNewsletterSection({ className }: FlightNewsletterS
   return (
     <section className={cn("py-10 sm:py-16", className)}>
       <div className="container mx-auto px-4">
-        <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-sky-500/10 via-card to-indigo-500/10">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-indigo-500/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
+        <Card className="relative overflow-hidden border-0 via-card bg-secondary">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-secondary rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-secondary rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
           
           <CardContent className="p-6 sm:p-10 relative">
             <div className="max-w-2xl mx-auto text-center">
-              <Badge className="mb-4 px-4 py-2 bg-sky-500/20 text-sky-400 border-sky-500/30">
+              <Badge className="mb-4 px-4 py-2 bg-secondary text-foreground border-border">
                 <Mail className="w-4 h-4 mr-2" />
                 Newsletter
               </Badge>
               
               <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-4">
                 Never Miss a
-                <span className="bg-gradient-to-r from-sky-400 to-indigo-500 bg-clip-text text-transparent ml-2">
+                <span className="ml-2 text-accent-foreground">
                   Cheap Flight
                 </span>
               </h2>
@@ -71,7 +71,7 @@ export default function FlightNewsletterSection({ className }: FlightNewsletterS
                     />
                     <Button 
                       type="submit"
-                      className="h-12 px-8 bg-gradient-to-r from-sky-500 to-indigo-600 hover:opacity-90 touch-manipulation active:scale-[0.98]"
+                      className="h-12 px-8 hover:opacity-90 touch-manipulation active:scale-[0.98] bg-secondary"
                     >
                       Subscribe
                     </Button>
@@ -80,7 +80,7 @@ export default function FlightNewsletterSection({ className }: FlightNewsletterS
                   <div className="flex flex-wrap justify-center gap-4">
                     {benefits.map((benefit) => (
                       <div key={benefit.text} className="flex items-center gap-2 text-sm text-muted-foreground">
-                        <benefit.icon className="w-4 h-4 text-sky-400" />
+                        <benefit.icon className="w-4 h-4 text-foreground" />
                         <span>{benefit.text}</span>
                       </div>
                     ))}

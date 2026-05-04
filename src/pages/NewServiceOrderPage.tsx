@@ -206,7 +206,7 @@ export default function NewServiceOrderPage() {
           </Card>
 
           <Card>
-            <CardHeader><CardTitle className="text-base"><MapPin className="inline mr-1 h-4 w-4 text-rose-500" />Drop-off</CardTitle></CardHeader>
+            <CardHeader><CardTitle className="text-base"><MapPin className="inline mr-1 h-4 w-4 text-foreground" />Drop-off</CardTitle></CardHeader>
             <CardContent className="space-y-3">
               <div>
                 <Label htmlFor="ride-dropoff">Address</Label>

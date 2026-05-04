@@ -84,8 +84,8 @@ export default function PersonalNotificationsPage() {
 
         {!isLoading && (!notifs || notifs.length === 0) && (
           <div className="flex flex-col items-center justify-center py-16 text-center">
-            <div className="w-14 h-14 rounded-full bg-rose-500/10 flex items-center justify-center mb-4">
-              <Bell className="w-7 h-7 text-rose-500" />
+            <div className="w-14 h-14 rounded-full bg-secondary flex items-center justify-center mb-4">
+              <Bell className="w-7 h-7 text-foreground" />
             </div>
             <h2 className="font-semibold text-[15px] mb-1">No notifications yet</h2>
             <p className="text-[13px] text-muted-foreground max-w-[260px]">

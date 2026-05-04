@@ -412,7 +412,7 @@ function DesktopCinematicHero() {
                   transition={{ duration: 0.5 }}
                 >
                   <h1 className="font-display text-3xl lg:text-5xl font-bold mb-2 leading-tight">
-                    <span className="bg-gradient-to-r from-sky-400 via-blue-500 to-cyan-400 bg-clip-text text-transparent">
+                    <span className="text-accent-foreground">
                       {heroSlides[currentSlide].label}
                     </span>
                   </h1>

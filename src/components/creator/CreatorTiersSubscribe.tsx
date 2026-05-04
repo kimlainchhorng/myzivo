@@ -339,7 +339,7 @@ export default function CreatorTiersSubscribe({ creatorId, creatorName, isOwnPro
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Sparkles className="w-4 h-4 text-violet-500" />
+              <Sparkles className="w-4 h-4 text-foreground" />
               Choose your amount
             </DialogTitle>
           </DialogHeader>
@@ -384,11 +384,11 @@ export default function CreatorTiersSubscribe({ creatorId, creatorName, isOwnPro
         <DialogContent className="max-w-sm">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <Gift className="w-5 h-5 text-rose-500" />
+              <Gift className="w-5 h-5 text-foreground" />
               Welcome to {welcomeFor?.name}
             </DialogTitle>
           </DialogHeader>
-          <div className="rounded-2xl border border-border/40 bg-gradient-to-br from-rose-500/10 via-amber-500/5 to-transparent p-4">
+          <div className="rounded-2xl border border-border/40 to-transparent p-4 bg-secondary">
             <p className="text-[10px] uppercase tracking-wider font-bold text-muted-foreground mb-1.5">
               A note from {creatorName || "the creator"}
             </p>

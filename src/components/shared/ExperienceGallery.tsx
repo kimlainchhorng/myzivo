@@ -88,7 +88,7 @@ const serviceColors = {
   },
   extras: {
     text: "text-pink-400",
-    gradient: "from-pink-500/20 to-purple-500/10",
+    gradient: "from-muted to-muted",
   },
 };
 

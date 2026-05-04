@@ -15,6 +15,7 @@
  */
 import { createClient } from "../_shared/deps.ts";
 import Stripe from "../_shared/stripe.ts";
+import { cascadeCancellationToDriver } from "../_shared/cancellation-cascade.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -174,6 +175,13 @@ Deno.serve(async (req) => {
         cancelled_at: new Date().toISOString(),
       } as any)
       .eq("id", order_id);
+
+    // Cascade to service_orders + jobs + notify the assigned shopper/driver.
+    try {
+      await cascadeCancellationToDriver(admin, order_id, "delivery");
+    } catch (e) {
+      console.warn("[cancel-grocery-order] driver cascade skipped", e);
+    }
 
     return new Response(JSON.stringify({
       ok: true,

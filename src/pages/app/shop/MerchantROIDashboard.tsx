@@ -254,7 +254,7 @@ export default function MerchantROIDashboard() {
             </Card>
 
             {/* Verified Meta Revenue */}
-            <Card className="border-blue-500/20 bg-gradient-to-br from-blue-500/5 to-indigo-500/5">
+            <Card className="border-blue-500/20 bg-gradient-to-br from-blue-500/5">
               <CardContent className="p-4">
                 <div className="flex items-center gap-3">
                   <div className="h-10 w-10 rounded-xl bg-blue-500/15 flex items-center justify-center">

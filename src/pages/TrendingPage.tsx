@@ -267,7 +267,7 @@ export default function TrendingPage() {
                           )}
                           <div className="flex items-center gap-3">
                             <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                              <Heart className="h-3 w-3 text-rose-500" />
+                              <Heart className="h-3 w-3 text-foreground" />
                               {post.likes_count.toLocaleString()}
                             </span>
                             <span className="flex items-center gap-1 text-[11px] text-muted-foreground">

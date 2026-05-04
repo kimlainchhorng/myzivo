@@ -358,9 +358,9 @@ function SplitFareTab() {
 
   return (
     <div className="space-y-4">
-      <div className="rounded-2xl bg-gradient-to-br from-violet-500/10 to-primary/5 border border-violet-500/20 p-5">
+      <div className="rounded-2xl to-primary/5 border border-border p-5 bg-secondary">
         <div className="flex items-center gap-2 mb-3">
-          <Users className="w-5 h-5 text-violet-500" />
+          <Users className="w-5 h-5 text-foreground" />
           <h3 className="text-sm font-bold text-foreground">Split This Fare</h3>
         </div>
 

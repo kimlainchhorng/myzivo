@@ -13,12 +13,12 @@ const FlightPriceGuarantee = () => {
   return (
     <section className="py-12 px-4">
       <div className="max-w-6xl mx-auto">
-        <div className="relative overflow-hidden bg-gradient-to-br from-sky-500/10 via-card/50 to-blue-500/10 border border-sky-500/20 rounded-3xl p-8 md:p-12">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500/20 blur-3xl rounded-full" />
+        <div className="relative overflow-hidden via-card/50 border border-border rounded-3xl p-8 md:p-12 bg-secondary">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-secondary blur-3xl rounded-full" />
 
           <div className="relative z-10">
             <div className="text-center mb-10">
-              <Badge className="mb-3 bg-sky-500/20 text-sky-400 border-sky-500/30">
+              <Badge className="mb-3 bg-secondary text-foreground border-border">
                 <Shield className="w-3 h-3 mr-1" /> Search with Confidence
               </Badge>
               <h2 className="text-2xl md:text-4xl font-display font-bold mb-3">
@@ -39,7 +39,7 @@ const FlightPriceGuarantee = () => {
             </div>
 
             <div className="text-center">
-              <Button size="lg" className="bg-gradient-to-r from-sky-500 to-blue-500">
+              <Button size="lg" className="bg-secondary">
                 <Award className="w-4 h-4 mr-2" />
                 Start Searching Flights
               </Button>

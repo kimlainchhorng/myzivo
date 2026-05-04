@@ -15,10 +15,10 @@ import { motion, AnimatePresence } from "framer-motion";
 
 const SHIFT_META: Record<string, { label: string; icon: typeof Sunrise; gradient: string; dot: string }> = {
   morning: { label: "Morning", icon: Sunrise, gradient: "from-amber-400 to-orange-400", dot: "bg-amber-400" },
-  afternoon: { label: "Afternoon", icon: Sun, gradient: "from-sky-400 to-blue-500", dot: "bg-sky-400" },
-  evening: { label: "Evening", icon: Moon, gradient: "from-violet-400 to-purple-500", dot: "bg-violet-400" },
+  afternoon: { label: "Afternoon", icon: Sun, gradient: "from-muted to-muted", dot: "bg-sky-400" },
+  evening: { label: "Evening", icon: Moon, gradient: "from-muted to-muted", dot: "bg-violet-400" },
   full: { label: "Full Day", icon: Clock, gradient: "from-emerald-400 to-teal-500", dot: "bg-emerald-500" },
-  split: { label: "Split", icon: BarChart3, gradient: "from-rose-400 to-pink-500", dot: "bg-rose-400" },
+  split: { label: "Split", icon: BarChart3, gradient: "from-muted to-muted", dot: "bg-rose-400" },
 };
 
 const OFF_ICONS: Record<string, typeof Coffee> = {

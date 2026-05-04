@@ -92,8 +92,8 @@ export const PayLater = ({ className, totalAmount = 1299 }: PayLaterProps) => {
       <CardHeader className="pb-4 border-b border-border/50">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500/20 to-purple-500/10 border border-pink-500/40 flex items-center justify-center">
-              <Wallet className="w-6 h-6 text-pink-400" />
+            <div className="w-12 h-12 rounded-xl border border-border flex items-center justify-center bg-secondary">
+              <Wallet className="w-6 h-6 text-foreground" />
             </div>
             <div>
               <CardTitle className="text-xl">Pay Later</CardTitle>
@@ -233,11 +233,11 @@ export const PayLater = ({ className, totalAmount = 1299 }: PayLaterProps) => {
               No hidden fees
             </span>
             <span className="flex items-center gap-1">
-              <Clock className="w-4 h-4 text-sky-400" />
+              <Clock className="w-4 h-4 text-foreground" />
               Instant approval
             </span>
             <span className="flex items-center gap-1">
-              <CheckCircle className="w-4 h-4 text-violet-400" />
+              <CheckCircle className="w-4 h-4 text-foreground" />
               No credit impact
             </span>
           </div>

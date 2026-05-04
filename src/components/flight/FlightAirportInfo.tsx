@@ -28,7 +28,7 @@ const FlightAirportInfo = () => {
     <section className="py-12 px-4">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-8">
-          <Badge className="mb-3 bg-cyan-500/20 text-cyan-400 border-cyan-500/30">
+          <Badge className="mb-3 bg-secondary text-foreground border-border">
             <MapPin className="w-3 h-3 mr-1" /> Airport Guide
           </Badge>
           <h2 className="text-2xl md:text-3xl font-display font-bold mb-2">
@@ -75,7 +75,7 @@ const FlightAirportInfo = () => {
                         <div key={idx} className="flex items-center gap-2 text-sm p-2 rounded-xl bg-muted/30">
                           {idx === 0 && <ShoppingBag className="w-4 h-4 text-amber-400" />}
                           {idx === 1 && <Wifi className="w-4 h-4 text-blue-400" />}
-                          {idx === 2 && <ShoppingBag className="w-4 h-4 text-pink-400" />}
+                          {idx === 2 && <ShoppingBag className="w-4 h-4 text-foreground" />}
                           {idx === 3 && <Coffee className="w-4 h-4 text-orange-400" />}
                           <span>{amenity}</span>
                         </div>
@@ -93,8 +93,8 @@ const FlightAirportInfo = () => {
                         <div key={idx} className="flex items-center gap-2 text-sm p-2 rounded-xl bg-muted/30">
                           {idx === 0 && <Train className="w-4 h-4 text-green-400" />}
                           {idx === 1 && <Car className="w-4 h-4 text-yellow-400" />}
-                          {idx === 2 && <Car className="w-4 h-4 text-purple-400" />}
-                          {idx === 3 && <Car className="w-4 h-4 text-cyan-400" />}
+                          {idx === 2 && <Car className="w-4 h-4 text-foreground" />}
+                          {idx === 3 && <Car className="w-4 h-4 text-foreground" />}
                           <span>{option}</span>
                         </div>
                       ))}
@@ -103,7 +103,7 @@ const FlightAirportInfo = () => {
                 </div>
 
                 {/* Pro Tip */}
-                <div className="mt-6 p-4 rounded-xl bg-gradient-to-r from-primary/10 to-sky-500/10 border border-primary/30">
+                <div className="mt-6 p-4 rounded-xl bg-gradient-to-r from-primary/10 border border-primary/30">
                   <p className="text-sm">
                     <span className="font-semibold text-primary">Pro Tip:</span> {airport.tips}
                   </p>

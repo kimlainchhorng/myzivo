@@ -460,7 +460,7 @@ export const FeatureCard: React.FC<FeatureCardProps> = ({
   const badgeConfig = {
     new: { icon: Sparkles, label: "New", gradient: "from-emerald-500 to-green-500" },
     popular: { icon: Zap, label: "Popular", gradient: "from-amber-500 to-orange-500" },
-    premium: { icon: Crown, label: "Premium", gradient: "from-violet-500 to-purple-500" },
+    premium: { icon: Crown, label: "Premium", gradient: "from-muted to-muted" },
   };
 
   return (

@@ -54,7 +54,7 @@ const FlightSeasonalDeals = () => {
     <section className="py-12 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-8">
-          <Badge className="mb-3 bg-gradient-to-r from-sky-500/20 to-purple-500/20 text-sky-400 border-sky-500/20">
+          <Badge className="mb-3 text-foreground border-border bg-secondary">
             <Gift className="w-3 h-3 mr-1" /> Seasonal Specials
           </Badge>
           <h2 className="text-2xl md:text-3xl font-display font-bold mb-2">
@@ -69,7 +69,7 @@ const FlightSeasonalDeals = () => {
           {seasons.map((season) => (
             <div
               key={season.id}
-              className="group relative overflow-hidden bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl p-6 hover:border-sky-500/50 transition-all"
+              className="group relative overflow-hidden bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl p-6 hover:border-border transition-all"
             >
               <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${season.color} opacity-10 blur-3xl`} />
 
@@ -89,13 +89,13 @@ const FlightSeasonalDeals = () => {
                 <p className="text-xs text-muted-foreground">Popular routes:</p>
                 {season.routes.map((route) => (
                   <div key={route} className="flex items-center gap-1 text-xs">
-                    <Plane className="w-3 h-3 text-sky-400" />
+                    <Plane className="w-3 h-3 text-foreground" />
                     {route}
                   </div>
                 ))}
               </div>
 
-              <Button variant="outline" className="w-full group-hover:bg-sky-500 group-hover:text-primary-foreground transition-colors" size="sm">
+              <Button variant="outline" className="w-full group-hover:bg-foreground group-hover:text-primary-foreground transition-colors" size="sm">
                 Explore <ArrowRight className="w-4 h-4 ml-1" />
               </Button>
             </div>

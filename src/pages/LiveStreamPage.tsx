@@ -1508,14 +1508,14 @@ export default function LiveStreamPage() {
 </div>
 <div className="flex gap-3 overflow-x-auto scrollbar-hide -mx-4 px-4 pb-1">
  {[
- { label: "Beauty", emoji: "", desc: "Smooth skin & glow", gradient: "from-pink-400 via-rose-300 to-amber-200" },
- { label: "Anime Eyes", emoji: "", desc: "Big sparkly eyes", gradient: "from-purple-400 via-fuchsia-300 to-pink-300" },
- { label: "Cat Ears", emoji: "", desc: "Cute kitty filter", gradient: "from-orange-300 via-pink-300 to-rose-200" },
- { label: "Bunny", emoji: "", desc: "Pink bunny ears", gradient: "from-pink-300 via-rose-200 to-fuchsia-300" },
+ { label: "Beauty", emoji: "", desc: "Smooth skin & glow", gradient: "from-muted to-muted" },
+ { label: "Anime Eyes", emoji: "", desc: "Big sparkly eyes", gradient: "from-muted to-muted" },
+ { label: "Cat Ears", emoji: "", desc: "Cute kitty filter", gradient: "from-muted to-muted" },
+ { label: "Bunny", emoji: "", desc: "Pink bunny ears", gradient: "from-muted to-muted" },
  { label: "Crown", emoji: "", desc: "Royal sparkle", gradient: "from-amber-300 via-yellow-200 to-orange-300" },
- { label: "Galaxy", emoji: "", desc: "Star background", gradient: "from-violet-500 via-purple-500 to-indigo-500" },
+ { label: "Galaxy", emoji: "", desc: "Star background", gradient: "from-muted to-muted" },
  { label: "Vintage", emoji: "", desc: "Film grain", gradient: "from-amber-200 via-orange-200 to-yellow-200" },
- { label: "Neon", emoji: "", desc: "Cyberpunk glow", gradient: "from-cyan-400 via-blue-400 to-purple-400" },
+ { label: "Neon", emoji: "", desc: "Cyberpunk glow", gradient: "from-muted to-muted" },
  ].map((e) =>(
 <button
  key={e.label}
@@ -1691,8 +1691,8 @@ export default function LiveStreamPage() {
  {[
  { title: "Pomodoro 25/5", studying: 142, emoji: "", gradient: "from-red-500 to-orange-500" },
  { title: "Silent library", studying: 89, emoji: "", gradient: "from-emerald-500 to-teal-500" },
- { title: "Coding bootcamp", studying: 64, emoji: "", gradient: "from-blue-500 to-indigo-500" },
- { title: "Lo-fi study", studying: 218, emoji: "", gradient: "from-violet-500 to-purple-500" },
+ { title: "Coding bootcamp", studying: 64, emoji: "", gradient: "from-muted to-muted" },
+ { title: "Lo-fi study", studying: 218, emoji: "", gradient: "from-muted to-muted" },
  ].map((r, i) =>(
 <button
  key={i}
@@ -2394,10 +2394,10 @@ export default function LiveStreamPage() {
 </div>
 <div className="grid grid-cols-2 gap-2.5">
  {[
- { title: "Whisper sleep", listeners: "8.4K", emoji: "", gradient: "from-indigo-600 via-blue-500 to-cyan-500" },
+ { title: "Whisper sleep", listeners: "8.4K", emoji: "", gradient: "from-muted to-muted" },
  { title: "Rain & thunder", listeners: "6.2K", emoji: "", gradient: "from-slate-700 via-slate-600 to-blue-700" },
- { title: "Tapping & scratching", listeners: "4.8K", emoji: "", gradient: "from-purple-600 via-violet-500 to-indigo-500" },
- { title: "Roleplay haircut", listeners: "3.6K", emoji: "", gradient: "from-emerald-600 via-teal-500 to-cyan-500" },
+ { title: "Tapping & scratching", listeners: "4.8K", emoji: "", gradient: "from-muted to-muted" },
+ { title: "Roleplay haircut", listeners: "3.6K", emoji: "", gradient: "from-muted to-muted" },
  ].map((a, i) =>(
 <button
  key={i}
@@ -2556,16 +2556,16 @@ export default function LiveStreamPage() {
 </div>
 <div className="grid grid-cols-4 gap-2">
  {[
- { label: "Music", icon: "", gradient: "from-pink-500 to-rose-400", q: "music" },
- { label: "Gaming", icon: "", gradient: "from-violet-500 to-indigo-500", q: "gaming" },
- { label: "Dance", icon: "", gradient: "from-fuchsia-500 to-pink-500", q: "dance" },
+ { label: "Music", icon: "", gradient: "from-muted to-muted", q: "music" },
+ { label: "Gaming", icon: "", gradient: "from-muted to-muted", q: "gaming" },
+ { label: "Dance", icon: "", gradient: "from-muted to-muted", q: "dance" },
  { label: "Talent", icon: "", gradient: "from-amber-500 to-orange-400", q: "talent" },
- { label: "Beauty", icon: "", gradient: "from-rose-400 to-red-400", q: "beauty" },
+ { label: "Beauty", icon: "", gradient: "from-muted to-muted", q: "beauty" },
  { label: "Cooking", icon: "", gradient: "from-orange-500 to-yellow-400", q: "cooking" },
  { label: "Sports", icon: "", gradient: "from-emerald-500 to-teal-400", q: "sports" },
- { label: "Travel", icon: "", gradient: "from-sky-500 to-cyan-400", q: "travel" },
- { label: "Fashion", icon: "", gradient: "from-purple-500 to-fuchsia-500", q: "fashion" },
- { label: "Tech", icon: "", gradient: "from-blue-500 to-indigo-500", q: "tech" },
+ { label: "Travel", icon: "", gradient: "from-muted to-muted", q: "travel" },
+ { label: "Fashion", icon: "", gradient: "from-muted to-muted", q: "fashion" },
+ { label: "Tech", icon: "", gradient: "from-muted to-muted", q: "tech" },
  { label: "Comedy", icon: "", gradient: "from-yellow-400 to-orange-400", q: "comedy" },
  { label: "Education", icon: "", gradient: "from-teal-500 to-emerald-500", q: "education" },
  ].map((c) =>(

@@ -22,7 +22,7 @@ const serviceColors = {
     text: "text-violet-400",
     border: "border-violet-500/30",
     shadow: "shadow-violet-500/20",
-    gradient: "from-violet-500 to-purple-600",
+    gradient: "from-muted to-muted",
     bg: "bg-violet-500/10",
   },
   rides: {
@@ -166,7 +166,7 @@ export default function VehicleTypeGallery({
                 
                 {/* Info Overlay (bottom) */}
                 <div className="absolute bottom-0 left-0 right-0 p-4">
-                  <h3 className="font-bold text-lg text-primary-foreground mb-1 group-hover:text-violet-300 transition-all duration-200">
+                  <h3 className="font-bold text-lg text-primary-foreground mb-1 group-hover:text-foreground transition-all duration-200">
                     {vehicle.label}
                   </h3>
                   

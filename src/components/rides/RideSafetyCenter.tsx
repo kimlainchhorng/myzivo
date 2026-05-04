@@ -72,7 +72,7 @@ export default function RideSafetyCenter() {
   return (
     <div className="space-y-4">
       {/* Header */}
-      <div className="rounded-2xl bg-gradient-to-br from-red-500/10 to-violet-500/10 border border-red-500/20 p-4">
+      <div className="rounded-2xl bg-gradient-to-br from-red-500/10 border border-red-500/20 p-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-xl bg-red-500/10 flex items-center justify-center">
             <Shield className="w-6 h-6 text-red-500" />
@@ -185,7 +185,7 @@ export default function RideSafetyCenter() {
                 ].map(c => (
                   <div key={c.name} className="flex items-center gap-3 p-2.5 rounded-xl bg-muted/20">
                     <Avatar className="w-8 h-8">
-                      <AvatarFallback className="text-[10px] font-bold bg-violet-500/10 text-violet-500">{c.initials}</AvatarFallback>
+                      <AvatarFallback className="text-[10px] font-bold bg-secondary text-foreground">{c.initials}</AvatarFallback>
                     </Avatar>
                     <div className="flex-1">
                       <span className="text-xs font-bold text-foreground">{c.name}</span>

@@ -411,7 +411,7 @@ const PreferencesPage = () => {
 
                     <div className="flex items-center justify-between gap-3 pt-2 border-t border-border/20">
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <Eye className="h-4 w-4 text-violet-500 shrink-0" />
+                        <Eye className="h-4 w-4 text-foreground shrink-0" />
                         <div className="min-w-0">
                           <p className="text-sm font-semibold">High contrast</p>
                           <p className="text-[11px] text-muted-foreground">Stronger borders & text contrast</p>
@@ -422,7 +422,7 @@ const PreferencesPage = () => {
 
                     <div className="flex items-center justify-between gap-3 pt-2 border-t border-border/20">
                       <div className="flex items-center gap-2.5 min-w-0">
-                        <Globe className="h-4 w-4 text-sky-500 shrink-0" />
+                        <Globe className="h-4 w-4 text-foreground shrink-0" />
                         <div className="min-w-0">
                           <p className="text-sm font-semibold">Underline links</p>
                           <p className="text-[11px] text-muted-foreground">Always show link underlines</p>

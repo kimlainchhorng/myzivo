@@ -77,7 +77,7 @@ export default function EnhanceYourTrip({
       title: "Travel eSIM",
       description: "Stay connected abroad",
       icon: Wifi,
-      gradient: "from-cyan-500/10 to-teal-500/10",
+      gradient: "from-muted to-muted",
       borderColor: "hover:border-cyan-500/50",
       showFor: ["flights", "hotels", "cars"],
     },
@@ -86,7 +86,7 @@ export default function EnhanceYourTrip({
       title: "Luggage Storage",
       description: "Store bags securely",
       icon: Luggage,
-      gradient: "from-purple-500/10 to-pink-500/10",
+      gradient: "from-muted to-muted",
       borderColor: "hover:border-purple-500/50",
       showFor: ["flights", "hotels"],
     },
@@ -95,7 +95,7 @@ export default function EnhanceYourTrip({
       title: "Flight Compensation",
       description: "Claim up to €600",
       icon: Scale,
-      gradient: "from-rose-500/10 to-red-500/10",
+      gradient: "from-muted to-muted",
       borderColor: "hover:border-rose-500/50",
       showFor: ["flights"],
     },
@@ -224,7 +224,7 @@ export default function EnhanceYourTrip({
             <span>Instant confirmation</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <MapPin className="w-4 h-4 text-sky-500" />
+            <MapPin className="w-4 h-4 text-foreground" />
             <span>Worldwide coverage</span>
           </div>
         </div>

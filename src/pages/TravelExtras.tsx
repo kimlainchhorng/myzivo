@@ -388,7 +388,7 @@ export default function TravelExtras() {
                   <span>Instant confirmation</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <Globe className="w-4 h-4 text-sky-500" />
+                  <Globe className="w-4 h-4 text-foreground" />
                   <span>Worldwide coverage</span>
                 </div>
               </div>

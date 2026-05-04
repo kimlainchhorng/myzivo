@@ -166,7 +166,7 @@ const CancellationPolicy = () => {
           <Card className="mb-8">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Plane className="h-5 w-5 text-sky-500" />
+                <Plane className="h-5 w-5 text-foreground" />
                 Flights (Partner Ticketing)
               </CardTitle>
             </CardHeader>

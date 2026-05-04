@@ -275,8 +275,8 @@ const AppMore = () => {
                 onClick={() => navigate("/shop-dashboard/employees")}
                 className="rounded-2xl bg-card border border-border/40 shadow-sm p-3 flex items-center gap-2.5 touch-manipulation active:bg-muted/30 transition-colors text-left"
               >
-                <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-indigo-500/10">
-                  <Truck className="w-5 h-5 text-indigo-500" />
+                <div className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-secondary">
+                  <Truck className="w-5 h-5 text-foreground" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-[13px] leading-tight">Driver / Truck Mode</p>

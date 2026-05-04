@@ -192,7 +192,7 @@ export default function BusinessAccountPage() {
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <Building2 className="w-8 h-8 text-violet-500" />
+                <Building2 className="w-8 h-8 text-foreground" />
                 <div>
                   <p className="text-2xl font-bold capitalize">
                     {account.payment_method}

@@ -150,7 +150,7 @@ const FlightBookings = () => {
                   <CardContent className="p-4 sm:p-5">
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
                       <div className="flex gap-3 sm:gap-4 flex-1">
-                        <div className="p-3 sm:p-4 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 shadow-lg group-hover:scale-110 transition-transform duration-300">
+                        <div className="p-3 sm:p-4 rounded-2xl shadow-lg group-hover:scale-110 transition-transform duration-300 bg-secondary">
                           <Plane className="h-5 w-5 sm:h-7 sm:w-7 text-primary-foreground" />
                         </div>
                         <div className="flex-1 min-w-0">
@@ -235,7 +235,7 @@ const FlightBookings = () => {
               </div>
               <p className="text-lg font-medium mb-1">No Bookings Yet</p>
               <p className="text-muted-foreground">Start exploring flights to book your next adventure.</p>
-              <Button className="mt-4 gap-2 bg-gradient-to-r from-sky-500 to-blue-600">
+              <Button className="mt-4 gap-2 bg-secondary">
                 <Plane className="h-4 w-4" />
                 Search Flights
               </Button>

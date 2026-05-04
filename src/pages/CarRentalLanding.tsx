@@ -87,15 +87,15 @@ export default function CarRentalLanding() {
           <div className="container mx-auto px-4 relative z-10">
             <div className="max-w-3xl mx-auto text-center mb-10">
               <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-sm border border-white/20 text-sm font-medium mb-6 text-primary-foreground">
-                <CarFront className="w-4 h-4 text-violet-400" />
+                <CarFront className="w-4 h-4 text-foreground" />
                 <span className="text-primary-foreground/80">Compare car rental prices</span>
               </div>
               
               <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-primary-foreground mb-4">
                 {formattedLocation ? (
-                  <>Car Rental in <span className="text-violet-400">{formattedLocation}</span></>
+                  <>Car Rental in <span className="text-foreground">{formattedLocation}</span></>
                 ) : (
-                  <>Find the <span className="text-violet-400">Best Rental Car Deals</span></>
+                  <>Find the <span className="text-foreground">Best Rental Car Deals</span></>
                 )}
               </h1>
               
@@ -111,7 +111,7 @@ export default function CarRentalLanding() {
             <div className="flex flex-wrap items-center justify-center gap-6 mt-8">
               {trustBadges.map((badge) => (
                 <div key={badge.text} className="flex items-center gap-2 text-sm text-primary-foreground/70">
-                  <badge.icon className="w-4 h-4 text-violet-400" />
+                  <badge.icon className="w-4 h-4 text-foreground" />
                   <span>{badge.text}</span>
                 </div>
               ))}
@@ -156,10 +156,10 @@ export default function CarRentalLanding() {
         <TravelFAQ serviceType="cars" />
 
         {/* Locked Disclaimer Banner */}
-        <section className="py-4 bg-violet-500/5 border-y border-violet-500/20">
+        <section className="py-4 bg-secondary border-y border-border">
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-              <ShieldCheck className="w-4 h-4 text-violet-500" />
+              <ShieldCheck className="w-4 h-4 text-foreground" />
               <span className="font-medium">{CAR_DISCLAIMERS.partnerBooking}</span>
             </div>
           </div>
@@ -169,7 +169,7 @@ export default function CarRentalLanding() {
         <section className="py-8 border-t border-border/50">
           <div className="container mx-auto px-4 text-center space-y-2">
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto font-medium flex items-center justify-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-violet-500 shrink-0" />
+              <ShieldCheck className="w-3.5 h-3.5 text-foreground shrink-0" />
               {CAR_DISCLAIMERS.partnerBooking}
             </p>
             <p className="text-xs text-muted-foreground max-w-2xl mx-auto">

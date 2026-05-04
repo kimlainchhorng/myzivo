@@ -319,7 +319,7 @@ export default function StoreDetailsDrawer({
             {onAddToTrail && (
               <Button
                 variant="outline"
-                className="col-span-2 border-indigo-300 text-indigo-700 hover:bg-indigo-50"
+                className="col-span-2 border-border text-foreground hover:bg-foreground"
                 onClick={() => { onAddToTrail(store); onClose(); }}
               >
                 <Route className="w-4 h-4 mr-1.5" /> Add to Shopping Trail

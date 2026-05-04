@@ -131,7 +131,7 @@ export default function SupportCenterPage() {
   };
 
   const statusIcons: Record<string, React.ReactNode> = {
-    open: <AlertCircle className="w-4 h-4 text-sky-500" />,
+    open: <AlertCircle className="w-4 h-4 text-foreground" />,
     in_progress: <Clock className="w-4 h-4 text-amber-500" />,
     resolved: <CheckCircle className="w-4 h-4 text-emerald-500" />,
     closed: <CheckCircle className="w-4 h-4 text-muted-foreground" />,

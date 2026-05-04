@@ -57,7 +57,7 @@ export default function FlightConsentCheckbox({
             htmlFor="flight-consent" 
             className="text-sm font-medium leading-tight cursor-pointer flex items-center gap-2"
           >
-            <ExternalLink className="w-4 h-4 text-sky-500" />
+            <ExternalLink className="w-4 h-4 text-foreground" />
             {FLIGHT_CONSENT.checkboxLabel}
           </Label>
           <p className="text-xs text-muted-foreground">

@@ -84,14 +84,14 @@ export default function AccountTipsPage() {
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className="text-base font-bold flex items-center gap-1.5">
-            <Gift className="h-4 w-4 text-rose-500" />
+            <Gift className="h-4 w-4 text-foreground" />
             Tips sent
           </h1>
         </div>
       </header>
 
       <div className="max-w-3xl mx-auto px-4 pt-4">
-        <div className="rounded-2xl overflow-hidden mb-4 bg-gradient-to-br from-rose-500 via-pink-500 to-amber-500 p-4 text-white shadow-lg">
+        <div className="rounded-2xl overflow-hidden mb-4 p-4 text-white shadow-lg bg-foreground">
           <p className="text-[10px] uppercase tracking-[0.18em] font-bold opacity-80">Lifetime sent</p>
           <p className="text-3xl font-extrabold mt-1">${(totals.total / 100).toFixed(2)}</p>
           <div className="grid grid-cols-2 gap-2 mt-4">
@@ -150,7 +150,7 @@ export default function AccountTipsPage() {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-baseline justify-between gap-2">
                       <p className="font-bold text-sm truncate">{name}</p>
-                      <p className="text-base font-extrabold text-rose-600 shrink-0">
+                      <p className="text-base font-extrabold text-foreground shrink-0">
                         −${((t.amount_cents ?? 0) / 100).toFixed(2)}
                       </p>
                     </div>

@@ -24,7 +24,7 @@ export default function FlightsMoRFooter({
         "flex items-center gap-2 text-xs text-muted-foreground",
         className
       )}>
-        <Plane className="w-3.5 h-3.5 text-sky-500" />
+        <Plane className="w-3.5 h-3.5 text-foreground" />
         {FLIGHT_DISCLAIMERS.ticketingShort}
       </p>
     );
@@ -51,8 +51,8 @@ export default function FlightsMoRFooter({
     )}>
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-center gap-3 mb-4">
-          <div className="w-10 h-10 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center">
-            <Shield className="w-5 h-5 text-sky-500" />
+          <div className="w-10 h-10 rounded-xl bg-secondary border border-border flex items-center justify-center">
+            <Shield className="w-5 h-5 text-foreground" />
           </div>
           <h3 className="font-semibold text-sm">Trusted Travel Partners</h3>
         </div>

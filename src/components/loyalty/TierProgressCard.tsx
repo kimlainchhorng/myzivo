@@ -27,7 +27,7 @@ const TierProgressCard = ({ className }: TierProgressCardProps) => {
     <Card className={cn("border-border/50", className)}>
       <CardContent className="p-4">
         <div className="flex items-center gap-2 mb-3">
-          <Crown className="w-5 h-5 text-sky-400" />
+          <Crown className="w-5 h-5 text-foreground" />
           <span className="text-sm font-medium">Tier Progress</span>
         </div>
         <div className="flex justify-between text-xs mb-2">

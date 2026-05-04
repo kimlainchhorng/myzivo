@@ -37,7 +37,7 @@ const getExtras = (currentService: ServiceType): ExtraService[] => {
       icon: Plane,
       link: "/flights",
       color: "text-sky-500",
-      gradient: "from-sky-500/10 to-blue-500/10",
+      gradient: "from-muted to-muted",
     },
     hotels: {
       title: "Need a Hotel?",
@@ -53,7 +53,7 @@ const getExtras = (currentService: ServiceType): ExtraService[] => {
       icon: Car,
       link: "/rent-car",
       color: "text-violet-500",
-      gradient: "from-violet-500/10 to-purple-500/10",
+      gradient: "from-muted to-muted",
     },
     insurance: {
       title: "Travel Insurance",

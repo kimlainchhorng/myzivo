@@ -25,12 +25,12 @@ export default function AffiliateRedirectNotice({
   if (variant === 'banner') {
     return (
       <Alert className={cn("border-sky-500/30 bg-sky-500/5", className)}>
-        <ShieldCheck className="h-4 w-4 text-sky-500" />
+        <ShieldCheck className="h-4 w-4 text-foreground" />
         <AlertDescription className="text-xs sm:text-sm">
           <strong>Booking Redirect:</strong> You will be redirected to{' '}
           {partnerName ? <strong>{partnerName}</strong> : 'our trusted travel partner'} to complete your booking.
           ZIVO earns a commission at no extra cost to you.{' '}
-          <a href="/affiliate-disclosure" className="text-sky-500 hover:underline">
+          <a href="/affiliate-disclosure" className="text-foreground hover:underline">
             Learn more
           </a>
         </AlertDescription>
@@ -52,7 +52,7 @@ export default function AffiliateRedirectNotice({
         </p>
         <p className="mt-1">
           ZIVO may earn a commission when you book through partner links.{' '}
-          <a href="/affiliate-disclosure" className="text-sky-500 hover:underline">
+          <a href="/affiliate-disclosure" className="text-foreground hover:underline">
             Affiliate Disclosure
           </a>
         </p>

@@ -281,14 +281,14 @@ const tierConfig = {
     textColor: "text-amber-400"
   },
   platinum: { 
-    gradient: "from-violet-400 via-purple-500 to-violet-600", 
+    gradient: "from-muted to-muted", 
     glow: "shadow-violet-500/40",
     icon: Crown, 
     label: "Platinum",
     textColor: "text-violet-400"
   },
   diamond: { 
-    gradient: "from-cyan-400 via-blue-500 to-indigo-600", 
+    gradient: "from-muted to-muted", 
     glow: "shadow-cyan-500/50",
     icon: Sparkles, 
     label: "Diamond",
@@ -317,8 +317,8 @@ export const PersonalizedGreeting: React.FC<PersonalizedGreetingProps> = ({
   const GreetingIcon = () => {
     const hour = new Date().getHours();
     if (hour < 12) return <Sun className="w-5 h-5 text-amber-400" />;
-    if (hour < 18) return <CloudSun className="w-5 h-5 text-sky-400" />;
-    return <Moon className="w-5 h-5 text-indigo-400" />;
+    if (hour < 18) return <CloudSun className="w-5 h-5 text-foreground" />;
+    return <Moon className="w-5 h-5 text-foreground" />;
   };
 
   return (
@@ -603,7 +603,7 @@ const recommendationColors = {
     glow: "hover:shadow-eats/20",
   },
   sky: {
-    gradient: "from-sky-500/25 to-sky-500/5",
+    gradient: "from-muted to-muted",
     border: "border-sky-400/30",
     text: "text-sky-400",
     glow: "hover:shadow-sky-500/20",

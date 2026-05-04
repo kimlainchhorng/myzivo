@@ -125,7 +125,7 @@ const CarbonFootprintWidget = ({
           <p className="text-[10px] text-muted-foreground">Trees to offset/year</p>
         </div>
         <div className="p-3 rounded-xl bg-muted/20 border border-border/30 text-center">
-          <Droplets className="w-5 h-5 mx-auto mb-1 text-sky-400" />
+          <Droplets className="w-5 h-5 mx-auto mb-1 text-foreground" />
           <p className="text-lg font-bold">{waterSaved}L</p>
           <p className="text-[10px] text-muted-foreground">Water equivalent</p>
         </div>

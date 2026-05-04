@@ -84,10 +84,10 @@ export default function ShopEmployeeRulesPage() {
         </div>
 
         {/* Summary card */}
-        <Card className="p-4 bg-gradient-to-br from-rose-500/10 to-orange-500/10 border-rose-500/20 mb-4">
+        <Card className="p-4 border-border mb-4 bg-secondary">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-rose-500/20 flex items-center justify-center">
-              <Shield className="w-5 h-5 text-rose-600" />
+            <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center">
+              <Shield className="w-5 h-5 text-foreground" />
             </div>
             <div>
               <p className="font-bold text-[15px]">{rules.length} workplace rules</p>

@@ -131,16 +131,16 @@ const About = () => {
                   </div>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
-                  <div className="p-6 rounded-2xl bg-card/80 border border-border/50 text-center hover:border-sky-500/30 hover:shadow-lg hover:shadow-sky-500/5 hover:-translate-y-1 transition-all duration-300">
-                    <Plane className="w-8 h-8 text-sky-500 mx-auto mb-3" />
+                  <div className="p-6 rounded-2xl bg-card/80 border border-border/50 text-center hover:border-border hover:shadow-lg hover:hover:-translate-y-1 transition-all duration-300">
+                    <Plane className="w-8 h-8 text-foreground mx-auto mb-3" />
                     <p className="font-semibold">Flights</p>
                   </div>
                   <div className="p-6 rounded-2xl bg-card/80 border border-border/50 text-center hover:border-amber-500/30 hover:shadow-lg hover:shadow-amber-500/5 hover:-translate-y-1 transition-all duration-300">
                     <Hotel className="w-8 h-8 text-amber-500 mx-auto mb-3" />
                     <p className="font-semibold">Hotels</p>
                   </div>
-                  <div className="p-6 rounded-2xl bg-card/80 border border-border/50 text-center hover:border-violet-500/30 hover:shadow-lg hover:shadow-violet-500/5 hover:-translate-y-1 transition-all duration-300">
-                    <Car className="w-8 h-8 text-violet-500 mx-auto mb-3" />
+                  <div className="p-6 rounded-2xl bg-card/80 border border-border/50 text-center hover:border-border hover:shadow-lg hover:hover:-translate-y-1 transition-all duration-300">
+                    <Car className="w-8 h-8 text-foreground mx-auto mb-3" />
                     <p className="font-semibold">Car Rentals</p>
                   </div>
                   <div className="p-6 rounded-2xl bg-card/80 border border-border/50 text-center hover:border-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/5 hover:-translate-y-1 transition-all duration-300">
@@ -212,7 +212,7 @@ const About = () => {
           {/* Platform Scale */}
           <div className="mb-16">
             <div className="text-center mb-8">
-              <Badge className="mb-4 bg-violet-500/20 text-violet-500 border-violet-500/30">
+              <Badge className="mb-4 bg-secondary text-foreground border-border">
                 <Globe className="w-3 h-3 mr-1" />
                 Global Platform
               </Badge>
@@ -367,7 +367,7 @@ const About = () => {
           {/* What's New / Changelog */}
           <section id="changelog" className="scroll-mt-24 mb-16">
             <div className="text-center mb-8">
-              <Badge className="mb-3 bg-pink-500/15 text-pink-500 border-pink-500/30">
+              <Badge className="mb-3 bg-secondary text-foreground border-border">
                 <Sparkles className="w-3 h-3 mr-1" />
                 What's New
               </Badge>

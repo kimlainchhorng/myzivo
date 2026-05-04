@@ -384,7 +384,7 @@ function VehicleRow({
         <div className="flex items-center gap-1.5 flex-wrap">
           <span className="text-sm font-bold text-foreground">{getVehicleName(vehicle.id, vehicle.name, useKm)}</span>
           {vehicle.id === "economy" && (
-            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-sky-500/10 text-sky-600 dark:text-sky-400 text-[10px] font-bold">
+            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-secondary text-foreground dark:text-foreground text-[10px] font-bold">
               <TrendingDown className="w-3 h-3" />
               LOW
             </span>
@@ -401,7 +401,7 @@ function VehicleRow({
             </span>
           )}
           {vehicle.id === "comfort" && (
-            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-violet-500/10 text-violet-600 dark:text-violet-400 text-[10px] font-bold">
+            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-secondary text-foreground dark:text-foreground text-[10px] font-bold">
               <Sparkles className="w-3 h-3" />
               TOP
             </span>
@@ -431,13 +431,13 @@ function VehicleRow({
             </span>
           )}
           {vehicle.id === "luxury-xl" && (
-            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[10px] font-bold">
+            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-secondary text-foreground dark:text-foreground text-[10px] font-bold">
               <Gem className="w-3 h-3" />
               ELITE
             </span>
           )}
           {vehicle.id === "pet" && (
-            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-pink-500/10 text-pink-600 dark:text-pink-400 text-[10px] font-bold">
+            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-secondary text-foreground dark:text-foreground text-[10px] font-bold">
               <PawPrint className="w-3 h-3" />
               PET
             </span>
@@ -449,7 +449,7 @@ function VehicleRow({
             </span>
           )}
           {vehicle.carSeat && (
-            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-sky-500/10 text-sky-600 text-[10px] font-bold">
+            <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-secondary text-foreground text-[10px] font-bold">
               <Baby className="w-3 h-3" />
               Car seat
             </span>
@@ -1080,7 +1080,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
     if (!center) return;
 
     const fetchNearby = async () => {
-      console.log("[NearbyDrivers] Searching around:", center.lat, center.lng, "radius: 15000m");
+      if (import.meta.env.DEV) console.log("[NearbyDrivers] Searching around:", center.lat, center.lng, "radius: 15000m");
       
       // Also check raw drivers_status for debugging
       const { data: rawStatus } = await supabase
@@ -1088,7 +1088,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
         .select("driver_id, lat, lng, is_online, is_busy, driver_state")
         .eq("is_online", true)
         .limit(10);
-      console.log("[NearbyDrivers] Raw online drivers_status:", rawStatus);
+      if (import.meta.env.DEV) console.log("[NearbyDrivers] Raw online drivers_status:", rawStatus);
 
       const { data, error } = await supabase.rpc("get_nearby_drivers", {
         p_lat: center.lat,
@@ -1100,7 +1100,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
         console.error("[NearbyDrivers] RPC error:", error);
         return;
       }
-      console.log("[NearbyDrivers] RPC returned:", data?.length, "drivers", data);
+      if (import.meta.env.DEV) console.log("[NearbyDrivers] RPC returned:", data?.length, "drivers", data);
       if (data) {
         setRealNearbyDrivers(data.map((d: any) => ({ lat: d.lat, lng: d.lng })));
       }
@@ -1162,7 +1162,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
 
       jobId = jobData.id;
       setActiveJobId(jobId);
-      console.log("[Dispatch] Job created:", jobId);
+      if (import.meta.env.DEV) console.log("[Dispatch] Job created:", jobId);
 
       // 2. Subscribe to job updates (driver acceptance)
       channel = supabase
@@ -1269,7 +1269,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
 
         // Retry dispatch with expanded radius
         if (!cancelled) setSearchPhase("expanding");
-        console.log("[Dispatch] Retrying dispatch for job:", jobId);
+        if (import.meta.env.DEV) console.log("[Dispatch] Retrying dispatch for job:", jobId);
         await supabase.functions.invoke("dispatch-start", {
           body: { job_id: jobId, offer_ttl_seconds: 30, radius_meters: 25000 },
         });
@@ -1760,14 +1760,14 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
     // Immediately re-fetch route with the updated stops
     const currentPickup = pickup;
     const currentDest = destination;
-    console.log("[handleStopSelect] pickup:", currentPickup?.address, "dest:", currentDest?.address, "place:", place.address);
+    if (import.meta.env.DEV) console.log("[handleStopSelect] pickup:", currentPickup?.address, "dest:", currentDest?.address, "place:", place.address);
     
     if (currentPickup && currentDest && place.lat && place.lng) {
       const wp = updatedStops
         .filter(s => s.place && s.place.lat && s.place.lng)
         .map(s => ({ lat: s.place!.lat, lng: s.place!.lng }));
       
-      console.log("[handleStopSelect] Re-fetching with", wp.length, "waypoints");
+      if (import.meta.env.DEV) console.log("[handleStopSelect] Re-fetching with", wp.length, "waypoints");
       fetchRoute(currentPickup, currentDest, wp);
     } else {
       console.warn("[handleStopSelect] Missing pickup or destination, skipping route fetch");
@@ -1851,7 +1851,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
     setIsLoadingRoute(true);
     setRouteData(null);
 
-    console.log("[fetchRoute] waypoints:", waypoints.length, JSON.stringify(waypoints));
+    if (import.meta.env.DEV) console.log("[fetchRoute] waypoints:", waypoints.length, JSON.stringify(waypoints));
     try {
       const { data, error } = await supabase.functions.invoke("maps-route", {
         body: {
@@ -1862,7 +1862,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
           waypoints: waypoints.length > 0 ? waypoints : undefined,
         },
       });
-      console.log("[fetchRoute] Response:", data?.ok, data?.distance_miles, data?.duration_minutes);
+      if (import.meta.env.DEV) console.log("[fetchRoute] Response:", data?.ok, data?.distance_miles, data?.duration_minutes);
       if (error) throw error;
       if (data?.ok) {
         setRouteData({
@@ -2141,7 +2141,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
 
   /** Handle ABA Payway ride — pay first, then dispatch */
   const handleAbaRide = async () => {
-    console.log("[handleAbaRide] State check:", { user: !!user, pickup: JSON.stringify(pickup), destination: JSON.stringify(destination) });
+    if (import.meta.env.DEV) console.log("[handleAbaRide] State check:", { user: !!user, pickup: JSON.stringify(pickup), destination: JSON.stringify(destination) });
     if (!user || !pickup || !destination) {
       toast.error("Please sign in and select locations");
       return;
@@ -3414,7 +3414,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className={cn("text-[14px] font-bold", isSelected ? "text-foreground" : "text-foreground")}>{getVehicleName(v.id, v.name, isCambodiaCountry)}</span>
                       {v.id === "economy" && (
-                        <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-sky-500/10 text-sky-600 dark:text-sky-400 text-[10px] font-bold">
+                        <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-secondary text-foreground dark:text-foreground text-[10px] font-bold">
                           <TrendingDown className="w-3 h-3" />LOW
                         </span>
                       )}
@@ -3430,7 +3430,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
                         </span>
                       )}
                       {v.id === "comfort" && (
-                        <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-violet-500/10 text-violet-600 dark:text-violet-400 text-[10px] font-bold">
+                        <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-secondary text-foreground dark:text-foreground text-[10px] font-bold">
                           <Sparkles className="w-3 h-3" />TOP
                         </span>
                       )}
@@ -3455,12 +3455,12 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
                         </span>
                       )}
                       {v.id === "luxury-xl" && (
-                        <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[10px] font-bold">
+                        <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-secondary text-foreground dark:text-foreground text-[10px] font-bold">
                           <Gem className="w-3 h-3" />ELITE
                         </span>
                       )}
                       {v.id === "pet" && (
-                        <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-pink-500/10 text-pink-600 dark:text-pink-400 text-[10px] font-bold">
+                        <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-secondary text-foreground dark:text-foreground text-[10px] font-bold">
                           <PawPrint className="w-3 h-3" />PET
                         </span>
                       )}
@@ -3594,10 +3594,10 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
 
             {/* Flight linked badge — shows when ride is connected to a flight booking */}
             {(upcomingFlight || isAirportAddress(pickup?.address)) && (
-              <div className="rounded-lg bg-sky-500/5 border border-sky-500/20 px-3 py-2 shrink-0">
+              <div className="rounded-lg bg-secondary border border-border px-3 py-2 shrink-0">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-sky-500/10 flex items-center justify-center shrink-0">
-                    <Plane className="w-4 h-4 text-sky-500" />
+                  <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center shrink-0">
+                    <Plane className="w-4 h-4 text-foreground" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[11px] font-bold text-foreground">
@@ -3608,7 +3608,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
                         {upcomingFlight.origin} → {upcomingFlight.destination} · Ref: {upcomingFlight.bookingReference}
                       </p>
                     )}
-                    <p className="text-[9px] text-sky-600 font-medium mt-0.5">
+                    <p className="text-[9px] text-foreground font-medium mt-0.5">
                       {upcomingFlight ? "Driver will see your flight details for timely pickup" : "Driver notified this is an airport pickup"}
                     </p>
                   </div>

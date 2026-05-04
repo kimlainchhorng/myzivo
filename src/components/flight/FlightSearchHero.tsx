@@ -115,7 +115,7 @@ export default function FlightSearchHero({
   };
 
   const trustBadges = [
-    { icon: Search, text: "Compare 500+ Airlines", color: "text-sky-500" },
+    { icon: Search, text: "Compare 500+ Airlines", color: "text-foreground" },
     { icon: Shield, text: "Trusted Partners", color: "text-emerald-500" },
     { icon: Clock, text: "Real-Time Prices", color: "text-amber-500" },
     { icon: Zap, text: "Fast & Easy", color: "text-purple-500" },
@@ -147,42 +147,33 @@ export default function FlightSearchHero({
 
       {/* Animated Background Elements - Hidden on mobile */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none hidden sm:block">
-        <div className="absolute top-20 left-[10%] w-32 h-32 bg-sky-500/10 rounded-full blur-3xl animate-pulse" />
-        <div className="absolute bottom-32 right-[15%] w-40 h-40 bg-blue-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
+        <div className="absolute top-20 left-[10%] w-32 h-32 bg-secondary rounded-full blur-3xl animate-pulse" />
+        <div className="absolute bottom-32 right-[15%] w-40 h-40 bg-secondary rounded-full blur-3xl animate-pulse" style={{ animationDelay: "1s" }} />
       </div>
 
-      {/* 3D Floating Elements - Desktop only */}
-      <div className="absolute top-20 right-10 hidden lg:block" style={{ perspective: "600px" }}>
+      {/* Floating decorative tiles - Desktop only */}
+      <div className="absolute top-20 right-10 hidden lg:block">
         <div
-          className="w-12 h-12 rounded-2xl bg-gradient-to-br from-sky-500/25 to-cyan-500/25 backdrop-blur-xl border border-sky-500/30 flex items-center justify-center shadow-xl shadow-sky-500/20"
-          style={{
-            animation: "float3d 6s ease-in-out infinite",
-            transformStyle: "preserve-3d",
-          }}
+          className="w-12 h-12 rounded-2xl bg-card border border-border flex items-center justify-center"
+          style={{ animation: "float3d 6s ease-in-out infinite" }}
         >
-          <Plane className="w-5 h-5 text-sky-400" />
+          <Plane className="w-5 h-5 text-foreground" />
         </div>
       </div>
-      <div className="absolute top-40 right-32 hidden lg:block" style={{ perspective: "600px" }}>
+      <div className="absolute top-40 right-32 hidden lg:block">
         <div
-          className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500/25 to-indigo-500/25 backdrop-blur-xl border border-blue-500/30 flex items-center justify-center shadow-lg shadow-blue-500/15"
-          style={{
-            animation: "float3d 6s ease-in-out infinite 1s",
-            transformStyle: "preserve-3d",
-          }}
+          className="w-9 h-9 rounded-xl bg-card border border-border flex items-center justify-center"
+          style={{ animation: "float3d 6s ease-in-out infinite 1s" }}
         >
-          <Globe className="w-4 h-4 text-blue-400" />
+          <Globe className="w-4 h-4 text-foreground" />
         </div>
       </div>
-      <div className="absolute bottom-40 left-12 hidden lg:block" style={{ perspective: "600px" }}>
+      <div className="absolute bottom-40 left-12 hidden lg:block">
         <div
-          className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/20 to-sky-500/20 backdrop-blur-xl border border-cyan-500/30 flex items-center justify-center shadow-lg shadow-cyan-500/15"
-          style={{
-            animation: "float3d 6s ease-in-out infinite 2s",
-            transformStyle: "preserve-3d",
-          }}
+          className="w-10 h-10 rounded-xl bg-card border border-border flex items-center justify-center"
+          style={{ animation: "float3d 6s ease-in-out infinite 2s" }}
         >
-          <Star className="w-4 h-4 text-cyan-400" />
+          <Star className="w-4 h-4 text-foreground" />
         </div>
       </div>
 
@@ -199,15 +190,12 @@ export default function FlightSearchHero({
             </Badge>
           </div>
           
-          <Badge className="mb-2 sm:mb-4 px-2.5 sm:px-4 py-1 sm:py-1.5 bg-gradient-to-r from-sky-500 via-blue-600 to-cyan-500 text-primary-foreground border-0 shadow-md shadow-sky-500/30 text-[10px] sm:text-xs">
+          <Badge variant="secondary" className="mb-2 sm:mb-4 px-2.5 sm:px-4 py-1 sm:py-1.5 rounded-full text-[10px] sm:text-xs">
             <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 mr-1" />
             ZIVO Flights
           </Badge>
-          <h1 className="font-display text-xl sm:text-3xl lg:text-4xl font-bold mb-2 sm:mb-3 leading-tight">
-            Search & Compare
-            <span className="bg-gradient-to-r from-sky-400 via-blue-500 to-cyan-400 bg-clip-text text-transparent ml-1.5">
-              Flights
-            </span>
+          <h1 className="font-display text-xl sm:text-3xl lg:text-4xl font-bold tracking-tight mb-2 sm:mb-3 leading-tight">
+            Search &amp; Compare <span className="text-accent-foreground">Flights</span>
           </h1>
           <p className="text-xs sm:text-sm text-muted-foreground max-w-lg mx-auto leading-relaxed mb-3 sm:mb-4 px-2">
             {FLIGHT_HEADER_MICROCOPY.standard}
@@ -234,15 +222,10 @@ export default function FlightSearchHero({
           style={{ animationDelay: "0.1s" }}
         >
           <Card className="overflow-hidden border-0 bg-transparent shadow-none relative">
-            {/* Premium glow effect - subtle on mobile */}
-            <div className="absolute -inset-1 sm:-inset-1.5 bg-gradient-to-r from-sky-500/20 via-blue-600/10 to-cyan-500/20 rounded-xl sm:rounded-2xl blur-lg sm:blur-xl opacity-40 sm:opacity-50" />
-            
             {/* Card content wrapper */}
-            <div className="relative bg-gradient-to-br from-card via-card to-card/95 rounded-xl sm:rounded-2xl overflow-hidden border border-border/40 shadow-xl sm:shadow-2xl shadow-black/40 ring-1 ring-white/5">
+            <div className="relative bg-card rounded-xl sm:rounded-2xl overflow-hidden border border-border">
               {/* Top accent line */}
-              <div className="h-0.5 sm:h-1 bg-gradient-to-r from-sky-400 via-blue-500 to-cyan-400 relative overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent -translate-x-full animate-shimmer" />
-              </div>
+              <div className="h-0.5 sm:h-1 bg-foreground" />
               
               <CardContent className="p-3 sm:p-4 lg:p-6">
                 {/* Trip Type Toggle - Mobile Compact */}
@@ -255,9 +238,9 @@ export default function FlightSearchHero({
                       key={item.type}
                       onClick={() => setTripType(item.type)}
                       className={cn(
-                        "px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-semibold text-[11px] sm:text-xs transition-all duration-200 flex items-center gap-1.5 sm:gap-2 flex-shrink-0 touch-manipulation active:scale-95",
+                        "px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-semibold text-[11px] sm:text-xs transition-colors flex items-center gap-1.5 sm:gap-2 flex-shrink-0 touch-manipulation active:scale-95",
                         tripType === item.type
-                          ? "bg-gradient-to-r from-sky-500 via-blue-600 to-sky-600 text-primary-foreground shadow-md shadow-sky-500/30"
+                          ? "bg-foreground text-background"
                           : "bg-muted/80 text-foreground/70 border border-border/60"
                       )}
                     >
@@ -278,7 +261,7 @@ export default function FlightSearchHero({
                   <div className="space-y-2 sm:space-y-3">
                     {/* From Field */}
                     <div className="relative">
-                      <div className="bg-muted/50 rounded-xl border border-border/40 focus-within:border-sky-500/50 transition-colors">
+                      <div className="bg-muted/50 rounded-xl border border-border/40 focus-within:border-border/50 transition-colors">
                         <AirportAutocomplete
                           value={fromCity}
                           onChange={setFromCity}
@@ -293,8 +276,8 @@ export default function FlightSearchHero({
                     {/* Departure Date - Mobile Compact */}
                     <div className="relative">
                       <label className="text-[10px] sm:text-xs font-bold text-foreground mb-1.5 sm:mb-2 flex items-center gap-1.5 sm:gap-2">
-                        <div className="w-4 h-4 sm:w-5 sm:h-5 rounded bg-gradient-to-br from-sky-500/20 to-blue-500/20 flex items-center justify-center border border-sky-500/20">
-                          <CalendarIcon className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-sky-400" />
+                        <div className="w-4 h-4 sm:w-5 sm:h-5 rounded flex items-center justify-center border border-border/20">
+                          <CalendarIcon className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-foreground" />
                         </div>
                         Departure
                       </label>
@@ -307,8 +290,8 @@ export default function FlightSearchHero({
                               !departDate && "text-muted-foreground"
                             )}
                           >
-                            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-br from-sky-500/20 to-blue-500/15 flex items-center justify-center mr-2 sm:mr-3 border border-sky-500/20">
-                              <CalendarIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-sky-500" />
+                            <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center mr-2 sm:mr-3 border border-border/20">
+                              <CalendarIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-foreground" />
                             </div>
                             <div className="text-left flex-1">
                               {departDate ? (
@@ -343,7 +326,7 @@ export default function FlightSearchHero({
                   </button>
                   <button
                     onClick={swapCities}
-                    className="hidden md:flex absolute left-1/2 top-[36px] -translate-x-1/2 w-9 h-9 items-center justify-center rounded-full bg-gradient-to-br from-sky-500 via-blue-600 to-cyan-600 text-primary-foreground transition-all z-20 shadow-lg shadow-sky-500/40 hover:scale-110 active:scale-95 border-2 border-white/30 ring-2 ring-background"
+                    className="hidden md:flex absolute left-1/2 top-[36px] -translate-x-1/2 w-9 h-9 items-center justify-center rounded-full bg-foreground text-background transition-transform z-20 hover:scale-105 active:scale-95 ring-2 ring-background"
                   >
                     <ArrowLeftRight className="w-3.5 h-3.5" />
                   </button>
@@ -352,7 +335,7 @@ export default function FlightSearchHero({
                   <div className="space-y-2 sm:space-y-3">
                     {/* To Field */}
                     <div className="relative">
-                      <div className="bg-muted/50 rounded-xl border border-border/40 focus-within:border-cyan-500/50 transition-colors">
+                      <div className="bg-muted/50 rounded-xl border border-border/40 focus-within:border-border/50 transition-colors">
                         <AirportAutocomplete
                           value={toCity}
                           onChange={setToCity}
@@ -367,8 +350,8 @@ export default function FlightSearchHero({
                     {/* Return Date - Mobile Compact */}
                     <div className="relative">
                       <label className="text-[10px] sm:text-xs font-bold text-foreground mb-1.5 sm:mb-2 flex items-center gap-1.5 sm:gap-2">
-                        <div className="w-4 h-4 sm:w-5 sm:h-5 rounded bg-gradient-to-br from-cyan-500/20 to-blue-500/20 flex items-center justify-center border border-cyan-500/20">
-                          <CalendarIcon className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-cyan-400" />
+                        <div className="w-4 h-4 sm:w-5 sm:h-5 rounded flex items-center justify-center border border-border/20">
+                          <CalendarIcon className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-foreground" />
                         </div>
                         {tripType === "roundtrip" ? "Return" : "One Way"}
                       </label>
@@ -382,8 +365,8 @@ export default function FlightSearchHero({
                                 !returnDate && "text-muted-foreground"
                               )}
                             >
-                              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-gradient-to-br from-cyan-500/20 to-blue-500/15 flex items-center justify-center mr-2 sm:mr-3 border border-cyan-500/20">
-                                <CalendarIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-cyan-500" />
+                              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center mr-2 sm:mr-3 border border-border/20">
+                                <CalendarIcon className="h-3 w-3 sm:h-3.5 sm:w-3.5 text-foreground" />
                               </div>
                               <div className="text-left flex-1">
                                 {returnDate ? (
@@ -420,8 +403,8 @@ export default function FlightSearchHero({
                   {/* Passengers Dropdown - Mobile Compact */}
                   <div className="col-span-1 sm:flex-1 sm:min-w-[140px]">
                     <label className="text-[10px] sm:text-xs font-bold text-foreground mb-1.5 sm:mb-2 flex items-center gap-1 sm:gap-2">
-                      <div className="w-4 h-4 sm:w-5 sm:h-5 rounded bg-gradient-to-br from-sky-500/20 to-blue-500/20 flex items-center justify-center border border-sky-500/20">
-                        <Users className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-sky-400" />
+                      <div className="w-4 h-4 sm:w-5 sm:h-5 rounded flex items-center justify-center border border-border/20">
+                        <Users className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-foreground" />
                       </div>
                       Travelers
                     </label>
@@ -432,8 +415,8 @@ export default function FlightSearchHero({
                           className="w-full h-10 sm:h-11 justify-between bg-muted/60 border border-border/50 rounded-lg text-xs sm:text-sm font-medium touch-manipulation active:scale-[0.98]"
                         >
                           <div className="flex items-center gap-2">
-                            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-xl bg-gradient-to-br from-sky-500/20 to-blue-500/15 flex items-center justify-center border border-sky-500/20">
-                              <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-sky-500" />
+                            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-xl flex items-center justify-center border border-border/20">
+                              <Users className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-foreground" />
                             </div>
                             <span className="font-bold text-foreground">{totalPassengers}</span>
                           </div>
@@ -443,14 +426,14 @@ export default function FlightSearchHero({
                       <PopoverContent className="w-64 sm:w-72 p-3 sm:p-4 bg-card border border-border/50 shadow-2xl rounded-xl" align="start">
                         <div className="space-y-2 sm:space-y-3">
                           <h4 className="font-bold text-xs sm:text-sm text-foreground flex items-center gap-2 mb-2 sm:mb-3">
-                            <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-sky-500" />
+                            <Users className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-foreground" />
                             Select Travelers
                           </h4>
                           {/* Adults */}
                           <div className="flex items-center justify-between p-2 sm:p-3 rounded-lg bg-gradient-to-br from-muted/60 to-muted/40 border border-border/30">
                             <div className="flex items-center gap-2 sm:gap-3">
-                              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-sky-500/25 to-blue-500/25 flex items-center justify-center border border-sky-500/30">
-                                <User className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-sky-500" />
+                              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center border border-border/30">
+                                <User className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-foreground" />
                               </div>
                               <div>
                                 <p className="font-semibold text-xs sm:text-sm text-foreground">Adults</p>
@@ -471,7 +454,7 @@ export default function FlightSearchHero({
                           {/* Children */}
                           <div className="flex items-center justify-between p-2 sm:p-3 rounded-lg bg-gradient-to-br from-muted/60 to-muted/40 border border-border/30">
                             <div className="flex items-center gap-2 sm:gap-3">
-                              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-amber-500/25 to-orange-500/25 flex items-center justify-center border border-amber-500/30">
+                              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center border border-amber-500/30">
                                 <User className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-500" />
                               </div>
                               <div>
@@ -493,8 +476,8 @@ export default function FlightSearchHero({
                           {/* Infants */}
                           <div className="flex items-center justify-between p-2 sm:p-3 rounded-lg bg-gradient-to-br from-muted/60 to-muted/40 border border-border/30">
                             <div className="flex items-center gap-2 sm:gap-3">
-                              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-gradient-to-br from-pink-500/25 to-rose-500/25 flex items-center justify-center border border-pink-500/30">
-                                <Baby className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-pink-500" />
+                              <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg flex items-center justify-center border border-border">
+                                <Baby className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-foreground" />
                               </div>
                               <div>
                                 <p className="font-semibold text-xs sm:text-sm text-foreground">Infants</p>
@@ -512,7 +495,7 @@ export default function FlightSearchHero({
                             </div>
                           </div>
 
-                          <Button className="w-full h-9 sm:h-10 mt-2 bg-gradient-to-r from-sky-500 via-blue-600 to-cyan-500 font-semibold text-xs sm:text-sm rounded-lg shadow-md shadow-sky-500/30" onClick={updatePassengers}>
+                          <Button className="w-full h-9 sm:h-10 mt-2 font-semibold text-xs sm:text-sm rounded-lg shadow-md" onClick={updatePassengers}>
                             Done
                           </Button>
                         </div>
@@ -523,7 +506,7 @@ export default function FlightSearchHero({
                   {/* Cabin Class - Mobile Compact */}
                   <div className="col-span-1 sm:flex-1 sm:min-w-[120px]">
                     <label className="text-[10px] sm:text-xs font-bold text-foreground mb-1.5 sm:mb-2 flex items-center gap-1 sm:gap-2">
-                      <div className="w-4 h-4 sm:w-5 sm:h-5 rounded bg-gradient-to-br from-amber-500/20 to-yellow-500/20 flex items-center justify-center border border-amber-500/20">
+                      <div className="w-4 h-4 sm:w-5 sm:h-5 rounded bg-secondary flex items-center justify-center border border-amber-500/20">
                         <Star className="w-2 h-2 sm:w-2.5 sm:h-2.5 text-amber-400" />
                       </div>
                       Class
@@ -545,7 +528,7 @@ export default function FlightSearchHero({
                   <Button
                     onClick={onSearch}
                     disabled={isSearching}
-                    className="col-span-2 sm:col-span-1 h-11 sm:h-11 px-6 sm:px-8 bg-gradient-to-r from-sky-500 via-blue-600 to-cyan-500 text-primary-foreground font-bold text-sm shadow-lg shadow-sky-500/40 transition-all active:scale-[0.98] rounded-lg relative overflow-hidden touch-manipulation"
+                    className="col-span-2 sm:col-span-1 h-11 sm:h-11 px-6 sm:px-8 text-primary-foreground font-bold text-sm shadow-lg transition-all active:scale-[0.98] rounded-lg relative overflow-hidden touch-manipulation"
                   >
                     <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
                     {isSearching ? (
@@ -560,7 +543,7 @@ export default function FlightSearchHero({
                 {/* Advanced Options Toggle - Mobile friendly */}
                 <button
                   onClick={() => setShowAdvanced(!showAdvanced)}
-                  className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-semibold text-muted-foreground hover:text-sky-400 transition-colors mb-3 sm:mb-4 touch-manipulation active:scale-95"
+                  className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors mb-3 sm:mb-4 touch-manipulation active:scale-95"
                 >
                   <div className="w-5 h-5 sm:w-6 sm:h-6 rounded bg-muted flex items-center justify-center transition-colors">
                     <Filter className="w-2.5 h-2.5 sm:w-3 sm:h-3" />
@@ -574,7 +557,7 @@ export default function FlightSearchHero({
                   <div className="p-2 sm:p-3 rounded-lg bg-muted/40 border border-border/50 mb-3 sm:mb-4 animate-in fade-in slide-in-from-top-2 duration-200">
                     <div className="grid grid-cols-1 sm:flex sm:flex-wrap gap-3 sm:gap-4">
                       <label className="flex items-center gap-2 cursor-pointer touch-manipulation">
-                        <Switch checked={directOnly} onCheckedChange={setDirectOnly} className="data-[state=checked]:bg-sky-500 scale-75 sm:scale-90" />
+                        <Switch checked={directOnly} onCheckedChange={setDirectOnly} className="data-[state=checked]:bg-secondary scale-75 sm:scale-90" />
                         <div>
                           <p className="text-[11px] sm:text-xs font-semibold">Direct only</p>
                           <p className="text-[9px] sm:text-[10px] text-muted-foreground">No stops</p>
@@ -582,7 +565,7 @@ export default function FlightSearchHero({
                       </label>
                       
                       <label className="flex items-center gap-2 cursor-pointer touch-manipulation">
-                        <Switch checked={flexibleDates} onCheckedChange={setFlexibleDates} className="data-[state=checked]:bg-sky-500 scale-75 sm:scale-90" />
+                        <Switch checked={flexibleDates} onCheckedChange={setFlexibleDates} className="data-[state=checked]:bg-secondary scale-75 sm:scale-90" />
                         <div>
                           <p className="text-[11px] sm:text-xs font-semibold">Flexible</p>
                           <p className="text-[9px] sm:text-[10px] text-muted-foreground">±3 days</p>
@@ -590,7 +573,7 @@ export default function FlightSearchHero({
                       </label>
                       
                       <label className="flex items-center gap-2 cursor-pointer touch-manipulation">
-                        <Switch checked={nearbyAirports} onCheckedChange={setNearbyAirports} className="data-[state=checked]:bg-sky-500 scale-75 sm:scale-90" />
+                        <Switch checked={nearbyAirports} onCheckedChange={setNearbyAirports} className="data-[state=checked]:bg-secondary scale-75 sm:scale-90" />
                         <div>
                           <p className="text-[11px] sm:text-xs font-semibold">Nearby</p>
                           <p className="text-[9px] sm:text-[10px] text-muted-foreground">100mi</p>
@@ -609,7 +592,7 @@ export default function FlightSearchHero({
                       </div>
                       Trending
                     </span>
-                    <Badge className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-sky-500/15 text-sky-400 border-sky-500/30 font-semibold text-[9px] sm:text-[10px]">
+                    <Badge className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-secondary text-foreground border-border/30 font-semibold text-[9px] sm:text-[10px]">
                       <Zap className="w-2 h-2 sm:w-2.5 sm:h-2.5 mr-0.5 sm:mr-1" />
                       Live
                     </Badge>
@@ -622,7 +605,7 @@ export default function FlightSearchHero({
                         className={cn(
                           "flex items-center gap-1.5 sm:gap-2 px-2 sm:px-3 py-1.5 sm:py-2 rounded-xl border transition-all flex-shrink-0 touch-manipulation active:scale-95 relative",
                           toCity.includes(dest.code)
-                            ? "border-sky-500 bg-gradient-to-r from-sky-500/15 to-blue-500/10 text-sky-400"
+                            ? "border-border text-foreground"
                             : "border-border/50 bg-muted/40"
                         )}
                       >
@@ -632,7 +615,7 @@ export default function FlightSearchHero({
                           </div>
                         )}
                         <span className="font-semibold text-[10px] sm:text-xs text-foreground whitespace-nowrap">{dest.city}</span>
-                        <Badge className="text-[9px] sm:text-xs px-1 sm:px-1.5 py-0 sm:py-0.5 bg-gradient-to-r from-sky-500/20 to-blue-500/20 text-sky-400 border-sky-500/30 font-bold">
+                        <Badge className="text-[9px] sm:text-xs px-1 sm:px-1.5 py-0 sm:py-0.5 text-foreground border-border/30 font-bold">
                           ${dest.price}
                         </Badge>
                         <span className={cn(
@@ -652,13 +635,13 @@ export default function FlightSearchHero({
                   <div className="pt-3 sm:pt-4 border-t border-border/40 mt-3 sm:mt-4">
                     <button
                       onClick={() => setShowPriceCalendar(!showPriceCalendar)}
-                      className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-bold text-sky-400 transition-colors touch-manipulation active:scale-95"
+                      className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-bold text-foreground transition-colors touch-manipulation active:scale-95"
                     >
-                      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-sky-500/15 flex items-center justify-center">
+                      <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-secondary flex items-center justify-center">
                         <CalendarDays className="w-3 h-3 sm:w-4 sm:h-4" />
                       </div>
                       {showPriceCalendar ? "Hide" : "View"} Prices
-                      <Badge className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-sky-500/15 text-sky-400 border-sky-500/30 font-semibold text-[9px] sm:text-[10px]">
+                      <Badge className="px-1.5 sm:px-2 py-0.5 sm:py-1 bg-secondary text-foreground border-border/30 font-semibold text-[9px] sm:text-[10px]">
                         <Sparkles className="w-2 h-2 sm:w-2.5 sm:h-2.5 mr-0.5 sm:mr-1" />
                         Best fares
                       </Badge>

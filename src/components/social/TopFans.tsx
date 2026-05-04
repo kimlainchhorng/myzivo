@@ -144,7 +144,7 @@ export default function TopFans({ creatorId, title = "Top fans this month", limi
     >
       <div className="flex items-center justify-between mb-2.5">
         <h3 className="text-[13px] font-bold text-foreground flex items-center gap-1.5">
-          <Heart className="h-4 w-4 text-rose-500" aria-hidden="true" fill="currentColor" />
+          <Heart className="h-4 w-4 text-foreground" aria-hidden="true" fill="currentColor" />
           {title}
         </h3>
       </div>
@@ -166,9 +166,9 @@ export default function TopFans({ creatorId, title = "Top fans this month", limi
                 aria-label={`${name} — ${engagementLabel}`}
               >
                 <div className="relative">
-                  <Avatar className="h-12 w-12 border-2 border-rose-500/40">
+                  <Avatar className="h-12 w-12 border-2 border-border">
                     <AvatarImage src={optimizeAvatar(f.avatarUrl, 48)} alt="" loading="lazy" />
-                    <AvatarFallback className="bg-gradient-to-br from-rose-500 to-pink-600 text-white text-sm font-bold">
+                    <AvatarFallback className="text-white text-sm font-bold bg-foreground">
                       {initialsOf(f.fullName)}
                     </AvatarFallback>
                   </Avatar>

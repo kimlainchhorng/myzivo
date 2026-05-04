@@ -53,7 +53,7 @@ export default function CarComplianceFooter({
     )}>
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-center gap-2 mb-3">
-          <Shield className="w-4 h-4 text-violet-400" />
+          <Shield className="w-4 h-4 text-foreground" />
           <span className="text-sm font-medium">Rental Information</span>
         </div>
         

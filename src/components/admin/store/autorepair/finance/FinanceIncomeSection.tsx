@@ -99,7 +99,7 @@ export default function FinanceIncomeSection({ storeId }: Props) {
         <StatCard icon={<DollarSign className="w-4 h-4 text-emerald-600" />} label="Revenue (paid)" value={fmt(stats.totalRevenue)} />
         <StatCard icon={<Receipt className="w-4 h-4 text-blue-600" />} label="Billed" value={fmt(stats.billed)} />
         <StatCard icon={<AlertCircle className="w-4 h-4 text-amber-600" />} label="Outstanding" value={fmt(stats.outstanding)} />
-        <StatCard icon={<TrendingUp className="w-4 h-4 text-violet-600" />} label="Avg ticket" value={fmt(stats.avgTicket)} />
+        <StatCard icon={<TrendingUp className="w-4 h-4 text-foreground" />} label="Avg ticket" value={fmt(stats.avgTicket)} />
       </div>
 
       <Card>

@@ -56,7 +56,7 @@ export default function ReelsCoachmarks() {
 
             <ul className="space-y-3">
               <Hint icon={<ChevronUp className="h-5 w-5" />} title="Swipe up" sub="See the next reel" />
-              <Hint icon={<Heart className="h-5 w-5 text-rose-400" />} title="Double-tap" sub="Like the reel" />
+              <Hint icon={<Heart className="h-5 w-5 text-foreground" />} title="Double-tap" sub="Like the reel" />
               <Hint icon={<Smile className="h-5 w-5 text-amber-300" />} title="Long-press the like" sub="Pick a reaction" />
               <Hint icon={<VolumeX className="h-5 w-5" />} title="Tap the right edge" sub="Mute or unmute sound" />
             </ul>

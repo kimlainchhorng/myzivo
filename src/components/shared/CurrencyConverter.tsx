@@ -172,7 +172,7 @@ export default function CurrencyConverter() {
               {isRateUp ? (
                 <TrendingUp className="w-4 h-4 text-emerald-400" />
               ) : (
-                <TrendingDown className="w-4 h-4 text-rose-400" />
+                <TrendingDown className="w-4 h-4 text-foreground" />
               )}
             </div>
           </div>

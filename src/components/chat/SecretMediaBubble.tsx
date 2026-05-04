@@ -68,7 +68,7 @@ export default function SecretMediaBubble({ message, decryptMedia, mine }: Props
   return (
     <div ref={ref} className={wrapper}>
       <div className="absolute right-2 top-2 z-10 rounded-full bg-background/70 p-1 backdrop-blur">
-        <Lock className="h-3 w-3 text-indigo-500" />
+        <Lock className="h-3 w-3 text-foreground" />
       </div>
 
       {type === "image" && (
@@ -93,7 +93,7 @@ export default function SecretMediaBubble({ message, decryptMedia, mine }: Props
 
       {type === "audio" && (
         <div className="flex items-center gap-2 px-3 py-2">
-          <Mic className="h-4 w-4 text-indigo-500" />
+          <Mic className="h-4 w-4 text-foreground" />
           {url ? (
             <audio src={url} controls className="h-8 max-w-[220px]" />
           ) : (
@@ -106,7 +106,7 @@ export default function SecretMediaBubble({ message, decryptMedia, mine }: Props
 
       {type === "file" && (
         <div className="flex items-center gap-3 px-3 py-2.5">
-          <div className="rounded-lg bg-indigo-500/10 p-2 text-indigo-500">
+          <div className="rounded-lg bg-secondary p-2 text-foreground">
             <FileLock2 className="h-5 w-5" />
           </div>
           <div className="min-w-0 flex-1">
@@ -119,7 +119,7 @@ export default function SecretMediaBubble({ message, decryptMedia, mine }: Props
             <a
               href={url}
               download={file_name ?? "secret-file"}
-              className="rounded-full bg-indigo-500 p-1.5 text-white hover:bg-indigo-600"
+              className="rounded-full bg-foreground p-1.5 text-white hover:bg-foreground"
               aria-label="Download"
             >
               <Download className="h-3.5 w-3.5" />
@@ -127,7 +127,7 @@ export default function SecretMediaBubble({ message, decryptMedia, mine }: Props
           ) : (
             <button
               onClick={handleManualLoad}
-              className="rounded-full bg-indigo-500 p-1.5 text-white hover:bg-indigo-600"
+              className="rounded-full bg-foreground p-1.5 text-white hover:bg-foreground"
               aria-label="Decrypt"
             >
               {loading ? (
@@ -145,7 +145,7 @@ export default function SecretMediaBubble({ message, decryptMedia, mine }: Props
 
 function Placeholder({ icon, loading, label }: { icon: React.ReactNode; loading: boolean; label: string }) {
   return (
-    <div className="flex h-40 w-64 max-w-full flex-col items-center justify-center gap-1.5 bg-indigo-500/5 text-indigo-500">
+    <div className="flex h-40 w-64 max-w-full flex-col items-center justify-center gap-1.5 bg-secondary text-foreground">
       {loading ? <Loader2 className="h-6 w-6 animate-spin" /> : icon}
       <div className="text-[11px] text-muted-foreground">{loading ? "Decrypting…" : label}</div>
     </div>

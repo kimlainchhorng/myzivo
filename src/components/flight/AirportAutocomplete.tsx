@@ -94,8 +94,8 @@ const AirportAutocomplete = ({
         <label className="text-[10px] sm:text-xs text-muted-foreground mb-0.5 block font-medium">{label}</label>
       )}
       <div className="relative">
-        <div className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-sky-500/10 flex items-center justify-center">
-          <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-sky-500" />
+        <div className="absolute left-2.5 sm:left-3 top-1/2 -translate-y-1/2 w-6 h-6 sm:w-7 sm:h-7 rounded-full bg-secondary flex items-center justify-center">
+          <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-foreground" />
         </div>
         <Input
           ref={inputRef}
@@ -127,7 +127,7 @@ const AirportAutocomplete = ({
                       onChange(search);
                       setIsOpen(false);
                     }}
-                    className="flex items-center gap-1.5 px-2.5 py-1.5 bg-muted/60 hover:bg-sky-500/10 text-xs font-medium rounded-lg transition-all touch-manipulation active:scale-95"
+                    className="flex items-center gap-1.5 px-2.5 py-1.5 bg-muted/60 hover:bg-secondary text-xs font-medium rounded-lg transition-all touch-manipulation active:scale-95"
                   >
                     <Clock className="w-3 h-3 text-muted-foreground" />
                     <span className="text-foreground">{search}</span>
@@ -161,18 +161,18 @@ const AirportAutocomplete = ({
                 <button
                   key={airport.code}
                   onClick={() => handleSelect(airport)}
-                  className="w-full px-3 py-3 flex items-center gap-3 hover:bg-sky-500/5 transition-colors text-left group border-b border-border/20 last:border-0 touch-manipulation active:scale-[0.99]"
+                  className="w-full px-3 py-3 flex items-center gap-3 hover:bg-secondary transition-colors text-left group border-b border-border/20 last:border-0 touch-manipulation active:scale-[0.99]"
                 >
                   {/* Plane icon */}
-                  <div className="w-9 h-9 rounded-xl bg-sky-500/8 flex items-center justify-center flex-shrink-0 group-hover:bg-sky-500/15 transition-colors">
-                    <Plane className="w-4 h-4 text-sky-500 -rotate-45" />
+                  <div className="w-9 h-9 rounded-xl bg-secondary flex items-center justify-center flex-shrink-0 group-hover:bg-secondary transition-colors">
+                    <Plane className="w-4 h-4 text-foreground -rotate-45" />
                   </div>
 
                   {/* Airport info */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="font-semibold text-sm text-foreground">{airport.city} ({airport.code})</span>
-                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-[18px] font-mono font-bold text-sky-500 border-sky-500/40 bg-sky-500/8 rounded-md">
+                      <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-[18px] font-mono font-bold text-foreground border-border bg-secondary rounded-md">
                         {airport.code}
                       </Badge>
                     </div>

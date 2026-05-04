@@ -86,7 +86,7 @@ const RefundPolicy = () => {
           </Card>
           <Card>
             <CardContent className="p-4 text-center">
-              <Plane className="h-6 w-6 mx-auto mb-2 text-sky-500" />
+              <Plane className="h-6 w-6 mx-auto mb-2 text-foreground" />
               <p className="text-sm font-medium">Flights</p>
               <p className="text-xs text-muted-foreground">Per airline policy</p>
             </CardContent>
@@ -227,7 +227,7 @@ const RefundPolicy = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Plane className="h-5 w-5 text-sky-500" />
+                  <Plane className="h-5 w-5 text-foreground" />
                   Flights (Airline Partner Processes Refunds)
                 </CardTitle>
               </CardHeader>

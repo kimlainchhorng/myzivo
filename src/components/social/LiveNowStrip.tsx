@@ -63,7 +63,7 @@ export default function LiveNowStrip() {
     >
       <div className="flex items-center justify-between mb-2.5">
         <h3 className="text-[13px] font-bold text-foreground flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-rose-500 animate-pulse" aria-hidden="true" />
+          <span className="w-2 h-2 rounded-full bg-foreground animate-pulse" aria-hidden="true" />
           Live Now
         </h3>
         <button
@@ -88,13 +88,13 @@ export default function LiveNowStrip() {
               className="shrink-0 flex flex-col items-center gap-1.5 w-[80px] active:opacity-70 transition-opacity"
             >
               <div className="relative">
-                <Avatar className="h-14 w-14 border-2 border-rose-500">
+                <Avatar className="h-14 w-14 border-2 border-border">
                   <AvatarImage src={s.host_avatar || undefined} alt="" />
-                  <AvatarFallback className="bg-gradient-to-br from-rose-500 to-pink-600 text-white text-sm font-bold">
+                  <AvatarFallback className="text-white text-sm font-bold bg-foreground">
                     {initialsOf(s.host_name)}
                   </AvatarFallback>
                 </Avatar>
-                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-rose-500 text-white text-[8px] font-bold px-1 rounded-full leading-none py-0.5">
+                <span className="absolute -bottom-1 left-1/2 -translate-x-1/2 bg-foreground text-white text-[8px] font-bold px-1 rounded-full leading-none py-0.5">
                   LIVE
                 </span>
               </div>

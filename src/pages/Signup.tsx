@@ -6,9 +6,8 @@
  */
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Loader2, Mail, Lock, User as UserIcon, ArrowRight, Eye, EyeOff, MailCheck } from "lucide-react";
+import { Loader2, Eye, EyeOff, MailCheck } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import SEOHead from "@/components/SEOHead";
@@ -151,7 +150,7 @@ const Signup = () => {
       <div className="min-h-[100dvh] w-full bg-white dark:bg-black flex items-center justify-center px-5 py-8">
         <div className="w-full max-w-sm">
           <div className="bg-white dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-white/10 rounded-xl px-8 py-10 shadow-sm text-center">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 via-rose-500 to-fuchsia-600 shadow-lg shadow-rose-500/20 mb-4">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 shadow-lg mb-4">
               <MailCheck className="w-8 h-8 text-white" />
             </div>
             <h1 className="text-xl font-bold text-zinc-900 dark:text-white">Check your email</h1>
@@ -161,7 +160,7 @@ const Signup = () => {
             </p>
             <Link
               to={`/login${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`}
-              className="block mt-6 w-full h-9 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 transition flex items-center justify-center shadow-md shadow-rose-500/20"
+              className="block mt-6 w-full h-9 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 hover:opacity-95 transition flex items-center justify-center shadow-md"
             >
               Go to Sign In
             </Link>
@@ -177,8 +176,8 @@ const Signup = () => {
 
       {/* Subtle gradient backdrop matching Login page */}
       <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-32 -right-32 w-[420px] h-[420px] rounded-full bg-gradient-to-br from-fuchsia-300/30 via-orange-200/30 to-rose-200/30 blur-3xl dark:from-fuchsia-600/20 dark:via-orange-600/20 dark:to-rose-600/20" />
-        <div className="absolute -bottom-32 -left-32 w-[420px] h-[420px] rounded-full bg-gradient-to-tr from-amber-200/30 via-pink-200/30 to-purple-200/30 blur-3xl dark:from-amber-600/15 dark:via-pink-600/15 dark:to-purple-600/15" />
+        <div className="absolute -top-32 -right-32 w-[420px] h-[420px] rounded-full blur-3xl dark:dark:dark: bg-secondary" />
+        <div className="absolute -bottom-32 -left-32 w-[420px] h-[420px] rounded-full bg-gradient-to-tr from-amber-200/30 blur-3xl dark:from-amber-600/15 dark:dark:" />
       </div>
 
       <div className="relative w-full max-w-sm">
@@ -186,7 +185,7 @@ const Signup = () => {
         <div className="bg-white dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-white/10 rounded-xl px-8 pt-9 pb-6 shadow-sm">
           {/* Brand wordmark */}
           <div className="flex flex-col items-center mb-6">
-            <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 via-rose-500 to-fuchsia-600 flex items-center justify-center mb-4 shadow-lg shadow-rose-500/20">
+            <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 flex items-center justify-center mb-4 shadow-lg">
               <span className="text-white font-black text-2xl tracking-tight italic" style={{ fontFamily: "'Brush Script MT', cursive" }}>Z</span>
             </div>
             <h1 className="text-3xl font-light tracking-wider text-zinc-900 dark:text-white" style={{ fontFamily: "'Snell Roundhand', 'Brush Script MT', cursive", fontWeight: 600 }}>
@@ -319,7 +318,7 @@ const Signup = () => {
                 </select>
               </div>
               {isUnderage && (
-                <p className="text-[11px] font-medium text-rose-600 dark:text-rose-400">
+                <p className="text-[11px] font-medium text-foreground dark:text-foreground">
                   You must be at least 18 years old to use ZIVO.
                 </p>
               )}
@@ -337,7 +336,7 @@ const Signup = () => {
               <Checkbox
                 checked={agree}
                 onCheckedChange={(v) => setAgree(!!v)}
-                className="mt-0.5 data-[state=checked]:bg-rose-500 data-[state=checked]:border-rose-500"
+                className="mt-0.5 data-[state=checked]:bg-foreground data-[state=checked]:border-border"
               />
               <span className="text-xs text-zinc-600 dark:text-zinc-400">
                 I confirm I'm 18 or older and agree to the terms above.
@@ -347,7 +346,7 @@ const Signup = () => {
             <button
               type="submit"
               disabled={submitting || !agree || isUnderage}
-              className="w-full h-9 mt-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md shadow-rose-500/20"
+              className="w-full h-9 mt-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md"
             >
               {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sign up"}
             </button>
@@ -360,7 +359,7 @@ const Signup = () => {
             Have an account?{" "}
             <Link
               to={`/login${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`}
-              className="font-semibold text-rose-500 hover:text-rose-600"
+              className="font-semibold text-foreground hover:text-foreground"
             >
               Log in
             </Link>
@@ -373,7 +372,7 @@ const Signup = () => {
             href="https://apps.apple.com/us/app/zivodrivers/id6759507131"
             target="_blank"
             rel="noopener noreferrer"
-            className="font-semibold text-rose-500/80 hover:text-rose-600"
+            className="font-semibold text-foreground/80 hover:text-foreground"
           >
             Apply as a Driver
           </a>

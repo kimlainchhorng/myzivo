@@ -314,10 +314,10 @@ const CarRentalBooking = () => {
 
       <main className="pb-32 lg:pb-20">
         {/* Car Rental Disclaimer Banner - LOCKED TEXT */}
-        <section className="border-b border-violet-500/20 py-2.5 bg-violet-500/5">
+        <section className="border-b border-border py-2.5 bg-secondary">
           <div className="container mx-auto px-4">
             <p className="text-center text-xs text-muted-foreground flex items-center justify-center gap-1.5">
-              <ShieldCheck className="w-3.5 h-3.5 text-violet-500" />
+              <ShieldCheck className="w-3.5 h-3.5 text-foreground" />
               {CAR_DISCLAIMERS.partnerBooking}
             </p>
           </div>
@@ -346,7 +346,7 @@ const CarRentalBooking = () => {
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button variant="outline" className="w-full h-12 justify-start">
-                        <CalendarDays className="mr-2 h-4 w-4 text-violet-500" />
+                        <CalendarDays className="mr-2 h-4 w-4 text-foreground" />
                         {pickupDate ? format(pickupDate, "MMM d") : "Select date"}
                       </Button>
                     </PopoverTrigger>
@@ -367,7 +367,7 @@ const CarRentalBooking = () => {
                   <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Pickup Time</label>
                   <Select value={pickupTime} onValueChange={setPickupTime}>
                     <SelectTrigger className="h-12">
-                      <Clock className="w-4 h-4 mr-2 text-violet-500" />
+                      <Clock className="w-4 h-4 mr-2 text-foreground" />
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -387,7 +387,7 @@ const CarRentalBooking = () => {
                   <Popover>
                     <PopoverTrigger asChild>
                       <Button variant="outline" className="w-full h-12 justify-start">
-                        <CalendarDays className="mr-2 h-4 w-4 text-purple-500" />
+                        <CalendarDays className="mr-2 h-4 w-4 text-foreground" />
                         {returnDate ? format(returnDate, "MMM d") : "Select date"}
                       </Button>
                     </PopoverTrigger>
@@ -408,7 +408,7 @@ const CarRentalBooking = () => {
                   <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Return Time</label>
                   <Select value={returnTime} onValueChange={setReturnTime}>
                     <SelectTrigger className="h-12">
-                      <Clock className="w-4 h-4 mr-2 text-purple-500" />
+                      <Clock className="w-4 h-4 mr-2 text-foreground" />
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -429,7 +429,7 @@ const CarRentalBooking = () => {
                   <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Driver Age</label>
                   <Select value={driverAge} onValueChange={setDriverAge}>
                     <SelectTrigger className="h-12">
-                      <User className="w-4 h-4 mr-2 text-violet-500" />
+                      <User className="w-4 h-4 mr-2 text-foreground" />
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -450,9 +450,7 @@ const CarRentalBooking = () => {
               size="lg"
               className={cn(
                 "w-full h-14 font-bold text-lg mt-6",
-                "bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-600 hover:to-purple-700",
-                "shadow-xl shadow-violet-500/30 hover:shadow-violet-500/40",
-                "transition-all duration-300 active:scale-[0.98]"
+                "transition-all duration-200 active:scale-[0.98]"
               )}
             >
               <Search className="w-5 h-5 mr-2" />
@@ -526,7 +524,7 @@ const CarRentalBooking = () => {
             </div>
 
             {/* Price Disclaimer - LOCKED TEXT */}
-            <div className="mt-6 p-4 rounded-xl bg-violet-500/5 border border-violet-500/20">
+            <div className="mt-6 p-4 rounded-xl bg-secondary border border-border">
               <p className="text-xs text-muted-foreground text-center font-medium mb-1">
                 {CAR_DISCLAIMERS.partnerBooking}
               </p>
@@ -585,7 +583,7 @@ const CarRentalBooking = () => {
           <div className="container mx-auto px-4">
             <button onClick={() => setShowCarFeatureFilter(!showCarFeatureFilter)}
               className="flex items-center gap-2 text-sm font-bold text-foreground hover:text-primary transition-all mb-4">
-              <Key className="w-4 h-4 text-violet-500" /> Car Features
+              <Key className="w-4 h-4 text-foreground" /> Car Features
               <ChevronRight className={cn("w-4 h-4 transition-transform", showCarFeatureFilter && "rotate-90")} />
             </button>
             {showCarFeatureFilter && (
@@ -593,7 +591,7 @@ const CarRentalBooking = () => {
                 {carFeatures.map(f => (
                   <button key={f.id} onClick={() => setSelectedFeatures(prev => prev.includes(f.id) ? prev.filter(x => x !== f.id) : [...prev, f.id])}
                     className={cn("px-3 py-2 rounded-xl text-[10px] font-bold transition-all",
-                      selectedFeatures.includes(f.id) ? "bg-violet-500/10 text-violet-500 border border-violet-500/30" : "bg-card text-muted-foreground border border-border/40")}>
+                      selectedFeatures.includes(f.id) ? "bg-secondary text-foreground border border-border" : "bg-card text-muted-foreground border border-border/40")}>
                     {f.icon} {f.label}
                   </button>
                 ))}
@@ -607,7 +605,7 @@ const CarRentalBooking = () => {
           <div className="container mx-auto px-4">
             <div className="text-center mb-6">
               <h2 className="text-xl font-bold text-foreground flex items-center justify-center gap-2">
-                <Shield className="w-5 h-5 text-violet-500" /> Trip Protection Plans
+                <Shield className="w-5 h-5 text-foreground" /> Trip Protection Plans
               </h2>
               <p className="text-sm text-muted-foreground">Choose your coverage level</p>
             </div>
@@ -615,13 +613,13 @@ const CarRentalBooking = () => {
               {protectionTiers.map(tier => (
                 <button key={tier.id} onClick={() => setSelectedProtection(tier.id)}
                   className={cn("rounded-2xl p-4 text-left transition-all border relative",
-                    selectedProtection === tier.id ? "border-violet-500 bg-violet-500/5 shadow-lg" : "border-border/40 bg-card hover:border-border")}>
+                    selectedProtection === tier.id ? "border-foreground bg-secondary" : "border-border bg-card hover:border-foreground/30")}>
                   {"badge" in tier && tier.badge && (
-                    <span className="absolute -top-2 right-3 text-[8px] font-bold bg-violet-500 text-primary-foreground px-2 py-0.5 rounded-full">{tier.badge}</span>
+                    <span className="absolute -top-2 right-3 text-[8px] font-bold bg-foreground text-background px-2 py-0.5 rounded-full">{tier.badge}</span>
                   )}
                   <div className="flex items-center justify-between mb-2">
                     <h3 className="text-xs font-bold text-foreground">{tier.name}</h3>
-                    <span className="text-xs font-bold text-violet-500">{tier.price}</span>
+                    <span className="text-xs font-bold text-foreground">{tier.price}</span>
                   </div>
                   <ul className="space-y-1">
                     {tier.features.map(f => (
@@ -641,12 +639,12 @@ const CarRentalBooking = () => {
         <section className="py-8 border-b border-border/30 bg-muted/5">
           <div className="container mx-auto px-4">
             <h2 className="text-xl font-bold text-foreground flex items-center gap-2 mb-6">
-              <Users className="w-5 h-5 text-violet-500" /> Top-Rated Hosts
+              <Users className="w-5 h-5 text-foreground" /> Top-Rated Hosts
             </h2>
             <div className="grid md:grid-cols-3 gap-4 max-w-4xl mx-auto">
               {hostProfiles.map(host => (
-                <div key={host.name} className="rounded-2xl bg-card border border-border/40 p-5 text-center hover:border-violet-500/30 transition-all">
-                  <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-gradient-to-br from-violet-500/20 to-purple-500/20 flex items-center justify-center text-2xl font-bold text-violet-500">
+                <div key={host.name} className="rounded-2xl bg-card border border-border/40 p-5 text-center hover:border-border transition-all">
+                  <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-secondary border border-border flex items-center justify-center text-2xl font-bold text-foreground">
                     {host.name.charAt(0)}
                   </div>
                   <p className="text-sm font-bold text-foreground flex items-center justify-center gap-1">
@@ -667,7 +665,7 @@ const CarRentalBooking = () => {
         )}
 
         {/* Long-Term Discount Banner (Turo) */}
-        <section className="py-6 border-b border-border/30 bg-gradient-to-r from-violet-500/5 to-purple-500/5">
+        <section className="py-6 border-b border-border bg-secondary">
           <div className="container mx-auto px-4 text-center">
             <div className="flex items-center justify-center gap-3 mb-2">
               <DollarSign className="w-5 h-5 text-emerald-500" />
@@ -689,7 +687,7 @@ const CarRentalBooking = () => {
           <div className="container mx-auto px-4">
             <button onClick={() => setShowDamageInspection(!showDamageInspection)}
               className="flex items-center gap-2 text-sm font-bold text-foreground hover:text-primary transition-all mb-4">
-              <CheckCircle className="w-5 h-5 text-violet-500" /> Pre-Pickup Inspection Checklist
+              <CheckCircle className="w-5 h-5 text-foreground" /> Pre-Pickup Inspection Checklist
               <ChevronRight className={cn("w-4 h-4 transition-transform", showDamageInspection && "rotate-90")} />
             </button>
             {showDamageInspection && (
@@ -723,7 +721,7 @@ const CarRentalBooking = () => {
                     <h3 className="text-sm font-bold text-foreground mb-1">{opt.plan}</h3>
                     <p className="text-lg font-bold text-primary">{opt.miles}</p>
                     <p className="text-[10px] text-muted-foreground mt-1">{opt.extraCost}</p>
-                    {opt.addOn && <Badge className="mt-2 bg-violet-500/10 text-violet-500 border-0 text-[9px]">{opt.addOn}</Badge>}
+                    {opt.addOn && <Badge className="mt-2 bg-secondary text-foreground border-0 text-[9px]">{opt.addOn}</Badge>}
                     {opt.included && <Badge className="mt-2 bg-emerald-500/10 text-emerald-500 border-0 text-[9px]">Included</Badge>}
                   </div>
                 ))}
@@ -737,7 +735,7 @@ const CarRentalBooking = () => {
           <div className="container mx-auto px-4">
             <button onClick={() => setShowRoadsideDetails(!showRoadsideDetails)}
               className="flex items-center gap-2 text-sm font-bold text-foreground hover:text-primary transition-all mb-4">
-              <Truck className="w-5 h-5 text-sky-500" /> 24/7 Roadside Assistance
+              <Truck className="w-5 h-5 text-foreground" /> 24/7 Roadside Assistance
               <Badge className="bg-emerald-500/10 text-emerald-500 border-0 text-[9px]">Included</Badge>
               <ChevronRight className={cn("w-4 h-4 transition-transform", showRoadsideDetails && "rotate-90")} />
             </button>
@@ -750,7 +748,7 @@ const CarRentalBooking = () => {
                     {f.included ? (
                       <CheckCircle className="w-4 h-4 text-emerald-500" />
                     ) : (
-                      <Badge className="bg-violet-500/10 text-violet-500 border-0 text-[8px]">Premium only</Badge>
+                      <Badge className="bg-secondary text-foreground border-0 text-[8px]">Premium only</Badge>
                     )}
                   </div>
                 ))}
@@ -774,7 +772,7 @@ const CarRentalBooking = () => {
                   <div key={review.name} className="rounded-2xl bg-card border border-border/40 p-4">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-violet-500/10 flex items-center justify-center text-xs font-bold text-violet-500">
+                        <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-xs font-bold text-foreground">
                           {review.name.charAt(0)}
                         </div>
                         <div>
@@ -816,7 +814,7 @@ const CarRentalBooking = () => {
 
             {/* Toll Estimator */}
             <button onClick={() => setShowTollEstimator(!showTollEstimator)} className="w-full flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-all">
-              <DollarSign className="w-4 h-4 text-sky-500" /> Toll Estimates
+              <DollarSign className="w-4 h-4 text-foreground" /> Toll Estimates
               <ChevronRight className={cn("w-4 h-4 ml-auto transition-transform", showTollEstimator && "rotate-90")} />
             </button>
             {showTollEstimator && (
@@ -832,7 +830,7 @@ const CarRentalBooking = () => {
 
             {/* Parking Finder */}
             <button onClick={() => setShowParkingFinder(!showParkingFinder)} className="w-full flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-all">
-              <MapPin className="w-4 h-4 text-violet-500" /> Airport Parking Options
+              <MapPin className="w-4 h-4 text-foreground" /> Airport Parking Options
               <ChevronRight className={cn("w-4 h-4 ml-auto transition-transform", showParkingFinder && "rotate-90")} />
             </button>
             {showParkingFinder && (

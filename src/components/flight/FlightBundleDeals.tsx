@@ -37,7 +37,7 @@ const FlightBundleDeals = () => {
     <section className="py-12 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-8">
-          <Badge className="mb-3 bg-purple-500/20 text-purple-400 border-purple-500/20">
+          <Badge className="mb-3 bg-secondary text-foreground border-border">
             <Package className="w-3 h-3 mr-1" /> Bundle & Save
           </Badge>
           <h2 className="text-2xl md:text-3xl font-display font-bold mb-2">
@@ -58,7 +58,7 @@ const FlightBundleDeals = () => {
             >
               {bundle.popular && (
                 <div className="absolute -top-3 left-1/2 -translate-x-1/2">
-                  <Badge className="bg-sky-500 text-primary-foreground border-0">
+                  <Badge className="bg-foreground text-primary-foreground border-0">
                     <Star className="w-3 h-3 mr-1" /> Most Popular
                   </Badge>
                 </div>

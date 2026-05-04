@@ -60,7 +60,7 @@ export default function PnLArAging({ aging, onOpenInvoice }: Props) {
                         {u.daysOverdue > 0 ? `${u.daysOverdue} days overdue` : "Not yet due"}
                       </div>
                     </div>
-                    <div className="text-xs font-semibold tabular-nums text-rose-600">{fmtMoney(u.outstanding)}</div>
+                    <div className="text-xs font-semibold tabular-nums text-foreground">{fmtMoney(u.outstanding)}</div>
                   </button>
                 </li>
               ))}

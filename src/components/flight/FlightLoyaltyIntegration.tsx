@@ -287,11 +287,11 @@ export const FlightLoyaltyIntegration = ({
             animate={{ opacity: 1, height: "auto" }}
             exit={{ opacity: 0, height: 0 }}
           >
-            <Card className="border-dashed border-2 border-sky-500/30 bg-sky-500/5">
+            <Card className="border-dashed border-2 border-border bg-secondary">
               <CardContent className="p-5 space-y-4">
                 <div className="flex items-center justify-between">
                   <h4 className="font-semibold flex items-center gap-2">
-                    <Plus className="w-4 h-4 text-sky-500" />
+                    <Plus className="w-4 h-4 text-foreground" />
                     Link Frequent Flyer Program
                   </h4>
                   <Button
@@ -345,7 +345,7 @@ export const FlightLoyaltyIntegration = ({
                 <Button
                   onClick={handleAddProgram}
                   disabled={!selectedProgram || !newMemberNumber}
-                  className="w-full bg-gradient-to-r from-sky-500 to-blue-600 text-primary-foreground rounded-xl active:scale-[0.97] transition-all duration-200 touch-manipulation"
+                  className="w-full text-primary-foreground rounded-xl active:scale-[0.97] transition-all duration-200 touch-manipulation bg-foreground"
                 >
                   <Check className="w-4 h-4 mr-2" />
                   Link Program

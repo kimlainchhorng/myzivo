@@ -193,7 +193,7 @@ export default function MultiCityLegs({ className, passengers = 1, cabin = "econ
                       errors[`${i}-date`] && "border-destructive"
                     )}
                   >
-                    <CalendarIcon className="w-4 h-4 mr-2 text-sky-500" />
+                    <CalendarIcon className="w-4 h-4 mr-2 text-foreground" />
                     {leg.departDate ? format(leg.departDate, "MMM d") : "Date"}
                   </Button>
                   <MobileDatePickerSheet
@@ -217,7 +217,7 @@ export default function MultiCityLegs({ className, passengers = 1, cabin = "econ
                         errors[`${i}-date`] && "border-destructive"
                       )}
                     >
-                      <CalendarIcon className="w-4 h-4 mr-2 text-sky-500" />
+                      <CalendarIcon className="w-4 h-4 mr-2 text-foreground" />
                       {leg.departDate ? format(leg.departDate, "EEE, MMM d") : "Select date"}
                     </Button>
                   </PopoverTrigger>

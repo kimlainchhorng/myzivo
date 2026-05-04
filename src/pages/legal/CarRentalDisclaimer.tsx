@@ -27,7 +27,7 @@ export default function CarRentalDisclaimer() {
         {/* Title */}
         <div className="text-center mb-12">
           <div className="flex items-center justify-center gap-3 mb-4">
-            <Car className="w-10 h-10 text-violet-500" />
+            <Car className="w-10 h-10 text-foreground" />
           </div>
           <h1 className="text-4xl font-bold mb-4">Car Rental Marketplace Disclaimer</h1>
           <p className="text-muted-foreground max-w-2xl mx-auto">
@@ -36,8 +36,8 @@ export default function CarRentalDisclaimer() {
         </div>
 
         {/* Main Disclaimer */}
-        <Alert className="mb-8 border-violet-500/30 bg-violet-500/5">
-          <FileWarning className="h-5 w-5 text-violet-500" />
+        <Alert className="mb-8 border-border bg-secondary">
+          <FileWarning className="h-5 w-5 text-foreground" />
           <AlertTitle className="text-lg">Marketplace Disclaimer</AlertTitle>
           <AlertDescription className="text-base mt-2">
             {CAR_RENTAL_DISCLAIMER.content}

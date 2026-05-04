@@ -64,7 +64,7 @@ export default function HotelInspirationalBanner({ className }: HotelInspiration
                 <span>Secure Booking</span>
               </div>
               <div className="flex items-center gap-2 text-primary-foreground/70 text-sm">
-                <Clock className="w-4 h-4 text-sky-400" />
+                <Clock className="w-4 h-4 text-foreground" />
                 <span>24/7 Support</span>
               </div>
             </div>

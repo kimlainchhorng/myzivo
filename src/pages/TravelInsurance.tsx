@@ -105,9 +105,9 @@ const TravelInsurance = () => {
   ];
 
   const coverageTypes = [
-    { icon: Plane, label: "Flights", description: "Flight delays & cancellations", gradient: "from-sky-500 to-blue-500" },
+    { icon: Plane, label: "Flights", description: "Flight delays & cancellations", gradient: "from-muted to-muted" },
     { icon: Hotel, label: "Hotels", description: "Booking protection", gradient: "from-amber-500 to-orange-500" },
-    { icon: Car, label: "Car Rentals", description: "Rental car coverage", gradient: "from-violet-500 to-purple-500" },
+    { icon: Car, label: "Car Rentals", description: "Rental car coverage", gradient: "from-muted to-muted" },
     { icon: Package, label: "Luggage", description: "Lost luggage protection", gradient: "from-emerald-500 to-green-500" },
   ];
 
@@ -133,9 +133,9 @@ const TravelInsurance = () => {
         {/* Hero Section */}
         <section className="relative py-12 sm:py-20 lg:py-32 overflow-hidden">
           {/* Enhanced background effects */}
-          <div className="absolute inset-0 bg-gradient-radial from-cyan-500/20 via-transparent to-transparent opacity-70" />
-          <div className="absolute top-1/3 right-0 w-[300px] sm:w-[600px] h-[300px] sm:h-[600px] bg-gradient-to-bl from-cyan-500/25 to-teal-500/15 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-[250px] sm:w-[500px] h-[250px] sm:h-[500px] bg-gradient-to-tr from-primary/15 to-cyan-500/10 rounded-full blur-3xl" />
+          <div className="absolute inset-0 bg-gradient-radial via-transparent to-transparent opacity-70" />
+          <div className="absolute top-1/3 right-0 w-[300px] sm:w-[600px] h-[300px] sm:h-[600px] rounded-full blur-3xl bg-secondary" />
+          <div className="absolute bottom-0 left-0 w-[250px] sm:w-[500px] h-[250px] sm:h-[500px] bg-gradient-to-tr from-primary/15 rounded-full blur-3xl" />
           
           <div className="container mx-auto px-4 relative z-10">
             {/* Back Navigation */}
@@ -151,13 +151,13 @@ const TravelInsurance = () => {
             </div>
 
             <div className="text-center max-w-4xl mx-auto mb-10 sm:mb-16 animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <Badge className="mb-4 sm:mb-6 bg-gradient-to-r from-cyan-500 to-teal-500 text-primary-foreground border-0 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-bold shadow-xl shadow-cyan-500/40">
+              <Badge className="mb-4 sm:mb-6 text-primary-foreground border-0 px-4 sm:px-5 py-2 sm:py-2.5 text-xs sm:text-sm font-bold shadow-xl bg-foreground">
                 <Sparkles className="w-4 h-4 mr-2" />
                 New Service
               </Badge>
               <h1 className="font-display text-3xl sm:text-5xl lg:text-7xl font-bold mb-4 sm:mb-8 leading-tight">
                 Travel with{" "}
-                <span className="bg-gradient-to-r from-cyan-500 via-teal-400 to-cyan-500 bg-clip-text text-transparent">
+                <span className="text-accent-foreground">
                   Confidence
                 </span>
               </h1>
@@ -166,7 +166,7 @@ const TravelInsurance = () => {
                 lost luggage, and more.
               </p>
               <div className="flex flex-wrap gap-3 sm:gap-4 justify-center">
-                <Button size="lg" className="h-12 sm:h-14 px-6 sm:px-10 text-sm sm:text-lg font-bold rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-500 text-primary-foreground shadow-xl shadow-cyan-500/40 hover:opacity-90 gap-2 touch-manipulation active:scale-[0.98]">
+                <Button size="lg" className="h-12 sm:h-14 px-6 sm:px-10 text-sm sm:text-lg font-bold rounded-2xl text-primary-foreground shadow-xl hover:opacity-90 gap-2 touch-manipulation active:scale-[0.98] bg-foreground">
                   Get Protected
                   <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
                 </Button>
@@ -184,10 +184,10 @@ const TravelInsurance = () => {
                   className="text-center animate-in fade-in slide-in-from-bottom-4 duration-300"
                   style={{ animationDelay: `${index * 75}ms` }}
                 >
-                  <div className="w-10 h-10 sm:w-14 sm:h-14 mx-auto mb-2 sm:mb-3 rounded-xl sm:rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+                  <div className="w-10 h-10 sm:w-14 sm:h-14 mx-auto mb-2 sm:mb-3 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg bg-secondary">
                     <stat.icon className="w-5 h-5 sm:w-7 sm:h-7 text-primary-foreground" />
                   </div>
-                  <p className="text-2xl sm:text-3xl lg:text-4xl font-bold bg-gradient-to-r from-cyan-500 to-teal-500 bg-clip-text text-transparent">{stat.value}</p>
+                  <p className="text-2xl sm:text-3xl lg:text-4xl font-bold text-accent-foreground">{stat.value}</p>
                   <p className="text-xs sm:text-sm text-muted-foreground">{stat.label}</p>
                 </div>
               ))}
@@ -200,7 +200,7 @@ const TravelInsurance = () => {
           <div className="container mx-auto px-4">
             <div className="text-center mb-8 sm:mb-14 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <h2 className="font-display text-2xl sm:text-3xl lg:text-5xl font-bold mb-2 sm:mb-4">
-                What We <span className="bg-gradient-to-r from-cyan-500 to-teal-500 bg-clip-text text-transparent">Cover</span>
+                What We <span className="text-accent-foreground">Cover</span>
               </h2>
               <p className="text-sm sm:text-lg text-muted-foreground">Comprehensive protection for all aspects of your trip</p>
             </div>
@@ -212,7 +212,7 @@ const TravelInsurance = () => {
                   className="text-center h-full border-0 bg-gradient-to-br from-card/90 to-card shadow-xl hover:shadow-2xl transition-all cursor-pointer group overflow-hidden animate-in fade-in slide-in-from-bottom-4 duration-300"
                   style={{ animationDelay: `${index * 75}ms` }}
                 >
-                  <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity bg-secondary" />
                   <CardContent className="p-4 sm:pt-8 sm:pb-6 relative">
                     <div className={`w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-5 rounded-xl sm:rounded-2xl bg-gradient-to-br ${type.gradient} flex items-center justify-center shadow-lg`}>
                       <type.icon className="h-6 w-6 sm:h-8 sm:w-8 text-primary-foreground" />
@@ -231,7 +231,7 @@ const TravelInsurance = () => {
           <div className="container mx-auto px-4 max-w-6xl">
             <div className="text-center mb-8 sm:mb-14 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <h2 className="font-display text-2xl sm:text-3xl lg:text-5xl font-bold mb-2 sm:mb-4">
-                Choose Your <span className="bg-gradient-to-r from-cyan-500 to-teal-500 bg-clip-text text-transparent">Plan</span>
+                Choose Your <span className="text-accent-foreground">Plan</span>
               </h2>
               <p className="text-sm sm:text-lg text-muted-foreground">Select the coverage that fits your travel needs</p>
             </div>
@@ -314,7 +314,7 @@ const TravelInsurance = () => {
           <div className="container mx-auto px-4 max-w-5xl">
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               <Card className="border-0 bg-gradient-to-br from-card/90 to-card shadow-2xl overflow-hidden">
-                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-teal-500/5" />
+                <div className="absolute inset-0 bg-secondary" />
                 <CardContent className="p-5 sm:p-8 lg:p-12 relative">
                   <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-8">
                     {benefits.map((benefit, index) => (
@@ -323,7 +323,7 @@ const TravelInsurance = () => {
                         className="text-center animate-in fade-in slide-in-from-bottom-4 duration-300"
                         style={{ animationDelay: `${index * 75}ms` }}
                       >
-                        <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-xl sm:rounded-2xl bg-gradient-to-br from-cyan-500 to-teal-500 flex items-center justify-center shadow-lg shadow-cyan-500/30">
+                        <div className="w-12 h-12 sm:w-16 sm:h-16 mx-auto mb-3 sm:mb-4 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-lg bg-secondary">
                           <benefit.icon className="h-6 w-6 sm:h-8 sm:w-8 text-primary-foreground" />
                         </div>
                         <h4 className="font-bold text-sm sm:text-lg mb-1">{benefit.title}</h4>
@@ -342,12 +342,12 @@ const TravelInsurance = () => {
           <div className="container mx-auto px-4 max-w-4xl">
             <div className="text-center animate-in fade-in slide-in-from-bottom-4 duration-500">
               <h2 className="font-display text-2xl sm:text-3xl lg:text-5xl font-bold mb-3 sm:mb-4">
-                Ready to Travel <span className="bg-gradient-to-r from-cyan-500 to-teal-500 bg-clip-text text-transparent">Worry-Free?</span>
+                Ready to Travel <span className="text-accent-foreground">Worry-Free?</span>
               </h2>
               <p className="text-sm sm:text-lg text-muted-foreground mb-6 sm:mb-10">Get instant coverage and peace of mind for your next trip</p>
               
               <div className="inline-block mb-6 sm:mb-10">
-                <Button size="lg" className="h-12 sm:h-16 px-6 sm:px-10 text-base sm:text-xl font-bold rounded-xl sm:rounded-2xl bg-gradient-to-r from-cyan-500 to-teal-500 text-primary-foreground shadow-xl shadow-cyan-500/30 hover:opacity-90 gap-2 sm:gap-3 touch-manipulation active:scale-[0.98]">
+                <Button size="lg" className="h-12 sm:h-16 px-6 sm:px-10 text-base sm:text-xl font-bold rounded-xl sm:rounded-2xl text-primary-foreground shadow-xl hover:opacity-90 gap-2 sm:gap-3 touch-manipulation active:scale-[0.98] bg-foreground">
                   Get Insured Now
                   <ArrowRight className="w-4 h-4 sm:w-6 sm:h-6" />
                 </Button>
@@ -356,26 +356,26 @@ const TravelInsurance = () => {
               <div className="grid sm:grid-cols-2 gap-3 sm:gap-4 max-w-2xl mx-auto">
                 <Card className="cursor-pointer border-0 bg-gradient-to-br from-card/90 to-card shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all group touch-manipulation active:scale-[0.98]" onClick={() => navigate("/insurance")}>
                   <CardContent className="flex items-center gap-3 sm:gap-4 p-4 sm:p-6">
-                    <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-cyan-500/20 to-teal-500/10 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
-                      <FileText className="h-5 w-5 sm:h-7 sm:w-7 text-cyan-500" />
+                    <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0 bg-secondary">
+                      <FileText className="h-5 w-5 sm:h-7 sm:w-7 text-foreground" />
                     </div>
                     <div className="flex-1 text-left min-w-0">
                       <h4 className="font-bold text-sm sm:text-lg">Full Policy Details</h4>
                       <p className="text-xs sm:text-sm text-muted-foreground">Read complete terms</p>
                     </div>
-                    <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground group-hover:text-cyan-500 transition-colors flex-shrink-0" />
+                    <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
                   </CardContent>
                 </Card>
                 <Card className="cursor-pointer border-0 bg-gradient-to-br from-card/90 to-card shadow-xl hover:shadow-2xl hover:-translate-y-1 transition-all group touch-manipulation active:scale-[0.98]" onClick={() => navigate("/help#insurance")}>
                   <CardContent className="flex items-center gap-3 sm:gap-4 p-4 sm:p-6">
-                    <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl bg-gradient-to-br from-cyan-500/20 to-teal-500/10 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0">
-                      <Heart className="h-5 w-5 sm:h-7 sm:w-7 text-cyan-500" />
+                    <div className="w-11 h-11 sm:w-14 sm:h-14 rounded-xl sm:rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0 bg-secondary">
+                      <Heart className="h-5 w-5 sm:h-7 sm:w-7 text-foreground" />
                     </div>
                     <div className="flex-1 text-left min-w-0">
                       <h4 className="font-bold text-sm sm:text-lg">Claims & Support</h4>
                       <p className="text-xs sm:text-sm text-muted-foreground">How to file a claim</p>
                     </div>
-                    <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground group-hover:text-cyan-500 transition-colors flex-shrink-0" />
+                    <ChevronRight className="h-4 w-4 sm:h-5 sm:w-5 text-muted-foreground group-hover:text-foreground transition-colors flex-shrink-0" />
                   </CardContent>
                 </Card>
               </div>
@@ -388,7 +388,7 @@ const TravelInsurance = () => {
         <section className="py-10 sm:py-16 lg:py-24">
           <div className="container mx-auto px-4 max-w-4xl">
             <h2 className="font-display text-2xl sm:text-3xl font-bold text-center mb-8">
-              How <span className="bg-gradient-to-r from-cyan-500 to-teal-500 bg-clip-text text-transparent">Claims</span> Work
+              How <span className="text-accent-foreground">Claims</span> Work
             </h2>
             <div className="grid sm:grid-cols-4 gap-4">
               {[
@@ -397,9 +397,9 @@ const TravelInsurance = () => {
                 { step: 3, title: "Review", desc: "Our team reviews within 24 hours and may request info", emoji: "🔍" },
                 { step: 4, title: "Get Paid", desc: "Approved claims paid within 48 hours to your account", emoji: "💰" },
               ].map(s => (
-                <div key={s.step} className="text-center p-5 rounded-2xl border border-border/50 hover:border-cyan-500/20 transition-all bg-card/80">
+                <div key={s.step} className="text-center p-5 rounded-2xl border border-border/50 hover:border-border transition-all bg-card/80">
                   <span className="text-3xl">{s.emoji}</span>
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-cyan-500 to-teal-500 text-primary-foreground font-bold text-sm flex items-center justify-center mx-auto my-3">{s.step}</div>
+                  <div className="w-8 h-8 rounded-full text-primary-foreground font-bold text-sm flex items-center justify-center mx-auto my-3 bg-foreground">{s.step}</div>
                   <p className="font-bold text-sm">{s.title}</p>
                   <p className="text-xs text-muted-foreground mt-1">{s.desc}</p>
                 </div>
@@ -447,7 +447,7 @@ const TravelInsurance = () => {
                 { q: "How do I file a claim?", a: "Log in to your ZIVO account, go to My Trips, select the trip, and click 'File Insurance Claim'. Upload supporting documents." },
                 { q: "Is adventure sports covered?", a: "Yes, with our Premium plan. This includes skiing, scuba diving, hiking, and more. Extreme sports may have limits." },
               ].map(f => (
-                <Card key={f.q} className="border-border/50 hover:border-cyan-500/20 transition-all">
+                <Card key={f.q} className="border-border/50 hover:border-border transition-all">
                   <CardContent className="p-4">
                     <p className="text-sm font-bold text-foreground">{f.q}</p>
                     <p className="text-xs text-muted-foreground mt-1">{f.a}</p>

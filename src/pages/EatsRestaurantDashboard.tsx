@@ -80,7 +80,13 @@ export default function EatsRestaurantDashboard() {
     return () => clearInterval(interval);
   }, [restaurant]);
 
-  // Realtime subscription for new orders
+  // Realtime subscription for new PAID orders.
+  //
+  // Previously we toasted on INSERT and re-loaded on every event. That meant
+  // restaurants saw orders the customer hadn't actually paid for yet — and
+  // started preparing food on speculation. Now we only celebrate when the
+  // customer's payment has actually confirmed (paid or cash_on_delivery), and
+  // we listen for the UPDATE that flips payment_status, not the initial INSERT.
   useEffect(() => {
     if (!restaurant) return;
     const channel = supabase
@@ -92,10 +98,18 @@ export default function EatsRestaurantDashboard() {
         filter: `restaurant_id=eq.${restaurant.id}`,
       }, (payload) => {
         loadOrders(restaurant.id);
-        // Notify on new orders
-        if (payload.eventType === "INSERT" && (payload.new as any)?.status === "pending") {
-          toast.info("🔔 New order received!", { description: `Order #${(payload.new as any)?.tracking_code || ""}` });
-          // Play notification sound if available
+
+        const before = payload.old as any | null;
+        const after = payload.new as any | null;
+        const becamePaid = after?.payment_status === "paid"
+          && before?.payment_status !== "paid";
+        const isCashOnDelivery = payload.eventType === "INSERT"
+          && after?.payment_status === "cash_on_delivery";
+
+        if (becamePaid || isCashOnDelivery) {
+          toast.info("🔔 New paid order!", {
+            description: `Order #${after?.tracking_code || ""} · $${Number(after?.total_amount || 0).toFixed(2)}`,
+          });
           try { new Audio("/notification.mp3").play().catch(() => {}); } catch {}
         }
       })
@@ -132,10 +146,14 @@ export default function EatsRestaurantDashboard() {
 
   async function loadOrders(restaurantId: string) {
     setRefreshing(true);
+    // Only show orders the customer has actually paid for (or chose cash on
+    // delivery). Pending-payment + processing rows hide so the restaurant
+    // doesn't start preparing food on speculation.
     const { data } = await supabase
       .from("food_orders")
       .select("*")
       .eq("restaurant_id", restaurantId)
+      .in("payment_status", ["paid", "cash_on_delivery"])
       .order("created_at", { ascending: false })
       .limit(100);
     setOrders((data as any[] || []).map(d => ({ ...d, items: d.items || [] })));
@@ -149,6 +167,34 @@ export default function EatsRestaurantDashboard() {
 
   // ─── Order Actions ─────────────────────────────────────────
   async function updateOrderStatus(orderId: string, newStatus: string) {
+    // Cancellation is special: it has to refund the customer, reverse the
+    // auto-transfer, and release the assigned driver. Route it through the
+    // edge function instead of a bare DB update.
+    if (newStatus === "cancelled") {
+      const reason = window.prompt("Reason for cancelling? (shown to customer)") ?? undefined;
+      const { data, error } = await supabase.functions.invoke("restaurant-cancel-order", {
+        body: { order_id: orderId, reason },
+      });
+      if (error) {
+        toast.error(error.message || "Could not cancel order");
+        return;
+      }
+      if ((data as any)?.error) {
+        toast.error((data as any).error);
+        return;
+      }
+      const refundCents = (data as any)?.refund_cents || 0;
+      if (refundCents > 0) {
+        toast.success("Order cancelled", {
+          description: `$${(refundCents / 100).toFixed(2)} refunded to the customer.`,
+        });
+      } else {
+        toast.success("Order cancelled");
+      }
+      if (restaurant) loadOrders(restaurant.id);
+      return;
+    }
+
     const { error } = await supabase
       .from("food_orders")
       .update({ status: newStatus } as any)

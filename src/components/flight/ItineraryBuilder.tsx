@@ -171,8 +171,8 @@ export const ItineraryBuilder = ({
       <CardHeader className="pb-4 border-b border-border/50">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500/20 to-rose-500/10 border border-pink-500/40 flex items-center justify-center">
-              <Map className="w-5 h-5 text-pink-500" />
+            <div className="w-10 h-10 rounded-xl border border-border flex items-center justify-center bg-secondary">
+              <Map className="w-5 h-5 text-foreground" />
             </div>
             <div>
               <CardTitle className="text-lg">{tripName}</CardTitle>
@@ -390,10 +390,10 @@ export const ItineraryBuilder = ({
         </Button>
 
         {/* Tips */}
-        <div className="flex items-start gap-3 p-4 rounded-xl bg-pink-500/10 border border-pink-500/30">
-          <Sparkles className="w-5 h-5 text-pink-400 mt-0.5" />
+        <div className="flex items-start gap-3 p-4 rounded-xl bg-secondary border border-border">
+          <Sparkles className="w-5 h-5 text-foreground mt-0.5" />
           <div className="text-sm">
-            <p className="font-medium text-pink-400 mb-1">Building Tips</p>
+            <p className="font-medium text-foreground mb-1">Building Tips</p>
             <ul className="text-muted-foreground space-y-1">
               <li>• Drag items to reorder your schedule</li>
               <li>• Check off confirmed reservations</li>

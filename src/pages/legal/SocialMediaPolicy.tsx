@@ -93,7 +93,7 @@ export default function SocialMediaPolicy() {
 
       <div className="p-4 max-w-2xl mx-auto space-y-6 pb-20">
         <div>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-500/10 text-violet-600 text-xs font-semibold mb-3">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary text-foreground text-xs font-semibold mb-3">
             <Share2 className="h-3 w-3" /> Community Guidelines
           </span>
           <h2 className="text-2xl font-bold text-foreground">Social Media Policy</h2>

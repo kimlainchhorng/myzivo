@@ -47,9 +47,9 @@ const FlightBaggageGuide = () => {
     <section className="py-12 md:py-16">
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-sky-500/10 border border-sky-500/20 mb-4">
-            <Luggage className="w-4 h-4 text-sky-400" />
-            <span className="text-sm font-medium text-sky-400">Baggage Guide</span>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary border border-border mb-4">
+            <Luggage className="w-4 h-4 text-foreground" />
+            <span className="text-sm font-medium text-foreground">Baggage Guide</span>
           </div>
           <h2 className="font-display text-2xl md:text-3xl font-bold mb-2">
             Baggage Allowances

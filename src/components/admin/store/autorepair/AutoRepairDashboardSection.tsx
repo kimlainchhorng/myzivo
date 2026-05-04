@@ -182,7 +182,7 @@ export default function AutoRepairDashboardSection({ storeId }: Props) {
         <Card>
           <CardHeader className="pb-3">
             <CardTitle className="text-sm flex items-center gap-2">
-              <CalendarClock className="w-4 h-4 text-violet-500" />
+              <CalendarClock className="w-4 h-4 text-foreground" />
               Today's Appointments
               <Badge variant="secondary" className="text-[10px] ml-auto">{bookings.length}</Badge>
             </CardTitle>

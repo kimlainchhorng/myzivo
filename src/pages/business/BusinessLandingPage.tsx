@@ -176,8 +176,8 @@ export default function BusinessLandingPage() {
                       <Card className="border-primary/20 shadow-lg">
                         <CardContent className="p-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-sky-500/10 flex items-center justify-center">
-                              <Plane className="w-5 h-5 text-sky-500" />
+                            <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
+                              <Plane className="w-5 h-5 text-foreground" />
                             </div>
                             <div>
                               <p className="font-semibold">Flight Booking</p>
@@ -201,11 +201,11 @@ export default function BusinessLandingPage() {
                       </Card>
                     </div>
                     <div className="space-y-4 mt-8">
-                      <Card className="border-purple-500/20 shadow-lg">
+                      <Card className="border-border shadow-lg">
                         <CardContent className="p-4">
                           <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-lg bg-purple-500/10 flex items-center justify-center">
-                              <Car className="w-5 h-5 text-purple-500" />
+                            <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
+                              <Car className="w-5 h-5 text-foreground" />
                             </div>
                             <div>
                               <p className="font-semibold">Car Rentals</p>
@@ -318,8 +318,8 @@ export default function BusinessLandingPage() {
                   </div>
                   
                   <div className="flex items-start gap-4 p-4 rounded-xl bg-muted/50">
-                    <div className="w-10 h-10 rounded-lg bg-sky-500/10 flex items-center justify-center shrink-0">
-                      <FileText className="w-5 h-5 text-sky-500" />
+                    <div className="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center shrink-0">
+                      <FileText className="w-5 h-5 text-foreground" />
                     </div>
                     <div>
                       <h4 className="font-semibold mb-1">Admin Views Trips and Invoices</h4>

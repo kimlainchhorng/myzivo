@@ -29,7 +29,7 @@ export default function CommunicationConsent() {
       </div>
       <div className="p-4 max-w-2xl mx-auto space-y-5 pb-20">
         <div>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-sky-500/10 text-sky-600 text-xs font-semibold mb-3">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary text-foreground text-xs font-semibold mb-3">
             <Bell className="h-3 w-3" /> TCPA & CAN-SPAM Compliant
           </span>
           <h2 className="text-2xl font-bold">Communication Consent</h2>

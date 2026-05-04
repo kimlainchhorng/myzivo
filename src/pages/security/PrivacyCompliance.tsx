@@ -101,7 +101,7 @@ export default function PrivacyCompliance() {
               <Shield className="w-4 h-4 mr-2" />
               CCPA Ready
             </Badge>
-            <Badge className="px-4 py-2 text-sm bg-purple-500/10 text-purple-600 border-purple-500/30">
+            <Badge className="px-4 py-2 text-sm bg-secondary text-foreground border-border">
               <Lock className="w-4 h-4 mr-2" />
               Privacy by Design
             </Badge>

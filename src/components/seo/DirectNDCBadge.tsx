@@ -28,8 +28,8 @@
            className
          )}
        >
-         <Zap className="w-3.5 h-3.5 text-sky-500" />
-         <span className="text-sky-600 dark:text-sky-400">Direct NDC Pricing</span>
+         <Zap className="w-3.5 h-3.5 text-foreground" />
+         <span className="text-foreground dark:text-foreground">Direct NDC Pricing</span>
        </motion.div>
      );
    }
@@ -50,7 +50,7 @@
        >
          {/* Animated glow */}
          <motion.div
-           className="absolute inset-0 bg-gradient-to-r from-sky-500/10 via-transparent to-blue-500/10"
+           className="absolute inset-0 via-transparent bg-secondary"
            animate={{
              x: ["-100%", "100%"],
            }}
@@ -63,7 +63,7 @@
          />
  
          <div className="relative z-10 flex items-start gap-4">
-           <div className="shrink-0 w-12 h-12 rounded-xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center shadow-lg shadow-sky-500/20">
+           <div className="shrink-0 w-12 h-12 rounded-xl flex items-center justify-center shadow-lg bg-secondary">
              <Zap className="w-6 h-6 text-primary-foreground" />
            </div>
            <div className="flex-1">
@@ -105,11 +105,11 @@
          className
        )}
      >
-       <div className="shrink-0 w-10 h-10 rounded-xl bg-sky-500/20 flex items-center justify-center">
-         <Zap className="w-5 h-5 text-sky-500" />
+       <div className="shrink-0 w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
+         <Zap className="w-5 h-5 text-foreground" />
        </div>
        <div>
-         <p className="font-semibold text-sm text-sky-600 dark:text-sky-400">
+         <p className="font-semibold text-sm text-foreground dark:text-foreground">
            Direct NDC Pricing
          </p>
          <p className="text-xs text-muted-foreground">

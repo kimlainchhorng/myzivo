@@ -206,7 +206,7 @@ export default function StorePerformanceSection({ storeId }: Props) {
           {reviews.filter(r => r.feedback).map(r => (
             <div key={r.id} className="rounded-xl border border-border/40 bg-card p-4">
               <div className="flex items-center gap-3 mb-2">
-                <div className="w-8 h-8 rounded-full bg-purple-500/10 flex items-center justify-center text-xs font-bold text-purple-600">
+                <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center text-xs font-bold text-foreground">
                   {r.employeeName[0].toUpperCase()}
                 </div>
                 <div>

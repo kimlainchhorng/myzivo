@@ -198,9 +198,9 @@ export const TravelAlerts = ({
             {/* Weather Quick View */}
             {weatherAlert && (
               <div className="flex items-center gap-2 text-sm">
-                <Thermometer className="w-4 h-4 text-sky-400" />
+                <Thermometer className="w-4 h-4 text-foreground" />
                 <span>5-12°C</span>
-                <CloudRain className="w-4 h-4 text-sky-400" />
+                <CloudRain className="w-4 h-4 text-foreground" />
                 <span>Rain expected</span>
               </div>
             )}

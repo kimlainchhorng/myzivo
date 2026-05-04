@@ -199,14 +199,14 @@ export default function StoreMiniMap({ latitude, longitude, storeName, slug, use
 
       {/* Loading shimmer */}
       {!showFallback && !ready && (
-        <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-primary/15 via-emerald-500/10 to-sky-500/10" />
+        <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-primary/15 via-emerald-500/10" />
       )}
 
       {/* Fallback */}
       {showFallback && (
         <>
           <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/25 via-emerald-500/15 to-sky-500/15" />
+            <div className="absolute inset-0 bg-gradient-to-br from-primary/25 via-emerald-500/15" />
             <div
               className="absolute inset-0 opacity-40"
               style={{

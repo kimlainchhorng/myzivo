@@ -248,7 +248,7 @@ export default function PublicTripSharePage() {
               value={trip.pickup_address ?? "—"}
             />
             <Row
-              icon={<MapPin className="w-4 h-4 text-rose-500" />}
+              icon={<MapPin className="w-4 h-4 text-foreground" />}
               label="Drop-off"
               value={trip.dropoff_address ?? "—"}
             />

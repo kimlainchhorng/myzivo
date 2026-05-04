@@ -168,8 +168,8 @@ const PrivacyPolicy = () => {
                   <p className="font-medium text-primary">Car Rental</p>
                   <p className="text-sm">License details, rental history, damage reports</p>
                 </div>
-                <div className="p-3 bg-sky-500/10 rounded-lg">
-                  <p className="font-medium text-sky-500">Flights & Hotels</p>
+                <div className="p-3 bg-secondary rounded-lg">
+                  <p className="font-medium text-foreground">Flights & Hotels</p>
                   <p className="text-sm">Passport details, travel history, loyalty programs</p>
                 </div>
               </div>

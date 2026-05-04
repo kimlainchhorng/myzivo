@@ -81,7 +81,7 @@ export default function CarCategoryTiles({
 
                   {/* Popular badge */}
                   {pricing.popular && (
-                    <Badge className="absolute top-2 left-2 text-[10px] font-semibold border-0 shadow-lg bg-violet-500 text-primary-foreground">
+                    <Badge className="absolute top-2 left-2 text-[10px] font-semibold border-0 shadow-lg bg-foreground text-primary-foreground">
                       Popular
                     </Badge>
                   )}
@@ -109,7 +109,7 @@ export default function CarCategoryTiles({
                     </div>
                     <div className="text-right">
                       <span className="text-[10px] text-muted-foreground block">From</span>
-                      <span className="font-bold text-sm text-violet-500">
+                      <span className="font-bold text-sm text-foreground">
                         ${pricing.priceFrom}/day
                       </span>
                     </div>

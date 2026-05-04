@@ -126,7 +126,7 @@ export default function CarResultCardPro({
       <CardContent className="p-0">
         <div className="flex flex-col sm:flex-row">
           {/* Vehicle Image */}
-          <div className="sm:w-52 h-36 sm:h-auto relative shrink-0 bg-gradient-to-br from-violet-500/10 to-purple-500/10">
+          <div className="sm:w-52 h-36 sm:h-auto relative shrink-0 bg-secondary">
             {image ? (
               <img 
                 src={image} 
@@ -136,12 +136,12 @@ export default function CarResultCardPro({
               />
             ) : (
               <div className="w-full h-full flex items-center justify-center">
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-violet-500/20 to-purple-500/20 flex items-center justify-center">
-                  <FallbackIcon className="w-10 h-10 text-violet-400" />
+                <div className="w-20 h-20 rounded-2xl flex items-center justify-center bg-secondary">
+                  <FallbackIcon className="w-10 h-10 text-foreground" />
                 </div>
               </div>
             )}
-            <Badge className="absolute top-3 left-3 bg-violet-500/90 text-primary-foreground text-[10px]">
+            <Badge className="absolute top-3 left-3 bg-foreground text-primary-foreground text-[10px]">
               {category}
             </Badge>
           </div>
@@ -152,7 +152,7 @@ export default function CarResultCardPro({
               {/* Header */}
               <div className="flex items-start justify-between gap-3 mb-3">
                 <div>
-                  <h3 className="font-bold text-base sm:text-lg line-clamp-1 group-hover:text-violet-500 transition-all duration-200">
+                  <h3 className="font-bold text-base sm:text-lg line-clamp-1 group-hover:text-foreground transition-all duration-200">
                     {name || `${category} Car`}
                   </h3>
                   {provider && (
@@ -172,27 +172,27 @@ export default function CarResultCardPro({
               {/* Specs Grid */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
                 <div className="flex items-center gap-2 text-sm">
-                  <div className="w-8 h-8 rounded-xl bg-violet-500/10 flex items-center justify-center">
-                    <Users className="w-4 h-4 text-violet-500" />
+                  <div className="w-8 h-8 rounded-xl bg-secondary flex items-center justify-center">
+                    <Users className="w-4 h-4 text-foreground" />
                   </div>
                   <span className="text-xs">{passengers} seats</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
-                  <div className="w-8 h-8 rounded-xl bg-violet-500/10 flex items-center justify-center">
-                    <Briefcase className="w-4 h-4 text-violet-500" />
+                  <div className="w-8 h-8 rounded-xl bg-secondary flex items-center justify-center">
+                    <Briefcase className="w-4 h-4 text-foreground" />
                   </div>
                   <span className="text-xs">{bags} bags</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
-                  <div className="w-8 h-8 rounded-xl bg-violet-500/10 flex items-center justify-center">
-                    <Cog className="w-4 h-4 text-violet-500" />
+                  <div className="w-8 h-8 rounded-xl bg-secondary flex items-center justify-center">
+                    <Cog className="w-4 h-4 text-foreground" />
                   </div>
                   <span className="text-xs">{transmission}</span>
                 </div>
                 {hasAC && (
                   <div className="flex items-center gap-2 text-sm">
-                    <div className="w-8 h-8 rounded-xl bg-violet-500/10 flex items-center justify-center">
-                      <Snowflake className="w-4 h-4 text-violet-500" />
+                    <div className="w-8 h-8 rounded-xl bg-secondary flex items-center justify-center">
+                      <Snowflake className="w-4 h-4 text-foreground" />
                     </div>
                     <span className="text-xs">A/C</span>
                   </div>
@@ -216,7 +216,7 @@ export default function CarResultCardPro({
               {/* Footer: Price & CTA */}
               <div className="flex items-end justify-between pt-3 border-t border-border/50 mt-auto">
                 <div>
-                  <p className="text-[10px] text-violet-500 font-medium uppercase tracking-wide">Estimated</p>
+                  <p className="text-[10px] text-foreground font-medium uppercase tracking-wide">Estimated</p>
                   <div className="flex items-baseline gap-1">
                     <p className="text-xl sm:text-2xl font-bold">${pricePerDay}</p>
                     <span className="text-sm text-muted-foreground">* /day</span>

@@ -263,7 +263,7 @@ export default function DocumentScanner({ open, onClose, onComplete }: DocumentS
                     <button onClick={() => rotatePage(p.id)} className="h-7 w-7 rounded-full bg-background/80 backdrop-blur flex items-center justify-center">
                       <RotateCw className="h-3.5 w-3.5" />
                     </button>
-                    <button onClick={() => removePage(p.id)} className="h-7 w-7 rounded-full bg-background/80 backdrop-blur flex items-center justify-center text-rose-500">
+                    <button onClick={() => removePage(p.id)} className="h-7 w-7 rounded-full bg-background/80 backdrop-blur flex items-center justify-center text-foreground">
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>

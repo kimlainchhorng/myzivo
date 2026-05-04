@@ -19,6 +19,7 @@ import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import SEOHead from "@/components/SEOHead";
 import CreatorTipsLedger from "@/components/creator/CreatorTipsLedger";
+import { VerifyIdentityButton } from "@/components/creator/VerifyIdentityButton";
 
 export default function CreatorDashboardPage() {
   const navigate = useNavigate();
@@ -264,7 +265,7 @@ export default function CreatorDashboardPage() {
             animate={{ opacity: 1, y: 0 }}
             className="w-full text-left relative rounded-[20px] overflow-hidden touch-manipulation active:scale-[0.99] transition-transform"
           >
-            <div className="absolute inset-0 bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500" />
+            <div className="absolute inset-0 bg-gradient-to-br from-amber-400 via-orange-500" />
             <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full bg-white/15" />
             <div className="relative z-10 p-4 flex items-center gap-3 text-white">
               <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
@@ -358,6 +359,25 @@ export default function CreatorDashboardPage() {
           </div>
         </div>
 
+        {/* KYC banner — required for payouts. Show if creator profile exists
+            but isn't verified yet. */}
+        {user?.id && creator && !creator.is_verified && (
+          <div className="mb-4 rounded-2xl border border-amber-500/30 bg-gradient-to-r from-amber-500/10 to-orange-500/5 p-4 flex items-start gap-3">
+            <div className="h-9 w-9 rounded-xl bg-amber-500/15 flex items-center justify-center shrink-0">
+              <ShieldCheck className="h-4 w-4 text-amber-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-bold">Verify your identity to enable payouts</p>
+              <p className="text-[11px] text-muted-foreground mt-0.5">
+                Stripe Identity runs the check (ID + selfie). Takes ~2 minutes. Required by every payout rail.
+              </p>
+              <div className="mt-2.5">
+                <VerifyIdentityButton size="sm" className="bg-amber-600 hover:bg-amber-700 text-white" label="Start verification" />
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* Tips ledger — full per-tip breakdown with rail + status */}
         {user?.id && (
           <div className="mb-4">
@@ -428,8 +448,8 @@ export default function CreatorDashboardPage() {
                       <div className="flex items-center gap-1.5 flex-wrap">
                         <p className="font-bold text-sm truncate">{tier.name}</p>
                         {tier.is_free && <span className="text-[9px] font-bold uppercase px-1 py-0.5 rounded bg-emerald-500/20 text-emerald-600">Free</span>}
-                        {tier.is_custom_price && <span className="text-[9px] font-bold uppercase px-1 py-0.5 rounded bg-violet-500/20 text-violet-600">PWYW</span>}
-                        {tier.trial_days > 0 && <span className="text-[9px] font-bold uppercase px-1 py-0.5 rounded bg-sky-500/20 text-sky-600">{tier.trial_days}d trial</span>}
+                        {tier.is_custom_price && <span className="text-[9px] font-bold uppercase px-1 py-0.5 rounded bg-secondary text-foreground">PWYW</span>}
+                        {tier.trial_days > 0 && <span className="text-[9px] font-bold uppercase px-1 py-0.5 rounded bg-secondary text-foreground">{tier.trial_days}d trial</span>}
                       </div>
                       <p className="text-[10px] text-muted-foreground">{priceLabel}</p>
                     </div>

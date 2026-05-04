@@ -114,7 +114,7 @@ export default function PersonalSettingsPage() {
         {/* Language / Account links */}
         <div className="rounded-2xl bg-card border border-border/40 overflow-hidden">
           <div className="px-4 py-3 border-b border-border/30 flex items-center gap-2">
-            <Globe className="w-4 h-4 text-sky-500" />
+            <Globe className="w-4 h-4 text-foreground" />
             <span className="text-[12px] font-bold text-foreground">Account</span>
           </div>
           {[

@@ -45,38 +45,53 @@ export default function AcceptInvitePage() {
   }, [authLoading, user, token, navigate]);
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <Card className="w-full max-w-sm p-6 text-center space-y-4">
-        <div className="w-14 h-14 rounded-2xl bg-emerald-500/10 flex items-center justify-center mx-auto">
-          <Briefcase className="w-7 h-7 text-emerald-500" />
+    <div className="relative min-h-[100dvh] w-full overflow-hidden flex items-center justify-center px-5 py-8 bg-white dark:bg-black">
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-32 -right-32 w-[420px] h-[420px] rounded-full blur-3xl dark:dark:dark: bg-secondary" />
+        <div className="absolute -bottom-32 -left-32 w-[420px] h-[420px] rounded-full bg-gradient-to-tr from-amber-200/30 blur-3xl dark:from-amber-600/15 dark:dark:" />
+      </div>
+
+      <div className="relative w-full max-w-sm">
+        <div className="bg-white dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-white/10 rounded-xl px-7 py-9 shadow-sm text-center space-y-4">
+          <div className="w-14 h-14 mx-auto rounded-2xl bg-gradient-to-br from-amber-400 flex items-center justify-center shadow-lg">
+            <Briefcase className="w-7 h-7 text-white" />
+          </div>
+          {state === "idle" || state === "claiming" ? (
+            <>
+              <h1 className="text-lg font-bold text-zinc-900 dark:text-white">Setting up your account…</h1>
+              <Loader2 className="w-5 h-5 animate-spin mx-auto text-foreground" />
+            </>
+          ) : state === "ok" || state === "already" ? (
+            <>
+              <CheckCircle2 className="w-10 h-10 text-foreground mx-auto" />
+              <h1 className="text-lg font-bold text-zinc-900 dark:text-white">
+                {state === "already" ? "You're already on the team" : "Welcome to the team!"}
+              </h1>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                You can now clock in and view your schedule.
+              </p>
+              <button
+                onClick={() => navigate("/personal-dashboard")}
+                className="w-full h-9 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 hover:opacity-95 active:scale-[0.99] transition flex items-center justify-center shadow-md"
+              >
+                Open Personal Dashboard
+              </button>
+            </>
+          ) : (
+            <>
+              <AlertTriangle className="w-10 h-10 text-amber-500 mx-auto" />
+              <h1 className="text-lg font-bold text-zinc-900 dark:text-white">Invite issue</h1>
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">{errorMsg || "This invite is no longer valid."}</p>
+              <button
+                onClick={() => navigate("/")}
+                className="w-full h-9 rounded-lg text-sm font-semibold text-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/40 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 active:scale-[0.99] transition flex items-center justify-center"
+              >
+                Go home
+              </button>
+            </>
+          )}
         </div>
-        {state === "idle" || state === "claiming" ? (
-          <>
-            <h1 className="text-lg font-bold">Setting up your account…</h1>
-            <Loader2 className="w-5 h-5 animate-spin mx-auto text-muted-foreground" />
-          </>
-        ) : state === "ok" || state === "already" ? (
-          <>
-            <CheckCircle2 className="w-10 h-10 text-emerald-500 mx-auto" />
-            <h1 className="text-lg font-bold">
-              {state === "already" ? "You're already on the team" : "Welcome to the team!"}
-            </h1>
-            <p className="text-sm text-muted-foreground">
-              You can now clock in and view your schedule.
-            </p>
-            <Button className="w-full" onClick={() => navigate("/personal-dashboard")}>
-              Open Personal Dashboard
-            </Button>
-          </>
-        ) : (
-          <>
-            <AlertTriangle className="w-10 h-10 text-amber-500 mx-auto" />
-            <h1 className="text-lg font-bold">Invite issue</h1>
-            <p className="text-sm text-muted-foreground">{errorMsg || "This invite is no longer valid."}</p>
-            <Button variant="outline" className="w-full" onClick={() => navigate("/")}>Go home</Button>
-          </>
-        )}
-      </Card>
+      </div>
     </div>
   );
 }

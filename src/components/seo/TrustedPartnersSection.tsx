@@ -41,7 +41,7 @@ export default function TrustedPartnersSection() {
               key={partner.name}
               className="flex items-center gap-2 px-4 py-3 rounded-xl bg-card border border-border/50 hover:border-primary/30 transition-all duration-200 hover:shadow-md"
             >
-              <Plane className="w-4 h-4 text-sky-500" />
+              <Plane className="w-4 h-4 text-foreground" />
               <span className="font-medium text-sm">{partner.name}</span>
             </div>
           ))}
@@ -51,7 +51,7 @@ export default function TrustedPartnersSection() {
         <div className="mt-10 text-center">
           <div className="inline-flex flex-wrap justify-center gap-6 text-sm text-muted-foreground">
             <div className="flex items-center gap-2">
-              <Plane className="w-4 h-4 text-sky-500" />
+              <Plane className="w-4 h-4 text-foreground" />
               <span>500+ Airlines</span>
             </div>
             <div className="flex items-center gap-2">

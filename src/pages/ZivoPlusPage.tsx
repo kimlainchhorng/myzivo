@@ -443,7 +443,7 @@ export default function ZivoPlusPage() {
               <span className="text-[9px] font-bold text-muted-foreground uppercase">Feature</span>
               <span className="text-[9px] font-bold text-muted-foreground uppercase text-center">Basic</span>
               <span className="text-[9px] font-bold text-amber-600 uppercase text-center">Chat+</span>
-              <span className="text-[9px] font-bold text-purple-600 uppercase text-center">Pro</span>
+              <span className="text-[9px] font-bold text-foreground uppercase text-center">Pro</span>
             </div>
             {[
               { feat: "Service Fee", basic: "Free", chat: "Free", pro: "Free" },
@@ -459,7 +459,7 @@ export default function ZivoPlusPage() {
                 <span className="text-[10px] text-foreground/90 font-medium">{row.feat}</span>
                 <span className="text-[10px] text-muted-foreground text-center">{row.basic}</span>
                 <span className="text-[10px] text-amber-600 font-bold text-center">{row.chat}</span>
-                <span className="text-[10px] text-purple-600 font-bold text-center">{row.pro}</span>
+                <span className="text-[10px] text-foreground font-bold text-center">{row.pro}</span>
               </div>
             ))}
           </div>

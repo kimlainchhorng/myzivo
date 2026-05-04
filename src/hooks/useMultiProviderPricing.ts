@@ -49,8 +49,8 @@ const CAR_PARTNERS = [
 ];
 
 /**
- * Multi-provider pricing — returns empty until real partner APIs are integrated
- * TODO: Integrate TravelPayouts or other meta-search APIs
+ * Multi-provider pricing — returns empty until real partner APIs are integrated.
+ * Hook into a meta-search provider (TravelPayouts, Skyscanner, etc.) when ready.
  */
 export function useMultiProviderPricing(
   basePrice: number,

@@ -87,7 +87,7 @@ export default function ReferralsPage() {
         );
       case "qualified":
         return (
-          <span className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-sky-500/20 text-sky-500">
+          <span className="flex items-center gap-1 text-xs px-2 py-1 rounded-full bg-secondary text-foreground">
             <Check className="w-3 h-3" />
             First Booking
           </span>

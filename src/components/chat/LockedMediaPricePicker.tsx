@@ -52,7 +52,7 @@ export default function LockedMediaPricePicker({ open, onClose, onConfirm }: Pro
           {/* Header */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2.5">
-              <div className="w-10 h-10 rounded-2xl bg-rose-500 flex items-center justify-center">
+              <div className="w-10 h-10 rounded-2xl bg-foreground flex items-center justify-center">
                 <Lock className="w-5 h-5 text-white" />
               </div>
               <div>

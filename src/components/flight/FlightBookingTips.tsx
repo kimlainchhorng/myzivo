@@ -62,12 +62,12 @@ const tips = [
 
 const FlightBookingTips = () => {
   return (
-    <section className="py-12 md:py-16 bg-gradient-to-b from-transparent via-sky-500/5 to-transparent">
+    <section className="py-12 md:py-16 bg-gradient-to-b from-transparent to-transparent">
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-sky-500/10 border border-sky-500/20 mb-4">
-            <Lightbulb className="w-4 h-4 text-sky-400" />
-            <span className="text-sm font-medium text-sky-400">Pro Tips</span>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary border border-border mb-4">
+            <Lightbulb className="w-4 h-4 text-foreground" />
+            <span className="text-sm font-medium text-foreground">Pro Tips</span>
           </div>
           <h2 className="font-display text-2xl md:text-3xl font-bold mb-2">
             Flight Booking Secrets
@@ -91,7 +91,7 @@ const FlightBookingTips = () => {
                 <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center mb-3", tip.bg)}>
                   <Icon className={cn("w-5 h-5", tip.color)} />
                 </div>
-                <h3 className="font-bold text-sm mb-1 group-hover:text-sky-400 transition-colors">
+                <h3 className="font-bold text-sm mb-1 group-hover:text-foreground transition-colors">
                   {tip.title}
                 </h3>
                 <p className="text-xs text-muted-foreground leading-relaxed">

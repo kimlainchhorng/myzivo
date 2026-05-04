@@ -28,9 +28,9 @@ const FlightDestinationInspiration = () => {
     <section className="py-12 md:py-16">
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-sky-500/10 border border-sky-500/20 mb-4">
-            <Sparkles className="w-4 h-4 text-sky-400" />
-            <span className="text-sm font-medium text-sky-400">Inspiration</span>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary border border-border mb-4">
+            <Sparkles className="w-4 h-4 text-foreground" />
+            <span className="text-sm font-medium text-foreground">Inspiration</span>
           </div>
           <h2 className="font-display text-2xl md:text-3xl font-bold mb-2">
             Where to Next?
@@ -63,15 +63,15 @@ const FlightDestinationInspiration = () => {
               )}
 
               <div className="flex items-start gap-4">
-                <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-sky-500/20 to-blue-500/10 flex items-center justify-center">
-                  {(() => { const Icon = destinationIcons[dest.city] || MapPin; return <Icon className="w-7 h-7 text-sky-400" />; })()}
+                <div className="w-16 h-16 rounded-xl flex items-center justify-center bg-secondary">
+                  {(() => { const Icon = destinationIcons[dest.city] || MapPin; return <Icon className="w-7 h-7 text-foreground" />; })()}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-bold text-lg group-hover:text-sky-400 transition-colors">
+                  <h3 className="font-bold text-lg group-hover:text-foreground transition-colors">
                     {dest.city}
                   </h3>
                   <p className="text-sm text-muted-foreground">{dest.country}</p>
-                  <p className="text-xs text-sky-400 mt-1">{dest.highlight}</p>
+                  <p className="text-xs text-foreground mt-1">{dest.highlight}</p>
                 </div>
               </div>
 
@@ -79,7 +79,7 @@ const FlightDestinationInspiration = () => {
                 <div>
                   <p className="text-xs text-muted-foreground">From</p>
                   <div className="flex items-center gap-1">
-                    <p className="text-xl font-bold text-sky-400">${dest.fromPrice}*</p>
+                    <p className="text-xl font-bold text-foreground">${dest.fromPrice}*</p>
                     <ArrowRight className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                 </div>

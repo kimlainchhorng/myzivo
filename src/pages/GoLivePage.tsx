@@ -108,8 +108,8 @@ const TOPICS = [
 
 type StreamType = "video" | "audio" | "pk" | "multi";
 const STREAM_TYPES: { id: StreamType; label: string; desc: string; emoji: string; gradient: string }[] = [
- { id: "video", label: "Video Live", desc: "Standard camera stream", emoji: "", gradient: "from-rose-500 to-red-500" },
- { id: "audio", label: "Voice Room", desc: "Audio only · multi-host", emoji: "", gradient: "from-violet-500 to-purple-500" },
+ { id: "video", label: "Video Live", desc: "Standard camera stream", emoji: "", gradient: "from-muted to-muted" },
+ { id: "audio", label: "Voice Room", desc: "Audio only · multi-host", emoji: "", gradient: "from-muted to-muted" },
  { id: "pk", label: "PK Battle", desc: "Compete head-to-head", emoji: "", gradient: "from-amber-500 to-orange-500" },
  { id: "multi", label: "Multi-Guest", desc: "Up to 9 guests", emoji: "", gradient: "from-emerald-500 to-teal-500" },
 ];
@@ -1025,14 +1025,14 @@ export default function GoLivePage() {
 </div>
 <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 snap-x snap-mandatory">
  {[
- { tip: "Start with a strong title to grab viewers", icon: "", gradient: "from-rose-500/30 via-orange-500/20 to-amber-500/10" },
- { tip: "Greet new viewers within 10 seconds", icon: "", gradient: "from-blue-500/30 via-cyan-500/20 to-teal-500/10" },
+ { tip: "Start with a strong title to grab viewers", icon: "", gradient: "from-muted to-muted" },
+ { tip: "Greet new viewers within 10 seconds", icon: "", gradient: "from-muted to-muted" },
  { tip: "Use good lighting — face a window", icon: "", gradient: "from-amber-500/30 via-yellow-500/20 to-orange-500/10" },
  { tip: "Respond to comments to boost engagement", icon: "", gradient: "from-emerald-500/30 via-green-500/20 to-teal-500/10" },
- { tip: "Stream for at least 30 mins for algo boost", icon: "⏱", gradient: "from-violet-500/30 via-purple-500/20 to-fuchsia-500/10" },
- { tip: "Set a coin goal to motivate gifts", icon: "", gradient: "from-amber-500/30 via-orange-500/20 to-rose-500/10" },
- { tip: "Add hashtags for discovery", icon: "#", gradient: "from-cyan-500/30 via-blue-500/20 to-indigo-500/10" },
- { tip: "Schedule streams to build a routine", icon: "", gradient: "from-pink-500/30 via-rose-500/20 to-red-500/10" },
+ { tip: "Stream for at least 30 mins for algo boost", icon: "⏱", gradient: "from-muted to-muted" },
+ { tip: "Set a coin goal to motivate gifts", icon: "", gradient: "from-muted to-muted" },
+ { tip: "Add hashtags for discovery", icon: "#", gradient: "from-muted to-muted" },
+ { tip: "Schedule streams to build a routine", icon: "", gradient: "from-muted to-muted" },
  ].map((p, i) =>(
 <div
  key={i}
@@ -1261,14 +1261,14 @@ export default function GoLivePage() {
 <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
  {[
  { id: null, label: "None", emoji: "", gradient: "from-zinc-700 to-zinc-800" },
- { id: "beauty", label: "Beauty", emoji: "", gradient: "from-pink-400 to-rose-300" },
- { id: "anime", label: "Anime", emoji: "", gradient: "from-purple-400 to-fuchsia-300" },
- { id: "cat", label: "Cat", emoji: "", gradient: "from-orange-300 to-pink-300" },
- { id: "bunny", label: "Bunny", emoji: "", gradient: "from-pink-300 to-rose-200" },
+ { id: "beauty", label: "Beauty", emoji: "", gradient: "from-muted to-muted" },
+ { id: "anime", label: "Anime", emoji: "", gradient: "from-muted to-muted" },
+ { id: "cat", label: "Cat", emoji: "", gradient: "from-muted to-muted" },
+ { id: "bunny", label: "Bunny", emoji: "", gradient: "from-muted to-muted" },
  { id: "crown", label: "Crown", emoji: "", gradient: "from-amber-300 to-yellow-200" },
- { id: "galaxy", label: "Galaxy", emoji: "", gradient: "from-violet-500 to-indigo-500" },
+ { id: "galaxy", label: "Galaxy", emoji: "", gradient: "from-muted to-muted" },
  { id: "vintage", label: "Vintage", emoji: "", gradient: "from-amber-200 to-orange-200" },
- { id: "neon", label: "Neon", emoji: "", gradient: "from-cyan-400 to-purple-400" },
+ { id: "neon", label: "Neon", emoji: "", gradient: "from-muted to-muted" },
  ].map((e) =>{
  const active = arEffect === e.id;
  return (
@@ -1432,14 +1432,14 @@ export default function GoLivePage() {
 <span className="text-white/80 text-xs font-semibold mb-1.5 block px-1">Stream vibe</span>
 <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1">
  {[
- { id: "chill", label: "Chill", emoji: "", gradient: "from-blue-500/40 to-cyan-500/30" },
+ { id: "chill", label: "Chill", emoji: "", gradient: "from-muted to-muted" },
  { id: "hype", label: "Hype", emoji: "", gradient: "from-red-500/40 to-orange-500/30" },
  { id: "cozy", label: "Cozy", emoji: "", gradient: "from-amber-500/40 to-yellow-500/30" },
- { id: "spicy", label: "Spicy", emoji: "", gradient: "from-rose-500/40 to-red-500/30" },
- { id: "wholesome", label: "Wholesome", emoji: "", gradient: "from-pink-500/40 to-fuchsia-500/30" },
+ { id: "spicy", label: "Spicy", emoji: "", gradient: "from-muted to-muted" },
+ { id: "wholesome", label: "Wholesome", emoji: "", gradient: "from-muted to-muted" },
  { id: "savage", label: "Savage", emoji: "", gradient: "from-zinc-500/40 to-slate-500/30" },
- { id: "romantic", label: "Romantic", emoji: "", gradient: "from-rose-500/40 to-pink-500/30" },
- { id: "mysterious", label: "Mysterious", emoji: "", gradient: "from-violet-500/40 to-purple-500/30" },
+ { id: "romantic", label: "Romantic", emoji: "", gradient: "from-muted to-muted" },
+ { id: "mysterious", label: "Mysterious", emoji: "", gradient: "from-muted to-muted" },
  { id: "energetic", label: "Energetic", emoji: "", gradient: "from-yellow-500/40 to-amber-500/30" },
  ].map((m) =>(
 <button
@@ -1551,7 +1551,7 @@ export default function GoLivePage() {
 <div>
 <div className="flex items-center justify-between mb-1.5 px-1">
 <span className="text-white/80 text-xs font-semibold">Background music</span>
- {bgm &&<span className="text-[10px] text-purple-300 font-bold">{bgm}</span>}
+ {bgm &&<span className="text-[10px] text-foreground font-bold">{bgm}</span>}
 </div>
 <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
  {[
@@ -1582,7 +1582,7 @@ export default function GoLivePage() {
 <div className="mt-2">
 <div className="flex items-center justify-between mb-1 px-1">
 <span className="text-[10px] text-white/60">BGM volume</span>
-<span className="text-[10px] text-purple-300 font-mono">{bgmVolume}%</span>
+<span className="text-[10px] text-foreground font-mono">{bgmVolume}%</span>
 </div>
 <input
  type="range"
@@ -2169,7 +2169,7 @@ export default function GoLivePage() {
 <div className="rounded-2xl border border-white/15 bg-white/5 p-3 mt-2">
 <p className="text-[10px] font-bold text-white/60 uppercase tracking-wider mb-2">Stream summary</p>
 <div className="flex flex-wrap gap-1.5">
-<Badge className="bg-rose-500/20 text-rose-300 border-rose-500/30 text-[10px] gap-1">
+<Badge className="bg-secondary text-foreground border-border text-[10px] gap-1">
  {STREAM_TYPES.find((t) =>t.id === streamType)?.emoji} {STREAM_TYPES.find((t) =>t.id === streamType)?.label}
 </Badge>
 <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 text-[10px] gap-1">
@@ -2178,7 +2178,7 @@ export default function GoLivePage() {
 <Badge className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-[10px]">
  {PRIVACY_OPTIONS.find((p) =>p.id === privacy)?.emoji} {PRIVACY_OPTIONS.find((p) =>p.id === privacy)?.label}
 </Badge>
-<Badge className="bg-violet-500/20 text-violet-300 border-violet-500/30 text-[10px]">
+<Badge className="bg-secondary text-foreground border-border text-[10px]">
  {quality}
 </Badge>
  {coinGoal >0 && (
@@ -2187,17 +2187,17 @@ export default function GoLivePage() {
 </Badge>
  )}
  {scheduleAt && (
-<Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 text-[10px]">
+<Badge className="bg-secondary text-foreground border-border text-[10px]">
  ⏰ Scheduled
 </Badge>
  )}
  {arEffect && (
-<Badge className="bg-pink-500/20 text-pink-300 border-pink-500/30 text-[10px]">
+<Badge className="bg-secondary text-foreground border-border text-[10px]">
  {arEffect}
 </Badge>
  )}
  {coHosts.length >0 && (
-<Badge className="bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/30 text-[10px]">
+<Badge className="bg-secondary text-foreground border-border text-[10px]">
  {coHosts.length} co-host{coHosts.length >1 ? "s" : ""}
 </Badge>
  )}
@@ -2217,7 +2217,7 @@ export default function GoLivePage() {
 </Badge>
  )}
  {donationCause && (
-<Badge className="bg-pink-500/20 text-pink-300 border-pink-500/30 text-[10px]">
+<Badge className="bg-secondary text-foreground border-border text-[10px]">
  {donationCause}{donationGoal >0 ? ` · $${donationGoal.toLocaleString()}` : ""}
 </Badge>
  )}
@@ -2232,12 +2232,12 @@ export default function GoLivePage() {
 </Badge>
  )}
  {bgm && (
-<Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 text-[10px]">
+<Badge className="bg-secondary text-foreground border-border text-[10px]">
  {bgm}
 </Badge>
  )}
  {cameraFilter !== "none" && (
-<Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 text-[10px]">
+<Badge className="bg-secondary text-foreground border-border text-[10px]">
  {cameraFilter}
 </Badge>
  )}
@@ -2262,7 +2262,7 @@ export default function GoLivePage() {
 </Badge>
  )}
  {autoEnd >0 && (
-<Badge className="bg-rose-500/20 text-rose-300 border-rose-500/30 text-[10px]">
+<Badge className="bg-secondary text-foreground border-border text-[10px]">
  ⏰ Auto-end {autoEnd >= 60 ? `${autoEnd / 60}h` : `${autoEnd}m`}
 </Badge>
  )}
@@ -2272,7 +2272,7 @@ export default function GoLivePage() {
 </Badge>
  )}
  {qaQueue && (
-<Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 text-[10px]">
+<Badge className="bg-secondary text-foreground border-border text-[10px]">
  Q&A on
 </Badge>
  )}
@@ -2282,17 +2282,17 @@ export default function GoLivePage() {
 </Badge>
  )}
  {multistream.length >0 && (
-<Badge className="bg-cyan-500/20 text-cyan-300 border-cyan-500/30 text-[10px]">
+<Badge className="bg-secondary text-foreground border-border text-[10px]">
  Restream {multistream.length}
 </Badge>
  )}
  {streamTemplate && (
-<Badge className="bg-fuchsia-500/20 text-fuchsia-300 border-fuchsia-500/30 text-[10px]">
+<Badge className="bg-secondary text-foreground border-border text-[10px]">
  Template
 </Badge>
  )}
  {voiceEffect !== "none" && (
-<Badge className="bg-indigo-500/20 text-indigo-300 border-indigo-500/30 text-[10px]">
+<Badge className="bg-secondary text-foreground border-border text-[10px]">
  {voiceEffect}
 </Badge>
  )}

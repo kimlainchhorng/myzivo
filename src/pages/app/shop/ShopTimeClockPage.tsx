@@ -181,7 +181,7 @@ export default function ShopTimeClockPage() {
               {todayEntries.map((e) => (
                 <Card key={e.id} className="p-3 flex items-center gap-3">
                   <div className={cn("w-9 h-9 rounded-full flex items-center justify-center shrink-0", e.type === "in" ? "bg-emerald-500/15" : "bg-rose-500/15")}>
-                    {e.type === "in" ? <LogIn className="w-4 h-4 text-emerald-600" /> : <LogOut className="w-4 h-4 text-rose-500" />}
+                    {e.type === "in" ? <LogIn className="w-4 h-4 text-emerald-600" /> : <LogOut className="w-4 h-4 text-foreground" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="font-semibold text-[13px]">{e.employeeName}</p>

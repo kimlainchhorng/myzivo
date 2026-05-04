@@ -40,7 +40,7 @@ export default function HowBookingWorks({ className, variant = 'horizontal' }: H
           {steps.map((step, idx) => (
             <div key={step.number} className="flex items-center gap-2">
               <div className="flex items-center gap-1.5">
-                <div className="w-5 h-5 rounded-full bg-sky-500/20 text-sky-500 flex items-center justify-center text-xs font-bold">
+                <div className="w-5 h-5 rounded-full bg-secondary text-foreground flex items-center justify-center text-xs font-bold">
                   {step.number}
                 </div>
                 <span className="hidden sm:inline">{step.title}</span>
@@ -61,8 +61,8 @@ export default function HowBookingWorks({ className, variant = 'horizontal' }: H
         <h3 className="font-semibold text-base mb-4">How booking works</h3>
         {steps.map((step, idx) => (
           <div key={step.number} className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500/20 to-blue-500/20 border border-sky-500/30 flex items-center justify-center shrink-0">
-              <step.icon className="w-5 h-5 text-sky-500" />
+            <div className="w-10 h-10 rounded-xl border border-border flex items-center justify-center shrink-0 bg-secondary">
+              <step.icon className="w-5 h-5 text-foreground" />
             </div>
             <div className="flex-1 pt-1">
               <p className="font-medium text-sm">{step.title}</p>
@@ -82,13 +82,13 @@ export default function HowBookingWorks({ className, variant = 'horizontal' }: H
           {steps.map((step, idx) => (
             <div key={step.number} className="relative flex flex-col items-center text-center">
               {/* Step number */}
-              <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-500/20 to-blue-500/20 border border-sky-500/30 flex items-center justify-center mb-4">
-                <step.icon className="w-7 h-7 text-sky-500" />
+              <div className="w-14 h-14 rounded-2xl border border-border flex items-center justify-center mb-4 bg-secondary">
+                <step.icon className="w-7 h-7 text-foreground" />
               </div>
               
               {/* Connector line */}
               {idx < steps.length - 1 && (
-                <div className="hidden md:block absolute top-7 left-[calc(50%+2rem)] w-[calc(100%-4rem)] h-0.5 bg-gradient-to-r from-sky-500/30 to-sky-500/10" />
+                <div className="hidden md:block absolute top-7 left-[calc(50%+2rem)] w-[calc(100%-4rem)] h-0.5 bg-secondary" />
               )}
               
               <h3 className="font-semibold mb-1">{step.title}</h3>

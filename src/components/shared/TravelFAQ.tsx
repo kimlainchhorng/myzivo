@@ -149,13 +149,13 @@ export default function TravelFAQ({ serviceType, className = '' }: TravelFAQProp
               <>
                 <strong className="text-foreground">About Flight Bookings:</strong> ZIVO sells flight tickets as a sub-agent of licensed ticketing providers. 
                 Tickets are issued by authorized partners under applicable airline rules.{' '}
-                <a href="/terms" className="text-sky-500 hover:underline">View terms</a>
+                <a href="/terms" className="text-foreground hover:underline">View terms</a>
               </>
             ) : (
               <>
                 <strong className="text-foreground">Important:</strong> All bookings, payments, refunds, and changes 
                 are handled directly by our travel partners. ZIVO is a search and comparison platform for hotels and car rentals.{' '}
-                <a href="/partner-disclosure" className="text-sky-500 hover:underline">Learn more</a>
+                <a href="/partner-disclosure" className="text-foreground hover:underline">Learn more</a>
               </>
             )}
           </p>

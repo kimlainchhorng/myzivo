@@ -22,8 +22,8 @@ export default function ApplyJobHubPage() {
 
         <button onClick={() => navigate("/personal/create-cv")} className="w-full text-left">
           <Card className="flex items-center gap-4 p-5 transition-colors hover:bg-accent">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-indigo-500/10">
-              <FileText className="h-6 w-6 text-indigo-500" />
+            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-secondary">
+              <FileText className="h-6 w-6 text-foreground" />
             </div>
             <div className="flex-1">
               <h2 className="font-semibold">Create CV</h2>

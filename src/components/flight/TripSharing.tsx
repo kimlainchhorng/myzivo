@@ -120,8 +120,8 @@ export const TripSharing = ({
       <CardHeader className="pb-4 border-b border-border/50">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-500/10 border border-violet-500/40 flex items-center justify-center">
-              <Share2 className="w-5 h-5 text-violet-500" />
+            <div className="w-10 h-10 rounded-xl border border-border flex items-center justify-center bg-secondary">
+              <Share2 className="w-5 h-5 text-foreground" />
             </div>
             <div>
               <CardTitle className="text-lg">Share Trip</CardTitle>
@@ -194,7 +194,7 @@ export const TripSharing = ({
             {showQr ? (
               <img src={qrUrl} alt="QR code for trip link" className="w-[180px] h-[180px] rounded-xl" />
             ) : (
-              <div className="w-24 h-24 bg-gradient-to-br from-violet-500 to-purple-500 rounded-xl flex items-center justify-center cursor-pointer" onClick={() => setShowQr(true)}>
+              <div className="w-24 h-24 rounded-xl flex items-center justify-center cursor-pointer bg-secondary" onClick={() => setShowQr(true)}>
                 <QrCode className="w-16 h-16 text-primary-foreground" />
               </div>
             )}
@@ -295,7 +295,7 @@ export const TripSharing = ({
                   className="flex items-center justify-between p-3 rounded-xl bg-muted/30 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200"
                 >
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center text-sm font-medium text-primary-foreground">
+                    <div className="w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium text-primary-foreground bg-foreground">
                       {user.name.charAt(0).toUpperCase()}
                     </div>
                     <div>

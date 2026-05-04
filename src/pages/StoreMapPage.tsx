@@ -1137,7 +1137,7 @@ export default function StoreMapPage() {
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
             <p className="text-[13px] font-bold text-foreground truncate">{store.name}</p>
-            {isInTrip && <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600 shrink-0" />}
+            {isInTrip && <CheckCircle2 className="w-3.5 h-3.5 text-foreground shrink-0" />}
           </div>
           <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
             <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
@@ -1164,7 +1164,7 @@ export default function StoreMapPage() {
               ) : null;
             })()}
             {checkins > 0 && (
-              <span className="flex items-center gap-0.5 text-[10px] font-semibold text-violet-600">
+              <span className="flex items-center gap-0.5 text-[10px] font-semibold text-foreground">
                 <Users className="w-2.5 h-2.5" />{checkins} here
               </span>
             )}
@@ -1184,7 +1184,7 @@ export default function StoreMapPage() {
               </span>
             )}
             {isVisited && (
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700 shrink-0">
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-foreground text-foreground shrink-0">
                 ✓ Visited
               </span>
             )}
@@ -1242,14 +1242,14 @@ export default function StoreMapPage() {
               {tripMode ? (
                 <motion.div key="trail"
                   initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-                  className="flex items-center gap-2.5 rounded-2xl px-3 py-2.5 bg-indigo-600/95 backdrop-blur-xl shadow-lg"
+                  className="flex items-center gap-2.5 rounded-2xl px-3 py-2.5 bg-secondary backdrop-blur-xl shadow-lg"
                 >
                   <div className="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
                     <Route className="w-5 h-5 text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[14px] font-bold text-white leading-tight">Shopping Trail</p>
-                    <p className="text-[11px] text-indigo-200 mt-0.5">
+                    <p className="text-[11px] text-foreground mt-0.5">
                       {tripStops.length === 0 ? "Tap stores on map to add stops" :
                         `${tripStops.length} stop${tripStops.length > 1 ? "s" : ""} · ${formatDistLabel(tripKm)} total`}
                     </p>
@@ -1387,7 +1387,7 @@ export default function StoreMapPage() {
                 {activeFiltersCount > 0 && (
                   <motion.button whileTap={{ scale: 0.95 }}
                     onClick={clearAllFilters}
-                    className="px-4 py-2 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 border backdrop-blur-sm bg-rose-500/10 text-rose-600 border-rose-500/30 shadow-sm"
+                    className="px-4 py-2 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 border backdrop-blur-sm bg-secondary text-foreground border-border shadow-sm"
                   >
                     <X className="w-3.5 h-3.5" /> Clear ({activeFiltersCount})
                   </motion.button>
@@ -1507,7 +1507,7 @@ export default function StoreMapPage() {
               >
                 <Route className="w-5 h-5" />
                 {tripStops.length > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-indigo-600 text-white text-[10px] font-bold flex items-center justify-center border-2 border-card">
+                  <span className="absolute -top-1 -right-1 w-5 h-5 rounded-full bg-foreground text-white text-[10px] font-bold flex items-center justify-center border-2 border-card">
                     {tripStops.length}
                   </span>
                 )}
@@ -1699,9 +1699,9 @@ export default function StoreMapPage() {
                     ? `${nearbySorted.length} stores${radiusKm ? ` within ${radiusKm < 1 ? radiusKm * 1000 + " m" : radiusKm + " km"}` : " nearby"}`
                     : `${nearbySorted.length} stores`}
                   {tripMode && tripStops.length > 0
-                    ? <span className="ml-1.5 text-indigo-600 font-semibold">· {tripStops.length} stops · {formatTripEta(tripKm)}</span>
+                    ? <span className="ml-1.5 text-foreground font-semibold">· {tripStops.length} stops · {formatTripEta(tripKm)}</span>
                     : tripMode
-                    ? <span className="ml-1.5 text-indigo-600 font-semibold">· tap to add to trail</span>
+                    ? <span className="ml-1.5 text-foreground font-semibold">· tap to add to trail</span>
                     : null}
                 </p>
                 {nearbySorted.length > 3 && (
@@ -1734,29 +1734,29 @@ export default function StoreMapPage() {
               transition={{ type: "spring", damping: 28, stiffness: 300 }}
               className="absolute bottom-[80px] left-3 right-3 z-[1600]"
             >
-              <div className="rounded-[20px] overflow-hidden shadow-2xl border border-indigo-200 bg-white/95 backdrop-blur-xl">
+              <div className="rounded-[20px] overflow-hidden shadow-2xl border border-border bg-white/95 backdrop-blur-xl">
                 <div className="px-4 pt-3 pb-2">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-[13px] font-bold text-foreground flex items-center gap-1.5">
-                      <Route className="w-4 h-4 text-indigo-600" />
+                      <Route className="w-4 h-4 text-foreground" />
                       Your Shopping Trail
                     </p>
-                    <span className="text-[11px] text-indigo-600 font-semibold">
+                    <span className="text-[11px] text-foreground font-semibold">
                       {formatDistLabel(tripKm)} · {formatTripEta(tripKm)}
                     </span>
                   </div>
                   <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
                     {tripStops.map((stop, idx) => (
                       <div key={stop.id} className="flex-shrink-0 flex items-center gap-1.5">
-                        {idx > 0 && <ChevronRight className="w-3 h-3 text-indigo-300 shrink-0" />}
-                        <div className="flex items-center gap-1.5 bg-indigo-50 border border-indigo-200 rounded-xl px-2.5 py-1.5">
-                          <span className="w-5 h-5 rounded-full bg-indigo-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
+                        {idx > 0 && <ChevronRight className="w-3 h-3 text-foreground shrink-0" />}
+                        <div className="flex items-center gap-1.5 bg-foreground border border-border rounded-xl px-2.5 py-1.5">
+                          <span className="w-5 h-5 rounded-full bg-foreground text-white text-[10px] font-bold flex items-center justify-center shrink-0">
                             {idx + 1}
                           </span>
                           <p className="text-[11px] font-semibold text-foreground whitespace-nowrap max-w-[100px] truncate">{stop.name}</p>
                           <button
                             onClick={() => setTripStops((prev) => prev.filter((s) => s.id !== stop.id))}
-                            className="text-indigo-400 hover:text-red-500"
+                            className="text-foreground hover:text-red-500"
                           >
                             <Minus className="w-3.5 h-3.5" />
                           </button>
@@ -1765,15 +1765,15 @@ export default function StoreMapPage() {
                     ))}
                   </div>
                 </div>
-                <div className="flex border-t border-indigo-100">
+                <div className="flex border-t border-border">
                   <button className="flex-1 py-3 text-[12px] font-bold text-red-500 hover:bg-red-50" onClick={handleExitTripMode}>
                     Clear
                   </button>
-                  <div className="w-px bg-indigo-100" />
+                  <div className="w-px bg-foreground" />
                   {tripStops.length >= 3 && (
                     <>
                       <button
-                        className="flex-1 py-3 text-[12px] font-bold text-violet-600 hover:bg-violet-50 flex items-center justify-center gap-1"
+                        className="flex-1 py-3 text-[12px] font-bold text-foreground hover:bg-foreground flex items-center justify-center gap-1"
                         onClick={() => {
                           const optimized = optimizeTrailStops(tripStops, userLocation);
                           setTripStops(optimized);
@@ -1782,7 +1782,7 @@ export default function StoreMapPage() {
                       >
                         ✦ Optimize
                       </button>
-                      <div className="w-px bg-indigo-100" />
+                      <div className="w-px bg-foreground" />
                     </>
                   )}
                   <button
@@ -1791,9 +1791,9 @@ export default function StoreMapPage() {
                   >
                     <Share2 className="w-3.5 h-3.5" /> Share
                   </button>
-                  <div className="w-px bg-indigo-100" />
+                  <div className="w-px bg-foreground" />
                   <button
-                    className="flex-1 py-3 text-[12px] font-bold text-indigo-600 hover:bg-indigo-50 flex items-center justify-center gap-1.5"
+                    className="flex-1 py-3 text-[12px] font-bold text-foreground hover:bg-foreground flex items-center justify-center gap-1.5"
                     onClick={() => navigateShoppingTrail(tripStops, userLocation)}
                   >
                     <Navigation className="w-3.5 h-3.5" /> Navigate
@@ -1899,7 +1899,7 @@ export default function StoreMapPage() {
                     })()}
                     {/* Check-in count */}
                     {checkInMap[selectedStore.id] > 0 && (
-                      <p className="text-[11px] mt-0.5 flex items-center gap-1 text-violet-600 font-semibold">
+                      <p className="text-[11px] mt-0.5 flex items-center gap-1 text-foreground font-semibold">
                         <Users className="w-3 h-3" /> {checkInMap[selectedStore.id]} people here recently
                       </p>
                     )}
@@ -1926,7 +1926,7 @@ export default function StoreMapPage() {
                           </span>
                         )}
                         {visitedStoreIds.has(selectedStore.id) && (
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-indigo-100 text-indigo-700">
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-foreground text-foreground">
                             ✓ Visited
                           </span>
                         )}
@@ -1994,7 +1994,7 @@ export default function StoreMapPage() {
                       setSelectedStore(null);
                       toast("Trail started! Tap more stores to add stops", { duration: 3000 });
                     }}
-                    className="flex-1 h-11 rounded-xl bg-indigo-600 text-white inline-flex items-center justify-center gap-1.5 text-[12px] font-bold"
+                    className="flex-1 h-11 rounded-xl bg-foreground text-white inline-flex items-center justify-center gap-1.5 text-[12px] font-bold"
                   >
                     <Route className="w-4 h-4" /> Add to Trail
                   </button>

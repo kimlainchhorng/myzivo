@@ -28,7 +28,7 @@ const FlightLoyaltyProgram = () => {
     <section className="py-12 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-8">
-          <Badge className="mb-3 bg-gradient-to-r from-sky-500/20 to-blue-500/20 text-sky-400 border-sky-500/30">
+          <Badge className="mb-3 text-foreground border-border bg-secondary">
             <Crown className="w-3 h-3 mr-1" /> ZIVO SkyMiles
           </Badge>
           <h2 className="text-2xl md:text-3xl font-display font-bold mb-2">
@@ -48,7 +48,7 @@ const FlightLoyaltyProgram = () => {
             <div className="flex-1 text-center md:text-left">
               <p className="text-sm text-muted-foreground">Your Status</p>
               <h3 className="text-2xl font-bold">{currentDisplay.name}</h3>
-              <p className="text-sky-400 font-semibold">
+              <p className="text-foreground font-semibold">
                 {user ? `${points.points_balance.toLocaleString()} miles` : "Sign in to track miles"}
               </p>
             </div>
@@ -56,7 +56,7 @@ const FlightLoyaltyProgram = () => {
               <div className="w-full md:w-64">
                 <div className="flex justify-between text-sm mb-2">
                   <span className="text-muted-foreground">Next: {nextDisplay.name}</span>
-                  <span className="text-sky-400">{pointsNeeded.toLocaleString()} to go</span>
+                  <span className="text-foreground">{pointsNeeded.toLocaleString()} to go</span>
                 </div>
                 <Progress value={progress} className="h-3" />
               </div>
@@ -74,7 +74,7 @@ const FlightLoyaltyProgram = () => {
               }`}
             >
               {tier.key === currentTierKey && (
-                <Badge className="absolute -top-2 left-1/2 -translate-x-1/2 bg-sky-500 text-xs">Current</Badge>
+                <Badge className="absolute -top-2 left-1/2 -translate-x-1/2 bg-foreground text-xs">Current</Badge>
               )}
               <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${tier.color} flex items-center justify-center mx-auto mb-3`}>
                 <Star className="w-6 h-6 text-primary-foreground" />
@@ -84,7 +84,7 @@ const FlightLoyaltyProgram = () => {
               <ul className="space-y-1">
                 {tier.benefits.map((benefit) => (
                   <li key={benefit} className="text-xs text-muted-foreground flex items-center gap-1">
-                    <Zap className="w-3 h-3 text-sky-400" />
+                    <Zap className="w-3 h-3 text-foreground" />
                     {benefit}
                   </li>
                 ))}
@@ -96,7 +96,7 @@ const FlightLoyaltyProgram = () => {
         {!user && (
           <div className="text-center mt-8">
             <Button
-              className="bg-gradient-to-r from-sky-500 to-blue-500 text-primary-foreground font-semibold"
+              className="text-primary-foreground font-semibold bg-foreground"
               onClick={() => navigate(withRedirectParam("/login", "/flights"))}
             >
               <Gift className="w-4 h-4 mr-2" />

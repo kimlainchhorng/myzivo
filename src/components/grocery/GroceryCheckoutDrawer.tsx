@@ -1288,14 +1288,14 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                       </div>
                     )}
                     {scheduler.isGift && (
-                      <div className="flex justify-between text-[12px] text-pink-500">
+                      <div className="flex justify-between text-[12px] text-foreground">
                         <span className="flex items-center gap-1.5">🎁 Gift order</span>
                         <span className="font-medium">Free</span>
                       </div>
                     )}
                     {tip > 0 && (
                       <div className="flex justify-between text-[12px] text-muted-foreground">
-                        <span className="flex items-center gap-1.5"><Heart className="h-3 w-3 text-pink-500" /> Driver tip</span>
+                        <span className="flex items-center gap-1.5"><Heart className="h-3 w-3 text-foreground" /> Driver tip</span>
                         <span className="text-foreground tabular-nums">${tip.toFixed(2)}</span>
                       </div>
                     )}
@@ -1421,7 +1421,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                     {/* Tip selection */}
                     <div className="mb-4">
                       <h3 className="text-[13px] font-bold flex items-center gap-2 mb-2.5">
-                        <Heart className="h-3.5 w-3.5 text-pink-500" />
+                        <Heart className="h-3.5 w-3.5 text-foreground" />
                         Driver Tip
                       </h3>
                       <div className="flex gap-2">

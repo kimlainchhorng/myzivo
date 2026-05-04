@@ -435,15 +435,15 @@ export default function DriverMapPage() {
           >
             {/* Flight info banner for airport pickups */}
             {acceptedJobFlight?.isAirportPickup && (
-              <div className="rounded-2xl border border-sky-500/20 bg-sky-500/5 backdrop-blur shadow-lg p-3">
+              <div className="rounded-2xl border border-border bg-secondary backdrop-blur shadow-lg p-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center shrink-0">
-                    <Plane className="w-5 h-5 text-sky-500" />
+                  <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+                    <Plane className="w-5 h-5 text-foreground" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-bold text-foreground">✈️ Airport Pickup</p>
                     {acceptedJobFlight.flightNumber && (
-                      <p className="text-xs font-semibold text-sky-600">
+                      <p className="text-xs font-semibold text-foreground">
                         Flight: {acceptedJobFlight.flightNumber}
                       </p>
                     )}
@@ -512,7 +512,7 @@ export default function DriverMapPage() {
                 <div className="flex items-start gap-3 min-w-0">
                   <div className={`w-11 h-11 rounded-2xl flex items-center justify-center shrink-0 ${activeOffer.isAirportPickup ? "bg-sky-500/10" : "bg-primary/10"}`}>
                     {activeOffer.isAirportPickup ? (
-                      <Plane className="w-5 h-5 text-sky-500" />
+                      <Plane className="w-5 h-5 text-foreground" />
                     ) : (
                       <Car className="w-5 h-5 text-primary" />
                     )}
@@ -524,7 +524,7 @@ export default function DriverMapPage() {
                       </p>
                     </div>
                     {activeOffer.isAirportPickup && (
-                      <p className="text-xs font-bold text-sky-600">
+                      <p className="text-xs font-bold text-foreground">
                         {activeOffer.flightNumber ? `Flight ${activeOffer.flightNumber}` : "Airport terminal pickup"}
                         {activeOffer.flightArrivalTime && (
                           <> · Lands {new Date(activeOffer.flightArrivalTime).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</>

@@ -5,9 +5,8 @@
  */
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Loader2, Mail, ArrowLeft, ArrowRight } from "lucide-react";
+import { Loader2, Mail, ArrowLeft, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import SEOHead from "@/components/SEOHead";
 
@@ -25,6 +24,11 @@ const VerifyOTP = () => {
   const [resending, setResending] = useState(false);
   const [cooldown, setCooldown] = useState(RESEND_COOLDOWN);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
+  // Some Supabase email templates only contain the magic link (no 6-digit
+  // token). Default the page to "waiting for link tap" which is the primary
+  // path; users who DO have a code can click "Use code instead" to reveal the
+  // 6-box input.
+  const [showCodeEntry, setShowCodeEntry] = useState(false);
 
   useEffect(() => {
     if (!email) {
@@ -39,9 +43,22 @@ const VerifyOTP = () => {
     return () => clearTimeout(t);
   }, [cooldown]);
 
+  // No auto-focus on mount — code entry is hidden by default; we focus the
+  // first box explicitly when the user taps "I have a 6-digit code".
+
+  // Listen for auth session changes — when the user clicks the magic link in
+  // their email (which opens /auth/callback in another tab and sets the
+  // session), this listener fires here too via Supabase's broadcast and we
+  // redirect home. Same effect even if they click the link in this tab.
   useEffect(() => {
-    inputRefs.current[0]?.focus();
-  }, []);
+    const { data: sub } = supabase.auth.onAuthStateChange((event, session) => {
+      if ((event === "SIGNED_IN" || event === "TOKEN_REFRESHED") && session?.user) {
+        toast.success("Signed in!");
+        navigate(redirect, { replace: true });
+      }
+    });
+    return () => sub.subscription.unsubscribe();
+  }, [navigate, redirect]);
 
   const submit = async (fullCode: string) => {
     if (submitting) return;
@@ -158,61 +175,134 @@ const VerifyOTP = () => {
   };
 
   return (
-    <div className="min-h-[100dvh] w-full bg-gradient-to-br from-emerald-950 via-background to-background flex items-center justify-center px-4 py-10">
+    <div className="relative min-h-[100dvh] w-full overflow-hidden flex items-center justify-center px-5 py-8 bg-white dark:bg-black">
       <SEOHead title="Verify your code" description="Enter the 6-digit code we emailed you." />
 
-      <div className="w-full max-w-md">
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 mb-3">
-            <Mail className="w-7 h-7 text-emerald-400" />
+      {/* Subtle ZIVO gradient backdrop */}
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-32 -right-32 w-[420px] h-[420px] rounded-full blur-3xl dark:dark:dark: bg-secondary" />
+        <div className="absolute -bottom-32 -left-32 w-[420px] h-[420px] rounded-full bg-gradient-to-tr from-amber-200/30 blur-3xl dark:from-amber-600/15 dark:dark:" />
+      </div>
+
+      <div className="relative w-full max-w-sm">
+        {/* Main card — link-first layout. The 6-digit code entry is collapsed
+            by default because Supabase email templates often only contain the
+            magic link (no token), so showing 6 empty boxes upfront is
+            confusing. Users with a code can tap "Use code instead" to expand. */}
+        <div className="bg-white dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-white/10 rounded-xl px-7 pt-9 pb-6 shadow-sm">
+          <div className="flex flex-col items-center mb-6">
+            <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 flex items-center justify-center mb-4 shadow-lg">
+              <Mail className="w-7 h-7 text-white" />
+            </div>
+            <h1 className="text-xl font-bold text-zinc-900 dark:text-white">Check your email</h1>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1.5 text-center">
+              We sent a sign-in link to<br />
+              <span className="font-semibold text-zinc-900 dark:text-white">{email}</span>
+            </p>
           </div>
-          <h1 className="text-3xl font-bold text-foreground">Check your email</h1>
-          <p className="text-sm text-muted-foreground mt-2">
-            We sent a 6-digit code to <span className="font-semibold text-foreground">{email}</span>
-          </p>
+
+          <div className="space-y-4">
+            {/* Primary CTA — open the user's webmail directly */}
+            {(() => {
+              const domain = email.split("@")[1]?.toLowerCase() || "";
+              const provider =
+                domain === "gmail.com" || domain === "googlemail.com" ? { name: "Gmail", url: "https://mail.google.com/mail/u/0/#inbox" } :
+                domain.includes("outlook") || domain.includes("hotmail") || domain.includes("live.com") ? { name: "Outlook", url: "https://outlook.live.com/mail/" } :
+                domain === "yahoo.com" || domain === "ymail.com" ? { name: "Yahoo Mail", url: "https://mail.yahoo.com/" } :
+                domain === "icloud.com" || domain === "me.com" || domain === "mac.com" ? { name: "iCloud Mail", url: "https://www.icloud.com/mail" } :
+                domain === "proton.me" || domain === "protonmail.com" ? { name: "Proton Mail", url: "https://mail.proton.me/" } :
+                null;
+              return provider ? (
+                <a
+                  href={provider.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="w-full h-10 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 hover:opacity-95 active:scale-[0.99] transition flex items-center justify-center gap-2 shadow-md"
+                >
+                  <ExternalLink className="w-4 h-4" /> Open {provider.name}
+                </a>
+              ) : (
+                <div className="text-center text-xs text-zinc-500 dark:text-zinc-400 py-2 px-3 rounded-md bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/70 dark:border-zinc-700/60">
+                  Open your email app and tap the sign-in link.
+                </div>
+              );
+            })()}
+
+            {/* Waiting indicator — auto-redirects via the onAuthStateChange
+                listener once the user clicks the link. */}
+            <div className="flex items-center justify-center gap-2 py-2 text-xs text-zinc-500 dark:text-zinc-400">
+              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+              <span>Waiting for you to tap the link…</span>
+            </div>
+
+            {/* Resend */}
+            <div className="text-center text-sm text-zinc-500 dark:text-zinc-400">
+              Didn't get it?{" "}
+              <button
+                type="button"
+                onClick={resend}
+                disabled={cooldown > 0 || resending}
+                className="font-semibold text-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {resending ? "Sending…" : cooldown > 0 ? `Resend in ${cooldown}s` : "Resend"}
+              </button>
+            </div>
+
+            {/* OR divider */}
+            <div className="flex items-center gap-3 py-1">
+              <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-700" />
+              <span className="text-[11px] font-bold text-zinc-400 dark:text-zinc-500 tracking-wider">OR</span>
+              <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-700" />
+            </div>
+
+            {/* Secondary: collapsible code entry (for emails that include
+                a 6-digit token). Hidden by default to keep the page clean. */}
+            {!showCodeEntry ? (
+              <button
+                type="button"
+                onClick={() => { setShowCodeEntry(true); setTimeout(() => inputRefs.current[0]?.focus(), 50); }}
+                className="w-full h-9 rounded-lg text-sm font-semibold text-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/40 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 active:scale-[0.99] transition"
+              >
+                I have a 6-digit code
+              </button>
+            ) : (
+              <>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 text-center">
+                  Enter the 6-digit code from your email
+                </p>
+                <div className="flex justify-between gap-2" onPaste={handlePaste}>
+                  {code.map((digit, idx) => (
+                    <input
+                      key={idx}
+                      ref={(el) => (inputRefs.current[idx] = el)}
+                      type="text"
+                      inputMode="numeric"
+                      autoComplete={idx === 0 ? "one-time-code" : "off"}
+                      maxLength={1}
+                      value={digit}
+                      onChange={(e) => handleChange(idx, e.target.value)}
+                      onKeyDown={(e) => handleKeyDown(idx, e)}
+                      disabled={submitting}
+                      className="w-11 h-12 text-center text-xl font-bold rounded-md bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 focus:border-border dark:focus:border-border outline-none text-zinc-900 dark:text-white transition"
+                    />
+                  ))}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => submit(code.join(""))}
+                  disabled={submitting || code.some((c) => !c)}
+                  className="w-full h-9 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md"
+                >
+                  {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : (mode === "signup" ? "Confirm email" : "Verify")}
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
-        <div className="rounded-2xl border border-emerald-500/20 bg-card/70 backdrop-blur-xl shadow-2xl p-6 space-y-5">
-          <div className="flex justify-between gap-2" onPaste={handlePaste}>
-            {code.map((digit, idx) => (
-              <input
-                key={idx}
-                ref={(el) => (inputRefs.current[idx] = el)}
-                type="text"
-                inputMode="numeric"
-                autoComplete={idx === 0 ? "one-time-code" : "off"}
-                maxLength={1}
-                value={digit}
-                onChange={(e) => handleChange(idx, e.target.value)}
-                onKeyDown={(e) => handleKeyDown(idx, e)}
-                disabled={submitting}
-                className="w-12 h-14 text-center text-2xl font-bold rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-foreground transition"
-              />
-            ))}
-          </div>
-
-          <Button
-            type="button"
-            onClick={() => submit(code.join(""))}
-            disabled={submitting || code.some((c) => !c)}
-            className="w-full h-12 rounded-xl text-base font-semibold bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30"
-          >
-            {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <>{mode === "signup" ? "Confirm Email" : "Verify"} <ArrowRight className="w-4 h-4 ml-1" /></>}
-          </Button>
-
-          <div className="text-center text-sm text-muted-foreground">
-            Didn't get it?{" "}
-            <button
-              type="button"
-              onClick={resend}
-              disabled={cooldown > 0 || resending}
-              className="font-semibold text-emerald-400 hover:text-emerald-300 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {resending ? "Sending…" : cooldown > 0 ? `Resend in ${cooldown}s` : "Resend code"}
-            </button>
-          </div>
-
-          <Link to="/login" className="flex items-center justify-center gap-1 text-sm text-muted-foreground hover:text-foreground transition">
+        {/* Footer card */}
+        <div className="mt-3 bg-white dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-white/10 rounded-xl px-6 py-4 text-center shadow-sm">
+          <Link to="/login" className="flex items-center justify-center gap-1 text-sm font-semibold text-foreground hover:text-foreground">
             <ArrowLeft className="w-4 h-4" /> Back to sign in
           </Link>
         </div>

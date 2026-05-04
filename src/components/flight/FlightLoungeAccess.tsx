@@ -85,7 +85,7 @@ export default function FlightLoungeAccess() {
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-3">
                 <div className={cn("w-10 h-10 rounded-lg flex items-center justify-center", lounge.isPremium ? "bg-amber-500/15" : "bg-sky-500/15")}>
-                  {lounge.icon === "premier" ? <Building2 className="w-5 h-5 text-amber-400" /> : lounge.icon === "first" ? <Crown className="w-5 h-5 text-amber-400" /> : <Plane className="w-5 h-5 text-sky-400" />}
+                  {lounge.icon === "premier" ? <Building2 className="w-5 h-5 text-amber-400" /> : lounge.icon === "first" ? <Crown className="w-5 h-5 text-amber-400" /> : <Plane className="w-5 h-5 text-foreground" />}
                 </div>
                 <div>
                   <h4 className="font-medium flex items-center gap-2">

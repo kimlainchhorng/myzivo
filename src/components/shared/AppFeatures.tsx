@@ -69,7 +69,7 @@ const AppFeatures = () => {
 
             {/* Floating Elements */}
             <div className="absolute -top-4 -left-4 p-3 bg-card rounded-xl border border-border/50 shadow-lg animate-float">
-              <Bell className="w-6 h-6 text-sky-400" />
+              <Bell className="w-6 h-6 text-foreground" />
             </div>
             <div className="absolute top-1/4 -right-8 p-3 bg-card rounded-xl border border-border/50 shadow-lg animate-float" style={{ animationDelay: "0.5s" }}>
               <Wallet className="w-6 h-6 text-emerald-400" />

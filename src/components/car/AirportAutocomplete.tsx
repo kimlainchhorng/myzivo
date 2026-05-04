@@ -170,7 +170,7 @@ export default function AirportAutocomplete({
   return (
     <div ref={containerRef} className={cn("relative", className)}>
       <div className="relative">
-        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-violet-500" />
+        <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-foreground" />
         <Input
           ref={inputRef}
           type="text"
@@ -215,10 +215,10 @@ export default function AirportAutocomplete({
                   highlightedIndex === index && "bg-accent"
                 )}
               >
-                <Plane className="w-4 h-4 text-violet-500 shrink-0" />
+                <Plane className="w-4 h-4 text-foreground shrink-0" />
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs font-bold text-violet-500 bg-violet-500/10 px-1.5 py-0.5 rounded">
+                    <span className="font-mono text-xs font-bold text-foreground bg-secondary px-1.5 py-0.5 rounded">
                       {airport.code}
                     </span>
                     <p className="font-medium truncate">{airport.city}</p>

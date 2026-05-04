@@ -46,7 +46,7 @@ export default function AirportTransfersSection({ className = '', destination }:
       ? { TransferIcon: CarTaxiFront, gradient: "from-amber-500/20 to-yellow-500/20", color: "text-amber-500" }
       : partner.id === 'gettransfer'
       ? { TransferIcon: Car, gradient: "from-emerald-500/20 to-green-500/20", color: "text-emerald-500" }
-      : { TransferIcon: Bus, gradient: "from-sky-500/20 to-blue-500/20", color: "text-sky-500" };
+      : { TransferIcon: Bus, gradient: "from-muted to-muted", color: "text-sky-500" };
     return {
       ...partner,
       description: partner.id === 'kiwitaxi' 
@@ -131,7 +131,7 @@ export default function AirportTransfersSection({ className = '', destination }:
             <span>24/7 Support</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <MapPin className="w-4 h-4 text-sky-500" />
+            <MapPin className="w-4 h-4 text-foreground" />
             <span>150+ Countries</span>
           </div>
         </div>

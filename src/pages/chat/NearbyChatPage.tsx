@@ -44,7 +44,7 @@ export default function NearbyChatPage() {
           </div>
           <Switch checked={active} onCheckedChange={setActive} />
         </div>
-        {error && <p className="text-xs text-rose-500 mt-2">{error}</p>}
+        {error && <p className="text-xs text-foreground mt-2">{error}</p>}
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-2">

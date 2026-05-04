@@ -124,7 +124,7 @@ export default function PostInsights({ open, onClose, postId, source }: Props) {
                   <Tile icon={<Eye          className="h-4 w-4 text-blue-500" />}    label="Views"     value={formatNum(stats.views)} />
                   <Tile icon={<Heart        className="h-4 w-4 text-red-500" />}     label="Likes"     value={formatNum(stats.likes)} />
                   <Tile icon={<MessageCircle className="h-4 w-4 text-emerald-500" />} label="Comments"  value={formatNum(stats.comments)} />
-                  <Tile icon={<Share2       className="h-4 w-4 text-violet-500" />}  label="Shares"    value={formatNum(stats.shares)} />
+                  <Tile icon={<Share2       className="h-4 w-4 text-foreground" />}  label="Shares"    value={formatNum(stats.shares)} />
                   <Tile icon={<Repeat2      className="h-4 w-4 text-emerald-600" />} label="Reposts"   value={formatNum(stats.reposts)} />
                   <Tile icon={<Bookmark     className="h-4 w-4 text-amber-500" />}   label="Saves"     value={formatNum(stats.bookmarks)} />
                 </div>

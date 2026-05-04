@@ -59,7 +59,7 @@ export default function VideoTile({ participant, emphasized = false, isRecording
       {/* Top-left: REC privacy indicator */}
       {isRecording && (
         <div
-          className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-rose-500/90 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow"
+          className="absolute left-2 top-2 flex items-center gap-1 rounded-full bg-foreground px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-white shadow"
           title="This call is being recorded"
         >
           <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-white" />
@@ -86,7 +86,7 @@ export default function VideoTile({ participant, emphasized = false, isRecording
         {participant.micEnabled ? (
           <Mic className="h-3 w-3" />
         ) : (
-          <MicOff className="h-3 w-3 text-rose-400" />
+          <MicOff className="h-3 w-3 text-foreground" />
         )}
         <span className="truncate">{participant.isLocal ? "You" : participant.name}</span>
       </div>

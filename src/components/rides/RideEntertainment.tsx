@@ -70,8 +70,8 @@ export default function RideEntertainment() {
           {activeTab === "player" && (
             <div className="space-y-4">
               {/* Now playing */}
-              <div className="rounded-2xl bg-gradient-to-br from-violet-500/10 via-primary/5 to-pink-500/10 border border-violet-500/20 p-6 text-center relative overflow-hidden">
-                <div className="absolute -top-8 -right-8 w-24 h-24 bg-gradient-to-bl from-pink-500/10 to-transparent rounded-full" />
+              <div className="rounded-2xl via-primary/5 border border-border p-6 text-center relative overflow-hidden bg-secondary">
+                <div className="absolute -top-8 -right-8 w-24 h-24 to-transparent rounded-full bg-secondary" />
                 <div className="relative">
                   <motion.div
                     className="w-20 h-20 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-4"

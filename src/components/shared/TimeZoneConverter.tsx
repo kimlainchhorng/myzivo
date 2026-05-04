@@ -52,8 +52,8 @@ export default function TimeZoneConverter() {
     <Card className="border-border/50 bg-card/50 backdrop-blur">
       <CardHeader className="pb-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500/20 to-purple-500/10 flex items-center justify-center">
-            <Clock className="w-5 h-5 text-indigo-400" />
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-secondary">
+            <Clock className="w-5 h-5 text-foreground" />
           </div>
           <div>
             <CardTitle className="text-lg">Time Zone Converter</CardTitle>
@@ -123,13 +123,13 @@ export default function TimeZoneConverter() {
         </div>
 
         {/* Difference Info */}
-        <div className="p-3 rounded-lg bg-indigo-500/10 border border-indigo-500/20 text-center">
+        <div className="p-3 rounded-lg bg-secondary border border-border text-center">
           <div className="flex items-center justify-center gap-2 text-sm">
             <span>{fromZoneData.name}</span>
             <ArrowRight className="w-4 h-4" />
             <span>{toZoneData.name}</span>
           </div>
-          <p className="text-lg font-bold text-indigo-400 mt-1">
+          <p className="text-lg font-bold text-foreground mt-1">
             {hoursDiff >= 0 ? '+' : ''}{hoursDiff} hours
           </p>
         </div>

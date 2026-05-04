@@ -32,7 +32,7 @@ export default function FlightPremiumExperience({ className }: FlightPremiumExpe
       title: "Global Network",
       description: "Access 500+ airlines flying to 15,000+ routes across all continents",
       features: ["190+ Countries", "Direct Flights", "Alliance Partners"],
-      gradient: "from-sky-500 via-blue-500 to-cyan-500",
+      gradient: "from-muted to-muted",
       iconBg: "bg-sky-500/20",
       iconColor: "text-sky-500",
     },
@@ -57,14 +57,14 @@ export default function FlightPremiumExperience({ className }: FlightPremiumExpe
   return (
     <section className={cn("py-10 sm:py-16 relative overflow-hidden", className)}>
       {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-sky-500/5 to-transparent" />
-      <div className="absolute top-20 right-10 w-64 h-64 bg-sky-500/10 rounded-full blur-3xl" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-transparent" />
+      <div className="absolute top-20 right-10 w-64 h-64 bg-secondary rounded-full blur-3xl" />
       <div className="absolute bottom-20 left-10 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl" />
 
       <div className="container mx-auto px-4 relative z-10">
         {/* Section Header */}
         <div className="text-center mb-8 sm:mb-12">
-          <Badge className="mb-3 sm:mb-4 px-3 sm:px-4 py-1.5 sm:py-2 bg-gradient-to-r from-sky-500/20 to-blue-500/20 text-sky-500 border-sky-500/30 text-xs sm:text-sm">
+          <Badge className="mb-3 sm:mb-4 px-3 sm:px-4 py-1.5 sm:py-2 text-foreground border-border text-xs sm:text-sm bg-secondary">
             <Sparkles className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1.5 sm:mr-2" />
             Premium Experience
           </Badge>
@@ -124,10 +124,10 @@ export default function FlightPremiumExperience({ className }: FlightPremiumExpe
           {trustBadges.map((badge, index) => (
             <div
               key={badge.label}
-              className="flex flex-col items-center p-3 sm:p-4 rounded-xl bg-card/50 backdrop-blur-xl border border-border/50 hover:border-sky-500/30 transition-all animate-in fade-in slide-in-from-bottom-4"
+              className="flex flex-col items-center p-3 sm:p-4 rounded-xl bg-card/50 backdrop-blur-xl border border-border/50 hover:border-border transition-all animate-in fade-in slide-in-from-bottom-4"
               style={{ animationDelay: `${(index + 3) * 100}ms` }}
             >
-              <badge.icon className="w-5 h-5 sm:w-6 sm:h-6 text-sky-500 mb-2" />
+              <badge.icon className="w-5 h-5 sm:w-6 sm:h-6 text-foreground mb-2" />
               <p className="text-lg sm:text-xl font-bold text-foreground">{badge.value}</p>
               <p className="text-[10px] sm:text-xs text-muted-foreground">{badge.label}</p>
             </div>

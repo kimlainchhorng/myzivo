@@ -162,11 +162,11 @@ export default function BookingReturnPage() {
           <div className="container mx-auto max-w-2xl">
             
             {/* Explanation Info Box - Always visible at top */}
-            <Card className="mb-6 border-sky-500/30 bg-sky-500/5">
+            <Card className="mb-6 border-border bg-secondary">
               <CardContent className="p-4">
                 <div className="flex items-start gap-3">
-                  <div className="w-10 h-10 rounded-xl bg-sky-500/20 flex items-center justify-center shrink-0">
-                    <Info className="w-5 h-5 text-sky-500" />
+                  <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+                    <Info className="w-5 h-5 text-foreground" />
                   </div>
                   <div>
                     <p className="font-semibold text-sm mb-1">Partner Checkout</p>
@@ -183,7 +183,7 @@ export default function BookingReturnPage() {
             {pageStatus === "converted" && (
               <Card className="overflow-hidden">
                 {/* Neutral Header - Not claiming ticket issuance */}
-                <div className="bg-gradient-to-r from-sky-500 to-blue-600 p-6 sm:p-8 text-center text-primary-foreground">
+                <div className="p-6 sm:p-8 text-center text-primary-foreground bg-foreground">
                   <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto rounded-full bg-white/20 flex items-center justify-center mb-4">
                     <ExternalLink className="w-10 h-10 sm:w-12 sm:h-12" />
                   </div>
@@ -211,7 +211,7 @@ export default function BookingReturnPage() {
                         {tripSummary.origin && tripSummary.destination && (
                           <div className="flex items-center justify-center gap-2 font-semibold text-base">
                             <span>{tripSummary.origin}</span>
-                            <Plane className="w-4 h-4 text-sky-500 rotate-90" />
+                            <Plane className="w-4 h-4 text-foreground rotate-90" />
                             <span>{tripSummary.destination}</span>
                           </div>
                         )}
@@ -279,7 +279,7 @@ export default function BookingReturnPage() {
             {pageStatus === "failed" && (
               <Card className="overflow-hidden">
                 {/* Error Header */}
-                <div className="bg-gradient-to-r from-red-500 to-rose-500 p-8 text-center text-primary-foreground">
+                <div className="bg-gradient-to-r from-red-500 p-8 text-center text-primary-foreground">
                   <div className="w-20 h-20 mx-auto rounded-full bg-white/20 flex items-center justify-center mb-4">
                     <XCircle className="w-12 h-12" />
                   </div>
@@ -422,7 +422,7 @@ export default function BookingReturnPage() {
                       <strong>For changes, cancellations, or refunds:</strong> Contact the airline partner listed in your confirmation email.
                     </p>
                     <p className="text-xs text-muted-foreground">
-                      <strong>For website issues:</strong> <a href="mailto:support@hizivo.com" className="text-sky-500 hover:underline">support@hizivo.com</a>
+                      <strong>For website issues:</strong> <a href="mailto:support@hizivo.com" className="text-foreground hover:underline">support@hizivo.com</a>
                     </p>
                   </div>
                 </div>

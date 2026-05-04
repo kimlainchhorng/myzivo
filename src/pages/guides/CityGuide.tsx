@@ -269,8 +269,8 @@ export default function CityGuide() {
                   to={`/airports/${airport.code.toLowerCase()}`}
                   className="flex items-center gap-3 p-4 rounded-xl bg-card border border-border hover:border-primary/30 transition-colors group"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-sky-500/10 flex items-center justify-center">
-                    <Plane className="w-6 h-6 text-sky-500" />
+                  <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center">
+                    <Plane className="w-6 h-6 text-foreground" />
                   </div>
                   <div>
                     <p className="font-bold text-lg">{airport.code}</p>

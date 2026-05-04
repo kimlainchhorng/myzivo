@@ -501,7 +501,7 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
                   onClick={() => setStep("compose-text")}
                   className="group w-full flex items-center gap-4 rounded-2xl border border-border/60 bg-background/60 p-4 text-left hover:bg-muted/40 hover:border-border active:scale-[0.985] transition-all"
                 >
-                  <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-fuchsia-400 to-pink-500 text-white flex items-center justify-center shadow-lg shadow-pink-500/25">
+                  <div className="w-12 h-12 rounded-2xl text-white flex items-center justify-center shadow-lg bg-foreground">
                     <Type className="w-5 h-5" />
                   </div>
                   <div className="flex-1 min-w-0">

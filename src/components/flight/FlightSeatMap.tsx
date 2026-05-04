@@ -52,7 +52,7 @@ const FlightSeatMap = () => {
     <section className="py-12 px-4">
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
-          <Badge className="mb-3 bg-sky-500/20 text-sky-400 border-sky-500/30">
+          <Badge className="mb-3 bg-secondary text-foreground border-border">
             <Armchair className="w-3 h-3 mr-1" /> Seat Selection
           </Badge>
           <h2 className="text-2xl md:text-3xl font-display font-bold mb-2">
@@ -107,11 +107,11 @@ const FlightSeatMap = () => {
                   <span>First Class (+$150)</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-purple-500/20" />
+                  <div className="w-4 h-4 rounded bg-secondary" />
                   <span>Business (+$75)</span>
                 </div>
                 <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-sky-500/20" />
+                  <div className="w-4 h-4 rounded bg-secondary" />
                   <span>Economy+ (+$35)</span>
                 </div>
                 <div className="flex items-center gap-2">
@@ -165,7 +165,7 @@ const FlightSeatMap = () => {
                         +${seatPrices[seatRows.find(r => r.row === parseInt(selectedSeat))?.type || "economy"]}
                       </span>
                     </div>
-                    <Button className="w-full bg-gradient-to-r from-sky-500 to-blue-500">
+                    <Button className="w-full bg-secondary">
                       Confirm Selection
                     </Button>
                   </div>

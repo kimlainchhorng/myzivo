@@ -170,8 +170,8 @@ const CookiePolicy = () => {
           {/* Introduction */}
           <section>
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-sky-500/10">
-                <Cookie className="w-5 h-5 text-sky-500" />
+              <div className="p-2 rounded-lg bg-secondary">
+                <Cookie className="w-5 h-5 text-foreground" />
               </div>
               <h2 className="text-2xl font-bold text-foreground">How We Use Cookies</h2>
             </div>

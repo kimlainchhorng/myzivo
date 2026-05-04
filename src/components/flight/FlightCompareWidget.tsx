@@ -25,10 +25,10 @@ const FlightCompareWidget = ({ compareList, onRemove }: FlightCompareWidgetProps
   const navigate = useNavigate();
 
   return (
-    <section className="py-12 px-4 bg-gradient-to-b from-background to-sky-500/5">
+    <section className="py-12 px-4 bg-gradient-to-b from-background">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-8">
-          <Badge className="mb-3 bg-sky-500/10 text-sky-400 border-sky-500/20">
+          <Badge className="mb-3 bg-secondary text-foreground border-border">
             <Scale className="w-3 h-3 mr-1" /> Smart Compare
           </Badge>
           <h2 className="text-2xl md:text-3xl font-display font-bold mb-2">
@@ -87,7 +87,7 @@ const FlightCompareWidget = ({ compareList, onRemove }: FlightCompareWidgetProps
               </div>
 
               <div className="text-center mb-4">
-                <span className="text-3xl font-bold text-sky-400">${flight.price}</span>
+                <span className="text-3xl font-bold text-foreground">${flight.price}</span>
               </div>
 
               <Button className="w-full" variant={index === 0 ? "default" : "outline"}>
@@ -102,10 +102,10 @@ const FlightCompareWidget = ({ compareList, onRemove }: FlightCompareWidgetProps
                 toast.info("Search for flights to add", { description: "Tap the compare icon on a flight in the search results." });
                 navigate("/book-flight");
               }}
-              className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-border/50 rounded-2xl hover:border-sky-500/50 hover:bg-sky-500/5 transition-all"
+              className="flex flex-col items-center justify-center p-8 border-2 border-dashed border-border/50 rounded-2xl hover:border-border hover:bg-secondary transition-all"
             >
-              <div className="w-16 h-16 rounded-full bg-sky-500/10 flex items-center justify-center mb-4">
-                <Plus className="w-8 h-8 text-sky-400" />
+              <div className="w-16 h-16 rounded-full bg-secondary flex items-center justify-center mb-4">
+                <Plus className="w-8 h-8 text-foreground" />
               </div>
               <p className="font-semibold">Add Flight to Compare</p>
               <p className="text-sm text-muted-foreground">Up to 3 flights</p>

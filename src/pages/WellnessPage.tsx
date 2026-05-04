@@ -96,12 +96,12 @@ const SECTION_TITLES: Record<SectionKey, string> = {
 };
 
 const HUB_CARDS: { key: SectionKey; icon: any; label: string; desc: string; gradient: string }[] = [
-  { key: "activity", icon: Activity, label: "Activity", desc: "Steps, calories & moves", gradient: "from-emerald-500 via-teal-400 to-cyan-400" },
-  { key: "workouts", icon: Dumbbell, label: "Workouts", desc: "Plans & guides", gradient: "from-rose-500 via-red-500 to-orange-400" },
-  { key: "vitals", icon: Heart, label: "Vitals", desc: "HR, BP & sleep", gradient: "from-pink-500 via-fuchsia-500 to-purple-500" },
-  { key: "mindfulness", icon: Brain, label: "Mindfulness", desc: "Meditation & calm", gradient: "from-violet-500 via-purple-500 to-indigo-500" },
-  { key: "telehealth", icon: Stethoscope, label: "Telehealth", desc: "Talk to a doctor", gradient: "from-sky-500 via-blue-500 to-indigo-500" },
-  { key: "meds", icon: Pill, label: "Medications", desc: "Reminders & refills", gradient: "from-amber-500 via-orange-500 to-rose-400" },
+  { key: "activity", icon: Activity, label: "Activity", desc: "Steps, calories & moves", gradient: "from-muted to-muted" },
+  { key: "workouts", icon: Dumbbell, label: "Workouts", desc: "Plans & guides", gradient: "from-muted to-muted" },
+  { key: "vitals", icon: Heart, label: "Vitals", desc: "HR, BP & sleep", gradient: "from-muted to-muted" },
+  { key: "mindfulness", icon: Brain, label: "Mindfulness", desc: "Meditation & calm", gradient: "from-muted to-muted" },
+  { key: "telehealth", icon: Stethoscope, label: "Telehealth", desc: "Talk to a doctor", gradient: "from-muted to-muted" },
+  { key: "meds", icon: Pill, label: "Medications", desc: "Reminders & refills", gradient: "from-muted to-muted" },
   { key: "nutrition", icon: UtensilsCrossed, label: "Nutrition", desc: "Meals & macros", gradient: "from-lime-500 via-green-500 to-emerald-500" },
   { key: "goals", icon: Trophy, label: "Goals", desc: "Targets & streaks", gradient: "from-yellow-500 via-amber-400 to-orange-400" },
 ];
@@ -183,7 +183,7 @@ function HubView() {
       <motion.div
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="rounded-2xl bg-gradient-to-br from-emerald-500/10 via-teal-500/10 to-cyan-500/10 border border-emerald-500/20 p-4"
+        className="rounded-2xl bg-gradient-to-br from-emerald-500/10 via-teal-500/10 border border-emerald-500/20 p-4"
       >
         <p className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Today · {new Date().toLocaleDateString("en-US", { weekday: "long", month: "short", day: "numeric" })}</p>
         <p className="mt-1 text-lg font-bold">
@@ -407,8 +407,8 @@ function WorkoutsView() {
           <p className="text-xs text-muted-foreground mt-0.5">{day.workoutsLogged.join(" · ")}</p>
         </Card>
       ) : (
-        <Card className="p-4 bg-gradient-to-br from-rose-500/10 to-orange-500/10 border-rose-500/20">
-          <p className="text-[11px] font-semibold text-rose-600 dark:text-rose-400 uppercase tracking-wider">Today's suggestion</p>
+        <Card className="p-4 border-border bg-secondary">
+          <p className="text-[11px] font-semibold text-foreground dark:text-foreground uppercase tracking-wider">Today's suggestion</p>
           <p className="font-bold text-[15px] mt-1">Full body strength · 45 min</p>
           <Button size="sm" className="mt-3" onClick={() => logWorkout("Full body strength", 320)}>
             <Dumbbell className="w-4 h-4 mr-1.5" />
@@ -622,13 +622,13 @@ function MindfulnessView() {
       <AnimatePresence mode="wait">
         {activeSession ? (
           <motion.div key="timer" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}>
-            <Card className="p-6 bg-gradient-to-br from-violet-500/10 to-purple-500/10 border-violet-500/20 text-center">
+            <Card className="p-6 border-border text-center bg-secondary">
               <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">{activeSession}</p>
               <motion.div
                 key={phaseIdx}
                 animate={{ scale: phase.label === "Inhale" ? [1, 1.25] : phase.label === "Exhale" ? [1.25, 1] : 1 }}
                 transition={{ duration: phase.duration, ease: "linear" }}
-                className="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-violet-500/30 to-purple-500/30 border-2 border-violet-400/40 flex items-center justify-center mb-4"
+                className="w-24 h-24 mx-auto rounded-full border-2 border-border flex items-center justify-center mb-4 bg-secondary"
               >
                 <p className={cn("font-bold text-lg", phase.color)}>{phase.label}</p>
               </motion.div>
@@ -642,8 +642,8 @@ function MindfulnessView() {
           </motion.div>
         ) : (
           <motion.div key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }}>
-            <Card className="p-5 bg-gradient-to-br from-violet-500/10 to-purple-500/10 border-violet-500/20 text-center">
-              <Brain className="w-10 h-10 mx-auto text-violet-500" />
+            <Card className="p-5 border-border text-center bg-secondary">
+              <Brain className="w-10 h-10 mx-auto text-foreground" />
               <p className="font-bold text-[15px] mt-3">{streak}-day streak</p>
               <p className="text-[12px] text-muted-foreground">
                 {streak > 0 ? "Keep going — you're building a habit" : "Start your first session today"}
@@ -662,7 +662,7 @@ function MindfulnessView() {
           {sessions.map((s) => (
             <Card key={s.name} className="p-3 flex items-center gap-3 cursor-pointer hover:bg-muted/20 transition-colors"
               onClick={() => activeSession ? null : startSession(s.name)}>
-              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-500 flex items-center justify-center shrink-0">
+              <div className="w-12 h-12 rounded-xl flex items-center justify-center shrink-0 bg-secondary">
                 <Brain className="w-5 h-5 text-white" />
               </div>
               <div className="flex-1 min-w-0">
@@ -694,8 +694,8 @@ function TelehealthView() {
 
   return (
     <div className="space-y-4">
-      <Card className="p-4 bg-gradient-to-br from-sky-500/10 to-blue-500/10 border-sky-500/20">
-        <Stethoscope className="w-6 h-6 text-sky-500" />
+      <Card className="p-4 border-border bg-secondary">
+        <Stethoscope className="w-6 h-6 text-foreground" />
         <p className="font-bold text-[15px] mt-2">Need to talk to a doctor?</p>
         <p className="text-[12px] text-muted-foreground mt-0.5">Book a video or voice consultation in minutes.</p>
         <div className="flex gap-2 mt-3">
@@ -713,7 +713,7 @@ function TelehealthView() {
         <div className="space-y-2">
           {docs.map((d) => (
             <Card key={d.name} className="p-3 flex items-center gap-3">
-              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-sky-500 to-blue-500 flex items-center justify-center shrink-0 text-white font-bold">
+              <div className="w-12 h-12 rounded-full flex items-center justify-center shrink-0 text-white font-bold bg-foreground">
                 {d.name.split(" ")[1][0]}
               </div>
               <div className="flex-1 min-w-0">
@@ -726,7 +726,7 @@ function TelehealthView() {
                 {d.online && (
                   <button
                     onClick={() => handleBook(d.name, "video")}
-                    className="text-[10px] font-semibold text-sky-600 bg-sky-500/10 px-2 py-0.5 rounded-full"
+                    className="text-[10px] font-semibold text-foreground bg-secondary px-2 py-0.5 rounded-full"
                   >
                     Book
                   </button>

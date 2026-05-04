@@ -30,7 +30,7 @@ const TIER_META: Omit<FareTier, "price" | "originalPrice">[] = [
   { id: "economy", name: "Economy", icon: Car, eta: 4, surge: 1.0, features: ["4 seats", "Standard car"], color: "text-emerald-500", gradient: "from-emerald-500/10 to-emerald-500/5" },
   { id: "comfort", name: "Comfort", icon: Sparkles, eta: 3, surge: 1.0, features: ["4 seats", "Newer cars", "Extra legroom"], color: "text-primary", gradient: "from-primary/10 to-primary/5", recommended: true },
   { id: "black-lane", name: "Premium", icon: Crown, eta: 5, surge: 1.0, features: ["4 seats", "Luxury vehicle", "Top-rated driver", "Complimentary water"], color: "text-amber-500", gradient: "from-amber-500/10 to-amber-500/5" },
-  { id: "share", name: "Shared", icon: Users, eta: 7, surge: 1.0, features: ["Shared ride", "1-2 extra stops", "Best value"], color: "text-sky-500", gradient: "from-sky-500/10 to-sky-500/5" },
+  { id: "share", name: "Shared", icon: Users, eta: 7, surge: 1.0, features: ["Shared ride", "1-2 extra stops", "Best value"], color: "text-sky-500", gradient: "from-muted to-muted" },
 ];
 
 /* Fallback prices (only used when DB has no data) */

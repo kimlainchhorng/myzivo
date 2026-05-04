@@ -109,6 +109,14 @@ Deno.serve(async (req) => {
           await admin.from("food_orders").update({ payment_status: next, ...extra } as any).eq("id", resolvedOrderId);
           if (next === "paid") {
             try { await notifyEatsOrderConfirmed(admin, resolvedOrderId, "Square"); } catch (e) { console.warn("[square-eats-webhook] confirmation email skipped", e); }
+            // Dispatch driver now that Square confirmed payment.
+            try {
+              await fetch(`${supabaseUrl}/functions/v1/dispatch-eats-order`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", Authorization: `Bearer ${serviceKey}` },
+                body: JSON.stringify({ order_id: resolvedOrderId }),
+              });
+            } catch (e) { console.warn("[square-eats-webhook] dispatch skipped", e); }
           }
           processingStatus = "applied";
         }

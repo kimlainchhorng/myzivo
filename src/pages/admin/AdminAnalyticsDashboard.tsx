@@ -11,6 +11,7 @@ import {
   Eye, Package, Car, UserPlus, Plane, Store, Activity, Wallet, Zap,
   Megaphone, Bell, UserCheck, Utensils, Radio, Film, Heart,
 } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, PieChart, Pie, Cell, Legend,
@@ -66,7 +67,7 @@ function StatCard({
 }: {
   title: string;
   value: string | number;
-  icon: any;
+  icon: LucideIcon;
   trend?: number;
   subtitle?: string;
   color?: "green" | "blue" | "orange" | "purple" | "sky" | "red";

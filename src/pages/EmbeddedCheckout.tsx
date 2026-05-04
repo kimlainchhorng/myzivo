@@ -217,10 +217,10 @@ const EmbeddedCheckout = () => {
       </header>
 
       {/* Partner Notice Bar */}
-      <div className="fixed top-16 left-0 right-0 z-40 bg-sky-500/10 border-b border-sky-500/20 py-2">
+      <div className="fixed top-16 left-0 right-0 z-40 bg-secondary border-b border-border py-2">
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-center gap-2 text-sm">
-            <Info className="w-4 h-4 text-sky-500" />
+            <Info className="w-4 h-4 text-foreground" />
             <span className="text-muted-foreground">
               Payment and ticketing handled by <strong className="text-foreground">{partnerName}</strong>
             </span>
@@ -272,7 +272,7 @@ const EmbeddedCheckout = () => {
                     </div>
                   </div>
                   <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 text-left">
-                    <Lock className="w-5 h-5 text-sky-500 shrink-0" />
+                    <Lock className="w-5 h-5 text-foreground shrink-0" />
                     <div>
                       <p className="font-medium text-sm">Stay on Hizovo</p>
                       <p className="text-xs text-muted-foreground">No redirects to external sites</p>

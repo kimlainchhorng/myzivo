@@ -125,7 +125,7 @@ export default function CreatorLiveEarningsPage() {
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,hsl(38_92%_50%/0.25),transparent_55%)]" />
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_85%_90%,hsl(340_75%_55%/0.2),transparent_50%)]" />
           <div className="absolute -top-16 -right-16 w-56 h-56 rounded-full bg-amber-500/10 blur-2xl" />
-          <div className="absolute -bottom-12 -left-12 w-44 h-44 rounded-full bg-rose-500/10 blur-2xl" />
+          <div className="absolute -bottom-12 -left-12 w-44 h-44 rounded-full bg-secondary blur-2xl" />
 
           {/* Glass overlay */}
           <div className="absolute inset-0 bg-white/[0.02] backdrop-blur-[2px] border border-white/10 rounded-[28px]" />
@@ -301,7 +301,7 @@ export default function CreatorLiveEarningsPage() {
                             {s.title || "Untitled stream"}
                           </p>
                           {isLive && (
-                            <Badge className="bg-rose-500 text-white border-0 text-[9px] font-extrabold px-1.5 py-0 h-4 animate-pulse">
+                            <Badge className="bg-foreground text-white border-0 text-[9px] font-extrabold px-1.5 py-0 h-4 animate-pulse">
                               ● LIVE
                             </Badge>
                           )}
@@ -331,7 +331,7 @@ export default function CreatorLiveEarningsPage() {
                             initial={{ width: 0 }}
                             animate={{ width: `${fillPct}%` }}
                             transition={{ duration: 0.8, delay: i * 0.05 }}
-                            className="h-full bg-gradient-to-r from-amber-400 to-rose-500 rounded-full"
+                            className="h-full bg-gradient-to-r from-amber-400 rounded-full"
                           />
                         </div>
                       </div>
@@ -570,7 +570,7 @@ function EmptyStreamsState({ onGoLive }: { onGoLive: () => void }) {
     <div className="zivo-card-organic p-8 text-center border-dashed relative overflow-hidden">
       {/* Decorative gradient blobs */}
       <div className="absolute -top-10 -left-10 w-32 h-32 rounded-full bg-amber-500/5 blur-2xl" />
-      <div className="absolute -bottom-10 -right-10 w-32 h-32 rounded-full bg-rose-500/5 blur-2xl" />
+      <div className="absolute -bottom-10 -right-10 w-32 h-32 rounded-full bg-secondary blur-2xl" />
 
       <div className="relative">
         {/* Illustration: stacked floating gift icons */}
@@ -585,7 +585,7 @@ function EmptyStreamsState({ onGoLive }: { onGoLive: () => void }) {
           <motion.div
             animate={{ y: [0, 8, 0], rotate: [8, -8, 8] }}
             transition={{ duration: 5, repeat: Infinity }}
-            className="absolute bottom-0 right-0 w-12 h-12 rounded-2xl bg-gradient-to-br from-rose-400 to-pink-600 flex items-center justify-center shadow-xl"
+            className="absolute bottom-0 right-0 w-12 h-12 rounded-2xl flex items-center justify-center shadow-xl bg-secondary"
           >
             <Heart className="w-6 h-6 text-white" />
           </motion.div>
@@ -605,7 +605,7 @@ function EmptyStreamsState({ onGoLive }: { onGoLive: () => void }) {
         </p>
         <Button
           onClick={onGoLive}
-          className="h-12 px-6 rounded-2xl text-sm font-extrabold gap-2 bg-gradient-to-r from-rose-500 to-orange-500 hover:opacity-90 text-white shadow-lg shadow-rose-500/25 active:scale-[0.97]"
+          className="h-12 px-6 rounded-2xl text-sm font-extrabold gap-2 hover:opacity-90 text-white shadow-lg active:scale-[0.97] bg-foreground"
         >
           <Radio className="w-4 h-4" /> Go Live Now
         </Button>

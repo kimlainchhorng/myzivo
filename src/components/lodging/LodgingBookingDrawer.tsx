@@ -975,7 +975,7 @@ function PriceSummary({ breakdown, fmt }: { breakdown: Breakdown; fmt: (c: numbe
     <div className="p-3.5 rounded-2xl bg-gradient-to-br from-muted/50 to-muted/20 border border-border/60 text-xs space-y-1 shadow-sm">
       <div className="flex justify-between items-center">
         <span className="text-muted-foreground inline-flex items-center gap-1.5">
-          <BedDouble className="h-3.5 w-3.5 text-sky-600 dark:text-sky-400 shrink-0" />
+          <BedDouble className="h-3.5 w-3.5 text-foreground dark:text-foreground shrink-0" />
           Room · {breakdown.nights} night{breakdown.nights > 1 ? "s" : ""}
         </span>
         <span className="font-semibold tabular-nums">{fmt(breakdown.roomTotal - breakdown.weekendUplift)}</span>
@@ -1002,8 +1002,8 @@ function PriceSummary({ breakdown, fmt }: { breakdown: Breakdown; fmt: (c: numbe
         <div key={i} className="flex justify-between items-center">
           <span className="text-muted-foreground truncate pr-2 inline-flex items-center gap-1.5">
             {a.icon
-              ? <AddonIcon slug={a.icon} className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400 shrink-0" />
-              : <Sparkles className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400 shrink-0" />}
+              ? <AddonIcon slug={a.icon} className="h-3.5 w-3.5 text-foreground dark:text-foreground shrink-0" />
+              : <Sparkles className="h-3.5 w-3.5 text-foreground dark:text-foreground shrink-0" />}
             <span className="truncate">{a.name} ({a.per === "stay" ? "stay" : `${a.qty}× ${a.per === "person_night" ? "guest/night" : a.per}`})</span>
           </span>
           <span className="tabular-nums shrink-0">{fmt(a.subtotal_cents)}</span>
@@ -1021,7 +1021,7 @@ function PriceSummary({ breakdown, fmt }: { breakdown: Breakdown; fmt: (c: numbe
       {breakdown.extraChildFee > 0 && (
         <div className="flex justify-between items-center">
           <span className="text-muted-foreground inline-flex items-center gap-1.5">
-            <Baby className="h-3.5 w-3.5 text-pink-500 shrink-0" />
+            <Baby className="h-3.5 w-3.5 text-foreground shrink-0" />
             Extra child fee
           </span>
           <span className="tabular-nums">{fmt(breakdown.extraChildFee)}</span>
@@ -1030,7 +1030,7 @@ function PriceSummary({ breakdown, fmt }: { breakdown: Breakdown; fmt: (c: numbe
       {breakdown.cleaningFee > 0 && (
         <div className="flex justify-between items-center">
           <span className="text-muted-foreground inline-flex items-center gap-1.5">
-            <Sparkles className="h-3.5 w-3.5 text-cyan-600 dark:text-cyan-400 shrink-0" />
+            <Sparkles className="h-3.5 w-3.5 text-foreground dark:text-foreground shrink-0" />
             Cleaning fee
           </span>
           <span className="tabular-nums">{fmt(breakdown.cleaningFee)}</span>
@@ -1039,7 +1039,7 @@ function PriceSummary({ breakdown, fmt }: { breakdown: Breakdown; fmt: (c: numbe
       {breakdown.resortFee > 0 && (
         <div className="flex justify-between items-center">
           <span className="text-muted-foreground inline-flex items-center gap-1.5">
-            <Building className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400 shrink-0" />
+            <Building className="h-3.5 w-3.5 text-foreground dark:text-foreground shrink-0" />
             Resort fee
           </span>
           <span className="tabular-nums">{fmt(breakdown.resortFee)}</span>
@@ -1048,7 +1048,7 @@ function PriceSummary({ breakdown, fmt }: { breakdown: Breakdown; fmt: (c: numbe
       {breakdown.cityTax > 0 && (
         <div className="flex justify-between items-center">
           <span className="text-muted-foreground inline-flex items-center gap-1.5">
-            <Landmark className="h-3.5 w-3.5 text-rose-600 dark:text-rose-400 shrink-0" />
+            <Landmark className="h-3.5 w-3.5 text-foreground dark:text-foreground shrink-0" />
             City tax
           </span>
           <span className="tabular-nums">{fmt(breakdown.cityTax)}</span>

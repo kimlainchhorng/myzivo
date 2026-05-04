@@ -113,7 +113,7 @@ function DeliveryTrackingTimeline() {
               <p className={cn("text-xs font-bold", isDone ? "text-foreground" : "text-muted-foreground")}>{s.label}</p>
               <p className="text-[10px] text-muted-foreground">{s.time}</p>
             </div>
-            {isDone && i < activeStep && <CheckCircle className="w-3.5 h-3.5 text-violet-500" />}
+            {isDone && i < activeStep && <CheckCircle className="w-3.5 h-3.5 text-foreground" />}
             {isActive && <span className="w-2 h-2 rounded-full bg-amber-500 animate-pulse" />}
           </motion.div>
         );
@@ -129,16 +129,16 @@ function CourierPreviewCard() {
   if (!show) return null;
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl bg-card border border-violet-500/20 p-4 space-y-3 shadow-lg shadow-violet-500/10">
+      className="rounded-2xl bg-card border border-border p-4 space-y-3 shadow-lg">
       <div className="flex items-center gap-3">
-        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-violet-500/20 to-purple-500/20 flex items-center justify-center text-lg font-bold text-violet-500">J</div>
+        <div className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold text-foreground bg-secondary">J</div>
         <div className="flex-1">
           <p className="text-sm font-bold text-foreground">Jamie R.</p>
           <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
             <Star className="w-3 h-3 fill-amber-400 text-amber-400" /> 4.95 · 1,204 deliveries
           </div>
         </div>
-        <span className="text-[10px] font-bold text-violet-500 bg-violet-500/10 px-2 py-1 rounded-full animate-pulse">Assigning...</span>
+        <span className="text-[10px] font-bold text-foreground bg-secondary px-2 py-1 rounded-full animate-pulse">Assigning...</span>
       </div>
       <div className="flex gap-2">
         <div className="flex-1 p-2 rounded-lg bg-muted/30 text-center">
@@ -163,12 +163,12 @@ function PriceEstimate({ basePrice, speed, fragile, signature, insurance, packag
   const final = total - discount;
   return (
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-      className="rounded-xl bg-violet-500/5 border border-violet-500/20 p-3 flex items-center justify-between">
+      className="rounded-xl bg-secondary border border-border p-3 flex items-center justify-between">
       <div className="flex items-center gap-2">
-        <DollarSign className="w-4 h-4 text-violet-500" />
+        <DollarSign className="w-4 h-4 text-foreground" />
         <span className="text-xs font-bold text-foreground">Estimated total</span>
       </div>
-      <span className="text-base font-bold text-violet-500">${final.toFixed(2)}</span>
+      <span className="text-base font-bold text-foreground">${final.toFixed(2)}</span>
     </motion.div>
   );
 }
@@ -496,8 +496,8 @@ export default function DeliveryPage() {
               <ArrowLeft className="w-5 h-5 text-foreground" />
             </motion.button>
             <div className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-500/10 flex items-center justify-center">
-                <Package className="w-5 h-5 text-violet-500" />
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center bg-secondary">
+                <Package className="w-5 h-5 text-foreground" />
               </div>
               <div>
                 <h1 className="text-base font-bold text-foreground">Send a Package</h1>
@@ -546,7 +546,7 @@ export default function DeliveryPage() {
 
               <div className="rounded-2xl bg-card border border-border/40 p-4 space-y-3">
                 <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 rounded-full border-2 border-violet-500 bg-violet-500/20 shrink-0" />
+                  <div className="w-3 h-3 rounded-full border-2 border-border bg-secondary shrink-0" />
                   <Input placeholder="Pickup address" value={pickupAddress} onChange={(e) => setPickupAddress(e.target.value)} className="h-11 border-0 bg-transparent px-0 text-sm font-medium focus-visible:ring-0 shadow-none" />
                 </div>
                 <div className="ml-1.5 border-l-2 border-dashed border-border/40 h-3" />
@@ -569,7 +569,7 @@ export default function DeliveryPage() {
                       className="space-y-1.5 overflow-hidden">
                       {previousDeliveries.map(d => (
                         <button key={d.id} onClick={() => handleLoadPrevious(d)}
-                          className="w-full flex items-center gap-3 p-3 rounded-xl bg-card border border-border/30 hover:border-violet-500/20 transition-all touch-manipulation active:scale-[0.98] text-left">
+                          className="w-full flex items-center gap-3 p-3 rounded-xl bg-card border border-border/30 hover:border-border transition-all touch-manipulation active:scale-[0.98] text-left">
                           <RotateCcw className="w-4 h-4 text-muted-foreground shrink-0" />
                           <div className="flex-1 min-w-0">
                             <p className="text-xs font-bold text-foreground truncate">{d.from} → {d.to}</p>
@@ -584,7 +584,7 @@ export default function DeliveryPage() {
               </div>
 
               <div className="space-y-3">
-                <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><Phone className="w-4 h-4 text-violet-500" /> Contact Details</h3>
+                <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><Phone className="w-4 h-4 text-foreground" /> Contact Details</h3>
                 <div className="grid grid-cols-2 gap-2">
                   <Input placeholder="Sender name" value={senderName} onChange={(e) => setSenderName(e.target.value)} className="h-12 rounded-xl" />
                   <Input placeholder="Sender phone" value={senderPhone} onChange={(e) => setSenderPhone(e.target.value)} className="h-12 rounded-xl" type="tel" />
@@ -602,12 +602,12 @@ export default function DeliveryPage() {
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", notifyRecipient ? "left-[18px]" : "left-0.5")} />
                 </button>
                 <div className="flex-1">
-                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Bell className="w-3.5 h-3.5 text-violet-500" /> Notify recipient</p>
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Bell className="w-3.5 h-3.5 text-foreground" /> Notify recipient</p>
                   <p className="text-[10px] text-muted-foreground">Send SMS updates to recipient</p>
                 </div>
               </div>
 
-              <Button onClick={handleContinueToPackage} className="w-full h-14 text-base font-bold gap-2.5 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-500/90 hover:to-purple-600/90 text-primary-foreground shadow-lg shadow-violet-500/25 active:scale-[0.98] transition-all" size="lg">
+              <Button onClick={handleContinueToPackage} className="w-full h-14 text-base font-bold gap-2.5 rounded-2xl hover:hover:text-primary-foreground shadow-lg active:scale-[0.98] transition-all bg-foreground" size="lg">
                 Continue <Zap className="w-5 h-5" />
               </Button>
             </motion.div>
@@ -630,14 +630,14 @@ export default function DeliveryPage() {
                       className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-foreground font-bold touch-manipulation active:scale-90">−</button>
                     <span className="text-lg font-bold w-6 text-center">{packageCount}</span>
                     <button onClick={() => setPackageCount(Math.min(10, packageCount + 1))}
-                      className="w-8 h-8 rounded-full bg-violet-500 text-primary-foreground flex items-center justify-center font-bold touch-manipulation active:scale-90">+</button>
+                      className="w-8 h-8 rounded-full bg-foreground text-primary-foreground flex items-center justify-center font-bold touch-manipulation active:scale-90">+</button>
                   </div>
                 </div>
               </div>
 
               {/* Sizes */}
               <div className="space-y-2">
-                <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><Box className="w-4 h-4 text-violet-500" /> Package Size</h3>
+                <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><Box className="w-4 h-4 text-foreground" /> Package Size</h3>
                 {packageSizes.map((size, i) => (
                   <motion.button key={size.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
                     onClick={() => setSelectedSize(size.id)}
@@ -657,7 +657,7 @@ export default function DeliveryPage() {
 
               {/* Speed */}
               <div className="space-y-2">
-                <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><Clock className="w-4 h-4 text-violet-500" /> Delivery Speed</h3>
+                <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><Clock className="w-4 h-4 text-foreground" /> Delivery Speed</h3>
                 <div className="grid grid-cols-2 gap-2">
                   {deliverySpeed.map(speed => {
                     const Icon = speed.icon;
@@ -670,7 +670,7 @@ export default function DeliveryPage() {
                         <Icon className={cn("w-4 h-4 mx-auto mb-1", selectedSpeed === speed.id ? "text-violet-500" : "text-muted-foreground")} />
                         <p className="font-bold text-xs text-foreground">{speed.name}</p>
                         <p className="text-[10px] text-muted-foreground mt-0.5">{speed.time}</p>
-                        {speed.badge && <span className="text-[9px] font-bold text-violet-500 mt-1 inline-block">{speed.badge}</span>}
+                        {speed.badge && <span className="text-[9px] font-bold text-foreground mt-1 inline-block">{speed.badge}</span>}
                       </button>
                     );
                   })}
@@ -679,7 +679,7 @@ export default function DeliveryPage() {
 
               {/* Schedule */}
               <div className="space-y-2">
-                <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><Calendar className="w-4 h-4 text-violet-500" /> Schedule Delivery</h3>
+                <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><Calendar className="w-4 h-4 text-foreground" /> Schedule Delivery</h3>
                 <div className="grid grid-cols-2 gap-2">
                   {scheduleTimes.map(time => (
                     <button key={time.id} onClick={() => setScheduledTime(time.id)}
@@ -696,7 +696,7 @@ export default function DeliveryPage() {
 
               {/* Special handling toggles */}
               <div className="space-y-2">
-                <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><Shield className="w-4 h-4 text-violet-500" /> Special Handling</h3>
+                <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><Shield className="w-4 h-4 text-foreground" /> Special Handling</h3>
                 <div className="flex gap-2">
                   <button onClick={() => setIsFragile(!isFragile)}
                     className={cn(
@@ -766,7 +766,7 @@ export default function DeliveryPage() {
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", includeInsurance ? "left-[18px]" : "left-0.5")} />
                 </button>
                 <div className="flex-1">
-                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-violet-500" /> Package Insurance</p>
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-foreground" /> Package Insurance</p>
                   <p className="text-[10px] text-muted-foreground">Cover up to $500 for +$1.99{packageCount > 1 ? `/pkg` : ""}</p>
                 </div>
               </div>
@@ -778,7 +778,7 @@ export default function DeliveryPage() {
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", returnShipping ? "left-[18px]" : "left-0.5")} />
                 </button>
                 <div className="flex-1">
-                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><RotateCcw className="w-3.5 h-3.5 text-violet-500" /> Return shipping label</p>
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><RotateCcw className="w-3.5 h-3.5 text-foreground" /> Return shipping label</p>
                   <p className="text-[10px] text-muted-foreground">Include prepaid return label · +$3.99</p>
                 </div>
               </div>
@@ -797,7 +797,7 @@ export default function DeliveryPage() {
 
               {/* Declared Value */}
               <div className="rounded-2xl bg-card border border-border/40 p-3 space-y-2">
-                <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><DollarSign className="w-3.5 h-3.5 text-violet-500" /> Declared value (optional)</p>
+                <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><DollarSign className="w-3.5 h-3.5 text-foreground" /> Declared value (optional)</p>
                 <Input placeholder="Enter package value in USD" type="number" value={declaredValue} onChange={(e) => setDeclaredValue(e.target.value)} className="h-10 rounded-xl text-sm" />
                 <p className="text-[10px] text-muted-foreground">Higher declared value may increase insurance coverage</p>
               </div>
@@ -809,7 +809,7 @@ export default function DeliveryPage() {
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", multiStop ? "left-[18px]" : "left-0.5")} />
                 </button>
                 <div className="flex-1">
-                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-violet-500" /> Multi-stop delivery</p>
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-foreground" /> Multi-stop delivery</p>
                   <p className="text-[10px] text-muted-foreground">Add multiple drop-off locations</p>
                 </div>
               </div>
@@ -844,15 +844,15 @@ export default function DeliveryPage() {
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", liveUpdates ? "left-[18px]" : "left-0.5")} />
                 </button>
                 <div className="flex-1">
-                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Bell className="w-3.5 h-3.5 text-violet-500" /> Live tracking updates</p>
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Bell className="w-3.5 h-3.5 text-foreground" /> Live tracking updates</p>
                   <p className="text-[10px] text-muted-foreground">Real-time SMS & push notifications</p>
                 </div>
               </div>
 
               {/* Business Account Banner */}
               <button onClick={() => { setBusinessAccount(!businessAccount); toast.info(businessAccount ? "Switched to personal" : "Business receipts enabled"); }}
-                className="w-full rounded-2xl bg-gradient-to-r from-violet-500/10 to-purple-500/10 border border-violet-500/20 p-3 flex items-center gap-3 touch-manipulation active:scale-[0.98] transition-all">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shrink-0">
+                className="w-full rounded-2xl border border-border p-3 flex items-center gap-3 touch-manipulation active:scale-[0.98] transition-all bg-secondary">
+                <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-secondary">
                   <Award className="w-5 h-5 text-primary-foreground" />
                 </div>
                 <div className="flex-1 text-left">
@@ -878,7 +878,7 @@ export default function DeliveryPage() {
                         <span className="text-xs font-bold text-foreground">{tier.label}</span>
                         <span className="text-[10px] text-muted-foreground ml-2">{tier.coverage}</span>
                       </div>
-                      <span className="text-xs font-bold text-violet-500">{tier.cost === 0 ? "Free" : `+$${tier.cost.toFixed(2)}`}</span>
+                      <span className="text-xs font-bold text-foreground">{tier.cost === 0 ? "Free" : `+$${tier.cost.toFixed(2)}`}</span>
                     </button>
                   ))}
                 </div>
@@ -899,7 +899,7 @@ export default function DeliveryPage() {
                   ))}
                 </div>
                 {recurringSchedule !== "none" && (
-                  <p className="text-[10px] text-violet-500 mt-2 font-medium">📅 {recurringOptions.find(o => o.id === recurringSchedule)?.description}</p>
+                  <p className="text-[10px] text-foreground mt-2 font-medium">📅 {recurringOptions.find(o => o.id === recurringSchedule)?.description}</p>
                 )}
               </div>
 
@@ -910,7 +910,7 @@ export default function DeliveryPage() {
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", requirePhotoId ? "left-[18px]" : "left-0.5")} />
                 </button>
                 <div className="flex-1">
-                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-violet-500" /> Require photo ID on delivery</p>
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-foreground" /> Require photo ID on delivery</p>
                   <p className="text-[10px] text-muted-foreground">Recipient must show valid ID · +$1.99</p>
                 </div>
               </div>
@@ -922,7 +922,7 @@ export default function DeliveryPage() {
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", giftWrapping ? "left-[18px]" : "left-0.5")} />
                 </button>
                 <div className="flex-1">
-                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Gift className="w-3.5 h-3.5 text-violet-500" /> Gift wrapping</p>
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Gift className="w-3.5 h-3.5 text-foreground" /> Gift wrapping</p>
                   <p className="text-[10px] text-muted-foreground">Premium gift wrap & card · +$3.99</p>
                 </div>
               </div>
@@ -938,7 +938,7 @@ export default function DeliveryPage() {
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", peerDelivery ? "left-[18px]" : "left-0.5")} />
                 </button>
                 <div className="flex-1">
-                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-violet-500" /> Peer Delivery (Roadie-style)</p>
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-foreground" /> Peer Delivery (Roadie-style)</p>
                   <p className="text-[10px] text-muted-foreground">Match with nearby drivers already going your way</p>
                 </div>
               </div>
@@ -962,7 +962,7 @@ export default function DeliveryPage() {
                       <button key={bid.id} onClick={() => { setSelectedBid(bid.id); toast.success(`Selected ${bid.name}'s offer!`); }}
                         className={cn("w-full flex items-center gap-3 p-3 rounded-xl border transition-all touch-manipulation active:scale-[0.98] text-left",
                           selectedBid === bid.id ? "border-violet-500 bg-violet-500/5" : "border-border/40 bg-card")}>
-                        <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500/20 to-purple-500/20 flex items-center justify-center text-sm font-bold text-violet-500">
+                        <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-foreground bg-secondary">
                           {bid.name.charAt(0)}
                         </div>
                         <div className="flex-1 min-w-0">
@@ -974,7 +974,7 @@ export default function DeliveryPage() {
                           </div>
                         </div>
                         <div className="text-right shrink-0">
-                          <p className="text-sm font-bold text-violet-500">${bid.price.toFixed(2)}</p>
+                          <p className="text-sm font-bold text-foreground">${bid.price.toFixed(2)}</p>
                           <p className="text-[10px] text-muted-foreground">{bid.eta}</p>
                         </div>
                       </button>
@@ -985,7 +985,7 @@ export default function DeliveryPage() {
 
               {/* Vehicle Type for Delivery (Roadie) */}
               <div className="rounded-2xl bg-card border border-border/40 p-4">
-                <p className="text-xs font-bold text-foreground flex items-center gap-1.5 mb-2"><Truck className="w-3.5 h-3.5 text-violet-500" /> Vehicle Type Needed</p>
+                <p className="text-xs font-bold text-foreground flex items-center gap-1.5 mb-2"><Truck className="w-3.5 h-3.5 text-foreground" /> Vehicle Type Needed</p>
                 <div className="flex gap-2 flex-wrap">
                   {(["any", "sedan", "suv", "truck", "van"] as const).map(v => (
                     <button key={v} onClick={() => setVehicleTypeForDelivery(v)}
@@ -1042,7 +1042,7 @@ export default function DeliveryPage() {
 
               {/* Pickup Window (Roadie) */}
               <div className="rounded-2xl bg-card border border-border/40 p-4">
-                <p className="text-xs font-bold text-foreground flex items-center gap-1.5 mb-2"><Clock className="w-3.5 h-3.5 text-violet-500" /> Pickup Window</p>
+                <p className="text-xs font-bold text-foreground flex items-center gap-1.5 mb-2"><Clock className="w-3.5 h-3.5 text-foreground" /> Pickup Window</p>
                 <div className="flex gap-2 flex-wrap">
                   {(["flexible", "morning", "afternoon", "evening"] as const).map(w => (
                     <button key={w} onClick={() => setScheduledPickupWindow(w)}
@@ -1084,7 +1084,7 @@ export default function DeliveryPage() {
 
               {/* Package Dimensions */}
               <div className="rounded-2xl bg-card border border-border/40 p-4">
-                <p className="text-xs font-bold text-foreground flex items-center gap-1.5 mb-2"><Ruler className="w-3.5 h-3.5 text-violet-500" /> Package Dimensions (optional)</p>
+                <p className="text-xs font-bold text-foreground flex items-center gap-1.5 mb-2"><Ruler className="w-3.5 h-3.5 text-foreground" /> Package Dimensions (optional)</p>
                 <div className="grid grid-cols-3 gap-2">
                   <div>
                     <label className="text-[9px] text-muted-foreground uppercase font-bold">Length</label>
@@ -1124,7 +1124,7 @@ export default function DeliveryPage() {
               </div>
 
               {/* White Glove Service */}
-              <div className="rounded-2xl bg-gradient-to-r from-amber-500/10 to-violet-500/10 border border-amber-500/20 p-3 flex items-center gap-3">
+              <div className="rounded-2xl bg-gradient-to-r from-amber-500/10 border border-amber-500/20 p-3 flex items-center gap-3">
                 <button onClick={() => { setWhiteGloveService(!whiteGloveService); if (!whiteGloveService) toast.success("🤵 White-glove service added — premium handling & setup!"); }}
                   className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", whiteGloveService ? "bg-amber-500" : "bg-muted/60")}>
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", whiteGloveService ? "left-[18px]" : "left-0.5")} />
@@ -1165,14 +1165,14 @@ export default function DeliveryPage() {
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", neighborDelivery ? "left-[18px]" : "left-0.5")} />
                 </button>
                 <div className="flex-1">
-                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-violet-500" /> Allow neighbor delivery</p>
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Users className="w-3.5 h-3.5 text-foreground" /> Allow neighbor delivery</p>
                   <p className="text-[10px] text-muted-foreground">If not home, deliver to a neighbor</p>
                 </div>
               </div>
 
               {/* Delivery Attempts */}
               <div className="rounded-2xl bg-card border border-border/40 p-4">
-                <p className="text-xs font-bold text-foreground flex items-center gap-1.5 mb-2"><RefreshCw className="w-3.5 h-3.5 text-violet-500" /> Delivery attempts</p>
+                <p className="text-xs font-bold text-foreground flex items-center gap-1.5 mb-2"><RefreshCw className="w-3.5 h-3.5 text-foreground" /> Delivery attempts</p>
                 <div className="flex gap-2">
                   {[1, 2, 3].map(n => (
                     <button key={n} onClick={() => setDeliveryAttempts(n)}
@@ -1182,7 +1182,7 @@ export default function DeliveryPage() {
                     </button>
                   ))}
                 </div>
-                {deliveryAttempts > 1 && <p className="text-[10px] text-violet-500 mt-2 font-medium">+${((deliveryAttempts - 1) * 2.99).toFixed(2)} per additional attempt</p>}
+                {deliveryAttempts > 1 && <p className="text-[10px] text-foreground mt-2 font-medium">+${((deliveryAttempts - 1) * 2.99).toFixed(2)} per additional attempt</p>}
               </div>
 
               {/* Shipment Stats */}
@@ -1231,7 +1231,7 @@ export default function DeliveryPage() {
 
               {/* Temperature Control */}
               <div className="rounded-2xl bg-card border border-border/40 p-4">
-                <p className="text-xs font-bold text-foreground flex items-center gap-1.5 mb-2"><Thermometer className="w-3.5 h-3.5 text-sky-500" /> Temperature control</p>
+                <p className="text-xs font-bold text-foreground flex items-center gap-1.5 mb-2"><Thermometer className="w-3.5 h-3.5 text-foreground" /> Temperature control</p>
                 <div className="flex gap-2">
                   {([
                     { id: "none" as const, label: "None" },
@@ -1246,7 +1246,7 @@ export default function DeliveryPage() {
                     </button>
                   ))}
                 </div>
-                {tempControl !== "none" && <p className="text-[10px] text-sky-500 mt-2 font-medium">+$4.99 for temperature-controlled shipping</p>}
+                {tempControl !== "none" && <p className="text-[10px] text-foreground mt-2 font-medium">+$4.99 for temperature-controlled shipping</p>}
               </div>
 
               {/* Package Locker */}
@@ -1257,7 +1257,7 @@ export default function DeliveryPage() {
                     <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", packageLocker ? "left-[18px]" : "left-0.5")} />
                   </button>
                   <div className="flex-1">
-                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><LockIcon className="w-3.5 h-3.5 text-violet-500" /> Deliver to package locker</p>
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><LockIcon className="w-3.5 h-3.5 text-foreground" /> Deliver to package locker</p>
                     <p className="text-[10px] text-muted-foreground">Secure pickup at your convenience</p>
                   </div>
                 </div>
@@ -1276,7 +1276,7 @@ export default function DeliveryPage() {
                     <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", multiAddress ? "left-[18px]" : "left-0.5")} />
                   </button>
                   <div className="flex-1">
-                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-violet-500" /> Multi-address delivery</p>
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><MapPin className="w-3.5 h-3.5 text-foreground" /> Multi-address delivery</p>
                     <p className="text-[10px] text-muted-foreground">Split package to multiple addresses</p>
                   </div>
                 </div>
@@ -1284,14 +1284,14 @@ export default function DeliveryPage() {
                   <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2 mt-2">
                     {extraAddresses.map((addr, i) => (
                       <div key={i} className="flex items-center gap-2">
-                        <div className="w-2.5 h-2.5 rounded-full bg-violet-500 shrink-0" />
+                        <div className="w-2.5 h-2.5 rounded-full bg-foreground shrink-0" />
                         <Input value={addr} onChange={(e) => { const na = [...extraAddresses]; na[i] = e.target.value; setExtraAddresses(na); }}
                           placeholder={`Address ${i + 2}`} className="h-9 text-xs flex-1" />
                       </div>
                     ))}
                     {extraAddresses.length < 4 && (
                       <button onClick={() => setExtraAddresses([...extraAddresses, ""])}
-                        className="text-[10px] text-violet-500 font-bold flex items-center gap-1 touch-manipulation"><Plus className="w-3 h-3" /> Add address</button>
+                        className="text-[10px] text-foreground font-bold flex items-center gap-1 touch-manipulation"><Plus className="w-3 h-3" /> Add address</button>
                     )}
                   </motion.div>
                 )}
@@ -1305,7 +1305,7 @@ export default function DeliveryPage() {
                     <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", notifyRecipient ? "left-[18px]" : "left-0.5")} />
                   </button>
                   <div className="flex-1">
-                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Bell className="w-3.5 h-3.5 text-violet-500" /> Notify recipient</p>
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Bell className="w-3.5 h-3.5 text-foreground" /> Notify recipient</p>
                     <p className="text-[10px] text-muted-foreground">Send tracking updates to the receiver</p>
                   </div>
                 </div>
@@ -1324,7 +1324,7 @@ export default function DeliveryPage() {
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", returnLabel ? "left-[18px]" : "left-0.5")} />
                 </button>
                 <div className="flex-1">
-                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><RotateCcw className="w-3.5 h-3.5 text-violet-500" /> Include return label</p>
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><RotateCcw className="w-3.5 h-3.5 text-foreground" /> Include return label</p>
                   <p className="text-[10px] text-muted-foreground">Prepaid return shipping · +$5.99</p>
                 </div>
               </div>
@@ -1336,7 +1336,7 @@ export default function DeliveryPage() {
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", saturdayDelivery ? "left-[18px]" : "left-0.5")} />
                 </button>
                 <div className="flex-1">
-                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-violet-500" /> Saturday delivery</p>
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Calendar className="w-3.5 h-3.5 text-foreground" /> Saturday delivery</p>
                   <p className="text-[10px] text-muted-foreground">Deliver on weekends · +$3.99</p>
                 </div>
               </div>
@@ -1355,7 +1355,7 @@ export default function DeliveryPage() {
               {/* Past Deliveries */}
               <div className="rounded-2xl bg-card border border-border/40 p-4">
                 <button onClick={() => setShowDeliveryHistory(!showDeliveryHistory)} className="w-full flex items-center justify-between">
-                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><History className="w-3.5 h-3.5 text-violet-500" /> Recent deliveries</p>
+                  <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><History className="w-3.5 h-3.5 text-foreground" /> Recent deliveries</p>
                   <ChevronRight className={cn("w-3.5 h-3.5 text-muted-foreground transition-transform", showDeliveryHistory && "rotate-90")} />
                 </button>
                 <AnimatePresence>
@@ -1413,7 +1413,7 @@ export default function DeliveryPage() {
                 <PriceEstimate basePrice={currentSize?.price ?? 0} speed={speedMultiplier} fragile={isFragile} signature={requireSignature} insurance={includeInsurance} packages={packageCount} promo={promoApplied} />
               )}
 
-              <Button onClick={handleContinueToReview} disabled={!selectedSize} className="w-full h-14 text-base font-bold gap-2.5 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-500/90 hover:to-purple-600/90 text-primary-foreground shadow-lg shadow-violet-500/25 active:scale-[0.98] transition-all" size="lg">
+              <Button onClick={handleContinueToReview} disabled={!selectedSize} className="w-full h-14 text-base font-bold gap-2.5 rounded-2xl hover:hover:text-primary-foreground shadow-lg active:scale-[0.98] transition-all bg-foreground" size="lg">
                 Review Order <Zap className="w-5 h-5" />
               </Button>
             </motion.div>
@@ -1428,8 +1428,8 @@ export default function DeliveryPage() {
               <div className="p-5 rounded-2xl bg-card border border-border/40 shadow-sm">
                 <div className="flex items-start gap-3">
                   <div className="flex flex-col items-center gap-1 pt-1">
-                    <div className="w-3 h-3 rounded-full bg-violet-500 shadow-sm" />
-                    <div className="w-0.5 h-10 bg-gradient-to-b from-violet-500/40 to-orange-500/40" />
+                    <div className="w-3 h-3 rounded-full bg-foreground shadow-sm" />
+                    <div className="w-0.5 h-10 bg-secondary" />
                     <div className="w-3 h-3 rounded-full bg-orange-500 shadow-sm" />
                   </div>
                   <div className="flex-1 space-y-4">
@@ -1446,7 +1446,7 @@ export default function DeliveryPage() {
                   </div>
                 </div>
                 {notifyRecipient && (
-                  <div className="mt-3 pt-3 border-t border-border/30 flex items-center gap-2 text-xs text-violet-500">
+                  <div className="mt-3 pt-3 border-t border-border/30 flex items-center gap-2 text-xs text-foreground">
                     <Bell className="w-3 h-3" /> Recipient will receive SMS updates
                   </div>
                 )}
@@ -1462,7 +1462,7 @@ export default function DeliveryPage() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
-                  <Truck className="w-5 h-5 text-violet-500" />
+                  <Truck className="w-5 h-5 text-foreground" />
                   <div className="flex-1">
                     <p className="font-bold text-sm">{currentSpeed?.name} Delivery</p>
                     <p className="text-xs text-muted-foreground">
@@ -1478,17 +1478,17 @@ export default function DeliveryPage() {
                     </span>
                   )}
                   {requireSignature && (
-                    <span className="flex items-center gap-1 text-[10px] font-bold text-violet-500 bg-violet-500/10 px-2.5 py-1 rounded-full">
+                    <span className="flex items-center gap-1 text-[10px] font-bold text-foreground bg-secondary px-2.5 py-1 rounded-full">
                       <CheckCircle className="w-3 h-3" /> Signature
                     </span>
                   )}
                   {priorityHandling && (
-                    <span className="flex items-center gap-1 text-[10px] font-bold text-violet-500 bg-violet-500/10 px-2.5 py-1 rounded-full">
+                    <span className="flex items-center gap-1 text-[10px] font-bold text-foreground bg-secondary px-2.5 py-1 rounded-full">
                       <Award className="w-3 h-3" /> Priority
                     </span>
                   )}
                   {photoAdded && (
-                    <span className="flex items-center gap-1 text-[10px] font-bold text-violet-500 bg-violet-500/10 px-2.5 py-1 rounded-full">
+                    <span className="flex items-center gap-1 text-[10px] font-bold text-foreground bg-secondary px-2.5 py-1 rounded-full">
                       <Camera className="w-3 h-3" /> Photo
                     </span>
                   )}
@@ -1498,12 +1498,12 @@ export default function DeliveryPage() {
                     </span>
                   )}
                   {requirePhotoId && (
-                    <span className="flex items-center gap-1 text-[10px] font-bold text-violet-500 bg-violet-500/10 px-2.5 py-1 rounded-full">
+                    <span className="flex items-center gap-1 text-[10px] font-bold text-foreground bg-secondary px-2.5 py-1 rounded-full">
                       <Users className="w-3 h-3" /> Photo ID
                     </span>
                   )}
                   {giftWrapping && (
-                    <span className="flex items-center gap-1 text-[10px] font-bold text-violet-500 bg-violet-500/10 px-2.5 py-1 rounded-full">
+                    <span className="flex items-center gap-1 text-[10px] font-bold text-foreground bg-secondary px-2.5 py-1 rounded-full">
                       <Gift className="w-3 h-3" /> Gift Wrapped
                     </span>
                   )}
@@ -1513,17 +1513,17 @@ export default function DeliveryPage() {
                     </span>
                   )}
                   {contactlessDelivery && (
-                    <span className="flex items-center gap-1 text-[10px] font-bold text-sky-500 bg-sky-500/10 px-2.5 py-1 rounded-full">
+                    <span className="flex items-center gap-1 text-[10px] font-bold text-foreground bg-secondary px-2.5 py-1 rounded-full">
                       <Shield className="w-3 h-3" /> Contactless
                     </span>
                   )}
                   {recurringSchedule !== "none" && (
-                    <span className="flex items-center gap-1 text-[10px] font-bold text-violet-500 bg-violet-500/10 px-2.5 py-1 rounded-full">
+                    <span className="flex items-center gap-1 text-[10px] font-bold text-foreground bg-secondary px-2.5 py-1 rounded-full">
                       <RefreshCw className="w-3 h-3" /> {recurringSchedule}
                     </span>
                   )}
                   {packageCount > 1 && (
-                    <span className="flex items-center gap-1 text-[10px] font-bold text-violet-500 bg-violet-500/10 px-2.5 py-1 rounded-full">
+                    <span className="flex items-center gap-1 text-[10px] font-bold text-foreground bg-secondary px-2.5 py-1 rounded-full">
                       <Package className="w-3 h-3" /> {packageCount} packages
                     </span>
                   )}
@@ -1555,19 +1555,19 @@ export default function DeliveryPage() {
                 {signatureFee > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Signature required</span><span className="font-bold">${signatureFee.toFixed(2)}</span></div>}
                 {includeInsurance && <div className="flex justify-between"><span className="text-muted-foreground">Insurance{packageCount > 1 ? ` (×${packageCount})` : ""}</span><span className="font-bold">${insuranceFee.toFixed(2)}</span></div>}
                 {priorityFee > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Priority handling</span><span className="font-bold">${priorityFee.toFixed(2)}</span></div>}
-                {promoDiscount > 0 && <div className="flex justify-between text-violet-500"><span className="font-bold flex items-center gap-1"><Tag className="w-3 h-3" /> DELIVER15</span><span className="font-bold">-${promoDiscount.toFixed(2)}</span></div>}
+                {promoDiscount > 0 && <div className="flex justify-between text-foreground"><span className="font-bold flex items-center gap-1"><Tag className="w-3 h-3" /> DELIVER15</span><span className="font-bold">-${promoDiscount.toFixed(2)}</span></div>}
                 <div className="flex justify-between pt-3 border-t border-border/30">
                   <span className="font-bold text-base">Total</span>
-                  <span className="font-bold text-xl text-violet-500">${totalPrice.toFixed(2)}</span>
+                  <span className="font-bold text-xl text-foreground">${totalPrice.toFixed(2)}</span>
                 </div>
               </div>
 
               <div className="flex items-center gap-2 text-xs text-muted-foreground justify-center">
-                <Shield className="w-3.5 h-3.5 text-violet-500/60" />
+                <Shield className="w-3.5 h-3.5 text-foreground/60" />
                 <span>{includeInsurance ? "Package insured up to $500" : "No insurance"} · Secured by ZIVO</span>
               </div>
 
-              <Button onClick={handlePlaceOrder} className="w-full h-14 text-base font-bold gap-2.5 rounded-2xl bg-gradient-to-r from-violet-500 to-purple-600 hover:from-violet-500/90 hover:to-purple-600/90 text-primary-foreground shadow-lg shadow-violet-500/25 active:scale-[0.98] transition-all" size="lg">
+              <Button onClick={handlePlaceOrder} className="w-full h-14 text-base font-bold gap-2.5 rounded-2xl hover:hover:text-primary-foreground shadow-lg active:scale-[0.98] transition-all bg-foreground" size="lg">
                 <CheckCircle className="w-5 h-5" /> Confirm Delivery · ${totalPrice.toFixed(2)}
               </Button>
             </motion.div>
@@ -1578,14 +1578,14 @@ export default function DeliveryPage() {
             <motion.div key="confirmation" initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col items-center justify-center min-h-[60vh]">
               <div className="max-w-md w-full text-center space-y-6">
                 <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", delay: 0.2 }}
-                  className="w-20 h-20 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center mx-auto shadow-2xl shadow-violet-500/30">
+                  className="w-20 h-20 rounded-full flex items-center justify-center mx-auto shadow-2xl bg-secondary">
                   <PartyPopper className="w-10 h-10 text-primary-foreground" />
                 </motion.div>
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
                   <h1 className="text-2xl font-bold text-foreground mb-2">Delivery Confirmed! 📦</h1>
                   <p className="text-muted-foreground">A courier will be assigned shortly.</p>
                   <button onClick={handleCopyTracking}
-                    className="text-xs font-mono text-violet-500/80 mt-2 bg-violet-500/5 px-3 py-1.5 rounded-full inline-flex items-center gap-1.5 hover:bg-violet-500/10 transition-all touch-manipulation">
+                    className="text-xs font-mono text-foreground/80 mt-2 bg-secondary px-3 py-1.5 rounded-full inline-flex items-center gap-1.5 hover:bg-secondary transition-all touch-manipulation">
                     Tracking: {trackingId} <Copy className="w-3 h-3" />
                   </button>
                 </motion.div>
@@ -1593,7 +1593,7 @@ export default function DeliveryPage() {
                 {/* Live tracking */}
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.5 }}
                   className="rounded-2xl bg-card border border-border/40 p-4 text-left">
-                  <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2"><Navigation className="w-4 h-4 text-violet-500" /> Live Tracking</h3>
+                  <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2"><Navigation className="w-4 h-4 text-foreground" /> Live Tracking</h3>
                   <DeliveryTrackingTimeline />
                 </motion.div>
 
@@ -1603,7 +1603,7 @@ export default function DeliveryPage() {
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.6 }}
                   className="rounded-2xl bg-card border border-border/40 p-5 text-left space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center"><Package className="w-5 h-5 text-violet-500" /></div>
+                    <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center"><Package className="w-5 h-5 text-foreground" /></div>
                     <div><p className="text-xs text-muted-foreground">{currentSize?.name}{packageCount > 1 ? ` × ${packageCount}` : ""}</p><p className="text-sm font-bold text-foreground">{packageDescription || "Package delivery"}</p></div>
                   </div>
                   <div className="flex items-center gap-3">
@@ -1612,10 +1612,10 @@ export default function DeliveryPage() {
                   </div>
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-emerald-500/10 flex items-center justify-center"><CreditCard className="w-5 h-5 text-emerald-500" /></div>
-                    <div><p className="text-xs text-muted-foreground">Total</p><p className="text-sm font-bold text-violet-500">${totalPrice.toFixed(2)}</p></div>
+                    <div><p className="text-xs text-muted-foreground">Total</p><p className="text-sm font-bold text-foreground">${totalPrice.toFixed(2)}</p></div>
                   </div>
                   {notifyRecipient && (
-                    <div className="pt-2 border-t border-border/30 flex items-center gap-2 text-xs text-violet-500">
+                    <div className="pt-2 border-t border-border/30 flex items-center gap-2 text-xs text-foreground">
                       <Bell className="w-3 h-3" /> Recipient notified via SMS
                     </div>
                   )}
@@ -1645,7 +1645,7 @@ export default function DeliveryPage() {
                   <Button variant="outline" onClick={handleShareTracking} className="flex-1 h-12 rounded-xl font-bold gap-2">
                     <Share2 className="w-4 h-4" /> Share
                   </Button>
-                  <Button onClick={() => navigate("/")} className="flex-1 h-12 rounded-xl font-bold bg-gradient-to-r from-violet-500 to-purple-600 text-primary-foreground gap-2">
+                  <Button onClick={() => navigate("/")} className="flex-1 h-12 rounded-xl font-bold text-primary-foreground gap-2 bg-foreground">
                     <Navigation className="w-4 h-4" /> Track Live
                   </Button>
                 </motion.div>
@@ -1664,11 +1664,11 @@ export default function DeliveryPage() {
           {/* Shipping Analytics */}
           <button onClick={() => setShowShippingAnalytics(!showShippingAnalytics)}
             className="w-full flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation">
-            <BarChart3 className="w-3.5 h-3.5 text-violet-500" /> Shipping Analytics
+            <BarChart3 className="w-3.5 h-3.5 text-foreground" /> Shipping Analytics
             <ChevronRight className={cn("w-3 h-3 ml-auto transition-transform", showShippingAnalytics && "rotate-90")} />
           </button>
           {showShippingAnalytics && (
-            <div className="rounded-2xl bg-card border border-violet-500/20 p-4 space-y-3">
+            <div className="rounded-2xl bg-card border border-border p-4 space-y-3">
               <div className="grid grid-cols-3 gap-2">
                 <div className="text-center p-2 rounded-xl bg-muted/30"><p className="text-sm font-bold text-foreground">{shippingAnalytics.totalShipments}</p><p className="text-[9px] text-muted-foreground">Total</p></div>
                 <div className="text-center p-2 rounded-xl bg-muted/30"><p className="text-sm font-bold text-foreground">{shippingAnalytics.avgDeliveryTime}</p><p className="text-[9px] text-muted-foreground">Avg time</p></div>
@@ -1677,7 +1677,7 @@ export default function DeliveryPage() {
               <div className="flex items-end gap-1.5 h-16">
                 {shippingAnalytics.monthlySpend.map(m => (
                   <div key={m.month} className="flex-1 flex flex-col items-center gap-0.5">
-                    <motion.div initial={{ height: 0 }} animate={{ height: `${(m.amount / 250) * 100}%` }} className="w-full rounded-t bg-violet-500/30" />
+                    <motion.div initial={{ height: 0 }} animate={{ height: `${(m.amount / 250) * 100}%` }} className="w-full rounded-t bg-secondary" />
                     <span className="text-[8px] text-muted-foreground">{m.month}</span>
                   </div>
                 ))}
@@ -1707,7 +1707,7 @@ export default function DeliveryPage() {
           {/* Carrier Comparison */}
           <button onClick={() => setShowCarrierComparison(!showCarrierComparison)}
             className="w-full flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation">
-            <Truck className="w-3.5 h-3.5 text-sky-500" /> Compare Carriers
+            <Truck className="w-3.5 h-3.5 text-foreground" /> Compare Carriers
             <ChevronRight className={cn("w-3 h-3 ml-auto transition-transform", showCarrierComparison && "rotate-90")} />
           </button>
           {showCarrierComparison && (
@@ -1715,7 +1715,7 @@ export default function DeliveryPage() {
               {carrierOptions.map(c => (
                 <div key={c.name} className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40">
                   <div className="flex-1"><p className="text-xs font-bold text-foreground">{c.name}</p><p className="text-[10px] text-muted-foreground">{c.time} · ★ {c.rating}</p></div>
-                  <span className="text-sm font-bold text-violet-500">{c.price}</span>
+                  <span className="text-sm font-bold text-foreground">{c.price}</span>
                 </div>
               ))}
             </div>
@@ -1741,7 +1741,7 @@ export default function DeliveryPage() {
           {/* Delivery Zones */}
           <button onClick={() => setShowDeliveryZones(!showDeliveryZones)}
             className="w-full flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation">
-            <MapPin className="w-3.5 h-3.5 text-sky-500" /> Delivery Zones & Pricing
+            <MapPin className="w-3.5 h-3.5 text-foreground" /> Delivery Zones & Pricing
             <ChevronRight className={cn("w-3 h-3 ml-auto transition-transform", showDeliveryZones && "rotate-90")} />
           </button>
           {showDeliveryZones && (

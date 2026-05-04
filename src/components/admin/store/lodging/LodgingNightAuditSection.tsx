@@ -208,9 +208,9 @@ export default function LodgingNightAuditSection({ storeId }: { storeId: string 
                   <p className="text-xs text-emerald-700 font-semibold uppercase tracking-wider">Clean</p>
                   <p className="text-2xl font-bold text-emerald-700 mt-1">{audit.cleanRooms}</p>
                 </div>
-                <div className="rounded-lg bg-rose-500/10 p-3">
-                  <p className="text-xs text-rose-700 font-semibold uppercase tracking-wider">Dirty</p>
-                  <p className="text-2xl font-bold text-rose-700 mt-1">{audit.dirtyRooms}</p>
+                <div className="rounded-lg bg-secondary p-3">
+                  <p className="text-xs text-foreground font-semibold uppercase tracking-wider">Dirty</p>
+                  <p className="text-2xl font-bold text-foreground mt-1">{audit.dirtyRooms}</p>
                 </div>
                 <div className="rounded-lg bg-muted p-3">
                   <p className="text-xs text-muted-foreground font-semibold uppercase tracking-wider">Out of Svc</p>

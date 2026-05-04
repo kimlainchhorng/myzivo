@@ -79,7 +79,7 @@ export default function PersonalHelpPage() {
         {/* FAQs */}
         <div className="rounded-2xl bg-card border border-border/40 overflow-hidden">
           <div className="px-4 py-3 border-b border-border/30 flex items-center gap-2">
-            <HelpCircle className="w-4 h-4 text-sky-500" />
+            <HelpCircle className="w-4 h-4 text-foreground" />
             <span className="text-[12px] font-bold text-foreground">Frequently Asked Questions</span>
           </div>
           {faqs.map((faq, i) => (

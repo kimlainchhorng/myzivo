@@ -79,7 +79,7 @@ export default function FlightTicketCard({
       className
     )}>
       {/* Top accent */}
-      <div className="h-1.5 bg-gradient-to-r from-sky-500 via-blue-600 to-cyan-500" />
+      <div className="h-1.5 bg-secondary" />
 
       {/* Ticket Body */}
       <div className="flex flex-col md:flex-row">
@@ -132,8 +132,8 @@ export default function FlightTicketCard({
               </div>
               <div className="relative flex items-center">
                 <div className="h-px flex-1 bg-border" />
-                <div className="w-8 h-8 rounded-full bg-sky-500/10 border border-sky-500/30 flex items-center justify-center mx-2">
-                  <Plane className="w-4 h-4 text-sky-500 -rotate-45" />
+                <div className="w-8 h-8 rounded-full bg-secondary border border-border flex items-center justify-center mx-2">
+                  <Plane className="w-4 h-4 text-foreground -rotate-45" />
                 </div>
                 <div className="h-px flex-1 bg-border" />
               </div>

@@ -123,7 +123,7 @@ const Careers = () => {
           </motion.div>
 
           {/* Mission Banner */}
-          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-sky-500/5 mb-16">
+          <Card className="border-primary/20 bg-gradient-to-br from-primary/5 mb-16">
             <CardContent className="p-8 text-center">
               <Sparkles className="w-10 h-10 text-primary mx-auto mb-4" />
               <h2 className="text-2xl font-bold mb-4">Our Mission</h2>
@@ -364,7 +364,7 @@ const Careers = () => {
 
           {/* DEI Commitment */}
           <section className="mb-16">
-            <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-violet-500/5">
+            <Card className="border-primary/20 bg-gradient-to-br from-primary/5">
               <CardContent className="p-8 text-center">
                 <h2 className="text-2xl font-bold mb-4">Diversity & Inclusion</h2>
                 <p className="text-muted-foreground max-w-2xl mx-auto mb-6">
@@ -388,7 +388,7 @@ const Careers = () => {
           </section>
 
           {/* Contact Section */}
-          <section className="text-center p-12 rounded-3xl bg-gradient-to-br from-primary/10 via-transparent to-sky-500/10 border border-primary/20">
+          <section className="text-center p-12 rounded-3xl bg-gradient-to-br from-primary/10 via-transparent border border-primary/20">
             <Mail className="w-12 h-12 text-primary mx-auto mb-6" />
             <h2 className="text-3xl font-bold mb-4">Get in Touch</h2>
             <p className="text-muted-foreground max-w-xl mx-auto mb-6">

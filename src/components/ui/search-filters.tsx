@@ -51,7 +51,7 @@ const colorConfig = {
   sky: {
     ring: "focus-within:ring-sky-400/40 focus-within:border-sky-400/50",
     icon: "text-sky-400",
-    gradient: "from-sky-500 to-blue-400",
+    gradient: "from-muted to-muted",
     bg: "bg-sky-500/10"
   },
   amber: {

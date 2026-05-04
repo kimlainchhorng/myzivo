@@ -48,7 +48,7 @@ const serviceData = {
     title: "Flying there?",
     description: "Book flights & save 15%",
     href: "/book-flight",
-    gradient: "from-sky-500/20 to-blue-500/10",
+    gradient: "from-muted to-muted",
     iconBg: "bg-sky-500",
     textColor: "text-sky-600"
   }

@@ -89,8 +89,8 @@ const GroupBookingManager = ({
       <CardHeader className="pb-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="p-2 rounded-xl bg-indigo-500/10">
-              <Users className="w-5 h-5 text-indigo-500" />
+            <div className="p-2 rounded-xl bg-secondary">
+              <Users className="w-5 h-5 text-foreground" />
             </div>
             <div>
               <CardTitle className="text-lg">{tripName}</CardTitle>
@@ -248,7 +248,7 @@ const GroupBookingManager = ({
             Group Chat
           </Button>
           <Button 
-            className="flex-1 bg-gradient-to-r from-indigo-500 to-purple-500"
+            className="flex-1 bg-secondary"
             disabled={confirmedCount < members.length}
           >
             {confirmedCount === members.length ? "Finalize Booking" : "Awaiting Confirmations"}

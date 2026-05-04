@@ -166,18 +166,18 @@ const ZivoPlus = () => {
             animate={{ opacity: 1, y: 0 }}
             className="max-w-3xl mx-auto"
           >
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 mb-6">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary border border-border mb-6">
               <Crown className="w-4 h-4 text-amber-500" />
-              <span className="text-sm font-medium text-amber-400">Premium Membership</span>
+              <span className="text-sm font-medium text-foreground">Premium Membership</span>
             </div>
-            
-            <h1 className="text-4xl sm:text-5xl font-bold mb-4">
+
+            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight mb-4">
               ZIVO Plus
             </h1>
             <p className="text-xl text-muted-foreground mb-2">
               Travel smarter with exclusive perks
             </p>
-            <p className="text-lg text-amber-400 font-semibold">
+            <p className="text-base text-foreground font-medium">
               Get exclusive deals, priority support, and more miles on every trip.
             </p>
           </motion.div>
@@ -186,7 +186,7 @@ const ZivoPlus = () => {
         {/* Pricing Toggle */}
         <section className="container mx-auto px-4 mb-16">
           <div className="max-w-md mx-auto">
-            <Card className="border-amber-500/20 bg-gradient-to-br from-amber-500/5 to-orange-500/5">
+            <Card className="border-border bg-secondary">
               <CardContent className="p-8">
                 {/* Toggle */}
                 <div className="flex items-center justify-center gap-4 mb-8">
@@ -196,7 +196,7 @@ const ZivoPlus = () => {
                   <Switch checked={isAnnual} onCheckedChange={setIsAnnual} />
                   <span className={cn("text-sm font-medium flex items-center gap-2", isAnnual && "text-foreground", !isAnnual && "text-muted-foreground")}>
                     Annual
-                    <Badge className="bg-emerald-500/20 text-emerald-400 text-xs">
+                    <Badge variant="secondary" className="text-xs rounded-full">
                       Save {annualSavings}%
                     </Badge>
                   </span>
@@ -228,7 +228,7 @@ const ZivoPlus = () => {
                     </div>
                     <Button
                       variant="outline"
-                      className="w-full h-12 rounded-xl border-amber-500/30"
+                      className="w-full h-12 rounded-xl"
                       onClick={() => navigate("/account/subscriptions")}
                     >
                       Manage Subscription
@@ -238,7 +238,7 @@ const ZivoPlus = () => {
                   <Button
                     onClick={handleJoin}
                     disabled={joining}
-                    className="w-full h-14 text-lg bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 gap-2 shadow-[0_0_20px_hsl(38_92%_50%/0.3)] hover:shadow-[0_0_30px_hsl(38_92%_50%/0.4)] transition-shadow"
+                    className="w-full h-14 text-lg gap-2"
                   >
                     {joining ? <Loader2 className="w-5 h-5 animate-spin" /> : <Crown className="w-5 h-5" />}
                     {joining ? "Processing…" : isPending ? "Check Your Email" : !user ? "Sign In to Join" : "Join ZIVO Plus"}
@@ -266,15 +266,13 @@ const ZivoPlus = () => {
                 transition={{ delay: index * 0.1 }}
               >
                 <Card className={cn(
-                  "h-full transition-all duration-200 hover:border-amber-500/30 hover:shadow-md hover:-translate-y-1.5",
-                  benefit.highlight && "border-amber-500/20 bg-amber-500/5"
+                  "h-full transition-all duration-200 hover:border-foreground/30 hover:-translate-y-0.5",
+                  benefit.highlight && "border-border bg-secondary"
                 )}>
                   <CardContent className="p-5">
                     <div className={cn(
-                      "w-10 h-10 rounded-xl flex items-center justify-center mb-3",
-                      benefit.highlight 
-                        ? "bg-gradient-to-br from-amber-500/20 to-orange-500/20 border border-amber-500/30"
-                        : "bg-muted"
+                      "w-10 h-10 rounded-xl flex items-center justify-center mb-3 border border-border",
+                      benefit.highlight ? "bg-background" : "bg-muted"
                     )}>
                       <benefit.icon className={cn(
                         "w-5 h-5",
@@ -348,10 +346,10 @@ const ZivoPlus = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
               >
-                <Card className="h-full hover:border-amber-500/20 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                <Card className="h-full hover:border-foreground/30 hover:-translate-y-0.5 transition-all duration-300">
                   <CardContent className="p-5">
                     <div className="flex items-center gap-3 mb-3">
-                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500/20 to-orange-500/20 flex items-center justify-center text-sm font-bold text-amber-500">
+                      <div className="w-10 h-10 rounded-full bg-secondary border border-border flex items-center justify-center text-sm font-bold text-foreground">
                         {testimonial.avatar}
                       </div>
                       <div>
@@ -375,7 +373,7 @@ const ZivoPlus = () => {
         <section className="container mx-auto px-4 mb-16">
           <div className="max-w-3xl mx-auto">
             <h2 className="text-2xl font-bold text-center mb-6">How Much Can You Save?</h2>
-            <Card className="border-amber-500/20 bg-amber-500/5">
+            <Card className="border-border bg-secondary">
               <CardContent className="p-6">
                 <div className="grid sm:grid-cols-3 gap-4 text-center">
                   {[
@@ -383,10 +381,10 @@ const ZivoPlus = () => {
                     { trips: "4 trips/mo", monthly: "$42", yearly: "$504", emoji: "✈️" },
                     { trips: "8+ trips/mo", monthly: "$95", yearly: "$1,140", emoji: "🌍" },
                   ].map(s => (
-                    <div key={s.trips} className="p-4 rounded-xl border border-amber-500/20 bg-card/80">
+                    <div key={s.trips} className="p-4 rounded-xl border border-border bg-background">
                       <span className="text-2xl">{s.emoji}</span>
                       <p className="text-xs font-bold mt-2">{s.trips}</p>
-                      <p className="text-lg font-bold text-amber-500 mt-1">{s.monthly}/mo</p>
+                      <p className="text-lg font-bold text-foreground mt-1">{s.monthly}/mo</p>
                       <p className="text-[10px] text-muted-foreground">{s.yearly}/year saved</p>
                     </div>
                   ))}
@@ -407,7 +405,7 @@ const ZivoPlus = () => {
                 { deal: "Extra driver free on rentals", normal: "$15/day", plus: "$0", tag: "Cars", emoji: "🚗" },
                 { deal: "3x miles on Tokyo routes", normal: "1x", plus: "3x miles", tag: "Miles", emoji: "🎌" },
               ].map(d => (
-                <Card key={d.deal} className="border-amber-500/15 hover:border-amber-500/30 transition-all">
+                <Card key={d.deal} className="border-border hover:border-foreground/30 transition-colors">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <span>{d.emoji}</span>
@@ -416,9 +414,9 @@ const ZivoPlus = () => {
                     <div className="flex items-center justify-between">
                       <div className="text-[10px]">
                         <span className="text-muted-foreground line-through mr-2">{d.normal}</span>
-                        <span className="text-amber-500 font-bold">{d.plus}</span>
+                        <span className="text-foreground font-bold">{d.plus}</span>
                       </div>
-                      <Badge className="bg-amber-500/10 text-amber-500 border-0 text-[8px]">{d.tag}</Badge>
+                      <Badge variant="secondary" className="text-[8px] rounded-full">{d.tag}</Badge>
                     </div>
                   </CardContent>
                 </Card>
@@ -438,7 +436,7 @@ const ZivoPlus = () => {
                 { q: "Is Plus available worldwide?", a: "Yes. Benefits apply to all bookings globally." },
                 { q: "Can I share with family?", a: "Currently per-account. Family plan support is on our roadmap." },
               ].map(f => (
-                <Card key={f.q} className="border-border/50 hover:border-amber-500/20 transition-all">
+                <Card key={f.q} className="border-border hover:border-foreground/30 transition-colors">
                   <CardContent className="p-4">
                     <p className="text-sm font-bold">{f.q}</p>
                     <p className="text-xs text-muted-foreground mt-1">{f.a}</p>
@@ -451,20 +449,20 @@ const ZivoPlus = () => {
 
         {/* Final CTA */}
         <section className="container mx-auto px-4">
-          <Card className="max-w-2xl mx-auto border-amber-500/30 bg-gradient-to-br from-amber-500/10 to-orange-500/10">
+          <Card className="max-w-2xl mx-auto border-border bg-secondary">
             <CardContent className="p-8 text-center">
               <Crown className="w-12 h-12 text-amber-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold mb-2">Ready to travel smarter?</h2>
+              <h2 className="text-2xl font-bold tracking-tight mb-2">Ready to travel smarter?</h2>
               <p className="text-muted-foreground mb-6">
                 Join thousands of members saving more on every trip.
               </p>
               {isActive ? (
                 <div className="flex flex-col items-center gap-2">
-                  <div className="flex items-center gap-2 text-emerald-500 font-bold text-lg">
+                  <div className="flex items-center gap-2 text-foreground font-bold text-lg">
                     <CheckCircle2 className="w-6 h-6" />
                     You're already a member!
                   </div>
-                  <Button size="lg" variant="outline" className="border-amber-500/30" onClick={() => navigate("/account/subscriptions")}>
+                  <Button size="lg" variant="outline" onClick={() => navigate("/account/subscriptions")}>
                     Manage Subscription
                   </Button>
                 </div>
@@ -473,7 +471,7 @@ const ZivoPlus = () => {
                   size="lg"
                   onClick={handleJoin}
                   disabled={joining}
-                  className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 gap-2 shadow-[0_0_20px_hsl(38_92%_50%/0.3)] hover:shadow-[0_0_30px_hsl(38_92%_50%/0.4)] transition-shadow"
+                  className="gap-2"
                 >
                   {joining ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
                   {joining ? "Processing…" : isPending ? "Check Your Email" : "Get ZIVO Plus Now"}

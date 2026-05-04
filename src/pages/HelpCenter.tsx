@@ -154,7 +154,7 @@ const HelpCenter = () => {
       {/* Background effects - simplified for mobile */}
       <div className="absolute inset-0 bg-gradient-radial from-primary/8 via-transparent to-transparent opacity-40" />
       <div className="absolute top-1/4 right-0 w-[200px] h-[200px] bg-gradient-to-bl from-primary/15 to-teal-500/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-0 w-[180px] h-[180px] bg-gradient-to-tr from-violet-500/10 to-purple-500/6 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-0 w-[180px] h-[180px] rounded-full blur-3xl bg-secondary" />
 
       {/* Header - Mobile optimized */}
       <header className="sticky top-0 safe-area-top z-50 bg-card/80 backdrop-blur-xl border-b border-white/10 px-3 py-2.5">
@@ -292,7 +292,7 @@ const HelpCenter = () => {
               {/* Account FAQ */}
               <div id="account">
                 <h3 className="font-display font-bold text-xl mb-4 flex items-center gap-2">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center shadow-lg shadow-pink-500/30">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg bg-secondary">
                     <User className="h-5 w-5 text-primary-foreground" />
                   </div>
                   Account & Billing
@@ -314,14 +314,14 @@ const HelpCenter = () => {
               {/* Travel FAQ */}
               <div id="flights">
                 <h3 className="font-display font-bold text-xl mb-4 flex items-center gap-2">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500 to-blue-500 flex items-center justify-center shadow-lg shadow-sky-500/30">
+                  <div className="w-10 h-10 rounded-xl flex items-center justify-center shadow-lg bg-secondary">
                     <Plane className="h-5 w-5 text-primary-foreground" />
                   </div>
                   Flights, Hotels & Car Rentals
                 </h3>
                 <Accordion type="single" collapsible className="space-y-2">
                   {travelFAQ.map((item, i) => (
-                    <AccordionItem key={i} value={`travel-${i}`} className="border border-border/50 rounded-2xl px-5 bg-gradient-to-br from-card/90 to-card shadow-lg hover:border-sky-500/30 hover:shadow-xl transition-all duration-200">
+                    <AccordionItem key={i} value={`travel-${i}`} className="border border-border/50 rounded-2xl px-5 bg-gradient-to-br from-card/90 to-card shadow-lg hover:border-border hover:shadow-xl transition-all duration-200">
                       <AccordionTrigger className="hover:no-underline text-left font-semibold py-5">
                         {item.q}
                       </AccordionTrigger>
@@ -333,7 +333,7 @@ const HelpCenter = () => {
                 </Accordion>
                 
                 {/* Partner Disclaimer */}
-                <div className="mt-4 p-4 rounded-xl bg-sky-500/5 border border-sky-500/20">
+                <div className="mt-4 p-4 rounded-xl bg-secondary border border-border">
                   <p className="text-xs text-muted-foreground">
                     <strong className="text-foreground">Important:</strong> All bookings, payments, refunds, and changes are handled directly by our travel partners. 
                     ZIVO is a search and comparison platform and does not collect or process any payment information.
@@ -347,8 +347,8 @@ const HelpCenter = () => {
               <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
                 {[
                   { icon: MessageCircle, title: "Live Chat", desc: "Chat with a support agent", badge: "24/7", gradient: "from-primary to-teal-400", action: "Start Chat" },
-                  { icon: Phone, title: "Phone", desc: "Speak with our team", badge: "1-800-ZIVO", gradient: "from-violet-500 to-purple-500", action: "Call Now" },
-                  { icon: Mail, title: "Email", desc: "Response within 24h", badge: "support@zivo.com", gradient: "from-sky-500 to-blue-500", action: "Send Email" },
+                  { icon: Phone, title: "Phone", desc: "Speak with our team", badge: "1-800-ZIVO", gradient: "from-muted to-muted", action: "Call Now" },
+                  { icon: Mail, title: "Email", desc: "Response within 24h", badge: "support@zivo.com", gradient: "from-muted to-muted", action: "Send Email" },
                 ].map((contact, index) => (
                   <Card key={contact.title} className="border-0 bg-gradient-to-br from-card/90 to-card shadow-xl hover:shadow-2xl transition-all">
                     <CardContent className="p-4 sm:p-6 text-center">
@@ -524,7 +524,7 @@ const HelpCenter = () => {
             {/* Quick Troubleshooter */}
             <div>
               <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-                <Sparkles className="w-5 h-5 text-violet-500" /> Quick Troubleshooter
+                <Sparkles className="w-5 h-5 text-foreground" /> Quick Troubleshooter
               </h2>
               <div className="grid sm:grid-cols-2 gap-3">
                 {[
@@ -577,7 +577,7 @@ const HelpCenter = () => {
             {/* Recent Community Questions */}
             <div>
               <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-                <MessageCircle className="w-5 h-5 text-sky-500" /> Trending Questions
+                <MessageCircle className="w-5 h-5 text-foreground" /> Trending Questions
               </h2>
               <div className="space-y-2">
                 {[

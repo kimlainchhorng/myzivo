@@ -34,7 +34,7 @@ export default function FlightVisaChecker() {
     <Card className="border-border/50 bg-card/50 backdrop-blur">
       <CardHeader className="pb-4">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/10 flex items-center justify-center">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 flex items-center justify-center">
             <FileCheck className="w-5 h-5 text-blue-400" />
           </div>
           <div>

@@ -139,7 +139,7 @@ export default function FriendActivity() {
     >
       <div className="flex items-center justify-between mb-2.5">
         <h3 className="text-[13px] font-bold text-foreground flex items-center gap-1.5">
-          <Heart className="h-4 w-4 text-rose-500" aria-hidden="true" />
+          <Heart className="h-4 w-4 text-foreground" aria-hidden="true" />
           Friend Activity
         </h3>
         <button

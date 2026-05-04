@@ -73,14 +73,14 @@ const colorConfig = {
     iconBg: "bg-gradient-to-br from-sky-500/25 to-sky-500/5",
     iconColor: "text-sky-500",
     valueTrend: "text-sky-500",
-    gradient: "from-sky-500/10 to-sky-500/5",
+    gradient: "from-muted to-muted",
     ring: "ring-sky-500/20",
   },
   purple: {
     iconBg: "bg-gradient-to-br from-violet-500/25 to-violet-500/5",
     iconColor: "text-violet-500",
     valueTrend: "text-violet-500",
-    gradient: "from-violet-500/10 to-violet-500/5",
+    gradient: "from-muted to-muted",
     ring: "ring-violet-500/20",
   },
   rides: {

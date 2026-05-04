@@ -74,7 +74,7 @@ const FlightDelayPredictor = () => {
                   <div className="flex items-center gap-3">
                     {index === 0 && <CloudRain className="w-5 h-5 text-blue-400" />}
                     {index === 1 && <TrendingUp className="w-5 h-5 text-orange-400" />}
-                    {index === 2 && <Plane className="w-5 h-5 text-purple-400" />}
+                    {index === 2 && <Plane className="w-5 h-5 text-foreground" />}
                     {index === 3 && <CheckCircle2 className="w-5 h-5 text-green-400" />}
                     <span className="text-sm">{factor.name}</span>
                   </div>

@@ -342,7 +342,7 @@ const AITripPlanner = () => {
                           <h3 className="text-xl font-bold">{suggestion.city}</h3>
                           <p className="text-sm text-muted-foreground">{suggestion.country}</p>
                         </div>
-                        <Badge className="bg-violet-500/20 text-violet-400">
+                        <Badge className="bg-secondary text-foreground">
                           {suggestion.matchScore}% Match
                         </Badge>
                       </div>
@@ -361,7 +361,7 @@ const AITripPlanner = () => {
                       
                       <div className="grid grid-cols-2 gap-3 mb-4 text-sm">
                         <div className="flex items-center gap-2">
-                          <Plane className="w-4 h-4 text-sky-500" />
+                          <Plane className="w-4 h-4 text-foreground" />
                           <span>From ${suggestion.price}</span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -369,7 +369,7 @@ const AITripPlanner = () => {
                           <span>{suggestion.weather}</span>
                         </div>
                         <div className="flex items-center gap-2">
-                          <Star className="w-4 h-4 text-violet-500" />
+                          <Star className="w-4 h-4 text-foreground" />
                           <span>{suggestion.rating} rating</span>
                         </div>
                         <div className="flex items-center gap-2">
@@ -432,9 +432,9 @@ const AITripPlanner = () => {
         <div className="container mx-auto px-4">
           {/* Hero */}
           <div className="text-center mb-12">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-gradient-to-r from-violet-500/10 to-purple-500/10 border border-violet-500/20 mb-6">
-              <Sparkles className="w-4 h-4 text-violet-500" />
-              <span className="text-sm font-medium text-violet-400">AI-Powered Planning</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-border mb-6 bg-secondary">
+              <Sparkles className="w-4 h-4 text-foreground" />
+              <span className="text-sm font-medium text-foreground">AI-Powered Planning</span>
             </div>
             <h1 className="text-4xl sm:text-5xl font-bold mb-4">
               Plan Your Perfect Trip
@@ -456,7 +456,7 @@ const AITripPlanner = () => {
               </div>
               <div className="h-2 bg-muted rounded-full overflow-hidden">
                 <motion.div
-                  className="h-full bg-gradient-to-r from-violet-500 to-purple-500"
+                  className="h-full bg-secondary"
                   initial={{ width: 0 }}
                   animate={{ width: `${(step / totalSteps) * 100}%` }}
                 />
@@ -465,12 +465,12 @@ const AITripPlanner = () => {
           )}
 
           {/* Content Card */}
-          <Card className="max-w-3xl mx-auto border-violet-500/20">
+          <Card className="max-w-3xl mx-auto border-border">
             <CardContent className="p-8">
               {isLoading ? (
                 <div className="text-center py-12">
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-r from-violet-500/20 to-purple-500/20 flex items-center justify-center mx-auto mb-4">
-                    <Loader2 className="w-8 h-8 text-violet-500 animate-spin" />
+                  <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-secondary">
+                    <Loader2 className="w-8 h-8 text-foreground animate-spin" />
                   </div>
                   <h3 className="text-xl font-semibold mb-2">AI is thinking...</h3>
                   <p className="text-muted-foreground">
@@ -499,7 +499,7 @@ const AITripPlanner = () => {
                   {step < totalSteps ? (
                     <Button
                       onClick={() => setStep(step + 1)}
-                      className="gap-2 bg-gradient-to-r from-violet-500 to-purple-500"
+                      className="gap-2 bg-secondary"
                     >
                       Next
                       <ChevronRight className="w-4 h-4" />
@@ -507,7 +507,7 @@ const AITripPlanner = () => {
                   ) : (
                     <Button
                       onClick={handleGenerateSuggestions}
-                      className="gap-2 bg-gradient-to-r from-violet-500 to-purple-500"
+                      className="gap-2 bg-secondary"
                     >
                       <Sparkles className="w-4 h-4" />
                       Generate Suggestions
@@ -535,15 +535,15 @@ const AITripPlanner = () => {
           <div className="max-w-3xl mx-auto mt-12 space-y-8">
             {/* Travel Personality */}
             <div>
-              <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Sparkles className="w-5 h-5 text-violet-500" /> Your Travel Personality</h2>
-              <Card className="border-violet-500/20 bg-violet-500/5">
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Sparkles className="w-5 h-5 text-foreground" /> Your Travel Personality</h2>
+              <Card className="border-border bg-secondary">
                 <CardContent className="p-6 text-center">
                   <div className="text-4xl mb-2">🌍</div>
                   <p className="text-lg font-bold text-foreground">The Explorer</p>
                   <p className="text-xs text-muted-foreground mt-1 max-w-md mx-auto">You love discovering new cultures and off-the-beaten-path destinations. You prefer authentic local experiences over tourist hotspots.</p>
                   <div className="flex flex-wrap gap-2 justify-center mt-3">
                     {["Culture","Adventure","Foodie","Budget-savvy"].map(t => (
-                      <Badge key={t} className="bg-violet-500/10 text-violet-400 border-0 text-[9px]">{t}</Badge>
+                      <Badge key={t} className="bg-secondary text-foreground border-0 text-[9px]">{t}</Badge>
                     ))}
                   </div>
                 </CardContent>
@@ -552,7 +552,7 @@ const AITripPlanner = () => {
 
             {/* Visa Requirements */}
             <div>
-              <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Building2 className="w-5 h-5 text-sky-500" /> Visa Quick Check</h2>
+              <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Building2 className="w-5 h-5 text-foreground" /> Visa Quick Check</h2>
               <div className="grid sm:grid-cols-2 gap-3">
                 {[
                   { country: "Japan", flag: "🇯🇵", status: "Visa-free", duration: "90 days", color: "text-emerald-500" },

@@ -25,7 +25,7 @@ const priceColors: Record<string, string> = {
 };
 
 const weatherIcons: Record<string, React.ReactNode> = {
-  cold: <Snowflake className="w-4 h-4 text-sky-400" />,
+  cold: <Snowflake className="w-4 h-4 text-foreground" />,
   mild: <Cloud className="w-4 h-4 text-muted-foreground" />,
   warm: <Leaf className="w-4 h-4 text-emerald-400" />,
   hot: <Sun className="w-4 h-4 text-amber-400" />,
@@ -38,7 +38,7 @@ const TravelCalendar = () => {
     <section className="py-12 px-4">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-8">
-          <Badge className="mb-3 bg-violet-500/20 text-violet-400 border-violet-500/30">
+          <Badge className="mb-3 bg-secondary text-foreground border-border">
             <Calendar className="w-3 h-3 mr-1" /> Best Time to Travel
           </Badge>
           <h2 className="text-2xl md:text-3xl font-display font-bold mb-2">

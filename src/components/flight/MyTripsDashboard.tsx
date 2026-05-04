@@ -335,8 +335,8 @@ export const MyTripsDashboard = ({ className, onViewTrip, onDownloadBoardingPass
     return (
       <Card className={cn("overflow-hidden border-border/50 bg-card/50 backdrop-blur", className)}>
         <CardContent className="p-12 text-center">
-          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-sky-500/20 to-blue-500/10 flex items-center justify-center mx-auto mb-4">
-            <Plane className="w-8 h-8 text-sky-500" />
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-secondary">
+            <Plane className="w-8 h-8 text-foreground" />
           </div>
           <h3 className="font-semibold text-lg mb-2">No trips yet</h3>
           <p className="text-sm text-muted-foreground mb-6">
@@ -376,8 +376,8 @@ export const MyTripsDashboard = ({ className, onViewTrip, onDownloadBoardingPass
       <CardHeader className="pb-4 border-b border-border/50">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-sky-500/20 to-blue-500/10 border border-sky-500/40 flex items-center justify-center">
-              <Plane className="w-5 h-5 text-sky-500" />
+            <div className="w-10 h-10 rounded-xl border border-border flex items-center justify-center bg-secondary">
+              <Plane className="w-5 h-5 text-foreground" />
             </div>
             <div>
               <CardTitle className="text-lg">My Trips</CardTitle>
@@ -436,12 +436,12 @@ export const MyTripsDashboard = ({ className, onViewTrip, onDownloadBoardingPass
             <TabsList className="w-full justify-start rounded-none bg-transparent h-auto p-0 min-w-max">
               <TabsTrigger
                 value="upcoming"
-                className="rounded-none border-b-2 border-transparent data-[state=active]:border-sky-500 data-[state=active]:bg-transparent py-3 px-4 sm:px-6"
+                className="rounded-none border-b-2 border-transparent data-[state=active]:border-border data-[state=active]:bg-transparent py-3 px-4 sm:px-6"
               >
                 <Clock className="w-4 h-4 mr-2" />
                 <span className="hidden sm:inline">Upcoming</span>
                 {upcomingCount > 0 && (
-                  <Badge className="ml-2 bg-sky-500/20 text-sky-400">{upcomingCount}</Badge>
+                  <Badge className="ml-2 bg-secondary text-foreground">{upcomingCount}</Badge>
                 )}
               </TabsTrigger>
               <TabsTrigger
@@ -507,11 +507,11 @@ export const MyTripsDashboard = ({ className, onViewTrip, onDownloadBoardingPass
                         </div>
                         <div className="flex flex-col items-center px-2 sm:px-4">
                           <div className="flex items-center gap-1 sm:gap-2 text-muted-foreground">
-                            <div className="w-2 h-2 rounded-full bg-sky-500" />
-                            <div className="w-8 sm:w-16 h-px bg-gradient-to-r from-sky-500 to-violet-500" />
+                            <div className="w-2 h-2 rounded-full bg-foreground" />
+                            <div className="w-8 sm:w-16 h-px bg-secondary" />
                             <Plane className="w-4 h-4 rotate-90" />
-                            <div className="w-8 sm:w-16 h-px bg-gradient-to-r from-violet-500 to-sky-500" />
-                            <div className="w-2 h-2 rounded-full bg-violet-500" />
+                            <div className="w-8 sm:w-16 h-px bg-secondary" />
+                            <div className="w-2 h-2 rounded-full bg-foreground" />
                           </div>
                           <p className="text-xs text-muted-foreground mt-1">{trip.flightNumber || 'Direct'}</p>
                         </div>
@@ -547,7 +547,7 @@ export const MyTripsDashboard = ({ className, onViewTrip, onDownloadBoardingPass
                           </Badge>
                           
                           {trip.isRealPrice && (
-                            <Badge variant="outline" className="bg-sky-500/10 text-sky-500 border-sky-500/30">
+                            <Badge variant="outline" className="bg-secondary text-foreground border-border">
                               <Zap className="w-3 h-3" />
                             </Badge>
                           )}

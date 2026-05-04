@@ -245,7 +245,7 @@ export default function ContactsPage() {
             aria-label="Find people by phone number"
             className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border bg-card hover:bg-muted/50 active:scale-[0.98] transition focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"
           >
-            <div className="w-9 h-9 rounded-full bg-sky-500/15 text-sky-600 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-full bg-secondary text-foreground flex items-center justify-center">
               <Phone className="w-4 h-4" />
             </div>
             <span className="text-[11px] font-medium leading-tight text-center">Find by phone</span>
@@ -257,7 +257,7 @@ export default function ContactsPage() {
             aria-label={nativeReady ? "Sync contacts from your phone" : "Sync contacts (paste numbers)"}
             className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border bg-card hover:bg-muted/50 active:scale-[0.98] transition focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none disabled:opacity-60"
           >
-            <div className="w-9 h-9 rounded-full bg-violet-500/15 text-violet-600 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-full bg-secondary text-foreground flex items-center justify-center">
               <Smartphone className={`w-4 h-4 ${syncingNative ? "animate-pulse" : ""}`} />
             </div>
             <span className="text-[11px] font-medium leading-tight text-center">{syncingNative ? "Syncing…" : "Sync phone"}</span>
@@ -289,7 +289,7 @@ export default function ContactsPage() {
             aria-label="View blocked users"
             className="flex flex-col items-center gap-1.5 p-3 rounded-2xl border bg-card hover:bg-muted/50 active:scale-[0.98] transition focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"
           >
-            <div className="w-9 h-9 rounded-full bg-rose-500/15 text-rose-600 flex items-center justify-center">
+            <div className="w-9 h-9 rounded-full bg-secondary text-foreground flex items-center justify-center">
               <ShieldOff className="w-4 h-4" />
             </div>
             <span className="text-[11px] font-medium leading-tight text-center">Blocked</span>

@@ -91,7 +91,7 @@ export function HeroSearchTabs({ className, defaultTab = "flights" }: HeroSearch
           Real-time prices
         </span>
         <span className="flex items-center gap-1.5">
-          <span className="w-2 h-2 rounded-full bg-sky-500" />
+          <span className="w-2 h-2 rounded-full bg-foreground" />
           Secure checkout
         </span>
         <span className="flex items-center gap-1.5 hidden sm:flex">

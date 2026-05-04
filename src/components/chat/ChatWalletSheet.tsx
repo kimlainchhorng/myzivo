@@ -51,7 +51,7 @@ export default function ChatWalletSheet({ open, onClose, recipientId, recipientN
 
         <div className="overflow-y-auto h-[calc(72dvh-50px)]">
           {/* Balance hero */}
-          <div className="m-4 p-5 rounded-2xl bg-gradient-to-br from-amber-500 via-orange-500 to-pink-500 text-white shadow-lg">
+          <div className="m-4 p-5 rounded-2xl bg-gradient-to-br from-amber-500 via-orange-500 text-white shadow-lg">
             <div className="text-[11px] uppercase tracking-wider opacity-90">Z-Coin balance</div>
             <div className="mt-1 flex items-end gap-2">
               <div className="text-3xl font-extrabold">{balance.toLocaleString()}</div>
@@ -102,7 +102,7 @@ export default function ChatWalletSheet({ open, onClose, recipientId, recipientN
             <Button
               onClick={handleSend}
               disabled={sending || amount <= 0 || amount > balance}
-              className="w-full h-11 rounded-full gap-2 bg-gradient-to-r from-amber-500 to-pink-500 text-white"
+              className="w-full h-11 rounded-full gap-2 bg-gradient-to-r from-amber-500 text-white"
             >
               <Send className="w-4 h-4" />
               {amount > balance ? "Insufficient balance" : `Send ${amount.toLocaleString()} coins`}

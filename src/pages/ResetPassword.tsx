@@ -208,55 +208,55 @@ const ResetPassword = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 bg-gradient-to-br from-background via-background to-muted safe-area-top safe-area-bottom">
+    <div className="relative min-h-[100dvh] w-full overflow-hidden flex items-center justify-center px-5 py-8 bg-white dark:bg-black">
       <SEOHead title="Set New Password – ZIVO" description="Create a new password for your ZIVO account." noIndex={true} />
+
+      {/* Subtle ZIVO gradient backdrop */}
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-32 -right-32 w-[420px] h-[420px] rounded-full blur-3xl dark:dark:dark: bg-secondary" />
+        <div className="absolute -bottom-32 -left-32 w-[420px] h-[420px] rounded-full bg-gradient-to-tr from-amber-200/30 blur-3xl dark:from-amber-600/15 dark:dark:" />
+      </div>
+
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4 }}
-        className="w-full max-w-md"
+        transition={{ duration: 0.35 }}
+        className="relative w-full max-w-sm"
       >
-      <Card>
-        <CardHeader className="text-center">
-          <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
-            <Lock className="w-7 h-7 sm:w-8 sm:h-8 text-primary" />
+        <div className="bg-white dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-white/10 rounded-xl px-7 pt-9 pb-6 shadow-sm">
+          <div className="flex flex-col items-center mb-6">
+            <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 flex items-center justify-center mb-4 shadow-lg">
+              <Lock className="w-7 h-7 text-white" />
+            </div>
+            <h1 className="text-xl font-bold text-zinc-900 dark:text-white">Set new password</h1>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1.5 text-center">
+              Choose a strong password<br />you'll remember.
+            </p>
           </div>
-          <CardTitle className="text-xl sm:text-2xl">Set new password</CardTitle>
-          <CardDescription>
-            Enter your new password below.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
+
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-3">
               <FormField
                 control={form.control}
                 name="password"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="text-sm">New password</FormLabel>
                     <FormControl>
                       <div className="relative">
                         <Input
                           type={showPassword ? "text" : "password"}
-                          placeholder="••••••••"
-                          className="h-11 sm:h-12 rounded-xl pr-12"
+                          placeholder="New password"
+                          className="w-full h-11 px-3 pr-10 rounded-md bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 focus:border-zinc-400 dark:focus:border-zinc-500 outline-none text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 transition"
                           {...field}
                         />
-                        <Button
+                        <button
                           type="button"
-                          variant="ghost"
-                          size="icon"
                           aria-label="Toggle password visibility"
-                          className="absolute right-0 top-0 h-full px-3 touch-manipulation"
+                          className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200"
                           onClick={() => setShowPassword(!showPassword)}
                         >
-                          {showPassword ? (
-                            <EyeOff className="w-4 h-4 text-muted-foreground" />
-                          ) : (
-                            <Eye className="w-4 h-4 text-muted-foreground" />
-                          )}
-                        </Button>
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        </button>
                       </div>
                     </FormControl>
                     <FormMessage />
@@ -264,30 +264,25 @@ const ResetPassword = () => {
                 )}
               />
 
-
-              <div className="text-xs text-muted-foreground space-y-1 p-3 rounded-lg bg-muted/30">
-                <p className="font-medium">Password must:</p>
-                <ul className="list-disc list-inside space-y-0.5 text-xs">
+              <div className="text-xs text-zinc-500 dark:text-zinc-400 space-y-1 p-3 rounded-md bg-zinc-50 dark:bg-zinc-800/40 border border-zinc-200/70 dark:border-zinc-700/60">
+                <p className="font-semibold text-zinc-700 dark:text-zinc-300">Password must:</p>
+                <ul className="list-disc list-inside space-y-0.5">
                   <li>Be at least 8 characters long</li>
-                  <li>Contain uppercase & lowercase letters</li>
+                  <li>Contain uppercase &amp; lowercase letters</li>
                   <li>Contain at least one number</li>
                 </ul>
               </div>
 
-              <Button type="submit" className="w-full h-11 sm:h-12 rounded-xl font-semibold touch-manipulation active:scale-[0.98]" disabled={isLoading}>
-                {isLoading ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Updating...
-                  </>
-                ) : (
-                  "Update password"
-                )}
-              </Button>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full h-9 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md"
+              >
+                {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Update password"}
+              </button>
             </form>
           </Form>
-        </CardContent>
-      </Card>
+        </div>
       </motion.div>
     </div>
   );

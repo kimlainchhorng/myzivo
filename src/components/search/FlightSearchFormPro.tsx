@@ -220,7 +220,7 @@ export default function FlightSearchFormPro({
 
       {/* Accent bar with 3D lift */}
       <div
-        className="relative h-1.5 bg-gradient-to-r from-sky-400 via-blue-500 to-cyan-400 -mx-5 sm:-mx-7 -mt-5 sm:-mt-7 rounded-t-3xl mb-5 sm:mb-6 shadow-[0_2px_12px_hsl(var(--primary)/0.3)]"
+        className="relative h-1.5 -mx-5 sm:-mx-7 -mt-5 sm:-mt-7 rounded-t-3xl mb-5 sm:mb-6 shadow-[0_2px_12px_hsl(var(--primary)/0.3)] bg-secondary"
         style={{ transform: "translateZ(4px)" }}
       />
 
@@ -284,7 +284,7 @@ export default function FlightSearchFormPro({
                 variant="outline"
                 size="icon"
                 onClick={handleSwap}
-                className="h-11 sm:h-12 w-11 sm:w-12 rounded-full border-dashed hover:border-sky-500 hover:bg-sky-500/10 shrink-0 transition-all hover:rotate-180 duration-500 hidden md:flex shadow-md hover:shadow-lg active:scale-[0.95] active:shadow-sm"
+                className="h-11 sm:h-12 w-11 sm:w-12 rounded-full border-dashed hover:border-border hover:bg-secondary shrink-0 transition-all hover:rotate-180 duration-500 hidden md:flex shadow-md hover:shadow-lg active:scale-[0.95] active:shadow-sm"
                 aria-label="Swap cities"
               >
                 <ArrowLeftRight className="w-4 h-4" />
@@ -503,7 +503,7 @@ export default function FlightSearchFormPro({
                       onClick={() => setPassengerSheetOpen(true)}
                       className="w-full h-13 justify-start text-left font-normal rounded-2xl touch-manipulation shadow-sm border-border/30 hover:shadow-md transition-all active:scale-[0.98]"
                     >
-                      <Users className="w-4 h-4 mr-2 text-purple-500" />
+                      <Users className="w-4 h-4 mr-2 text-foreground" />
                       {passengers} {passengers === 1 ? "Traveler" : "Travelers"} • {cabin.charAt(0).toUpperCase() + cabin.slice(1)}
                     </Button>
                     <MobilePassengerCabinSheet
@@ -526,7 +526,7 @@ export default function FlightSearchFormPro({
                           variant="outline"
                           className="w-full h-11 sm:h-12 justify-start text-left font-normal rounded-2xl shadow-sm hover:shadow-md transition-all active:scale-[0.98]"
                         >
-                          <Users className="w-4 h-4 mr-2 text-purple-500" />
+                          <Users className="w-4 h-4 mr-2 text-foreground" />
                           {passengers} {passengers === 1 ? "Traveler" : "Travelers"}
                         </Button>
                       </PopoverTrigger>

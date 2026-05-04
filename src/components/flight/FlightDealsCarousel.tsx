@@ -18,7 +18,7 @@ interface FlightDealsCarouselProps {
 const FlightDealsCarousel = ({ onSelect }: FlightDealsCarouselProps) => {
   return (
     <section className="py-12 sm:py-16 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-sky-500/5 via-transparent to-transparent" />
+      <div className="absolute inset-0 via-transparent to-transparent bg-secondary" />
       
       <div className="container mx-auto px-4 relative z-10">
         <div className="flex items-center justify-between mb-8">
@@ -28,10 +28,10 @@ const FlightDealsCarousel = ({ onSelect }: FlightDealsCarouselProps) => {
               Popular Routes
             </div>
             <h2 className="font-display text-2xl sm:text-3xl font-bold">
-              Trending <span className="bg-gradient-to-r from-sky-400 to-blue-500 bg-clip-text text-transparent">Destinations</span>
+              Trending <span className="text-accent-foreground">Destinations</span>
             </h2>
           </div>
-          <button className="hidden sm:flex items-center gap-2 text-sky-400 hover:text-sky-300 transition-colors text-sm font-medium">
+          <button className="hidden sm:flex items-center gap-2 text-foreground hover:text-foreground transition-colors text-sm font-medium">
             View all routes <ArrowRight className="w-4 h-4" />
           </button>
         </div>
@@ -49,7 +49,7 @@ const FlightDealsCarousel = ({ onSelect }: FlightDealsCarouselProps) => {
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <CardContent className="p-0">
-                <div className="relative p-4 bg-gradient-to-r from-sky-500/10 to-blue-500/10">
+                <div className="relative p-4 bg-secondary">
                   <div className="flex items-center justify-between">
                     <div className="text-center">
                       <p className="text-2xl font-bold">{route.from}</p>
@@ -57,7 +57,7 @@ const FlightDealsCarousel = ({ onSelect }: FlightDealsCarouselProps) => {
                     </div>
                     <div className="flex-1 flex items-center justify-center px-3">
                       <div className="flex-1 h-px bg-border" />
-                      <Plane className="w-5 h-5 mx-2 text-sky-400 rotate-90" />
+                      <Plane className="w-5 h-5 mx-2 text-foreground rotate-90" />
                       <div className="flex-1 h-px bg-border" />
                     </div>
                     <div className="text-center">
@@ -71,7 +71,7 @@ const FlightDealsCarousel = ({ onSelect }: FlightDealsCarouselProps) => {
                   <p className="text-sm text-muted-foreground mb-3">
                     Avg. flight time: {route.duration}
                   </p>
-                  <Button className="w-full bg-sky-500 hover:bg-sky-600 text-primary-foreground">
+                  <Button className="w-full bg-foreground hover:bg-foreground text-primary-foreground">
                     Search Flights <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
                 </div>

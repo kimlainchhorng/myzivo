@@ -99,7 +99,7 @@ const UserTestimonials = () => {
               <div className="flex items-center gap-2 mb-1">
                 <p className="font-bold">{testimonials[activeIndex].name}</p>
                 {testimonials[activeIndex].verified && (
-                  <Verified className="w-4 h-4 text-sky-400" />
+                  <Verified className="w-4 h-4 text-foreground" />
                 )}
               </div>
               <p className="text-sm text-muted-foreground flex items-center gap-1">

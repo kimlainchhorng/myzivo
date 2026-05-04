@@ -60,8 +60,8 @@ export function CustomerCityProvider({ children }: { children: React.ReactNode }
         })) || [];
 
         setCities(cityList);
-      } catch (err) {
-        console.error("Error fetching cities:", err);
+      } catch (err: any) {
+        console.error("Error fetching cities:", err?.message || err, err?.code, err?.details);
       }
     }
 

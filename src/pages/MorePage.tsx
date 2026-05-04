@@ -1323,7 +1323,7 @@ export default function MorePage() {
           <>
             <span className="text-muted-foreground/30">•</span>
             <div className="flex items-center gap-1">
-              <Pin className="w-3 h-3 text-fuchsia-500" />
+              <Pin className="w-3 h-3 text-foreground" />
               <span className="font-semibold text-foreground/80">{pinnedHrefs.length}</span>
               <span>pinned</span>
             </div>
@@ -1357,7 +1357,7 @@ export default function MorePage() {
           </div>
           <div className="h-1.5 bg-muted/60 rounded-full overflow-hidden">
             <motion.div
-              className="h-full bg-gradient-to-r from-primary to-fuchsia-500"
+              className="h-full bg-gradient-to-r from-primary"
               initial={{ width: 0 }}
               animate={{ width: `${completion}%` }}
               transition={{ duration: 0.8, ease: "easeOut" }}
@@ -1500,7 +1500,7 @@ export default function MorePage() {
             <p className={cn("font-semibold leading-tight truncate", density === "compact" ? "text-[12px]" : "text-[13px]")}>{link.label}</p>
             {link.badge && <span className="zivo-badge">{link.badge}</span>}
             {dynamicBadges[link.href] && (
-              <span className="text-[9px] font-bold text-white bg-rose-500 rounded-full px-1.5 py-0.5 leading-none min-w-[18px] text-center">
+              <span className="text-[9px] font-bold text-white bg-foreground rounded-full px-1.5 py-0.5 leading-none min-w-[18px] text-center">
                 {dynamicBadges[link.href]}
               </span>
             )}
@@ -1698,9 +1698,9 @@ export default function MorePage() {
               animate={{ opacity: 1, y: 0 }}
               className="zivo-card-organic p-5 mb-5 relative overflow-hidden"
             >
-              <div className="absolute -top-4 -right-4 w-32 h-32 rounded-full bg-gradient-to-br from-primary/20 to-fuchsia-500/20 blur-2xl" />
+              <div className="absolute -top-4 -right-4 w-32 h-32 rounded-full bg-gradient-to-br from-primary/20 blur-2xl" />
               <div className="relative">
-                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-fuchsia-500 flex items-center justify-center mb-3">
+                <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary flex items-center justify-center mb-3">
                   <Sparkles className="w-6 h-6 text-white" />
                 </div>
                 <h2 className="font-bold text-[18px] mb-1">Welcome to ZIVO</h2>
@@ -1781,11 +1781,11 @@ export default function MorePage() {
             >
               <Link
                 to="/my-trips"
-                className="zivo-card-organic p-3 active:scale-[0.97] transition-transform bg-gradient-to-br from-sky-500/10 to-blue-500/10 border-sky-500/20"
+                className="zivo-card-organic p-3 active:scale-[0.97] transition-transform border-border bg-secondary"
               >
                 <div className="flex items-center gap-2 mb-1">
-                  <Plane className="w-4 h-4 text-sky-500" />
-                  <p className="text-[10px] font-bold text-sky-500 uppercase tracking-wider">Trips</p>
+                  <Plane className="w-4 h-4 text-foreground" />
+                  <p className="text-[10px] font-bold text-foreground uppercase tracking-wider">Trips</p>
                 </div>
                 <p className="text-2xl font-extrabold leading-none">{upcomingFlightCount}</p>
                 <p className="text-[11px] text-muted-foreground mt-1">
@@ -2103,9 +2103,9 @@ export default function MorePage() {
             <motion.div
               initial={{ opacity: 0, y: -6 }}
               animate={{ opacity: 1, y: 0 }}
-              className="zivo-card-organic flex items-center gap-3 p-3 mb-4 bg-gradient-to-r from-primary/10 to-fuchsia-500/10 border-primary/20"
+              className="zivo-card-organic flex items-center gap-3 p-3 mb-4 bg-gradient-to-r from-primary/10 border-primary/20"
             >
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary to-fuchsia-500 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary flex items-center justify-center shrink-0">
                 <Download className="w-5 h-5 text-white" />
               </div>
               <div className="flex-1 min-w-0">
@@ -2158,7 +2158,7 @@ export default function MorePage() {
                     to={n.action_url || "/notification-center"}
                     className="zivo-card-organic flex items-start gap-2.5 p-3 active:scale-[0.98] transition-transform"
                   >
-                    <div className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-foreground mt-1.5 shrink-0" />
                     <div className="flex-1 min-w-0">
                       <p className="font-semibold text-[12px] leading-tight truncate">{n.title}</p>
                       <p className="text-[11px] text-muted-foreground line-clamp-2 mt-0.5">{n.body}</p>
@@ -2307,8 +2307,8 @@ export default function MorePage() {
             >
               <div className="flex items-center justify-between mb-2 mt-1">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-lg bg-sky-400/15 flex items-center justify-center">
-                    <Clock className="w-3.5 h-3.5 text-sky-500" />
+                  <div className="w-7 h-7 rounded-lg bg-secondary flex items-center justify-center">
+                    <Clock className="w-3.5 h-3.5 text-foreground" />
                   </div>
                   <h2 className="font-bold text-[15px]">Recently Used</h2>
                   <span className="text-[10px] text-muted-foreground/60 font-medium bg-muted/40 px-1.5 py-0.5 rounded-full">
@@ -2435,13 +2435,13 @@ export default function MorePage() {
               className="mt-5 zivo-card-organic p-4"
             >
               <div className="flex items-start gap-3">
-                <div className="w-10 h-10 rounded-xl bg-fuchsia-500/15 flex items-center justify-center shrink-0">
-                  <Cpu className="w-5 h-5 text-fuchsia-500" />
+                <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center shrink-0">
+                  <Cpu className="w-5 h-5 text-foreground" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-1">
                     <p className="font-bold text-[14px]">ZIVO Labs</p>
-                    <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-fuchsia-500/20 text-fuchsia-500">
+                    <span className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-full bg-secondary text-foreground">
                       Beta
                     </span>
                   </div>
@@ -2452,7 +2452,7 @@ export default function MorePage() {
                     <ul className="space-y-1 mb-3">
                       {betaFeatures.map((f) => (
                         <li key={f.label} className="flex items-center gap-2 text-[11px] text-foreground/80">
-                          <f.icon className="w-3 h-3 text-fuchsia-500" />
+                          <f.icon className="w-3 h-3 text-foreground" />
                           {f.label}
                         </li>
                       ))}
@@ -2733,7 +2733,7 @@ export default function MorePage() {
       <button
         onClick={() => setShowHelpSheet(true)}
         aria-label="Open help"
-        className="fixed bottom-24 lg:bottom-8 right-5 z-30 w-12 h-12 rounded-full bg-gradient-to-br from-primary to-fuchsia-500 shadow-lg shadow-primary/30 flex items-center justify-center active:scale-90 transition-transform"
+        className="fixed bottom-24 lg:bottom-8 right-5 z-30 w-12 h-12 rounded-full bg-gradient-to-br from-primary shadow-lg shadow-primary/30 flex items-center justify-center active:scale-90 transition-transform"
       >
         <HelpCircle className="w-5 h-5 text-white" />
       </button>
@@ -2787,7 +2787,7 @@ export default function MorePage() {
               onClick={() => setShowShareProfile(false)}
               className="zivo-card-organic flex flex-col items-center gap-1.5 p-3 active:scale-[0.95] transition-transform"
             >
-              <QrCode className="w-5 h-5 text-fuchsia-500" />
+              <QrCode className="w-5 h-5 text-foreground" />
               <span className="text-[11px] font-bold">QR code</span>
             </Link>
             <button

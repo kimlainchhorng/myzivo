@@ -71,7 +71,7 @@ const FlightBaggageOptions = () => {
     <section className="py-12 px-4">
       <div className="max-w-5xl mx-auto">
         <div className="text-center mb-8">
-          <Badge className="mb-3 bg-violet-500/20 text-violet-400 border-violet-500/30">
+          <Badge className="mb-3 bg-secondary text-foreground border-border">
             <Luggage className="w-3 h-3 mr-1" /> Baggage
           </Badge>
           <h2 className="text-2xl md:text-3xl font-display font-bold mb-2">
@@ -172,11 +172,11 @@ const FlightBaggageOptions = () => {
         </div>
 
         {/* Summary */}
-        <div className="bg-gradient-to-r from-violet-500/10 via-card/50 to-purple-500/10 rounded-2xl border border-violet-500/20 p-6">
+        <div className="via-card/50 rounded-2xl border border-border p-6 bg-secondary">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-violet-500/20 flex items-center justify-center">
-                <Luggage className="w-6 h-6 text-violet-400" />
+              <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center">
+                <Luggage className="w-6 h-6 text-foreground" />
               </div>
               <div>
                 <p className="font-bold">Baggage Summary</p>
@@ -189,11 +189,11 @@ const FlightBaggageOptions = () => {
             <div className="flex items-center gap-6">
               <div className="text-right">
                 <p className="text-sm text-muted-foreground">Additional Cost</p>
-                <p className="text-2xl font-display font-bold text-violet-400">
+                <p className="text-2xl font-display font-bold text-foreground">
                   ${totalPrice}
                 </p>
               </div>
-              <Button className="bg-gradient-to-r from-violet-500 to-purple-500">
+              <Button className="bg-secondary">
                 <Check className="w-4 h-4 mr-2" />
                 Add to Booking
               </Button>

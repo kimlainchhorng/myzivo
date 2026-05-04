@@ -87,7 +87,7 @@ export default function RideAccessibilityPlus() {
   return (
     <div className="space-y-5">
       {/* Header */}
-      <div className="bg-gradient-to-r from-blue-500/15 via-purple-500/10 to-pink-500/15 rounded-2xl p-4 border border-primary/20">
+      <div className="bg-gradient-to-r from-blue-500/15 rounded-2xl p-4 border border-primary/20">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
             <Heart className="w-6 h-6 text-primary" />

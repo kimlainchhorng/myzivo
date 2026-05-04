@@ -93,7 +93,7 @@ const RealTimeStatusWidget = ({
       </div>
 
       {/* Flight Status Bar */}
-      <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-500/10 to-sky-500/10 border border-emerald-500/20 mb-4">
+      <div className="p-3 rounded-xl bg-gradient-to-r from-emerald-500/10 border border-emerald-500/20 mb-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Plane className="w-4 h-4 text-emerald-400" />

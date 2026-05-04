@@ -157,9 +157,9 @@ const Company = () => {
             <div className="grid sm:grid-cols-3 gap-4">
               <Card className="border-border/50">
                 <CardContent className="p-4 text-center">
-                  <Mail className="w-5 h-5 text-sky-500 mx-auto mb-2" />
+                  <Mail className="w-5 h-5 text-foreground mx-auto mb-2" />
                   <p className="text-xs text-muted-foreground mb-1">General</p>
-                  <a href="mailto:info@hizivo.com" className="text-sm font-medium text-sky-500 hover:underline">
+                  <a href="mailto:info@hizivo.com" className="text-sm font-medium text-foreground hover:underline">
                     info@hizivo.com
                   </a>
                 </CardContent>
@@ -177,9 +177,9 @@ const Company = () => {
               
               <Card className="border-border/50">
                 <CardContent className="p-4 text-center">
-                  <Mail className="w-5 h-5 text-violet-500 mx-auto mb-2" />
+                  <Mail className="w-5 h-5 text-foreground mx-auto mb-2" />
                   <p className="text-xs text-muted-foreground mb-1">Business</p>
-                  <a href="mailto:kimlain@hizivo.com" className="text-sm font-medium text-violet-500 hover:underline">
+                  <a href="mailto:kimlain@hizivo.com" className="text-sm font-medium text-foreground hover:underline">
                     kimlain@hizivo.com
                   </a>
                 </CardContent>

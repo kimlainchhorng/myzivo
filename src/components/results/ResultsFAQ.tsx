@@ -97,9 +97,9 @@ const faqContent: Record<ResultsServiceType, { question: string; answer: React.R
       question: "Need help with your trip?",
       answer: (
         <>
-          Check out our <Link to="/extras" className="text-sky-500 hover:underline font-medium">travel extras</Link> for 
+          Check out our <Link to="/extras" className="text-foreground hover:underline font-medium">travel extras</Link> for 
           airport transfers, tours, eSIM data, and more. For any questions, visit our{" "}
-          <Link to="/contact" className="text-sky-500 hover:underline font-medium">contact page</Link> or email us directly.
+          <Link to="/contact" className="text-foreground hover:underline font-medium">contact page</Link> or email us directly.
         </>
       ),
       plainAnswer: "Check out our travel extras for airport transfers, tours, eSIM data, and more. For any questions, visit our contact page or email us directly.",
@@ -224,10 +224,10 @@ const faqContent: Record<ResultsServiceType, { question: string; answer: React.R
       question: "Need extras for your trip?",
       answer: (
         <>
-          Enhance your journey with our <Link to="/extras" className="text-violet-500 hover:underline font-medium">travel extras</Link>—book 
+          Enhance your journey with our <Link to="/extras" className="text-foreground hover:underline font-medium">travel extras</Link>—book 
           airport transfers, activities, eSIM data plans, and luggage storage. Also check our{" "}
-          <Link to="/flights" className="text-violet-500 hover:underline font-medium">flights</Link> and{" "}
-          <Link to="/hotels" className="text-violet-500 hover:underline font-medium">hotels</Link> for a complete trip.
+          <Link to="/flights" className="text-foreground hover:underline font-medium">flights</Link> and{" "}
+          <Link to="/hotels" className="text-foreground hover:underline font-medium">hotels</Link> for a complete trip.
         </>
       ),
       plainAnswer: "Enhance your journey with our travel extras—book airport transfers, activities, eSIM data plans, and luggage storage. Also check our flights and hotels for a complete trip.",

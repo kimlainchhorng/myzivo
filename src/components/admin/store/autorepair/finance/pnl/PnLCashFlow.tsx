@@ -37,8 +37,8 @@ export default function PnLCashFlow({ payments, expenses, payouts }: Props) {
             <div className="text-base font-semibold text-emerald-600 tabular-nums">{fmtMoney(cashIn)}</div>
           </div>
           <div className="rounded-lg border p-2.5">
-            <div className="text-[10px] text-muted-foreground flex items-center gap-1"><ArrowUpCircle className="w-3 h-3 text-rose-600" /> Cash out</div>
-            <div className="text-base font-semibold text-rose-600 tabular-nums">{fmtMoney(cashOut)}</div>
+            <div className="text-[10px] text-muted-foreground flex items-center gap-1"><ArrowUpCircle className="w-3 h-3 text-foreground" /> Cash out</div>
+            <div className="text-base font-semibold text-foreground tabular-nums">{fmtMoney(cashOut)}</div>
           </div>
           <div className="rounded-lg border p-2.5 bg-muted/30">
             <div className="text-[10px] text-muted-foreground">Net cash</div>

@@ -239,7 +239,7 @@ export default function PublicOrderSharePage() {
             )}
             {order.delivery_address_short && (
               <Row
-                icon={<MapPin className="w-4 h-4 text-rose-500" />}
+                icon={<MapPin className="w-4 h-4 text-foreground" />}
                 label="Delivering to"
                 value={order.delivery_address_short}
               />

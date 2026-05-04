@@ -1451,7 +1451,7 @@ function ReelCard({
             const isTrending = trendingScore >= 50;
             if (!isTrending) return null;
             return (
-              <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-orange-500/90 to-rose-500/90 backdrop-blur-sm border border-white/20 shadow-lg">
+              <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-gradient-to-r from-orange-500/90 backdrop-blur-sm border border-white/20 shadow-lg">
                 <Flame className="w-3 h-3 text-white" />
                 <span className="text-white text-[10px] font-bold leading-none">Trending</span>
               </span>
@@ -1609,7 +1609,7 @@ function ReelCard({
                     navigate(`/explore?tag=${encodeURIComponent((challengeTag || tags[0]).slice(1))}`);
                     toast.success("Join the challenge — create your own video with this sound!");
                   }}
-                  className="flex items-center gap-1.5 mb-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-primary to-violet-500 text-white text-[11px] font-bold active:scale-95 transition-transform shadow-lg"
+                  className="flex items-center gap-1.5 mb-2 px-3 py-1.5 rounded-full bg-gradient-to-r from-primary text-white text-[11px] font-bold active:scale-95 transition-transform shadow-lg"
                 >
                   <Flame className="w-3.5 h-3.5" />
                   <span>Join Challenge</span>

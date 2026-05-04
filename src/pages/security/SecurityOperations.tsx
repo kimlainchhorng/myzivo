@@ -105,8 +105,8 @@ export default function SecurityOperations() {
               <h3 className="font-semibold">Weekly</h3>
               <p className="text-sm text-muted-foreground">Review & analysis</p>
             </div>
-            <div className="p-4 rounded-lg bg-purple-500/10 border border-purple-500/30 text-center">
-              <CalendarDays className="w-6 h-6 text-purple-500 mx-auto mb-2" />
+            <div className="p-4 rounded-lg bg-secondary border border-border text-center">
+              <CalendarDays className="w-6 h-6 text-foreground mx-auto mb-2" />
               <h3 className="font-semibold">Monthly</h3>
               <p className="text-sm text-muted-foreground">Deep audits</p>
             </div>
@@ -165,7 +165,7 @@ export default function SecurityOperations() {
           <Card className="mb-6">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <CalendarDays className="w-5 h-5 text-purple-500" />
+                <CalendarDays className="w-5 h-5 text-foreground" />
                 Monthly Security Tasks
               </CardTitle>
               <CardDescription>
@@ -175,8 +175,8 @@ export default function SecurityOperations() {
             <CardContent>
               <div className="grid sm:grid-cols-2 gap-3">
                 {monthlyTasks.map((item) => (
-                  <div key={item.task} className="flex items-center gap-3 p-3 rounded-lg bg-purple-500/5 border border-purple-500/20">
-                    <item.icon className="w-4 h-4 text-purple-500 shrink-0" />
+                  <div key={item.task} className="flex items-center gap-3 p-3 rounded-lg bg-secondary border border-border">
+                    <item.icon className="w-4 h-4 text-foreground shrink-0" />
                     <span className="text-sm">{item.task}</span>
                   </div>
                 ))}

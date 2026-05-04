@@ -153,9 +153,9 @@ const FlightMealPreorder = () => {
           <h3 className="font-bold mb-4">Enhance Your Meal</h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {([
-              { name: "Premium Wine", price: 15, addonIcon: Wine, gradient: "from-red-500/20 to-rose-500/20", color: "text-red-400" },
+              { name: "Premium Wine", price: 15, addonIcon: Wine, gradient: "from-muted to-muted", color: "text-red-400" },
               { name: "Champagne", price: 25, addonIcon: GlassWater, gradient: "from-amber-500/20 to-yellow-500/20", color: "text-amber-400" },
-              { name: "Dessert Platter", price: 8, addonIcon: Cake, gradient: "from-pink-500/20 to-rose-500/20", color: "text-pink-400" },
+              { name: "Dessert Platter", price: 8, addonIcon: Cake, gradient: "from-muted to-muted", color: "text-pink-400" },
               { name: "Cheese Board", price: 12, addonIcon: UtensilsCrossed, gradient: "from-amber-500/20 to-orange-500/20", color: "text-amber-500" },
             ] as const).map((addon) => (
               <button

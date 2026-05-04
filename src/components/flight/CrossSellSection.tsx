@@ -121,11 +121,11 @@ export default function CrossSellSection({
         </Card>
 
         {/* Car Rentals Section */}
-        <Card className="bg-gradient-to-br from-violet-500/10 to-purple-500/5 border-violet-500/30">
+        <Card className="border-border bg-secondary">
           <CardContent className="p-3 sm:p-4">
             <div className="flex items-center gap-2 mb-2 sm:mb-3">
-              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-violet-500/20 flex items-center justify-center">
-                <Car className="w-4 h-4 sm:w-5 sm:h-5 text-violet-500" />
+              <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl bg-secondary flex items-center justify-center">
+                <Car className="w-4 h-4 sm:w-5 sm:h-5 text-foreground" />
               </div>
               <div>
                 <h4 className="font-semibold text-sm sm:text-base">Car Rentals</h4>
@@ -155,7 +155,7 @@ export default function CrossSellSection({
             <Button
               variant="outline"
               size="sm"
-              className="w-full h-8 sm:h-9 text-xs sm:text-sm border-violet-500/30 hover:bg-violet-500/10 touch-manipulation active:scale-[0.98]"
+              className="w-full h-8 sm:h-9 text-xs sm:text-sm border-border hover:bg-secondary touch-manipulation active:scale-[0.98]"
               onClick={() => handleInternalLink('/rent-car', 'car')}
             >
               Search on ZIVO Cars
@@ -210,7 +210,7 @@ export default function CrossSellSection({
       </div>
 
       <p className="text-[9px] sm:text-[10px] text-muted-foreground text-center">
-        ZIVO may earn a commission from partner bookings. <a href="/affiliate-disclosure" className="text-sky-500 hover:underline">Learn more</a>
+        ZIVO may earn a commission from partner bookings. <a href="/affiliate-disclosure" className="text-foreground hover:underline">Learn more</a>
       </p>
     </div>
   );

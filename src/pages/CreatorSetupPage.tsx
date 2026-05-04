@@ -605,8 +605,8 @@ function TierStep({ tiers, userId, onSaved }: any) {
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <p className="text-xs font-bold truncate">{t.name}</p>
                   {t.is_free && <span className="text-[9px] font-bold uppercase px-1 py-0.5 rounded bg-emerald-500/20 text-emerald-600">Free</span>}
-                  {t.is_custom_price && <span className="text-[9px] font-bold uppercase px-1 py-0.5 rounded bg-violet-500/20 text-violet-600">PWYW</span>}
-                  {t.trial_days > 0 && <span className="text-[9px] font-bold uppercase px-1 py-0.5 rounded bg-sky-500/20 text-sky-600">{t.trial_days}d trial</span>}
+                  {t.is_custom_price && <span className="text-[9px] font-bold uppercase px-1 py-0.5 rounded bg-secondary text-foreground">PWYW</span>}
+                  {t.trial_days > 0 && <span className="text-[9px] font-bold uppercase px-1 py-0.5 rounded bg-secondary text-foreground">{t.trial_days}d trial</span>}
                   {t.discount_percent > 0 && <span className="text-[9px] font-bold uppercase px-1 py-0.5 rounded bg-amber-500/20 text-amber-600">-{t.discount_percent}%{t.discount_months ? ` x${t.discount_months}mo` : ""}</span>}
                 </div>
                 <p className="text-[10px] text-muted-foreground">
@@ -737,8 +737,8 @@ function TierStep({ tiers, userId, onSaved }: any) {
             </span>
             <p className="font-bold text-sm">{name || "Tier name"}</p>
             {type === "free" && <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-600">Free</span>}
-            {type === "custom" && <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-violet-500/20 text-violet-600">PWYW</span>}
-            {trialDays > 0 && type !== "free" && <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-sky-500/20 text-sky-600">{trialDays}-day trial</span>}
+            {type === "custom" && <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-secondary text-foreground">PWYW</span>}
+            {trialDays > 0 && type !== "free" && <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-secondary text-foreground">{trialDays}-day trial</span>}
             {discountPct > 0 && type !== "free" && <span className="text-[9px] font-bold uppercase px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-600">-{discountPct}%</span>}
           </div>
           <p className="text-base font-bold mt-1">
@@ -904,8 +904,8 @@ function TipsStep({ enabled, userId, onSaved }: any) {
   return (
     <div className="space-y-3">
       <div className="rounded-xl border border-border/40 bg-card p-4 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-xl bg-pink-500/15 flex items-center justify-center">
-          <Heart className="w-5 h-5 text-pink-500" />
+        <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
+          <Heart className="w-5 h-5 text-foreground" />
         </div>
         <div className="flex-1 min-w-0">
           <p className="text-sm font-extrabold">Accept tips</p>

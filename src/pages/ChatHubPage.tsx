@@ -2033,7 +2033,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                       {active === "personal" && (chat as any).isSentByMe && !(chat as any).isGroup && (
                                         <span className="mr-1 flex-shrink-0">
                                           {(chat as any).isRead ? (
-                                            <CheckCheck className="w-3.5 h-3.5 text-sky-500" />
+                                            <CheckCheck className="w-3.5 h-3.5 text-foreground" />
                                           ) : (chat as any).deliveredAt ? (
                                             <CheckCheck className="w-3.5 h-3.5 text-muted-foreground/60" />
                                           ) : (
@@ -2231,14 +2231,14 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                             <button
                               onClick={() => handleBulkSetPinned(true)}
                               disabled={selectedChatIds.size === 0}
-                              className="flex-1 h-10 rounded-xl bg-violet-500/10 text-violet-600 text-xs font-semibold disabled:opacity-40"
+                              className="flex-1 h-10 rounded-xl bg-secondary text-foreground text-xs font-semibold disabled:opacity-40"
                             >
                               Pin
                             </button>
                             <button
                               onClick={() => handleBulkSetPinned(false)}
                               disabled={selectedChatIds.size === 0}
-                              className="flex-1 h-10 rounded-xl bg-violet-500/10 text-violet-600 text-xs font-semibold disabled:opacity-40"
+                              className="flex-1 h-10 rounded-xl bg-secondary text-foreground text-xs font-semibold disabled:opacity-40"
                             >
                               Unpin
                             </button>
@@ -2266,7 +2266,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                             <button
                               onClick={() => handleBulkSetArchive(false)}
                               disabled={selectedChatIds.size === 0}
-                              className="flex-1 h-10 rounded-xl bg-sky-500/10 text-sky-600 text-xs font-semibold disabled:opacity-40"
+                              className="flex-1 h-10 rounded-xl bg-secondary text-foreground text-xs font-semibold disabled:opacity-40"
                             >
                               Unarchive
                             </button>

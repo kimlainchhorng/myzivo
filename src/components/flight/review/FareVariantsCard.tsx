@@ -59,7 +59,7 @@ const CABIN_THEMES: Record<string, {
     cabinImage: cabinPremiumEconomy,
   },
   business: {
-    gradient: "from-indigo-400/10 to-violet-300/5",
+    gradient: "from-muted to-muted",
     accent: "hsl(230 75% 58%)",
     label: "Business",
     icon: Crown,

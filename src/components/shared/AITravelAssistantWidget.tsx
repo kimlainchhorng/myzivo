@@ -89,7 +89,7 @@ const AITravelAssistantWidget = ({
           </div>
           <h3 className="font-semibold text-sm">AI Travel Assistant</h3>
         </div>
-        <Badge className="bg-gradient-to-r from-primary/20 to-purple-500/20 text-primary border-0">
+        <Badge className="bg-gradient-to-r from-primary/20 text-primary border-0">
           <Sparkles className="w-3 h-3 mr-1" />
           Powered by AI
         </Badge>

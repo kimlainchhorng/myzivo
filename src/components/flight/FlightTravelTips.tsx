@@ -44,16 +44,16 @@ const tips = [
 const FlightTravelTips = () => {
   return (
     <section className="py-12 sm:py-16 lg:py-20 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-sky-500/10 via-transparent to-blue-500/10" />
+      <div className="absolute inset-0 via-transparent bg-secondary" />
       
       <div className="container mx-auto px-4 relative z-10">
         <div className="text-center mb-10 animate-in fade-in slide-in-from-bottom-4 duration-500">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-sky-500/10 border border-sky-500/20 text-sky-400 text-sm font-medium mb-4">
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary border border-border text-foreground text-sm font-medium mb-4">
             <Lightbulb className="w-4 h-4" />
             Pro Tips
           </div>
           <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">
-            Save More on <span className="bg-gradient-to-r from-sky-400 to-blue-500 bg-clip-text text-transparent">Every Flight</span>
+            Save More on <span className="text-accent-foreground">Every Flight</span>
           </h2>
           <p className="text-muted-foreground max-w-xl mx-auto">
             Expert tips to find the best deals and travel smarter
@@ -79,7 +79,7 @@ const FlightTravelTips = () => {
                 )}>
                   <tip.icon className="w-6 h-6 text-primary-foreground" />
                 </div>
-                <h3 className="font-display font-bold text-lg mb-2 group-hover:text-sky-400 transition-colors">
+                <h3 className="font-display font-bold text-lg mb-2 group-hover:text-foreground transition-colors">
                   {tip.title}
                 </h3>
                 <p className="text-sm text-muted-foreground leading-relaxed">

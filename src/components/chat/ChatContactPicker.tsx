@@ -119,7 +119,7 @@ export default function ChatContactPicker({ open, onOpenChange, onConfirm }: Pro
       <SheetContent side="bottom" className="rounded-t-2xl pb-safe h-[80vh] flex flex-col">
         <SheetHeader>
           <SheetTitle className="text-left flex items-center gap-2">
-            <UserSquare className="w-5 h-5 text-indigo-500" /> Share a contact
+            <UserSquare className="w-5 h-5 text-foreground" /> Share a contact
           </SheetTitle>
         </SheetHeader>
         <Input

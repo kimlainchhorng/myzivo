@@ -156,91 +156,87 @@ const VerifyNewDevice = () => {
   if (!email || !userId) return null;
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
+    <div className="relative min-h-[100dvh] w-full overflow-hidden flex items-center justify-center px-5 py-8 bg-white dark:bg-black">
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-32 -right-32 w-[420px] h-[420px] rounded-full blur-3xl dark:dark:dark: bg-secondary" />
+        <div className="absolute -bottom-32 -left-32 w-[420px] h-[420px] rounded-full bg-gradient-to-tr from-amber-200/30 blur-3xl dark:from-amber-600/15 dark:dark:" />
+      </div>
+
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
+        initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
-        className="w-full max-w-sm"
+        className="relative w-full max-w-sm"
       >
-        <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl p-6 shadow-xl">
-          {/* Header */}
-          <div className="text-center mb-6">
-            <div className="w-14 h-14 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3">
-              <Shield className="w-7 h-7 text-primary" />
+        <div className="bg-white dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-white/10 rounded-xl px-7 pt-9 pb-6 shadow-sm">
+          <div className="flex flex-col items-center mb-6">
+            <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 flex items-center justify-center mb-4 shadow-lg">
+              <Shield className="w-7 h-7 text-white" />
             </div>
-            <h1 className="text-xl font-bold text-foreground">New Device Detected</h1>
-            <p className="text-sm text-muted-foreground mt-1">
-              We sent a verification code to
-            </p>
-            <p className="text-sm font-medium text-foreground mt-0.5">
-              {maskedEmail}
+            <h1 className="text-xl font-bold text-zinc-900 dark:text-white">New device detected</h1>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1.5 text-center">
+              We sent a verification code to<br />
+              <span className="font-semibold text-zinc-900 dark:text-white">{maskedEmail}</span>
             </p>
           </div>
 
-          {/* OTP Inputs */}
-          <div className="flex justify-center gap-2 mb-6" onPaste={handlePaste}>
-            {code.map((digit, i) => (
-              <span key={i} className="contents">
-                <input
-                  ref={(el) => { inputRefs.current[i] = el; }}
-                  type="text"
-                  inputMode="numeric"
-                  maxLength={1}
-                  value={digit}
-                  onChange={(e) => handleInputChange(i, e.target.value)}
-                  onKeyDown={(e) => handleKeyDown(i, e)}
-                  className="w-11 h-13 text-center text-lg font-bold bg-background border border-border rounded-lg text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50 transition-all"
-                  disabled={isVerifying}
-                />
-                {i === 2 && <span className="flex items-center text-muted-foreground font-bold">·</span>}
-              </span>
-            ))}
-          </div>
+          <div className="space-y-4">
+            <div className="flex justify-center gap-2" onPaste={handlePaste}>
+              {code.map((digit, i) => (
+                <span key={i} className="contents">
+                  <input
+                    ref={(el) => { inputRefs.current[i] = el; }}
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={1}
+                    value={digit}
+                    onChange={(e) => handleInputChange(i, e.target.value)}
+                    onKeyDown={(e) => handleKeyDown(i, e)}
+                    className="w-11 h-12 text-center text-xl font-bold rounded-md bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 focus:border-border dark:focus:border-border outline-none text-zinc-900 dark:text-white transition"
+                    disabled={isVerifying}
+                  />
+                  {i === 2 && <span className="flex items-center text-zinc-400 font-bold">·</span>}
+                </span>
+              ))}
+            </div>
 
-          {/* Verify Button */}
-          <Button
-            onClick={() => handleVerify(code.join(""))}
-            disabled={isVerifying || code.some((d) => !d)}
-            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground h-11 rounded-xl font-semibold"
-          >
-            {isVerifying ? (
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
-            ) : (
-              <Shield className="w-4 h-4 mr-2" />
-            )}
-            Verify Device →
-          </Button>
-
-          {/* Resend */}
-          <div className="text-center mt-4 space-y-1">
-            <p className="text-xs text-muted-foreground">Didn't receive the code?</p>
-            {countdown > 0 ? (
-              <p className="text-xs text-muted-foreground">Resend in {countdown}s</p>
-            ) : (
-              <button
-                onClick={handleResend}
-                disabled={isResending}
-                className="text-xs text-primary font-medium hover:underline"
-              >
-                {isResending ? "Sending..." : "Resend Code"}
-              </button>
-            )}
-          </div>
-
-          {/* Divider */}
-          <div className="border-t border-border/50 mt-5 pt-4 flex flex-col items-center gap-2">
             <button
-              onClick={() => navigate("/login", { replace: true })}
-              className="text-sm text-muted-foreground hover:text-foreground flex items-center gap-1"
+              type="button"
+              onClick={() => handleVerify(code.join(""))}
+              disabled={isVerifying || code.some((d) => !d)}
+              className="w-full h-9 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md"
             >
-              <ArrowLeft className="w-3.5 h-3.5" /> Back to Sign In
+              {isVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify device"}
             </button>
+
+            <div className="text-center text-sm text-zinc-500 dark:text-zinc-400">
+              Didn't receive the code?{" "}
+              {countdown > 0 ? (
+                <span className="text-zinc-500 dark:text-zinc-400">Resend in {countdown}s</span>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleResend}
+                  disabled={isResending}
+                  className="font-semibold text-foreground hover:text-foreground disabled:opacity-50"
+                >
+                  {isResending ? "Sending…" : "Resend code"}
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* Security note */}
-          <p className="text-[10px] text-muted-foreground text-center mt-4">
+          <p className="text-[11px] text-zinc-400 dark:text-zinc-500 text-center mt-5">
             This extra step keeps your account safe when signing in from a new device.
           </p>
+        </div>
+
+        <div className="mt-3 bg-white dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-white/10 rounded-xl px-6 py-4 text-center shadow-sm">
+          <button
+            onClick={() => navigate("/login", { replace: true })}
+            className="inline-flex items-center justify-center gap-1 text-sm font-semibold text-foreground hover:text-foreground"
+          >
+            <ArrowLeft className="w-4 h-4" /> Back to sign in
+          </button>
         </div>
       </motion.div>
     </div>

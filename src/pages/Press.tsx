@@ -83,7 +83,7 @@ const Press = () => {
         <div className="container mx-auto px-4 max-w-5xl">
           {/* Hero Section */}
           <div className="text-center mb-12">
-            <Badge className="mb-4 bg-sky-500/20 text-sky-500 border-sky-500/30">
+            <Badge className="mb-4 bg-secondary text-foreground border-border">
               <Newspaper className="w-3 h-3 mr-1" />
               Press & Media
             </Badge>
@@ -325,7 +325,7 @@ const Press = () => {
 
               {/* Media Coverage Stats */}
               <section className="mt-12">
-                <Card className="border-sky-500/20 bg-sky-500/5">
+                <Card className="border-border bg-secondary">
                   <CardContent className="p-6">
                     <h3 className="font-bold text-lg text-center mb-4">Media Coverage</h3>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
@@ -337,7 +337,7 @@ const Press = () => {
                       ].map(s => (
                         <div key={s.label}>
                           <span className="text-xl">{s.emoji}</span>
-                          <p className="text-xl font-bold text-sky-500 mt-1">{s.stat}</p>
+                          <p className="text-xl font-bold text-foreground mt-1">{s.stat}</p>
                           <p className="text-[10px] text-muted-foreground">{s.label}</p>
                         </div>
                       ))}
@@ -355,7 +355,7 @@ const Press = () => {
                     { event: "Phocuswright Conference", topic: "AI-Powered Travel Personalization", date: "Nov 2024", location: "Los Angeles", emoji: "🤖" },
                     { event: "TravelTech Show", topic: "Building a Unified Travel Platform", date: "Jun 2024", location: "London", emoji: "🌍" },
                   ].map(e => (
-                    <Card key={e.event} className="border-border/50 hover:border-sky-500/20 transition-all">
+                    <Card key={e.event} className="border-border/50 hover:border-border transition-all">
                       <CardContent className="p-4">
                         <span className="text-lg">{e.emoji}</span>
                         <p className="font-bold text-sm mt-2">{e.event}</p>

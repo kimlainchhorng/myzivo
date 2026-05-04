@@ -566,11 +566,198 @@ serve(async (req) => {
             await supabase.from("booking_audit_logs").insert({
               order_id: metadata.orderId,
               event: "booking_confirmation_error",
-              meta: { 
+              meta: {
                 error: confirmErr instanceof Error ? confirmErr.message : "Unknown error",
                 checkout_session_id: session.id,
               },
             });
+          }
+        } else if (metadata.type === "creator_tip") {
+          // Tip via create-tip-checkout. The function inserts creator_tips with
+          // status='pending' + payment_intent_id = session.payment_intent OR
+          // session.id (depending on availability at session-create time).
+          // Without this branch, tips stay pending forever — creator never
+          // sees them as succeeded.
+          if (session.payment_status !== "paid") {
+            console.log("[Webhook] creator_tip session not yet paid:", session.id);
+          } else {
+            // Resolve the tip row by either payment_intent_id (if set during
+            // create) or by session.id (fallback used when PI isn't known yet).
+            const piRef = paymentIntentId ?? session.id;
+            const sessionRef = session.id;
+            const tipperId = metadata.tipper_id;
+
+            // Try by payment_intent_id first; if no row, try by session.id.
+            let tipRow: { id: string; status: string } | null = null;
+            const { data: byPi } = await supabase
+              .from("creator_tips")
+              .select("id, status")
+              .eq("payment_intent_id", piRef)
+              .maybeSingle();
+            tipRow = (byPi as any) ?? null;
+            if (!tipRow) {
+              const { data: bySession } = await supabase
+                .from("creator_tips")
+                .select("id, status")
+                .eq("payment_intent_id", sessionRef)
+                .maybeSingle();
+              tipRow = (bySession as any) ?? null;
+            }
+
+            if (!tipRow) {
+              console.warn("[Webhook] creator_tip row not found", { session: session.id, pi: piRef });
+            } else if (tipRow.status === "succeeded") {
+              console.log("[Webhook] creator_tip already succeeded", { tip: tipRow.id });
+            } else {
+              const { error: tipErr } = await supabase
+                .from("creator_tips")
+                .update({
+                  status: "succeeded",
+                  payment_provider: "stripe",
+                  payment_intent_id: paymentIntentId ?? sessionRef,
+                  last_payment_error: null,
+                })
+                .eq("id", tipRow.id);
+              if (tipErr) {
+                console.error("[Webhook] creator_tip flip failed", tipErr);
+              } else {
+                console.log("[Webhook] creator_tip succeeded", { tip: tipRow.id });
+                // Push notify the creator + tipper
+                const creatorId = metadata.creator_id;
+                const isAnon = metadata.is_anonymous === "true";
+                if (creatorId) {
+                  try {
+                    await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${supabaseServiceKey}` },
+                      body: JSON.stringify({
+                        user_id: creatorId,
+                        notification_type: "tip_received",
+                        title: "You received a tip! 💰",
+                        body: `${isAnon ? "Someone" : "A fan"} sent you $${(((session.amount_total || 0)) / 100).toFixed(2)}`,
+                        data: { type: "tip_received", amount_cents: session.amount_total ?? 0, action_url: "/wallet" },
+                      }),
+                    });
+                  } catch {}
+                }
+              }
+            }
+          }
+        } else if (metadata.type === "reel_boost") {
+          // Reel boost via create-reel-boost. Without this branch, the buyer
+          // pays but the reel is never marked as boosted. Idempotent via
+          // merchant_boosts.payment_ref UNIQUE-ish on session id.
+          if (session.payment_status !== "paid") {
+            console.log("[Webhook] reel_boost session not yet paid:", session.id);
+          } else {
+            const storeId = metadata.store_id || null;
+            const reelId = metadata.reel_id || null;
+            const amountCents = session.amount_total || 0;
+            const featuredDays = 7; // matches the standard boost duration
+            const featuredUntil = new Date(Date.now() + featuredDays * 24 * 60 * 60 * 1000).toISOString();
+
+            const { data: existing } = await supabase
+              .from("merchant_boosts")
+              .select("id")
+              .eq("payment_ref", session.id)
+              .maybeSingle();
+
+            if (existing) {
+              console.log("[Webhook] reel_boost already credited:", session.id);
+            } else if (!storeId) {
+              console.warn("[Webhook] reel_boost missing store_id metadata", { session: session.id });
+            } else {
+              const { error: boostErr } = await supabase.from("merchant_boosts").insert({
+                store_id: storeId,
+                amount_cents: amountCents,
+                currency: (session.currency || "usd").toUpperCase(),
+                paid_via: "stripe",
+                payment_ref: session.id,
+                featured_until: featuredUntil,
+                status: "active",
+              });
+              if (boostErr) {
+                console.error("[Webhook] reel_boost insert failed", boostErr);
+              } else {
+                console.log("[Webhook] reel_boost activated", { store: storeId, reel: reelId, until: featuredUntil });
+                // Notify the merchant
+                const buyer = metadata.user_id;
+                if (buyer) {
+                  try {
+                    await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${supabaseServiceKey}` },
+                      body: JSON.stringify({
+                        user_id: buyer,
+                        notification_type: "boost_activated",
+                        title: "Boost active 🚀",
+                        body: `Your reel boost is now live for ${featuredDays} days.`,
+                        data: { type: "boost_activated", reel_id: reelId, action_url: "/shop-dashboard/attribution" },
+                      }),
+                    });
+                  } catch {}
+                }
+              }
+            }
+          }
+        } else if (metadata.type === "ads_wallet_topup" || metadata.store_id && metadata.amount_cents) {
+          // SAFETY NET for ads-wallet top-ups. Primary path is verify-ads-wallet-topup
+          // (called by SPA on return). If the buyer closed the tab on Stripe's
+          // hosted page, they never come back to call verify and the wallet
+          // never credits — even though Stripe captured the funds. This branch
+          // mirrors verify-ads-wallet-topup and is idempotent via the
+          // ads_wallet_ledger.ref_id check.
+          if (session.payment_status !== "paid") {
+            console.log("[Webhook] ads_wallet_topup session not yet paid:", session.id);
+          } else {
+            const storeId = metadata.store_id;
+            const amountCents = Number(metadata.amount_cents || session.amount_total || 0);
+            if (!storeId || !amountCents) {
+              console.warn("[Webhook] ads_wallet_topup missing storeId/amount", { session: session.id });
+            } else {
+              const { data: existing } = await supabase
+                .from("ads_wallet_ledger")
+                .select("id")
+                .eq("ref_id", session.id)
+                .maybeSingle();
+              if (existing) {
+                console.log("[Webhook] ads_wallet_topup already credited:", session.id);
+              } else {
+                const { data: wallet } = await supabase
+                  .from("ads_studio_wallet")
+                  .select("balance_cents")
+                  .eq("store_id", storeId)
+                  .maybeSingle();
+                const newBalance = (wallet?.balance_cents ?? 0) + amountCents;
+
+                let paymentMethodId: string | null = null;
+                try {
+                  if (paymentIntentId) {
+                    const stripe = new Stripe(stripeKey!, { apiVersion: "2025-08-27.basil" });
+                    const pi = await stripe.paymentIntents.retrieve(paymentIntentId);
+                    paymentMethodId = (typeof pi.payment_method === "string" ? pi.payment_method : pi.payment_method?.id) ?? null;
+                  }
+                } catch (e) { console.warn("[Webhook] couldn't retrieve PI for ads_wallet_topup", e); }
+
+                const upd: Record<string, unknown> = { balance_cents: newBalance, last_recharge_at: new Date().toISOString() };
+                if (paymentMethodId) upd.stripe_payment_method_id = paymentMethodId;
+                await supabase.from("ads_studio_wallet").upsert(
+                  { store_id: storeId, ...upd },
+                  { onConflict: "store_id" }
+                );
+
+                await supabase.from("ads_wallet_ledger").insert({
+                  store_id: storeId,
+                  entry_type: "topup",
+                  amount_cents: amountCents,
+                  balance_after_cents: newBalance,
+                  ref_id: session.id,
+                  ref_type: "stripe_checkout_session",
+                  description: `Stripe top-up $${(amountCents / 100).toFixed(2)} (webhook safety net)`,
+                });
+                console.log("[Webhook] ads_wallet credit safety net fired", { store: storeId, amount: amountCents, session: session.id });
+              }
+            }
           }
         }
         // ──── Record 2% platform fee ────
@@ -722,6 +909,14 @@ serve(async (req) => {
           catch (e) { console.warn("[Webhook] eats auto-transfer skipped", e); }
           try { await notifyEatsOrderConfirmed(supabase, row.id, "Card"); }
           catch (e) { console.warn("[Webhook] eats confirmation email skipped", e); }
+          // Dispatch driver — only fires after payment confirms, idempotent.
+          try {
+            await fetch(`${supabaseUrl}/functions/v1/dispatch-eats-order`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json", Authorization: `Bearer ${supabaseServiceKey}` },
+              body: JSON.stringify({ order_id: row.id }),
+            });
+          } catch (e) { console.warn("[Webhook] eats dispatch skipped", e); }
         }
 
         // Webhook safety net for grocery orders — confirm-grocery-payment is the
@@ -736,6 +931,45 @@ serve(async (req) => {
         for (const row of (paidGroceryOrders ?? []) as { id: string }[]) {
           try { await notifyGroceryOrderConfirmed(supabase, row.id, "Card"); }
           catch (e) { console.warn("[Webhook] grocery confirmation email skipped", e); }
+        }
+
+        // Webhook safety net for COIN TOP-UPS — verify-coin-purchase is the
+        // primary path (called by the SPA). If the buyer closes the tab right
+        // after Stripe confirms but before that call, coins never credited.
+        // The credit_coin_purchase RPC is idempotent (keyed on session_id /
+        // payment_intent_id) so calling it from both paths is safe.
+        const coinUserId = paymentIntent.metadata?.user_id;
+        const coinPackageId = paymentIntent.metadata?.package_id;
+        const coinAmount = parseInt(paymentIntent.metadata?.coins || "0", 10);
+        if (coinUserId && coinPackageId && coinAmount > 0) {
+          try {
+            const { error: coinErr } = await supabase.rpc("credit_coin_purchase", {
+              _user_id: coinUserId,
+              _session_id: paymentIntent.id,
+              _package_id: coinPackageId,
+              _coins: coinAmount,
+              _amount_cents: paymentIntent.amount_received || paymentIntent.amount || 0,
+              _currency: paymentIntent.currency ?? "usd",
+            });
+            if (coinErr) {
+              console.error("[Webhook] coin credit failed", coinErr);
+            } else {
+              console.log("[Webhook] coin credit safety net fired", { user: coinUserId, coins: coinAmount, pi: paymentIntent.id });
+              // Notify the user they got their coins (best-effort).
+              try {
+                await supabase.from("user_notifications").insert({
+                  user_id: coinUserId,
+                  type: "coin_topup_success",
+                  entity_id: paymentIntent.id,
+                  entity_type: "coin_purchase",
+                  message: `+${coinAmount.toLocaleString()} Z Coins added to your wallet`,
+                  is_read: false,
+                });
+              } catch (e) { console.warn("[Webhook] coin notify skipped", e); }
+            }
+          } catch (e) {
+            console.error("[Webhook] coin credit error", e);
+          }
         }
 
         // Log for flight payments
@@ -1227,6 +1461,92 @@ serve(async (req) => {
               .eq("stripe_subscription_id", subscriptionId);
           }
         }
+        break;
+      }
+
+      // ============ STRIPE IDENTITY (KYC) ============
+      case "identity.verification_session.verified":
+      case "identity.verification_session.requires_input":
+      case "identity.verification_session.processing":
+      case "identity.verification_session.canceled": {
+        const vs = event.data.object as any;
+        const userId = vs.metadata?.user_id;
+        const role = vs.metadata?.role || "creator";
+        if (!userId) {
+          console.warn("[Webhook] identity event missing user_id metadata", { id: vs.id, type: event.type });
+          break;
+        }
+
+        const verified = event.type === "identity.verification_session.verified";
+        const requiresInput = event.type === "identity.verification_session.requires_input";
+        const canceled = event.type === "identity.verification_session.canceled";
+
+        const submissionStatus = verified ? "verified"
+          : canceled ? "canceled"
+          : requiresInput ? "requires_input"
+          : "pending";
+
+        const update: Record<string, any> = {
+          stripe_verification_status: vs.status,
+          status: submissionStatus,
+          updated_at: new Date().toISOString(),
+        };
+        if (verified) {
+          update.stripe_verified_at = new Date().toISOString();
+          update.reviewed_at = new Date().toISOString();
+        }
+        if (requiresInput && vs.last_error?.reason) {
+          update.rejection_reason = vs.last_error.reason;
+        }
+
+        await supabase
+          .from("kyc_submissions")
+          .update(update)
+          .eq("stripe_verification_session_id", vs.id);
+
+        // Mirror to creator_profiles.is_verified for the existing dashboard.
+        if (role === "creator") {
+          if (verified) {
+            await supabase
+              .from("creator_profiles")
+              .update({ is_verified: true })
+              .eq("user_id", userId);
+          } else if (canceled || requiresInput) {
+            // Don't unset is_verified — once verified, stays verified.
+            // Just log for ops via console.
+          }
+        }
+
+        // Notify the user.
+        try {
+          const titleByEvent: Record<string, string> = {
+            "identity.verification_session.verified": "Identity verified ✓",
+            "identity.verification_session.requires_input": "Identity check needs more info",
+            "identity.verification_session.canceled": "Identity check cancelled",
+            "identity.verification_session.processing": "Identity check processing",
+          };
+          const bodyByEvent: Record<string, string> = {
+            "identity.verification_session.verified": "Your identity has been verified. Payouts and other gated features are now available.",
+            "identity.verification_session.requires_input": "Stripe needs another document or photo to complete your verification.",
+            "identity.verification_session.canceled": "Your identity verification was cancelled. You can restart any time.",
+            "identity.verification_session.processing": "We're reviewing your documents — usually takes a few minutes.",
+          };
+          await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${supabaseServiceKey}` },
+            body: JSON.stringify({
+              user_id: userId,
+              notification_type: "identity_verification_update",
+              title: titleByEvent[event.type] || "Identity update",
+              body: bodyByEvent[event.type] || "",
+              data: { type: "identity_verification_update", status: vs.status, action_url: "/creator/setup?step=verify" },
+            }),
+          });
+        } catch (e) {
+          console.warn("[Webhook] identity notify failed", e);
+        }
+
+        console.log("[Webhook] identity event handled", { type: event.type, user: userId, status: vs.status });
         break;
       }
 

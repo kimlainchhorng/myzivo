@@ -106,7 +106,7 @@ export default function FlightTracker({
               <div className="flex items-center gap-2">
                 <CardTitle className="text-lg">{flightNumber}</CardTitle>
                 {isRealPrice && (
-                  <Badge variant="outline" className="text-xs bg-sky-500/10 text-sky-500 border-sky-500/30">
+                  <Badge variant="outline" className="text-xs bg-secondary text-foreground border-border">
                     <Zap className="w-3 h-3 mr-1" />
                     Live
                   </Badge>
@@ -142,7 +142,7 @@ export default function FlightTracker({
               onClick={handleNotificationToggle}
             >
               {notificationsEnabled ? (
-                <Bell className="w-4 h-4 text-sky-400" />
+                <Bell className="w-4 h-4 text-foreground" />
               ) : (
                 <BellOff className="w-4 h-4 text-muted-foreground" />
               )}
@@ -168,7 +168,7 @@ export default function FlightTracker({
                 <div className="h-0.5 bg-muted w-full" />
                 {currentStatus === 'in-flight' && (
                   <div 
-                    className="absolute top-0 left-0 h-0.5 bg-gradient-to-r from-sky-500 to-blue-500 transition-all duration-1000"
+                    className="absolute top-0 left-0 h-0.5 transition-all duration-1000 bg-secondary"
                     style={{ width: `${flightProgress}%` }}
                   />
                 )}
@@ -185,7 +185,7 @@ export default function FlightTracker({
                 <div className="relative">
                   <Plane className="w-6 h-6 rotate-90" />
                   {currentStatus === 'in-flight' && (
-                    <div className="absolute -inset-2 rounded-full bg-sky-500/20 animate-ping" />
+                    <div className="absolute -inset-2 rounded-full bg-secondary animate-ping" />
                   )}
                 </div>
               </div>
@@ -260,10 +260,10 @@ export default function FlightTracker({
 
         {/* Weather Info */}
         <div className="grid grid-cols-2 gap-4">
-          <div className="p-4 rounded-xl bg-gradient-to-br from-sky-500/10 to-blue-500/10 border border-sky-500/20">
+          <div className="p-4 rounded-xl border border-border bg-secondary">
             <p className="text-xs text-muted-foreground mb-2">{departure.city} Weather</p>
             <div className="flex items-center gap-3">
-              <Thermometer className="w-5 h-5 text-sky-400" />
+              <Thermometer className="w-5 h-5 text-foreground" />
               <div>
                 <p className="font-semibold">{weatherData.departure.temp}°F</p>
                 <p className="text-xs text-muted-foreground">{weatherData.departure.condition}</p>
@@ -275,10 +275,10 @@ export default function FlightTracker({
             </div>
           </div>
           
-          <div className="p-4 rounded-xl bg-gradient-to-br from-violet-500/10 to-purple-500/10 border border-violet-500/20">
+          <div className="p-4 rounded-xl border border-border bg-secondary">
             <p className="text-xs text-muted-foreground mb-2">{arrival.city} Weather</p>
             <div className="flex items-center gap-3">
-              <CloudRain className="w-5 h-5 text-violet-400" />
+              <CloudRain className="w-5 h-5 text-foreground" />
               <div>
                 <p className="font-semibold">{weatherData.arrival.temp}°F</p>
                 <p className="text-xs text-muted-foreground">{weatherData.arrival.condition}</p>

@@ -31,7 +31,7 @@ export function TrendingDestinationsSection({ onSelectDestination }: TrendingDes
               className="cursor-pointer animate-in fade-in slide-in-from-bottom-4 duration-200 touch-manipulation active:scale-[0.98]"
               style={{ animationDelay: `${index * 75}ms` }}
             >
-              <Card className="glass-card hover:border-sky-500/50 transition-all group overflow-hidden relative">
+              <Card className="glass-card hover:border-border transition-all group overflow-hidden relative">
                 {dest.trending && (
                   <Badge className="absolute top-2 right-2 bg-gradient-to-r from-orange-500 to-amber-500 text-primary-foreground text-xs">
                     <TrendingUp className="w-3 h-3 mr-1" />
@@ -40,8 +40,8 @@ export function TrendingDestinationsSection({ onSelectDestination }: TrendingDes
                 )}
                 <CardContent className="p-0">
                   <div className="flex items-center">
-                    <div className="w-24 h-24 bg-gradient-to-br from-sky-500/20 to-blue-600/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-200 relative">
-                      <MapPin className="w-8 h-8 text-sky-400" />
+                    <div className="w-24 h-24 flex items-center justify-center group-hover:scale-110 transition-transform duration-200 relative bg-secondary">
+                      <MapPin className="w-8 h-8 text-foreground" />
                       <div className="absolute inset-0 bg-gradient-to-t from-background/60 to-transparent" />
                     </div>
                     <div className="flex-1 p-4">
@@ -53,12 +53,12 @@ export function TrendingDestinationsSection({ onSelectDestination }: TrendingDes
                         {dest.isLoading ? (
                           <Skeleton className="h-5 w-16" />
                         ) : (
-                          <p className="text-sky-400 font-bold">From ${dest.price}</p>
+                          <p className="text-foreground font-bold">From ${dest.price}</p>
                         )}
                         <span className="text-xs text-muted-foreground">round trip</span>
                       </div>
                     </div>
-                    <ArrowRight className="w-5 h-5 text-muted-foreground mr-4 group-hover:text-sky-400 group-hover:translate-x-0.5 transition-all duration-200" />
+                    <ArrowRight className="w-5 h-5 text-muted-foreground mr-4 group-hover:text-foreground group-hover:translate-x-0.5 transition-all duration-200" />
                   </div>
                 </CardContent>
               </Card>

@@ -189,7 +189,7 @@ const HotelBooking = () => {
                   <label className="text-xs text-muted-foreground mb-1.5 block font-medium">Guests</label>
                   <Select value={guests} onValueChange={setGuests}>
                     <SelectTrigger className="h-12">
-                      <Users className="w-4 h-4 mr-2 text-purple-500" />
+                      <Users className="w-4 h-4 mr-2 text-foreground" />
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>

@@ -109,7 +109,7 @@ export function CarFiltersContent({
       {/* Car Category */}
       <div>
         <Label className="text-sm font-semibold mb-3 flex items-center gap-2">
-          <Car className="w-4 h-4 text-violet-500" />
+          <Car className="w-4 h-4 text-foreground" />
           Car Category
         </Label>
         <div className="space-y-2">

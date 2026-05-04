@@ -140,16 +140,16 @@ export default function APIPartners() {
       <main className="min-h-screen bg-background">
         {/* Hero Section */}
         <section className="relative overflow-hidden py-20 sm:py-28">
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-violet-500/5" />
+          <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent" />
           <div className="container mx-auto px-4 relative">
             <div className="max-w-3xl mx-auto text-center">
-              <Badge className="mb-4 bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300">
+              <Badge className="mb-4 bg-foreground text-foreground dark:bg-secondary dark:text-foreground">
                 <Sparkles className="w-3 h-3 mr-1" />
                 Coming Soon
               </Badge>
               <h1 className="text-4xl sm:text-5xl font-bold mb-6">
                 Build with ZIVO's
-                <span className="bg-gradient-to-r from-primary to-violet-600 bg-clip-text text-transparent">
+                <span className="bg-gradient-to-r from-primary bg-clip-text text-transparent">
                   {" "}Travel APIs
                 </span>
               </h1>
@@ -322,7 +322,7 @@ const response = await zivo.flights.search({
         </section>
 
         {/* CTA */}
-        <section className="py-16 sm:py-20 bg-gradient-to-br from-primary/10 via-violet-500/10 to-primary/5">
+        <section className="py-16 sm:py-20 bg-gradient-to-br from-primary/10 to-primary/5">
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl font-bold mb-4">Ready to Get Started?</h2>
             <p className="text-muted-foreground mb-8 max-w-xl mx-auto">

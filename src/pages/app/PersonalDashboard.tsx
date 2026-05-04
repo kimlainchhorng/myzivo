@@ -1016,7 +1016,7 @@ const PersonalDashboard = () => {
                   onClick={() => navigate("/personal/notifications")}
                   className="w-full flex items-start gap-2.5 px-3 py-2.5 hover:bg-muted/30 active:bg-muted/50 transition-colors text-left"
                 >
-                  <div className="w-1.5 h-1.5 rounded-full bg-rose-500 mt-1.5 shrink-0" />
+                  <div className="w-1.5 h-1.5 rounded-full bg-foreground mt-1.5 shrink-0" />
                   <div className="flex-1 min-w-0">
                     <p className="font-medium text-[12px] leading-tight truncate">
                       {n.title || "Notification"}

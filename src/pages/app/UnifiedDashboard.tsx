@@ -25,10 +25,10 @@ import { format } from "date-fns";
 const services = [
   { id: "ride", name: "Ride", icon: Car, gradient: "from-emerald-500 to-green-600", link: "/rides" },
   { id: "eats", name: "Eats", icon: UtensilsCrossed, gradient: "from-orange-500 to-red-500", link: "/eats" },
-  { id: "delivery", name: "Delivery", icon: Package, gradient: "from-violet-500 to-purple-600", link: "/delivery" },
-  { id: "flights", name: "Flights", icon: Plane, gradient: "from-sky-500 to-blue-600", link: "/flights" },
+  { id: "delivery", name: "Delivery", icon: Package, gradient: "from-muted to-muted", link: "/delivery" },
+  { id: "flights", name: "Flights", icon: Plane, gradient: "from-muted to-muted", link: "/flights" },
   { id: "hotels", name: "Hotels", icon: Hotel, gradient: "from-amber-500 to-orange-500", link: "/hotels" },
-  { id: "rentals", name: "Rentals", icon: Car, gradient: "from-teal-500 to-cyan-600", link: "/rent-car" },
+  { id: "rentals", name: "Rentals", icon: Car, gradient: "from-muted to-muted", link: "/rent-car" },
 ];
 
 const tripIconMap: Record<string, LucideIcon> = {
@@ -172,7 +172,7 @@ export default function UnifiedDashboard() {
 
           {/* Spending Breakdown */}
           <button onClick={() => setShowSpendingBreakdown(!showSpendingBreakdown)} className="w-full flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation">
-            <BarChart3 className="w-3.5 h-3.5 text-violet-500" /> Spending Breakdown
+            <BarChart3 className="w-3.5 h-3.5 text-foreground" /> Spending Breakdown
             <ChevronRight className={cn("w-3 h-3 ml-auto transition-transform", showSpendingBreakdown && "rotate-90")} />
           </button>
           {showSpendingBreakdown && (
@@ -192,8 +192,8 @@ export default function UnifiedDashboard() {
 
           {/* Travel Stats */}
           <button onClick={() => setShowTravelStats(!showTravelStats)} className="w-full flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation">
-            <Globe className="w-3.5 h-3.5 text-sky-500" /> Travel Stats
-            <Badge className="bg-sky-500/10 text-sky-500 border-0 text-[8px] ml-auto">{travelStats.countriesVisited} countries</Badge>
+            <Globe className="w-3.5 h-3.5 text-foreground" /> Travel Stats
+            <Badge className="bg-secondary text-foreground border-0 text-[8px] ml-auto">{travelStats.countriesVisited} countries</Badge>
             <ChevronRight className={cn("w-3 h-3 transition-transform", showTravelStats && "rotate-90")} />
           </button>
           {showTravelStats && (

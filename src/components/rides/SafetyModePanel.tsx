@@ -65,11 +65,11 @@ export default function SafetyModePanel({ onClose }: { onClose?: () => void }) {
   return (
     <div className="rounded-2xl bg-card border border-border/40 overflow-hidden">
       {/* Header */}
-      <div className="px-4 py-4 bg-gradient-to-b from-violet-500/10 to-transparent border-b border-border/30">
+      <div className="px-4 py-4 to-transparent border-b border-border/30 bg-secondary">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-violet-500/10 flex items-center justify-center">
-              <Shield className="w-5 h-5 text-violet-500" />
+            <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
+              <Shield className="w-5 h-5 text-foreground" />
             </div>
             <div>
               <h3 className="text-sm font-bold text-foreground">Safety Mode</h3>
@@ -144,7 +144,7 @@ export default function SafetyModePanel({ onClose }: { onClose?: () => void }) {
           <div className="px-4 py-3 border-t border-border/20">
             <div className="flex items-center justify-between mb-2">
               <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
-                <Users className="w-3.5 h-3.5 text-violet-500" /> Trusted Contacts
+                <Users className="w-3.5 h-3.5 text-foreground" /> Trusted Contacts
               </span>
               <Badge variant="outline" className="text-[9px]">{contacts.length}</Badge>
             </div>
@@ -153,7 +153,7 @@ export default function SafetyModePanel({ onClose }: { onClose?: () => void }) {
               {contacts.map((contact) => (
                 <div key={contact.id} className="flex items-center gap-3 p-2.5 rounded-xl bg-muted/20 border border-border/20">
                   <Avatar className="w-8 h-8">
-                    <AvatarFallback className="text-[10px] font-bold bg-violet-500/10 text-violet-500">
+                    <AvatarFallback className="text-[10px] font-bold bg-secondary text-foreground">
                       {contact.initials}
                     </AvatarFallback>
                   </Avatar>
@@ -175,7 +175,7 @@ export default function SafetyModePanel({ onClose }: { onClose?: () => void }) {
               {!showAddContact ? (
                 <button
                   onClick={() => setShowAddContact(true)}
-                  className="w-full flex items-center gap-2 p-2.5 rounded-xl border border-dashed border-border/50 text-xs text-muted-foreground hover:border-violet-500/30 hover:bg-violet-500/5 transition-all"
+                  className="w-full flex items-center gap-2 p-2.5 rounded-xl border border-dashed border-border/50 text-xs text-muted-foreground hover:border-border hover:bg-secondary transition-all"
                 >
                   <Users className="w-4 h-4" /> Add trusted contact
                 </button>

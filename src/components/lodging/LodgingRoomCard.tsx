@@ -45,12 +45,12 @@ interface Props {
 function OrnamentDivider() {
   return (
     <div className="flex items-center justify-center gap-1.5 px-3 py-1.5">
-      <span className="h-px flex-1 bg-gradient-to-r from-transparent via-sky-200/60 to-sky-300/40" />
-      <svg viewBox="0 0 40 12" className="h-3 w-10 text-sky-400/80" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round">
+      <span className="h-px flex-1 bg-gradient-to-r from-transparent" />
+      <svg viewBox="0 0 40 12" className="h-3 w-10 text-foreground/80" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round">
         <path d="M2 6 Q 8 1, 14 6 T 26 6 T 38 6" />
         <circle cx="20" cy="6" r="1.2" fill="currentColor" />
       </svg>
-      <span className="h-px flex-1 bg-gradient-to-l from-transparent via-sky-200/60 to-sky-300/40" />
+      <span className="h-px flex-1 bg-gradient-to-l from-transparent" />
     </div>
   );
 }
@@ -113,7 +113,7 @@ export function LodgingRoomCard({
         >
           <div className="grid grid-cols-[1.05fr_1fr] gap-1.5 rounded-2xl overflow-hidden">
             {/* Left big tile w/ info overlay */}
-            <div className="relative aspect-[4/5] bg-gradient-to-br from-sky-100 to-sky-200/60 overflow-hidden rounded-l-2xl">
+            <div className="relative aspect-[4/5] overflow-hidden rounded-l-2xl bg-secondary">
               {gridPhotos[0] ? (
                 <img src={gridPhotos[0]} alt={name} className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
               ) : (
@@ -220,7 +220,7 @@ export function LodgingRoomCard({
                   return (
                     <span
                       key={a}
-                      className="text-[10px] px-2 py-0.5 rounded-full bg-sky-50 text-sky-700 border border-sky-100 inline-flex items-center gap-1 font-medium dark:bg-sky-500/10 dark:text-sky-300 dark:border-sky-500/20"
+                      className="text-[10px] px-2 py-0.5 rounded-full bg-foreground text-foreground border border-border inline-flex items-center gap-1 font-medium dark:bg-secondary dark:text-foreground dark:border-border"
                     >
                       <Icon className="h-2.5 w-2.5" />
                       {a.replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}

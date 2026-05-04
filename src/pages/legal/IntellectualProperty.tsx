@@ -30,7 +30,7 @@ export default function IntellectualProperty() {
       </div>
       <div className="p-4 max-w-2xl mx-auto space-y-5 pb-20">
         <div>
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-violet-500/10 text-violet-600 text-xs font-semibold mb-3">
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-secondary text-foreground text-xs font-semibold mb-3">
             <Shield className="h-3 w-3" /> IP Protection
           </span>
           <h2 className="text-2xl font-bold">Intellectual Property Rights</h2>

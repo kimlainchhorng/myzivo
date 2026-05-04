@@ -293,7 +293,7 @@ export default function RewardsPage() {
         {/* Active Challenges */}
         {challenges.length > 0 && (
           <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}>
-            <h2 className="text-sm font-bold mb-3 flex items-center gap-2"><Target className="w-4 h-4 text-violet-500" /> Active Challenges</h2>
+            <h2 className="text-sm font-bold mb-3 flex items-center gap-2"><Target className="w-4 h-4 text-foreground" /> Active Challenges</h2>
             <div className="space-y-2">
               {challenges.map((c: any) => (
                 <Card key={c.id} className="border-border/40">

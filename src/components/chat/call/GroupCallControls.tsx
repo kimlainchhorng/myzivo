@@ -107,7 +107,7 @@ export default function GroupCallControls(props: Props) {
           label={props.isRecording ? "Stop recording" : "Start recording"}
         >
           {props.isRecording ? (
-            <Square className="h-4 w-4 fill-rose-500 text-rose-500" />
+            <Square className="h-4 w-4 fill-rose-500 text-foreground" />
           ) : (
             <Circle className="h-5 w-5" />
           )}

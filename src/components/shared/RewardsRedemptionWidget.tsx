@@ -89,10 +89,10 @@ const RewardsRedemptionWidget = ({
         ))}
       </div>
 
-      <div className="flex items-start gap-2 p-2 rounded-xl bg-sky-500/10 text-xs">
-        <Info className="w-4 h-4 text-sky-400 flex-shrink-0 mt-0.5" />
+      <div className="flex items-start gap-2 p-2 rounded-xl bg-secondary text-xs">
+        <Info className="w-4 h-4 text-foreground flex-shrink-0 mt-0.5" />
         <p className="text-muted-foreground">
-          <span className="text-sky-400 font-medium">Pro tip:</span> Save miles for premium upgrades to maximize value
+          <span className="text-foreground font-medium">Pro tip:</span> Save miles for premium upgrades to maximize value
         </p>
       </div>
 

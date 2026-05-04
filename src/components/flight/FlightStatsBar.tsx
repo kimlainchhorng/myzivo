@@ -63,7 +63,7 @@ export default function FlightStatsBar({ className }: FlightStatsBarProps) {
   return (
     <div className={cn("relative overflow-hidden", className)}>
       {/* Background gradient */}
-      <div className="absolute inset-0 bg-gradient-to-r from-sky-500/5 via-transparent to-blue-500/5" />
+      <div className="absolute inset-0 via-transparent bg-secondary" />
       
       <div className="container mx-auto px-4 py-8">
         {/* Stats Grid */}
@@ -71,7 +71,7 @@ export default function FlightStatsBar({ className }: FlightStatsBarProps) {
           {stats.map((stat, index) => (
             <div
               key={stat.label}
-              className="flex flex-col items-center p-4 rounded-2xl bg-card/50 backdrop-blur-xl border border-border/50 hover:border-sky-500/30 transition-all duration-200 group animate-in fade-in slide-in-from-bottom-4"
+              className="flex flex-col items-center p-4 rounded-2xl bg-card/50 backdrop-blur-xl border border-border/50 hover:border-border transition-all duration-200 group animate-in fade-in slide-in-from-bottom-4"
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className={cn(
@@ -107,7 +107,7 @@ export default function FlightStatsBar({ className }: FlightStatsBarProps) {
             {trustBadges.map((badge, index) => (
               <div
                 key={badge.label}
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-card/50 backdrop-blur-xl border border-border/50 hover:border-sky-500/30 transition-all duration-200 animate-in fade-in"
+                className="flex items-center gap-2 px-4 py-2 rounded-full bg-card/50 backdrop-blur-xl border border-border/50 hover:border-border transition-all duration-200 animate-in fade-in"
                 style={{ animationDelay: `${(index + 4) * 100}ms` }}
               >
                 <badge.icon className={cn("w-4 h-4", badge.color)} />

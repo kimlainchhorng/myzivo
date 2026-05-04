@@ -62,9 +62,9 @@ export default function FlightAlertsPromo({ className, onSetAlert }: FlightAlert
   return (
     <section className={cn("py-10 sm:py-16", className)}>
       <div className="container mx-auto px-4">
-        <Card className="relative overflow-hidden border-0 bg-gradient-to-br from-sky-500/10 via-card to-blue-500/10">
+        <Card className="relative overflow-hidden border-0 via-card bg-secondary">
           {/* Decorative elements */}
-          <div className="absolute top-0 right-0 w-64 h-64 bg-sky-500/20 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
+          <div className="absolute top-0 right-0 w-64 h-64 bg-secondary rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
           <div className="absolute bottom-0 left-0 w-48 h-48 bg-blue-500/20 rounded-full blur-3xl translate-y-1/2 -translate-x-1/2" />
           
           <CardContent className="p-6 sm:p-8 md:p-12 relative">
@@ -78,7 +78,7 @@ export default function FlightAlertsPromo({ className, onSetAlert }: FlightAlert
                 
                 <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-bold mb-4">
                   Never Miss a
-                  <span className="bg-gradient-to-r from-sky-400 to-blue-500 bg-clip-text text-transparent ml-2">
+                  <span className="ml-2 text-accent-foreground">
                     Price Drop
                   </span>
                 </h2>
@@ -104,7 +104,7 @@ export default function FlightAlertsPromo({ className, onSetAlert }: FlightAlert
                 </div>
 
                 <Button 
-                  className="bg-gradient-to-r from-sky-500 to-blue-600 hover:opacity-90"
+                  className="hover:opacity-90 bg-secondary"
                   onClick={onSetAlert}
                 >
                   <Bell className="w-4 h-4 mr-2" />
@@ -115,12 +115,12 @@ export default function FlightAlertsPromo({ className, onSetAlert }: FlightAlert
 
               {/* Right side - Live alerts preview */}
               <div className="relative">
-                <div className="absolute -inset-4 bg-gradient-to-r from-sky-500/20 to-blue-500/20 rounded-2xl blur-xl opacity-50" />
+                <div className="absolute -inset-4 rounded-2xl blur-xl opacity-50 bg-secondary" />
                 
                 <Card className="relative bg-card/80 backdrop-blur-xl border-border/50">
                   <CardContent className="p-4 sm:p-6">
                     <div className="flex items-center gap-2 mb-4">
-                      <Sparkles className="w-5 h-5 text-sky-500" />
+                      <Sparkles className="w-5 h-5 text-foreground" />
                       <span className="font-semibold">Recent Price Drops</span>
                       <span className="relative flex h-2 w-2 ml-auto">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>

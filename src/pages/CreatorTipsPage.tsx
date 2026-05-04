@@ -96,21 +96,21 @@ export default function CreatorTipsPage() {
       </header>
 
       <div className="max-w-3xl mx-auto px-4 pt-4">
-        <div className="rounded-2xl overflow-hidden mb-4 bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500 p-4 text-white shadow-lg">
-          <p className="text-[10px] uppercase tracking-[0.18em] font-bold opacity-80">Lifetime tips</p>
-          <p className="text-3xl font-extrabold mt-1">${(totals.total / 100).toFixed(2)}</p>
+        <div className="rounded-2xl overflow-hidden mb-4 bg-foreground text-background p-4">
+          <p className="text-[10px] uppercase tracking-[0.18em] font-bold opacity-70">Lifetime tips</p>
+          <p className="text-3xl font-bold tracking-tight mt-1">${(totals.total / 100).toFixed(2)}</p>
           <div className="grid grid-cols-3 gap-2 mt-4">
             <div>
-              <p className="text-[10px] uppercase font-bold opacity-75">24h</p>
-              <p className="text-sm font-extrabold">${(totals.last24 / 100).toFixed(2)}</p>
+              <p className="text-[10px] uppercase font-bold opacity-60">24h</p>
+              <p className="text-sm font-bold">${(totals.last24 / 100).toFixed(2)}</p>
             </div>
             <div>
-              <p className="text-[10px] uppercase font-bold opacity-75">30d</p>
-              <p className="text-sm font-extrabold">${(totals.last30 / 100).toFixed(2)}</p>
+              <p className="text-[10px] uppercase font-bold opacity-60">30d</p>
+              <p className="text-sm font-bold">${(totals.last30 / 100).toFixed(2)}</p>
             </div>
             <div>
-              <p className="text-[10px] uppercase font-bold opacity-75">Tippers</p>
-              <p className="text-sm font-extrabold">{totals.tippers}</p>
+              <p className="text-[10px] uppercase font-bold opacity-60">Tippers</p>
+              <p className="text-sm font-bold">{totals.tippers}</p>
             </div>
           </div>
         </div>

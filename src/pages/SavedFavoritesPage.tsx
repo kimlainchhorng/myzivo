@@ -148,7 +148,7 @@ export default function SavedFavoritesPage() {
             {hotels.length > 0 && (
               <section>
                 <div className="flex items-center gap-2 mb-3 px-1">
-                  <BedDouble className="w-4 h-4 text-violet-500" />
+                  <BedDouble className="w-4 h-4 text-foreground" />
                   <h2 className="text-sm font-bold text-foreground">Hotels & stays</h2>
                   <span className="text-[11px] text-muted-foreground">({hotels.length})</span>
                 </div>

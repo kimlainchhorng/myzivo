@@ -20,6 +20,7 @@
 import { createClient } from "../_shared/deps.ts";
 import Stripe from "../_shared/stripe.ts";
 import { notifyEatsRefundIssued } from "../_shared/eats-notifications.ts";
+import { cascadeCancellationToDriver } from "../_shared/cancellation-cascade.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -248,6 +249,14 @@ Deno.serve(async (req) => {
         last_payment_error: providerRefundError,
       } as any)
       .eq("id", order_id);
+
+    // Cascade to service_orders + jobs + notify the assigned driver so they
+    // stop driving toward this order.
+    try {
+      await cascadeCancellationToDriver(admin, order_id, "delivery");
+    } catch (e) {
+      console.warn("[cancel-eats-order] driver cascade skipped", e);
+    }
 
     // Refund-issued email + SMS — only when an actual refund was triggered.
     if (refundCents > 0 && wasPaid) {

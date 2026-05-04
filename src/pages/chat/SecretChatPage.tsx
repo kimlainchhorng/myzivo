@@ -117,12 +117,12 @@ export default function SecretChatPage() {
   }, [ttlSeconds]);
 
   return (
-    <div className="flex h-[100dvh] flex-col bg-gradient-to-b from-indigo-950/10 via-background to-background">
+    <div className="flex h-[100dvh] flex-col via-background to-background bg-secondary">
       <SEOHead title={`Secret · ${partnerName}`} description="End-to-end encrypted conversation" />
 
       {/* Header */}
       <header
-        className="flex shrink-0 items-center gap-2 border-b border-indigo-500/20 bg-background/85 px-3 pb-2.5 backdrop-blur-xl pt-safe"
+        className="flex shrink-0 items-center gap-2 border-b border-border bg-background/85 px-3 pb-2.5 backdrop-blur-xl pt-safe"
       >
         <button
           aria-label="Back"
@@ -137,14 +137,14 @@ export default function SecretChatPage() {
         </Avatar>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-1.5 truncate text-sm font-semibold">
-            <Lock className="h-3.5 w-3.5 text-indigo-500" />
+            <Lock className="h-3.5 w-3.5 text-foreground" />
             <span className="truncate">{partnerName}</span>
           </div>
-          <div className="text-[10.5px] text-indigo-500/80">End-to-end encrypted</div>
+          <div className="text-[10.5px] text-foreground/80">End-to-end encrypted</div>
         </div>
 
         {ttlLabel && (
-          <span className="flex items-center gap-1 rounded-full bg-indigo-500/10 px-2 py-1 text-[10px] font-semibold text-indigo-500">
+          <span className="flex items-center gap-1 rounded-full bg-secondary px-2 py-1 text-[10px] font-semibold text-foreground">
             <Clock className="h-3 w-3" /> {ttlLabel}
           </span>
         )}
@@ -195,8 +195,8 @@ export default function SecretChatPage() {
         )}
 
         {!loading && !error && messages.length === 0 && (
-          <div className="mx-auto mt-12 max-w-sm rounded-2xl border border-indigo-500/20 bg-indigo-500/5 p-5 text-center">
-            <Lock className="mx-auto mb-2 h-6 w-6 text-indigo-500" />
+          <div className="mx-auto mt-12 max-w-sm rounded-2xl border border-border bg-secondary p-5 text-center">
+            <Lock className="mx-auto mb-2 h-6 w-6 text-foreground" />
             <div className="mb-1 text-sm font-semibold">This is a Secret Chat</div>
             <div className="text-xs text-muted-foreground">
               Messages are end-to-end encrypted on your devices. ZIVO cannot read them.
@@ -258,7 +258,7 @@ export default function SecretChatPage() {
           <button
             type="button"
             onClick={() => scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" })}
-            className="pointer-events-auto rounded-full bg-indigo-500 px-3 py-2 text-xs font-semibold text-white shadow-lg shadow-indigo-500/25"
+            className="pointer-events-auto rounded-full bg-foreground px-3 py-2 text-xs font-semibold text-white shadow-lg"
           >
             Jump to latest
           </button>
@@ -292,23 +292,23 @@ export default function SecretChatPage() {
               type="button"
               aria-label="Attach"
               disabled={!chatId}
-              className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-indigo-500/10 text-indigo-500 hover:bg-indigo-500/20 disabled:opacity-50"
+              className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-secondary text-foreground hover:bg-secondary disabled:opacity-50"
             >
               <Plus className="h-4 w-4" />
             </button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="start" side="top" className="w-44">
             <DropdownMenuItem onClick={() => openPicker("image/*")}>
-              <ImageIcon className="mr-2 h-4 w-4 text-indigo-500" /> Photo
+              <ImageIcon className="mr-2 h-4 w-4 text-foreground" /> Photo
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => openPicker("video/*")}>
-              <VideoIcon className="mr-2 h-4 w-4 text-indigo-500" /> Video
+              <VideoIcon className="mr-2 h-4 w-4 text-foreground" /> Video
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => openPicker("audio/*")}>
-              <Mic className="mr-2 h-4 w-4 text-indigo-500" /> Voice / Audio
+              <Mic className="mr-2 h-4 w-4 text-foreground" /> Voice / Audio
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => openPicker("*/*")}>
-              <Paperclip className="mr-2 h-4 w-4 text-indigo-500" /> File
+              <Paperclip className="mr-2 h-4 w-4 text-foreground" /> File
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -328,13 +328,13 @@ export default function SecretChatPage() {
           placeholder={chatId ? "Send an encrypted message" : "Connecting…"}
           disabled={!chatId || loading}
           rows={1}
-          className="max-h-32 min-h-[38px] flex-1 resize-none rounded-2xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-indigo-500/50"
+          className="max-h-32 min-h-[38px] flex-1 resize-none rounded-2xl border border-border bg-background px-3 py-2 text-sm outline-none focus:border-border"
         />
         <Button
           type="submit"
           size="icon"
           disabled={!draft.trim() || !chatId}
-          className="h-9 w-9 rounded-full bg-indigo-500 hover:bg-indigo-600"
+          className="h-9 w-9 rounded-full bg-foreground hover:bg-foreground"
           aria-label="Send"
         >
           <Send className="h-4 w-4" />

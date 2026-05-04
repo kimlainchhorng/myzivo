@@ -47,7 +47,7 @@ function formatFileSize(bytes: number): string {
 
 function getFileIcon(type: string) {
   if (type.startsWith("image")) return <Image className="w-5 h-5 text-blue-500" />;
-  if (type.startsWith("video")) return <Film className="w-5 h-5 text-purple-500" />;
+  if (type.startsWith("video")) return <Film className="w-5 h-5 text-foreground" />;
   return <FileText className="w-5 h-5 text-orange-500" />;
 }
 

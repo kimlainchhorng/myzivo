@@ -381,7 +381,7 @@ export default function WalletPage() {
                 onClick={() => navigate("/creator/live-earnings")}
                 className="w-full text-left relative rounded-2xl overflow-hidden active:scale-[0.99] transition-transform"
               >
-                <div className="absolute inset-0 bg-gradient-to-br from-amber-400 via-orange-500 to-rose-500" />
+                <div className="absolute inset-0 bg-gradient-to-br from-amber-400 via-orange-500" />
                 <div className="absolute -top-8 -right-8 w-32 h-32 rounded-full bg-white/15" />
                 <div className="relative z-10 p-5 text-white">
                   <div className="flex items-center justify-between mb-3">
@@ -420,7 +420,7 @@ export default function WalletPage() {
                   <p className="text-[10px] text-muted-foreground">Gifters</p>
                 </div>
                 <div className="rounded-2xl bg-card border border-border/30 p-3 text-center">
-                  <Gift className="w-4 h-4 text-rose-500 mx-auto mb-1" />
+                  <Gift className="w-4 h-4 text-foreground mx-auto mb-1" />
                   <p className="font-bold text-sm tabular-nums">
                     {(liveEarnings?.total_gifts_received ?? 0).toLocaleString()}
                   </p>

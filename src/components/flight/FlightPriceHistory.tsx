@@ -30,11 +30,11 @@ const FlightPriceHistory = ({ origin, destination, onSetAlert }: FlightPriceHist
   return (
     <section className="py-12 px-4">
       <div className="max-w-4xl mx-auto">
-        <div className="bg-gradient-to-br from-sky-500/10 via-card/50 to-blue-500/10 border border-sky-500/20 rounded-3xl p-6 md:p-8">
+        <div className="via-card/50 border border-border rounded-3xl p-6 md:p-8 bg-secondary">
           <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
             <div>
               <div className="flex items-center gap-2 mb-2">
-                <Badge className="bg-sky-500/20 text-sky-400 border-sky-500/30">
+                <Badge className="bg-secondary text-foreground border-border">
                   <Sparkles className="w-3 h-3 mr-1" /> Smart Booking Tips
                 </Badge>
               </div>
@@ -58,8 +58,8 @@ const FlightPriceHistory = ({ origin, destination, onSetAlert }: FlightPriceHist
               <p className="text-xs text-muted-foreground">Best window for domestic flights</p>
             </div>
             
-            <div className="p-4 bg-sky-500/10 rounded-xl border border-sky-500/20">
-              <div className="flex items-center gap-2 text-sky-500 mb-1">
+            <div className="p-4 bg-secondary rounded-xl border border-border">
+              <div className="flex items-center gap-2 text-foreground mb-1">
                 <Calendar className="w-4 h-4" />
                 <span className="text-sm font-bold">Flexible Dates</span>
               </div>

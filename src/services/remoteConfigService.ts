@@ -123,8 +123,8 @@ class RemoteConfigService {
       
       console.log('Remote config updated:', config);
       return config;
-    } catch (error) {
-      console.error('Error fetching remote config:', error);
+    } catch (error: any) {
+      console.error('Error fetching remote config:', error?.message || error, error?.code, error?.details);
       return this.config; // Return cached config on error
     }
   }

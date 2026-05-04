@@ -129,9 +129,9 @@ export default function ReferralProgram() {
                 <p className="text-3xl font-bold text-amber-500">{REFERRAL_REWARDS.referrer.pointsPerReferral.toLocaleString()}</p>
                 <p className="text-sm text-muted-foreground">ZIVO Points per referral</p>
               </div>
-              <div className="text-center p-6 rounded-2xl bg-violet-500/5 border border-violet-500/20 hover:border-violet-500/40 hover:shadow-md hover:-translate-y-1 transition-all duration-300">
-                <Users className="w-10 h-10 text-violet-500 mx-auto mb-3" />
-                <p className="text-3xl font-bold text-violet-500">{REFERRAL_REWARDS.newUser.points.toLocaleString()}</p>
+              <div className="text-center p-6 rounded-2xl bg-secondary border border-border hover:border-border hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+                <Users className="w-10 h-10 text-foreground mx-auto mb-3" />
+                <p className="text-3xl font-bold text-foreground">{REFERRAL_REWARDS.newUser.points.toLocaleString()}</p>
                 <p className="text-sm text-muted-foreground">Your friend gets too</p>
               </div>
             </div>

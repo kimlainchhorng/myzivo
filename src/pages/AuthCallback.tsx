@@ -339,43 +339,57 @@ const AuthCallback = () => {
 
   if (status === "error" || error) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center p-4 safe-area-top safe-area-bottom">
-        <Card className="w-full max-w-md animate-in fade-in zoom-in-95 duration-300">
-          <CardContent className="p-6 sm:p-8 text-center">
-            <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-4 rounded-full bg-destructive/10 flex items-center justify-center">
-              <XCircle className="w-7 h-7 sm:w-8 sm:h-8 text-destructive" />
+      <div className="relative min-h-[100dvh] w-full overflow-hidden flex items-center justify-center px-5 py-8 bg-white dark:bg-black">
+        <div aria-hidden className="pointer-events-none absolute inset-0">
+          <div className="absolute -top-32 -right-32 w-[420px] h-[420px] rounded-full blur-3xl dark:dark:dark: bg-secondary" />
+          <div className="absolute -bottom-32 -left-32 w-[420px] h-[420px] rounded-full bg-gradient-to-tr from-amber-200/30 blur-3xl dark:from-amber-600/15 dark:dark:" />
+        </div>
+        <div className="relative w-full max-w-sm">
+          <div className="bg-white dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-white/10 rounded-xl px-7 py-9 shadow-sm text-center">
+            <div className="w-14 h-14 mx-auto mb-4 rounded-2xl flex items-center justify-center shadow-lg shadow-red-500/20 bg-secondary">
+              <XCircle className="w-7 h-7 text-white" />
             </div>
-            <h2 className="text-lg sm:text-xl font-semibold mb-2">Authentication Failed</h2>
-            <p className="text-sm sm:text-base text-muted-foreground mb-6">
-              {errorMessage || error || "This email is not authorized to sign up, or the authentication link is invalid. Please request an invitation or contact support."}
+            <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">Authentication failed</h2>
+            <p className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">
+              {errorMessage || error || "This email is not authorized, or the link is invalid. Please request an invitation or contact support."}
             </p>
-            <div className="flex gap-3 justify-center">
-              <Button variant="outline" onClick={() => navigate("/")} className="rounded-xl touch-manipulation active:scale-95">
-                Go Home
-              </Button>
-              <Button onClick={() => navigate(withRedirectParam("/login", redirectTo))} className="rounded-xl touch-manipulation active:scale-95">
-                Sign In
-              </Button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => navigate("/")}
+                className="flex-1 h-9 rounded-lg text-sm font-semibold text-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/40 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 active:scale-[0.99] transition"
+              >
+                Go home
+              </button>
+              <button
+                onClick={() => navigate(withRedirectParam("/login", redirectTo))}
+                className="flex-1 h-9 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 hover:opacity-95 active:scale-[0.99] transition shadow-md"
+              >
+                Sign in
+              </button>
             </div>
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4 safe-area-top safe-area-bottom">
-      <Card className="w-full max-w-md animate-in fade-in zoom-in-95 duration-300">
-        <CardContent className="p-6 sm:p-8 text-center">
-          <div className="w-14 h-14 sm:w-16 sm:h-16 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
-            <Loader2 className="w-7 h-7 sm:w-8 sm:h-8 text-primary animate-spin" />
+    <div className="relative min-h-[100dvh] w-full overflow-hidden flex items-center justify-center px-5 py-8 bg-white dark:bg-black">
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-32 -right-32 w-[420px] h-[420px] rounded-full blur-3xl dark:dark:dark: bg-secondary" />
+        <div className="absolute -bottom-32 -left-32 w-[420px] h-[420px] rounded-full bg-gradient-to-tr from-amber-200/30 blur-3xl dark:from-amber-600/15 dark:dark:" />
+      </div>
+      <div className="relative w-full max-w-sm">
+        <div className="bg-white dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-white/10 rounded-xl px-7 py-9 shadow-sm text-center">
+          <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-amber-400 flex items-center justify-center shadow-lg">
+            <Loader2 className="w-7 h-7 text-white animate-spin" />
           </div>
-          <h2 className="text-lg sm:text-xl font-semibold mb-2">Signing you in...</h2>
-          <p className="text-sm sm:text-base text-muted-foreground">
+          <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">Signing you in…</h2>
+          <p className="text-sm text-zinc-500 dark:text-zinc-400">
             Please wait while we authenticate your session.
           </p>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 };

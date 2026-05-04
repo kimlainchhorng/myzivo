@@ -62,11 +62,11 @@ export default function GroupRidePlanner({ onStartRide, onClose }: GroupRidePlan
   return (
     <div className="rounded-2xl bg-card border border-border/40 overflow-hidden">
       {/* Header */}
-      <div className="px-4 py-4 bg-gradient-to-b from-sky-500/10 to-transparent border-b border-border/30">
+      <div className="px-4 py-4 to-transparent border-b border-border/30 bg-secondary">
         <div className="flex items-center justify-between mb-3">
           <div className="flex items-center gap-2">
-            <div className="w-10 h-10 rounded-xl bg-sky-500/10 flex items-center justify-center">
-              <Users className="w-5 h-5 text-sky-500" />
+            <div className="w-10 h-10 rounded-xl bg-secondary flex items-center justify-center">
+              <Users className="w-5 h-5 text-foreground" />
             </div>
             <div>
               <h3 className="text-sm font-bold text-foreground">Group Ride</h3>
@@ -86,7 +86,7 @@ export default function GroupRidePlanner({ onStartRide, onClose }: GroupRidePlan
           className="w-full flex items-center justify-between p-3 rounded-xl bg-card/50 border border-border/20"
         >
           <div className="flex items-center gap-2">
-            <Share2 className="w-3.5 h-3.5 text-sky-500" />
+            <Share2 className="w-3.5 h-3.5 text-foreground" />
             <span className="text-xs text-muted-foreground">Invite code:</span>
             <span className="text-xs font-mono font-bold text-foreground">{shareCode}</span>
           </div>
@@ -170,7 +170,7 @@ export default function GroupRidePlanner({ onStartRide, onClose }: GroupRidePlan
         {!showInvite ? (
           <button
             onClick={() => setShowInvite(true)}
-            className="w-full flex items-center gap-2 p-3 rounded-xl border border-dashed border-border/50 text-xs text-muted-foreground hover:border-sky-500/30 hover:bg-sky-500/5 transition-all mt-2"
+            className="w-full flex items-center gap-2 p-3 rounded-xl border border-dashed border-border/50 text-xs text-muted-foreground hover:border-border hover:bg-secondary transition-all mt-2"
           >
             <UserPlus className="w-4 h-4" /> Invite more riders
           </button>
@@ -188,9 +188,9 @@ export default function GroupRidePlanner({ onStartRide, onClose }: GroupRidePlan
       <div className="px-4 py-3 border-t border-border/20">
         <div className="flex items-center justify-between mb-2">
           <span className="text-xs font-bold text-foreground flex items-center gap-1.5">
-            <Navigation className="w-3.5 h-3.5 text-sky-500" /> Pickup Order
+            <Navigation className="w-3.5 h-3.5 text-foreground" /> Pickup Order
           </span>
-          <Badge variant="outline" className="text-[9px] font-bold text-sky-500 border-sky-500/20">
+          <Badge variant="outline" className="text-[9px] font-bold text-foreground border-border">
             Optimized route
           </Badge>
         </div>

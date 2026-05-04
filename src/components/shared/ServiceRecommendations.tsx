@@ -184,8 +184,8 @@ const ServiceRecommendations = ({
     <Card className={cn("overflow-hidden", className)}>
       <CardHeader className="pb-3">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-500/10">
-            <Sparkles className="w-5 h-5 text-violet-500" />
+          <div className="p-2 rounded-xl bg-secondary">
+            <Sparkles className="w-5 h-5 text-foreground" />
           </div>
           <div>
             <CardTitle className="text-lg">Recommended For You</CardTitle>

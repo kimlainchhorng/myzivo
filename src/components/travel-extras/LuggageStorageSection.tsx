@@ -49,11 +49,11 @@ export default function LuggageStorageSection({ className = '', destination }: L
       <div className="container mx-auto px-4">
         <div className="max-w-3xl mx-auto">
           <Card 
-            className="overflow-hidden border-border/50 hover:border-purple-500/50 hover:shadow-xl hover:shadow-purple-500/10 transition-all duration-200 cursor-pointer group active:scale-[0.99] touch-manipulation rounded-2xl"
+            className="overflow-hidden border-border/50 hover:border-border hover:shadow-xl hover:transition-all duration-200 cursor-pointer group active:scale-[0.99] touch-manipulation rounded-2xl"
             onClick={handleClick}
           >
             {/* Top Banner */}
-            <div className="bg-gradient-to-r from-purple-500 to-pink-500 text-primary-foreground py-2 px-4 flex items-center justify-center gap-2 text-sm">
+            <div className="text-primary-foreground py-2 px-4 flex items-center justify-center gap-2 text-sm bg-foreground">
               <Luggage className="w-4 h-4" />
               <span className="font-medium">Travel Extras • Luggage Storage</span>
             </div>
@@ -61,12 +61,12 @@ export default function LuggageStorageSection({ className = '', destination }: L
             <CardContent className="p-6 sm:p-8">
               <div className="flex flex-col sm:flex-row items-center gap-6">
                 {/* Icon */}
-                <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform">
-                  <Luggage className="w-10 h-10 text-purple-500" />
+                <div className="w-20 h-20 rounded-2xl flex items-center justify-center shrink-0 group-hover:scale-110 transition-transform bg-secondary">
+                  <Luggage className="w-10 h-10 text-foreground" />
                 </div>
                 
                 <div className="flex-1 text-center sm:text-left">
-                  <Badge className="mb-2 bg-purple-500/20 text-purple-500 border-purple-500/30">
+                  <Badge className="mb-2 bg-secondary text-foreground border-border">
                     Radical Storage
                   </Badge>
                   <h3 className="font-display text-xl sm:text-2xl font-bold mb-2">
@@ -88,7 +88,7 @@ export default function LuggageStorageSection({ className = '', destination }: L
                   
                   <Button 
                     size="lg"
-                    className="gap-2 bg-gradient-to-r from-purple-500 to-pink-500 text-primary-foreground hover:opacity-90 touch-manipulation rounded-xl active:scale-[0.97] transition-all duration-200 shadow-md shadow-purple-500/20"
+                    className="gap-2 text-primary-foreground hover:opacity-90 touch-manipulation rounded-xl active:scale-[0.97] transition-all duration-200 shadow-md bg-foreground"
                   >
                     <Luggage className="w-5 h-5" />
                     Find Storage Near You

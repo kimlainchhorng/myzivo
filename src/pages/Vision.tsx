@@ -133,16 +133,14 @@ const Vision = () => {
             animate={{ opacity: 1, y: 0 }}
             className="max-w-3xl mx-auto"
           >
-            <Badge className="mb-6 bg-gradient-to-r from-violet-500/20 to-purple-500/20 text-violet-400 border-violet-500/30">
+            <Badge variant="secondary" className="mb-6 rounded-full font-medium">
               Our Vision
             </Badge>
-            
-            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6">
+
+            <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold tracking-tight mb-6">
               The Future of Travel
               <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-violet-500 to-purple-500">
-                with ZIVO
-              </span>
+              <span className="text-accent-foreground">with ZIVO</span>
             </h1>
             
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -167,32 +165,32 @@ const Vision = () => {
                 }`}
               >
                 <div className={index % 2 === 1 ? "lg:order-2" : ""}>
-                  <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-${section.color}-500/10 border border-${section.color}-500/20 mb-4`}>
-                    <section.icon className={`w-4 h-4 text-${section.color}-500`} />
-                    <span className={`text-sm font-medium text-${section.color}-400`}>
+                  <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-secondary border border-border mb-4">
+                    <section.icon className="w-4 h-4 text-foreground" />
+                    <span className="text-sm font-medium text-foreground">
                       {section.subtitle}
                     </span>
                   </div>
-                  
-                  <h2 className="text-3xl font-bold mb-4">{section.title}</h2>
+
+                  <h2 className="text-3xl font-bold tracking-tight mb-4">{section.title}</h2>
                   <p className="text-muted-foreground mb-6 leading-relaxed">
                     {section.description}
                   </p>
-                  
+
                   <div className="grid sm:grid-cols-2 gap-3">
                     {section.features.map((feature) => (
                       <div key={feature} className="flex items-center gap-2 text-sm">
-                        <div className={`w-1.5 h-1.5 rounded-full bg-${section.color}-500`} />
+                        <div className="w-1.5 h-1.5 rounded-full bg-foreground" />
                         {feature}
                       </div>
                     ))}
                   </div>
                 </div>
-                
+
                 <div className={index % 2 === 1 ? "lg:order-1" : ""}>
-                  <Card className={`aspect-video bg-gradient-to-br from-${section.color}-500/10 to-${section.color}-500/5 border-${section.color}-500/20`}>
+                  <Card className="aspect-video bg-secondary border-border">
                     <CardContent className="h-full flex items-center justify-center">
-                      <section.icon className={`w-24 h-24 text-${section.color}-500/30`} />
+                      <section.icon className="w-24 h-24 text-muted-foreground/40" />
                     </CardContent>
                   </Card>
                 </div>
@@ -248,9 +246,9 @@ const Vision = () => {
                 { goal: "30+", label: "Countries live", emoji: "🌍" },
                 { goal: "4.8★", label: "App Store rating", emoji: "⭐" },
               ].map(g => (
-                <div key={g.label} className="text-center p-5 rounded-2xl border border-violet-500/20 bg-violet-500/5">
+                <div key={g.label} className="text-center p-5 rounded-2xl border border-border bg-secondary">
                   <span className="text-2xl">{g.emoji}</span>
-                  <p className="text-xl font-bold text-violet-500 mt-2">{g.goal}</p>
+                  <p className="text-xl font-bold text-foreground mt-2">{g.goal}</p>
                   <p className="text-[10px] text-muted-foreground">{g.label}</p>
                 </div>
               ))}
@@ -271,7 +269,7 @@ const Vision = () => {
                 { innovation: "Social Trips", desc: "Plan and book group trips with friends in real-time", timeline: "2026", emoji: "👥" },
                 { innovation: "Carbon Dashboard", desc: "Track and offset your travel carbon footprint", timeline: "2025", emoji: "🌱" },
               ].map(i => (
-                <Card key={i.innovation} className="border-border/50 hover:border-violet-500/20 transition-all">
+                <Card key={i.innovation} className="border-border hover:border-foreground/30 transition-colors">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-2 mb-2">
                       <span>{i.emoji}</span>
@@ -289,9 +287,9 @@ const Vision = () => {
         {/* Core Beliefs */}
         <section className="container mx-auto px-4 mb-20">
           <div className="max-w-3xl mx-auto">
-            <Card className="border-violet-500/20 bg-gradient-to-br from-violet-500/5 to-purple-500/5">
+            <Card className="border-border bg-secondary">
               <CardContent className="p-8">
-                <h2 className="text-2xl font-bold text-center mb-6">What We Believe</h2>
+                <h2 className="text-2xl font-bold tracking-tight text-center mb-6">What We Believe</h2>
                 <div className="grid sm:grid-cols-2 gap-4">
                   {[
                     { belief: "Travel should be accessible to everyone", emoji: "🌏" },
@@ -299,7 +297,7 @@ const Vision = () => {
                     { belief: "Transparency builds lasting trust", emoji: "🤝" },
                     { belief: "Sustainability is not optional", emoji: "🌱" },
                   ].map(b => (
-                    <div key={b.belief} className="flex items-center gap-3 p-3 rounded-xl bg-card/60 border border-violet-500/10">
+                    <div key={b.belief} className="flex items-center gap-3 p-3 rounded-xl bg-background border border-border">
                       <span className="text-xl">{b.emoji}</span>
                       <p className="text-sm font-medium">{b.belief}</p>
                     </div>
@@ -312,16 +310,16 @@ const Vision = () => {
 
         {/* Join the Journey */}
         <section className="container mx-auto px-4">
-          <Card className="max-w-2xl mx-auto border-violet-500/30 bg-gradient-to-br from-violet-500/10 to-purple-500/10">
+          <Card className="max-w-2xl mx-auto border-border bg-secondary">
             <CardContent className="p-8 text-center">
-              <Sparkles className="w-12 h-12 text-violet-500 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold mb-2">Join the Journey</h2>
+              <Sparkles className="w-12 h-12 text-foreground mx-auto mb-4" />
+              <h2 className="text-2xl font-bold tracking-tight mb-2">Join the Journey</h2>
               <p className="text-muted-foreground mb-6">
                 Be the first to know about new features and exclusive early access.
               </p>
-              
+
               {subscribed ? (
-                <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+                <div className="p-4 rounded-xl bg-background border border-border text-foreground">
                   Thanks for joining! We'll keep you updated.
                 </div>
               ) : (
@@ -337,7 +335,7 @@ const Vision = () => {
                       required
                     />
                   </div>
-                  <Button type="submit" disabled={submittingNewsletter} className="h-12 px-6 bg-gradient-to-r from-violet-500 to-purple-500 gap-2 shadow-[0_0_15px_hsl(270_60%_50%/0.3)] hover:shadow-[0_0_25px_hsl(270_60%_50%/0.4)] transition-shadow">
+                  <Button type="submit" disabled={submittingNewsletter} className="h-12 px-6 gap-2">
                     {submittingNewsletter ? "Subscribing…" : "Subscribe"}
                     <ArrowRight className="w-4 h-4" />
                   </Button>

@@ -60,7 +60,7 @@ const ProfileReferralCard = ({
       )}
     >
       <div className="flex items-center gap-2.5">
-        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-fuchsia-500/15 text-fuchsia-500">
+        <div className="flex h-9 w-9 items-center justify-center rounded-full bg-secondary text-foreground">
           <Gift className="h-4 w-4" />
         </div>
         <div className="flex-1 min-w-0">
@@ -91,7 +91,7 @@ const ProfileReferralCard = ({
       <div className="mt-3 flex items-center gap-2">
         <div
           aria-label="Your referral code"
-          className="flex-1 rounded-xl border border-dashed border-fuchsia-500/30 bg-background/70 px-3 py-2.5 text-center font-mono text-sm font-bold tracking-[0.2em] text-foreground"
+          className="flex-1 rounded-xl border border-dashed border-border bg-background/70 px-3 py-2.5 text-center font-mono text-sm font-bold tracking-[0.2em] text-foreground"
         >
           {loading ? <Skeleton className="h-5 w-24 align-middle" /> : display}
         </div>
@@ -109,7 +109,7 @@ const ProfileReferralCard = ({
           onClick={onShare}
           disabled={!code || loading}
           aria-label="Share referral link"
-          className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-fuchsia-500 px-4 text-xs font-bold text-white shadow-sm transition-colors hover:bg-fuchsia-600 active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500/60"
+          className="inline-flex h-10 items-center gap-1.5 rounded-xl bg-foreground px-4 text-xs font-bold text-white shadow-sm transition-colors hover:bg-foreground active:scale-[0.97] disabled:opacity-50 disabled:cursor-not-allowed focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-fuchsia-500/60"
         >
           <Share2 className="h-3.5 w-3.5" /> Share
         </button>

@@ -345,7 +345,7 @@ export default function EatsLanding() {
                             {restaurant.cover_image_url ? (
                               <img src={restaurant.cover_image_url} alt={restaurant.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
                             ) : (
-                              <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-orange-500/15 via-amber-500/10 to-rose-500/15">
+                              <div className="w-full h-full flex flex-col items-center justify-center gap-2 bg-gradient-to-br from-orange-500/15 via-amber-500/10">
                                 <span className="text-5xl">{cuisineEmoji(restaurant.cuisine_type)}</span>
                                 <span className="text-[10px] font-bold uppercase tracking-wider text-foreground/50">{canonicalCuisine(restaurant.cuisine_type)}</span>
                               </div>

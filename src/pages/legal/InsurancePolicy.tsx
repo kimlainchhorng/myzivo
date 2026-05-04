@@ -16,7 +16,7 @@ const InsurancePolicy = () => {
       {/* Background effects */}
       <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-40" />
       <div className="absolute top-1/4 right-0 w-[400px] h-[400px] bg-gradient-to-bl from-primary/15 to-teal-500/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-1/3 left-0 w-[300px] h-[300px] bg-gradient-to-tr from-violet-500/10 to-purple-500/5 rounded-full blur-3xl" />
+      <div className="absolute bottom-1/3 left-0 w-[300px] h-[300px] rounded-full blur-3xl bg-secondary" />
 
       {/* Floating decorative icons */}
       <motion.div
@@ -381,7 +381,7 @@ const InsurancePolicy = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
-                  <Plane className="h-5 w-5 text-sky-500" />
+                  <Plane className="h-5 w-5 text-foreground" />
                   Travel Insurance for Flights
                 </CardTitle>
                 <CardDescription>Optional protection for air travel</CardDescription>

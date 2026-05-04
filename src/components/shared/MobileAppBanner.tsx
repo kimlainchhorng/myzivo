@@ -14,9 +14,9 @@ const MobileAppBanner = () => {
   return (
     <section className="py-12 px-4">
       <div className="max-w-6xl mx-auto">
-        <div className="relative overflow-hidden bg-gradient-to-br from-primary/20 via-card/50 to-cyan-500/20 border border-primary/20 rounded-3xl p-8 md:p-12">
+        <div className="relative overflow-hidden bg-gradient-to-br from-primary/20 via-card/50 border border-primary/20 rounded-3xl p-8 md:p-12">
           <div className="absolute top-0 right-0 w-64 h-64 bg-primary/20 blur-3xl rounded-full" />
-          <div className="absolute bottom-0 left-0 w-48 h-48 bg-cyan-500/20 blur-3xl rounded-full" />
+          <div className="absolute bottom-0 left-0 w-48 h-48 bg-secondary blur-3xl rounded-full" />
 
           <div className="relative z-10 grid md:grid-cols-2 gap-8 items-center">
             <div>
@@ -59,9 +59,9 @@ const MobileAppBanner = () => {
             </div>
 
             <div className="relative flex justify-center">
-              <div className="absolute inset-0 bg-gradient-to-br from-primary/30 to-cyan-500/30 rounded-[3rem] blur-3xl" />
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/30 rounded-[3rem] blur-3xl" />
               <div className="relative w-64 h-[500px] bg-gradient-to-br from-card to-background rounded-[3rem] p-3 shadow-2xl border border-border">
-                <div className="w-full h-full bg-gradient-to-br from-primary/20 via-card to-cyan-500/20 rounded-[2.5rem] flex items-center justify-center">
+                <div className="w-full h-full bg-gradient-to-br from-primary/20 via-card rounded-[2.5rem] flex items-center justify-center">
                   <div className="text-center">
                     <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-primary/20 flex items-center justify-center"><Sparkles className="w-8 h-8 text-primary" /></div>
                     <p className="font-bold text-lg">ZIVO</p>

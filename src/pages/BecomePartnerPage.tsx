@@ -21,8 +21,7 @@ interface PartnerOption {
   hook: string;
   benefits: string[];
   icon: LucideIcon;
-  gradient: string;
-  ring: string;
+  iconClass: string;
 }
 
 const OPTIONS: PartnerOption[] = [
@@ -32,8 +31,7 @@ const OPTIONS: PartnerOption[] = [
     hook: "Earn weekly. Set your own hours.",
     benefits: ["Instant payouts", "Surge pricing alerts", "Eats deliveries too"],
     icon: Car,
-    gradient: "from-emerald-500 to-teal-600",
-    ring: "ring-emerald-400/30",
+    iconClass: "text-emerald-500",
   },
   {
     type: "restaurant",
@@ -41,8 +39,7 @@ const OPTIONS: PartnerOption[] = [
     hook: "Take delivery + table reservations from day one.",
     benefits: ["Reservations", "Pickup & delivery", "Restaurant dashboard"],
     icon: UtensilsCrossed,
-    gradient: "from-orange-500 to-amber-600",
-    ring: "ring-orange-400/30",
+    iconClass: "text-orange-500",
   },
   {
     type: "lodging",
@@ -50,8 +47,7 @@ const OPTIONS: PartnerOption[] = [
     hook: "Reach travelers booking flights + cars in one place.",
     benefits: ["Channel manager", "Direct bookings", "Cross-sell to flights"],
     icon: BedDouble,
-    gradient: "from-violet-500 to-purple-600",
-    ring: "ring-violet-400/30",
+    iconClass: "text-violet-500",
   },
   {
     type: "property",
@@ -59,8 +55,7 @@ const OPTIONS: PartnerOption[] = [
     hook: "Short-term stays, long-term tenants — your choice.",
     benefits: ["Smart pricing", "Verified guests", "ID + payment trust"],
     icon: Building2,
-    gradient: "from-slate-500 to-zinc-700",
-    ring: "ring-slate-400/30",
+    iconClass: "text-foreground",
   },
 ];
 
@@ -75,14 +70,13 @@ export default function BecomePartnerPage() {
   return (
     <div className="min-h-[100dvh] bg-background pb-16">
       {/* Hero */}
-      <section className="relative overflow-hidden bg-gradient-to-br from-primary/15 via-background to-background border-b border-border/40">
-        <div className="absolute -top-20 -right-20 w-72 h-72 rounded-full bg-primary/15 blur-3xl pointer-events-none" />
-        <div className="max-w-screen-md mx-auto px-5 pt-12 pb-10 relative">
-          <span className="inline-flex items-center gap-1 rounded-full bg-primary/15 text-primary text-[10px] font-bold uppercase tracking-wider px-2.5 py-1">
+      <section className="border-b border-border bg-background">
+        <div className="max-w-screen-md mx-auto px-5 pt-12 pb-10">
+          <span className="inline-flex items-center gap-1 rounded-full bg-secondary border border-border text-foreground text-[10px] font-bold uppercase tracking-wider px-2.5 py-1">
             <Sparkles className="w-3 h-3" /> Become a partner
           </span>
-          <h1 className="text-3xl sm:text-4xl font-extrabold mt-3 leading-tight">
-            Grow with the only super-app that <span className="text-primary">ties them all together</span>.
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight mt-3 leading-tight">
+            Grow with the only super-app that ties them all together.
           </h1>
           <p className="text-muted-foreground mt-3 text-sm sm:text-base">
             Drivers, restaurants, hotels, and property owners share one platform. One account, one
@@ -108,30 +102,29 @@ export default function BecomePartnerPage() {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04 }}
                 onClick={() => navigate(`/partner-with-zivo?type=${opt.type}`)}
-                className={`relative overflow-hidden rounded-3xl p-5 text-left bg-gradient-to-br ${opt.gradient} text-white shadow-md ring-1 ${opt.ring} touch-manipulation`}
+                className="relative overflow-hidden rounded-3xl p-5 text-left bg-card border border-border hover:border-foreground/30 transition-colors touch-manipulation"
               >
-                <div className="absolute -bottom-10 -right-10 w-32 h-32 rounded-full bg-white/10 blur-2xl pointer-events-none" />
-                <div className="relative flex items-start gap-3">
-                  <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center">
-                    <Icon className="w-6 h-6 text-white" />
+                <div className="flex items-start gap-3">
+                  <div className="w-12 h-12 rounded-2xl bg-secondary border border-border flex items-center justify-center">
+                    <Icon className={`w-6 h-6 ${opt.iconClass}`} />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-lg font-extrabold leading-tight">{opt.label}</div>
-                    <div className="text-[12px] text-white/85 mt-0.5">{opt.hook}</div>
+                    <div className="text-lg font-bold tracking-tight leading-tight text-foreground">{opt.label}</div>
+                    <div className="text-[12px] text-muted-foreground mt-0.5">{opt.hook}</div>
                   </div>
                 </div>
-                <ul className="relative mt-3 space-y-1.5">
+                <ul className="mt-3 space-y-1.5">
                   {opt.benefits.map((b) => (
                     <li
                       key={b}
-                      className="flex items-center gap-1.5 text-[12px] text-white/95"
+                      className="flex items-center gap-1.5 text-[12px] text-foreground"
                     >
-                      <span className="w-1.5 h-1.5 rounded-full bg-white/80" />
+                      <span className="w-1.5 h-1.5 rounded-full bg-foreground/60" />
                       {b}
                     </li>
                   ))}
                 </ul>
-                <div className="relative mt-4 inline-flex items-center gap-1 rounded-full bg-white/20 backdrop-blur px-3 py-1.5 text-[12px] font-bold">
+                <div className="mt-4 inline-flex items-center gap-1 rounded-full bg-foreground text-background px-3 py-1.5 text-[12px] font-bold">
                   Get started <ChevronRight className="w-3.5 h-3.5" />
                 </div>
               </motion.button>
@@ -151,9 +144,9 @@ export default function BecomePartnerPage() {
             return (
               <div
                 key={p.label}
-                className="rounded-2xl border border-border/50 bg-card p-4"
+                className="rounded-2xl border border-border bg-card p-4"
               >
-                <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center mb-2">
+                <div className="w-9 h-9 rounded-xl bg-secondary border border-border text-foreground flex items-center justify-center mb-2">
                   <Icon className="w-4 h-4" />
                 </div>
                 <div className="text-sm font-bold text-foreground">{p.label}</div>
@@ -166,14 +159,14 @@ export default function BecomePartnerPage() {
 
       {/* Footer CTA */}
       <section className="max-w-screen-md mx-auto px-4 mt-10">
-        <div className="rounded-3xl bg-gradient-to-r from-primary/15 via-primary/10 to-transparent border border-primary/20 p-5">
-          <div className="text-base font-extrabold text-foreground">Not sure which fits?</div>
+        <div className="rounded-3xl bg-secondary border border-border p-5">
+          <div className="text-base font-bold tracking-tight text-foreground">Not sure which fits?</div>
           <div className="text-[12px] text-muted-foreground mt-1">
             Talk to our partnerships team — we'll help you pick the right entry point.
           </div>
           <button
             onClick={() => navigate("/contact")}
-            className="mt-3 inline-flex items-center gap-1 rounded-xl bg-primary text-primary-foreground font-bold px-4 py-2 text-sm shadow active:scale-[0.98] transition-transform"
+            className="mt-3 inline-flex items-center gap-1 rounded-xl bg-foreground text-background font-bold px-4 py-2 text-sm active:scale-[0.98] transition-transform"
           >
             Contact sales <ChevronRight className="w-4 h-4" />
           </button>

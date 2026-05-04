@@ -60,7 +60,7 @@ export default function GroupCallScreenV2({
         </div>
         {call.isRecording && (
           <span
-            className="flex items-center gap-1.5 rounded-full bg-rose-500 px-2.5 py-1 text-[11px] font-bold tracking-wider text-white shadow-lg ring-2 ring-rose-300/50"
+            className="flex items-center gap-1.5 rounded-full bg-foreground px-2.5 py-1 text-[11px] font-bold tracking-wider text-white shadow-lg ring-2 ring-rose-300/50"
             title="This call is being recorded and saved to the host's secure bucket"
           >
             <Radio className="h-3 w-3 animate-pulse" /> REC
@@ -80,7 +80,7 @@ export default function GroupCallScreenV2({
         )}
 
         {call.state === "error" && (
-          <div className="grid h-full place-items-center px-6 text-center text-sm text-rose-300">
+          <div className="grid h-full place-items-center px-6 text-center text-sm text-foreground">
             {call.error ?? "Could not join the call."}
           </div>
         )}

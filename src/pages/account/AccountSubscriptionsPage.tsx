@@ -137,14 +137,14 @@ export default function AccountSubscriptionsPage() {
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className="text-base font-bold flex items-center gap-1.5">
-            <Heart className="h-4 w-4 text-rose-500" />
+            <Heart className="h-4 w-4 text-foreground" />
             My subscriptions
           </h1>
         </div>
       </header>
 
       <div className="max-w-3xl mx-auto px-4 pt-4">
-        <div className="rounded-2xl border border-border/40 bg-gradient-to-br from-rose-500/10 via-amber-500/5 to-transparent p-4 mb-4">
+        <div className="rounded-2xl border border-border/40 to-transparent p-4 mb-4 bg-secondary">
           <p className="text-[11px] uppercase tracking-wider font-bold text-muted-foreground">Monthly spend</p>
           <p className="text-2xl font-extrabold mt-0.5">
             ${(monthlySpend / 100).toFixed(2)}

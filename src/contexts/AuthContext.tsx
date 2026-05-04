@@ -302,7 +302,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
     }
 
-    await supabase.auth.signOut();
+    // Soft sign-out — `scope: 'local'` clears the local session but does NOT
+    // revoke the refresh token server-side. That keeps the saved-account
+    // entry's stored refresh_token valid, so when the user comes back and
+    // taps their avatar, `setSession()` succeeds and they're back in with one
+    // tap — the Facebook / Instagram pattern.
+    //
+    // The "Remove this account" button on the picker still does a full wipe
+    // (clears the saved-account entry entirely from localStorage), which is
+    // the right place for an explicit "forget me on this device" action.
+    await supabase.auth.signOut({ scope: "local" });
     setUser(null);
     setSession(null);
     setIsAdmin(false);

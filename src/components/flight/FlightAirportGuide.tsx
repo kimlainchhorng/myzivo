@@ -38,12 +38,12 @@ const airports = [
 
 const FlightAirportGuide = () => {
   return (
-    <section className="py-12 md:py-16 bg-gradient-to-b from-transparent via-sky-500/5 to-transparent">
+    <section className="py-12 md:py-16 bg-gradient-to-b from-transparent to-transparent">
       <div className="container mx-auto px-4">
         <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-sky-500/10 border border-sky-500/20 mb-4">
-            <MapPin className="w-4 h-4 text-sky-400" />
-            <span className="text-sm font-medium text-sky-400">Airport Guides</span>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary border border-border mb-4">
+            <MapPin className="w-4 h-4 text-foreground" />
+            <span className="text-sm font-medium text-foreground">Airport Guides</span>
           </div>
           <h2 className="font-display text-2xl md:text-3xl font-bold mb-2">
             Major Airport Tips
@@ -62,7 +62,7 @@ const FlightAirportGuide = () => {
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className="flex items-start gap-4 mb-4">
-                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-sky-500 to-blue-500 flex items-center justify-center">
+                <div className="w-14 h-14 rounded-xl flex items-center justify-center bg-secondary">
                   <span className="text-lg font-bold text-primary-foreground">{airport.code}</span>
                 </div>
                 <div>
@@ -71,7 +71,7 @@ const FlightAirportGuide = () => {
                 </div>
               </div>
 
-              <div className="p-3 rounded-xl bg-sky-500/10 border border-sky-500/20 mb-4">
+              <div className="p-3 rounded-xl bg-secondary border border-border mb-4">
                 <p className="text-sm font-medium">Tip: {airport.tips}</p>
               </div>
 

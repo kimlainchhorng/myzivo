@@ -26,10 +26,10 @@ interface Props { storeId: string; }
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const SHIFT_PRESETS = [
   { type: "morning", label: "Morning", icon: Sunrise, start: "06:00", end: "14:00", color: "bg-amber-50 text-amber-700 border-amber-200", dotColor: "bg-amber-400", gradient: "from-amber-400 to-orange-400" },
-  { type: "afternoon", label: "Afternoon", icon: Sun, start: "14:00", end: "22:00", color: "bg-sky-50 text-sky-700 border-sky-200", dotColor: "bg-sky-400", gradient: "from-sky-400 to-blue-500" },
-  { type: "evening", label: "Evening", icon: Moon, start: "18:00", end: "02:00", color: "bg-violet-50 text-violet-700 border-violet-200", dotColor: "bg-violet-400", gradient: "from-violet-400 to-purple-500" },
+  { type: "afternoon", label: "Afternoon", icon: Sun, start: "14:00", end: "22:00", color: "bg-sky-50 text-sky-700 border-sky-200", dotColor: "bg-sky-400", gradient: "from-muted to-muted" },
+  { type: "evening", label: "Evening", icon: Moon, start: "18:00", end: "02:00", color: "bg-violet-50 text-violet-700 border-violet-200", dotColor: "bg-violet-400", gradient: "from-muted to-muted" },
   { type: "full", label: "Full Day", icon: Clock, start: "09:00", end: "17:00", color: "bg-emerald-50 text-emerald-700 border-emerald-200", dotColor: "bg-emerald-400", gradient: "from-emerald-400 to-teal-500" },
-  { type: "split", label: "Split", icon: BarChart3, start: "10:00", end: "20:00", color: "bg-rose-50 text-rose-700 border-rose-200", dotColor: "bg-rose-400", gradient: "from-rose-400 to-pink-500" },
+  { type: "split", label: "Split", icon: BarChart3, start: "10:00", end: "20:00", color: "bg-rose-50 text-rose-700 border-rose-200", dotColor: "bg-rose-400", gradient: "from-muted to-muted" },
 ];
 
 const OFF_REASONS = ["Day Off", "Vacation", "Sick Leave", "Personal", "Public Holiday"];
@@ -396,9 +396,9 @@ export default function StoreScheduleSection({ storeId }: Props) {
   };
 
   const statItems = [
-    { icon: Calendar, label: "Shifts", value: weekStats.totalShifts, gradient: "from-blue-500 to-indigo-600" },
+    { icon: Calendar, label: "Shifts", value: weekStats.totalShifts, gradient: "from-muted to-muted" },
     { icon: Clock, label: "Hours", value: `${weekStats.totalHours.toFixed(0)}h`, gradient: "from-emerald-500 to-teal-600" },
-    { icon: Users, label: "Scheduled", value: weekStats.scheduledCount, gradient: "from-violet-500 to-purple-600" },
+    { icon: Users, label: "Scheduled", value: weekStats.scheduledCount, gradient: "from-muted to-muted" },
     { icon: AlertTriangle, label: "Unscheduled", value: Math.max(0, employees.length - weekStats.scheduledCount), gradient: "from-amber-500 to-orange-600" },
   ];
 

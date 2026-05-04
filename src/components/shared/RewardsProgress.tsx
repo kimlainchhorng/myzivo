@@ -41,14 +41,14 @@ const RewardsProgress = ({
   return (
     <section className="py-12 px-4">
       <div className="max-w-4xl mx-auto">
-        <div className="relative overflow-hidden bg-gradient-to-br from-violet-500/10 via-card/50 to-purple-500/10 border border-violet-500/20 rounded-3xl p-6 md:p-8">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/20 blur-3xl rounded-full" />
+        <div className="relative overflow-hidden via-card/50 border border-border rounded-3xl p-6 md:p-8 bg-secondary">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-secondary blur-3xl rounded-full" />
 
           <div className="relative z-10">
             {/* Header */}
             <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 mb-6">
               <div>
-                <Badge className="mb-2 bg-violet-500/20 text-violet-400 border-violet-500/30">
+                <Badge className="mb-2 bg-secondary text-foreground border-border">
                   <Sparkles className="w-3 h-3 mr-1" /> ZIVO Rewards
                 </Badge>
                 <h2 className="text-2xl font-display font-bold">Your Rewards Status</h2>
@@ -118,7 +118,7 @@ const RewardsProgress = ({
             {/* Upcoming Rewards */}
             <div className="bg-card/60 backdrop-blur-xl rounded-xl p-5 border border-border/30">
               <h3 className="font-bold mb-4 flex items-center gap-2">
-                <TrendingUp className="w-4 h-4 text-violet-400" />
+                <TrendingUp className="w-4 h-4 text-foreground" />
                 Next Rewards
               </h3>
               <div className="grid grid-cols-3 gap-3">
@@ -127,7 +127,7 @@ const RewardsProgress = ({
                     key={reward.points}
                     className="p-3 bg-muted/30 rounded-xl text-center"
                   >
-                    <reward.icon className="w-5 h-5 text-violet-400 mx-auto mb-2" />
+                    <reward.icon className="w-5 h-5 text-foreground mx-auto mb-2" />
                     <p className="text-xs font-medium">{reward.reward}</p>
                     <p className="text-[10px] text-muted-foreground">
                       {reward.points} pts
@@ -138,7 +138,7 @@ const RewardsProgress = ({
             </div>
 
             <div className="text-center mt-6">
-              <Button className="bg-gradient-to-r from-violet-500 to-purple-500">
+              <Button className="bg-secondary">
                 View All Benefits <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             </div>

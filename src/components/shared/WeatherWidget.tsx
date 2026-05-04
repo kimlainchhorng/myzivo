@@ -15,7 +15,7 @@ const WeatherWidget = () => {
   return (
     <section className="py-12 px-4">
       <div className="max-w-4xl mx-auto">
-        <div className="bg-gradient-to-br from-sky-500/20 via-blue-500/10 to-indigo-500/20 rounded-2xl border border-sky-500/30 p-6 overflow-hidden relative">
+        <div className="rounded-2xl border border-border p-6 overflow-hidden relative bg-secondary">
           <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-yellow-400/20 to-orange-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2" />
           
           <div className="relative z-10">
@@ -26,7 +26,7 @@ const WeatherWidget = () => {
                   <CurrentIcon className="w-10 h-10 text-primary-foreground" />
                 </div>
                 <div>
-                  <Badge className="mb-1 bg-sky-500/20 text-sky-400 border-sky-500/30">
+                  <Badge className="mb-1 bg-secondary text-foreground border-border">
                     Los Angeles, CA
                   </Badge>
                   <div className="flex items-end gap-2">
@@ -50,7 +50,7 @@ const WeatherWidget = () => {
                   <p className="font-bold">8 mph</p>
                 </div>
                 <div className="text-center p-3 rounded-xl bg-card/50">
-                  <Droplets className="w-5 h-5 text-cyan-400 mx-auto mb-1" />
+                  <Droplets className="w-5 h-5 text-foreground mx-auto mb-1" />
                   <p className="text-xs text-muted-foreground">Humidity</p>
                   <p className="font-bold">45%</p>
                 </div>

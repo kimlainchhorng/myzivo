@@ -115,8 +115,8 @@ export const ReferralCenter = ({ className }: ReferralCenterProps) => {
       <CardHeader className="pb-4 border-b border-border/50">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-pink-500/20 to-rose-500/10 border border-pink-500/40 flex items-center justify-center">
-              <Gift className="w-6 h-6 text-pink-400" />
+            <div className="w-12 h-12 rounded-xl border border-border flex items-center justify-center bg-secondary">
+              <Gift className="w-6 h-6 text-foreground" />
             </div>
             <div>
               <CardTitle className="text-xl">Refer & Earn</CardTitle>
@@ -130,10 +130,10 @@ export const ReferralCenter = ({ className }: ReferralCenterProps) => {
 
       <CardContent className="p-0">
         {/* Stats Summary */}
-        <div className="p-4 bg-gradient-to-br from-pink-500/10 via-transparent to-rose-500/5">
+        <div className="p-4 via-transparent bg-secondary">
           <div className="grid grid-cols-3 gap-3">
             <div className="text-center p-3 rounded-xl bg-card/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
-              <p className="text-2xl font-bold text-pink-400">{totalReferrals}</p>
+              <p className="text-2xl font-bold text-foreground">{totalReferrals}</p>
               <p className="text-xs text-muted-foreground">Total Invites</p>
             </div>
             <div className="text-center p-3 rounded-xl bg-card/50 border border-border/50 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
@@ -264,14 +264,14 @@ export const ReferralCenter = ({ className }: ReferralCenterProps) => {
           <h4 className="font-medium mb-3">How it Works</h4>
           <div className="grid grid-cols-3 gap-3 text-center">
             <div>
-              <div className="w-10 h-10 rounded-full bg-pink-500/20 flex items-center justify-center mx-auto mb-2">
-                <Share2 className="w-5 h-5 text-pink-400" />
+              <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center mx-auto mb-2">
+                <Share2 className="w-5 h-5 text-foreground" />
               </div>
               <p className="text-xs text-muted-foreground">Share your code</p>
             </div>
             <div>
-              <div className="w-10 h-10 rounded-full bg-sky-500/20 flex items-center justify-center mx-auto mb-2">
-                <UserPlus className="w-5 h-5 text-sky-400" />
+              <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center mx-auto mb-2">
+                <UserPlus className="w-5 h-5 text-foreground" />
               </div>
               <p className="text-xs text-muted-foreground">Friend signs up</p>
             </div>

@@ -57,8 +57,8 @@ export default function MultiStopRoute({ pickup = "Current location", onConfirm,
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border/30">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-lg bg-violet-500/10 flex items-center justify-center">
-            <Route className="w-4 h-4 text-violet-500" />
+          <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center">
+            <Route className="w-4 h-4 text-foreground" />
           </div>
           <div>
             <h3 className="text-sm font-bold text-foreground">Multi-Stop</h3>

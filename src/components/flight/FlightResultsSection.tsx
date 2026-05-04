@@ -103,7 +103,7 @@ export default function FlightResultsSection({
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-4 sm:mb-6">
           <div>
             <h2 className="font-display text-xl sm:text-2xl md:text-3xl font-bold flex flex-wrap items-center gap-2 sm:gap-3">
-              <span className="text-sky-500">{searchResults.length}</span> flights found
+              <span className="text-foreground">{searchResults.length}</span> flights found
               {stats.realPrices > 0 && (
                 <Badge className="bg-emerald-500/20 text-emerald-500 text-[10px] sm:text-xs">
                   <Zap className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-1" />
@@ -192,7 +192,7 @@ export default function FlightResultsSection({
                       <div className="flex flex-col items-center gap-1">
                         <p className="text-xs text-muted-foreground">{flight.duration}</p>
                         <div className="w-16 sm:w-24 h-px bg-border relative">
-                          <Plane className="w-3 h-3 text-sky-500 absolute -top-1.5 right-0" />
+                          <Plane className="w-3 h-3 text-foreground absolute -top-1.5 right-0" />
                         </div>
                         <p className="text-[10px] text-muted-foreground">
                           {flight.stops === 0 ? "Direct" : `${flight.stops} stop${flight.stops > 1 ? "s" : ""}`}
@@ -204,7 +204,7 @@ export default function FlightResultsSection({
                       </div>
                     </div>
                     <div className="text-right">
-                      <p className="text-2xl font-bold text-sky-500">${flight.price}</p>
+                      <p className="text-2xl font-bold text-foreground">${flight.price}</p>
                       <p className="text-[10px] text-muted-foreground">per person</p>
                       {flight.isRealPrice && (
                         <Badge className="mt-1 bg-emerald-500/20 text-emerald-500 text-[10px]">

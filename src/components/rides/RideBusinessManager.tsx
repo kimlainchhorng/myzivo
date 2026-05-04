@@ -67,9 +67,9 @@ export default function RideBusinessManager() {
           {activeTab === "overview" && (
             <div className="space-y-4">
               {/* Company card */}
-              <div className="rounded-2xl bg-gradient-to-br from-sky-500/10 to-primary/5 border border-sky-500/20 p-5">
+              <div className="rounded-2xl to-primary/5 border border-border p-5 bg-secondary">
                 <div className="flex items-center gap-2 mb-1">
-                  <Briefcase className="w-4 h-4 text-sky-500" />
+                  <Briefcase className="w-4 h-4 text-foreground" />
                   <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">{businessProfile.company}</span>
                 </div>
                 <p className="text-[10px] text-muted-foreground">{businessProfile.department} · Business Account</p>

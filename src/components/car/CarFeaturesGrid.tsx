@@ -160,8 +160,8 @@ const sections: FeatureSection[] = [
 function FeatureCard({ item }: { item: FeatureItem }) {
   const content = (
     <div className="flex items-start gap-3 p-3 rounded-xl bg-card/50 border border-border/50 hover:border-border hover:bg-card/80 transition-all duration-200 hover:shadow-sm group touch-manipulation active:scale-[0.98]">
-      <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center shrink-0 group-hover:bg-violet-500/10 group-hover:scale-110 transition-all duration-200">
-        <span className="text-muted-foreground group-hover:text-violet-400 transition-all duration-200">
+      <div className="w-10 h-10 rounded-xl bg-muted/50 flex items-center justify-center shrink-0 group-hover:bg-secondary group-hover:scale-110 transition-all duration-200">
+        <span className="text-muted-foreground group-hover:text-foreground transition-all duration-200">
           {item.icon}
         </span>
       </div>
@@ -193,9 +193,9 @@ export default function CarFeaturesGrid({ className }: CarFeaturesGridProps) {
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-10">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-violet-500/10 border border-violet-500/20 mb-4">
-            <Car className="w-4 h-4 text-violet-400" />
-            <span className="text-sm font-medium text-violet-400">ZIVO Car Rental</span>
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-secondary border border-border mb-4">
+            <Car className="w-4 h-4 text-foreground" />
+            <span className="text-sm font-medium text-foreground">ZIVO Car Rental</span>
           </div>
           <h2 className="font-display text-2xl md:text-3xl font-bold mb-2">
             Rent Cars from 800+ Locations Worldwide

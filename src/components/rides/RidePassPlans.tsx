@@ -29,7 +29,7 @@ const plans: Plan[] = [
     period: "/month",
     icon: Car,
     color: "text-sky-500",
-    gradient: "from-sky-500/15 to-sky-500/5",
+    gradient: "from-muted to-muted",
     savings: "Save ~$15/mo",
     features: [
       "5% off all rides",

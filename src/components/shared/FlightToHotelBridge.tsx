@@ -53,8 +53,8 @@ const FlightToHotelBridge = ({
         {/* Header */}
         <div className="flex items-center gap-3 mb-4">
           <div className="flex items-center gap-2">
-            <div className="p-2 rounded-xl bg-sky-500/20">
-              <Plane className="w-5 h-5 text-sky-500" />
+            <div className="p-2 rounded-xl bg-secondary">
+              <Plane className="w-5 h-5 text-foreground" />
             </div>
             <ArrowRight className="w-4 h-4 text-muted-foreground" />
             <div className="p-2 rounded-xl bg-amber-500/20">

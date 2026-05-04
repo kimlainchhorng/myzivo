@@ -83,11 +83,11 @@ export function FlightMultiProviderCard({
             </Badge>
           )}
           {flight.isFastest && !flight.isBestPrice && !flight.isBestValue && (
-            <Badge className="bg-purple-500 text-primary-foreground text-[10px] gap-1">
+            <Badge className="bg-foreground text-primary-foreground text-[10px] gap-1">
               <Clock className="w-3 h-3" /> Fastest Route
             </Badge>
           )}
-          <Badge className="bg-sky-500/20 text-sky-500 text-[10px] gap-1">
+          <Badge className="bg-secondary text-foreground text-[10px] gap-1">
             <Zap className="w-3 h-3" /> Compare {providers.length} providers
           </Badge>
         </div>
@@ -98,7 +98,7 @@ export function FlightMultiProviderCard({
         <div className="flex flex-col lg:flex-row">
           {/* LEFT: Airline Section */}
           <div className="p-4 flex items-center gap-3 lg:w-48 border-b lg:border-b-0 lg:border-r border-border/50 bg-muted/10">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-sky-500/10 to-blue-500/10 border border-sky-500/20 flex items-center justify-center shrink-0">
+            <div className="w-12 h-12 rounded-xl border border-border flex items-center justify-center shrink-0 bg-secondary">
               {flight.airlineLogo ? (
                 <img
                   src={flight.airlineLogo}
@@ -110,7 +110,7 @@ export function FlightMultiProviderCard({
                   }}
                 />
               ) : (
-                <span className="text-sm font-bold text-sky-500">{flight.airlineCode}</span>
+                <span className="text-sm font-bold text-foreground">{flight.airlineCode}</span>
               )}
             </div>
             <div className="min-w-0 flex-1">
@@ -131,8 +131,8 @@ export function FlightMultiProviderCard({
 
               {/* Duration Line */}
               <div className="flex-1 relative px-1 min-w-[70px]">
-                <div className="h-[2px] bg-gradient-to-r from-sky-500/30 via-sky-500 to-sky-500/30 rounded-full" />
-                <Plane className="absolute right-0 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-sky-500 rotate-90" />
+                <div className="h-[2px] rounded-full bg-secondary" />
+                <Plane className="absolute right-0 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-foreground rotate-90" />
                 
                 <div className="absolute inset-x-0 -top-4 flex justify-center">
                   <span className="text-[10px] text-muted-foreground bg-card px-1.5 flex items-center gap-1">
@@ -199,8 +199,8 @@ export function FlightMultiProviderCard({
           {/* RIGHT: Best Price Summary */}
           <div className="p-4 lg:py-5 lg:px-5 lg:w-48 border-t lg:border-t-0 lg:border-l border-border/50 flex flex-row lg:flex-col items-center justify-between lg:justify-center gap-2 bg-gradient-to-br from-muted/30 to-muted/10">
             <div className="text-left lg:text-center">
-              <p className="text-[10px] text-sky-500 font-medium uppercase tracking-wide">From</p>
-              <p className="text-2xl font-bold text-sky-500">{formattedLowestPrice}</p>
+              <p className="text-[10px] text-foreground font-medium uppercase tracking-wide">From</p>
+              <p className="text-2xl font-bold text-foreground">{formattedLowestPrice}</p>
               <p className="text-[10px] text-muted-foreground">per person</p>
             </div>
             <Button
@@ -240,7 +240,7 @@ export function FlightMultiProviderCard({
                   >
                     <div className="flex items-center gap-3">
                       {provider.isOfficialPrice ? (
-                        <BadgeCheck className="w-4 h-4 text-sky-500" />
+                        <BadgeCheck className="w-4 h-4 text-foreground" />
                       ) : (
                         <ExternalLink className="w-4 h-4 text-muted-foreground" />
                       )}

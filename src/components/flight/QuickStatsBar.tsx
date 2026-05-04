@@ -51,7 +51,7 @@ export function QuickStatsBar({
       price: fastest.price,
       airline: fastest.airline,
       duration: fastest.duration,
-      gradient: "from-violet-500/10 to-violet-500/[0.02]",
+      gradient: "from-muted to-muted",
       accentLine: "bg-violet-500",
       iconColor: "text-violet-500",
       priceColor: "text-violet-600 dark:text-violet-400",

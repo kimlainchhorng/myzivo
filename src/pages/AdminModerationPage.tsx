@@ -88,14 +88,57 @@ export default function AdminModerationPage() {
   const resolvedReports = reports.filter(r => r.status && r.status !== "pending");
 
   const handleAction = async (id: string, action: "resolved" | "dismissed") => {
+    // Find the report so we know what content type/id to act on.
+    const report = reports.find(r => r.id === id);
+
+    // If admin "resolves" (i.e., upholds the report), actually take the
+    // content down. Previously this only flipped a status flag and the
+    // offending post stayed live.
+    if (action === "resolved" && report?.contentType === "post" && report.contentId) {
+      const { data: { user } } = await supabase.auth.getUser();
+      const { error: hideErr } = await (supabase as any)
+        .from("user_posts")
+        .update({
+          hidden_at: new Date().toISOString(),
+          hidden_reason: report.reason || "Moderator action",
+          hidden_by: user?.id ?? null,
+        })
+        .eq("id", report.contentId);
+      if (hideErr) {
+        toast.error("Could not hide post: " + hideErr.message);
+        return;
+      }
+    }
+
     const { error } = await supabase
       .from("content_moderation_queue")
       .update({ status: action })
       .eq("id", id);
-    if (!error) {
-      setReports(prev => prev.map(r => r.id === id ? { ...r, status: action } : r));
-      toast.success(action === "resolved" ? "Report resolved" : "Report dismissed");
+    if (error) {
+      toast.error("Could not update report status: " + error.message);
+      return;
     }
+
+    // Audit the moderation action so we have a paper trail.
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      await (supabase as any).from("moderation_actions").insert({
+        action_type: action === "resolved" ? "content_hidden" : "report_dismissed",
+        target_type: report?.contentType || "unknown",
+        target_id: report?.contentId || id,
+        moderator_id: user?.id ?? null,
+        notes: report?.reason || null,
+      });
+    } catch (e) {
+      console.warn("moderation_actions audit insert failed", e);
+    }
+
+    setReports(prev => prev.map(r => r.id === id ? { ...r, status: action } : r));
+    toast.success(
+      action === "resolved"
+        ? (report?.contentType === "post" ? "Post hidden + report resolved" : "Report resolved")
+        : "Report dismissed"
+    );
   };
 
   const severityVariant = (s: string | null): "destructive" | "default" | "secondary" => {

@@ -176,7 +176,7 @@ export default function ComplianceCenter() {
             <CheckCircle2 className="w-4 h-4" />
             <span className="text-sm font-medium">CCPA Compliant</span>
           </div>
-          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400">
+          <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-secondary text-foreground dark:text-foreground">
             <CheckCircle2 className="w-4 h-4" />
             <span className="text-sm font-medium">PCI-DSS Level 1</span>
           </div>

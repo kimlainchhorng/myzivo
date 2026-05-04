@@ -196,9 +196,9 @@ export default function LodgingWakeupCallsSection({ storeId }: { storeId: string
 
         {/* Missed alert */}
         {missedCount > 0 && (
-          <div className="rounded-lg border border-rose-500/30 bg-rose-500/5 p-3 flex items-center gap-2 text-sm">
-            <AlertTriangle className="h-4 w-4 text-rose-600 shrink-0" />
-            <span className="text-rose-700 font-medium">{missedCount} missed wake-up call{missedCount > 1 ? "s" : ""} — follow up with guest{missedCount > 1 ? "s" : ""}.</span>
+          <div className="rounded-lg border border-border bg-secondary p-3 flex items-center gap-2 text-sm">
+            <AlertTriangle className="h-4 w-4 text-foreground shrink-0" />
+            <span className="text-foreground font-medium">{missedCount} missed wake-up call{missedCount > 1 ? "s" : ""} — follow up with guest{missedCount > 1 ? "s" : ""}.</span>
           </div>
         )}
 
@@ -239,7 +239,7 @@ export default function LodgingWakeupCallsSection({ storeId }: { storeId: string
                           onClick={() => setStatus.mutate({ id: call.id, status: "completed" })}>
                           <CheckCircle2 className="h-3.5 w-3.5" /> Done
                         </Button>
-                        <Button size="sm" variant="ghost" className="h-7 px-2 text-[11px] gap-1 text-rose-600"
+                        <Button size="sm" variant="ghost" className="h-7 px-2 text-[11px] gap-1 text-foreground"
                           onClick={() => setStatus.mutate({ id: call.id, status: "missed" })}>
                           <AlertTriangle className="h-3.5 w-3.5" /> Missed
                         </Button>

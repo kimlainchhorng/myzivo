@@ -104,14 +104,14 @@ export default function FlightTestimonialsSection({ className }: FlightTestimoni
   return (
     <section className={cn("py-16 relative overflow-hidden", className)}>
       {/* Background Elements */}
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-sky-500/5 to-transparent" />
-      <div className="absolute top-20 left-10 w-72 h-72 bg-sky-500/10 rounded-full blur-3xl" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-transparent" />
+      <div className="absolute top-20 left-10 w-72 h-72 bg-secondary rounded-full blur-3xl" />
       <div className="absolute bottom-20 right-10 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
 
       <div className="container mx-auto px-4 relative z-10">
         {/* Section Header */}
         <div className="text-center mb-12">
-          <Badge className="mb-4 px-4 py-2 bg-gradient-to-r from-sky-500/20 to-blue-500/20 text-sky-500 border-sky-500/30">
+          <Badge className="mb-4 px-4 py-2 text-foreground border-border bg-secondary">
             <Star className="w-4 h-4 mr-2 fill-sky-500" />
             Customer Reviews
           </Badge>
@@ -132,7 +132,7 @@ export default function FlightTestimonialsSection({ className }: FlightTestimoni
               style={{ animationDelay: `${index * 100}ms` }}
             >
               <div className="flex justify-center mb-2">
-                <stat.icon className="w-6 h-6 text-sky-500" />
+                <stat.icon className="w-6 h-6 text-foreground" />
               </div>
               <p className="text-2xl font-bold text-foreground">{stat.value}</p>
               <p className="text-xs text-muted-foreground">{stat.label}</p>
@@ -144,12 +144,12 @@ export default function FlightTestimonialsSection({ className }: FlightTestimoni
         <div className="max-w-4xl mx-auto mb-8">
           <Card className="relative overflow-hidden border-0 bg-card/80 backdrop-blur-2xl shadow-2xl">
             {/* Gradient accent */}
-            <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-sky-500 via-blue-500 to-cyan-500" />
+            <div className="absolute top-0 left-0 right-0 h-1 bg-secondary" />
             
             <CardContent className="p-8 md:p-10">
               {/* Quote Icon */}
-              <div className="absolute top-6 right-6 w-16 h-16 rounded-full bg-sky-500/10 flex items-center justify-center">
-                <Quote className="w-8 h-8 text-sky-500/50" />
+              <div className="absolute top-6 right-6 w-16 h-16 rounded-full bg-secondary flex items-center justify-center">
+                <Quote className="w-8 h-8 text-foreground/50" />
               </div>
 
               {/* Testimonial Content */}
@@ -266,7 +266,7 @@ export default function FlightTestimonialsSection({ className }: FlightTestimoni
           {testimonials.filter((_, i) => i !== activeIndex).slice(0, 3).map((testimonial, index) => (
             <Card
               key={testimonial.id}
-              className="cursor-pointer hover:border-sky-500/50 transition-all duration-200 bg-card/50 backdrop-blur-xl animate-in fade-in slide-in-from-bottom-4"
+              className="cursor-pointer hover:border-border transition-all duration-200 bg-card/50 backdrop-blur-xl animate-in fade-in slide-in-from-bottom-4"
               style={{ animationDelay: `${(index + 4) * 100}ms` }}
               onClick={() => setActiveIndex(testimonials.findIndex(t => t.id === testimonial.id))}
             >

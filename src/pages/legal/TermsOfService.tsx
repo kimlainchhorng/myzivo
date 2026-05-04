@@ -277,8 +277,8 @@ const TermsOfService = () => {
           <AccordionItem value="flights" id="flights" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-sky-500/20 flex items-center justify-center">
-                  <Plane className="h-4 w-4 text-sky-500" />
+                <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center">
+                  <Plane className="h-4 w-4 text-foreground" />
                 </div>
                 <span className="font-semibold">ZIVO Flights - Booking Terms</span>
               </div>
@@ -569,8 +569,8 @@ const TermsOfService = () => {
           <AccordionItem value="no-agency" className="border border-border rounded-lg px-4 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
             <AccordionTrigger className="hover:no-underline">
               <div className="flex items-center gap-3">
-                <div className="w-8 h-8 rounded-lg bg-violet-500/20 flex items-center justify-center">
-                  <span className="text-sm font-bold text-violet-500">13</span>
+                <div className="w-8 h-8 rounded-lg bg-secondary flex items-center justify-center">
+                  <span className="text-sm font-bold text-foreground">13</span>
                 </div>
                 <span className="font-semibold">{ADVANCED_LEGAL_CLAUSES.noAgencyClause.title}</span>
               </div>

@@ -60,7 +60,7 @@ export default function FlightFeaturedDestinations({
         {/* Section Header */}
         <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
           <div>
-            <Badge className="mb-4 px-4 py-2 bg-gradient-to-r from-sky-500/20 to-blue-500/20 text-sky-500 border-sky-500/30">
+            <Badge className="mb-4 px-4 py-2 text-foreground border-border bg-secondary">
               <Sparkles className="w-4 h-4 mr-2" />
               Featured Destinations
             </Badge>
@@ -136,7 +136,7 @@ export default function FlightFeaturedDestinations({
                 {/* Price Tag */}
                 <div className="absolute bottom-4 right-4 bg-background/90 backdrop-blur-sm rounded-xl px-4 py-2 text-right">
                   <p className="text-xs text-muted-foreground line-through">${dest.originalPrice}</p>
-                  <p className="text-2xl font-bold text-sky-500">${dest.price}</p>
+                  <p className="text-2xl font-bold text-foreground">${dest.price}</p>
                 </div>
               </div>
 
@@ -184,7 +184,7 @@ export default function FlightFeaturedDestinations({
                       Direct
                     </div>
                   </div>
-                  <Button size="sm" className="gap-1 bg-gradient-to-r from-sky-500 to-blue-600">
+                  <Button size="sm" className="gap-1 bg-secondary">
                     Book Now
                     <ArrowRight className="w-4 h-4" />
                   </Button>

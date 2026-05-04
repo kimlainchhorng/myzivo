@@ -37,7 +37,7 @@ export default function HowItWorksSection() {
     <section className="py-16">
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
-          <Badge className="mb-4 px-4 py-2 bg-purple-500/10 text-purple-400 border-purple-500/20">
+          <Badge className="mb-4 px-4 py-2 bg-secondary text-foreground border-border">
             <CheckCircle2 className="w-4 h-4 mr-2" />
             Simple Process
           </Badge>

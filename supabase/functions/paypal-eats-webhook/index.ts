@@ -119,6 +119,14 @@ Deno.serve(async (req) => {
       if (eventType === "PAYMENT.CAPTURE.COMPLETED" || eventType === "CHECKOUT.ORDER.COMPLETED") {
         await admin.from("food_orders").update({ payment_status: "paid", paypal_capture_id: captureId, last_payment_error: null } as any).eq("id", resolvedOrderId);
         try { await notifyEatsOrderConfirmed(admin, resolvedOrderId, "PayPal"); } catch (e) { console.warn("[paypal-eats-webhook] confirmation email skipped", e); }
+        // Dispatch a driver now that payment is confirmed.
+        try {
+          await fetch(`${supabaseUrl}/functions/v1/dispatch-eats-order`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json", Authorization: `Bearer ${serviceKey}` },
+            body: JSON.stringify({ order_id: resolvedOrderId }),
+          });
+        } catch (e) { console.warn("[paypal-eats-webhook] dispatch skipped", e); }
         processingStatus = "applied";
       } else if (eventType === "PAYMENT.CAPTURE.DENIED") {
         const reason = resource?.status_details?.reason ?? "PayPal denied the capture";

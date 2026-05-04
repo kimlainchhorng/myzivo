@@ -375,14 +375,14 @@ export function LodgingRoomDetailsModal({
         {/* Premium stat tiles */}
         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-3">
           {beds && (
-            <div className="flex flex-col items-start gap-1 p-2.5 rounded-xl bg-gradient-to-br from-sky-50 to-sky-100/50 border border-sky-200/60 dark:from-sky-950/40 dark:to-sky-900/20 dark:border-sky-800/40">
-              <BedDouble className="h-4 w-4 text-sky-600 dark:text-sky-400" />
+            <div className="flex flex-col items-start gap-1 p-2.5 rounded-xl border border-border dark:dark:dark:border-border bg-secondary">
+              <BedDouble className="h-4 w-4 text-foreground dark:text-foreground" />
               <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Beds</span>
               <span className="text-xs font-bold text-foreground leading-tight">{beds}</span>
             </div>
           )}
-          <div className="flex flex-col items-start gap-1 p-2.5 rounded-xl bg-gradient-to-br from-violet-50 to-violet-100/50 border border-violet-200/60 dark:from-violet-950/40 dark:to-violet-900/20 dark:border-violet-800/40">
-            <Users className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+          <div className="flex flex-col items-start gap-1 p-2.5 rounded-xl border border-border dark:dark:dark:border-border bg-secondary">
+            <Users className="h-4 w-4 text-foreground dark:text-foreground" />
             <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Sleeps</span>
             <span className="text-xs font-bold text-foreground leading-tight">{maxGuests} guests</span>
           </div>
@@ -417,7 +417,7 @@ export function LodgingRoomDetailsModal({
         {amenities.length > 0 && (
           <div>
             <h3 className="text-sm font-bold mb-2 flex items-center gap-1.5">
-              <span className="h-3.5 w-1 rounded-full bg-sky-500" />
+              <span className="h-3.5 w-1 rounded-full bg-foreground" />
               Amenities
             </h3>
             <div className="space-y-3">
@@ -472,8 +472,8 @@ export function LodgingRoomDetailsModal({
         {/* Policies */}
         <div>
           <h3 className="text-sm font-bold mb-2 flex items-center gap-1.5">
-            <span className="h-3.5 w-1 rounded-full bg-violet-500" />
-            <ShieldCheck className="h-3.5 w-3.5 text-violet-600 dark:text-violet-400" /> Policies
+            <span className="h-3.5 w-1 rounded-full bg-foreground" />
+            <ShieldCheck className="h-3.5 w-3.5 text-foreground dark:text-foreground" /> Policies
           </h3>
           <div className="rounded-xl bg-muted/30 border border-border/60 p-3 space-y-2 text-xs text-muted-foreground">
             {cancellationPolicy && (

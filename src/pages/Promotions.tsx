@@ -143,8 +143,8 @@ const Promotions = () => {
   const availableOffers = [
     { title: "Weekend Rides Special", discount: "15% OFF", description: "All rides on weekends", validUntil: "Every Sat-Sun", code: "WEEKEND15", gradient: "from-primary to-teal-400" },
     { title: "Late Night Eats", discount: "Free Delivery", description: "Orders after 10 PM", validUntil: "Ongoing", code: "LATENIGHT", gradient: "from-eats to-orange-500" },
-    { title: "Luxury Car Rental", discount: "$50 OFF", description: "Premium vehicle rentals 3+ days", validUntil: "Limited time", code: "LUXURY50", gradient: "from-violet-500 to-purple-500" },
-    { title: "Hotel + Flight Bundle", discount: "20% OFF", description: "Book together and save", validUntil: "Mar 2026", code: "BUNDLE20", gradient: "from-sky-500 to-blue-500" },
+    { title: "Luxury Car Rental", discount: "$50 OFF", description: "Premium vehicle rentals 3+ days", validUntil: "Limited time", code: "LUXURY50", gradient: "from-muted to-muted" },
+    { title: "Hotel + Flight Bundle", discount: "20% OFF", description: "Book together and save", validUntil: "Mar 2026", code: "BUNDLE20", gradient: "from-muted to-muted" },
   ];
 
   const rewards = [
@@ -563,7 +563,7 @@ const Promotions = () => {
             {[
               { name: "Spring Break Deals", period: "Mar 1 – Apr 15", discount: "Up to 35% off", desc: "Flights & hotels to top beach destinations", emoji: "🌴", gradient: "from-emerald-500/10 to-teal-500/10 border-emerald-500/20" },
               { name: "Summer Sale", period: "Jun 1 – Aug 31", discount: "Up to 40% off", desc: "Early bird Europe & Asia packages", emoji: "☀️", gradient: "from-amber-500/10 to-orange-500/10 border-amber-500/20" },
-              { name: "Holiday Special", period: "Nov 15 – Jan 5", discount: "Up to 50% off", desc: "Year-end travel extravaganza", emoji: "🎄", gradient: "from-destructive/10 to-rose-500/10 border-destructive/20" },
+              { name: "Holiday Special", period: "Nov 15 – Jan 5", discount: "Up to 50% off", desc: "Year-end travel extravaganza", emoji: "🎄", gradient: "from-muted to-muted" },
             ].map(c => (
               <Card key={c.name} className={`border ${c.gradient} hover:shadow-lg transition-all`}>
                 <CardContent className="p-5">

@@ -45,19 +45,19 @@ const FlightPopularRoutes = ({ onSelect }: FlightPopularRoutesProps) => {
 
   return (
     <section className="py-12 sm:py-16 border-t border-border/50 relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-sky-500/5 to-transparent" />
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent to-transparent" />
       
       <div className="container mx-auto px-4 relative z-10">
         <div className="flex items-center justify-between mb-8">
           <div>
             <h2 className="font-display text-2xl sm:text-3xl font-bold mb-2">
-              Most Searched <span className="bg-gradient-to-r from-sky-400 to-blue-500 bg-clip-text text-transparent">Routes</span>
+              Most Searched <span className="text-accent-foreground">Routes</span>
             </h2>
             <p className="text-muted-foreground text-sm sm:text-base">
               Popular flight routes with the best deals
             </p>
           </div>
-          <button className="hidden sm:flex items-center gap-2 text-sky-400 hover:text-sky-300 transition-colors text-sm font-medium">
+          <button className="hidden sm:flex items-center gap-2 text-foreground hover:text-foreground transition-colors text-sm font-medium">
             View all <ArrowRight className="w-4 h-4" />
           </button>
         </div>
@@ -88,7 +88,7 @@ const FlightPopularRoutes = ({ onSelect }: FlightPopularRoutesProps) => {
                     </div>
                     <div className="flex items-center">
                       <div className="w-6 h-px bg-border" />
-                      <ArrowRight className="w-4 h-4 mx-1 text-sky-400" />
+                      <ArrowRight className="w-4 h-4 mx-1 text-foreground" />
                       <div className="w-6 h-px bg-border" />
                     </div>
                     <div className="text-center">
@@ -97,7 +97,7 @@ const FlightPopularRoutes = ({ onSelect }: FlightPopularRoutesProps) => {
                     </div>
                   </div>
                   {route.trending && (
-                    <Badge className="bg-gradient-to-r from-sky-500 to-blue-500 text-primary-foreground text-xs">
+                    <Badge className="text-primary-foreground text-xs bg-foreground">
                       <TrendingUp className="w-3 h-3 mr-1" />
                       Hot
                     </Badge>
@@ -107,7 +107,7 @@ const FlightPopularRoutes = ({ onSelect }: FlightPopularRoutesProps) => {
                   <span className="text-xs text-muted-foreground">{route.searches} searches</span>
                   <div className="flex items-center gap-1">
                     <span className="text-xs text-muted-foreground">From</span>
-                    <span className="text-lg font-bold text-sky-400">${route.price}*</span>
+                    <span className="text-lg font-bold text-foreground">${route.price}*</span>
                     <ExternalLink className="w-3 h-3 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
                   </div>
                 </div>

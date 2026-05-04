@@ -869,7 +869,7 @@ export default function StoresListPage() {
               <Button
                 onClick={handleBulkRemove}
                 disabled={selectedIds.size === 0 || removingFavs}
-                className="bg-rose-500 hover:bg-rose-600 text-white"
+                className="bg-foreground hover:bg-foreground text-white"
               >
                 {removingFavs ? (
                   <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />

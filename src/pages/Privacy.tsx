@@ -70,7 +70,7 @@ const Privacy = () => {
                   <span><strong>Hotels & Car Rentals:</strong> ZIVO is the merchant of record. We collect and process your payment and booking information directly.</span>
                 </li>
                 <li className="flex items-start gap-3 text-foreground">
-                  <Plane className="w-5 h-5 text-sky-500 mt-0.5 shrink-0" />
+                  <Plane className="w-5 h-5 text-foreground mt-0.5 shrink-0" />
                   <span><strong>Flights:</strong> We share your search criteria and traveler details with airline partners (with your consent) who process your payment and issue tickets.</span>
                 </li>
               </ul>
@@ -80,27 +80,27 @@ const Privacy = () => {
           {/* Information We Collect */}
           <section>
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-sky-500/10">
-                <Database className="w-5 h-5 text-sky-500" />
+              <div className="p-2 rounded-lg bg-secondary">
+                <Database className="w-5 h-5 text-foreground" />
               </div>
               <h2 className="text-2xl font-bold text-foreground">Information We Collect</h2>
             </div>
             <div className="bg-card/50 rounded-2xl p-6 border border-border">
               <ul className="space-y-3">
                 <li className="flex items-start gap-3 text-foreground">
-                  <span className="w-1.5 h-1.5 rounded-full bg-sky-500 mt-2 shrink-0" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-foreground mt-2 shrink-0" />
                   <strong>Account Information:</strong> Name, email, phone number when you create an account
                 </li>
                 <li className="flex items-start gap-3 text-foreground">
-                  <span className="w-1.5 h-1.5 rounded-full bg-sky-500 mt-2 shrink-0" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-foreground mt-2 shrink-0" />
                   <strong>Booking Information:</strong> Traveler/guest details, travel dates, preferences
                 </li>
                 <li className="flex items-start gap-3 text-foreground">
-                  <span className="w-1.5 h-1.5 rounded-full bg-sky-500 mt-2 shrink-0" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-foreground mt-2 shrink-0" />
                   <strong>Payment Information:</strong> For Hotels & Car Rentals only, payment details are processed securely via Stripe/Adyen (we do not store full card numbers)
                 </li>
                 <li className="flex items-start gap-3 text-foreground">
-                  <span className="w-1.5 h-1.5 rounded-full bg-sky-500 mt-2 shrink-0" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-foreground mt-2 shrink-0" />
                   <strong>Technical Data:</strong> Device information, browser type, IP address, cookies, analytics
                 </li>
               </ul>
@@ -176,8 +176,8 @@ const Privacy = () => {
           {/* Cookies */}
           <section>
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-purple-500/10">
-                <Cookie className="w-5 h-5 text-purple-500" />
+              <div className="p-2 rounded-lg bg-secondary">
+                <Cookie className="w-5 h-5 text-foreground" />
               </div>
               <h2 className="text-2xl font-bold text-foreground">Cookies</h2>
             </div>
@@ -191,8 +191,8 @@ const Privacy = () => {
           {/* Your Rights */}
           <section>
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-indigo-500/10">
-                <Shield className="w-5 h-5 text-indigo-500" />
+              <div className="p-2 rounded-lg bg-secondary">
+                <Shield className="w-5 h-5 text-foreground" />
               </div>
               <h2 className="text-2xl font-bold text-foreground">Your Rights</h2>
             </div>

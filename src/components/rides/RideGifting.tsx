@@ -15,8 +15,8 @@ type Tab = "send" | "vouchers" | "events";
 const giftAmounts = [10, 25, 50, 100];
 
 const voucherDesigns = [
-  { id: "birthday", label: "Birthday", emoji: "🎂", gradient: "from-pink-500/10 to-violet-500/10", border: "border-pink-500/20" },
-  { id: "thankyou", label: "Thank You", emoji: "🙏", gradient: "from-sky-500/10 to-emerald-500/10", border: "border-sky-500/20" },
+  { id: "birthday", label: "Birthday", emoji: "🎂", gradient: "from-muted to-muted", border: "border-pink-500/20" },
+  { id: "thankyou", label: "Thank You", emoji: "🙏", gradient: "from-muted to-muted", border: "border-sky-500/20" },
   { id: "congrats", label: "Congrats", emoji: "🎉", gradient: "from-amber-500/10 to-orange-500/10", border: "border-amber-500/20" },
   { id: "holiday", label: "Holiday", emoji: "🎄", gradient: "from-emerald-500/10 to-red-500/10", border: "border-emerald-500/20" },
 ];

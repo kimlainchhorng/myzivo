@@ -38,12 +38,12 @@ const FlightSocialShare = () => {
   return (
     <section className="py-12 px-4">
       <div className="max-w-4xl mx-auto">
-        <div className="relative overflow-hidden bg-gradient-to-br from-violet-500/10 via-card/50 to-purple-500/10 border border-violet-500/20 rounded-3xl p-8">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/20 blur-3xl rounded-full" />
+        <div className="relative overflow-hidden via-card/50 border border-border rounded-3xl p-8 bg-secondary">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-secondary blur-3xl rounded-full" />
 
           <div className="relative z-10">
             <div className="text-center mb-8">
-              <Badge className="mb-3 bg-violet-500/20 text-violet-400 border-violet-500/30">
+              <Badge className="mb-3 bg-secondary text-foreground border-border">
                 <Share2 className="w-3 h-3 mr-1" /> Share & Invite
               </Badge>
               <h2 className="text-2xl md:text-3xl font-display font-bold mb-2">
@@ -76,8 +76,8 @@ const FlightSocialShare = () => {
             {/* Invite Travel Companion */}
             <div className="bg-card/60 backdrop-blur-xl rounded-xl p-6 border border-border/30 hover:border-primary/20 hover:shadow-sm transition-all duration-200">
               <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 bg-violet-500/20 rounded-xl flex items-center justify-center">
-                  <Users className="w-5 h-5 text-violet-400" />
+                <div className="w-10 h-10 bg-secondary rounded-xl flex items-center justify-center">
+                  <Users className="w-5 h-5 text-foreground" />
                 </div>
                 <div>
                   <h3 className="font-bold">Invite Travel Companions</h3>
@@ -93,7 +93,7 @@ const FlightSocialShare = () => {
                   placeholder="Enter email address"
                   className="flex-1 h-11 px-4 bg-background/50 border border-border rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/50"
                 />
-                <Button onClick={handleInvite} className="bg-violet-500 hover:bg-violet-600">
+                <Button onClick={handleInvite} className="bg-foreground hover:bg-foreground">
                   <Mail className="w-4 h-4 mr-2" />
                   Send Invite
                 </Button>

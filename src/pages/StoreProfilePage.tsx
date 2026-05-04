@@ -302,7 +302,7 @@ export default function StoreProfilePage() {
         <motion.div
           animate={{ y: [25, -25, 25], x: [12, -12, 12], scale: [1.1, 0.9, 1.1] }}
           transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-1/3 -left-24 w-72 h-72 rounded-full bg-sky-400/[0.05] blur-[80px]"
+          className="absolute top-1/3 -left-24 w-72 h-72 rounded-full bg-foreground/[0.05] blur-[80px]"
         />
         <motion.div
           animate={{ y: [15, -20, 15], scale: [1, 1.2, 1] }}
@@ -312,7 +312,7 @@ export default function StoreProfilePage() {
         <motion.div
           animate={{ y: [-10, 20, -10], x: [8, -8, 8] }}
           transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-2/3 left-1/3 w-40 h-40 rounded-full bg-rose-400/[0.03] blur-[50px]"
+          className="absolute top-2/3 left-1/3 w-40 h-40 rounded-full bg-foreground/[0.03] blur-[50px]"
         />
         {/* Bokeh particles */}
         <BokehDot delay={0} size={6} x="15%" y="25%" color="hsl(var(--primary) / 0.3)" />
@@ -345,7 +345,7 @@ export default function StoreProfilePage() {
                 style={{ objectPosition: `center ${(store as any).banner_position ?? 50}%` }}
               />
             ) : (
-              <div className="w-full h-full bg-gradient-to-br from-primary/30 via-primary/10 to-sky-500/15" />
+              <div className="w-full h-full bg-gradient-to-br from-primary/30 via-primary/10" />
             )}
             {/* Gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent pointer-events-none z-[1]" />

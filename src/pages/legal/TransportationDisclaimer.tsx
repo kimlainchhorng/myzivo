@@ -107,7 +107,7 @@ export default function TransportationDisclaimer() {
                 </div>
               </div>
               <div className="flex items-center gap-3 p-3 bg-background rounded-lg">
-                <Building2 className="w-8 h-8 text-violet-500" />
+                <Building2 className="w-8 h-8 text-foreground" />
                 <div>
                   <p className="font-medium">ZIVO Move</p>
                   <p className="text-sm text-muted-foreground">Package delivery & moving</p>

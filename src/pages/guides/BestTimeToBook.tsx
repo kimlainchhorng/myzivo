@@ -66,7 +66,7 @@ export default function BestTimeToBook() {
 
       <main className="min-h-screen bg-background pt-20">
         {/* Hero */}
-        <section className="py-16 bg-gradient-to-b from-sky-500/5 to-background">
+        <section className="py-16 to-background bg-secondary">
           <div className="container mx-auto px-4">
             <div className="max-w-3xl mx-auto">
               <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
@@ -96,8 +96,8 @@ export default function BestTimeToBook() {
         {/* Key Insight */}
         <section className="py-8 border-y border-border">
           <div className="container mx-auto px-4">
-            <div className="max-w-3xl mx-auto flex items-start gap-4 p-5 rounded-2xl bg-sky-500/5 border border-sky-500/20">
-              <Clock className="w-8 h-8 text-sky-500 shrink-0" />
+            <div className="max-w-3xl mx-auto flex items-start gap-4 p-5 rounded-2xl bg-secondary border border-border">
+              <Clock className="w-8 h-8 text-foreground shrink-0" />
               <div>
                 <h3 className="font-semibold mb-1">The Golden Rule</h3>
                 <p className="text-muted-foreground">

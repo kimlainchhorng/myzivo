@@ -42,7 +42,7 @@ const colorClasses = {
     active: "bg-sky-500", 
     text: "text-sky-400", 
     glow: "shadow-[0_0_20px_rgb(56,189,248,0.5)]",
-    gradient: "from-sky-500 to-blue-400",
+    gradient: "from-muted to-muted",
     ring: "ring-sky-500/30",
     bgGlow: "from-sky-500/20 to-sky-500/5"
   },
@@ -74,7 +74,7 @@ const colorClasses = {
     active: "bg-violet-500",
     text: "text-violet-400",
     glow: "shadow-[0_0_20px_rgb(139,92,246,0.5)]",
-    gradient: "from-violet-500 to-purple-400",
+    gradient: "from-muted to-muted",
     ring: "ring-violet-500/30",
     bgGlow: "from-violet-500/20 to-violet-500/5"
   },
@@ -521,7 +521,7 @@ const statusConfig = {
     label: "Confirmed", 
     color: "bg-blue-500/10 text-blue-400 border-blue-500/20", 
     icon: Check,
-    gradient: "from-blue-500 to-sky-500"
+    gradient: "from-muted to-muted"
   },
   in_progress: { 
     label: "In Progress", 
@@ -539,7 +539,7 @@ const statusConfig = {
     label: "Cancelled", 
     color: "bg-red-500/10 text-red-400 border-red-500/20", 
     icon: AlertCircle,
-    gradient: "from-red-500 to-rose-500"
+    gradient: "from-muted to-muted"
   },
   delayed: {
     label: "Delayed",

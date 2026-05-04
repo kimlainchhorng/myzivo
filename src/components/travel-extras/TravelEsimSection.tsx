@@ -65,7 +65,7 @@ export default function TravelEsimSection({ className = '' }: TravelEsimSectionP
       <div className="container mx-auto px-4">
         {/* Header */}
         <div className="text-center mb-8">
-          <Badge className="mb-3 bg-cyan-500/20 text-cyan-500 border-cyan-500/30">
+          <Badge className="mb-3 bg-secondary text-foreground border-border">
             <Wifi className="w-3 h-3 mr-1" />
             Travel Essentials
           </Badge>
@@ -82,13 +82,13 @@ export default function TravelEsimSection({ className = '' }: TravelEsimSectionP
           {esimCards.map((provider, index) => (
             <Card 
               key={provider.id}
-              className="group cursor-pointer border-border/50 hover:border-cyan-500/50 hover:shadow-lg hover:shadow-cyan-500/10 transition-all duration-200 overflow-hidden animate-in fade-in slide-in-from-bottom-4 active:scale-[0.98] touch-manipulation"
+              className="group cursor-pointer border-border/50 hover:border-border hover:shadow-lg hover:transition-all duration-200 overflow-hidden animate-in fade-in slide-in-from-bottom-4 active:scale-[0.98] touch-manipulation"
               style={{ animationDelay: `${index * 100}ms` }}
               onClick={() => handlePartnerClick(provider)}
             >
               {/* Top Banner */}
               {index === 0 && (
-                <div className="bg-gradient-to-r from-cyan-500 to-teal-500 text-primary-foreground text-center py-1 text-xs font-medium flex items-center justify-center gap-1">
+                <div className="text-primary-foreground text-center py-1 text-xs font-medium flex items-center justify-center gap-1 bg-foreground">
                   <Award className="w-3 h-3" /> Recommended
                 </div>
               )}
@@ -96,20 +96,20 @@ export default function TravelEsimSection({ className = '' }: TravelEsimSectionP
               <CardContent className="p-5">
                 <div className="flex items-center justify-between mb-4">
                   <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500/20 to-teal-500/20 flex items-center justify-center text-xl group-hover:scale-110 transition-transform duration-200">
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl group-hover:scale-110 transition-transform duration-200 bg-secondary">
                       {provider.logo}
                     </div>
                     <div>
-                      <h3 className="font-bold text-base group-hover:text-cyan-500 transition-colors">
+                      <h3 className="font-bold text-base group-hover:text-foreground transition-colors">
                         {provider.name}
                       </h3>
-                      <Badge variant="outline" className="text-[10px] border-cyan-500/30 text-cyan-500">
+                      <Badge variant="outline" className="text-[10px] border-border text-foreground">
                         {provider.tagline}
                       </Badge>
                     </div>
                   </div>
                   <div className="text-right">
-                    <span className="text-sm font-bold text-cyan-500">{provider.highlight}</span>
+                    <span className="text-sm font-bold text-foreground">{provider.highlight}</span>
                   </div>
                 </div>
                 
@@ -129,7 +129,7 @@ export default function TravelEsimSection({ className = '' }: TravelEsimSectionP
                 
                 <Button 
                   size="sm"
-                  className="w-full gap-2 bg-gradient-to-r from-cyan-500 to-teal-500 text-primary-foreground hover:opacity-90 touch-manipulation rounded-xl active:scale-[0.97] transition-all duration-200 min-h-[40px] shadow-sm"
+                  className="w-full gap-2 text-primary-foreground hover:opacity-90 touch-manipulation rounded-xl active:scale-[0.97] transition-all duration-200 min-h-[40px] shadow-sm bg-foreground"
                 >
                   <Smartphone className="w-4 h-4" />
                   Get eSIM
@@ -143,7 +143,7 @@ export default function TravelEsimSection({ className = '' }: TravelEsimSectionP
         {/* Benefits */}
         <div className="flex flex-wrap items-center justify-center gap-6 mt-8 text-sm text-muted-foreground">
           <div className="flex items-center gap-1.5">
-            <Globe className="w-4 h-4 text-cyan-500" />
+            <Globe className="w-4 h-4 text-foreground" />
             <span>190+ Countries</span>
           </div>
           <div className="flex items-center gap-1.5">

@@ -220,8 +220,8 @@ export default function LodgingParkingSection({ storeId }: { storeId: string }) 
 
         {/* Overdue alert */}
         {overdueOut.length > 0 && (
-          <div className="rounded-lg border border-rose-500/30 bg-rose-500/5 p-3 text-xs">
-            <p className="font-semibold text-rose-700">Overdue vehicles</p>
+          <div className="rounded-lg border border-border bg-secondary p-3 text-xs">
+            <p className="font-semibold text-foreground">Overdue vehicles</p>
             <p className="text-muted-foreground mt-0.5">{overdueOut.map(s => `Slot ${s.slot_number} (${s.vehicle_plate || "—"})`).join(", ")}</p>
           </div>
         )}
@@ -279,7 +279,7 @@ export default function LodgingParkingSection({ storeId }: { storeId: string }) 
                         <span className="font-bold text-sm">Slot {slot.slot_number}</span>
                         <Badge variant="outline" className="text-[10px]">{TYPE_LABEL[slot.slot_type]}</Badge>
                         <Badge className={`text-[10px] border ${STATUS_COLOR[slot.status]}`}>{slot.status}</Badge>
-                        {isOverdue && <Badge className="text-[10px] border border-rose-500/20 bg-rose-500/10 text-rose-700">Overdue</Badge>}
+                        {isOverdue && <Badge className="text-[10px] border border-border bg-secondary text-foreground">Overdue</Badge>}
                       </div>
                       {slot.status === "occupied" && (
                         <div className="text-[11px] text-muted-foreground flex flex-wrap gap-3">

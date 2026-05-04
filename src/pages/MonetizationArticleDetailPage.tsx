@@ -263,7 +263,7 @@ export default function MonetizationArticleDetailPage() {
             onClick={() => navigate("/shop-dashboard")}
             className="rounded-xl border border-border/40 bg-card p-3 text-left touch-manipulation active:scale-[0.97] transition-transform"
           >
-            <Gift className="w-5 h-5 text-purple-500 mb-2" />
+            <Gift className="w-5 h-5 text-foreground mb-2" />
             <p className="text-xs font-bold">ZIVO Shop</p>
             <p className="text-[10px] text-muted-foreground mt-0.5">Sell products</p>
           </button>

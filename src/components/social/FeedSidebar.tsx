@@ -379,7 +379,7 @@ export default function FeedSidebar() {
                     onClick={() => { setShowSwitch(false); navigate("/driver/home"); }}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
                   >
-                    <CarTaxiFront className="h-5 w-5 text-sky-500" />
+                    <CarTaxiFront className="h-5 w-5 text-foreground" />
                     <span>Driver Dashboard</span>
                   </button>
                 )}
@@ -409,7 +409,7 @@ export default function FeedSidebar() {
                     onClick={() => { setShowSwitch(false); navigate("/admin/moderation"); }}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
                   >
-                    <Eye className="h-5 w-5 text-purple-500" />
+                    <Eye className="h-5 w-5 text-foreground" />
                     <span>Moderator Dashboard</span>
                   </button>
                 )}
@@ -464,7 +464,7 @@ export default function FeedSidebar() {
                     onClick={() => { setShowSwitch(false); navigate("/partner-with-zivo"); }}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
                   >
-                    <CarTaxiFront className="h-5 w-5 text-sky-500" />
+                    <CarTaxiFront className="h-5 w-5 text-foreground" />
                     <span>Become Driver</span>
                   </button>
                 )}

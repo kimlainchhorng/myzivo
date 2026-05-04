@@ -136,45 +136,30 @@ export function useEatsOrder() {
         }
       }
 
-      // 3. Dispatch delivery driver via jobs table
-      try {
-        const { error: jobError } = await supabase.from("jobs").insert({
-          customer_id: user.id,
-          job_type: "food_delivery" as any,
-          status: "requested" as any,
-          pickup_address: params.restaurantName || "Restaurant",
-          pickup_lat: params.pickupLat || 0,
-          pickup_lng: params.pickupLng || 0,
-          dropoff_address: params.deliveryAddress,
-          dropoff_lat: params.deliveryLat,
-          dropoff_lng: params.deliveryLng,
-          notes: `Food order: ${orderId}`,
-          price_total: params.totalAmount,
-          requested_at: new Date().toISOString(),
-        } as any);
-
-        if (jobError) {
-          console.error("[EatsOrder] Job creation error:", jobError);
-        } else {
-          // Trigger dispatch
-          const { data: jobData } = await supabase
-            .from("jobs")
-            .select("id")
-            .eq("customer_id", user.id)
-            .eq("job_type", "food_delivery" as any)
-            .order("created_at", { ascending: false })
-            .limit(1)
-            .single();
-
-          if (jobData?.id) {
-            await supabase.functions.invoke("dispatch-start", {
-              body: { job_id: jobData.id, offer_ttl_seconds: 30, radius_meters: 15000 },
-            });
+      // 3. Dispatch delivery driver
+      // For redirect-based payments (PayPal/Square) the page is navigating
+      // away here — dispatching from the hook is racy AND dispatches an
+      // unpaid order. For card payments the webhook fires faster than this
+      // hook completes anyway. So: only dispatch from the hook for synchronous
+      // payment paths (cash on delivery, wallet). Webhooks handle everything else.
+      const dispatchableNow = params.paymentType === "cash" || params.paymentType === "wallet";
+      if (dispatchableNow) {
+        try {
+          const { data: dispatchData, error: dispatchErr } = await supabase.functions.invoke(
+            "dispatch-eats-order",
+            { body: { order_id: orderId } },
+          );
+          if (dispatchErr) {
+            console.error("[EatsOrder] Dispatch error:", dispatchErr);
+          } else if ((dispatchData as any)?.error) {
+            console.warn("[EatsOrder] Dispatch refused:", (dispatchData as any).error);
           }
+        } catch (dispatchErr) {
+          console.error("[EatsOrder] Dispatch invoke error:", dispatchErr);
         }
-      } catch (dispatchErr) {
-        console.error("[EatsOrder] Dispatch error:", dispatchErr);
       }
+      // For card/paypal/square: webhooks (stripe-webhook, paypal-eats-webhook,
+      // square-eats-webhook) call dispatch-eats-order on payment confirmation.
 
       // 3.5 Track promo redemption (non-blocking attribution)
       if (params.promoCode && params.discountAmount && params.discountAmount > 0) {

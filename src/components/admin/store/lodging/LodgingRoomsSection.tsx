@@ -403,7 +403,7 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
                         )}
                       </div>
                       <p className="text-xs text-muted-foreground mt-1 inline-flex items-center gap-1 flex-wrap">
-                        <BedDouble className="h-3 w-3 text-sky-600 dark:text-sky-400 shrink-0" />
+                        <BedDouble className="h-3 w-3 text-foreground dark:text-foreground shrink-0" />
                         <span>{r.beds || "—"}</span>
                         <span className="text-muted-foreground/50">·</span>
                         <Users className="h-3 w-3 text-emerald-600 dark:text-emerald-400 shrink-0" />
@@ -425,7 +425,7 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
                     <div className="flex gap-0.5 shrink-0">
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(r)} title="Edit"><Pencil className="h-4 w-4" /></Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => duplicate(r)} title="Duplicate" disabled={upsert.isPending}>
-                        <Copy className="h-4 w-4 text-sky-600 dark:text-sky-400" />
+                        <Copy className="h-4 w-4 text-foreground dark:text-foreground" />
                       </Button>
                       <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => { if (confirm("Delete room?")) remove.mutate(r.id); }} title="Delete">
                         <Trash2 className="h-4 w-4 text-destructive" />
@@ -611,7 +611,7 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
                 </Label>
                 <div className="grid grid-cols-2 gap-2">
                   <div>
-                    <Label className="text-xs inline-flex items-center gap-1.5"><Baby className="h-3 w-3 text-pink-500" />Child max age</Label>
+                    <Label className="text-xs inline-flex items-center gap-1.5"><Baby className="h-3 w-3 text-foreground" />Child max age</Label>
                     <Input type="number" inputMode="numeric" value={editing.child_policy?.child_max_age ?? ""}
                       onChange={e => setEditing({ ...editing, child_policy: { ...(editing.child_policy as ChildPolicy || {}), child_max_age: e.target.value === "" ? undefined : parseInt(e.target.value) } })} />
                   </div>

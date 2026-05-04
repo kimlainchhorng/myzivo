@@ -169,8 +169,8 @@ export default function CallLobby({
           >
             <div className="flex items-center justify-between gap-3">
               <div className="flex items-center gap-3">
-                <div className="grid h-9 w-9 place-items-center rounded-full bg-rose-500/20">
-                  <Radio className="h-4 w-4 text-rose-300" />
+                <div className="grid h-9 w-9 place-items-center rounded-full bg-secondary">
+                  <Radio className="h-4 w-4 text-foreground" />
                 </div>
                 <div>
                   <p className="text-sm font-medium">Record this call</p>
@@ -206,8 +206,8 @@ export default function CallLobby({
                 )}
                 {bucketStatus === "unavailable" && (
                   <>
-                    <AlertTriangle className="h-3.5 w-3.5 text-rose-400" />
-                    <span className="text-rose-300 truncate">
+                    <AlertTriangle className="h-3.5 w-3.5 text-foreground" />
+                    <span className="text-foreground truncate">
                       Recording unavailable
                       {bucketMsg ? ` · ${bucketMsg}` : ""}
                     </span>

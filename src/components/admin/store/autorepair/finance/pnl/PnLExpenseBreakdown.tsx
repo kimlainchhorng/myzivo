@@ -39,7 +39,7 @@ export default function PnLExpenseBreakdown({ expenses }: Props) {
   return (
     <Card>
       <CardHeader className="pb-2">
-        <CardTitle className="text-sm flex items-center gap-2"><Wallet className="w-4 h-4 text-rose-600" /> Expense breakdown</CardTitle>
+        <CardTitle className="text-sm flex items-center gap-2"><Wallet className="w-4 h-4 text-foreground" /> Expense breakdown</CardTitle>
       </CardHeader>
       <CardContent>
         <Tabs value={mode} onValueChange={(v) => setMode(v as Mode)}>
@@ -66,7 +66,7 @@ export default function PnLExpenseBreakdown({ expenses }: Props) {
                           <span className="tabular-nums text-muted-foreground">{fmtMoney(v)} · {pct}%</span>
                         </div>
                         <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                          <div className="h-full bg-rose-500" style={{ width: `${pct}%` }} />
+                          <div className="h-full bg-foreground" style={{ width: `${pct}%` }} />
                         </div>
                       </button>
                     </li>

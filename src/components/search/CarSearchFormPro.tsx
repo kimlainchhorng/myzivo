@@ -199,7 +199,7 @@ export default function CarSearchFormPro({
       className
     )}>
       {/* Accent bar */}
-      <div className="h-1 bg-gradient-to-r from-violet-500 via-purple-500 to-violet-500 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 rounded-t-2xl mb-4 sm:mb-5" />
+      <div className="h-1 -mx-4 sm:-mx-6 -mt-4 sm:-mt-6 rounded-t-2xl mb-4 sm:mb-5 bg-secondary" />
 
       {/* Search Fields */}
       <div className="space-y-4">
@@ -236,7 +236,7 @@ export default function CarSearchFormPro({
                     errors.pickupDate && "border-destructive"
                   )}
                 >
-                  <CalendarIcon className="w-4 h-4 mr-2 text-violet-500" />
+                  <CalendarIcon className="w-4 h-4 mr-2 text-foreground" />
                   {pickupDate ? format(pickupDate, "MMM d") : "Select"}
                 </Button>
               </PopoverTrigger>
@@ -269,7 +269,7 @@ export default function CarSearchFormPro({
             <Label className="text-xs text-muted-foreground mb-1.5 block">Pickup Time</Label>
             <Select value={pickupTime} onValueChange={setPickupTime}>
               <SelectTrigger className="h-11 sm:h-12 rounded-xl">
-                <Clock className="w-4 h-4 mr-2 text-violet-500" />
+                <Clock className="w-4 h-4 mr-2 text-foreground" />
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -299,7 +299,7 @@ export default function CarSearchFormPro({
                     errors.dropoffDate && "border-destructive"
                   )}
                 >
-                  <CalendarIcon className="w-4 h-4 mr-2 text-purple-500" />
+                  <CalendarIcon className="w-4 h-4 mr-2 text-foreground" />
                   {dropoffDate ? format(dropoffDate, "MMM d") : "Select"}
                 </Button>
               </PopoverTrigger>
@@ -326,7 +326,7 @@ export default function CarSearchFormPro({
             <Label className="text-xs text-muted-foreground mb-1.5 block">Return Time</Label>
             <Select value={dropoffTime} onValueChange={setDropoffTime}>
               <SelectTrigger className="h-11 sm:h-12 rounded-xl">
-                <Clock className="w-4 h-4 mr-2 text-purple-500" />
+                <Clock className="w-4 h-4 mr-2 text-foreground" />
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -354,7 +354,7 @@ export default function CarSearchFormPro({
           <Label className="text-xs text-muted-foreground mb-1.5 block">Driver Age</Label>
           <Select value={driverAge} onValueChange={setDriverAge}>
             <SelectTrigger className="h-11 sm:h-12 rounded-xl">
-              <User className="w-4 h-4 mr-2 text-violet-500" />
+              <User className="w-4 h-4 mr-2 text-foreground" />
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

@@ -131,8 +131,8 @@ export const GiftCardsCredits = ({
       <CardHeader className="pb-4 border-b border-border/50">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500/20 to-purple-500/10 border border-violet-500/40 flex items-center justify-center">
-              <Gift className="w-6 h-6 text-violet-400" />
+            <div className="w-12 h-12 rounded-xl border border-border flex items-center justify-center bg-secondary">
+              <Gift className="w-6 h-6 text-foreground" />
             </div>
             <div>
               <CardTitle className="text-xl">Gift Cards & Credits</CardTitle>
@@ -276,10 +276,10 @@ export const GiftCardsCredits = ({
                     key={gc.id}
                     initial={{ opacity: 0, y: -10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center justify-between p-3 rounded-lg bg-violet-500/10 border border-violet-500/30"
+                    className="flex items-center justify-between p-3 rounded-lg bg-secondary border border-border"
                   >
                     <div className="flex items-center gap-3">
-                      <Gift className="w-5 h-5 text-violet-400" />
+                      <Gift className="w-5 h-5 text-foreground" />
                       <div>
                         <p className="font-medium">{gc.code}</p>
                         <p className="text-sm text-muted-foreground">
@@ -338,7 +338,7 @@ export const GiftCardsCredits = ({
             </div>
             
             {giftCardTotal > 0 && (
-              <div className="flex justify-between text-violet-400">
+              <div className="flex justify-between text-foreground">
                 <span>Gift Cards</span>
                 <span>-${giftCardTotal.toFixed(2)}</span>
               </div>

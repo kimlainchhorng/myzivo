@@ -148,7 +148,7 @@ export default function ActivitiesSection({ className = '', destination }: Activ
             <span>Instant Tickets</span>
           </div>
           <div className="flex items-center gap-1.5">
-            <Star className="w-4 h-4 text-sky-500" />
+            <Star className="w-4 h-4 text-foreground" />
             <span>Verified Reviews</span>
           </div>
         </div>

@@ -1019,7 +1019,7 @@ export default function RequestRidePage() {
                     <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", rideInsurance ? "left-[18px]" : "left-0.5")} />
                   </button>
                   <div className="flex-1">
-                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-sky-500" /> Trip protection</p>
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Shield className="w-3.5 h-3.5 text-foreground" /> Trip protection</p>
                     <p className="text-[10px] text-muted-foreground">Personal accident cover · +$1.99</p>
                   </div>
                 </div>
@@ -1161,7 +1161,7 @@ export default function RequestRidePage() {
                     <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", airportMeetGreet ? "left-[18px]" : "left-0.5")} />
                   </button>
                   <div className="flex-1">
-                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Plane className="w-3.5 h-3.5 text-sky-500" /> Airport Meet & Greet</p>
+                    <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Plane className="w-3.5 h-3.5 text-foreground" /> Airport Meet & Greet</p>
                     <p className="text-[10px] text-muted-foreground">Driver waits at arrivals with name sign · +$9.99</p>
                   </div>
                 </div>
@@ -2029,12 +2029,12 @@ export default function RequestRidePage() {
           {/* Commute Insights */}
           <button onClick={() => setShowCommuteInsights(!showCommuteInsights)}
             className="w-full flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation">
-            <BarChart3 className="w-3.5 h-3.5 text-violet-500" /> Commute Insights
-            <Badge className="bg-violet-500/10 text-violet-500 border-0 text-[8px] ml-auto">AI</Badge>
+            <BarChart3 className="w-3.5 h-3.5 text-foreground" /> Commute Insights
+            <Badge className="bg-secondary text-foreground border-0 text-[8px] ml-auto">AI</Badge>
             <ChevronRight className={cn("w-3 h-3 transition-transform", showCommuteInsights && "rotate-90")} />
           </button>
           {showCommuteInsights && (
-            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="rounded-2xl bg-card border border-violet-500/20 p-4 space-y-3">
+            <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} className="rounded-2xl bg-card border border-border p-4 space-y-3">
               <div className="grid grid-cols-3 gap-2">
                 <div className="text-center p-2 rounded-xl bg-muted/30"><p className="text-sm font-bold text-foreground">{commuteInsights.weeklyRides}</p><p className="text-[9px] text-muted-foreground">Rides/week</p></div>
                 <div className="text-center p-2 rounded-xl bg-muted/30"><p className="text-sm font-bold text-foreground">{commuteInsights.avgCost}</p><p className="text-[9px] text-muted-foreground">Avg cost</p></div>
@@ -2043,7 +2043,7 @@ export default function RequestRidePage() {
               <div className="flex items-end gap-1.5 h-16">
                 {commuteInsights.monthlySpend.map(m => (
                   <div key={m.month} className="flex-1 flex flex-col items-center gap-0.5">
-                    <motion.div initial={{ height: 0 }} animate={{ height: `${(m.amount / 350) * 100}%` }} className="w-full rounded-t bg-violet-500/30" />
+                    <motion.div initial={{ height: 0 }} animate={{ height: `${(m.amount / 350) * 100}%` }} className="w-full rounded-t bg-secondary" />
                     <span className="text-[8px] text-muted-foreground">{m.month}</span>
                   </div>
                 ))}
@@ -2095,8 +2095,8 @@ export default function RequestRidePage() {
           {/* Driver Memory */}
           <button onClick={() => setShowDriverMemory(!showDriverMemory)}
             className="w-full flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation">
-            <Heart className="w-3.5 h-3.5 text-rose-500" /> Favorite Drivers
-            <Badge className="bg-rose-500/10 text-rose-500 border-0 text-[8px] ml-auto">{driverMemory.length}</Badge>
+            <Heart className="w-3.5 h-3.5 text-foreground" /> Favorite Drivers
+            <Badge className="bg-secondary text-foreground border-0 text-[8px] ml-auto">{driverMemory.length}</Badge>
             <ChevronRight className={cn("w-3 h-3 transition-transform", showDriverMemory && "rotate-90")} />
           </button>
           {showDriverMemory && (

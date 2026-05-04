@@ -52,7 +52,7 @@ export default function RideFamilyAccounts() {
       <motion.div
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-r from-pink-500/15 via-purple-500/10 to-blue-500/15 rounded-2xl p-4 border border-primary/20"
+        className="rounded-2xl p-4 border border-primary/20 bg-secondary"
       >
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center text-2xl">👨‍👩‍👧‍👦</div>

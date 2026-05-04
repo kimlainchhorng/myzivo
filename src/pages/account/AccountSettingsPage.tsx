@@ -969,7 +969,7 @@ export default function AccountSettingsPage() {
               notificationsMuted ? "bg-rose-500/10 border-rose-500/30 text-rose-500" : "bg-card border-border/40 hover:bg-accent/50"
             }`}
           >
-            {notificationsMuted ? <BellOff className="h-4 w-4 shrink-0" /> : <Bell className="h-4 w-4 shrink-0 text-sky-500" />}
+            {notificationsMuted ? <BellOff className="h-4 w-4 shrink-0" /> : <Bell className="h-4 w-4 shrink-0 text-foreground" />}
             <div className="text-left min-w-0 flex-1">
               <p className="text-[11px] font-semibold leading-tight truncate">{notificationsMuted ? "Muted" : "On"}</p>
               <p className="text-[10px] text-muted-foreground leading-tight">Notifications</p>
@@ -1083,7 +1083,7 @@ export default function AccountSettingsPage() {
                   : "bg-amber-500/15"
             }`}>
               {securitySummary.failed_logins > 0 ? (
-                <AlertTriangle className="h-5 w-5 text-rose-500" />
+                <AlertTriangle className="h-5 w-5 text-foreground" />
               ) : setupSignals?.twoFactorOn ? (
                 <ShieldCheck className="h-5 w-5 text-emerald-500" />
               ) : (
@@ -1249,7 +1249,7 @@ export default function AccountSettingsPage() {
                                 variant="ghost"
                                 size="sm"
                                 onClick={() => handleUnlinkProvider(p.id)}
-                                className="h-8 px-3 text-xs rounded-lg text-rose-500 hover:bg-rose-500/10 hover:text-rose-500"
+                                className="h-8 px-3 text-xs rounded-lg text-foreground hover:bg-secondary hover:text-foreground"
                               >
                                 Disconnect
                               </Button>
@@ -1371,7 +1371,7 @@ export default function AccountSettingsPage() {
                       variant="outline"
                       size="sm"
                       onClick={handleResetPrefs}
-                      className="h-9 rounded-lg text-xs text-rose-500 hover:bg-rose-500/10 hover:text-rose-500"
+                      className="h-9 rounded-lg text-xs text-foreground hover:bg-secondary hover:text-foreground"
                     >
                       <RefreshCw className="h-3.5 w-3.5 mr-1.5" />
                       Reset

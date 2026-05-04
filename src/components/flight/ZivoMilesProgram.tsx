@@ -259,10 +259,10 @@ export const ZivoMilesProgram = ({ className }: ZivoMilesProgramProps) => {
               className="text-center p-4 rounded-xl bg-card/50 border border-border/50 relative overflow-hidden"
               whileHover={{ scale: 1.02 }}
             >
-              <div className="absolute top-0 right-0 w-8 h-8 bg-rose-500/20 rounded-bl-xl flex items-center justify-center">
-                <Timer className="w-3 h-3 text-rose-400" />
+              <div className="absolute top-0 right-0 w-8 h-8 bg-secondary rounded-bl-xl flex items-center justify-center">
+                <Timer className="w-3 h-3 text-foreground" />
               </div>
-              <p className="text-2xl font-semibold text-rose-400">{expiringMiles.toLocaleString()}</p>
+              <p className="text-2xl font-semibold text-foreground">{expiringMiles.toLocaleString()}</p>
               <p className="text-xs text-muted-foreground mt-1">Expiring {expiryDate}</p>
             </motion.div>
             <motion.div 
@@ -293,19 +293,19 @@ export const ZivoMilesProgram = ({ className }: ZivoMilesProgramProps) => {
                 <p className="text-xs text-muted-foreground">This Month</p>
               </div>
               <div className="p-3 rounded-lg bg-muted/30 border border-border/50 text-center">
-                <Calendar className="w-5 h-5 mx-auto mb-1 text-sky-400" />
+                <Calendar className="w-5 h-5 mx-auto mb-1 text-foreground" />
                 <p className="text-lg font-semibold">{transactions.length}</p>
                 <p className="text-xs text-muted-foreground">Transactions</p>
               </div>
               <div className="p-3 rounded-lg bg-muted/30 border border-border/50 text-center">
-                <Gift className="w-5 h-5 mx-auto mb-1 text-purple-400" />
+                <Gift className="w-5 h-5 mx-auto mb-1 text-foreground" />
                 <p className="text-lg font-semibold">—</p>
                 <p className="text-xs text-muted-foreground">Rewards Used</p>
               </div>
             </div>
 
             {/* Next Reward Progress */}
-            <div className="p-4 rounded-xl bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30">
+            <div className="p-4 rounded-xl border border-border bg-secondary">
               <div className="flex items-center justify-between mb-2">
                 <span className="text-sm font-medium">Next Reward: Flight Upgrade</span>
                 <span className="text-sm text-muted-foreground">25,000 miles</span>
@@ -444,7 +444,7 @@ export const ZivoMilesProgram = ({ className }: ZivoMilesProgramProps) => {
                     </Badge>
                   )}
                   {option.limited && (
-                    <Badge className="absolute -top-2 -right-2 bg-rose-500 text-primary-foreground animate-pulse">
+                    <Badge className="absolute -top-2 -right-2 bg-foreground text-primary-foreground animate-pulse">
                       Limited: {option.stock} left
                     </Badge>
                   )}

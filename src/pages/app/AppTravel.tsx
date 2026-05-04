@@ -16,7 +16,7 @@ import { toast } from "sonner";
 type TravelTab = "flights" | "hotels" | "cars";
 
 const tabs: { id: TravelTab; label: string; icon: typeof Plane; gradient: string; color: string }[] = [
-  { id: "flights", label: "Flights", icon: Plane, gradient: "from-sky-500 to-blue-600", color: "text-sky-500" },
+  { id: "flights", label: "Flights", icon: Plane, gradient: "from-muted to-muted", color: "text-sky-500" },
   { id: "hotels", label: "Hotels", icon: Hotel, gradient: "from-amber-500 to-orange-500", color: "text-amber-500" },
   { id: "cars", label: "Cars", icon: CarFront, gradient: "from-emerald-500 to-teal-600", color: "text-emerald-500" },
 ];
@@ -194,7 +194,7 @@ const AppTravel = () => {
                       />
                     </div>
                     <div className="relative">
-                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-sky-500" />
+                      <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-foreground" />
                       <Input
                         value={flightTo}
                         onChange={(e) => setFlightTo(e.target.value)}
@@ -329,11 +329,11 @@ const AppTravel = () => {
                         initial={{ opacity: 0, y: 12 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: i * 0.06 }}
-                        className="p-4 rounded-2xl bg-card border border-border/40 space-y-3 hover:border-sky-500/20 hover:shadow-lg transition-all duration-300 relative overflow-hidden"
+                        className="p-4 rounded-2xl bg-card border border-border/40 space-y-3 hover:border-border hover:shadow-lg transition-all duration-300 relative overflow-hidden"
                       >
                         <div className="flex items-center gap-3">
-                          <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-sky-500/15 to-blue-500/10 flex items-center justify-center">
-                            <Plane className="w-5 h-5 text-sky-500" />
+                          <div className="w-11 h-11 rounded-xl flex items-center justify-center bg-secondary">
+                            <Plane className="w-5 h-5 text-foreground" />
                           </div>
                           <div>
                             <p className="font-bold text-sm">{flight.airline}</p>
@@ -348,8 +348,8 @@ const AppTravel = () => {
                           <span className="font-bold">{flight.to}</span>
                         </div>
                         <div className="flex items-center justify-between">
-                          <p className="font-bold text-xl text-sky-500">${flight.price}</p>
-                          <Button size="sm" className="rounded-xl gap-1 bg-gradient-to-r from-sky-500 to-blue-600 text-primary-foreground shadow-md font-bold" onClick={handleBookNow}>
+                          <p className="font-bold text-xl text-foreground">${flight.price}</p>
+                          <Button size="sm" className="rounded-xl gap-1 text-primary-foreground shadow-md font-bold bg-foreground" onClick={handleBookNow}>
                             View Deal <ArrowRight className="w-3 h-3" />
                           </Button>
                         </div>

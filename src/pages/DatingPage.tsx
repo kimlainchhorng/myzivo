@@ -107,7 +107,7 @@ export default function DatingPage() {
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className="text-lg font-bold flex-1 flex items-center gap-2">
-            <Sparkles className="h-5 w-5 text-pink-500" /> Discover
+            <Sparkles className="h-5 w-5 text-foreground" /> Discover
           </h1>
         </div>
       </div>

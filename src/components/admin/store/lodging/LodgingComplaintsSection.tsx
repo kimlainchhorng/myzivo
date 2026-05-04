@@ -227,9 +227,9 @@ export default function LodgingComplaintsSection({ storeId }: { storeId: string 
 
         {/* Urgent alert */}
         {urgentCount > 0 && (
-          <div className="rounded-lg border border-rose-500/30 bg-rose-500/5 p-3 flex items-center gap-2">
-            <ArrowUp className="h-4 w-4 text-rose-600 shrink-0" />
-            <span className="text-sm font-semibold text-rose-700">{urgentCount} urgent complaint{urgentCount > 1 ? "s" : ""} require immediate attention.</span>
+          <div className="rounded-lg border border-border bg-secondary p-3 flex items-center gap-2">
+            <ArrowUp className="h-4 w-4 text-foreground shrink-0" />
+            <span className="text-sm font-semibold text-foreground">{urgentCount} urgent complaint{urgentCount > 1 ? "s" : ""} require immediate attention.</span>
           </div>
         )}
 
@@ -295,7 +295,7 @@ export default function LodgingComplaintsSection({ storeId }: { storeId: string 
                         </Button>
                       )}
                       {c.status !== "escalated" && !["resolved", "closed"].includes(c.status) && (
-                        <Button size="sm" variant="ghost" className="h-7 text-[11px] px-2 text-rose-600"
+                        <Button size="sm" variant="ghost" className="h-7 text-[11px] px-2 text-foreground"
                           onClick={() => setStatus.mutate({ id: c.id, status: "escalated" })}>
                           Escalate
                         </Button>

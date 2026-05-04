@@ -114,7 +114,7 @@ export function FlightResultCard({ flight, onViewDeal, className, showPriceAlert
               </Badge>
             )}
             {flight.isFastest && !flight.isBestPrice && !flight.isBestValue && (
-              <Badge className="bg-purple-500 text-primary-foreground text-[10px] gap-1">
+              <Badge className="bg-foreground text-primary-foreground text-[10px] gap-1">
                 <Clock className="w-3 h-3" /> Fastest Route
               </Badge>
             )}
@@ -164,7 +164,7 @@ export function FlightResultCard({ flight, onViewDeal, className, showPriceAlert
                 </div>
 
                 <div className="flex-1 relative px-1 min-w-[70px]">
-                  <div className="h-[2px] bg-gradient-to-r from-[hsl(var(--flights))/0.3] via-[hsl(var(--flights))] to-[hsl(var(--flights))/0.3] rounded-full" />
+                  <div className="h-[2px] from-[hsl(var(--flights))/0.3] via-[hsl(var(--flights))] to-[hsl(var(--flights))/0.3] rounded-full bg-secondary" />
                   <Plane className="absolute right-0 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[hsl(var(--flights))] rotate-90" />
                   
                   <div className="absolute inset-x-0 -top-4 flex justify-center">
@@ -280,7 +280,7 @@ export function FlightResultCard({ flight, onViewDeal, className, showPriceAlert
                   e.stopPropagation();
                   onViewDeal(flight);
                 }}
-                className="gap-2 font-semibold bg-gradient-to-r from-[hsl(var(--flights))] to-blue-600 hover:from-[hsl(var(--flights))/0.9] hover:to-blue-700 shadow-lg shadow-[hsl(var(--flights))/0.2] hover:shadow-[hsl(var(--flights))/0.3] transition-all w-full lg:w-auto text-primary-foreground min-h-[48px] touch-manipulation active:scale-[0.97] rounded-xl"
+                className="gap-2 font-semibold from-[hsl(var(--flights))] hover:from-[hsl(var(--flights))/0.9] hover:shadow-lg shadow-[hsl(var(--flights))/0.2] hover:shadow-[hsl(var(--flights))/0.3] transition-all w-full lg:w-auto text-primary-foreground min-h-[48px] touch-manipulation active:scale-[0.97] rounded-xl bg-foreground"
               >
                 <span className="hidden sm:inline">Book with Provider</span>
                 <span className="sm:hidden">View Deal</span>

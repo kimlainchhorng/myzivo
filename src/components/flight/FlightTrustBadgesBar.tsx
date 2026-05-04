@@ -42,7 +42,7 @@ export default function FlightTrustBadgesBar({ className, variant = 'default' }:
         className
       )}>
         <div className="flex items-center gap-2 text-sm font-medium">
-          <Shield className="w-4 h-4 text-sky-500" />
+          <Shield className="w-4 h-4 text-foreground" />
           <span>Booking with confidence</span>
         </div>
         <div className="grid gap-2">

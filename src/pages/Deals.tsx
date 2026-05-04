@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { motion } from "framer-motion";
 import Flame from "lucide-react/dist/esm/icons/flame";
 import Search from "lucide-react/dist/esm/icons/search";
@@ -213,8 +214,17 @@ export default function Deals() {
             </div>
 
             {isLoading ? (
-              <div className="flex items-center justify-center py-16">
-                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                {Array.from({ length: 6 }).map((_, i) => (
+                  <div key={i} className="rounded-2xl border border-border bg-card overflow-hidden">
+                    <Skeleton className="h-40 w-full rounded-none" />
+                    <div className="p-4 space-y-2">
+                      <Skeleton className="h-4 w-3/4" />
+                      <Skeleton className="h-3 w-1/2" />
+                      <Skeleton className="h-9 w-full mt-3" />
+                    </div>
+                  </div>
+                ))}
               </div>
             ) : filteredDeals.length > 0 ? (
               <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -292,7 +302,7 @@ export default function Deals() {
                 <Card key={p.route} className="border-border/40 hover:border-primary/20 transition-all">
                   <CardContent className="p-4">
                     <div className="flex items-center gap-2 mb-2">
-                      <Plane className="w-3.5 h-3.5 text-sky-500" />
+                      <Plane className="w-3.5 h-3.5 text-foreground" />
                       <span className="text-xs font-bold text-foreground">{p.route}</span>
                     </div>
                     <div className="flex items-center gap-2">
@@ -390,7 +400,7 @@ export default function Deals() {
 
           {/* Deal Score Explainer */}
           <div className="max-w-4xl mx-auto">
-            <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Target className="w-5 h-5 text-violet-500" /> How We Score Deals</h2>
+            <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Target className="w-5 h-5 text-foreground" /> How We Score Deals</h2>
             <div className="grid sm:grid-cols-3 gap-3">
               {[
                 { factor: "Price vs Historical", weight: "40%", desc: "Compared to 90-day average", icon: BarChart3, color: "text-sky-500" },

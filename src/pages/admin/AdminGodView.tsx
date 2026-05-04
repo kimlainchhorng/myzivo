@@ -254,8 +254,8 @@ export default function AdminGodView() {
                   <p className="text-2xl font-black text-emerald-600">+{userCounts?.newUsers || 0}</p>
                   <p className="text-[10px] text-muted-foreground">New Signups ({label})</p>
                 </div>
-                <div className="p-3 rounded-xl bg-purple-500/10 text-center">
-                  <p className="text-2xl font-black text-purple-600">{userCounts?.loyaltyEarned?.toLocaleString() || 0}</p>
+                <div className="p-3 rounded-xl bg-secondary text-center">
+                  <p className="text-2xl font-black text-foreground">{userCounts?.loyaltyEarned?.toLocaleString() || 0}</p>
                   <p className="text-[10px] text-muted-foreground">Loyalty Points Earned</p>
                 </div>
               </div>
@@ -291,7 +291,7 @@ export default function AdminGodView() {
               </div>
               <div className="flex items-center justify-between py-2 border-b border-border">
                 <div className="flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4 text-sky-500" />
+                  <MessageSquare className="w-4 h-4 text-foreground" />
                   <span className="text-sm text-foreground">AI Support Chats</span>
                 </div>
                 <div className="text-right">
@@ -301,7 +301,7 @@ export default function AdminGodView() {
               </div>
               <div className="flex items-center justify-between py-2">
                 <div className="flex items-center gap-2">
-                  <Heart className="w-4 h-4 text-pink-500" />
+                  <Heart className="w-4 h-4 text-foreground" />
                   <span className="text-sm text-foreground">Feedback</span>
                 </div>
                 <div className="text-right">
@@ -334,7 +334,7 @@ export default function AdminGodView() {
 
           <Card>
             <CardContent className="p-5 flex items-center gap-4">
-              <Plane className="w-8 h-8 text-purple-500 shrink-0" />
+              <Plane className="w-8 h-8 text-foreground shrink-0" />
               <div>
                 <p className="text-2xl font-black">
                   ${(volumeData?.travelRevenue || 0).toLocaleString("en-US", { minimumFractionDigits: 2 })}

@@ -171,7 +171,7 @@ export default function FlightLegCard({
             </Badge>
           )}
           {isFastest && !isTop && (
-            <Badge className="text-[9px] font-bold px-2.5 py-0.5 border rounded-lg bg-violet-500/10 text-violet-600 dark:text-violet-400 border-violet-500/25" style={{ boxShadow: "0 1px 4px -1px hsl(var(--foreground)/0.06)" }}>
+            <Badge className="text-[9px] font-bold px-2.5 py-0.5 border rounded-lg bg-secondary text-foreground dark:text-foreground border-border" style={{ boxShadow: "0 1px 4px -1px hsl(var(--foreground)/0.06)" }}>
               ⚡ Fastest
             </Badge>
           )}
@@ -240,7 +240,7 @@ export default function FlightLegCard({
               <Clock className="w-2.5 h-2.5 shrink-0 opacity-60" />
               {summary.duration}
             </span>
-            <div className="w-full h-[3px] bg-gradient-to-r from-[hsl(var(--flights))] via-[hsl(var(--flights)/0.3)] to-[hsl(var(--flights))] relative my-1.5 rounded-full"
+            <div className="w-full h-[3px] from-[hsl(var(--flights))] via-[hsl(var(--flights)/0.3)] to-[hsl(var(--flights))] relative my-1.5 rounded-full bg-secondary"
               style={{ boxShadow: "0 1px 4px -1px hsl(var(--flights)/0.2)" }}
             >
               {/* Departure dot */}

@@ -178,7 +178,7 @@ export function useEventTracking() {
         .insert(eventPayload as any)
         .then(({ error }) => {
           if (error) {
-            console.error('[Tracking] Failed to track event:', error);
+            console.error('[Tracking] Failed to track event:', error.message, error.code, error.details);
           }
         });
 

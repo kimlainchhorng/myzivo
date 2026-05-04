@@ -1124,8 +1124,8 @@ const FlightResults = () => {
                             className="flex items-center justify-between gap-3 px-4 py-3 hover:bg-muted/30 transition-colors group w-full text-left"
                           >
                             <div className="flex items-center gap-3 min-w-0">
-                              <div className="w-9 h-9 rounded-lg bg-sky-500/12 flex items-center justify-center shrink-0">
-                                <span className="text-base font-black text-sky-600">A</span>
+                              <div className="w-9 h-9 rounded-lg bg-secondary flex items-center justify-center shrink-0">
+                                <span className="text-base font-black text-foreground">A</span>
                               </div>
                               <div>
                                 <div className="flex items-center gap-1.5">

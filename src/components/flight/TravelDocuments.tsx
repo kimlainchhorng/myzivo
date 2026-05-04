@@ -114,7 +114,7 @@ const getStatusBadge = (status: string, expiryDate?: Date) => {
       );
     case 'pending':
       return (
-        <Badge className="bg-sky-500/20 text-sky-400 border-sky-500/40">
+        <Badge className="bg-secondary text-foreground border-border">
           <Clock className="w-3 h-3 mr-1" />
           Processing
         </Badge>
@@ -182,7 +182,7 @@ export const TravelDocuments = ({ className, destinationCode }: TravelDocumentsP
       <CardHeader className="pb-4 border-b border-border/50">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 to-indigo-500/10 border border-blue-500/40 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500/20 border border-blue-500/40 flex items-center justify-center">
               <FileText className="w-5 h-5 text-blue-500" />
             </div>
             <div>
@@ -230,10 +230,10 @@ export const TravelDocuments = ({ className, destinationCode }: TravelDocumentsP
         <div className="p-4 border-b border-border/50">
           <button
             onClick={() => setShowVisaInfo(!showVisaInfo)}
-            className="w-full flex items-center justify-between p-3 rounded-xl bg-violet-500/10 border border-violet-500/30 hover:bg-violet-500/15 transition-all duration-200 active:scale-[0.98] touch-manipulation"
+            className="w-full flex items-center justify-between p-3 rounded-xl bg-secondary border border-border hover:bg-secondary transition-all duration-200 active:scale-[0.98] touch-manipulation"
           >
             <div className="flex items-center gap-2">
-              <Globe className="w-4 h-4 text-violet-400" />
+              <Globe className="w-4 h-4 text-foreground" />
               <span className="font-medium text-sm">Entry Requirements by Country</span>
             </div>
             <Badge variant="outline" className="text-xs">

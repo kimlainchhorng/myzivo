@@ -213,7 +213,7 @@ export default function RideOptionsSheet({
                     {ride.name}
                   </span>
                   {ride.id === "economy" && (
-                    <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-sky-500/10 text-sky-600 dark:text-sky-400 text-[10px] font-bold">
+                    <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-secondary text-foreground dark:text-foreground text-[10px] font-bold">
                       <TrendingDown className="w-3 h-3" />
                       LOW
                     </span>
@@ -225,7 +225,7 @@ export default function RideOptionsSheet({
                     </span>
                   )}
                   {ride.id === "comfort" && (
-                    <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-violet-500/10 text-violet-600 dark:text-violet-400 text-[10px] font-bold">
+                    <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-secondary text-foreground dark:text-foreground text-[10px] font-bold">
                       <Sparkles className="w-3 h-3" />
                       TOP
                     </span>
@@ -255,13 +255,13 @@ export default function RideOptionsSheet({
                     </span>
                   )}
                   {ride.id === "luxury-xl" && (
-                    <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-rose-500/10 text-rose-600 dark:text-rose-400 text-[10px] font-bold">
+                    <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-secondary text-foreground dark:text-foreground text-[10px] font-bold">
                       <Gem className="w-3 h-3" />
                       ELITE
                     </span>
                   )}
                   {ride.id === "pet" && (
-                    <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-pink-500/10 text-pink-600 dark:text-pink-400 text-[10px] font-bold">
+                    <span className="flex items-center gap-0.5 px-1.5 py-0.5 rounded-md bg-secondary text-foreground dark:text-foreground text-[10px] font-bold">
                       <PawPrint className="w-3 h-3" />
                       PET
                     </span>

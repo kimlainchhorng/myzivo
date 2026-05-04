@@ -59,7 +59,7 @@ const colorClasses = {
     icon: "text-sky-500",
     bg: "bg-sky-500/10",
     bullet: "bg-sky-500",
-    gradient: "from-sky-500 to-blue-400",
+    gradient: "from-muted to-muted",
     glow: "shadow-sky-500/30",
   },
   eats: {
@@ -73,7 +73,7 @@ const colorClasses = {
     icon: "text-violet-500",
     bg: "bg-violet-500/10",
     bullet: "bg-violet-500",
-    gradient: "from-violet-500 to-purple-400",
+    gradient: "from-muted to-muted",
     glow: "shadow-violet-500/30",
   },
 };
@@ -316,14 +316,14 @@ const spotlightVariants = {
     badge: "Premium",
   },
   new: {
-    gradient: "from-violet-500/20 via-violet-500/10 to-purple-500/20",
+    gradient: "from-muted to-muted",
     accent: "from-violet-500 to-purple-500",
     icon: Rocket,
     glow: "shadow-violet-500/20",
     badge: "New",
   },
   trending: {
-    gradient: "from-rose-500/20 via-rose-500/10 to-pink-500/20",
+    gradient: "from-muted to-muted",
     accent: "from-rose-500 to-pink-500",
     icon: TrendingUp,
     glow: "shadow-rose-500/20",
@@ -529,7 +529,7 @@ export const UrgencyBanner: React.FC<UrgencyBannerProps> = ({
       icon: Check,
     },
     limited: {
-      gradient: "from-red-500/15 to-rose-500/15",
+      gradient: "from-muted to-muted",
       border: "border-red-500/30",
       text: "text-red-500",
       icon: Zap,

@@ -55,8 +55,8 @@ const Terms = () => {
           {/* 1. ZIVO Services */}
           <section>
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-sky-500/10">
-                <Search className="w-5 h-5 text-sky-500" />
+              <div className="p-2 rounded-lg bg-secondary">
+                <Search className="w-5 h-5 text-foreground" />
               </div>
               <h2 className="text-2xl font-bold text-foreground">1. ZIVO Services</h2>
             </div>
@@ -74,7 +74,7 @@ const Terms = () => {
                   <span><strong>Car Rentals:</strong> ZIVO is the merchant of record. Payments are processed by ZIVO.</span>
                 </li>
                 <li className="flex items-start gap-3">
-                  <Plane className="w-5 h-5 text-sky-500 mt-0.5 shrink-0" />
+                  <Plane className="w-5 h-5 text-foreground mt-0.5 shrink-0" />
                   <span><strong>Flights:</strong> ZIVO is NOT the merchant of record. Flight bookings are completed with licensed airline partners who process payments and issue tickets.</span>
                 </li>
               </ul>
@@ -108,8 +108,8 @@ const Terms = () => {
           {/* 3. Flights (Partner Ticketing) */}
           <section>
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-sky-500/10">
-                <Plane className="w-5 h-5 text-sky-500" />
+              <div className="p-2 rounded-lg bg-secondary">
+                <Plane className="w-5 h-5 text-foreground" />
               </div>
               <h2 className="text-2xl font-bold text-foreground">3. Flights (Partner Ticketing)</h2>
             </div>
@@ -195,8 +195,8 @@ const Terms = () => {
           {/* 8. Limitation of Liability */}
           <section>
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-purple-500/10">
-                <Scale className="w-5 h-5 text-purple-500" />
+              <div className="p-2 rounded-lg bg-secondary">
+                <Scale className="w-5 h-5 text-foreground" />
               </div>
               <h2 className="text-2xl font-bold text-foreground">8. Limitation of Liability</h2>
             </div>
@@ -240,8 +240,8 @@ const Terms = () => {
           {/* 11. Changes */}
           <section>
             <div className="flex items-center gap-3 mb-4">
-              <div className="p-2 rounded-lg bg-indigo-500/10">
-                <RefreshCw className="w-5 h-5 text-indigo-500" />
+              <div className="p-2 rounded-lg bg-secondary">
+                <RefreshCw className="w-5 h-5 text-foreground" />
               </div>
               <h2 className="text-2xl font-bold text-foreground">11. Changes</h2>
             </div>

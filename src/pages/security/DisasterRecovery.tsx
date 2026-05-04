@@ -161,7 +161,7 @@ export default function DisasterRecovery() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Clock className="h-5 w-5 text-purple-500" />
+              <Clock className="h-5 w-5 text-foreground" />
               Recovery Objectives
             </CardTitle>
           </CardHeader>
@@ -195,7 +195,7 @@ export default function DisasterRecovery() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Cloud className="h-5 w-5 text-sky-500" />
+              <Cloud className="h-5 w-5 text-foreground" />
               Third-Party Dependency Handling
             </CardTitle>
           </CardHeader>

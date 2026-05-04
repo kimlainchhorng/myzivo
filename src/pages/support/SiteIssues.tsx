@@ -260,7 +260,7 @@ export default function SiteIssuesSupport() {
           <Card className="mb-8">
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
-                <Globe className="w-5 h-5 text-sky-500" />
+                <Globe className="w-5 h-5 text-foreground" />
                 Browser Requirements
               </CardTitle>
             </CardHeader>

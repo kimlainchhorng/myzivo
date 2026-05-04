@@ -55,7 +55,7 @@ const LocalExperiences = () => {
     <section className="py-12 px-4">
       <div className="max-w-6xl mx-auto">
         <div className="text-center mb-8">
-          <Badge className="mb-3 bg-pink-500/20 text-pink-400 border-pink-500/20">
+          <Badge className="mb-3 bg-secondary text-foreground border-border">
             <Sparkles className="w-3 h-3 mr-1" /> Experiences
           </Badge>
           <h2 className="text-2xl md:text-3xl font-display font-bold mb-2">
@@ -71,7 +71,7 @@ const LocalExperiences = () => {
             <div
               key={exp.title}
               onClick={handleBookExperience}
-              className="group p-4 bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl hover:border-pink-500/50 transition-all cursor-pointer"
+              className="group p-4 bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl hover:border-border transition-all cursor-pointer"
             >
               <div className={`w-14 h-14 rounded-2xl ${exp.bg} flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}>
                 <exp.icon className={`w-7 h-7 ${exp.color}`} />
@@ -87,7 +87,7 @@ const LocalExperiences = () => {
                   <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
                   <span className="text-sm font-bold">{exp.rating}</span>
                 </div>
-                <span className="font-bold text-pink-400">${exp.price}</span>
+                <span className="font-bold text-foreground">${exp.price}</span>
               </div>
             </div>
           ))}

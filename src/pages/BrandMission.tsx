@@ -137,10 +137,10 @@ const BrandMission = () => {
               </CardContent>
             </Card>
 
-            <Card className="border-sky-500/20 bg-gradient-to-br from-sky-500/5 to-transparent">
+            <Card className="border-border to-transparent bg-secondary">
               <CardContent className="p-8">
-                <div className="w-12 h-12 rounded-xl bg-sky-500/10 flex items-center justify-center mb-4">
-                  <Eye className="w-6 h-6 text-sky-500" />
+                <div className="w-12 h-12 rounded-xl bg-secondary flex items-center justify-center mb-4">
+                  <Eye className="w-6 h-6 text-foreground" />
                 </div>
                 <h2 className="text-2xl font-bold mb-4">Our Vision</h2>
                 <p className="text-muted-foreground text-lg">
@@ -287,7 +287,7 @@ const BrandMission = () => {
           </section>
 
           {/* Brand Promise */}
-          <section className="text-center p-12 rounded-3xl bg-gradient-to-br from-primary/10 via-transparent to-sky-500/10 border border-primary/20">
+          <section className="text-center p-12 rounded-3xl bg-gradient-to-br from-primary/10 via-transparent border border-primary/20">
             <Sparkles className="w-12 h-12 text-primary mx-auto mb-6" />
             <h2 className="text-3xl font-bold mb-4">Our Promise</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-6">

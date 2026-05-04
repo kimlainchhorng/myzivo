@@ -114,7 +114,7 @@ export default function CreatorTipsLedger({ creatorId }: Props) {
       <div className="flex items-center justify-between gap-3 flex-wrap">
         <div>
           <p className="text-sm font-semibold flex items-center gap-1.5">
-            <Heart className="h-3.5 w-3.5 text-pink-500" />
+            <Heart className="h-3.5 w-3.5 text-foreground" />
             Tips received
           </p>
           <p className="text-[11px] text-muted-foreground mt-0.5">
@@ -124,9 +124,9 @@ export default function CreatorTipsLedger({ creatorId }: Props) {
         {rows.length > 0 && (
           <div className="flex items-center gap-2 flex-wrap">
             <Badge variant="outline" className="text-[10px]">Earned: <span className="ml-1 font-bold tabular-nums">{money(totals.earned)}</span></Badge>
-            {totals.refunded > 0 && <Badge variant="outline" className="text-[10px] border-purple-500/40 text-purple-700 dark:text-purple-300">{money(totals.refunded)} refunded</Badge>}
+            {totals.refunded > 0 && <Badge variant="outline" className="text-[10px] border-border text-foreground dark:text-foreground">{money(totals.refunded)} refunded</Badge>}
             {totals.pending > 0 && <Badge variant="outline" className="text-[10px] border-amber-500/40 text-amber-700 dark:text-amber-300">{totals.pending} pending</Badge>}
-            {totals.failed > 0 && <Badge variant="outline" className="text-[10px] border-rose-500/40 text-rose-700 dark:text-rose-300">{totals.failed} failed</Badge>}
+            {totals.failed > 0 && <Badge variant="outline" className="text-[10px] border-border text-foreground dark:text-foreground">{totals.failed} failed</Badge>}
           </div>
         )}
       </div>
@@ -147,7 +147,7 @@ export default function CreatorTipsLedger({ creatorId }: Props) {
           <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading tips…
         </div>
       ) : error ? (
-        <div className="flex items-center gap-2 py-3 text-xs text-rose-600">
+        <div className="flex items-center gap-2 py-3 text-xs text-foreground">
           <AlertTriangle className="h-3.5 w-3.5" /> Could not load tips.
         </div>
       ) : rows.length === 0 ? (
@@ -190,7 +190,7 @@ export default function CreatorTipsLedger({ creatorId }: Props) {
                 <p className="text-[10px] text-muted-foreground/70 mt-0.5">
                   {formatDistanceToNow(new Date(r.created_at), { addSuffix: true })}
                   {r.last_payment_error && (
-                    <span className="ml-1.5 text-rose-600" title={r.last_payment_error}>· {r.last_payment_error.slice(0, 40)}</span>
+                    <span className="ml-1.5 text-foreground" title={r.last_payment_error}>· {r.last_payment_error.slice(0, 40)}</span>
                   )}
                 </p>
               </div>

@@ -116,7 +116,7 @@ export default function LodgingAutoPayoutLedger({ storeId }: Props) {
             <Badge variant="outline" className="text-[10px]">Net received: <span className="ml-1 font-bold tabular-nums">{money(totals.netReceived)}</span></Badge>
             <Badge variant="outline" className="text-[10px]">Commission: {money(totals.totalCommission)}</Badge>
             {totals.pendingCount > 0 && <Badge variant="outline" className="text-[10px] border-amber-500/40 text-amber-700 dark:text-amber-300">{totals.pendingCount} pending</Badge>}
-            {totals.failedCount > 0 && <Badge variant="outline" className="text-[10px] border-rose-500/40 text-rose-700 dark:text-rose-300">{totals.failedCount} failed</Badge>}
+            {totals.failedCount > 0 && <Badge variant="outline" className="text-[10px] border-border text-foreground dark:text-foreground">{totals.failedCount} failed</Badge>}
           </div>
         )}
       </div>
@@ -126,7 +126,7 @@ export default function LodgingAutoPayoutLedger({ storeId }: Props) {
           <Loader2 className="h-3.5 w-3.5 animate-spin" /> Loading transfer history…
         </div>
       ) : error ? (
-        <div className="flex items-center gap-2 py-3 text-xs text-rose-600">
+        <div className="flex items-center gap-2 py-3 text-xs text-foreground">
           <AlertTriangle className="h-3.5 w-3.5" /> Could not load transfer history.
         </div>
       ) : rows.length === 0 ? (
@@ -169,7 +169,7 @@ export default function LodgingAutoPayoutLedger({ storeId }: Props) {
                         {r.status}
                       </span>
                       {r.error_message && (
-                        <p className="mt-1 text-[10px] text-rose-600 max-w-[220px] line-clamp-2" title={r.error_message}>
+                        <p className="mt-1 text-[10px] text-foreground max-w-[220px] line-clamp-2" title={r.error_message}>
                           {r.error_message}
                         </p>
                       )}
