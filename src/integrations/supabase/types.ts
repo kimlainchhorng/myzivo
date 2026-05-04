@@ -25835,6 +25835,205 @@ export type Database = {
           },
         ]
       }
+      import_order_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          id: string
+          note: string | null
+          order_id: string
+          photo_url: string | null
+          status: Database["public"]["Enums"]["marketplace_fulfillment_status"]
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          order_id: string
+          photo_url?: string | null
+          status: Database["public"]["Enums"]["marketplace_fulfillment_status"]
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          id?: string
+          note?: string | null
+          order_id?: string
+          photo_url?: string | null
+          status?: Database["public"]["Enums"]["marketplace_fulfillment_status"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_order_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "import_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      import_orders: {
+        Row: {
+          assigned_driver_id: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          customer_id: string
+          delivery_address: string
+          delivery_lat: number | null
+          delivery_lng: number | null
+          fulfillment_status: Database["public"]["Enums"]["marketplace_fulfillment_status"]
+          id: string
+          intl_tracking: string | null
+          items: Json
+          local_tracking: string | null
+          notes: string | null
+          payment_intent_id: string | null
+          payment_method: Database["public"]["Enums"]["marketplace_payment_method"]
+          payment_status: string
+          shipping_cents: number
+          subtotal_cents: number
+          supplier_tracking: string | null
+          surcharge_cents: number
+          total_cents: number
+          tracking_code: string | null
+          updated_at: string
+          warehouse_id: string | null
+        }
+        Insert: {
+          assigned_driver_id?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          customer_id: string
+          delivery_address: string
+          delivery_lat?: number | null
+          delivery_lng?: number | null
+          fulfillment_status?: Database["public"]["Enums"]["marketplace_fulfillment_status"]
+          id?: string
+          intl_tracking?: string | null
+          items?: Json
+          local_tracking?: string | null
+          notes?: string | null
+          payment_intent_id?: string | null
+          payment_method?: Database["public"]["Enums"]["marketplace_payment_method"]
+          payment_status?: string
+          shipping_cents?: number
+          subtotal_cents?: number
+          supplier_tracking?: string | null
+          surcharge_cents?: number
+          total_cents?: number
+          tracking_code?: string | null
+          updated_at?: string
+          warehouse_id?: string | null
+        }
+        Update: {
+          assigned_driver_id?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          customer_id?: string
+          delivery_address?: string
+          delivery_lat?: number | null
+          delivery_lng?: number | null
+          fulfillment_status?: Database["public"]["Enums"]["marketplace_fulfillment_status"]
+          id?: string
+          intl_tracking?: string | null
+          items?: Json
+          local_tracking?: string | null
+          notes?: string | null
+          payment_intent_id?: string | null
+          payment_method?: Database["public"]["Enums"]["marketplace_payment_method"]
+          payment_status?: string
+          shipping_cents?: number
+          subtotal_cents?: number
+          supplier_tracking?: string | null
+          surcharge_cents?: number
+          total_cents?: number
+          tracking_code?: string | null
+          updated_at?: string
+          warehouse_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "import_orders_warehouse_id_fkey"
+            columns: ["warehouse_id"]
+            isOneToOne: false
+            referencedRelation: "warehouses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      import_products: {
+        Row: {
+          active: boolean
+          category: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          est_delivery_days_max: number
+          est_delivery_days_min: number
+          featured: boolean
+          final_price_cents: number
+          id: string
+          images: Json
+          markup_percent: number
+          source_currency: string | null
+          source_platform: Database["public"]["Enums"]["marketplace_source_platform"]
+          source_price: number | null
+          source_url: string | null
+          title: string
+          updated_at: string
+          variants: Json
+          weight_grams: number
+        }
+        Insert: {
+          active?: boolean
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          est_delivery_days_max?: number
+          est_delivery_days_min?: number
+          featured?: boolean
+          final_price_cents: number
+          id?: string
+          images?: Json
+          markup_percent?: number
+          source_currency?: string | null
+          source_platform?: Database["public"]["Enums"]["marketplace_source_platform"]
+          source_price?: number | null
+          source_url?: string | null
+          title: string
+          updated_at?: string
+          variants?: Json
+          weight_grams?: number
+        }
+        Update: {
+          active?: boolean
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          est_delivery_days_max?: number
+          est_delivery_days_min?: number
+          featured?: boolean
+          final_price_cents?: number
+          id?: string
+          images?: Json
+          markup_percent?: number
+          source_currency?: string | null
+          source_platform?: Database["public"]["Enums"]["marketplace_source_platform"]
+          source_price?: number | null
+          source_url?: string | null
+          title?: string
+          updated_at?: string
+          variants?: Json
+          weight_grams?: number
+        }
+        Relationships: []
+      }
       incident_logs: {
         Row: {
           acknowledged_at: string | null
