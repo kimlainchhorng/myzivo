@@ -77,6 +77,9 @@ const ProtectedRoute = ({ children, requireAdmin = false, allowStoreOwner = fals
 
   if (!user) {
     if (allowStoreOwner && storeId) {
+      if (!publicStoreResolved && location.pathname.startsWith("/admin/stores/")) {
+        return <Navigate to={`/hotel/${storeId}`} replace />;
+      }
       if (!publicStoreResolved) {
         return (
           <div className="min-h-screen flex items-center justify-center bg-background">
