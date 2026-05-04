@@ -219,10 +219,10 @@ function HubView() {
                 card.gradient,
               )}
             >
-              <card.icon className="w-5 h-5 text-white/90" />
+              <card.icon className="w-5 h-5 text-foreground" />
               <div>
-                <p className="text-white font-bold text-[14px] leading-tight">{card.label}</p>
-                <p className="text-white/80 text-[11px] mt-0.5">{card.desc}</p>
+                <p className="text-foreground font-bold text-[14px] leading-tight">{card.label}</p>
+                <p className="text-muted-foreground text-[11px] mt-0.5">{card.desc}</p>
               </div>
             </motion.div>
           </Link>

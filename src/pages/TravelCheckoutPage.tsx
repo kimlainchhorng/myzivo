@@ -2,7 +2,7 @@
  * Travel Checkout Page
  * Unified checkout for hotels, activities, and transfers
  */
-import React, { useState } from "react";
+import { useState } from "react";
 import { motion } from "framer-motion";
 import { useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, Hotel, MapPin, Car, Loader2, CreditCard, AlertCircle, Check } from "lucide-react";

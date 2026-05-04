@@ -31,6 +31,8 @@ Deno.serve(async (req) => {
   const admin = createClient(supabaseUrl, serviceKey);
   const pi = event.data?.object;
   const rideId = pi?.metadata?.ride_request_id ?? null;
+  const piType = pi?.metadata?.type ?? null; // "ride_tip" for tip PIs created by capture-ride-tip
+  const isTipPI = piType === "ride_tip";
 
   // Idempotency: insert into webhook_events; skip if duplicate
   const { error: insertErr } = await admin.from("webhook_events").insert({
@@ -60,6 +62,29 @@ Deno.serve(async (req) => {
     switch (event.type) {
       case "payment_intent.succeeded": {
         const capturedCents = pi.amount_received ?? pi.amount;
+
+        if (isTipPI) {
+          // Tip PI created by capture-ride-tip — do NOT touch ride payment_status
+          // (the trip itself was captured earlier with its own PI). Just write a
+          // tip-specific ledger entry. Driver credit is handled by capture-ride-tip
+          // via creator_earnings; this is purely buyer-side reconciliation.
+          try {
+            const { data: ride } = await admin.from("ride_requests").select("user_id").eq("id", rideId).maybeSingle();
+            if (ride?.user_id) {
+              await admin.from("financial_ledger").insert({
+                user_id: ride.user_id,
+                ride_request_id: rideId,
+                entry_type: "charge",
+                amount_cents: capturedCents,
+                currency: pi.currency ?? "usd",
+                stripe_reference: pi.id,
+                description: `Ride tip ${rideId.slice(0, 8)}`,
+              } as any);
+            }
+          } catch (e) { console.warn("[stripe-ride-webhook] tip ledger failed", e); }
+          break;
+        }
+
         await admin.from("ride_requests").update({
           payment_status: "captured",
           captured_amount_cents: capturedCents,
@@ -87,12 +112,15 @@ Deno.serve(async (req) => {
         break;
       }
       case "payment_intent.payment_failed":
+        if (isTipPI) break; // tip failure must not flip trip's payment_status
         await admin.from("ride_requests").update({ payment_status: "failed" } as any).eq("id", rideId);
         break;
       case "payment_intent.canceled":
+        if (isTipPI) break;
         await admin.from("ride_requests").update({ payment_status: "canceled" } as any).eq("id", rideId);
         break;
       case "payment_intent.amount_capturable_updated":
+        if (isTipPI) break;
         await admin.from("ride_requests").update({ payment_status: "authorized" } as any).eq("id", rideId);
         break;
     }

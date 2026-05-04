@@ -2,7 +2,7 @@
  * ChatAttachMenu — Bottom sheet for attachment options: image, video, location, disappearing
  * Lock & Unlock requires Chat+ or Pro ZIVO+ plan
  */
-import React, { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import ImagePlus from "lucide-react/dist/esm/icons/image-plus";
 import Video from "lucide-react/dist/esm/icons/video";

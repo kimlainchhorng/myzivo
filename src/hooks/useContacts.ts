@@ -74,7 +74,7 @@ export function useContacts() {
     }
 
     const ids = rows.map((r) => r.contact_user_id);
-    let profiles: Record<string, Contact["profile"]> = {};
+    const profiles: Record<string, Contact["profile"]> = {};
     if (ids.length) {
       const { data: profs } = await supabase
         .from("profiles")

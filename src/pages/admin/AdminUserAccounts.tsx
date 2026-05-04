@@ -777,7 +777,7 @@ function ProfileCard({
       } else {
         // Fetch profile names for commenters
         const userIds = [...new Set((data || []).map((c: any) => c.user_id))] as string[];
-        let profileMap = new Map<string, { display_name?: string; avatar_url?: string }>();
+        const profileMap = new Map<string, { display_name?: string; avatar_url?: string }>();
         if (userIds.length > 0) {
           const { data: profiles } = await (supabase as any)
             .from("profiles")

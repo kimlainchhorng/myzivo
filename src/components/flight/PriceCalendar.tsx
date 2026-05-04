@@ -30,7 +30,7 @@ function generatePrices(year: number, month: number, base: number) {
     if (isBefore(date, today)) continue;
     const dow = date.getDay();
     const seed = (year * 365 + month * 31 + d) % 100;
-    let mod = dow === 2 || dow === 3 ? -0.1 : dow === 0 || dow === 5 ? 0.12 : (seed % 16 - 8) / 100;
+    const mod = dow === 2 || dow === 3 ? -0.1 : dow === 0 || dow === 5 ? 0.12 : (seed % 16 - 8) / 100;
     const price = Math.round(base * (1 + mod + (seed % 20 - 10) / 100));
     result[d] = {
       price,

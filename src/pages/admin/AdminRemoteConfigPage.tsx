@@ -3,7 +3,7 @@
  * Allows admins to update app settings without releasing updates
  */
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useRemoteConfig } from '@/contexts/RemoteConfigContext';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';

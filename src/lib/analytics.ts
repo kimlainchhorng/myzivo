@@ -139,7 +139,7 @@ export function track(event: string, props: AnalyticsProps = {}) {
     const last = recentEvents.get(key);
     if (last !== undefined && now - last < dedupeMs) {
       if (typeof window !== "undefined" && (window as any).__zivo_debug_analytics) {
-        // eslint-disable-next-line no-console
+         
         console.debug("[analytics] deduped", event, props);
       }
       return;
@@ -182,7 +182,7 @@ export function track(event: string, props: AnalyticsProps = {}) {
   }
 
   if (typeof window !== "undefined" && (window as any).__zivo_debug_analytics) {
-    // eslint-disable-next-line no-console
+     
     console.debug("[analytics]", event, properties);
   }
 }

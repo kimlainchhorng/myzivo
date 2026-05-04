@@ -433,7 +433,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
 
         // Fetch avatars for all unique user IDs
         const userIds = [...new Set((data as UserPostRow[]).map((r) => r.user_id))];
-        let avatarMap: Record<string, { avatar_url: string | null; full_name: string | null; is_verified: boolean }> = {};
+        const avatarMap: Record<string, { avatar_url: string | null; full_name: string | null; is_verified: boolean }> = {};
         if (userIds.length > 0) {
           try {
             const { data: profiles } = await supabase

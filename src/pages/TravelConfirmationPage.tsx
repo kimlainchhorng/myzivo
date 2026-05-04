@@ -2,7 +2,7 @@
  * Travel Confirmation Page
  * Shows booking confirmation after successful payment
  */
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { CheckCircle, XCircle, Loader2, Hotel, MapPin, Car, ArrowLeft, Copy, Download, Mail, Home, Headphones } from "lucide-react";
 import { Button } from "@/components/ui/button";

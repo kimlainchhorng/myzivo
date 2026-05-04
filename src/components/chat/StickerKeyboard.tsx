@@ -233,11 +233,11 @@ interface StorePackItem {
 
 const STORE_PACKS: StorePackItem[] = [
   { name: "Cute Cats", count: 24, emoji: "🐱", category: "Fun", gradient: "from-amber-400 to-orange-500", preview: ["😺","😸","😻","🙀"] },
-  { name: "Anime Reactions", count: 32, emoji: "⚡", category: "Anime", gradient: "from-muted to-muted", preview: ["💫","✨","⚡","🌟"] },
-  { name: "Travel Vibes", count: 18, emoji: "✈️", category: "Travel", gradient: "from-muted to-muted", preview: ["🌍","✈️","🏖️","🗺️"] },
-  { name: "Emoji Blast", count: 40, emoji: "💥", category: "Fun", gradient: "from-muted to-muted", preview: ["🔥","💥","💢","⭐"] },
-  { name: "Tokyo Mood", count: 28, emoji: "🗼", category: "Anime", gradient: "from-muted to-muted", preview: ["🗼","🍜","🎌","🌸"] },
-  { name: "Love Language", count: 22, emoji: "💕", category: "Love", gradient: "from-muted to-muted", preview: ["💕","💌","💋","🌹"] },
+  { name: "Anime Reactions", count: 32, emoji: "⚡", category: "Anime", gradient: "from-foreground to-foreground/80", preview: ["💫","✨","⚡","🌟"] },
+  { name: "Travel Vibes", count: 18, emoji: "✈️", category: "Travel", gradient: "from-foreground to-foreground/80", preview: ["🌍","✈️","🏖️","🗺️"] },
+  { name: "Emoji Blast", count: 40, emoji: "💥", category: "Fun", gradient: "from-foreground to-foreground/80", preview: ["🔥","💥","💢","⭐"] },
+  { name: "Tokyo Mood", count: 28, emoji: "🗼", category: "Anime", gradient: "from-foreground to-foreground/80", preview: ["🗼","🍜","🎌","🌸"] },
+  { name: "Love Language", count: 22, emoji: "💕", category: "Love", gradient: "from-foreground to-foreground/80", preview: ["💕","💌","💋","🌹"] },
   { name: "Sporty", count: 30, emoji: "⚽", category: "Sports", gradient: "from-green-500 to-emerald-600", preview: ["⚽","🏀","🏆","🎯"] },
   { name: "Foodies", count: 36, emoji: "🍕", category: "Food", gradient: "from-orange-400 to-red-500", preview: ["🍕","🍔","🌮","🍰"] },
 ];
@@ -260,12 +260,12 @@ const MEME_ITEMS = [
 /* ═══════════════ Future Actions ═══════════════ */
 
 const FUTURE_ACTIONS = [
-  { label: "Plan Weekend", emoji: "🗓️", text: "Let's plan this weekend ✨", desc: "Create a plan together", gradient: "from-muted to-muted" },
+  { label: "Plan Weekend", emoji: "🗓️", text: "Let's plan this weekend ✨", desc: "Create a plan together", gradient: "from-foreground to-foreground/80" },
   { label: "Split Fare", emoji: "🚗", text: "Let's split the ride fare.", desc: "Share ride costs", gradient: "from-emerald-500/20 to-green-500/10" },
-  { label: "Start Poll", emoji: "📊", text: "Quick poll: what do you prefer?", desc: "Get everyone's opinion", gradient: "from-muted to-muted" },
+  { label: "Start Poll", emoji: "📊", text: "Quick poll: what do you prefer?", desc: "Get everyone's opinion", gradient: "from-foreground to-foreground/80" },
   { label: "Book Table", emoji: "🍽️", text: "Let's reserve a table for tonight.", desc: "Restaurant reservation", gradient: "from-amber-500/20 to-orange-500/10" },
-  { label: "Trip Idea", emoji: "🧳", text: "Travel idea: weekend city break?", desc: "Suggest a getaway", gradient: "from-muted to-muted" },
-  { label: "Voice Note", emoji: "🎙️", text: "Send me a quick voice check-in.", desc: "Quick audio message", gradient: "from-muted to-muted" },
+  { label: "Trip Idea", emoji: "🧳", text: "Travel idea: weekend city break?", desc: "Suggest a getaway", gradient: "from-foreground to-foreground/80" },
+  { label: "Voice Note", emoji: "🎙️", text: "Send me a quick voice check-in.", desc: "Quick audio message", gradient: "from-foreground to-foreground/80" },
 ];
 
 /* ═══════════════ Helpers ═══════════════ */

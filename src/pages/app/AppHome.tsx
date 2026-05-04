@@ -4,7 +4,7 @@
  * quick actions, promos, rewards, and personalized content.
  * @module AppHome
  */
-import React, { useState, useEffect, useMemo, lazy, Suspense } from "react";
+import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
 import { useI18n } from "@/hooks/useI18n";
 import { useCountry } from "@/hooks/useCountry";
@@ -216,7 +216,7 @@ const getSmartNow = (hour: number): SmartNowConfig => {
       { label: "Quick bite", to: "/eats?q=fast" },
       { label: "Reserve a table", to: "/eats" },
     ],
-    gradient: "from-muted to-muted",
+    gradient: "from-foreground to-foreground/80",
     iconBg: "bg-orange-500/15",
     iconColor: "text-orange-500",
   };
@@ -228,7 +228,7 @@ const getSmartNow = (hour: number): SmartNowConfig => {
       { label: "Coffee break", to: "/eats?q=coffee" },
       { label: "Trip ideas", to: "/flights" },
     ],
-    gradient: "from-muted to-muted",
+    gradient: "from-foreground to-foreground/80",
     iconBg: "bg-sky-500/15",
     iconColor: "text-sky-500",
   };
@@ -240,7 +240,7 @@ const getSmartNow = (hour: number): SmartNowConfig => {
       { label: "Ride home", to: "/rides" },
       { label: "Reserve a table", to: "/eats" },
     ],
-    gradient: "from-muted to-muted",
+    gradient: "from-foreground to-foreground/80",
     iconBg: "bg-rose-500/15",
     iconColor: "text-rose-500",
   };
@@ -252,7 +252,7 @@ const getSmartNow = (hour: number): SmartNowConfig => {
       { label: "Late-night eats", to: "/eats" },
       { label: "Hotel stays", to: "/hotels" },
     ],
-    gradient: "from-muted to-muted",
+    gradient: "from-foreground to-foreground/80",
     iconBg: "bg-indigo-500/15",
     iconColor: "text-indigo-400",
   };
@@ -376,12 +376,12 @@ const DAILY_MISSIONS: DailyMission[] = [
 ];
 
 const ACCENT_STYLES: Record<string, { iconBg: string; iconColor: string; gradient: string; ringColor: string; ctaBg: string }> = {
-  sky:      { iconBg: "bg-sky-500/15",     iconColor: "text-sky-500",     gradient: "from-muted to-muted",         ringColor: "border-sky-500/25",     ctaBg: "bg-sky-500 text-white" },
+  sky:      { iconBg: "bg-sky-500/15",     iconColor: "text-sky-500",     gradient: "from-foreground to-foreground/80",         ringColor: "border-sky-500/25",     ctaBg: "bg-sky-500 text-white" },
   emerald:  { iconBg: "bg-emerald-500/15", iconColor: "text-emerald-500", gradient: "from-emerald-500/12 via-emerald-500/5 to-transparent", ringColor: "border-emerald-500/25", ctaBg: "bg-emerald-500 text-white" },
   orange:   { iconBg: "bg-orange-500/15",  iconColor: "text-orange-500",  gradient: "from-orange-500/12 via-orange-500/5 to-transparent",   ringColor: "border-orange-500/25",  ctaBg: "bg-orange-500 text-white" },
-  violet:   { iconBg: "bg-violet-500/15",  iconColor: "text-violet-500",  gradient: "from-muted to-muted",   ringColor: "border-violet-500/25",  ctaBg: "bg-violet-500 text-white" },
-  rose:     { iconBg: "bg-rose-500/15",    iconColor: "text-rose-500",    gradient: "from-muted to-muted",       ringColor: "border-rose-500/25",    ctaBg: "bg-rose-500 text-white" },
-  indigo:   { iconBg: "bg-indigo-500/15",  iconColor: "text-indigo-500",  gradient: "from-muted to-muted",   ringColor: "border-indigo-500/25",  ctaBg: "bg-indigo-500 text-white" },
+  violet:   { iconBg: "bg-violet-500/15",  iconColor: "text-violet-500",  gradient: "from-foreground to-foreground/80",   ringColor: "border-violet-500/25",  ctaBg: "bg-violet-500 text-white" },
+  rose:     { iconBg: "bg-rose-500/15",    iconColor: "text-rose-500",    gradient: "from-foreground to-foreground/80",       ringColor: "border-rose-500/25",    ctaBg: "bg-rose-500 text-white" },
+  indigo:   { iconBg: "bg-indigo-500/15",  iconColor: "text-indigo-500",  gradient: "from-foreground to-foreground/80",   ringColor: "border-indigo-500/25",  ctaBg: "bg-indigo-500 text-white" },
   amber:    { iconBg: "bg-amber-500/15",   iconColor: "text-amber-600",   gradient: "from-amber-500/12 via-amber-500/5 to-transparent",     ringColor: "border-amber-500/25",   ctaBg: "bg-amber-500 text-white" },
 };
 
@@ -584,10 +584,10 @@ const AppHome = () => {
   const promos = [
     { title: t("home.promo_first_ride"), subtitle: t("home.promo_first_ride_sub"), gradient: "from-emerald-500 to-teal-600", icon: Car, cta: t("home.promo_claim") },
     { title: t("home.promo_free_delivery"), subtitle: t("home.promo_free_delivery_sub"), gradient: "from-orange-500 to-amber-600", icon: Package, cta: t("home.promo_order_now") },
-    { title: t("home.promo_flights_deal"), subtitle: t("home.promo_flights_deal_sub"), gradient: "from-muted to-muted", icon: Plane, cta: t("home.promo_explore") },
-    { title: t("home.promo_hotel_sale"), subtitle: t("home.promo_hotel_sale_sub"), gradient: "from-muted to-muted", icon: BedDouble, cta: t("home.promo_book_now") },
+    { title: t("home.promo_flights_deal"), subtitle: t("home.promo_flights_deal_sub"), gradient: "from-foreground to-foreground/80", icon: Plane, cta: t("home.promo_explore") },
+    { title: t("home.promo_hotel_sale"), subtitle: t("home.promo_hotel_sale_sub"), gradient: "from-foreground to-foreground/80", icon: BedDouble, cta: t("home.promo_book_now") },
     // Driver recruitment — US only
-    ...(!isKH ? [{ title: "Become a ZIVO Driver", subtitle: "", gradient: "from-muted to-muted", icon: Car, cta: "Join ZIVO Today", isDriverPromo: true as const }] : []),
+    ...(!isKH ? [{ title: "Become a ZIVO Driver", subtitle: "", gradient: "from-foreground to-foreground/80", icon: Car, cta: "Join ZIVO Today", isDriverPromo: true as const }] : []),
   ];
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -1243,13 +1243,13 @@ const AppHome = () => {
             </div>
             <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1 px-5" style={{ WebkitOverflowScrolling: "touch" }}>
               {[
-                { icon: Briefcase, label: "Jobs", desc: "Find work", href: "/personal-dashboard", gradient: "from-muted to-muted" },
-                { icon: Tv, label: "Live", desc: "Watch live", href: "/live", gradient: "from-muted to-muted" },
-                { icon: Rocket, label: "Creator Hub", desc: "Grow & earn", href: "/creator-dashboard", gradient: "from-muted to-muted" },
-                { icon: Heart, label: "Wellness", desc: "Stay healthy", href: "/wellness/activity", gradient: "from-muted to-muted" },
+                { icon: Briefcase, label: "Jobs", desc: "Find work", href: "/personal-dashboard", gradient: "from-foreground to-foreground/80" },
+                { icon: Tv, label: "Live", desc: "Watch live", href: "/live", gradient: "from-foreground to-foreground/80" },
+                { icon: Rocket, label: "Creator Hub", desc: "Grow & earn", href: "/creator-dashboard", gradient: "from-foreground to-foreground/80" },
+                { icon: Heart, label: "Wellness", desc: "Stay healthy", href: "/wellness/activity", gradient: "from-foreground to-foreground/80" },
                 { icon: Crown, label: "ZIVO Plus", desc: "Premium perks", href: "/zivo-plus", gradient: "from-amber-500 via-yellow-400 to-orange-400" },
-                { icon: Gem, label: "Rewards", desc: "Earn points", href: "/rewards", gradient: "from-muted to-muted" },
-                { icon: Sparkles, label: "Marketplace", desc: "Buy & sell", href: "/marketplace", gradient: "from-muted to-muted" },
+                { icon: Gem, label: "Rewards", desc: "Earn points", href: "/rewards", gradient: "from-foreground to-foreground/80" },
+                { icon: Sparkles, label: "Marketplace", desc: "Buy & sell", href: "/marketplace", gradient: "from-foreground to-foreground/80" },
                 { icon: Dumbbell, label: "Workouts", desc: "Train daily", href: "/wellness/workouts", gradient: "from-lime-500 via-green-500 to-emerald-500" },
               ].map((card, i) => (
                 <motion.button

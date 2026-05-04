@@ -56,7 +56,7 @@ export function useTopLiveGifters(limit = 5, sinceDays = 7) {
 
       // Fetch avatars for the winners
       const ids = top.map((t) => t.userId);
-      let avatarMap = new Map<string, string | null>();
+      const avatarMap = new Map<string, string | null>();
       if (ids.length > 0) {
         const { data: profiles } = await (supabase as any)
           .from("profiles")

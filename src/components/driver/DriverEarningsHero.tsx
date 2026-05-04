@@ -2,7 +2,7 @@
  * DriverEarningsHero - iOS 2026 earnings card with animated numbers
  * Ported from Zivo Driver Connect's NextGenHero
  */
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { Target, Clock, MapPin, Star, Award, HandCoins } from "lucide-react";
 

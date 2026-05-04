@@ -50,7 +50,7 @@ export function useStoreTrainingPrograms(storeId: string) {
       if (error) throw error;
 
       const ids = (programs || []).map((p) => p.id);
-      let modulesByProgram: Record<string, TrainingModule[]> = {};
+      const modulesByProgram: Record<string, TrainingModule[]> = {};
       if (ids.length) {
         const { data: mods } = await supabase
           .from("store_training_modules")

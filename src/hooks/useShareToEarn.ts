@@ -32,7 +32,7 @@ export function useShareToEarn() {
       try {
         // Get or create user's referral code
         const db = supabase as any;
-        let { data: existing } = await db
+        const { data: existing } = await db
           .from("user_referral_codes")
           .select("referral_code")
           .eq("user_id", user.id)

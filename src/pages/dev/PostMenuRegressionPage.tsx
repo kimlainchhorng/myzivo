@@ -154,7 +154,7 @@ function PostMenuRegressionPageInner() {
   const runAll = useCallback(async () => {
     for (const row of ROWS) {
       // Sequential to keep the UI legible and avoid clipboard contention.
-      // eslint-disable-next-line no-await-in-loop
+       
       await runOne(row);
     }
   }, [runOne]);

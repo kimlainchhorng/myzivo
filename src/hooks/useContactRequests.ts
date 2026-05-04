@@ -40,7 +40,7 @@ export function useContactRequests() {
 
     const rows: ContactRequest[] = (data ?? []) as any;
     const ids = Array.from(new Set(rows.map((r) => (r.from_user_id === user.id ? r.to_user_id : r.from_user_id))));
-    let profiles: Record<string, ContactRequest["profile"]> = {};
+    const profiles: Record<string, ContactRequest["profile"]> = {};
     if (ids.length) {
       const { data: profs } = await supabase
         .from("profiles")

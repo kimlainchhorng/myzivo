@@ -119,7 +119,7 @@ function parseScannedTime(value: unknown): { h: string; m: string; ap: "AM" | "P
   const raw = String(value || "").trim();
   const match = raw.match(/(\d{1,2})\s*:\s*(\d{2})(?::\d{2})?\s*(AM|PM)?/i);
   if (!match) return { h: "12", m: "00", ap: "PM" };
-  let hour = parseInt(match[1], 10);
+  const hour = parseInt(match[1], 10);
   const minute = match[2];
   const suffix = match[3]?.toUpperCase() as "AM" | "PM" | undefined;
   if (suffix) return { h: String(((hour + 11) % 12) + 1), m: minute, ap: suffix };

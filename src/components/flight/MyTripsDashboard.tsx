@@ -182,7 +182,7 @@ export const MyTripsDashboard = ({ className, onViewTrip, onDownloadBoardingPass
   }, [bookings]);
 
   const filteredTrips = useMemo(() => {
-    let filtered = trips.filter(trip => {
+    const filtered = trips.filter(trip => {
       const matchesTab = activeTab === 'all' || trip.status === activeTab;
       const matchesSearch = searchQuery === '' || 
         trip.bookingRef.toLowerCase().includes(searchQuery.toLowerCase()) ||

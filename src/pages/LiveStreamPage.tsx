@@ -231,7 +231,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
  const userIds = new Set<string>();
  (comments ?? []).forEach((c: any) =>userIds.add(c.user_id));
  (viewers ?? []).forEach((v: any) =>userIds.add(v.user_id));
- let profileMap = new Map<string, { full_name: string | null; avatar_url: string | null; is_verified?: boolean | null }>();
+ const profileMap = new Map<string, { full_name: string | null; avatar_url: string | null; is_verified?: boolean | null }>();
  if (userIds.size) {
  const { data: profs } = await supabase
  .from("profiles")

@@ -204,15 +204,64 @@ export default function RideHubPage() {
 
   const submitRateAndTip = async (data: { rating: number; tip: number; feedback: string; tags: string[] }) => {
     try {
-      const { error } = await supabase.from("feedback_submissions").insert({
+      // Find the most recent completed ride that hasn't been rated yet so the
+      // edge function can charge the tip against the right card-on-file and
+      // credit the right driver. Without this, the tip used to be a UI lie —
+      // amount written as plain text into feedback_submissions, never charged.
+      const { data: ride } = await supabase
+        .from("ride_requests")
+        .select("id")
+        .eq("user_id", user!.id)
+        .eq("status", "completed")
+        .is("rated_at", null)
+        .order("completed_at", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      const tipCents = Math.max(0, Math.round((data.tip || 0) * 100));
+      let tipResult: { charged: boolean; tip_cents: number; error?: string } | null = null;
+
+      if (ride?.id) {
+        const { data: tipResp, error: tipErr } = await supabase.functions.invoke("capture-ride-tip", {
+          body: {
+            ride_request_id: ride.id,
+            tip_cents: tipCents,
+            rating: data.rating,
+            feedback: data.feedback || null,
+          },
+        });
+        if (tipErr) {
+          tipResult = { charged: false, tip_cents: 0, error: tipErr.message || "Tip charge failed" };
+        } else if ((tipResp as any)?.error) {
+          tipResult = { charged: false, tip_cents: 0, error: (tipResp as any).error };
+        } else {
+          tipResult = tipResp as any;
+        }
+      }
+
+      // Always log the qualitative feedback even if there's no recent ride
+      // (e.g. user tapped Rate from a generic CTA). This keeps the existing
+      // feedback table populated and lets ops see ratings even if the tip
+      // path can't run.
+      await supabase.from("feedback_submissions").insert({
         category: "ride_rating",
         subject: `Ride rating: ${data.rating} stars`,
-        message: `Rating: ${data.rating}/5\nTip: $${data.tip.toFixed(2)}\nTags: ${data.tags.join(", ") || "none"}\n\nFeedback: ${data.feedback || "(no comment)"}`,
+        message: `Rating: ${data.rating}/5\nTip: $${data.tip.toFixed(2)} ${tipResult?.charged ? "✓ charged" : tipResult?.error ? `✗ ${tipResult.error}` : "(no recent ride)"}\nTags: ${data.tags.join(", ") || "none"}\n\nFeedback: ${data.feedback || "(no comment)"}`,
         rating: data.rating,
         user_id: user?.id ?? null,
       });
-      if (error) throw error;
-      toast.success("Thanks for the feedback!");
+
+      if (tipResult?.charged) {
+        toast.success(`Tip of $${data.tip.toFixed(2)} charged. Thanks!`);
+      } else if (tipResult?.error) {
+        toast.error(`Rating saved but tip couldn't be charged: ${tipResult.error}`);
+      } else if (tipCents > 0 && !ride?.id) {
+        toast.message("Rating saved", {
+          description: "We couldn't find a recent ride to attach the tip to. Please tip from your trip history.",
+        });
+      } else {
+        toast.success("Thanks for the feedback!");
+      }
     } catch (e: any) {
       toast.error(e?.message || "Could not submit rating. Please try again.");
     }

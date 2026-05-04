@@ -203,7 +203,7 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
     });
   };
 
-  useEffect(() => { reloadAll(); /* eslint-disable-next-line react-hooks/exhaustive-deps */ }, [storeId]);
+  useEffect(() => { reloadAll();   }, [storeId]);
   const draftKey = useMemo(() => `autorepair:invoice-draft:${storeId}`, [storeId]);
   const saveTimer = useRef<number | null>(null);
   const skipNextSave = useRef(true);
@@ -564,7 +564,7 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
       return sortKey === "oldest" ? at - bt : bt - at;
     });
     return all;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [dbRowsForTab, seedForTab, tab, query, statusFilter, sortKey]);
 
   // Read persisted draft (if any) to surface a "Continue editing" banner

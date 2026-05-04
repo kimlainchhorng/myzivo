@@ -638,7 +638,7 @@ export default function GoLivePage() {
  useEffect(() =>{
  if (!streamId || phase !== "live") return;
  if (!localStream || localStream.getTracks().length === 0) {
- console.log("[publisher] waiting for local media stream...");
+ if (import.meta.env.DEV) console.log("[publisher] waiting for local media stream...");
  return;
  }
 
@@ -647,7 +647,7 @@ export default function GoLivePage() {
  let alive = true;
  const pendingIce: RTCIceCandidateInit[] = [];
 
- console.log("[publisher] starting peer connection for stream", streamId);
+ if (import.meta.env.DEV) console.log("[publisher] starting peer connection for stream", streamId);
  pc = new RTCPeerConnection({ iceServers: ICE_SERVERS });
  // Swap in real TURN servers as soon as the edge function returns.
  getIceServers().then((servers) =>{
@@ -697,11 +697,11 @@ export default function GoLivePage() {
  };
 
  pc.oniceconnectionstatechange = () =>{
- console.log("[publisher] iceConnectionState=", pc?.iceConnectionState);
+ if (import.meta.env.DEV) console.log("[publisher] iceConnectionState=", pc?.iceConnectionState);
  };
 
  pc.onconnectionstatechange = () =>{
- console.log("[publisher] connectionState=", pc?.connectionState);
+ if (import.meta.env.DEV) console.log("[publisher] connectionState=", pc?.connectionState);
  if (pc?.connectionState === "connected") {
  logSelectedCandidatePair(pc, "publisher");
  return;
@@ -728,31 +728,31 @@ export default function GoLivePage() {
  try {
  if (row.type === "join") {
  if (creatingOffer) {
- console.log("[publisher] ignoring re-join, offer creation in progress");
+ if (import.meta.env.DEV) console.log("[publisher] ignoring re-join, offer creation in progress");
  return;
  }
  if (pc.signalingState !== "stable" && !answered) {
- console.log("[publisher] ignoring re-join, negotiation in progress");
+ if (import.meta.env.DEV) console.log("[publisher] ignoring re-join, negotiation in progress");
  return;
  }
  if (answered && (pc.connectionState === "connected" || pc.connectionState === "connecting")) {
- console.log("[publisher] ignoring re-join, already connected/connecting");
+ if (import.meta.env.DEV) console.log("[publisher] ignoring re-join, already connected/connecting");
  return;
  }
  creatingOffer = true;
  answered = false;
  try {
- console.log("[publisher] viewer joined, creating offer for stream", streamId);
+ if (import.meta.env.DEV) console.log("[publisher] viewer joined, creating offer for stream", streamId);
  const offer = await pc.createOffer();
  await pc.setLocalDescription(offer);
  await sendSignal(streamId, "publisher", "viewer", "offer", { type: offer.type, sdp: offer.sdp });
- console.log("[publisher] offer sent");
+ if (import.meta.env.DEV) console.log("[publisher] offer sent");
  } finally {
  creatingOffer = false;
  }
  } else if (row.type === "answer") {
  if (pc.signalingState !== "have-local-offer") {
- console.log("[publisher] ignoring answer, state=", pc.signalingState);
+ if (import.meta.env.DEV) console.log("[publisher] ignoring answer, state=", pc.signalingState);
  return;
  }
  await pc.setRemoteDescription(new RTCSessionDescription(row.payload));

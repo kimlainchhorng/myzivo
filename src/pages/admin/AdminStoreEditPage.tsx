@@ -1341,7 +1341,7 @@ export default function AdminStoreEditPage() {
   };
 
   const uploadPostMedia = async (file: File) => {
-    console.log("[PostMedia] uploadPostMedia called", { name: file.name, type: file.type, size: file.size });
+    if (import.meta.env.DEV) console.log("[PostMedia] uploadPostMedia called", { name: file.name, type: file.type, size: file.size });
     if (postMediaItems.length >= 10) {
       toast.error("Maximum 10 files per post");
       return;
@@ -1393,15 +1393,15 @@ export default function AdminStoreEditPage() {
       const { data: { user: authUser } } = await supabase.auth.getUser();
       if (!authUser) throw new Error("Not signed in");
       const path = `${authUser.id}/${storeId}/${Date.now()}-${mediaItemId}.${ext}`;
-      console.log("[PostMedia] uploading to storage path:", path);
+      if (import.meta.env.DEV) console.log("[PostMedia] uploading to storage path:", path);
       const { error: upErr, data: uploadData } = await supabase.storage.from("store-posts").upload(path, uploadFile, {
         upsert: true,
         contentType: uploadFile.type || undefined,
       });
-      console.log("[PostMedia] upload result:", { error: upErr, data: uploadData });
+      if (import.meta.env.DEV) console.log("[PostMedia] upload result:", { error: upErr, data: uploadData });
       if (upErr) throw upErr;
       const { data: urlData } = supabase.storage.from("store-posts").getPublicUrl(path);
-      console.log("[PostMedia] publicUrl:", urlData.publicUrl);
+      if (import.meta.env.DEV) console.log("[PostMedia] publicUrl:", urlData.publicUrl);
       clearPostMediaProgressTimer(mediaItemId);
       setPostMediaItems(prev => prev.map((item) => item.id === mediaItemId ? {
         ...item,
@@ -1472,7 +1472,7 @@ export default function AdminStoreEditPage() {
 
   const savePost = useMutation({
     mutationFn: async () => {
-      console.log("[SavePost] starting save", { postMediaUrls, hasPendingPostUploads, postMediaItems, postMediaMode });
+      if (import.meta.env.DEV) console.log("[SavePost] starting save", { postMediaUrls, hasPendingPostUploads, postMediaItems, postMediaMode });
       if (postMediaUrls.length === 0) throw new Error("Add at least one picture or video");
       if (hasPendingPostUploads) throw new Error("Please wait for media upload to finish");
 
@@ -1500,9 +1500,9 @@ export default function AdminStoreEditPage() {
         location: postLocation || null,
         scheduled_at: scheduledTimestamp,
       };
-      console.log("[SavePost] inserting:", JSON.stringify(insertPayload));
+      if (import.meta.env.DEV) console.log("[SavePost] inserting:", JSON.stringify(insertPayload));
       const { data, error } = await supabase.from("store_posts").insert(insertPayload as any).select();
-      console.log("[SavePost] result:", { data, error });
+      if (import.meta.env.DEV) console.log("[SavePost] result:", { data, error });
       if (error) throw error;
       return data;
     },
