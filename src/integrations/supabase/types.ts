@@ -60316,6 +60316,45 @@ export type Database = {
           },
         ]
       }
+      warehouses: {
+        Row: {
+          active: boolean
+          address: string | null
+          city: string | null
+          country: string
+          created_at: string
+          id: string
+          lat: number | null
+          lng: number | null
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          address?: string | null
+          city?: string | null
+          country: string
+          created_at?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          address?: string | null
+          city?: string | null
+          country?: string
+          created_at?: string
+          id?: string
+          lat?: number | null
+          lng?: number | null
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       waste_categories: {
         Row: {
           color: string | null
@@ -67119,6 +67158,25 @@ export type Database = {
         | "cancelled"
         | "failed"
       lodge_change_type: "reschedule" | "cancel" | "addon"
+      marketplace_fulfillment_status:
+        | "awaiting_payment"
+        | "awaiting_supplier"
+        | "supplier_ordered"
+        | "at_origin_warehouse"
+        | "in_transit"
+        | "at_local_warehouse"
+        | "out_for_delivery"
+        | "delivered"
+        | "cancelled"
+        | "refunded"
+      marketplace_payment_method: "card" | "aba" | "cash_on_delivery" | "wallet"
+      marketplace_source_platform:
+        | "taobao"
+        | "lazada"
+        | "1688"
+        | "shein"
+        | "manual"
+        | "other"
       notification_category:
         | "transactional"
         | "account"
@@ -67530,6 +67588,27 @@ export const Constants = {
         "failed",
       ],
       lodge_change_type: ["reschedule", "cancel", "addon"],
+      marketplace_fulfillment_status: [
+        "awaiting_payment",
+        "awaiting_supplier",
+        "supplier_ordered",
+        "at_origin_warehouse",
+        "in_transit",
+        "at_local_warehouse",
+        "out_for_delivery",
+        "delivered",
+        "cancelled",
+        "refunded",
+      ],
+      marketplace_payment_method: ["card", "aba", "cash_on_delivery", "wallet"],
+      marketplace_source_platform: [
+        "taobao",
+        "lazada",
+        "1688",
+        "shein",
+        "manual",
+        "other",
+      ],
       notification_category: [
         "transactional",
         "account",
