@@ -102,7 +102,7 @@ export default function CallScreen({
   const [duration, setDuration] = useState(0);
   const [remoteAccepted, setRemoteAccepted] = useState(false);
   const [isSpeaker, setIsSpeaker] = useState(false);
-  const timerRef = useRef<ReturnType<typeof setInterval>>();
+  const timerRef = useRef<ReturnType<typeof setInterval>>(undefined);
   const endReasonRef = useRef<"declined" | "no_answer" | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);

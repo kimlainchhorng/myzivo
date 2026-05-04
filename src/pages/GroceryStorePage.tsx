@@ -227,7 +227,7 @@ export default function GroceryStorePage() {
   const [selectedProduct, setSelectedProduct] = useState<StoreProduct | null>(null);
   const [filters, setFilters] = useState<ActiveFilters>(EMPTY_FILTERS);
   const [showFilters, setShowFilters] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const storeName = storeCfg?.name ?? "Walmart";
   const { products, isLoading, isLoadingMore, hasMore, error, search, loadMore, clearResults } = useStoreSearch(storeName);
@@ -262,7 +262,7 @@ export default function GroceryStorePage() {
 
   // Auto-load multiple pages on mount for a fuller grid
   const autoLoadCount = useRef(0);
-  const autoLoadTimer = useRef<ReturnType<typeof setTimeout>>();
+  const autoLoadTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   
   useEffect(() => {
     if (storeCfg && !hasLoadedDefaults.current) {

@@ -89,7 +89,7 @@ export default function StoreMapPicker({ open, onOpenChange, currentAddress, cur
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [searching, setSearching] = useState(false);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const marketConfig = MARKET_DEFAULTS[market || "US"] || MARKET_DEFAULTS.US;
   const marketCenter = { lat: marketConfig.lat, lng: marketConfig.lng };

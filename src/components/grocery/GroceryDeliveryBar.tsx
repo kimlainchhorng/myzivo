@@ -47,7 +47,7 @@ export default function GroceryDeliveryBar({ onAddressChange }: GroceryDeliveryB
   const [isSearching, setIsSearching] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [pendingCoords, setPendingCoords] = useState<{ lat: number; lng: number } | null>(null);
-  const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const debounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   // Notify parent when selected address changes
   useEffect(() => {

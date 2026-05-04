@@ -116,7 +116,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
   const [addressSuggestions, setAddressSuggestions] = useState<{ display: string; mainText: string; placeId: string }[]>([]);
   const [showAddrSuggestions, setShowAddrSuggestions] = useState(false);
   const [isSearchingAddr, setIsSearchingAddr] = useState(false);
-  const addrDebounceRef = useRef<ReturnType<typeof setTimeout>>();
+  const addrDebounceRef = useRef<ReturnType<typeof setTimeout>>(undefined);
   const [name, setName] = useState(savedProfile.name);
   const [phone, setPhone] = useState(savedProfile.phone);
   const [gpsAutoFilled, setGpsAutoFilled] = useState(false);

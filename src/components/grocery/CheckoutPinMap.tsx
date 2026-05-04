@@ -50,7 +50,7 @@ export function CheckoutPinMap({ coords, onLocationChange }: CheckoutPinMapProps
   const markerRef = useRef<google.maps.Marker | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
-  const geocodeTimeout = useRef<ReturnType<typeof setTimeout>>();
+  const geocodeTimeout = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const movePin = useCallback(async (lat: number, lng: number) => {
     if (markerRef.current) {
