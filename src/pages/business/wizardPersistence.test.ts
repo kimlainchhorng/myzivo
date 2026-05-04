@@ -98,6 +98,7 @@ vi.mock("@/integrations/supabase/client", () => {
 
 const baseSnapshot: WizardSnapshot = {
   bizName: "Sunrise Coffee",
+  bizDescription: "",
   bizPhone: "(555) 123-4567",
   bizEmail: "hello@sunrise.test",
   category: "cafe",
@@ -107,6 +108,12 @@ const baseSnapshot: WizardSnapshot = {
   contactEmail: "ada@example.com",
   logoUrl: null,
   bannerUrl: null,
+  address: "",
+  paymentTypes: [],
+  facebookUrl: "",
+  instagramUrl: "",
+  tiktokUrl: "",
+  telegramUrl: "",
 };
 
 beforeEach(() => {
