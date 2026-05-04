@@ -100,7 +100,7 @@ const AppMore = () => {
       options.push({ icon: Hotel, label: "Hotel Dashboard", description: "Manage your hotel", href: "/hotel-dashboard", color: "from-purple-500 to-purple-600" });
     }
     if (access?.isStoreOwner) {
-      options.push({ icon: Store, label: "Shop Dashboard", description: "Manage your shop", href: access.storeId ? `/admin/stores/${access.storeId}` : "/shop-dashboard", color: "from-emerald-500 to-green-500" });
+      options.push({ icon: Store, label: "Shop Dashboard", description: "Manage your shop", href: "/shop-dashboard", color: "from-emerald-500 to-green-500" });
     }
     return options;
   })();
