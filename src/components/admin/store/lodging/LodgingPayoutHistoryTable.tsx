@@ -39,7 +39,7 @@ const STATUS: Record<string, { label: string; className: string }> = {
 };
 
 const RAIL_ICON: Record<PayoutRail, typeof Banknote> = {
-  stripe: ShieldCheck, aba: Banknote, bank_wire: Landmark, paypal: Wallet,
+  stripe: ShieldCheck, aba: Banknote, bank_wire: Landmark, paypal: Wallet, square: Wallet, mercury: Landmark,
 };
 
 export default function LodgingPayoutHistoryTable({ storeId }: Props) {
