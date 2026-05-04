@@ -61,6 +61,7 @@ const ProtectedRoute = ({ children, requireAdmin = false, allowStoreOwner = fals
   });
   const ownerAccessResolved = ownerQuery.isSuccess || ownerQuery.isError;
   const ownerAccessAllowed = ownerQuery.data === true;
+  const publicStoreResolved = publicStoreQuery.isSuccess || publicStoreQuery.isError;
   const publicStorePath = getPublicStorePath(publicStoreQuery.data);
 
   if (isLoading) {
@@ -76,7 +77,7 @@ const ProtectedRoute = ({ children, requireAdmin = false, allowStoreOwner = fals
 
   if (!user) {
     if (allowStoreOwner && storeId) {
-      if (publicStoreQuery.isLoading) {
+      if (!publicStoreResolved) {
         return (
           <div className="min-h-screen flex items-center justify-center bg-background">
             <div className="flex flex-col items-center gap-4">
@@ -108,7 +109,7 @@ const ProtectedRoute = ({ children, requireAdmin = false, allowStoreOwner = fals
       }
 
       if (ownerAccessAllowed) return <>{children}</>;
-      if (publicStoreQuery.isLoading) {
+      if (!publicStoreResolved) {
         return (
           <div className="min-h-screen flex items-center justify-center bg-background">
             <div className="flex flex-col items-center gap-4">
