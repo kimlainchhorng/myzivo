@@ -261,12 +261,12 @@ const MEME_ITEMS = [
 /* ═══════════════ Future Actions ═══════════════ */
 
 const FUTURE_ACTIONS = [
-  { label: "Plan Weekend", emoji: "🗓️", text: "Let's plan this weekend ✨", desc: "Create a plan together", gradient: "from-foreground to-foreground/80" },
-  { label: "Split Fare", emoji: "🚗", text: "Let's split the ride fare.", desc: "Share ride costs", gradient: "from-emerald-500/20 to-green-500/10" },
-  { label: "Start Poll", emoji: "📊", text: "Quick poll: what do you prefer?", desc: "Get everyone's opinion", gradient: "from-foreground to-foreground/80" },
-  { label: "Book Table", emoji: "🍽️", text: "Let's reserve a table for tonight.", desc: "Restaurant reservation", gradient: "from-amber-500/20 to-orange-500/10" },
-  { label: "Trip Idea", emoji: "🧳", text: "Travel idea: weekend city break?", desc: "Suggest a getaway", gradient: "from-foreground to-foreground/80" },
-  { label: "Voice Note", emoji: "🎙️", text: "Send me a quick voice check-in.", desc: "Quick audio message", gradient: "from-foreground to-foreground/80" },
+  { label: "Plan Weekend", emoji: "🗓️", text: "Let's plan this weekend ✨", desc: "Create a plan together", gradient: "from-black to-zinc-900", textColor: "text-white" },
+  { label: "Split Fare", emoji: "🚗", text: "Let's split the ride fare.", desc: "Share ride costs", gradient: "from-[#ccfbf1] to-[#bbf7f0]", textColor: "text-[#047857]" },
+  { label: "Start Poll", emoji: "📊", text: "Quick poll: what do you prefer?", desc: "Get everyone's opinion", gradient: "from-black to-zinc-900", textColor: "text-white" },
+  { label: "Book Table", emoji: "🍽️", text: "Let's reserve a table for tonight.", desc: "Restaurant reservation", gradient: "from-[#ffedd5] to-[#fed7aa]", textColor: "text-[#c2410c]" },
+  { label: "Trip Idea", emoji: "🧳", text: "Travel idea: weekend city break?", desc: "Plan your next journey", gradient: "from-[#dbeafe] to-[#bfdbfe]", textColor: "text-[#1d4ed8]" },
+  { label: "Voice Note", emoji: "🎙️", text: "Send me a quick voice check-in.", desc: "Record a quick message", gradient: "from-black to-zinc-900", textColor: "text-white" },
 ];
 
 /* ═══════════════ Helpers ═══════════════ */
@@ -1315,10 +1315,16 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onQuickA
                       quickSend(`${item.emoji} ${item.text}`);
                     }
                   }}
-                    className={`rounded-2xl bg-gradient-to-br ${item.gradient} border border-border/20 p-4 text-left hover:scale-[1.02] active:scale-95 transition-all`}>
-                    <p className="text-3xl mb-2">{item.emoji}</p>
-                    <p className="text-sm font-bold">{item.label}</p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">{item.desc}</p>
+                    className={cn(
+                      "rounded-2xl bg-gradient-to-br border border-border/20 p-4 text-left hover:scale-[1.02] active:scale-95 transition-all h-28 flex flex-col justify-between",
+                      item.gradient,
+                      item.textColor || "text-foreground"
+                    )}>
+                    <p className="text-3xl mb-1">{item.emoji}</p>
+                    <div>
+                      <p className="text-sm font-bold leading-tight">{item.label}</p>
+                      <p className={cn("text-[11px] mt-0.5 leading-tight", item.textColor ? "opacity-70" : "text-muted-foreground")}>{item.desc}</p>
+                    </div>
                   </button>
                 ))}
               </div>

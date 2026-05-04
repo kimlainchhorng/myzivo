@@ -1924,37 +1924,37 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         )}
 
         {latestMissedCall && latestMissedCall.id !== dismissedMissedCallId && !activeCall && (
-          <div className="w-full px-4 py-2 border-t border-amber-500/15 bg-amber-500/8 flex items-center gap-3">
+          <div className="w-full px-5 py-3.5 border-t border-amber-500/20 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent flex items-center gap-4 relative overflow-hidden group">
+            <div className="absolute inset-0 bg-white/40 dark:bg-black/20 backdrop-blur-md -z-10" />
+            <div className="h-10 w-10 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0">
+              <Phone className="w-5 h-5 text-amber-600" />
+            </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[12px] font-semibold text-amber-700 truncate">
+              <p className="text-[14px] font-bold text-amber-700 leading-tight">
                 {latestMissedCall.call_type === "video" ? "Missed video call" : "Missed voice call"}
               </p>
-              <p className="text-[11px] text-amber-700/70 truncate">
+              <p className="text-[12px] text-amber-700/80 font-medium mt-0.5">
                 {latestMissedCall.status === "declined"
-                  ? "Call was declined. Tap below to call back."
+                  ? "Call was declined. Tap to call back."
                   : "Tap below to call back quickly."}
               </p>
             </div>
             <button
               onClick={() => { void handleStartCall(latestMissedCall.call_type as "voice" | "video"); }}
-              title={latestMissedCall.call_type === "video" ? "Call back with video" : "Call back with voice"}
-              aria-label={latestMissedCall.call_type === "video" ? "Call back with video" : "Call back with voice"}
-              className="h-9 px-3 rounded-full bg-amber-500 text-white text-[12px] font-semibold inline-flex items-center gap-1.5 shrink-0"
+              className="h-10 px-5 rounded-full bg-[#f59e0b] hover:bg-[#d97706] text-white text-[13px] font-bold shadow-lg shadow-amber-500/25 active:scale-95 transition-all flex items-center gap-2"
             >
-              {latestMissedCall.call_type === "video" ? <Video className="h-3.5 w-3.5" /> : <Phone className="h-3.5 w-3.5" />}
+              <Phone className="h-4 w-4 fill-current" />
               Call back
             </button>
             <button
               onClick={() => setDismissedMissedCallId(latestMissedCall.id)}
-              title="Dismiss missed call banner"
-              aria-label="Dismiss missed call banner"
-              className="h-8 w-8 rounded-full flex items-center justify-center text-amber-700/70 hover:bg-amber-500/10 shrink-0"
+              className="h-8 w-8 rounded-full flex items-center justify-center text-amber-700/50 hover:bg-amber-500/10 transition-colors"
+              aria-label="Dismiss"
             >
               <X className="h-4 w-4" />
             </button>
           </div>
         )}
-
         {activeCall && pipMode && (
           <button
             onClick={() => setPipMode(false)}

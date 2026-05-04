@@ -262,6 +262,55 @@ function MiniAppCard({ type, message, isMe, time, onAction }: { type: string; me
   );
 }
 
+function MusicCard({ message, isMe, time }: { message: string; isMe: boolean; time: string }) {
+  const lines = message.split("\n");
+  const titleLine = lines[0].replace("🎵 ", "").split(" — ");
+  const title = titleLine[0] || "Unknown Track";
+  const artist = titleLine[1] || "Unknown Artist";
+  const metaLine = lines[1] || "";
+
+  return (
+    <div className={`p-4 rounded-3xl border ${isMe ? "bg-black text-white border-white/10" : "bg-muted/50 border-border/30"} min-w-[260px] shadow-xl relative overflow-hidden group`}>
+      <div className="flex items-start justify-between gap-4">
+        <div className="min-w-0 flex-1">
+          <p className="text-[13px] font-bold opacity-60 flex items-center gap-1.5 mb-1">
+            <Music2 className="w-3.5 h-3.5" /> {artist}
+          </p>
+          <p className="text-[17px] font-black leading-tight tracking-tight mb-1">{title}</p>
+          <p className="text-[12px] font-medium opacity-80">{metaLine}</p>
+          <p className="text-[13px] font-bold mt-2">Listen:</p>
+        </div>
+        <button className="h-11 w-11 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-white/20 transition-all active:scale-90 shrink-0 shadow-lg border border-white/10">
+          <Play className="w-5 h-5 fill-white text-white ml-0.5" />
+        </button>
+      </div>
+      
+      <div className="mt-4 h-16 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center relative overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-500/10" />
+        <p className="text-[15px] font-bold relative z-10 flex items-center gap-2">
+          {title}
+          <div className="h-8 w-8 rounded-full bg-white text-black flex items-center justify-center shadow-sm">
+             <Play className="w-4 h-4 fill-current ml-0.5" />
+          </div>
+        </p>
+        <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded-md bg-black/40 text-[9px] font-black uppercase tracking-widest text-white/40">Zivo</div>
+      </div>
+      
+      <div className="mt-3 flex items-center justify-between">
+        <span className="text-[10px] font-bold opacity-40 uppercase tracking-widest">{time}</span>
+        <div className="flex items-center gap-1">
+          <div className="w-3 h-3 rounded-sm border border-white/20 flex items-center justify-center">
+            <Check className="w-2 h-2 text-white/40" />
+          </div>
+          <div className="w-3 h-3 rounded-sm border border-white/20 -ml-1.5 flex items-center justify-center bg-black">
+            <Check className="w-2 h-2 text-white/40" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 const ChatMessageBubble = memo(function ChatMessageBubble({
   id, message, time, isMe, isRead, isDelivered, imageUrl, videoUrl, isPinned, expiresAt, messageType, senderId, lockedPriceCents,
   editedAt, createdAt,
@@ -726,6 +775,10 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
         {message && (() => {
           if (messageType === "poll" || messageType === "todo" || messageType === "split_bill" || messageType === "book_table" || messageType === "trip_idea") {
             return <MiniAppCard type={messageType} message={message} isMe={isMe} time={time} onAction={onMiniAppAction} />;
+          }
+
+          if (message.startsWith("🎵")) {
+            return <MusicCard message={message} isMe={isMe} time={time} />;
           }
 
           // Sticker rendering (supports legacy + current formats)
