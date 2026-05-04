@@ -321,9 +321,11 @@ export default function BusinessPageWizard() {
     async (opts?: { persistProfile?: boolean }) => {
       if (!user) return { id: null as string | null };
       const snap: WizardSnapshot = {
-        bizName, bizPhone, bizEmail, category,
+        bizName, bizDescription, bizPhone, bizEmail, category,
         firstName, lastName, contactPhone, contactEmail,
         logoUrl, bannerUrl,
+        address, paymentTypes,
+        facebookUrl, instagramUrl, tiktokUrl, telegramUrl,
       };
       const res = await persistWizardPartial({
         userId: user.id,
