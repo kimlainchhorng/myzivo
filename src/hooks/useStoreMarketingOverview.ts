@@ -145,7 +145,7 @@ export function useStoreMarketingOverview(storeId: string | undefined) {
   useEffect(() => {
     if (!storeId) return;
     const channel = supabase
-      .channel(`marketing-overview-${storeId}`)
+      .channel(`marketing-overview-${storeId}-${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "marketing_campaign_events", filter: `store_id=eq.${storeId}` },

@@ -48,7 +48,7 @@ export function useMyStoryViews() {
   useEffect(() => {
     if (!userId) return;
     const channel = supabase
-      .channel(`story_views:${userId}`)
+      .channel(`story_views:${userId}-${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         {

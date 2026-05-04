@@ -294,7 +294,7 @@ export function useGroupCall({
     if (!groupCallId) return;
 
     const channel = supabase
-      .channel(`group-participants-${groupCallId}`)
+      .channel(`group-participants-${groupCallId}-${crypto.randomUUID()}`)
       .on("postgres_changes", {
         event: "UPDATE",
         schema: "public",

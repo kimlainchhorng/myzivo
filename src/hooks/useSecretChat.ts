@@ -152,7 +152,7 @@ export function useSecretChat(partnerId: string | null) {
   useEffect(() => {
     if (!chatId) return;
     const channel = supabase
-      .channel(`secret-${chatId}`)
+      .channel(`secret-${chatId}-${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "secret_messages", filter: `chat_id=eq.${chatId}` },

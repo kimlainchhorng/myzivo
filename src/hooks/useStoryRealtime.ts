@@ -15,7 +15,7 @@ export function useStoryRealtime(storyId: string | null | undefined) {
     if (!storyId) return;
 
     const channel = supabase
-      .channel(`story-live:${storyId}`)
+      .channel(`story-live:${storyId}-${crypto.randomUUID()}`)
       .on(
         "postgres_changes" as any,
         {

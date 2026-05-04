@@ -131,7 +131,7 @@ export function useSuggestedContacts() {
   useEffect(() => {
     if (!user) return;
     const ch = supabase
-      .channel(`suggested-${user.id}`)
+      .channel(`suggested-${user.id}-${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         { event: "INSERT", schema: "public", table: "follows", filter: `following_id=eq.${user.id}` },

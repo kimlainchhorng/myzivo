@@ -48,7 +48,7 @@ export function useDriverLocation(driverId: string | null | undefined) {
 
     // Subscribe to realtime changes
     const channel = supabase
-      .channel(`driver-location-${driverId}`)
+      .channel(`driver-location-${driverId}-${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         {

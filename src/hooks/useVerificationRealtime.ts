@@ -52,7 +52,7 @@ export function useVerificationRealtime() {
 
   useEffect(() => {
     const channel = supabase
-      .channel("verification-realtime")
+      .channel(`verification-realtime-${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         { event: "UPDATE", schema: "public", table: "profiles" },

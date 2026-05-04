@@ -27,7 +27,7 @@ export function useLodgingSidebarBadges(storeId?: string, enabled = true) {
     if (!storeId || !enabled) return;
     const channels = REALTIME_TABLES.map((table) => {
       return supabase
-        .channel(`lodging-badges-${table}-${storeId}`)
+        .channel(`lodging-badges-${table}-${storeId}-${crypto.randomUUID()}`)
         .on("postgres_changes", { event: "*", schema: "public", table, filter: `store_id=eq.${storeId}` }, () => {
           qc.invalidateQueries({ queryKey });
         })

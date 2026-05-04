@@ -47,7 +47,7 @@ export function useReactions(
     // Skip initial DB query when parent already provided pre-loaded reactions
     if (!initialState) load();
     const channel = (supabase as any)
-      .channel(`reactions-${messageId}`)
+      .channel(`reactions-${messageId}-${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "message_reactions", filter: `message_id=eq.${messageId}` },

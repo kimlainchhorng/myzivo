@@ -56,7 +56,7 @@ export function useThreadSettings() {
     refresh();
     if (!user) return;
     const ch = supabase
-      .channel(`thread-settings-${user.id}`)
+      .channel(`thread-settings-${user.id}-${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "chat_thread_settings", filter: `user_id=eq.${user.id}` },

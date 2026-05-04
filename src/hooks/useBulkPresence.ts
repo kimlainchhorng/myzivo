@@ -14,7 +14,7 @@ export function useBulkPresence(currentUserId: string | undefined, watchIds: str
     if (!currentUserId) return;
     lastKey.current = watchKey;
 
-    const channel = supabase.channel("chat-list-presence", {
+    const channel = supabase.channel(`chat-list-presence-${crypto.randomUUID()}`, {
       config: { presence: { key: currentUserId } },
     });
 

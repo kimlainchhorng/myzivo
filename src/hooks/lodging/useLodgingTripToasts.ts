@@ -20,7 +20,7 @@ export function useLodgingTripToasts(reservationId: string | undefined) {
     };
 
     const channel = supabase
-      .channel(`lodge-trip-toasts-${reservationId}`)
+      .channel(`lodge-trip-toasts-${reservationId}-${crypto.randomUUID()}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "lodge_reservation_receipts", filter: `reservation_id=eq.${reservationId}` }, () => {
         qc.invalidateQueries({ queryKey: ["lodge-receipt-history", reservationId] });
         show("success", "Receipt ready", "Your PDF receipt was generated and saved to history.");

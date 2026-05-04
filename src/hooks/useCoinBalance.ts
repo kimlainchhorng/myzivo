@@ -26,7 +26,7 @@ export function useCoinBalance() {
     void refresh();
     if (!user) return;
     const ch = (supabase as any)
-      .channel(`coin-balance-${user.id}`)
+      .channel(`coin-balance-${user.id}-${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "user_coin_balances", filter: `user_id=eq.${user.id}` },

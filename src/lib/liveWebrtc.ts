@@ -156,7 +156,7 @@ export function subscribeSignals(
   onSignal: (row: SignalRow) => void,
 ): () => void {
   const channel = supabase
-    .channel(`stream-signal-${streamId}-${myRole}-${Math.random().toString(36).slice(2, 8)}`)
+    .channel(`stream-signal-${streamId}-${myRole}-${crypto.randomUUID()}`)
     .on(
       "postgres_changes",
       {

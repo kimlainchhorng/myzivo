@@ -97,7 +97,7 @@ export function useLiveEarnings() {
   useEffect(() => {
     if (!user?.id) return;
     const ch = supabase
-      .channel(`live-earnings-${user.id}`)
+      .channel(`live-earnings-${user.id}-${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         {

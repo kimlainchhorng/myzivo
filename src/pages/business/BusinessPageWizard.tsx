@@ -14,7 +14,9 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, ArrowRight, Briefcase, Building2, User, Image as ImageIcon,
-  Camera, CheckCircle2, Loader2, Upload, X, Check, Save,
+  Camera, CheckCircle2, Loader2, Upload, X, Check, Save, Sparkles,
+  CreditCard, MapPin, Banknote, Smartphone, QrCode, Facebook,
+  Instagram, MessageCircle,
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -34,6 +36,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -45,15 +48,23 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-const STEP_COUNT = 5;
+const STEP_COUNT = 6;
 
-const STEP_LABELS = ["Basics", "Type", "Contact", "Profile", "Cover"] as const;
+const STEP_LABELS = ["Basics", "Type", "Contact", "Profile", "Cover", "Polish"] as const;
 const NEXT_STEP_LABELS: Record<number, string> = {
   1: "Business type",
   2: "Contact",
   3: "Profile photo",
   4: "Cover photo",
+  5: "Polish",
 };
+
+const PAYMENT_OPTIONS: { value: string; label: string; icon: typeof Banknote }[] = [
+  { value: "cash", label: "Cash", icon: Banknote },
+  { value: "card", label: "Card", icon: CreditCard },
+  { value: "qr", label: "QR / KHQR", icon: QrCode },
+  { value: "wallet", label: "E-wallet", icon: Smartphone },
+];
 
 const formatPhone = (value: string): string => {
   const d = value.replace(/\D/g, "").slice(0, 10);
@@ -62,7 +73,7 @@ const formatPhone = (value: string): string => {
   return `(${d.slice(0, 3)}) ${d.slice(3, 6)}-${d.slice(6)}`;
 };
 
-type Step = 1 | 2 | 3 | 4 | 5;
+type Step = 1 | 2 | 3 | 4 | 5 | 6;
 
 const SENTINEL_KEY = "biz-wizard-guard";
 
@@ -91,6 +102,7 @@ export default function BusinessPageWizard() {
 
   // Step 1
   const [bizName, setBizName] = useState("");
+  const [bizDescription, setBizDescription] = useState("");
   const [bizPhone, setBizPhone] = useState("");
   const [bizEmail, setBizEmail] = useState("");
   const [nameError, setNameError] = useState<string | null>(null);
@@ -111,6 +123,14 @@ export default function BusinessPageWizard() {
   const [uploadingBanner, setUploadingBanner] = useState(false);
   const logoInput = useRef<HTMLInputElement>(null);
   const bannerInput = useRef<HTMLInputElement>(null);
+
+  // Step 6 — optional polish
+  const [address, setAddress] = useState("");
+  const [paymentTypes, setPaymentTypes] = useState<string[]>(["cash", "card"]);
+  const [facebookUrl, setFacebookUrl] = useState("");
+  const [instagramUrl, setInstagramUrl] = useState("");
+  const [tiktokUrl, setTiktokUrl] = useState("");
+  const [telegramUrl, setTelegramUrl] = useState("");
 
   // Build the current snapshot used for both DB writes and dirty detection.
   const snapshot: WizardSnapshot = useMemo(

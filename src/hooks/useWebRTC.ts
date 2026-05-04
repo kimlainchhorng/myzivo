@@ -495,7 +495,7 @@ export function useWebRTC({
     if (!callId) return;
 
     const channel = supabase
-      .channel(`call-signal-${callId}`)
+      .channel(`call-signal-${callId}-${crypto.randomUUID()}`)
       .on("postgres_changes", {
         event: "UPDATE",
         schema: "public",

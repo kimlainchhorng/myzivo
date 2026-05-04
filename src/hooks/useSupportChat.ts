@@ -114,7 +114,7 @@ export function useTicketChatRealtime(
     if (!ticketId) return;
 
     const channel = supabase
-      .channel(`ticket-chat-${ticketId}`)
+      .channel(`ticket-chat-${ticketId}-${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         {
@@ -159,7 +159,7 @@ export function useDispatchTicketsRealtime(
 
   useEffect(() => {
     const channel = supabase
-      .channel("dispatch-tickets-realtime")
+      .channel(`dispatch-tickets-realtime-${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         {

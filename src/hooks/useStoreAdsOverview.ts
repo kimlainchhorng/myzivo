@@ -218,7 +218,7 @@ export function useStoreAdsOverview(storeId: string) {
   useEffect(() => {
     if (!storeId) return;
     const channel = supabase
-      .channel(`store-ads-${storeId}`)
+      .channel(`store-ads-${storeId}-${crypto.randomUUID()}`)
       .on(
         "postgres_changes" as any,
         {

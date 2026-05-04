@@ -9,7 +9,7 @@ export function useHostLodgingOpsToasts(storeId: string | undefined) {
   useEffect(() => {
     if (!storeId) return;
     const channel = supabase
-      .channel(`host-lodging-ops-${storeId}`)
+      .channel(`host-lodging-ops-${storeId}-${crypto.randomUUID()}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "lodge_reservations", filter: `store_id=eq.${storeId}` }, (payload) => {
         const row = (payload.new || payload.old) as any;
         qc.invalidateQueries({ queryKey: ["lodge-reservations", storeId] });

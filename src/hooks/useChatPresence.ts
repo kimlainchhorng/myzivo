@@ -55,7 +55,7 @@ export function useChatPresence(userId: string | undefined, recipientId: string)
   useEffect(() => {
     if (!recipientId) return;
     const channel = supabase
-      .channel(`profile-lastseen-${recipientId}`)
+      .channel(`profile-lastseen-${recipientId}-${crypto.randomUUID()}`)
       .on(
         "postgres_changes" as any,
         {

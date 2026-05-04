@@ -32,6 +32,7 @@ export async function findAvailableSlug(
 
 export type WizardSnapshot = {
   bizName: string;
+  bizDescription: string;
   bizPhone: string;
   bizEmail: string;
   category: StoreCategory | "";
@@ -41,6 +42,12 @@ export type WizardSnapshot = {
   contactEmail: string;
   logoUrl: string | null;
   bannerUrl: string | null;
+  address: string;
+  paymentTypes: string[];
+  facebookUrl: string;
+  instagramUrl: string;
+  tiktokUrl: string;
+  telegramUrl: string;
 };
 
 export type PersistArgs = {
@@ -68,23 +75,32 @@ export async function persistWizardPartial({
     if (!slug) return { id: null, error: SLUG_TAKEN_MESSAGE };
 
     // store_profiles has no `email` column — keep it out of the payload.
-    const payload = {
+    const payload: Record<string, unknown> = {
       owner_id: userId,
       name: snapshot.bizName.trim(),
       slug,
-      category: (snapshot.category || null) as any,
+      description: snapshot.bizDescription.trim() || null,
+      category: snapshot.category || null,
       phone: snapshot.bizPhone.replace(/\D/g, "") || null,
       logo_url: snapshot.logoUrl,
       banner_url: snapshot.bannerUrl,
+      address: snapshot.address.trim() || null,
+      facebook_url: snapshot.facebookUrl.trim() || null,
+      instagram_url: snapshot.instagramUrl.trim() || null,
+      tiktok_url: snapshot.tiktokUrl.trim() || null,
+      telegram_url: snapshot.telegramUrl.trim() || null,
       setup_complete: false,
     };
+    if (snapshot.paymentTypes.length > 0) {
+      payload.payment_types = snapshot.paymentTypes;
+    }
 
     let nextId: string | null = storeId;
 
     if (storeId) {
       const { error } = await supabase
         .from("store_profiles")
-        .update(payload)
+        .update(payload as never)
         .eq("id", storeId);
       if (error) {
         if ((error as any).code === "23505") return { id: null, error: SLUG_TAKEN_MESSAGE };
@@ -93,7 +109,7 @@ export async function persistWizardPartial({
     } else {
       const { data, error } = await supabase
         .from("store_profiles")
-        .insert(payload as any)
+        .insert(payload as never)
         .select("id")
         .single();
       if (error) {

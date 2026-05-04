@@ -53,7 +53,7 @@ export function useServiceOrder(orderId: string | null | undefined): UseServiceO
 
   useEffect(() => {
     if (!orderId) return;
-    const ch = supabase.channel(`zivo-order:${orderId}`)
+    const ch = supabase.channel(`zivo-order:${orderId}-${crypto.randomUUID()}`)
       .on("postgres_changes",
         { event: "UPDATE", schema: "public", table: "service_orders", filter: `id=eq.${orderId}` },
         (p) => setOrder(p.new as unknown as ServiceOrder),
@@ -83,7 +83,7 @@ export function useServiceOrder(orderId: string | null | undefined): UseServiceO
         }
       });
 
-    const ch = supabase.channel(`zivo-driver-loc:${driverId}`)
+    const ch = supabase.channel(`zivo-driver-loc:${driverId}-${crypto.randomUUID()}`)
       .on("postgres_changes",
         { event: "UPDATE", schema: "public", table: "drivers", filter: `id=eq.${driverId}` },
         (p) => {

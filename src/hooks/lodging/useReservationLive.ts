@@ -39,7 +39,7 @@ export function useReservationLive(reservationId: string | undefined) {
   useEffect(() => {
     if (!reservationId) return;
     const channel = supabase
-      .channel(`lodge-res-${reservationId}`)
+      .channel(`lodge-res-${reservationId}-${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "lodge_reservations", filter: `id=eq.${reservationId}` },

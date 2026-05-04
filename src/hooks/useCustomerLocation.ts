@@ -48,7 +48,7 @@ export function useCustomerLocation(tripId: string | null | undefined) {
 
     // Subscribe to realtime changes
     const channel = supabase
-      .channel(`customer-location-${tripId}`)
+      .channel(`customer-location-${tripId}-${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         {

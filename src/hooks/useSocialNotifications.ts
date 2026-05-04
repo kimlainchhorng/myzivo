@@ -65,21 +65,28 @@ export function useSocialNotifications(limit = 30) {
 
   // Realtime subscription
   useEffect(() => {
-    const setup = async () => {
+    let cancelled = false;
+    let activeChannel: ReturnType<typeof supabase.channel> | null = null;
+
+    (async () => {
       const { data: session } = await supabase.auth.getSession();
-      if (!session?.session?.user) return;
+      if (cancelled || !session?.session?.user) return;
       const channel = supabase
-        .channel("social-notifs")
+        .channel(`social-notifs-${crypto.randomUUID()}`)
         .on("postgres_changes", {
           event: "INSERT",
           schema: "public",
           table: "user_notifications",
           filter: `user_id=eq.${session.session.user.id}`,
-        }, () => { fetch(); })
-        .subscribe();
-      return () => { supabase.removeChannel(channel); };
+        }, () => { fetch(); });
+      activeChannel = channel;
+      channel.subscribe();
+    })();
+
+    return () => {
+      cancelled = true;
+      if (activeChannel) supabase.removeChannel(activeChannel);
     };
-    setup();
   }, [fetch]);
 
   const markAsRead = async (ids: string[]) => {

@@ -125,7 +125,7 @@ export function usePostComments({ postId, postSource, currentUserId }: UsePostCo
   useEffect(() => {
     if (!postId) return;
     const channel = supabase
-      .channel(`post-comments-${postSource}-${postId}`)
+      .channel(`post-comments-${postSource}-${postId}-${crypto.randomUUID()}`)
       .on(
         "postgres_changes" as any,
         { event: "INSERT", schema: "public", table: "post_comments", filter: `post_id=eq.${postId}` },

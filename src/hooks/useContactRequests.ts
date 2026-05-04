@@ -62,7 +62,7 @@ export function useContactRequests() {
   useEffect(() => {
     if (!user) return;
     const ch = supabase
-      .channel(`contact-requests-${user.id}`)
+      .channel(`contact-requests-${user.id}-${crypto.randomUUID()}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "contact_requests" }, () => refresh())
       .subscribe();
     return () => { supabase.removeChannel(ch); };

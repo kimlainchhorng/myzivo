@@ -76,7 +76,7 @@ export function useLiveActivityCount(): LiveActivity {
     refetch().catch(() => {});
 
     const channel = supabase
-      .channel(`live-activity:${user.id}`)
+      .channel(`live-activity:${user.id}-${crypto.randomUUID()}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "trips", filter: `rider_id=eq.${user.id}` }, () => refetch().catch(() => {}))
       .on("postgres_changes", { event: "*", schema: "public", table: "food_orders", filter: `customer_id=eq.${user.id}` }, () => refetch().catch(() => {}))
       .on("postgres_changes", { event: "*", schema: "public", table: "flight_bookings", filter: `user_id=eq.${user.id}` }, () => refetch().catch(() => {}))

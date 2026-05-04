@@ -84,7 +84,7 @@ export function useChannel(handle: string | undefined) {
   useEffect(() => {
     if (!channel?.id) return;
     const ch = supabase
-      .channel(`channel-${channel.id}`)
+      .channel(`channel-${channel.id}-${crypto.randomUUID()}`)
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "channel_posts", filter: `channel_id=eq.${channel.id}` },
