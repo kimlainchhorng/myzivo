@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
 import { Navigate, useLocation, useParams } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import { withRedirectParam } from "@/lib/authRedirect";
@@ -16,33 +16,22 @@ const ProtectedRoute = ({ children, requireAdmin = false, allowStoreOwner = fals
   const { user, isLoading, isAdmin } = useAuth();
   const location = useLocation();
   const { storeId } = useParams<{ storeId?: string }>();
-  const ownerCheckKey = allowStoreOwner && storeId && user?.id ? `${user.id}:${storeId}` : "";
-  const [ownerAccess, setOwnerAccess] = useState({ key: "", allowed: false, loading: false });
+  const shouldCheckStoreOwner = requireAdmin && allowStoreOwner && !!storeId && !!user?.id && !isAdmin;
 
-  useEffect(() => {
-    if (!requireAdmin || !allowStoreOwner || !storeId || !user?.id || isAdmin) {
-      setOwnerAccess({ key: ownerCheckKey, allowed: false, loading: false });
-      return;
-    }
-
-    let cancelled = false;
-    setOwnerAccess({ key: ownerCheckKey, allowed: false, loading: true });
-
-    supabase
-      .from("store_profiles")
-      .select("id")
-      .eq("id", storeId)
-      .eq("owner_id", user.id)
-      .maybeSingle()
-      .then(({ data, error }) => {
-        if (cancelled) return;
-        setOwnerAccess({ key: ownerCheckKey, allowed: !!data && !error, loading: false });
-      });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [allowStoreOwner, isAdmin, ownerCheckKey, requireAdmin, storeId, user?.id]);
+  const { data: ownerAccessAllowed = false, isLoading: ownerAccessLoading } = useQuery({
+    queryKey: ["protected-route-store-owner", user?.id, storeId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from("store_profiles")
+        .select("id")
+        .eq("id", storeId!)
+        .eq("owner_id", user!.id)
+        .maybeSingle();
+      return !!data && !error;
+    },
+    enabled: shouldCheckStoreOwner,
+    staleTime: 30_000,
+  });
 
   if (isLoading) {
     return (
@@ -63,7 +52,7 @@ const ProtectedRoute = ({ children, requireAdmin = false, allowStoreOwner = fals
 
   if (requireAdmin && !isAdmin) {
     if (allowStoreOwner && storeId) {
-      if (ownerAccess.loading || ownerAccess.key !== ownerCheckKey) {
+      if (ownerAccessLoading) {
         return (
           <div className="min-h-screen flex items-center justify-center bg-background">
             <div className="flex flex-col items-center gap-4">
@@ -74,7 +63,7 @@ const ProtectedRoute = ({ children, requireAdmin = false, allowStoreOwner = fals
         );
       }
 
-      if (ownerAccess.allowed) return <>{children}</>;
+      if (ownerAccessAllowed) return <>{children}</>;
     }
 
     return (
