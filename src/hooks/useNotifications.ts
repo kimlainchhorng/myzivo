@@ -154,42 +154,44 @@ export function useNotifications(limit = 50): UseNotificationsResult {
 
   // Subscribe to real-time updates
   useEffect(() => {
-    const setupSubscription = async () => {
+    let cancelled = false;
+    let activeChannel: ReturnType<typeof supabase.channel> | null = null;
+
+    (async () => {
       const { data: session } = await supabase.auth.getSession();
-      if (!session?.session?.user) return;
+      if (cancelled || !session?.session?.user) return;
 
-      const channel = supabase
-        .channel('notifications-realtime')
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'notifications',
-            filter: `user_id=eq.${session.session.user.id}`
-          },
-          (payload) => {
-            const newNotification = payload.new as unknown as Notification;
-            if (newNotification.channel === 'in_app') {
-              setNotifications(prev => [newNotification, ...prev].slice(0, limit));
-              setUnreadCount(prev => prev + 1);
-              
-              // Show toast for new notification
-              toast({
-                title: newNotification.title,
-                description: newNotification.body.substring(0, 100),
-              });
-            }
+      const channel = supabase.channel(
+        `notifications-realtime-${session.session.user.id}-${crypto.randomUUID()}`,
+      );
+      activeChannel = channel;
+      channel.on(
+        'postgres_changes' as never,
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${session.session.user.id}`,
+        },
+        (payload: { new: unknown }) => {
+          const newNotification = payload.new as Notification;
+          if (newNotification.channel === 'in_app') {
+            setNotifications((prev) => [newNotification, ...prev].slice(0, limit));
+            setUnreadCount((prev) => prev + 1);
+            toast({
+              title: newNotification.title,
+              description: newNotification.body.substring(0, 100),
+            });
           }
-        )
-        .subscribe();
+        },
+      );
+      channel.subscribe();
+    })();
 
-      return () => {
-        supabase.removeChannel(channel);
-      };
+    return () => {
+      cancelled = true;
+      if (activeChannel) supabase.removeChannel(activeChannel);
     };
-
-    setupSubscription();
   }, [limit, toast]);
 
   return {
