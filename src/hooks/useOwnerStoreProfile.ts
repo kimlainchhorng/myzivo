@@ -27,7 +27,7 @@ export function useOwnerStoreProfile() {
       if (!user) return null;
       const { data, error } = await supabase
         .from("store_profiles")
-        .select("id, name, category, logo_url, setup_complete, owner_id")
+        .select("id, name, slug, category, logo_url, setup_complete, owner_id")
         .eq("owner_id", user.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -47,7 +47,7 @@ export function useOwnerStores() {
       if (!user) return [];
       const { data, error } = await supabase
         .from("store_profiles")
-        .select("id, name, category, logo_url, setup_complete, owner_id")
+        .select("id, name, slug, category, logo_url, setup_complete, owner_id")
         .eq("owner_id", user.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
