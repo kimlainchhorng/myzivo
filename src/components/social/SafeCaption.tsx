@@ -147,27 +147,34 @@ export default function SafeCaption({ text, className }: SafeCaptionProps) {
             // Per product direction: hashtags in feed/reel render as plain
             // inline text (no emerald highlight, no underline) but remain
             // clickable so users can still tap through to /tag/<token>.
+            // Use <span role="button"> so SafeCaption can be safely nested
+            // inside another <button> (post tap-to-expand) without producing
+            // invalid DOM (button-in-button).
             return (
-              <button
+              <span
                 key={i}
-                type="button"
+                role="button"
+                tabIndex={0}
                 onClick={(e) => handleHashtagClick(e, seg.token!)}
-                className="inline text-inherit font-normal active:opacity-70"
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleHashtagClick(e as any, seg.token!); } }}
+                className="inline text-inherit font-normal cursor-pointer active:opacity-70"
               >
                 {seg.value}
-              </button>
+              </span>
             );
           }
           if (seg.type === "mention") {
             return (
-              <button
+              <span
                 key={i}
-                type="button"
+                role="button"
+                tabIndex={0}
                 onClick={(e) => handleMentionClick(e, seg.token!)}
-                className="text-primary font-medium hover:underline active:opacity-70 inline"
+                onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); handleMentionClick(e as any, seg.token!); } }}
+                className="text-primary font-medium hover:underline cursor-pointer active:opacity-70 inline"
               >
                 {seg.value}
-              </button>
+              </span>
             );
           }
           const risk = seg.risk ?? "neutral";

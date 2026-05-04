@@ -18,6 +18,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { formatDistanceToNow } from "date-fns";
 import SEOHead from "@/components/SEOHead";
+import CreatorTipsLedger from "@/components/creator/CreatorTipsLedger";
 
 export default function CreatorDashboardPage() {
   const navigate = useNavigate();
@@ -356,6 +357,13 @@ export default function CreatorDashboardPage() {
             })}
           </div>
         </div>
+
+        {/* Tips ledger — full per-tip breakdown with rail + status */}
+        {user?.id && (
+          <div className="mb-4">
+            <CreatorTipsLedger creatorId={user.id} />
+          </div>
+        )}
 
         {/* Recent Activity */}
         <div>

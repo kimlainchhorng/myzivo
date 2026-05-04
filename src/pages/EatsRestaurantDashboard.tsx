@@ -3,6 +3,7 @@
  */
 import { useState, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, Package, Clock, CheckCircle, XCircle, ChefHat,
@@ -20,6 +21,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import PullToRefresh from "@/components/shared/PullToRefresh";
+import EatsAutoPayoutLedger from "@/components/admin/store/restaurant/EatsAutoPayoutLedger";
+import EatsRequestPayoutSheet from "@/components/admin/store/restaurant/EatsRequestPayoutSheet";
 
 // ─── Types ───────────────────────────────────────────────────
 interface MenuItem {
@@ -54,7 +57,7 @@ export default function EatsRestaurantDashboard() {
   const [menuItems, setMenuItems] = useState<MenuItem[]>([]);
   const [orders, setOrders] = useState<FoodOrder[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"orders" | "menu" | "stats">("orders");
+  const [activeTab, setActiveTab] = useState<"orders" | "menu" | "stats" | "payouts">("orders");
   const [orderFilter, setOrderFilter] = useState<"active" | "completed" | "all">("active");
   const [refreshing, setRefreshing] = useState(false);
 
@@ -288,6 +291,7 @@ export default function EatsRestaurantDashboard() {
             <TabsTrigger value="orders" className="flex-1 text-xs">Orders</TabsTrigger>
             <TabsTrigger value="menu" className="flex-1 text-xs">Menu</TabsTrigger>
             <TabsTrigger value="stats" className="flex-1 text-xs">Stats</TabsTrigger>
+            <TabsTrigger value="payouts" className="flex-1 text-xs">Payouts</TabsTrigger>
           </TabsList>
         </Tabs>
       </div>
@@ -409,9 +413,113 @@ export default function EatsRestaurantDashboard() {
               </div>
             </motion.div>
           )}
+
+          {activeTab === "payouts" && restaurant?.id && (
+            <motion.div key="payouts" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="space-y-4">
+              <EatsPayoutsPanel restaurantId={restaurant.id} restaurantCountry={(restaurant as any).market || null} />
+              <EatsAutoPayoutLedger restaurantId={restaurant.id} />
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
     </PullToRefresh>
+  );
+}
+
+// ─── Payouts Panel ───────────────────────────────────────────
+function EatsPayoutsPanel({ restaurantId, restaurantCountry }: { restaurantId: string; restaurantCountry: string | null }) {
+  const [requestOpen, setRequestOpen] = useState(false);
+
+  // Available = sum(paid orders total) * (1 - commission_rate) - already-transferred (Stripe Connect ledger) - already-requested (pending/approved manual)
+  const { data: stats } = useQuery({
+    queryKey: ["eats-payouts-summary", restaurantId],
+    queryFn: async () => {
+      const [paidRes, ledgerRes, openReqRes, restRes] = await Promise.all([
+        (supabase.from("food_orders") as any)
+          .select("total_amount, payment_status")
+          .eq("restaurant_id", restaurantId)
+          .eq("payment_status", "paid"),
+        (supabase.from("eats_payout_ledger") as any)
+          .select("amount_cents, direction, status")
+          .eq("restaurant_id", restaurantId)
+          .eq("status", "created"),
+        (supabase.from("eats_payout_requests") as any)
+          .select("amount_cents, status")
+          .eq("restaurant_id", restaurantId)
+          .in("status", ["pending", "approved"]),
+        (supabase.from("restaurants") as any)
+          .select("commission_rate")
+          .eq("id", restaurantId)
+          .maybeSingle(),
+      ]);
+
+      const grossCents = (paidRes.data || []).reduce((s: number, r: any) => s + Math.round(Number(r.total_amount || 0) * 100), 0);
+      const commissionRate = Number(restRes.data?.commission_rate ?? 0.10);
+      const platformFee = Math.round(grossCents * commissionRate);
+      const netCents = grossCents - platformFee;
+
+      const transferred = (ledgerRes.data || []).reduce((s: number, r: any) => s + (r.direction === "transfer" ? r.amount_cents : -r.amount_cents), 0);
+      const reservedManual = (openReqRes.data || []).reduce((s: number, r: any) => s + (r.amount_cents || 0), 0);
+      const available = Math.max(0, netCents - transferred - reservedManual);
+
+      return { grossCents, platformFee, netCents, transferred, reservedManual, available, commissionRate };
+    },
+    enabled: !!restaurantId,
+    staleTime: 30_000,
+  });
+
+  const money = (cents: number) => `$${(cents / 100).toFixed(2)}`;
+
+  return (
+    <>
+      <div className="rounded-lg border border-border bg-card p-4 space-y-3">
+        <div className="flex items-center justify-between gap-3 flex-wrap">
+          <div>
+            <p className="text-sm font-semibold flex items-center gap-1.5">
+              <DollarSign className="h-3.5 w-3.5 text-primary" />
+              Manual payout request
+            </p>
+            <p className="text-[11px] text-muted-foreground mt-0.5">
+              Request a payout for orders paid via PayPal, Square, Wallet, or Cash — Stripe-paid orders auto-transfer below.
+            </p>
+          </div>
+          <Button
+            size="sm"
+            onClick={() => setRequestOpen(true)}
+            disabled={!stats || stats.available <= 0}
+          >
+            Request payout
+          </Button>
+        </div>
+
+        {stats && (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+            <Stat label="Gross paid" value={money(stats.grossCents)} />
+            <Stat label={`Platform fee (${(stats.commissionRate * 100).toFixed(0)}%)`} value={money(stats.platformFee)} />
+            <Stat label="Auto-transferred" value={money(stats.transferred)} />
+            <Stat label="Available" value={money(stats.available)} highlight />
+          </div>
+        )}
+      </div>
+      {stats && (
+        <EatsRequestPayoutSheet
+          restaurantId={restaurantId}
+          restaurantCountry={restaurantCountry}
+          availableCents={stats.available}
+          open={requestOpen}
+          onOpenChange={setRequestOpen}
+        />
+      )}
+    </>
+  );
+}
+
+function Stat({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
+  return (
+    <div className={`rounded-md border ${highlight ? "border-primary/30 bg-primary/5" : "border-border/40 bg-muted/20"} p-2`}>
+      <p className="text-[10px] uppercase tracking-wider text-muted-foreground">{label}</p>
+      <p className={`text-sm font-bold tabular-nums ${highlight ? "text-primary" : ""}`}>{value}</p>
+    </div>
   );
 }
 

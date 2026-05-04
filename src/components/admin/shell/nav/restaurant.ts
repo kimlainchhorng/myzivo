@@ -7,6 +7,7 @@ import {
   Tag,
   TrendingUp,
   Settings,
+  Wallet,
 } from "lucide-react";
 import type { NavConfig } from "./types";
 
@@ -26,6 +27,12 @@ export const restaurantNav: NavConfig = {
         { title: "Reviews", url: "/eats/reviews", icon: Star },
         { title: "Promotions", url: "/eats/promotions", icon: Tag },
         { title: "Analytics", url: "/eats/restaurant-dashboard?tab=stats", icon: TrendingUp },
+      ],
+    },
+    {
+      label: "Finance",
+      items: [
+        { title: "Payouts", url: "/eats/restaurant-dashboard?tab=payouts", icon: Wallet },
       ],
     },
     {

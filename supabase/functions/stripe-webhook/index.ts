@@ -6,6 +6,8 @@
 import { serve, createClient } from "../_shared/deps.ts";
 import Stripe from "../_shared/stripe.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { notifyEatsOrderConfirmed, notifyEatsRefundIssued } from "../_shared/eats-notifications.ts";
+import { notifyGroceryOrderConfirmed } from "../_shared/grocery-notifications.ts";
 
 // Audit logging helper
 async function logPaymentAudit(
@@ -114,7 +116,139 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     const stripe = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
-    
+
+    /**
+     * Auto-transfer the restaurant's share to their Connect account on a paid
+     * Eats order. Idempotent — UNIQUE(order_id, direction) on the ledger
+     * prevents double-transfer on webhook redelivery. Skips silently when the
+     * restaurant hasn't onboarded Connect or has opted out.
+     */
+    const queueEatsAutoTransfer = async (orderId: string) => {
+      const { data: o } = await supabase
+        .from("food_orders")
+        .select("id, restaurant_id, total_amount, payment_provider, payment_status")
+        .eq("id", orderId)
+        .maybeSingle();
+      if (!o || (o as any).payment_status !== "paid") return;
+      // Only Stripe-paid orders get an auto-transfer; PayPal/Square route through their own webhooks.
+      if ((o as any).payment_provider && (o as any).payment_provider !== "stripe") return;
+      const settledCents = Math.round(Number((o as any).total_amount || 0) * 100);
+      if (!settledCents) return;
+
+      const { data: r } = await supabase
+        .from("restaurants")
+        .select("id, stripe_account_id, commission_rate, auto_payout_enabled")
+        .eq("id", (o as any).restaurant_id)
+        .maybeSingle();
+      if (!r?.stripe_account_id || (r as any).auto_payout_enabled === false) return;
+
+      const rate = Number((r as any).commission_rate ?? 0.10);
+      const commissionCents = Math.round(settledCents * rate);
+      const transferCents = Math.max(0, settledCents - commissionCents);
+      if (transferCents <= 0) return;
+
+      const { error: insertErr } = await supabase
+        .from("eats_payout_ledger")
+        .insert({
+          order_id: orderId,
+          restaurant_id: (o as any).restaurant_id,
+          stripe_account_id: (r as any).stripe_account_id,
+          direction: "transfer",
+          amount_cents: transferCents,
+          commission_cents: commissionCents,
+          commission_rate: rate,
+          status: "queued",
+        });
+      if (insertErr) {
+        if ((insertErr as any).code === "23505") return; // already done
+        console.error("[stripe-webhook] eats ledger reserve failed", insertErr);
+        return;
+      }
+
+      try {
+        const transfer = await stripe.transfers.create(
+          {
+            amount: transferCents,
+            currency: "usd",
+            destination: (r as any).stripe_account_id,
+            transfer_group: `eats-${orderId}`,
+            metadata: {
+              order_id: orderId,
+              restaurant_id: (o as any).restaurant_id,
+              commission_cents: String(commissionCents),
+              type: "eats_auto_transfer",
+            },
+          },
+          { idempotencyKey: `eats-transfer-${orderId}` },
+        );
+        await supabase
+          .from("eats_payout_ledger")
+          .update({ status: "created", stripe_transfer_id: transfer.id, updated_at: new Date().toISOString() })
+          .eq("order_id", orderId)
+          .eq("direction", "transfer");
+      } catch (e: any) {
+        const msg = String(e?.message || e);
+        console.error("[stripe-webhook] eats auto-transfer failed", msg);
+        await supabase
+          .from("eats_payout_ledger")
+          .update({ status: "failed", error_message: msg, updated_at: new Date().toISOString() })
+          .eq("order_id", orderId)
+          .eq("direction", "transfer");
+      }
+    };
+
+    /**
+     * Reverse the auto-transfer when an Eats refund completes.
+     */
+    const queueEatsAutoReversal = async (orderId: string, reason: string) => {
+      const { data: ledger } = await supabase
+        .from("eats_payout_ledger")
+        .select("id, stripe_transfer_id, amount_cents, restaurant_id, stripe_account_id")
+        .eq("order_id", orderId)
+        .eq("direction", "transfer")
+        .eq("status", "created")
+        .maybeSingle();
+      if (!ledger || !(ledger as any).stripe_transfer_id) return;
+
+      const { error: insertErr } = await supabase
+        .from("eats_payout_ledger")
+        .insert({
+          order_id: orderId,
+          restaurant_id: (ledger as any).restaurant_id,
+          stripe_account_id: (ledger as any).stripe_account_id,
+          direction: "reversal",
+          amount_cents: (ledger as any).amount_cents,
+          commission_cents: 0,
+          status: "queued",
+        });
+      if (insertErr) {
+        if ((insertErr as any).code === "23505") return;
+        console.error("[stripe-webhook] eats reversal reserve failed", insertErr);
+        return;
+      }
+
+      try {
+        const reversal = await stripe.transfers.createReversal(
+          (ledger as any).stripe_transfer_id,
+          { amount: (ledger as any).amount_cents, metadata: { order_id: orderId, reason } },
+          { idempotencyKey: `eats-reversal-${orderId}` },
+        );
+        await supabase
+          .from("eats_payout_ledger")
+          .update({ status: "created", stripe_reversal_id: reversal.id, updated_at: new Date().toISOString() })
+          .eq("order_id", orderId)
+          .eq("direction", "reversal");
+      } catch (e: any) {
+        const msg = String(e?.message || e);
+        console.error("[stripe-webhook] eats auto-reversal failed", msg);
+        await supabase
+          .from("eats_payout_ledger")
+          .update({ status: "failed", error_message: msg, updated_at: new Date().toISOString() })
+          .eq("order_id", orderId)
+          .eq("direction", "reversal");
+      }
+    };
+
     const body = await req.text();
     const signature = req.headers.get("stripe-signature");
 
@@ -152,6 +286,46 @@ serve(async (req) => {
           : session.payment_intent?.id;
 
         console.log("[Webhook] Checkout completed:", session.id, "Type:", metadata.type);
+
+        // Creator one-time / lifetime tier purchase — recurring tiers go through
+        // customer.subscription.created instead. Identify by metadata.tier_id +
+        // creator_id + subscriber_id and a non-subscription session mode.
+        if (metadata.tier_id && metadata.creator_id && metadata.subscriber_id && session.mode === "payment") {
+          const row = {
+            creator_id: metadata.creator_id,
+            subscriber_id: metadata.subscriber_id,
+            tier_id: metadata.tier_id,
+            status: "active",
+            price_cents: session.amount_total ?? null,
+            stripe_session_id: session.id,
+            payment_method: "stripe",
+            started_at: new Date().toISOString(),
+            // Lifetime — no expiry. (NULL expires_at signals lifetime.)
+            expires_at: null,
+          } as any;
+          const { error: subErr } = await supabase
+            .from("creator_subscriptions")
+            .upsert(row, { onConflict: "stripe_session_id" });
+          if (subErr) {
+            console.error("[Webhook] lifetime tier upsert failed", subErr);
+          } else {
+            console.log("[Webhook] Lifetime creator tier activated", { session: session.id });
+            try {
+              await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${supabaseServiceKey}` },
+                body: JSON.stringify({
+                  user_id: metadata.creator_id,
+                  notification_type: "creator_new_subscriber",
+                  title: "New lifetime subscriber 💎",
+                  body: `Someone bought your lifetime tier — that's permanent revenue.`,
+                  data: { type: "creator_new_subscriber", tier_id: metadata.tier_id, action_url: "/creator/dashboard" },
+                }),
+              });
+            } catch {}
+          }
+          break;
+        }
 
         if (metadata.type === "ride") {
           // Update ride request
@@ -528,17 +702,41 @@ serve(async (req) => {
       case "payment_intent.succeeded": {
         const paymentIntent = event.data.object as Stripe.PaymentIntent;
         console.log("[Webhook] Payment succeeded:", paymentIntent.id);
-        
+
         // Update any orders with this payment intent ID
         await supabase
           .from("ride_requests")
           .update({ payment_status: "paid" })
           .eq("stripe_payment_intent_id", paymentIntent.id);
 
-        await supabase
+        const { data: paidFoodOrders } = await supabase
           .from("food_orders")
           .update({ payment_status: "paid" })
-          .eq("stripe_payment_id", paymentIntent.id);
+          .eq("stripe_payment_id", paymentIntent.id)
+          .select("id");
+
+        // Trigger Stripe Connect auto-transfer + customer confirmation email/SMS
+        // for each food order that just flipped to paid.
+        for (const row of (paidFoodOrders ?? []) as { id: string }[]) {
+          try { await queueEatsAutoTransfer(row.id); }
+          catch (e) { console.warn("[Webhook] eats auto-transfer skipped", e); }
+          try { await notifyEatsOrderConfirmed(supabase, row.id, "Card"); }
+          catch (e) { console.warn("[Webhook] eats confirmation email skipped", e); }
+        }
+
+        // Webhook safety net for grocery orders — confirm-grocery-payment is the
+        // primary path but if it fails (e.g., client closed tab) the webhook
+        // still flips payment_status and fires the confirmation.
+        const { data: paidGroceryOrders } = await supabase
+          .from("shopping_orders")
+          .update({ payment_status: "paid" })
+          .eq("stripe_payment_intent_id", paymentIntent.id)
+          .neq("payment_status", "paid")
+          .select("id");
+        for (const row of (paidGroceryOrders ?? []) as { id: string }[]) {
+          try { await notifyGroceryOrderConfirmed(supabase, row.id, "Card"); }
+          catch (e) { console.warn("[Webhook] grocery confirmation email skipped", e); }
+        }
 
         // Log for flight payments
         if (paymentIntent.metadata?.type === 'flight') {
@@ -644,14 +842,19 @@ serve(async (req) => {
             })
             .eq("stripe_payment_intent_id", paymentIntentId);
 
-          // Update food orders
-          await supabase
+          // Update food orders + email/SMS the customer about the completed refund.
+          const { data: refundedOrders } = await supabase
             .from("food_orders")
-            .update({ 
+            .update({
               refund_status: "refunded",
               refunded_at: new Date().toISOString(),
             })
-            .eq("stripe_payment_id", paymentIntentId);
+            .eq("stripe_payment_id", paymentIntentId)
+            .select("id");
+          for (const row of (refundedOrders ?? []) as { id: string }[]) {
+            try { await notifyEatsRefundIssued(supabase, row.id, charge.amount_refunded, "Card", "complete"); }
+            catch (e) { console.warn("[Webhook] eats refund email skipped", e); }
+          }
 
           // Update P2P bookings
           await supabase
@@ -808,7 +1011,76 @@ serve(async (req) => {
       case "customer.subscription.updated": {
         const subscription = event.data.object as Stripe.Subscription;
         const metadata = subscription.metadata || {};
-        
+
+        // Creator tier subscription — written from subscribe-to-tier checkout.
+        // Metadata is set by stripe.checkout.sessions.create({ metadata: { tier_id, creator_id, subscriber_id } })
+        // and propagates to the resulting Subscription via session settings.
+        if (metadata.tier_id && metadata.creator_id && metadata.subscriber_id) {
+          const periodEnd = subscription.current_period_end
+            ? new Date(subscription.current_period_end * 1000).toISOString()
+            : null;
+          const status = subscription.status === "active" || subscription.status === "trialing"
+            ? "active"
+            : subscription.status; // canceled | incomplete | past_due | etc.
+
+          // Pull the unit price off the first item to record price_cents at the time of subscription.
+          const item = subscription.items?.data?.[0];
+          const priceCents = item?.price?.unit_amount ?? null;
+
+          const row = {
+            creator_id: metadata.creator_id,
+            subscriber_id: metadata.subscriber_id,
+            tier_id: metadata.tier_id,
+            status,
+            price_cents: priceCents,
+            stripe_subscription_id: subscription.id,
+            payment_method: "stripe",
+            started_at: new Date(subscription.start_date * 1000).toISOString(),
+            expires_at: periodEnd,
+          } as any;
+
+          // Upsert by stripe_subscription_id so retries don't double-insert.
+          const { error: subErr } = await supabase
+            .from("creator_subscriptions")
+            .upsert(row, { onConflict: "stripe_subscription_id" });
+          if (subErr) {
+            console.error("[Webhook] creator_subscriptions upsert failed", subErr);
+          } else {
+            console.log("[Webhook] creator_subscriptions synced", { sub: subscription.id, status });
+          }
+
+          // Notify creator + subscriber on first activation.
+          if (event.type === "customer.subscription.created" && status === "active") {
+            try {
+              await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${supabaseServiceKey}` },
+                body: JSON.stringify({
+                  user_id: metadata.creator_id,
+                  notification_type: "creator_new_subscriber",
+                  title: "New subscriber 🎉",
+                  body: `Someone subscribed to your ${item?.price?.nickname || "tier"} tier.`,
+                  data: { type: "creator_new_subscriber", tier_id: metadata.tier_id, action_url: "/creator/dashboard" },
+                }),
+              });
+            } catch {}
+            try {
+              await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${supabaseServiceKey}` },
+                body: JSON.stringify({
+                  user_id: metadata.subscriber_id,
+                  notification_type: "subscription_active",
+                  title: "Subscription active ✨",
+                  body: `Your subscription is active. Welcome aboard!`,
+                  data: { type: "subscription_active", creator_id: metadata.creator_id, action_url: `/u/${metadata.creator_id}` },
+                }),
+              });
+            } catch {}
+          }
+          break;
+        }
+
         // Only handle membership subscriptions
         if (metadata.type === "membership" && metadata.user_id && metadata.plan_id) {
           console.log("[Webhook] Membership subscription event:", event.type, "Sub:", subscription.id);
@@ -848,7 +1120,37 @@ serve(async (req) => {
       case "customer.subscription.deleted": {
         const subscription = event.data.object as Stripe.Subscription;
         const metadata = subscription.metadata || {};
-        
+
+        // Creator tier cancellation
+        if (metadata.tier_id && metadata.creator_id && metadata.subscriber_id) {
+          const cancelledAt = subscription.canceled_at
+            ? new Date(subscription.canceled_at * 1000).toISOString()
+            : new Date().toISOString();
+          const { error } = await supabase
+            .from("creator_subscriptions")
+            .update({ status: "cancelled", cancelled_at: cancelledAt })
+            .eq("stripe_subscription_id", subscription.id);
+          if (error) {
+            console.error("[Webhook] creator_subscriptions cancel failed", error);
+          } else {
+            console.log("[Webhook] creator subscription cancelled", subscription.id);
+            try {
+              await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${supabaseServiceKey}` },
+                body: JSON.stringify({
+                  user_id: metadata.subscriber_id,
+                  notification_type: "subscription_cancelled",
+                  title: "Subscription cancelled",
+                  body: "Your creator subscription was cancelled. You can resubscribe anytime.",
+                  data: { type: "subscription_cancelled", creator_id: metadata.creator_id, action_url: `/u/${metadata.creator_id}` },
+                }),
+              });
+            } catch {}
+          }
+          break;
+        }
+
         if (metadata.type === "membership") {
           console.log("[Webhook] Membership subscription deleted:", subscription.id);
           

@@ -142,7 +142,7 @@ export default function EatsLanding() {
   const [selectedSpeed, setSelectedSpeed] = useState("standard");
   const [noUtensils, setNoUtensils] = useState(false);
   const [specialInstructions, setSpecialInstructions] = useState<Record<string, string>>({});
-  const [paymentType, setPaymentType] = useState<"cash" | "card" | "wallet">("card");
+  const [paymentType, setPaymentType] = useState<"cash" | "card" | "wallet" | "paypal" | "square">("card");
 
   // Favorites — persisted via localStorage and shared across the app
   const { favorites, toggle: toggleFavoriteHook } = useNetworkFavorites("restaurant");
@@ -714,11 +714,13 @@ export default function EatsLanding() {
               {/* Payment Method */}
               <div className="rounded-2xl bg-card border border-border/40 p-4">
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5"><CreditCard className="w-3 h-3" /> Payment method</h3>
-                <div className="flex gap-2">
+                <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                   {([
                     { id: "card" as const, label: "💳 Card" },
                     { id: "cash" as const, label: "💵 Cash" },
                     { id: "wallet" as const, label: `👛 $${(walletBalanceCents / 100).toFixed(2)}` },
+                    { id: "paypal" as const, label: "🅿️ PayPal" },
+                    { id: "square" as const, label: "🟦 Square" },
                   ]).map(p => (
                     <button key={p.id} onClick={() => {
                       if (p.id === "wallet" && walletBalanceCents < Math.round(grandTotal * 100)) {
@@ -727,13 +729,18 @@ export default function EatsLanding() {
                       }
                       setPaymentType(p.id);
                     }}
-                      className={cn("flex-1 py-3 rounded-xl text-xs font-bold transition-all touch-manipulation active:scale-95",
+                      className={cn("py-3 rounded-xl text-xs font-bold transition-all touch-manipulation active:scale-95",
                         paymentType === p.id ? "bg-primary text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40",
                         p.id === "wallet" && walletBalanceCents < Math.round(grandTotal * 100) && "opacity-50")}>
                       {p.label}
                     </button>
                   ))}
                 </div>
+                {(paymentType === "paypal" || paymentType === "square") && (
+                  <p className="text-[11px] text-muted-foreground mt-2">
+                    You'll be redirected to {paymentType === "paypal" ? "PayPal" : "Square"} to confirm payment, then come right back to track your order.
+                  </p>
+                )}
               </div>
 
               {/* Tip */}

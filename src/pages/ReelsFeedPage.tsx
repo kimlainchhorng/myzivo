@@ -80,6 +80,7 @@ import Download from "lucide-react/dist/esm/icons/download";
 import Tv2 from "lucide-react/dist/esm/icons/tv-2";
 import HandHeart from "lucide-react/dist/esm/icons/hand-heart";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
+import Pencil from "lucide-react/dist/esm/icons/pencil";
 import Plane from "lucide-react/dist/esm/icons/plane";
 import Hotel from "lucide-react/dist/esm/icons/hotel";
 import Car from "lucide-react/dist/esm/icons/car";
@@ -95,7 +96,7 @@ const AlertDialogDescription = lazy(() => import("@/components/ui/alert-dialog")
 const AlertDialogFooter = lazy(() => import("@/components/ui/alert-dialog").then(m => ({ default: m.AlertDialogFooter })));
 const AlertDialogHeader = lazy(() => import("@/components/ui/alert-dialog").then(m => ({ default: m.AlertDialogHeader })));
 const AlertDialogTitle = lazy(() => import("@/components/ui/alert-dialog").then(m => ({ default: m.AlertDialogTitle })));
-import { useState, useRef, useCallback, useEffect } from "react";
+import { useState, useRef, useCallback, useEffect, memo, useMemo } from "react";
 import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { getPostShareUrl } from "@/lib/getPublicOrigin";
@@ -2900,7 +2901,10 @@ function FeedPollCard() {
 
 /* ── Individual Feed Card (IG/FB style) ──────────────────────────── */
 
-function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detailMode }: { item: FeedItem; currentUserId: string | null; onOpenFullscreen?: () => void; autoPlayVideo?: boolean; detailMode?: boolean }) {
+// Memoized so tab switches / parent state changes don't re-render every visible
+// card. Cards re-render only when their own item identity changes or when
+// currentUserId / autoPlayVideo / detailMode flips.
+const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detailMode }: { item: FeedItem; currentUserId: string | null; onOpenFullscreen?: () => void; autoPlayVideo?: boolean; detailMode?: boolean }) {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const hiddenPosts = useHiddenPosts();
@@ -4388,6 +4392,60 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
         hideCloseButton
       >
         <div className="px-2 pb-4">
+          {/* Owner-only actions surfaced at the TOP so they're visible without
+              scrolling. Edit / Pin / Comment settings / Delete are the most
+              relevant rows when viewing one's own post. */}
+          {isOwner && (
+            <>
+              <button
+                onClick={() => { setShowPostMenu(false); setEditCaptionText(item.caption || ""); setShowEditCaption(true); }}
+                className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+              >
+                <Pencil className="h-5 w-5 text-foreground" />
+                <span className="text-sm font-medium text-foreground">Edit caption</span>
+              </button>
+              <button
+                onClick={async () => {
+                  setShowPostMenu(false);
+                  const realId = item.id.replace(/^u-/, "");
+                  const table = item.source === "store" ? "store_posts" : "user_posts";
+                  await (supabase as any).from(table).update({ is_pinned: true }).eq("id", realId);
+                  toast.success("Post pinned to your profile");
+                }}
+                className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+              >
+                <Pin className="h-5 w-5 text-foreground" />
+                <span className="text-sm font-medium text-foreground">Pin to profile</span>
+              </button>
+              <button
+                onClick={() => { setShowPostMenu(false); setShowCommentSettings(true); }}
+                className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
+              >
+                <Settings2 className="h-5 w-5 text-foreground" />
+                <span className="text-sm font-medium text-foreground">Comment settings</span>
+              </button>
+              <button
+                onClick={async () => {
+                  if (!confirm("Delete this post permanently? This cannot be undone.")) return;
+                  setShowPostMenu(false);
+                  const realId = item.id.replace(/^u-/, "");
+                  const { error } = await supabase.from("user_posts").delete().eq("id", realId).eq("user_id", currentUserId);
+                  if (error) {
+                    toast.error("Failed to delete post");
+                  } else {
+                    toast.success("Post deleted");
+                    queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
+                    queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
+                  }
+                }}
+                className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-destructive/10 rounded-xl min-h-[48px]"
+              >
+                <Trash2 className="h-5 w-5 text-destructive" />
+                <span className="text-sm font-medium text-destructive">Delete post</span>
+              </button>
+              <hr className="my-1 border-border/40" />
+            </>
+          )}
           <button
             onClick={() => { setShowPostMenu(false); setShowReportSheet(true); setReportStep("categories"); setReportCategory(""); }}
             className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
@@ -4525,64 +4583,6 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
             </button>
           )}
 
-          {isOwner && (
-            <button
-              onClick={() => { setShowPostMenu(false); setShowCommentSettings(true); }}
-              className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
-            >
-              <Settings2 className="h-5 w-5 text-foreground" />
-              <span className="text-sm font-medium text-foreground">Comment settings</span>
-            </button>
-          )}
-
-          {/* Owner-only: Pin post */}
-          {isOwner && (
-            <button
-              onClick={async () => {
-                setShowPostMenu(false);
-                const realId = item.id.replace(/^u-/, "");
-                const table = item.source === "store" ? "store_posts" : "user_posts";
-                await (supabase as any).from(table).update({ is_pinned: true }).eq("id", realId);
-                toast.success("Post pinned to your profile");
-              }}
-              className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
-            >
-              <Pin className="h-5 w-5 text-foreground" />
-              <span className="text-sm font-medium text-foreground">Pin to profile</span>
-            </button>
-          )}
-
-          {/* Owner-only: Edit caption */}
-          {isOwner && (
-            <button
-              onClick={() => { setShowPostMenu(false); setEditCaptionText(item.caption || ""); setShowEditCaption(true); }}
-              className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
-            >
-              <Settings2 className="h-5 w-5 text-foreground" />
-              <span className="text-sm font-medium text-foreground">Edit caption</span>
-            </button>
-          )}
-
-          {/* Owner-only: Delete post */}
-          {isOwner && (
-            <button
-              onClick={async () => {
-                setShowPostMenu(false);
-                const realId = item.id.replace(/^u-/, "");
-                const { error } = await supabase.from("user_posts").delete().eq("id", realId).eq("user_id", currentUserId);
-                if (error) {
-                  toast.error("Failed to delete post");
-                } else {
-                  toast.success("Post deleted");
-                  queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
-                }
-              }}
-              className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
-            >
-              <Trash2 className="h-5 w-5 text-destructive" />
-              <span className="text-sm font-medium text-destructive">Delete post</span>
-            </button>
-          )}
         </div>
       </SwipeableSheet>
 
@@ -4837,4 +4837,15 @@ function FeedCard({ item, currentUserId, onOpenFullscreen, autoPlayVideo, detail
       )}
     </div>
   );
-}
+}, (prev, next) => {
+  // Custom equality: only re-render when meaningful props change. The
+  // onOpenFullscreen handler is recreated each parent render (closes over
+  // filteredItems), so default Object.is would defeat the memo on every tab
+  // click / state change.
+  return (
+    prev.item === next.item &&
+    prev.currentUserId === next.currentUserId &&
+    prev.autoPlayVideo === next.autoPlayVideo &&
+    prev.detailMode === next.detailMode
+  );
+});

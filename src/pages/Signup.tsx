@@ -104,222 +104,184 @@ const Signup = () => {
   // Post-signup confirmation screen (legacy, unused now)
   if (sentTo) {
     return (
-      <div className="min-h-[100dvh] w-full bg-gradient-to-br from-emerald-950 via-background to-background flex items-center justify-center px-4 py-10">
-        <div className="w-full max-w-md text-center">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 mb-4">
-            <MailCheck className="w-8 h-8 text-emerald-400" />
-          </div>
-          <h1 className="text-2xl font-bold text-foreground">Check your email</h1>
-          <p className="text-sm text-muted-foreground mt-2">
-            We sent a confirmation link to <span className="font-semibold text-foreground">{sentTo}</span>.
-            Click the link to activate your account, then come back to sign in.
-          </p>
-          <Button
-            asChild
-            className="mt-6 w-full h-12 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white"
-          >
-            <Link to={`/login${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`}>
+      <div className="min-h-[100dvh] w-full bg-white dark:bg-black flex items-center justify-center px-5 py-8">
+        <div className="w-full max-w-sm">
+          <div className="bg-white dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-white/10 rounded-xl px-8 py-10 shadow-sm text-center">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 via-rose-500 to-fuchsia-600 shadow-lg shadow-rose-500/20 mb-4">
+              <MailCheck className="w-8 h-8 text-white" />
+            </div>
+            <h1 className="text-xl font-bold text-zinc-900 dark:text-white">Check your email</h1>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400 mt-2">
+              We sent a confirmation link to <span className="font-semibold text-zinc-900 dark:text-white">{sentTo}</span>.
+              Click the link to activate your account, then come back to sign in.
+            </p>
+            <Link
+              to={`/login${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`}
+              className="block mt-6 w-full h-9 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 transition flex items-center justify-center shadow-md shadow-rose-500/20"
+            >
               Go to Sign In
             </Link>
-          </Button>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="relative min-h-[100dvh] w-full overflow-hidden flex items-center justify-center px-4 py-3 bg-[#04100d]">
+    <div className="relative min-h-[100dvh] w-full overflow-hidden flex items-center justify-center px-5 py-8 bg-white dark:bg-black">
       <SEOHead title="Create your ZIVO account" description="Sign up for ZIVO to search flights, hotels and more." />
 
-      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute inset-0 opacity-90 [background:conic-gradient(from_180deg_at_50%_50%,#022c22_0deg,#064e3b_90deg,#0f766e_180deg,#022c22_270deg,#022c22_360deg)]" />
-        <div className="absolute -top-40 -left-32 w-[520px] h-[520px] rounded-full bg-emerald-400/40 blur-[140px] animate-pulse" />
-        <div className="absolute top-1/4 -right-40 w-[560px] h-[560px] rounded-full bg-teal-300/25 blur-[160px] animate-pulse" style={{ animationDelay: "1.4s" }} />
-        <div className="absolute -bottom-48 left-1/3 w-[620px] h-[620px] rounded-full bg-emerald-700/35 blur-[180px] animate-pulse" style={{ animationDelay: "2.6s" }} />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(0,0,0,0.85)_100%)]" />
-        <div className="absolute inset-0 opacity-[0.05] [background-image:linear-gradient(rgba(255,255,255,0.6)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.6)_1px,transparent_1px)] [background-size:56px_56px] [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_75%)]" />
+      {/* Subtle gradient backdrop matching Login page */}
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-32 -right-32 w-[420px] h-[420px] rounded-full bg-gradient-to-br from-fuchsia-300/30 via-orange-200/30 to-rose-200/30 blur-3xl dark:from-fuchsia-600/20 dark:via-orange-600/20 dark:to-rose-600/20" />
+        <div className="absolute -bottom-32 -left-32 w-[420px] h-[420px] rounded-full bg-gradient-to-tr from-amber-200/30 via-pink-200/30 to-purple-200/30 blur-3xl dark:from-amber-600/15 dark:via-pink-600/15 dark:to-purple-600/15" />
       </div>
 
-      <div className="relative w-full max-w-md animate-flip-in">
-        <div className="text-center mb-3">
-          <div className="inline-flex items-center justify-center w-12 h-12 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 shadow-[0_8px_32px_rgba(16,185,129,0.45)] mb-2 ring-1 ring-white/20">
-            <MailCheck className="w-6 h-6 text-white" />
-          </div>
-          <h1 className="text-2xl font-bold bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent tracking-tight">ZIVO ID</h1>
-          <p className="text-xs text-white/60 mt-0.5">
-            Get Started Free — No credit card needed
-          </p>
-        </div>
-
-        <div className="relative rounded-2xl p-[1px] bg-gradient-to-b from-emerald-400/50 via-emerald-500/10 to-transparent shadow-[0_30px_80px_-20px_rgba(16,185,129,0.45)]">
-        <form
-          onSubmit={onSubmit}
-          className="rounded-2xl bg-[#0a1f1a]/85 backdrop-blur-2xl p-4 space-y-2.5"
-        >
-          {/* Honeypot — visually + AT-hidden, but bots still fill it. */}
-          <div aria-hidden="true" style={{
-            position: "absolute", left: "-10000px", top: "auto",
-            width: "1px", height: "1px", overflow: "hidden",
-          }}>
-            <label htmlFor="company-website">Company website (leave blank)</label>
-            <input
-              id="company-website"
-              type="text"
-              tabIndex={-1}
-              autoComplete="off"
-              value={companyWebsite}
-              onChange={(e) => setCompanyWebsite(e.target.value)}
-            />
-          </div>
-
-          {/* Names */}
-          <div className="grid grid-cols-2 gap-2">
-            <div className="space-y-1">
-              <label htmlFor="su-first" className="text-sm font-medium text-foreground">First Name</label>
-              <div className="relative">
-                <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                <input
-                  id="su-first"
-                  type="text"
-                  autoComplete="given-name"
-                  value={firstName}
-                  onChange={(e) => setFirstName(e.target.value)}
-                  placeholder="John"
-                  disabled={submitting}
-                  className="w-full h-10 pl-9 pr-3 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
-                />
-              </div>
+      <div className="relative w-full max-w-sm">
+        {/* Main card */}
+        <div className="bg-white dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-white/10 rounded-xl px-8 pt-9 pb-6 shadow-sm">
+          {/* Brand wordmark */}
+          <div className="flex flex-col items-center mb-6">
+            <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 via-rose-500 to-fuchsia-600 flex items-center justify-center mb-4 shadow-lg shadow-rose-500/20">
+              <span className="text-white font-black text-2xl tracking-tight italic" style={{ fontFamily: "'Brush Script MT', cursive" }}>Z</span>
             </div>
-            <div className="space-y-1">
-              <label htmlFor="su-last" className="text-sm font-medium text-foreground">Last Name</label>
-              <div className="relative">
-                <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                <input
-                  id="su-last"
-                  type="text"
-                  autoComplete="family-name"
-                  value={lastName}
-                  onChange={(e) => setLastName(e.target.value)}
-                  placeholder="Doe"
-                  disabled={submitting}
-                  className="w-full h-10 pl-9 pr-3 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
-                />
-              </div>
-            </div>
+            <h1 className="text-3xl font-light tracking-wider text-zinc-900 dark:text-white" style={{ fontFamily: "'Snell Roundhand', 'Brush Script MT', cursive", fontWeight: 600 }}>
+              Zivo
+            </h1>
+            <p className="text-center text-sm font-semibold text-zinc-500 dark:text-zinc-400 mt-3 leading-snug">
+              Sign up to see photos and videos<br />from your friends.
+            </p>
           </div>
 
-          {/* Email */}
-          <div className="space-y-1">
-            <label htmlFor="su-email" className="text-sm font-medium text-foreground">Email</label>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+          <form onSubmit={onSubmit} className="space-y-2">
+            {/* Honeypot */}
+            <div aria-hidden="true" style={{
+              position: "absolute", left: "-10000px", top: "auto",
+              width: "1px", height: "1px", overflow: "hidden",
+            }}>
+              <label htmlFor="company-website">Company website (leave blank)</label>
               <input
-                id="su-email"
-                type="email"
-                inputMode="email"
-                autoComplete="email"
-                autoCapitalize="none"
-                autoCorrect="off"
-                spellCheck={false}
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@example.com"
-                disabled={submitting}
-                className="w-full h-10 pl-9 pr-3 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
+                id="company-website"
+                type="text"
+                tabIndex={-1}
+                autoComplete="off"
+                value={companyWebsite}
+                onChange={(e) => setCompanyWebsite(e.target.value)}
               />
             </div>
-          </div>
 
-          {/* Password */}
-          <div className="space-y-1">
-            <label htmlFor="su-pw" className="text-sm font-medium text-foreground">Password</label>
+            <input
+              id="su-email"
+              type="email"
+              inputMode="email"
+              autoComplete="email"
+              autoCapitalize="none"
+              autoCorrect="off"
+              spellCheck={false}
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              placeholder="Email"
+              disabled={submitting}
+              className="w-full h-11 px-3 rounded-md bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 focus:border-zinc-400 dark:focus:border-zinc-500 outline-none text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 transition"
+            />
+
+            <div className="grid grid-cols-2 gap-2">
+              <input
+                id="su-first"
+                type="text"
+                autoComplete="given-name"
+                value={firstName}
+                onChange={(e) => setFirstName(e.target.value)}
+                placeholder="First name"
+                disabled={submitting}
+                className="w-full h-11 px-3 rounded-md bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 focus:border-zinc-400 dark:focus:border-zinc-500 outline-none text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 transition"
+              />
+              <input
+                id="su-last"
+                type="text"
+                autoComplete="family-name"
+                value={lastName}
+                onChange={(e) => setLastName(e.target.value)}
+                placeholder="Last name"
+                disabled={submitting}
+                className="w-full h-11 px-3 rounded-md bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 focus:border-zinc-400 dark:focus:border-zinc-500 outline-none text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 transition"
+              />
+            </div>
+
             <div className="relative">
-              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
               <input
                 id="su-pw"
                 type={showPassword ? "text" : "password"}
                 autoComplete="new-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="At least 8 characters"
+                placeholder="Password"
                 disabled={submitting}
-                className="w-full h-10 pl-9 pr-10 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
+                className="w-full h-11 px-3 pr-10 rounded-md bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 focus:border-zinc-400 dark:focus:border-zinc-500 outline-none text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 transition"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200"
                 tabIndex={-1}
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
               </button>
             </div>
-          </div>
 
-          {/* Terms */}
-          <label className="flex items-start gap-2 select-none cursor-pointer">
-            <Checkbox
-              checked={agree}
-              onCheckedChange={(v) => setAgree(!!v)}
-              className="mt-0.5 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
-            />
-            <span className="text-sm text-muted-foreground">
-              I agree to the{" "}
-              <LegalPreviewLink kind="terms" className="text-emerald-400 hover:text-emerald-300 font-medium underline-offset-2 hover:underline">Terms of Service</LegalPreviewLink>
-              {" "}and{" "}
-              <LegalPreviewLink kind="privacy" className="text-emerald-400 hover:text-emerald-300 font-medium underline-offset-2 hover:underline">Privacy Policy</LegalPreviewLink>
-            </span>
-          </label>
+            <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug pt-2">
+              By signing up, you agree to our{" "}
+              <LegalPreviewLink kind="terms" className="font-medium text-zinc-700 dark:text-zinc-200 hover:underline">Terms</LegalPreviewLink>
+              {", "}
+              <LegalPreviewLink kind="privacy" className="font-medium text-zinc-700 dark:text-zinc-200 hover:underline">Privacy Policy</LegalPreviewLink>
+              {" and Cookies Policy."}
+            </p>
 
-          {/* Submit */}
-          <Button
-            type="submit"
-            disabled={submitting}
-            className="w-full h-11 rounded-xl text-sm font-semibold bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30"
-          >
-            {submitting ? (
-              <Loader2 className="w-5 h-5 animate-spin" />
-            ) : (
-              <>
-                Create Account <ArrowRight className="w-4 h-4 ml-1" />
-              </>
-            )}
-          </Button>
+            <label className="flex items-start gap-2 select-none cursor-pointer pt-1">
+              <Checkbox
+                checked={agree}
+                onCheckedChange={(v) => setAgree(!!v)}
+                className="mt-0.5 data-[state=checked]:bg-rose-500 data-[state=checked]:border-rose-500"
+              />
+              <span className="text-xs text-zinc-600 dark:text-zinc-400">
+                I confirm I'm 13+ and agree to the terms above.
+              </span>
+            </label>
 
-          <p className="text-center text-sm text-muted-foreground">
-            Already have an account?{" "}
-            <Link
-              to={`/login${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`}
-              className="font-semibold text-emerald-400 hover:text-emerald-300"
+            <button
+              type="submit"
+              disabled={submitting || !agree}
+              className="w-full h-9 mt-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md shadow-rose-500/20"
             >
-              Log In
-            </Link>
-          </p>
-
-          <div className="flex items-center gap-2 pt-1">
-            <div className="flex-1 h-px bg-white/10" />
-            <span className="text-[11px] text-white/30 uppercase tracking-wider">or</span>
-            <div className="flex-1 h-px bg-white/10" />
-          </div>
-
-          <p className="text-center text-xs text-white/50">
-            Want to drive with ZIVO?{" "}
-            <a
-              href="https://apps.apple.com/us/app/zivodrivers/id6759507131"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-semibold text-emerald-400/80 hover:text-emerald-300"
-            >
-              Apply as a Driver
-            </a>
-            {" — "}driver accounts are separate.
-          </p>
-        </form>
+              {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sign up"}
+            </button>
+          </form>
         </div>
 
-        <p className="text-center text-xs text-muted-foreground mt-4">
-          By signing up, you agree to our Terms of Service
+        {/* Footer card */}
+        <div className="mt-3 bg-white dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-white/10 rounded-xl px-6 py-5 text-center shadow-sm">
+          <p className="text-sm text-zinc-700 dark:text-zinc-300">
+            Have an account?{" "}
+            <Link
+              to={`/login${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`}
+              className="font-semibold text-rose-500 hover:text-rose-600"
+            >
+              Log in
+            </Link>
+          </p>
+        </div>
+
+        <p className="text-center text-[11px] text-zinc-400 dark:text-zinc-500 mt-6">
+          Want to drive?{" "}
+          <a
+            href="https://apps.apple.com/us/app/zivodrivers/id6759507131"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-semibold text-rose-500/80 hover:text-rose-600"
+          >
+            Apply as a Driver
+          </a>
         </p>
       </div>
     </div>

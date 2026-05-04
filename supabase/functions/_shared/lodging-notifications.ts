@@ -2,6 +2,7 @@ import { createClient } from "./deps.ts";
 
 export type LodgingNotificationEvent =
   | "booking_confirmed"
+  | "refund_issued"
   | "receipt_ready"
   | "receipt_shared"
   | "addon_success"
@@ -89,6 +90,49 @@ export async function notifyLodgingBookingConfirmed(
       manageUrl: `${Deno.env.get("PUBLIC_APP_URL") || "https://hizivo.com"}/trips`,
     },
     smsBody: `ZIVO: Your stay at ${store?.name || "the property"} is confirmed (ref ${r.number}). ${paidAmount ? `Paid ${paidAmount}.` : ""} Check-in ${ci ? ci.toLocaleDateString() : ""}.`,
+  });
+}
+
+/**
+ * Send the guest a refund-issued email + SMS. Idempotency key includes
+ * refundCents + status so a "pending" then "complete" sequence sends two
+ * distinct notifications, but redelivery of either does not double-send.
+ */
+export async function notifyLodgingRefundIssued(
+  admin: ReturnType<typeof createClient>,
+  reservationId: string,
+  refundCents: number,
+  paymentMethodLabel: string,
+  refundStatus: "in progress" | "complete" = "in progress",
+) {
+  const { data: r } = await admin
+    .from("lodge_reservations")
+    .select("id, number, store_id")
+    .eq("id", reservationId)
+    .maybeSingle();
+  if (!r) return;
+  const { data: store } = await admin.from("restaurants").select("name").eq("id", (r as any).store_id).maybeSingle();
+  const refundAmount = refundCents > 0 ? `$${(refundCents / 100).toFixed(2)}` : null;
+
+  await notifyLodgingReservation(admin, {
+    reservationId,
+    event: "refund_issued",
+    templateName: "lodging-refund-issued",
+    idempotencyKey: `refund-${reservationId}-${refundCents}-${refundStatus.replace(/\s+/g, "_")}`,
+    title: `Refund ${refundStatus}`,
+    message: refundStatus === "complete"
+      ? "The funds have been returned to your original payment method."
+      : "The refund is on its way back to your original payment method.",
+    templateData: {
+      propertyName: store?.name || "Your stay",
+      refundAmount,
+      paymentMethod: paymentMethodLabel,
+      refundStatus,
+      expectedDays: "5–10 business days",
+    },
+    smsBody: refundAmount
+      ? `ZIVO: Refund ${refundStatus} for ${(r as any).number}. ${refundAmount} back to ${paymentMethodLabel}.`
+      : `ZIVO: Refund ${refundStatus} for ${(r as any).number}.`,
   });
 }
 

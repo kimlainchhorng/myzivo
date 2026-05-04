@@ -38,6 +38,16 @@ export async function uploadWithProgress(
         let msg = "Upload failed";
         // eslint-disable-next-line no-empty
         try { msg = JSON.parse(xhr.responseText)?.message || msg; } catch {}
+
+        // Translate Supabase Storage's cryptic schema-drift error into a
+        // user-actionable message. This fires when the storage service
+        // expects a newer DB schema (storage.prefixes table / objects.level
+        // column) than what's deployed — only fixable from the Supabase
+        // platform side, not from app code.
+        if (/schema is invalid or incompatible/i.test(msg)) {
+          msg = "Upload service is temporarily unavailable. Please try again in a few minutes — if the problem persists, contact support.";
+        }
+
         reject(new Error(msg));
       }
     };

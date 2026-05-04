@@ -19,7 +19,7 @@ export interface PlaceOrderParams {
   serviceFee: number;
   tipAmount: number;
   totalAmount: number;
-  paymentType: "cash" | "card" | "wallet";
+  paymentType: "cash" | "card" | "wallet" | "paypal" | "square";
   specialInstructions?: string;
   isExpress?: boolean;
   expressFee?: number;
@@ -98,14 +98,41 @@ export function useEatsOrder() {
         if (walletResult.success) {
           await supabase
             .from("food_orders")
-            .update({ payment_status: "paid" } as any)
+            .update({ payment_status: "paid", payment_provider: "wallet" } as any)
             .eq("id", orderId);
+          // Fire confirmation email + SMS — wallet flow doesn't trigger any webhook.
+          supabase.functions.invoke("notify-eats-order-confirmed", {
+            body: { order_id: orderId, payment_method: "Wallet" },
+          }).catch((e) => console.warn("[EatsOrder] confirmation email skipped:", e));
         } else {
           await supabase
             .from("food_orders")
             .update({ payment_status: "failed" } as any)
             .eq("id", orderId);
           toast.error("Wallet payment failed. Please try another method.");
+        }
+      } else if (params.paymentType === "paypal") {
+        const amountCents = Math.round(params.totalAmount * 100);
+        const returnUrl = `${window.location.origin}/orders?eats_paypal_return=${orderId}`;
+        const cancelUrl = `${window.location.origin}/orders?eats_paypal_cancel=${orderId}`;
+        const { data, error } = await supabase.functions.invoke("create-eats-paypal-order", {
+          body: { order_id: orderId, amount_cents: amountCents, return_url: returnUrl, cancel_url: cancelUrl },
+        });
+        if (error || !data?.approve_url) {
+          toast.error("PayPal checkout could not start. You can retry from order details.");
+        } else {
+          window.location.assign(data.approve_url);
+        }
+      } else if (params.paymentType === "square") {
+        const amountCents = Math.round(params.totalAmount * 100);
+        const returnUrl = `${window.location.origin}/orders?eats_square_return=${orderId}`;
+        const { data, error } = await supabase.functions.invoke("create-eats-square-checkout", {
+          body: { order_id: orderId, amount_cents: amountCents, return_url: returnUrl },
+        });
+        if (error || !data?.url) {
+          toast.error("Square checkout could not start. You can retry from order details.");
+        } else {
+          window.location.assign(data.url);
         }
       }
 

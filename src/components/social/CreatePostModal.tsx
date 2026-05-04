@@ -280,21 +280,83 @@ export default function CreatePostModal({
       // Upload all files (first one is primary media_url)
       if (files.length > 0) {
         const uploadedUrls: string[] = [];
-        for (let i = 0; i < files.length; i++) {
-          const original = files[i];
-          const file = await stripImageMetadata(original);
-          const sizeMB = (file.size / (1024 * 1024)).toFixed(0);
-          setUploadStatus(`Uploading ${i + 1}/${files.length} — ${file.name} (${sizeMB} MB) — 0%`);
-          const ext = file.name.split(".").pop() || "jpg";
-          const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
-          const publicUrl = await uploadWithProgress("user-posts", path, file, (pct) => {
-            setUploadStatus(`Uploading ${i + 1}/${files.length} — ${file.name} (${sizeMB} MB) — ${pct}%`);
-          });
-          uploadedUrls.push(publicUrl);
+        let storageDown = false;
+        try {
+          for (let i = 0; i < files.length; i++) {
+            const original = files[i];
+            const file = await stripImageMetadata(original);
+            const sizeMB = (file.size / (1024 * 1024)).toFixed(0);
+            setUploadStatus(`Uploading ${i + 1}/${files.length} — ${file.name} (${sizeMB} MB) — 0%`);
+            const ext = file.name.split(".").pop() || "jpg";
+            const path = `${userId}/${Date.now()}-${Math.random().toString(36).slice(2, 6)}.${ext}`;
+            const publicUrl = await uploadWithProgress("user-posts", path, file, (pct) => {
+              setUploadStatus(`Uploading ${i + 1}/${files.length} — ${file.name} (${sizeMB} MB) — ${pct}%`);
+            });
+            uploadedUrls.push(publicUrl);
+          }
+        } catch (uploadErr: any) {
+          // Detect the Supabase storage schema-drift error (translated by
+          // uploadWithProgress). When storage is down we try two fallbacks
+          // before giving up:
+          //
+          //   1) Inline small images as base64 data URLs in media_url. This
+          //      stores the image bytes directly in Postgres (text column,
+          //      capped to ~2 MB per image to keep rows reasonable) so the
+          //      post still shows the image without going through Storage.
+          //   2) If files are too large or are videos (which wouldn't fit
+          //      inline anyway), offer text-only posting if a caption exists.
+          //
+          // Once Supabase fixes the storage migration the normal upload path
+          // resumes — no UI change for the happy case.
+          const msg = String(uploadErr?.message || "");
+          const isStorageDown = /Upload service is temporarily unavailable/i.test(msg);
+          if (!isStorageDown) {
+            throw uploadErr;
+          }
+
+          // Try inline-base64 path for small images
+          const INLINE_LIMIT = 2 * 1024 * 1024; // 2 MB per image
+          const allInlineable = files.every(
+            (f) => f.type.startsWith("image/") && f.size <= INLINE_LIMIT
+          );
+          if (allInlineable) {
+            setUploadStatus("Storage offline — embedding images inline…");
+            const inlineUrls: string[] = [];
+            for (let i = 0; i < files.length; i++) {
+              const original = files[i];
+              const file = await stripImageMetadata(original);
+              const dataUrl: string = await new Promise((resolve, reject) => {
+                const r = new FileReader();
+                r.onload = () => resolve(String(r.result));
+                r.onerror = () => reject(new Error("Failed to read image"));
+                r.readAsDataURL(file);
+              });
+              inlineUrls.push(dataUrl);
+            }
+            uploadedUrls.length = 0;
+            uploadedUrls.push(...inlineUrls);
+          } else if (caption.trim()) {
+            // Fall back to text-only
+            const proceed = window.confirm(
+              "Media upload is temporarily unavailable.\n\nPost just your text caption without the attached media?"
+            );
+            if (proceed) {
+              storageDown = true;
+            } else {
+              throw uploadErr;
+            }
+          } else {
+            throw uploadErr;
+          }
         }
-        mediaUrl = uploadedUrls[0];
-        allMediaUrls = uploadedUrls;
-        if (files[0].type.startsWith("video")) finalMediaType = "video";
+        if (!storageDown) {
+          mediaUrl = uploadedUrls[0];
+          allMediaUrls = uploadedUrls;
+          if (files[0].type.startsWith("video")) finalMediaType = "video";
+        } else {
+          // Text-only fallback path
+          finalMediaType = "image";
+        }
       } else if (sharedMediaUrl) {
         mediaUrl = sharedMediaUrl;
         allMediaUrls = [sharedMediaUrl];
@@ -903,11 +965,16 @@ export default function CreatePostModal({
             {previews.length >= 1 && (
               <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
                 {previews.map((p, i) => (
-                  <button
+                  // Thumbnail is a div role="button" (not a <button>) so the
+                  // remove-X <button> nested inside is valid DOM.
+                  <div
                     key={i}
+                    role="button"
+                    tabIndex={0}
                     onClick={() => setCurrentPreview(i)}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setCurrentPreview(i); } }}
                     className={cn(
-                      "relative shrink-0 h-14 w-14 rounded-lg overflow-hidden border-2 transition-all",
+                      "relative shrink-0 h-14 w-14 rounded-lg overflow-hidden border-2 transition-all cursor-pointer",
                       i === currentPreview ? "border-primary ring-1 ring-primary/30 scale-105" : "border-border/30 opacity-70 hover:opacity-100"
                     )}
                   >
@@ -917,12 +984,14 @@ export default function CreatePostModal({
                       <img src={p} alt="" className="h-full w-full object-cover" />
                     )}
                     <button
+                      type="button"
+                      aria-label="Remove media"
                       onClick={(e) => { e.stopPropagation(); removeMedia(i); }}
                       className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-destructive flex items-center justify-center"
                     >
                       <XIcon className="h-2.5 w-2.5 text-destructive-foreground" />
                     </button>
-                  </button>
+                  </div>
                 ))}
                 {/* Add more inline */}
                 {files.length < 10 && (

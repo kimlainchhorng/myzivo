@@ -8,7 +8,7 @@ import { motion } from "framer-motion";
 import {
   ArrowLeft, CheckCircle, Clock, Flame, Package, Truck,
   Navigation, MapPin, Phone, MessageSquare, Star, PartyPopper,
-  Loader2, UtensilsCrossed, RefreshCw
+  Loader2, UtensilsCrossed, RefreshCw, Receipt
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -390,6 +390,148 @@ export default function EatsTrackingPage() {
             </Button>
           )}
         </div>
+
+        {/* Cancel — only while order hasn't been picked up yet */}
+        {!isDelivered && !isCancelled && (
+          <CancelOrderButton orderId={order.id} />
+        )}
+
+        {/* Download receipt — only for paid orders */}
+        {(order as any).payment_status === "paid" && (
+          <DownloadReceiptButton orderId={order.id} trackingCode={order.tracking_code} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DownloadReceiptButton({ orderId, trackingCode }: { orderId: string; trackingCode?: string | null }) {
+  const [loading, setLoading] = useState(false);
+  const onDownload = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("eats-order-receipt", {
+        body: { order_id: orderId },
+      });
+      if (error) throw error;
+      // Edge functions return raw bodies as Blob via supabase-js v2
+      const blob = data instanceof Blob ? data : new Blob([data as any], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `ZIVO-eats-${trackingCode || orderId.slice(0, 8)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast.success("Receipt downloaded");
+    } catch (e: any) {
+      toast.error(e?.message || "Could not download receipt");
+    } finally {
+      setLoading(false);
+    }
+  };
+  return (
+    <Button
+      variant="outline"
+      onClick={onDownload}
+      disabled={loading}
+      className="w-full rounded-xl font-bold gap-1.5"
+    >
+      {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Receipt className="w-4 h-4" />}
+      Download receipt
+    </Button>
+  );
+}
+
+function CancelOrderButton({ orderId }: { orderId: string }) {
+  const [confirming, setConfirming] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [preview, setPreview] = useState<{ eligible: boolean; reason_label: string; refund_cents: number; provider: string } | null>(null);
+
+  const onPrep = async () => {
+    setConfirming(true);
+    setPreview(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("cancel-eats-order", {
+        body: { order_id: orderId, preview: true },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      setPreview(data as any);
+    } catch (e: any) {
+      toast.error(e?.message || "Could not check refund policy");
+      setConfirming(false);
+    }
+  };
+
+  const onConfirm = async () => {
+    setSubmitting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("cancel-eats-order", {
+        body: { order_id: orderId, reason: "customer_initiated" },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const r = data as any;
+      if (r.refund_cents > 0) {
+        toast.success("Order cancelled", { description: `$${(r.refund_cents / 100).toFixed(2)} refund ${r.payment_status === "refunded" ? "issued" : "in progress"} via ${r.provider || "your payment method"}.` });
+      } else {
+        toast.success("Order cancelled");
+      }
+      setConfirming(false);
+      setPreview(null);
+    } catch (e: any) {
+      toast.error(e?.message || "Cancellation failed");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (!confirming) {
+    return (
+      <Button
+        variant="outline"
+        onClick={onPrep}
+        className="w-full rounded-xl font-bold border-destructive/30 text-destructive hover:bg-destructive/10"
+      >
+        Cancel order
+      </Button>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4 space-y-3">
+      <div>
+        <p className="text-sm font-bold text-destructive">Cancel this order?</p>
+        {preview ? (
+          <p className="text-xs text-muted-foreground mt-1">
+            {preview.reason_label}
+            {preview.refund_cents > 0 ? ` · $${(preview.refund_cents / 100).toFixed(2)} back to ${preview.provider}` : " · No refund will be issued"}
+          </p>
+        ) : (
+          <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1.5">
+            <Loader2 className="h-3 w-3 animate-spin" /> Checking refund policy…
+          </p>
+        )}
+      </div>
+      <div className="flex gap-2">
+        <Button
+          variant="outline"
+          onClick={() => { setConfirming(false); setPreview(null); }}
+          disabled={submitting}
+          className="flex-1 rounded-xl"
+        >
+          Keep order
+        </Button>
+        <Button
+          variant="destructive"
+          onClick={onConfirm}
+          disabled={submitting || !preview}
+          className="flex-1 rounded-xl"
+        >
+          {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : "Cancel & refund"}
+        </Button>
       </div>
     </div>
   );

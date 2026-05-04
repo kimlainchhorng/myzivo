@@ -36,7 +36,7 @@ import { useCountry } from "@/hooks/useCountry";
 import { CheckoutPinMap } from "@/components/grocery/CheckoutPinMap";
 import { CheckoutRouteMap } from "@/components/grocery/CheckoutRouteMap";
 
-export type StorePaymentType = "cash" | "card" | "aba";
+export type StorePaymentType = "cash" | "card" | "aba" | "paypal" | "square";
 
 interface SavedDeliveryAddress {
   id: string;
@@ -405,6 +405,62 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
       setIsSubmitting(false);
     }
   }, [grandTotal, onOrderPlaced, paymentOrderId]);
+
+  // PayPal / Square — hosted redirect flows
+  const handlePaypalOrSquareOrder = async (provider: "paypal" | "square") => {
+    setIsSubmitting(true);
+    try {
+      const { data: userData } = await supabase.auth.getUser();
+      if (!userData?.user) throw new Error("Please sign in to place an order");
+      const orderItems = items.map((i) => ({
+        productId: i.productId, name: i.name, price: i.price,
+        image: i.image, brand: i.brand, quantity: i.quantity, store: i.store,
+      }));
+      const totalCents = Math.round(grandTotal * 100);
+
+      // Create shopping_orders row first (mirrors create-grocery-payment-intent pattern).
+      const { data: created, error: insertErr } = await supabase
+        .from("shopping_orders")
+        .insert({
+          user_id: userData.user.id,
+          store: items[0]?.store || "Unknown",
+          order_type: "shopping_delivery",
+          status: "pending_payment",
+          items: orderItems,
+          total_amount: total,
+          final_total: grandTotal,
+          delivery_fee: deliveryFee,
+          delivery_address: address.trim(),
+          customer_name: name.trim(),
+          customer_phone: phone.trim() || null,
+          customer_email: userData.user.email || null,
+          placed_at: new Date().toISOString(),
+          payment_provider: provider,
+          payment_status: "pending",
+        } as any)
+        .select("id")
+        .single();
+      if (insertErr || !created) throw new Error(insertErr?.message || "Failed to create order");
+      const orderId = (created as any).id;
+
+      const fnName = provider === "paypal" ? "create-grocery-paypal-order" : "create-grocery-square-checkout";
+      const returnParam = provider === "paypal" ? "grocery_paypal_return" : "grocery_square_return";
+      const returnUrl = `${window.location.origin}/grocery/orders?${returnParam}=${orderId}`;
+      const cancelUrl = `${window.location.origin}/grocery/orders?grocery_paypal_cancel=${orderId}`;
+      const { data, error } = await supabase.functions.invoke(fnName, {
+        body: { order_id: orderId, amount_cents: totalCents, return_url: returnUrl, cancel_url: cancelUrl },
+      });
+      if (error) throw new Error(error.message || `${provider} checkout could not start`);
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const redirect = provider === "paypal" ? (data as any).approve_url : (data as any).url;
+      if (!redirect) throw new Error(`${provider} did not return a redirect URL`);
+      window.location.assign(redirect);
+    } catch (err: any) {
+      console.error(`[grocery] ${provider} order error:`, err);
+      toast.error(err.message || `Failed to start ${provider} checkout`);
+      setIsSubmitting(false);
+    }
+  };
 
   // Cash / ABA order — no Stripe
   const handleCashOrAbaOrder = async () => {
@@ -1332,6 +1388,32 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                               <QrCode className="h-3.5 w-3.5" /> ABA
                             </motion.button>
                           )}
+                          {storePaymentTypes.includes("paypal") && (
+                            <motion.button
+                              whileTap={{ scale: 0.92 }}
+                              onClick={() => { setSelectedPayment("paypal"); resetInlinePayment(); }}
+                              className={`flex-1 py-2.5 rounded-xl text-[12px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                                selectedPayment === "paypal"
+                                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
+                                  : "bg-muted/25 text-muted-foreground hover:bg-muted/40 border border-border/15"
+                              }`}
+                            >
+                              🅿️ PayPal
+                            </motion.button>
+                          )}
+                          {storePaymentTypes.includes("square") && (
+                            <motion.button
+                              whileTap={{ scale: 0.92 }}
+                              onClick={() => { setSelectedPayment("square"); resetInlinePayment(); }}
+                              className={`flex-1 py-2.5 rounded-xl text-[12px] font-bold transition-all duration-200 flex items-center justify-center gap-1.5 ${
+                                selectedPayment === "square"
+                                  ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
+                                  : "bg-muted/25 text-muted-foreground hover:bg-muted/40 border border-border/15"
+                              }`}
+                            >
+                              🟦 Square
+                            </motion.button>
+                          )}
                         </div>
                       </div>
                     )}
@@ -1429,7 +1511,12 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
               <Button
                 className="w-full h-[50px] rounded-2xl text-[14px] font-bold shadow-lg shadow-primary/20 gap-2"
                 disabled={isSubmitting}
-                onClick={selectedPayment === "card" ? handleCreateInlinePayment : handleCashOrAbaOrder}
+                onClick={
+                  selectedPayment === "card" ? handleCreateInlinePayment :
+                  selectedPayment === "paypal" ? () => handlePaypalOrSquareOrder("paypal") :
+                  selectedPayment === "square" ? () => handlePaypalOrSquareOrder("square") :
+                  handleCashOrAbaOrder
+                }
               >
                 {isSubmitting ? (
                   <>
@@ -1446,6 +1533,10 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                     <QrCode className="h-4 w-4" />
                     Place Order · ${grandTotal.toFixed(2)} ABA
                   </>
+                ) : selectedPayment === "paypal" ? (
+                  <>🅿️ Continue to PayPal · ${grandTotal.toFixed(2)}</>
+                ) : selectedPayment === "square" ? (
+                  <>🟦 Continue to Square · ${grandTotal.toFixed(2)}</>
                 ) : (
                   <>
                     <CreditCard className="h-4 w-4" />
@@ -1458,7 +1549,11 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
           <div className="flex items-center justify-center gap-1.5 mt-2">
             <Lock className="h-2.5 w-2.5 text-muted-foreground/40" />
             <span className="text-[9px] text-muted-foreground/40">
-              {selectedPayment === "cash" ? "Cash on delivery" : selectedPayment === "aba" ? "ABA Bank · Secure QR" : "Powered by Stripe · 256-bit encryption"}
+              {selectedPayment === "cash" ? "Cash on delivery" :
+               selectedPayment === "aba" ? "ABA Bank · Secure QR" :
+               selectedPayment === "paypal" ? "PayPal · Secure redirect" :
+               selectedPayment === "square" ? "Square · Secure redirect" :
+               "Powered by Stripe · 256-bit encryption"}
             </span>
           </div>
         </div>

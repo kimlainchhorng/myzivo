@@ -180,8 +180,59 @@ function TipForm({ creatorId, creatorName, onClose }: { creatorId: string; creat
             className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg"
           >
             <CreditCard className="h-4 w-4" />
-            Continue · ${(finalAmount / 100).toFixed(2)}
+            Continue with Card · ${(finalAmount / 100).toFixed(2)}
           </button>
+
+          {/* Alternative rails — hosted redirect */}
+          <div className="mt-3 grid grid-cols-2 gap-2">
+            <button
+              onClick={async () => {
+                if (finalAmount < 100) return toast.error("Minimum tip is $1.00");
+                setSending(true);
+                try {
+                  const returnUrl = `${window.location.origin}${window.location.pathname}?tip_paypal_return=1`;
+                  const cancelUrl = `${window.location.origin}${window.location.pathname}?tip_paypal_cancel=1`;
+                  const { data, error } = await supabase.functions.invoke("create-tip-paypal-order", {
+                    body: { creator_id: creatorId, amount_cents: finalAmount, message, is_anonymous: isAnonymous, return_url: returnUrl, cancel_url: cancelUrl },
+                  });
+                  if (error) throw error;
+                  if ((data as any)?.error) throw new Error((data as any).error);
+                  if (!(data as any)?.approve_url) throw new Error("PayPal did not return approval URL");
+                  window.location.assign((data as any).approve_url);
+                } catch (e: any) {
+                  toast.error(e?.message || "PayPal could not start");
+                  setSending(false);
+                }
+              }}
+              disabled={sending || finalAmount < 100}
+              className="py-2.5 rounded-xl bg-[#FFC439] text-[#003087] font-bold text-xs disabled:opacity-50"
+            >
+              🅿️ PayPal
+            </button>
+            <button
+              onClick={async () => {
+                if (finalAmount < 100) return toast.error("Minimum tip is $1.00");
+                setSending(true);
+                try {
+                  const returnUrl = `${window.location.origin}${window.location.pathname}?tip_square_return=1`;
+                  const { data, error } = await supabase.functions.invoke("create-tip-square-checkout", {
+                    body: { creator_id: creatorId, amount_cents: finalAmount, message, is_anonymous: isAnonymous, return_url: returnUrl },
+                  });
+                  if (error) throw error;
+                  if ((data as any)?.error) throw new Error((data as any).error);
+                  if (!(data as any)?.url) throw new Error("Square did not return URL");
+                  window.location.assign((data as any).url);
+                } catch (e: any) {
+                  toast.error(e?.message || "Square could not start");
+                  setSending(false);
+                }
+              }}
+              disabled={sending || finalAmount < 100}
+              className="py-2.5 rounded-xl bg-slate-900 text-white font-bold text-xs disabled:opacity-50"
+            >
+              🟦 Square
+            </button>
+          </div>
         </>
       ) : (
         <>

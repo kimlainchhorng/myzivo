@@ -553,9 +553,135 @@ export default function GroceryOrderTracking() {
             Shop More
           </Button>
         </motion.div>
+
+        {/* Cancel — only while order hasn't been picked up yet */}
+        {!isComplete && !isCancelled && order && (
+          <CancelGroceryButton orderId={order.id} />
+        )}
+
+        {/* Download receipt — only for paid orders */}
+        {order && (order as any).payment_status === "paid" && (
+          <DownloadGroceryReceiptButton orderId={order.id} />
+        )}
       </div>
 
       <ZivoMobileNav />
+    </div>
+  );
+}
+
+function DownloadGroceryReceiptButton({ orderId }: { orderId: string }) {
+  const [loading, setLoading] = useState(false);
+  const onDownload = async () => {
+    setLoading(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("grocery-order-receipt", {
+        body: { order_id: orderId },
+      });
+      if (error) throw error;
+      const blob = data instanceof Blob ? data : new Blob([data as any], { type: "application/pdf" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `ZIVO-grocery-${orderId.slice(0, 8)}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+      toast.success("Receipt downloaded");
+    } catch (e: any) {
+      toast.error(e?.message || "Could not download receipt");
+    } finally {
+      setLoading(false);
+    }
+  };
+  return (
+    <Button
+      variant="outline"
+      onClick={onDownload}
+      disabled={loading}
+      className="w-full rounded-2xl mb-6 font-bold"
+    >
+      {loading ? "Generating…" : "Download receipt"}
+    </Button>
+  );
+}
+
+function CancelGroceryButton({ orderId }: { orderId: string }) {
+  const [confirming, setConfirming] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [preview, setPreview] = useState<{ eligible: boolean; reason_label: string; refund_cents: number; provider: string } | null>(null);
+
+  const onPrep = async () => {
+    setConfirming(true);
+    setPreview(null);
+    try {
+      const { data, error } = await supabase.functions.invoke("cancel-grocery-order", {
+        body: { order_id: orderId, preview: true },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      setPreview(data as any);
+    } catch (e: any) {
+      toast.error(e?.message || "Could not check refund policy");
+      setConfirming(false);
+    }
+  };
+
+  const onConfirm = async () => {
+    setSubmitting(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("cancel-grocery-order", {
+        body: { order_id: orderId, reason: "customer_initiated" },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      const r = data as any;
+      if (r.refund_cents > 0) {
+        toast.success("Order cancelled", { description: `$${(r.refund_cents / 100).toFixed(2)} refund ${r.payment_status === "refunded" ? "issued" : "in progress"} via ${r.provider || "your payment method"}.` });
+      } else {
+        toast.success("Order cancelled");
+      }
+      setConfirming(false);
+      setPreview(null);
+    } catch (e: any) {
+      toast.error(e?.message || "Cancellation failed");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (!confirming) {
+    return (
+      <Button
+        variant="outline"
+        onClick={onPrep}
+        className="w-full rounded-2xl mb-6 font-bold border-destructive/30 text-destructive hover:bg-destructive/10"
+      >
+        Cancel order
+      </Button>
+    );
+  }
+
+  return (
+    <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4 mb-6 space-y-3">
+      <div>
+        <p className="text-sm font-bold text-destructive">Cancel this order?</p>
+        {preview ? (
+          <p className="text-xs text-muted-foreground mt-1">
+            {preview.reason_label}
+            {preview.refund_cents > 0 ? ` · $${(preview.refund_cents / 100).toFixed(2)} back to ${preview.provider}` : " · No refund will be issued"}
+          </p>
+        ) : (
+          <p className="text-xs text-muted-foreground mt-1">Checking refund policy…</p>
+        )}
+      </div>
+      <div className="flex gap-2">
+        <Button variant="outline" onClick={() => { setConfirming(false); setPreview(null); }} disabled={submitting} className="flex-1 rounded-xl">Keep order</Button>
+        <Button variant="destructive" onClick={onConfirm} disabled={submitting || !preview} className="flex-1 rounded-xl">
+          {submitting ? "Cancelling…" : "Cancel & refund"}
+        </Button>
+      </div>
     </div>
   );
 }

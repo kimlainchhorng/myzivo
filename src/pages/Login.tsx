@@ -34,23 +34,25 @@ function AccountCard({
       <button
         type="button"
         onClick={(e) => { e.stopPropagation(); onRemove(account.email); }}
-        className="absolute -top-1 -right-1 z-10 w-5 h-5 rounded-full bg-black/70 text-white flex items-center justify-center opacity-0 group-hover:opacity-100 transition"
+        className="absolute -top-1 -right-1 z-10 w-5 h-5 rounded-full bg-zinc-700 dark:bg-white text-white dark:text-zinc-900 flex items-center justify-center opacity-0 group-hover:opacity-100 transition shadow-md"
         aria-label="Remove account"
       >
         <X className="w-3 h-3" />
       </button>
 
-      {/* Avatar */}
-      <div className="w-16 h-16 rounded-2xl ring-2 ring-white/10 overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shadow-lg group-hover:ring-emerald-400/60 transition">
-        {account.avatarUrl ? (
-          <img src={account.avatarUrl} alt={account.fullName} className="w-full h-full object-cover" />
-        ) : (
-          <span className="text-white font-bold text-lg">{initials}</span>
-        )}
+      {/* Avatar — Instagram-style circular ring with brand gradient on hover */}
+      <div className="w-16 h-16 rounded-full p-[2px] bg-gradient-to-br from-amber-400 via-rose-500 to-fuchsia-600 shadow-md transition group-hover:scale-105">
+        <div className="w-full h-full rounded-full overflow-hidden bg-white dark:bg-zinc-900 flex items-center justify-center">
+          {account.avatarUrl ? (
+            <img src={account.avatarUrl} alt={account.fullName} className="w-full h-full object-cover" />
+          ) : (
+            <span className="bg-gradient-to-br from-amber-400 via-rose-500 to-fuchsia-600 bg-clip-text text-transparent font-bold text-lg">{initials}</span>
+          )}
+        </div>
       </div>
 
       {/* Name */}
-      <span className="text-xs text-white/80 font-medium text-center max-w-[72px] truncate">
+      <span className="text-xs text-zinc-700 dark:text-zinc-300 font-medium text-center max-w-[72px] truncate">
         {account.fullName || account.email.split("@")[0]}
       </span>
     </div>
@@ -201,238 +203,222 @@ const Login = () => {
   };
 
   return (
-    <div className="relative min-h-[100dvh] w-full overflow-hidden flex items-center justify-center px-4 py-10 bg-[#04100d]">
+    <div className="relative min-h-[100dvh] w-full overflow-hidden flex items-center justify-center px-5 py-8 bg-white dark:bg-black">
       <SEOHead title="Sign in to ZIVO" description="Sign in to your ZIVO account" />
 
-      {/* Background */}
-      <div aria-hidden className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute inset-0 opacity-90 [background:conic-gradient(from_180deg_at_50%_50%,#022c22_0deg,#064e3b_90deg,#0f766e_180deg,#022c22_270deg,#022c22_360deg)]" />
-        <div className="absolute -top-40 -left-32 w-[520px] h-[520px] rounded-full bg-emerald-400/40 blur-[140px] animate-pulse" />
-        <div className="absolute top-1/4 -right-40 w-[560px] h-[560px] rounded-full bg-teal-300/25 blur-[160px] animate-pulse" style={{ animationDelay: "1.4s" }} />
-        <div className="absolute -bottom-48 left-1/3 w-[620px] h-[620px] rounded-full bg-emerald-700/35 blur-[180px] animate-pulse" style={{ animationDelay: "2.6s" }} />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_30%,rgba(0,0,0,0.85)_100%)]" />
-        <div className="absolute inset-0 opacity-[0.05] [background-image:linear-gradient(rgba(255,255,255,0.6)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.6)_1px,transparent_1px)] [background-size:56px_56px] [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_75%)]" />
+      {/* Subtle gradient backdrop — IG keeps it minimal but ZIVO has a colorful brand */}
+      <div aria-hidden className="pointer-events-none absolute inset-0">
+        <div className="absolute -top-32 -right-32 w-[420px] h-[420px] rounded-full bg-gradient-to-br from-fuchsia-300/30 via-orange-200/30 to-rose-200/30 blur-3xl dark:from-fuchsia-600/20 dark:via-orange-600/20 dark:to-rose-600/20" />
+        <div className="absolute -bottom-32 -left-32 w-[420px] h-[420px] rounded-full bg-gradient-to-tr from-amber-200/30 via-pink-200/30 to-purple-200/30 blur-3xl dark:from-amber-600/15 dark:via-pink-600/15 dark:to-purple-600/15" />
       </div>
 
-      <div className="relative w-full max-w-md animate-flip-in">
-        {/* Brand */}
-        <div className="text-center mb-6">
-          <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-600 shadow-[0_8px_32px_rgba(16,185,129,0.45)] mb-3 ring-1 ring-white/20">
-            <Sparkles className="w-7 h-7 text-white" />
+      <div className="relative w-full max-w-sm flex flex-col items-stretch">
+        {/* IG-style stack: card → "OR" → footer card */}
+
+        {/* Main card */}
+        <div className="bg-white dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-white/10 rounded-xl px-8 pt-10 pb-6 shadow-sm">
+          {/* Brand wordmark — IG-style script logo */}
+          <div className="flex flex-col items-center mb-8">
+            <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 via-rose-500 to-fuchsia-600 flex items-center justify-center mb-5 shadow-lg shadow-rose-500/20">
+              <span className="text-white font-black text-3xl tracking-tight italic" style={{ fontFamily: "'Brush Script MT', cursive" }}>Z</span>
+            </div>
+            <h1 className="text-4xl font-light tracking-wider text-zinc-900 dark:text-white" style={{ fontFamily: "'Snell Roundhand', 'Brush Script MT', cursive", fontWeight: 600 }}>
+              Zivo
+            </h1>
           </div>
-          <h1 className="text-3xl font-bold bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent tracking-tight">ZIVO ID</h1>
-          <p className="text-sm text-white/60 mt-1">Welcome Back — Zivo All in One Place</p>
-        </div>
 
-        <div className="relative rounded-2xl p-[1px] bg-gradient-to-b from-emerald-400/50 via-emerald-500/10 to-transparent shadow-[0_30px_80px_-20px_rgba(16,185,129,0.45)]">
-          <div className="rounded-2xl bg-[#0a1f1a]/85 backdrop-blur-2xl p-6">
+          {/* ── MODE: saved account picker ── */}
+          {mode === "picker" && (
+            <div className="space-y-4">
+              <p className="text-center text-sm text-zinc-500 dark:text-zinc-400">Log in as</p>
 
-            {/* ── MODE: saved account picker ── */}
-            {mode === "picker" && (
-              <div className="space-y-5">
-                <p className="text-sm font-medium text-white/70 text-center">Continue as</p>
+              <div className="flex justify-center gap-5 flex-wrap">
+                {accounts.slice(0, 4).map((acc) => (
+                  <AccountCard
+                    key={acc.email}
+                    account={acc}
+                    onSelect={handleSelectAccount}
+                    onRemove={(email) => { remove(email); }}
+                  />
+                ))}
 
-                {/* Account grid */}
-                <div className="flex flex-wrap justify-center gap-4">
-                  {accounts.map((acc) => (
-                    <AccountCard
-                      key={acc.email}
-                      account={acc}
-                      onSelect={handleSelectAccount}
-                      onRemove={(email) => { remove(email); }}
-                    />
-                  ))}
-
-                  {/* Add account tile */}
-                  <div
-                    className="flex flex-col items-center gap-2 cursor-pointer group"
-                    onClick={handleAddAccount}
-                  >
-                    <div className="w-16 h-16 rounded-2xl ring-2 ring-white/10 bg-white/5 flex items-center justify-center group-hover:ring-emerald-400/60 group-hover:bg-white/10 transition">
-                      <UserPlus className="w-6 h-6 text-white/50 group-hover:text-emerald-400 transition" />
-                    </div>
-                    <span className="text-xs text-white/50 font-medium">Add account</span>
+                <div
+                  className="flex flex-col items-center gap-2 cursor-pointer group"
+                  onClick={handleAddAccount}
+                >
+                  <div className="w-16 h-16 rounded-full border-2 border-dashed border-zinc-300 dark:border-zinc-700 bg-zinc-50 dark:bg-zinc-800/40 flex items-center justify-center group-hover:border-rose-400 group-hover:bg-rose-50/50 dark:group-hover:border-rose-500 dark:group-hover:bg-rose-950/30 transition">
+                    <UserPlus className="w-6 h-6 text-zinc-400 group-hover:text-rose-500 transition" />
                   </div>
+                  <span className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">Add account</span>
                 </div>
-
-                <p className="text-center text-xs text-muted-foreground pt-1">
-                  Don't have an account?{" "}
-                  <Link
-                    to={`/signup${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`}
-                    className="font-semibold text-emerald-400 hover:text-emerald-300"
-                  >
-                    Sign Up
-                  </Link>
-                </p>
               </div>
-            )}
 
-            {/* ── MODE: selected account — password only ── */}
-            {mode === "password" && selectedAccount && (
-              <form onSubmit={onSubmit} className="space-y-5">
-                {/* Back */}
+              <button
+                type="button"
+                onClick={handleAddAccount}
+                className="w-full text-center text-sm font-semibold text-rose-500 hover:text-rose-600 pt-2"
+              >
+                Log into another account
+              </button>
+            </div>
+          )}
+
+          {/* ── MODE: selected account — password only ── */}
+          {mode === "password" && selectedAccount && (
+            <form onSubmit={onSubmit} className="space-y-3">
+              <button
+                type="button"
+                onClick={handleBack}
+                className="flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition mb-1"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" /> Back
+              </button>
+
+              <div className="flex flex-col items-center gap-2 pb-2">
+                <div className="w-20 h-20 rounded-full overflow-hidden bg-gradient-to-br from-amber-400 via-rose-500 to-fuchsia-600 flex items-center justify-center ring-2 ring-zinc-200 dark:ring-zinc-700">
+                  {selectedAccount.avatarUrl ? (
+                    <img src={selectedAccount.avatarUrl} alt={selectedAccount.fullName} className="w-full h-full object-cover" />
+                  ) : (
+                    <span className="text-white font-bold text-xl">
+                      {selectedAccount.fullName ? selectedAccount.fullName.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase() : selectedAccount.email[0].toUpperCase()}
+                    </span>
+                  )}
+                </div>
+                <p className="text-sm font-semibold text-zinc-900 dark:text-white truncate max-w-full">{selectedAccount.fullName || selectedAccount.email.split("@")[0]}</p>
+                <p className="text-xs text-zinc-500 dark:text-zinc-400 truncate max-w-full">{selectedAccount.email}</p>
+              </div>
+
+              <div className="relative">
+                <input
+                  id="login-password"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  autoFocus
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  {...passwordKeyHandlers}
+                  placeholder="Password"
+                  disabled={submitting}
+                  className="w-full h-11 px-3 pr-10 rounded-md bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 focus:border-zinc-400 dark:focus:border-zinc-500 outline-none text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 transition"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200"
+                  tabIndex={-1}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {capsLockNotice}
+
+              <button
+                type="submit"
+                disabled={!canSubmit}
+                className="w-full h-9 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md shadow-rose-500/20"
+              >
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Log in"}
+              </button>
+
+              <div className="text-center">
+                <Link to="/forgot-password" className="text-xs font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-white">
+                  Forgot password?
+                </Link>
+              </div>
+            </form>
+          )}
+
+          {/* ── MODE: full email + password form ── */}
+          {mode === "full" && (
+            <form onSubmit={onSubmit} className="space-y-2.5">
+              {accounts.length > 0 && (
                 <button
                   type="button"
                   onClick={handleBack}
-                  className="flex items-center gap-1 text-sm text-white/50 hover:text-white transition"
+                  className="flex items-center gap-1 text-xs text-zinc-500 dark:text-zinc-400 hover:text-zinc-700 dark:hover:text-zinc-200 transition mb-1"
                 >
-                  <ChevronLeft className="w-4 h-4" /> Back
+                  <ChevronLeft className="w-3.5 h-3.5" /> Saved accounts
                 </button>
+              )}
 
-                {/* Selected account banner */}
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
-                  <div className="w-10 h-10 rounded-xl overflow-hidden bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center flex-shrink-0">
-                    {selectedAccount.avatarUrl ? (
-                      <img src={selectedAccount.avatarUrl} alt={selectedAccount.fullName} className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-white font-bold text-sm">
-                        {selectedAccount.fullName ? selectedAccount.fullName.split(" ").map((n) => n[0]).join("").slice(0, 2).toUpperCase() : selectedAccount.email[0].toUpperCase()}
-                      </span>
-                    )}
-                  </div>
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-white truncate">{selectedAccount.fullName || selectedAccount.email.split("@")[0]}</p>
-                    <p className="text-xs text-white/50 truncate">{selectedAccount.email}</p>
-                  </div>
-                </div>
+              <input
+                id="login-email"
+                type="email"
+                inputMode="email"
+                autoComplete="username"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck={false}
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="Phone number, username, or email"
+                disabled={submitting}
+                className="w-full h-11 px-3 rounded-md bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 focus:border-zinc-400 dark:focus:border-zinc-500 outline-none text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 transition"
+              />
 
-                {/* Password */}
-                <div className="space-y-1.5">
-                  <label htmlFor="login-password" className="text-sm font-medium text-foreground">Password</label>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                    <input
-                      id="login-password"
-                      type={showPassword ? "text" : "password"}
-                      autoComplete="current-password"
-                      autoFocus
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      {...passwordKeyHandlers}
-                      placeholder="Your password"
-                      disabled={submitting}
-                      className="w-full h-12 pl-10 pr-11 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword((v) => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      tabIndex={-1}
-                      aria-label={showPassword ? "Hide password" : "Show password"}
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                  {capsLockNotice}
-                  <div className="text-right">
-                    <Link to="/forgot-password" className="text-xs font-medium text-emerald-400 hover:text-emerald-300">
-                      Forgot password?
-                    </Link>
-                  </div>
-                </div>
-
-                <Button
-                  type="submit"
-                  disabled={!canSubmit}
-                  className="w-full h-12 rounded-xl text-base font-semibold bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
+              <div className="relative">
+                <input
+                  id="login-password-full"
+                  type={showPassword ? "text" : "password"}
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  {...passwordKeyHandlers}
+                  placeholder="Password"
+                  disabled={submitting}
+                  className="w-full h-11 px-3 pr-10 rounded-md bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 focus:border-zinc-400 dark:focus:border-zinc-500 outline-none text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 transition"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword((v) => !v)}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200"
+                  tabIndex={-1}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
                 >
-                  {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Continue <ArrowRight className="w-4 h-4 ml-1" /></>}
-                </Button>
-              </form>
-            )}
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
+              </div>
+              {capsLockNotice}
 
-            {/* ── MODE: full email + password form ── */}
-            {mode === "full" && (
-              <form onSubmit={onSubmit} className="space-y-5">
-                {/* Back to accounts if any saved */}
-                {accounts.length > 0 && (
-                  <button
-                    type="button"
-                    onClick={handleBack}
-                    className="flex items-center gap-1 text-sm text-white/50 hover:text-white transition"
-                  >
-                    <ChevronLeft className="w-4 h-4" /> Saved accounts
-                  </button>
-                )}
+              <button
+                type="submit"
+                disabled={!canSubmit}
+                className="w-full h-9 mt-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md shadow-rose-500/20"
+              >
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Log in"}
+              </button>
 
-                {/* Email */}
-                <div className="space-y-1.5">
-                  <label htmlFor="login-email" className="text-sm font-medium text-foreground">Email</label>
-                  <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                    <input
-                      id="login-email"
-                      type="email"
-                      inputMode="email"
-                      autoComplete="username"
-                      autoCapitalize="none"
-                      autoCorrect="off"
-                      spellCheck={false}
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      placeholder="you@example.com"
-                      disabled={submitting}
-                      className="w-full h-12 pl-10 pr-3 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
-                    />
-                  </div>
-                </div>
+              {/* OR divider — Instagram signature */}
+              <div className="flex items-center gap-4 py-3">
+                <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-700" />
+                <span className="text-xs font-bold text-zinc-400 dark:text-zinc-500 tracking-wider">OR</span>
+                <div className="flex-1 h-px bg-zinc-200 dark:bg-zinc-700" />
+              </div>
 
-                {/* Password */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label htmlFor="login-password-full" className="text-sm font-medium text-foreground">Password</label>
-                    <Link to="/forgot-password" className="text-xs font-medium text-emerald-400 hover:text-emerald-300">Forgot?</Link>
-                  </div>
-                  <div className="relative">
-                    <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                    <input
-                      id="login-password-full"
-                      type={showPassword ? "text" : "password"}
-                      autoComplete="current-password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      {...passwordKeyHandlers}
-                      placeholder="Your password"
-                      disabled={submitting}
-                      className="w-full h-12 pl-10 pr-11 rounded-xl bg-background/60 border border-border focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/30 outline-none text-base text-foreground placeholder:text-muted-foreground transition"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword((v) => !v)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                      tabIndex={-1}
-                      aria-label={showPassword ? "Hide password" : "Show password"}
-                    >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                    </button>
-                  </div>
-                  {capsLockNotice}
-                </div>
-
-                <Button
-                  type="submit"
-                  disabled={!canSubmit}
-                  className="w-full h-12 rounded-xl text-base font-semibold bg-emerald-500 hover:bg-emerald-600 text-white shadow-lg shadow-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : <>Sign In <ArrowRight className="w-4 h-4 ml-1" /></>}
-                </Button>
-
-                <p className="text-center text-sm text-muted-foreground">
-                  Don't have an account?{" "}
-                  <Link
-                    to={`/signup${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`}
-                    className="font-semibold text-emerald-400 hover:text-emerald-300"
-                  >
-                    Sign Up
-                  </Link>
-                </p>
-              </form>
-            )}
-
-          </div>
+              <div className="text-center">
+                <Link to="/forgot-password" className="text-xs font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-white">
+                  Forgot password?
+                </Link>
+              </div>
+            </form>
+          )}
         </div>
 
-        <p className="text-center text-xs text-muted-foreground mt-4">
+        {/* Footer card — IG-style "Don't have an account?" */}
+        <div className="mt-3 bg-white dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-white/10 rounded-xl px-6 py-5 text-center shadow-sm">
+          <p className="text-sm text-zinc-700 dark:text-zinc-300">
+            Don't have an account?{" "}
+            <Link
+              to={`/signup${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`}
+              className="font-semibold text-rose-500 hover:text-rose-600"
+            >
+              Sign up
+            </Link>
+          </p>
+        </div>
+
+        <p className="text-center text-[11px] text-zinc-400 dark:text-zinc-500 mt-6">
           Protected by enterprise-grade security
         </p>
       </div>

@@ -9,7 +9,7 @@
  */
 import { createClient } from "../_shared/deps.ts";
 import Stripe from "../_shared/stripe.ts";
-import { notifyLodgingBookingConfirmed } from "../_shared/lodging-notifications.ts";
+import { notifyLodgingBookingConfirmed, notifyLodgingRefundIssued } from "../_shared/lodging-notifications.ts";
 
 Deno.serve(async (req) => {
   if (req.method !== "POST") {
@@ -328,6 +328,12 @@ Deno.serve(async (req) => {
             await updateByPI(piId, "refunded");
             if (resolvedReservationId) {
               try { await queueAutoReversal(resolvedReservationId, "refund.updated"); } catch (e) { console.warn("[stripe-lodging-webhook] reversal skipped", e); }
+              try {
+                const refundCents = Number(refund.amount ?? 0);
+                if (refundCents > 0) {
+                  await notifyLodgingRefundIssued(admin, resolvedReservationId, refundCents, "Card", "complete");
+                }
+              } catch (e) { console.warn("[stripe-lodging-webhook] refund email skipped", e); }
             }
           } else if (refund.status === "failed" || refund.status === "canceled") {
             await updateByPI(piId, "captured", { last_payment_error: `Refund ${refund.status}` });
