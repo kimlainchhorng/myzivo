@@ -102,7 +102,7 @@ export function LodgingBookingDrawer({
   const [notes, setNotes] = useState("");
   const [payMethod, setPayMethod] = useState<PayMethod>("pay_at_property");
   // Inline payment-card method toggle (Card | Apple/Google Pay | Cash). Only used in success step.
-  const [inlineMethod, setInlineMethod] = useState<"card" | "wallet" | "cash">("card");
+  const [inlineMethod, setInlineMethod] = useState<"card" | "wallet" | "cash" | "paypal" | "square">("card");
   const [agreeRules, setAgreeRules] = useState(false);
   const [agreeCancel, setAgreeCancel] = useState(false);
   const [submitting, setSubmitting] = useState(false);
