@@ -63,12 +63,12 @@ export default function SpendTrackerWidget() {
           .eq("customer_id", user.id)
           .eq("status", "delivered")
           .gte("created_at", start),
-        supabase
+        (supabase as any)
           .from("flight_bookings")
           .select("total_amount,passengers")
           .eq("user_id", user.id)
           .gte("created_at", start),
-        supabase
+        (supabase as any)
           .from("hotel_bookings")
           .select("total_amount")
           .eq("user_id", user.id)
