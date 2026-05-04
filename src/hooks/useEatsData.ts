@@ -128,7 +128,7 @@ export async function createFoodOrder(params: {
   serviceFee: number;
   tipAmount: number;
   totalAmount: number;
-  paymentType: "cash" | "card" | "wallet";
+  paymentType: "cash" | "card" | "wallet" | "paypal" | "square";
   specialInstructions?: string;
   isScheduled?: boolean;
   scheduledFor?: string;
