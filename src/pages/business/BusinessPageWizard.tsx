@@ -135,14 +135,18 @@ export default function BusinessPageWizard() {
   // Build the current snapshot used for both DB writes and dirty detection.
   const snapshot: WizardSnapshot = useMemo(
     () => ({
-      bizName, bizPhone, bizEmail, category,
+      bizName, bizDescription, bizPhone, bizEmail, category,
       firstName, lastName, contactPhone, contactEmail,
       logoUrl, bannerUrl,
+      address, paymentTypes,
+      facebookUrl, instagramUrl, tiktokUrl, telegramUrl,
     }),
     [
-      bizName, bizPhone, bizEmail, category,
+      bizName, bizDescription, bizPhone, bizEmail, category,
       firstName, lastName, contactPhone, contactEmail,
       logoUrl, bannerUrl,
+      address, paymentTypes,
+      facebookUrl, instagramUrl, tiktokUrl, telegramUrl,
     ]
   );
   const fieldsSnapshot = useMemo(() => JSON.stringify(snapshot), [snapshot]);
