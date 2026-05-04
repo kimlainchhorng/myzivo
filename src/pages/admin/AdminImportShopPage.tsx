@@ -81,7 +81,7 @@ function OrdersAdmin() {
             onChange={(e) => updateStatus.mutate({ id: o.id, status: e.target.value })}
             className="mt-2 w-full h-9 rounded-lg border px-2 text-[12px] bg-background"
           >
-            {STATUSES.map((s) => <option key={s} value={s}>{s.replaceAll("_", " ")}</option>)}
+            {STATUSES.map((s) => <option key={s} value={s}>{s.split("_").join(" ")}</option>)}
           </select>
         </div>
       ))}

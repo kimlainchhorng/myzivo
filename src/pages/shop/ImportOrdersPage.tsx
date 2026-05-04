@@ -51,7 +51,7 @@ function OrderList() {
             >
               <div className="flex items-center justify-between">
                 <span className="text-[11px] font-mono text-muted-foreground">{o.tracking_code ?? o.id.slice(0, 8)}</span>
-                <span className="text-[11px] font-semibold capitalize">{o.fulfillment_status.replaceAll("_", " ")}</span>
+                <span className="text-[11px] font-semibold capitalize">{o.fulfillment_status.split("_").join(" ")}</span>
               </div>
               <p className="text-[13px] font-bold mt-1">${(o.total_cents / 100).toFixed(2)} · {(o.items as any[])?.length ?? 0} items</p>
               <p className="text-[11px] text-muted-foreground mt-0.5">{new Date(o.created_at).toLocaleDateString()}</p>
@@ -88,7 +88,7 @@ function OrderDetail({ id }: { id: string }) {
           <p className="text-[11px] text-muted-foreground">Total</p>
           <p className="text-2xl font-bold text-primary">${(order.total_cents / 100).toFixed(2)}</p>
           <p className="text-[11px] text-muted-foreground mt-1">
-            {(order.items as any[])?.length ?? 0} items · {order.payment_method.replaceAll("_", " ")}
+            {(order.items as any[])?.length ?? 0} items · {order.payment_method.split("_").join(" ")}
           </p>
         </div>
 
@@ -120,7 +120,7 @@ function OrderDetail({ id }: { id: string }) {
             <p className="text-[13px] font-bold">Updates</p>
             {events.map((e: any) => (
               <div key={e.id} className="text-[11px]">
-                <p className="font-semibold capitalize">{e.status.replaceAll("_", " ")}</p>
+                <p className="font-semibold capitalize">{e.status.split("_").join(" ")}</p>
                 <p className="text-muted-foreground">{new Date(e.created_at).toLocaleString()}</p>
                 {e.note && <p className="mt-0.5">{e.note}</p>}
               </div>
