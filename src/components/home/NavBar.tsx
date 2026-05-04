@@ -55,7 +55,7 @@ import { useSupportedLanguages } from "@/hooks/useGlobalExpansion";
 
 import { withRedirectParam } from "@/lib/authRedirect";
 import { useOwnerStores } from "@/hooks/useOwnerStoreProfile";
-import { resolveBusinessDashboardRoute } from "@/lib/business/dashboardRoute";
+import { resolvePublicBusinessPageRoute } from "@/lib/business/dashboardRoute";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import Plus from "lucide-react/dist/esm/icons/plus";
 import Bell from "lucide-react/dist/esm/icons/bell";
@@ -442,8 +442,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                             <DropdownMenuItem
                               key={store.id}
                               onClick={() => {
-                                const { path } = resolveBusinessDashboardRoute(store.category, store.id);
-                                navigate(path);
+                                navigate(resolvePublicBusinessPageRoute(store.category, store.id, (store as any).slug));
                               }}
                               className="cursor-pointer rounded-lg py-2 gap-2.5"
                             >
