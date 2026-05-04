@@ -47,6 +47,8 @@ const RAIL_ICON: Record<PayoutRail, typeof Banknote> = {
   aba: Banknote,
   bank_wire: Landmark,
   paypal: Wallet,
+  square: Wallet,
+  mercury: Landmark,
 };
 
 export default function LodgingPayoutAccountCard({ storeId, storeCountry }: Props) {
