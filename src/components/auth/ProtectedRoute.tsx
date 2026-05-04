@@ -18,7 +18,7 @@ const ProtectedRoute = ({ children, requireAdmin = false, allowStoreOwner = fals
   const { storeId } = useParams<{ storeId?: string }>();
   const shouldCheckStoreOwner = requireAdmin && allowStoreOwner && !!storeId && !!user?.id && !isAdmin;
 
-  const { data: ownerAccessAllowed = false, isLoading: ownerAccessLoading } = useQuery({
+  const ownerQuery = useQuery({
     queryKey: ["protected-route-store-owner", user?.id, storeId],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -27,11 +27,14 @@ const ProtectedRoute = ({ children, requireAdmin = false, allowStoreOwner = fals
         .eq("id", storeId!)
         .eq("owner_id", user!.id)
         .maybeSingle();
-      return !!data && !error;
+      if (error) throw error;
+      return !!data;
     },
     enabled: shouldCheckStoreOwner,
     staleTime: 30_000,
   });
+  const ownerAccessResolved = ownerQuery.isSuccess || ownerQuery.isError;
+  const ownerAccessAllowed = ownerQuery.data === true;
 
   if (isLoading) {
     return (
