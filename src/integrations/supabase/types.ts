@@ -13422,6 +13422,8 @@ export type Database = {
           price_cents: number | null
           started_at: string | null
           status: string | null
+          stripe_session_id: string | null
+          stripe_subscription_id: string | null
           subscriber_id: string
           tier_id: string | null
         }
@@ -13435,6 +13437,8 @@ export type Database = {
           price_cents?: number | null
           started_at?: string | null
           status?: string | null
+          stripe_session_id?: string | null
+          stripe_subscription_id?: string | null
           subscriber_id: string
           tier_id?: string | null
         }
@@ -13448,6 +13452,8 @@ export type Database = {
           price_cents?: number | null
           started_at?: string | null
           status?: string | null
+          stripe_session_id?: string | null
+          stripe_subscription_id?: string | null
           subscriber_id?: string
           tier_id?: string | null
         }
@@ -13469,8 +13475,14 @@ export type Database = {
           currency: string | null
           id: string
           is_anonymous: boolean | null
+          last_payment_error: string | null
           message: string | null
           payment_intent_id: string | null
+          payment_provider: string | null
+          paypal_capture_id: string | null
+          paypal_order_id: string | null
+          square_checkout_id: string | null
+          square_payment_id: string | null
           status: string | null
           tipper_id: string
         }
@@ -13481,8 +13493,14 @@ export type Database = {
           currency?: string | null
           id?: string
           is_anonymous?: boolean | null
+          last_payment_error?: string | null
           message?: string | null
           payment_intent_id?: string | null
+          payment_provider?: string | null
+          paypal_capture_id?: string | null
+          paypal_order_id?: string | null
+          square_checkout_id?: string | null
+          square_payment_id?: string | null
           status?: string | null
           tipper_id: string
         }
@@ -13493,8 +13511,14 @@ export type Database = {
           currency?: string | null
           id?: string
           is_anonymous?: boolean | null
+          last_payment_error?: string | null
           message?: string | null
           payment_intent_id?: string | null
+          payment_provider?: string | null
+          paypal_capture_id?: string | null
+          paypal_order_id?: string | null
+          square_checkout_id?: string | null
+          square_payment_id?: string | null
           status?: string | null
           tipper_id?: string
         }
@@ -19327,6 +19351,133 @@ export type Database = {
         }
         Relationships: []
       }
+      eats_payout_ledger: {
+        Row: {
+          amount_cents: number
+          commission_cents: number
+          commission_rate: number | null
+          created_at: string
+          direction: string
+          error_message: string | null
+          id: string
+          order_id: string
+          restaurant_id: string
+          status: string
+          stripe_account_id: string
+          stripe_reversal_id: string | null
+          stripe_transfer_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          amount_cents: number
+          commission_cents?: number
+          commission_rate?: number | null
+          created_at?: string
+          direction: string
+          error_message?: string | null
+          id?: string
+          order_id: string
+          restaurant_id: string
+          status?: string
+          stripe_account_id: string
+          stripe_reversal_id?: string | null
+          stripe_transfer_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          amount_cents?: number
+          commission_cents?: number
+          commission_rate?: number | null
+          created_at?: string
+          direction?: string
+          error_message?: string | null
+          id?: string
+          order_id?: string
+          restaurant_id?: string
+          status?: string
+          stripe_account_id?: string
+          stripe_reversal_id?: string | null
+          stripe_transfer_id?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "eats_payout_ledger_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "customer_orders_view"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eats_payout_ledger_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "eats_payout_ledger_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "food_orders_masked"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      eats_payout_requests: {
+        Row: {
+          admin_note: string | null
+          amount_cents: number
+          created_at: string
+          currency: string
+          failure_reason: string | null
+          id: string
+          note: string | null
+          paid_at: string | null
+          payout_method_id: string | null
+          rail: string
+          reference: string | null
+          requested_by: string
+          restaurant_id: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          admin_note?: string | null
+          amount_cents: number
+          created_at?: string
+          currency?: string
+          failure_reason?: string | null
+          id?: string
+          note?: string | null
+          paid_at?: string | null
+          payout_method_id?: string | null
+          rail: string
+          reference?: string | null
+          requested_by: string
+          restaurant_id: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          admin_note?: string | null
+          amount_cents?: number
+          created_at?: string
+          currency?: string
+          failure_reason?: string | null
+          id?: string
+          note?: string | null
+          paid_at?: string | null
+          payout_method_id?: string | null
+          rail?: string
+          reference?: string | null
+          requested_by?: string
+          restaurant_id?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       eats_paypal_webhook_events: {
         Row: {
           error_message: string | null
@@ -24553,6 +24704,106 @@ export type Database = {
         }
         Relationships: []
       }
+      grocery_paypal_webhook_events: {
+        Row: {
+          error_message: string | null
+          event_created_at: string | null
+          event_type: string
+          id: string
+          order_id: string | null
+          payload: Json | null
+          paypal_capture_id: string | null
+          paypal_event_id: string
+          paypal_order_id: string | null
+          processing_status: string
+          received_at: string
+        }
+        Insert: {
+          error_message?: string | null
+          event_created_at?: string | null
+          event_type: string
+          id?: string
+          order_id?: string | null
+          payload?: Json | null
+          paypal_capture_id?: string | null
+          paypal_event_id: string
+          paypal_order_id?: string | null
+          processing_status?: string
+          received_at?: string
+        }
+        Update: {
+          error_message?: string | null
+          event_created_at?: string | null
+          event_type?: string
+          id?: string
+          order_id?: string | null
+          payload?: Json | null
+          paypal_capture_id?: string | null
+          paypal_event_id?: string
+          paypal_order_id?: string | null
+          processing_status?: string
+          received_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grocery_paypal_webhook_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "shopping_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      grocery_square_webhook_events: {
+        Row: {
+          error_message: string | null
+          event_created_at: string | null
+          event_type: string
+          id: string
+          order_id: string | null
+          payload: Json | null
+          processing_status: string
+          received_at: string
+          square_checkout_id: string | null
+          square_event_id: string
+          square_payment_id: string | null
+        }
+        Insert: {
+          error_message?: string | null
+          event_created_at?: string | null
+          event_type: string
+          id?: string
+          order_id?: string | null
+          payload?: Json | null
+          processing_status?: string
+          received_at?: string
+          square_checkout_id?: string | null
+          square_event_id: string
+          square_payment_id?: string | null
+        }
+        Update: {
+          error_message?: string | null
+          event_created_at?: string | null
+          event_type?: string
+          id?: string
+          order_id?: string | null
+          payload?: Json | null
+          processing_status?: string
+          received_at?: string
+          square_checkout_id?: string | null
+          square_event_id?: string
+          square_payment_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "grocery_square_webhook_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "shopping_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       group_call_participants: {
         Row: {
           created_at: string
@@ -26979,7 +27230,10 @@ export type Database = {
           reviewed_by: string | null
           role: string
           status: string
-          submitted_at: string
+          stripe_verification_session_id: string | null
+          stripe_verification_status: string | null
+          stripe_verified_at: string | null
+          submitted_at: string | null
           updated_at: string | null
           user_id: string
         }
@@ -27000,7 +27254,10 @@ export type Database = {
           reviewed_by?: string | null
           role: string
           status?: string
-          submitted_at?: string
+          stripe_verification_session_id?: string | null
+          stripe_verification_status?: string | null
+          stripe_verified_at?: string | null
+          submitted_at?: string | null
           updated_at?: string | null
           user_id: string
         }
@@ -27021,7 +27278,10 @@ export type Database = {
           reviewed_by?: string | null
           role?: string
           status?: string
-          submitted_at?: string
+          stripe_verification_session_id?: string | null
+          stripe_verification_status?: string | null
+          stripe_verified_at?: string | null
+          submitted_at?: string | null
           updated_at?: string | null
           user_id?: string
         }
@@ -45672,6 +45932,9 @@ export type Database = {
           quoted_surge_multiplier: number | null
           quoted_time_fee: number | null
           quoted_total: number | null
+          rated_at: string | null
+          rating: number | null
+          rating_feedback: string | null
           refund_status: string | null
           refunded_at: string | null
           requires_car_seat: boolean
@@ -45682,6 +45945,9 @@ export type Database = {
           stripe_checkout_session_id: string | null
           stripe_payment_intent_id: string | null
           surcharge_amount_cents: number | null
+          tip_cents: number | null
+          tip_charged_at: string | null
+          tip_payment_intent_id: string | null
           updated_at: string
           user_id: string | null
           zone_code: string | null
@@ -45728,6 +45994,9 @@ export type Database = {
           quoted_surge_multiplier?: number | null
           quoted_time_fee?: number | null
           quoted_total?: number | null
+          rated_at?: string | null
+          rating?: number | null
+          rating_feedback?: string | null
           refund_status?: string | null
           refunded_at?: string | null
           requires_car_seat?: boolean
@@ -45738,6 +46007,9 @@ export type Database = {
           stripe_checkout_session_id?: string | null
           stripe_payment_intent_id?: string | null
           surcharge_amount_cents?: number | null
+          tip_cents?: number | null
+          tip_charged_at?: string | null
+          tip_payment_intent_id?: string | null
           updated_at?: string
           user_id?: string | null
           zone_code?: string | null
@@ -45784,6 +46056,9 @@ export type Database = {
           quoted_surge_multiplier?: number | null
           quoted_time_fee?: number | null
           quoted_total?: number | null
+          rated_at?: string | null
+          rating?: number | null
+          rating_feedback?: string | null
           refund_status?: string | null
           refunded_at?: string | null
           requires_car_seat?: boolean
@@ -45794,6 +46069,9 @@ export type Database = {
           stripe_checkout_session_id?: string | null
           stripe_payment_intent_id?: string | null
           surcharge_amount_cents?: number | null
+          tip_cents?: number | null
+          tip_charged_at?: string | null
+          tip_payment_intent_id?: string | null
           updated_at?: string
           user_id?: string | null
           zone_code?: string | null
@@ -48024,6 +48302,7 @@ export type Database = {
       }
       service_orders: {
         Row: {
+          cancel_source: string | null
           cancellation_reason: string | null
           cancelled_at: string | null
           completed_at: string | null
@@ -48031,9 +48310,12 @@ export type Database = {
           currency: string
           customer_id: string
           delivery_fee_cents: number
+          delivery_photo_url: string | null
           dispatch_attempts: number
           distance_km: number | null
+          driver_arrived_at: string | null
           driver_assigned_at: string | null
+          driver_en_route_at: string | null
           driver_id: string | null
           dropoff_address: string
           dropoff_lat: number | null
@@ -48044,6 +48326,8 @@ export type Database = {
           eta_dropoff_at: string | null
           eta_pickup_at: string | null
           eta_updated_at: string | null
+          external_kind: string | null
+          external_order_id: string | null
           id: string
           items: Json | null
           kind: Database["public"]["Enums"]["service_order_kind"]
@@ -48072,10 +48356,12 @@ export type Database = {
           subtotal_cents: number
           tip_cents: number
           total_cents: number
+          trip_started_at: string | null
           updated_at: string
           vehicle_class: string | null
         }
         Insert: {
+          cancel_source?: string | null
           cancellation_reason?: string | null
           cancelled_at?: string | null
           completed_at?: string | null
@@ -48083,9 +48369,12 @@ export type Database = {
           currency?: string
           customer_id: string
           delivery_fee_cents?: number
+          delivery_photo_url?: string | null
           dispatch_attempts?: number
           distance_km?: number | null
+          driver_arrived_at?: string | null
           driver_assigned_at?: string | null
+          driver_en_route_at?: string | null
           driver_id?: string | null
           dropoff_address: string
           dropoff_lat?: number | null
@@ -48096,6 +48385,8 @@ export type Database = {
           eta_dropoff_at?: string | null
           eta_pickup_at?: string | null
           eta_updated_at?: string | null
+          external_kind?: string | null
+          external_order_id?: string | null
           id?: string
           items?: Json | null
           kind: Database["public"]["Enums"]["service_order_kind"]
@@ -48124,10 +48415,12 @@ export type Database = {
           subtotal_cents?: number
           tip_cents?: number
           total_cents?: number
+          trip_started_at?: string | null
           updated_at?: string
           vehicle_class?: string | null
         }
         Update: {
+          cancel_source?: string | null
           cancellation_reason?: string | null
           cancelled_at?: string | null
           completed_at?: string | null
@@ -48135,9 +48428,12 @@ export type Database = {
           currency?: string
           customer_id?: string
           delivery_fee_cents?: number
+          delivery_photo_url?: string | null
           dispatch_attempts?: number
           distance_km?: number | null
+          driver_arrived_at?: string | null
           driver_assigned_at?: string | null
+          driver_en_route_at?: string | null
           driver_id?: string | null
           dropoff_address?: string
           dropoff_lat?: number | null
@@ -48148,6 +48444,8 @@ export type Database = {
           eta_dropoff_at?: string | null
           eta_pickup_at?: string | null
           eta_updated_at?: string | null
+          external_kind?: string | null
+          external_order_id?: string | null
           id?: string
           items?: Json | null
           kind?: Database["public"]["Enums"]["service_order_kind"]
@@ -48176,6 +48474,7 @@ export type Database = {
           subtotal_cents?: number
           tip_cents?: number
           total_cents?: number
+          trip_started_at?: string | null
           updated_at?: string
           vehicle_class?: string | null
         }
@@ -48595,14 +48894,22 @@ export type Database = {
           final_total: number | null
           id: string
           items: Json
+          last_payment_error: string | null
           order_type: string
+          payment_provider: string | null
+          payment_status: string | null
+          paypal_capture_id: string | null
+          paypal_order_id: string | null
           picked_up_at: string | null
           placed_at: string | null
           receipt_photo_url: string | null
           shopping_completed_at: string | null
           shopping_started_at: string | null
+          square_checkout_id: string | null
+          square_payment_id: string | null
           status: string
           store: string
+          stripe_payment_intent_id: string | null
           total_amount: number
           updated_at: string
           user_id: string | null
@@ -48624,14 +48931,22 @@ export type Database = {
           final_total?: number | null
           id?: string
           items?: Json
+          last_payment_error?: string | null
           order_type?: string
+          payment_provider?: string | null
+          payment_status?: string | null
+          paypal_capture_id?: string | null
+          paypal_order_id?: string | null
           picked_up_at?: string | null
           placed_at?: string | null
           receipt_photo_url?: string | null
           shopping_completed_at?: string | null
           shopping_started_at?: string | null
+          square_checkout_id?: string | null
+          square_payment_id?: string | null
           status?: string
           store?: string
+          stripe_payment_intent_id?: string | null
           total_amount?: number
           updated_at?: string
           user_id?: string | null
@@ -48653,14 +48968,22 @@ export type Database = {
           final_total?: number | null
           id?: string
           items?: Json
+          last_payment_error?: string | null
           order_type?: string
+          payment_provider?: string | null
+          payment_status?: string | null
+          paypal_capture_id?: string | null
+          paypal_order_id?: string | null
           picked_up_at?: string | null
           placed_at?: string | null
           receipt_photo_url?: string | null
           shopping_completed_at?: string | null
           shopping_started_at?: string | null
+          square_checkout_id?: string | null
+          square_payment_id?: string | null
           status?: string
           store?: string
+          stripe_payment_intent_id?: string | null
           total_amount?: number
           updated_at?: string
           user_id?: string | null
@@ -54284,6 +54607,106 @@ export type Database = {
           },
         ]
       }
+      tip_paypal_webhook_events: {
+        Row: {
+          error_message: string | null
+          event_created_at: string | null
+          event_type: string
+          id: string
+          payload: Json | null
+          paypal_capture_id: string | null
+          paypal_event_id: string
+          paypal_order_id: string | null
+          processing_status: string
+          received_at: string
+          tip_id: string | null
+        }
+        Insert: {
+          error_message?: string | null
+          event_created_at?: string | null
+          event_type: string
+          id?: string
+          payload?: Json | null
+          paypal_capture_id?: string | null
+          paypal_event_id: string
+          paypal_order_id?: string | null
+          processing_status?: string
+          received_at?: string
+          tip_id?: string | null
+        }
+        Update: {
+          error_message?: string | null
+          event_created_at?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json | null
+          paypal_capture_id?: string | null
+          paypal_event_id?: string
+          paypal_order_id?: string | null
+          processing_status?: string
+          received_at?: string
+          tip_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tip_paypal_webhook_events_tip_id_fkey"
+            columns: ["tip_id"]
+            isOneToOne: false
+            referencedRelation: "creator_tips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tip_square_webhook_events: {
+        Row: {
+          error_message: string | null
+          event_created_at: string | null
+          event_type: string
+          id: string
+          payload: Json | null
+          processing_status: string
+          received_at: string
+          square_checkout_id: string | null
+          square_event_id: string
+          square_payment_id: string | null
+          tip_id: string | null
+        }
+        Insert: {
+          error_message?: string | null
+          event_created_at?: string | null
+          event_type: string
+          id?: string
+          payload?: Json | null
+          processing_status?: string
+          received_at?: string
+          square_checkout_id?: string | null
+          square_event_id: string
+          square_payment_id?: string | null
+          tip_id?: string | null
+        }
+        Update: {
+          error_message?: string | null
+          event_created_at?: string | null
+          event_type?: string
+          id?: string
+          payload?: Json | null
+          processing_status?: string
+          received_at?: string
+          square_checkout_id?: string | null
+          square_event_id?: string
+          square_payment_id?: string | null
+          tip_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tip_square_webhook_events_tip_id_fkey"
+            columns: ["tip_id"]
+            isOneToOne: false
+            referencedRelation: "creator_tips"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       training_certifications: {
         Row: {
           certified_at: string | null
@@ -57724,6 +58147,9 @@ export type Database = {
           comments_count: number | null
           created_at: string | null
           filter_css: string | null
+          hidden_at: string | null
+          hidden_by: string | null
+          hidden_reason: string | null
           id: string
           is_pinned: boolean
           is_published: boolean | null
@@ -57746,6 +58172,9 @@ export type Database = {
           comments_count?: number | null
           created_at?: string | null
           filter_css?: string | null
+          hidden_at?: string | null
+          hidden_by?: string | null
+          hidden_reason?: string | null
           id?: string
           is_pinned?: boolean
           is_published?: boolean | null
@@ -57768,6 +58197,9 @@ export type Database = {
           comments_count?: number | null
           created_at?: string | null
           filter_css?: string | null
+          hidden_at?: string | null
+          hidden_by?: string | null
+          hidden_reason?: string | null
           id?: string
           is_pinned?: boolean
           is_published?: boolean | null
@@ -66225,6 +66657,7 @@ export type Database = {
       zivo_accept_offer: {
         Args: { p_offer_id: string }
         Returns: {
+          cancel_source: string | null
           cancellation_reason: string | null
           cancelled_at: string | null
           completed_at: string | null
@@ -66232,9 +66665,12 @@ export type Database = {
           currency: string
           customer_id: string
           delivery_fee_cents: number
+          delivery_photo_url: string | null
           dispatch_attempts: number
           distance_km: number | null
+          driver_arrived_at: string | null
           driver_assigned_at: string | null
+          driver_en_route_at: string | null
           driver_id: string | null
           dropoff_address: string
           dropoff_lat: number | null
@@ -66245,6 +66681,8 @@ export type Database = {
           eta_dropoff_at: string | null
           eta_pickup_at: string | null
           eta_updated_at: string | null
+          external_kind: string | null
+          external_order_id: string | null
           id: string
           items: Json | null
           kind: Database["public"]["Enums"]["service_order_kind"]
@@ -66273,6 +66711,7 @@ export type Database = {
           subtotal_cents: number
           tip_cents: number
           total_cents: number
+          trip_started_at: string | null
           updated_at: string
           vehicle_class: string | null
         }
@@ -66469,6 +66908,7 @@ export type Database = {
           p_to_status: Database["public"]["Enums"]["service_order_status"]
         }
         Returns: {
+          cancel_source: string | null
           cancellation_reason: string | null
           cancelled_at: string | null
           completed_at: string | null
@@ -66476,9 +66916,12 @@ export type Database = {
           currency: string
           customer_id: string
           delivery_fee_cents: number
+          delivery_photo_url: string | null
           dispatch_attempts: number
           distance_km: number | null
+          driver_arrived_at: string | null
           driver_assigned_at: string | null
+          driver_en_route_at: string | null
           driver_id: string | null
           dropoff_address: string
           dropoff_lat: number | null
@@ -66489,6 +66932,8 @@ export type Database = {
           eta_dropoff_at: string | null
           eta_pickup_at: string | null
           eta_updated_at: string | null
+          external_kind: string | null
+          external_order_id: string | null
           id: string
           items: Json | null
           kind: Database["public"]["Enums"]["service_order_kind"]
@@ -66517,6 +66962,7 @@ export type Database = {
           subtotal_cents: number
           tip_cents: number
           total_cents: number
+          trip_started_at: string | null
           updated_at: string
           vehicle_class: string | null
         }

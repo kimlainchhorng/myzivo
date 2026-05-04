@@ -362,11 +362,11 @@ const Profile = () => {
   });
 
   const getShopDashboardPath = useCallback(() => {
-    if (!ownerStore?.id) return "/shop-dashboard";
-    return ownerStore.isLodging
-      ? `/admin/stores/${ownerStore.id}?tab=lodge-overview`
-      : `/admin/stores/${ownerStore.id}`;
-  }, [ownerStore]);
+    // Store owners go to their merchant dashboard (`/shop-dashboard`).
+    // The `/admin/stores/:id` route is admin-only and triggers Access Denied
+    // for regular store owners.
+    return "/shop-dashboard";
+  }, []);
 
   const openShopDashboard = useCallback(() => {
     selectionChanged();
