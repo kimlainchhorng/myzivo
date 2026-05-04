@@ -33009,6 +33009,75 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_products: {
+        Row: {
+          active: boolean
+          category: string | null
+          created_at: string
+          created_by: string | null
+          description: string | null
+          est_delivery_days_max: number
+          est_delivery_days_min: number
+          featured: boolean
+          final_price_cents: number
+          id: string
+          images: Json
+          markup_percent: number
+          source_currency: string | null
+          source_platform: Database["public"]["Enums"]["marketplace_source_platform"]
+          source_price: number | null
+          source_url: string | null
+          title: string
+          updated_at: string
+          variants: Json
+          weight_grams: number
+        }
+        Insert: {
+          active?: boolean
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          est_delivery_days_max?: number
+          est_delivery_days_min?: number
+          featured?: boolean
+          final_price_cents: number
+          id?: string
+          images?: Json
+          markup_percent?: number
+          source_currency?: string | null
+          source_platform?: Database["public"]["Enums"]["marketplace_source_platform"]
+          source_price?: number | null
+          source_url?: string | null
+          title: string
+          updated_at?: string
+          variants?: Json
+          weight_grams?: number
+        }
+        Update: {
+          active?: boolean
+          category?: string | null
+          created_at?: string
+          created_by?: string | null
+          description?: string | null
+          est_delivery_days_max?: number
+          est_delivery_days_min?: number
+          featured?: boolean
+          final_price_cents?: number
+          id?: string
+          images?: Json
+          markup_percent?: number
+          source_currency?: string | null
+          source_platform?: Database["public"]["Enums"]["marketplace_source_platform"]
+          source_price?: number | null
+          source_url?: string | null
+          title?: string
+          updated_at?: string
+          variants?: Json
+          weight_grams?: number
+        }
+        Relationships: []
+      }
       marketplace_reviews: {
         Row: {
           content: string | null
