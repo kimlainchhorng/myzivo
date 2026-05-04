@@ -43,7 +43,7 @@ const travelerSchema = z.object({
     .regex(/^\+?[0-9\s\-()]+$/, "Please enter a valid phone number"),
   consentSharing: z
     .literal(true, {
-      errorMap: () => ({ message: "You must consent to share your information" }),
+      message: "You must consent to share your information",
     }),
 });
 
