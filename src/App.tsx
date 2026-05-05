@@ -337,7 +337,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 
 const Profile = lazy(() => lazyRetry(() => import("./pages/Profile")));
 const MorePage = lazy(() => import("./pages/MorePage"));
-const PublicProfilePage = lazy(() => import("./pages/PublicProfilePage"));
+const PublicProfilePage = lazy(() => import("./pages/user/PublicUserProfilePage"));
 const UsernameRedirectPage = lazy(() => import("./pages/UsernameRedirectPage"));
 const DeleteAccountPage = lazy(() => import("./pages/profile/DeleteAccountPage"));
 const ShareProfileRedirect = lazy(() => import("./pages/ShareProfileRedirect"));
