@@ -19,6 +19,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { cn } from "@/lib/utils";
+import SEOHead from "@/components/SEOHead";
 
 const parseParamDate = (s: string | null) => {
   if (!s) return null;
@@ -169,6 +170,10 @@ export default function HotelRoomCheckoutPage() {
 
   return (
     <div className="min-h-screen bg-background pb-32">
+      <SEOHead
+        title="Hotel Booking – Complete Your Reservation – ZIVO"
+        description="Complete your hotel reservation securely. Review pricing, confirm details, and book your stay with flexible payment options."
+      />
       {/* Header */}
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border/40 px-4 py-3 flex items-center gap-3">
         <button

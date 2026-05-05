@@ -21,6 +21,7 @@ import { MaintenanceScreen } from "@/components/shared/MaintenanceScreen";
 import { format } from "date-fns";
 import { usePromotionValidation } from "@/hooks/usePromotionValidation";
 import { Tag, X, CheckCircle2, Loader2 as PromoLoader } from "lucide-react";
+import SEOHead from "@/components/SEOHead";
 
 const TravelCheckoutPage = () => {
   const navigate = useNavigate();
@@ -152,6 +153,10 @@ const TravelCheckoutPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead
+        title="Travel Checkout – Secure Booking – ZIVO"
+        description="Complete your travel booking securely. Review hotel accommodations, activities, and transfers with flexible payment options and instant confirmation."
+      />
       {/* Header */}
       <header className="sticky top-0 safe-area-top z-40 bg-background/95 backdrop-blur border-b">
         <div className="container mx-auto px-4 py-4 flex items-center gap-4">
