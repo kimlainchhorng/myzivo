@@ -246,6 +246,21 @@ export default function MyFlightTripPage() {
               </div>
             </motion.div>
 
+            {/* Reviews */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="space-y-3"
+            >
+              <ReviewsSummary
+                serviceType="flight"
+                serviceId={booking.id}
+                onWriteClick={() => setReviewSheetOpen(true)}
+              />
+              <ReviewsList serviceType="flight" serviceId={booking.id} />
+            </motion.div>
+
             {/* Actions */}
             <motion.div
               initial={{ opacity: 0, y: 10 }}
@@ -272,6 +287,15 @@ export default function MyFlightTripPage() {
           </>
         ) : null}
       </div>
+
+      <ReviewSubmissionSheet
+        isOpen={reviewSheetOpen}
+        onClose={() => setReviewSheetOpen(false)}
+        serviceType="flight"
+        serviceId={booking?.id || bookingId}
+        bookingReference={booking?.booking_reference}
+        title={`${booking?.departure_airport} to ${booking?.arrival_airport}`}
+      />
 
       <ZivoMobileNav />
     </div>
