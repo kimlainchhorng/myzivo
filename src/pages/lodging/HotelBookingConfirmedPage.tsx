@@ -90,7 +90,7 @@ export default function HotelBookingConfirmedPage() {
   return (
     <div className="min-h-screen bg-background relative overflow-hidden pb-28 safe-area-top">
       <SEOHead
-        title={loading ? "Hotel Booking – ZIVO" : `${data?.room?.name || "Hotel"} Booking Confirmed – ZIVO`}
+        title={loading ? "Hotel Booking – ZIVO" : `${reservation?.room?.name || "Hotel"} Booking Confirmed – ZIVO`}
         description="Your hotel booking has been confirmed. View your reservation details and check-in information."
       />
       {/* Ambient glow */}
