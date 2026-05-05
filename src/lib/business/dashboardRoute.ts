@@ -3,7 +3,7 @@
  * based on its category. Centralized so the wizard and the auto-redirect
  * on mount stay in sync.
  */
-import { isLodgingStoreCategory } from "@/hooks/useOwnerStoreProfile";
+import { isLodgingStoreCategory, normalizeStoreCategory } from "@/hooks/useOwnerStoreProfile";
 import type { StoreCategory } from "@/config/groceryStores";
 
 export const RESTAURANT_CATEGORIES = new Set<StoreCategory>([
@@ -35,9 +35,16 @@ export function resolveBusinessDashboardRoute(
   category: StoreCategory | string | null | undefined,
   storeId: string | undefined
 ): ResolvedDashboard {
+  const normalizedCategory = normalizeStoreCategory(category);
+
   // Restaurants/cafés/bakeries/drinks → Eats restaurant dashboard.
   if (category && RESTAURANT_CATEGORIES.has(category as StoreCategory)) {
     return { path: "/eats/restaurant-dashboard", fallback: false };
+  }
+
+  // Auto repair → full store admin dashboard with repair-specific sections.
+  if (normalizedCategory === "auto repair" && storeId) {
+    return { path: `/admin/stores/${storeId}?tab=ar-dashboard`, fallback: false };
   }
 
   // Lodging → store edit page on the lodge tab.
