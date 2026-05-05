@@ -65,6 +65,8 @@ import ChatMessageBubble from "./ChatMessageBubble";
 import StickyDatePill from "./StickyDatePill";
 import AvatarPreviewSheet from "./AvatarPreviewSheet";
 import { emitReactionAdded } from "./FloatingReactionsOverlay";
+import ZivoActionBubble, { type ZivoCardPayload } from "./ZivoActionBubble";
+import ZivoCardPicker from "./ZivoCardPicker";
 import { enqueue as outboxEnqueue, remove as outboxRemove, list as outboxList, subscribe as outboxSubscribe } from "@/lib/chat/messageOutbox";
 import FileBubble, { type FileBubbleData } from "./FileBubble";
 import HoldToRecordMic from "./HoldToRecordMic";
@@ -419,6 +421,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [showJumpToLatest, setShowJumpToLatest] = useState(false);
   const [unreadWhileScrolled, setUnreadWhileScrolled] = useState(0);
   const [showAvatarPreview, setShowAvatarPreview] = useState(false);
+  const [showZivoCardPicker, setShowZivoCardPicker] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -2414,6 +2417,14 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                           />
                         );
                       })()
+                    ) : msg.message_type === "zivo_card" && msg.file_payload ? (
+                      <div className={msg.id.startsWith("opt-") ? "opacity-60" : ""}>
+                        <ZivoActionBubble
+                          payload={msg.file_payload as unknown as ZivoCardPayload}
+                          isMe={isMe}
+                          time={formatMsgTime(msg.created_at)}
+                        />
+                      </div>
                     ) : msg.message_type === "file" && msg.file_payload ? (
                       <div className={`flex ${isMe ? "justify-end" : "justify-start"} ${msg.id.startsWith("opt-") ? "opacity-60" : ""}`}>
                         <div className="flex flex-col gap-1">
@@ -2655,6 +2666,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                   onCreatePoll={() => setShowPollCreator(true)}
                   onShareContact={() => setShowContactPicker(true)}
                   onShareSocial={() => setShowSocialShare(true)}
+                  onShareZivoCard={() => setShowZivoCardPicker(true)}
                 />
               </div>
 
@@ -2914,6 +2926,19 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           />
         </Suspense>
       )}
+
+      {/* ZIVO action card picker */}
+      <ZivoCardPicker
+        open={showZivoCardPicker}
+        onClose={() => setShowZivoCardPicker(false)}
+        onPick={(payload) => {
+          handleSend({
+            messageType: "zivo_card",
+            text: payload.title,
+            filePayload: payload as unknown as FileBubbleData,
+          });
+        }}
+      />
 
       {/* Avatar fullscreen preview */}
       <AvatarPreviewSheet
