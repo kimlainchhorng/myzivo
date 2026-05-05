@@ -20,6 +20,11 @@ const MarketplaceHubPage = lazy(() => import("@/pages/hubs/MarketplaceHubPage"))
 const JobsHubPage = lazy(() => import("@/pages/hubs/JobsHubPage"));
 const VoiceRoomsHubPage = lazy(() => import("@/pages/hubs/VoiceRoomsHubPage"));
 const FitnessHubPage = lazy(() => import("@/pages/hubs/FitnessHubPage"));
+const CreateEventPage = lazy(() => import("@/pages/hubs/CreateEventPage"));
+const CreateListingPage = lazy(() => import("@/pages/hubs/CreateListingPage"));
+const CreateJobPage = lazy(() => import("@/pages/hubs/CreateJobPage"));
+const StartVoiceRoomPage = lazy(() => import("@/pages/hubs/StartVoiceRoomPage"));
+const CreateSupportTicketPage = lazy(() => import("@/pages/support/CreateSupportTicketPage"));
 const TwoFactorSetupSheet = lazy(() => import("@/components/security/TwoFactorSetupSheet"));
 const OnboardingTour = lazy(() => import("@/components/onboarding/OnboardingTour"));
 const BugReportSheet = lazy(() => import("@/components/support/BugReportSheet"));
@@ -1169,6 +1174,11 @@ const App = () => (
                 <Route path="/jobs-hub" element={<JobsHubPage />} />
                 <Route path="/voice-rooms" element={<VoiceRoomsHubPage />} />
                 <Route path="/fitness" element={<FitnessHubPage />} />
+                <Route path="/events-hub/create" element={<CreateEventPage />} />
+                <Route path="/marketplace-hub/create" element={<CreateListingPage />} />
+                <Route path="/jobs-hub/create" element={<CreateJobPage />} />
+                <Route path="/voice-rooms/create" element={<StartVoiceRoomPage />} />
+                <Route path="/support/new" element={<CreateSupportTicketPage />} />
                 <Route path="/traveler" element={<ProtectedRoute><TravelerDashboard /></ProtectedRoute>} />
                 <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
                 <Route path="/saved-searches" element={<ProtectedRoute><SavedSearchesPage /></ProtectedRoute>} />

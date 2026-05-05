@@ -8,12 +8,14 @@ import JobPostingCard, { type JobData } from "@/components/jobs/JobPostingCard";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Plus from "lucide-react/dist/esm/icons/plus";
+import { useNavigate } from "react-router-dom";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 
 const dbFrom = (table: string): unknown =>
   (supabase as unknown as { from: (t: string) => unknown }).from(table);
 
 export default function JobsHubPage() {
+  const navigate = useNavigate();
   const [jobs, setJobs] = useState<JobData[] | null>(null);
 
   useEffect(() => {
@@ -38,7 +40,7 @@ export default function JobsHubPage() {
             <h1 className="text-2xl font-bold">Gigs & jobs</h1>
             <p className="text-sm text-muted-foreground">Earn extra — drive, deliver, freelance, or full-time.</p>
           </div>
-          <button className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold">
+          <button onClick={() => navigate("/jobs-hub/create")} className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold">
             <Plus className="w-4 h-4" /> Post
           </button>
         </div>

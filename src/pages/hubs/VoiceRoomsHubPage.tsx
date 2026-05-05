@@ -9,6 +9,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Mic from "lucide-react/dist/esm/icons/mic";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
+import { useNavigate } from "react-router-dom";
 
 interface RawRoom {
   id: string;
@@ -22,6 +23,7 @@ const dbFrom = (table: string): unknown =>
   (supabase as unknown as { from: (t: string) => unknown }).from(table);
 
 export default function VoiceRoomsHubPage() {
+  const navigate = useNavigate();
   const [rooms, setRooms] = useState<VoiceRoomData[] | null>(null);
 
   useEffect(() => {
@@ -68,6 +70,9 @@ export default function VoiceRoomsHubPage() {
             <h1 className="text-2xl font-bold inline-flex items-center gap-2"><Mic className="w-6 h-6 text-primary" />Voice rooms</h1>
             <p className="text-sm text-muted-foreground">Drop into live audio conversations.</p>
           </div>
+          <button onClick={() => navigate("/voice-rooms/create")} className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white text-sm font-bold">
+            <Mic className="w-4 h-4" /> Go live
+          </button>
         </div>
 
         {rooms == null ? (

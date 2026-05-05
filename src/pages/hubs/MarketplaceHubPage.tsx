@@ -40,7 +40,7 @@ export default function MarketplaceHubPage() {
             <h1 className="text-2xl font-bold">Marketplace</h1>
             <p className="text-sm text-muted-foreground">Buy & sell with people in your area.</p>
           </div>
-          <button className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold">
+          <button onClick={() => navigate("/marketplace-hub/create")} className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold">
             <Plus className="w-4 h-4" /> Sell
           </button>
         </div>

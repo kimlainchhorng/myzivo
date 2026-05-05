@@ -111,6 +111,7 @@ export default function AutoRepairPartSuppliersSection({ storeId }: Props) {
   const [target, setTarget] = useState<Supplier | null>(null);
   const [form, setForm] = useState<Cred>({ username: "", password: "" });
   const [showPw, setShowPw] = useState(false);
+  const [portalUrl, setPortalUrl] = useState<string | null>(null);
 
   const [savedMap, setSavedMap] = useState<Record<string, Cred | null>>(() => {
     const map: Record<string, Cred | null> = {};
@@ -144,7 +145,7 @@ export default function AutoRepairPartSuppliersSection({ storeId }: Props) {
     persistCred(storeId, target.id, { username: form.username.trim(), password: form.password });
     setSavedMap(prev => ({ ...prev, [target.id]: { username: form.username.trim(), password: form.password } }));
     toast.success(`${target.name} — account saved`);
-    window.open(target.url, "_blank", "noopener,noreferrer");
+    setPortalUrl(target.url);
     setTarget(null);
   };
 
@@ -235,7 +236,7 @@ export default function AutoRepairPartSuppliersSection({ storeId }: Props) {
                           variant="ghost"
                           className="h-7 w-7 text-green-600"
                           title="Open portal"
-                          onClick={() => window.open(s.url, "_blank", "noopener,noreferrer")}
+                          onClick={() => setPortalUrl(s.url)}
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
                         </Button>
@@ -323,7 +324,7 @@ export default function AutoRepairPartSuppliersSection({ storeId }: Props) {
             </div>
             <p className="text-[11px] text-muted-foreground leading-snug">
               Clicking <strong>Save & Open Portal</strong> will store your credentials and open{" "}
-              {target?.name} in a new tab so you can log in.
+              {target?.name} in a modal so you can log in.
             </p>
           </div>
 
@@ -345,6 +346,23 @@ export default function AutoRepairPartSuppliersSection({ storeId }: Props) {
               Save & Open Portal
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Portal iframe modal */}
+      <Dialog open={!!portalUrl} onOpenChange={open => { if (!open) setPortalUrl(null); }}>
+        <DialogContent className="max-w-4xl h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>Supplier Portal</DialogTitle>
+          </DialogHeader>
+          {portalUrl && (
+            <iframe
+              src={portalUrl}
+              className="w-full h-full border-0 rounded"
+              title="Supplier portal"
+              sandbox="allow-same-origin allow-forms allow-scripts allow-popups allow-top-navigation"
+            />
+          )}
         </DialogContent>
       </Dialog>
     </>

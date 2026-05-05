@@ -9,6 +9,7 @@ import EventRSVPCard, { type EventData } from "@/components/events/EventRSVPCard
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import Plus from "lucide-react/dist/esm/icons/plus";
+import { useNavigate } from "react-router-dom";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 
 const dbFrom = (table: string): unknown =>
@@ -16,6 +17,7 @@ const dbFrom = (table: string): unknown =>
 
 export default function EventsHubPage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [events, setEvents] = useState<EventData[] | null>(null);
   const [myStatuses, setMyStatuses] = useState<Record<string, "going" | "maybe" | "declined">>({});
 
@@ -56,7 +58,7 @@ export default function EventsHubPage() {
             <h1 className="text-2xl font-bold">Events</h1>
             <p className="text-sm text-muted-foreground">RSVP to local meetups, parties, and meetings.</p>
           </div>
-          <button className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold">
+          <button onClick={() => navigate("/events-hub/create")} className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold">
             <Plus className="w-4 h-4" /> Create
           </button>
         </div>
