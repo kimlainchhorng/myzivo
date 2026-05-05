@@ -1497,6 +1497,33 @@ export default function RequestRidePage() {
                   </div>
                 </div>
 
+                {/* Saved places */}
+                {(activeInput === "pickup" || activeInput === "dropoff") && (
+                  <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="bg-card border border-border/40 rounded-2xl shadow-lg overflow-hidden">
+                    {savedPlaces.map((place) => {
+                      const PlaceIcon = place.icon;
+                      return (
+                        <button
+                          key={place.id}
+                          onClick={() => {
+                            if (activeInput === "pickup") {
+                              setPickupAddress(place.label);
+                              setActiveInput(null);
+                            } else {
+                              setDropoffAddress(place.label);
+                              setActiveInput(null);
+                            }
+                          }}
+                          className="w-full text-left px-4 py-3.5 hover:bg-muted/50 transition border-b border-border/20 last:border-b-0 text-sm text-foreground touch-manipulation active:bg-muted/80 flex items-center gap-3"
+                        >
+                          <PlaceIcon className="w-4 h-4 text-primary shrink-0" />
+                          <span className="font-medium">{place.label}</span>
+                        </button>
+                      );
+                    })}
+                  </motion.div>
+                )}
+
                 {/* Suggestions */}
                 {activeInput === "pickup" && pickupGeocode.suggestions.length > 0 && (
                   <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} className="bg-card border border-border/40 rounded-2xl shadow-lg overflow-hidden">

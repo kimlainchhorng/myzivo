@@ -9,7 +9,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   ArrowLeft, CheckCircle, Clock, Copy, MapPin, Package,
   Phone, ShoppingBag, Sparkles, Star, Truck, User,
-  ChevronDown, ChevronUp, MessageSquare, Navigation,
+  ChevronDown, ChevronUp, MessageSquare, Navigation, AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -97,6 +97,7 @@ export default function GroceryOrderTracking() {
   const [order, setOrder] = useState<OrderData | null>(null);
   const [driver, setDriver] = useState<DriverInfo | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [showItems, setShowItems] = useState(false);
   const [now, setNow] = useState(Date.now());
 
@@ -119,6 +120,7 @@ export default function GroceryOrderTracking() {
 
       if (error || !data) {
         console.error("Failed to fetch order:", error);
+        setError("Order not found. Please check the order ID and try again.");
         setLoading(false);
         return;
       }
@@ -202,12 +204,12 @@ export default function GroceryOrderTracking() {
     );
   }
 
-  if (!order) {
+  if (error || (!order && !loading)) {
     return (
       <div className="min-h-screen bg-background pb-24 flex flex-col items-center justify-center px-6">
-        <Package className="h-16 w-16 text-muted-foreground/20 mb-4" />
-        <h1 className="text-xl font-bold mb-2">Order Not Found</h1>
-        <p className="text-sm text-muted-foreground mb-6 text-center">This order may have been removed or the link is invalid.</p>
+        <AlertTriangle className="h-16 w-16 text-amber-500 mb-4" />
+        <h1 className="text-xl font-bold mb-2">Unable to Load Order</h1>
+        <p className="text-sm text-muted-foreground mb-6 text-center">{error || "This order may have been removed or the link is invalid."}</p>
         <Button onClick={() => navigate("/grocery/orders")} className="rounded-2xl">View My Orders</Button>
         <ZivoMobileNav />
       </div>
