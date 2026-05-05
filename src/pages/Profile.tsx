@@ -53,6 +53,7 @@ import { useReferrals } from "@/hooks/useReferrals";
 import { useBookingHistory } from "@/hooks/useBookingHistory";
 import PullToRefresh from "@/components/shared/PullToRefresh";
 import { useNotifications } from "@/hooks/useNotifications";
+import { resolveBusinessDashboardRoute } from "@/lib/business/dashboardRoute";
 import { formatDistanceToNowStrict } from "date-fns";
 
 const LANGS = [
@@ -363,11 +364,9 @@ const Profile = () => {
   });
 
   const getShopDashboardPath = useCallback(() => {
-    // Store owners go to their merchant dashboard (`/shop-dashboard`).
-    // The `/admin/stores/:id` route is admin-only and triggers Access Denied
-    // for regular store owners.
-    return "/shop-dashboard";
-  }, []);
+    if (!ownerStore?.id) return "/shop-dashboard";
+    return resolveBusinessDashboardRoute(ownerStore.category, ownerStore.id).path;
+  }, [ownerStore]);
 
   const openShopDashboard = useCallback(() => {
     selectionChanged();
