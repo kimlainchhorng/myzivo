@@ -138,6 +138,7 @@ const MyHotelTripPage = lazy(() => import("./pages/MyHotelTripPage"));
 const MyRestaurantTripPage = lazy(() => import("./pages/MyRestaurantTripPage"));
 const MyActivityTripPage = lazy(() => import("./pages/MyActivityTripPage"));
 const MyReviewsPage = lazy(() => import("./pages/MyReviewsPage"));
+const ReviewModerationDashboard = lazy(() => import("./pages/admin/ReviewModerationDashboard"));
 
 const SupportCenterPage = lazy(() => import("./pages/app/SupportCenterPage"));
 const RideTrackingPage = lazy(() => import("./pages/app/RideTrackingPage"));
@@ -938,6 +939,7 @@ const App = () => (
                 <Route path="/notification-center" element={<ProtectedRoute><NotificationCenterPage /></ProtectedRoute>} />
                 <Route path="/activity" element={<ProtectedRoute><ActivityFeedPage /></ProtectedRoute>} />
                 <Route path="/admin/moderation" element={<ProtectedRoute requireAdmin={true}><AdminModerationPage /></ProtectedRoute>} />
+                <Route path="/admin/reviews/moderation" element={<ProtectedRoute requireAdmin={true}><ReviewModerationDashboard /></ProtectedRoute>} />
                 <Route path="/admin/launch" element={<ProtectedRoute requireAdmin={true}><AdminLaunchDashboard /></ProtectedRoute>} />
                 <Route path="/content-scheduler" element={<ProtectedRoute><ContentSchedulerPage /></ProtectedRoute>} />
                 <Route path="/story-polls" element={<ProtectedRoute><StoryPollsPage /></ProtectedRoute>} />
