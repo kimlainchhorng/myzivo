@@ -472,7 +472,6 @@ const PreferencesPage = () => {
         </div>
       </div>
     </div>
-    </>
   );
 };
 

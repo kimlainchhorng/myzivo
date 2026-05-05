@@ -1966,6 +1966,42 @@ export type Database = {
           },
         ]
       }
+      affiliate_links: {
+        Row: {
+          category: string | null
+          click_count: number
+          conversion_count: number
+          created_at: string
+          earnings_cents: number
+          id: string
+          owner_id: string
+          slug: string
+          target_url: string
+        }
+        Insert: {
+          category?: string | null
+          click_count?: number
+          conversion_count?: number
+          created_at?: string
+          earnings_cents?: number
+          id?: string
+          owner_id: string
+          slug: string
+          target_url: string
+        }
+        Update: {
+          category?: string | null
+          click_count?: number
+          conversion_count?: number
+          created_at?: string
+          earnings_cents?: number
+          id?: string
+          owner_id?: string
+          slug?: string
+          target_url?: string
+        }
+        Relationships: []
+      }
       affiliate_payouts: {
         Row: {
           affiliate_id: string
@@ -6818,6 +6854,42 @@ export type Database = {
           name?: string
           owner_id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      bug_reports: {
+        Row: {
+          app_version: string | null
+          created_at: string
+          description: string
+          id: string
+          metadata: Json | null
+          page_url: string | null
+          screenshot_url: string | null
+          user_agent: string | null
+          user_id: string | null
+        }
+        Insert: {
+          app_version?: string | null
+          created_at?: string
+          description: string
+          id?: string
+          metadata?: Json | null
+          page_url?: string | null
+          screenshot_url?: string | null
+          user_agent?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          app_version?: string | null
+          created_at?: string
+          description?: string
+          id?: string
+          metadata?: Json | null
+          page_url?: string | null
+          screenshot_url?: string | null
+          user_agent?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }
@@ -13673,6 +13745,36 @@ export type Database = {
         }
         Relationships: []
       }
+      custom_emoji_packs: {
+        Row: {
+          created_at: string
+          emojis: Json
+          group_id: string | null
+          id: string
+          is_public: boolean
+          name: string
+          owner_id: string
+        }
+        Insert: {
+          created_at?: string
+          emojis: Json
+          group_id?: string | null
+          id?: string
+          is_public?: boolean
+          name: string
+          owner_id: string
+        }
+        Update: {
+          created_at?: string
+          emojis?: Json
+          group_id?: string | null
+          id?: string
+          is_public?: boolean
+          name?: string
+          owner_id?: string
+        }
+        Relationships: []
+      }
       customer_feedback: {
         Row: {
           ambiance_rating: number | null
@@ -15013,6 +15115,8 @@ export type Database = {
           original_text: string | null
           receiver_id: string
           reply_to_id: string | null
+          reply_to_message_id: string | null
+          reply_to_snapshot: Json | null
           self_destruct_seconds: number | null
           sender_id: string
           video_url: string | null
@@ -15040,6 +15144,8 @@ export type Database = {
           original_text?: string | null
           receiver_id: string
           reply_to_id?: string | null
+          reply_to_message_id?: string | null
+          reply_to_snapshot?: Json | null
           self_destruct_seconds?: number | null
           sender_id: string
           video_url?: string | null
@@ -15067,6 +15173,8 @@ export type Database = {
           original_text?: string | null
           receiver_id?: string
           reply_to_id?: string | null
+          reply_to_message_id?: string | null
+          reply_to_snapshot?: Json | null
           self_destruct_seconds?: number | null
           sender_id?: string
           video_url?: string | null
@@ -20630,6 +20738,35 @@ export type Database = {
           },
         ]
       }
+      event_rsvps: {
+        Row: {
+          event_id: string
+          rsvped_at: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          event_id: string
+          rsvped_at?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          event_id?: string
+          rsvped_at?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_rsvps_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_zones: {
         Row: {
           center_lat: number
@@ -20679,6 +20816,63 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      events: {
+        Row: {
+          capacity: number | null
+          cover_url: string | null
+          created_at: string
+          creator_id: string
+          description: string | null
+          ends_at: string | null
+          group_id: string | null
+          id: string
+          is_ticketed: boolean
+          latitude: number | null
+          location: string | null
+          longitude: number | null
+          starts_at: string
+          ticket_price_cents: number | null
+          title: string
+          visibility: string
+        }
+        Insert: {
+          capacity?: number | null
+          cover_url?: string | null
+          created_at?: string
+          creator_id: string
+          description?: string | null
+          ends_at?: string | null
+          group_id?: string | null
+          id?: string
+          is_ticketed?: boolean
+          latitude?: number | null
+          location?: string | null
+          longitude?: number | null
+          starts_at: string
+          ticket_price_cents?: number | null
+          title: string
+          visibility?: string
+        }
+        Update: {
+          capacity?: number | null
+          cover_url?: string | null
+          created_at?: string
+          creator_id?: string
+          description?: string | null
+          ends_at?: string | null
+          group_id?: string | null
+          id?: string
+          is_ticketed?: boolean
+          latitude?: number | null
+          location?: string | null
+          longitude?: number | null
+          starts_at?: string
+          ticket_price_cents?: number | null
+          title?: string
+          visibility?: string
+        }
+        Relationships: []
       }
       exchange_rates: {
         Row: {
@@ -21621,6 +21815,42 @@ export type Database = {
           payouts?: number | null
           profit_estimate?: number | null
           snapshot_time?: string | null
+        }
+        Relationships: []
+      }
+      fitness_activities: {
+        Row: {
+          activity_type: string
+          calories: number | null
+          distance_meters: number | null
+          duration_seconds: number | null
+          id: string
+          recorded_at: string
+          source: string | null
+          steps: number | null
+          user_id: string
+        }
+        Insert: {
+          activity_type: string
+          calories?: number | null
+          distance_meters?: number | null
+          duration_seconds?: number | null
+          id?: string
+          recorded_at?: string
+          source?: string | null
+          steps?: number | null
+          user_id: string
+        }
+        Update: {
+          activity_type?: string
+          calories?: number | null
+          distance_meters?: number | null
+          duration_seconds?: number | null
+          id?: string
+          recorded_at?: string
+          source?: string | null
+          steps?: number | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -24887,6 +25117,89 @@ export type Database = {
         }
         Relationships: []
       }
+      group_expense_shares: {
+        Row: {
+          expense_id: string
+          settled_at: string | null
+          share_cents: number
+          user_id: string
+        }
+        Insert: {
+          expense_id: string
+          settled_at?: string | null
+          share_cents: number
+          user_id: string
+        }
+        Update: {
+          expense_id?: string
+          settled_at?: string | null
+          share_cents?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_expense_shares_expense_id_fkey"
+            columns: ["expense_id"]
+            isOneToOne: false
+            referencedRelation: "group_expenses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_expenses: {
+        Row: {
+          category: string | null
+          created_at: string
+          currency: string
+          group_id: string
+          id: string
+          message_id: string | null
+          paid_by: string
+          title: string
+          total_cents: number
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          currency?: string
+          group_id: string
+          id?: string
+          message_id?: string | null
+          paid_by: string
+          title: string
+          total_cents: number
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          currency?: string
+          group_id?: string
+          id?: string
+          message_id?: string | null
+          paid_by?: string
+          title?: string
+          total_cents?: number
+        }
+        Relationships: []
+      }
+      group_message_reads: {
+        Row: {
+          message_id: string
+          read_at: string
+          user_id: string
+        }
+        Insert: {
+          message_id: string
+          read_at?: string
+          user_id: string
+        }
+        Update: {
+          message_id?: string
+          read_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       group_messages: {
         Row: {
           created_at: string
@@ -24902,6 +25215,8 @@ export type Database = {
           message: string
           message_type: string
           reply_to_id: string | null
+          reply_to_message_id: string | null
+          reply_to_snapshot: Json | null
           sender_id: string
           video_url: string | null
           voice_url: string | null
@@ -24920,6 +25235,8 @@ export type Database = {
           message?: string
           message_type?: string
           reply_to_id?: string | null
+          reply_to_message_id?: string | null
+          reply_to_snapshot?: Json | null
           sender_id: string
           video_url?: string | null
           voice_url?: string | null
@@ -24938,6 +25255,8 @@ export type Database = {
           message?: string
           message_type?: string
           reply_to_id?: string | null
+          reply_to_message_id?: string | null
+          reply_to_snapshot?: Json | null
           sender_id?: string
           video_url?: string | null
           voice_url?: string | null
@@ -25161,6 +25480,71 @@ export type Database = {
           id?: string
           restaurant_id?: string | null
           status?: string | null
+        }
+        Relationships: []
+      }
+      group_poll_votes: {
+        Row: {
+          option_id: string
+          poll_id: string
+          user_id: string
+          voted_at: string
+        }
+        Insert: {
+          option_id: string
+          poll_id: string
+          user_id: string
+          voted_at?: string
+        }
+        Update: {
+          option_id?: string
+          poll_id?: string
+          user_id?: string
+          voted_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_poll_votes_poll_id_fkey"
+            columns: ["poll_id"]
+            isOneToOne: false
+            referencedRelation: "group_polls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_polls: {
+        Row: {
+          closes_at: string | null
+          created_at: string
+          created_by: string
+          group_id: string
+          id: string
+          message_id: string | null
+          multi_select: boolean
+          options: Json
+          question: string
+        }
+        Insert: {
+          closes_at?: string | null
+          created_at?: string
+          created_by: string
+          group_id: string
+          id?: string
+          message_id?: string | null
+          multi_select?: boolean
+          options: Json
+          question: string
+        }
+        Update: {
+          closes_at?: string | null
+          created_at?: string
+          created_by?: string
+          group_id?: string
+          id?: string
+          message_id?: string | null
+          multi_select?: boolean
+          options?: Json
+          question?: string
         }
         Relationships: []
       }
@@ -26834,6 +27218,41 @@ export type Database = {
           },
         ]
       }
+      job_applications: {
+        Row: {
+          applicant_id: string
+          cover_letter: string | null
+          created_at: string
+          id: string
+          job_id: string
+          status: string
+        }
+        Insert: {
+          applicant_id: string
+          cover_letter?: string | null
+          created_at?: string
+          id?: string
+          job_id: string
+          status?: string
+        }
+        Update: {
+          applicant_id?: string
+          cover_letter?: string | null
+          created_at?: string
+          id?: string
+          job_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_applications_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "job_postings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_events: {
         Row: {
           actor_id: string | null
@@ -27046,6 +27465,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      job_postings: {
+        Row: {
+          category: string | null
+          created_at: string
+          description: string | null
+          id: string
+          location: string | null
+          pay_cents: number | null
+          pay_unit: string | null
+          poster_id: string
+          remote: boolean | null
+          status: string
+          title: string
+        }
+        Insert: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          location?: string | null
+          pay_cents?: number | null
+          pay_unit?: string | null
+          poster_id: string
+          remote?: boolean | null
+          status?: string
+          title: string
+        }
+        Update: {
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          location?: string | null
+          pay_cents?: number | null
+          pay_unit?: string | null
+          poster_id?: string
+          remote?: boolean | null
+          status?: string
+          title?: string
+        }
+        Relationships: []
       }
       jobs: {
         Row: {
@@ -28473,6 +28934,42 @@ export type Database = {
             referencedColumns: ["stream_id"]
           },
         ]
+      }
+      live_locations: {
+        Row: {
+          accuracy_m: number | null
+          chat_key: string
+          chat_kind: string
+          expires_at: string
+          id: string
+          latitude: number
+          longitude: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          accuracy_m?: number | null
+          chat_key: string
+          chat_kind: string
+          expires_at: string
+          id?: string
+          latitude: number
+          longitude: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          accuracy_m?: number | null
+          chat_key?: string
+          chat_kind?: string
+          expires_at?: string
+          id?: string
+          latitude?: number
+          longitude?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       live_metrics: {
         Row: {
@@ -31660,6 +32157,57 @@ export type Database = {
           status?: string
           trip_id?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      loyalty_accounts: {
+        Row: {
+          lifetime_points: number
+          points: number
+          tier: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          lifetime_points?: number
+          points?: number
+          tier?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          lifetime_points?: number
+          points?: number
+          tier?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      loyalty_events: {
+        Row: {
+          created_at: string
+          delta: number
+          id: string
+          reason: string
+          reference_id: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          delta: number
+          id?: string
+          reason: string
+          reference_id?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          delta?: number
+          id?: string
+          reason?: string
+          reference_id?: string | null
+          user_id?: string
         }
         Relationships: []
       }
@@ -38030,6 +38578,45 @@ export type Database = {
           },
         ]
       }
+      p2p_transfers: {
+        Row: {
+          amount_cents: number
+          completed_at: string | null
+          created_at: string
+          currency: string
+          id: string
+          message_id: string | null
+          note: string | null
+          receiver_id: string
+          sender_id: string
+          status: string
+        }
+        Insert: {
+          amount_cents: number
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          message_id?: string | null
+          note?: string | null
+          receiver_id: string
+          sender_id: string
+          status?: string
+        }
+        Update: {
+          amount_cents?: number
+          completed_at?: string | null
+          created_at?: string
+          currency?: string
+          id?: string
+          message_id?: string | null
+          note?: string | null
+          receiver_id?: string
+          sender_id?: string
+          status?: string
+        }
+        Relationships: []
+      }
       p2p_vehicles: {
         Row: {
           approval_status:
@@ -38470,6 +39057,51 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      partner_applications: {
+        Row: {
+          business_name: string
+          contact_email: string | null
+          contact_phone: string | null
+          description: string | null
+          documents: Json | null
+          id: string
+          partner_kind: string
+          reviewed_at: string | null
+          reviewer_notes: string | null
+          status: string
+          submitted_at: string
+          user_id: string
+        }
+        Insert: {
+          business_name: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          description?: string | null
+          documents?: Json | null
+          id?: string
+          partner_kind: string
+          reviewed_at?: string | null
+          reviewer_notes?: string | null
+          status?: string
+          submitted_at?: string
+          user_id: string
+        }
+        Update: {
+          business_name?: string
+          contact_email?: string | null
+          contact_phone?: string | null
+          description?: string | null
+          documents?: Json | null
+          id?: string
+          partner_kind?: string
+          reviewed_at?: string | null
+          reviewer_notes?: string | null
+          status?: string
+          submitted_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       partner_checkout_config: {
         Row: {
@@ -39790,22 +40422,28 @@ export type Database = {
       pinned_messages: {
         Row: {
           conversation_id: string
+          expires_at: string | null
           id: string
           message_id: string
+          message_table: string | null
           pinned_at: string | null
           pinned_by: string
         }
         Insert: {
           conversation_id: string
+          expires_at?: string | null
           id?: string
           message_id: string
+          message_table?: string | null
           pinned_at?: string | null
           pinned_by: string
         }
         Update: {
           conversation_id?: string
+          expires_at?: string | null
           id?: string
           message_id?: string
+          message_table?: string | null
           pinned_at?: string | null
           pinned_by?: string
         }
@@ -42880,6 +43518,33 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      recommendation_scores: {
+        Row: {
+          computed_at: string
+          id: string
+          item_id: string
+          item_kind: string
+          score: number
+          user_id: string
+        }
+        Insert: {
+          computed_at?: string
+          id?: string
+          item_id: string
+          item_kind: string
+          score: number
+          user_id: string
+        }
+        Update: {
+          computed_at?: string
+          id?: string
+          item_id?: string
+          item_kind?: string
+          score?: number
+          user_id?: string
+        }
+        Relationships: []
       }
       recovery_tests: {
         Row: {
@@ -57927,6 +58592,33 @@ export type Database = {
           },
         ]
       }
+      user_e2e_keys: {
+        Row: {
+          device_id: string
+          identity_pubkey: string
+          one_time_prekeys: Json | null
+          signed_prekey: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          device_id: string
+          identity_pubkey: string
+          one_time_prekeys?: Json | null
+          signed_prekey: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          device_id?: string
+          identity_pubkey?: string
+          one_time_prekeys?: Json | null
+          signed_prekey?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       user_email_preferences: {
         Row: {
           booking_updates: boolean
@@ -58329,6 +59021,24 @@ export type Database = {
           is_read?: boolean
           message?: string
           type?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_onboarding: {
+        Row: {
+          completed_at: string | null
+          completed_steps: Json | null
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          completed_steps?: Json | null
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          completed_steps?: Json | null
           user_id?: string
         }
         Relationships: []
@@ -59045,6 +59755,87 @@ export type Database = {
           status?: string | null
           target_audience?: string | null
           title?: string
+        }
+        Relationships: []
+      }
+      user_totp_secrets: {
+        Row: {
+          enabled_at: string | null
+          encrypted_secret: string
+          recovery_codes_hashed: Json | null
+          user_id: string
+        }
+        Insert: {
+          enabled_at?: string | null
+          encrypted_secret: string
+          recovery_codes_hashed?: Json | null
+          user_id: string
+        }
+        Update: {
+          enabled_at?: string | null
+          encrypted_secret?: string
+          recovery_codes_hashed?: Json | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_wallet_transactions: {
+        Row: {
+          amount_cents: number
+          balance_after_cents: number
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          kind: string
+          reference_id: string | null
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          balance_after_cents: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          kind: string
+          reference_id?: string | null
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          balance_after_cents?: number
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          kind?: string
+          reference_id?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_wallets: {
+        Row: {
+          available_cents: number
+          currency: string
+          pending_cents: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          available_cents?: number
+          currency?: string
+          pending_cents?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          available_cents?: number
+          currency?: string
+          pending_cents?: number
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -60180,6 +60971,68 @@ export type Database = {
           transcript_lang?: string | null
           user_id?: string
           waveform_data?: Json | null
+        }
+        Relationships: []
+      }
+      voice_room_participants: {
+        Row: {
+          is_muted: boolean
+          joined_at: string
+          role: string
+          room_id: string
+          user_id: string
+        }
+        Insert: {
+          is_muted?: boolean
+          joined_at?: string
+          role?: string
+          room_id: string
+          user_id: string
+        }
+        Update: {
+          is_muted?: boolean
+          joined_at?: string
+          role?: string
+          room_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "voice_room_participants_room_id_fkey"
+            columns: ["room_id"]
+            isOneToOne: false
+            referencedRelation: "voice_rooms"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      voice_rooms: {
+        Row: {
+          description: string | null
+          ended_at: string | null
+          host_id: string
+          id: string
+          is_live: boolean
+          started_at: string
+          topic: string
+        }
+        Insert: {
+          description?: string | null
+          ended_at?: string | null
+          host_id: string
+          id?: string
+          is_live?: boolean
+          started_at?: string
+          topic: string
+        }
+        Update: {
+          description?: string | null
+          ended_at?: string | null
+          host_id?: string
+          id?: string
+          is_live?: boolean
+          started_at?: string
+          topic?: string
         }
         Relationships: []
       }
