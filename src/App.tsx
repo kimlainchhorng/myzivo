@@ -135,6 +135,9 @@ const MyLodgingTripPage = lazy(() => import("./pages/MyLodgingTripPage"));
 const MyCarTripPage = lazy(() => import("./pages/MyCarTripPage"));
 const MyFlightTripPage = lazy(() => import("./pages/MyFlightTripPage"));
 const MyHotelTripPage = lazy(() => import("./pages/MyHotelTripPage"));
+const MyRestaurantTripPage = lazy(() => import("./pages/MyRestaurantTripPage"));
+const MyActivityTripPage = lazy(() => import("./pages/MyActivityTripPage"));
+const MyReviewsPage = lazy(() => import("./pages/MyReviewsPage"));
 
 const SupportCenterPage = lazy(() => import("./pages/app/SupportCenterPage"));
 const RideTrackingPage = lazy(() => import("./pages/app/RideTrackingPage"));
@@ -789,6 +792,7 @@ const App = () => (
                 <Route path="/index" element={<ProtectedRoute><AppHome /></ProtectedRoute>} />
                 <Route path="/hotel-admin" element={<ProtectedRoute><HotelAdminLaunchPage /></ProtectedRoute>} />
                 <Route path="/my-trips" element={<ProtectedRoute><MyTripsPage /></ProtectedRoute>} />
+                <Route path="/my-reviews" element={<ProtectedRoute><MyReviewsPage /></ProtectedRoute>} />
                 <Route path="/wallet" element={<ProtectedRoute><AccountWalletPage /></ProtectedRoute>} />
                 <Route path="/wallet/coins/success" element={<ProtectedRoute><CoinPurchaseSuccess /></ProtectedRoute>} />
                 <Route path="/support" element={<ProtectedRoute><SupportCenterPage /></ProtectedRoute>} />
@@ -1105,6 +1109,8 @@ const App = () => (
                 <Route path="/my-trips/cars/:bookingId" element={<ProtectedRoute><RouteErrorBoundary section="Cars"><MyCarTripPage /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/my-trips/flights/:bookingId" element={<ProtectedRoute><RouteErrorBoundary section="Flights"><MyFlightTripPage /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/my-trips/hotels/:bookingId" element={<ProtectedRoute><RouteErrorBoundary section="Hotels"><MyHotelTripPage /></RouteErrorBoundary></ProtectedRoute>} />
+                <Route path="/my-trips/restaurants/:bookingId" element={<ProtectedRoute><RouteErrorBoundary section="Restaurants"><MyRestaurantTripPage /></RouteErrorBoundary></ProtectedRoute>} />
+                <Route path="/my-trips/activities/:bookingId" element={<ProtectedRoute><RouteErrorBoundary section="Activities"><MyActivityTripPage /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/my-trips/:orderNumber" element={<RouteErrorBoundary section="Checkout"><TravelOrderDetailPage /></RouteErrorBoundary>} />
 
                 {/* Extras */}
