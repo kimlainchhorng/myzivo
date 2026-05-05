@@ -395,7 +395,7 @@ export const AITripSuggestions = ({
         {/* Advanced Filters Toggle */}
         <button
           onClick={() => setShowAdvanced(!showAdvanced)}
-          className="flex items-center gap-2 text-sm text-foreground hover:text-foreground transition-colors"
+          className="flex items-center gap-2 text-sm text-foreground hover:text-primary transition-colors"
         >
           <History className="w-4 h-4" />
           {showAdvanced ? 'Hide' : 'Show'} advanced filters

@@ -586,7 +586,11 @@ const queryClient = new QueryClient({
 
 const PageLoader = forwardRef<HTMLDivElement>(function PageLoader(_, ref) {
   return (
-  <div ref={ref} className="min-h-screen bg-background flex items-center justify-center">
+  // min-h-[100dvh] (dynamic viewport height) instead of min-h-screen so the
+  // loader fills the visible viewport correctly on iOS Safari — the older
+  // `100vh` overshoots when the URL bar is showing, pushing the centered
+  // content off-screen and creating a visible jump when the bar hides.
+  <div ref={ref} className="min-h-[100dvh] bg-background flex items-center justify-center">
     <div className="flex flex-col items-center gap-4">
       <div className="relative">
         <div className="absolute inset-0 rounded-2xl bg-ig-gradient opacity-30 blur-xl animate-pulse" />

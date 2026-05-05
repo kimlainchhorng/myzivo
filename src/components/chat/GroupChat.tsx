@@ -432,6 +432,26 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
     return members.find((m) => m.user_id === senderId)?.avatar || null;
   };
 
+  const handleLockedMediaSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (lockedImageInputRef.current) lockedImageInputRef.current.value = "";
+    if (!file) return;
+    const isVideo = file.type.startsWith("video");
+    const maxSize = isVideo ? 25 * 1024 * 1024 : 5 * 1024 * 1024;
+    if (file.size > maxSize) {
+      toast.error(`File must be under ${isVideo ? "25MB" : "5MB"}`);
+      return;
+    }
+    setLockedMediaFile(file);
+    setShowLockedPricePicker(true);
+  };
+
+  const handleLockedMediaConfirm = (_priceCents: number) => {
+    setShowLockedPricePicker(false);
+    setLockedMediaFile(null);
+    toast.message("Locked media in groups is coming soon");
+  };
+
   const handleSend = useCallback(async (imageUrl?: string, voiceUrl?: string) => {
     const text = input.trim();
     if (!text && !imageUrl && !voiceUrl) return;

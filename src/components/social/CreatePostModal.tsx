@@ -723,7 +723,7 @@ export default function CreatePostModal({
                         )}
                       >
                         <div className="h-7 w-7 rounded-full bg-muted overflow-hidden shrink-0">
-                          {u.avatar_url ? <img src={u.avatar_url} className="h-full w-full object-cover" alt="" /> :
+                          {u.avatar_url ? <img src={u.avatar_url} loading="lazy" decoding="async" className="h-full w-full object-cover" alt="" /> :
                             <div className="h-full w-full flex items-center justify-center text-[10px] font-bold text-muted-foreground">{(u.full_name || "?")[0]}</div>}
                         </div>
                         <span className="text-xs font-medium text-foreground flex-1 text-left truncate inline-flex items-center gap-1">
@@ -826,7 +826,7 @@ export default function CreatePostModal({
                     className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted/50 transition-colors"
                   >
                     <div className="h-7 w-7 rounded-full bg-muted overflow-hidden">
-                      {u.avatar_url ? <img src={u.avatar_url} className="h-full w-full object-cover" alt="" /> :
+                      {u.avatar_url ? <img src={u.avatar_url} loading="lazy" decoding="async" className="h-full w-full object-cover" alt="" /> :
                         <div className="h-full w-full flex items-center justify-center text-[10px] font-bold text-muted-foreground">{(u.full_name || "?")[0]}</div>}
                     </div>
                     <span className="text-xs font-medium text-foreground inline-flex items-center gap-1">

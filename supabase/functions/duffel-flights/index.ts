@@ -698,7 +698,7 @@ function transformOffer(offer: unknown): DuffelOfferTransformed | null {
   let checkedBagsIncluded = false;
   let checkedBagQuantity = 0;
   let carryOnQuantity = 0;
-  let fareBrandName = readFareBrandName(o, firstSlice, firstSegment, passengers);
+  const fareBrandName = readFareBrandName(o, firstSlice, firstSegment, passengers);
   let checkedBagWeightKg: number | null = null;
   let checkedBagWeightLb: number | null = null;
   let carryOnWeightKg: number | null = null;

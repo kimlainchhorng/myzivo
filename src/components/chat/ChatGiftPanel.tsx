@@ -191,7 +191,7 @@ export default function ChatGiftPanel({ open, onClose, recipientId, recipientNam
                     onTouchStart={startHold}
                     onTouchEnd={endHold}
                     disabled={sending || insufficient}
-                    className="flex-1 h-10 rounded-full font-semibold gap-2 bg-gradient-to-r from-amber-500 hover:from-amber-500 hover:text-white"
+                    className="flex-1 h-10 rounded-full font-semibold gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-md shadow-amber-500/20 transition-all"
                   >
                     {insufficient ? (
                       <>Need {totalCost - balance} more</>

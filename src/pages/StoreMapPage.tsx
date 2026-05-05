@@ -60,35 +60,69 @@ interface StoreProduct {
   price: number;
 }
 
+// Cache the resolved API key for the lifetime of the page so navigating away
+// and back to the map doesn't re-hit the supabase edge function (cold start
+// could add 1–2s of blank screen). The promise itself is cached so concurrent
+// map components share the same in-flight request.
+let _apiKeyPromise: Promise<string> | null = null;
+
 async function getApiKey(): Promise<string> {
+  if (_apiKeyPromise) return _apiKeyPromise;
   const envKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
-  try {
-    const { data, error } = await supabase.functions.invoke("maps-api-key");
-    if (!error && data?.key) return data.key;
-  } catch { /* fallback */ }
-  return envKey;
+  // If the env key is configured, use it directly. The Maps JS key is a
+  // public token (it ships in the script URL) so the supabase round-trip
+  // adds latency without adding security — referrer/origin restrictions on
+  // the GCP side are what protect it.
+  if (envKey) {
+    _apiKeyPromise = Promise.resolve(envKey);
+    return _apiKeyPromise;
+  }
+  _apiKeyPromise = (async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke("maps-api-key");
+      if (!error && data?.key) return data.key as string;
+    } catch { /* fallback */ }
+    return "";
+  })();
+  return _apiKeyPromise;
 }
+
+// Cache the SDK-load promise too. Without this, two components mounting
+// simultaneously can each append their own <script> tag, and rapid back/forward
+// navigation re-runs the existing-script-wait branch every time.
+let _mapsLoadPromise: Promise<boolean> | null = null;
 
 async function loadGoogleMaps(apiKey: string): Promise<boolean> {
   if ((window as any).google?.maps) return true;
-  const existing = document.querySelector('script[src*="maps.googleapis.com/maps/api/js"]');
-  if (existing) {
-    await new Promise<void>((res) => {
-      if ((window as any).google?.maps) return res();
-      existing.addEventListener("load", () => res());
-      setTimeout(() => res(), 3000);
+  if (_mapsLoadPromise) return _mapsLoadPromise;
+
+  _mapsLoadPromise = (async () => {
+    const existing = document.querySelector('script[src*="maps.googleapis.com/maps/api/js"]');
+    if (existing) {
+      await new Promise<void>((res) => {
+        if ((window as any).google?.maps) return res();
+        existing.addEventListener("load", () => res());
+        setTimeout(() => res(), 3000);
+      });
+      return !!(window as any).google?.maps;
+    }
+    return new Promise<boolean>((resolve) => {
+      const script = document.createElement("script");
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}`;
+      script.async = true;
+      script.defer = true;
+      script.onload = () => resolve(true);
+      script.onerror = () => {
+        // Reset cache so a retry can attempt a fresh load instead of
+        // permanently returning a failed promise.
+        _mapsLoadPromise = null;
+        resolve(false);
+      };
+      document.head.appendChild(script);
     });
-    return !!(window as any).google?.maps;
-  }
-  return new Promise((resolve) => {
-    const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}`;
-    script.async = true;
-    script.defer = true;
-    script.onload = () => resolve(true);
-    script.onerror = () => resolve(false);
-    document.head.appendChild(script);
-  });
+  })();
+
+  return _mapsLoadPromise;
 }
 
 const LIGHT_MAP_STYLES: google.maps.MapTypeStyle[] = [
@@ -1549,16 +1583,20 @@ export default function StoreMapPage() {
         {/* ── Map ── */}
         <div ref={mapContainerRef} className="absolute inset-0" style={{ touchAction: "none" }} />
 
-        {/* Map loading overlay */}
+        {/* Map loading overlay — visible from first paint so the user
+            never sees a blank white screen while the SDK + key resolve. */}
         {!mapReady && !mapError && (
           <div className="absolute inset-0 z-[500] flex flex-col items-center justify-center bg-[#f5f5f5]">
-            <div className="w-14 h-14 rounded-2xl bg-primary/10 flex items-center justify-center mb-3 animate-pulse">
-              <MapPin className="w-7 h-7 text-primary" />
+            <div className="w-16 h-16 rounded-2xl bg-primary/15 flex items-center justify-center mb-4 animate-pulse">
+              <MapPin className="w-8 h-8 text-primary" />
             </div>
-            <p className="text-[13px] font-semibold text-muted-foreground">Loading map…</p>
-            <div className="mt-3 w-36 h-1.5 rounded-full bg-muted overflow-hidden">
-              <div className="h-full w-1/2 bg-primary/60 rounded-full animate-[shimmer_1.4s_ease-in-out_infinite]"
-                style={{ animation: "slidein 1.4s ease-in-out infinite" }} />
+            <p className="text-sm font-semibold text-foreground">Loading map…</p>
+            <p className="text-[11px] text-muted-foreground mt-1">Finding stores near you</p>
+            {/* Indeterminate shimmer bar — sliding-half pattern.
+                The Tailwind `shimmer` keyframe (translateX -100% → 100%)
+                animates the inner half-width bar across the track. */}
+            <div className="mt-4 w-40 h-1.5 rounded-full bg-muted overflow-hidden">
+              <div className="h-full w-1/2 bg-primary rounded-full animate-shimmer" />
             </div>
           </div>
         )}

@@ -983,7 +983,7 @@ export default function StoryViewer({
                       <div key={v.viewer_id} className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-full bg-muted overflow-hidden flex-shrink-0">
                           {v.avatar ? (
-                            <img src={v.avatar} alt="" className="w-full h-full object-cover" />
+                            <img src={v.avatar} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center text-xs font-bold text-muted-foreground">
                               {v.name.charAt(0)}
@@ -1012,7 +1012,7 @@ export default function StoryViewer({
                           <div className="relative w-9 h-9 shrink-0">
                             <div className="w-9 h-9 rounded-full bg-muted overflow-hidden">
                               {r.avatar ? (
-                                <img src={r.avatar} alt="" className="w-full h-full object-cover" />
+                                <img src={r.avatar} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                               ) : (
                                 <div className="w-full h-full flex items-center justify-center text-xs font-bold text-muted-foreground">
                                   {r.name.charAt(0)}
@@ -1061,7 +1061,7 @@ export default function StoryViewer({
                                 <CornerDownRight className="w-3 h-3 text-muted-foreground/60 mt-1.5 shrink-0" />
                                 <div className="w-6 h-6 rounded-full bg-muted overflow-hidden flex-shrink-0">
                                   {tc.avatar ? (
-                                    <img src={tc.avatar} alt="" className="w-full h-full object-cover" />
+                                    <img src={tc.avatar} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                                   ) : (
                                     <div className="w-full h-full flex items-center justify-center text-[9px] font-bold text-muted-foreground">
                                       {tc.name.charAt(0)}
@@ -1147,7 +1147,7 @@ export default function StoryViewer({
                     <div key={c.id} className="flex gap-2">
                       <div className="w-8 h-8 rounded-full bg-muted overflow-hidden flex-shrink-0">
                         {c.avatar ? (
-                          <img src={c.avatar} alt="" className="w-full h-full object-cover" />
+                          <img src={c.avatar} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                         ) : (
                           <div className="w-full h-full flex items-center justify-center text-xs font-bold text-muted-foreground">
                             {c.name.charAt(0)}

@@ -179,10 +179,10 @@ serve(async (req) => {
     console.log(`[aviasales-search] Search started: search_id=${search_id}, results_url=${results_url}`);
 
     // Step 2: Poll for results (up to 15 seconds)
-    let allProposals: any[] = [];
-    let agents: Record<string, any> = {};
-    let airlines: Record<string, any> = {};
-    let airports: Record<string, any> = {};
+    const allProposals: any[] = [];
+    const agents: Record<string, any> = {};
+    const airlines: Record<string, any> = {};
+    const airports: Record<string, any> = {};
     let isOver = false;
     let pollCount = 0;
     const maxPolls = 10;

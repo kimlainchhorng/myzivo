@@ -194,6 +194,10 @@ export default defineConfig(({ mode }) => ({
     alias: {
       "@": path.resolve(__dirname, "./src"),
       "@radix-ui/react-slot": path.resolve(__dirname, "./node_modules/@radix-ui/react-slot"),
+      // React 19 hoists <title>/<meta>/<link> natively. react-helmet-async
+      // collides with that hoisting, causing NotFoundError on commit/unmount
+      // (App failed to start crash on iOS WKWebView in particular).
+      "react-helmet-async": path.resolve(__dirname, "./src/lib/react-helmet-shim.tsx"),
     },
     // Prevent duplicate React copies (fixes "Cannot read properties of null (reading 'useEffect')")
     dedupe: ["react", "react-dom", "@radix-ui/react-slot"],

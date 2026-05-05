@@ -174,7 +174,7 @@ export default function MentionPicker({ query, onSelect, onClose, className = ""
                   >
                     <div className="h-9 w-9 shrink-0 overflow-hidden rounded-full bg-muted">
                       {r.avatarUrl ? (
-                        <img src={r.avatarUrl} alt="" className="h-full w-full object-cover" />
+                        <img src={r.avatarUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
                       ) : (
                         <div className="flex h-full w-full items-center justify-center text-sm font-bold text-primary">
                           {(r.fullName ?? r.username ?? "?")[0]?.toUpperCase()}

@@ -27,6 +27,8 @@ import DollarSign from "lucide-react/dist/esm/icons/dollar-sign";
 import Pencil from "lucide-react/dist/esm/icons/pencil";
 import Languages from "lucide-react/dist/esm/icons/languages";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
+import Music2 from "lucide-react/dist/esm/icons/music-2";
+import Check from "lucide-react/dist/esm/icons/check";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";

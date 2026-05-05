@@ -70,7 +70,7 @@ export default function StoryHighlights({ userId, isOwnProfile }: StoryHighlight
           >
             <div className="h-16 w-16 rounded-full border-2 border-border/60 overflow-hidden bg-muted/30 flex items-center justify-center">
               {h.cover_url ? (
-                <img src={h.cover_url} alt={h.title} className="w-full h-full object-cover" />
+                <img src={h.cover_url} alt={h.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
               ) : (
                 <span className="text-lg">📌</span>
               )}

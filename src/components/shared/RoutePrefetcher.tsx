@@ -13,6 +13,15 @@ const PREFETCH_ROUTES: Record<string, () => Promise<unknown>> = {
   "/rides": () => import("@/pages/app/RideHubPage"),
   "/eats": () => import("@/pages/EatsLanding"),
   "/feed": () => import("@/pages/FeedPage"),
+  // Bottom-nav targets — prefetched on touch-down so the chunk is in-memory
+  // by the time the user's finger lifts and the click fires.
+  "/reels": () => import("@/pages/ReelsFeedPage"),
+  "/chat": () => import("@/pages/ChatHubPage"),
+  "/profile": () => import("@/pages/Profile"),
+  // Home "More Services" tiles — same touch-down prefetch pattern.
+  "/rent-car": () => import("@/pages/CarRentalBooking"),
+  "/grocery": () => import("@/pages/GroceryMarketplace"),
+  "/delivery": () => import("@/pages/DeliveryPage"),
 };
 
 const prefetched = new Set<string>();

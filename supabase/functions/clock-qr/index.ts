@@ -144,7 +144,7 @@ Deno.serve(async (req) => {
       }
 
       let employeeId: string;
-      let storeId = qrToken.store_id;
+      const storeId = qrToken.store_id;
 
       if (scanner_type === "employee_scans_store") {
         // Employee scanning store QR → find their employee record

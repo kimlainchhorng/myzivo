@@ -3,16 +3,13 @@
  * Full-width cards with author info, media, captions, and engagement
  * Everyone can post photos/videos that show up here
  */
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useState, useRef, useCallback, useEffect, memo, useMemo } from "react";
 import { createPortal } from "react-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-const UnifiedShareSheet = lazy(() => import("@/components/shared/ShareSheet"));
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
-const ZivoMobileNav = lazy(() => import("@/components/app/ZivoMobileNav"));
-const NavBar = lazy(() => import("@/components/home/NavBar"));
 import SEOHead from "@/components/SEOHead";
-const TipSheet = lazy(() => import("@/components/social/TipSheet"));
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import Heart from "lucide-react/dist/esm/icons/heart";
 import MessageCircle from "lucide-react/dist/esm/icons/message-circle";
@@ -40,13 +37,6 @@ import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
 import Flag from "lucide-react/dist/esm/icons/flag";
 import Bell from "lucide-react/dist/esm/icons/bell";
 import Menu from "lucide-react/dist/esm/icons/menu";
-import {
-  Sheet,
-  SheetContent,
-  SheetHeader,
-  SheetTitle,
-  SheetTrigger,
-} from "@/components/ui/sheet";
 import BellOff from "lucide-react/dist/esm/icons/bell-off";
 import Link2 from "lucide-react/dist/esm/icons/link-2";
 import EyeOff from "lucide-react/dist/esm/icons/eye-off";
@@ -87,21 +77,16 @@ import Car from "lucide-react/dist/esm/icons/car";
 import UtensilsCrossed from "lucide-react/dist/esm/icons/utensils-crossed";
 import Crown from "lucide-react/dist/esm/icons/crown";
 import Package from "lucide-react/dist/esm/icons/package";
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-const AlertDialog = lazy(() => import("@/components/ui/alert-dialog").then(m => ({ default: m.AlertDialog })));
-const AlertDialogAction = lazy(() => import("@/components/ui/alert-dialog").then(m => ({ default: m.AlertDialogAction })));
-const AlertDialogCancel = lazy(() => import("@/components/ui/alert-dialog").then(m => ({ default: m.AlertDialogCancel })));
-const AlertDialogContent = lazy(() => import("@/components/ui/alert-dialog").then(m => ({ default: m.AlertDialogContent })));
-const AlertDialogDescription = lazy(() => import("@/components/ui/alert-dialog").then(m => ({ default: m.AlertDialogDescription })));
-const AlertDialogFooter = lazy(() => import("@/components/ui/alert-dialog").then(m => ({ default: m.AlertDialogFooter })));
-const AlertDialogHeader = lazy(() => import("@/components/ui/alert-dialog").then(m => ({ default: m.AlertDialogHeader })));
-const AlertDialogTitle = lazy(() => import("@/components/ui/alert-dialog").then(m => ({ default: m.AlertDialogTitle })));
-import { useState, useRef, useCallback, useEffect, memo, useMemo } from "react";
-import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { getPostShareUrl } from "@/lib/getPublicOrigin";
-const trackInitiateCheckout = (input: Record<string, unknown>) =>
-  import("@/services/metaConversion").then((m) => m.trackInitiateCheckout(input as any));
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
@@ -112,6 +97,34 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { useChatPrefs } from "@/hooks/useChatPrefs";
 import RelativeTime from "@/components/social/RelativeTime";
 import { topicForUserSync } from "@/lib/security/channelName";
+import TrendingHashtags, { postHasHashtag } from "@/components/social/TrendingHashtags";
+import CollapsibleCaption from "@/components/social/CollapsibleCaption";
+import VerifiedBadge from "@/components/VerifiedBadge";
+import { isBlueVerified } from "@/lib/verification";
+import { formatCount, commentsLinkLabel } from "@/lib/social/formatCount";
+import { shouldSendLikeNotification } from "@/lib/social/likeNotificationGuard";
+import { EngagementSkeleton } from "@/components/social/EngagementSkeleton";
+import SwipeableSheet from "@/components/social/SwipeableSheet";
+import { optimizeAvatar } from "@/utils/optimizeAvatar";
+import { useSwipeDownClose } from "@/components/social/useSwipeDownClose";
+import { SwipeGrabHandle } from "@/components/social/SwipeGrabHandle";
+
+// ── Lazy components ──────────────────────────────────────────────────────────
+// All lazy() calls are grouped AFTER imports. Interleaving them with imports
+// can cause "Cannot access 'lazy' before initialization" TDZ errors under
+// Vite + react-refresh dev-mode transforms.
+const UnifiedShareSheet = lazy(() => import("@/components/shared/ShareSheet"));
+const ZivoMobileNav = lazy(() => import("@/components/app/ZivoMobileNav"));
+const NavBar = lazy(() => import("@/components/home/NavBar"));
+const TipSheet = lazy(() => import("@/components/social/TipSheet"));
+const AlertDialog = lazy(() => import("@/components/ui/alert-dialog").then(m => ({ default: m.AlertDialog })));
+const AlertDialogAction = lazy(() => import("@/components/ui/alert-dialog").then(m => ({ default: m.AlertDialogAction })));
+const AlertDialogCancel = lazy(() => import("@/components/ui/alert-dialog").then(m => ({ default: m.AlertDialogCancel })));
+const AlertDialogContent = lazy(() => import("@/components/ui/alert-dialog").then(m => ({ default: m.AlertDialogContent })));
+const AlertDialogDescription = lazy(() => import("@/components/ui/alert-dialog").then(m => ({ default: m.AlertDialogDescription })));
+const AlertDialogFooter = lazy(() => import("@/components/ui/alert-dialog").then(m => ({ default: m.AlertDialogFooter })));
+const AlertDialogHeader = lazy(() => import("@/components/ui/alert-dialog").then(m => ({ default: m.AlertDialogHeader })));
+const AlertDialogTitle = lazy(() => import("@/components/ui/alert-dialog").then(m => ({ default: m.AlertDialogTitle })));
 const NewPostsPill = lazy(() => import("@/components/social/NewPostsPill"));
 const FeedGreeting = lazy(() => import("@/components/social/FeedGreeting"));
 const ReelsPreviewRow = lazy(() => import("@/components/social/ReelsPreviewRow"));
@@ -126,24 +139,16 @@ const FloatingProductCard = lazy(() => import("@/components/reels/FloatingProduc
 const CommentsSheet = lazy(() => import("@/components/social/CommentsSheet"));
 const FeedStoryRing = lazy(() => import("@/components/social/FeedStoryRing"));
 const OnThisDay = lazy(() => import("@/components/social/OnThisDay"));
-import TrendingHashtags, { postHasHashtag } from "@/components/social/TrendingHashtags";
 const ScrollToTopFab = lazy(() => import("@/components/social/ScrollToTopFab"));
 const SuggestedUsersCarousel = lazy(() => import("@/components/social/SuggestedUsersCarousel"));
 const CreatePostModal = lazy(() => import("@/components/social/CreatePostModal"));
 const PollPostCard = lazy(() => import("@/components/social/PollPostCard"));
 const SafeCaption = lazy(() => import("@/components/social/SafeCaption"));
-import CollapsibleCaption from "@/components/social/CollapsibleCaption";
-import VerifiedBadge from "@/components/VerifiedBadge";
-import { isBlueVerified } from "@/lib/verification";
-import { formatCount, commentsLinkLabel } from "@/lib/social/formatCount";
-import { shouldSendLikeNotification } from "@/lib/social/likeNotificationGuard";
-import { EngagementSkeleton } from "@/components/social/EngagementSkeleton";
-import SwipeableSheet from "@/components/social/SwipeableSheet";
 const FeedSidebar = lazy(() => import("@/components/social/FeedSidebar"));
 const CommentPreview = lazy(() => import("@/components/social/CommentPreview"));
-import { optimizeAvatar } from "@/utils/optimizeAvatar";
-import { useSwipeDownClose } from "@/components/social/useSwipeDownClose";
-import { SwipeGrabHandle } from "@/components/social/SwipeGrabHandle";
+
+const trackInitiateCheckout = (input: Record<string, unknown>) =>
+  import("@/services/metaConversion").then((m) => m.trackInitiateCheckout(input as any));
 
 /**
  * Fullscreen post-detail overlay with swipe-down-to-close.

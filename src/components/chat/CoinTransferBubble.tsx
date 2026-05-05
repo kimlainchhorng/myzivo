@@ -18,7 +18,7 @@ export default function CoinTransferBubble({ amount, note, isOwn }: Props) {
       isOwn ? "ml-auto" : "mr-auto",
     )}>
       <div className="flex items-center gap-2">
-        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 flex items-center justify-center shadow">
+        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow">
           <Coins className="w-5 h-5 text-white" />
         </div>
         <div>

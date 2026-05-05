@@ -31,7 +31,7 @@ const FlightDealsCarousel = ({ onSelect }: FlightDealsCarouselProps) => {
               Trending <span className="text-accent-foreground">Destinations</span>
             </h2>
           </div>
-          <button className="hidden sm:flex items-center gap-2 text-foreground hover:text-foreground transition-colors text-sm font-medium">
+          <button className="hidden sm:flex items-center gap-2 text-foreground hover:text-primary transition-colors text-sm font-medium">
             View all routes <ArrowRight className="w-4 h-4" />
           </button>
         </div>

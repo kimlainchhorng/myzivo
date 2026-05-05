@@ -279,12 +279,12 @@ export default function BookingReturnPage() {
             {pageStatus === "failed" && (
               <Card className="overflow-hidden">
                 {/* Error Header */}
-                <div className="bg-gradient-to-r from-red-500 p-8 text-center text-primary-foreground">
+                <div className="bg-gradient-to-r from-red-500 to-red-600 p-8 text-center text-white">
                   <div className="w-20 h-20 mx-auto rounded-full bg-white/20 flex items-center justify-center mb-4">
                     <XCircle className="w-12 h-12" />
                   </div>
                   <h1 className="text-2xl font-bold mb-2">Booking Failed</h1>
-                  <p className="text-primary-foreground/90">
+                  <p className="text-white/90">
                     There was an issue processing your booking
                   </p>
                 </div>

@@ -180,8 +180,8 @@ const VerifyOTP = () => {
 
       {/* Subtle ZIVO gradient backdrop */}
       <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-32 -right-32 w-[420px] h-[420px] rounded-full blur-3xl dark:dark:dark: bg-secondary" />
-        <div className="absolute -bottom-32 -left-32 w-[420px] h-[420px] rounded-full bg-gradient-to-tr from-amber-200/30 blur-3xl dark:from-amber-600/15 dark:dark:" />
+        <div className="absolute -top-32 -right-32 w-[420px] h-[420px] rounded-full bg-gradient-to-br from-fuchsia-300/30 via-orange-200/30 to-rose-200/30 blur-3xl dark:from-fuchsia-600/20 dark:via-orange-600/20 dark:to-rose-600/20" />
+        <div className="absolute -bottom-32 -left-32 w-[420px] h-[420px] rounded-full bg-gradient-to-tr from-amber-200/30 via-pink-200/30 to-purple-200/30 blur-3xl dark:from-amber-600/15 dark:via-pink-600/15 dark:to-purple-600/15" />
       </div>
 
       <div className="relative w-full max-w-sm">
@@ -191,7 +191,7 @@ const VerifyOTP = () => {
             confusing. Users with a code can tap "Use code instead" to expand. */}
         <div className="bg-white dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-white/10 rounded-xl px-7 pt-9 pb-6 shadow-sm">
           <div className="flex flex-col items-center mb-6">
-            <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 flex items-center justify-center mb-4 shadow-lg">
+            <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 via-rose-500 to-fuchsia-600 flex items-center justify-center mb-4 shadow-lg shadow-rose-500/20">
               <Mail className="w-7 h-7 text-white" />
             </div>
             <h1 className="text-xl font-bold text-zinc-900 dark:text-white">Check your email</h1>
@@ -217,7 +217,7 @@ const VerifyOTP = () => {
                   href={provider.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="w-full h-10 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 hover:opacity-95 active:scale-[0.99] transition flex items-center justify-center gap-2 shadow-md"
+                  className="w-full h-10 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 active:scale-[0.99] transition flex items-center justify-center gap-2 shadow-md"
                 >
                   <ExternalLink className="w-4 h-4" /> Open {provider.name}
                 </a>
@@ -242,7 +242,7 @@ const VerifyOTP = () => {
                 type="button"
                 onClick={resend}
                 disabled={cooldown > 0 || resending}
-                className="font-semibold text-foreground hover:text-foreground disabled:opacity-50 disabled:cursor-not-allowed"
+                className="font-semibold text-rose-500 hover:text-rose-600 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {resending ? "Sending…" : cooldown > 0 ? `Resend in ${cooldown}s` : "Resend"}
               </button>
@@ -291,7 +291,7 @@ const VerifyOTP = () => {
                   type="button"
                   onClick={() => submit(code.join(""))}
                   disabled={submitting || code.some((c) => !c)}
-                  className="w-full h-9 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md"
+                  className="w-full h-9 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md"
                 >
                   {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : (mode === "signup" ? "Confirm email" : "Verify")}
                 </button>
@@ -302,7 +302,7 @@ const VerifyOTP = () => {
 
         {/* Footer card */}
         <div className="mt-3 bg-white dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-white/10 rounded-xl px-6 py-4 text-center shadow-sm">
-          <Link to="/login" className="flex items-center justify-center gap-1 text-sm font-semibold text-foreground hover:text-foreground">
+          <Link to="/login" className="flex items-center justify-center gap-1 text-sm font-semibold text-zinc-700 dark:text-zinc-200 hover:text-rose-500 dark:hover:text-rose-400 transition-colors">
             <ArrowLeft className="w-4 h-4" /> Back to sign in
           </Link>
         </div>

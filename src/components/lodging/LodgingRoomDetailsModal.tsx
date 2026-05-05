@@ -375,13 +375,13 @@ export function LodgingRoomDetailsModal({
         {/* Premium stat tiles */}
         <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-2 xl:grid-cols-4 gap-2 sm:gap-3">
           {beds && (
-            <div className="flex flex-col items-start gap-1 p-2.5 rounded-xl border border-border dark:dark:dark:border-border bg-secondary">
+            <div className="flex flex-col items-start gap-1 p-2.5 rounded-xl border border-border bg-secondary">
               <BedDouble className="h-4 w-4 text-foreground dark:text-foreground" />
               <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Beds</span>
               <span className="text-xs font-bold text-foreground leading-tight">{beds}</span>
             </div>
           )}
-          <div className="flex flex-col items-start gap-1 p-2.5 rounded-xl border border-border dark:dark:dark:border-border bg-secondary">
+          <div className="flex flex-col items-start gap-1 p-2.5 rounded-xl border border-border bg-secondary">
             <Users className="h-4 w-4 text-foreground dark:text-foreground" />
             <span className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Sleeps</span>
             <span className="text-xs font-bold text-foreground leading-tight">{maxGuests} guests</span>

@@ -19,6 +19,7 @@ import { useLiveActivityCount } from "@/hooks/useLiveActivityCount";
 import { useChatPrefs } from "@/hooks/useChatPrefs";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
+import { useRoutePrefetch } from "@/components/shared/RoutePrefetcher";
 
 interface NavTab {
   id: string;
@@ -54,6 +55,10 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
     refetchInterval: 30000,
     staleTime: 15000,
   });
+
+  // Prefetch tab chunks on touch-down so navigation feels instant (chunk
+  // arrives in memory while the finger is still on the screen).
+  const { prefetch } = useRoutePrefetch();
 
   const { prefs: chatPrefs } = useChatPrefs(user?.id);
   const chatUnread = (() => {
@@ -110,6 +115,14 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
           return (
             <button
               key={tab.id}
+              onPointerDown={() => {
+                // Strip `/login?redirect=...` wrapper so prefetch hits the
+                // actual destination chunk, not the login chunk.
+                const target = tab.path.startsWith("/login")
+                  ? decodeURIComponent(tab.path.split("redirect=")[1] || "")
+                  : tab.path;
+                if (target && activeTab !== tab.id) prefetch(target);
+              }}
               onClick={() => {
                 if (tab.id === "account" && activeTab === "account") {
                   impact("light");

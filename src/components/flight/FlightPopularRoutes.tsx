@@ -57,7 +57,7 @@ const FlightPopularRoutes = ({ onSelect }: FlightPopularRoutesProps) => {
               Popular flight routes with the best deals
             </p>
           </div>
-          <button className="hidden sm:flex items-center gap-2 text-foreground hover:text-foreground transition-colors text-sm font-medium">
+          <button className="hidden sm:flex items-center gap-2 text-foreground hover:text-primary transition-colors text-sm font-medium">
             View all <ArrowRight className="w-4 h-4" />
           </button>
         </div>

@@ -102,7 +102,7 @@ export default function ChatWalletSheet({ open, onClose, recipientId, recipientN
             <Button
               onClick={handleSend}
               disabled={sending || amount <= 0 || amount > balance}
-              className="w-full h-11 rounded-full gap-2 bg-gradient-to-r from-amber-500 text-white"
+              className="w-full h-11 rounded-full gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white shadow-md shadow-amber-500/20 transition-all"
             >
               <Send className="w-4 h-4" />
               {amount > balance ? "Insufficient balance" : `Send ${amount.toLocaleString()} coins`}

@@ -197,7 +197,7 @@ export function FlightFiltersContent({
           {availableAirlines.length > 6 && (
             <button
               onClick={() => setShowAllAirlines(!showAllAirlines)}
-              className="flex items-center gap-1 text-sm text-foreground hover:text-foreground mt-2 font-medium"
+              className="flex items-center gap-1 text-sm text-foreground hover:text-primary mt-2 font-medium transition-colors"
             >
               {showAllAirlines ? (
                 <>

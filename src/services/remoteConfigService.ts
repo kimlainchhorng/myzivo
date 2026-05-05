@@ -62,7 +62,9 @@ class RemoteConfigService {
       const interval = setInterval(() => this.fetchConfig(), this.cacheDuration);
       this.refreshIntervals.push(interval);
     } catch (error) {
-      console.error('Failed to initialize remote config:', error);
+      // fetchConfig already handles its own errors gracefully and returns
+      // cached config. If we still landed here, it's truly unexpected.
+      console.warn('[remoteConfig] initialize fell through:', error);
     }
   }
 
@@ -120,12 +122,23 @@ class RemoteConfigService {
 
       this.config = config;
       this.lastFetch = now;
-      
-      console.log('Remote config updated:', config);
+
       return config;
     } catch (error: any) {
-      console.error('Error fetching remote config:', error?.message || error, error?.code, error?.details);
-      return this.config; // Return cached config on error
+      // Network failures (offline, unreachable supabase) and RLS rejections
+      // (running on /login before the user has a session) are expected and
+      // non-fatal — we always fall back to cached / default config. Log at
+      // warn instead of error so this doesn't trip Sentry on every login.
+      const msg = String(error?.message || error || '');
+      const isExpected =
+        msg.includes('Load failed') ||
+        msg.includes('Failed to fetch') ||
+        msg.includes('NetworkError') ||
+        error?.code === 'PGRST301' || // RLS rejection
+        error?.code === '42501'; // PostgreSQL permission denied
+      const log = isExpected ? console.warn : console.error;
+      log('[remoteConfig] fetch failed, using cached config:', msg, error?.code || '');
+      return this.config;
     }
   }
 

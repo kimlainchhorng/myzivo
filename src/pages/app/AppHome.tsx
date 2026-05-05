@@ -6,6 +6,7 @@
  */
 import { useState, useEffect, useMemo, lazy, Suspense } from "react";
 import { useNavigate } from "react-router-dom";
+import { useRoutePrefetch } from "@/components/shared/RoutePrefetcher";
 import { useI18n } from "@/hooks/useI18n";
 import { useCountry } from "@/hooks/useCountry";
 import { motion } from "framer-motion";
@@ -592,6 +593,16 @@ const AppHome = () => {
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [activeHomeTab, setActiveHomeTab] = useState<"rides" | "eats" | "flights" | "hotels">("rides");
+  // Prefetch the route a tab/search-button leads to on touch-down so the
+  // chunk is in memory by the time the click fires (~80–150 ms head-start
+  // on mobile).
+  const { prefetch } = useRoutePrefetch();
+  const tabRoutes: Record<"rides" | "eats" | "flights" | "hotels", string> = {
+    rides: "/rides",
+    eats: "/eats",
+    flights: "/flights",
+    hotels: "/hotels",
+  };
 
   const homeTabs = [
     { id: "rides", label: t("home.rides"), icon: null, image: zivoRideIcon },
@@ -786,6 +797,7 @@ const AppHome = () => {
               return (
                 <motion.button
                   key={tab.id}
+                  onPointerDown={() => prefetch(tabRoutes[tab.id])}
                   onClick={() => {
                     if (tab.id === "hotels") {
                       navigate("/hotels");
@@ -838,14 +850,9 @@ const AppHome = () => {
             <motion.button
               whileTap={{ scale: 0.99 }}
               aria-label={getSearchPlaceholder(activeHomeTab)}
+              onPointerDown={() => prefetch(tabRoutes[activeHomeTab] || "/rides")}
               onClick={() => {
-                const routes: Record<string, string> = {
-                  rides: "/rides",
-                  eats: "/eats",
-                  flights: "/flights",
-                  hotels: "/hotels",
-                };
-                navigate(routes[activeHomeTab] || "/rides");
+                navigate(tabRoutes[activeHomeTab] || "/rides");
               }}
               className="w-full touch-manipulation"
             >
@@ -859,12 +866,12 @@ const AppHome = () => {
           </div>
 
           {/* ─── STORIES RAIL — Instagram signature ─── */}
-          <Suspense fallback={<div className="h-[100px]" />}>
+          <Suspense fallback={<div className="h-[100px] mx-4 my-2 rounded-2xl bg-muted/40 animate-pulse" />}>
             <StoriesRail />
           </Suspense>
 
           {/* ─── SMART INTENT SEARCH ─── */}
-          <Suspense fallback={<div className="h-[68px]" />}>
+          <Suspense fallback={<div className="h-[68px] mx-4 my-2 rounded-xl bg-muted/40 animate-pulse" />}>
             <SmartIntentSearch />
           </Suspense>
 
@@ -963,17 +970,17 @@ const AppHome = () => {
           )}
 
           {/* ─── ZIVO CONCIERGE ─── */}
-          <Suspense fallback={<div className="h-[140px]" />}>
+          <Suspense fallback={<div className="h-[140px] mx-4 my-2 rounded-2xl bg-muted/40 animate-pulse" />}>
             <ConciergeLauncher />
           </Suspense>
 
           {/* ─── PLAN A TRIP BUNDLE ─── */}
-          <Suspense fallback={<div className="h-[140px]" />}>
+          <Suspense fallback={<div className="h-[140px] mx-4 my-2 rounded-2xl bg-muted/40 animate-pulse" />}>
             <PlanTripBundle />
           </Suspense>
 
           {/* ─── ZIVO NETWORK PROMO ─── */}
-          <Suspense fallback={<div className="h-[68px]" />}>
+          <Suspense fallback={<div className="h-[68px] mx-4 my-2 rounded-xl bg-muted/40 animate-pulse" />}>
             <NetworkPromoStrip />
           </Suspense>
 
@@ -1176,6 +1183,7 @@ const AppHome = () => {
                 <motion.button
                   key={s.label}
                   whileTap={{ scale: 0.94 }}
+                  onPointerDown={() => prefetch(s.href)}
                   onClick={() => navigate(s.href)}
                   className="flex flex-col items-center gap-2 touch-manipulation relative group"
                 >
@@ -1190,7 +1198,7 @@ const AppHome = () => {
                     </div>
                   )}
                   <div className="w-[60px] h-[60px] rounded-2xl bg-card border border-border/30 shadow-sm flex items-center justify-center icon-3d-pop group-active:scale-95 transition-all duration-200">
-                    <img src={s.image} alt={s.label} width={32} height={32} className="w-8 h-8 object-contain" />
+                    <img src={s.image} alt={s.label} width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8 object-contain" />
                   </div>
                   <span className="text-[11px] font-semibold text-muted-foreground text-center leading-tight group-hover:text-foreground transition-colors">{s.label}</span>
                 </motion.button>
@@ -1209,6 +1217,7 @@ const AppHome = () => {
                   <motion.button
                     key={s.label}
                     whileTap={{ scale: 0.94 }}
+                    onPointerDown={() => prefetch(s.href)}
                     onClick={() => navigate(s.href)}
                     className="flex flex-col items-center gap-2 touch-manipulation relative group"
                   >
@@ -1219,7 +1228,7 @@ const AppHome = () => {
                     )}
                     <div className="w-[60px] h-[60px] rounded-2xl bg-card border border-border/30 shadow-sm flex items-center justify-center icon-3d-pop group-active:scale-95 transition-all duration-200">
                       {s.image ? (
-                        <img src={s.image} alt={s.label} width={32} height={32} className="w-8 h-8 object-contain" />
+                        <img src={s.image} alt={s.label} width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8 object-contain" />
                       ) : SvcIcon ? (
                         <SvcIcon className="w-7 h-7 text-primary" />
                       ) : null}
@@ -1487,7 +1496,7 @@ const AppHome = () => {
     </div>
 
     {/* Bottom Nav — outside perspective container so position:fixed works */}
-    <Suspense fallback={<div className="h-16" />}><ZivoMobileNav /></Suspense>
+    <Suspense fallback={<div className="fixed inset-x-0 bottom-0 h-16 bg-background border-t border-border lg:hidden pb-safe" />}><ZivoMobileNav /></Suspense>
     </>
   );
 };

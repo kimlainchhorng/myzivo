@@ -1593,7 +1593,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                       <div className="relative">
                         <div className="w-12 h-12 rounded-full bg-muted overflow-hidden ring-2 ring-emerald-500/40">
                           {c.avatar ? (
-                            <img src={c.avatar} alt={c.name} className="w-full h-full object-cover" />
+                            <img src={c.avatar} alt={c.name} loading="lazy" decoding="async" className="w-full h-full object-cover" />
                           ) : (
                             <div className="w-full h-full flex items-center justify-center bg-primary/10">
                               <span className="text-sm font-bold text-primary">
@@ -1948,7 +1948,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                     (chat as any).isGroup ? "bg-primary/10" : "bg-muted"
                                   )}>
                                     {chat.avatar ? (
-                                      <img src={chat.avatar} alt="" className="w-full h-full object-cover" />
+                                      <img src={chat.avatar} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                                     ) : (chat as any).isGroup ? (
                                       <Users className="w-5 h-5 text-primary" />
                                     ) : active === "personal" ? (
@@ -2073,7 +2073,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                           return (
                                             <span className="flex items-center gap-1.5">
                                               {stickerPreview.src && (
-                                                <img src={stickerPreview.src} alt={stickerPreview.alt} className="w-5 h-5 object-contain" />
+                                                <img src={stickerPreview.src} alt={stickerPreview.alt} loading="lazy" decoding="async" className="w-5 h-5 object-contain" />
                                               )}
                                               <span className={cn(
                                                 embedded ? "text-[12px]" : "text-[13px]",
@@ -2155,7 +2155,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                               "w-10 h-10 rounded-xl bg-muted flex items-center justify-center overflow-hidden ring-2 ring-border/20"
                             )}>
                               {chat.avatar ? (
-                                <img src={chat.avatar} alt="" className="w-full h-full object-cover" />
+                                <img src={chat.avatar} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                               ) : (
                                 <span className="text-sm font-bold text-muted-foreground">
                                   {(chat.name || "U").split(" ").map((n: string) => n[0]).join("").toUpperCase().slice(0, 2)}

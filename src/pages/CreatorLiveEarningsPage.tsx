@@ -331,7 +331,7 @@ export default function CreatorLiveEarningsPage() {
                             initial={{ width: 0 }}
                             animate={{ width: `${fillPct}%` }}
                             transition={{ duration: 0.8, delay: i * 0.05 }}
-                            className="h-full bg-gradient-to-r from-amber-400 rounded-full"
+                            className="h-full bg-gradient-to-r from-amber-400 to-orange-500 rounded-full"
                           />
                         </div>
                       </div>

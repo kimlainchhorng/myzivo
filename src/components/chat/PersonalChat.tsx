@@ -363,6 +363,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [showAutoDelete, setShowAutoDelete] = useState(false);
   const [showMiniApps, setShowMiniApps] = useState(false);
   const [miniAppView, setMiniAppView] = useState<"menu" | "poll" | "todo" | "split" | "book-table" | "trip-idea">("menu");
+  const [showPersonalization, setShowPersonalization] = useState(false);
   const [showSecurity, setShowSecurity] = useState(false);
   const [showCallHistory, setShowCallHistory] = useState(false);
   const [showContactInfo, setShowContactInfo] = useState(false);

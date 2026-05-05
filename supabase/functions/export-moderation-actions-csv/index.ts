@@ -55,7 +55,7 @@ Deno.serve(async (req) => {
 
     // Fetch related messages in one go
     const messageIds = Array.from(new Set((actions || []).map((a: any) => a.entity_id).filter(Boolean)));
-    let msgMap = new Map<string, any>();
+    const msgMap = new Map<string, any>();
     if (messageIds.length) {
       const { data: msgs } = await admin
         .from("trip_messages")

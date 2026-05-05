@@ -213,8 +213,8 @@ const ResetPassword = () => {
 
       {/* Subtle ZIVO gradient backdrop */}
       <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-32 -right-32 w-[420px] h-[420px] rounded-full blur-3xl dark:dark:dark: bg-secondary" />
-        <div className="absolute -bottom-32 -left-32 w-[420px] h-[420px] rounded-full bg-gradient-to-tr from-amber-200/30 blur-3xl dark:from-amber-600/15 dark:dark:" />
+        <div className="absolute -top-32 -right-32 w-[420px] h-[420px] rounded-full bg-gradient-to-br from-fuchsia-300/30 via-orange-200/30 to-rose-200/30 blur-3xl dark:from-fuchsia-600/20 dark:via-orange-600/20 dark:to-rose-600/20" />
+        <div className="absolute -bottom-32 -left-32 w-[420px] h-[420px] rounded-full bg-gradient-to-tr from-amber-200/30 via-pink-200/30 to-purple-200/30 blur-3xl dark:from-amber-600/15 dark:via-pink-600/15 dark:to-purple-600/15" />
       </div>
 
       <motion.div
@@ -225,7 +225,7 @@ const ResetPassword = () => {
       >
         <div className="bg-white dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-white/10 rounded-xl px-7 pt-9 pb-6 shadow-sm">
           <div className="flex flex-col items-center mb-6">
-            <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 flex items-center justify-center mb-4 shadow-lg">
+            <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 via-rose-500 to-fuchsia-600 flex items-center justify-center mb-4 shadow-lg shadow-rose-500/20">
               <Lock className="w-7 h-7 text-white" />
             </div>
             <h1 className="text-xl font-bold text-zinc-900 dark:text-white">Set new password</h1>
@@ -276,7 +276,7 @@ const ResetPassword = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-9 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md"
+                className="w-full h-9 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md shadow-rose-500/20"
               >
                 {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Update password"}
               </button>

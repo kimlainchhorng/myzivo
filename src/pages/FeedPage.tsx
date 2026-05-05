@@ -3,35 +3,15 @@
  * Each post fills the entire viewport. Swipe up/down to navigate.
  * Videos auto-play when scrolled into view, pause when scrolled away.
  */
-import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { lazy, Suspense } from "react";
-const UnifiedShareSheet = lazy(() => import("@/components/shared/ShareSheet"));
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
 import { useI18n } from "@/hooks/useI18n";
-const ZivoMobileNav = lazy(() => import("@/components/app/ZivoMobileNav"));
-const NavBar = lazy(() => import("@/components/home/NavBar"));
 import SEOHead from "@/components/SEOHead";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { isBlueVerified } from "@/lib/verification";
-const CreatePostModal = lazy(() => import("@/components/social/CreatePostModal"));
-const FeedSidebar = lazy(() => import("@/components/social/FeedSidebar"));
-const SafeCaption = lazy(() => import("@/components/social/SafeCaption"));
-const SuggestedUsersCarousel = lazy(() => import("@/components/social/SuggestedUsersCarousel"));
-const FeedSkeleton = lazy(() => import("@/components/social/FeedSkeleton"));
-const NewPostsPill = lazy(() => import("@/components/social/NewPostsPill"));
-const PostActionsMenu = lazy(() => import("@/components/social/PostActionsMenu"));
-const ReactionPicker = lazy(() => import("@/components/social/ReactionPicker"));
-const CommentPreview = lazy(() => import("@/components/social/CommentPreview"));
-const ReactionSummary = lazy(() => import("@/components/social/ReactionSummary"));
-const RepostDialog = lazy(() => import("@/components/social/RepostDialog"));
-const PostInsights = lazy(() => import("@/components/social/PostInsights"));
-const CaptionEditDialog = lazy(() => import("@/components/social/CaptionEditDialog"));
-const MentionPicker = lazy(() => import("@/components/social/MentionPicker"));
-const CommentHeartButton = lazy(() => import("@/components/social/CommentHeartButton"));
-const CommentRowActions = lazy(() => import("@/components/social/CommentRowActions"));
-const ReelsCoachmarks = lazy(() => import("@/components/social/ReelsCoachmarks"));
 import TrendingHashtags, { postHasHashtag } from "@/components/social/TrendingHashtags";
 import { detectMention, applyMention } from "@/components/social/MentionPicker";
 import { usePostActions, type PostActionTarget } from "@/hooks/usePostActions";
@@ -101,12 +81,37 @@ import { shouldSendLikeNotification } from "@/lib/social/likeNotificationGuard";
 import { useOwnerStoreProfile } from "@/hooks/useOwnerStoreProfile";
 import { useHaptic } from "@/hooks/useHaptic";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
-const ReelSocialProof = lazy(() => import("@/components/reels/ReelSocialProof"));
 import RelativeTime from "@/components/social/RelativeTime";
 import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
 import { useLodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile";
 import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
 // videoRepair is heavy (FFmpeg WASM) — dynamic import only when needed
+
+// ── Lazy components ──────────────────────────────────────────────────────────
+// All lazy() calls are grouped AFTER imports. Interleaving them with imports
+// can cause "Cannot access 'lazy' before initialization" TDZ errors under
+// Vite + react-refresh dev-mode transforms.
+const UnifiedShareSheet = lazy(() => import("@/components/shared/ShareSheet"));
+const ZivoMobileNav = lazy(() => import("@/components/app/ZivoMobileNav"));
+const NavBar = lazy(() => import("@/components/home/NavBar"));
+const CreatePostModal = lazy(() => import("@/components/social/CreatePostModal"));
+const FeedSidebar = lazy(() => import("@/components/social/FeedSidebar"));
+const SafeCaption = lazy(() => import("@/components/social/SafeCaption"));
+const SuggestedUsersCarousel = lazy(() => import("@/components/social/SuggestedUsersCarousel"));
+const FeedSkeleton = lazy(() => import("@/components/social/FeedSkeleton"));
+const NewPostsPill = lazy(() => import("@/components/social/NewPostsPill"));
+const PostActionsMenu = lazy(() => import("@/components/social/PostActionsMenu"));
+const ReactionPicker = lazy(() => import("@/components/social/ReactionPicker"));
+const CommentPreview = lazy(() => import("@/components/social/CommentPreview"));
+const ReactionSummary = lazy(() => import("@/components/social/ReactionSummary"));
+const RepostDialog = lazy(() => import("@/components/social/RepostDialog"));
+const PostInsights = lazy(() => import("@/components/social/PostInsights"));
+const CaptionEditDialog = lazy(() => import("@/components/social/CaptionEditDialog"));
+const MentionPicker = lazy(() => import("@/components/social/MentionPicker"));
+const CommentHeartButton = lazy(() => import("@/components/social/CommentHeartButton"));
+const CommentRowActions = lazy(() => import("@/components/social/CommentRowActions"));
+const ReelsCoachmarks = lazy(() => import("@/components/social/ReelsCoachmarks"));
+const ReelSocialProof = lazy(() => import("@/components/reels/ReelSocialProof"));
 
 interface FeedPost {
   id: string;

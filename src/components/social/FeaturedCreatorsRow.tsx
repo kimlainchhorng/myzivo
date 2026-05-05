@@ -219,7 +219,7 @@ export default function FeaturedCreatorsRow({ fullBleed = true }: Props) {
                 >
                   <div className="h-16 w-16 rounded-full overflow-hidden bg-white/10 ring-2 ring-emerald-500/40">
                     {c.avatarUrl ? (
-                      <img src={c.avatarUrl} alt="" className="h-full w-full object-cover" />
+                      <img src={c.avatarUrl} alt="" loading="lazy" decoding="async" className="h-full w-full object-cover" />
                     ) : (
                       <div className="flex h-full w-full items-center justify-center text-white font-bold">
                         {initials}

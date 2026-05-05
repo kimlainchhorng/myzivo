@@ -176,7 +176,7 @@ async function tryRoutesApi(
     // Calculate traffic level from speed intervals
     let slowCount = 0;
     let jamCount = 0;
-    let totalCount = trafficSegments.length || 1;
+    const totalCount = trafficSegments.length || 1;
     for (const seg of trafficSegments) {
       if (seg.speed === "SLOW") slowCount++;
       if (seg.speed === "TRAFFIC_JAM") jamCount++;

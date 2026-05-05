@@ -15,13 +15,24 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { ScrollArea } from "@/components/ui/scroll-area";
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { FFmpeg } from "@ffmpeg/ffmpeg";
-import { fetchFile, toBlobURL } from "@ffmpeg/util";
+// FFmpeg (~600 KB minified + WASM) is loaded on-demand inside ensureFFmpegLoaded
+// rather than statically imported, so admins who never trigger a video upload
+// don't pay the download cost. The type-only import keeps refs typed without
+// pulling the runtime into this page's chunk.
+import type { FFmpeg } from "@ffmpeg/ffmpeg";
 import ffmpegWorkerUrl from "@ffmpeg/ffmpeg/worker?url";
 
 const FFMPEG_CDN_BASE = "https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm";
 const ffmpegCoreUrl = `${FFMPEG_CDN_BASE}/ffmpeg-core.js`;
 const ffmpegWasmUrl = `${FFMPEG_CDN_BASE}/ffmpeg-core.wasm`;
+
+// Module-level holders populated by the first call to ensureFFmpegLoaded().
+// They cache the dynamically-imported runtime values so subsequent calls don't
+// re-import. Non-null assertion is safe at every call site because all callers
+// await ensureFFmpegLoaded() (which sets these) before reading them.
+let _FFmpegCtor: typeof import("@ffmpeg/ffmpeg")["FFmpeg"] | null = null;
+let _fetchFile: typeof import("@ffmpeg/util")["fetchFile"] | null = null;
+let _toBlobURL: typeof import("@ffmpeg/util")["toBlobURL"] | null = null;
 import { supabase } from "@/integrations/supabase/client";
 import { uploadStoreAsset, verifyStoreProfileUrl, verifyStoreProfileGallery } from "@/pages/admin/utils/uploadStoreAsset";
 import { normalizeStorePostMediaUrl } from "@/utils/normalizeStorePostMediaUrl";
@@ -948,11 +959,23 @@ export default function AdminStoreEditPage() {
 
     if (!ffmpegLoadPromiseRef.current) {
       ffmpegLoadPromiseRef.current = (async () => {
-        const ffmpeg = new FFmpeg();
+        // Dynamic import splits FFmpeg + util into their own chunks, so this
+        // 5500-line admin page no longer ships ~600 KB of video-transcode code
+        // to admins who never upload video.
+        if (!_FFmpegCtor || !_fetchFile || !_toBlobURL) {
+          const [main, util] = await Promise.all([
+            import("@ffmpeg/ffmpeg"),
+            import("@ffmpeg/util"),
+          ]);
+          _FFmpegCtor = main.FFmpeg;
+          _fetchFile = util.fetchFile;
+          _toBlobURL = util.toBlobURL;
+        }
+        const ffmpeg = new _FFmpegCtor();
         try {
-          const blobCoreURL = await toBlobURL(ffmpegCoreUrl, "text/javascript");
-          const blobWasmURL = await toBlobURL(ffmpegWasmUrl, "application/wasm");
-          const blobWorkerURL = await toBlobURL(ffmpegWorkerUrl, "text/javascript");
+          const blobCoreURL = await _toBlobURL(ffmpegCoreUrl, "text/javascript");
+          const blobWasmURL = await _toBlobURL(ffmpegWasmUrl, "application/wasm");
+          const blobWorkerURL = await _toBlobURL(ffmpegWorkerUrl, "text/javascript");
 
           await ffmpeg.load({
             coreURL: blobCoreURL,
@@ -1077,7 +1100,7 @@ export default function AdminStoreEditPage() {
       const inputName = `input-${Date.now()}.mp4`;
       const outputName = `output-${Date.now()}.mp4`;
 
-      await ffmpeg.writeFile(inputName, await fetchFile(file));
+      await ffmpeg.writeFile(inputName, await _fetchFile!(file));
 
       try {
         // Simplified pipeline — minimal filters to avoid crashes
@@ -1131,7 +1154,7 @@ export default function AdminStoreEditPage() {
     const inputName = `input-audio-fix-${Date.now()}.mp4`;
     const outputName = `output-audio-fix-${Date.now()}.mp4`;
 
-    await ffmpeg.writeFile(inputName, await fetchFile(file));
+    await ffmpeg.writeFile(inputName, await _fetchFile!(file));
 
     try {
       await ffmpeg.exec([
@@ -1174,7 +1197,7 @@ export default function AdminStoreEditPage() {
     const inputName = `input-mute-fix-${Date.now()}.mp4`;
     const outputName = `output-mute-fix-${Date.now()}.mp4`;
 
-    await ffmpeg.writeFile(inputName, await fetchFile(file));
+    await ffmpeg.writeFile(inputName, await _fetchFile!(file));
 
     try {
       await ffmpeg.exec([
@@ -1317,7 +1340,7 @@ export default function AdminStoreEditPage() {
       const ffmpeg = await ensureFFmpegLoaded();
       const inputName = `input-audio-check-${Date.now()}.mp4`;
 
-      await ffmpeg.writeFile(inputName, await fetchFile(file));
+      await ffmpeg.writeFile(inputName, await _fetchFile!(file));
       try {
         await ffmpeg.ffprobe([
           "-v", "error",

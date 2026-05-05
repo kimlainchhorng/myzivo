@@ -341,8 +341,8 @@ const AuthCallback = () => {
     return (
       <div className="relative min-h-[100dvh] w-full overflow-hidden flex items-center justify-center px-5 py-8 bg-white dark:bg-black">
         <div aria-hidden className="pointer-events-none absolute inset-0">
-          <div className="absolute -top-32 -right-32 w-[420px] h-[420px] rounded-full blur-3xl dark:dark:dark: bg-secondary" />
-          <div className="absolute -bottom-32 -left-32 w-[420px] h-[420px] rounded-full bg-gradient-to-tr from-amber-200/30 blur-3xl dark:from-amber-600/15 dark:dark:" />
+          <div className="absolute -top-32 -right-32 w-[420px] h-[420px] rounded-full bg-gradient-to-br from-fuchsia-300/30 via-orange-200/30 to-rose-200/30 blur-3xl dark:from-fuchsia-600/20 dark:via-orange-600/20 dark:to-rose-600/20" />
+          <div className="absolute -bottom-32 -left-32 w-[420px] h-[420px] rounded-full bg-gradient-to-tr from-amber-200/30 via-pink-200/30 to-purple-200/30 blur-3xl dark:from-amber-600/15 dark:via-pink-600/15 dark:to-purple-600/15" />
         </div>
         <div className="relative w-full max-w-sm">
           <div className="bg-white dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-white/10 rounded-xl px-7 py-9 shadow-sm text-center">
@@ -362,7 +362,7 @@ const AuthCallback = () => {
               </button>
               <button
                 onClick={() => navigate(withRedirectParam("/login", redirectTo))}
-                className="flex-1 h-9 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 hover:opacity-95 active:scale-[0.99] transition shadow-md"
+                className="flex-1 h-9 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 active:scale-[0.99] transition shadow-md"
               >
                 Sign in
               </button>
@@ -376,12 +376,12 @@ const AuthCallback = () => {
   return (
     <div className="relative min-h-[100dvh] w-full overflow-hidden flex items-center justify-center px-5 py-8 bg-white dark:bg-black">
       <div aria-hidden className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-32 -right-32 w-[420px] h-[420px] rounded-full blur-3xl dark:dark:dark: bg-secondary" />
-        <div className="absolute -bottom-32 -left-32 w-[420px] h-[420px] rounded-full bg-gradient-to-tr from-amber-200/30 blur-3xl dark:from-amber-600/15 dark:dark:" />
+        <div className="absolute -top-32 -right-32 w-[420px] h-[420px] rounded-full bg-gradient-to-br from-fuchsia-300/30 via-orange-200/30 to-rose-200/30 blur-3xl dark:from-fuchsia-600/20 dark:via-orange-600/20 dark:to-rose-600/20" />
+        <div className="absolute -bottom-32 -left-32 w-[420px] h-[420px] rounded-full bg-gradient-to-tr from-amber-200/30 via-pink-200/30 to-purple-200/30 blur-3xl dark:from-amber-600/15 dark:via-pink-600/15 dark:to-purple-600/15" />
       </div>
       <div className="relative w-full max-w-sm">
         <div className="bg-white dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-white/10 rounded-xl px-7 py-9 shadow-sm text-center">
-          <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-amber-400 flex items-center justify-center shadow-lg">
+          <div className="w-14 h-14 mx-auto mb-4 rounded-2xl bg-gradient-to-br from-amber-400 via-rose-500 to-fuchsia-600 flex items-center justify-center shadow-lg shadow-rose-500/20">
             <Loader2 className="w-7 h-7 text-white animate-spin" />
           </div>
           <h2 className="text-lg font-bold text-zinc-900 dark:text-white mb-2">Signing you in…</h2>
