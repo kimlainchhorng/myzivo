@@ -5,6 +5,7 @@ import { ArrowLeft, Heart, Crown, Loader2, Sparkles, Calendar, AlertCircle } fro
 import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import SEOHead from "@/components/SEOHead";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {
@@ -131,6 +132,7 @@ export default function AccountSubscriptionsPage() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
+      <SEOHead title="My Subscriptions – ZIVO" description="View and manage your creator subscriptions. See active subscriptions, renewal dates, and tier details for the creators you support." />
       <header className="sticky top-0 z-30 bg-background/85 backdrop-blur border-b border-border/40">
         <div className="flex items-center gap-3 px-3 h-14 max-w-3xl mx-auto">
           <button onClick={() => navigate(-1)} aria-label="Back" className="p-2 -ml-2 rounded-lg hover:bg-muted/60">

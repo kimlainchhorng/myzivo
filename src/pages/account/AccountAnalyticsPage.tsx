@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import SEOHead from "@/components/SEOHead";
 import { ArrowLeft, Eye, Heart, Users, TrendingUp, BarChart3, Calendar, MessageCircle, Send, Bookmark } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -177,6 +178,7 @@ export default function AccountAnalyticsPage() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
+      <SEOHead title="Analytics – ZIVO" description="View your profile visits, engagement statistics, follower growth trends, and top performing posts by likes, comments, shares, and saves." />
       <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border/50 safe-area-top">
         <div className="flex items-center gap-3 px-4 py-3">
           <Button variant="ghost" size="icon" aria-label="Back" className="h-10 w-10 rounded-full" onClick={() => navigate(-1)}>

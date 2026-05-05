@@ -1,5 +1,6 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import SEOHead from "@/components/SEOHead";
 import {
   ArrowLeft, Shield, Globe, UserCheck, Bell, CreditCard, Gift, ChevronRight,
   UserPen, Scale, BarChart3, ShieldCheck, Download, Clock, Search, X,
@@ -797,6 +798,7 @@ export default function AccountSettingsPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead title="Settings – ZIVO" description="Manage your account settings, privacy preferences, payment methods, loyalty rewards, and notification channels." />
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">

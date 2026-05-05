@@ -1,5 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { useRef, useCallback, useEffect } from "react";
+import SEOHead from "@/components/SEOHead";
 import { ArrowLeft, Globe, DollarSign, Check, Palette, Sparkles, Ruler, Thermometer, Clock, CalendarDays, Accessibility, Languages, Type, Eye, Zap } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
@@ -53,11 +54,9 @@ const Section3D = ({ children, icon: Icon, title, subtitle, delay = 0, iconColor
   const tilt = use3DTilt(ref);
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 40, rotateX: -8 }}
-      animate={{ opacity: 1, y: 0, rotateX: 0 }}
-      transition={{ duration: 0.7, delay, ease: [0.16, 1, 0.3, 1] }}
-      ref={ref}
+    <>
+      <SEOHead title="Preferences – ZIVO" description="Customize your ZIVO experience. Set language, currency, units (distance/temperature), date format, accessibility options, and translation preferences." />
+      <div className="min-h-screen bg-background safe-area-top safe-area-bottom relative overflow-hidden">
       {...tilt}
       className="rounded-2xl border border-border/30 bg-card/80 backdrop-blur-xl shadow-[0_8px_32px_hsl(var(--primary)/0.08)] overflow-hidden transition-transform duration-200 ease-out"
       style={{ transformStyle: "preserve-3d" }}

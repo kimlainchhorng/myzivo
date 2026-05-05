@@ -7,6 +7,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
+import SEOHead from "@/components/SEOHead";
 import {
   ArrowLeft, Shield, LogIn, Settings, Pencil, Trash2, Loader2, Clock,
   Search, X, Download,
@@ -144,6 +145,7 @@ export default function ActivityLogPage() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
+      <SEOHead title="Activity Log – ZIVO" description="Full history of your account activity including logins, settings changes, profile updates, and security events. Filter, search, and export for compliance." />
       <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border/50 safe-area-top">
         <div className="flex items-center gap-3 px-4 py-3">
           <Button variant="ghost" size="icon" aria-label="Back" className="h-10 w-10 rounded-full" onClick={() => navigate(-1)}>

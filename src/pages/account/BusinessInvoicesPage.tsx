@@ -5,6 +5,7 @@
 import { useState, useMemo } from "react";
 import { useNavigate, Navigate, useLocation } from "react-router-dom";
 import { withRedirectParam } from "@/lib/authRedirect";
+import SEOHead from "@/components/SEOHead";
 import {
   ArrowLeft,
   FileText,
@@ -141,6 +142,7 @@ export default function BusinessInvoicesPage() {
 
   return (
     <div className="min-h-screen bg-background pb-20">
+      <SEOHead title="Business Invoices – ZIVO" description="View, search, and download invoices for your business account. Filter by status and export for accounting and record-keeping." />
       {/* Header */}
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b safe-area-top">
         <div className="flex items-center gap-3 px-4 py-3">

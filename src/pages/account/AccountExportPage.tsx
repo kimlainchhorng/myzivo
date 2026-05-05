@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import SEOHead from "@/components/SEOHead";
 import {
   ArrowLeft, Download, FileText, Image, MessageCircle, Loader2, CheckCircle2,
   Heart, Users, MapPin, Plane, Bookmark, Bell, Activity,
@@ -310,6 +311,7 @@ export default function AccountExportPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead title="Export Data – ZIVO" description="Download all your personal data in JSON or CSV format. Select which categories to include: messages, posts, bookmarks, notifications, activity log, and more." />
       <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border/50 safe-area-top">
         <div className="flex items-center gap-3 px-4 py-3">
           <Button variant="ghost" size="icon" aria-label="Back" className="h-10 w-10 rounded-full" onClick={() => navigate(-1)}>

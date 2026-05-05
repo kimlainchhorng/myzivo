@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import SEOHead from "@/components/SEOHead";
 import { ArrowLeft, ChevronRight, ChevronDown, FileText, Scale, Cookie, Shield, Eye, Globe, Lock, Database, Plane, Undo2, XCircle, Car, Umbrella, AlertTriangle, Heart, CloudLightning, MessageSquare, Users, Landmark, UserX, Ban, Gavel, Share2, Siren, DollarSign, Brain, Copyright, Megaphone, Mail, RefreshCw, Link, Accessibility, BookOpen, Fingerprint, ShieldAlert, ShieldCheck, MapPin, Wifi, CreditCard, Baby, Clock, Headphones, Receipt, Truck, Building2, Languages, Smartphone, BadgeCheck, FileWarning, ScrollText, HandCoins, Waypoints, KeyRound, Cpu, Zap, CircleDollarSign, Monitor, BarChart3, UserCog, Mic, Camera, Activity, FileCheck, Scale3d, Radar, Flame, Sparkles, ShieldQuestion, GitBranch, ListChecks, Hash, PenTool, Podcast, Newspaper, RadioTower, BellRing, MailWarning, UserMinus, Glasses, Archive, Layers, ScanFace, Network, Server, HardDrive, CircleAlert, FileLock2, Ratio, Wrench, Gauge, TreePine, Flag, ShoppingBag, Coins, LockKeyhole, TabletSmartphone, Blocks, FileSearch, BriefcaseBusiness, ClipboardCheck, CircleX, AlarmClock, Orbit, Vault, PiggyBank, Banknote, Target, Unplug, SquareStack, PackageCheck, Gem, Crown, Handshake, FileCode, Route, Ticket, PlaneTakeoff, PlaneLanding, Luggage, Map, Compass, Anchor, Ship, Train, Bus, Bike, Utensils, Wine, Coffee, Store, Home, Tent, Mountain, Palmtree, Sunset, Waves, Thermometer, Droplets, Wind, Leaf, Sprout } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { LucideIcon } from "lucide-react";
@@ -1004,6 +1005,7 @@ export default function LegalPoliciesPage() {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead title="Legal & Policies – ZIVO" description="Access ZIVO's terms of service, privacy policy, community guidelines, and legal documents. Learn about your rights and our platform rules." />
       <div className="sticky top-0 safe-area-top z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">
           <Button variant="ghost" size="icon" aria-label="Back" className="h-10 w-10 rounded-full" onClick={() => navigate(-1)}>
