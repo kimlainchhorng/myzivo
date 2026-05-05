@@ -13,6 +13,8 @@ import BedDouble from "lucide-react/dist/esm/icons/bed-double";
 import Car from "lucide-react/dist/esm/icons/car";
 import Sparkles from "lucide-react/dist/esm/icons/sparkles";
 import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
+import Share2 from "lucide-react/dist/esm/icons/share-2";
+import { openShareToChat } from "@/components/chat/ShareToChatSheet";
 
 const STEPS = [
   { icon: Plane, label: "Flight", to: "/flights?bundle=1" },
@@ -62,13 +64,29 @@ export default function PlanTripBundle() {
           })}
         </div>
 
-        <motion.button
-          whileTap={{ scale: 0.98 }}
-          onClick={() => navigate("/flights?bundle=1")}
-          className="relative mt-3 w-full flex items-center justify-center gap-1 rounded-lg bg-primary text-primary-foreground font-semibold py-2.5 text-sm active:opacity-80 transition-opacity touch-manipulation"
-        >
-          Start with a flight <ArrowRight className="w-4 h-4" />
-        </motion.button>
+        <div className="mt-3 flex items-stretch gap-2">
+          <motion.button
+            whileTap={{ scale: 0.98 }}
+            onClick={() => navigate("/flights?bundle=1")}
+            className="relative flex-1 flex items-center justify-center gap-1 rounded-lg bg-primary text-primary-foreground font-semibold py-2.5 text-sm active:opacity-80 transition-opacity touch-manipulation"
+          >
+            Start with a flight <ArrowRight className="w-4 h-4" />
+          </motion.button>
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => openShareToChat({
+              kind: "trip",
+              title: "Weekend getaway",
+              subtitle: "Flight + hotel + airport ride",
+              meta: "Plan it together on ZIVO",
+              deepLink: "/flights?bundle=1",
+            })}
+            aria-label="Share trip bundle to chat"
+            className="h-11 w-11 shrink-0 inline-flex items-center justify-center rounded-lg border border-border/40 bg-background text-foreground active:opacity-70 transition-opacity touch-manipulation"
+          >
+            <Share2 className="w-4 h-4" />
+          </motion.button>
+        </div>
       </motion.div>
     </div>
   );

@@ -9,7 +9,7 @@ import {
   Users, Gift, Trophy,
   Clock, DollarSign, ChevronRight, Eye, EyeOff,
   TrendingUp, Zap, Banknote, Building2, Send, AlertCircle,
-  Radio, Coins,
+  Radio, Coins, CheckCircle,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -25,6 +25,7 @@ import { useLoyaltyPoints } from "@/hooks/useLoyaltyPoints";
 import { useLiveEarnings } from "@/hooks/useLiveEarnings";
 import AddCardForm from "@/components/wallet/AddCardForm";
 import UnifiedPayoutCard from "@/components/wallet/UnifiedPayoutCard";
+import { useStepUpMfa } from "@/hooks/useStepUpMfa";
 import SEOHead from "@/components/SEOHead";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow, format } from "date-fns";
@@ -68,6 +69,7 @@ export default function WalletPage() {
   const [cashoutMethod, setCashoutMethod] = useState<string>("bank_transfer");
   const [cashoutNote, setCashoutNote] = useState("");
   const [cashoutSubmitting, setCashoutSubmitting] = useState(false);
+  const [withdrawalDone, setWithdrawalDone] = useState<{ amount: string; method: string } | null>(null);
   const [showAddPayout, setShowAddPayout] = useState(false);
   const [payoutForm, setPayoutForm] = useState({
     method_type: "bank_transfer" as "bank_transfer" | "aba",
@@ -81,6 +83,7 @@ export default function WalletPage() {
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
+  const { ensureAal2, dialog: mfaDialog } = useStepUpMfa();
   const { balanceDollars, lifetimeEarnedDollars, isLoading: walletLoading } = useCustomerWallet();
   const { data: stripeCards = [], isLoading: cardsLoading } = useStripePaymentMethods();
   const deleteCard = useDeleteStripeCard();
@@ -476,6 +479,26 @@ export default function WalletPage() {
 
           {activeTab === "cashout" && (
             <motion.div key="cashout" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }} className="space-y-4">
+              {/* Withdrawal success card */}
+              {withdrawalDone && (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className="rounded-2xl bg-emerald-500/10 border border-emerald-500/20 p-5 flex flex-col items-center gap-3 text-center"
+                >
+                  <div className="h-12 w-12 rounded-full bg-emerald-500/15 flex items-center justify-center">
+                    <CheckCircle className="h-6 w-6 text-emerald-500" />
+                  </div>
+                  <div>
+                    <p className="text-[16px] font-bold text-foreground">${withdrawalDone.amount} Submitted</p>
+                    <p className="text-[12px] text-muted-foreground mt-0.5">via {withdrawalDone.method}</p>
+                    <p className="text-[11px] text-muted-foreground/70 mt-1">Processing 1–3 business days</p>
+                  </div>
+                  <Button size="sm" variant="outline" className="rounded-2xl h-9 px-5 text-[12px]" onClick={() => setWithdrawalDone(null)}>
+                    New Withdrawal
+                  </Button>
+                </motion.div>
+              )}
               {/* Available to withdraw */}
               <div className="rounded-2xl bg-emerald-500/[0.06] border border-emerald-500/15 p-4">
                 <div className="flex items-center justify-between">
@@ -740,6 +763,8 @@ export default function WalletPage() {
                     }
                     onClick={async () => {
                       if (!user) { toast.error("Please sign in"); return; }
+                      const ok = await ensureAal2("Authorize withdrawal");
+                      if (!ok) return;
                       setCashoutSubmitting(true);
                       try {
                         const amountCents = Math.round(Number(cashoutAmount) * 100);
@@ -755,8 +780,10 @@ export default function WalletPage() {
                         if (error) throw new Error(error.message || "Withdrawal failed");
                         if (data?.error) throw new Error(data.error);
 
-                        toast.success(`Withdrawal of $${Number(cashoutAmount).toFixed(2)} submitted!`, {
-                          description: "Processing usually takes 1-3 business days.",
+                        const selectedPayout2 = payoutMethods.find((p: any) => p.id === selectedPayoutId);
+                        setWithdrawalDone({
+                          amount: Number(cashoutAmount).toFixed(2),
+                          method: selectedPayout2?.label || selectedPayout2?.method_type || cashoutMethod,
                         });
                         setCashoutAmount("");
                         setCashoutNote("");
@@ -927,5 +954,6 @@ export default function WalletPage() {
         </div>
       </div>
     </div>
+    {mfaDialog}
   );
 }

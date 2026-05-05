@@ -10,11 +10,14 @@ import Hotel from "lucide-react/dist/esm/icons/hotel";
 import UtensilsCrossed from "lucide-react/dist/esm/icons/utensils-crossed";
 import Car from "lucide-react/dist/esm/icons/car";
 import Compass from "lucide-react/dist/esm/icons/compass";
+import ShoppingCart from "lucide-react/dist/esm/icons/shopping-cart";
 import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
+import Forward from "lucide-react/dist/esm/icons/forward";
 import type { ComponentType, SVGProps } from "react";
 import { useNavigate } from "react-router-dom";
+import { openShareToChat } from "./ShareToChatSheet";
 
-export type ZivoCardKind = "flight" | "hotel" | "eats" | "ride" | "trip";
+export type ZivoCardKind = "flight" | "hotel" | "eats" | "ride" | "trip" | "product";
 
 export interface ZivoCardPayload {
   kind: ZivoCardKind;
@@ -25,6 +28,8 @@ export interface ZivoCardPayload {
   deepLink: string;
   /** "ZIVO" by default; brand can override. */
   badge?: string;
+  /** When forwarded, includes original sender. */
+  forwardedFrom?: string;
 }
 
 interface Props {
@@ -39,11 +44,12 @@ const KIND_META: Record<ZivoCardKind, {
   gradient: string;
   cta: string;
 }> = {
-  flight: { label: "Flight", icon: Plane, gradient: "from-sky-500 to-indigo-500", cta: "View flight" },
-  hotel: { label: "Hotel", icon: Hotel, gradient: "from-emerald-500 to-teal-500", cta: "View stay" },
-  eats: { label: "Eats", icon: UtensilsCrossed, gradient: "from-orange-500 to-rose-500", cta: "Order now" },
-  ride: { label: "Ride", icon: Car, gradient: "from-violet-500 to-fuchsia-500", cta: "Book ride" },
-  trip: { label: "Trip Bundle", icon: Compass, gradient: "from-amber-500 to-pink-500", cta: "Open trip" },
+  flight:  { label: "Flight",       icon: Plane,         gradient: "from-sky-500 to-indigo-500",   cta: "View flight" },
+  hotel:   { label: "Hotel",        icon: Hotel,         gradient: "from-emerald-500 to-teal-500",  cta: "View stay"   },
+  eats:    { label: "Eats",         icon: UtensilsCrossed, gradient: "from-orange-500 to-rose-500", cta: "Order now"   },
+  ride:    { label: "Ride",         icon: Car,           gradient: "from-violet-500 to-fuchsia-500", cta: "Book ride"  },
+  trip:    { label: "Trip Bundle",  icon: Compass,       gradient: "from-amber-500 to-pink-500",    cta: "Open trip"   },
+  product: { label: "Grocery",      icon: ShoppingCart,  gradient: "from-green-500 to-emerald-600", cta: "Add to cart" },
 };
 
 export default function ZivoActionBubble({ payload, isMe, time }: Props) {
@@ -53,7 +59,20 @@ export default function ZivoActionBubble({ payload, isMe, time }: Props) {
 
   return (
     <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
-      <div className="flex flex-col gap-1 max-w-[80%] min-w-[240px]">
+      <div className="relative flex flex-col gap-1 max-w-[80%] min-w-[240px]">
+        {payload.forwardedFrom && (
+          <span className={`text-[10px] font-semibold text-muted-foreground/60 ${isMe ? "text-right" : "text-left"}`}>
+            ↳ Forwarded from {payload.forwardedFrom}
+          </span>
+        )}
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); openShareToChat(payload); }}
+          aria-label="Forward this card"
+          className="absolute top-2 right-2 z-10 h-7 w-7 inline-flex items-center justify-center rounded-full bg-black/35 backdrop-blur text-white hover:bg-black/55 active:scale-90 transition"
+        >
+          <Forward className="w-3.5 h-3.5" />
+        </button>
         <button
           type="button"
           onClick={() => navigate(payload.deepLink)}
@@ -74,7 +93,7 @@ export default function ZivoActionBubble({ payload, isMe, time }: Props) {
               <Icon className="w-3 h-3" />
               {meta.label}
             </div>
-            <div className="absolute top-2.5 right-2.5 inline-flex items-center px-1.5 py-0.5 rounded-full bg-black/30 text-[9px] font-bold uppercase tracking-wider text-white">
+            <div className="absolute bottom-2.5 right-2.5 inline-flex items-center px-1.5 py-0.5 rounded-full bg-black/30 text-[9px] font-bold uppercase tracking-wider text-white">
               {payload.badge ?? "ZIVO"}
             </div>
           </div>

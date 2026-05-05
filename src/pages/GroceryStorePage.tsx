@@ -29,6 +29,7 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import SEOHead from "@/components/SEOHead";
 import { useStoreSearch, type StoreProduct } from "@/hooks/useStoreSearch";
 import { useGroceryCart } from "@/hooks/useGroceryCart";
 import { getStoreBySlug } from "@/config/groceryStores";
@@ -377,6 +378,7 @@ export default function GroceryStorePage() {
 
   return (
     <div className="min-h-screen bg-background pb-24 relative overflow-hidden">
+      <SEOHead title={`${storeName} Grocery – ZIVO`} description={`Shop ${storeName} grocery for same-day delivery on ZIVO.`} />
       {/* Background orbs */}
       <div className="pointer-events-none absolute inset-0 overflow-hidden">
         <div className="absolute -top-32 -right-32 h-64 w-64 rounded-full bg-primary/6 blur-[60px]" />

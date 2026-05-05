@@ -10,10 +10,12 @@ import {
   MapPin, Sparkles, ShoppingBag, ChevronRight, PartyPopper,
   Copy, Share2,
 } from "lucide-react";
+import { openShareToChat } from "@/components/chat/ShareToChatSheet";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Skeleton } from "@/components/ui/skeleton";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import SEOHead from "@/components/SEOHead";
 import { toast } from "sonner";
 
 const STEPS = [
@@ -43,13 +45,24 @@ export default function GroceryOrderPlaced() {
 
     const fetchOrder = async () => {
       try {
-        const { data } = await supabase
+        // Cash/ABA orders go into grocery_orders; card/PayPal/Square go into shopping_orders.
+        // Try shopping_orders first, fall back to grocery_orders.
+        const { data: shoppingData } = await supabase
           .from("shopping_orders")
           .select("store, total_amount, items, delivery_address, customer_name")
           .eq("id", orderId)
-          .single();
+          .maybeSingle();
 
-        if (data) setOrder(data as unknown as OrderData);
+        if (shoppingData) {
+          setOrder(shoppingData as unknown as OrderData);
+        } else {
+          const { data: groceryData } = await (supabase as any)
+            .from("grocery_orders")
+            .select("store, total_amount, items, delivery_address, customer_name")
+            .eq("id", orderId)
+            .maybeSingle();
+          if (groceryData) setOrder(groceryData as OrderData);
+        }
       } catch (err) {
         console.error("Failed to fetch order:", err);
       } finally {
@@ -68,6 +81,10 @@ export default function GroceryOrderPlaced() {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden pb-24 safe-area-top">
+      <SEOHead
+        title={order ? `Order from ${order.store} – ZIVO` : "Order Placed – ZIVO"}
+        description="Your grocery order has been placed. Track your delivery in real time."
+      />
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-40 left-1/2 -translate-x-1/2 h-80 w-80 rounded-full bg-primary/8 blur-[80px]" />
         <div className="absolute bottom-1/3 -right-20 h-48 w-48 rounded-full bg-emerald-500/6 blur-[60px]" />
@@ -282,6 +299,18 @@ export default function GroceryOrderPlaced() {
               <ArrowLeft className="h-4 w-4 mr-1.5" />
               Home
             </Button>
+            {order && (
+              <Button variant="outline" onClick={() => openShareToChat({
+                kind: "product",
+                title: `Order from ${order.store}`,
+                subtitle: `${itemCount} items`,
+                meta: `$${order.total_amount.toFixed(2)} · Processing`,
+                deepLink: `/grocery/track/${orderId}`,
+                image: null,
+              })} className="rounded-2xl h-11 px-4">
+                <Share2 className="h-4 w-4" />
+              </Button>
+            )}
           </div>
         </motion.div>
       </div>

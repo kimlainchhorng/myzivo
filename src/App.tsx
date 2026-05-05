@@ -10,6 +10,8 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import OfflineBanner from "@/components/chat/OfflineBanner";
 import OutboxFlusher from "@/components/chat/OutboxFlusher";
 import FloatingReactionsOverlay from "@/components/chat/FloatingReactionsOverlay";
+import ReactedByHost from "@/components/chat/ReactedByHost";
+import ShareToChatSheet from "@/components/chat/ShareToChatSheet";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useVerificationRealtime } from "@/hooks/useVerificationRealtime";
 import { useOTAUpdate } from "@/hooks/useOTAUpdate";
@@ -370,6 +372,8 @@ const HotelLanding = lazy(() => import("./pages/HotelLanding"));
 // HotelDashboard removed
 const HotelResultsPage = lazy(() => import("./pages/HotelResultsPage"));
 const HotelResortDetailPage = lazy(() => import("./pages/lodging/HotelResortDetailPage"));
+const HotelRoomCheckoutPage = lazy(() => import("./pages/lodging/HotelRoomCheckoutPage"));
+const HotelBookingConfirmedPage = lazy(() => import("./pages/lodging/HotelBookingConfirmedPage"));
 const HotelsResortsDirectoryPage = lazy(() => import("./pages/lodging/HotelsResortsDirectoryPage"));
 const HotelsLandingPage = lazy(() => import("./pages/lodging/HotelsLandingPage"));
 
@@ -744,6 +748,7 @@ const App = () => (
               <OfflineBanner />
               <OutboxFlusher />
               <FloatingReactionsOverlay />
+              <ReactedByHost />
               <BrowserRouter
                 future={{
                   v7_startTransition: true,
@@ -758,6 +763,7 @@ const App = () => (
                 <PaymentReturnHandler />
                 <AuthProvider>
                   <AuthBackgroundServices />
+                  <ShareToChatSheet />
                    <RemoteConfigProvider>
                   <ZivoPlusProvider>
                   <CustomerCityProvider>
@@ -1064,6 +1070,8 @@ const App = () => (
                 {/* Hotels */}
                 <Route path="/hotels/:city" element={<RouteErrorBoundary section="Hotels"><HotelCityLandingPage /></RouteErrorBoundary>} />
                 <Route path="/hotel/:storeId" element={<RouteErrorBoundary section="HotelDetail"><HotelResortDetailPage /></RouteErrorBoundary>} />
+                <Route path="/hotel/:storeId/book" element={<ProtectedRoute><RouteErrorBoundary section="HotelCheckout"><HotelRoomCheckoutPage /></RouteErrorBoundary></ProtectedRoute>} />
+                <Route path="/hotel/:storeId/booking-confirmed" element={<ProtectedRoute><RouteErrorBoundary section="HotelBookingConfirmed"><HotelBookingConfirmedPage /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/hotels" element={<RouteErrorBoundary section="HotelsLanding"><HotelsLandingPage /></RouteErrorBoundary>} />
                 <Route path="/hotels-list" element={<RouteErrorBoundary section="HotelsDirectory"><HotelsResortsDirectoryPage /></RouteErrorBoundary>} />
                 {/* /hotels and /hotels/in-:city removed */}

@@ -5,6 +5,7 @@
  * @module AppHome
  */
 import { useState, useEffect, useMemo, lazy, Suspense } from "react";
+import SEOHead from "@/components/SEOHead";
 import { useNavigate } from "react-router-dom";
 import { useRoutePrefetch } from "@/components/shared/RoutePrefetcher";
 import { useI18n } from "@/hooks/useI18n";
@@ -724,6 +725,7 @@ const AppHome = () => {
 
   return (
     <>
+    <SEOHead title="ZIVO – Your Travel Super-App" description="Book rides, flights, hotels, and grocery delivery — all in one app." />
     <div className="relative min-h-[100dvh] bg-background font-sans text-foreground selection:bg-primary/30 overflow-x-hidden" role="main">
       {/* Safe-area top backdrop — Capacitor's `overlaysWebView: true` lets web
           content paint up to the very top of the screen for full-bleed cover

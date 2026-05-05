@@ -3,7 +3,8 @@
  * Connected to Supabase: restaurants, menu_items, food_orders
  */
 import { useState, useMemo, useEffect } from "react";
-import { Star, Clock, Truck, ShoppingCart, Search, MapPin, UtensilsCrossed, Plus, Minus, ArrowLeft, CheckCircle, CreditCard, Package, Timer, Heart, Sparkles, MessageSquare, Percent, Leaf, Award, Loader2 } from "lucide-react";
+import { Star, Clock, Truck, ShoppingCart, Search, MapPin, UtensilsCrossed, Plus, Minus, ArrowLeft, CheckCircle, CreditCard, Package, Timer, Heart, Sparkles, MessageSquare, Percent, Leaf, Award, Loader2, Share2 } from "lucide-react";
+import { openShareToChat } from "@/components/chat/ShareToChatSheet";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import { Input } from "@/components/ui/input";
@@ -424,6 +425,20 @@ export default function EatsLanding() {
                 <button onClick={() => toggleFavorite(currentRestaurant.id)}
                   className="w-10 h-10 rounded-xl bg-card/80 border border-border/40 flex items-center justify-center touch-manipulation">
                   <Heart className={cn("w-5 h-5", favorites.has(currentRestaurant.id) ? "fill-red-500 text-red-500" : "text-muted-foreground")} />
+                </button>
+                <button
+                  onClick={() => openShareToChat({
+                    kind: "eats",
+                    title: currentRestaurant.name,
+                    subtitle: `${canonicalCuisine(currentRestaurant.cuisine_type)} · ${currentRestaurant.avg_prep_time ?? 25}-${(currentRestaurant.avg_prep_time ?? 25) + 15} min`,
+                    meta: currentRestaurant.delivery_fee != null ? (currentRestaurant.delivery_fee === 0 ? "Free delivery" : `$${currentRestaurant.delivery_fee} delivery`) : undefined,
+                    deepLink: "/eats",
+                    image: currentRestaurant.cover_image_url ?? null,
+                  })}
+                  aria-label="Share to chat"
+                  className="w-10 h-10 rounded-xl bg-card/80 border border-border/40 flex items-center justify-center touch-manipulation"
+                >
+                  <Share2 className="w-4 h-4 text-muted-foreground" />
                 </button>
                 {currentRestaurant.rating != null && currentRestaurant.rating > 0 && (currentRestaurant.rating_count ?? 0) > 0 ? (
                   <div className="flex items-center gap-1 text-xs font-bold text-amber-500">

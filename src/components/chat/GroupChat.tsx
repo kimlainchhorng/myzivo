@@ -38,6 +38,8 @@ import VoiceMessageBubble from "./VoiceMessageBubble";
 import HoldToRecordMic from "./HoldToRecordMic";
 import StickyDatePill from "./StickyDatePill";
 import AvatarPreviewSheet from "./AvatarPreviewSheet";
+import ZivoActionBubble, { type ZivoCardPayload } from "./ZivoActionBubble";
+import ZivoCardPicker from "./ZivoCardPicker";
 import { enqueue as outboxEnqueue, remove as outboxRemove, list as outboxList, subscribe as outboxSubscribe } from "@/lib/chat/messageOutbox";
 import ChatAttachMenu from "./ChatAttachMenu";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
@@ -255,6 +257,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
   const [showJumpToLatest, setShowJumpToLatest] = useState(false);
   const [unreadWhileScrolled, setUnreadWhileScrolled] = useState(0);
   const [showAvatarPreview, setShowAvatarPreview] = useState(false);
+  const [showZivoCardPicker, setShowZivoCardPicker] = useState(false);
 
   const scrollToBottom = useCallback(() => {
     requestAnimationFrame(() => {
@@ -534,6 +537,54 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
   }, [groupId, input, replyTo, scrollToBottom, sending, user?.id]);
 
   const failedSendsRef = useRef<Map<string, GroupMessageInsert>>(new Map());
+
+  // Drop a ZIVO action card (flight / hotel / ride / eats / trip) into the
+  // group chat. Reuses the same outbox + retry pipeline as a regular message.
+  const sendZivoCard = useCallback(async (payload: ZivoCardPayload) => {
+    if (!user?.id) return;
+    const optimisticId = `opt-zivo-${Date.now()}`;
+    const optimisticMsg: GroupMessage = {
+      id: optimisticId,
+      group_id: groupId,
+      sender_id: user.id,
+      message: payload.title,
+      image_url: null,
+      voice_url: null,
+      message_type: "zivo_card",
+      reply_to_id: replyTo?.id || null,
+      created_at: new Date().toISOString(),
+      file_payload: payload as unknown as GroupMessage["file_payload"],
+    };
+    setMessages((prev) => [...prev, optimisticMsg]);
+    scrollToBottom();
+    setReplyTo(null);
+
+    const insertData: GroupMessageInsert = {
+      group_id: groupId,
+      sender_id: user.id,
+      message: payload.title,
+      message_type: "zivo_card",
+      file_payload: payload as unknown as GroupMessageInsert["file_payload"],
+    };
+    if (replyTo) insertData.reply_to_id = replyTo.id;
+    try {
+      const { error } = await dbFrom("group_messages").insert(insertData);
+      if (error) throw error;
+    } catch {
+      failedSendsRef.current.set(optimisticId, insertData);
+      outboxEnqueue({
+        id: optimisticId,
+        table: "group_messages",
+        chatKey: groupId,
+        payload: insertData as unknown as Record<string, unknown>,
+        optimistic: optimisticMsg as unknown as Record<string, unknown>,
+      });
+      setMessages((prev) =>
+        prev.map((m) => (m.id === optimisticId ? { ...m, _upload_status: "failed" } : m)),
+      );
+      toast.error(navigator.onLine ? "Couldn't send card — tap to retry" : "You're offline — tap to retry when back online");
+    }
+  }, [groupId, replyTo, scrollToBottom, user?.id]);
 
   const retryFailedGroupSend = useCallback(async (optimisticId: string) => {
     const payload = failedSendsRef.current.get(optimisticId);
@@ -873,11 +924,6 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const handleLockedMediaSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files?.[0]) toast.info("Locked media in groups is coming soon");
-    if (lockedImageInputRef.current) lockedImageInputRef.current.value = "";
-  };
-
   const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user?.id) return;
@@ -1143,7 +1189,15 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
                     </div>
                   )}
 
-                  {msg.message_type === "voice" && msg.voice_url ? (
+                  {msg.message_type === "zivo_card" && msg.file_payload ? (
+                    <div className={msg.id.startsWith("opt-") ? "opacity-60" : ""}>
+                      <ZivoActionBubble
+                        payload={msg.file_payload as unknown as ZivoCardPayload}
+                        isMe={isMe}
+                        time={formatTime(msg.created_at)}
+                      />
+                    </div>
+                  ) : msg.message_type === "voice" && msg.voice_url ? (
                     (() => {
                       const csid = msg.file_payload?.client_send_id;
                       const isOpt = msg.id.startsWith("opt-");
@@ -1501,6 +1555,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
               onCreatePoll={() => setShowPollCreator(true)}
               onShareContact={() => setShowContactPicker(true)}
               onShareSocial={() => setShowSocialShare(true)}
+              onShareZivoCard={() => setShowZivoCardPicker(true)}
               onToggleDisappearing={() => {
                 const next = disappearingSec == null ? 24 * 60 * 60 : disappearingSec === 24 * 60 * 60 ? 7 * 24 * 60 * 60 : disappearingSec === 7 * 24 * 60 * 60 ? 30 * 24 * 60 * 60 : null;
                 setDisappearingSec(next);
@@ -1658,6 +1713,13 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
           )}
         </div>
       </div>
+
+      {/* ZIVO action card picker */}
+      <ZivoCardPicker
+        open={showZivoCardPicker}
+        onClose={() => setShowZivoCardPicker(false)}
+        onPick={(payload) => { void sendZivoCard(payload); }}
+      />
 
       {/* Avatar fullscreen preview */}
       <AvatarPreviewSheet

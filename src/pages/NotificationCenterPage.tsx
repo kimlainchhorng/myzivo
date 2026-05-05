@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { formatDistanceToNow, isToday, isYesterday, isThisWeek } from "date-fns";
 import { toast } from "sonner";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import SEOHead from "@/components/SEOHead";
 
 type NotifType =
   | "like" | "comment" | "follow" | "mention"
@@ -228,6 +229,7 @@ export default function NotificationCenterPage() {
 
   return (
     <div className="min-h-screen bg-background pb-24">
+      <SEOHead title="Notifications – ZIVO" description="Your activity, alerts, and updates." />
       {/* Header */}
       <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-xl border-b border-border/40"
         style={{ paddingTop: "var(--zivo-safe-top-sticky, env(safe-area-inset-top, 0px))" }}>

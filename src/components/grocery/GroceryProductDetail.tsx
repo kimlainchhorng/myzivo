@@ -6,8 +6,9 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   X, Plus, Minus, Check, Package, Star, MapPin, ShieldCheck,
   Truck, Clock, Info, ChevronRight, ChevronDown, Heart, Barcode,
-  Ruler, Box, Leaf, Zap, RotateCcw, Tag, ShoppingBag, ClipboardList,
+  Ruler, Box, Leaf, Zap, RotateCcw, Tag, ShoppingBag, ClipboardList, Share2,
 } from "lucide-react";
+import { openShareToChat } from "@/components/chat/ShareToChatSheet";
 import { Button } from "@/components/ui/button";
 import type { StoreProduct } from "@/hooks/useStoreSearch";
 import type { GroceryCartItem } from "@/hooks/useGroceryCart";
@@ -148,6 +149,21 @@ export function GroceryProductDetail({
                 aria-label="Save"
               >
                 <Heart className={`h-[18px] w-[18px] transition-all duration-300 ${liked ? "fill-red-500 text-red-500 scale-110" : "text-foreground/50"}`} />
+              </motion.button>
+              <motion.button
+                whileTap={{ scale: 0.85 }}
+                onClick={() => openShareToChat({
+                  kind: "product",
+                  title: product.name,
+                  subtitle: product.brand || product.store || undefined,
+                  meta: `$${product.price.toFixed(2)}`,
+                  deepLink: `/grocery`,
+                  image: product.image ?? null,
+                })}
+                className="h-10 w-10 rounded-full bg-background/80 backdrop-blur-xl border border-border/40 flex items-center justify-center shadow-lg"
+                aria-label="Share to chat"
+              >
+                <Share2 className="h-[18px] w-[18px] text-foreground/50" />
               </motion.button>
               <motion.button
                 whileTap={{ scale: 0.85 }}

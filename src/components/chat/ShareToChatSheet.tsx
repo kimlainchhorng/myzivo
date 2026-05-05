@@ -168,12 +168,13 @@ export default function ShareToChatSheet() {
     setSending(true);
     const recipients = buildRecipients();
     let successCount = 0;
+    const cardWithForwarder = { ...card, forwardedFrom: user.id === card.forwardedFrom ? undefined : (user.full_name || user.email?.split("@")[0] || "Someone") };
     for (const recipient of recipients) {
       const id = recipient.kind === "friend" ? recipient.friend.user_id : recipient.group.id;
       const table = recipient.kind === "friend" ? "direct_messages" : "group_messages";
       const insertData: Record<string, unknown> = recipient.kind === "friend"
-        ? { sender_id: user.id, receiver_id: id, message: card.title, message_type: "zivo_card", file_payload: card as unknown as Record<string, unknown> }
-        : { sender_id: user.id, group_id: id, message: card.title, message_type: "zivo_card", file_payload: card as unknown as Record<string, unknown> };
+        ? { sender_id: user.id, receiver_id: id, message: card.title, message_type: "zivo_card", file_payload: cardWithForwarder as unknown as Record<string, unknown> }
+        : { sender_id: user.id, group_id: id, message: card.title, message_type: "zivo_card", file_payload: cardWithForwarder as unknown as Record<string, unknown> };
       try {
         const { error } = await (dbFrom(table) as { insert: (p: unknown) => Promise<{ error: unknown }> }).insert(insertData);
         if (error) throw error;

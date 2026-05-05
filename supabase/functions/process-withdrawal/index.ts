@@ -91,7 +91,7 @@ serve(async (req) => {
     const description = `Withdrawal via ${methodLabel}${note ? ` — ${note}` : ""}`;
 
     // Insert transaction record
-    const { error: txError } = await supabase
+    const { data: txRow, error: txError } = await supabase
       .from("customer_wallet_transactions")
       .insert({
         user_id: userId,
@@ -99,14 +99,16 @@ serve(async (req) => {
         balance_after_cents: newBalance,
         type: "withdrawal",
         description,
-      });
+      })
+      .select("id")
+      .single();
 
     if (txError) {
       console.error("Transaction insert error:", txError);
       throw new Error("Failed to record withdrawal");
     }
 
-    // Deduct balance
+    // Deduct balance — rollback the TX record if this fails
     const { error: updateError } = await supabase
       .from("customer_wallets")
       .update({
@@ -117,6 +119,8 @@ serve(async (req) => {
 
     if (updateError) {
       console.error("Balance update error:", updateError);
+      // Clean up the orphaned transaction record
+      await supabase.from("customer_wallet_transactions").delete().eq("id", (txRow as any).id);
       throw new Error("Failed to update balance");
     }
 

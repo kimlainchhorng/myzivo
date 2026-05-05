@@ -15,8 +15,10 @@ import { useRideNotifications } from "@/hooks/useRideNotifications";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { getStripe } from "@/lib/stripe";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import SEOHead from "@/components/SEOHead";
 import { cn } from "@/lib/utils";
 import { getPublicOrigin } from "@/lib/getPublicOrigin";
+import { openShareToChat } from "@/components/chat/ShareToChatSheet";
 import RideMap from "@/components/maps/RideMap";
 
 const stripePromise = getStripe();
@@ -754,13 +756,19 @@ export default function RequestRidePage() {
   };
 
   const handleShareTrip = () => {
-    if (navigator.share) {
-      const tripUrl = `${getPublicOrigin()}/rides`;
-      navigator.share({ title: "My ZIVO Trip", text: `I'm on my way! Track my ride from ${pickupAddress} to ${dropoffAddress}.`, url: tripUrl });
-    } else {
-      navigator.clipboard.writeText(`${getPublicOrigin()}/rides`);
-      toast.success("Trip link copied to clipboard!");
-    }
+    const vehicle = currentVehicles.find((v) => v.id === selectedVehicle);
+    openShareToChat({
+      kind: "ride",
+      title: pickupAddress && dropoffAddress
+        ? `${pickupAddress} → ${dropoffAddress}`
+        : "Ride on ZIVO",
+      subtitle: vehicle
+        ? `${vehicle.name} · ${vehicle.eta}`
+        : `${activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1)} ride`,
+      meta: vehicle ? vehicle.price : undefined,
+      deepLink: "/rides",
+      image: null,
+    });
   };
 
   const formatUSD = (cents: number) => `$${(cents / 100).toFixed(2)}`;
@@ -790,6 +798,7 @@ export default function RequestRidePage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SEOHead title="Request a Ride – ZIVO" description="Book a ZIVO ride in seconds. Economy, comfort, and premium options available." />
       {/* Map area */}
       <div className="relative h-[35vh] min-h-[220px]">
         <RideMap pickupCoords={pickupCoords} dropoffCoords={dropoffCoords} className="w-full h-full" />

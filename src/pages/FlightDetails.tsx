@@ -6,7 +6,8 @@
 
 import { useEffect, useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Plane, Clock, Luggage, RefreshCw, AlertTriangle, Shield, ChevronDown, ChevronUp, Briefcase } from "lucide-react";
+import { ArrowLeft, Plane, Clock, Luggage, RefreshCw, AlertTriangle, Shield, ChevronDown, ChevronUp, Briefcase, Share2 } from "lucide-react";
+import { openShareToChat } from "@/components/chat/ShareToChatSheet";
 import { motion } from "framer-motion";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
@@ -61,10 +62,25 @@ const FlightDetails = () => {
             <Button aria-label="Back" variant="ghost" size="icon" onClick={() => navigate(-1)} className="shrink-0">
               <ArrowLeft className="w-5 h-5" />
             </Button>
-            <div>
+            <div className="flex-1">
               <h1 className="text-xl sm:text-2xl font-bold">Review Flight</h1>
               <p className="text-sm text-muted-foreground">Confirm details before continuing</p>
             </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              aria-label="Share to chat"
+              onClick={() => openShareToChat({
+                kind: "flight",
+                title: `${offer.departure.code} → ${offer.arrival.code}`,
+                subtitle: `${search.departureDate}${search.returnDate ? ` — ${search.returnDate}` : ""} · ${offer.airline}`,
+                meta: `From $${totalPrice}`,
+                deepLink: "/flights",
+                image: null,
+              })}
+            >
+              <Share2 className="w-4 h-4" />
+            </Button>
           </motion.div>
 
           {/* Main flight card */}

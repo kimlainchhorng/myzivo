@@ -14,6 +14,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import SEOHead from "@/components/SEOHead";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 
@@ -31,6 +32,8 @@ interface OrderSummary {
   items: Array<{ name: string; quantity: number; price: number; image?: string }>;
   delivery_address: string;
   customer_name: string;
+  payment_provider?: string | null;
+  payment_method?: string | null;
 }
 
 export default function GroceryOrderConfirmed() {
@@ -53,11 +56,16 @@ export default function GroceryOrderConfirmed() {
 
         const { data } = await supabase
           .from("shopping_orders")
-          .select("store, total_amount, delivery_fee, items, delivery_address, customer_name")
+          .select("store, total_amount, delivery_fee, items, delivery_address, customer_name, payment_provider, payment_method")
           .eq("id", orderId)
           .single();
 
         if (data) setOrder(data as unknown as OrderSummary);
+
+        // Trigger driver dispatch
+        supabase.functions.invoke("dispatch-order", {
+          body: { order_id: orderId, order_type: "shopping_delivery" },
+        }).catch(() => {/* best-effort */});
       } catch (err) {
         console.error("Failed to update order:", err);
       } finally {
@@ -91,6 +99,10 @@ export default function GroceryOrderConfirmed() {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden pb-24 safe-area-top">
+      <SEOHead
+        title={order ? `Order Confirmed – ${order.store} – ZIVO` : "Order Confirmed – ZIVO"}
+        description="Payment confirmed. Your ZIVO driver will shop and deliver your items."
+      />
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-40 left-1/2 -translate-x-1/2 h-80 w-80 rounded-full bg-emerald-500/8 blur-[80px]" />
         <div className="absolute bottom-1/4 -left-20 h-48 w-48 rounded-full bg-primary/6 blur-[60px]" />
@@ -119,7 +131,7 @@ export default function GroceryOrderConfirmed() {
           transition={{ delay: 0.3 }}
           className="text-2xl font-extrabold mb-1 tracking-tight"
         >
-          Payment Confirmed! ✅
+          Order Confirmed! ✅
         </motion.h1>
 
         <motion.p
@@ -128,7 +140,13 @@ export default function GroceryOrderConfirmed() {
           transition={{ delay: 0.4 }}
           className="text-[13px] text-muted-foreground text-center max-w-xs mb-6"
         >
-          Your payment was processed securely via Stripe. A ZIVO driver will shop and deliver your items.
+          {order?.payment_provider === "paypal"
+            ? "Your PayPal payment was received. A ZIVO driver will shop and deliver your items."
+            : order?.payment_method === "cash" || order?.payment_provider == null
+            ? "Your order was placed. Pay the driver in cash upon delivery."
+            : order?.payment_method === "aba"
+            ? "Your order was placed. Complete your ABA/KHQR payment to confirm."
+            : "Your payment was processed securely. A ZIVO driver will shop and deliver your items."}
         </motion.p>
 
         {/* Order ID + store */}
@@ -152,7 +170,9 @@ export default function GroceryOrderConfirmed() {
               </div>
               <div className="flex flex-col items-end gap-1">
                 <div className="px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/15">
-                  <span className="text-[10px] font-bold text-emerald-600">Paid</span>
+                  <span className="text-[10px] font-bold text-emerald-600">
+                    {order?.payment_method === "cash" ? "Placed" : order?.payment_method === "aba" ? "Pending" : "Paid"}
+                  </span>
                 </div>
                 {order?.total_amount && (
                   <span className="text-[13px] font-bold text-foreground">${order.total_amount.toFixed(2)}</span>
@@ -263,7 +283,9 @@ export default function GroceryOrderConfirmed() {
           <div className="p-3 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 text-center">
             <Shield className="h-4 w-4 text-emerald-500 mx-auto mb-1" />
             <p className="text-[11px] font-bold">Secure</p>
-            <p className="text-[8px] text-muted-foreground">Stripe</p>
+            <p className="text-[8px] text-muted-foreground">
+              {order?.payment_provider === "paypal" ? "PayPal" : order?.payment_method === "aba" ? "ABA" : order?.payment_method === "cash" ? "Cash" : "Stripe"}
+            </p>
           </div>
           <div className="p-3 rounded-2xl bg-muted/20 border border-border/15 text-center">
             <Bell className="h-4 w-4 text-muted-foreground mx-auto mb-1" />

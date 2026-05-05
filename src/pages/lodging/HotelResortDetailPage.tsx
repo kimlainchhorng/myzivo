@@ -20,6 +20,7 @@ import Star from "lucide-react/dist/esm/icons/star";
 import Share2 from "lucide-react/dist/esm/icons/share-2";
 import Phone from "lucide-react/dist/esm/icons/phone";
 import MessageCircle from "lucide-react/dist/esm/icons/message-circle";
+import { openShareToChat } from "@/components/chat/ShareToChatSheet";
 import Globe from "lucide-react/dist/esm/icons/globe";
 import Wifi from "lucide-react/dist/esm/icons/wifi";
 import Coffee from "lucide-react/dist/esm/icons/coffee";
@@ -343,13 +344,29 @@ export default function HotelResortDetailPage() {
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <button
-            onClick={handleShare}
-            aria-label="Share"
-            className="h-10 w-10 rounded-full bg-background/80 backdrop-blur flex items-center justify-center shadow-sm active:scale-95 transition"
-          >
-            <Share2 className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => openShareToChat({
+                kind: "hotel",
+                title: store?.name || "Hotel on ZIVO",
+                subtitle: store?.address || undefined,
+                meta: minPriceCents > 0 ? `From $${Math.round(minPriceCents / 100)} / night` : undefined,
+                deepLink: window.location.pathname,
+                image: store?.banner_url ?? null,
+              })}
+              aria-label="Share to chat"
+              className="h-10 w-10 rounded-full bg-background/80 backdrop-blur flex items-center justify-center shadow-sm active:scale-95 transition"
+            >
+              <MessageCircle className="w-5 h-5" />
+            </button>
+            <button
+              onClick={handleShare}
+              aria-label="Share"
+              className="h-10 w-10 rounded-full bg-background/80 backdrop-blur flex items-center justify-center shadow-sm active:scale-95 transition"
+            >
+              <Share2 className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </div>
 
@@ -621,6 +638,16 @@ export default function HotelResortDetailPage() {
                           </span>
                         )}
                       </div>
+                      <button
+                        onClick={() => {
+                          const ciStr = format(checkIn, "yyyy-MM-dd");
+                          const coStr = format(checkOut, "yyyy-MM-dd");
+                          navigate(`/hotel/${storeId}/book?room=${room.id}&ci=${ciStr}&co=${coStr}&adults=${adults}&children=${children}`);
+                        }}
+                        className="mt-2 w-full rounded-lg bg-emerald-500 hover:bg-emerald-600 active:scale-[0.97] transition text-white text-[11px] font-bold py-1.5 px-2"
+                      >
+                        Book Now
+                      </button>
                     </div>
                   </div>
                 );
@@ -815,6 +842,17 @@ export default function HotelResortDetailPage() {
                           </span>
                         )}
                       </div>
+                      <button
+                        onClick={() => {
+                          const ciStr = format(checkIn, "yyyy-MM-dd");
+                          const coStr = format(checkOut, "yyyy-MM-dd");
+                          setAllRoomsOpen(false);
+                          navigate(`/hotel/${storeId}/book?room=${room.id}&ci=${ciStr}&co=${coStr}&adults=${adults}&children=${children}`);
+                        }}
+                        className="mt-2 w-full rounded-lg bg-emerald-500 hover:bg-emerald-600 active:scale-[0.97] transition text-white text-[11px] font-bold py-1.5 px-2"
+                      >
+                        Book Now
+                      </button>
                     </div>
                   </div>
                 );

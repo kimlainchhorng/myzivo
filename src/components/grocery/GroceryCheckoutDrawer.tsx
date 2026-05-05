@@ -501,6 +501,10 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
           : `Order placed! Complete ABA payment`
       );
       if (orderId) {
+        // Trigger driver dispatch for grocery order
+        supabase.functions.invoke("dispatch-order", {
+          body: { order_id: orderId, order_type: "shopping_delivery" },
+        }).catch(() => {/* dispatch is best-effort */});
         onOrderPlaced(orderId);
       }
     } catch (err: any) {
