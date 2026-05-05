@@ -366,7 +366,7 @@ const Profile = () => {
   const getShopDashboardPath = useCallback(() => {
     if (!ownerStore?.id) return "/shop-dashboard";
     return resolveBusinessDashboardRoute(ownerStore.category, ownerStore.id).path;
-  }, [ownerStore?.category, ownerStore?.id]);
+  }, [ownerStore]);
 
   const openShopDashboard = useCallback(() => {
     selectionChanged();
