@@ -10,10 +10,12 @@ import Star from "lucide-react/dist/esm/icons/star";
 import Users from "lucide-react/dist/esm/icons/users";
 import Fuel from "lucide-react/dist/esm/icons/fuel";
 import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
+import Share2 from "lucide-react/dist/esm/icons/share-2";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { optimizeAvatar } from "@/utils/optimizeAvatar";
+import { openShareToChat } from "@/components/chat/ShareToChatSheet";
 
 const CAR_CATEGORIES = ["car-rental", "rent-car", "auto-dealership", "car-hire", "vehicle-rental"];
 
@@ -121,6 +123,13 @@ export default function FeaturedCarsSection() {
                       Verified
                     </span>
                   )}
+                  <button
+                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); openShareToChat({ kind: "ride", title: store.name, subtitle: store.address || store.vehicle_type || "Car rental", meta: store.price_per_day != null ? `$${store.price_per_day}/day` : undefined, image: store.banner_url || store.logo_url || null, deepLink: store.slug ? `/store/${store.slug}` : "/rent-car" }); }}
+                    className="absolute top-3 right-3 w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 hover:bg-card active:scale-90 touch-manipulation"
+                    aria-label={`Share ${store.name}`}
+                  >
+                    <Share2 className="w-4 h-4 text-foreground" />
+                  </button>
                 </div>
                 <div className="p-5">
                   <div className="flex items-center justify-between mb-2">

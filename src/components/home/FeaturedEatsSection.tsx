@@ -10,11 +10,13 @@ import Clock from "lucide-react/dist/esm/icons/clock";
 import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
 import Truck from "lucide-react/dist/esm/icons/truck";
 import ShoppingCart from "lucide-react/dist/esm/icons/shopping-cart";
+import Share2 from "lucide-react/dist/esm/icons/share-2";
 import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { optimizeAvatar } from "@/utils/optimizeAvatar";
+import { openShareToChat } from "@/components/chat/ShareToChatSheet";
 
 const FOOD_CATEGORIES = ["restaurant", "food", "coffee", "cafe", "bakery", "eats", "pizza", "sushi", "burger", "asian", "fastfood"];
 
@@ -138,6 +140,13 @@ export default function FeaturedEatsSection() {
                       aria-label={`Order from ${store.name}`}
                     >
                       <ShoppingCart className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); openShareToChat({ kind: "eats", title: store.name, subtitle: store.address || store.category, meta: store.delivery_min != null ? `${store.delivery_min} min delivery` : undefined, image: store.banner_url || store.logo_url || null, deepLink: store.slug ? `/store/${store.slug}` : "/eats" }); }}
+                      className="absolute top-3 right-3 w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 hover:bg-card active:scale-90 touch-manipulation"
+                      aria-label={`Share ${store.name}`}
+                    >
+                      <Share2 className="w-4 h-4 text-foreground" />
                     </button>
                   </div>
                   <div className="p-5">

@@ -10,6 +10,7 @@ import Star from "lucide-react/dist/esm/icons/star";
 import MapPin from "lucide-react/dist/esm/icons/map-pin";
 import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
 import Heart from "lucide-react/dist/esm/icons/heart";
+import Share2 from "lucide-react/dist/esm/icons/share-2";
 import Wifi from "lucide-react/dist/esm/icons/wifi";
 import Waves from "lucide-react/dist/esm/icons/waves";
 import Dumbbell from "lucide-react/dist/esm/icons/dumbbell";
@@ -17,6 +18,7 @@ import { motion } from "framer-motion";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { optimizeAvatar } from "@/utils/optimizeAvatar";
+import { openShareToChat } from "@/components/chat/ShareToChatSheet";
 
 const HOTEL_CATEGORIES = ["hotel", "resort", "lodging", "accommodation", "guesthouse", "hostel", "motel", "villa"];
 
@@ -121,6 +123,13 @@ export default function FeaturedHotelsSection() {
                       aria-label={`Save ${store.name}`}
                     >
                       <Heart className={`w-4 h-4 transition-colors ${savedHotels.has(store.id) ? "text-destructive fill-current" : "text-foreground"}`} />
+                    </button>
+                    <button
+                      onClick={(e) => { e.preventDefault(); e.stopPropagation(); openShareToChat({ kind: "hotel", title: store.name, subtitle: store.address || store.category, meta: store.price_per_night != null ? `$${store.price_per_night}/night` : undefined, image: store.banner_url || store.logo_url || null, deepLink: store.slug ? `/store/${store.slug}` : "/hotels" }); }}
+                      className="absolute top-3 right-3 w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 hover:bg-card active:scale-90 touch-manipulation"
+                      aria-label={`Share ${store.name}`}
+                    >
+                      <Share2 className="w-4 h-4 text-foreground" />
                     </button>
                   </div>
                   <div className="p-5">

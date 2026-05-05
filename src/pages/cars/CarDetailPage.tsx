@@ -9,6 +9,8 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
+import Share2 from "lucide-react/dist/esm/icons/share-2";
+import { openShareToChat } from "@/components/chat/ShareToChatSheet";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { StarRating } from "@/components/shared/StarRating";
@@ -400,14 +402,32 @@ export default function CarDetailPage() {
                     </div>
                   )}
 
-                  <Button
-                    onClick={handleBookNow}
-                    className="w-full"
-                    size="lg"
-                    disabled={!pickupDate || !returnDate || totalDays <= 0}
-                  >
-                    {vehicle.instant_book ? "Book Now" : "Request to Book"}
-                  </Button>
+                  <div className="flex gap-2">
+                    <Button
+                      onClick={handleBookNow}
+                      className="flex-1"
+                      size="lg"
+                      disabled={!pickupDate || !returnDate || totalDays <= 0}
+                    >
+                      {vehicle.instant_book ? "Book Now" : "Request to Book"}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="lg"
+                      className="shrink-0 px-3"
+                      aria-label="Share to chat"
+                      onClick={() => openShareToChat({
+                        kind: "ride",
+                        title: vehicle.name,
+                        subtitle: vehicle.description?.slice(0, 60) || "P2P vehicle rental",
+                        meta: pricing ? `$${pricing.total.toFixed(0)} total · ${totalDays}d` : undefined,
+                        image: vehicle.images?.[0] ?? null,
+                        deepLink: `/cars/${id ?? ""}`,
+                      })}
+                    >
+                      <Share2 className="w-4 h-4" />
+                    </Button>
+                  </div>
 
                   {!user && (
                     <p className="text-xs text-center text-muted-foreground">

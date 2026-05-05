@@ -1,9 +1,10 @@
-import { Star, MapPin, Wifi, Car, Coffee, CheckCircle } from "lucide-react";
+import { Star, MapPin, Wifi, Car, Coffee, CheckCircle, Share2 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { openShareToChat } from "@/components/chat/ShareToChatSheet";
 
 export interface HotelCardData {
   id: string;
@@ -111,9 +112,30 @@ export function HotelResultCard({ hotel, onViewDeal, className }: HotelResultCar
                   per night · {totalPrice} total
                 </div>
               </div>
-              <Button onClick={() => onViewDeal(hotel)} size="sm">
-                View Deal
-              </Button>
+              <div className="flex gap-1.5">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="px-2.5"
+                  aria-label="Share to chat"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    openShareToChat({
+                      kind: "hotel",
+                      title: hotel.name,
+                      subtitle: hotel.area,
+                      meta: `${pricePerNight}/night · ${hotel.nights}n`,
+                      image: hotel.imageUrl,
+                      deepLink: `/hotels`,
+                    });
+                  }}
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                </Button>
+                <Button onClick={() => onViewDeal(hotel)} size="sm">
+                  View Deal
+                </Button>
+              </div>
             </div>
           </div>
         </div>
