@@ -463,6 +463,18 @@ export default function RequestRidePage() {
     refetchInterval: 60000,
   });
   const surgeActive = surgeZones.some((z: any) => (z.manual_multiplier ?? z.base_multiplier ?? 1) > 1.0);
+
+  // Prepare saved places from user's saved locations
+  const savedPlacesList = userSavedLocations?.map((loc: any) => ({
+    id: loc.id,
+    label: loc.label,
+    address: loc.address,
+    icon: loc.icon_type === "home" ? Home : loc.icon_type === "work" ? Building2 : MapPin,
+  })) || [
+    { id: "home", label: "Home", icon: Home, address: "" },
+    { id: "work", label: "Work", icon: Building2, address: "" },
+  ];
+
   const [favoriteDrivers] = useState(["Marcus T.", "Sarah L.", "David K."]);
   const [requestFavoriteDriver, setRequestFavoriteDriver] = useState(false);
   const [selectedRoute, setSelectedRoute] = useState("fastest");
