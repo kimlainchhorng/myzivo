@@ -389,6 +389,8 @@ const CarConfirmationPage = lazy(() => import("./pages/CarConfirmationPage"));
 const Cars = lazy(() => import("./pages/Cars"));
 const CarsSearchPage = lazy(() => import("./pages/cars/CarsSearchPage"));
 const CarsDetailPage = lazy(() => import("./pages/cars/CarDetailPage"));
+const CarRentalCheckoutPage = lazy(() => import("./pages/cars/CarRentalCheckoutPage"));
+const CarRentalConfirmedPage = lazy(() => import("./pages/cars/CarRentalConfirmedPage"));
 const HowToRent = lazy(() => import("./pages/HowToRent"));
 
 // Travel Extras & Checkout
@@ -1089,6 +1091,8 @@ const App = () => (
                 <Route path="/cars" element={<RouteErrorBoundary section="Cars"><Cars /></RouteErrorBoundary>} />
                 <Route path="/cars/search" element={<RouteErrorBoundary section="Cars"><CarsSearchPage /></RouteErrorBoundary>} />
                 <Route path="/cars/:id" element={<RouteErrorBoundary section="Cars"><CarsDetailPage /></RouteErrorBoundary>} />
+                <Route path="/cars/:id/checkout" element={<ProtectedRoute><RouteErrorBoundary section="Cars"><CarRentalCheckoutPage /></RouteErrorBoundary></ProtectedRoute>} />
+                <Route path="/cars/:id/booking-confirmed" element={<RouteErrorBoundary section="Cars"><CarRentalConfirmedPage /></RouteErrorBoundary>} />
                 <Route path="/how-to-rent" element={<RouteErrorBoundary section="Cars"><HowToRent /></RouteErrorBoundary>} />
 
                 {/* Travel Checkout */}
