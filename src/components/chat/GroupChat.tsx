@@ -516,8 +516,9 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
     setMessages((prev) => [...prev, optimisticMsg]);
     scrollToBottom();
 
+    let insertData: GroupMessageInsert;
     try {
-      const insertData: GroupMessageInsert = {
+      insertData = {
         group_id: groupId,
         sender_id: user.id,
         message: text || "",
@@ -1408,7 +1409,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
       <AnimatePresence>
         {showGiftPanel && (
           <Suspense fallback={null}>
-            <ChatGiftPanel open={showGiftPanel} onClose={() => setShowGiftPanel(false)} />
+            <ChatGiftPanel open={showGiftPanel} onClose={() => setShowGiftPanel(false)} recipientId={groupId} />
           </Suspense>
         )}
       </AnimatePresence>
@@ -1416,7 +1417,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
       <AnimatePresence>
         {showWalletSheet && (
           <Suspense fallback={null}>
-            <ChatWalletSheet open={showWalletSheet} onClose={() => setShowWalletSheet(false)} />
+            <ChatWalletSheet open={showWalletSheet} onClose={() => setShowWalletSheet(false)} recipientId={groupId} />
           </Suspense>
         )}
       </AnimatePresence>
@@ -1424,7 +1425,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
       <AnimatePresence>
         {showScanner && (
           <Suspense fallback={null}>
-            <ChatDocumentScanner open={showScanner} onClose={() => setShowScanner(false)} />
+            <ChatDocumentScanner open={showScanner} onClose={() => setShowScanner(false)} onComplete={() => setShowScanner(false)} />
           </Suspense>
         )}
       </AnimatePresence>
@@ -1432,7 +1433,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
       <AnimatePresence>
         {showContactPicker && (
           <Suspense fallback={null}>
-            <ContactPickerSheet open={showContactPicker} onOpenChange={setShowContactPicker} />
+            <ContactPickerSheet open={showContactPicker} onOpenChange={setShowContactPicker} onConfirm={() => setShowContactPicker(false)} />
           </Suspense>
         )}
       </AnimatePresence>
@@ -1440,7 +1441,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
       <AnimatePresence>
         {showSocialShare && (
           <Suspense fallback={null}>
-            <ChatSocialShare open={showSocialShare} onClose={() => setShowSocialShare(false)} />
+            <ChatSocialShare open={showSocialShare} onClose={() => setShowSocialShare(false)} onShareLink={() => setShowSocialShare(false)} />
           </Suspense>
         )}
       </AnimatePresence>
@@ -1451,7 +1452,9 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
             <PollCreator
               open={showPollCreator}
               onClose={() => setShowPollCreator(false)}
-              onPollCreated={(q) => handleStickerSend({ text: `📊 Poll: ${q}`, messageType: "text" })}
+              onSubmit={(draft) => {
+                void handleStickerSend({ text: `📊 Poll: ${draft.question}`, messageType: "text" });
+              }}
             />
           </Suspense>
         )}

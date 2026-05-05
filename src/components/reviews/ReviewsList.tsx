@@ -29,8 +29,8 @@ export function ReviewsList({ serviceType, serviceId }: ReviewsListProps) {
   useEffect(() => {
     const fetchReviews = async () => {
       try {
-        const { data, error } = await supabase
-          .from("reviews")
+        const { data, error } = await (supabase
+          .from("reviews") as any)
           .select("*")
           .eq("service_type", serviceType)
           .eq("service_id", serviceId)
@@ -39,7 +39,7 @@ export function ReviewsList({ serviceType, serviceId }: ReviewsListProps) {
           .limit(10);
 
         if (error) throw error;
-        setReviews(data || []);
+        setReviews((data as Review[]) || []);
       } catch (err) {
         console.error("Failed to fetch reviews:", err);
       } finally {
