@@ -30,6 +30,9 @@ import RefundDisputeCard from "@/components/lodging/guest/RefundDisputeCard";
 import { useLodgingRefundDisputes } from "@/hooks/lodging/useLodgingRefundDisputes";
 import LodgingTripNotificationSettings from "@/components/lodging/guest/LodgingTripNotificationSettings";
 import { toast } from "sonner";
+import { ReviewSubmissionSheet } from "@/components/reviews/ReviewSubmissionSheet";
+import { ReviewsList } from "@/components/reviews/ReviewsList";
+import { ReviewsSummary } from "@/components/reviews/ReviewsSummary";
 
 interface FullReservation {
   id: string;
@@ -73,6 +76,7 @@ export default function MyLodgingTripPage() {
   const [addonsOpen, setAddonsOpen] = useState(false);
   const [chatOpen, setChatOpen] = useState(false);
   const [addonStatusRefreshing, setAddonStatusRefreshing] = useState(false);
+  const [reviewSheetOpen, setReviewSheetOpen] = useState(false);
 
   const { data: reservation, isLoading } = useQuery({
     queryKey: ["lodge-reservation-full", reservationId],
@@ -343,6 +347,14 @@ export default function MyLodgingTripPage() {
 
       <RefundDisputeCard reservationId={reservation.id} disputes={disputes} canRequest={canDispute} maxAmountCents={maxDisputeCents} />
 
+      {/* Reviews */}
+      <ReviewsSummary
+        serviceType="hotel"
+        serviceId={reservation.id}
+        onWriteClick={() => setReviewSheetOpen(true)}
+      />
+      <ReviewsList serviceType="hotel" serviceId={reservation.id} />
+
       <RescheduleSheet
         open={rescheduleOpen}
         onOpenChange={setRescheduleOpen}
@@ -387,6 +399,14 @@ export default function MyLodgingTripPage() {
         open={chatOpen}
         onClose={() => setChatOpen(false)}
         reservationContext={chatContext}
+      />
+
+      <ReviewSubmissionSheet
+        isOpen={reviewSheetOpen}
+        onClose={() => setReviewSheetOpen(false)}
+        serviceType="hotel"
+        serviceId={reservation.id}
+        title={store?.name || "Your stay"}
       />
     </div>
   );
