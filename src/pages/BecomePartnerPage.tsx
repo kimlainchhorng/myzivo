@@ -5,6 +5,7 @@
  */
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import SEOHead from "@/components/SEOHead";
 import Car from "lucide-react/dist/esm/icons/car";
 import UtensilsCrossed from "lucide-react/dist/esm/icons/utensils-crossed";
 import BedDouble from "lucide-react/dist/esm/icons/bed-double";
@@ -69,6 +70,10 @@ export default function BecomePartnerPage() {
   const navigate = useNavigate();
   return (
     <div className="min-h-[100dvh] bg-background pb-16">
+      <SEOHead
+        title="Become a Partner – Earn with ZIVO"
+        description="Join ZIVO as a driver, restaurant, hotel, or property owner. Access our super-app platform with unified dashboard, instant payouts, and millions of customers."
+      />
       {/* Hero */}
       <section className="border-b border-border bg-background">
         <div className="max-w-screen-md mx-auto px-5 pt-12 pb-10">

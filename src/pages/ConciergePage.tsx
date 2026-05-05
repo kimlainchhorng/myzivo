@@ -23,6 +23,7 @@ import type { LucideIcon } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { planFromQuery, ConciergeStepKind } from "@/lib/conciergePlanner";
+import SEOHead from "@/components/SEOHead";
 
 const ICON_BY_KIND: Record<ConciergeStepKind, { icon: LucideIcon; tone: string }> = {
   reserve: { icon: CalendarClock, tone: "bg-orange-500/15 text-orange-600" },
@@ -130,6 +131,10 @@ export default function ConciergePage() {
 
   return (
     <div className="min-h-[100dvh] bg-background pb-20">
+      <SEOHead
+        title="ZIVO Concierge – Plan Your Day in One Sentence"
+        description="AI-powered trip orchestration. Type one sentence and get an action plan that deep-links into rides, flights, hotels, restaurants, and more."
+      />
       {/* Header */}
       <header className="sticky top-0 z-30 bg-background/90 backdrop-blur border-b border-border/40 pt-safe">
         <div className="max-w-screen-md mx-auto px-4 py-3 flex items-center gap-3">
