@@ -134,6 +134,7 @@ const MyTripsPage = lazy(() => import("./pages/app/MyTripsPage"));
 const MyLodgingTripPage = lazy(() => import("./pages/MyLodgingTripPage"));
 const MyCarTripPage = lazy(() => import("./pages/MyCarTripPage"));
 const MyFlightTripPage = lazy(() => import("./pages/MyFlightTripPage"));
+const MyHotelTripPage = lazy(() => import("./pages/MyHotelTripPage"));
 
 const SupportCenterPage = lazy(() => import("./pages/app/SupportCenterPage"));
 const RideTrackingPage = lazy(() => import("./pages/app/RideTrackingPage"));
@@ -1103,6 +1104,7 @@ const App = () => (
                 <Route path="/my-trips/lodging/:reservationId" element={<ProtectedRoute><RouteErrorBoundary section="Lodging"><MyLodgingTripPage /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/my-trips/cars/:bookingId" element={<ProtectedRoute><RouteErrorBoundary section="Cars"><MyCarTripPage /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/my-trips/flights/:bookingId" element={<ProtectedRoute><RouteErrorBoundary section="Flights"><MyFlightTripPage /></RouteErrorBoundary></ProtectedRoute>} />
+                <Route path="/my-trips/hotels/:bookingId" element={<ProtectedRoute><RouteErrorBoundary section="Hotels"><MyHotelTripPage /></RouteErrorBoundary></ProtectedRoute>} />
                 <Route path="/my-trips/:orderNumber" element={<RouteErrorBoundary section="Checkout"><TravelOrderDetailPage /></RouteErrorBoundary>} />
 
                 {/* Extras */}
