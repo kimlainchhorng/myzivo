@@ -236,7 +236,10 @@ export default function AutoRepairPartSuppliersSection({ storeId }: Props) {
                           variant="ghost"
                           className="h-7 w-7 text-green-600"
                           title="Open portal"
-                          onClick={() => setPortalUrl(s.url)}
+                          onClick={() => {
+                            setPortalUrl(s.url);
+                            setTarget(null);
+                          }}
                         >
                           <ExternalLink className="w-3.5 h-3.5" />
                         </Button>

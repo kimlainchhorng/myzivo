@@ -21,6 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import MediaGalleryLightbox from "./MediaGalleryLightbox";
 import { OPEN_MEDIA_EVENT, type OpenMediaDetail } from "@/lib/chat/openMedia";
+import { openP2PTransfer } from "./P2PTransferSheet";
 import { signedUrlFor } from "@/lib/security/signedMedia";
 import { topicForPairSync } from "@/lib/security/channelName";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
@@ -2685,7 +2686,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                   }
                   onLockedImageSelect={() => lockedImageInputRef.current?.click()}
                   onSendGift={() => setShowGiftPanel(true)}
-                  onOpenWallet={() => setShowWalletSheet(true)}
+                  onOpenWallet={() => {
+                    if (isSelfChat) { setShowWalletSheet(true); return; }
+                    openP2PTransfer({ receiverId: recipientId, receiverName, mode: "send" });
+                  }}
                   onScanDocument={() => setShowScanner(true)}
                   onFileSelect={() => filePickerTriggerRef.current?.()}
                   onCreatePoll={() => setShowPollCreator(true)}
