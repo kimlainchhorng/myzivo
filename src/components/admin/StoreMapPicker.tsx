@@ -61,7 +61,7 @@ async function loadGoogleMaps(apiKey: string): Promise<boolean> {
   }
   return new Promise((resolve) => {
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=marker`;
     script.async = true;
     script.onload = () => resolve(true);
     script.onerror = () => resolve(false);
