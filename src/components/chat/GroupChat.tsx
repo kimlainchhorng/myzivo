@@ -200,6 +200,15 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
   const { user } = useAuth();
   const navigate = useNavigate();
   const [galleryState, setGalleryState] = useState<{ open: boolean; images: { id: string; url: string; type: "image" | "video" }[]; index: number }>({ open: false, images: [], index: 0 });
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<OpenMediaDetail>).detail;
+      if (!detail?.url) return;
+      setGalleryState({ open: true, images: [{ id: detail.id || detail.url, url: detail.url, type: detail.type }], index: 0 });
+    };
+    window.addEventListener(OPEN_MEDIA_EVENT, handler as EventListener);
+    return () => window.removeEventListener(OPEN_MEDIA_EVENT, handler as EventListener);
+  }, []);
   const [messages, setMessages] = useState<GroupMessage[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [input, setInput] = useState("");
