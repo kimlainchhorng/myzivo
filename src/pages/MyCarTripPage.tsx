@@ -5,7 +5,7 @@ import { format, parseISO, differenceInDays } from "date-fns";
 import {
   ArrowLeft, Car, Calendar, MapPin, DollarSign, Phone, Mail,
   Edit, Download, Share2, Loader2, AlertCircle, CheckCircle,
-  Clock, Shield, Fuel, Users, Copy, Check,
+  Clock, Shield, Fuel, Users, Copy, Check, MessageCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,6 +15,9 @@ import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { openShareToChat } from "@/components/chat/ShareToChatSheet";
 import SEOHead from "@/components/SEOHead";
 import { cn } from "@/lib/utils";
+import { ReviewSubmissionSheet } from "@/components/reviews/ReviewSubmissionSheet";
+import { ReviewsList } from "@/components/reviews/ReviewsList";
+import { ReviewsSummary } from "@/components/reviews/ReviewsSummary";
 
 const formatPrice = (amount: number) =>
   amount > 0 ? `$${amount.toFixed(0)}` : "—";
@@ -55,6 +58,7 @@ export default function MyCarTripPage() {
   const [booking, setBooking] = useState<CarBookingDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [reviewSheetOpen, setReviewSheetOpen] = useState(false);
 
   useEffect(() => {
     if (!bookingId) {
@@ -281,6 +285,21 @@ export default function MyCarTripPage() {
               </div>
             </motion.div>
 
+            {/* Reviews */}
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+              className="space-y-3"
+            >
+              <ReviewsSummary
+                serviceType="car_rental"
+                serviceId={bookingId}
+                onWriteClick={() => setReviewSheetOpen(true)}
+              />
+              <ReviewsList serviceType="car_rental" serviceId={bookingId} />
+            </motion.div>
+
             {/* Special Requests */}
             {booking.notes && (
               <motion.div
@@ -320,6 +339,15 @@ export default function MyCarTripPage() {
           </>
         ) : null}
       </div>
+
+      <ReviewSubmissionSheet
+        isOpen={reviewSheetOpen}
+        onClose={() => setReviewSheetOpen(false)}
+        serviceType="car_rental"
+        serviceId={bookingId}
+        bookingReference={booking?.id}
+        title={`${booking?.vehicle?.year} ${booking?.vehicle?.make} ${booking?.vehicle?.model}`}
+      />
 
       <ZivoMobileNav />
     </div>

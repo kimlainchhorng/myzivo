@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import SEOHead from "@/components/SEOHead";
 import { Gift, Ticket, Users, Star, Copy, Check, Share2, Clock, TrendingUp, Award, Sparkles, Zap, ChevronLeft, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -157,6 +158,10 @@ const Promotions = () => {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden safe-area-top safe-area-bottom">
+      <SEOHead
+        title="Promotions & Rewards – ZIVO"
+        description="View active promo codes, exclusive offers, and seasonal campaigns. Earn loyalty points, refer friends, and redeem rewards for free rides and credits."
+      />
       {/* Enhanced Background effects */}
       <div className="absolute inset-0 bg-gradient-radial from-eats/12 via-transparent to-transparent opacity-50" />
       <div className="absolute top-1/4 right-0 w-[300px] sm:w-[500px] h-[300px] sm:h-[500px] bg-gradient-to-bl from-eats/20 to-orange-500/15 rounded-full blur-3xl" />

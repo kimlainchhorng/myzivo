@@ -15,6 +15,7 @@ import { useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { motion, AnimatePresence } from "framer-motion";
+import SEOHead from "@/components/SEOHead";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
 import Radio from "lucide-react/dist/esm/icons/radio";
 import Eye from "lucide-react/dist/esm/icons/eye";
@@ -505,6 +506,10 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
 
  return (
 <div className="fixed inset-0 z-50 bg-black flex flex-col">
+ <SEOHead
+ title="Live Streams – ZIVO"
+ description="Watch live streams from creators, join interactive voice rooms, and discover trending content. Send gifts, participate in battles, and engage with community."
+ />
  {/* Stream ended overlay */}
  {streamEnded && (
 <div className="absolute inset-0 z-[60] bg-black/90 backdrop-blur-md flex flex-col items-center px-6 overflow-y-auto pt-12 pb-6">

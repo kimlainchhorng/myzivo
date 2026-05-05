@@ -5,7 +5,7 @@ import { format, parseISO } from "date-fns";
 import {
   ArrowLeft, Plane, Calendar, MapPin, Users, Luggage,
   Loader2, CheckCircle, Clock, AlertCircle, Share2, Download,
-  Copy, Check, Shield,
+  Copy, Check, Shield, MessageCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -15,6 +15,9 @@ import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { openShareToChat } from "@/components/chat/ShareToChatSheet";
 import SEOHead from "@/components/SEOHead";
 import { cn } from "@/lib/utils";
+import { ReviewSubmissionSheet } from "@/components/reviews/ReviewSubmissionSheet";
+import { ReviewsList } from "@/components/reviews/ReviewsList";
+import { ReviewsSummary } from "@/components/reviews/ReviewsSummary";
 
 const formatPrice = (amount: number) =>
   amount > 0 ? `$${amount.toFixed(0)}` : "—";
@@ -46,6 +49,7 @@ export default function MyFlightTripPage() {
   const [booking, setBooking] = useState<FlightBookingDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [reviewSheetOpen, setReviewSheetOpen] = useState(false);
 
   useEffect(() => {
     if (!bookingId) {

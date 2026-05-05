@@ -10,6 +10,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import SEOHead from "@/components/SEOHead";
 import {
   ArrowLeft,
   Search,
@@ -524,6 +525,10 @@ export default function StoresListPage() {
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
+      <SEOHead
+        title="All Stores – ZIVO"
+        description="Browse nearby stores, restaurants, and businesses. Filter by category, ratings, and distance. Save favorites and get directions."
+      />
       <div className="hidden lg:block shrink-0">
         <NavBar />
       </div>

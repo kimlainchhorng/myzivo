@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import SEOHead from "@/components/SEOHead";
 import { ArrowLeft, Search, MessageCircle, Phone, Mail, Car, UtensilsCrossed, Plane, Hotel, Key, ChevronRight, HelpCircle, FileText, Shield, CreditCard, Star, AlertTriangle, User, ChevronLeft, Sparkles, Send, CheckCircle2, Package, Headphones, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -151,6 +152,10 @@ const HelpCenter = () => {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden safe-area-top safe-area-bottom">
+      <SEOHead
+        title="Help Center – ZIVO"
+        description="Get help with rides, food delivery, car rentals, flights, hotels, account settings, and safety. Browse FAQs, contact support, or submit tickets."
+      />
       {/* Background effects - simplified for mobile */}
       <div className="absolute inset-0 bg-gradient-radial from-primary/8 via-transparent to-transparent opacity-40" />
       <div className="absolute top-1/4 right-0 w-[200px] h-[200px] bg-gradient-to-bl from-primary/15 to-teal-500/10 rounded-full blur-3xl" />

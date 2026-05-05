@@ -9,6 +9,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import SEOHead from "@/components/SEOHead";
 import {
   MapPin, Clock, Star, Navigation, Store, ChevronRight, Search, X,
   Locate, Car, Phone, Wrench, List, Heart, Share2, MoreHorizontal,
@@ -1263,6 +1264,10 @@ export default function StoreMapPage() {
 
   return (
     <div className="fixed inset-0 z-0 bg-background lg:flex lg:flex-col">
+      <SEOHead
+        title="Store Map – ZIVO"
+        description="Find stores, restaurants, and businesses near you on the interactive map. Filter by category, check hours, save favorites, and get directions."
+      />
       <div className="hidden lg:block relative z-[1200] shrink-0">
         <NavBar />
       </div>
