@@ -431,7 +431,7 @@ export default function EatsLanding() {
                     kind: "eats",
                     title: currentRestaurant.name,
                     subtitle: `${canonicalCuisine(currentRestaurant.cuisine_type)} · ${currentRestaurant.avg_prep_time ?? 25}-${(currentRestaurant.avg_prep_time ?? 25) + 15} min`,
-                    meta: currentRestaurant.delivery_fee != null ? (currentRestaurant.delivery_fee === 0 ? "Free delivery" : `$${currentRestaurant.delivery_fee} delivery`) : undefined,
+                    meta: (currentRestaurant as { delivery_fee?: number | null }).delivery_fee != null ? ((currentRestaurant as { delivery_fee?: number | null }).delivery_fee === 0 ? "Free delivery" : `$${(currentRestaurant as { delivery_fee?: number | null }).delivery_fee} delivery`) : undefined,
                     deepLink: "/eats",
                     image: currentRestaurant.cover_image_url ?? null,
                   })}

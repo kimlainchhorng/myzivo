@@ -17,7 +17,7 @@ import type { ComponentType, SVGProps } from "react";
 import { useNavigate } from "react-router-dom";
 import { openShareToChat } from "./ShareToChatSheet";
 
-export type ZivoCardKind = "flight" | "hotel" | "eats" | "ride" | "trip" | "product";
+export type ZivoCardKind = "flight" | "hotel" | "eats" | "ride" | "trip" | "product" | "car" | "restaurant" | "activity";
 
 export interface ZivoCardPayload {
   kind: ZivoCardKind;
@@ -44,12 +44,15 @@ const KIND_META: Record<ZivoCardKind, {
   gradient: string;
   cta: string;
 }> = {
-  flight:  { label: "Flight",       icon: Plane,         gradient: "from-sky-500 to-indigo-500",   cta: "View flight" },
-  hotel:   { label: "Hotel",        icon: Hotel,         gradient: "from-emerald-500 to-teal-500",  cta: "View stay"   },
-  eats:    { label: "Eats",         icon: UtensilsCrossed, gradient: "from-orange-500 to-rose-500", cta: "Order now"   },
-  ride:    { label: "Ride",         icon: Car,           gradient: "from-violet-500 to-fuchsia-500", cta: "Book ride"  },
-  trip:    { label: "Trip Bundle",  icon: Compass,       gradient: "from-amber-500 to-pink-500",    cta: "Open trip"   },
-  product: { label: "Grocery",      icon: ShoppingCart,  gradient: "from-green-500 to-emerald-600", cta: "Add to cart" },
+  flight:     { label: "Flight",       icon: Plane,         gradient: "from-sky-500 to-indigo-500",   cta: "View flight" },
+  hotel:      { label: "Hotel",        icon: Hotel,         gradient: "from-emerald-500 to-teal-500",  cta: "View stay"   },
+  eats:       { label: "Eats",         icon: UtensilsCrossed, gradient: "from-orange-500 to-rose-500", cta: "Order now"   },
+  ride:       { label: "Ride",         icon: Car,           gradient: "from-violet-500 to-fuchsia-500", cta: "Book ride"  },
+  trip:       { label: "Trip Bundle",  icon: Compass,       gradient: "from-amber-500 to-pink-500",    cta: "Open trip"   },
+  product:    { label: "Grocery",      icon: ShoppingCart,  gradient: "from-green-500 to-emerald-600", cta: "Add to cart" },
+  car:        { label: "Car Rental",   icon: Car,           gradient: "from-violet-500 to-fuchsia-500", cta: "View rental" },
+  restaurant: { label: "Restaurant",   icon: UtensilsCrossed, gradient: "from-orange-500 to-rose-500", cta: "View booking" },
+  activity:   { label: "Activity",     icon: Compass,       gradient: "from-amber-500 to-pink-500",    cta: "View activity" },
 };
 
 export default function ZivoActionBubble({ payload, isMe, time }: Props) {

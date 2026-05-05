@@ -385,7 +385,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [showAutoDelete, setShowAutoDelete] = useState(false);
   const [showMiniApps, setShowMiniApps] = useState(false);
   const [showPersonalization, setShowPersonalization] = useState(false);
-  const [miniAppView, setMiniAppView] = useState<"menu" | "poll" | "todo" | "split" | "book-table" | "trip-idea">("menu");
+  const [miniAppView, setMiniAppView] = useState<"menu" | "poll" | "todo" | "split" | "book_table" | "trip_idea">("menu");
   const [showSecurity, setShowSecurity] = useState(false);
   const [showCallHistory, setShowCallHistory] = useState(false);
   const [showContactInfo, setShowContactInfo] = useState(false);
@@ -1027,8 +1027,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     if (effect) setActiveEffect(effect);
     if (pendingEffect) setPendingEffect(null);
 
+    let insertData: DirectMessageInsert;
     try {
-      const insertData: DirectMessageInsert = {
+      insertData = {
         sender_id: user.id,
         receiver_id: recipientId,
         message: text || "",

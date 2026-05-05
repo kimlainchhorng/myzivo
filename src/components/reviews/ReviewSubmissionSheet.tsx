@@ -70,7 +70,7 @@ export function ReviewSubmissionSheet({
 
     setLoading(true);
     try {
-      const { error } = await supabase.from("reviews").insert([
+      const { error } = await (supabase.from("reviews") as any).insert([
         {
           reviewer_id: user.id,
           service_type: serviceType,

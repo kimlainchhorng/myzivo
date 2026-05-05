@@ -35,10 +35,10 @@ export default function PublicUserProfilePage() {
   useEffect(() => {
     if (!userId) return;
     const load = async () => {
-      const { data } = await supabase.from("profiles").select("user_id, full_name, username, avatar_url, bio").eq("user_id", userId).single();
+      const { data } = await (supabase.from("profiles") as any).select("user_id, full_name, username, avatar_url, bio").eq("user_id", userId).single();
       setProfile(data as UserProfile);
       if (authUser?.id && data?.user_id !== authUser.id) {
-        const { data: friendship } = await supabase.from("friendships").select("id").or(`user_id.eq.${authUser.id},friend_id.eq.${authUser.id}`).eq("other_user_id", userId).eq("status", "accepted").limit(1);
+        const { data: friendship } = await (supabase.from("friendships") as any).select("id").or(`user_id.eq.${authUser.id},friend_id.eq.${authUser.id}`).eq("other_user_id", userId).eq("status", "accepted").limit(1);
         setIsFriend(!!friendship?.length);
       }
       setLoading(false);
