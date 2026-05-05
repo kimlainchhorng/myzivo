@@ -6,6 +6,8 @@
 import { useState, useEffect, useRef, useCallback, useMemo, memo, lazy, Suspense, type ComponentType, type SVGProps } from "react";
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
+import Music2 from "lucide-react/dist/esm/icons/music-2";
+import Check from "lucide-react/dist/esm/icons/check";
 import Reply from "lucide-react/dist/esm/icons/reply";
 import ReadReceipt, { type ReadReceiptStatus } from "@/components/chat/ReadReceipt";
 import Copy from "lucide-react/dist/esm/icons/copy";
@@ -27,8 +29,6 @@ import DollarSign from "lucide-react/dist/esm/icons/dollar-sign";
 import Pencil from "lucide-react/dist/esm/icons/pencil";
 import Languages from "lucide-react/dist/esm/icons/languages";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
-import Music2 from "lucide-react/dist/esm/icons/music-2";
-import Check from "lucide-react/dist/esm/icons/check";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
@@ -44,6 +44,7 @@ import { ILLUSTRATED_PACKS } from "@/config/illustratedStickers";
 import { getAnimatedStickerUrl } from "@/config/animatedStickerMap";
 import { getStickerMotionSpec } from "./stickerMotion";
 import SpoilerText from "./SpoilerText";
+import { emitReactionAdded } from "./FloatingReactionsOverlay";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 // Lazy-load TransparentStickerVideo — heavy chroma-key/WebGL component
@@ -505,6 +506,11 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
         if (found) return prev.map((r) => r.emoji === emoji ? { ...r, count: r.count + 1, reactedByMe: true } : r);
         return [...prev, { emoji, count: 1, reactedByMe: true }];
       });
+      const node = bubbleRef.current;
+      if (node) {
+        const r = node.getBoundingClientRect();
+        emitReactionAdded({ emoji, x: r.right - 24, y: r.bottom - 12 });
+      }
     }
     setShowReactions(false);
     setShowActions(false);

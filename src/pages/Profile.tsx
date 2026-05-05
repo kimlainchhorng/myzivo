@@ -1526,7 +1526,7 @@ const Profile = () => {
               type="button"
               onClick={async () => {
                 if (!user?.id) { toast.error("Sign in to share your profile"); setShareOpen(false); return; }
-                const url = `${window.location.origin}/u/${user.id}`;
+                const url = `${window.location.origin}/u/${claimedUsername || user.id}`;
                 try {
                   await navigator.clipboard.writeText(url);
                   toast.success("Profile link copied");
@@ -1552,7 +1552,7 @@ const Profile = () => {
               type="button"
               onClick={async () => {
                 if (!user?.id) { toast.error("Sign in to share your profile"); setShareOpen(false); return; }
-                const url = `${window.location.origin}/u/${user.id}`;
+                const url = `${window.location.origin}/u/${claimedUsername || user.id}`;
                 const title = headerName || "My ZIVO profile";
                 if (navigator.share) {
                   try { await navigator.share({ title, url }); } catch { /* user cancelled */ }

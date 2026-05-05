@@ -36,6 +36,9 @@ import { toast } from "sonner";
 import VoiceMessagePlayer from "./VoiceMessagePlayer";
 import VoiceMessageBubble from "./VoiceMessageBubble";
 import HoldToRecordMic from "./HoldToRecordMic";
+import StickyDatePill from "./StickyDatePill";
+import AvatarPreviewSheet from "./AvatarPreviewSheet";
+import { enqueue as outboxEnqueue, remove as outboxRemove, list as outboxList, subscribe as outboxSubscribe } from "@/lib/chat/messageOutbox";
 import ChatAttachMenu from "./ChatAttachMenu";
 import { useVoiceRecorder } from "@/hooks/useVoiceRecorder";
 import { blobToDataUrl, shouldInlineVoiceBlob, uploadVoiceWithProgress, retryWithBackoff, UploadAbortedError, UploadHttpError } from "@/lib/voiceUpload";
@@ -248,10 +251,25 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
     storagePath?: string;
   }>>(new Map());
 
+  const isNearBottomRef = useRef(true);
+  const [showJumpToLatest, setShowJumpToLatest] = useState(false);
+  const [unreadWhileScrolled, setUnreadWhileScrolled] = useState(0);
+  const [showAvatarPreview, setShowAvatarPreview] = useState(false);
+
   const scrollToBottom = useCallback(() => {
     requestAnimationFrame(() => {
       bottomAnchorRef.current?.scrollIntoView({ block: "end" });
     });
+  }, []);
+
+  const handleTimelineScroll = useCallback(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    const wasNear = isNearBottomRef.current;
+    isNearBottomRef.current = distanceFromBottom < 150;
+    setShowJumpToLatest(distanceFromBottom > 360);
+    if (!wasNear && isNearBottomRef.current) setUnreadWhileScrolled(0);
   }, []);
 
   // Detect an in-progress @mention based on caret position. Returns {start, query}
@@ -405,6 +423,11 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
               return next;
             }
           }
+          // New message from someone else while user is scrolled up — bump
+          // the unread badge on the jump-to-latest button.
+          if (msg.sender_id !== user?.id && !isNearBottomRef.current) {
+            setUnreadWhileScrolled((c) => c + 1);
+          }
           return [...prev, msg];
         });
         scrollToBottom();
@@ -492,11 +515,82 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
       const { error } = await dbFrom("group_messages").insert(insertData);
       if (error) throw error;
     } catch {
-      setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
-      toast.error("Failed to send message");
+      // Keep the bubble + persist to durable outbox so the message survives
+      // a refresh and auto-retries on reconnect.
+      failedSendsRef.current.set(optimisticId, insertData);
+      outboxEnqueue({
+        id: optimisticId,
+        table: "group_messages",
+        chatKey: groupId,
+        payload: insertData as unknown as Record<string, unknown>,
+        optimistic: optimisticMsg as unknown as Record<string, unknown>,
+      });
+      setMessages((prev) =>
+        prev.map((m) => (m.id === optimisticId ? { ...m, _upload_status: "failed" } : m)),
+      );
+      toast.error(navigator.onLine ? "Failed to send — tap to retry" : "You're offline — tap to retry when back online");
     }
     setSending(false);
   }, [groupId, input, replyTo, scrollToBottom, sending, user?.id]);
+
+  const failedSendsRef = useRef<Map<string, GroupMessageInsert>>(new Map());
+
+  const retryFailedGroupSend = useCallback(async (optimisticId: string) => {
+    const payload = failedSendsRef.current.get(optimisticId);
+    if (!payload) return;
+    setMessages((prev) =>
+      prev.map((m) => (m.id === optimisticId ? { ...m, _upload_status: "uploading" } : m)),
+    );
+    try {
+      const { error } = await dbFrom("group_messages").insert(payload);
+      if (error) throw error;
+      failedSendsRef.current.delete(optimisticId);
+      outboxRemove(optimisticId);
+      setMessages((prev) =>
+        prev.map((m) => (m.id === optimisticId ? { ...m, _upload_status: "sent" } : m)),
+      );
+    } catch {
+      setMessages((prev) =>
+        prev.map((m) => (m.id === optimisticId ? { ...m, _upload_status: "failed" } : m)),
+      );
+      toast.error(navigator.onLine ? "Still couldn't send — try again" : "You're offline");
+    }
+  }, []);
+
+  // Restore persisted failed group sends + auto-retry on reconnect.
+  useEffect(() => {
+    if (!groupId) return;
+    const sync = () => {
+      const items = outboxList({ table: "group_messages", chatKey: groupId });
+      const queuedIds = new Set(items.map((i) => i.id));
+      setMessages((prev) => {
+        const have = new Set(prev.map((m) => m.id));
+        const restored = items
+          .filter((i) => !have.has(i.id) && i.optimistic)
+          .map((i) => ({ ...(i.optimistic as unknown as GroupMessage), _upload_status: "failed" as const }));
+        const filtered = prev.filter(
+          (m) => m._upload_status !== "failed" || queuedIds.has(m.id),
+        );
+        return restored.length ? [...filtered, ...restored] : filtered;
+      });
+      items.forEach((i) => {
+        if (!failedSendsRef.current.has(i.id)) {
+          failedSendsRef.current.set(i.id, i.payload as unknown as GroupMessageInsert);
+        }
+      });
+    };
+    sync();
+    const unsub = outboxSubscribe(sync);
+    const onOnline = () => {
+      const ids = Array.from(failedSendsRef.current.keys());
+      ids.forEach((id) => { void retryFailedGroupSend(id); });
+    };
+    window.addEventListener("online", onOnline);
+    return () => {
+      unsub();
+      window.removeEventListener("online", onOnline);
+    };
+  }, [groupId, retryFailedGroupSend]);
 
   // ─── Voice send pipeline (cancellable + retriable) ────────────────────
   const handledVoiceBlobsRef = useRef<WeakSet<Blob>>(new WeakSet());
@@ -779,6 +873,11 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
     if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
+  const handleLockedMediaSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files?.[0]) toast.info("Locked media in groups is coming soon");
+    if (lockedImageInputRef.current) lockedImageInputRef.current.value = "";
+  };
+
   const handleVideoSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !user?.id) return;
@@ -893,10 +992,17 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
           <button onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center" aria-label="Back" title="Back">
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
-          <Avatar className="h-9 w-9 border-2 border-border/30">
-            <AvatarImage src={groupAvatar || undefined} />
-            <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary">{initials}</AvatarFallback>
-          </Avatar>
+          <button
+            type="button"
+            onClick={() => setShowAvatarPreview(true)}
+            aria-label={`View ${groupName} group photo`}
+            className="rounded-full focus:outline-none focus:ring-2 focus:ring-primary/40"
+          >
+            <Avatar className="h-9 w-9 border-2 border-border/30">
+              <AvatarImage src={groupAvatar || undefined} />
+              <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary">{initials}</AvatarFallback>
+            </Avatar>
+          </button>
           <div className="min-w-0 flex-1">
             <p className="text-sm font-bold text-foreground truncate">{groupName}</p>
             <p className="text-[10px] text-muted-foreground">
@@ -977,8 +1083,10 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
       </AnimatePresence>
 
       {/* Messages */}
+      <StickyDatePill scrollRef={scrollRef} />
       <div
         ref={scrollRef}
+        onScroll={handleTimelineScroll}
         className="flex-1 overflow-y-auto overscroll-contain px-4 py-3 space-y-2"
         style={{
           WebkitOverflowScrolling: "touch",
@@ -1019,7 +1127,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
             return (
               <div key={msg.id}>
                 {showDateSep && (
-                  <div className="flex items-center gap-2 py-2 px-2">
+                  <div data-chat-date={dateLabel} className="flex items-center gap-2 py-2 px-2">
                     <div className="h-px flex-1 bg-border/30" />
                     <span className="text-[10px] font-semibold text-muted-foreground/60 bg-background/80 px-2 py-0.5 rounded-full border border-border/20">{dateLabel}</span>
                     <div className="h-px flex-1 bg-border/30" />
@@ -1090,6 +1198,17 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
                       <MessageReactionsBar messageId={msg.id} align={isMe ? "right" : "left"} />
                     </div>
                   )}
+
+                  {/* Failed-send indicator with tap-to-retry */}
+                  {msg._upload_status === "failed" && isMe && (
+                    <button
+                      onClick={() => retryFailedGroupSend(msg.id)}
+                      className="self-end mt-0.5 mr-1 inline-flex items-center gap-1 text-[11px] font-medium text-destructive hover:underline"
+                    >
+                      <span aria-hidden>!</span>
+                      Failed · Tap to retry
+                    </button>
+                  )}
                 </div>
               </div>
             );
@@ -1100,6 +1219,31 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
           </>
         )}
       </div>
+
+      {/* Jump-to-latest with unread count */}
+      <AnimatePresence>
+        {showJumpToLatest && (
+          <motion.button
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 8 }}
+            onClick={() => {
+              scrollToBottom();
+              setShowJumpToLatest(false);
+              setUnreadWhileScrolled(0);
+            }}
+            aria-label={unreadWhileScrolled > 0 ? `${unreadWhileScrolled} new ${unreadWhileScrolled === 1 ? "message" : "messages"} — jump to latest` : "Jump to latest"}
+            className="absolute right-4 bottom-[calc(env(safe-area-inset-bottom,0px)+5.25rem)] z-20 inline-flex items-center gap-1.5 h-10 px-3 rounded-full bg-primary text-primary-foreground text-xs font-semibold shadow-lg shadow-primary/25"
+          >
+            Jump to latest
+            {unreadWhileScrolled > 0 && (
+              <span className="min-w-[18px] h-[18px] inline-flex items-center justify-center px-1 rounded-full bg-background text-primary text-[10px] font-bold tabular-nums">
+                {unreadWhileScrolled > 99 ? "99+" : unreadWhileScrolled}
+              </span>
+            )}
+          </motion.button>
+        )}
+      </AnimatePresence>
 
       {/* Reply preview */}
       <AnimatePresence>
@@ -1514,6 +1658,15 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
           )}
         </div>
       </div>
+
+      {/* Avatar fullscreen preview */}
+      <AvatarPreviewSheet
+        open={showAvatarPreview}
+        src={groupAvatar}
+        name={groupName}
+        initials={initials}
+        onClose={() => setShowAvatarPreview(false)}
+      />
 
       {/* Phase 4 Track C — Group admin sheets */}
       <GroupMembersSheet

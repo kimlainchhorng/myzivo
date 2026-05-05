@@ -1,13 +1,14 @@
 /**
  * CreateGroupModal — Select friends to create a group chat
  */
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import X from "lucide-react/dist/esm/icons/x";
 import Check from "lucide-react/dist/esm/icons/check";
 import Users from "lucide-react/dist/esm/icons/users";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
+import Search from "lucide-react/dist/esm/icons/search";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
@@ -72,6 +73,17 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
   const [groupName, setGroupName] = useState("");
   const [loading, setLoading] = useState(false);
   const [creating, setCreating] = useState(false);
+  const [search, setSearch] = useState("");
+
+  const filteredFriends = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return friends;
+    return friends.filter((f) => f.name.toLowerCase().includes(q));
+  }, [friends, search]);
+
+  const trimmedName = groupName.trim();
+  const canSubmit = !creating && trimmedName.length > 0 && selected.size >= 1;
+  const friendsLabel = selected.size === 1 ? "friend" : "friends";
 
   useEffect(() => {
     if (!open || !user?.id) return;
@@ -316,6 +328,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
       onClose();
       setSelected(new Set());
       setGroupName("");
+      setSearch("");
     } catch (err: unknown) {
       console.error("[CreateGroup] failed", err);
       if (cancelledRef.current) {
@@ -359,30 +372,103 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
               <Users className="w-5 h-5 text-primary" />
               <h3 className="text-base font-bold text-foreground">New Group</h3>
             </div>
-            <button onClick={onClose} className="p-2 rounded-full hover:bg-muted">
-              <X className="w-4 h-4 text-muted-foreground" />
+            <button
+              onClick={onClose}
+              aria-label="Close"
+              className="h-11 w-11 -mr-2 flex items-center justify-center rounded-full hover:bg-muted active:bg-muted/80"
+            >
+              <X className="w-5 h-5 text-muted-foreground" />
             </button>
           </div>
 
           {/* Group name */}
           <div className="px-4 py-3 border-b border-border/20">
-            <input
-              value={groupName}
-              onChange={(e) => setGroupName(e.target.value)}
-              placeholder="Group name..."
-              className="w-full px-3 py-2.5 rounded-xl bg-muted/50 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30"
-            />
+            <div className="relative">
+              <input
+                value={groupName}
+                onChange={(e) =>
+                  setGroupName(e.target.value.slice(0, MAX_GROUP_NAME))
+                }
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && canSubmit) {
+                    e.preventDefault();
+                    handleCreate();
+                  }
+                }}
+                placeholder="Group name"
+                maxLength={MAX_GROUP_NAME}
+                autoFocus
+                className="w-full pl-3 pr-14 py-2.5 rounded-xl bg-muted/50 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30"
+              />
+              <span
+                className={`absolute right-3 top-1/2 -translate-y-1/2 text-[11px] tabular-nums ${
+                  groupName.length >= MAX_GROUP_NAME
+                    ? "text-destructive"
+                    : "text-muted-foreground"
+                }`}
+              >
+                {groupName.length}/{MAX_GROUP_NAME}
+              </span>
+            </div>
           </div>
+
+          {/* Search */}
+          {friends.length > 0 && (
+            <div className="px-4 pt-3 pb-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search friends"
+                  className="w-full pl-9 pr-9 py-2 rounded-xl bg-muted/50 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30"
+                />
+                {search && (
+                  <button
+                    onClick={() => setSearch("")}
+                    aria-label="Clear search"
+                    className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 flex items-center justify-center rounded-full hover:bg-muted"
+                  >
+                    <X className="w-3.5 h-3.5 text-muted-foreground" />
+                  </button>
+                )}
+              </div>
+              <div className="flex items-center justify-between mt-2 px-1">
+                <span className="text-[11px] font-medium uppercase tracking-wide text-muted-foreground">
+                  {selected.size === 0
+                    ? "Select friends"
+                    : `${selected.size} ${friendsLabel} selected`}
+                </span>
+                {selected.size > 0 && (
+                  <button
+                    onClick={() => setSelected(new Set())}
+                    className="text-[11px] font-semibold text-primary hover:underline"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
 
           {/* Selected chips */}
           {selected.size > 0 && (
-            <div className="px-4 py-2 flex flex-wrap gap-1.5 border-b border-border/20">
+            <div className="px-4 pb-2 flex flex-wrap gap-1.5">
               {Array.from(selected).map((id) => {
                 const f = friends.find((fr) => fr.id === id);
                 return (
-                  <span key={id} className="inline-flex items-center gap-1 px-2.5 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium">
+                  <span
+                    key={id}
+                    className="inline-flex items-center gap-1 pl-2.5 pr-1 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium"
+                  >
                     {f?.name || "User"}
-                    <button onClick={() => toggleSelect(id)}><X className="w-3 h-3" /></button>
+                    <button
+                      onClick={() => toggleSelect(id)}
+                      aria-label={`Remove ${f?.name || "User"}`}
+                      className="h-5 w-5 flex items-center justify-center rounded-full hover:bg-primary/20"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
                   </span>
                 );
               })}
@@ -390,29 +476,52 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
           )}
 
           {/* Friend list */}
-          <div className="flex-1 overflow-y-auto px-4 py-2">
+          <div className="flex-1 overflow-y-auto px-4 py-1">
             {loading ? (
-              <div className="flex justify-center py-10"><Loader2 className="h-5 w-5 animate-spin text-primary" /></div>
+              <div className="flex justify-center py-10">
+                <Loader2 className="h-5 w-5 animate-spin text-primary" />
+              </div>
             ) : friends.length === 0 ? (
-              <p className="text-center text-sm text-muted-foreground py-10">No friends to add</p>
+              <div className="text-center py-10 px-6">
+                <Users className="w-8 h-8 mx-auto text-muted-foreground/60 mb-2" />
+                <p className="text-sm font-medium text-foreground">No friends yet</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  Add contacts first, then come back to create a group.
+                </p>
+              </div>
+            ) : filteredFriends.length === 0 ? (
+              <p className="text-center text-sm text-muted-foreground py-10">
+                No matches for "{search}"
+              </p>
             ) : (
-              friends.map((f) => {
+              filteredFriends.map((f) => {
                 const isSelected = selected.has(f.id);
                 return (
                   <button
                     key={f.id}
                     onClick={() => toggleSelect(f.id)}
+                    aria-pressed={isSelected}
                     className="w-full flex items-center gap-3 py-2.5 px-1 rounded-xl hover:bg-muted/50 transition-colors"
                   >
                     <Avatar className="h-9 w-9">
                       <AvatarImage src={f.avatar || undefined} />
-                      <AvatarFallback className="text-xs bg-muted">{f.name[0]}</AvatarFallback>
+                      <AvatarFallback className="text-xs bg-muted">
+                        {f.name[0]}
+                      </AvatarFallback>
                     </Avatar>
-                    <span className="flex-1 text-sm font-medium text-foreground text-left">{f.name}</span>
-                    <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center transition-colors ${
-                      isSelected ? "bg-primary border-primary" : "border-border"
-                    }`}>
-                      {isSelected && <Check className="w-3 h-3 text-primary-foreground" />}
+                    <span className="flex-1 text-sm font-medium text-foreground text-left truncate">
+                      {f.name}
+                    </span>
+                    <div
+                      className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors ${
+                        isSelected
+                          ? "bg-primary border-primary"
+                          : "border-border"
+                      }`}
+                    >
+                      {isSelected && (
+                        <Check className="w-3 h-3 text-primary-foreground" />
+                      )}
                     </div>
                   </button>
                 );
@@ -424,11 +533,13 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
           <div className="p-4 border-t border-border/30 pb-[max(1rem,env(safe-area-inset-bottom))]">
             <button
               onClick={handleCreate}
-              disabled={selected.size < 1 || !groupName.trim() || creating}
-              className="w-full h-11 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-40 active:scale-[0.97] transition-transform flex items-center justify-center gap-2"
+              disabled={!canSubmit}
+              className="w-full h-11 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.97] transition-transform flex items-center justify-center gap-2"
             >
               {creating ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
-              Create Group ({selected.size + 1} members)
+              {selected.size === 0
+                ? "Create Group"
+                : `Create Group · ${selected.size} ${friendsLabel}`}
             </button>
           </div>
         </motion.div>

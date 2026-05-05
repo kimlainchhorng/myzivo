@@ -147,6 +147,20 @@ export default function FindContactsPage() {
       </header>
 
       <div className="space-y-4 p-4">
+        <button
+          type="button"
+          onClick={() => navigate("/chat/find-username")}
+          className="w-full flex items-center gap-3 rounded-lg border border-border bg-card p-4 text-left active:scale-[0.99] transition-transform"
+        >
+          <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center text-primary text-base font-bold">
+            @
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-semibold text-foreground">Find by @username</p>
+            <p className="text-xs text-muted-foreground">Type a handle and open their profile instantly.</p>
+          </div>
+        </button>
+
         {nativeReady && (
           <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-4">
             <div className="mb-1 flex items-center gap-2 text-sm font-medium">

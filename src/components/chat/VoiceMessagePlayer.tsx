@@ -56,6 +56,19 @@ interface VoiceMessagePlayerProps {
 }
 
 const SPEED_OPTIONS = [1, 1.5, 2] as const;
+type Speed = (typeof SPEED_OPTIONS)[number];
+const SPEED_STORAGE_KEY = "zivo.chat.voice.speed";
+const SPEED_CHANGE_EVENT = "zivo:voice-speed-change";
+
+const readStoredSpeed = (): Speed => {
+  try {
+    const raw = Number(localStorage.getItem(SPEED_STORAGE_KEY));
+    if (SPEED_OPTIONS.includes(raw as Speed)) return raw as Speed;
+  } catch {
+    // localStorage unavailable
+  }
+  return 1;
+};
 const BAR_COUNT = 48;
 
 // Generate deterministic pseudo-random waveform from URL hash
@@ -99,7 +112,34 @@ export default function VoiceMessagePlayer({
   const knownTotalSec = durationMs && durationMs > 0 ? durationMs / 1000 : 0;
   const [playing, setPlaying] = useState(false);
   const [totalDuration, setTotalDuration] = useState(knownTotalSec);
-  const [speed, setSpeed] = useState<(typeof SPEED_OPTIONS)[number]>(1);
+  const [speed, setSpeed] = useState<Speed>(() => readStoredSpeed());
+
+  // Keep this player in sync with the user's globally-preferred speed —
+  // changing speed on one bubble updates every other voice bubble in the
+  // chat (and other tabs) so behaviour matches Telegram's "set once".
+  useEffect(() => {
+    const onChange = (e: Event) => {
+      const next = (e as CustomEvent<Speed>).detail;
+      if (SPEED_OPTIONS.includes(next)) {
+        setSpeed(next);
+        if (audioRef.current) audioRef.current.playbackRate = next;
+      }
+    };
+    const onStorage = (e: StorageEvent) => {
+      if (e.key !== SPEED_STORAGE_KEY) return;
+      const next = Number(e.newValue) as Speed;
+      if (SPEED_OPTIONS.includes(next)) {
+        setSpeed(next);
+        if (audioRef.current) audioRef.current.playbackRate = next;
+      }
+    };
+    window.addEventListener(SPEED_CHANGE_EVENT, onChange as EventListener);
+    window.addEventListener("storage", onStorage);
+    return () => {
+      window.removeEventListener(SPEED_CHANGE_EVENT, onChange as EventListener);
+      window.removeEventListener("storage", onStorage);
+    };
+  }, []);
   const [hasPlayed, setHasPlayed] = useState(false);
 
   const waveform = useMemo(() => generateWaveform(url, BAR_COUNT), [url]);
@@ -208,6 +248,12 @@ export default function VoiceMessagePlayer({
       audioRef.current.playbackRate = next;
       lastSyncRef.current = { at: performance.now(), time: audioRef.current.currentTime };
     }
+    try {
+      localStorage.setItem(SPEED_STORAGE_KEY, String(next));
+    } catch {
+      // ignore quota / private mode
+    }
+    window.dispatchEvent(new CustomEvent<Speed>(SPEED_CHANGE_EVENT, { detail: next }));
   }, [speed]);
 
   const handleSeekToRatio = useCallback((ratio: number) => {

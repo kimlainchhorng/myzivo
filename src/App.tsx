@@ -7,6 +7,9 @@ import { useGeoDetect } from "@/hooks/useGeoDetect";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
+import OfflineBanner from "@/components/chat/OfflineBanner";
+import OutboxFlusher from "@/components/chat/OutboxFlusher";
+import FloatingReactionsOverlay from "@/components/chat/FloatingReactionsOverlay";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useVerificationRealtime } from "@/hooks/useVerificationRealtime";
 import { useOTAUpdate } from "@/hooks/useOTAUpdate";
@@ -155,6 +158,7 @@ const ContactsPage = lazy(() => import("./pages/chat/ContactsPage"));
 const ContactRequestsPage = lazy(() => import("./pages/chat/ContactRequestsPage"));
 const NearbyChatPage = lazy(() => import("./pages/chat/NearbyChatPage"));
 const FindContactsPage = lazy(() => import("./pages/chat/FindContactsPage"));
+const FindByUsernamePage = lazy(() => import("./pages/chat/FindByUsernamePage"));
 const BlockedUsersPage = lazy(() => import("./pages/chat/BlockedUsersPage"));
 const JoinGroupPage = lazy(() => import("./pages/chat/JoinGroupPage"));
 const PrivacySecurityPage = lazy(() => import("./pages/chat/settings/PrivacySecurityPage"));
@@ -332,6 +336,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const Profile = lazy(() => lazyRetry(() => import("./pages/Profile")));
 const MorePage = lazy(() => import("./pages/MorePage"));
 const PublicProfilePage = lazy(() => import("./pages/PublicProfilePage"));
+const UsernameRedirectPage = lazy(() => import("./pages/UsernameRedirectPage"));
 const DeleteAccountPage = lazy(() => import("./pages/profile/DeleteAccountPage"));
 const ShareProfileRedirect = lazy(() => import("./pages/ShareProfileRedirect"));
 const DeepLinkLandingPage = lazy(() => import("./pages/DeepLinkLandingPage"));
@@ -736,6 +741,9 @@ const App = () => (
               <SkipToContent />
               <Toaster />
               <Sonner />
+              <OfflineBanner />
+              <OutboxFlusher />
+              <FloatingReactionsOverlay />
               <BrowserRouter
                 future={{
                   v7_startTransition: true,
@@ -861,6 +869,7 @@ const App = () => (
                 <Route path="/chat/contacts/requests" element={<ProtectedRoute><ContactRequestsPage /></ProtectedRoute>} />
                 <Route path="/chat/nearby" element={<ProtectedRoute><NearbyChatPage /></ProtectedRoute>} />
                 <Route path="/chat/find-contacts" element={<ProtectedRoute><FindContactsPage /></ProtectedRoute>} />
+                <Route path="/chat/find-username" element={<ProtectedRoute><FindByUsernamePage /></ProtectedRoute>} />
                 <Route path="/chat/blocked" element={<ProtectedRoute><BlockedUsersPage /></ProtectedRoute>} />
                 <Route path="/chat/join/:code" element={<JoinGroupPage />} />
                 <Route path="/chat/secret/:partnerId" element={<ProtectedRoute><SecretChatPage /></ProtectedRoute>} />
@@ -1101,6 +1110,8 @@ const App = () => (
                 <Route path="/more" element={<ProtectedRoute><MorePage /></ProtectedRoute>} />
                 <Route path="/profile/delete-account" element={<ProtectedRoute><DeleteAccountPage /></ProtectedRoute>} />
                 <Route path="/user/:userId" element={<PublicProfilePage />} />
+                <Route path="/@:username" element={<UsernameRedirectPage />} />
+                <Route path="/u/:username" element={<UsernameRedirectPage />} />
                 <Route path="/p/:code" element={<ShareProfileRedirect />} />
                 <Route path="/traveler" element={<ProtectedRoute><TravelerDashboard /></ProtectedRoute>} />
                 <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />

@@ -62,6 +62,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { format, isToday, isYesterday } from "date-fns";
 import { primeCallAudio } from "@/lib/callAudio";
 import ChatMessageBubble from "./ChatMessageBubble";
+import StickyDatePill from "./StickyDatePill";
+import AvatarPreviewSheet from "./AvatarPreviewSheet";
+import { emitReactionAdded } from "./FloatingReactionsOverlay";
+import { enqueue as outboxEnqueue, remove as outboxRemove, list as outboxList, subscribe as outboxSubscribe } from "@/lib/chat/messageOutbox";
 import FileBubble, { type FileBubbleData } from "./FileBubble";
 import HoldToRecordMic from "./HoldToRecordMic";
 import ChatAttachMenu from "./ChatAttachMenu";
@@ -362,8 +366,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [showStickerKeyboard, setShowStickerKeyboard] = useState(false);
   const [showAutoDelete, setShowAutoDelete] = useState(false);
   const [showMiniApps, setShowMiniApps] = useState(false);
-  const [miniAppView, setMiniAppView] = useState<"menu" | "poll" | "todo" | "split" | "book-table" | "trip-idea">("menu");
   const [showPersonalization, setShowPersonalization] = useState(false);
+  const [miniAppView, setMiniAppView] = useState<"menu" | "poll" | "todo" | "split" | "book-table" | "trip-idea">("menu");
   const [showSecurity, setShowSecurity] = useState(false);
   const [showCallHistory, setShowCallHistory] = useState(false);
   const [showContactInfo, setShowContactInfo] = useState(false);
@@ -413,6 +417,8 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const stickerSuggestions = useMemo(() => suggestStickersFor(input), [input]);
   const [visibleTimelineCount, setVisibleTimelineCount] = useState(INITIAL_VISIBLE_TIMELINE_ITEMS);
   const [showJumpToLatest, setShowJumpToLatest] = useState(false);
+  const [unreadWhileScrolled, setUnreadWhileScrolled] = useState(0);
+  const [showAvatarPreview, setShowAvatarPreview] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -431,6 +437,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     storagePath?: string;
   }>>(new Map());
   const handleSendRef = useRef<((opts?: SendMessageOptions) => Promise<void>) | null>(null);
+  // Captured insert payloads for failed messages, keyed by optimistic id, so the
+  // user can tap-to-retry without re-typing or re-uploading.
+  const failedSendsRef = useRef<Map<string, DirectMessageInsert>>(new Map());
   const filePickerTriggerRef = useRef<(() => void) | null>(null);
   const messageRefs = useRef<Map<string, HTMLDivElement>>(new Map());
   const timelineRef = useRef<HTMLDivElement>(null);
@@ -507,8 +516,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     const el = scrollRef.current;
     if (!el) return;
     const distanceFromBottom = el.scrollHeight - el.scrollTop - el.clientHeight;
+    const wasNear = isNearBottomRef.current;
     isNearBottomRef.current = distanceFromBottom < 150;
     setShowJumpToLatest(distanceFromBottom > 360);
+    if (!wasNear && isNearBottomRef.current) setUnreadWhileScrolled(0);
 
     if (el.scrollTop < 120 && timelineLengthRef.current > visibleTimelineCountRef.current && !expandingTimelineRef.current) {
       expandingTimelineRef.current = true;
@@ -635,14 +646,46 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     }
   }, [recipientId, user]);
 
-  // Scroll to bottom after messages render (when loading transitions to false)
+  // Scroll to bottom — or to the first unread when reopening a chat with new
+  // messages. The first-unread anchor is captured once per chat-open so it
+  // doesn't drift as new messages stream in or get marked read.
   const initialScrollDone = useRef(false);
+  const firstUnreadIdRef = useRef<string | null>(null);
+  const [firstUnreadId, setFirstUnreadId] = useState<string | null>(null);
+  const [unreadOnOpenCount, setUnreadOnOpenCount] = useState(0);
   useEffect(() => {
     if (!loading && messages.length > 0 && !initialScrollDone.current) {
       initialScrollDone.current = true;
+      // Snapshot the first unread once.
+      if (firstUnreadIdRef.current == null) {
+        const myId = user?.id;
+        const unread = myId
+          ? messages.filter((m) => m.receiver_id === myId && !m.is_read && !m.id.startsWith("opt-"))
+          : [];
+        if (unread.length > 0) {
+          firstUnreadIdRef.current = unread[0].id;
+          setFirstUnreadId(unread[0].id);
+          setUnreadOnOpenCount(unread.length);
+          requestAnimationFrame(() => {
+            const el = messageRefs.current.get(unread[0].id);
+            if (el) el.scrollIntoView({ block: "start" });
+            else scrollToBottom(true);
+          });
+          // Clear the divider 4s after it appears so it doesn't linger forever.
+          window.setTimeout(() => setFirstUnreadId(null), 4000);
+          return;
+        }
+      }
       scrollToBottom(true);
     }
-  }, [loading, messages.length, scrollToBottom]);
+  }, [loading, messages.length, scrollToBottom, user?.id, messages]);
+
+  // Reset the first-unread snapshot when switching chats.
+  useEffect(() => {
+    firstUnreadIdRef.current = null;
+    setFirstUnreadId(null);
+    setUnreadOnOpenCount(0);
+  }, [recipientId]);
 
   // Load messages
   useEffect(() => {
@@ -757,6 +800,11 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 next[optIdx] = msg;
                 return next;
               }
+            }
+            // Genuinely new partner message arriving while scrolled up —
+            // bump the unread badge on the jump-to-latest button.
+            if (msg.sender_id === recipientId && !isNearBottomRef.current) {
+              setUnreadWhileScrolled((c) => c + 1);
             }
             return [...prev, msg];
           });
@@ -992,13 +1040,93 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       if (error) throw error;
       void sendChatPush(msgType, text || filePayload?.filename || "");
     } catch {
-      setMessages((prev) => prev.filter((m) => m.id !== optimisticId));
-      toast.error("Failed to send message");
+      // Keep the optimistic bubble and surface a tap-to-retry control instead
+      // of dropping the message. Also persist to the durable outbox so the
+      // message survives a refresh / app kill and auto-retries on reconnect.
+      failedSendsRef.current.set(optimisticId, insertData);
+      outboxEnqueue({
+        id: optimisticId,
+        table: "direct_messages",
+        chatKey: recipientId,
+        payload: insertData as unknown as Record<string, unknown>,
+        optimistic: optimisticMsg as unknown as Record<string, unknown>,
+      });
+      setMessages((prev) =>
+        prev.map((m) => (m.id === optimisticId ? { ...m, _upload_status: "failed" } : m)),
+      );
+      toast.error(navigator.onLine ? "Failed to send — tap to retry" : "You're offline — tap to retry when back online");
     }
     if (isComplexSend) setSending(false);
     inputRef.current?.focus();
   };
   handleSendRef.current = handleSend;
+
+  const retryFailedSend = useCallback(async (optimisticId: string) => {
+    const payload = failedSendsRef.current.get(optimisticId);
+    if (!payload) return;
+    setMessages((prev) =>
+      prev.map((m) => (m.id === optimisticId ? { ...m, _upload_status: "uploading" } : m)),
+    );
+    try {
+      const { error } = await dbFrom("direct_messages").insert(payload);
+      if (error) throw error;
+      failedSendsRef.current.delete(optimisticId);
+      outboxRemove(optimisticId);
+      // Realtime echo will replace the optimistic row; if not, mark as sent
+      // so the failure UI clears.
+      setMessages((prev) =>
+        prev.map((m) => (m.id === optimisticId ? { ...m, _upload_status: "sent" } : m)),
+      );
+    } catch {
+      setMessages((prev) =>
+        prev.map((m) => (m.id === optimisticId ? { ...m, _upload_status: "failed" } : m)),
+      );
+      toast.error(navigator.onLine ? "Still couldn't send — try again" : "You're offline");
+    }
+  }, []);
+
+  // Auto-retry queued failed messages when the network comes back.
+  useEffect(() => {
+    const onOnline = () => {
+      const ids = Array.from(failedSendsRef.current.keys());
+      ids.forEach((id) => { void retryFailedSend(id); });
+    };
+    window.addEventListener("online", onOnline);
+    return () => window.removeEventListener("online", onOnline);
+  }, [retryFailedSend]);
+
+  // Restore persisted failed sends for this chat on mount, and stay in sync
+  // with the durable outbox (the app-level flusher may clear items in the
+  // background — drop their bubbles when that happens).
+  useEffect(() => {
+    if (!recipientId) return;
+    const sync = () => {
+      const items = outboxList({ table: "direct_messages", chatKey: recipientId });
+      const queuedIds = new Set(items.map((i) => i.id));
+      // Add any persisted-failed bubbles we don't yet have in state.
+      setMessages((prev) => {
+        const have = new Set(prev.map((m) => m.id));
+        const restored = items
+          .filter((i) => !have.has(i.id) && i.optimistic)
+          .map((i) => ({ ...(i.optimistic as unknown as Message), _upload_status: "failed" as const }));
+        // Drop locally-tracked failed bubbles that the outbox no longer holds
+        // (background flush succeeded — realtime echo will surface the row).
+        const filtered = prev.filter(
+          (m) => m._upload_status !== "failed" || queuedIds.has(m.id),
+        );
+        return restored.length ? [...filtered, ...restored] : filtered;
+      });
+      // Mirror queued payloads into the in-memory retry map.
+      items.forEach((i) => {
+        if (!failedSendsRef.current.has(i.id)) {
+          failedSendsRef.current.set(i.id, i.payload as unknown as DirectMessageInsert);
+        }
+      });
+    };
+    sync();
+    const unsub = outboxSubscribe(sync);
+    return unsub;
+  }, [recipientId]);
 
   // ─── Voice send pipeline ──────────────────────────────────────────────
   // Each send becomes a cancellable "job" tracked in voiceJobsRef so the
@@ -1565,6 +1693,11 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         await dbFrom("message_reactions").delete().eq("id", existing.id);
       } else {
         await dbFrom("message_reactions").insert({ message_id: messageId, user_id: user.id, emoji });
+        const el = messageRefs.current.get(messageId);
+        if (el) {
+          const r = el.getBoundingClientRect();
+          emitReactionAdded({ emoji, x: r.right - 24, y: r.bottom - 12 });
+        }
       }
     } catch {
       toast.error("Couldn't react");
@@ -1779,7 +1912,13 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           <button onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-90 transition-transform rounded-full hover:bg-muted/50" aria-label="Back" title="Back">
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
-          <div className="relative shrink-0">
+          <button
+            type="button"
+            onClick={() => { if (!isSelfChat) setShowAvatarPreview(true); }}
+            disabled={isSelfChat}
+            aria-label={isSelfChat ? "Saved messages" : `View ${displayName}'s profile photo`}
+            className="relative shrink-0 rounded-full focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:cursor-default"
+          >
             {isSelfChat ? (
               <div className="h-11 w-11 rounded-full bg-emerald-500 flex items-center justify-center shadow-sm">
                 <Bookmark className="h-5 w-5 text-white" />
@@ -1793,7 +1932,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             {!isSelfChat && recipientOnline && (
               <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-500 border-2 border-background" />
             )}
-          </div>
+          </button>
           <div className="min-w-0 flex-1 cursor-pointer" onClick={() => { if (!isSelfChat) setShowContactInfo(true); }}>
             <p className="text-[15px] font-semibold text-foreground truncate leading-tight inline-flex items-center gap-1">
               <span className="truncate">{displayName}</span>
@@ -2054,6 +2193,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       )}
 
       {/* Messages — drag & drop file upload zone (desktop / iPad) */}
+      <StickyDatePill scrollRef={scrollRef} />
       <div
         ref={scrollRef}
         onScroll={handleScroll}
@@ -2148,7 +2288,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                   return format(d, "MMMM d, yyyy");
                 })();
                 const dateSep = showDateSep ? (
-                  <div key={`sep-${item.created_at}`} className="flex items-center gap-2 py-2 px-2">
+                  <div key={`sep-${item.created_at}`} data-chat-date={dateLabel} className="flex items-center gap-2 py-2 px-2">
                     <div className="h-px flex-1 bg-border/30" />
                     <span className="text-[10px] font-semibold text-muted-foreground/60 bg-background/80 px-2 py-0.5 rounded-full border border-border/20">{dateLabel}</span>
                     <div className="h-px flex-1 bg-border/30" />
@@ -2188,6 +2328,19 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 return (
                   <div key={msg.id}>
                   {dateSep}
+                  {firstUnreadId === msg.id && unreadOnOpenCount > 0 && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="flex items-center gap-2 py-2 px-2"
+                    >
+                      <div className="h-px flex-1 bg-primary/40" />
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-primary bg-primary/10 px-2.5 py-1 rounded-full">
+                        {unreadOnOpenCount} new {unreadOnOpenCount === 1 ? "message" : "messages"}
+                      </span>
+                      <div className="h-px flex-1 bg-primary/40" />
+                    </motion.div>
+                  )}
                   <motion.div
                     key={`bubble-${msg.id}`}
                     ref={(el) => { if (el) messageRefs.current.set(msg.id, el as HTMLDivElement); }}
@@ -2312,6 +2465,17 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                         initialReactions={reactionsMap[msg.id]}
                       />
                     )}
+
+                    {/* Failed-send indicator with tap-to-retry */}
+                    {msg._upload_status === "failed" && isMe && (
+                      <button
+                        onClick={() => retryFailedSend(msg.id)}
+                        className="self-end mt-0.5 mr-1 inline-flex items-center gap-1 text-[11px] font-medium text-destructive hover:underline"
+                      >
+                        <span aria-hidden>!</span>
+                        Failed · Tap to retry
+                      </button>
+                    )}
                   </motion.div>
                   </div>
                 );
@@ -2391,10 +2555,17 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             onClick={() => {
               scrollToBottom(true);
               setShowJumpToLatest(false);
+              setUnreadWhileScrolled(0);
             }}
-            className="absolute right-4 bottom-[calc(env(safe-area-inset-bottom,0px)+5.25rem)] z-20 h-10 px-3 rounded-full bg-primary text-primary-foreground text-xs font-semibold shadow-lg shadow-primary/25"
+            aria-label={unreadWhileScrolled > 0 ? `${unreadWhileScrolled} new ${unreadWhileScrolled === 1 ? "message" : "messages"} — jump to latest` : "Jump to latest"}
+            className="absolute right-4 bottom-[calc(env(safe-area-inset-bottom,0px)+5.25rem)] z-20 inline-flex items-center gap-1.5 h-10 px-3 rounded-full bg-primary text-primary-foreground text-xs font-semibold shadow-lg shadow-primary/25"
           >
             Jump to latest
+            {unreadWhileScrolled > 0 && (
+              <span className="min-w-[18px] h-[18px] inline-flex items-center justify-center px-1 rounded-full bg-background text-primary text-[10px] font-bold tabular-nums">
+                {unreadWhileScrolled > 99 ? "99+" : unreadWhileScrolled}
+              </span>
+            )}
           </motion.button>
         )}
       </AnimatePresence>
@@ -2743,6 +2914,15 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           />
         </Suspense>
       )}
+
+      {/* Avatar fullscreen preview */}
+      <AvatarPreviewSheet
+        open={showAvatarPreview}
+        src={recipientAvatar}
+        name={displayName}
+        initials={initials}
+        onClose={() => setShowAvatarPreview(false)}
+      />
 
       {/* Personalization */}
       {showPersonalization && (
