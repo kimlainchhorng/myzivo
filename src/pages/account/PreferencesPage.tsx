@@ -57,10 +57,11 @@ const Section3D = ({ children, icon: Icon, title, subtitle, delay = 0, iconColor
     <>
       <SEOHead title="Preferences – ZIVO" description="Customize your ZIVO experience. Set language, currency, units (distance/temperature), date format, accessibility options, and translation preferences." />
       <div className="min-h-screen bg-background safe-area-top safe-area-bottom relative overflow-hidden">
-      {...tilt}
-      className="rounded-2xl border border-border/30 bg-card/80 backdrop-blur-xl shadow-[0_8px_32px_hsl(var(--primary)/0.08)] overflow-hidden transition-transform duration-200 ease-out"
-      style={{ transformStyle: "preserve-3d" }}
-    >
+        <motion.div
+          {...tilt}
+          className="rounded-2xl border border-border/30 bg-card/80 backdrop-blur-xl shadow-[0_8px_32px_hsl(var(--primary)/0.08)] overflow-hidden transition-transform duration-200 ease-out"
+          style={{ transformStyle: "preserve-3d" }}
+        >
       {/* Header with glow */}
       <div className="relative px-5 pt-5 pb-3">
         <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-accent/5 pointer-events-none" />
@@ -77,7 +78,9 @@ const Section3D = ({ children, icon: Icon, title, subtitle, delay = 0, iconColor
       <div className="px-5 pb-5">
         {children}
       </div>
-    </motion.div>
+        </motion.div>
+      </div>
+    </>
   );
 };
 

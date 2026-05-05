@@ -12,6 +12,15 @@ import OutboxFlusher from "@/components/chat/OutboxFlusher";
 import FloatingReactionsOverlay from "@/components/chat/FloatingReactionsOverlay";
 import ReactedByHost from "@/components/chat/ReactedByHost";
 import ShareToChatSheet from "@/components/chat/ShareToChatSheet";
+const P2PTransferSheet = lazy(() => import("@/components/chat/P2PTransferSheet"));
+const PartnerSignupSheet = lazy(() => import("@/components/partner/PartnerSignupSheet"));
+const AffiliateRedirectPage = lazy(() => import("@/pages/AffiliateRedirectPage"));
+const TwoFactorSetupSheet = lazy(() => import("@/components/security/TwoFactorSetupSheet"));
+const OnboardingTour = lazy(() => import("@/components/onboarding/OnboardingTour"));
+const BugReportSheet = lazy(() => import("@/components/support/BugReportSheet"));
+const AffiliateLinkSheet = lazy(() => import("@/components/affiliate/AffiliateLinkSheet"));
+const CurrencyPickerSheet = lazy(() => import("@/components/currency/CurrencyPickerSheet"));
+const CreatorSubscribeSheet = lazy(() => import("@/components/creator/CreatorSubscribeSheet"));
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useVerificationRealtime } from "@/hooks/useVerificationRealtime";
 import { useOTAUpdate } from "@/hooks/useOTAUpdate";
@@ -773,10 +782,20 @@ const App = () => (
                 <AuthProvider>
                   <AuthBackgroundServices />
                   <ShareToChatSheet />
+                  <Suspense fallback={null}>
+                    <P2PTransferSheet />
+                    <PartnerSignupSheet />
+                    <TwoFactorSetupSheet />
+                    <OnboardingTour />
+                    <BugReportSheet />
+                    <AffiliateLinkSheet />
+                    <CreatorSubscribeSheet />
+                  </Suspense>
                    <RemoteConfigProvider>
                   <ZivoPlusProvider>
                   <CustomerCityProvider>
                     <CurrencyProvider>
+                      <Suspense fallback={null}><CurrencyPickerSheet /></Suspense>
                       <UTMProvider>
                         <Suspense fallback={<PageLoader />}>
                           <Routes>
@@ -1139,6 +1158,7 @@ const App = () => (
                 <Route path="/@:username" element={<UsernameRedirectPage />} />
                 <Route path="/u/:username" element={<UsernameRedirectPage />} />
                 <Route path="/p/:code" element={<ShareProfileRedirect />} />
+                <Route path="/r/:slug" element={<AffiliateRedirectPage />} />
                 <Route path="/traveler" element={<ProtectedRoute><TravelerDashboard /></ProtectedRoute>} />
                 <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
                 <Route path="/saved-searches" element={<ProtectedRoute><SavedSearchesPage /></ProtectedRoute>} />
