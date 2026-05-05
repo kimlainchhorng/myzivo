@@ -110,7 +110,6 @@ export default function HotelRoomCheckoutPage() {
         children,
         check_in: ciStr,
         check_out: coStr,
-        nights,
         status: payMethod === "cash" ? "confirmed" : "hold",
         source: "zivo_app",
         rate_cents: basePerNight,

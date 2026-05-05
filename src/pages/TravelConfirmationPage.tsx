@@ -11,6 +11,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { useOrderDetails } from "@/hooks/useOrderDetails";
 import { useTravelCart } from "@/contexts/TravelCartContext";
+import SEOHead from "@/components/SEOHead";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import CheckoutTrustFooter from "@/components/checkout/CheckoutTrustFooter";
@@ -111,6 +112,7 @@ const TravelConfirmationPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <SEOHead title="Booking Confirmed – ZIVO" description="Your travel bookings have been confirmed. Check your confirmation details." />
       {/* Header */}
       <header className="sticky top-0 safe-area-top z-40 bg-background/95 backdrop-blur border-b">
         <div className="container mx-auto px-4 py-4 flex items-center gap-4">

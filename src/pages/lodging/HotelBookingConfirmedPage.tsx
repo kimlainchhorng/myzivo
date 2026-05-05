@@ -12,6 +12,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { openShareToChat } from "@/components/chat/ShareToChatSheet";
+import SEOHead from "@/components/SEOHead";
 
 const formatPrice = (cents: number) =>
   cents > 0 ? `$${(cents / 100).toFixed(0)}` : "—";
@@ -88,6 +89,10 @@ export default function HotelBookingConfirmedPage() {
 
   return (
     <div className="min-h-screen bg-background relative overflow-hidden pb-28 safe-area-top">
+      <SEOHead
+        title={loading ? "Hotel Booking – ZIVO" : `${data?.room?.name || "Hotel"} Booking Confirmed – ZIVO`}
+        description="Your hotel booking has been confirmed. View your reservation details and check-in information."
+      />
       {/* Ambient glow */}
       <div className="pointer-events-none absolute inset-0">
         <div className="absolute -top-40 left-1/2 -translate-x-1/2 h-80 w-80 rounded-full bg-emerald-500/10 blur-[80px]" />
