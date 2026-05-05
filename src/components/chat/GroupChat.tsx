@@ -198,6 +198,7 @@ function renderMessageWithMentions(
 export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: GroupChatProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
+  const [galleryState, setGalleryState] = useState<{ open: boolean; images: { id: string; url: string; type: "image" | "video" }[]; index: number }>({ open: false, images: [], index: 0 });
   const [messages, setMessages] = useState<GroupMessage[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
   const [input, setInput] = useState("");
@@ -1781,6 +1782,14 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
           />
         </div>
       )}
+
+      {/* Fullscreen media gallery */}
+      <MediaGalleryLightbox
+        open={galleryState.open}
+        images={galleryState.images}
+        initialIndex={galleryState.index}
+        onClose={() => setGalleryState({ open: false, images: [], index: 0 })}
+      />
     </motion.div>
   );
 }

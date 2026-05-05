@@ -12,6 +12,7 @@ import { useGoogleMapsGeocode, Suggestion } from "@/hooks/useGoogleMapsGeocode";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { useRideNotifications } from "@/hooks/useRideNotifications";
+import { useSavedLocations } from "@/hooks/useSavedLocations";
 import { Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { getStripe } from "@/lib/stripe";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
@@ -400,6 +401,7 @@ export default function RequestRidePage() {
   const { user } = useAuth();
   const { notify: notifyRide } = useRideNotifications();
   const { getCurrentLocation, reverseGeocode, isGettingLocation } = useCurrentLocation();
+  const { data: userSavedLocations } = useSavedLocations(user?.id);
 
   const [pickupAddress, setPickupAddress] = useState("");
   const [pickupCoords, setPickupCoords] = useState<{ lat: number; lng: number } | null>(null);
