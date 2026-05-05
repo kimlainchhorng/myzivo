@@ -18,6 +18,7 @@ import Header from "@/components/Header";
 import { supabase } from "@/integrations/supabase/client";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
+import { openShareToChat } from "@/components/chat/ShareToChatSheet";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -127,17 +128,17 @@ const FlightConfirmation = () => {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const handleShare = async () => {
+  const handleShare = () => {
     if (!booking) return;
-    const text = `✈️ Flight booked! ${booking.origin} → ${booking.destination} | Ref: ${booking.booking_reference}`;
-    if (navigator.share) {
-      try {
-        await navigator.share({ title: "ZIVO Flight Booking", text });
-      } catch { /* user cancelled */ }
-    } else {
-      navigator.clipboard.writeText(text);
-      toast({ title: "Copied to clipboard", description: "Share text copied." });
-    }
+    openShareToChat({
+      kind: "flight",
+      title: `${booking.origin} → ${booking.destination}`,
+      subtitle: booking.departure_date || undefined,
+      meta: `Ref: ${booking.booking_reference}`,
+      deepLink: `/flights/confirmation/${booking.booking_id}`,
+      image: null,
+      badge: "ZIVO",
+    });
   };
 
   return (

@@ -16,8 +16,10 @@ type SendMessageOptions = {
 import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
 import { App as CapacitorApp } from "@capacitor/app";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import MediaGalleryLightbox from "./MediaGalleryLightbox";
 import { signedUrlFor } from "@/lib/security/signedMedia";
 import { topicForPairSync } from "@/lib/security/channelName";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
@@ -263,8 +265,10 @@ function formatMsgTime(dateStr: string) {
 
 export default function PersonalChat({ recipientId, recipientName, recipientAvatar, recipientIsVerified, prefillInput, onClose, autoStartCall, onCallStarted, inline = false }: PersonalChatProps) {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const isSelfChat = !!user?.id && recipientId === user.id;
   const displayName = isSelfChat ? "Saved Messages" : recipientName;
+  const [galleryState, setGalleryState] = useState<{ open: boolean; images: { id: string; url: string; type: "image" | "video" }[]; index: number }>({ open: false, images: [], index: 0 });
 
   // Notify global listener that this chat is open
   useEffect(() => {
@@ -1917,9 +1921,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           </button>
           <button
             type="button"
-            onClick={() => { if (!isSelfChat) setShowAvatarPreview(true); }}
+            onClick={() => { if (!isSelfChat) navigate(`/user/${recipientId}`); }}
             disabled={isSelfChat}
-            aria-label={isSelfChat ? "Saved messages" : `View ${displayName}'s profile photo`}
+            aria-label={isSelfChat ? "Saved messages" : `View ${displayName}'s profile`}
             className="relative shrink-0 rounded-full focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:cursor-default"
           >
             {isSelfChat ? (
@@ -2122,6 +2126,14 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           </Suspense>
         )}
       </AnimatePresence>
+
+      {/* Fullscreen media gallery */}
+      <MediaGalleryLightbox
+        open={galleryState.open}
+        images={galleryState.images}
+        initialIndex={galleryState.index}
+        onClose={() => setGalleryState({ open: false, images: [], index: 0 })}
+      />
 
       {/* Call overlay */}
       <AnimatePresence>

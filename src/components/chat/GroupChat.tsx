@@ -5,6 +5,8 @@ import { useState, useEffect, useMemo, useRef, useCallback, lazy, Suspense } fro
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import MediaGalleryLightbox from "./MediaGalleryLightbox";
+import GroupReadReceipts from "./GroupReadReceipts";
 import { signedUrlFor } from "@/lib/security/signedMedia";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
 import Send from "lucide-react/dist/esm/icons/send";

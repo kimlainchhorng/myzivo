@@ -5,12 +5,13 @@
 
 import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
-import { CheckCircle, ExternalLink, Car, Home, ArrowRight } from "lucide-react";
+import { CheckCircle, ExternalLink, Car, Home, ArrowRight, Share2 } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
+import { openShareToChat } from "@/components/chat/ShareToChatSheet";
 
 export default function CarConfirmationPage() {
   const [searchParams] = useSearchParams();
@@ -67,12 +68,29 @@ export default function CarConfirmationPage() {
               <ExternalLink className="w-4 h-4" />
             </Button>
 
-            <Link to="/">
-              <Button variant="ghost" className="w-full gap-2">
-                <Home className="w-4 h-4" />
-                Return to Homepage
+            <div className="flex gap-3 mb-4">
+              <Button
+                variant="outline"
+                onClick={() => openShareToChat({
+                  kind: "ride",
+                  title: `${category} Car Rental Booked`,
+                  meta: `Ref: ${bookingRef}`,
+                  deepLink: `/`,
+                  image: null,
+                  badge: "ZIVO",
+                })}
+                className="flex-1 gap-2"
+              >
+                <Share2 className="w-4 h-4" />
+                Share
               </Button>
-            </Link>
+              <Link to="/" className="flex-1">
+                <Button variant="ghost" className="w-full gap-2">
+                  <Home className="w-4 h-4" />
+                  Home
+                </Button>
+              </Link>
+            </div>
           </div>
 
           {/* Cross-Sell: ZIVO Driver */}
