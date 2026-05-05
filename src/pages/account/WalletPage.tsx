@@ -169,6 +169,7 @@ export default function WalletPage() {
 
 
   return (
+    <>
     <div className="min-h-screen bg-background text-foreground pb-24">
       <SEOHead title="ZIVO Wallet" description="Payments & credits" />
 
@@ -955,5 +956,6 @@ export default function WalletPage() {
       </div>
     </div>
     {mfaDialog}
+    </>
   );
 }
