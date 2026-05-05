@@ -20,8 +20,8 @@ export function ReviewsSummary({
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const { data, error } = await supabase
-          .from("reviews")
+        const { data, error } = await (supabase
+          .from("reviews") as any)
           .select("rating")
           .eq("service_type", serviceType)
           .eq("service_id", serviceId)

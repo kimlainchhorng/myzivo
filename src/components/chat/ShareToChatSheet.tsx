@@ -168,7 +168,7 @@ export default function ShareToChatSheet() {
     setSending(true);
     const recipients = buildRecipients();
     let successCount = 0;
-    const cardWithForwarder = { ...card, forwardedFrom: user.id === card.forwardedFrom ? undefined : (user.full_name || user.email?.split("@")[0] || "Someone") };
+    const cardWithForwarder = { ...card, forwardedFrom: user.id === card.forwardedFrom ? undefined : (user.user_metadata?.full_name as string | undefined) || user.email?.split("@")[0] || "Someone" };
     for (const recipient of recipients) {
       const id = recipient.kind === "friend" ? recipient.friend.user_id : recipient.group.id;
       const table = recipient.kind === "friend" ? "direct_messages" : "group_messages";

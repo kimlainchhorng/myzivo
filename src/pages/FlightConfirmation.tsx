@@ -135,7 +135,7 @@ const FlightConfirmation = () => {
       title: `${booking.origin} → ${booking.destination}`,
       subtitle: booking.departure_date || undefined,
       meta: `Ref: ${booking.booking_reference}`,
-      deepLink: `/flights/confirmation/${booking.booking_id}`,
+      deepLink: `/flights/confirmation/${(booking as { id?: string; booking_id?: string }).booking_id ?? booking.id}`,
       image: null,
       badge: "ZIVO",
     });
