@@ -10,7 +10,31 @@ import MapPin from "lucide-react/dist/esm/icons/map-pin";
 import Navigation from "lucide-react/dist/esm/icons/navigation";
 import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
 import ImageOff from "lucide-react/dist/esm/icons/image-off";
+import { supabase } from "@/integrations/supabase/client";
 import { useLocationSharePrefs } from "@/hooks/useLocationSharePrefs";
+
+// Module-level cache so we resolve the Google Maps key just once per session.
+let cachedMapsKey: string | null = null;
+let mapsKeyPromise: Promise<string> | null = null;
+
+const resolveMapsKey = (): Promise<string> => {
+  if (cachedMapsKey !== null) return Promise.resolve(cachedMapsKey);
+  if (mapsKeyPromise) return mapsKeyPromise;
+  const envKey = (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_GOOGLE_MAPS_API_KEY || "";
+  if (envKey) { cachedMapsKey = envKey; return Promise.resolve(envKey); }
+  mapsKeyPromise = (async () => {
+    try {
+      const { data, error } = await supabase.functions.invoke("maps-api-key");
+      const key = (!error && (data as { key?: string } | null)?.key) || "";
+      cachedMapsKey = key;
+      return key;
+    } catch {
+      cachedMapsKey = "";
+      return "";
+    }
+  })();
+  return mapsKeyPromise;
+};
 import {
   reverseGeocode,
   getCachedAddress,
@@ -69,13 +93,24 @@ export default function LocationShareBubble({ lat, lng, label, isMe, time }: Loc
     ? `https://maps.apple.com/?ll=${lat},${lng}&q=${encodeURIComponent(label || "Shared Location")}`
     : `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
 
-  // Prefer Google Static Maps when a key is configured — it's the most
-  // reliable. Fall back to OpenStreetMap.de (often slow / 5xxs) and finally
-  // to the dotted-grid placeholder UI handled by `imgFailed`.
-  const googleKey = (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_GOOGLE_MAPS_API_KEY || "";
+  // Prefer Google Static Maps when a key is available — it's the most
+  // reliable. Resolved async via env var or the maps-api-key edge function;
+  // until it loads we use OpenStreetMap.de as a temporary preview, and the
+  // dotted-grid placeholder kicks in if both fail.
+  const [googleKey, setGoogleKey] = useState<string | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    void resolveMapsKey().then((k) => { if (!cancelled) setGoogleKey(k); });
+    return () => { cancelled = true; };
+  }, []);
+
   const staticMapUrl = googleKey
     ? `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=15&size=520x280&scale=2&markers=color:red%7C${lat},${lng}&key=${googleKey}`
     : `https://staticmap.openstreetmap.de/staticmap.php?center=${lat},${lng}&zoom=15&size=520x280&markers=${lat},${lng},red-pushpin`;
+
+  // Reset failure state when the URL flips (e.g. OSM fallback → Google Maps
+  // once the key resolves) so the bubble can render the better preview.
+  useEffect(() => { setImgFailed(false); }, [staticMapUrl]);
 
   const title = label || "Shared Location";
   const coords = `${lat.toFixed(5)}, ${lng.toFixed(5)}`;
