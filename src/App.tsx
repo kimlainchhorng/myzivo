@@ -15,6 +15,11 @@ import ShareToChatSheet from "@/components/chat/ShareToChatSheet";
 const P2PTransferSheet = lazy(() => import("@/components/chat/P2PTransferSheet"));
 const PartnerSignupSheet = lazy(() => import("@/components/partner/PartnerSignupSheet"));
 const AffiliateRedirectPage = lazy(() => import("@/pages/AffiliateRedirectPage"));
+const EventsHubPage = lazy(() => import("@/pages/hubs/EventsHubPage"));
+const MarketplaceHubPage = lazy(() => import("@/pages/hubs/MarketplaceHubPage"));
+const JobsHubPage = lazy(() => import("@/pages/hubs/JobsHubPage"));
+const VoiceRoomsHubPage = lazy(() => import("@/pages/hubs/VoiceRoomsHubPage"));
+const FitnessHubPage = lazy(() => import("@/pages/hubs/FitnessHubPage"));
 const TwoFactorSetupSheet = lazy(() => import("@/components/security/TwoFactorSetupSheet"));
 const OnboardingTour = lazy(() => import("@/components/onboarding/OnboardingTour"));
 const BugReportSheet = lazy(() => import("@/components/support/BugReportSheet"));
@@ -1159,6 +1164,11 @@ const App = () => (
                 <Route path="/u/:username" element={<UsernameRedirectPage />} />
                 <Route path="/p/:code" element={<ShareProfileRedirect />} />
                 <Route path="/r/:slug" element={<AffiliateRedirectPage />} />
+                <Route path="/events-hub" element={<EventsHubPage />} />
+                <Route path="/marketplace-hub" element={<MarketplaceHubPage />} />
+                <Route path="/jobs-hub" element={<JobsHubPage />} />
+                <Route path="/voice-rooms" element={<VoiceRoomsHubPage />} />
+                <Route path="/fitness" element={<FitnessHubPage />} />
                 <Route path="/traveler" element={<ProtectedRoute><TravelerDashboard /></ProtectedRoute>} />
                 <Route path="/notifications" element={<ProtectedRoute><NotificationsPage /></ProtectedRoute>} />
                 <Route path="/saved-searches" element={<ProtectedRoute><SavedSearchesPage /></ProtectedRoute>} />
