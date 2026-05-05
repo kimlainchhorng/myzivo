@@ -7,6 +7,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import MediaGalleryLightbox from "./MediaGalleryLightbox";
 import GroupReadReceipts from "./GroupReadReceipts";
+import { OPEN_MEDIA_EVENT, type OpenMediaDetail } from "@/lib/chat/openMedia";
 import { signedUrlFor } from "@/lib/security/signedMedia";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
 import Send from "lucide-react/dist/esm/icons/send";

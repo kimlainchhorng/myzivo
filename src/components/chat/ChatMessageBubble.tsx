@@ -742,7 +742,8 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
             <img
               src={imageUrl}
               alt=""
-              className={`max-w-full max-h-60 object-cover rounded-2xl transition-all duration-300 ${isLocked ? "blur-xl scale-105" : ""}`}
+              onClick={(e) => { if (!isLocked) { e.stopPropagation(); import("@/lib/chat/openMedia").then(m => m.openMedia({ url: imageUrl, type: "image", id })); } }}
+              className={`max-w-full max-h-60 object-cover rounded-2xl transition-all duration-300 cursor-zoom-in ${isLocked ? "blur-xl scale-105" : ""}`}
               loading="lazy"
             />
             {/* Locked overlay */}

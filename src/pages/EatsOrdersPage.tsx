@@ -17,6 +17,7 @@ import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
+import SEOHead from "@/components/SEOHead";
 
 interface FoodOrder {
   id: string;
@@ -124,6 +125,7 @@ export default function EatsOrdersPage() {
 
   return (
     <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background">
+      <SEOHead title="Order History – ZIVO Eats" description="View your food delivery order history, reorder favorite meals, and track past deliveries." />
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-20 bg-background/95 backdrop-blur-2xl border-b border-border/30">
         <div className="px-4 py-3 flex items-center gap-3 safe-area-top">

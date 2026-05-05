@@ -20,6 +20,7 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import MediaGalleryLightbox from "./MediaGalleryLightbox";
+import { OPEN_MEDIA_EVENT, type OpenMediaDetail } from "@/lib/chat/openMedia";
 import { signedUrlFor } from "@/lib/security/signedMedia";
 import { topicForPairSync } from "@/lib/security/channelName";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
@@ -277,6 +278,17 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       window.dispatchEvent(new CustomEvent("chat-closed"));
     };
   }, [recipientId]);
+
+  // Listen for image-tap requests from message bubbles
+  useEffect(() => {
+    const handler = (e: Event) => {
+      const detail = (e as CustomEvent<OpenMediaDetail>).detail;
+      if (!detail?.url) return;
+      setGalleryState({ open: true, images: [{ id: detail.id || detail.url, url: detail.url, type: detail.type }], index: 0 });
+    };
+    window.addEventListener(OPEN_MEDIA_EVENT, handler as EventListener);
+    return () => window.removeEventListener(OPEN_MEDIA_EVENT, handler as EventListener);
+  }, []);
 
   // Seed the composer once when the chat is opened with a prefill (e.g. "Reply Privately")
   const prefilledRef = useRef(false);
