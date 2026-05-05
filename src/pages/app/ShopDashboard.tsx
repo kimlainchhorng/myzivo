@@ -1,9 +1,10 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import StoreOwnerLayout from "@/components/admin/StoreOwnerLayout";
+import { resolveBusinessDashboardRoute } from "@/lib/business/dashboardRoute";
 
 const ShopDashboard = () => {
   const navigate = useNavigate();
@@ -25,6 +26,11 @@ const ShopDashboard = () => {
 
   if (isLoading || !store) {
     return <div className="min-h-screen bg-background flex items-center justify-center">Loading...</div>;
+  }
+
+  const resolvedDashboard = resolveBusinessDashboardRoute(store.category, store.id);
+  if (!resolvedDashboard.fallback && resolvedDashboard.path !== "/shop-dashboard") {
+    return <Navigate to={resolvedDashboard.path} replace />;
   }
 
   const renderContent = () => {
