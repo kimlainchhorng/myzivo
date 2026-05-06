@@ -69,11 +69,21 @@ const PLATFORMS: {
   { id: "ytmusic",    label: "YT Music",    icon: Music2,      color: "bg-[#FF0000]", prefix: "https://music.youtube.com/channel/", placeholder: "channel id or paste song URL" },
 ];
 
+export interface SocialCardPayload {
+  platform: string;
+  platform_label: string;
+  url: string;
+  handle: string;
+}
+
 interface Props {
   open: boolean;
   onClose: () => void;
   /** Receives a final URL to insert/append into the composer. */
   onShareLink: (url: string) => void;
+  /** When provided, the sheet's primary action sends a structured social card
+   *  bubble; falls back to onShareLink (text-only) when omitted. */
+  onShareSocialCard?: (payload: SocialCardPayload) => void;
 }
 
 const RECENT_KEY = "chat:social-share:recent";
@@ -96,7 +106,7 @@ function pushRecent(p: Platform) {
   } catch { /* noop */ }
 }
 
-export default function ChatSocialShareSheet({ open, onClose, onShareLink }: Props) {
+export default function ChatSocialShareSheet({ open, onClose, onShareLink, onShareSocialCard }: Props) {
   const { data: profile } = useUserProfile();
   const { user } = useAuth();
   const [selected, setSelected] = useState<Platform | null>(null);
@@ -161,6 +171,17 @@ export default function ChatSocialShareSheet({ open, onClose, onShareLink }: Pro
   const handleShare = () => {
     if (!finalUrl) return;
     onShareLink(finalUrl);
+    onClose();
+  };
+
+  const handleSendAsCard = () => {
+    if (!finalUrl || !platform || !onShareSocialCard) return;
+    onShareSocialCard({
+      platform: platform.id,
+      platform_label: platform.label,
+      url: finalUrl,
+      handle: handle.trim(),
+    });
     onClose();
   };
 
@@ -311,21 +332,32 @@ export default function ChatSocialShareSheet({ open, onClose, onShareLink }: Pro
                     )}
                   </div>
 
-                  <div className="flex gap-2">
-                    <button
-                      onClick={async () => { if (finalUrl) { try { await openExternalUrl(finalUrl); } catch { /* noop */ } } }}
-                      disabled={!finalUrl}
-                      className="px-4 py-3 rounded-xl bg-muted/60 text-foreground font-semibold text-[15px] disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-transform"
-                    >
-                      Open
-                    </button>
-                    <button
-                      onClick={handleShare}
-                      disabled={!finalUrl}
-                      className="flex-1 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-[15px] disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-transform"
-                    >
-                      Add to Message
-                    </button>
+                  <div className="flex flex-col gap-2">
+                    {onShareSocialCard && (
+                      <button
+                        onClick={handleSendAsCard}
+                        disabled={!finalUrl}
+                        className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-[15px] disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-transform"
+                      >
+                        Send card
+                      </button>
+                    )}
+                    <div className="flex gap-2">
+                      <button
+                        onClick={async () => { if (finalUrl) { try { await openExternalUrl(finalUrl); } catch { /* noop */ } } }}
+                        disabled={!finalUrl}
+                        className="px-4 py-3 rounded-xl bg-muted/60 text-foreground font-semibold text-[15px] disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-transform"
+                      >
+                        Open
+                      </button>
+                      <button
+                        onClick={handleShare}
+                        disabled={!finalUrl}
+                        className={`flex-1 py-3 rounded-xl ${onShareSocialCard ? "bg-muted/60 text-foreground" : "bg-primary text-primary-foreground"} font-semibold text-[15px] disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-transform`}
+                      >
+                        Add to text
+                      </button>
+                    </div>
                   </div>
                 </div>
               )}

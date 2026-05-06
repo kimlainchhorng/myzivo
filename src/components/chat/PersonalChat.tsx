@@ -85,6 +85,9 @@ const ChatGiftPanel = lazy(() => import("./ChatGiftPanel"));
 const ChatWalletSheet = lazy(() => import("./ChatWalletSheet"));
 const CoinTransferBubble = lazy(() => import("./CoinTransferBubble"));
 const P2PTransferMessageCard = lazy(() => import("./P2PTransferMessageCard"));
+const ChatPollBubble = lazy(() => import("./ChatPollBubble"));
+const ChatContactBubble = lazy(() => import("./ChatContactBubble"));
+const ChatSocialBubble = lazy(() => import("./ChatSocialBubble"));
 const DocumentScanner = lazy(() => import("./DocumentScanner"));
 import { useChatFiles } from "@/hooks/useChatFiles";
 import type { StickerSendPayload } from "./StickerKeyboard";
@@ -425,7 +428,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     });
   }, [autoTranslateStorageKey]);
 
-  // Cycle Off → 1d → 7d → 30d → Off (Telegram parity)
+  // Cycle Off → 1d → 7d → 30d → Off (Telegram parity).
+  // The setting itself is local (no per-conversation server table yet), but
+  // we post a system-style message so the recipient SEES the change and the
+  // sender's own outbound messages will get expires_at set automatically.
   const cycleAutoDelete = useCallback(() => {
     const next = disappearingSec == null
       ? 24 * 60 * 60
@@ -435,16 +441,28 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       ? 30 * 24 * 60 * 60
       : null;
     persistAutoDelete(next);
-    toast.success(
-      next == null
-        ? "Auto-delete: Off"
-        : next === 24 * 60 * 60
-        ? "Auto-delete: 1 day"
-        : next === 7 * 24 * 60 * 60
-        ? "Auto-delete: 7 days"
-        : "Auto-delete: 30 days"
-    );
-  }, [disappearingSec, persistAutoDelete]);
+    const label = next == null
+      ? "Off"
+      : next === 24 * 60 * 60
+      ? "1 day"
+      : next === 7 * 24 * 60 * 60
+      ? "7 days"
+      : "30 days";
+    toast.success(`Auto-delete: ${label}`);
+    // Announce in the chat so the other participant knows.
+    if (user?.id && recipientId) {
+      const senderName = user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0] || "Someone";
+      const announcement = next == null
+        ? `🔓 ${senderName} turned off disappearing messages`
+        : `⏱️ ${senderName} set messages to disappear after ${label}`;
+      void dbFrom("direct_messages").insert({
+        sender_id: user.id,
+        receiver_id: recipientId,
+        message: announcement,
+        message_type: "system",
+      });
+    }
+  }, [disappearingSec, persistAutoDelete, user?.id, user?.user_metadata?.full_name, user?.user_metadata?.name, user?.email, recipientId]);
   const autoDeleteLabel = disappearingSec == null
     ? "Off"
     : disappearingSec === 24 * 60 * 60
@@ -2588,6 +2606,68 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                           </span>
                         </div>
                       </div>
+                    ) : msg.message_type === "system" ? (
+                      <div className="flex justify-center my-1.5">
+                        <span className="px-3 py-1 rounded-full bg-muted/60 text-[11px] font-medium text-muted-foreground border border-border/30 max-w-[90%] text-center">
+                          {msg.message}
+                        </span>
+                      </div>
+                    ) : msg.message_type === "poll" && msg.file_payload ? (
+                      (() => {
+                        const fp = msg.file_payload as { poll_id?: string; question?: string; options?: { text: string }[]; is_anonymous?: boolean; creator_name?: string };
+                        if (!fp?.poll_id) return null;
+                        return (
+                          <div className={`flex ${isMe ? "justify-end" : "justify-start"} ${msg.id.startsWith("opt-") ? "opacity-60" : ""}`}>
+                            <Suspense fallback={null}>
+                              <ChatPollBubble
+                                pollId={fp.poll_id}
+                                question={fp.question || ""}
+                                options={fp.options || []}
+                                isAnonymous={fp.is_anonymous}
+                                creatorName={fp.creator_name || (isMe ? "You" : recipientName)}
+                              />
+                            </Suspense>
+                          </div>
+                        );
+                      })()
+                    ) : msg.message_type === "contact" && msg.file_payload ? (
+                      (() => {
+                        const fp = msg.file_payload as { user_id?: string | null; full_name?: string; username?: string | null; avatar_url?: string | null };
+                        if (!fp?.full_name) return null;
+                        return (
+                          <div className={`flex ${isMe ? "justify-end" : "justify-start"} ${msg.id.startsWith("opt-") ? "opacity-60" : ""}`}>
+                            <Suspense fallback={null}>
+                              <ChatContactBubble
+                                userId={fp.user_id ?? null}
+                                fullName={fp.full_name}
+                                username={fp.username ?? null}
+                                avatarUrl={fp.avatar_url ?? null}
+                                isMe={isMe}
+                                time={formatMsgTime(msg.created_at)}
+                              />
+                            </Suspense>
+                          </div>
+                        );
+                      })()
+                    ) : msg.message_type === "social" && msg.file_payload ? (
+                      (() => {
+                        const fp = msg.file_payload as { platform?: string; platform_label?: string; url?: string; handle?: string };
+                        if (!fp?.url || !fp?.platform) return null;
+                        return (
+                          <div className={`${msg.id.startsWith("opt-") ? "opacity-60" : ""}`}>
+                            <Suspense fallback={null}>
+                              <ChatSocialBubble
+                                platform={fp.platform}
+                                platformLabel={fp.platform_label || fp.platform}
+                                url={fp.url}
+                                handle={fp.handle || ""}
+                                isMe={isMe}
+                                time={formatMsgTime(msg.created_at)}
+                              />
+                            </Suspense>
+                          </div>
+                        );
+                      })()
                     ) : (
                       <ChatMessageBubble
                         id={msg.id}
@@ -3344,27 +3424,39 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             throw new Error("missing user or recipient");
           }
           const optionsPayload = poll.options.map((text) => ({ text }));
-          const { error: pollError } = await dbFrom("chat_polls").insert({
-            creator_id: user.id,
-            chat_partner_id: recipientId,
-            question: poll.question,
-            options: optionsPayload,
-            is_anonymous: poll.isAnonymous,
-            votes: {},
-          });
-          if (pollError) {
+          // Insert the poll first so we have an id to attach to the chat message.
+          const { data: pollRow, error: pollError } = await dbFrom("chat_polls")
+            .insert({
+              creator_id: user.id,
+              chat_partner_id: recipientId,
+              question: poll.question,
+              options: optionsPayload,
+              is_anonymous: poll.isAnonymous,
+              votes: {},
+            })
+            .select("id")
+            .maybeSingle();
+          if (pollError || !pollRow?.id) {
             toast.error("Failed to create poll");
-            throw pollError;
+            throw pollError ?? new Error("missing poll id");
           }
-          const announcement = `📊 Poll: ${poll.question}\n${poll.options.map((o, i) => `${i + 1}. ${o}`).join("\n")}`;
+          // Send a structured poll message — recipient renders ChatPollBubble
+          // (interactive voting) instead of a dead plain-text announcement.
           const { error: msgError } = await dbFrom("direct_messages").insert({
             sender_id: user.id,
             receiver_id: recipientId,
-            message: announcement,
-            message_type: "text",
+            message: `📊 ${poll.question}`, // Fallback for older clients that don't know "poll" type.
+            message_type: "poll",
+            file_payload: {
+              poll_id: pollRow.id,
+              question: poll.question,
+              options: optionsPayload,
+              is_anonymous: !!poll.isAnonymous,
+              creator_name: user.user_metadata?.full_name || user.user_metadata?.name || user.email?.split("@")[0] || "You",
+            },
           });
           if (msgError) {
-            toast.error("Poll created, but couldn't send announcement");
+            toast.error("Poll created, but couldn't send to chat");
             throw msgError;
           }
           toast.success("Poll sent");
@@ -3390,15 +3482,24 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             toast.error("Couldn't share contact");
             return;
           }
-          const lines = [
-            `👤 Contact: ${contact.displayName}`,
+          // Send a structured contact message — recipient renders
+          // ChatContactBubble (avatar + name + Message button) instead of
+          // a plain "👤 Contact: name" text line.
+          const fallback = [
+            `👤 ${contact.displayName}`,
             contact.username ? `@${contact.username}` : null,
-          ].filter(Boolean);
+          ].filter(Boolean).join(" ");
           const { error } = await dbFrom("direct_messages").insert({
             sender_id: user.id,
             receiver_id: recipientId,
-            message: lines.join("\n"),
-            message_type: "text",
+            message: fallback,
+            message_type: "contact",
+            file_payload: {
+              user_id: contact.userId,
+              full_name: contact.displayName,
+              username: contact.username ?? null,
+              avatar_url: contact.avatarUrl ?? null,
+            },
           });
           if (error) {
             toast.error("Failed to share contact");
@@ -3415,6 +3516,27 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         onShareLink={(url) => {
           setInput((prev) => (prev.trim() ? `${prev.trim()} ${url}` : url));
           setTimeout(() => inputRef.current?.focus(), 0);
+        }}
+        onShareSocialCard={async (payload) => {
+          if (!user?.id || !recipientId) {
+            toast.error("Couldn't share profile");
+            return;
+          }
+          // Send as a structured social card — recipient renders ChatSocialBubble
+          // with brand colours + Open button instead of a raw URL line.
+          const fallback = `${payload.platform_label}: ${payload.url}`;
+          const { error } = await dbFrom("direct_messages").insert({
+            sender_id: user.id,
+            receiver_id: recipientId,
+            message: fallback,
+            message_type: "social",
+            file_payload: payload,
+          });
+          if (error) {
+            toast.error("Failed to share profile");
+            return;
+          }
+          toast.success("Profile shared");
         }}
       />
 
