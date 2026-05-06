@@ -1,13 +1,24 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Eye, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Eye, X, ChevronLeft, ChevronRight, Pin, PinOff, Share2 } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
+import { toast } from "sonner";
 import type { ChannelPost } from "@/hooks/useChannel";
+
+const ChannelPostComments = lazy(() => import("./ChannelPostComments"));
+const ChannelPostInsights = lazy(() => import("./ChannelPostInsights"));
 
 const REACTIONS = ["👍", "❤️", "🔥", "🎉", "👏"];
 
 interface Props {
   post: ChannelPost;
+  /** True if the viewer can pin/delete posts on this channel. */
+  canManage?: boolean;
+  /** True if the viewer can comment (subscribed or manager). */
+  canComment?: boolean;
+  /** Called after pin toggles so the parent can re-order the list. */
+  onPinChanged?: () => void;
 }
 
 interface MediaItem {
@@ -15,7 +26,46 @@ interface MediaItem {
   type?: string;
 }
 
-export function ChannelPostCard({ post }: Props) {
+export function ChannelPostCard({ post, canManage = false, canComment = true, onPinChanged }: Props) {
+  const navigate = useNavigate();
+  const [pinning, setPinning] = useState(false);
+
+  // Build a deep link to this post so it can be forwarded into a DM. The
+  // /c/:handle route doesn't yet support a #post anchor, so we send a plain
+  // channel link + the body excerpt as the message preview.
+  async function forwardToDm() {
+    const handle = (post as any).channel_handle as string | undefined;
+    const path = handle ? `/c/${handle}` : `/c/?post=${post.id}`;
+    const url = `${window.location.origin}${path}`;
+    const excerpt = (post.body ?? "").slice(0, 240);
+    const prefill = excerpt ? `${excerpt}\n\n${url}` : url;
+    try {
+      await navigator.clipboard?.writeText(prefill);
+    } catch {
+      /* clipboard may be blocked in iframes */
+    }
+    try {
+      sessionStorage.setItem("pendingForwardPrefill", prefill);
+    } catch {
+      /* private mode */
+    }
+    toast.success("Pick a chat — the post will be pre-filled.");
+    navigate("/chat");
+  }
+
+  async function togglePin() {
+    setPinning(true);
+    try {
+      const { error } = await (supabase as any).rpc("toggle_channel_post_pin", { p_post_id: post.id });
+      if (error) throw error;
+      onPinChanged?.();
+    } catch (e: any) {
+      toast.error(e?.message || "Could not pin");
+    } finally {
+      setPinning(false);
+    }
+  }
+
   const ref = useRef<HTMLDivElement>(null);
   const [counted, setCounted] = useState(false);
   const [reactions, setReactions] = useState<Record<string, number>>(
@@ -88,7 +138,28 @@ export function ChannelPostCard({ post }: Props) {
 
   return (
     <>
-      <div ref={ref} className="rounded-lg border border-border bg-card p-4">
+      <div ref={ref} className={`rounded-lg border bg-card p-4 ${post.is_pinned ? "border-primary/50 ring-1 ring-primary/20" : "border-border"}`}>
+        {(post.is_pinned || canManage) && (
+          <div className="mb-2 flex items-center justify-between gap-2">
+            {post.is_pinned ? (
+              <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wider text-primary">
+                <Pin className="w-3 h-3" /> Pinned
+              </span>
+            ) : <span />}
+            {canManage && (
+              <button
+                type="button"
+                onClick={togglePin}
+                disabled={pinning}
+                className="inline-flex items-center gap-1 text-[10px] font-semibold text-muted-foreground hover:text-foreground disabled:opacity-50"
+                aria-label={post.is_pinned ? "Unpin post" : "Pin post"}
+              >
+                {post.is_pinned ? <PinOff className="w-3 h-3" /> : <Pin className="w-3 h-3" />}
+                {post.is_pinned ? "Unpin" : "Pin"}
+              </button>
+            )}
+          </div>
+        )}
         {post.body && <p className="whitespace-pre-wrap text-sm">{post.body}</p>}
 
         {media.length > 0 && (
@@ -138,6 +209,15 @@ export function ChannelPostCard({ post }: Props) {
             ))}
           </div>
           <div className="flex items-center gap-3 text-xs text-muted-foreground">
+            <button
+              type="button"
+              onClick={forwardToDm}
+              className="inline-flex items-center gap-1 hover:text-foreground active:scale-95 transition"
+              aria-label="Forward to chat"
+              title="Forward to chat"
+            >
+              <Share2 className="h-3 w-3" /> Share
+            </button>
             <span className="flex items-center gap-1">
               <Eye className="h-3 w-3" /> {post.view_count}
             </span>
@@ -146,6 +226,24 @@ export function ChannelPostCard({ post }: Props) {
             )}
           </div>
         </div>
+
+        {canManage && (
+          <Suspense fallback={null}>
+            <ChannelPostInsights post={post} />
+          </Suspense>
+        )}
+
+        {(post.comments_enabled !== false) && (
+          <Suspense fallback={null}>
+            <ChannelPostComments
+              postId={post.id}
+              channelId={post.channel_id}
+              initialCount={post.comments_count ?? 0}
+              canComment={canComment}
+              canModerate={canManage}
+            />
+          </Suspense>
+        )}
       </div>
 
       {lightboxIdx !== null && (

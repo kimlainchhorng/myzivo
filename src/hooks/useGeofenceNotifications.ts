@@ -4,6 +4,7 @@
  * Runs periodically when the app is active.
  */
 import { useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
@@ -22,6 +23,7 @@ function haversineDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 
 export function useGeofenceNotifications() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const notifiedRef = useRef<Set<string>>(new Set());
 
   useEffect(() => {
@@ -65,7 +67,7 @@ export function useGeofenceNotifications() {
                   const mins = Math.ceil(dist / 80); // ~walking speed
                   toast(`🔥 Hot Deal at ${store.name} — Just ${mins} min away!`, {
                     duration: 8000,
-                    action: { label: "View on Map", onClick: () => window.location.href = "/store-map" },
+                    action: { label: "View on Map", onClick: () => navigate("/store-map") },
                   });
                 }
               }

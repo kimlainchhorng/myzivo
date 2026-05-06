@@ -163,7 +163,9 @@ export async function markPromoUsed(promoId: string): Promise<void> {
 
 export async function executeCampaign(id: string): Promise<{ success: boolean; users_targeted: number; error?: string }> {
   try {
-    const { data, error } = await supabase.functions.invoke("execute-marketing-campaign", {
+    // `execute-marketing-campaign` was never deployed — the canonical fn is
+    // `send-marketing-campaign`. Every "Send now" press silently 404'd.
+    const { data, error } = await supabase.functions.invoke("send-marketing-campaign", {
       body: { campaign_id: id },
     });
     if (error) throw error;

@@ -103,13 +103,34 @@ export default function CallLobby({
           <p className="text-[11px] uppercase tracking-wider text-white/50">Ready to join</p>
           <h2 className="text-base font-semibold">{roomName}</h2>
         </div>
-        <button
-          onClick={onCancel}
-          className="rounded-full bg-white/10 p-2 hover:bg-white/20"
-          aria-label="Cancel"
-        >
-          <X className="h-4 w-4" />
-        </button>
+        <div className="flex items-center gap-2">
+          {/* Copy invite link — shareable URL recipients can click to land on
+              GroupCallEntryPage and join the same LiveKit room. */}
+          <button
+            type="button"
+            onClick={async () => {
+              const url = `${window.location.origin}/chat/call/group/${encodeURIComponent(roomName)}${callType === "audio" ? "?audio=1" : ""}`;
+              try {
+                await navigator.clipboard?.writeText(url);
+                const { toast } = await import("sonner");
+                toast.success("Invite link copied. Send it to anyone you want to join.");
+              } catch {
+                /* clipboard blocked */
+              }
+            }}
+            className="rounded-full bg-white/10 px-3 py-1.5 text-xs font-semibold hover:bg-white/20 inline-flex items-center gap-1.5"
+            aria-label="Copy invite link"
+          >
+            Copy invite
+          </button>
+          <button
+            onClick={onCancel}
+            className="rounded-full bg-white/10 p-2 hover:bg-white/20"
+            aria-label="Cancel"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
       </header>
 
       {/* Self preview */}

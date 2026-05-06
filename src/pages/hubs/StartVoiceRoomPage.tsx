@@ -51,7 +51,7 @@ export default function StartVoiceRoomPage() {
         <div className="space-y-3">
           <input autoFocus value={topic} onChange={(e) => setTopic(e.target.value)} placeholder="What's the topic?" className="w-full px-3 py-3 rounded-xl bg-muted/40 border border-border/30 text-base font-medium outline-none focus:ring-2 focus:ring-primary/30" />
           <textarea value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Add a description (optional)" rows={3} className="w-full px-3 py-2.5 rounded-xl bg-muted/40 border border-border/30 text-sm outline-none focus:ring-2 focus:ring-primary/30 resize-none" />
-          <button onClick={() => void start()} disabled={busy || !topic} className="w-full inline-flex items-center justify-center gap-1 py-3 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white font-bold text-base disabled:opacity-50">
+          <button onClick={() => void start()} disabled={busy || !topic} className="w-full inline-flex items-center justify-center gap-1 py-3 rounded-xl text-white font-bold text-base disabled:opacity-50 bg-foreground">
             {busy ? <Loader2 className="w-4 h-4 animate-spin" /> : "🎙 Go live"}
           </button>
         </div>

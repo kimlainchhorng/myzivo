@@ -45,6 +45,7 @@ import Bookmark from "lucide-react/dist/esm/icons/bookmark";
 import MoreVertical from "lucide-react/dist/esm/icons/more-vertical";
 import HardDrive from "lucide-react/dist/esm/icons/hard-drive";
 import SwipeableRow from "@/components/chat/SwipeableRow";
+import ChatErrorBoundary from "@/components/chat/ChatErrorBoundary";
 import ChatRowActionsSheet, { type ChatRowActionsTarget } from "@/components/chat/ChatRowActionsSheet";
 import NewChatFab from "@/components/chat/NewChatFab";
 import AddContactSheet from "@/components/chat/AddContactSheet";
@@ -312,7 +313,23 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; name: string; category: ChatCategory } | null>(null);
   const [swipedId, setSwipedId] = useState<string | null>(null);
   const [openShopChat, setOpenShopChat] = useState<{ storeId: string; name: string; logo?: string | null } | null>(null);
-  const [openPersonalChat, setOpenPersonalChat] = useState<{ id: string; name: string; avatar?: string | null; isVerified?: boolean; prefillInput?: string } | null>(null);
+  const [openPersonalChat, _setOpenPersonalChat] = useState<{ id: string; name: string; avatar?: string | null; isVerified?: boolean; prefillInput?: string } | null>(null);
+  // Wrap the raw setter so every call site automatically picks up a pending
+  // forward prefill (set by ChannelPostCard.forwardToDm). Keeps the per-row
+  // click handlers untouched.
+  const setOpenPersonalChat = (next: typeof openPersonalChat) => {
+    if (next && !next.prefillInput) {
+      try {
+        const pending = sessionStorage.getItem("pendingForwardPrefill");
+        if (pending) {
+          sessionStorage.removeItem("pendingForwardPrefill");
+          _setOpenPersonalChat({ ...next, prefillInput: pending });
+          return;
+        }
+      } catch { /* private mode */ }
+    }
+    _setOpenPersonalChat(next);
+  };
   const [openGroupChat, setOpenGroupChat] = useState<{ id: string; name: string; avatar?: string | null } | null>(null);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const location = useLocation();
@@ -366,6 +383,16 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
     searchParams.delete("with");
     setSearchParams(searchParams, { replace: true });
     setActive("personal");
+    // If a forward-from-channel stashed a prefill, consume it now so the
+    // composer opens with the channel post text already typed.
+    let prefillInput: string | undefined;
+    try {
+      const pending = sessionStorage.getItem("pendingForwardPrefill");
+      if (pending) {
+        prefillInput = pending;
+        sessionStorage.removeItem("pendingForwardPrefill");
+      }
+    } catch {}
     (async () => {
       const { data } = await supabase
         .from("profiles")
@@ -377,6 +404,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
         name: data?.full_name || "Chat",
         avatar: data?.avatar_url || null,
         isVerified: (data as any)?.is_verified === true,
+        prefillInput,
       });
     })();
   }, [searchParams, user, setSearchParams]);
@@ -2499,17 +2527,26 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
               </div>
             </div>
           }>
-            <PersonalChat
-              recipientId={openPersonalChat.id}
-              recipientName={openPersonalChat.name}
-              recipientAvatar={openPersonalChat.avatar}
-              recipientIsVerified={openPersonalChat.isVerified === true}
-              prefillInput={openPersonalChat.prefillInput}
-              onClose={() => { setOpenPersonalChat(null); setPendingCall(null); queryClient.invalidateQueries({ queryKey: ["chat-hub-personal"] }); }}
-              autoStartCall={pendingCall}
-              onCallStarted={() => setPendingCall(null)}
-              inline={embedded}
-            />
+            <ChatErrorBoundary
+              title="This chat hit an error"
+              onReset={() => {
+                setOpenPersonalChat(null);
+                setPendingCall(null);
+                queryClient.invalidateQueries({ queryKey: ["chat-hub-personal"] });
+              }}
+            >
+              <PersonalChat
+                recipientId={openPersonalChat.id}
+                recipientName={openPersonalChat.name}
+                recipientAvatar={openPersonalChat.avatar}
+                recipientIsVerified={openPersonalChat.isVerified === true}
+                prefillInput={openPersonalChat.prefillInput}
+                onClose={() => { setOpenPersonalChat(null); setPendingCall(null); queryClient.invalidateQueries({ queryKey: ["chat-hub-personal"] }); }}
+                autoStartCall={pendingCall}
+                onCallStarted={() => setPendingCall(null)}
+                inline={embedded}
+              />
+            </ChatErrorBoundary>
           </Suspense>
         )}
       </AnimatePresence>
@@ -2538,12 +2575,17 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
               </div>
             </div>
           }>
-            <GroupChat
-              groupId={openGroupChat.id}
-              groupName={openGroupChat.name}
-              groupAvatar={openGroupChat.avatar}
-              onClose={() => setOpenGroupChat(null)}
-            />
+            <ChatErrorBoundary
+              title="This group chat hit an error"
+              onReset={() => setOpenGroupChat(null)}
+            >
+              <GroupChat
+                groupId={openGroupChat.id}
+                groupName={openGroupChat.name}
+                groupAvatar={openGroupChat.avatar}
+                onClose={() => setOpenGroupChat(null)}
+              />
+            </ChatErrorBoundary>
           </Suspense>
         )}
       </AnimatePresence>

@@ -203,6 +203,8 @@ const StorageManagerPage = lazy(() => import("./pages/chat/settings/StorageManag
 const AppLockGate = lazy(() => import("./components/chat/settings/AppLockGate"));
 const MfaChallengeDialog = lazy(() => import("./components/auth/MfaChallengeDialog"));
 const GroupCallEntryPage = lazy(() => import("./pages/chat/GroupCallEntryPage"));
+const RecordingsPage = lazy(() => import("./pages/chat/RecordingsPage"));
+const ChatSearchPage = lazy(() => import("./pages/chat/ChatSearchPage"));
 const ChannelsDirectoryPage = lazy(() => import("./pages/channels/ChannelsDirectoryPage"));
 const NewChannelPage = lazy(() => import("./pages/channels/NewChannelPage"));
 const ChannelPage = lazy(() => import("./pages/channels/ChannelPage"));
@@ -920,6 +922,8 @@ const App = () => (
                 <Route path="/chat/secret/:partnerId" element={<ProtectedRoute><SecretChatPage /></ProtectedRoute>} />
                 <Route path="/chat/call/group/:roomName" element={<ProtectedRoute><GroupCallEntryPage /></ProtectedRoute>} />
                 <Route path="/chat/group-call/:roomName" element={<ProtectedRoute><GroupCallEntryPage /></ProtectedRoute>} />
+                <Route path="/chat/recordings" element={<ProtectedRoute><RecordingsPage /></ProtectedRoute>} />
+                <Route path="/chat/search" element={<ProtectedRoute><ChatSearchPage /></ProtectedRoute>} />
                 <Route path="/channels" element={<ChannelsDirectoryPage />} />
                 <Route path="/channels/new" element={<ProtectedRoute><NewChannelPage /></ProtectedRoute>} />
                 <Route path="/c/:handle" element={<ChannelPage />} />

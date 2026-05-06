@@ -4,7 +4,7 @@ import { ExternalLink, Hotel, Car, Shield, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getCrossSellByType, type CrossSellPartner } from '@/data/affiliatePartners';
 import { trackAffiliateClick } from '@/lib/affiliateTracking';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate , Link} from 'react-router-dom';
 
 interface CrossSellSectionProps {
   destination: string;
@@ -210,7 +210,7 @@ export default function CrossSellSection({
       </div>
 
       <p className="text-[9px] sm:text-[10px] text-muted-foreground text-center">
-        ZIVO may earn a commission from partner bookings. <a href="/affiliate-disclosure" className="text-foreground hover:underline">Learn more</a>
+        ZIVO may earn a commission from partner bookings. <Link to="/affiliate-disclosure" className="text-foreground hover:underline">Learn more</Link>
       </p>
     </div>
   );

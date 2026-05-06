@@ -1153,7 +1153,7 @@ const FlightResults = () => {
                       <div className="px-4 py-2 border-t border-border/20 bg-muted/20">
                           <p className="text-[9px] text-muted-foreground text-center">
                            All prices are live from real-time API queries. Final price confirmed at checkout.{' '}
-                           <a href="/partner-disclosure" className="underline hover:text-foreground transition-colors">Partner Disclosure</a>
+                           <Link to="/partner-disclosure" className="underline hover:text-foreground transition-colors">Partner Disclosure</Link>
                         </p>
                       </div>
                     </CardContent>

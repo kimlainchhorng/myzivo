@@ -7,6 +7,7 @@ import { Lock, Users, DollarSign, Shield, Mail, HelpCircle } from "lucide-react"
 import { cn } from "@/lib/utils";
 import { CHECKOUT_FOOTER } from "@/config/checkoutCompliance";
 import { ZIVO_SOT_REGISTRATION } from "@/config/flightMoRCompliance";
+import { Link } from "react-router-dom";
 
 interface CheckoutTrustFooterProps {
   className?: string;
@@ -50,13 +51,13 @@ export default function CheckoutTrustFooter({
         </p>
         {/* Legal links */}
         <div className="flex items-center justify-center gap-2 flex-wrap text-[10px] text-muted-foreground/60 mb-2">
-          <a href="/terms" className="hover:text-primary hover:underline">Terms</a>
+          <Link to="/terms" className="hover:text-primary hover:underline">Terms</Link>
           <span>·</span>
-          <a href="/privacy" className="hover:text-primary hover:underline">Privacy</a>
+          <Link to="/privacy" className="hover:text-primary hover:underline">Privacy</Link>
           <span>·</span>
-          <a href="/legal/flight-terms" className="hover:text-primary hover:underline">Flight Terms</a>
+          <Link to="/legal/flight-terms" className="hover:text-primary hover:underline">Flight Terms</Link>
           <span>·</span>
-          <a href="/legal/partner-disclosure" className="hover:text-primary hover:underline">Partner Disclosure</a>
+          <Link to="/legal/partner-disclosure" className="hover:text-primary hover:underline">Partner Disclosure</Link>
         </div>
         {/* SOT + final */}
         <p className="text-[10px] text-muted-foreground/50 leading-relaxed">
@@ -104,13 +105,13 @@ export default function CheckoutTrustFooter({
 
       {/* Legal Links */}
       <div className="flex items-center justify-center gap-3 flex-wrap text-xs text-muted-foreground">
-        <a href="/terms" className="hover:text-primary hover:underline">Terms of Service</a>
+        <Link to="/terms" className="hover:text-primary hover:underline">Terms of Service</Link>
         <span className="text-border">·</span>
-        <a href="/privacy" className="hover:text-primary hover:underline">Privacy Policy</a>
+        <Link to="/privacy" className="hover:text-primary hover:underline">Privacy Policy</Link>
         <span className="text-border">·</span>
-        <a href="/legal/flight-terms" className="hover:text-primary hover:underline">Flight Terms</a>
+        <Link to="/legal/flight-terms" className="hover:text-primary hover:underline">Flight Terms</Link>
         <span className="text-border">·</span>
-        <a href="/legal/partner-disclosure" className="hover:text-primary hover:underline">Partner Disclosure</a>
+        <Link to="/legal/partner-disclosure" className="hover:text-primary hover:underline">Partner Disclosure</Link>
       </div>
 
       {/* Final Disclaimer + SOT */}

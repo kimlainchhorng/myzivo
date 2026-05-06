@@ -85,17 +85,45 @@ export function useVoiceRecorder() {
         return;
       }
 
-      console.log("[useVoiceRecorder] Requesting microphone access...");
+      // Pre-check the Permissions API where supported. If permission is
+      // already denied, surface an actionable toast with a deep-link to
+      // Settings instead of triggering yet another silent prompt that the
+      // browser/OS has remembered as denied.
+      try {
+        const perms = (navigator as any).permissions;
+        if (perms && typeof perms.query === "function") {
+          const status = await perms.query({ name: "microphone" as PermissionName }).catch(() => null);
+          if (status && status.state === "denied") {
+            const isCapacitor = (window as any).Capacitor?.isNativePlatform?.() === true;
+            const settingsHint = isCapacitor
+              ? "Open Settings → Privacy → Microphone → enable Zivo"
+              : "Click the lock icon in the address bar → Site settings → Allow Microphone";
+            // Note: deep-linking to native Settings would require the
+            // `capacitor-native-settings` plugin (not installed in this build).
+            // We surface a clear, actionable message instead so the user knows
+            // exactly where to go without us pulling in another native dep.
+            toast.error("Microphone access is blocked", {
+              description: settingsHint,
+              duration: 6000,
+            });
+            return;
+          }
+        }
+      } catch {
+        /* Permissions API not available or threw — fall through to getUserMedia */
+      }
+
+      if (import.meta.env.DEV) console.log("[useVoiceRecorder] Requesting microphone access...");
 
       cancelled.current = false;
       chunks.current = [];
       samples.current = [];
       const s = await navigator.mediaDevices.getUserMedia({ audio: true });
-      console.log("[useVoiceRecorder] Microphone access granted");
+      if (import.meta.env.DEV) console.log("[useVoiceRecorder] Microphone access granted");
       stream.current = s;
 
       const mimeType = getSupportedVoiceMimeType();
-      console.log("[useVoiceRecorder] Using MIME type:", mimeType);
+      if (import.meta.env.DEV) console.log("[useVoiceRecorder] Using MIME type:", mimeType);
       const rec = mimeType
         ? new MediaRecorder(s, { mimeType, audioBitsPerSecond: VOICE_AUDIO_BITS_PER_SECOND })
         : new MediaRecorder(s, { audioBitsPerSecond: VOICE_AUDIO_BITS_PER_SECOND });
@@ -103,7 +131,7 @@ export function useVoiceRecorder() {
       rec.ondataavailable = (e) => { if (e.data.size > 0) chunks.current.push(e.data); };
       rec.start(100);
 
-      console.log("[useVoiceRecorder] Recording started, listening to audio stream");
+      if (import.meta.env.DEV) console.log("[useVoiceRecorder] Recording started, listening to audio stream");
 
       // Waveform sampling
       const ctx = new AudioContext();

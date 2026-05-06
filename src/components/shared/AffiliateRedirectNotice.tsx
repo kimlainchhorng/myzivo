@@ -1,6 +1,7 @@
 import { ExternalLink, ShieldCheck, Info } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { cn } from '@/lib/utils';
+import { Link } from "react-router-dom";
 
 interface AffiliateRedirectNoticeProps {
   partnerName?: string;
@@ -30,9 +31,9 @@ export default function AffiliateRedirectNotice({
           <strong>Booking Redirect:</strong> You will be redirected to{' '}
           {partnerName ? <strong>{partnerName}</strong> : 'our trusted travel partner'} to complete your booking.
           ZIVO earns a commission at no extra cost to you.{' '}
-          <a href="/affiliate-disclosure" className="text-foreground hover:underline">
+          <Link to="/affiliate-disclosure" className="text-foreground hover:underline">
             Learn more
-          </a>
+          </Link>
         </AlertDescription>
       </Alert>
     );
@@ -52,9 +53,9 @@ export default function AffiliateRedirectNotice({
         </p>
         <p className="mt-1">
           ZIVO may earn a commission when you book through partner links.{' '}
-          <a href="/affiliate-disclosure" className="text-foreground hover:underline">
+          <Link to="/affiliate-disclosure" className="text-foreground hover:underline">
             Affiliate Disclosure
-          </a>
+          </Link>
         </p>
       </div>
     </div>

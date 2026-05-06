@@ -1,8 +1,10 @@
 /**
- * translateMessage — call the translate-text edge function.
+ * translateMessage — call the translate-caption edge function.
  * Used by long-press → "Translate" action in chat bubbles.
  *
- * Caches results per message id to avoid re-translating the same content.
+ * Caches results per message id + target lang. The previous code invoked a
+ * non-existent `translate-text` fn — every long-press translate silently
+ * returned null and the bubble showed nothing.
  */
 import { supabase } from "@/integrations/supabase/client";
 
@@ -18,12 +20,14 @@ export async function translateMessage(
   if (cache.has(key)) return cache.get(key) || null;
 
   try {
-    const { data, error } = await supabase.functions.invoke("translate-text", {
-      body: { text, target_language: lang },
+    const { data, error } = await supabase.functions.invoke("translate-caption", {
+      body: { text, targetLang: lang },
     });
     if (error) return null;
-    const out = (data as { translated_text?: string; translation?: string; text?: string } | null)
-      ?.translated_text ?? (data as { translation?: string } | null)?.translation ?? (data as { text?: string } | null)?.text ?? null;
+    // translate-caption returns { translated, targetLang }. Keep the legacy
+    // field-name fallbacks so older callers (if any) still work.
+    const d = data as { translated?: string; translated_text?: string; translation?: string; text?: string } | null;
+    const out = d?.translated ?? d?.translated_text ?? d?.translation ?? d?.text ?? null;
     if (out) cache.set(key, out);
     return out;
   } catch {

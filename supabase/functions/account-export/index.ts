@@ -27,7 +27,7 @@ const USER_TABLES: Array<{ table: string; userColumn: string }> = [
   { table: "posts",                     userColumn: "user_id" },
   { table: "comments",                  userColumn: "user_id" },
   { table: "saved_locations",           userColumn: "user_id" },
-  { table: "trips",                     userColumn: "user_id" },
+  { table: "trips",                     userColumn: "rider_id" },
   { table: "bookings",                  userColumn: "user_id" },
   { table: "wallet_transactions",       userColumn: "user_id" },
   { table: "customer_payout_methods",   userColumn: "user_id" },

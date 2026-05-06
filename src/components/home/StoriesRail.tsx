@@ -34,6 +34,12 @@ export default function StoriesRail() {
   const yourInitial = (profile?.full_name?.[0] || user?.email?.[0] || "Z").toUpperCase();
   const yourName = profile?.full_name?.split(" ")[0] || "Your story";
 
+  // For guests, the rail has nothing to show — skip rendering entirely so we
+  // don't leave a "Your story" tile that routes to an auth-gated page.
+  if (!user && stories.length === 0 && !isLoading) {
+    return null;
+  }
+
   // Hide the rail's bottom border when there's nothing but "Your story" — keeps
   // the home screen clean instead of leaving an orphan divider.
   const hasOthers = stories.length > 0 || isLoading;
@@ -41,30 +47,32 @@ export default function StoriesRail() {
   return (
     <div className={cn(hasOthers && "border-b border-border")}>
       <div className="flex gap-3 overflow-x-auto scrollbar-hide px-4 py-3">
-        {/* "Your story" — always first, never has a story-ring */}
-        <button
-          type="button"
-          onClick={() => navigate("/feed/new")}
-          className="shrink-0 flex flex-col items-center gap-1 touch-manipulation active:opacity-70 transition-opacity"
-        >
-          <div className="relative">
-            <Avatar className="h-[62px] w-[62px] border border-border">
-              <AvatarImage src={profile?.avatar_url || undefined} alt={yourName} />
-              <AvatarFallback className="bg-muted text-foreground text-base font-semibold">
-                {yourInitial}
-              </AvatarFallback>
-            </Avatar>
-            <span
-              aria-hidden
-              className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center ring-2 ring-background"
-            >
-              <Plus className="w-3 h-3" strokeWidth={3} />
+        {/* "Your story" — only shown to signed-in users (tile routes to auth-only /feed/new) */}
+        {user && (
+          <button
+            type="button"
+            onClick={() => navigate("/feed/new")}
+            className="shrink-0 flex flex-col items-center gap-1 touch-manipulation active:opacity-70 transition-opacity"
+          >
+            <div className="relative">
+              <Avatar className="h-[62px] w-[62px] border border-border">
+                <AvatarImage src={profile?.avatar_url || undefined} alt={yourName} />
+                <AvatarFallback className="bg-muted text-foreground text-base font-semibold">
+                  {yourInitial}
+                </AvatarFallback>
+              </Avatar>
+              <span
+                aria-hidden
+                className="absolute -bottom-0.5 -right-0.5 w-5 h-5 rounded-full bg-primary text-primary-foreground flex items-center justify-center ring-2 ring-background"
+              >
+                <Plus className="w-3 h-3" strokeWidth={3} />
+              </span>
+            </div>
+            <span className="text-[11px] text-foreground leading-none max-w-[64px] truncate">
+              Your story
             </span>
-          </div>
-          <span className="text-[11px] text-foreground leading-none max-w-[64px] truncate">
-            Your story
-          </span>
-        </button>
+          </button>
+        )}
 
         {stories.map(s => {
           const seen = initialWatched.has(s.id) || locallyWatched.has(s.id);

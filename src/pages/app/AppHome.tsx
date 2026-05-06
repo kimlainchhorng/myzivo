@@ -783,9 +783,7 @@ const AppHome = () => {
                 </button>
               </div>
             </div>
-          ) : (
-            <div className="pt-safe" />
-          )}
+          ) : null}
 
           {/* Service Tabs — Instagram story-rail style */}
           <div

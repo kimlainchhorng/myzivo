@@ -27,7 +27,7 @@ export default function VoiceRoomCard({ room, onJoin }: Props) {
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-2xl border border-border/40 bg-gradient-to-br from-violet-500/10 via-fuchsia-500/10 to-pink-500/10 p-4"
+      className="rounded-2xl border border-border bg-secondary p-4"
     >
       <div className="flex items-center gap-2 mb-2">
         {room.is_live && (

@@ -35,6 +35,7 @@ import { useCurrentLocation } from "@/hooks/useCurrentLocation";
 import { useCountry } from "@/hooks/useCountry";
 import { CheckoutPinMap } from "@/components/grocery/CheckoutPinMap";
 import { CheckoutRouteMap } from "@/components/grocery/CheckoutRouteMap";
+import { Link } from "react-router-dom";
 
 export type StorePaymentType = "cash" | "card" | "aba" | "paypal" | "square";
 
@@ -501,7 +502,8 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
           : `Order placed! Complete ABA payment`
       );
       if (orderId) {
-        // Trigger driver dispatch for grocery order
+        // Trigger driver dispatch (deployed as `dispatch-order` in the shared
+        // Supabase project; the folder lives in the zivodriver repo).
         supabase.functions.invoke("dispatch-order", {
           body: { order_id: orderId, order_type: "shopping_delivery" },
         }).catch(() => {/* dispatch is best-effort */});
@@ -1473,17 +1475,17 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                       <div className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/20 border border-border/10">
                         <RefreshCw className="h-3.5 w-3.5 text-primary/60 shrink-0" />
                         <p className="text-[9px] text-muted-foreground leading-relaxed">
-                          <span className="font-semibold text-foreground/70">Freshness Guarantee:</span> Report quality issues within 24h for a full refund. <a href="/grocery/returns" className="text-primary/70 underline">Returns policy</a>
+                          <span className="font-semibold text-foreground/70">Freshness Guarantee:</span> Report quality issues within 24h for a full refund. <Link to="/grocery/returns" className="text-primary/70 underline">Returns policy</Link>
                         </p>
                       </div>
                       <div className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/20 border border-border/10">
                         <AlertTriangle className="h-3.5 w-3.5 text-primary/60 shrink-0" />
                          <p className="text-[9px] text-muted-foreground leading-relaxed">
-                           <span className="font-semibold text-foreground/70">Cancellation:</span> Free before driver assigned · 15–50% after. <a href="/grocery/fees" className="text-primary/70 underline">View fees</a>
+                           <span className="font-semibold text-foreground/70">Cancellation:</span> Free before driver assigned · 15–50% after. <Link to="/grocery/fees" className="text-primary/70 underline">View fees</Link>
                          </p>
                       </div>
                       <p className="text-[8px] text-muted-foreground/50 text-center px-2">
-                        By placing your order, you agree to our <a href="/grocery/terms" className="text-primary/50 underline">Terms</a> and <a href="/privacy" className="text-primary/50 underline">Privacy Policy</a>
+                        By placing your order, you agree to our <Link to="/grocery/terms" className="text-primary/50 underline">Terms</Link> and <Link to="/privacy" className="text-primary/50 underline">Privacy Policy</Link>
                       </p>
                     </div>
                   </>

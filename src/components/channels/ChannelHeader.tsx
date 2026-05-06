@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Settings, Users } from "lucide-react";
+import { Settings, Users, BadgeCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { SubscribeButton } from "./SubscribeButton";
 import type { Channel } from "@/hooks/useChannel";
@@ -46,7 +46,15 @@ export function ChannelHeader({ channel, isSubscribed, isOwner, onSubscribe, onU
           </div>
         </div>
         <div className="mt-3">
-          <h1 className="text-xl font-bold">{channel.name}</h1>
+          <h1 className="text-xl font-bold inline-flex items-center gap-1.5">
+            {channel.name}
+            {(channel as any).is_verified && (
+              <BadgeCheck
+                className="h-5 w-5 text-sky-500 fill-sky-500/15"
+                aria-label="Verified channel"
+              />
+            )}
+          </h1>
           <p className="text-sm text-muted-foreground">@{channel.handle}</p>
           {channel.description && (
             <p className="mt-2 text-sm">{channel.description}</p>

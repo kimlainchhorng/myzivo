@@ -22,6 +22,7 @@ import CrossSellSection from "./CrossSellSection";
 import { AirlineLogo } from "@/components/flight/AirlineLogo";
 import type { GeneratedFlight } from "@/data/flightGenerator";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
 
 interface FlightResultsSectionProps {
   searchResults: GeneratedFlight[];
@@ -94,7 +95,7 @@ export default function FlightResultsSection({
               <span className="font-semibold text-foreground">Book directly with ZIVO:</span>{" "}
               <span className="hidden sm:inline">Secure checkout, instant e-ticket, and full booking support — all handled by ZIVO. </span>
               No hidden fees. No redirects.{" "}
-              <a href="/partner-disclosure" className="text-emerald-500 hover:underline">Learn more</a>
+              <Link to="/partner-disclosure" className="text-emerald-500 hover:underline">Learn more</Link>
             </p>
           </div>
         </div>

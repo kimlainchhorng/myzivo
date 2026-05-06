@@ -11,7 +11,7 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChannelMemberRow, type MemberRow } from "@/components/channels/ChannelMemberRow";
 import { toast } from "sonner";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, BadgeCheck, Loader2 } from "lucide-react";
 
 export default function ManageChannelPage() {
   const { handle } = useParams<{ handle: string }>();
@@ -22,6 +22,55 @@ export default function ManageChannelPage() {
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
   const [isPublic, setIsPublic] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [verifyBusy, setVerifyBusy] = useState(false);
+
+  // Check if the signed-in user is a platform admin (controls visibility of
+  // the "Verified" toggle below). The set_channel_verified RPC also enforces
+  // this server-side, so this is purely a UX gate.
+  useEffect(() => {
+    let alive = true;
+    (async () => {
+      try {
+        const { data } = await (supabase as any).rpc("is_admin", { _user_id: userId });
+        if (alive) setIsAdmin(Boolean(data));
+      } catch {
+        // Fallback to user_roles lookup if is_admin signature differs
+        try {
+          const { data: rows } = await (supabase as any)
+            .from("user_roles")
+            .select("role")
+            .eq("user_id", userId)
+            .eq("role", "admin")
+            .maybeSingle();
+          if (alive) setIsAdmin(!!rows);
+        } catch {
+          if (alive) setIsAdmin(false);
+        }
+      }
+    })();
+    return () => { alive = false; };
+  }, [userId]);
+
+  const toggleVerified = async () => {
+    if (!channel) return;
+    setVerifyBusy(true);
+    try {
+      const next = !(channel as any).is_verified;
+      const { error } = await (supabase as any).rpc("set_channel_verified", {
+        p_channel_id: channel.id,
+        p_verified: next,
+      });
+      if (error) throw error;
+      toast.success(next ? "Channel marked verified" : "Verified badge removed");
+      await refresh();
+    } catch (e: any) {
+      toast.error(e?.message || "Could not update verified state");
+    } finally {
+      setVerifyBusy(false);
+    }
+  };
+
 
   useEffect(() => {
     if (!channel) return;
@@ -142,6 +191,27 @@ export default function ManageChannelPage() {
             <Label>Public</Label>
             <Switch checked={isPublic} onCheckedChange={setIsPublic} />
           </div>
+          {isAdmin && (
+            <div className="flex items-center justify-between rounded-md border border-sky-500/30 bg-sky-500/5 p-3">
+              <div className="space-y-0.5">
+                <Label className="flex items-center gap-1.5">
+                  <BadgeCheck className="h-4 w-4 text-sky-500" />
+                  Verified
+                </Label>
+                <p className="text-[11px] text-muted-foreground">
+                  Platform admin only. Adds a blue checkmark next to the channel name.
+                </p>
+              </div>
+              <Button
+                onClick={toggleVerified}
+                disabled={verifyBusy}
+                size="sm"
+                variant={(channel as any).is_verified ? "secondary" : "default"}
+              >
+                {verifyBusy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : (channel as any).is_verified ? "Remove" : "Verify"}
+              </Button>
+            </div>
+          )}
           <Button onClick={saveMeta}>Save</Button>
         </TabsContent>
 

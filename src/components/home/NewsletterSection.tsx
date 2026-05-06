@@ -13,6 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { Link } from "react-router-dom";
 
 const perks = [
   { icon: TrendingDown, text: "Weekly fare drops & secret deals" },
@@ -109,7 +110,7 @@ export default function NewsletterSection() {
 
                   <p className="text-xs text-muted-foreground/60 mt-4 text-center">
                     No spam, unsubscribe anytime. Read our{" "}
-                    <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>.
+                    <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>.
                   </p>
                 </div>
               </div>

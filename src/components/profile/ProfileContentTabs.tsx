@@ -1364,9 +1364,11 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                         role="menuitem"
                         aria-label="Delete this post"
                         onClick={() => {
-                          if (window.confirm("Delete this post? This can't be undone.")) {
-                            handleDeletePost(selectedPost.id);
-                          }
+                          toast("Delete this post?", {
+                            description: "This can't be undone.",
+                            action: { label: "Delete", onClick: () => handleDeletePost(selectedPost.id) },
+                            cancel: { label: "Cancel", onClick: () => {} },
+                          });
                         }}
                         className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-destructive hover:bg-muted/50 focus-visible:bg-muted/60 focus-visible:outline-none transition-colors"
                       >

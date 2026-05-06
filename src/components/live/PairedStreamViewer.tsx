@@ -173,12 +173,12 @@ export default function PairedStreamViewer({
     };
 
     pc.oniceconnectionstatechange = () => {
-      console.log("[viewer] iceConnectionState=", pc.iceConnectionState);
+      if (import.meta.env.DEV) console.log("[viewer] iceConnectionState=", pc.iceConnectionState);
     };
 
     pc.onconnectionstatechange = () => {
       const nextState = pc.connectionState;
-      console.log("[viewer] connectionState=", nextState);
+      if (import.meta.env.DEV) console.log("[viewer] connectionState=", nextState);
       if (nextState === "connected") {
         setState("live");
         restartAttempted = false;
@@ -201,7 +201,7 @@ export default function PairedStreamViewer({
         if (!restartAttempted) {
           restartAttempted = true;
           try {
-            console.log("[viewer] attempting restartIce()");
+            if (import.meta.env.DEV) console.log("[viewer] attempting restartIce()");
             pc.restartIce();
           } catch (e) {
             console.warn("[viewer] restartIce failed", e);
@@ -212,7 +212,7 @@ export default function PairedStreamViewer({
           restartTimer = setTimeout(() => {
             if (!active) return;
             if (pc.connectionState === "connected") return;
-            console.log("[viewer] restartIce did not recover, tearing down");
+            if (import.meta.env.DEV) console.log("[viewer] restartIce did not recover, tearing down");
             if (videoRef.current) videoRef.current.srcObject = null;
             setStreamId(null);
             setState("waiting-for-stream");
@@ -239,7 +239,7 @@ export default function PairedStreamViewer({
       try {
         if (row.type === "offer") {
           if (pc.signalingState !== "stable") {
-            console.log("[viewer] ignoring offer, state=", pc.signalingState);
+            if (import.meta.env.DEV) console.log("[viewer] ignoring offer, state=", pc.signalingState);
             return;
           }
           setState("negotiating");

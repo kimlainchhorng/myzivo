@@ -395,9 +395,9 @@ const SafeAreaQAPage = () => {
 
         <p className="text-xs text-muted-foreground">
           Reference:{" "}
-          <a className="underline" href="/docs/dev/capacitor-safe-area.md">
+          <Link className="underline" to="/docs/dev/capacitor-safe-area.md">
             docs/dev/capacitor-safe-area.md
-          </a>
+          </Link>
         </p>
       </main>
     </div>

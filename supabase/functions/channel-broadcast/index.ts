@@ -123,28 +123,35 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Fan-out only when published immediately
+    // Fan-out only when published immediately. Schedule path is handled by
+    // the channel-publish-scheduled cron, which also runs the fan-out so
+    // subscribers always learn about the post the moment it goes live —
+    // not at insert time.
     let notified = 0;
     if (publishNow) {
       const { data: subs } = await supabase
         .from("channel_subscribers")
-        .select("user_id, muted")
+        .select("user_id, notifications_on")
         .eq("channel_id", channel_id);
       const recipients = (subs ?? [])
-        .filter((s: any) => !s.muted && s.user_id !== u.user.id)
+        .filter((s: any) => s.notifications_on !== false && s.user_id !== u.user.id)
         .map((s: any) => s.user_id);
-      // Best-effort: write notifications rows (push fan-out happens via existing notifier)
       if (recipients.length) {
         const actionUrl = ch.handle ? `/c/${ch.handle}` : `/channels`;
         const rows = recipients.map((uid: string) => ({
           user_id: uid,
-          type: "channel_post",
+          channel: "in_app" as const,
+          category: "social" as const,
+          template: "channel_post",
           title: ch.name,
           body: (text ?? "Sent a new post").slice(0, 140),
           action_url: actionUrl,
-          data: { channel_id, post_id: post.id, handle: ch.handle },
+          status: "sent" as const,
+          metadata: { channel_id, post_id: post.id, handle: ch.handle },
         }));
-        await supabase.from("notifications").insert(rows).then(() => { notified = rows.length; }).catch(() => {});
+        const { error: notifyErr } = await supabase.from("notifications").insert(rows);
+        if (!notifyErr) notified = rows.length;
+        else console.warn("[channel-broadcast] notify insert failed", notifyErr.message);
       }
     }
 

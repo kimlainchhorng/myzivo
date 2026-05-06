@@ -434,6 +434,53 @@ export type Database = {
           },
         ]
       }
+      ad_boost_bids: {
+        Row: {
+          budget_cents: number
+          created_at: string
+          decided_at: string | null
+          duration_days: number
+          id: string
+          placement: string
+          predicted_roi_pct: number | null
+          status: string
+          store_id: string | null
+          user_id: string
+        }
+        Insert: {
+          budget_cents: number
+          created_at?: string
+          decided_at?: string | null
+          duration_days: number
+          id?: string
+          placement: string
+          predicted_roi_pct?: number | null
+          status?: string
+          store_id?: string | null
+          user_id: string
+        }
+        Update: {
+          budget_cents?: number
+          created_at?: string
+          decided_at?: string | null
+          duration_days?: number
+          id?: string
+          placement?: string
+          predicted_roi_pct?: number | null
+          status?: string
+          store_id?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ad_boost_bids_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ad_campaigns: {
         Row: {
           conversions: number
@@ -9486,6 +9533,90 @@ export type Database = {
         }
         Relationships: []
       }
+      channel_post_comment_likes: {
+        Row: {
+          comment_id: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_post_comment_likes_comment_id_fkey"
+            columns: ["comment_id"]
+            isOneToOne: false
+            referencedRelation: "channel_post_comments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      channel_post_comments: {
+        Row: {
+          body: string
+          channel_id: string
+          created_at: string
+          deleted_at: string | null
+          edited_at: string | null
+          id: string
+          parent_id: string | null
+          post_id: string
+          user_id: string
+        }
+        Insert: {
+          body: string
+          channel_id: string
+          created_at?: string
+          deleted_at?: string | null
+          edited_at?: string | null
+          id?: string
+          parent_id?: string | null
+          post_id: string
+          user_id: string
+        }
+        Update: {
+          body?: string
+          channel_id?: string
+          created_at?: string
+          deleted_at?: string | null
+          edited_at?: string | null
+          id?: string
+          parent_id?: string | null
+          post_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "channel_post_comments_channel_id_fkey"
+            columns: ["channel_id"]
+            isOneToOne: false
+            referencedRelation: "channels"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_post_comments_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "channel_post_comments"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "channel_post_comments_post_id_fkey"
+            columns: ["post_id"]
+            isOneToOne: false
+            referencedRelation: "channel_posts"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       channel_post_reactions: {
         Row: {
           created_at: string
@@ -9546,9 +9677,13 @@ export type Database = {
           author_id: string
           body: string | null
           channel_id: string
+          comments_count: number
+          comments_enabled: boolean
           created_at: string
           id: string
+          is_pinned: boolean
           media: Json
+          pinned_at: string | null
           published_at: string | null
           reactions_count: Json
           scheduled_for: string | null
@@ -9559,9 +9694,13 @@ export type Database = {
           author_id: string
           body?: string | null
           channel_id: string
+          comments_count?: number
+          comments_enabled?: boolean
           created_at?: string
           id?: string
+          is_pinned?: boolean
           media?: Json
+          pinned_at?: string | null
           published_at?: string | null
           reactions_count?: Json
           scheduled_for?: string | null
@@ -9572,9 +9711,13 @@ export type Database = {
           author_id?: string
           body?: string | null
           channel_id?: string
+          comments_count?: number
+          comments_enabled?: boolean
           created_at?: string
           id?: string
+          is_pinned?: boolean
           media?: Json
+          pinned_at?: string | null
           published_at?: string | null
           reactions_count?: Json
           scheduled_for?: string | null
@@ -9632,10 +9775,13 @@ export type Database = {
           handle: string
           id: string
           is_public: boolean
+          is_verified: boolean
           name: string
           owner_id: string
           subscriber_count: number
           updated_at: string
+          verified_at: string | null
+          verified_by: string | null
         }
         Insert: {
           avatar_url?: string | null
@@ -9645,10 +9791,13 @@ export type Database = {
           handle: string
           id?: string
           is_public?: boolean
+          is_verified?: boolean
           name: string
           owner_id: string
           subscriber_count?: number
           updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Update: {
           avatar_url?: string | null
@@ -9658,10 +9807,13 @@ export type Database = {
           handle?: string
           id?: string
           is_public?: boolean
+          is_verified?: boolean
           name?: string
           owner_id?: string
           subscriber_count?: number
           updated_at?: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Relationships: []
       }
@@ -27310,6 +27462,7 @@ export type Database = {
           job_id: string
           miles_to_pickup: number | null
           offer_status: Database["public"]["Enums"]["offer_status"]
+          ride_request_id: string | null
           status: string | null
         }
         Insert: {
@@ -27326,6 +27479,7 @@ export type Database = {
           job_id: string
           miles_to_pickup?: number | null
           offer_status?: Database["public"]["Enums"]["offer_status"]
+          ride_request_id?: string | null
           status?: string | null
         }
         Update: {
@@ -27342,6 +27496,7 @@ export type Database = {
           job_id?: string
           miles_to_pickup?: number | null
           offer_status?: Database["public"]["Enums"]["offer_status"]
+          ride_request_id?: string | null
           status?: string | null
         }
         Relationships: [
@@ -27357,6 +27512,13 @@ export type Database = {
             columns: ["job_id"]
             isOneToOne: false
             referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_offers_ride_request_id_fkey"
+            columns: ["ride_request_id"]
+            isOneToOne: false
+            referencedRelation: "ride_requests"
             referencedColumns: ["id"]
           },
         ]
@@ -32180,6 +32342,45 @@ export type Database = {
           points?: number
           tier?: string
           updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      loyalty_award_events: {
+        Row: {
+          amount_cents: number
+          base_points: number
+          created_at: string
+          id: string
+          source_id: string
+          source_type: string
+          tier_at_award: string | null
+          tier_bonus: number
+          total_points: number
+          user_id: string
+        }
+        Insert: {
+          amount_cents: number
+          base_points: number
+          created_at?: string
+          id?: string
+          source_id: string
+          source_type: string
+          tier_at_award?: string | null
+          tier_bonus?: number
+          total_points: number
+          user_id: string
+        }
+        Update: {
+          amount_cents?: number
+          base_points?: number
+          created_at?: string
+          id?: string
+          source_id?: string
+          source_type?: string
+          tier_at_award?: string | null
+          tier_bonus?: number
+          total_points?: number
           user_id?: string
         }
         Relationships: []
@@ -61036,6 +61237,27 @@ export type Database = {
         }
         Relationships: []
       }
+      voice_transcriptions: {
+        Row: {
+          created_at: string
+          language: string | null
+          message_id: string
+          text: string
+        }
+        Insert: {
+          created_at?: string
+          language?: string | null
+          message_id: string
+          text: string
+        }
+        Update: {
+          created_at?: string
+          language?: string | null
+          message_id?: string
+          text?: string
+        }
+        Relationships: []
+      }
       voicemails: {
         Row: {
           audio_url: string
@@ -65967,6 +66189,27 @@ export type Database = {
         }[]
       }
       accept_offer: { Args: { p_offer_id: string }; Returns: Json }
+      accept_p2p_transfer: {
+        Args: { p_transfer_id: string }
+        Returns: {
+          amount_cents: number
+          completed_at: string | null
+          created_at: string
+          currency: string
+          id: string
+          message_id: string | null
+          note: string | null
+          receiver_id: string
+          sender_id: string
+          status: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "p2p_transfers"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       accept_shop_referral: {
         Args: { p_new_store_id: string; p_referral_code: string }
         Returns: boolean
@@ -65980,6 +66223,7 @@ export type Database = {
         Args: { p_accepted: boolean; p_recommendation_id: string }
         Returns: Json
       }
+      actor_display_name: { Args: { _user_id: string }; Returns: string }
       add_driver_points: {
         Args: {
           p_driver_id: string
@@ -66155,6 +66399,15 @@ export type Database = {
         Args: { p_order_id: string; p_service_type?: string }
         Returns: Json
       }
+      award_loyalty_points: {
+        Args: {
+          p_amount_cents: number
+          p_source_id: string
+          p_source_type: string
+          p_user_id: string
+        }
+        Returns: number
+      }
       award_order_points: { Args: { p_order_id: string }; Returns: Json }
       block_driver_for_multi_account: {
         Args: { p_driver_id: string; p_hours?: number }
@@ -66226,6 +66479,27 @@ export type Database = {
       cancel_live_pair_session: {
         Args: { p_token: string }
         Returns: undefined
+      }
+      cancel_p2p_transfer: {
+        Args: { p_transfer_id: string }
+        Returns: {
+          amount_cents: number
+          completed_at: string | null
+          created_at: string
+          currency: string
+          id: string
+          message_id: string | null
+          note: string | null
+          receiver_id: string
+          sender_id: string
+          status: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "p2p_transfers"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       check_expiring_documents: { Args: never; Returns: number }
       check_login_anomaly: {
@@ -66458,9 +66732,40 @@ export type Database = {
         }
         Returns: boolean
       }
+      credit_user_wallet_topup: {
+        Args: {
+          p_amount_cents: number
+          p_currency: string
+          p_description?: string
+          p_stripe_reference: string
+          p_user_id: string
+        }
+        Returns: Json
+      }
       customer_can_view_driver: {
         Args: { _driver_id: string }
         Returns: boolean
+      }
+      decline_p2p_transfer: {
+        Args: { p_transfer_id: string }
+        Returns: {
+          amount_cents: number
+          completed_at: string | null
+          created_at: string
+          currency: string
+          id: string
+          message_id: string | null
+          note: string | null
+          receiver_id: string
+          sender_id: string
+          status: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "p2p_transfers"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       decrement_forum_post_likes: {
         Args: { post_id_input: string }
@@ -67463,6 +67768,16 @@ export type Database = {
         Args: { p_restaurant_id: string }
         Returns: number
       }
+      notify_mentions_in_text: {
+        Args: {
+          p_action_url: string
+          p_actor_id: string
+          p_template: string
+          p_text: string
+          p_title: string
+        }
+        Returns: undefined
+      }
       optimize_batch_route: {
         Args: { p_batch_id: string; p_start_lat?: number; p_start_lng?: number }
         Returns: Json
@@ -67572,6 +67887,7 @@ export type Database = {
         Args: {
           _device_fingerprint: string
           _device_name?: string
+          _device_type?: string
           _ip_address?: string
           _user_id: string
         }
@@ -67597,6 +67913,7 @@ export type Database = {
         Args: { p_token: string }
         Returns: undefined
       }
+      run_ad_boost_auction: { Args: never; Returns: Json }
       safe_parse_timestamptz: { Args: { input: string }; Returns: string }
       safe_uuid: { Args: { _text: string }; Returns: string }
       score_driver_for_assignment: {
@@ -67621,6 +67938,10 @@ export type Database = {
           p_tier?: string
         }
         Returns: Json
+      }
+      set_channel_verified: {
+        Args: { p_channel_id: string; p_verified: boolean }
+        Returns: boolean
       }
       set_customer_phone: { Args: { p_phone_e164: string }; Returns: Json }
       set_driver_phone: { Args: { p_phone_e164: string }; Returns: Json }
@@ -67693,6 +68014,7 @@ export type Database = {
           }
       sync_customer_phone_verified: { Args: never; Returns: Json }
       sync_driver_phone_verified: { Args: never; Returns: Json }
+      toggle_channel_post_pin: { Args: { p_post_id: string }; Returns: boolean }
       toggle_unified_comment_pin: {
         Args: { _comment_id: string }
         Returns: {
@@ -68872,3 +69194,4 @@ export const Constants = {
     },
   },
 } as const
+

@@ -57,22 +57,22 @@ export default function AdBoostBidding() {
     }
     setIsSubmitting(true);
     try {
-      // Create a boost via Stripe checkout
-      const { data, error } = await supabase.functions.invoke("create-travel-checkout", {
-        body: {
-          orderId: `boost-${placement}-${Date.now()}`,
-          successUrl: `${window.location.origin}/shop-dashboard/roi?boosted=true`,
-          cancelUrl: `${window.location.origin}/shop-dashboard/boost`,
-        },
+      // Record the bid in `ad_boost_bids`. The ad-auction scheduler picks the
+      // highest bid per placement per window and flips it to status='won'.
+      // (The previous call to `create-travel-checkout` invoked an edge fn
+      // that doesn't exist — silent 404 on every submit.)
+      const { error } = await (supabase as any).from("ad_boost_bids").insert({
+        user_id: user.id,
+        placement,
+        budget_cents: budgetCents,
+        duration_days: durationDays,
+        predicted_roi_pct: predictedROI,
       });
       if (error) throw error;
-      if (data?.url) {
-        window.location.href = data.url;
-      } else {
-        toast.success("Boost submitted! Your placement will go live within 1 hour.");
-      }
-    } catch (err) {
-      toast.error("Failed to submit boost");
+      toast.success("Boost bid submitted. We'll notify you when the auction completes.");
+      navigate("/shop-dashboard/roi?boosted=true");
+    } catch (err: any) {
+      toast.error(err?.message || "Failed to submit boost");
     } finally {
       setIsSubmitting(false);
     }

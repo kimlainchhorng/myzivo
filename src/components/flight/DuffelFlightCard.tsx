@@ -20,6 +20,7 @@ import SeatMapPreview from "@/components/flight/SeatMapPreview";
 import BoardingPass3D from "@/components/flight/BoardingPass3D";
 import { use3DTilt } from "@/hooks/use3DTilt";
 import { cn } from "@/lib/utils";
+import { Link } from "react-router-dom";
 
 interface DuffelFlightCardProps {
   offer: DuffelOffer;
@@ -716,7 +717,7 @@ export default function DuffelFlightCard({
               <p className="text-[8px] text-muted-foreground/60 flex items-center gap-0.5">
                 <ExternalLink className="w-2 h-2 shrink-0" />
                 Booking completed via licensed travel partner.{" "}
-                <a href="/partner-disclosure" className="underline hover:text-foreground">Learn more</a>
+                <Link to="/partner-disclosure" className="underline hover:text-foreground">Learn more</Link>
               </p>
             </div>
           </motion.div>

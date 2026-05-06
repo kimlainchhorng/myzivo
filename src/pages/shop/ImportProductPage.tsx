@@ -145,7 +145,7 @@ export default function ImportProductPage() {
             <span>ZIVO Phnom Penh warehouse</span>
           </div>
           <div className="flex items-center gap-2 text-[12px]">
-            <Shield className="h-4 w-4 text-purple-600" />
+            <Shield className="h-4 w-4 text-foreground" />
             <span className="font-semibold">Buyer protection:</span>
             <span>Refund if not delivered</span>
           </div>

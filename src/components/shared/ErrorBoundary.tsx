@@ -76,24 +76,24 @@ export class ErrorBoundary extends Component<Props, State> {
       return (
         <div className="min-h-screen bg-background flex items-center justify-center p-6">
           <div className="text-center max-w-md">
-            <div className="w-16 h-16 rounded-2xl bg-destructive/10 flex items-center justify-center mx-auto mb-6">
-              <AlertTriangle className="w-8 h-8 text-destructive" />
+            <div className="w-14 h-14 rounded-2xl bg-secondary border border-border flex items-center justify-center mx-auto mb-5">
+              <AlertTriangle className="w-7 h-7 text-destructive" />
             </div>
-            <h1 className="text-2xl font-bold mb-2">Something went wrong</h1>
-            <p className="text-muted-foreground mb-6">
+            <h1 className="text-2xl font-bold tracking-tight mb-2">Something went wrong</h1>
+            <p className="text-base text-muted-foreground mb-6">
               An unexpected error occurred. This has been logged and we're working on a fix.
             </p>
             {import.meta.env.DEV && this.state.error && (
-              <pre className="text-left text-xs bg-muted/50 rounded-xl p-4 mb-6 overflow-auto max-h-32 text-destructive">
+              <pre className="text-left text-xs bg-secondary border border-border rounded-xl p-4 mb-6 overflow-auto max-h-32 text-destructive font-mono">
                 {this.state.error.message}
               </pre>
             )}
             <div className="flex gap-3 justify-center">
-              <Button onClick={this.handleRetry} className="gap-2">
+              <Button onClick={this.handleRetry} className="gap-2 rounded-full h-11 px-5 font-bold">
                 <RefreshCw className="w-4 h-4" />
                 Try Again
               </Button>
-              <Button variant="outline" onClick={this.handleGoHome} className="gap-2">
+              <Button variant="outline" onClick={this.handleGoHome} className="gap-2 rounded-full h-11 px-5 font-bold">
                 <Home className="w-4 h-4" />
                 Go Home
               </Button>

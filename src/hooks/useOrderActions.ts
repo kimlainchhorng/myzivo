@@ -26,12 +26,16 @@ export function useOrderActions() {
   const resendConfirmation = useCallback(async (orderId: string) => {
     setIsResending(true);
     try {
-      await supabase.functions.invoke("send-order-confirmation", {
+      // `send-order-confirmation` was never deployed. Re-trigger the
+      // receipt-email flow instead so the user actually gets a fresh
+      // confirmation in their inbox.
+      const { error } = await supabase.functions.invoke("eats-order-receipt", {
         body: { order_id: orderId },
       });
+      if (error) throw error;
       toast.success("Confirmation resent");
-    } catch {
-      toast.error("Failed to resend confirmation");
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to resend confirmation");
     } finally {
       setIsResending(false);
     }

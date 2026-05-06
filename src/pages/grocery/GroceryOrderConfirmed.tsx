@@ -62,7 +62,8 @@ export default function GroceryOrderConfirmed() {
 
         if (data) setOrder(data as unknown as OrderSummary);
 
-        // Trigger driver dispatch
+        // Trigger driver dispatch (deployed as `dispatch-order` in the shared
+        // Supabase project; folder lives in the zivodriver repo, not here).
         supabase.functions.invoke("dispatch-order", {
           body: { order_id: orderId, order_type: "shopping_delivery" },
         }).catch(() => {/* best-effort */});

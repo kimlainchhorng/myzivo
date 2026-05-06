@@ -11,6 +11,8 @@ export type Channel = {
   owner_id: string;
   is_public: boolean;
   subscriber_count: number;
+  is_verified?: boolean;
+  verified_at?: string | null;
 };
 
 export type ChannelPost = {
@@ -24,6 +26,10 @@ export type ChannelPost = {
   view_count: number;
   reactions_count: any;
   created_at: string;
+  is_pinned?: boolean;
+  pinned_at?: string | null;
+  comments_enabled?: boolean;
+  comments_count?: number;
 };
 
 export function useChannel(handle: string | undefined) {
@@ -58,6 +64,9 @@ export function useChannel(handle: string | undefined) {
       .select("*")
       .eq("channel_id", ch.id)
       .not("published_at", "is", null)
+      // Pinned first, then newest. The sort runs again client-side after
+      // re-fetches in case `is_pinned` flips for an already-loaded post.
+      .order("is_pinned", { ascending: false } as any)
       .order("published_at", { ascending: false })
       .limit(50);
     setPosts((postsData ?? []) as any);

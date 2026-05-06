@@ -131,18 +131,16 @@ export default function HotelRoomCheckoutPage() {
       if (error) throw error;
 
       if (payMethod === "card") {
-        // Create Stripe checkout session for lodging reservation
-        const { data: session, error: sessionErr } = await supabase.functions.invoke("create-lodging-checkout", {
+        // Create Stripe Checkout Session via the existing create-lodging-deposit
+        // edge fn (the previously-named create-lodging-checkout never existed
+        // in this project — a typo that silently broke card checkout).
+        const { data: session, error: sessionErr } = await supabase.functions.invoke("create-lodging-deposit", {
           body: {
             reservation_id: res.id,
             store_id: storeId,
-            room_name: room?.name ?? "Room",
-            nights,
-            total_cents: totalCents,
-            guest_name: name.trim(),
-            guest_email: email.trim() || undefined,
-            success_url: `${window.location.origin}/hotel/${storeId}/booking-confirmed?reservation_id=${res.id}`,
-            cancel_url: window.location.href,
+            deposit_cents: totalCents,
+            mode: "full",
+            ui_mode: "hosted",
           },
         });
 

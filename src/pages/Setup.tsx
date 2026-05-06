@@ -296,6 +296,48 @@ export default function Setup() {
             </div>
           </div>
 
+          {/* AI Polish — calls ai-face-edit (beauty mode) on the selected
+              avatar. Only shown when an avatar is staged so we don't waste
+              a (rate-limited, vision-model-priced) call on the placeholder. */}
+          {avatarFile && (
+            <div className="flex justify-center mt-2">
+              <button
+                type="button"
+                onClick={async () => {
+                  if (!avatarFile) return;
+                  try {
+                    const reader = new FileReader();
+                    const base64 = await new Promise<string>((resolve, reject) => {
+                      reader.onload = () => resolve(String(reader.result || ""));
+                      reader.onerror = () => reject(reader.error);
+                      reader.readAsDataURL(avatarFile);
+                    });
+                    toast.loading("Polishing photo…", { id: "ai-polish" });
+                    const { data, error } = await supabase.functions.invoke("ai-face-edit", {
+                      body: { imageBase64: base64, mode: "beauty" },
+                    });
+                    if (error) throw error;
+                    const enhanced = (data as { imageUrl?: string })?.imageUrl;
+                    if (!enhanced) throw new Error("No enhanced image returned");
+                    // Convert the data URL back into a File so the existing
+                    // upload pipeline (stripImageMetadata + profile-avatar-upload)
+                    // can handle it unchanged.
+                    const blob = await fetch(enhanced).then((r) => r.blob());
+                    const polished = new File([blob], "avatar-ai.png", { type: "image/png" });
+                    setAvatarFile(polished);
+                    setAvatarPreview(URL.createObjectURL(polished));
+                    toast.success("Photo polished — review then continue.", { id: "ai-polish" });
+                  } catch (e: any) {
+                    toast.error(e?.message || "AI polish failed", { id: "ai-polish" });
+                  }
+                }}
+                className="text-xs font-semibold text-white bg-primary/80 hover:bg-primary px-3 py-1.5 rounded-full inline-flex items-center gap-1.5 active:scale-95 transition"
+              >
+                ✨ AI polish photo
+              </button>
+            </div>
+          )}
+
           <div className="px-6 pb-6 pt-3 sm:px-8 sm:pb-8">
             <div className="mb-5">
               <div className="text-center">

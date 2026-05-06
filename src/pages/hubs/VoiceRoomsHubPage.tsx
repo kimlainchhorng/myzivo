@@ -70,7 +70,7 @@ export default function VoiceRoomsHubPage() {
             <h1 className="text-2xl font-bold inline-flex items-center gap-2"><Mic className="w-6 h-6 text-primary" />Voice rooms</h1>
             <p className="text-sm text-muted-foreground">Drop into live audio conversations.</p>
           </div>
-          <button onClick={() => navigate("/voice-rooms/create")} className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-gradient-to-r from-violet-500 to-fuchsia-500 text-white text-sm font-bold">
+          <button onClick={() => navigate("/voice-rooms/create")} className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-white text-sm font-bold bg-foreground">
             <Mic className="w-4 h-4" /> Go live
           </button>
         </div>

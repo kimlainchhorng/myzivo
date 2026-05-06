@@ -6,6 +6,7 @@ import { ExternalLink, Check, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { carAffiliatePartners, type CarAffiliatePartner, type CarAffiliateParams } from '@/data/carAffiliatePartners';
 import { trackAffiliateClick } from '@/lib/affiliateTracking';
+import { Link } from "react-router-dom";
 
 interface CarPartnerSelectorProps {
   pickupLocation: string;
@@ -138,7 +139,7 @@ export default function CarPartnerSelector({
 
       <p className="text-[9px] sm:text-[10px] text-muted-foreground text-center">
         ZIVO may earn a commission when you book through partner links.{' '}
-        <a href="/affiliate-disclosure" className="text-foreground hover:underline">Learn more</a>
+        <Link to="/affiliate-disclosure" className="text-foreground hover:underline">Learn more</Link>
       </p>
     </div>
   );

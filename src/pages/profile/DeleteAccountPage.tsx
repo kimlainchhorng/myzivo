@@ -4,7 +4,7 @@
  */
 
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate , Link} from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { AlertTriangle, ArrowLeft, Calendar, CheckCircle, Clock, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -309,9 +309,9 @@ export default function DeleteAccountPage() {
             {/* Help link */}
             <p className="text-center text-sm text-muted-foreground">
               Having issues?{' '}
-              <a href="/contact" className="text-primary hover:underline">
+              <Link to="/contact" className="text-primary hover:underline">
                 Contact support
-              </a>{' '}
+              </Link>{' '}
               instead.
             </p>
           </>

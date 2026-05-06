@@ -333,6 +333,51 @@ export default function AccountExportPage() {
           </p>
         </div>
 
+        {/* Server-side audited export — calls the `account-export` edge fn
+            which uses the service role to bundle data the user can't read
+            directly via RLS, and writes an audit log row for compliance. */}
+        <div className="rounded-xl border border-primary/30 bg-primary/5 p-4 space-y-2">
+          <p className="text-sm font-semibold flex items-center gap-1.5">
+            <Download className="h-4 w-4 text-primary" />
+            Authoritative export (server-side)
+          </p>
+          <p className="text-[11px] text-muted-foreground leading-relaxed">
+            One JSON bundle of every table that holds your data, generated server-side with full
+            scope and recorded in the compliance audit log. Requires re-confirming your identity
+            (TOTP) for security.
+          </p>
+          <button
+            type="button"
+            onClick={async () => {
+              try {
+                const { data, error } = await (supabase as any).functions.invoke("account-export");
+                if (error) throw error;
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                a.href = url;
+                const stamp = new Date().toISOString().slice(0, 10);
+                a.download = `zivo-account-export-${stamp}.json`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+                toast.success("Server-side export downloaded.");
+              } catch (e: any) {
+                const msg = e?.message || "Export failed";
+                toast.error(
+                  msg.includes("aal2") || msg.includes("AAL2")
+                    ? "Re-authenticate with TOTP, then try again."
+                    : msg
+                );
+              }
+            }}
+            className="w-full mt-1 px-4 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold active:scale-95 transition-transform"
+          >
+            Download authoritative bundle
+          </button>
+        </div>
+
         {/* Format selector */}
         <div>
           <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-1 mb-2">Format</p>

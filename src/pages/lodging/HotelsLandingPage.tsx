@@ -7,7 +7,7 @@
  */
 import { useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { format, addDays, differenceInCalendarDays } from "date-fns";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
@@ -88,13 +88,42 @@ const todayUTC = () => {
 
 export default function HotelsLandingPage() {
   const navigate = useNavigate();
-  const [search, setSearch] = useState("");
+  const [searchParams] = useSearchParams();
+
+  // Honor share-card / deep-link query params on mount: ?city=&ci=&co=&adults=&children=
+  // Matches the params built by ZivoCardPicker's hotel composer.
+  const initial = useMemo(() => {
+    const parseDate = (raw: string | null): Date | null => {
+      if (!raw) return null;
+      const d = new Date(raw + "T00:00:00");
+      return Number.isNaN(d.getTime()) ? null : d;
+    };
+    const parseInt10 = (raw: string | null): number | null => {
+      if (!raw) return null;
+      const n = parseInt(raw, 10);
+      return Number.isFinite(n) && n >= 0 ? n : null;
+    };
+    return {
+      city: searchParams.get("city") || "",
+      ci: parseDate(searchParams.get("ci")),
+      co: parseDate(searchParams.get("co")),
+      adults: parseInt10(searchParams.get("adults")),
+      children: parseInt10(searchParams.get("children")),
+    };
+    // We compute this once at mount; subsequent in-page changes shouldn't
+    // re-overwrite the user's edits.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const [search, setSearch] = useState(initial.city);
   const [activeFilter, setActiveFilter] = useState<string>("all");
   const [activeTags, setActiveTags] = useState<string[]>([]);
-  const [checkIn, setCheckIn] = useState<Date>(() => todayUTC());
-  const [checkOut, setCheckOut] = useState<Date>(() => addDays(todayUTC(), 1));
-  const [guests, setGuests] = useState<number>(2);
-  const [children, setChildren] = useState<number>(0);
+  const [checkIn, setCheckIn] = useState<Date>(() => initial.ci ?? todayUTC());
+  const [checkOut, setCheckOut] = useState<Date>(
+    () => initial.co ?? addDays(initial.ci ?? todayUTC(), 1)
+  );
+  const [guests, setGuests] = useState<number>(initial.adults ?? 2);
+  const [children, setChildren] = useState<number>(initial.children ?? 0);
   const [rooms, setRooms] = useState<number>(1);
   const [datesOpen, setDatesOpen] = useState(false);
   const [guestsOpen, setGuestsOpen] = useState(false);

@@ -6,6 +6,7 @@ import { ExternalLink, Check, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { hotelAffiliatePartners, type HotelAffiliatePartner, type HotelAffiliateParams } from '@/data/hotelAffiliatePartners';
 import { trackAffiliateClick } from '@/lib/affiliateTracking';
+import { Link } from "react-router-dom";
 
 interface HotelPartnerSelectorProps {
   destination: string;
@@ -135,7 +136,7 @@ export default function HotelPartnerSelector({
 
       <p className="text-[9px] sm:text-[10px] text-muted-foreground text-center">
         ZIVO may earn a commission when you book through partner links.{' '}
-        <a href="/affiliate-disclosure" className="text-amber-500 hover:underline">Learn more</a>
+        <Link to="/affiliate-disclosure" className="text-amber-500 hover:underline">Learn more</Link>
       </p>
     </div>
   );

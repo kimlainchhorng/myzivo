@@ -71,7 +71,7 @@ export default function OnboardingTour() {
             transition={{ type: "spring", damping: 26, stiffness: 280 }}
             className="w-full sm:max-w-md mx-4 mb-4 sm:mb-0 bg-background rounded-2xl shadow-2xl overflow-hidden"
           >
-            <div className="relative bg-gradient-to-br from-violet-500 via-fuchsia-500 to-pink-500 h-32 flex items-center justify-center text-5xl">
+            <div className="relative bg-foreground text-background h-32 flex items-center justify-center text-5xl">
               {stepIdx === 0 ? "👋" : stepIdx === 1 ? "💬" : stepIdx === 2 ? "✈️" : stepIdx === 3 ? "💵" : "✨"}
               <button onClick={() => void finish()} aria-label="Skip tour" className="absolute top-3 right-3 h-8 w-8 flex items-center justify-center rounded-full bg-black/30 text-white hover:bg-black/50">
                 <X className="w-4 h-4" />

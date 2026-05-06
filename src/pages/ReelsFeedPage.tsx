@@ -67,6 +67,10 @@ import BarChart2 from "lucide-react/dist/esm/icons/bar-chart-2";
 import Zap from "lucide-react/dist/esm/icons/zap";
 import QrCode from "lucide-react/dist/esm/icons/qr-code";
 import Download from "lucide-react/dist/esm/icons/download";
+import Building2 from "lucide-react/dist/esm/icons/building-2";
+import ShoppingBag from "lucide-react/dist/esm/icons/shopping-bag";
+import Briefcase from "lucide-react/dist/esm/icons/briefcase";
+import Mic2 from "lucide-react/dist/esm/icons/mic-2";
 import Tv2 from "lucide-react/dist/esm/icons/tv-2";
 import HandHeart from "lucide-react/dist/esm/icons/hand-heart";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
@@ -308,6 +312,7 @@ export default function ReelsFeedPage() {
   const [selectedHashtag, setSelectedHashtag] = useState<string | null>(null);
   const [newPostsCount, setNewPostsCount] = useState(0);
   const [showCreate, setShowCreate] = useState(false);
+  const [createMode, setCreateMode] = useState<"photo" | "reel" | "poll" | undefined>(undefined);
   const [shareForPost, setShareForPost] = useState<{ shareUrl: string; shareText: string; shareMediaUrl?: string; shareMediaType?: "image" | "video"; sharePostId?: string; sharePostAuthorId?: string; sharePostAuthorName?: string } | null>(null);
   const [commerceDraft, setCommerceDraft] = useState<{
     linkType: "store_product" | "truck_sale";
@@ -1152,6 +1157,85 @@ export default function ReelsFeedPage() {
                         <Suspense fallback={null}>
                           <SavedPostsLink />
                         </Suspense>
+
+                        {/* Facebook-style Create section */}
+                        {userId && (
+                          <div className="rounded-2xl bg-card border border-border/50 overflow-hidden">
+                            <div className="flex items-center justify-between px-4 pt-3 pb-2">
+                              <h3 className="text-[15px] font-bold text-foreground">Create</h3>
+                              <button
+                                onClick={() => setShowCreate(true)}
+                                className="text-[12px] font-semibold text-primary hover:underline"
+                              >
+                                See all
+                              </button>
+                            </div>
+                            <div className="grid grid-cols-2 gap-px bg-border/30">
+                              {[
+                                { label: "Business", desc: "Page for your shop", icon: Building2, color: "text-emerald-500", route: "/business/new" },
+                                { label: "Group", desc: "Build a community", icon: Users, color: "text-blue-500", route: "/communities" },
+                                { label: "Event", desc: "Bring people together", icon: Calendar, color: "text-amber-500", route: "/explore" },
+                                { label: "Reel", desc: "Short video", icon: Film, color: "text-fuchsia-500", route: "/reels" },
+                                { label: "Story", desc: "Share for 24h", icon: Camera, color: "text-pink-500", route: "/feed?compose=story" },
+                                { label: "Live", desc: "Go live now", icon: Radio, color: "text-red-500", route: "/go-live" },
+                                { label: "Marketplace", desc: "Sell items", icon: ShoppingBag, color: "text-orange-500", route: "/marketplace" },
+                                { label: "Job", desc: "Post a hiring", icon: Briefcase, color: "text-sky-500", route: "/personal/employer" },
+                                { label: "Spaces", desc: "Audio room", icon: Mic2, color: "text-violet-500", route: "/spaces" },
+                                { label: "Post", desc: "Photo, text, poll", icon: Plus, color: "text-foreground", action: "compose" as const },
+                              ].map((item) => (
+                                <button
+                                  key={item.label}
+                                  onClick={() => {
+                                    // `item` is a heterogeneous union — some
+                                    // entries carry `action: "compose"`, others
+                                    // carry `route`. Use `in` narrowing so TS
+                                    // resolves the right arm without picking
+                                    // `never` and erroring on `.route`.
+                                    if ("action" in item && item.action === "compose") {
+                                      setShowCreate(true);
+                                    } else if ("route" in item) {
+                                      navigate(item.route);
+                                    }
+                                  }}
+                                  className="flex items-start gap-3 p-3 bg-card hover:bg-muted/50 active:bg-muted transition-colors text-left"
+                                >
+                                  <div className="w-10 h-10 rounded-xl bg-secondary border border-border flex items-center justify-center shrink-0">
+                                    <item.icon className={`w-5 h-5 ${item.color}`} />
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-[13px] font-bold text-foreground leading-tight truncate">{item.label}</p>
+                                    <p className="text-[11px] text-muted-foreground leading-tight mt-0.5 truncate">{item.desc}</p>
+                                  </div>
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Quick links */}
+                        {userId && (
+                          <div className="rounded-2xl bg-card border border-border/50 overflow-hidden">
+                            <p className="px-4 pt-3 pb-1 text-[11px] font-bold text-muted-foreground uppercase tracking-wider">Shortcuts</p>
+                            {[
+                              { label: "Saved", icon: Bookmark, route: "/saved" },
+                              { label: "Notifications", icon: Bell, route: "/notifications" },
+                              { label: "Messages", icon: MessageCircle, route: "/chat" },
+                              { label: "Trending", icon: TrendingUp, route: "/trending" },
+                              { label: "History", icon: History, route: "/history" },
+                              { label: "Settings", icon: Settings2, route: "/settings" },
+                            ].map((item) => (
+                              <button
+                                key={item.label}
+                                onClick={() => navigate(item.route)}
+                                className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted/50 active:bg-muted transition-colors"
+                              >
+                                <item.icon className="w-5 h-5 text-foreground" />
+                                <span className="text-[14px] font-medium text-foreground">{item.label}</span>
+                                <ChevronRight className="ml-auto w-4 h-4 text-muted-foreground" />
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     </SheetContent>
                   </Sheet>
@@ -1377,15 +1461,15 @@ export default function ReelsFeedPage() {
                 </button>
               </div>
               <div className="border-t border-border/20 pt-1.5 flex overflow-x-auto scrollbar-hide lg:max-w-md lg:mx-auto lg:gap-2" role="toolbar" aria-label="Create post">
-                <button type="button" onClick={() => setShowCreate(true)} aria-label="Share a photo" className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
+                <button type="button" onClick={() => { setCreateMode("photo"); setShowCreate(true); }} aria-label="Share a photo" className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
                   <ImageIcon className="h-4 w-4 text-emerald-500" />
                   <span className="text-[10px] font-semibold text-muted-foreground">Photo</span>
                 </button>
-                <button type="button" onClick={() => setShowCreate(true)} aria-label="Create a Reel" className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
+                <button type="button" onClick={() => { setCreateMode("reel"); setShowCreate(true); }} aria-label="Create a Reel" className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
                   <Film className="h-4 w-4 text-violet-500" />
                   <span className="text-[10px] font-semibold text-muted-foreground">Reels</span>
                 </button>
-                <button type="button" onClick={() => setShowCreate(true)} aria-label="Create a poll" className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
+                <button type="button" onClick={() => { setCreateMode("poll"); setShowCreate(true); }} aria-label="Create a poll" className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
                   <TrendingUp className="h-4 w-4 text-amber-500" />
                   <span className="text-[10px] font-semibold text-muted-foreground">Poll</span>
                 </button>
@@ -1875,11 +1959,13 @@ export default function ReelsFeedPage() {
                 sharedPostAuthorId={shareForPost?.sharePostAuthorId}
                 sharedPostAuthorName={shareForPost?.sharePostAuthorName}
                 commerceLinkDraft={commerceDraft || undefined}
-                onClose={() => { setShowCreate(false); setShareForPost(null); setCommerceDraft(null); }}
+                initialMode={createMode}
+                onClose={() => { setShowCreate(false); setShareForPost(null); setCommerceDraft(null); setCreateMode(undefined); }}
                 onCreated={() => {
                   setShowCreate(false);
                   setShareForPost(null);
                   setCommerceDraft(null);
+                  setCreateMode(undefined);
                   setPageSize(50);
                   setNewPostsCount(0);
                   queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
@@ -2946,6 +3032,10 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
   const [showUnfollowConfirm, setShowUnfollowConfirm] = useState(false);
   const [showSharedUnfollowConfirm, setShowSharedUnfollowConfirm] = useState(false);
   const [showQrModal, setShowQrModal] = useState(false);
+  // Natural video aspect ratio (W/H), populated from onLoadedMetadata so the
+  // card's media well matches the video instead of forcing 9:16 — fixes
+  // landscape/square clips showing huge black bars top/bottom.
+  const [videoAspect, setVideoAspect] = useState<number | null>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const touchStartX = useRef(0);
@@ -3879,7 +3969,12 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
             onTouchStart={item.media_urls.length > 1 && item.media_type !== "video" ? undefined : (item.media_urls.length > 1 ? handleTouchStart : undefined)}
             onTouchMove={item.media_urls.length > 1 && item.media_type !== "video" ? undefined : (item.media_urls.length > 1 ? handleTouchMove : undefined)}
             onTouchEnd={item.media_urls.length > 1 && item.media_type !== "video" ? undefined : (item.media_urls.length > 1 ? handleTouchEnd : undefined)}
-            className={cn("relative overflow-hidden", hasMedia ? (item.media_type === "video" ? "aspect-[9/16] max-h-[500px] lg:max-h-[680px] xl:max-h-[760px] w-auto mx-auto bg-black rounded-xl" : "") : "")}
+            className={cn("relative overflow-hidden", hasMedia ? (item.media_type === "video" ? "max-h-[500px] lg:max-h-[680px] xl:max-h-[760px] w-full mx-auto bg-black rounded-xl" : "") : "")}
+            style={
+              hasMedia && item.media_type === "video"
+                ? { aspectRatio: videoAspect ? String(videoAspect) : "4 / 5" }
+                : undefined
+            }
           >
             {hasMedia ? (
               item.media_type === "video" ? (
@@ -3891,8 +3986,14 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                     loop
                     playsInline
                     preload="metadata"
+                    onLoadedMetadata={(e) => {
+                      const v = e.currentTarget;
+                      if (v.videoWidth > 0 && v.videoHeight > 0) {
+                        setVideoAspect(v.videoWidth / v.videoHeight);
+                      }
+                    }}
                     onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()}
-                    className="h-full w-full object-contain cursor-pointer"
+                    className="h-full w-full object-cover cursor-pointer"
                   />
                   {!isPlaying && (
                     <button onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()} className="absolute inset-0 flex items-center justify-center bg-black/10">

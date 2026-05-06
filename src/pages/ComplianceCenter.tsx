@@ -237,11 +237,46 @@ export default function ComplianceCenter() {
                     <p className="text-xs text-muted-foreground">Ask questions</p>
                   </div>
                 </Link>
-                <div className="p-4 rounded-xl bg-background border text-center opacity-60">
-                  <Download className="w-8 h-8 text-muted-foreground mx-auto mb-2" />
+                <button
+                  type="button"
+                  onClick={() => {
+                    // Build a single JSON manifest of every policy + link so a
+                    // user (or auditor) can archive the full policy set in one
+                    // click. No server roundtrip — the structure is already in
+                    // memory on this page. The site origin is included so the
+                    // links resolve from outside the app too.
+                    const origin = typeof window !== "undefined" ? window.location.origin : "";
+                    const payload = {
+                      generated_at: new Date().toISOString(),
+                      origin,
+                      categories: complianceCategories.map((c) => ({
+                        id: c.id,
+                        title: c.title,
+                        description: c.description,
+                        policies: c.links.map((l) => ({
+                          name: l.name,
+                          url: `${origin}${l.href}`,
+                          last_updated: l.updated,
+                        })),
+                      })),
+                    };
+                    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement("a");
+                    a.href = url;
+                    const stamp = new Date().toISOString().slice(0, 10);
+                    a.download = `zivo-policies-${stamp}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    URL.revokeObjectURL(url);
+                  }}
+                  className="p-4 rounded-xl bg-background border hover:shadow-md transition-shadow text-center w-full"
+                >
+                  <Download className="w-8 h-8 text-primary mx-auto mb-2" />
                   <p className="font-medium text-sm">Download All Policies</p>
-                  <p className="text-xs text-muted-foreground">Coming soon</p>
-                </div>
+                  <p className="text-xs text-muted-foreground">JSON manifest</p>
+                </button>
               </div>
             </CardContent>
           </Card>

@@ -36,6 +36,7 @@ import {
   openPartnerLink
 } from "@/config/affiliateLinks";
 import { trackAffiliateClick } from "@/lib/affiliateTracking";
+import { Link } from "react-router-dom";
 
 const ThingsToDo = () => {
   const [category, setCategory] = useState("all");
@@ -172,7 +173,7 @@ const ThingsToDo = () => {
                 {/* Affiliate Notice */}
                 <p className="text-xs text-muted-foreground text-center mt-4">
                   {AFFILIATE_DISCLOSURE_TEXT.short}{" "}
-                  <a href="/affiliate-disclosure" className="text-foreground hover:underline">Learn more</a>
+                  <Link to="/affiliate-disclosure" className="text-foreground hover:underline">Learn more</Link>
                 </p>
               </Card>
             </div>
@@ -492,7 +493,7 @@ const ThingsToDo = () => {
               <ExternalLink className="w-5 h-5 text-foreground shrink-0" />
               <p className="text-sm text-muted-foreground">
                 {AFFILIATE_DISCLOSURE_TEXT.detailed}{" "}
-                <a href="/affiliate-disclosure" className="text-foreground hover:underline font-medium">View full disclosure</a>
+                <Link to="/affiliate-disclosure" className="text-foreground hover:underline font-medium">View full disclosure</Link>
               </p>
             </div>
           </div>

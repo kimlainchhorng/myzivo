@@ -58,7 +58,7 @@ export default function WalletBalanceCard() {
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative rounded-2xl overflow-hidden p-5 bg-gradient-to-br from-violet-600 via-fuchsia-500 to-pink-500 text-white shadow-xl"
+      className="relative rounded-2xl overflow-hidden p-5 text-white shadow-xl bg-foreground"
     >
       <div className="absolute inset-0 pointer-events-none opacity-20 bg-[radial-gradient(circle_at_80%_20%,white,transparent_50%)]" />
       <div className="relative">
@@ -78,7 +78,7 @@ export default function WalletBalanceCard() {
         <div className="flex gap-2">
           <button
             onClick={() => trigger("topup")}
-            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white text-violet-700 font-bold text-sm active:scale-95 transition"
+            className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white text-foreground font-bold text-sm active:scale-95 transition"
           >
             <Plus className="w-4 h-4" /> Top up
           </button>

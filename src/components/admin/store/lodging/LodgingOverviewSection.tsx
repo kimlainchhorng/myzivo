@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { BedDouble, CheckCircle2, Hotel, KeyRound, ListChecks, PackagePlus } from "lucide-react";
 import { AddonList, LoadingPanel, NextActions, OpsSnapshot, SectionShell, StatCard, useLodgingOpsData } from "./LodgingOperationsShared";
@@ -13,6 +14,7 @@ import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
 const goTab = (tab: string) => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab } }));
 
 export default function LodgingOverviewSection({ storeId }: { storeId: string }) {
+  const navigate = useNavigate();
   const { rooms, profile, addons, reservations, isLoading } = useLodgingOpsData(storeId);
   const phase5 = useLodgingPhase5Counts(storeId);
   const activeReservations = reservations.filter((r) => !["cancelled", "checked_out", "no_show"].includes(r.status)).length;
@@ -43,7 +45,7 @@ export default function LodgingOverviewSection({ storeId }: { storeId: string })
         : "Hotel admin is active and guest-ready workflows are enabled.";
 
   return (
-    <SectionShell title="Hotel Overview" subtitle="A quick operating snapshot for rooms, stays, add-ons, and guest-ready setup." icon={Hotel} actions={<div className="flex gap-2"><Button size="sm" variant="outline" onClick={() => window.location.assign("/admin/lodging/qa-checklist")}><ListChecks className="mr-1.5 h-4 w-4" /> QA Checklist</Button><Button size="sm" onClick={() => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab: "lodge-addons" } }))}><PackagePlus className="mr-1.5 h-4 w-4" /> Add-ons</Button></div>}>
+    <SectionShell title="Hotel Overview" subtitle="A quick operating snapshot for rooms, stays, add-ons, and guest-ready setup." icon={Hotel} actions={<div className="flex gap-2"><Button size="sm" variant="outline" onClick={() => navigate("/admin/lodging/qa-checklist")}><ListChecks className="mr-1.5 h-4 w-4" /> QA Checklist</Button><Button size="sm" onClick={() => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab: "lodge-addons" } }))}><PackagePlus className="mr-1.5 h-4 w-4" /> Add-ons</Button></div>}>
       <LodgingQuickJump active="lodge-overview" />
       <LodgingSectionStatusBanner title="Hotel Overview" icon={Hotel} countLabel={`Rooms · Active stays`} countValue={`${rooms.length} · ${activeReservations}`} fixLabel="Open Reservations" fixTab="lodge-reservations" />
       {isLoading ? <LoadingPanel /> : <>
@@ -64,7 +66,7 @@ export default function LodgingOverviewSection({ storeId }: { storeId: string })
                   </div>
                   <div className="flex flex-wrap gap-2">
                     <Button size="sm" className="h-8" onClick={() => goTab(nextAction.tab)}>{nextAction.actionLabel}</Button>
-                    <Button size="sm" variant="outline" className="h-8" onClick={() => window.location.assign("/admin/lodging/qa-checklist")}>Review QA</Button>
+                    <Button size="sm" variant="outline" className="h-8" onClick={() => navigate("/admin/lodging/qa-checklist")}>Review QA</Button>
                   </div>
                 </div>
               </div>

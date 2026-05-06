@@ -4,7 +4,7 @@
  */
 
 import { useState, useEffect } from "react";
-import { useLocation } from "react-router-dom";
+import { useLocation , Link} from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -156,7 +156,7 @@ const CookieConsent = () => {
                           We use cookies to enhance your experience, analyze site traffic, and for marketing purposes. 
                           By clicking "Accept All", you consent to our use of cookies. 
                           Read our{" "}
-                          <a href="/privacy-policy" className="text-primary font-medium hover:underline">Privacy Policy</a>.
+                          <Link to="/privacy-policy" className="text-primary font-medium hover:underline">Privacy Policy</Link>.
                         </p>
                         <div className="flex flex-wrap gap-3">
                           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>

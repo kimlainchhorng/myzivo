@@ -96,16 +96,26 @@ export default function AccountSecurity() {
   const [isExporting, setIsExporting] = useState(false);
   const [isLoggingOutAll, setIsLoggingOutAll] = useState(false);
 
-  // Load real 2FA status from Supabase Auth MFA + phone verification status
+  // Load real 2FA status, phone verification, AND persisted security toggles
+  // (login_alerts_enabled / email_otp_backup_enabled live in
+  // user_preferences.preferences.security so they survive refresh/log-in
+  // cycles instead of resetting to default on mount).
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      const [{ data: mfa }, profile] = await Promise.all([
+      const [{ data: mfa }, profile, prefs] = await Promise.all([
         supabase.auth.mfa.listFactors(),
         user?.id
           ? supabase
               .from("profiles")
               .select("phone_e164, phone_verified")
+              .eq("user_id", user.id)
+              .maybeSingle()
+          : Promise.resolve({ data: null }),
+        user?.id
+          ? supabase
+              .from("user_preferences")
+              .select("preferences")
               .eq("user_id", user.id)
               .maybeSingle()
           : Promise.resolve({ data: null }),
@@ -118,10 +128,40 @@ export default function AccountSecurity() {
         setUserPhone(p.phone_e164 || "");
         setPhoneVerified(!!p.phone_verified);
       }
+      const security = (prefs as any)?.data?.preferences?.security;
+      if (security && typeof security === "object") {
+        if (typeof security.login_alerts_enabled === "boolean") setLoginAlerts(security.login_alerts_enabled);
+        if (typeof security.email_otp_backup_enabled === "boolean") setEmailOtpBackup(security.email_otp_backup_enabled);
+      }
       setTwoFactorLoading(false);
     })();
     return () => { cancelled = true; };
   }, [user?.id]);
+
+  // Upsert one key under preferences.security on user_preferences. Uses the
+  // jsonb_set RPC pattern: read current preferences, deep-merge the security
+  // sub-object, write back. Safe for concurrent toggles since each call is
+  // isolated to its own key.
+  const persistSecurityPref = async (key: "login_alerts_enabled" | "email_otp_backup_enabled", value: boolean) => {
+    if (!user?.id) return;
+    try {
+      const { data: existing } = await supabase
+        .from("user_preferences")
+        .select("preferences")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      const current = ((existing as any)?.preferences as Record<string, any>) || {};
+      const security = (current.security && typeof current.security === "object") ? current.security : {};
+      const next = { ...current, security: { ...security, [key]: value } };
+      const { error } = await supabase
+        .from("user_preferences")
+        .upsert({ user_id: user.id, preferences: next, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
+      if (error) throw error;
+    } catch (e: any) {
+      console.error("[security-pref] persist failed", e);
+      toast.error("Couldn't save that setting — try again");
+    }
+  };
 
   const refreshTwoFactor = async () => {
     const { data } = await supabase.auth.mfa.listFactors();
@@ -464,8 +504,9 @@ export default function AccountSecurity() {
                 </div>
                 <Switch
                   checked={emailOtpBackup}
-                  onCheckedChange={(v) => {
+                  onCheckedChange={async (v) => {
                     setEmailOtpBackup(v);
+                    await persistSecurityPref("email_otp_backup_enabled", v);
                     toast.success(v ? "Email backup code enabled" : "Email backup code disabled");
                   }}
                 />
@@ -494,8 +535,9 @@ export default function AccountSecurity() {
                 </div>
                 <Switch
                   checked={loginAlerts}
-                  onCheckedChange={(checked) => {
+                  onCheckedChange={async (checked) => {
                     setLoginAlerts(checked);
+                    await persistSecurityPref("login_alerts_enabled", checked);
                     toast.success(checked ? "Login alerts enabled" : "Login alerts disabled");
                   }}
                 />
@@ -503,7 +545,31 @@ export default function AccountSecurity() {
             </CardContent>
           </Card>
 
-          {/* Active Sessions & Login History */}
+          {/* Manage Active Sessions — deep-links to the full sessions page
+              with per-device revoke + "Sign out everywhere else" controls. */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Smartphone className="w-5 h-5" />
+                Active sessions
+              </CardTitle>
+              <CardDescription>
+                See where you're signed in and sign out devices you don't recognize.
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button
+                variant="outline"
+                className="w-full sm:w-auto gap-2"
+                onClick={() => navigate("/account/sessions")}
+              >
+                <Smartphone className="w-4 h-4" />
+                Manage active sessions
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Login history (recent sign-in attempts) */}
           <LoginHistorySection />
 
           {/* Data Management */}

@@ -72,9 +72,14 @@ export default function LiveTripTracker({
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) { setMapError(true); return; }
-        const { data, error } = await supabase.functions.invoke("get-google-maps-key");
-        if (error || !data?.apiKey) { setMapError(true); return; }
-        setMapApiKey(data.apiKey);
+        // The deployed fn is `maps-api-key` and returns `{ key }`. The
+        // previous call to `get-google-maps-key` (with `data.apiKey`) hit a
+        // 404 and silently flipped the map to error state on every ride.
+        const { data, error } = await supabase.functions.invoke("maps-api-key");
+        const key = (data as { key?: string; apiKey?: string } | null)?.key
+          ?? (data as { apiKey?: string } | null)?.apiKey;
+        if (error || !key) { setMapError(true); return; }
+        setMapApiKey(key);
       } catch { setMapError(true); }
     };
     fetchKey();

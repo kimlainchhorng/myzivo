@@ -564,7 +564,7 @@ function SupabaseStoreTab({ search }: { search: string }) {
         const isPreviewing = previewPackId === pack.id;
         return (
           <motion.div
-            key={pack.id}
+            key={`${pack.id}-${idx}`}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.05 }}
@@ -619,8 +619,11 @@ function SupabaseStoreTab({ search }: { search: string }) {
                 >
                   <div className="px-4 py-3 grid grid-cols-5 gap-2">
                     {previewStickers && previewStickers.length > 0 ? (
-                      previewStickers.slice(0, 10).map((s) => (
-                        <div key={s.id} className="aspect-square rounded-xl bg-muted/20 flex items-center justify-center p-1">
+                      previewStickers.slice(0, 10).map((s, idx) => (
+                        // Composite key prevents React duplicate-key warnings
+                        // when the same sticker.id appears more than once in
+                        // a preview pack (rare but happens with seeded data).
+                        <div key={`${s.id}-${idx}`} className="aspect-square rounded-xl bg-muted/20 flex items-center justify-center p-1">
                           <img src={s.image_url} alt={s.name || "sticker"} className="w-full h-full object-contain" loading="lazy" />
                         </div>
                       ))
@@ -646,7 +649,7 @@ function SupabaseStoreTab({ search }: { search: string }) {
       <div className="pt-3 border-t border-border/20">
         <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Built-in Packs</p>
         {ILLUSTRATED_PACKS.map((pack, idx) => (
-          <div key={pack.id} className="rounded-2xl border border-border/20 overflow-hidden mb-2">
+          <div key={`${pack.id}-${idx}`} className="rounded-2xl border border-border/20 overflow-hidden mb-2">
             <div className={`bg-gradient-to-r ${GRADIENT_COLORS[(idx + (filtered?.length || 0)) % GRADIENT_COLORS.length]} px-4 py-2.5 flex items-center justify-between`}>
               <div className="flex items-center gap-3">
                 <span className="text-2xl">{pack.icon}</span>
@@ -847,12 +850,70 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onQuickA
   }, []);
 
   /* ── Filtered data ── */
+  // Live Tenor results when the GIFs tab is open. Fetches from the
+  // `tenor-gif-search` edge function (which proxies the API key). Falls back
+  // to the bundled GIF_ITEMS catalog if the edge function reports the API key
+  // isn't configured, so the tab is never empty.
+  const [tenorResults, setTenorResults] = useState<GifItem[]>([]);
+  const [tenorLoading, setTenorLoading] = useState(false);
+  const [tenorBackend, setTenorBackend] = useState<"tenor" | "none" | "unknown">("unknown");
+
+  useEffect(() => {
+    if (!open || activeTab !== "gifs") return;
+    let cancelled = false;
+    const q = search.trim();
+    // Map the visible category chip into a Tenor query when there's no
+    // explicit search term. "All" / "Trending" just hit the featured feed.
+    const categoryQuery =
+      gifCategory === "All" || gifCategory === "Trending" ? "" : gifCategory.toLowerCase();
+    const finalQuery = q || categoryQuery;
+
+    setTenorLoading(true);
+    const handle = setTimeout(async () => {
+      try {
+        const params = new URLSearchParams({ limit: "30" });
+        if (finalQuery) params.set("q", finalQuery);
+        const { data, error } = await supabase.functions.invoke("tenor-gif-search", {
+          body: null,
+          // Functions client doesn't support GET; pass query in URL via direct fetch.
+        }).catch(() => ({ data: null, error: { message: "invoke_failed" } } as any));
+        // Fallback to direct fetch with query string (functions.invoke strips query).
+        const projectUrl = (supabase as any).supabaseUrl ?? "";
+        const res = await fetch(`${projectUrl}/functions/v1/tenor-gif-search?${params.toString()}`, {
+          headers: { "apikey": (supabase as any).supabaseKey ?? "" },
+        });
+        const json = await res.json();
+        if (cancelled) return;
+        const cat = (gifCategory === "All" ? "Trending" : gifCategory) as GifCategory;
+        const mapped: GifItem[] = (json.results ?? []).map((g: any) => ({
+          id: g.id,
+          label: g.label,
+          url: g.preview || g.url,
+          category: cat,
+          altText: g.altText,
+        }));
+        setTenorResults(mapped);
+        setTenorBackend(json.source === "tenor" ? "tenor" : "none");
+        // Suppress unused-warning for `data`/`error` from the no-op invoke above.
+        void data; void error;
+      } catch {
+        if (!cancelled) setTenorBackend("none");
+      } finally {
+        if (!cancelled) setTenorLoading(false);
+      }
+    }, q ? 250 : 0);
+    return () => { cancelled = true; clearTimeout(handle); };
+  }, [open, activeTab, search, gifCategory]);
+
   const filteredGifs = useMemo(() => {
+    // Prefer live Tenor when the backend is configured. Otherwise filter the
+    // bundled catalog by category + search term so the tab still has content.
+    if (tenorBackend === "tenor") return tenorResults;
     const q = search.trim().toLowerCase();
     const byCategory = gifCategory === "All" ? GIF_ITEMS : GIF_ITEMS.filter((g) => g.category === gifCategory);
     if (!q) return byCategory;
     return byCategory.filter((g) => g.label.toLowerCase().includes(q) || g.altText.toLowerCase().includes(q));
-  }, [gifCategory, search]);
+  }, [gifCategory, search, tenorBackend, tenorResults]);
 
   // Music tab data: when search is empty → show top charts (or Zivo Originals on
   // the Originals subtab); when search has text → debounced iTunes API call.
@@ -1099,8 +1160,8 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onQuickA
                 ))}
               </div>
               <div className="grid grid-cols-2 gap-2">
-                {filteredGifs.map((gif) => (
-                  <button key={gif.id} onClick={() => quickSend(`[GIF] ${gif.label}: ${gif.url}`, "gif")}
+                {filteredGifs.map((gif, gIdx) => (
+                  <button key={`${gif.id}-${gIdx}`} onClick={() => quickSend(`[GIF] ${gif.label}: ${gif.url}`, "gif")}
                     className="relative rounded-xl overflow-hidden border border-border/20 hover:border-primary/40 transition-all active:scale-95 aspect-square bg-muted/20">
                     <img src={gif.url} alt={gif.altText} loading="lazy" className="w-full h-full object-cover" />
                     <div className="absolute bottom-0 inset-x-0 bg-gradient-to-t from-black/70 to-transparent px-2 py-1.5">
@@ -1109,7 +1170,17 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onQuickA
                   </button>
                 ))}
               </div>
-              {filteredGifs.length === 0 && <p className="text-xs text-muted-foreground text-center py-6">No GIFs found</p>}
+              {tenorLoading && filteredGifs.length === 0 && (
+                <p className="text-xs text-muted-foreground text-center py-6">Loading GIFs…</p>
+              )}
+              {!tenorLoading && filteredGifs.length === 0 && (
+                <p className="text-xs text-muted-foreground text-center py-6">No GIFs found</p>
+              )}
+              {tenorBackend === "none" && filteredGifs.length > 0 && (
+                <p className="text-[10px] text-muted-foreground/70 text-center pt-1">
+                  Showing built-in GIFs. Set TENOR_API_KEY for live search.
+                </p>
+              )}
             </div>
           )}
 
@@ -1212,13 +1283,15 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onQuickA
               )}
 
               {filteredTracks.map((track, index) => {
-                const trackKey = track.slug || `track-${index}`;
+                const stableId = track.slug || `track-${index}`;
+                const reactKey = `${stableId}-${index}`;
+                const trackKey = stableId;
                 const isPlaying = playingTrackId === trackKey;
                 const isFavorite = favoriteTracks.includes(trackKey);
                 const artwork = (track as any).artworkUrl as string | undefined;
 
                 return (
-                  <div key={trackKey} className="rounded-2xl border border-border/30 overflow-hidden hover:border-primary/30 transition-colors">
+                  <div key={reactKey} className="rounded-2xl border border-border/30 overflow-hidden hover:border-primary/30 transition-colors">
                     <div className="flex items-center gap-3 p-3">
                       <button onClick={() => void toggleTrackPreview(trackKey, track.previewUrl)}
                         className={`relative w-12 h-12 rounded-xl bg-gradient-to-br ${track.coverGradient} flex items-center justify-center shrink-0 shadow-lg overflow-hidden`}>

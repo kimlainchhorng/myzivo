@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, ListChecks, LucideIcon } from "lucide-react";
@@ -21,6 +22,7 @@ export default function LodgingSectionStatusBanner({
   fixLabel: string;
   fixTab: string;
 }) {
+  const navigate = useNavigate();
   return (
     <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -36,7 +38,7 @@ export default function LodgingSectionStatusBanner({
         </div>
         <div className="flex flex-wrap gap-2">
           <Button size="sm" variant="outline" onClick={() => goTab(fixTab)}>{fixLabel}</Button>
-          <Button size="sm" variant="outline" onClick={() => window.location.assign("/admin/lodging/qa-checklist")}><ListChecks className="mr-2 h-4 w-4" /> QA</Button>
+          <Button size="sm" variant="outline" onClick={() => navigate("/admin/lodging/qa-checklist")}><ListChecks className="mr-2 h-4 w-4" /> QA</Button>
         </div>
       </div>
     </div>

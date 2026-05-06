@@ -2,6 +2,7 @@
  * Lodging — Front Desk: today board (arrivals / in-house / departures) + walk-in + search + rebook.
  */
 import { useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import LodgingQuickJump from "./LodgingQuickJump";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,6 +26,7 @@ const timeRange = (r: LodgeReservation) => r.room?.check_in_time || r.room?.chec
 const goTab = (tab: string) => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab } }));
 
 export default function LodgingFrontDeskSection({ storeId }: { storeId: string }) {
+  const navigate = useNavigate();
   const { data: reservations = [], setStatus } = useLodgeReservations(storeId, "all");
   const { data: guestRequests = [] } = useStoreChangeRequestInbox(storeId);
   useHostLodgingOpsToasts(storeId);
@@ -117,7 +119,7 @@ export default function LodgingFrontDeskSection({ storeId }: { storeId: string }
         <div className="rounded-lg border border-border bg-muted/20 p-3">
           <p className="text-sm font-semibold text-foreground">What this section does</p>
           <p className="mt-1 text-xs text-muted-foreground">Tracks same-day arrivals, in-house guests, departures, key handoff, check-in, and check-out. Empty columns mean there is no live reservation data for today.</p>
-          <div className="mt-3 flex flex-wrap gap-2"><Button size="sm" onClick={() => { setWalkInPrefill({ name: "", room: "" }); setWalkInOpen(true); }}><UserPlus className="mr-2 h-4 w-4" /> Walk-in booking</Button><Button size="sm" variant="outline" onClick={() => goTab("lodge-rate-plans")}><DollarSign className="mr-2 h-4 w-4" /> Open rate plans</Button><Button size="sm" variant="outline" onClick={() => goTab("lodge-rooms")}><BedDouble className="mr-2 h-4 w-4" /> Open rooms</Button><Button size="sm" variant="outline" onClick={() => goTab("lodge-guest-requests")}><MessageSquareText className="mr-2 h-4 w-4" /> Guest requests</Button><Button size="sm" variant="outline" onClick={() => window.location.assign("/admin/lodging/qa-checklist")}><ListChecks className="mr-2 h-4 w-4" /> Run QA</Button><Button size="sm" variant="outline" onClick={() => window.location.assign("/admin/lodging/completion-verification")}><ClipboardCheck className="mr-2 h-4 w-4" /> Completion Verification</Button><Button size="sm" variant="outline" onClick={exportReport}><Download className="mr-2 h-4 w-4" /> Export Front Desk QA Report</Button></div>
+          <div className="mt-3 flex flex-wrap gap-2"><Button size="sm" onClick={() => { setWalkInPrefill({ name: "", room: "" }); setWalkInOpen(true); }}><UserPlus className="mr-2 h-4 w-4" /> Walk-in booking</Button><Button size="sm" variant="outline" onClick={() => goTab("lodge-rate-plans")}><DollarSign className="mr-2 h-4 w-4" /> Open rate plans</Button><Button size="sm" variant="outline" onClick={() => goTab("lodge-rooms")}><BedDouble className="mr-2 h-4 w-4" /> Open rooms</Button><Button size="sm" variant="outline" onClick={() => goTab("lodge-guest-requests")}><MessageSquareText className="mr-2 h-4 w-4" /> Guest requests</Button><Button size="sm" variant="outline" onClick={() => navigate("/admin/lodging/qa-checklist")}><ListChecks className="mr-2 h-4 w-4" /> Run QA</Button><Button size="sm" variant="outline" onClick={() => navigate("/admin/lodging/completion-verification")}><ClipboardCheck className="mr-2 h-4 w-4" /> Completion Verification</Button><Button size="sm" variant="outline" onClick={exportReport}><Download className="mr-2 h-4 w-4" /> Export Front Desk QA Report</Button></div>
         </div>
         <div className="relative">
           <SearchIcon className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />

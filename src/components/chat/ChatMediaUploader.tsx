@@ -160,7 +160,10 @@ export function ChatMediaUploader({ recipientId, onMediaSent, renderTrigger }: C
       <input
         ref={fileRef}
         type="file"
-        accept={`${ACCEPT_TYPES.image},${ACCEPT_TYPES.video},${ACCEPT_TYPES.document}`}
+        // Documents only — Photo and Video buttons in the attach menu already
+        // cover image/video pickers. Including image/video here pops a confusing
+        // multi-source picker that overlaps those flows on iOS.
+        accept={ACCEPT_TYPES.document}
         className="hidden"
         onChange={handleFileSelect}
       />

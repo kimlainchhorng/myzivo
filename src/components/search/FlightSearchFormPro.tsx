@@ -44,6 +44,7 @@ import MultiCityLegs from "./MultiCityLegs";
 import { MobileDatePickerSheet, MobileDateRangePickerSheet, MobilePassengerCabinSheet } from "@/components/mobile";
 import { useFlightFunnel } from "@/hooks/useFlightFunnel";
 import { useTranslation } from "@/hooks/useI18n";
+import { recordSearchAttempt } from "@/lib/recordSearchAttempt";
 
 type TripType = "roundtrip" | "oneway" | "multicity";
 type CabinClass = "economy" | "premium" | "business" | "first";
@@ -185,6 +186,17 @@ export default function FlightSearchFormPro({
     if (returnDateStr) resultsParams.set("return", returnDateStr);
     navigate(`/flights/results?${resultsParams.toString()}`);
     if (onSearch) onSearch(resultsParams);
+
+    // Telemetry: record this flight search for re-engagement / price alerts.
+    void recordSearchAttempt("flight", {
+      origin: fromCode,
+      destination: toCode,
+      departureDate: departDateStr,
+      returnDate: returnDateStr ?? null,
+      passengers,
+      cabinClass: cabin,
+      tripType,
+    });
   };
 
   const isFormValid = useMemo(() => {

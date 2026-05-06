@@ -2,7 +2,8 @@
 // Route: /service/new
 
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams , Link} from "react-router-dom";
+import { toast } from "sonner";
 import { ArrowLeft, Car, Package, Loader2, MapPin, Tag } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -118,13 +119,13 @@ export default function NewServiceOrderPage() {
   }
 
   const submitRide = async () => {
-    if (!legalAccepted) { alert("Please accept the legal terms to continue"); return; }
+    if (!legalAccepted) { toast.error("Please accept the legal terms to continue"); return; }
     const lat = parseFloat(pickupLat);
     const lng = parseFloat(pickupLng);
     const fare = Math.round(parseFloat(farePrice) * 100);
-    if (Number.isNaN(lat) || Number.isNaN(lng)) { alert("Pickup coordinates required"); return; }
-    if (!dropoffAddr) { alert("Drop-off address required"); return; }
-    if (!Number.isFinite(fare) || fare <= 0) { alert("Fare must be positive"); return; }
+    if (Number.isNaN(lat) || Number.isNaN(lng)) { toast.error("Pickup coordinates required"); return; }
+    if (!dropoffAddr) { toast.error("Drop-off address required"); return; }
+    if (!Number.isFinite(fare) || fare <= 0) { toast.error("Fare must be positive"); return; }
 
     const input: CreateServiceOrderInput = {
       kind: "ride",
@@ -141,10 +142,10 @@ export default function NewServiceOrderPage() {
   };
 
   const submitDelivery = async () => {
-    if (!legalAccepted) { alert("Please accept the legal terms to continue"); return; }
-    if (!selectedShop) { alert("Pick a shop first"); return; }
-    if (cartLines.length === 0) { alert("Add at least one item"); return; }
-    if (!deliveryAddr) { alert("Drop-off address required"); return; }
+    if (!legalAccepted) { toast.error("Please accept the legal terms to continue"); return; }
+    if (!selectedShop) { toast.error("Pick a shop first"); return; }
+    if (cartLines.length === 0) { toast.error("Add at least one item"); return; }
+    if (!deliveryAddr) { toast.error("Drop-off address required"); return; }
 
     const items: ServiceOrderItem[] = cartLines.map((l) => ({
       name: l.name, qty: l.qty, price_cents: l.price_cents,
@@ -179,7 +180,7 @@ export default function NewServiceOrderPage() {
           <h1 className="text-2xl font-bold">Request service</h1>
           <p className="text-sm text-muted-foreground">A ride or delivery — same engine.</p>
         </div>
-        <a href="/legal" className="text-xs text-primary hover:underline whitespace-nowrap">Legal Center →</a>
+        <Link to="/legal" className="text-xs text-primary hover:underline whitespace-nowrap">Legal Center →</Link>
       </header>
 
       {error && <div className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive">{error}</div>}

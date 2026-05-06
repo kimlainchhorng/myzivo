@@ -2,6 +2,7 @@
  * GroupMembersSheet — Member roster with admin actions (promote, demote, kick).
  */
 import { useEffect, useState } from "react";
+import { toast } from "sonner";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
@@ -72,13 +73,21 @@ export default function GroupMembersSheet({ open, onOpenChange, groupId, onLeft 
     return order[a.role] - order[b.role];
   });
 
-  const handleLeave = async () => {
-    if (!confirm("Leave this group?")) return;
-    const ok = await leave();
-    if (ok) {
-      onOpenChange(false);
-      onLeft?.();
-    }
+  const handleLeave = () => {
+    toast("Leave this group?", {
+      description: "You won't receive new messages from this group.",
+      action: {
+        label: "Leave",
+        onClick: async () => {
+          const ok = await leave();
+          if (ok) {
+            onOpenChange(false);
+            onLeft?.();
+          }
+        },
+      },
+      cancel: { label: "Cancel", onClick: () => {} },
+    });
   };
 
   return (

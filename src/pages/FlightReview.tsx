@@ -828,9 +828,9 @@ const FlightReview = () => {
                   You'll be asked for passenger details and payment.
                   Final price and terms are confirmed at checkout.
                 </p>
-                <a href="/partner-disclosure" className="text-[10px] text-[hsl(var(--flights))] hover:underline mt-1.5 inline-block font-semibold">
+                <Link to="/partner-disclosure" className="text-[10px] text-[hsl(var(--flights))] hover:underline mt-1.5 inline-block font-semibold">
                   Partner disclosure →
-                </a>
+                </Link>
               </div>
             </div>
           </motion.div>

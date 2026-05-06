@@ -46,7 +46,15 @@ function AccountCard({
       {editing && (
         <button
           type="button"
-          onClick={(e) => { e.stopPropagation(); if (window.confirm(`Remove ${account.fullName || account.email} from this device?`)) onRemove(account.email); }}
+          onClick={(e) => {
+            e.stopPropagation();
+            const name = account.fullName || account.email;
+            toast(`Remove ${name}?`, {
+              description: "You'll need to enter your email next time.",
+              action: { label: "Remove", onClick: () => onRemove(account.email) },
+              cancel: { label: "Cancel", onClick: () => {} },
+            });
+          }}
           className="absolute -top-1 -right-1 z-10 w-6 h-6 rounded-full bg-zinc-800 dark:bg-zinc-100 text-white dark:text-zinc-900 flex items-center justify-center transition active:scale-90 shadow-md ring-2 ring-white dark:ring-zinc-900"
           aria-label={`Remove ${account.fullName || account.email}`}
           title="Remove this account"
@@ -243,11 +251,13 @@ const Login = () => {
     }
     setSubmitting(true);
 
-    // Precheck for better error messages
+    // Precheck for better error messages. `auth_precheck_login` is a Postgres
+    // RPC (not an edge fn) — calling it via functions.invoke 404'd on every
+    // login attempt so we never got the "account exists" hint.
     let accountExists: boolean | null = null;
     try {
-      const { data: precheck } = await supabase.functions.invoke("auth_precheck_login", {
-        body: { email: trimmedEmail },
+      const { data: precheck } = await (supabase as any).rpc("auth_precheck_login", {
+        p_email: trimmedEmail,
       });
       if (precheck && typeof precheck.exists === "boolean") accountExists = precheck.exists;
     } catch {}
@@ -522,12 +532,20 @@ const Login = () => {
                 <button
                   type="button"
                   onClick={() => {
-                    if (window.confirm(`Remove ${selectedAccount.fullName || selectedAccount.email} from this device? You'll need to enter your email next time.`)) {
-                      remove(selectedAccount.email);
-                      setSelectedAccount(null);
-                      setPassword("");
-                      setMode(accounts.length > 1 ? "picker" : "full");
-                    }
+                    const name = selectedAccount.fullName || selectedAccount.email;
+                    toast(`Remove ${name}?`, {
+                      description: "You'll need to enter your email next time.",
+                      action: {
+                        label: "Remove",
+                        onClick: () => {
+                          remove(selectedAccount.email);
+                          setSelectedAccount(null);
+                          setPassword("");
+                          setMode(accounts.length > 1 ? "picker" : "full");
+                        },
+                      },
+                      cancel: { label: "Cancel", onClick: () => {} },
+                    });
                   }}
                   className="font-medium text-rose-500 hover:text-rose-600"
                 >

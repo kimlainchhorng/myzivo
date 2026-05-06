@@ -377,7 +377,7 @@ export default function LoginHistorySection() {
                     </div>
 
                     <div className="flex-1 min-w-0">
-                      <p className="font-medium text-sm flex items-center gap-2 flex-wrap">
+                      <div className="font-medium text-sm flex items-center gap-2 flex-wrap">
                         <span className="truncate">{login.device_name || "Unknown"}</span>
                         {isFirst && (
                           <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
@@ -389,14 +389,14 @@ export default function LoginHistorySection() {
                             Suspicious
                           </Badge>
                         )}
-                      </p>
-                      <p className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
+                      </div>
+                      <div className="text-xs text-muted-foreground flex items-center gap-1.5 mt-0.5">
                         <MapPin className="w-3 h-3 shrink-0" />
                         <span className="truncate">{location}</span>
                         <span>•</span>
                         <Clock className="w-3 h-3 shrink-0" />
                         <span>{formatDistanceToNow(new Date(login.logged_in_at), { addSuffix: true })}</span>
-                      </p>
+                      </div>
                     </div>
 
                     {isExpanded ? (

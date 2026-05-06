@@ -41,6 +41,9 @@ interface CreatePostModalProps {
     mapLabel?: string;
   };
   initialAudioName?: string;
+  // Preselect a creation mode so entry buttons (Photo/Reels/Poll) skip the
+  // redundant second tap inside the modal toolbar.
+  initialMode?: "photo" | "reel" | "poll";
 }
 
 const FILTERS = [
@@ -101,6 +104,7 @@ export default function CreatePostModal({
   sharedPostAuthorName,
   commerceLinkDraft,
   initialAudioName,
+  initialMode,
 }: CreatePostModalProps) {
   const navigate = useNavigate();
   // Load draft from localStorage
@@ -118,8 +122,13 @@ export default function CreatePostModal({
   const [caption, setCaption] = useState(loadDraft);
   const [files, setFiles] = useState<File[]>([]);
   const [previews, setPreviews] = useState<string[]>(sharedMediaUrl ? [sharedMediaUrl] : []);
-  const [mediaType, setMediaType] = useState<"image" | "video">(sharedMediaType || "image");
-  const [selectedType, setSelectedType] = useState<"Photo" | "Video" | "Reel" | "Live" | null>(null);
+  // Reels are videos; otherwise honor the shared/default image.
+  const [mediaType, setMediaType] = useState<"image" | "video">(
+    sharedMediaType || (initialMode === "reel" ? "video" : "image"),
+  );
+  const [selectedType, setSelectedType] = useState<"Photo" | "Video" | "Reel" | "Live" | null>(
+    initialMode === "photo" ? "Photo" : initialMode === "reel" ? "Reel" : null,
+  );
   const [visibility, setVisibility] = useState<"everyone" | "friends" | "onlyme">("everyone");
   const [showVisibilityMenu, setShowVisibilityMenu] = useState(false);
   const [album, setAlbum] = useState<string | null>(null);
@@ -142,7 +151,7 @@ export default function CreatePostModal({
   const [showCameraChoice, setShowCameraChoice] = useState(false);
   const [feeling, setFeeling] = useState<{ emoji: string; label: string } | null>(null);
   const [showFeelingPicker, setShowFeelingPicker] = useState(false);
-  const [isPoll, setIsPoll] = useState(false);
+  const [isPoll, setIsPoll] = useState(initialMode === "poll");
   const [pollOptions, setPollOptions] = useState(["", ""]);
 
   const fileRef = useRef<HTMLInputElement>(null);

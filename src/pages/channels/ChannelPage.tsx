@@ -42,9 +42,17 @@ export default function ChannelPage() {
       />
       <div className="space-y-3 p-4">
         {canPost && <ChannelPostComposer channelId={channel.id} onPosted={refresh} />}
-        {posts.map((p) => (
-          <ChannelPostCard key={p.id} post={p} />
-        ))}
+        {[...posts]
+          .sort((a, b) => Number(!!b.is_pinned) - Number(!!a.is_pinned))
+          .map((p) => (
+            <ChannelPostCard
+              key={p.id}
+              post={p}
+              canManage={canPost}
+              canComment={isSubscribed || canPost}
+              onPinChanged={refresh}
+            />
+          ))}
         {posts.length === 0 && (
           <div className="rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
             No posts yet.

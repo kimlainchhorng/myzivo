@@ -47,9 +47,9 @@ export function useWalmartSearch() {
 
       const data = await res.json();
       const mapped = data.products || [];
-      console.log("[WalmartSearch] Raw response:", data);
-      console.log("[WalmartSearch] Mapped products:", mapped);
-      console.log("[WalmartSearch] Result count:", mapped.length);
+      if (import.meta.env.DEV) console.log("[WalmartSearch] Raw response:", data);
+      if (import.meta.env.DEV) console.log("[WalmartSearch] Mapped products:", mapped);
+      if (import.meta.env.DEV) console.log("[WalmartSearch] Result count:", mapped.length);
       setProducts(mapped);
     } catch (e) {
       const msg = e instanceof Error ? e.message : "Search failed";

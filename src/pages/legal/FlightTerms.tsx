@@ -9,6 +9,7 @@ import Footer from '@/components/Footer';
 import SEOHead from '@/components/SEOHead';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Plane, Shield, CreditCard, RefreshCw, AlertCircle, FileText, Scale, Clock, Globe, Database, Ban, Gavel } from 'lucide-react';
+import { Link } from "react-router-dom";
 
 const FlightTerms = () => {
   return (
@@ -332,7 +333,7 @@ const FlightTerms = () => {
                   <li>Non-discrimination for exercising your privacy rights</li>
                 </ul>
                 <p className="text-sm">
-                  For full details, see our <a href="/privacy">Privacy Policy</a>. To exercise your rights, contact <a href="mailto:support@hizivo.com">support@hizivo.com</a>.
+                  For full details, see our <Link to="/privacy">Privacy Policy</Link>. To exercise your rights, contact <a href="mailto:support@hizivo.com">support@hizivo.com</a>.
                 </p>
               </CardContent>
             </Card>
@@ -409,7 +410,7 @@ const FlightTerms = () => {
                 </p>
                 <ul>
                   <li><strong>Email:</strong> <a href="mailto:support@hizivo.com">support@hizivo.com</a></li>
-                  <li><strong>Support Center:</strong> <a href="/support">ZIVO Support Center</a></li>
+                  <li><strong>Support Center:</strong> <Link to="/support">ZIVO Support Center</Link></li>
                 </ul>
                 <p>
                   For urgent matters related to imminent travel, please contact us as soon as possible. ZIVO aims to respond to all inquiries within 24 hours.
@@ -425,9 +426,9 @@ const FlightTerms = () => {
           <div className="mt-12 text-center text-sm text-muted-foreground space-y-2">
             <p>
               By booking a flight through ZIVO, you agree to these Flight Booking Terms, our{' '}
-              <a href="/terms" className="text-primary hover:underline">Terms of Service</a>,{' '}
-              <a href="/privacy" className="text-primary hover:underline">Privacy Policy</a>, and{' '}
-              <a href="/legal/partner-disclosure" className="text-primary hover:underline">Partner Disclosure</a>.
+              <Link to="/terms" className="text-primary hover:underline">Terms of Service</Link>,{' '}
+              <Link to="/privacy" className="text-primary hover:underline">Privacy Policy</Link>, and{' '}
+              <Link to="/legal/partner-disclosure" className="text-primary hover:underline">Partner Disclosure</Link>.
             </p>
             <p className="text-xs text-muted-foreground/60">
               © {new Date().getFullYear()} ZIVO LLC. All rights reserved.

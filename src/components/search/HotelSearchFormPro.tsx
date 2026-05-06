@@ -27,6 +27,7 @@ import { Label } from "@/components/ui/label";
 import { format, addDays, isBefore, startOfToday, differenceInDays } from "date-fns";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { recordSearchAttempt } from "@/lib/recordSearchAttempt";
 import LocationAutocomplete, { type LocationOption } from "./LocationAutocomplete";
 import { useCitySearch } from "./hooks/useLocationSearch";
 
@@ -157,6 +158,18 @@ export default function HotelSearchFormPro({
       adults,
       rooms,
       children: children > 0 ? children : undefined,
+    });
+
+    // Telemetry: record this search so we can re-engage if the user never
+    // books (powers the PriceAlertsWidget + "your search expired" emails).
+    void recordSearchAttempt("hotel", {
+      citySlug,
+      cityName,
+      checkIn: format(checkIn, "yyyy-MM-dd"),
+      checkOut: format(checkOut, "yyyy-MM-dd"),
+      adults,
+      rooms,
+      children: children > 0 ? children : 0,
     });
 
     if (navigateOnSearch) {

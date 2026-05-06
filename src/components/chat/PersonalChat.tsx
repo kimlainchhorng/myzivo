@@ -44,6 +44,7 @@ import History from "lucide-react/dist/esm/icons/history";
 import FileText from "lucide-react/dist/esm/icons/file-text";
 import Bookmark from "lucide-react/dist/esm/icons/bookmark";
 import Timer from "lucide-react/dist/esm/icons/timer";
+import Languages from "lucide-react/dist/esm/icons/languages";
 import Sparkles from "lucide-react/dist/esm/icons/sparkles";
 import Ban from "lucide-react/dist/esm/icons/ban";
 import Flag from "lucide-react/dist/esm/icons/flag";
@@ -83,6 +84,7 @@ import SmartReplyBar from "./SmartReplyBar";
 const ChatGiftPanel = lazy(() => import("./ChatGiftPanel"));
 const ChatWalletSheet = lazy(() => import("./ChatWalletSheet"));
 const CoinTransferBubble = lazy(() => import("./CoinTransferBubble"));
+const P2PTransferMessageCard = lazy(() => import("./P2PTransferMessageCard"));
 const DocumentScanner = lazy(() => import("./DocumentScanner"));
 import { useChatFiles } from "@/hooks/useChatFiles";
 import type { StickerSendPayload } from "./StickerKeyboard";
@@ -127,6 +129,7 @@ const StickerKeyboard = lazy(() => import("./StickerKeyboard"));
 import MessageReactionsBar from "./MessageReactionsBar";
 import PinnedMessageBanner from "./PinnedMessageBanner";
 import SelfDestructPicker from "./SelfDestructPicker";
+import SmartReplyChips from "./SmartReplyChips";
 import Flame from "lucide-react/dist/esm/icons/flame";
 import Clock from "lucide-react/dist/esm/icons/clock";
 const ForwardPickerSheet = lazy(() => import("./ForwardPickerSheet"));
@@ -313,6 +316,54 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [forwardedNames, setForwardedNames] = useState<Record<string, string>>({});
   const [reactionsMap, setReactionsMap] = useState<Record<string, { emoji: string; count: number; reactedByMe: boolean }[]>>({});
   const [input, setInput] = useState("");
+  // Multi-device draft sync. Loads any saved draft for this conversation
+  // when the chat opens (after the prefillInput effect runs), and writes
+  // back debounced to `chat_drafts` so the composer survives reloads /
+  // device switches. Cleared when a message is actually sent.
+  useEffect(() => {
+    if (!user?.id || !recipientId) return;
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await (supabase as any)
+          .from("chat_drafts")
+          .select("draft_text")
+          .eq("user_id", user.id)
+          .eq("chat_partner_id", recipientId)
+          .maybeSingle();
+        if (cancelled) return;
+        // Don't clobber a prefillInput that already populated the composer.
+        if (data?.draft_text && !input && !prefillInput) {
+          setInput(data.draft_text);
+        }
+      } catch { /* table may not have a row */ }
+    })();
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, recipientId]);
+  useEffect(() => {
+    if (!user?.id || !recipientId) return;
+    const handle = setTimeout(async () => {
+      try {
+        if (!input.trim()) {
+          await (supabase as any)
+            .from("chat_drafts")
+            .delete()
+            .eq("user_id", user.id)
+            .eq("chat_partner_id", recipientId);
+          return;
+        }
+        await (supabase as any)
+          .from("chat_drafts")
+          .upsert(
+            { user_id: user.id, chat_partner_id: recipientId, draft_text: input, updated_at: new Date().toISOString() },
+            { onConflict: "user_id,chat_partner_id" }
+          );
+      } catch { /* offline / RLS — best-effort */ }
+    }, 800);
+    return () => clearTimeout(handle);
+  }, [input, user?.id, recipientId]);
+
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [activeCall, setActiveCall] = useState<"voice" | "video" | null>(null);
@@ -350,6 +401,30 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       else localStorage.setItem(autoDeleteStorageKey, String(next));
     } catch { /* ignore */ }
   }, [autoDeleteStorageKey]);
+  // Auto-translate inbound messages — per conversation, persisted in localStorage.
+  // When on, every received message gets a "Translated · <lang>" subtitle below
+  // the original via the translate-caption edge fn.
+  const [autoTranslate, setAutoTranslate] = useState(false);
+  const autoTranslateStorageKey = user?.id && recipientId ? `chat:autoTranslate:${user.id}:${recipientId}` : null;
+  useEffect(() => {
+    if (!autoTranslateStorageKey) return;
+    try {
+      setAutoTranslate(localStorage.getItem(autoTranslateStorageKey) === "1");
+    } catch { /* ignore */ }
+  }, [autoTranslateStorageKey]);
+  const toggleAutoTranslate = useCallback(() => {
+    setAutoTranslate((v) => {
+      const next = !v;
+      if (autoTranslateStorageKey) {
+        try {
+          if (next) localStorage.setItem(autoTranslateStorageKey, "1");
+          else localStorage.removeItem(autoTranslateStorageKey);
+        } catch { /* ignore */ }
+      }
+      return next;
+    });
+  }, [autoTranslateStorageKey]);
+
   // Cycle Off → 1d → 7d → 30d → Off (Telegram parity)
   const cycleAutoDelete = useCallback(() => {
     const next = disappearingSec == null
@@ -2012,13 +2087,19 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" sideOffset={8} className="w-52 bg-background/95 backdrop-blur-xl border-border/30 shadow-xl shadow-black/10 rounded-xl p-1.5">
               <DropdownMenuItem onClick={() => setShowSearch(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
-                <Search className="w-[18px] h-[18px] text-muted-foreground" /> Search
+                <Search className="w-[18px] h-[18px] text-muted-foreground" /> Search this chat
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/chat/search")} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
+                <Search className="w-[18px] h-[18px] text-muted-foreground" /> Search everywhere
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setShowMediaGallery(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
                 <ImageIcon className="w-[18px] h-[18px] text-muted-foreground" /> Media & Files
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setShowCallHistory(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
                 <History className="w-[18px] h-[18px] text-muted-foreground" /> Call History
+              </DropdownMenuItem>
+              <DropdownMenuItem onClick={() => navigate("/chat/recordings")} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
+                <Video className="w-[18px] h-[18px] text-muted-foreground" /> Recordings
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setShowMiniApps(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
                 <Zap className="w-[18px] h-[18px] text-muted-foreground" /> Mini Apps
@@ -2035,6 +2116,36 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               </DropdownMenuItem>
               <DropdownMenuItem onClick={() => setShowSecurity(true)} className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer">
                 <Shield className="w-[18px] h-[18px] text-muted-foreground" /> Privacy
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={toggleAutoTranslate}
+                className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer"
+                onSelect={(e) => { e.preventDefault(); }}
+              >
+                <Languages className="w-[18px] h-[18px] text-muted-foreground" />
+                <span className="flex-1">Auto-translate</span>
+                <span className={`text-[11px] font-semibold ${autoTranslate ? "text-emerald-500" : "text-muted-foreground"}`}>
+                  {autoTranslate ? "On" : "Off"}
+                </span>
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={async () => {
+                  // Spin up an ad-hoc LiveKit room. Pre-fill the DM composer
+                  // with the join link so the recipient can tap-to-join.
+                  const room = `dm-${user?.id?.slice(0, 6) || "x"}-${Date.now().toString(36)}`;
+                  const url = `${window.location.origin}/chat/call/group/${room}`;
+                  try {
+                    await navigator.clipboard?.writeText(url);
+                  } catch { /* clipboard may be blocked */ }
+                  setInput((prev) => (prev ? `${prev}\n${url}` : `Join my call: ${url}`));
+                  toast.success("Invite link added to composer. Send it to start the call.");
+                }}
+                className="gap-3 text-[14px] font-medium rounded-lg px-3 py-2.5 cursor-pointer"
+                onSelect={(e) => { e.preventDefault(); }}
+              >
+                <Video className="w-[18px] h-[18px] text-muted-foreground" />
+                <span className="flex-1">Start group call</span>
+                <span className="text-[10px] text-muted-foreground">+ invite</span>
               </DropdownMenuItem>
               <DropdownMenuItem
                 onClick={cycleAutoDelete}
@@ -2085,31 +2196,30 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         )}
 
         {latestMissedCall && latestMissedCall.id !== dismissedMissedCallId && !activeCall && (
-          <div className="w-full px-5 py-3.5 border-t border-amber-500/20 bg-gradient-to-r from-amber-500/10 via-amber-500/5 to-transparent flex items-center gap-4 relative overflow-hidden group">
-            <div className="absolute inset-0 bg-white/40 dark:bg-black/20 backdrop-blur-md -z-10" />
-            <div className="h-10 w-10 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0">
-              <Phone className="w-5 h-5 text-amber-600" />
+          <div className="w-full px-4 py-3 border-t border-border bg-secondary flex items-center gap-3">
+            <div className="h-10 w-10 rounded-full bg-background border border-border flex items-center justify-center shrink-0">
+              <Phone className="w-5 h-5 text-amber-500" />
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-[14px] font-bold text-amber-700 leading-tight">
+              <p className="text-[14px] font-bold text-foreground leading-tight tracking-tight">
                 {latestMissedCall.call_type === "video" ? "Missed video call" : "Missed voice call"}
               </p>
-              <p className="text-[12px] text-amber-700/80 font-medium mt-0.5">
+              <p className="text-[12px] text-muted-foreground mt-0.5">
                 {latestMissedCall.status === "declined"
                   ? "Call was declined. Tap to call back."
-                  : "Tap below to call back quickly."}
+                  : "Tap below to call back."}
               </p>
             </div>
             <button
               onClick={() => { void handleStartCall(latestMissedCall.call_type as "voice" | "video"); }}
-              className="h-10 px-5 rounded-full bg-[#f59e0b] hover:bg-[#d97706] text-white text-[13px] font-bold shadow-lg shadow-amber-500/25 active:scale-95 transition-all flex items-center gap-2"
+              className="h-9 px-4 rounded-full bg-foreground text-background text-[13px] font-bold active:scale-95 transition-transform flex items-center gap-1.5"
             >
-              <Phone className="h-4 w-4 fill-current" />
+              <Phone className="h-3.5 w-3.5 fill-current" />
               Call back
             </button>
             <button
               onClick={() => setDismissedMissedCallId(latestMissedCall.id)}
-              className="h-8 w-8 rounded-full flex items-center justify-center text-amber-700/50 hover:bg-amber-500/10 transition-colors"
+              className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-background transition-colors"
               aria-label="Dismiss"
             >
               <X className="h-4 w-4" />
@@ -2443,6 +2553,24 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                           />
                         );
                       })()
+                    ) : msg.message_type === "p2p_transfer" && msg.file_payload ? (
+                      (() => {
+                        const fp = msg.file_payload as { transferId?: string; amount_cents?: number; note?: string; mode?: "send" | "request" };
+                        if (!fp?.transferId || !fp?.amount_cents) return null;
+                        return (
+                          <Suspense fallback={null}>
+                            <P2PTransferMessageCard
+                              transferId={fp.transferId}
+                              amountCents={fp.amount_cents}
+                              note={fp.note ?? null}
+                              mode={fp.mode ?? "send"}
+                              isMe={isMe}
+                              currentUserId={user?.id ?? ""}
+                              time={formatMsgTime(msg.created_at)}
+                            />
+                          </Suspense>
+                        );
+                      })()
                     ) : msg.message_type === "zivo_card" && msg.file_payload ? (
                       <div className={msg.id.startsWith("opt-") ? "opacity-60" : ""}>
                         <ZivoActionBubble
@@ -2492,6 +2620,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                           setMiniAppView(type as any);
                           setShowMiniApps(true);
                         }}
+                        autoTranslate={autoTranslate}
                         />                    )}
 
                     {/* Aggregated emoji reactions chip row — pre-loaded to avoid N+1 queries */}
@@ -2631,6 +2760,17 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       />
 
       <div className="bg-background/80 backdrop-blur-2xl border-t border-border/5 px-2.5 py-2 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
+          {/* AI smart-reply chips — appears when latest visible message is from
+              the other side and the composer is empty. Tap a chip to seed the
+              composer (does not auto-send so the user can edit). */}
+          {!editingId && (
+            <SmartReplyChips
+              recent={messages.slice(-12).map((m) => ({ text: m.message ?? "", isMe: m.sender_id === user?.id }))}
+              composerHasText={input.trim().length > 0}
+              onPick={(text) => { setInput(text); inputRef.current?.focus(); }}
+            />
+          )}
+
           {/* Sticker auto-suggestions (Telegram parity) — shown when the user types an emoji
               and there are matching illustrated stickers. Hidden during slash mode so the popovers don't fight. */}
           {stickerSuggestions.length > 0 && slashQuery == null && !editingId && (
@@ -2688,7 +2828,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                   onSendGift={() => setShowGiftPanel(true)}
                   onOpenWallet={() => {
                     if (isSelfChat) { setShowWalletSheet(true); return; }
-                    openP2PTransfer({ receiverId: recipientId, receiverName, mode: "send" });
+                    openP2PTransfer({ receiverId: recipientId, receiverName: recipientName, mode: "send" });
                   }}
                   onScanDocument={() => setShowScanner(true)}
                   onFileSelect={() => filePickerTriggerRef.current?.()}

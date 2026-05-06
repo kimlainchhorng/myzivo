@@ -56,6 +56,7 @@ import { useFlightBookings, useRequestFlightRefund, getTicketingStatusInfo, canR
 import { FLIGHT_SUPPORT_INFO } from "@/config/flightCompliance";
 import FlightTicketCard from "./FlightTicketCard";
 import { useToast } from "@/hooks/use-toast";
+import { Link } from "react-router-dom";
 
 interface Trip {
   id: string;
@@ -343,10 +344,10 @@ export const MyTripsDashboard = ({ className, onViewTrip, onDownloadBoardingPass
             Start planning your next adventure! Search for flights and book directly on ZIVO.
           </p>
           <Button className="gap-2" asChild>
-            <a href="/flights">
+            <Link to="/flights">
               <Search className="w-4 h-4" />
               Search Flights
-            </a>
+            </Link>
           </Button>
         </CardContent>
       </Card>

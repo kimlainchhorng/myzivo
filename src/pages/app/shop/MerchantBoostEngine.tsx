@@ -68,22 +68,21 @@ export default function MerchantBoostEngine() {
     if (!user) { toast.error("Please log in"); return; }
     setIsSubmitting(true);
     try {
-      const { data, error } = await supabase.functions.invoke("create-travel-checkout", {
-        body: {
-          orderId: `boost-${contentType}-${tier.amount}-${Date.now()}`,
-          amount: tier.amount,
-          successUrl: `${window.location.origin}/shop-dashboard/roi?boosted=true&type=${contentType}`,
-          cancelUrl: `${window.location.origin}/shop-dashboard/boost-engine`,
-        },
+      // Same fix as AdBoostBidding: route the bid into `ad_boost_bids` so the
+      // auction scheduler can pick a winner. The previous call to
+      // `create-travel-checkout` invoked a non-existent edge fn — silent 404.
+      const placement: "top_map" | "top_reel" = contentType === "reel" ? "top_reel" : "top_map";
+      const { error } = await (supabase as any).from("ad_boost_bids").insert({
+        user_id: user.id,
+        placement,
+        budget_cents: Math.round(tier.amount * 100),
+        duration_days: 7,
+        predicted_roi_pct: Math.round(roi),
       });
       if (error) throw error;
-      if (data?.url) {
-        window.location.href = data.url;
-      } else {
-        toast.success("Boost activated! Content will be prioritized within 30 minutes.");
-      }
-    } catch {
-      toast.error("Failed to process boost payment");
+      toast.success("Boost bid submitted. The auction picks the winning slot every minute.");
+    } catch (e: any) {
+      toast.error(e?.message || "Failed to submit boost");
     } finally {
       setIsSubmitting(false);
     }

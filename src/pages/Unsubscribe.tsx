@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams , Link} from "react-router-dom";
 import { Loader2, MailCheck, MailX, AlertTriangle } from "lucide-react";
 import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
@@ -108,13 +108,13 @@ export default function Unsubscribe() {
 
         {state === "success" && (
           <Button className="mt-6 w-full" asChild>
-            <a href="/">Back to ZIVO</a>
+            <Link to="/">Back to ZIVO</Link>
           </Button>
         )}
 
         {(state === "invalid" || state === "error") && (
           <Button variant="outline" className="mt-6 w-full" asChild>
-            <a href="/help">Contact support</a>
+            <Link to="/help">Contact support</Link>
           </Button>
         )}
       </section>

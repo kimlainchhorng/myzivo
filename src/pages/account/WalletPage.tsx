@@ -94,6 +94,74 @@ export default function WalletPage() {
   const { points, isLoading: pointsLoading } = useLoyaltyPoints();
   const { totals: liveEarnings, payouts: liveGiftPayouts } = useLiveEarnings();
 
+  // ── Wallet topup (Stripe Checkout) ─────────────────────────────────────
+  const [topupOpen, setTopupOpen] = useState(false);
+  const [topupAmount, setTopupAmount] = useState("");
+  const [topupBusy, setTopupBusy] = useState(false);
+  const TOPUP_QUICK = [10, 25, 50, 100, 250];
+
+  // Run a one-shot verify when redirected back from Stripe Checkout.
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const url = new URL(window.location.href);
+    const status = url.searchParams.get("topup");
+    const sid = url.searchParams.get("session_id");
+    if (status === "success" && sid) {
+      (async () => {
+        try {
+          const { data, error } = await supabase.functions.invoke("verify-user-wallet-topup", {
+            body: { session_id: sid },
+          });
+          if (error) {
+            toast.error("Could not verify topup");
+          } else if ((data as any)?.credited) {
+            toast.success(`Wallet credited · balance $${(((data as any).balance_cents ?? 0) / 100).toFixed(2)}`);
+          } else {
+            toast.message("Topup already credited");
+          }
+        } finally {
+          // Strip the params so we don't re-run on every reload.
+          url.searchParams.delete("topup");
+          url.searchParams.delete("session_id");
+          window.history.replaceState({}, "", url.pathname + (url.search ? url.search : "") + url.hash);
+          queryClient.invalidateQueries({ queryKey: ["customer-wallet"] });
+          queryClient.invalidateQueries({ queryKey: ["wallet-transactions"] });
+        }
+      })();
+    } else if (status === "cancel") {
+      toast.message("Topup cancelled");
+      url.searchParams.delete("topup");
+      window.history.replaceState({}, "", url.pathname + (url.search ? url.search : "") + url.hash);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleTopup = async () => {
+    const cents = Math.round(Number(topupAmount) * 100);
+    if (!Number.isFinite(cents) || cents < 500) {
+      toast.error("Minimum topup is $5");
+      return;
+    }
+    setTopupBusy(true);
+    try {
+      const { data, error } = await supabase.functions.invoke("create-user-wallet-topup", {
+        body: {
+          amount_cents: cents,
+          currency: "USD",
+          success_url: `${window.location.origin}/wallet?topup=success`,
+          cancel_url: `${window.location.origin}/wallet?topup=cancel`,
+        },
+      });
+      if (error) throw error;
+      const url = (data as any)?.url;
+      if (!url) throw new Error("No checkout url returned");
+      window.location.href = url;
+    } catch (e) {
+      toast.error("Could not start topup");
+      setTopupBusy(false);
+    }
+  };
+
   // Payout methods
   const { data: payoutMethods = [], isLoading: payoutsLoading } = useQuery({
     queryKey: ["payout-methods", user?.id],
@@ -234,6 +302,13 @@ export default function WalletPage() {
               >
                 {walletLoading ? "..." : balanceHidden ? "••••••" : `$${balanceDollars.toFixed(2)}`}
               </motion.p>
+              <button
+                type="button"
+                onClick={() => setTopupOpen(true)}
+                className="mt-3 inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white text-[#0a0a0a] text-[12px] font-bold active:scale-95 transition-transform shadow-md"
+              >
+                <Plus className="w-3.5 h-3.5" /> Top up
+              </button>
               {lifetimeEarnedDollars > 0 && (
                 <p className="text-white/50 text-[11px] mt-1.5 flex items-center gap-1">
                   <TrendingUp className="w-3 h-3" />
@@ -956,6 +1031,94 @@ export default function WalletPage() {
       </div>
     </div>
     {mfaDialog}
+
+    {/* Wallet topup modal */}
+    <AnimatePresence>
+      {topupOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-[200] flex items-end sm:items-center justify-center bg-black/55 backdrop-blur-sm"
+          onClick={() => !topupBusy && setTopupOpen(false)}
+        >
+          <motion.div
+            initial={{ y: 80, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 80, opacity: 0 }}
+            transition={{ type: "spring", damping: 26, stiffness: 280 }}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full sm:max-w-md bg-background rounded-t-2xl sm:rounded-2xl pb-[max(1rem,env(safe-area-inset-bottom))] flex flex-col overflow-hidden"
+          >
+            <div className="px-5 pt-5 pb-3 border-b border-border/30">
+              <h3 className="text-lg font-bold">Top up wallet</h3>
+              <p className="text-[12px] text-muted-foreground mt-0.5">
+                Funded by Stripe. Settles instantly after payment.
+              </p>
+            </div>
+
+            <div className="px-5 py-4 space-y-3">
+              <div className="grid grid-cols-5 gap-2">
+                {TOPUP_QUICK.map((amt) => (
+                  <button
+                    key={amt}
+                    type="button"
+                    onClick={() => setTopupAmount(String(amt))}
+                    className={`py-2 rounded-lg text-sm font-bold border transition-colors ${
+                      topupAmount === String(amt)
+                        ? "bg-primary text-primary-foreground border-primary"
+                        : "bg-muted/40 border-border hover:bg-muted"
+                    }`}
+                  >
+                    ${amt}
+                  </button>
+                ))}
+              </div>
+
+              <div>
+                <label className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  Or enter amount
+                </label>
+                <div className="mt-1 relative">
+                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">$</span>
+                  <Input
+                    type="number"
+                    inputMode="decimal"
+                    min={5}
+                    step={1}
+                    value={topupAmount}
+                    onChange={(e) => setTopupAmount(e.target.value)}
+                    placeholder="25.00"
+                    className="pl-7 text-base font-semibold"
+                  />
+                </div>
+                {topupAmount && Number(topupAmount) > 0 && Number(topupAmount) < 5 && (
+                  <p className="text-[11px] text-foreground dark:text-foreground mt-1">Minimum is $5</p>
+                )}
+              </div>
+            </div>
+
+            <div className="px-5 pb-5 pt-1 flex gap-2">
+              <Button
+                variant="outline"
+                className="flex-1"
+                disabled={topupBusy}
+                onClick={() => setTopupOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="flex-1"
+                disabled={topupBusy || !topupAmount || Number(topupAmount) < 5}
+                onClick={handleTopup}
+              >
+                {topupBusy ? "Opening Stripe…" : `Top up $${topupAmount || "0"}`}
+              </Button>
+            </div>
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
     </>
   );
 }

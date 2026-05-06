@@ -2,8 +2,8 @@
  * AI Trip Planner - Full AI-powered trip planning wizard
  */
 
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useMemo, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -61,16 +61,35 @@ const budgetLevels = [
 const AITripPlanner = () => {
   const [step, setStep] = useState(1);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { destinations: suggestions, isLoading, fetchSuggestions } = useAITripSuggestions();
   const createTrip = useCreateTrip();
   const createItem = useCreateTripItem();
   const [savingId, setSavingId] = useState<string | null>(null);
-  
+
+  // Honor share-card / deep-link query params on mount: ?destination= &depart= &return= &travelers=
+  // (matches ZivoCardPicker's trip composer).
+  const initialTrip = useMemo(() => {
+    const parseDate = (raw: string | null): Date | undefined => {
+      if (!raw) return undefined;
+      const d = new Date(raw + "T00:00:00");
+      return Number.isNaN(d.getTime()) ? undefined : d;
+    };
+    const t = parseInt(searchParams.get("travelers") || "", 10);
+    return {
+      destination: searchParams.get("destination") || "",
+      depart: parseDate(searchParams.get("depart")),
+      back: parseDate(searchParams.get("return")),
+      travelers: Number.isFinite(t) && t > 0 ? t : null,
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   // Form state
-  const [destination, setDestination] = useState("");
-  const [departDate, setDepartDate] = useState<Date>();
-  const [returnDate, setReturnDate] = useState<Date>();
-  const [travelers, setTravelers] = useState(2);
+  const [destination, setDestination] = useState(initialTrip.destination);
+  const [departDate, setDepartDate] = useState<Date | undefined>(initialTrip.depart);
+  const [returnDate, setReturnDate] = useState<Date | undefined>(initialTrip.back);
+  const [travelers, setTravelers] = useState(initialTrip.travelers ?? 2);
   const [budget, setBudget] = useState<string>("mid");
   const [interests, setInterests] = useState<string[]>([]);
 

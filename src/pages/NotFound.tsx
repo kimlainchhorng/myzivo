@@ -9,96 +9,66 @@ const NotFound = () => {
   const location = useLocation();
 
   useEffect(() => {
-    console.error("404 Error: User attempted to access non-existent route:", location.pathname);
+    if (import.meta.env.DEV) console.error("404 Error: User attempted to access non-existent route:", location.pathname);
   }, [location.pathname]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background relative overflow-hidden safe-area-top safe-area-bottom">
+    <div className="flex min-h-screen items-center justify-center bg-background safe-area-top safe-area-bottom">
       <SEOHead
         title="Page Not Found | ZIVO"
         description="The page you're looking for doesn't exist. Explore flights, hotels, and car rentals on ZIVO."
         noIndex
       />
-      {/* Enhanced background effects */}
-      <div className="absolute inset-0 bg-gradient-radial from-primary/10 via-transparent to-transparent opacity-40" />
-      <div className="absolute top-1/4 right-1/4 w-[250px] sm:w-[400px] h-[250px] sm:h-[400px] bg-gradient-to-bl from-eats/10 to-orange-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-1/4 left-1/4 w-[200px] sm:w-[300px] h-[200px] sm:h-[300px] bg-gradient-to-tr from-primary/10 to-teal-500/5 rounded-full blur-3xl" />
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5 }}
-        className="text-center px-4 relative z-10"
+        transition={{ duration: 0.4 }}
+        className="text-center px-4 max-w-md"
       >
-        {/* Animated 404 */}
-        <div className="mb-6 sm:mb-8">
-          <motion.h1
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ duration: 0.6, type: "spring" }}
-            className="font-display text-[100px] sm:text-[150px] lg:text-[200px] font-bold leading-none bg-gradient-to-r from-primary via-flights to-primary bg-clip-text text-transparent bg-[length:200%_auto] animate-gradient"
-          >
-            404
-          </motion.h1>
+        {/* Bold 404 — IG-mono */}
+        <h1 className="font-display text-[88px] sm:text-[112px] font-black leading-none tracking-tight text-foreground mb-2">
+          404
+        </h1>
+
+        {/* Compass tile — clean secondary bg with hairline border */}
+        <div className="flex justify-center mb-6">
+          <div className="w-14 h-14 rounded-2xl bg-secondary border border-border flex items-center justify-center">
+            <Compass className="w-7 h-7 text-foreground" />
+          </div>
         </div>
 
-        {/* Icon */}
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
-          className="flex justify-center mb-6"
-        >
-          <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-3xl bg-gradient-to-br from-primary to-teal-400 flex items-center justify-center shadow-2xl shadow-primary/30">
-            <Compass className="w-8 h-8 sm:w-10 sm:h-10 text-primary-foreground" />
-          </div>
-        </motion.div>
-
         {/* Message */}
-        <motion.div
-          initial={{ opacity: 0, y: 12 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.3 }}
-        >
-          <h2 className="font-display text-2xl sm:text-3xl lg:text-4xl font-bold mb-4">
-            Lost in the{" "}
-            <span className="bg-gradient-to-r from-primary to-teal-400 bg-clip-text text-transparent">
-              journey?
-            </span>
-          </h2>
-          <p className="text-base sm:text-lg text-muted-foreground max-w-md mx-auto mb-8 sm:mb-10">
-            The page you're looking for has taken a detour. Let's get you back on track!
-          </p>
-        </motion.div>
+        <h2 className="text-2xl sm:text-3xl font-bold tracking-tight mb-3">
+          Lost in the <span className="text-accent-foreground">journey?</span>
+        </h2>
+        <p className="text-base text-muted-foreground mb-8">
+          The page you're looking for has taken a detour. Let's get you back on track.
+        </p>
 
-        {/* Buttons */}
-        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center animate-in fade-in slide-in-from-bottom-4 duration-500 delay-300">
-          <Button asChild size="lg" className="h-12 sm:h-14 px-6 sm:px-8 text-base sm:text-lg font-bold rounded-xl bg-gradient-to-r from-primary to-teal-400 text-primary-foreground shadow-lg shadow-primary/30 hover:opacity-90 gap-2 touch-manipulation active:scale-[0.98]">
+        {/* Buttons — solid black primary + outlined secondary */}
+        <div className="flex flex-col sm:flex-row gap-3 justify-center mb-12">
+          <Button asChild size="lg" className="h-12 px-6 text-base font-bold rounded-full gap-2 touch-manipulation active:scale-[0.98]">
             <Link to="/">
-              <Home className="w-5 h-5" />
+              <Home className="w-4 h-4" />
               Go Home
             </Link>
           </Button>
-          <Button asChild variant="outline" size="lg" className="h-12 sm:h-14 px-6 sm:px-8 text-base sm:text-lg font-bold rounded-xl border-2 gap-2 touch-manipulation active:scale-[0.98]">
+          <Button asChild variant="outline" size="lg" className="h-12 px-6 text-base font-bold rounded-full gap-2 touch-manipulation active:scale-[0.98]">
             <Link to="/help">
-              <Search className="w-5 h-5" />
+              <Search className="w-4 h-4" />
               Get Help
             </Link>
           </Button>
         </div>
 
         {/* Quick Links */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.6 }}
-          className="mt-12 sm:mt-16"
-        >
-          <p className="text-sm text-muted-foreground mb-4 flex items-center justify-center gap-2">
-            <Sparkles className="w-4 h-4 text-primary" />
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3 flex items-center justify-center gap-1.5">
+            <Sparkles className="w-3.5 h-3.5" />
             Popular destinations
           </p>
-          <div className="flex flex-wrap gap-2 sm:gap-3 justify-center">
+          <div className="flex flex-wrap gap-2 justify-center">
             {[
               { label: "Find Flights", href: "/flights" },
               { label: "Hotels", href: "/hotels" },
@@ -108,25 +78,14 @@ const NotFound = () => {
               <Link
                 key={link.href}
                 to={link.href}
-                className="px-3 sm:px-4 py-2 rounded-full bg-muted/50 hover:bg-muted text-sm font-medium transition-colors hover:text-primary touch-manipulation active:scale-95"
+                className="px-3.5 py-1.5 rounded-full bg-secondary border border-border text-[13px] font-medium text-foreground hover:bg-muted transition-colors touch-manipulation active:scale-95"
               >
                 {link.label}
               </Link>
             ))}
           </div>
-        </motion.div>
+        </div>
       </motion.div>
-
-      {/* CSS for gradient animation */}
-      <style>{`
-        @keyframes gradient {
-          0%, 100% { background-position: 0% 50%; }
-          50% { background-position: 100% 50%; }
-        }
-        .animate-gradient {
-          animation: gradient 3s ease infinite;
-        }
-      `}</style>
     </div>
   );
 };

@@ -367,9 +367,9 @@ const InsurancePolicy = () => {
                 <div className="pt-4 border-t border-border">
                   <p className="text-sm text-muted-foreground">
                     For more information, see our{" "}
-                    <a href="/terms/renter" className="text-primary hover:underline">Renter Terms</a>,{" "}
-                    <a href="/terms/owner" className="text-primary hover:underline">Owner Terms</a>, and{" "}
-                    <a href="/damage-policy" className="text-primary hover:underline">Damage Policy</a>.
+                    <Link to="/terms/renter" className="text-primary hover:underline">Renter Terms</Link>,{" "}
+                    <Link to="/terms/owner" className="text-primary hover:underline">Owner Terms</Link>, and{" "}
+                    <Link to="/damage-policy" className="text-primary hover:underline">Damage Policy</Link>.
                   </p>
                 </div>
               </CardContent>

@@ -12,6 +12,10 @@ interface Props {
   participants: LKParticipant[];
   screenShareSource: LKParticipant | null;
   isRecording?: boolean;
+  /** Forwarded to each VideoTile so the host sees the moderation menu. */
+  viewerIsHost?: boolean;
+  /** LiveKit room name — required for moderation actions. */
+  roomName?: string;
 }
 
 function gridClass(n: number): string {
@@ -22,7 +26,7 @@ function gridClass(n: number): string {
   return "grid-cols-2 grid-rows-4 md:grid-cols-4 md:grid-rows-2"; // up to 8
 }
 
-export default function GroupCallGrid({ participants, screenShareSource, isRecording = false }: Props) {
+export default function GroupCallGrid({ participants, screenShareSource, isRecording = false, viewerIsHost = false, roomName }: Props) {
   const orderedParticipants = useMemo(() => {
     // Local first for predictability
     return [...participants].sort((a, b) => Number(b.isLocal) - Number(a.isLocal));
@@ -38,7 +42,7 @@ export default function GroupCallGrid({ participants, screenShareSource, isRecor
         <div className="flex gap-2 overflow-x-auto md:flex-col md:overflow-y-auto">
           {orderedParticipants.map((p) => (
             <div key={p.identity} className="aspect-video h-full shrink-0 md:h-auto md:w-full">
-              <VideoTile participant={p} isRecording={isRecording} />
+              <VideoTile participant={p} isRecording={isRecording} viewerIsHost={viewerIsHost} roomName={roomName} />
             </div>
           ))}
         </div>
@@ -51,7 +55,7 @@ export default function GroupCallGrid({ participants, screenShareSource, isRecor
   return (
     <div className={`grid h-full gap-2 p-2 ${gridClass(n)}`}>
       {orderedParticipants.map((p) => (
-        <VideoTile key={p.identity} participant={p} isRecording={isRecording} />
+        <VideoTile key={p.identity} participant={p} isRecording={isRecording} viewerIsHost={viewerIsHost} roomName={roomName} />
       ))}
     </div>
   );

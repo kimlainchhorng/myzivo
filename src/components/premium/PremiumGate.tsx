@@ -31,11 +31,11 @@ export default function PremiumGate({ feature, description, children, fallback }
     <motion.div
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="relative rounded-2xl overflow-hidden border border-border/40 bg-gradient-to-br from-amber-500/10 via-pink-500/10 to-violet-500/10 p-5 text-center"
+      className="relative rounded-2xl overflow-hidden border border-border/40 bg-gradient-to-br from-amber-500/10 p-5 text-center"
     >
       <div className="absolute inset-0 pointer-events-none opacity-30 bg-[radial-gradient(circle_at_30%_20%,white,transparent_50%)]" />
       <div className="relative">
-        <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-gradient-to-br from-amber-400 to-pink-500 shadow-lg mb-3">
+        <div className="inline-flex items-center justify-center h-14 w-14 rounded-2xl bg-gradient-to-br from-amber-400 shadow-lg mb-3">
           <Lock className="w-6 h-6 text-white" />
         </div>
         <p className="text-[11px] font-bold uppercase tracking-widest text-amber-700 dark:text-amber-400 mb-1">ZIVO+ exclusive</p>
@@ -43,7 +43,7 @@ export default function PremiumGate({ feature, description, children, fallback }
         {description && <p className="text-sm text-muted-foreground mb-4">{description}</p>}
         <button
           onClick={() => navigate("/zivo-plus")}
-          className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-500 to-pink-500 text-white font-bold text-sm shadow-lg active:scale-95 transition"
+          className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-500 text-white font-bold text-sm shadow-lg active:scale-95 transition"
         >
           <Sparkles className="w-4 h-4" />
           Upgrade to unlock

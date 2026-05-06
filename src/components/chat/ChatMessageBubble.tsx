@@ -39,6 +39,7 @@ import { findZivoTrackBySlug } from "@/lib/zivoSessions";
 import ExternalLinkWarning from "@/components/security/ExternalLinkWarning";
 import { assessLinkSync } from "@/hooks/useLinkRisk";
 import { assessChatMessageRisk, assessIncomingChatRisk } from "@/lib/security/chatContentSafety";
+import { useAutoTranslateMessage } from "@/hooks/useAutoTranslateMessage";
 
 import { ILLUSTRATED_PACKS } from "@/config/illustratedStickers";
 import { getAnimatedStickerUrl } from "@/config/animatedStickerMap";
@@ -228,6 +229,9 @@ interface ChatMessageBubbleProps {
   onMiniAppAction?: (type: string) => void;
   senderName?: string;
   senderAvatar?: string | null;
+  /** When true, inbound messages are translated to the user's locale via
+   *  the translate-caption edge fn and rendered below the original text. */
+  autoTranslate?: boolean;
 }
 
 function MiniAppCard({ type, message, isMe, time, onAction }: { type: string; message: string; isMe: boolean; time: string; onAction?: (type: string) => void }) {
@@ -288,14 +292,14 @@ function MusicCard({ message, isMe, time }: { message: string; isMe: boolean; ti
         </button>
       </div>
       
-      <div className="mt-4 h-16 rounded-2xl bg-white/5 border border-white/5 flex items-center justify-center relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/20 to-purple-500/10" />
-        <p className="text-[15px] font-bold relative z-10 flex items-center gap-2">
-          {title}
-          <div className="h-8 w-8 rounded-full bg-white text-black flex items-center justify-center shadow-sm">
-             <Play className="w-4 h-4 fill-current ml-0.5" />
-          </div>
-        </p>
+      <div className="mt-4 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center relative overflow-hidden">
+        <div className="absolute inset-0 bg-white/5" />
+        <div className="text-[15px] font-bold relative z-10 flex items-center gap-2">
+          <span>{title}</span>
+          <span className="h-8 w-8 rounded-full bg-white text-black flex items-center justify-center shadow-sm">
+            <Play className="w-4 h-4 fill-current ml-0.5" />
+          </span>
+        </div>
         <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded-md bg-black/40 text-[9px] font-black uppercase tracking-widest text-white/40">Zivo</div>
       </div>
       
@@ -322,6 +326,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
   onMiniAppAction,
   senderName,
   senderAvatar,
+  autoTranslate = false,
 }: ChatMessageBubbleProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -330,6 +335,9 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
   const [showDeleteSub, setShowDeleteSub] = useState(false);
   const [showVideoPlayer, setShowVideoPlayer] = useState(false);
   const messageRisk = useMemo(() => isMe ? { warnings: [] } : assessChatMessageRisk(message || ""), [message, isMe]);
+  // Inbound auto-translate. Only fires for messages we received and only when
+  // the parent has the per-conversation toggle on (kebab menu in PersonalChat).
+  const autoTr = useAutoTranslateMessage(message || "", !isMe && autoTranslate);
   const incomingRisk = useMemo(
     () => isMe ? null : assessIncomingChatRisk(message || ""),
     [message, isMe],
@@ -897,6 +905,25 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
                 }`}>
                   <SpoilerText text={textWithoutUrl} variant="bold" />
                 </p>
+              )}
+
+              {/* Auto-translated inbound text. Hidden when not enabled, when
+                  the message was sent by us, or when no translation is
+                  needed. Uses a subdued style so the original stays primary. */}
+              {!isMe && autoTranslate && autoTr.status === "loading" && (
+                <p className="px-4 pb-1 text-[10px] italic text-muted-foreground relative z-[1]">
+                  Translating…
+                </p>
+              )}
+              {!isMe && autoTranslate && autoTr.status === "done" && autoTr.translated && (
+                <div className="px-4 pb-2 pt-1 relative z-[1]">
+                  <p className="text-[10px] uppercase tracking-wide font-bold text-muted-foreground/80 mb-0.5">
+                    Translated · {autoTr.targetLang}
+                  </p>
+                  <p className="text-sm text-foreground/90 whitespace-pre-wrap break-words">
+                    {autoTr.translated}
+                  </p>
+                </div>
               )}
 
               {!isMe && incomingRisk?.hasBlocked && (

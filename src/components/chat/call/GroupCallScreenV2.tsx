@@ -91,6 +91,8 @@ export default function GroupCallScreenV2({
               participants={call.participants}
               screenShareSource={call.screenShareSource}
               isRecording={call.isRecording}
+              viewerIsHost={call.isHost}
+              roomName={roomName}
             />
             <CallReactionsOverlay reactions={call.reactions} />
             <CallReactionStrip onReaction={call.sendReaction} />

@@ -111,15 +111,33 @@ const VerifyNewDevice = () => {
         return;
       }
 
-      // OTP valid — register this device as trusted
+      // OTP valid — register this device as trusted.
+      // Note: this RPC was failing silently for months (it referenced columns
+      // that don't exist on trusted_devices), which is why users kept getting
+      // re-prompted for OTP every sign-in. We now check the error and warn —
+      // sign-in still succeeds, but the user will know trust didn't stick.
       const fingerprint = getDeviceFingerprint();
       const deviceName = getDeviceName();
+      const ua = navigator.userAgent;
+      const deviceType = /iPad|Tablet/.test(ua)
+        ? "tablet"
+        : /iPhone|Android.*Mobile|Mobile/.test(ua)
+          ? "mobile"
+          : "desktop";
 
-      await supabase.rpc("register_trusted_device", {
+      const { error: trustErr } = await supabase.rpc("register_trusted_device", {
         _user_id: userId,
         _device_fingerprint: fingerprint,
         _device_name: deviceName,
+        _device_type: deviceType,
       });
+      if (trustErr) {
+        // Non-fatal: sign-in already succeeded server-side. Just inform the
+        // user that the "trust" step didn't persist so they understand why
+        // they may see the OTP screen again next time.
+        console.error("[VerifyNewDevice] register_trusted_device failed", trustErr);
+        toast.warning("Signed in, but couldn't save device trust. You may be asked again next time.");
+      }
 
       // Clean up session storage
       sessionStorage.removeItem("zivo_device_otp_email");

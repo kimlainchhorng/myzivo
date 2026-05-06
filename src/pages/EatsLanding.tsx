@@ -6,7 +6,7 @@ import { useState, useMemo, useEffect } from "react";
 import { Star, Clock, Truck, ShoppingCart, Search, MapPin, UtensilsCrossed, Plus, Minus, ArrowLeft, CheckCircle, CreditCard, Package, Timer, Heart, Sparkles, MessageSquare, Percent, Leaf, Award, Loader2, Share2 } from "lucide-react";
 import { openShareToChat } from "@/components/chat/ShareToChatSheet";
 import { motion, AnimatePresence } from "framer-motion";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -127,10 +127,24 @@ export default function EatsLanding() {
   const { data: menuItems = [], isLoading: loadingMenu } = useEatsMenu(selectedRestaurantId);
 
   // UI State
+  const [searchParams] = useSearchParams();
+  // Honor share-card / deep-link query params on mount: ?cuisine= / ?city=
+  // (matches the shape produced by ZivoCardPicker's eats composer). City is
+  // poured into searchQuery because EatsLanding doesn't have a separate
+  // location filter — its filtering is text-based across name+cuisine+city.
+  const initialEats = useMemo(() => {
+    const cuisine = searchParams.get("cuisine") || "";
+    const city = searchParams.get("city") || "";
+    return {
+      category: cuisine || "All",
+      query: city,
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const [step, setStep] = useState<Step>("browse");
   const [cart, setCart] = useState<EatsCartItem[]>([]);
-  const [searchQuery, setSearchQuery] = useState("");
-  const [activeCategory, setActiveCategory] = useState("All");
+  const [searchQuery, setSearchQuery] = useState(initialEats.query);
+  const [activeCategory, setActiveCategory] = useState(initialEats.category);
   const [sortBy, setSortBy] = useState<"recommended" | "rating" | "time">("recommended");
 
   // Checkout state

@@ -486,10 +486,7 @@ export default function AccountSettingsPage() {
     }
   };
 
-  const handleUnlinkProvider = async (provider: string) => {
-    if (!window.confirm(`Disconnect ${PROVIDER_META[provider]?.name ?? provider}? You won't be able to sign in with it anymore.`)) {
-      return;
-    }
+  const performUnlinkProvider = async (provider: string) => {
     try {
       const identities = (user as any)?.identities ?? [];
       const target = identities.find((i: any) => String(i.provider).toLowerCase() === provider);
@@ -505,6 +502,15 @@ export default function AccountSettingsPage() {
     } catch (e: any) {
       toast.error(e?.message || "Could not disconnect");
     }
+  };
+
+  const handleUnlinkProvider = (provider: string) => {
+    const name = PROVIDER_META[provider]?.name ?? provider;
+    toast(`Disconnect ${name}?`, {
+      description: "You won't be able to sign in with it anymore.",
+      action: { label: "Disconnect", onClick: () => { void performUnlinkProvider(provider); } },
+      cancel: { label: "Cancel", onClick: () => {} },
+    });
   };
 
   // ── System Diagnostics (for support / bug reports) ──
@@ -658,14 +664,20 @@ export default function AccountSettingsPage() {
   };
 
   const handleResetPrefs = () => {
-    if (!window.confirm("Reset all local preferences? This will clear theme, units, accessibility, translation, cookies, notification toggles, and recent visits on this device.")) {
-      return;
-    }
-    for (const key of PREF_KEYS) {
-      try { localStorage.removeItem(key); } catch { /* ignore */ }
-    }
-    toast.success("Preferences reset. Reloading…");
-    setTimeout(() => window.location.reload(), 800);
+    toast("Reset all local preferences?", {
+      description: "Clears theme, units, accessibility, translation, cookies, notification toggles, and recent visits on this device.",
+      action: {
+        label: "Reset",
+        onClick: () => {
+          for (const key of PREF_KEYS) {
+            try { localStorage.removeItem(key); } catch { /* ignore */ }
+          }
+          toast.success("Preferences reset. Reloading…");
+          setTimeout(() => window.location.reload(), 800);
+        },
+      },
+      cancel: { label: "Cancel", onClick: () => {} },
+    });
   };
 
   // Followers / following counts

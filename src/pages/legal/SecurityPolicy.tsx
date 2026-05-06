@@ -1,6 +1,7 @@
 import { Helmet } from "react-helmet-async";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield, Lock, AlertTriangle, FileCheck } from "lucide-react";
+import { Link } from "react-router-dom";
 
 export default function SecurityPolicy() {
   return (
@@ -50,7 +51,7 @@ export default function SecurityPolicy() {
         <Card>
           <CardHeader><CardTitle>Contact</CardTitle></CardHeader>
           <CardContent className="text-sm">
-            Report security issues to <a className="text-primary underline" href="mailto:security@hizivo.com">security@hizivo.com</a>. See our <a className="text-primary underline" href="/legal/vdp">Vulnerability Disclosure Program</a>.
+            Report security issues to <a className="text-primary underline" href="mailto:security@hizivo.com">security@hizivo.com</a>. See our <Link className="text-primary underline" to="/legal/vdp">Vulnerability Disclosure Program</Link>.
           </CardContent>
         </Card>
       </main>

@@ -44,19 +44,19 @@ interface ChatAttachMenuProps {
 }
 
 const menuItems = [
-  { id: "image", label: "Photo", icon: ImagePlus, color: "bg-emerald-500" },
-  { id: "video", label: "Video", icon: Video, color: "bg-violet-500" },
-  { id: "file", label: "File", icon: FileUp, color: "bg-sky-500" },
-  { id: "scan", label: "Scan", icon: ScanLine, color: "bg-cyan-500" },
-  { id: "location", label: "Location", icon: MapPin, color: "bg-blue-500" },
-  { id: "contact", label: "Contact", icon: UserSquare, color: "bg-indigo-500" },
-  { id: "poll", label: "Poll", icon: BarChart3, color: "bg-fuchsia-500" },
-  { id: "social", label: "Social", icon: Share2, color: "bg-gradient-to-br from-[#1877F2] to-[#00AFF0]" },
-  { id: "zivo", label: "ZIVO", icon: Compass, color: "bg-gradient-to-br from-amber-500 to-pink-500" },
-  { id: "gift", label: "Gift", icon: Gift, color: "bg-gradient-to-br from-amber-500 to-pink-500" },
-  { id: "money", label: "Money", icon: Coins, color: "bg-gradient-to-br from-emerald-500 to-teal-500" },
-  { id: "locked", label: "Locked", icon: Lock, color: "bg-rose-500" },
-  { id: "disappearing", label: "24h", icon: Timer, color: "bg-amber-500" },
+  { id: "image", label: "Photo", icon: ImagePlus, color: "text-emerald-500" },
+  { id: "video", label: "Video", icon: Video, color: "text-violet-500" },
+  { id: "file", label: "File", icon: FileUp, color: "text-sky-500" },
+  { id: "scan", label: "Scan", icon: ScanLine, color: "text-cyan-500" },
+  { id: "location", label: "Location", icon: MapPin, color: "text-blue-500" },
+  { id: "contact", label: "Contact", icon: UserSquare, color: "text-indigo-500" },
+  { id: "poll", label: "Poll", icon: BarChart3, color: "text-fuchsia-500" },
+  { id: "social", label: "Social", icon: Share2, color: "text-[#1877F2]" },
+  { id: "zivo", label: "ZIVO", icon: Compass, color: "text-pink-500" },
+  { id: "gift", label: "Gift", icon: Gift, color: "text-amber-500" },
+  { id: "money", label: "Money", icon: Coins, color: "text-emerald-500" },
+  { id: "locked", label: "Locked", icon: Lock, color: "text-rose-500" },
+  { id: "disappearing", label: "24h", icon: Timer, color: "text-amber-500" },
 ] as const;
 
 /** Plans that include Lock & Unlock */
@@ -153,10 +153,10 @@ export default function ChatAttachMenu({
                     onClick={() => handleAction(item.id)}
                     className="flex flex-col items-center gap-2 group relative"
                   >
-                    <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl ${item.color} flex items-center justify-center shadow-sm group-active:scale-90 transition-transform ${
+                    <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-2xl bg-secondary border border-border flex items-center justify-center group-active:scale-90 transition-transform ${
                       item.id === "disappearing" && disappearingEnabled ? "ring-2 ring-primary ring-offset-2 ring-offset-background" : ""
                     } ${isLockedGated ? "opacity-50" : ""}`}>
-                      <item.icon className="w-[18px] h-[18px] sm:w-5 sm:h-5 text-white" />
+                      <item.icon className={`w-[18px] h-[18px] sm:w-5 sm:h-5 ${item.color}`} />
                     </div>
                     <span className="text-[11px] font-medium text-muted-foreground group-hover:text-foreground transition-colors whitespace-nowrap">
                       {item.id === "disappearing" && disappearingLabel ? disappearingLabel : item.label}

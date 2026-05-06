@@ -3,18 +3,48 @@
  * Shows the camera track (or initials placeholder), name, mute/host badges,
  * a hand-raised indicator, and a "screen sharing" badge.
  */
-import { useEffect, useRef } from "react";
-import { Mic, MicOff, Crown, Hand, MonitorUp } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Mic, MicOff, Crown, Hand, MonitorUp, MoreVertical, UserX, VolumeX, Volume2, Loader2 } from "lucide-react";
 import type { LKParticipant } from "@/hooks/useLiveKitCall";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface Props {
   participant: LKParticipant;
   emphasized?: boolean;
   /** When true, every tile shows a small pulsing red dot for privacy disclosure */
   isRecording?: boolean;
+  /** True when the local viewer is the host of this room — surfaces the
+   *  moderation menu (mute / unmute / kick) on remote tiles. */
+  viewerIsHost?: boolean;
+  /** LiveKit room name — required for moderation calls. */
+  roomName?: string;
 }
 
-export default function VideoTile({ participant, emphasized = false, isRecording = false }: Props) {
+export default function VideoTile({ participant, emphasized = false, isRecording = false, viewerIsHost = false, roomName }: Props) {
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [busy, setBusy] = useState<null | "mute" | "unmute" | "kick">(null);
+
+  // Moderation: invokes livekit-moderate edge fn. Only renders for hosts on
+  // remote (non-local) tiles. Identity is the LiveKit identity, not name.
+  async function moderate(action: "mute" | "unmute" | "kick") {
+    if (!roomName) return;
+    setBusy(action);
+    try {
+      const { data, error } = await supabase.functions.invoke("livekit-moderate", {
+        body: { roomName, participantIdentity: participant.identity, action },
+      });
+      if (error) throw error;
+      if ((data as any)?.error) throw new Error((data as any).error);
+      toast.success(action === "kick" ? "Removed from call" : action === "mute" ? "Muted" : "Unmuted");
+      setMenuOpen(false);
+    } catch (e: any) {
+      toast.error(e?.message || "Action failed");
+    } finally {
+      setBusy(null);
+    }
+  }
+
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
@@ -67,7 +97,7 @@ export default function VideoTile({ participant, emphasized = false, isRecording
         </div>
       )}
 
-      {/* Top-right: badges */}
+      {/* Top-right: badges + host moderation menu */}
       <div className="absolute right-2 top-2 flex items-center gap-1">
         {participant.isHost && (
           <span className="rounded-full bg-amber-500/90 p-1 text-white" title="Host">
@@ -78,6 +108,61 @@ export default function VideoTile({ participant, emphasized = false, isRecording
           <span className="rounded-full bg-blue-500/90 p-1 text-white" title="Screen sharing">
             <MonitorUp className="h-3 w-3" />
           </span>
+        )}
+        {viewerIsHost && !participant.isLocal && roomName && (
+          <div className="relative">
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); setMenuOpen((v) => !v); }}
+              className="rounded-full bg-black/60 p-1 text-white hover:bg-black/80"
+              aria-label="Host actions"
+              title="Host actions"
+            >
+              <MoreVertical className="h-3 w-3" />
+            </button>
+            {menuOpen && (
+              <div
+                className="absolute right-0 top-7 z-10 w-32 rounded-lg bg-black/90 backdrop-blur-md p-1 ring-1 ring-white/10 shadow-xl"
+                onClick={(e) => e.stopPropagation()}
+              >
+                {participant.micEnabled ? (
+                  <button
+                    type="button"
+                    onClick={() => moderate("mute")}
+                    disabled={busy !== null}
+                    className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-[11px] text-white hover:bg-white/10 disabled:opacity-50"
+                  >
+                    {busy === "mute" ? <Loader2 className="h-3 w-3 animate-spin" /> : <VolumeX className="h-3 w-3" />}
+                    Mute
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => moderate("unmute")}
+                    disabled={busy !== null}
+                    className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-[11px] text-white hover:bg-white/10 disabled:opacity-50"
+                  >
+                    {busy === "unmute" ? <Loader2 className="h-3 w-3 animate-spin" /> : <Volume2 className="h-3 w-3" />}
+                    Unmute
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={() => {
+                    toast(`Remove ${participant.name} from the call?`, {
+                      action: { label: "Remove", onClick: () => moderate("kick") },
+                      cancel: { label: "Cancel", onClick: () => {} },
+                    });
+                  }}
+                  disabled={busy !== null}
+                  className="flex w-full items-center gap-2 rounded px-2 py-1.5 text-[11px] text-rose-400 hover:bg-rose-500/10 disabled:opacity-50"
+                >
+                  {busy === "kick" ? <Loader2 className="h-3 w-3 animate-spin" /> : <UserX className="h-3 w-3" />}
+                  Kick
+                </button>
+              </div>
+            )}
+          </div>
         )}
       </div>
 
