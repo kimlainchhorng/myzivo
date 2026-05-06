@@ -112,6 +112,7 @@ const CommentHeartButton = lazy(() => import("@/components/social/CommentHeartBu
 const CommentRowActions = lazy(() => import("@/components/social/CommentRowActions"));
 const ReelsCoachmarks = lazy(() => import("@/components/social/ReelsCoachmarks"));
 const ReelSocialProof = lazy(() => import("@/components/reels/ReelSocialProof"));
+const LikedByModal = lazy(() => import("@/components/social/LikedByModal"));
 
 interface FeedPost {
   id: string;
@@ -352,6 +353,7 @@ function ReelCard({
   const [isTranslating, setIsTranslating] = useState(false);
   const [isScrubbing, setIsScrubbing] = useState(false);
   const [showLikeBurst, setShowLikeBurst] = useState(false);
+  const [likedByOpen, setLikedByOpen] = useState(false);
   const [heartParticles, setHeartParticles] = useState<{ id: number; x: number; size: number; rotate: number; delay: number; emoji?: string }[]>([]);
   const [videoDuration, setVideoDuration] = useState(0);
   const [bufferedProgress, setBufferedProgress] = useState(0);
@@ -1638,6 +1640,34 @@ function ReelCard({
             <ReactionSummary postId={rawPostId} source={post.source ?? "store"} />
           </Suspense>
         </div>
+
+        {/* Liked-by inline link — opens the LikedByModal listing every account
+            that liked this post. Hidden when nobody has liked yet. */}
+        {liveLikesCount > 0 && (
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); setLikedByOpen(true); }}
+            className="block text-white/85 text-xs font-medium drop-shadow mb-2 active:opacity-70"
+            aria-label="View who liked this post"
+          >
+            Liked by{" "}
+            <span className="font-bold underline decoration-white/40 underline-offset-2">
+              {liveLikesCount > 999 ? `${(liveLikesCount / 1000).toFixed(1)}k` : liveLikesCount}{" "}
+              {liveLikesCount === 1 ? "person" : "people"}
+            </span>
+          </button>
+        )}
+        {likedByOpen && (
+          <Suspense fallback={null}>
+            <LikedByModal
+              open={likedByOpen}
+              onOpenChange={setLikedByOpen}
+              postId={rawPostId}
+              source={(post.source ?? "store") as "user" | "store"}
+              totalCount={liveLikesCount}
+            />
+          </Suspense>
+        )}
 
         {/* Top comment preview — surfaces the most-liked comment so users
             get social proof of engagement without opening the comment sheet.

@@ -60,7 +60,7 @@ export default defineConfig(({ mode }) => ({
       },
     },
     cssCodeSplit: true,
-    sourcemap: 'hidden',
+    sourcemap: mode === 'production' ? false : 'hidden',
   },
   esbuild: {
     drop: mode === "production" ? ["console", "debugger"] : [],

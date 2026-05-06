@@ -365,16 +365,27 @@ export function useVirtualBackground(
         try {
           segmenter.close();
         } catch {}
+        segmenter = null;
       }
       if (outStream) {
         outStream.getTracks().forEach((t) => {
           if (t.kind === "video") t.stop();
         });
+        outStream = null;
       }
       if (video) {
         video.pause();
         video.srcObject = null;
+        video = null;
       }
+      // WebKit (iOS WKWebView) keeps GPU-backed canvas bitmaps alive until the
+      // canvas is resized to 0×0. Without this the 5 canvases here leak ~18MB
+      // per Live session and accumulate until the OS jetsams the app.
+      for (const c of [out, person, mask, maskHi, maskPrev]) {
+        c.width = 0;
+        c.height = 0;
+      }
+      bgImg = null;
     };
   }, [source, config.kind, config.imageUrl, config.blurPx]);
 
