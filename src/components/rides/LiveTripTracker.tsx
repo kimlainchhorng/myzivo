@@ -42,6 +42,8 @@ interface LiveTripTrackerProps {
   pickupLng?: number;
   dropoffLat?: number;
   dropoffLng?: number;
+  driverUserId?: string;
+  driverName?: string;
 }
 
 export default function LiveTripTracker({
@@ -49,6 +51,8 @@ export default function LiveTripTracker({
   pickupLng = PICKUP.lng,
   dropoffLat = DROPOFF.lat,
   dropoffLng = DROPOFF.lng,
+  driverUserId,
+  driverName = "Marcus T.",
 }: LiveTripTrackerProps) {
   const navigate = useNavigate();
   const [phase, setPhase] = useState(1);
@@ -116,6 +120,21 @@ export default function LiveTripTracker({
   const carProgress = progressPct;
 
   const shareLink = `${getPublicOrigin()}/track/${Date.now().toString(36)}`;
+
+  const openDriverChat = (startCall?: "voice" | "video") => {
+    if (!driverUserId) {
+      navigate("/chat");
+      toast.info("Choose a chat thread to contact your driver");
+      return;
+    }
+
+    navigate("/chat", {
+      state: {
+        openChat: { userId: driverUserId, name: driverName },
+        ...(startCall ? { startCall } : {}),
+      },
+    });
+  };
 
   const renderETAOverlay = () => (
     <div className="absolute top-3 left-3 bg-card/95 backdrop-blur-sm rounded-xl px-3 py-2 border border-border/30 shadow-md z-20">
@@ -208,7 +227,7 @@ export default function LiveTripTracker({
           </Avatar>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-sm font-bold text-foreground">Marcus T.</span>
+              <span className="text-sm font-bold text-foreground">{driverName}</span>
               <div className="flex items-center gap-0.5">
                 <Star className="w-3 h-3 text-amber-400 fill-amber-400" />
                 <span className="text-xs font-bold">4.92</span>
@@ -221,21 +240,14 @@ export default function LiveTripTracker({
           </div>
           <div className="flex gap-2">
             <button
-              onClick={() =>
-                navigate("/chat", {
-                  state: {
-                    openChat: { userId: "driver", name: "Marcus T." },
-                    startCall: "voice",
-                  },
-                })
-              }
+              onClick={() => openDriverChat("voice")}
               className="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center active:scale-95 transition-transform min-w-[44px] min-h-[44px]"
               aria-label="Call driver"
             >
               <Phone className="w-4 h-4 text-emerald-500" />
             </button>
             <button
-              onClick={() => navigate("/chat", { state: { openChat: { userId: "driver", name: "Marcus T." } } })}
+              onClick={() => openDriverChat()}
               className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center active:scale-95 transition-transform min-w-[44px] min-h-[44px]"
               aria-label="Message driver"
             >
