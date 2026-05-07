@@ -91,5 +91,48 @@ idle(() => {
       window.matchMedia("(prefers-color-scheme: dark)").addEventListener?.("change", update);
       new MutationObserver(update).observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
     });
+
+    // Hide the iOS keyboard accessory bar ("Done / < / >") that sits above
+    // the keyboard. Looks dated above message inputs / search / forms — the
+    // composer's own Send button covers that affordance. Also wire body
+    // class toggles on keyboard show/hide so the app can pad sticky bars
+    // without polling for the keyboard height.
+    import("@capacitor/keyboard").then(({ Keyboard }) => {
+      void Keyboard.setAccessoryBarVisible({ isVisible: false }).catch(() => { /* older iOS versions */ });
+      Keyboard.addListener("keyboardWillShow", (info) => {
+        document.documentElement.classList.add("kb-open");
+        document.documentElement.style.setProperty("--zivo-kb-height", `${info.keyboardHeight}px`);
+      });
+      Keyboard.addListener("keyboardWillHide", () => {
+        document.documentElement.classList.remove("kb-open");
+        document.documentElement.style.setProperty("--zivo-kb-height", "0px");
+      });
+    }).catch(() => { /* plugin not in this binary yet */ });
+
+    // App Tracking Transparency — Apple requires the permission prompt before
+    // any cross-app tracking (analytics, attribution, ad personalization). We
+    // request once on first launch with a small delay so the user sees the
+    // app first; the OS itself only ever shows the system dialog once per
+    // install regardless, so re-running here is a cheap no-op afterwards.
+    import("capacitor-plugin-app-tracking-transparency").then(({ AppTrackingTransparency }) => {
+      const REQUESTED_FLAG = "zivo:att:requested";
+      if (localStorage.getItem(REQUESTED_FLAG) === "1") return;
+      window.setTimeout(async () => {
+        try {
+          const { status } = await AppTrackingTransparency.getStatus();
+          if (status !== "notDetermined") {
+            localStorage.setItem(REQUESTED_FLAG, "1");
+            return;
+          }
+          const result = await AppTrackingTransparency.requestPermission();
+          localStorage.setItem(REQUESTED_FLAG, "1");
+          // If the user denied, our analytics layer should treat it as opted-out.
+          // The flag is kept so we don't keep calling the (idempotent) prompt.
+          (window as any).__zivoAttStatus = result.status;
+        } catch {
+          /* Plugin missing in this binary — ignore. */
+        }
+      }, 1500);
+    }).catch(() => { /* plugin not in this binary yet */ });
   });
 });

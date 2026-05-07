@@ -35,6 +35,13 @@ const config: CapacitorConfig = {
       overlaysWebView: true,
       style: 'DARK',
     },
+    Keyboard: {
+      // "native" reflows the WebView when the keyboard appears (best for
+      // chat composers and forms). "ionic" repaints less but breaks
+      // sticky-bottom inputs. Native matches Telegram / WhatsApp behaviour.
+      resize: "native",
+      resizeOnFullScreen: true,
+    },
     SplashScreen: {
       // Keep the native splash visible until React mounts and paints. With
       // launchAutoHide:true the splash hid at ~500 ms but the JS bundle on a

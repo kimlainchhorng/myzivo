@@ -374,7 +374,7 @@ export default function StoreSetup() {
   const categoryLabel = STORE_CATEGORY_OPTIONS.find(o => o.value === storeCategory)?.label || storeCategory;
 
   return (
-    <div className="min-h-[100dvh] bg-gradient-to-b from-[#0a1628] to-[#0d2137] px-4 py-6 sm:py-8">
+    <div className="min-h-[100dvh] bg-gradient-to-b from-[#0a1628] to-[#0d2137] px-4 py-6 sm:py-8 safe-area-top">
       <div className="w-full max-w-2xl mx-auto">
         {/* Header */}
         <div className="text-center mb-6">

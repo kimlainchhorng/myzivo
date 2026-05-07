@@ -41,12 +41,20 @@ async function requestMicrophonePermission(): Promise<boolean> {
   }
 }
 
+/** Number of most-recent amplitude samples to expose for live waveforms.
+ *  At ~80ms per sample, 32 samples ≈ 2.5s of trailing audio history. */
+const LEVELS_BUFFER_SIZE = 32;
+
 export function useVoiceRecorder() {
   const [isRecording, setIsRecording] = useState(false);
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
   const [duration, setDuration] = useState(0);
   const [durationMs, setDurationMs] = useState(0);
   const [elapsedMs, setElapsedMs] = useState(0);
+  // Live mic amplitude (0..1) ring buffer — newest at the end. Pumped from
+  // the AnalyserNode tick so consumers can render reactive waveforms instead
+  // of fake-randomized ones.
+  const [levels, setLevels] = useState<number[]>(() => new Array(LEVELS_BUFFER_SIZE).fill(0));
   const recorder = useRef<MediaRecorder | null>(null);
   const chunks = useRef<Blob[]>([]);
   const stream = useRef<MediaStream | null>(null);
@@ -68,6 +76,7 @@ export function useVoiceRecorder() {
     stream.current = null;
     audioCtx.current = null;
     analyser.current = null;
+    setLevels(new Array(LEVELS_BUFFER_SIZE).fill(0));
   }, []);
 
   const start = useCallback(async () => {
@@ -150,7 +159,15 @@ export function useVoiceRecorder() {
           sum += v * v;
         }
         const rms = Math.sqrt(sum / buf.length);
-        samples.current.push(Math.min(1, rms * 2));
+        const sample = Math.min(1, rms * 2);
+        samples.current.push(sample);
+        // Push newest sample into the live buffer; drop oldest. New array
+        // identity each tick so React notices and re-renders the waveform.
+        setLevels((prev) => {
+          const next = prev.length >= LEVELS_BUFFER_SIZE ? prev.slice(1) : prev.slice();
+          next.push(sample);
+          return next;
+        });
       }, 80);
 
       startedAt.current = Date.now();
@@ -270,6 +287,7 @@ export function useVoiceRecorder() {
     audioBlob,
     duration,
     durationMs,
+    levels,
     start,
     stop,
     cancel,

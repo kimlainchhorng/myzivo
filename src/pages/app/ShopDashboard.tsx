@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { Store, ArrowRight, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import StoreOwnerLayout from "@/components/admin/StoreOwnerLayout";
@@ -24,8 +25,40 @@ const ShopDashboard = () => {
     enabled: !!user,
   });
 
-  if (isLoading || !store) {
-    return <div className="min-h-screen bg-background flex items-center justify-center">Loading...</div>;
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
+  if (!store) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-6">
+        <div className="max-w-sm w-full text-center">
+          <div className="mx-auto w-20 h-20 rounded-3xl bg-emerald-500/10 flex items-center justify-center mb-5">
+            <Store className="w-10 h-10 text-emerald-500" />
+          </div>
+          <h1 className="text-xl font-extrabold mb-1.5">Open your shop</h1>
+          <p className="text-sm text-muted-foreground mb-6 leading-relaxed">
+            Sell products, accept orders and reach the ZIVO community. Setup takes about 2 minutes.
+          </p>
+          <button
+            onClick={() => navigate("/store/setup")}
+            className="w-full h-12 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
+          >
+            Create my shop <ArrowRight className="w-4 h-4" />
+          </button>
+          <button
+            onClick={() => navigate("/more")}
+            className="w-full h-10 mt-2 rounded-2xl text-sm font-semibold text-muted-foreground hover:bg-muted/40 transition-colors"
+          >
+            Not now
+          </button>
+        </div>
+      </div>
+    );
   }
 
   const resolvedDashboard = resolveBusinessDashboardRoute(store.category, store.id);

@@ -9,11 +9,14 @@ import { toast } from "sonner";
 export interface ConnectStatus {
   connected: boolean;
   account_id?: string;
+  country?: string | null;
   charges_enabled?: boolean;
   details_submitted?: boolean;
   payouts_enabled?: boolean;
   instant_eligible?: boolean;
   requirements?: string[];
+  requirements_past_due?: string[];
+  disabled_reason?: string | null;
 }
 
 export function useConnectStatus() {

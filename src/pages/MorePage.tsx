@@ -359,7 +359,7 @@ const quickLinksAccount: QuickLink[] = [
 ];
 
 const quickLinksJobs: QuickLink[] = [
-  { icon: Briefcase, label: "Jobs Hub", href: "/personal-dashboard", description: "Career home", accent: "hsl(221 83% 53%)" },
+  { icon: Briefcase, label: "Workplace", href: "/personal-dashboard", description: "Clock in, jobs & schedule", accent: "hsl(221 83% 53%)" },
   { icon: Target, label: "Apply for Jobs", href: "/personal/apply-job", description: "Find work", accent: "hsl(199 89% 48%)" },
   { icon: UserPlus, label: "Find Employees", href: "/personal/find-employee", description: "Hire talent", accent: "hsl(263 70% 58%)" },
   { icon: FileSignature, label: "Create CV", href: "/personal/create-cv", description: "Build resume", accent: "hsl(142 71% 45%)" },
@@ -371,8 +371,8 @@ const quickLinksJobs: QuickLink[] = [
   { icon: Banknote, label: "Pay Stubs", href: "/personal/pay-stubs", description: "Payment history", accent: "hsl(142 71% 45%)" },
   { icon: Globe, label: "Connect Website", href: "/personal/connect-website", description: "Link portfolio", accent: "hsl(263 70% 58%)" },
   { icon: Bell, label: "Job Alerts", href: "/personal/notifications", description: "New matches", accent: "hsl(45 93% 58%)" },
-  { icon: HelpCircle, label: "Career Help", href: "/personal/help", description: "Tips & FAQ", accent: "hsl(var(--muted-foreground))" },
-  { icon: Settings, label: "Career Settings", href: "/personal/settings", description: "Preferences", accent: "hsl(215 16% 47%)" },
+  { icon: HelpCircle, label: "Workplace Help", href: "/personal/help", description: "Tips & FAQ", accent: "hsl(var(--muted-foreground))" },
+  { icon: Settings, label: "Workplace Settings", href: "/personal/settings", description: "Preferences", accent: "hsl(215 16% 47%)" },
 ];
 
 const quickLinksLive: QuickLink[] = [
@@ -506,7 +506,7 @@ const sections = [
   { title: "Travel & Orders", icon: Plane, links: quickLinksTravel },
   { title: "Social", icon: Users, links: quickLinksSocial },
   { title: "Live & Streaming", icon: Tv, links: quickLinksLive },
-  { title: "Jobs & Career", icon: Briefcase, links: quickLinksJobs },
+  { title: "Workplace & Jobs", icon: Briefcase, links: quickLinksJobs },
   { title: "Business", icon: Building2, links: quickLinksBusiness },
   { title: "Health & Wellness", icon: Heart, links: quickLinksWellness },
   { title: "Money & Earnings", icon: Wallet, links: quickLinksMoney },

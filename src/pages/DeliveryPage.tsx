@@ -408,16 +408,24 @@ export default function DeliveryPage() {
   const handlePlaceOrder = async () => {
     if (!user) { toast.error("Please sign in to place a delivery"); return; }
     try {
-      const { error } = await supabase.from("deliveries").insert({
-        customer_user_id: user.id,
-        pickup_location: { address: pickupAddress, name: senderName, phone: senderPhone },
-        dropoff_location: { address: dropoffAddress, name: recipientName, phone: recipientPhone },
-        delivery_fee: totalPrice,
-        status: "pending",
-      });
+      const { data: inserted, error } = await supabase
+        .from("deliveries")
+        .insert({
+          customer_user_id: user.id,
+          pickup_location: { address: pickupAddress, name: senderName, phone: senderPhone },
+          dropoff_location: { address: dropoffAddress, name: recipientName, phone: recipientPhone },
+          delivery_fee: totalPrice,
+          status: "requested",
+          package_size: selectedSize ?? null,
+          notes: deliveryNote || packageDescription || null,
+          notify_recipient: notifyRecipient,
+        })
+        .select("id")
+        .single();
       if (error) throw error;
       notifyEats("order_placed");
-      setStep("confirmation");
+      if (inserted?.id) navigate(`/delivery/track/${inserted.id}`);
+      else setStep("confirmation");
     } catch {
       toast.error("Failed to place order. Please try again.");
     }
@@ -490,7 +498,7 @@ export default function DeliveryPage() {
       {/* Header */}
       {step !== "address" && step !== "confirmation" && (
         <div className="sticky top-0 safe-area-top z-20 bg-background/95 backdrop-blur-2xl border-b border-border/30">
-          <div className="px-4 py-3 flex items-center gap-3 safe-area-top">
+          <div className="px-4 py-3 flex items-center gap-3">
             <motion.button whileTap={{ scale: 0.88 }} onClick={handleBack}
               className="w-10 h-10 rounded-xl bg-card/80 border border-border/40 flex items-center justify-center touch-manipulation">
               <ArrowLeft className="w-5 h-5 text-foreground" />

@@ -117,9 +117,9 @@ const settingsGroups: SettingsGroup[] = [
     ],
   },
   {
-    title: "Jobs & Career",
+    title: "Workplace & Jobs",
     items: [
-      { icon: Briefcase, label: "Jobs Hub", description: "Apply, track & manage", href: "/personal-dashboard", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+      { icon: Briefcase, label: "Workplace", description: "Clock in, jobs & schedule", href: "/personal-dashboard", color: "bg-blue-500/15", iconColor: "text-blue-500" },
       { icon: Target, label: "Apply for Jobs", description: "Browse open positions", href: "/personal/apply-job", color: "bg-sky-500/15", iconColor: "text-sky-500" },
       { icon: ClipboardList, label: "My Applications", description: "Track application status", href: "/personal/my-applications", color: "bg-amber-500/15", iconColor: "text-amber-500" },
       { icon: FileText, label: "Resume / CV", description: "Build & manage CV", href: "/personal/create-cv", color: "bg-emerald-500/15", iconColor: "text-emerald-500" },

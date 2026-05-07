@@ -9,11 +9,13 @@ interface Props {
   channel: Channel;
   isSubscribed: boolean;
   isOwner: boolean;
+  notificationsOn?: boolean;
   onSubscribe: () => void;
   onUnsubscribe: () => void;
+  onSetNotifications?: (next: boolean) => void | Promise<void>;
 }
 
-export function ChannelHeader({ channel, isSubscribed, isOwner, onSubscribe, onUnsubscribe }: Props) {
+export function ChannelHeader({ channel, isSubscribed, isOwner, notificationsOn = true, onSubscribe, onUnsubscribe, onSetNotifications }: Props) {
   return (
     <div className="border-b border-border bg-card">
       <div
@@ -40,8 +42,10 @@ export function ChannelHeader({ channel, isSubscribed, isOwner, onSubscribe, onU
             )}
             <SubscribeButton
               isSubscribed={isSubscribed}
+              notificationsOn={notificationsOn}
               onSubscribe={onSubscribe}
               onUnsubscribe={onUnsubscribe}
+              onSetNotifications={onSetNotifications}
             />
           </div>
         </div>

@@ -58,11 +58,14 @@ serve(async (req) => {
     return new Response(JSON.stringify({
       connected: true,
       account_id: row.stripe_account_id,
+      country: account.country ?? null,
       charges_enabled: account.charges_enabled,
       details_submitted: account.details_submitted,
       payouts_enabled: account.payouts_enabled,
       instant_eligible,
       requirements: account.requirements?.currently_due ?? [],
+      requirements_past_due: account.requirements?.past_due ?? [],
+      disabled_reason: account.requirements?.disabled_reason ?? null,
     }), { headers: { ...corsHeaders, "Content-Type": "application/json" } });
   } catch (err) {
     const msg = err instanceof Error ? err.message : "Status failed";

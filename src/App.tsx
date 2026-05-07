@@ -34,6 +34,7 @@ const CreatorSubscribeSheet = lazy(() => import("@/components/creator/CreatorSub
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useVerificationRealtime } from "@/hooks/useVerificationRealtime";
 import { useOTAUpdate } from "@/hooks/useOTAUpdate";
+import OTAUpdateBanner from "@/components/shared/OTAUpdateBanner";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useSearchParams } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
@@ -100,6 +101,7 @@ const AppMore = lazy(() => import("./pages/app/AppMore"));
 const PersonalDashboard = lazy(() => import("./pages/app/PersonalDashboard"));
 const ShopDashboard = lazy(() => import("./pages/app/ShopDashboard"));
 const ShopEmployeesPage = lazy(() => import("./pages/app/shop/ShopEmployeesPage"));
+const ShopEmployeeDetailPage = lazy(() => import("./pages/app/shop/ShopEmployeeDetailPage"));
 const ShopPayrollPage = lazy(() => import("./pages/app/shop/ShopPayrollPage"));
 const ShopEmployeeSchedulePage = lazy(() => import("./pages/app/shop/ShopEmployeeSchedulePage"));
 const ShopTimeClockPage = lazy(() => import("./pages/app/shop/ShopTimeClockPage"));
@@ -177,6 +179,8 @@ const EatsOrdersPage = lazy(() => import("./pages/EatsOrdersPage"));
 const EatsRestaurantDashboard = lazy(() => import("./pages/EatsRestaurantDashboard"));
 const EatsDriverDeliveryPage = lazy(() => import("./pages/EatsDriverDeliveryPage"));
 const DeliveryPage = lazy(() => import("./pages/DeliveryPage"));
+const DeliveryTrackingPage = lazy(() => import("./pages/DeliveryTrackingPage"));
+const DeliveryChatPage = lazy(() => import("./pages/DeliveryChatPage"));
 const GroceryMarketplace = lazy(() => import("./pages/GroceryMarketplace"));
 const FeedPage = lazy(() => import("./pages/FeedPage"));
 const ReelsFeedPage = lazy(() => import("./pages/ReelsFeedPage"));
@@ -184,6 +188,7 @@ const SoundPage = lazy(() => import("./pages/SoundPage"));
 const ChatHubPage = lazy(() => import("./pages/ChatHubPage"));
 const ContactsPage = lazy(() => import("./pages/chat/ContactsPage"));
 const ContactRequestsPage = lazy(() => import("./pages/chat/ContactRequestsPage"));
+const MessageRequestsPage = lazy(() => import("./pages/chat/MessageRequestsPage"));
 const NearbyChatPage = lazy(() => import("./pages/chat/NearbyChatPage"));
 const FindContactsPage = lazy(() => import("./pages/chat/FindContactsPage"));
 const FindByUsernamePage = lazy(() => import("./pages/chat/FindByUsernamePage"));
@@ -745,8 +750,8 @@ const VerificationRealtimeBridge = () => {
 };
 
 function OTAUpdateBootstrap() {
-  useOTAUpdate();
-  return null;
+  const ota = useOTAUpdate();
+  return <OTAUpdateBanner {...ota} />;
 }
 
 function AuthBackgroundServices() {
@@ -851,6 +856,7 @@ const App = () => (
                 <Route path="/personal/help" element={<ProtectedRoute><PersonalHelpPage /></ProtectedRoute>} />
                 <Route path="/personal/settings" element={<ProtectedRoute><PersonalSettingsPage /></ProtectedRoute>} />
                 <Route path="/shop-dashboard/employees" element={<ProtectedRoute><ShopEmployeesPage /></ProtectedRoute>} />
+                <Route path="/shop-dashboard/employees/:id" element={<ProtectedRoute><ShopEmployeeDetailPage /></ProtectedRoute>} />
                 <Route path="/shop-dashboard/payroll" element={<ProtectedRoute><ShopPayrollPage /></ProtectedRoute>} />
                 <Route path="/shop-dashboard/employee-schedule" element={<ProtectedRoute><ShopEmployeeSchedulePage /></ProtectedRoute>} />
                 <Route path="/shop-dashboard/time-clock" element={<ProtectedRoute><ShopTimeClockPage /></ProtectedRoute>} />
@@ -896,6 +902,8 @@ const App = () => (
                 <Route path="/account" element={<PreserveQueryRedirect to="/profile" />} />
                 <Route path="/alerts" element={<PreserveQueryRedirect to="/notifications" />} />
                 <Route path="/delivery" element={<DeliveryPage />} />
+                <Route path="/delivery/track/:id" element={<ProtectedRoute><DeliveryTrackingPage /></ProtectedRoute>} />
+                <Route path="/delivery/track/:id/chat" element={<ProtectedRoute><DeliveryChatPage /></ProtectedRoute>} />
                 <Route path="/grocery" element={<GroceryMarketplace />} />
                 <Route path="/feed" element={<ReelsFeedPage />} />
                 <Route path="/reels" element={<FeedPage />} />
@@ -914,6 +922,7 @@ const App = () => (
                 <Route path="/chat/saved" element={<ProtectedRoute><ChatHubPage /></ProtectedRoute>} />
                 <Route path="/chat/contacts" element={<ProtectedRoute><ContactsPage /></ProtectedRoute>} />
                 <Route path="/chat/contacts/requests" element={<ProtectedRoute><ContactRequestsPage /></ProtectedRoute>} />
+                <Route path="/chat/message-requests" element={<ProtectedRoute><MessageRequestsPage /></ProtectedRoute>} />
                 <Route path="/chat/nearby" element={<ProtectedRoute><NearbyChatPage /></ProtectedRoute>} />
                 <Route path="/chat/find-contacts" element={<ProtectedRoute><FindContactsPage /></ProtectedRoute>} />
                 <Route path="/chat/find-username" element={<ProtectedRoute><FindByUsernamePage /></ProtectedRoute>} />

@@ -3017,6 +3017,12 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
   const [showCommentSettings, setShowCommentSettings] = useState(false);
   const [localLikes, setLocalLikes] = useState(item.likes_count);
   const [localComments, setLocalComments] = useState(item.comments_count);
+  // Real "Liked by [name]" social proof — loaded async per post. The previous
+  // implementation seeded a name from a hardcoded ["Sarah K.", ...] mock, so
+  // every post displayed a fake liker even when the actual liker was the
+  // viewer themselves. We now look up the most recent real liker; falls back
+  // to "Liked by N people" if no name resolves.
+  const [topLikerName, setTopLikerName] = useState<string | null>(null);
   const [showDoubleTapHeart, setShowDoubleTapHeart] = useState(false);
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const [selectedReaction, setSelectedReaction] = useState<string | null>(null);
@@ -3303,6 +3309,44 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
     return () => clearTimeout(timer);
   }, [isPlaying, item.id, item.media_type, item.source, interactionPostId]);
 
+  // Load the actual most-recent liker's name so the "Liked by [name]" social
+  // proof line shows real data instead of a deterministic fake. Skips when
+  // there are no likes yet, when the only liker is the viewer themselves, or
+  // when an in-flight optimistic update hasn't settled yet.
+  useEffect(() => {
+    if (localLikes <= 0) { setTopLikerName(null); return; }
+    let cancelled = false;
+    (async () => {
+      // Pull the most recent likers; we'll skip the viewer's own row so the
+      // line says "Liked by [someone else]" instead of "Liked by you".
+      const { data: rows } = await (supabase as any)
+        .from(likesTable)
+        .select("user_id, created_at")
+        .eq("post_id", interactionPostId)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      if (cancelled) return;
+      const others = (rows || []).filter((r: { user_id: string }) => r.user_id && r.user_id !== currentUserId);
+      const winner = others[0]?.user_id;
+      if (!winner) {
+        // Only the viewer has liked — Instagram shows "1 like" in that case;
+        // we just hide the [name] line by leaving it null.
+        setTopLikerName(null);
+        return;
+      }
+      const { data: prof } = await supabase
+        .from("profiles")
+        .select("full_name, username")
+        .eq("user_id", winner)
+        .maybeSingle();
+      if (cancelled) return;
+      const display = (prof as { full_name?: string | null; username?: string | null } | null)?.full_name
+        || ((prof as { username?: string | null } | null)?.username ? `@${(prof as any).username}` : null);
+      setTopLikerName(display);
+    })();
+    return () => { cancelled = true; };
+  }, [localLikes, likesTable, interactionPostId, currentUserId]);
+
   const togglePlay = useCallback(() => {
     if (!videoRef.current) return;
     if (videoRef.current.paused) {
@@ -3504,6 +3548,12 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
       toast.info("Polls can't be saved yet");
       return;
     }
+    // Guard against missing post_id — without a UUID the insert would
+    // throw an opaque "invalid input syntax for type uuid" error.
+    if (!interactionPostId) {
+      toast.error("Couldn't bookmark — post id missing");
+      return;
+    }
     haptic(saved ? "light" : "medium");
     // Prevent rapid double-tap from triggering two writes — the second
     // INSERT would 409 against the unique (user_id, post_id, source) constraint.
@@ -3518,21 +3568,35 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
           post_id: interactionPostId,
           source: item.source,
         });
-        if (error && !String(error.message || "").toLowerCase().includes("duplicate")) {
-          throw error;
+        if (error) {
+          const msg = String(error.message || "").toLowerCase();
+          // Already bookmarked is a no-op success — the local state already
+          // reflects "saved". Don't surface that as an error.
+          if (msg.includes("duplicate") || msg.includes("unique")) {
+            toast.success("Already saved");
+          } else {
+            throw error;
+          }
+        } else {
+          toast.success("Saved to bookmarks");
         }
-        toast.success("Saved to bookmarks");
       } else {
-        await (supabase as any).from("post_bookmarks").delete()
+        const { error } = await (supabase as any).from("post_bookmarks").delete()
           .eq("user_id", currentUserId)
           .eq("post_id", interactionPostId)
           .eq("source", item.source);
+        if (error) throw error;
         toast.success("Removed from bookmarks");
       }
-    } catch {
+    } catch (e: any) {
       // Roll back optimistic toggle on real failure.
       setSaved(!newSaved);
-      toast.error("Couldn't update bookmark");
+      // Surface the actual reason — the previous "Couldn't update bookmark"
+      // toast hid the underlying RLS / schema / type error and made the
+      // failure undebuggable from the device.
+      const reason = e?.message || e?.error_description || "unknown";
+      console.error("[handleSave]", e);
+      toast.error(`Couldn't update bookmark: ${reason}`);
     } finally {
       savingBookmark.current = false;
     }
@@ -4163,18 +4227,30 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
       {/* Facebook-style engagement summary row */}
       {(localLikes > 0 || localComments > 0 || (item.shares_count || 0) > 0) && (
         <div className="px-3 pb-1 pt-0.5 space-y-0.5">
-          {/* "Liked by [friend] and X others" social proof line */}
+          {/* "Liked by [name] and X others" social proof line — real data
+              from post_likes joined to profiles. We only show the name once
+              we've actually resolved a non-self liker; otherwise we render
+              a generic count phrase so the line never lies. */}
           {localLikes > 0 && (() => {
-            const NAMES = ["Sarah K.", "James P.", "Alex C.", "Nadia M.", "Lucas B.", "Emma R.", "Kai T.", "Priya S."];
-            const seed = item.id.charCodeAt(item.id.length - 1) % NAMES.length;
-            const friendName = NAMES[seed];
+            const fmt = (n: number) => (n >= 1000 ? `${(n / 1000).toFixed(1)}k` : `${n}`);
+            const others = Math.max(0, localLikes - (topLikerName ? 1 : 0));
+            if (topLikerName) {
+              return (
+                <p className="text-[12px] text-foreground">
+                  {others > 0 ? (
+                    <span>Liked by <span className="font-semibold">{topLikerName}</span> and <span className="font-semibold">{fmt(others)} {others === 1 ? "other" : "others"}</span></span>
+                  ) : (
+                    <span>Liked by <span className="font-semibold">{topLikerName}</span></span>
+                  )}
+                </p>
+              );
+            }
+            // No resolved name yet (loading, or only the viewer liked) — fall
+            // back to a count phrase. Hide entirely if it's only the viewer.
+            if (liked && localLikes === 1) return null;
             return (
               <p className="text-[12px] text-foreground">
-                {localLikes === 1 ? (
-                  <span>Liked by <span className="font-semibold">{friendName}</span></span>
-                ) : (
-                  <span>Liked by <span className="font-semibold">{friendName}</span> and <span className="font-semibold">{localLikes - 1 >= 1000 ? `${((localLikes - 1) / 1000).toFixed(1)}k` : localLikes - 1} others</span></span>
-                )}
+                Liked by <span className="font-semibold">{fmt(localLikes)} {localLikes === 1 ? "person" : "people"}</span>
               </p>
             );
           })()}

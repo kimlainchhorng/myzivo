@@ -36,6 +36,8 @@
 	<string>ZIVO uses your location while you use the app to find nearby airports, estimate pickups, improve delivery and ride tracking, and help drivers navigate to customers.</string>
 	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
 	<string>ZIVO uses your location to support live trip, delivery, and driver navigation features while you are actively using the app.</string>
+	<key>NSUserTrackingUsageDescription</key>
+	<string>ZIVO uses this permission to measure ad performance and personalize content you see across rides, eats, hotels, and flights. You can decline and still use ZIVO normally.</string>
 	<key>NSUserActivityTypes</key>
 	<array>
 		<string>INSendMessageIntent</string>

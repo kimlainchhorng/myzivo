@@ -145,7 +145,7 @@ export default function ShopDocumentsPage() {
   return (
     <AppLayout title="Documents" hideHeader>
       <div className="flex flex-col pb-28">
-        <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-border/30 px-4 py-3 flex items-center gap-3">
+        <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-border/30 px-4 py-3 flex items-center gap-3" style={{ paddingTop: "var(--zivo-safe-top-sticky)" }}>
           <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-full bg-muted/60 flex items-center justify-center">
             <ArrowLeft className="w-4 h-4" />
           </button>

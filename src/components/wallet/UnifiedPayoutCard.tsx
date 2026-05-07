@@ -109,7 +109,7 @@ export default function UnifiedPayoutCard({ balanceDollars }: Props) {
       )}
 
       {provider === "stripe" ? (
-        <StripeConnectPayoutCard balanceDollars={balanceDollars} />
+        <StripeConnectPayoutCard balanceDollars={balanceDollars} detectedCountry={country} />
       ) : (
         <PayPalPayoutCard balanceDollars={balanceDollars} />
       )}

@@ -382,44 +382,49 @@ const Profile = () => {
     navigate(getShopDashboardPath());
   }, [getShopDashboardPath, navigate, ownerStoreLoading, selectionChanged, user]);
 
-  // Load real friendship status, friend count & follower count
+  // Load real friendship status, friend count & follower count.
+  // Refetches on tab visibility change so counts don't go stale after the
+  // user follows/unfollows / accepts a friend request from another screen.
+  const loadSocialCounts = useCallback(async () => {
+    if (!user?.id) return;
+    // Friend count (accepted friendships)
+    const { count: fc } = await supabase
+      .from("friendships" as any)
+      .select("*", { count: "exact", head: true })
+      .eq("status", "accepted")
+      .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`);
+    setFriendCount(fc || 0);
+
+    // Follower count (people following this user)
+    const { count: flc } = await supabase
+      .from("followers" as any)
+      .select("*", { count: "exact", head: true })
+      .eq("following_id", user.id);
+    setFollowerCount(flc || 0);
+
+    // Following count (people this user follows)
+    const { count: fgc } = await supabase
+      .from("followers" as any)
+      .select("*", { count: "exact", head: true })
+      .eq("follower_id", user.id);
+    setFollowingCount(fgc || 0);
+
+    // Posts count
+    const { count: pc } = await (supabase as any)
+      .from("user_posts")
+      .select("*", { count: "exact", head: true })
+      .eq("user_id", user.id);
+    setPostsCount(pc || 0);
+  }, [user?.id]);
+
+  useEffect(() => { void loadSocialCounts(); }, [loadSocialCounts]);
+
   useEffect(() => {
     if (!user?.id) return;
-    const load = async () => {
-      // Friend count (accepted friendships)
-      const { count: fc } = await supabase
-        .from("friendships" as any)
-        .select("*", { count: "exact", head: true })
-        .eq("status", "accepted")
-        .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`);
-      setFriendCount(fc || 0);
-
-      // Follower count (people following this user)
-      const { count: flc } = await supabase
-        .from("followers" as any)
-        .select("*", { count: "exact", head: true })
-        .eq("following_id", user.id);
-      setFollowerCount(flc || 0);
-
-      // Following count (people this user follows)
-      const { count: fgc } = await supabase
-        .from("followers" as any)
-        .select("*", { count: "exact", head: true })
-        .eq("follower_id", user.id);
-      setFollowingCount(fgc || 0);
-
-      // Posts count
-      const { count: pc } = await (supabase as any)
-        .from("user_posts")
-        .select("*", { count: "exact", head: true })
-        .eq("user_id", user.id);
-      setPostsCount(pc || 0);
-
-      // Check own friendship status (for own profile it stays "none" — used when viewing others)
-      // Check if currently following self (shouldn't happen but keeps state correct)
-    };
-    load();
-  }, [user?.id]);
+    const onVisible = () => { if (document.visibilityState === "visible") void loadSocialCounts(); };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [user?.id, loadSocialCounts]);
 
   useEffect(() => {
     setBioDraft(profile?.bio ?? "");
@@ -455,17 +460,20 @@ const Profile = () => {
     setCoverUploading(true);
     try {
       await uploadCover.mutateAsync(file);
-      // Edge function already persisted cover_url + email. Reset position locally;
-      // best-effort write of cover_position (silent — no extra toast).
+      // Edge function already persisted cover_url. Reset position locally and
+      // write cover_position as a best-effort follow-up. Profiles are keyed
+      // by user_id, NOT the row PK `id`, so match on user_id (a previous bug
+      // hit the same column-confusion in ShareProfileRedirect / QRProfilePage).
       setCoverPosition(50);
       try {
-        await supabase.from("profiles").update({ cover_position: 50 }).eq("id", user.id);
+        await supabase.from("profiles").update({ cover_position: 50 }).eq("user_id", user.id);
       } catch (e) {
         console.warn("[uploadCoverFile] cover_position update skipped", e);
       }
       queryClient.invalidateQueries({ queryKey: ["userProfile", user.id] });
     } catch (err: any) {
       console.error("[uploadCoverFile]", err);
+      toast.error(`Cover upload failed: ${err?.message || "unknown"}`);
     } finally {
       setCoverUploading(false);
     }
@@ -1233,7 +1241,7 @@ const Profile = () => {
                       <div className="lg:hidden mt-3 grid grid-cols-4 gap-2">
                         {[
                           { label: "Shop", icon: Store, onClick: openShopDashboard },
-                          { label: "Employees", icon: Users, onClick: () => { selectionChanged(); if (!user) { toast.info("Sign in to open Personal Account"); navigate("/login?redirect=/personal-dashboard"); return; } navigate("/personal-dashboard"); } },
+                          { label: "Employees", icon: Users, onClick: () => { selectionChanged(); if (!user) { toast.info("Sign in to open Workplace"); navigate("/login?redirect=/personal-dashboard"); return; } navigate("/personal-dashboard"); } },
                           { label: "Mode", icon: Repeat, onClick: () => { selectionChanged(); setModeOpen(true); } },
                           { label: "Monetization", icon: DollarSign, onClick: () => { selectionChanged(); navigate("/monetization"); } },
                         ].map((a) => (
@@ -1443,6 +1451,51 @@ const Profile = () => {
               );
             })}
           </div>
+
+          {activeMode === "personal" && (
+            <div className="mt-5 pt-4 border-t border-border/40">
+              <div className="flex items-center justify-between mb-3">
+                <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Personal controls</span>
+                <button
+                  type="button"
+                  onClick={() => { setModeOpen(false); navigate("/settings"); }}
+                  className="text-[11px] font-semibold text-primary"
+                >
+                  See all
+                </button>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { label: "Edit profile", icon: Pencil, route: "/profile/edit" },
+                  { label: "Privacy", icon: Shield, route: "/settings/privacy" },
+                  { label: "Notifications", icon: Bell, route: "/settings/notifications" },
+                  { label: "Wallet", icon: Wallet, route: "/wallet" },
+                  { label: "Saved places", icon: MapPin, route: "/saved-places" },
+                  { label: "Security", icon: Lock, route: "/settings/security" },
+                  { label: "Language", icon: Globe, route: "/more" },
+                  { label: "Activity", icon: BarChart3, route: "/account/activity" },
+                  { label: "Share profile", icon: Share2, route: "" },
+                ].map((a) => {
+                  const Icon = a.icon;
+                  return (
+                    <button
+                      key={a.label}
+                      type="button"
+                      onClick={() => {
+                        setModeOpen(false);
+                        if (a.label === "Share profile") setShareOpen(true);
+                        else if (a.route) navigate(a.route);
+                      }}
+                      className="flex flex-col items-center gap-1.5 rounded-2xl border border-border/40 bg-muted/30 p-3 active:scale-[0.97] transition-transform"
+                    >
+                      <Icon className="h-5 w-5 text-primary" />
+                      <span className="text-[11px] font-semibold text-center leading-tight">{a.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
 
           {activeMode === "creator" && (
             <div className="mt-5 pt-4 border-t border-border/40">

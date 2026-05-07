@@ -21,7 +21,11 @@ export default function ShareProfileRedirect() {
         if (data) {
           const redirectParams = new URLSearchParams({ sc: code });
           if (postId) redirectParams.set("post", postId);
-          navigate(`/user/${data.id}?${redirectParams.toString()}`, { replace: true });
+          // /user/:userId is keyed off auth user_id, NOT the profile row PK.
+          // Falling back to data.id keeps older links working when user_id
+          // happens to be null (rare, legacy rows).
+          const targetId = data.user_id || data.id;
+          navigate(`/user/${targetId}?${redirectParams.toString()}`, { replace: true });
         } else {
           setNotFound(true);
         }

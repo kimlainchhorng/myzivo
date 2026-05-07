@@ -66,12 +66,18 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
         <SheetOverlay className={overlayZClass} />
         <SheetPrimitive.Content ref={ref} className={cn(sheetVariants({ side }), className)} {...props}>
           {children}
-          {/* Close button positioned BELOW the safe-area inset so it never
-              sits behind the iOS status bar / Dynamic Island. Without this
-              calc(), the X overlaps the system Wi-Fi / clock icons. */}
+          {/* Close button: only side="top"/"left"/"right" sheets touch the
+              status bar, so they need the safe-area inset. For side="bottom"
+              the sheet sits at the bottom of the screen — applying the inset
+              there pushes the X far below the title, which looks broken. */}
           <SheetPrimitive.Close
             className="absolute right-4 rounded-full w-8 h-8 flex items-center justify-center bg-muted/80 hover:bg-muted ring-offset-background transition-all active:scale-90 touch-manipulation focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none z-50"
-            style={{ top: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}
+            style={{
+              top:
+                side === "bottom"
+                  ? "0.75rem"
+                  : "calc(env(safe-area-inset-top, 0px) + 0.75rem)",
+            }}
           >
             <X className="h-4 w-4" />
             <span className="sr-only">Close</span>

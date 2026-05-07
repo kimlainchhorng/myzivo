@@ -41,7 +41,7 @@ const POPULAR_SERVICES = [
   { label: "Rides", icon: Car, href: "/rides", color: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" },
   { label: "Eats", icon: Package, href: "/eats", color: "bg-orange-500/10 text-orange-500 border-orange-500/20" },
   { label: "Delivery", icon: Package, href: "/delivery", color: "bg-violet-500/10 text-violet-500 border-violet-500/20" },
-  { label: "Jobs", icon: Briefcase, href: "/personal-dashboard", color: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
+  { label: "Workplace", icon: Briefcase, href: "/personal-dashboard", color: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
   { label: "Live", icon: Tv, href: "/live", color: "bg-rose-500/10 text-rose-500 border-rose-500/20" },
   { label: "Creator", icon: Rocket, href: "/creator-dashboard", color: "bg-violet-500/10 text-violet-500 border-violet-500/20" },
   { label: "Wellness", icon: Heart, href: "/wellness", color: "bg-teal-500/10 text-teal-500 border-teal-500/20" },
@@ -51,7 +51,7 @@ const POPULAR_SERVICES = [
 
 // Quick-jump shortcuts that match by keyword (renders in flat results when query matches)
 const FEATURE_SHORTCUTS: { keywords: string[]; label: string; sub: string; icon: any; href: string; accent: string }[] = [
-  { keywords: ["job", "career", "work", "hire", "apply"], label: "Jobs Hub", sub: "Apply, track, and manage applications", icon: Briefcase, href: "/personal-dashboard", accent: "text-blue-500" },
+  { keywords: ["job", "career", "work", "hire", "apply", "workplace", "clock", "employee"], label: "Workplace", sub: "Clock in, jobs & schedule", icon: Briefcase, href: "/personal-dashboard", accent: "text-blue-500" },
   { keywords: ["resume", "cv"], label: "Build CV", sub: "Create your resume", icon: Briefcase, href: "/personal/create-cv", accent: "text-blue-500" },
   { keywords: ["live", "stream", "broadcast"], label: "Live Streams", sub: "Watch creators broadcasting now", icon: Tv, href: "/live", accent: "text-rose-500" },
   { keywords: ["go live", "broadcast"], label: "Go Live", sub: "Start streaming", icon: Video, href: "/go-live", accent: "text-rose-500" },

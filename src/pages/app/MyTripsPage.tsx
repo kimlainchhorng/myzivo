@@ -158,7 +158,7 @@ export default function MyTripsPage() {
   }, [refetch]);
 
   return (
-    <div className="min-h-screen bg-background relative overflow-hidden safe-area-top safe-area-bottom">
+    <div className="min-h-screen bg-background relative overflow-hidden safe-area-bottom">
       {/* ── 3D Background ── */}
       <div className="pointer-events-none fixed inset-0 z-0">
         <img
@@ -186,7 +186,7 @@ export default function MyTripsPage() {
             <div className="relative">
               <div className="absolute inset-0 bg-background/70 backdrop-blur-2xl" />
               <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-border/30 to-transparent" />
-              <div className="relative z-10 px-4 py-3 safe-area-top">
+              <div className="relative z-10 px-4 py-3">
                 <div className="flex items-center gap-3">
                   <motion.div whileHover={{ scale: 1.1, rotateY: 10 }} whileTap={{ scale: 0.88 }}>
                     <Link

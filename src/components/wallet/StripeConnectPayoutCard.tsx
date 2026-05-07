@@ -14,6 +14,58 @@ import { detectInAppBrowser } from "@/lib/isInAppBrowser";
 
 interface Props {
   balanceDollars: number;
+  /** ISO country code detected from user profile/timezone. Used as fallback when Stripe account doesn't exist yet. */
+  detectedCountry?: string | null;
+}
+
+/** Map Stripe `requirements.currently_due` codes to short, human-readable labels. */
+function describeRequirement(code: string): string {
+  const map: Record<string, string> = {
+    "external_account": "Bank or card for payouts",
+    "tos_acceptance.date": "Accept Stripe's terms",
+    "tos_acceptance.ip": "Accept Stripe's terms",
+    "business_type": "Business type",
+    "business_profile.url": "Website / profile URL",
+    "business_profile.mcc": "Business category",
+    "business_profile.product_description": "What you sell",
+    "individual.dob.day": "Date of birth",
+    "individual.dob.month": "Date of birth",
+    "individual.dob.year": "Date of birth",
+    "individual.first_name": "Legal first name",
+    "individual.last_name": "Legal last name",
+    "individual.email": "Email address",
+    "individual.phone": "Phone number",
+    "individual.address.line1": "Home address",
+    "individual.address.city": "Home address",
+    "individual.address.state": "Home address",
+    "individual.address.postal_code": "Home address",
+    "individual.id_number": "Government ID number",
+    "individual.ssn_last_4": "Last 4 of SSN",
+    "individual.verification.document": "ID document upload",
+    "individual.verification.additional_document": "Additional ID upload",
+    "company.tax_id": "Company tax ID",
+    "company.name": "Company legal name",
+    "company.address.line1": "Company address",
+    "company.verification.document": "Company verification doc",
+    "owners_provided": "Beneficial owners",
+    "representative.relationship.title": "Your role at the company",
+  };
+  if (map[code]) return map[code];
+  // Strip object prefixes like "individual." for unknown codes
+  return code.replace(/^[a-z_]+\./, "").replace(/[._]/g, " ");
+}
+
+function dedupeRequirements(reqs: string[]): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const r of reqs) {
+    const label = describeRequirement(r);
+    if (!seen.has(label)) {
+      seen.add(label);
+      out.push(label);
+    }
+  }
+  return out;
 }
 
 /** Embedded Stripe Connect only works in true desktop browsers, not mobile webviews/iframes. */
@@ -33,7 +85,7 @@ function shouldUseEmbedded(): boolean {
   }
 }
 
-export default function StripeConnectPayoutCard({ balanceDollars }: Props) {
+export default function StripeConnectPayoutCard({ balanceDollars, detectedCountry }: Props) {
   const { data: status, isLoading } = useConnectStatus();
   const onboard = useConnectOnboard();
   const payout = useInstantPayout();
@@ -70,7 +122,9 @@ export default function StripeConnectPayoutCard({ balanceDollars }: Props) {
     queryClient.invalidateQueries({ queryKey: ["stripe-connect-status"] });
   };
 
-  const country = (status as any)?.country || "US";
+  // Prefer the country Stripe already has on the connected account; fall back to
+  // the country detected from user profile/timezone, then "US" as a last resort.
+  const country = status?.country || detectedCountry || "US";
   const openOnboarding = () => {
     if (shouldUseEmbedded()) {
       setEmbedOpen(true);
@@ -104,11 +158,29 @@ export default function StripeConnectPayoutCard({ balanceDollars }: Props) {
             <ArrowRight className="w-4 h-4" />
             {status?.connected ? "Continue setup" : "Set up instant payouts"}
           </Button>
-          {!!status?.requirements?.length && (
-            <p className="text-[11px] text-white/70 mt-2 flex items-center gap-1">
-              <AlertCircle className="w-3 h-3" /> {status.requirements.length} item(s) need to be completed
-            </p>
-          )}
+          {!!status?.requirements?.length && (() => {
+            const labels = dedupeRequirements(status.requirements);
+            const preview = labels.slice(0, 3);
+            const extra = labels.length - preview.length;
+            return (
+              <div className="mt-3 rounded-xl bg-white/10 border border-white/15 p-2.5">
+                <p className="text-[11px] text-white/90 font-semibold flex items-center gap-1 mb-1">
+                  <AlertCircle className="w-3 h-3" /> {labels.length} item{labels.length === 1 ? "" : "s"} to complete
+                </p>
+                <ul className="text-[10.5px] text-white/75 space-y-0.5 leading-snug">
+                  {preview.map((l) => (
+                    <li key={l} className="flex items-start gap-1">
+                      <span className="text-white/50">•</span>
+                      <span>{l}</span>
+                    </li>
+                  ))}
+                  {extra > 0 && (
+                    <li className="text-white/55 italic">+ {extra} more — tap “Continue setup”</li>
+                  )}
+                </ul>
+              </div>
+            );
+          })()}
         </motion.div>
         <StripeEmbeddedOnboarding
           open={embedOpen}

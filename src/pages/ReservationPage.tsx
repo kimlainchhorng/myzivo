@@ -143,7 +143,8 @@ export default function ReservationPage() {
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-black/20" />
         <button
           onClick={() => navigate(-1)}
-          className="absolute top-3 left-3 w-10 h-10 rounded-full bg-black/40 backdrop-blur flex items-center justify-center text-white"
+          style={{ top: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}
+          className="absolute left-3 w-10 h-10 rounded-full bg-black/40 backdrop-blur flex items-center justify-center text-white"
           aria-label="Back"
         >
           <ChevronLeft className="w-5 h-5" />

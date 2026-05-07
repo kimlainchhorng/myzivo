@@ -5,6 +5,7 @@
  * Updates creator_tips.status on capture/denied/refunded.
  */
 import { createClient } from "../_shared/deps.ts";
+import { creditCreatorTipToWallet } from "../_shared/tipWalletCredit.ts";
 
 const PAYPAL_BASE = (Deno.env.get("PAYPAL_MODE") ?? "live") === "sandbox"
   ? "https://api-m.sandbox.paypal.com"
@@ -105,6 +106,13 @@ Deno.serve(async (req) => {
     if (resolvedTipId) {
       if (eventType === "PAYMENT.CAPTURE.COMPLETED" || eventType === "CHECKOUT.ORDER.COMPLETED") {
         await admin.from("creator_tips").update({ status: "succeeded", paypal_capture_id: captureId, last_payment_error: null } as any).eq("id", resolvedTipId);
+        // Credit the creator's wallet (idempotent on tip id).
+        const { data: tipFull } = await admin
+          .from("creator_tips")
+          .select("id, creator_id, amount_cents, tipper_id, message, is_anonymous")
+          .eq("id", resolvedTipId)
+          .maybeSingle();
+        if (tipFull) await creditCreatorTipToWallet(admin, tipFull as any);
         processingStatus = "applied";
       } else if (eventType === "PAYMENT.CAPTURE.DENIED") {
         const reason = resource?.status_details?.reason ?? "PayPal denied the capture";

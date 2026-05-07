@@ -490,6 +490,17 @@ export const usePushNotifications = () => {
       return;
     }
 
+    // Generic action_url respect — every push payload that ships an explicit
+    // route should win over the hardcoded type switch below. The send-push
+    // edge function already attaches action_url for friend requests, post
+    // likes, comments, reactions, transfers, etc., so this single line
+    // routes nearly every modern notification correctly without needing a
+    // case for each type.
+    if (actionUrl && actionUrl.startsWith("/")) {
+      window.location.href = actionUrl;
+      return;
+    }
+
     switch (normalizedType) {
       // Ride notifications
       case "driver_assigned":
@@ -547,6 +558,67 @@ export const usePushNotifications = () => {
       case "surge_alert":
       case "promo_available":
         window.location.href = `/rides`;
+        break;
+
+      // Social — friend requests / accepts / follows
+      case "friend_request":
+      case "friend_request_received":
+        window.location.href = `/notifications`; // friend requests live in the notifications inbox
+        break;
+      case "friend_request_accepted":
+      case "friend_accepted":
+      case "new_follower":
+        if (mergedData.sender_id || mergedData.user_id) {
+          window.location.href = `/user/${encodeURIComponent(String(mergedData.sender_id || mergedData.user_id))}`;
+        } else {
+          window.location.href = `/notifications`;
+        }
+        break;
+
+      // Social — engagement on a post
+      case "post_liked":
+      case "post_commented":
+      case "post_reaction":
+      case "social_reaction":
+      case "social_repost":
+      case "social_comment":
+      case "social_mention":
+        if (mergedData.post_id) {
+          window.location.href = `/reels?post=${encodeURIComponent(String(mergedData.post_id))}`;
+        } else {
+          window.location.href = `/notifications`;
+        }
+        break;
+
+      // Money — gift / wallet / P2P
+      case "coin_transfer":
+      case "gift_received":
+      case "p2p_transfer":
+      case "p2p_request":
+        // Open the chat with the sender so the transfer card / accept button
+        // is right there. Falls back to wallet if we don't know who.
+        if (mergedData.sender_id || mergedData.from_user_id) {
+          window.location.href = `/chat?with=${encodeURIComponent(String(mergedData.sender_id || mergedData.from_user_id))}`;
+        } else {
+          window.location.href = `/wallet`;
+        }
+        break;
+      case "wallet_topup":
+      case "wallet_credited":
+      case "topup_success":
+        window.location.href = `/wallet`;
+        break;
+
+      // Channels
+      case "channel_post":
+      case "channel_broadcast":
+        if (mergedData.handle) {
+          window.location.href = `/c/${encodeURIComponent(String(mergedData.handle))}`;
+        } else if (mergedData.channel_id) {
+          window.location.href = `/channels`;
+        } else {
+          window.location.href = `/notifications`;
+        }
         break;
 
       default:

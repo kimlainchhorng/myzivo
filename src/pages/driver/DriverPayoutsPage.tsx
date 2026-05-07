@@ -58,7 +58,7 @@ export default function DriverPayoutsPage() {
   };
 
   return (
-    <div className="container max-w-2xl py-6 space-y-4">
+    <div className="container max-w-2xl py-6 space-y-4 safe-area-top">
       <header>
         <h1 className="text-2xl font-semibold">Payouts</h1>
         <p className="text-sm text-muted-foreground">Earnings are paid out to your bank via Stripe Connect.</p>

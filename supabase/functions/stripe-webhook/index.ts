@@ -8,6 +8,7 @@ import Stripe from "../_shared/stripe.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
 import { notifyEatsOrderConfirmed, notifyEatsRefundIssued } from "../_shared/eats-notifications.ts";
 import { notifyGroceryOrderConfirmed } from "../_shared/grocery-notifications.ts";
+import { creditCreatorTipToWallet } from "../_shared/tipWalletCredit.ts";
 
 // Audit logging helper
 async function logPaymentAudit(
@@ -588,26 +589,29 @@ serve(async (req) => {
             const tipperId = metadata.tipper_id;
 
             // Try by payment_intent_id first; if no row, try by session.id.
-            let tipRow: { id: string; status: string } | null = null;
+            const tipSelect = "id, status, creator_id, amount_cents, tipper_id, is_anonymous, message";
+            let tipRow: any = null;
             const { data: byPi } = await supabase
               .from("creator_tips")
-              .select("id, status")
+              .select(tipSelect)
               .eq("payment_intent_id", piRef)
               .maybeSingle();
-            tipRow = (byPi as any) ?? null;
+            tipRow = byPi ?? null;
             if (!tipRow) {
               const { data: bySession } = await supabase
                 .from("creator_tips")
-                .select("id, status")
+                .select(tipSelect)
                 .eq("payment_intent_id", sessionRef)
                 .maybeSingle();
-              tipRow = (bySession as any) ?? null;
+              tipRow = bySession ?? null;
             }
 
             if (!tipRow) {
               console.warn("[Webhook] creator_tip row not found", { session: session.id, pi: piRef });
             } else if (tipRow.status === "succeeded") {
               console.log("[Webhook] creator_tip already succeeded", { tip: tipRow.id });
+              // Still attempt the wallet credit — idempotent via reference_id.
+              await creditCreatorTipToWallet(supabase, tipRow);
             } else {
               const { error: tipErr } = await supabase
                 .from("creator_tips")
@@ -622,6 +626,7 @@ serve(async (req) => {
                 console.error("[Webhook] creator_tip flip failed", tipErr);
               } else {
                 console.log("[Webhook] creator_tip succeeded", { tip: tipRow.id });
+                await creditCreatorTipToWallet(supabase, tipRow);
                 // Push notify the creator + tipper
                 const creatorId = metadata.creator_id;
                 const isAnon = metadata.is_anonymous === "true";
@@ -983,6 +988,58 @@ serve(async (req) => {
             amount: paymentIntent.amount / 100,
             currency: paymentIntent.currency.toUpperCase(),
           });
+        }
+
+        // Creator tip via in-app PaymentIntent (create-tip-payment-intent).
+        // Without this branch the tip stays at status='pending' and the creator's
+        // wallet never receives the funds — only the checkout-session flow was
+        // wired previously.
+        if (paymentIntent.metadata?.type === "creator_tip") {
+          const { data: tipRow } = await supabase
+            .from("creator_tips")
+            .select("id, status, creator_id, amount_cents, tipper_id, is_anonymous, message")
+            .eq("payment_intent_id", paymentIntent.id)
+            .maybeSingle();
+
+          if (!tipRow) {
+            console.warn("[Webhook] creator_tip row not found for PI", { pi: paymentIntent.id });
+          } else if ((tipRow as any).status === "succeeded") {
+            console.log("[Webhook] creator_tip already succeeded", { tip: (tipRow as any).id });
+            await creditCreatorTipToWallet(supabase, tipRow as any);
+          } else {
+            const { error: flipErr } = await supabase
+              .from("creator_tips")
+              .update({
+                status: "succeeded",
+                payment_provider: "stripe",
+                last_payment_error: null,
+              })
+              .eq("id", (tipRow as any).id);
+            if (flipErr) {
+              console.error("[Webhook] creator_tip PI flip failed", flipErr);
+            } else {
+              console.log("[Webhook] creator_tip succeeded via PI", { tip: (tipRow as any).id });
+              await creditCreatorTipToWallet(supabase, tipRow as any);
+              const creatorId = (tipRow as any).creator_id;
+              const isAnon = !!(tipRow as any).is_anonymous;
+              const amount = (tipRow as any).amount_cents ?? paymentIntent.amount ?? 0;
+              if (creatorId) {
+                try {
+                  await fetch(`${supabaseUrl}/functions/v1/send-push-notification`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json", "Authorization": `Bearer ${supabaseServiceKey}` },
+                    body: JSON.stringify({
+                      user_id: creatorId,
+                      notification_type: "tip_received",
+                      title: "You received a tip! 💰",
+                      body: `${isAnon ? "Someone" : "A fan"} sent you $${(amount / 100).toFixed(2)}`,
+                      data: { type: "tip_received", amount_cents: amount, action_url: "/wallet" },
+                    }),
+                  });
+                } catch {}
+              }
+            }
+          }
         }
         break;
       }

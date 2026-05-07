@@ -17,6 +17,7 @@ import {
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { useCustomerWallet } from "@/hooks/useCustomerWallet";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import SEOHead from "@/components/SEOHead";
 
@@ -84,16 +85,18 @@ export default function MonetizationPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
 
-  // Fetch user wallet balance
-  const { data: walletData } = useQuery({
-    queryKey: ["monetization-wallet", user?.id],
+  // Real customer wallet balance (cents)
+  const { balance: walletBalanceCents } = useCustomerWallet();
+
+  // Lifetime tips received (Tips & Donations program payouts)
+  const { data: tipsCount = 0 } = useQuery({
+    queryKey: ["monetization-tips-count", user?.id],
     queryFn: async () => {
-      const { data } = await (supabase as any)
-        .from("wallets")
-        .select("balance")
-        .eq("user_id", user!.id)
-        .maybeSingle();
-      return data as { balance: number } | null;
+      const { count } = await (supabase as any)
+        .from("creator_tips")
+        .select("id", { count: "exact", head: true })
+        .eq("creator_id", user!.id);
+      return (count as number) || 0;
     },
     enabled: !!user,
   });
@@ -126,7 +129,7 @@ export default function MonetizationPage() {
 
   const enrolledIds = new Set(enrollments.map((e: any) => e.program_id));
   const enrolledCount = enrolledIds.size;
-  const balance = walletData?.balance ?? 0;
+  const balance = walletBalanceCents;
 
   // Filter programs
   const filteredPrograms = monetizationPrograms.filter((prog) => {
@@ -201,7 +204,7 @@ export default function MonetizationPage() {
               {[
                 { label: "Programs", value: String(enrolledCount) },
                 { label: "Referrals", value: String(referralCount ?? 0) },
-                { label: "Tips", value: "0" },
+                { label: "Tips", value: String(tipsCount) },
                 { label: "Status", value: enrolledCount > 0 ? "Active" : "Start" },
               ].map((stat) => (
                 <div key={stat.label} className="rounded-xl bg-muted/30 p-2 text-center border border-border/20">

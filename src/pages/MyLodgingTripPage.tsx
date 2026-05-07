@@ -164,7 +164,7 @@ export default function MyLodgingTripPage() {
 
   if (isLoading) {
     return (
-      <div className="container max-w-3xl mx-auto p-4 space-y-4">
+      <div className="container max-w-3xl mx-auto p-4 space-y-4 safe-area-top">
         <Skeleton className="h-48 w-full rounded-2xl" />
         <Skeleton className="h-32 w-full rounded-2xl" />
       </div>
@@ -173,7 +173,7 @@ export default function MyLodgingTripPage() {
 
   if (!reservation) {
     return (
-      <div className="container max-w-3xl mx-auto p-8 text-center">
+      <div className="container max-w-3xl mx-auto p-8 text-center safe-area-top">
         <h1 className="text-2xl font-bold mb-2">Reservation not found</h1>
         <p className="text-muted-foreground mb-4">It may have been deleted or you don't have access.</p>
         <Button asChild><Link to="/my-trips">Back to my trips</Link></Button>
@@ -199,7 +199,7 @@ export default function MyLodgingTripPage() {
   const canDispute = reservation.status === "cancelled" || String(reservation.payment_status || "").includes("refund") || reservation.payment_status === "cancelled_no_refund";
 
   return (
-    <div className="container max-w-3xl mx-auto p-4 space-y-4 pb-24">
+    <div className="container max-w-3xl mx-auto p-4 space-y-4 pb-24 safe-area-top">
       <div className="flex items-center justify-between gap-3">
         <Link to="/my-trips" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
           <ArrowLeft className="w-4 h-4" /> All trips

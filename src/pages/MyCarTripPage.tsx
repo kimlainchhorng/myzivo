@@ -127,7 +127,7 @@ export default function MyCarTripPage() {
         description={`View your car rental booking details and information.`}
       />
 
-      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border/40 px-4 py-3 flex items-center gap-3">
+      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border/40 px-4 py-3 flex items-center gap-3" style={{ paddingTop: "var(--zivo-safe-top-sticky)" }}>
         <button
           onClick={() => navigate(-1)}
           className="h-9 w-9 rounded-full bg-muted/60 flex items-center justify-center active:scale-95 transition"

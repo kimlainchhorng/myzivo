@@ -1,10 +1,10 @@
-import { useState, useEffect, useCallback, Fragment } from "react";
+import { useState, useEffect, useCallback, Fragment, lazy, Suspense } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
-  ArrowLeft, Heart, MessageCircle, UserPlus, ShoppingBag, Bell, Check, Trash2,
+  ArrowLeft, Heart, MessageCircle, UserPlus, ShoppingBag, Bell, BellOff, Check, Trash2,
   Briefcase, Tv, Activity, Rocket, Plane, AlertTriangle, Tag, DollarSign, AtSign,
-  ChevronDown,
+  ChevronDown, CornerUpLeft, UserCircle2, Send, Loader2,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
@@ -12,8 +12,22 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { formatDistanceToNow, isToday, isYesterday, isThisWeek } from "date-fns";
 import { toast } from "sonner";
+import { useQuery } from "@tanstack/react-query";
+import { cn } from "@/lib/utils";
+import { useMutedThreads, MUTE_DURATIONS, formatMuteLabel, type MuteDurationId } from "@/hooks/useMutedThreads";
+import { useAllowMessageRequests } from "@/hooks/useAllowMessageRequests";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import SEOHead from "@/components/SEOHead";
+
+const ProfilePreviewSheet = lazy(() => import("@/components/profile/ProfilePreviewSheet"));
+
+// Pull the chat thread's recipient id out of an action_url like
+// `/chat?with=<user_id>`. Returns null for non-chat notifications.
+function chatThreadIdFromUrl(url: string | null | undefined): string | null {
+  if (!url) return null;
+  const m = url.match(/[?&]with=([^&]+)/);
+  return m ? decodeURIComponent(m[1]) : null;
+}
 
 type NotifType =
   | "like" | "comment" | "follow" | "mention"
@@ -80,6 +94,32 @@ function getDateLabel(date: Date): string {
   return "Older";
 }
 
+/**
+ * Each rendered row carries the displayed notification fields plus an `ids`
+ * array (the full set of underlying notif ids) and a `count`. For a single
+ * row count is 1; for a collapsed chat-thread group it's the size of the
+ * fold. Same shape both ways so the renderer doesn't branch on it.
+ */
+type Row = Notification & { ids: string[]; count: number; hasUnread: boolean };
+
+function collapseSenders(items: Notification[]): Row[] {
+  const out: Row[] = [];
+  for (const n of items) {
+    const tid = chatThreadIdFromUrl(n.action_url);
+    const last = out[out.length - 1];
+    if (tid && last && chatThreadIdFromUrl(last.action_url) === tid) {
+      // Same thread as the previous emitted row → fold in. We keep the
+      // *latest* notif as the displayed head (list is newest-first).
+      last.ids.push(n.id);
+      last.count += 1;
+      if (!n.isRead) last.hasUnread = true;
+      continue;
+    }
+    out.push({ ...n, ids: [n.id], count: 1, hasUnread: !n.isRead });
+  }
+  return out;
+}
+
 function groupByDate(items: Notification[]): { label: string; items: Notification[] }[] {
   const order = ["Today", "Yesterday", "This Week", "Older"];
   const groups: Record<string, Notification[]> = {};
@@ -129,6 +169,34 @@ export default function NotificationCenterPage() {
   const [hasMore, setHasMore] = useState(false);
   const [offset, setOffset] = useState(0);
   const [activeTab, setActiveTab] = useState("all");
+
+  // Mute integration — same hooks the bell uses, so muting from this page
+  // also drops the bell badge and chat-list state instantly.
+  const { isMuted, mute, unmute, getMuteEntry } = useMutedThreads();
+  const { allow: allowMessageRequests } = useAllowMessageRequests();
+
+  // Same privacy filter the bell uses: when "Allow message requests" is off,
+  // chat notifications from people not in the user's contacts are hidden
+  // from the list (and the visible unread count). Contact set is fetched
+  // only when the toggle is off so the common case stays one query.
+  const { data: contactSet } = useQuery({
+    queryKey: ["notif-page-contact-set", user?.id],
+    enabled: !!user && allowMessageRequests === false,
+    queryFn: async () => {
+      const { data } = await (supabase as any)
+        .from("user_contacts")
+        .select("contact_user_id")
+        .eq("owner_id", user!.id);
+      return new Set<string>(((data || []) as any[]).map((c) => c.contact_user_id));
+    },
+  });
+  const [muteOpenFor, setMuteOpenFor] = useState<string | null>(null);
+  const [previewUserId, setPreviewUserId] = useState<string | null>(null);
+
+  // Per-row inline reply state (only one open at a time, like the bell).
+  const [replyOpenFor, setReplyOpenFor] = useState<string | null>(null);
+  const [replyText, setReplyText] = useState("");
+  const [replySending, setReplySending] = useState(false);
 
   const mapRow = (n: any): Notification => ({
     id: n.id,
@@ -195,7 +263,18 @@ export default function NotificationCenterPage() {
     return () => { supabase.removeChannel(channel); };
   }, [user]);
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
+  // Privacy gate — applied before any other filtering so muted/non-contact
+  // chats vanish from every count and tab consistently.
+  const privacyFiltered = (() => {
+    if (allowMessageRequests !== false || !contactSet) return notifications;
+    return notifications.filter((n) => {
+      const tid = chatThreadIdFromUrl(n.action_url);
+      if (!tid) return true; // non-chat notifs always pass
+      return contactSet.has(tid);
+    });
+  })();
+
+  const unreadCount = privacyFiltered.filter(n => !n.isRead).length;
 
   const markAllRead = async () => {
     if (!user) return;
@@ -209,22 +288,59 @@ export default function NotificationCenterPage() {
     setNotifications(prev => prev.map(n => n.id === id ? { ...n, isRead: true } : n));
   };
 
+  const markReadMany = async (ids: string[]) => {
+    if (!ids.length) return;
+    await supabase.from("notifications").update({ is_read: true }).in("id", ids);
+    const set = new Set(ids);
+    setNotifications(prev => prev.map(n => set.has(n.id) ? { ...n, isRead: true } : n));
+  };
+
   const deleteNotif = async (id: string) => {
     await supabase.from("notifications").delete().eq("id", id);
     setNotifications(prev => prev.filter(n => n.id !== id));
   };
 
+  const deleteMany = async (ids: string[]) => {
+    if (!ids.length) return;
+    await supabase.from("notifications").delete().in("id", ids);
+    const set = new Set(ids);
+    setNotifications(prev => prev.filter(n => !set.has(n.id)));
+  };
+
+  const sendReply = async () => {
+    if (!user?.id || !replyOpenFor) return;
+    const text = replyText.trim();
+    if (!text || replySending) return;
+    setReplySending(true);
+    const { error } = await (supabase as any).from("direct_messages").insert({
+      sender_id: user.id,
+      receiver_id: replyOpenFor,
+      message: text,
+      message_type: "text",
+    });
+    setReplySending(false);
+    if (error) {
+      toast.error("Couldn't send reply");
+      return;
+    }
+    toast.success("Reply sent");
+    setReplyOpenFor(null);
+    setReplyText("");
+  };
+
+  // Each tab views a slice of `privacyFiltered`, not the raw notifications,
+  // so the privacy toggle applies to category tabs (Social, Orders, …) too.
   const filtered =
-    activeTab === "all" ? notifications
-    : activeTab === "unread" ? notifications.filter(n => !n.isRead)
-    : notifications.filter(n => TAB_TYPES[activeTab]?.includes(n.type));
+    activeTab === "all" ? privacyFiltered
+    : activeTab === "unread" ? privacyFiltered.filter(n => !n.isRead)
+    : privacyFiltered.filter(n => TAB_TYPES[activeTab]?.includes(n.type));
 
   const grouped = groupByDate(filtered);
 
   const tabUnreadCount = (key: string) => {
     if (key === "unread") return unreadCount;
     if (key === "all") return 0;
-    return notifications.filter(n => !n.isRead && TAB_TYPES[key]?.includes(n.type)).length;
+    return privacyFiltered.filter(n => !n.isRead && TAB_TYPES[key]?.includes(n.type)).length;
   };
 
   return (
@@ -312,9 +428,15 @@ export default function NotificationCenterPage() {
             </div>
 
             <AnimatePresence>
-              {items.map((notif, i) => {
+              {collapseSenders(items).map((notif, i) => {
                 const Icon = ICON_MAP[notif.type];
                 const colorClass = COLOR_MAP[notif.type];
+                const threadId = chatThreadIdFromUrl(notif.action_url);
+                const isChat = !!threadId;
+                const isReplying = !!threadId && replyOpenFor === threadId;
+                const isMuteOpen = !!threadId && muteOpenFor === threadId;
+                const rowMuted = !!threadId && isMuted(threadId);
+                const isGroup = notif.count > 1;
                 return (
                   <motion.div
                     key={notif.id}
@@ -323,36 +445,197 @@ export default function NotificationCenterPage() {
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, height: 0, overflow: "hidden" }}
                     transition={{ delay: i * 0.02, duration: 0.2 }}
-                    className={`group flex items-start gap-3 px-4 py-3 cursor-pointer transition-colors hover:bg-accent/40 ${!notif.isRead ? "bg-primary/[0.04]" : ""}`}
-                    onClick={() => {
-                      markRead(notif.id);
-                      if (notif.action_url) navigate(notif.action_url);
-                    }}
+                    className={cn(
+                      "group transition-colors",
+                      notif.hasUnread && !isReplying && !isMuteOpen && "bg-primary/[0.04]",
+                      (isReplying || isMuteOpen) && "bg-muted/30"
+                    )}
                   >
-                    <div className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 ${colorClass}`}>
-                      <Icon className="h-5 w-5" />
+                    <div
+                      className="flex items-start gap-3 px-4 py-3 cursor-pointer hover:bg-accent/40"
+                      onClick={() => {
+                        // Tapping a grouped row marks every collapsed notif
+                        // as read so the unread state clears in one tap.
+                        if (notif.hasUnread) {
+                          if (notif.count > 1) void markReadMany(notif.ids);
+                          else void markRead(notif.id);
+                        }
+                        if (notif.action_url) navigate(notif.action_url);
+                      }}
+                    >
+                      <div className={`h-10 w-10 rounded-full flex items-center justify-center shrink-0 ${colorClass}`}>
+                        <Icon className="h-5 w-5" />
+                      </div>
+                      <div className={cn("flex-1 min-w-0", rowMuted && "opacity-60")}>
+                        <div className="flex items-center gap-1.5">
+                          <p className={`text-sm leading-snug flex-1 ${notif.hasUnread ? "font-semibold text-foreground" : "font-medium text-foreground/90"}`}>
+                            {notif.title}
+                          </p>
+                          {isGroup && (
+                            <span className="shrink-0 text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-primary/15 text-primary">
+                              {notif.count} new
+                            </span>
+                          )}
+                          {rowMuted && (
+                            <BellOff className="h-3 w-3 text-muted-foreground shrink-0" aria-label="Muted" />
+                          )}
+                        </div>
+                        {notif.message && (
+                          <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{notif.message}</p>
+                        )}
+                        <div className="flex items-center gap-2 mt-1">
+                          <p className="text-[10px] text-muted-foreground">
+                            {formatDistanceToNow(notif.createdAt, { addSuffix: true })}
+                          </p>
+                          {rowMuted && threadId && (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-medium text-amber-600 bg-amber-500/10 px-1.5 py-0.5 rounded-full">
+                              <BellOff className="h-2.5 w-2.5" />
+                              {formatMuteLabel(getMuteEntry(threadId)) || "muted"}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-1 shrink-0 pt-0.5">
+                        {notif.hasUnread && <div className="w-2 h-2 rounded-full bg-primary mt-1" />}
+                        {isChat && !isReplying && (
+                          <>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                // Mark every notif in the group as read on
+                                // open — opening implies seen, just like the bell.
+                                if (notif.count > 1) void markReadMany(notif.ids);
+                                else void markRead(notif.id);
+                                setReplyOpenFor(threadId!);
+                                setReplyText("");
+                              }}
+                              aria-label="Reply"
+                              className="h-8 w-8 rounded-full bg-primary/10 text-primary flex items-center justify-center hover:bg-primary/20 active:scale-90 transition-all"
+                            >
+                              <CornerUpLeft className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={(e) => { e.stopPropagation(); setPreviewUserId(threadId!); }}
+                              aria-label="Preview profile"
+                              className="h-8 w-8 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground active:scale-90 transition-all flex items-center justify-center"
+                            >
+                              <UserCircle2 className="h-4 w-4" />
+                            </button>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (rowMuted) {
+                                  unmute(threadId!);
+                                  toast.success("Unmuted");
+                                  return;
+                                }
+                                setMuteOpenFor((cur) => (cur === threadId ? null : threadId!));
+                              }}
+                              aria-label={rowMuted ? "Unmute" : "Mute"}
+                              className={cn(
+                                "h-8 w-8 rounded-full flex items-center justify-center hover:bg-muted active:scale-90 transition-all",
+                                rowMuted ? "bg-muted text-foreground" : "text-muted-foreground"
+                              )}
+                            >
+                              <BellOff className="h-4 w-4" />
+                            </button>
+                          </>
+                        )}
+                        <button
+                          onClick={e => {
+                            e.stopPropagation();
+                            // Deleting a grouped row removes every collapsed
+                            // notif so the row vanishes — partial deletes
+                            // would just re-render the same group minus one.
+                            if (notif.count > 1) void deleteMany(notif.ids);
+                            else void deleteNotif(notif.id);
+                          }}
+                          className="p-1.5 rounded-lg hover:bg-destructive/10 transition-colors"
+                          aria-label="Delete notification"
+                        >
+                          <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
+                        </button>
+                      </div>
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-sm leading-snug ${!notif.isRead ? "font-semibold text-foreground" : "font-medium text-foreground/90"}`}>
-                        {notif.title}
-                      </p>
-                      {notif.message && (
-                        <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">{notif.message}</p>
+
+                    {/* Inline reply panel */}
+                    <AnimatePresence initial={false}>
+                      {isReplying && threadId && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.15 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="px-4 pb-3 pt-0 flex items-center gap-2">
+                            <input
+                              autoFocus
+                              value={replyText}
+                              onChange={(e) => setReplyText(e.target.value)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" && !e.shiftKey) {
+                                  e.preventDefault();
+                                  void sendReply();
+                                } else if (e.key === "Escape") {
+                                  e.preventDefault();
+                                  setReplyOpenFor(null);
+                                  setReplyText("");
+                                }
+                              }}
+                              placeholder={`Reply to ${notif.title}…`}
+                              disabled={replySending}
+                              className="flex-1 h-9 px-3 rounded-full bg-background border border-border text-[13px] focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50"
+                            />
+                            <button
+                              onClick={() => { setReplyOpenFor(null); setReplyText(""); }}
+                              disabled={replySending}
+                              className="shrink-0 h-9 px-3 text-[12px] font-medium text-muted-foreground hover:text-foreground"
+                            >
+                              Cancel
+                            </button>
+                            <button
+                              onClick={() => void sendReply()}
+                              disabled={!replyText.trim() || replySending}
+                              aria-label="Send reply"
+                              className="shrink-0 h-9 w-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 active:scale-90 transition-all"
+                            >
+                              {replySending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
+                            </button>
+                          </div>
+                        </motion.div>
                       )}
-                      <p className="text-[10px] text-muted-foreground mt-1">
-                        {formatDistanceToNow(notif.createdAt, { addSuffix: true })}
-                      </p>
-                    </div>
-                    <div className="flex items-center gap-1.5 shrink-0 pt-0.5">
-                      {!notif.isRead && <div className="w-2 h-2 rounded-full bg-primary" />}
-                      <button
-                        onClick={e => { e.stopPropagation(); deleteNotif(notif.id); }}
-                        className="p-1.5 rounded-lg hover:bg-destructive/10 transition-colors opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
-                        aria-label="Delete notification"
-                      >
-                        <Trash2 className="h-3.5 w-3.5 text-muted-foreground hover:text-destructive" />
-                      </button>
-                    </div>
+                    </AnimatePresence>
+
+                    {/* Mute dropdown */}
+                    <AnimatePresence initial={false}>
+                      {isMuteOpen && threadId && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: "auto", opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          transition={{ duration: 0.15 }}
+                          className="overflow-hidden"
+                        >
+                          <div className="px-4 pb-3 pt-0 grid grid-cols-2 gap-1.5">
+                            {MUTE_DURATIONS.map((d) => (
+                              <button
+                                key={d.id}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  mute(threadId, d.id as MuteDurationId);
+                                  setMuteOpenFor(null);
+                                  toast.success(`Muted · ${d.label.toLowerCase()}`);
+                                }}
+                                className="h-8 px-3 rounded-full bg-muted/70 hover:bg-muted text-foreground text-[12px] font-medium flex items-center justify-center"
+                              >
+                                {d.label}
+                              </button>
+                            ))}
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
                   </motion.div>
                 );
               })}
@@ -380,6 +663,18 @@ export default function NotificationCenterPage() {
       </div>
 
       <ZivoMobileNav />
+
+      {/* Profile preview bottom sheet — opened by the UserCircle action on
+          chat-type rows. Same component used by the bell, chat hub, and
+          message requests inbox. */}
+      {previewUserId && (
+        <Suspense fallback={null}>
+          <ProfilePreviewSheet
+            userId={previewUserId}
+            onClose={() => setPreviewUserId(null)}
+          />
+        </Suspense>
+      )}
     </div>
   );
 }

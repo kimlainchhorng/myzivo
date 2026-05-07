@@ -23,7 +23,7 @@ export default function AdminImportShopPage() {
   const navigate = useNavigate();
   return (
     <div className="min-h-screen bg-background pb-24">
-      <header className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b flex items-center px-3 py-2.5 gap-2">
+      <header className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b flex items-center px-3 py-2.5 gap-2" style={{ paddingTop: "var(--zivo-safe-top-sticky)" }}>
         <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>

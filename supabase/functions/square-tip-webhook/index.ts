@@ -4,6 +4,7 @@
  * Idempotent receiver for Square Webhooks targeting Creator Tips.
  */
 import { createClient } from "../_shared/deps.ts";
+import { creditCreatorTipToWallet } from "../_shared/tipWalletCredit.ts";
 
 async function hmacSha256Base64(key: string, message: string): Promise<string> {
   const cryptoKey = await crypto.subtle.importKey("raw", new TextEncoder().encode(key), { name: "HMAC", hash: "SHA-256" }, false, ["sign"]);
@@ -92,6 +93,15 @@ Deno.serve(async (req) => {
         else if (status === "FAILED") { next = "failed"; extra.last_payment_error = payment?.failure_reason ?? "Square reported a failure"; }
         if (next) {
           await admin.from("creator_tips").update({ status: next, ...extra } as any).eq("id", resolvedTipId);
+          // On successful capture, credit the creator's wallet (idempotent on tip id).
+          if (next === "succeeded") {
+            const { data: tipFull } = await admin
+              .from("creator_tips")
+              .select("id, creator_id, amount_cents, tipper_id, message, is_anonymous")
+              .eq("id", resolvedTipId)
+              .maybeSingle();
+            if (tipFull) await creditCreatorTipToWallet(admin, tipFull as any);
+          }
           processingStatus = "applied";
         }
       } else if (eventType === "refund.updated" || eventType === "refund.created") {

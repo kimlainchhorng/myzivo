@@ -9,7 +9,7 @@ import {
   ArrowLeft, Clock, Users, Calendar, Timer,
   CheckCircle2, ChevronRight, FileText, Bell, HelpCircle, Settings, Briefcase,
   QrCode, ScanLine, PlusCircle, Send, Search, IdCard, RefreshCw, DollarSign,
-  Sunrise, Sun, Moon, BarChart3, MessageCircle, Award, Trophy, Bookmark, Flame,
+  Sunrise, Sun, Moon, BarChart3, MessageCircle, Flame,
   Building2, UserPlus, Target, TrendingUp, Wifi, Sparkles,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
@@ -20,7 +20,7 @@ import AppLayout from "@/components/app/AppLayout";
 import { QRScannerModal } from "@/components/clock/QRScannerModal";
 import { EmployeeQRDisplay } from "@/components/clock/EmployeeQRDisplay";
 import { toast } from "sonner";
-import { format, startOfWeek, startOfMonth, addDays, isAfter, isEqual, differenceInDays } from "date-fns";
+import { format, startOfWeek, startOfMonth, addDays, isAfter, isEqual } from "date-fns";
 
 const DAILY_HOURS_TARGET = 8;
 
@@ -42,13 +42,6 @@ type WorkAssignment = {
 type DayOff = {
   id: string; employeeId: string;
   date: string; reason: string; note?: string;
-};
-
-type NotificationPreview = {
-  id: string;
-  title: string | null;
-  body: string | null;
-  created_at: string;
 };
 
 type ClockStatus = "clocked-out" | "clocked-in";
@@ -142,23 +135,6 @@ const PersonalDashboard = () => {
         assignments: Array.isArray(value.assignments) ? value.assignments : [],
         daysOff: Array.isArray(value.daysOff) ? value.daysOff : [],
       };
-    },
-  });
-
-  // Recent unread notifications (top 3)
-  const { data: recentNotifs } = useQuery({
-    queryKey: ["personal-dashboard-recent-notifs", user?.id],
-    enabled: !!user,
-    queryFn: async (): Promise<NotificationPreview[]> => {
-      if (!user) return [];
-      const { data } = await (supabase as any)
-        .from("notifications")
-        .select("id, title, body, created_at")
-        .eq("user_id", user.id)
-        .eq("is_read", false)
-        .order("created_at", { ascending: false })
-        .limit(3);
-      return Array.isArray(data) ? data : [];
     },
   });
 
@@ -532,7 +508,7 @@ const PersonalDashboard = () => {
 
   const sections: MenuSection[] = [
     {
-      title: "Career",
+      title: "Jobs",
       items: [
         { icon: Briefcase, label: "Apply for Jobs", description: "Browse openings & apply", onClick: () => navigate("/personal/apply-job"), color: "text-indigo-500", bg: "bg-indigo-500/10" },
         { icon: Send, label: "My Applications", description: "Track submitted applications", onClick: () => navigate("/personal/my-applications"), color: "text-blue-500", bg: "bg-blue-500/10", badge: stats?.applications || undefined },
@@ -542,21 +518,12 @@ const PersonalDashboard = () => {
       ],
     },
     {
-      title: "Workplace",
+      title: "Work",
       items: [
         { icon: Users, label: "Employees", description: "Manage team members", onClick: () => navigate("/personal/employees"), color: "text-blue-500", bg: "bg-blue-500/10" },
         { icon: Calendar, label: "Schedule", description: "View work schedule", onClick: () => navigate("/personal/schedule"), color: "text-purple-500", bg: "bg-purple-500/10" },
         { icon: Timer, label: "Timesheet", description: "View hours history", onClick: () => navigate("/personal/timesheet"), color: "text-amber-500", bg: "bg-amber-500/10" },
         { icon: FileText, label: "Pay Stubs", description: "Earnings & deductions", onClick: () => navigate("/personal/pay-stubs"), color: "text-emerald-500", bg: "bg-emerald-500/10" },
-      ],
-    },
-    {
-      title: "Engage",
-      items: [
-        { icon: MessageCircle, label: "Team Chat", description: "Message coworkers & managers", onClick: () => navigate("/chat"), color: "text-teal-500", bg: "bg-teal-500/10" },
-        { icon: Bookmark, label: "Saved Jobs", description: "Bookmarked listings", onClick: () => navigate("/saved"), color: "text-orange-500", bg: "bg-orange-500/10" },
-        { icon: Award, label: "Badges", description: "Achievements you've earned", onClick: () => navigate("/badges"), color: "text-yellow-500", bg: "bg-yellow-500/10" },
-        { icon: Trophy, label: "Rewards", description: "Redeem points & perks", onClick: () => navigate("/rewards"), color: "text-pink-500", bg: "bg-pink-500/10" },
       ],
     },
     {
@@ -570,7 +537,7 @@ const PersonalDashboard = () => {
   ];
 
   return (
-    <AppLayout title="Personal" hideHeader>
+    <AppLayout title="Workplace" hideHeader>
       <div className="flex flex-col px-4 pt-3 pb-24">
         {/* Header */}
         <div className="flex items-center gap-2.5 mb-3">
@@ -580,7 +547,7 @@ const PersonalDashboard = () => {
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
-          <h1 className="font-bold text-[17px] flex-1">Personal Account</h1>
+          <h1 className="font-bold text-[17px] flex-1">Workplace</h1>
           <button
             onClick={handleRefresh}
             disabled={refreshing}
@@ -991,52 +958,6 @@ const PersonalDashboard = () => {
                   );
                 })}
               </div>
-            </div>
-          </div>
-        )}
-
-        {/* Recent unread notifications */}
-        {recentNotifs && recentNotifs.length > 0 && (
-          <div className="mb-3">
-            <div className="flex items-center justify-between mb-1.5 px-1">
-              <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                Recent Alerts
-              </p>
-              <button
-                onClick={() => navigate("/personal/notifications")}
-                className="text-[11px] text-primary font-medium"
-              >
-                View all
-              </button>
-            </div>
-            <div className="rounded-xl border border-border/40 bg-card overflow-hidden divide-y divide-border/30">
-              {recentNotifs.map((n) => (
-                <button
-                  key={n.id}
-                  onClick={() => navigate("/personal/notifications")}
-                  className="w-full flex items-start gap-2.5 px-3 py-2.5 hover:bg-muted/30 active:bg-muted/50 transition-colors text-left"
-                >
-                  <div className="w-1.5 h-1.5 rounded-full bg-foreground mt-1.5 shrink-0" />
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-[12px] leading-tight truncate">
-                      {n.title || "Notification"}
-                    </p>
-                    {n.body && (
-                      <p className="text-[11px] text-muted-foreground leading-tight truncate mt-0.5">
-                        {n.body}
-                      </p>
-                    )}
-                  </div>
-                  <p className="text-[10px] text-muted-foreground shrink-0 mt-0.5">
-                    {(() => {
-                      const days = differenceInDays(new Date(), new Date(n.created_at));
-                      if (days === 0) return "today";
-                      if (days === 1) return "1d";
-                      return `${days}d`;
-                    })()}
-                  </p>
-                </button>
-              ))}
             </div>
           </div>
         )}

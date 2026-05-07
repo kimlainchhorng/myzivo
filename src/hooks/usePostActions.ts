@@ -57,20 +57,29 @@ export function usePostActions(userId: string | null) {
 
     try {
       if (isBookmarked) {
-        await (supabase as any)
+        const { error } = await (supabase as any)
           .from("post_bookmarks")
           .delete()
           .eq("user_id", userId)
           .eq("post_id", target.postId)
           .eq("source", target.source);
+        if (error) throw error;
         toast.success("Removed from saved");
       } else {
-        await (supabase as any)
+        const { error } = await (supabase as any)
           .from("post_bookmarks")
           .insert({ user_id: userId, post_id: target.postId, source: target.source });
-        toast.success("Saved to your bookmarks");
+        if (error) {
+          // Treat unique-key violations as already-saved success — the local
+          // optimistic flip already reflects that.
+          const msg = String(error.message || "").toLowerCase();
+          if (!msg.includes("duplicate") && !msg.includes("unique")) throw error;
+          toast.success("Already saved");
+        } else {
+          toast.success("Saved to your bookmarks");
+        }
       }
-    } catch (e) {
+    } catch (e: any) {
       // Roll back on failure
       setBookmarkedIds(prev => {
         const next = new Set(prev);
@@ -78,7 +87,9 @@ export function usePostActions(userId: string | null) {
         else next.delete(key);
         return next;
       });
-      toast.error("Couldn't update bookmark");
+      const reason = e?.message || e?.error_description || "unknown";
+      console.error("[toggleBookmark]", e);
+      toast.error(`Couldn't update bookmark: ${reason}`);
     }
   }, [userId, bookmarkedIds]);
 

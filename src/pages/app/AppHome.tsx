@@ -785,90 +785,81 @@ const AppHome = () => {
             </div>
           ) : null}
 
-          {/* Service Tabs — Instagram story-rail style */}
-          <div
-            className={cn(
-              "flex items-stretch gap-1 px-4 pb-3 overflow-x-auto scrollbar-hide",
-              user ? "pt-1" : "pt-safe",
-            )}
-          >
-            {homeTabs.map((tab) => {
-              const isActive = activeHomeTab === tab.id;
-              return (
+          {/* ─── ALL SERVICES (moved to top) ─── */}
+          <div className={cn("pb-5", user ? "pt-1" : "pt-safe")}>
+            <div className="flex items-center justify-between mb-3 px-5">
+              <h2 className="text-base font-bold text-foreground">{t("home.more_services")}</h2>
+              <button onClick={() => navigate("/services")} className="w-8 h-8 flex items-center justify-center touch-manipulation rounded-full hover:bg-muted/50 transition-colors">
+                <ArrowRight className="w-4.5 h-4.5 text-muted-foreground" />
+              </button>
+            </div>
+            {/* Row 1 */}
+            <div className="grid grid-cols-4 gap-3 px-5 pb-3 preserve-3d">
+              {[
+                { label: t("home.ride"), image: zivoRideIcon, href: "/rides", badge: "Hot Deal", badgeVariant: "promo" as const },
+                { label: t("home.eats"), image: zivoEatsIcon, href: "/eats", badge: null, badgeVariant: "promo" as const },
+                { label: t("home.flights"), image: zivoFlightsIcon, href: "/flights", badge: "Deals", badgeVariant: "discount" as const },
+                { label: t("home.hotels"), image: zivoHotelsIcon, href: "/hotels", badge: null, badgeVariant: "promo" as const },
+              ].map((s) => (
                 <motion.button
-                  key={tab.id}
-                  onPointerDown={() => prefetch(tabRoutes[tab.id])}
-                  onClick={() => {
-                    if (tab.id === "hotels") {
-                      navigate("/hotels");
-                      return;
-                    }
-                    setActiveHomeTab(tab.id);
-                  }}
-                  aria-label={tab.label}
-                  aria-pressed={isActive}
+                  key={s.label}
                   whileTap={{ scale: 0.94 }}
-                  className="relative flex-1 flex flex-col items-center justify-start gap-1.5 py-1.5 touch-manipulation min-h-[64px]"
+                  onPointerDown={() => prefetch(s.href)}
+                  onClick={() => navigate(s.href)}
+                  className="flex flex-col items-center gap-2 touch-manipulation relative group"
                 >
-                  <span
-                    className={cn(
-                      "rounded-full p-[2px] flex items-center justify-center",
-                      isActive ? "bg-ig-gradient" : "bg-border",
-                    )}
-                  >
-                    <span className="rounded-full bg-background p-[2px] flex items-center justify-center">
-                      <span className="w-[44px] h-[44px] rounded-full bg-muted flex items-center justify-center overflow-hidden">
-                        {tab.image ? (
-                          <img
-                            src={tab.image}
-                            alt={tab.label}
-                            width={28}
-                            height={28}
-                            className="w-7 h-7 object-contain"
-                          />
-                        ) : tab.icon ? (
-                          <tab.icon className="w-5 h-5 text-foreground" />
-                        ) : null}
-                      </span>
-                    </span>
-                  </span>
-                  <span
-                    className={cn(
-                      "text-[11px] leading-none transition-colors",
-                      isActive ? "font-semibold text-foreground" : "font-medium text-muted-foreground",
-                    )}
-                  >
-                    {tab.label}
-                  </span>
+                  {s.badge && (
+                    <div className={cn(
+                      "absolute -top-2.5 -right-2 z-10 text-[8px] font-bold px-2 py-[2px] rounded-full shadow-md",
+                      s.badgeVariant === "discount"
+                        ? "bg-primary text-primary-foreground"
+                        : "bg-gradient-to-r from-amber-500 to-orange-500 text-white"
+                    )}>
+                      {s.badge}
+                    </div>
+                  )}
+                  <div className="w-[60px] h-[60px] rounded-2xl bg-card border border-border/30 shadow-sm flex items-center justify-center icon-3d-pop group-active:scale-95 transition-all duration-200">
+                    <img src={s.image} alt={s.label} width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8 object-contain" />
+                  </div>
+                  <span className="text-[11px] font-semibold text-muted-foreground text-center leading-tight group-hover:text-foreground transition-colors">{s.label}</span>
                 </motion.button>
-              );
-            })}
+              ))}
+            </div>
+            {/* Row 2 */}
+            <div className="grid grid-cols-4 gap-3 px-5 pb-2 preserve-3d">
+              {(([
+                { label: t("home.rental_cars"), image: zivoRentalCarIcon, icon: null, href: "/rent-car", badge: "Promo" },
+                { label: "Reserve", image: zivoReserveIcon, icon: null, href: "/rides/hub?tab=reserve", badge: null },
+                { label: t("home.shopping"), image: zivoShoppingIcon, icon: null, href: "/grocery", badge: null },
+                { label: "Delivery", image: null, icon: Package, href: "/delivery", badge: null },
+              ]) as Array<{ label: string; image: string | null; icon: typeof Package | null; href: string; badge: string | null }>).map((s) => {
+                const SvcIcon = s.icon;
+                return (
+                  <motion.button
+                    key={s.label}
+                    whileTap={{ scale: 0.94 }}
+                    onPointerDown={() => prefetch(s.href)}
+                    onClick={() => navigate(s.href)}
+                    className="flex flex-col items-center gap-2 touch-manipulation relative group"
+                  >
+                    {s.badge && (
+                      <div className="absolute -top-2.5 -right-2 z-10 text-[8px] font-bold px-2 py-[2px] rounded-full shadow-md bg-gradient-to-r from-amber-500 to-orange-500 text-white">
+                        {s.badge}
+                      </div>
+                    )}
+                    <div className="w-[60px] h-[60px] rounded-2xl bg-card border border-border/30 shadow-sm flex items-center justify-center icon-3d-pop group-active:scale-95 transition-all duration-200">
+                      {s.image ? (
+                        <img src={s.image} alt={s.label} width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8 object-contain" />
+                      ) : SvcIcon ? (
+                        <SvcIcon className="w-7 h-7 text-primary" />
+                      ) : null}
+                    </div>
+                    <span className="text-[11px] font-semibold text-muted-foreground text-center leading-tight group-hover:text-foreground transition-colors">{s.label}</span>
+                  </motion.button>
+                );
+              })}
+            </div>
           </div>
-
-          {/* Search Bar — flat IG-style */}
-          <div className="px-4 pt-1 pb-4">
-            <motion.button
-              whileTap={{ scale: 0.99 }}
-              aria-label={getSearchPlaceholder(activeHomeTab)}
-              onPointerDown={() => prefetch(tabRoutes[activeHomeTab] || "/rides")}
-              onClick={() => {
-                navigate(tabRoutes[activeHomeTab] || "/rides");
-              }}
-              className="w-full touch-manipulation"
-            >
-              <div className="relative rounded-lg px-4 py-3 flex items-center gap-2.5 min-h-[44px] bg-muted">
-                <Search className="w-[18px] h-[18px] text-muted-foreground shrink-0" strokeWidth={2} />
-                <span className="font-normal text-[15px] flex-1 text-left text-muted-foreground">
-                  {getSearchPlaceholder(activeHomeTab)}
-                </span>
-              </div>
-            </motion.button>
-          </div>
-
-          {/* ─── STORIES RAIL — Instagram signature ─── */}
-          <Suspense fallback={<div className="h-[100px] mx-4 my-2 rounded-2xl bg-muted/40 animate-pulse" />}>
-            <StoriesRail />
-          </Suspense>
 
           {/* ─── SMART INTENT SEARCH ─── */}
           <Suspense fallback={<div className="h-[68px] mx-4 my-2 rounded-xl bg-muted/40 animate-pulse" />}>
@@ -1164,84 +1155,6 @@ const AppHome = () => {
 
 
 
-          {/* ─── ALL SERVICES ─── */}
-          <div className="pb-5">
-            <div className="flex items-center justify-between mb-3 px-5">
-              <h2 className="text-base font-bold text-foreground">{t("home.more_services")}</h2>
-              <button onClick={() => navigate("/services")} className="w-8 h-8 flex items-center justify-center touch-manipulation rounded-full hover:bg-muted/50 transition-colors">
-                <ArrowRight className="w-4.5 h-4.5 text-muted-foreground" />
-              </button>
-            </div>
-            {/* Row 1 */}
-            <div className="grid grid-cols-4 gap-3 px-5 pb-3 preserve-3d">
-              {[
-                { label: t("home.ride"), image: zivoRideIcon, href: "/rides", badge: "Hot Deal", badgeVariant: "promo" as const },
-                { label: t("home.eats"), image: zivoEatsIcon, href: "/eats", badge: null, badgeVariant: "promo" as const },
-                { label: t("home.flights"), image: zivoFlightsIcon, href: "/flights", badge: "Deals", badgeVariant: "discount" as const },
-                { label: t("home.hotels"), image: zivoHotelsIcon, href: "/hotels", badge: null, badgeVariant: "promo" as const },
-              ].map((s) => (
-                <motion.button
-                  key={s.label}
-                  whileTap={{ scale: 0.94 }}
-                  onPointerDown={() => prefetch(s.href)}
-                  onClick={() => navigate(s.href)}
-                  className="flex flex-col items-center gap-2 touch-manipulation relative group"
-                >
-                  {s.badge && (
-                    <div className={cn(
-                      "absolute -top-2.5 -right-2 z-10 text-[8px] font-bold px-2 py-[2px] rounded-full shadow-md",
-                      s.badgeVariant === "discount"
-                        ? "bg-primary text-primary-foreground"
-                        : "bg-gradient-to-r from-amber-500 to-orange-500 text-white"
-                    )}>
-                      {s.badge}
-                    </div>
-                  )}
-                  <div className="w-[60px] h-[60px] rounded-2xl bg-card border border-border/30 shadow-sm flex items-center justify-center icon-3d-pop group-active:scale-95 transition-all duration-200">
-                    <img src={s.image} alt={s.label} width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8 object-contain" />
-                  </div>
-                  <span className="text-[11px] font-semibold text-muted-foreground text-center leading-tight group-hover:text-foreground transition-colors">{s.label}</span>
-                </motion.button>
-              ))}
-            </div>
-            {/* Row 2 */}
-            <div className="grid grid-cols-4 gap-3 px-5 pb-2 preserve-3d">
-              {(([
-                { label: t("home.rental_cars"), image: zivoRentalCarIcon, icon: null, href: "/rent-car", badge: "Promo" },
-                { label: "Reserve", image: zivoReserveIcon, icon: null, href: "/rides/hub?tab=reserve", badge: null },
-                { label: t("home.shopping"), image: zivoShoppingIcon, icon: null, href: "/grocery", badge: null },
-                { label: "Delivery", image: null, icon: Package, href: "/delivery", badge: null },
-              ]) as Array<{ label: string; image: string | null; icon: typeof Package | null; href: string; badge: string | null }>).map((s) => {
-                const SvcIcon = s.icon;
-                return (
-                  <motion.button
-                    key={s.label}
-                    whileTap={{ scale: 0.94 }}
-                    onPointerDown={() => prefetch(s.href)}
-                    onClick={() => navigate(s.href)}
-                    className="flex flex-col items-center gap-2 touch-manipulation relative group"
-                  >
-                    {s.badge && (
-                      <div className="absolute -top-2.5 -right-2 z-10 text-[8px] font-bold px-2 py-[2px] rounded-full shadow-md bg-gradient-to-r from-amber-500 to-orange-500 text-white">
-                        {s.badge}
-                      </div>
-                    )}
-                    <div className="w-[60px] h-[60px] rounded-2xl bg-card border border-border/30 shadow-sm flex items-center justify-center icon-3d-pop group-active:scale-95 transition-all duration-200">
-                      {s.image ? (
-                        <img src={s.image} alt={s.label} width={32} height={32} loading="lazy" decoding="async" className="w-8 h-8 object-contain" />
-                      ) : SvcIcon ? (
-                        <SvcIcon className="w-7 h-7 text-primary" />
-                      ) : null}
-                    </div>
-                    <span className="text-[11px] font-semibold text-muted-foreground text-center leading-tight group-hover:text-foreground transition-colors">{s.label}</span>
-                  </motion.button>
-                );
-              })}
-            </div>
-          </div>
-
-
-
           {/* ─── DISCOVER (gradient cards) ─── */}
           <div className="pb-5">
             <div className="flex items-center justify-between mb-3 px-5">
@@ -1252,7 +1165,7 @@ const AppHome = () => {
             </div>
             <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1 px-5" style={{ WebkitOverflowScrolling: "touch" }}>
               {[
-                { icon: Briefcase, label: "Jobs", desc: "Find work", href: "/personal-dashboard", gradient: "from-foreground to-foreground/80" },
+                { icon: Briefcase, label: "Workplace", desc: "Clock in, jobs & schedule", href: "/personal-dashboard", gradient: "from-foreground to-foreground/80" },
                 { icon: Tv, label: "Live", desc: "Watch live", href: "/live", gradient: "from-foreground to-foreground/80" },
                 { icon: Rocket, label: "Creator Hub", desc: "Grow & earn", href: "/creator-dashboard", gradient: "from-foreground to-foreground/80" },
                 { icon: Heart, label: "Wellness", desc: "Stay healthy", href: "/wellness/activity", gradient: "from-foreground to-foreground/80" },

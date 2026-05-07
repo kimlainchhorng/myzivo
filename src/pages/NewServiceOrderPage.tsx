@@ -110,7 +110,7 @@ export default function NewServiceOrderPage() {
 
   if (!user) {
     return (
-      <div className="container mx-auto p-4 max-w-md">
+      <div className="container mx-auto p-4 max-w-md safe-area-top">
         <Card><CardContent className="pt-6 text-center text-muted-foreground">
           Please sign in to request a ride or delivery.
         </CardContent></Card>
@@ -170,7 +170,7 @@ export default function NewServiceOrderPage() {
   );
 
   return (
-    <div className="container mx-auto p-4 max-w-2xl space-y-4 pb-24">
+    <div className="container mx-auto p-4 max-w-2xl space-y-4 pb-24 safe-area-top">
       <Button variant="ghost" onClick={() => navigate(-1)} className="-ml-2">
         <ArrowLeft className="mr-2 h-4 w-4" /> Back
       </Button>

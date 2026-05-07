@@ -74,7 +74,7 @@ export default function AcceptInvitePage() {
                 onClick={() => navigate("/personal-dashboard")}
                 className="w-full h-9 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 active:scale-[0.99] transition flex items-center justify-center shadow-md"
               >
-                Open Personal Dashboard
+                Open Workplace
               </button>
             </>
           ) : (

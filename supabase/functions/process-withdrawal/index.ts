@@ -161,12 +161,26 @@ serve(async (req) => {
       });
     } catch (e) { console.error("[WITHDRAWAL] Push notify error:", e); }
 
+    // Estimate arrival: ABA same-business-day, bank 1–3 business days
+    const estimatedDays = method === "aba" ? 1 : 3;
+    const arrivalDate = new Date();
+    let added = 0;
+    while (added < estimatedDays) {
+      arrivalDate.setDate(arrivalDate.getDate() + 1);
+      const day = arrivalDate.getDay();
+      if (day !== 0 && day !== 6) added++; // skip weekends
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
+        transaction_id: (txRow as any).id,
         new_balance_cents: newBalance,
         amount_cents,
         method: methodLabel,
+        method_type: method,
+        estimated_arrival: arrivalDate.toISOString(),
+        estimated_business_days: estimatedDays,
       }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );

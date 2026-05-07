@@ -8,7 +8,7 @@ import { ChannelPostComposer } from "@/components/channels/ChannelPostComposer";
 export default function ChannelPage() {
   const { handle } = useParams<{ handle: string }>();
   const navigate = useNavigate();
-  const { channel, posts, isSubscribed, role, loading, userId, subscribe, unsubscribe, refresh } =
+  const { channel, posts, isSubscribed, notificationsOn, role, loading, userId, subscribe, unsubscribe, setNotifications, refresh } =
     useChannel(handle);
 
   if (loading) {
@@ -37,8 +37,10 @@ export default function ChannelPage() {
         channel={channel}
         isSubscribed={isSubscribed}
         isOwner={isOwner}
+        notificationsOn={notificationsOn}
         onSubscribe={subscribe}
         onUnsubscribe={unsubscribe}
+        onSetNotifications={setNotifications}
       />
       <div className="space-y-3 p-4">
         {canPost && <ChannelPostComposer channelId={channel.id} onPosted={refresh} />}

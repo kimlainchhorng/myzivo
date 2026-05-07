@@ -83,7 +83,7 @@ const AppMore = () => {
   // Build role options dynamically
   const roleOptions = (() => {
     const options: { icon: typeof Shield; label: string; description: string; href: string; color: string }[] = [];
-    options.push({ icon: User, label: "Personal", description: "Employees, Clock In & Out", href: "/personal-dashboard", color: "from-primary to-primary/80" });
+    options.push({ icon: Briefcase, label: "Workplace", description: "Clock in, jobs & schedule", href: "/personal-dashboard", color: "from-primary to-primary/80" });
     if (isDesignatedAdmin) {
       options.push({ icon: Shield, label: "Admin Dashboard", description: "Manage the platform", href: "/admin/analytics", color: "from-red-500 to-red-600" });
     }

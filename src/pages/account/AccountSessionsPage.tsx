@@ -161,7 +161,7 @@ export default function AccountSessionsPage() {
   const fpShort = (fp: string | null) => (fp ? `${fp.slice(0, 12)}…` : "unknown");
 
   return (
-    <main className="mx-auto max-w-2xl space-y-4 p-3 pb-24 sm:p-4 lg:p-6">
+    <main className="mx-auto max-w-2xl space-y-4 p-3 pb-24 sm:p-4 lg:p-6 safe-area-top">
       <SEOHead title="Active sessions" description="See where you're signed in and revoke other sessions." />
       <header className="flex items-center gap-2">
         <Link to="/account" className="rounded-full p-2 hover:bg-muted">

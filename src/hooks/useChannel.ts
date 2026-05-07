@@ -36,6 +36,7 @@ export function useChannel(handle: string | undefined) {
   const [channel, setChannel] = useState<Channel | null>(null);
   const [posts, setPosts] = useState<ChannelPost[]>([]);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [notificationsOn, setNotificationsOn] = useState(true);
   const [role, setRole] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string | null>(null);
@@ -75,12 +76,17 @@ export function useChannel(handle: string | undefined) {
     if (u.user) {
       const { data: sub } = await supabase
         .from("channel_subscribers")
-        .select("role")
+        .select("role, notifications_on")
         .eq("channel_id", ch.id)
         .eq("user_id", u.user.id)
         .maybeSingle();
       setIsSubscribed(!!sub);
       setRole(sub?.role ?? null);
+      setNotificationsOn(sub?.notifications_on ?? true);
+    } else {
+      setIsSubscribed(false);
+      setRole(null);
+      setNotificationsOn(true);
     }
     setLoading(false);
   }, [handle]);
@@ -125,5 +131,22 @@ export function useChannel(handle: string | undefined) {
     await refresh();
   };
 
-  return { channel, posts, isSubscribed, role, loading, userId, refresh, subscribe, unsubscribe };
+  const setNotifications = async (next: boolean) => {
+    if (!channel || !userId) return;
+    // Optimistic — flip locally so the bell icon responds immediately, then
+    // roll back if the persist fails.
+    const previous = notificationsOn;
+    setNotificationsOn(next);
+    const { error } = await supabase
+      .from("channel_subscribers")
+      .update({ notifications_on: next })
+      .eq("channel_id", channel.id)
+      .eq("user_id", userId);
+    if (error) {
+      setNotificationsOn(previous);
+      throw error;
+    }
+  };
+
+  return { channel, posts, isSubscribed, notificationsOn, role, loading, userId, refresh, subscribe, unsubscribe, setNotifications };
 }

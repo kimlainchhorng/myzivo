@@ -123,7 +123,7 @@ export default function MerchantWalletPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background p-4 pb-24 max-w-lg mx-auto space-y-4">
+    <div className="min-h-screen bg-background p-4 pb-24 max-w-lg mx-auto space-y-4 safe-area-top">
       {/* Header */}
       <div className="flex items-center gap-3">
         <Button aria-label="Back" variant="outline" size="icon" onClick={() => navigate(-1)}>

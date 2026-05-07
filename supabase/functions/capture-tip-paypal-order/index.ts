@@ -6,6 +6,7 @@
  */
 import { createClient } from "../_shared/deps.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { creditCreatorTipToWallet } from "../_shared/tipWalletCredit.ts";
 
 const PAYPAL_BASE = (Deno.env.get("PAYPAL_MODE") ?? "live") === "sandbox"
   ? "https://api-m.sandbox.paypal.com"
@@ -41,7 +42,7 @@ Deno.serve(async (req) => {
     const admin = createClient(supabaseUrl, serviceKey);
     const { data: t } = await admin
       .from("creator_tips")
-      .select("id, tipper_id, status, paypal_capture_id")
+      .select("id, tipper_id, creator_id, amount_cents, message, is_anonymous, status, paypal_capture_id")
       .eq("paypal_order_id", order_id)
       .maybeSingle();
     if (!t) return new Response(JSON.stringify({ error: "Tip not found" }), { status: 404, headers: { ...cors, "Content-Type": "application/json" } });
@@ -67,6 +68,9 @@ Deno.serve(async (req) => {
       .from("creator_tips")
       .update({ paypal_capture_id: captureId, status: "succeeded", last_payment_error: null } as any)
       .eq("id", (t as any).id);
+
+    // Credit the creator's wallet (idempotent on tip id).
+    await creditCreatorTipToWallet(admin, t as any);
 
     return new Response(JSON.stringify({ ok: true, capture_id: captureId, status: "succeeded" }), { headers: { ...cors, "Content-Type": "application/json" } });
   } catch (err) {

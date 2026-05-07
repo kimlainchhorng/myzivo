@@ -80,7 +80,7 @@ export default function AccountTipsPage() {
   return (
     <div className="min-h-screen bg-background pb-24">
       <SEOHead title="Tips – ZIVO" description="View all the tips you've sent to creators. Track tip history, amounts, messages, and support contributions across the platform." />
-      <header className="sticky top-0 z-30 bg-background/85 backdrop-blur border-b border-border/40">
+      <header className="sticky top-0 z-30 bg-background/85 backdrop-blur border-b border-border/40" style={{ paddingTop: "var(--zivo-safe-top-sticky)" }}>
         <div className="flex items-center gap-3 px-3 h-14 max-w-3xl mx-auto">
           <button onClick={() => navigate(-1)} aria-label="Back" className="p-2 -ml-2 rounded-lg hover:bg-muted/60">
             <ArrowLeft className="h-5 w-5" />

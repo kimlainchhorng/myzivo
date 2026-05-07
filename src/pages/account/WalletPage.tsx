@@ -25,10 +25,50 @@ import { useLoyaltyPoints } from "@/hooks/useLoyaltyPoints";
 import { useLiveEarnings } from "@/hooks/useLiveEarnings";
 import AddCardForm from "@/components/wallet/AddCardForm";
 import UnifiedPayoutCard from "@/components/wallet/UnifiedPayoutCard";
+import WithdrawalReceipt, { type WithdrawalReceiptData } from "@/components/wallet/WithdrawalReceipt";
 import { useStepUpMfa } from "@/hooks/useStepUpMfa";
 import SEOHead from "@/components/SEOHead";
 import { motion, AnimatePresence } from "framer-motion";
 import { formatDistanceToNow, format } from "date-fns";
+
+/** Validate a payout-method form and return a map of field → error message. Empty when valid. */
+function validatePayoutForm(form: {
+  method_type: "bank_transfer" | "aba";
+  account_holder_name: string;
+  bank_name: string;
+  account_number: string;
+  aba_account_id: string;
+}): Record<string, string> {
+  const errors: Record<string, string> = {};
+
+  const holder = form.account_holder_name.trim();
+  if (!holder) {
+    errors.account_holder_name = "Account holder name is required";
+  } else if (holder.length < 3) {
+    errors.account_holder_name = "Name must be at least 3 characters";
+  } else if (!/^[\p{L}][\p{L}\s.'\-]+$/u.test(holder)) {
+    errors.account_holder_name = "Name can only contain letters, spaces, '-', '.' and apostrophes";
+  }
+
+  if (form.method_type === "bank_transfer") {
+    if (!form.bank_name.trim()) errors.bank_name = "Bank name is required";
+    const acct = form.account_number.replace(/[\s-]/g, "");
+    if (!acct) {
+      errors.account_number = "Account number is required";
+    } else if (!/^\d{6,20}$/.test(acct)) {
+      errors.account_number = "Enter 6–20 digits, no letters";
+    }
+  } else {
+    const aba = form.aba_account_id.replace(/[\s-]/g, "");
+    if (!aba) {
+      errors.aba_account_id = "ABA ID or phone number is required";
+    } else if (!/^(\+?855)?\d{6,10}$/.test(aba)) {
+      errors.aba_account_id = "Enter 6–10 digits (optionally with +855 country code)";
+    }
+  }
+
+  return errors;
+}
 
 function brandIcon(brand: string) {
   const b = brand?.toLowerCase();
@@ -70,6 +110,8 @@ export default function WalletPage() {
   const [cashoutNote, setCashoutNote] = useState("");
   const [cashoutSubmitting, setCashoutSubmitting] = useState(false);
   const [withdrawalDone, setWithdrawalDone] = useState<{ amount: string; method: string } | null>(null);
+  const [receipt, setReceipt] = useState<WithdrawalReceiptData | null>(null);
+  const [receiptOpen, setReceiptOpen] = useState(false);
   const [showAddPayout, setShowAddPayout] = useState(false);
   const [payoutForm, setPayoutForm] = useState({
     method_type: "bank_transfer" as "bank_transfer" | "aba",
@@ -148,13 +190,55 @@ export default function WalletPage() {
         body: {
           amount_cents: cents,
           currency: "USD",
+          // The edge function appends &session_id={CHECKOUT_SESSION_ID} for us,
+          // so we just pass the bare path here.
           success_url: `${window.location.origin}/wallet?topup=success`,
           cancel_url: `${window.location.origin}/wallet?topup=cancel`,
         },
       });
       if (error) throw error;
       const url = (data as any)?.url;
+      const sessionId = (data as any)?.session_id || (data as any)?.id || null;
       if (!url) throw new Error("No checkout url returned");
+
+      // Open Stripe Checkout *inside* the app (SFSafariViewController on iOS,
+      // Custom Tabs on Android). When the user dismisses the sheet, hook into
+      // Browser.browserFinished — verify the session if we have its id, and
+      // always refetch the wallet so webhook-credited balances appear.
+      const { Capacitor } = await import("@capacitor/core");
+      if (Capacitor.isNativePlatform()) {
+        const { Browser } = await import("@capacitor/browser");
+        const listener = await Browser.addListener("browserFinished" as never, async () => {
+          try {
+            if (sessionId) {
+              const { data: vData } = await supabase.functions.invoke(
+                "verify-user-wallet-topup",
+                { body: { session_id: sessionId } },
+              );
+              if ((vData as any)?.credited) {
+                toast.success(`Wallet credited · balance $${(((vData as any).balance_cents ?? 0) / 100).toFixed(2)}`);
+              }
+            }
+          } catch { /* webhook will eventually credit; refetch covers it */ }
+          queryClient.invalidateQueries({ queryKey: ["customer-wallet"] });
+          queryClient.invalidateQueries({ queryKey: ["wallet-transactions"] });
+          setTopupBusy(false);
+          setTopupOpen(false);
+          // Detach so a future top-up attempt registers a fresh listener
+          // instead of stacking handlers that all fire on every dismiss.
+          await listener.remove();
+        });
+        try {
+          await Browser.open({ url, presentationStyle: "popover" });
+        } catch (err) {
+          // Don't leak the listener if presentation fails.
+          await listener.remove();
+          throw err;
+        }
+        return;
+      }
+
+      // Web fallback: full-page redirect (the existing behaviour).
       window.location.href = url;
     } catch (e) {
       toast.error("Could not start topup");
@@ -634,36 +718,67 @@ export default function WalletPage() {
                         ))}
                       </div>
 
-                      <Input
-                        placeholder="Account holder name"
-                        value={payoutForm.account_holder_name}
-                        onChange={(e) => setPayoutForm(f => ({ ...f, account_holder_name: e.target.value }))}
-                        className="rounded-xl h-10 text-sm"
-                      />
+                      {(() => {
+                        const errs = validatePayoutForm(payoutForm);
+                        const showErr = (field: string) =>
+                          errs[field] && payoutForm[field as keyof typeof payoutForm] ? errs[field] : null;
+                        return (
+                          <>
+                            <div>
+                              <Input
+                                placeholder="Account holder name"
+                                value={payoutForm.account_holder_name}
+                                onChange={(e) => setPayoutForm(f => ({ ...f, account_holder_name: e.target.value }))}
+                                className="rounded-xl h-10 text-sm"
+                              />
+                              {showErr("account_holder_name") && (
+                                <p className="text-[11px] text-destructive mt-1 ml-1">{showErr("account_holder_name")}</p>
+                              )}
+                            </div>
 
-                      {payoutForm.method_type === "bank_transfer" ? (
-                        <>
-                          <Input
-                            placeholder="Bank name (e.g. Chase, ABA)"
-                            value={payoutForm.bank_name}
-                            onChange={(e) => setPayoutForm(f => ({ ...f, bank_name: e.target.value }))}
-                            className="rounded-xl h-10 text-sm"
-                          />
-                          <Input
-                            placeholder="Account number"
-                            value={payoutForm.account_number}
-                            onChange={(e) => setPayoutForm(f => ({ ...f, account_number: e.target.value }))}
-                            className="rounded-xl h-10 text-sm"
-                          />
-                        </>
-                      ) : (
-                        <Input
-                          placeholder="ABA Account ID / Phone number"
-                          value={payoutForm.aba_account_id}
-                          onChange={(e) => setPayoutForm(f => ({ ...f, aba_account_id: e.target.value }))}
-                          className="rounded-xl h-10 text-sm"
-                        />
-                      )}
+                            {payoutForm.method_type === "bank_transfer" ? (
+                              <>
+                                <div>
+                                  <Input
+                                    placeholder="Bank name (e.g. Chase, ABA)"
+                                    value={payoutForm.bank_name}
+                                    onChange={(e) => setPayoutForm(f => ({ ...f, bank_name: e.target.value }))}
+                                    className="rounded-xl h-10 text-sm"
+                                  />
+                                  {showErr("bank_name") && (
+                                    <p className="text-[11px] text-destructive mt-1 ml-1">{showErr("bank_name")}</p>
+                                  )}
+                                </div>
+                                <div>
+                                  <Input
+                                    placeholder="Account number"
+                                    inputMode="numeric"
+                                    value={payoutForm.account_number}
+                                    onChange={(e) => setPayoutForm(f => ({ ...f, account_number: e.target.value }))}
+                                    className="rounded-xl h-10 text-sm"
+                                  />
+                                  {showErr("account_number") && (
+                                    <p className="text-[11px] text-destructive mt-1 ml-1">{showErr("account_number")}</p>
+                                  )}
+                                </div>
+                              </>
+                            ) : (
+                              <div>
+                                <Input
+                                  placeholder="ABA Account ID / Phone number"
+                                  inputMode="numeric"
+                                  value={payoutForm.aba_account_id}
+                                  onChange={(e) => setPayoutForm(f => ({ ...f, aba_account_id: e.target.value }))}
+                                  className="rounded-xl h-10 text-sm"
+                                />
+                                {showErr("aba_account_id") && (
+                                  <p className="text-[11px] text-destructive mt-1 ml-1">{showErr("aba_account_id")}</p>
+                                )}
+                              </div>
+                            )}
+                          </>
+                        );
+                      })()}
 
                       <Input
                         placeholder="Nickname (optional, e.g. 'My ABA')"
@@ -686,11 +801,16 @@ export default function WalletPage() {
                           className="flex-1 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-semibold"
                           disabled={
                             addPayoutMethod.isPending ||
-                            !payoutForm.account_holder_name.trim() ||
-                            (payoutForm.method_type === "bank_transfer" && (!payoutForm.account_number.trim() || !payoutForm.bank_name.trim())) ||
-                            (payoutForm.method_type === "aba" && !payoutForm.aba_account_id.trim())
+                            Object.keys(validatePayoutForm(payoutForm)).length > 0
                           }
-                          onClick={() => addPayoutMethod.mutate(payoutForm)}
+                          onClick={() => {
+                            const errs = validatePayoutForm(payoutForm);
+                            if (Object.keys(errs).length > 0) {
+                              toast.error(Object.values(errs)[0]);
+                              return;
+                            }
+                            addPayoutMethod.mutate(payoutForm);
+                          }}
                         >
                           {addPayoutMethod.isPending ? "Saving..." : "Save"}
                         </Button>
@@ -857,10 +977,23 @@ export default function WalletPage() {
                         if (data?.error) throw new Error(data.error);
 
                         const selectedPayout2 = payoutMethods.find((p: any) => p.id === selectedPayoutId);
+                        const payoutLabel = selectedPayout2?.label || selectedPayout2?.method_type || cashoutMethod;
                         setWithdrawalDone({
                           amount: Number(cashoutAmount).toFixed(2),
-                          method: selectedPayout2?.label || selectedPayout2?.method_type || cashoutMethod,
+                          method: payoutLabel,
                         });
+                        if (data?.transaction_id) {
+                          setReceipt({
+                            transaction_id: data.transaction_id,
+                            amount_cents: data.amount_cents ?? amountCents,
+                            method: data.method ?? payoutLabel,
+                            method_type: data.method_type ?? selectedPayout2?.method_type ?? cashoutMethod,
+                            estimated_arrival: data.estimated_arrival ?? new Date(Date.now() + 3 * 86400000).toISOString(),
+                            estimated_business_days: data.estimated_business_days ?? 3,
+                            payout_label: payoutLabel,
+                          });
+                          setReceiptOpen(true);
+                        }
                         setCashoutAmount("");
                         setCashoutNote("");
                         queryClient.invalidateQueries({ queryKey: ["customer-wallet"] });
@@ -1031,6 +1164,13 @@ export default function WalletPage() {
       </div>
     </div>
     {mfaDialog}
+
+    <WithdrawalReceipt
+      open={receiptOpen}
+      onOpenChange={setReceiptOpen}
+      data={receipt}
+      onViewHistory={() => setActiveTab("history")}
+    />
 
     {/* Wallet topup modal */}
     <AnimatePresence>
