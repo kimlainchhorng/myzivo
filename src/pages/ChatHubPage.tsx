@@ -138,6 +138,34 @@ type PersistedOpenChat =
   | { kind: "group"; id: string; name: string; avatar?: string | null }
   | { kind: "shop"; storeId: string; name: string; logo?: string | null };
 
+type OpenChatState = {
+  recipientId?: string;
+  recipientName?: string;
+  recipientAvatar?: string | null;
+  prefillInput?: string;
+  userId?: string;
+  userName?: string;
+  name?: string;
+  avatar?: string | null;
+};
+
+function normalizeOpenChatState(openChat?: OpenChatState | null) {
+  if (!openChat) return null;
+
+  const id = openChat.recipientId || openChat.userId;
+  const name = openChat.recipientName || openChat.userName || openChat.name;
+  const avatar = openChat.recipientAvatar ?? openChat.avatar ?? null;
+
+  if (!id || !name) return null;
+
+  return {
+    id,
+    name,
+    avatar,
+    prefillInput: openChat.prefillInput,
+  };
+}
+
 function formatChatTime(dateStr: string) {
   const d = new Date(dateStr);
   if (isToday(d)) return format(d, "h:mm a");
@@ -414,18 +442,14 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   const hasRestoredLastChatRef = useRef(false);
   useEffect(() => {
     const state = location.state as {
-      openChat?: { recipientId: string; recipientName: string; recipientAvatar?: string | null; prefillInput?: string };
+      openChat?: OpenChatState;
       startCall?: "voice" | "video";
       shareUrl?: string;
       shareText?: string;
     } | null;
-    if (state?.openChat) {
-      setOpenPersonalChat({
-        id: state.openChat.recipientId,
-        name: state.openChat.recipientName,
-        avatar: state.openChat.recipientAvatar,
-        prefillInput: state.openChat.prefillInput,
-      });
+    const normalizedOpenChat = normalizeOpenChatState(state?.openChat);
+    if (normalizedOpenChat) {
+      setOpenPersonalChat(normalizedOpenChat);
       if (state.startCall) {
         setPendingCall(state.startCall);
       }
@@ -448,13 +472,13 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
     hasRestoredLastChatRef.current = true;
 
     const routeState = location.state as {
-      openChat?: { recipientId: string; recipientName: string; recipientAvatar?: string | null };
+      openChat?: OpenChatState;
       startCall?: "voice" | "video";
       shareUrl?: string;
       shareText?: string;
     } | null;
 
-    if (searchParams.get("with") || searchParams.get("unlocked") || routeState?.openChat || routeState?.shareUrl) return;
+    if (searchParams.get("with") || searchParams.get("unlocked") || normalizeOpenChatState(routeState?.openChat) || routeState?.shareUrl) return;
 
     try {
       const raw = localStorage.getItem(`${LAST_OPEN_CHAT_KEY}:${user.id}`);
