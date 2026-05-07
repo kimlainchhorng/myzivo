@@ -65,6 +65,36 @@ type ITunesSearchResponse = {
   }>;
 };
 
+export function extractAppleTrackId(url?: string | null): string | null {
+  if (!url) return null;
+  try {
+    const parsed = new URL(url);
+    const queryTrackId = parsed.searchParams.get("i") || parsed.searchParams.get("id");
+    if (queryTrackId && /^\d+$/.test(queryTrackId)) return queryTrackId;
+
+    const idMatch = parsed.pathname.match(/\/id(\d+)/i);
+    if (idMatch?.[1]) return idMatch[1];
+
+    const numericTailMatch = parsed.pathname.match(/\/(\d+)(?:\/)?$/);
+    return numericTailMatch?.[1] || null;
+  } catch {
+    return null;
+  }
+}
+
+export async function lookupItunesPreviewUrlByTrackId(trackId: string): Promise<string | null> {
+  if (!trackId) return null;
+  try {
+    const res = await fetch(`https://itunes.apple.com/lookup?id=${encodeURIComponent(trackId)}`);
+    if (!res.ok) return null;
+
+    const data = (await res.json()) as ITunesSearchResponse;
+    return data.results?.[0]?.previewUrl || null;
+  } catch {
+    return null;
+  }
+}
+
 export async function lookupItunesPreviewUrl(title: string, artist?: string): Promise<string | null> {
   const query = [title, artist].filter(Boolean).join(" ").trim();
   if (!query) return null;

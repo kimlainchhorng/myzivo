@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { humanizeSoundSlug, parseLegacyMusicShare, slugifySoundName } from "./musicShare";
+import { extractAppleTrackId, humanizeSoundSlug, parseLegacyMusicShare, slugifySoundName } from "./musicShare";
 
 describe("musicShare parsing", () => {
   it("parses rich music share with preview url", () => {
@@ -38,5 +38,10 @@ describe("musicShare parsing", () => {
   it("slugifies and humanizes sound names", () => {
     expect(slugifySoundName("  Don't Stop!  ")) .toBe("dont-stop");
     expect(humanizeSoundSlug("midnight-city_live")).toBe("Midnight City Live");
+  });
+
+  it("extracts Apple track id from Apple Music URL", () => {
+    const url = "https://music.apple.com/us/album/wonderwall/1517447030?i=1517447036";
+    expect(extractAppleTrackId(url)).toBe("1517447036");
   });
 });

@@ -40,7 +40,14 @@ import ExternalLinkWarning from "@/components/security/ExternalLinkWarning";
 import { assessLinkSync } from "@/hooks/useLinkRisk";
 import { assessChatMessageRisk, assessIncomingChatRisk } from "@/lib/security/chatContentSafety";
 import { useAutoTranslateMessage } from "@/hooks/useAutoTranslateMessage";
-import { parseLegacyMusicShare, slugifySoundName, humanizeSoundSlug, lookupItunesPreviewUrl } from "./musicShare";
+import {
+  parseLegacyMusicShare,
+  slugifySoundName,
+  humanizeSoundSlug,
+  lookupItunesPreviewUrl,
+  extractAppleTrackId,
+  lookupItunesPreviewUrlByTrackId,
+} from "./musicShare";
 
 import { ILLUSTRATED_PACKS } from "@/config/illustratedStickers";
 import { getAnimatedStickerUrl } from "@/config/animatedStickerMap";
@@ -318,6 +325,24 @@ function MusicCard({ message, isMe, time }: { message: string; isMe: boolean; ti
           await audio.play();
           setIsPlaying(true);
         } catch {
+          const appleTrackId = extractAppleTrackId(listenUrl);
+          const fallbackPreview = appleTrackId
+            ? await lookupItunesPreviewUrlByTrackId(appleTrackId)
+            : await lookupItunesPreviewUrl(title, artist || undefined);
+
+          if (fallbackPreview && fallbackPreview !== resolvedPreviewUrl) {
+            try {
+              setResolvedPreviewUrl(fallbackPreview);
+              setPreviewFailed(false);
+              audio.src = fallbackPreview;
+              await audio.play();
+              setIsPlaying(true);
+              return;
+            } catch {
+              // continue to fallback UX below
+            }
+          }
+
           setPreviewFailed(true);
           if (listenUrl) toast.info("Preview unavailable. Tap play again to open source link");
           else toast.error("Unable to play preview audio");
