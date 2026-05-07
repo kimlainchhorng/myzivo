@@ -245,6 +245,7 @@ const ResetPassword = () => {
                       <div className="relative">
                         <Input
                           type={showPassword ? "text" : "password"}
+                          enterKeyHint="go"
                           placeholder="New password"
                           className="w-full h-11 px-3 pr-10 rounded-md bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 focus:border-zinc-400 dark:focus:border-zinc-500 outline-none text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 transition"
                           {...field}
@@ -276,7 +277,7 @@ const ResetPassword = () => {
               <button
                 type="submit"
                 disabled={isLoading}
-                className="w-full h-9 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md shadow-rose-500/20"
+                className="w-full h-11 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md shadow-rose-500/20"
               >
                 {isLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : "Update password"}
               </button>

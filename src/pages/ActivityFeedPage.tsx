@@ -97,7 +97,7 @@ export default function ActivityFeedPage() {
   const earlier = filtered.filter(a => a.time.includes("day") || a.time.includes("month") || a.time.includes("year"));
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="min-h-[100dvh] bg-background pb-nav safe-area-bottom">
       <SEOHead
         title="Activity Feed – ZIVO"
         description="See your latest activity, likes, comments, and follows on ZIVO."

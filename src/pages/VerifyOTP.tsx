@@ -261,7 +261,7 @@ const VerifyOTP = () => {
               <button
                 type="button"
                 onClick={() => { setShowCodeEntry(true); setTimeout(() => inputRefs.current[0]?.focus(), 50); }}
-                className="w-full h-9 rounded-lg text-sm font-semibold text-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/40 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 active:scale-[0.99] transition"
+                className="w-full h-11 rounded-lg text-sm font-semibold text-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/40 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 active:scale-[0.99] transition"
               >
                 I have a 6-digit code
               </button>
@@ -277,6 +277,8 @@ const VerifyOTP = () => {
                       ref={(el) => { inputRefs.current[idx] = el; }}
                       type="text"
                       inputMode="numeric"
+                      aria-label={`Verification code digit ${idx + 1}`}
+                      title={`Verification code digit ${idx + 1}`}
                       autoComplete={idx === 0 ? "one-time-code" : "off"}
                       maxLength={1}
                       value={digit}
@@ -291,7 +293,7 @@ const VerifyOTP = () => {
                   type="button"
                   onClick={() => submit(code.join(""))}
                   disabled={submitting || code.some((c) => !c)}
-                  className="w-full h-9 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md"
+                  className="w-full h-11 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md"
                 >
                   {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : (mode === "signup" ? "Confirm email" : "Verify")}
                 </button>

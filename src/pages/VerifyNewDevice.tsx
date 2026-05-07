@@ -205,6 +205,8 @@ const VerifyNewDevice = () => {
                     ref={(el) => { inputRefs.current[i] = el; }}
                     type="text"
                     inputMode="numeric"
+                    aria-label={`Verification code digit ${i + 1}`}
+                    title={`Verification code digit ${i + 1}`}
                     maxLength={1}
                     value={digit}
                     onChange={(e) => handleInputChange(i, e.target.value)}
@@ -221,7 +223,7 @@ const VerifyNewDevice = () => {
               type="button"
               onClick={() => handleVerify(code.join(""))}
               disabled={isVerifying || code.some((d) => !d)}
-              className="w-full h-9 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md"
+              className="w-full h-11 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md"
             >
               {isVerifying ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify device"}
             </button>

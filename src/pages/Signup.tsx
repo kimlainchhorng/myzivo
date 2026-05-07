@@ -160,7 +160,7 @@ const Signup = () => {
             </p>
             <Link
               to={`/login${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`}
-              className="block mt-6 w-full h-9 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 transition flex items-center justify-center shadow-md shadow-rose-500/20"
+              className="block mt-6 w-full h-11 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 transition flex items-center justify-center shadow-md shadow-rose-500/20"
             >
               Go to Sign In
             </Link>
@@ -186,9 +186,9 @@ const Signup = () => {
           {/* Brand wordmark */}
           <div className="flex flex-col items-center mb-6">
             <div className="relative w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-400 via-rose-500 to-fuchsia-600 flex items-center justify-center mb-4 shadow-lg shadow-rose-500/20">
-              <span className="text-white font-black text-2xl tracking-tight italic" style={{ fontFamily: "'Brush Script MT', cursive" }}>Z</span>
+              <span className="brand-script-mark text-white font-black text-2xl tracking-tight italic">Z</span>
             </div>
-            <h1 className="text-3xl font-light tracking-wider text-zinc-900 dark:text-white" style={{ fontFamily: "'Snell Roundhand', 'Brush Script MT', cursive", fontWeight: 600 }}>
+            <h1 className="brand-script-wordmark text-3xl font-light tracking-wider text-zinc-900 dark:text-white">
               Zivo
             </h1>
             <p className="text-center text-sm font-semibold text-zinc-500 dark:text-zinc-400 mt-3 leading-snug">
@@ -198,10 +198,7 @@ const Signup = () => {
 
           <form onSubmit={onSubmit} className="space-y-2">
             {/* Honeypot */}
-            <div aria-hidden="true" style={{
-              position: "absolute", left: "-10000px", top: "auto",
-              width: "1px", height: "1px", overflow: "hidden",
-            }}>
+            <div aria-hidden="true" className="honeypot-hidden">
               <label htmlFor="company-website">Company website (leave blank)</label>
               <input
                 id="company-website"
@@ -221,6 +218,7 @@ const Signup = () => {
               autoCapitalize="none"
               autoCorrect="off"
               spellCheck={false}
+              enterKeyHint="next"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               placeholder="Email"
@@ -256,6 +254,7 @@ const Signup = () => {
                 id="su-pw"
                 type={showPassword ? "text" : "password"}
                 autoComplete="new-password"
+                enterKeyHint="go"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password"

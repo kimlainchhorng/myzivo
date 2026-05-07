@@ -830,6 +830,18 @@ function ReelCard({
     }, 1900);
   };
 
+  const particleTextSizeClass = (size: number) => {
+    if (size < 28) return "text-2xl";
+    if (size < 34) return "text-3xl";
+    return "text-4xl";
+  };
+
+  const particleIconSizeClass = (size: number) => {
+    if (size < 28) return "w-6 h-6";
+    if (size < 34) return "w-8 h-8";
+    return "w-10 h-10";
+  };
+
   const handleVideoClick = () => {
     const now = Date.now();
     if (now - lastTapRef.current < 280) {
@@ -1248,8 +1260,7 @@ function ReelCard({
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.85 }}
             transition={{ duration: 0.18 }}
-            className="absolute left-1/2 -translate-x-1/2 z-30 px-3 py-1.5 rounded-full bg-black/70 backdrop-blur-md flex items-center gap-1.5 pointer-events-none"
-            style={{ top: "calc(env(safe-area-inset-top, 0px) + 84px)" }}
+            className="absolute left-1/2 top-[calc(env(safe-area-inset-top,0px)+84px)] -translate-x-1/2 z-30 px-3 py-1.5 rounded-full bg-black/70 backdrop-blur-md flex items-center gap-1.5 pointer-events-none"
           >
             <span className="text-white text-sm font-bold tabular-nums">2×</span>
             <span className="text-white text-xs">▶▶</span>
@@ -1297,16 +1308,14 @@ function ReelCard({
             >
               {p.emoji ? (
                 <span
-                  className="drop-shadow-lg leading-none"
-                  style={{ fontSize: p.size }}
+                  className={cn("drop-shadow-lg leading-none", particleTextSizeClass(p.size))}
                   aria-hidden
                 >
                   {p.emoji}
                 </span>
               ) : (
                 <Heart
-                  className="text-destructive fill-destructive drop-shadow-lg"
-                  style={{ width: p.size, height: p.size }}
+                  className={cn("text-destructive fill-destructive drop-shadow-lg", particleIconSizeClass(p.size))}
                 />
               )}
             </motion.div>
@@ -1365,8 +1374,7 @@ function ReelCard({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 8 }}
             transition={{ duration: 0.2 }}
-            className="absolute left-4 right-16 z-25 pointer-events-none"
-            style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 160px)" }}
+            className="absolute left-4 right-16 bottom-[calc(env(safe-area-inset-bottom,0px)+160px)] z-25 pointer-events-none"
           >
             <div className="bg-black/80 backdrop-blur-sm rounded-lg px-3 py-2">
               <p className="text-white text-[13px] sm:text-sm font-medium leading-snug text-center">
@@ -1378,10 +1386,7 @@ function ReelCard({
       </AnimatePresence>
 
       {/* Bottom-left: store info + caption */}
-      <div
-        className="absolute bottom-0 left-0 right-16 z-30 px-4"
-        style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 88px)" }}
-      >
+      <div className="absolute bottom-0 left-0 right-16 z-30 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+88px)]">
         {/* Owner-only insights pill — small "Your reel · X views" affordance
             that takes the creator to their post analytics on tap. */}
         {userId && post.author_id && userId === post.author_id && (
@@ -1519,7 +1524,7 @@ function ReelCard({
                   !captionExpanded && "line-clamp-2",
                   isLong ? "cursor-pointer" : "cursor-default",
                 )}
-                aria-expanded={captionExpanded}
+                aria-expanded={captionExpanded ? "true" : "false"}
               >
                 <Suspense fallback={<span>{post.caption}</span>}>
                   <SafeCaption text={post.caption} />
@@ -1733,10 +1738,7 @@ function ReelCard({
             without clipping the avatar off the top.
           - tablet (≥sm):  gap-5, all items
           - desktop (≥lg): gap-6, larger icons */}
-      <div
-        className="absolute right-2 sm:right-3 lg:right-4 z-30 flex flex-col items-center justify-end gap-3 sm:gap-5 lg:gap-6"
-        style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 88px)" }}
-      >
+      <div className="absolute right-2 sm:right-3 lg:right-4 bottom-[calc(env(safe-area-inset-bottom,0px)+88px)] z-30 flex flex-col items-center justify-end gap-3 sm:gap-5 lg:gap-6">
         {/* Mute/Unmute with sound wave */}
         <button
           type="button"
@@ -1756,11 +1758,12 @@ function ReelCard({
                   {[1, 2, 3].map((i) => (
                     <div
                       key={i}
-                      className="w-[2px] bg-primary rounded-full"
-                      style={{
-                        animation: `soundbar 0.${4 + i}s ease-in-out infinite alternate`,
-                        height: `${4 + i * 2}px`,
-                      }}
+                      className={cn(
+                        "w-[2px] bg-primary rounded-full animate-[soundbar_0.5s_ease-in-out_infinite_alternate]",
+                        i === 1 && "h-[6px] animate-[soundbar_0.5s_ease-in-out_infinite_alternate]",
+                        i === 2 && "h-[8px] animate-[soundbar_0.6s_ease-in-out_infinite_alternate]",
+                        i === 3 && "h-[10px] animate-[soundbar_0.7s_ease-in-out_infinite_alternate]",
+                      )}
                     />
                   ))}
                 </div>
@@ -2111,17 +2114,21 @@ function ReelCard({
                 can see how much is ready ahead of where they're watching. */}
             <div
               className="absolute inset-y-0 left-0 bg-white/30 transition-[width] duration-200 ease-out"
-              style={{ width: `${bufferedProgress * 100}%` }}
+              as={motion.div as any}
+              animate={{ width: `${bufferedProgress * 100}%` }}
+              transition={{ duration: 0.2, ease: "easeOut" }}
             />
             {/* Played fill */}
-            <div
+            <motion.div
               className="absolute inset-y-0 left-0 bg-white/90"
-              style={{ width: `${videoProgress * 100}%` }}
+              animate={{ width: `${videoProgress * 100}%` }}
+              transition={{ duration: 0.08, ease: "linear" }}
             />
             {isScrubbing && (
-              <div
+              <motion.div
                 className="absolute -top-1.5 w-4 h-4 -ml-2 rounded-full bg-white shadow-lg"
-                style={{ left: `${videoProgress * 100}%` }}
+                animate={{ left: `${videoProgress * 100}%` }}
+                transition={{ duration: 0.08, ease: "linear" }}
               />
             )}
           </div>
@@ -2137,8 +2144,7 @@ function ReelCard({
             initial={{ scale: 0, opacity: 1, y: 0 }}
             animate={{ scale: 1.1, opacity: 0, y: -40 }}
             transition={{ duration: 0.6, ease: "easeOut" }}
-            className="absolute right-6 z-40 pointer-events-none"
-            style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 270px)" }}
+            className="absolute right-6 bottom-[calc(env(safe-area-inset-bottom,0px)+270px)] z-40 pointer-events-none"
           >
             <Heart className="w-12 h-12 text-destructive fill-destructive drop-shadow-lg" />
           </motion.div>
@@ -2165,9 +2171,8 @@ function ReelCard({
             >
               <div className="flex justify-center pt-2 pb-1">
                 <div className="w-10 h-1 rounded-full bg-muted-foreground/20" />
-              </div>
+              <motion.div
               <div className="px-2 py-2 space-y-0.5">
-                <button
                   onClick={() => {
                     setShowMoreMenu(false);
                     const url = `${window.location.origin}/reels/${post.id}`;
@@ -2391,8 +2396,7 @@ function ReelCard({
           onClick={(e) => { e.stopPropagation(); setShowSpeedPicker(true); }}
           aria-label="Change playback speed"
           title="Change playback speed"
-          className="absolute right-3 z-30 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-sm border border-white/10 active:scale-95 transition-transform"
-          style={{ top: "calc(env(safe-area-inset-top, 0px) + 80px)" }}
+          className="absolute right-3 top-[calc(env(safe-area-inset-top,0px)+80px)] z-30 px-2 py-0.5 rounded-full bg-black/60 backdrop-blur-sm border border-white/10 active:scale-95 transition-transform"
         >
           <span className="text-white text-[11px] font-bold tabular-nums">{playbackSpeed}×</span>
         </button>
@@ -2645,7 +2649,7 @@ function CommentSheet({
 
   return (
     <div
-      className="fixed inset-0 z-[60] flex flex-col justify-end"
+      className="fixed inset-0 z-[1500] flex flex-col justify-end"
       onClick={onClose}
     >
       {/* Backdrop */}
@@ -2662,6 +2666,8 @@ function CommentSheet({
           <button
             type="button"
             onClick={onClose}
+            aria-label="Close comments"
+            title="Close comments"
             className="w-8 h-8 rounded-full flex items-center justify-center hover:bg-muted"
           >
             <XIcon className="w-4 h-4 text-muted-foreground" />
@@ -2681,7 +2687,7 @@ function CommentSheet({
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground hover:bg-muted/80",
               )}
-              aria-pressed={commentSort === "newest"}
+              aria-pressed={commentSort === "newest" ? "true" : "false"}
             >
               Newest
             </button>
@@ -2694,7 +2700,7 @@ function CommentSheet({
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground hover:bg-muted/80",
               )}
-              aria-pressed={commentSort === "top"}
+              aria-pressed={commentSort === "top" ? "true" : "false"}
             >
               Top
             </button>
@@ -2766,6 +2772,8 @@ function CommentSheet({
                           onChange={(e) => setEditingText(e.target.value)}
                           autoFocus
                           rows={2}
+                          aria-label="Edit comment"
+                          placeholder="Edit your comment"
                           className="w-full rounded-lg border border-border bg-background px-2 py-1.5 text-sm text-foreground outline-none focus:ring-2 focus:ring-primary/40 resize-none"
                         />
                         <div className="flex gap-2">
@@ -2854,7 +2862,7 @@ function CommentSheet({
                             return next;
                           })}
                           className="ml-9 self-start text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-                          aria-expanded={isExpanded}
+                          aria-expanded={isExpanded ? "true" : "false"}
                         >
                           <span className="inline-block w-6 border-t border-muted-foreground/30" />
                           {isExpanded
@@ -2872,7 +2880,7 @@ function CommentSheet({
         </div>
 
         {/* Input */}
-        <div className="px-4 py-3 border-t border-border" style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 12px)" }}>
+        <div className="px-4 pt-3 pb-[calc(env(safe-area-inset-bottom,0px)+12px)] border-t border-border">
           {!userId ? (
             <p className="text-center text-sm text-muted-foreground py-1">Sign in to comment</p>
           ) : !isVerified ? (
@@ -3008,10 +3016,10 @@ function FeedSearchOverlay({ onClose, onNavigate }: { onClose: () => void; onNav
   const hasQuery = debouncedQuery.length >= 1;
 
   return (
-    <div className="fixed inset-0 z-[70] bg-background flex flex-col">
+    <div className="fixed inset-0 z-[1500] bg-background flex flex-col">
       {/* Search header */}
       <div className="flex items-center gap-2 px-3 py-2.5 border-b border-border/50">
-        <button type="button" onClick={onClose} className="p-2 rounded-full hover:bg-muted/50">
+        <button type="button" onClick={onClose} aria-label="Close search" title="Close search" className="p-2 rounded-full hover:bg-muted/50">
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <div className="flex-1 relative">
@@ -3024,7 +3032,7 @@ function FeedSearchOverlay({ onClose, onNavigate }: { onClose: () => void; onNav
             className="w-full h-10 pl-9 pr-9 rounded-full bg-muted/40 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
           {query && (
-            <button type="button" onClick={() => setQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2">
+            <button type="button" onClick={() => setQuery("")} aria-label="Clear search" title="Clear search" className="absolute right-3 top-1/2 -translate-y-1/2">
               <XIcon className="w-4 h-4 text-muted-foreground" />
             </button>
           )}
@@ -3032,7 +3040,7 @@ function FeedSearchOverlay({ onClose, onNavigate }: { onClose: () => void; onNav
       </div>
 
       {/* Results */}
-      <div className="flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto pb-nav">
         {!hasQuery && (
           <div className="flex flex-col items-center justify-center h-full text-center px-8 gap-3">
             <Search className="w-12 h-12 text-muted-foreground/30" />
@@ -3187,7 +3195,7 @@ function SoundOverlay({
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
-        className="fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm"
+        className="fixed inset-0 z-[1500] bg-black/60 backdrop-blur-sm"
       />
       {/* Centered modal — responsive */}
       <motion.div
@@ -3195,7 +3203,7 @@ function SoundOverlay({
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.92, y: 20 }}
         transition={{ type: "spring", damping: 28, stiffness: 320 }}
-        className="fixed inset-0 z-[61] flex items-center justify-center pointer-events-none p-4"
+        className="fixed inset-0 z-[1501] flex items-center justify-center pointer-events-none p-4"
       >
         <div className="pointer-events-auto flex flex-col bg-background rounded-3xl overflow-hidden shadow-2xl border border-border/30 w-[94%] max-w-[480px] max-h-[75vh]">
           {/* Drag handle */}
@@ -3218,7 +3226,7 @@ function SoundOverlay({
                 {reelCount} reel{reelCount !== 1 ? "s" : ""} • Tap to watch
               </p>
             </div>
-            <button onClick={onClose} className="p-2 -mr-1 rounded-full hover:bg-muted/60 transition-colors">
+            <button onClick={onClose} aria-label="Close sound overlay" title="Close sound overlay" className="p-2 -mr-1 rounded-full hover:bg-muted/60 transition-colors">
               <XIcon className="h-5 w-5 text-muted-foreground" />
             </button>
           </div>
@@ -3349,10 +3357,10 @@ function DiscoverPeopleOverlay({ onClose, onNavigate }: { onClose: () => void; o
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       exit={{ opacity: 0 }}
-      className="fixed inset-0 z-[70] bg-background flex flex-col"
+      className="fixed inset-0 z-[1500] bg-background flex flex-col"
     >
-      <div data-testid="feed-discover-header" className="flex items-center gap-3 px-4 py-3 border-b border-border/30" style={{ paddingTop: 'var(--zivo-safe-top-sticky)' }}>
-        <button onClick={onClose} className="p-2 rounded-full hover:bg-muted/50">
+      <div data-testid="feed-discover-header" className="safe-area-top pt-3 pb-3 flex items-center gap-3 px-4 border-b border-border/30">
+        <button onClick={onClose} aria-label="Close discover people" title="Close discover people" className="p-2 rounded-full hover:bg-muted/50">
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <div>
@@ -3361,7 +3369,7 @@ function DiscoverPeopleOverlay({ onClose, onNavigate }: { onClose: () => void; o
         </div>
       </div>
 
-      <div className="flex-1 overflow-y-auto px-4 py-4">
+      <div className="flex-1 overflow-y-auto px-4 py-4 pb-nav">
         {isLoading ? (
           <div className="flex justify-center py-16">
             <Loader2 className="h-6 w-6 animate-spin text-primary" />
@@ -4272,17 +4280,15 @@ export default function FeedPage() {
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: -40, opacity: 0 }}
             transition={{ type: "spring", damping: 24, stiffness: 320 }}
-            className="absolute inset-x-0 z-[55] mx-auto md:max-w-[420px] pointer-events-none"
-            style={{ top: 'max(var(--zivo-safe-top-overlay, 12px), 16px)' }}
+            className="absolute inset-x-0 top-safe-overlay z-[55] mx-auto md:max-w-[420px] pointer-events-none"
             role="status"
             aria-live="polite"
           >
             <div className="mx-3 px-4 py-2 rounded-full bg-zinc-900/95 backdrop-blur-md border border-white/15 shadow-xl flex items-center justify-center gap-2 pointer-events-auto">
               <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
               <span className="text-white text-xs font-semibold">You're offline — reels will resume when you reconnect</span>
-            </div>
+            <motion.div
           </motion.div>
-        )}
       </AnimatePresence>
 
       {/* For You / Following tabs — TikTok-style top center segmented control.
@@ -4290,10 +4296,7 @@ export default function FeedPage() {
           so we max() the safe-area inset with 16px so the tabs sit inside the
           frame instead of floating above it on tablets without a notch. */}
       {userId && (
-        <div
-          className="absolute left-1/2 -translate-x-1/2 z-50 flex items-center gap-5 sm:gap-6 lg:gap-8"
-          style={{ top: 'max(var(--zivo-safe-top-overlay, 12px), 16px)' }}
-        >
+        <div className="absolute left-1/2 top-safe-overlay -translate-x-1/2 z-50 flex items-center gap-5 sm:gap-6 lg:gap-8">
           {(["foryou", "following"] as const).map((mode) => (
             <button
               key={mode}
@@ -4339,10 +4342,7 @@ export default function FeedPage() {
           Wrapped in a centered container so on iPad (md+), where the reel
           sits in a 420-px-wide phone frame, the buttons hug the right edge
           of the frame instead of floating in the black gutter outside it. */}
-      <div
-        className="absolute inset-x-0 z-50 mx-auto md:max-w-[420px] pointer-events-none lg:hidden"
-        style={{ top: 'max(var(--zivo-safe-top-overlay, 12px), 16px)' }}
-      >
+      <div className="absolute inset-x-0 top-safe-overlay z-50 mx-auto md:max-w-[420px] pointer-events-none lg:hidden">
       <div data-testid="feed-floating-actions" className="flex justify-end gap-2 sm:gap-2.5 px-3 sm:px-4 pointer-events-auto">
         {/* Live entry — also reachable via the bottom nav, so hide on the
             smallest phones (<sm) where the row would collide with center tabs. */}
@@ -4446,34 +4446,32 @@ export default function FeedPage() {
           "w-full h-full md:mx-auto md:rounded-2xl md:overflow-hidden md:shadow-2xl md:border md:border-white/10 md:h-[calc(100%-2rem)] md:w-auto md:aspect-[9/16] md:max-w-[420px] lg:my-4",
           isReelsRoute ? "lg:max-w-[520px] xl:max-w-[560px]" : "lg:max-w-[460px] xl:max-w-[500px]",
         )}>
-          <div
-            className="w-full h-full overflow-y-scroll snap-y snap-mandatory relative"
-            style={{
-              scrollbarWidth: "none",
-              WebkitOverflowScrolling: "touch",
-              transform: pullDelta > 0 ? `translateY(${pullDelta}px)` : undefined,
-              transition: pullDelta === 0 ? "transform 200ms ease-out" : undefined,
-            } as React.CSSProperties}
+          <motion.div
+            className="reel-scroll-host w-full h-full overflow-y-scroll snap-y snap-mandatory relative"
+            animate={{ y: pullDelta > 0 ? pullDelta : 0 }}
+            transition={pullDelta === 0 ? { duration: 0.2, ease: "easeOut" } : { duration: 0 }}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
           >
             {/* Pull-to-refresh indicator */}
             {(pullDelta > 0 || isRefreshing) && (
-              <div
+              <motion.div
                 className="pointer-events-none absolute left-1/2 z-50 -translate-x-1/2 flex items-center justify-center"
-                style={{ top: Math.max(20, pullDelta - 30) }}
+                animate={{ y: Math.max(20, pullDelta - 30) }}
+                transition={{ duration: 0.08, ease: "linear" }}
               >
-                <div
+                <motion.div
                   className={cn(
                     "rounded-full bg-white/15 backdrop-blur-md p-2 transition-transform",
                     isRefreshing && "animate-spin",
                   )}
-                  style={{ transform: !isRefreshing ? `rotate(${pullDelta * 3}deg)` : undefined }}
+                  animate={{ rotate: !isRefreshing ? pullDelta * 3 : 0 }}
+                  transition={{ duration: 0.08, ease: "linear" }}
                 >
                   <RefreshCw className="h-5 w-5 text-white" />
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
             )}
 
             {/* New posts pill */}
@@ -4609,7 +4607,7 @@ export default function FeedPage() {
                 feedMode={feedMode}
               />
             )}
-          </div>
+          </motion.div>
         </div>
 
         {/* Desktop RIGHT rail — suggested people + trending.
@@ -4621,7 +4619,7 @@ export default function FeedPage() {
             {ownerStore?.isLodging && lodgingCompletion && (
               <div className="rounded-xl border border-primary/30 bg-card/70 p-3">
                 <div className="flex items-start justify-between gap-2"><div><h3 className="text-sm font-semibold text-foreground">Hotel / Resort Admin</h3><p className="mt-0.5 text-xs text-muted-foreground truncate">{ownerStore.name}</p></div><span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{lodgingCompletion.percent}%</span></div>
-                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${lodgingCompletion.percent}%` }} /></div>
+                <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted"><motion.div className="h-full rounded-full bg-primary" animate={{ width: `${lodgingCompletion.percent}%` }} transition={{ duration: 0.25, ease: "easeOut" }} /></div>
                 <p className="mt-2 text-[11px] text-muted-foreground">Next: {lodgingCompletion.nextBestAction.actionLabel}</p>
                 <div className="mt-3 grid grid-cols-2 gap-2 text-xs"><button onClick={() => navigate(`/admin/stores/${ownerStore.id}?tab=lodge-overview`)} className="rounded-lg bg-primary px-2 py-2 font-semibold text-primary-foreground">Open Hotel Admin</button><button onClick={() => navigate("/admin/lodging/qa-checklist")} className="rounded-lg bg-muted px-2 py-2 font-semibold text-foreground">Run QA</button><button onClick={() => navigate("/admin/lodging/qa-checklist")} className="col-span-2 rounded-lg bg-muted px-2 py-2 font-semibold text-foreground">View QA Report</button></div>
               </div>

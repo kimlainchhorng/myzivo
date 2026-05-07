@@ -362,9 +362,9 @@ const Login = () => {
           {/* Brand wordmark — IG-style script logo */}
           <div className="flex flex-col items-center mb-8">
             <div className="relative w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-400 via-rose-500 to-fuchsia-600 flex items-center justify-center mb-5 shadow-lg shadow-rose-500/20">
-              <span className="text-white font-black text-3xl tracking-tight italic" style={{ fontFamily: "'Brush Script MT', cursive" }}>Z</span>
+              <span className="brand-script-mark text-white font-black text-3xl tracking-tight italic">Z</span>
             </div>
-            <h1 className="text-4xl font-light tracking-wider text-zinc-900 dark:text-white" style={{ fontFamily: "'Snell Roundhand', 'Brush Script MT', cursive", fontWeight: 600 }}>
+            <h1 className="brand-script-wordmark text-4xl font-light tracking-wider text-zinc-900 dark:text-white">
               Zivo
             </h1>
           </div>
@@ -461,7 +461,7 @@ const Login = () => {
                 readOnly
                 tabIndex={-1}
                 aria-hidden="true"
-                style={{ position: "absolute", left: "-10000px", width: "1px", height: "1px", opacity: 0 }}
+                className="visually-hidden-auth"
               />
 
               <div className="relative">
@@ -469,6 +469,7 @@ const Login = () => {
                   id="login-password"
                   type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
+                  enterKeyHint="go"
                   autoFocus
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -492,7 +493,7 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={!canSubmit}
-                className="w-full h-9 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md shadow-rose-500/20"
+                className="w-full h-11 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md shadow-rose-500/20"
               >
                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Log in"}
               </button>
@@ -516,7 +517,7 @@ const Login = () => {
                         if (provider) window.open(provider.url, "_blank", "noopener,noreferrer");
                       }}
                       disabled={submitting}
-                      className="w-full h-9 rounded-lg text-sm font-semibold text-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/40 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 active:scale-[0.99] disabled:opacity-40 transition flex items-center justify-center gap-2"
+                      className="w-full h-11 rounded-lg text-sm font-semibold text-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/40 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 active:scale-[0.99] disabled:opacity-40 transition flex items-center justify-center gap-2"
                     >
                       <ExternalLink className="w-4 h-4" />
                       {provider ? `Email me & open ${provider.name}` : "Email me a sign-in link"}
@@ -570,12 +571,13 @@ const Login = () => {
 
               <input
                 id="login-email"
-                type="email"
+                type="text"
                 inputMode="email"
                 autoComplete="username"
                 autoCapitalize="none"
                 autoCorrect="off"
                 spellCheck={false}
+                enterKeyHint="next"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="Phone number, username, or email"
@@ -588,6 +590,7 @@ const Login = () => {
                   id="login-password-full"
                   type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
+                  enterKeyHint="go"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   {...passwordKeyHandlers}
@@ -610,7 +613,7 @@ const Login = () => {
               <button
                 type="submit"
                 disabled={!canSubmit}
-                className="w-full h-9 mt-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md shadow-rose-500/20"
+                className="w-full h-11 mt-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md shadow-rose-500/20"
               >
                 {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Log in"}
               </button>
@@ -633,7 +636,7 @@ const Login = () => {
                       if (provider) window.open(provider.url, "_blank", "noopener,noreferrer");
                     }}
                     disabled={submitting || !email.trim()}
-                    className="w-full h-9 rounded-lg text-sm font-semibold text-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/40 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 active:scale-[0.99] disabled:opacity-40 transition flex items-center justify-center gap-2"
+                    className="w-full h-11 rounded-lg text-sm font-semibold text-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/40 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 active:scale-[0.99] disabled:opacity-40 transition flex items-center justify-center gap-2"
                   >
                     <ExternalLink className="w-4 h-4" />
                     {provider ? `Email me & open ${provider.name}` : "Email me a sign-in link"}
