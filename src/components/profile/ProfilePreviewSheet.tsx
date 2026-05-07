@@ -171,7 +171,7 @@ export default function ProfilePreviewSheet({
             )}
 
             <div className="grid grid-cols-2 gap-2 w-full mt-4">
-              <button
+              <button type="button"
                 onClick={handleMessage}
                 disabled={isSelf}
                 className="h-10 rounded-full bg-primary text-primary-foreground font-semibold text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-transform disabled:opacity-40"
@@ -179,7 +179,7 @@ export default function ProfilePreviewSheet({
                 <MessageCircle className="h-4 w-4" />
                 Message
               </button>
-              <button
+              <button type="button"
                 onClick={handleViewProfile}
                 className="h-10 rounded-full bg-muted text-foreground font-semibold text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
               >
@@ -190,7 +190,7 @@ export default function ProfilePreviewSheet({
 
             {!isSelf && (
               <div className="grid grid-cols-2 gap-2 w-full">
-                <button
+                <button type="button"
                   onClick={handleAdd}
                   disabled={isContact || busy !== null}
                   className="h-10 rounded-full bg-card border border-border text-foreground font-medium text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-transform disabled:opacity-50"
@@ -209,7 +209,7 @@ export default function ProfilePreviewSheet({
                     </>
                   )}
                 </button>
-                <button
+                <button type="button"
                   onClick={handleBlock}
                   disabled={busy !== null}
                   className="h-10 rounded-full bg-destructive/10 text-destructive font-medium text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-transform disabled:opacity-50"

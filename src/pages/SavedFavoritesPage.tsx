@@ -93,7 +93,7 @@ export default function SavedFavoritesPage() {
     <div className="min-h-[100dvh] bg-background pb-16">
       <header className="sticky top-0 z-30 bg-background/90 backdrop-blur border-b border-border/40 pt-safe">
         <div className="max-w-screen-md mx-auto px-4 py-3 flex items-center gap-3">
-          <button
+          <button type="button"
             onClick={() => navigate(-1)}
             className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center"
             aria-label="Back"
@@ -209,7 +209,7 @@ function RestaurantCard({
       transition={{ delay }}
       className="relative rounded-2xl overflow-hidden border border-border/40 bg-card shadow-sm"
     >
-      <button
+      <button type="button"
         onClick={() => navigate(`/eats/restaurant/${r.id}`)}
         className="block w-full text-left active:scale-[0.99] transition-transform touch-manipulation"
       >
@@ -217,7 +217,7 @@ function RestaurantCard({
           <img src={cover} alt={r.name} className="w-full h-full object-cover" loading="lazy" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
           <PartnerBadge size="xs" className="absolute top-2 left-2 shadow-sm" />
-          <button
+          <button type="button"
             onClick={(e) => {
               e.stopPropagation();
               onUnfavorite();
@@ -293,7 +293,7 @@ function HotelCard({
       transition={{ delay }}
       className="relative rounded-2xl overflow-hidden border border-border/40 bg-card shadow-sm"
     >
-      <button
+      <button type="button"
         onClick={() => navigate(`/hotels?hotelId=${h.id}`)}
         className="block w-full text-left active:scale-[0.99] transition-transform touch-manipulation"
       >
@@ -301,7 +301,7 @@ function HotelCard({
           <img src={cover} alt={h.name} className="w-full h-full object-cover" loading="lazy" />
           <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent" />
           <PartnerBadge size="xs" className="absolute top-2 left-2 shadow-sm" />
-          <button
+          <button type="button"
             onClick={(e) => {
               e.stopPropagation();
               onUnfavorite();

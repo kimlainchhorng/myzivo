@@ -38,7 +38,7 @@ export default function ChatSearchBar({ visible, onClose, onSearch }: Props) {
         onChange={(e) => handleChange(e.target.value)}
         className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground outline-none"
       />
-      <button
+      <button type="button"
         onClick={() => { setQuery(""); onClose(); }}
         className="h-7 w-7 flex items-center justify-center rounded-full hover:bg-muted/60 active:scale-90"
         aria-label="Close search"

@@ -256,7 +256,7 @@ export default function ChatMiniApps({ open, onClose, chatPartnerId, chatPartner
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 {view !== "menu" && (
-                  <button onClick={() => setView("menu")} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+                  <button type="button" onClick={() => setView("menu")} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
                     <ChevronRight className="w-4 h-4 text-muted-foreground rotate-180" />
                   </button>
                 )}
@@ -264,7 +264,7 @@ export default function ChatMiniApps({ open, onClose, chatPartnerId, chatPartner
                   {view === "menu" ? "Mini Apps" : view === "poll" ? "Polls" : view === "todo" ? "To-Do Lists" : "Split Bills"}
                 </h3>
               </div>
-              <button onClick={onClose} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+              <button type="button" onClick={onClose} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
                 <X className="w-4 h-4 text-muted-foreground" />
               </button>
             </div>
@@ -280,7 +280,7 @@ export default function ChatMiniApps({ open, onClose, chatPartnerId, chatPartner
                   { id: "book_table" as MiniApp, icon: Utensils, label: "Book Table", count: 0, color: "bg-orange-500" },
                   { id: "trip_idea" as MiniApp, icon: Map, label: "Trip Idea", count: 0, color: "bg-indigo-500" },
                 ].map((app) => (
-                  <button
+                  <button type="button"
                     key={app.id}
                     onClick={() => setView(app.id)}
                     className="flex flex-col items-center gap-2 py-5 rounded-2xl border border-border/30 hover:bg-muted/30 transition-colors relative"
@@ -326,12 +326,12 @@ export default function ChatMiniApps({ open, onClose, chatPartnerId, chatPartner
                   ))}
                   <div className="flex gap-2">
                     {newPollOpts.length < 6 && (
-                      <button onClick={() => setNewPollOpts([...newPollOpts, ""])} className="text-xs text-primary font-medium flex items-center gap-1">
+                      <button type="button" onClick={() => setNewPollOpts([...newPollOpts, ""])} className="text-xs text-primary font-medium flex items-center gap-1">
                         <Plus className="w-3 h-3" /> Add option
                       </button>
                     )}
                   </div>
-                  <button onClick={createPoll} className="w-full h-10 rounded-xl bg-primary text-primary-foreground text-sm font-semibold">
+                  <button type="button" onClick={createPoll} className="w-full h-10 rounded-xl bg-primary text-primary-foreground text-sm font-semibold">
                     Create Poll
                   </button>
                 </div>
@@ -351,7 +351,7 @@ export default function ChatMiniApps({ open, onClose, chatPartnerId, chatPartner
                         const pct = totalVotes > 0 ? Math.round((voteCount / totalVotes) * 100) : 0;
                         const isMyVote = myVote === opt;
                         return (
-                          <button
+                          <button type="button"
                             key={opt}
                             onClick={() => votePoll(poll.id, opt)}
                             disabled={poll.is_closed}
@@ -401,10 +401,10 @@ export default function ChatMiniApps({ open, onClose, chatPartnerId, chatPartner
                       className="w-full h-9 px-3 rounded-lg border border-border/30 bg-muted/20 text-sm text-foreground placeholder:text-muted-foreground"
                     />
                   ))}
-                  <button onClick={() => setNewTodoItems([...newTodoItems, ""])} className="text-xs text-primary font-medium flex items-center gap-1">
+                  <button type="button" onClick={() => setNewTodoItems([...newTodoItems, ""])} className="text-xs text-primary font-medium flex items-center gap-1">
                     <Plus className="w-3 h-3" /> Add item
                   </button>
-                  <button onClick={createTodo} className="w-full h-10 rounded-xl bg-primary text-primary-foreground text-sm font-semibold">
+                  <button type="button" onClick={createTodo} className="w-full h-10 rounded-xl bg-primary text-primary-foreground text-sm font-semibold">
                     Create List
                   </button>
                 </div>
@@ -413,7 +413,7 @@ export default function ChatMiniApps({ open, onClose, chatPartnerId, chatPartner
                   <div key={todo.id} className="p-4 rounded-2xl border border-border/40 space-y-2">
                     <h4 className="text-sm font-bold text-foreground">{todo.title}</h4>
                     {(todo.items as TodoItem[]).map((item, i) => (
-                      <button
+                      <button type="button"
                         key={i}
                         onClick={() => toggleTodoItem(todo.id, i)}
                         className="w-full flex items-center gap-2.5 py-1.5 text-left"
@@ -458,7 +458,7 @@ export default function ChatMiniApps({ open, onClose, chatPartnerId, chatPartner
                     />
                   </div>
                   <p className="text-[10px] text-muted-foreground">Split evenly between you and {chatPartnerName}</p>
-                  <button onClick={createSplitBill} className="w-full h-10 rounded-xl bg-primary text-primary-foreground text-sm font-semibold">
+                  <button type="button" onClick={createSplitBill} className="w-full h-10 rounded-xl bg-primary text-primary-foreground text-sm font-semibold">
                     Create Split
                   </button>
                 </div>
@@ -507,7 +507,7 @@ export default function ChatMiniApps({ open, onClose, chatPartnerId, chatPartner
                     onChange={(e) => setNewBookingDate(e.target.value)}
                     className="w-full h-10 px-3 rounded-xl border border-border/40 bg-muted/30 text-sm text-foreground"
                   />
-                  <button onClick={createBooking} className="w-full h-10 rounded-xl bg-orange-500 text-white text-sm font-semibold">
+                  <button type="button" onClick={createBooking} className="w-full h-10 rounded-xl bg-orange-500 text-white text-sm font-semibold">
                     Send Suggestion
                   </button>
                 </div>
@@ -531,7 +531,7 @@ export default function ChatMiniApps({ open, onClose, chatPartnerId, chatPartner
                     onChange={(e) => setNewTripDest(e.target.value)}
                     className="w-full h-10 px-3 rounded-xl border border-border/40 bg-muted/30 text-sm text-foreground placeholder:text-muted-foreground"
                   />
-                  <button onClick={createTrip} className="w-full h-10 rounded-xl bg-indigo-500 text-white text-sm font-semibold">
+                  <button type="button" onClick={createTrip} className="w-full h-10 rounded-xl bg-indigo-500 text-white text-sm font-semibold">
                     Share Idea
                   </button>
                 </div>

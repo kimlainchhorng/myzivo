@@ -337,7 +337,7 @@ export default function HotelResortDetailPage() {
 
         {/* Top nav */}
         <div className="absolute top-3 left-3 right-3 flex items-center justify-between safe-area-top">
-          <button
+          <button type="button"
             onClick={() => navigate(-1)}
             aria-label="Back"
             className="h-10 w-10 rounded-full bg-background/80 backdrop-blur flex items-center justify-center shadow-sm active:scale-95 transition"
@@ -345,7 +345,7 @@ export default function HotelResortDetailPage() {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <div className="flex items-center gap-2">
-            <button
+            <button type="button"
               onClick={() => openShareToChat({
                 kind: "hotel",
                 title: store?.name || "Hotel on ZIVO",
@@ -359,7 +359,7 @@ export default function HotelResortDetailPage() {
             >
               <MessageCircle className="w-5 h-5" />
             </button>
-            <button
+            <button type="button"
               onClick={handleShare}
               aria-label="Share"
               className="h-10 w-10 rounded-full bg-background/80 backdrop-blur flex items-center justify-center shadow-sm active:scale-95 transition"
@@ -480,7 +480,7 @@ export default function HotelResortDetailPage() {
       <div className="px-4 mt-3 grid grid-cols-2 gap-2">
         <Popover open={datesOpen} onOpenChange={setDatesOpen}>
           <PopoverTrigger asChild>
-            <button className="h-11 rounded-2xl border border-border bg-card shadow-sm text-left px-3 flex items-center gap-2 active:scale-[0.98] transition">
+            <button type="button" className="h-11 rounded-2xl border border-border bg-card shadow-sm text-left px-3 flex items-center gap-2 active:scale-[0.98] transition">
               <CalendarRange className="w-4 h-4 text-primary shrink-0" />
               <div className="min-w-0 flex-1">
                 <p className="text-[10px] uppercase tracking-wide text-muted-foreground leading-none">
@@ -516,7 +516,7 @@ export default function HotelResortDetailPage() {
 
         <Popover open={guestsOpen} onOpenChange={setGuestsOpen}>
           <PopoverTrigger asChild>
-            <button className="h-11 rounded-2xl border border-border bg-card shadow-sm text-left px-3 flex items-center gap-2 active:scale-[0.98] transition">
+            <button type="button" className="h-11 rounded-2xl border border-border bg-card shadow-sm text-left px-3 flex items-center gap-2 active:scale-[0.98] transition">
               <Users className="w-4 h-4 text-primary shrink-0" />
               <div className="min-w-0 flex-1">
                 <p className="text-[10px] uppercase tracking-wide text-muted-foreground leading-none">Guests</p>
@@ -638,7 +638,7 @@ export default function HotelResortDetailPage() {
                           </span>
                         )}
                       </div>
-                      <button
+                      <button type="button"
                         onClick={() => {
                           const ciStr = format(checkIn, "yyyy-MM-dd");
                           const coStr = format(checkOut, "yyyy-MM-dd");
@@ -842,7 +842,7 @@ export default function HotelResortDetailPage() {
                           </span>
                         )}
                       </div>
-                      <button
+                      <button type="button"
                         onClick={() => {
                           const ciStr = format(checkIn, "yyyy-MM-dd");
                           const coStr = format(checkOut, "yyyy-MM-dd");

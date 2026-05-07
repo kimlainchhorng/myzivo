@@ -105,7 +105,7 @@ export default function AutoRepairPage() {
       {/* Mobile header */}
       <div className="md:hidden sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/20 safe-area-top">
         <div className="flex items-center gap-3 px-4 py-3">
-          <button onClick={() => navigate(-1)} className="p-1.5 rounded-full hover:bg-muted/60 transition-colors">
+          <button type="button" onClick={() => navigate(-1)} className="p-1.5 rounded-full hover:bg-muted/60 transition-colors">
             <ChevronLeft className="h-5 w-5" />
           </button>
           <div className="flex items-center gap-2">
@@ -147,7 +147,7 @@ export default function AutoRepairPage() {
         {/* Service filter chips */}
         <div className="flex gap-2 mb-6 overflow-x-auto scrollbar-hide pb-1">
           {SERVICE_FILTERS.map((f) => (
-            <button
+            <button type="button"
               key={f}
               onClick={() => setActiveFilter(f)}
               className={cn(
@@ -192,7 +192,7 @@ export default function AutoRepairPage() {
             <Wrench className="h-12 w-12 text-muted-foreground/20" />
             <p className="text-sm font-semibold text-foreground">No shops found</p>
             <p className="text-xs text-muted-foreground">Try a different search or filter</p>
-            <button onClick={() => { setSearch(""); setActiveFilter("All"); }} className="text-xs text-primary font-semibold">Clear filters</button>
+            <button type="button" onClick={() => { setSearch(""); setActiveFilter("All"); }} className="text-xs text-primary font-semibold">Clear filters</button>
           </div>
         ) : (
           <AnimatePresence mode="wait">

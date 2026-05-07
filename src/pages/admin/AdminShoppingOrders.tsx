@@ -89,14 +89,14 @@ export default function AdminShoppingOrders() {
       {/* Header */}
       <div className="safe-area-top sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">
-          <button onClick={() => navigate(-1)} className="p-1.5 rounded-xl hover:bg-muted">
+          <button type="button" onClick={() => navigate(-1)} className="p-1.5 rounded-xl hover:bg-muted">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="flex-1">
             <h1 className="text-lg font-bold">Shopping Orders</h1>
             <p className="text-xs text-muted-foreground">{orders.length} orders</p>
           </div>
-          <button
+          <button type="button"
             onClick={fetchOrders}
             className="p-2 rounded-xl hover:bg-muted"
             disabled={isLoading}
@@ -108,7 +108,7 @@ export default function AdminShoppingOrders() {
         {/* Filters */}
         <div className="flex gap-2 px-4 pb-3 overflow-x-auto no-scrollbar">
           {filters.map((f) => (
-            <button
+            <button type="button"
               key={f}
               onClick={() => setFilter(f)}
               className={cn(
@@ -155,7 +155,7 @@ export default function AdminShoppingOrders() {
                 className="rounded-2xl border border-border/50 bg-card overflow-hidden"
               >
                 {/* Order Header */}
-                <button
+                <button type="button"
                   onClick={() => setExpandedId(isExpanded ? null : order.id)}
                   className="w-full p-4 text-left"
                 >
@@ -259,7 +259,7 @@ export default function AdminShoppingOrders() {
                         <p className="text-xs font-semibold mb-1.5 flex items-center gap-1">
                           <Image className="h-3 w-3" /> Receipt
                         </p>
-                        <button onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(order.receipt_photo_url))}>
+                        <button type="button" onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(order.receipt_photo_url))}>
                           <img
                             src={order.receipt_photo_url}
                             alt="Receipt"

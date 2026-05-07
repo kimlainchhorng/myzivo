@@ -111,7 +111,7 @@ export default function RideQuickSearch() {
               {focusedInput && (pickup || destination) && (
                 <motion.div initial={{ opacity: 0, y: -5 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -5 }} className="rounded-2xl bg-card border border-border/40 overflow-hidden shadow-lg">
                   {filteredSuggestions.map((s, i) => (
-                    <button key={s.id} onClick={() => selectAddress(s.primary)} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/20 transition-colors border-b border-border/20 last:border-0">
+                    <button type="button" key={s.id} onClick={() => selectAddress(s.primary)} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/20 transition-colors border-b border-border/20 last:border-0">
                       <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
                       <div>
                         <p className="text-xs font-bold text-foreground">{s.primary}</p>
@@ -132,7 +132,7 @@ export default function RideQuickSearch() {
                     {savedPlaces.map(place => {
                       const Icon = place.icon;
                       return (
-                        <button key={place.id} onClick={() => { setDestination(place.address); toast.success(`Destination: ${place.name}`); }} className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-card border border-border/40 shrink-0 active:scale-[0.97] transition-transform">
+                        <button type="button" key={place.id} onClick={() => { setDestination(place.address); toast.success(`Destination: ${place.name}`); }} className="flex items-center gap-2 px-4 py-3 rounded-2xl bg-card border border-border/40 shrink-0 active:scale-[0.97] transition-transform">
                           <Icon className={cn("w-4 h-4", place.color)} />
                           <div className="text-left">
                             <p className="text-xs font-bold text-foreground">{place.name}</p>
@@ -150,7 +150,7 @@ export default function RideQuickSearch() {
                     <History className="w-3 h-3" /> Recent
                   </h3>
                   {recentDestinations.map(dest => (
-                    <button key={dest.id} onClick={() => { setDestination(dest.address.split(",")[0]); toast.success(`Destination: ${dest.address.split(",")[0]}`); }} className="w-full flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40 text-left hover:border-primary/20 transition-colors">
+                    <button type="button" key={dest.id} onClick={() => { setDestination(dest.address.split(",")[0]); toast.success(`Destination: ${dest.address.split(",")[0]}`); }} className="w-full flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40 text-left hover:border-primary/20 transition-colors">
                       <div className="w-9 h-9 rounded-lg bg-muted/50 flex items-center justify-center shrink-0">
                         <MapPin className="w-4 h-4 text-muted-foreground" />
                       </div>
@@ -190,7 +190,7 @@ export default function RideQuickSearch() {
                   <p className="text-xs font-bold text-foreground truncate">{pickup}</p>
                   <p className="text-xs text-muted-foreground truncate">{destination}</p>
                 </div>
-                <button onClick={() => setStep("search")} className="text-[10px] text-primary font-bold">Edit</button>
+                <button type="button" onClick={() => setStep("search")} className="text-[10px] text-primary font-bold">Edit</button>
               </div>
             </div>
 

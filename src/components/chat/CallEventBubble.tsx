@@ -179,7 +179,7 @@ export default function CallEventBubble({
                       <MenuItem icon={Trash2} label="Delete this call" onClick={() => { if (id) onDelete?.(id); closeMenu(); }} destructive />
                       <MenuItem icon={Trash2} label="Delete all calls" onClick={() => { onDeleteAll?.(); closeMenu(); }} destructive />
                       <div className="border-t border-border/30">
-                        <button
+                        <button type="button"
                           onClick={(e) => { e.stopPropagation(); setDeleteStep("menu"); }}
                           className="w-full py-2.5 text-center text-[13px] font-medium text-muted-foreground hover:bg-muted/30 active:bg-muted/50 transition-colors"
                         >
@@ -206,7 +206,7 @@ function MenuItem({ icon: Icon, label, onClick, destructive, chevron }: {
   chevron?: boolean;
 }) {
   return (
-    <button
+    <button type="button"
       onClick={(e) => { e.stopPropagation(); onClick(); }}
       className={`flex items-center gap-3 w-full px-4 py-3 text-left transition-colors active:bg-muted/60 border-b border-border/15 last:border-b-0 ${
         destructive ? "text-destructive hover:bg-destructive/5" : "text-foreground hover:bg-muted/30"

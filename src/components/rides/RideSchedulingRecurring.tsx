@@ -90,7 +90,7 @@ export default function RideSchedulingRecurring() {
         {sections.map(s => {
           const Icon = s.icon;
           return (
-            <button key={s.id} onClick={() => setSection(s.id)} className={cn("flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all", section === s.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
+            <button type="button" key={s.id} onClick={() => setSection(s.id)} className={cn("flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all", section === s.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
               <Icon className="w-3.5 h-3.5" /> {s.label}
             </button>
           );
@@ -115,7 +115,7 @@ export default function RideSchedulingRecurring() {
                     { label: "This Weekend", time: "10:00 AM", icon: "📅" },
                     { label: "Custom Time", time: "Pick", icon: "⏰" },
                   ].map(opt => (
-                    <button key={opt.label} onClick={() => navigate("/rides", { state: { scheduledTime: opt.time, label: opt.label } })} className="flex items-center gap-2.5 p-3 rounded-xl border border-border/40 bg-muted/20 hover:bg-muted/40 transition-colors active:scale-[0.98]">
+                    <button type="button" key={opt.label} onClick={() => navigate("/rides", { state: { scheduledTime: opt.time, label: opt.label } })} className="flex items-center gap-2.5 p-3 rounded-xl border border-border/40 bg-muted/20 hover:bg-muted/40 transition-colors active:scale-[0.98]">
                       <span className="text-lg">{opt.icon}</span>
                       <div className="text-left">
                         <p className="text-xs font-bold text-foreground">{opt.label}</p>
@@ -212,7 +212,7 @@ export default function RideSchedulingRecurring() {
 
                 <div className="flex gap-2">
                   {["Google", "Apple", "Outlook"].map(cal => (
-                    <button key={cal} onClick={() => toggleCalSync(cal)} className={cn("flex-1 py-2 rounded-xl text-xs font-bold border transition-colors", syncedCals.includes(cal) ? "border-primary bg-primary/5 text-primary" : "border-border/40 bg-muted/20 text-muted-foreground hover:bg-muted/40")}>
+                    <button type="button" key={cal} onClick={() => toggleCalSync(cal)} className={cn("flex-1 py-2 rounded-xl text-xs font-bold border transition-colors", syncedCals.includes(cal) ? "border-primary bg-primary/5 text-primary" : "border-border/40 bg-muted/20 text-muted-foreground hover:bg-muted/40")}>
                       {cal}{syncedCals.includes(cal) ? " ✓" : ""}
                     </button>
                   ))}
@@ -266,7 +266,7 @@ export default function RideSchedulingRecurring() {
                           <p className="text-[9px] text-muted-foreground capitalize">{stop.type}</p>
                         </div>
                         {stop.type === "stop" && (
-                          <button onClick={() => { setMultiStops(prev => prev.filter(s => s.id !== stop.id)); toast.info("Stop removed"); }} className="p-1 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors">
+                          <button type="button" onClick={() => { setMultiStops(prev => prev.filter(s => s.id !== stop.id)); toast.info("Stop removed"); }} className="p-1 rounded-lg hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors">
                             <Trash2 className="w-3.5 h-3.5" />
                           </button>
                         )}

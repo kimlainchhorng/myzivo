@@ -147,7 +147,7 @@ export function LodgingRoomPhotoUploader({
             {photos.map((url, i) => {
               const isCover = i === safeCover;
               return (
-                <button
+                <button type="button"
                   key={url + i}
                   type="button"
                   onClick={() => { setCover(i); setCoverPickerOpen(false); }}

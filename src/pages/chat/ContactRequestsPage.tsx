@@ -34,7 +34,7 @@ export default function ContactRequestsPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header className="flex items-center gap-3 px-4 h-14 border-b border-border/30 sticky top-0 bg-background/95 backdrop-blur z-10 pt-safe">
-        <button onClick={goBack} aria-label="Back" className="h-9 w-9 rounded-full hover:bg-muted/60 flex items-center justify-center">
+        <button type="button" onClick={goBack} aria-label="Back" className="h-9 w-9 rounded-full hover:bg-muted/60 flex items-center justify-center">
           <ArrowLeft className="h-5 w-5" />
         </button>
         <h1 className="font-semibold text-lg">Contact Requests</h1>
@@ -42,7 +42,7 @@ export default function ContactRequestsPage() {
 
       <div className="px-4 pt-3">
         <div role="tablist" aria-label="Request direction" className="grid grid-cols-2 gap-1 p-1 rounded-full bg-muted/60">
-          <button
+          <button type="button"
             role="tab"
             aria-selected={tab === "in"}
             onClick={() => setTab("in")}
@@ -50,7 +50,7 @@ export default function ContactRequestsPage() {
           >
             Incoming{incoming.length ? ` · ${incoming.length}` : ""}
           </button>
-          <button
+          <button type="button"
             role="tab"
             aria-selected={tab === "out"}
             onClick={() => setTab("out")}
@@ -90,19 +90,19 @@ export default function ContactRequestsPage() {
             </div>
             {tab === "in" && r.status === "pending" && (
               <div className="flex gap-1.5">
-                <button onClick={() => accept(r.id)} aria-label="Accept request" className="h-9 w-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+                <button type="button" onClick={() => accept(r.id)} aria-label="Accept request" className="h-9 w-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
                   <Check className="h-4 w-4" />
                 </button>
-                <button onClick={() => decline(r.id)} aria-label="Decline request" className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
+                <button type="button" onClick={() => decline(r.id)} aria-label="Decline request" className="h-9 w-9 rounded-full bg-muted flex items-center justify-center">
                   <X className="h-4 w-4" />
                 </button>
               </div>
             )}
             {tab === "out" && r.status === "pending" && (
-              <button onClick={() => cancel(r.id)} className="px-3 h-9 rounded-full bg-muted text-xs font-medium">Cancel</button>
+              <button type="button" onClick={() => cancel(r.id)} className="px-3 h-9 rounded-full bg-muted text-xs font-medium">Cancel</button>
             )}
             {tab === "out" && r.status === "declined" && (
-              <button
+              <button type="button"
                 onClick={() => handleResend(r.id)}
                 aria-label="Resend declined request"
                 className="px-3 h-9 rounded-full bg-emerald-500 text-white text-xs font-medium flex items-center gap-1"

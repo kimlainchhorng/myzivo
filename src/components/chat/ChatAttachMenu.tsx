@@ -148,7 +148,7 @@ export default function ChatAttachMenu({
               {menuItems.map((item) => {
                 const isLockedGated = item.id === "locked" && !canUseLocked;
                 return (
-                  <button
+                  <button type="button"
                     key={item.id}
                     onClick={() => handleAction(item.id)}
                     className="flex flex-col items-center gap-2 group relative"

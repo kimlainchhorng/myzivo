@@ -135,7 +135,7 @@ const TripSharingWidget = ({
         ].map((option) => {
           const Icon = option.icon;
           return (
-            <button
+            <button type="button"
               key={option.label}
               onClick={() => handleShareMethod(option.method)}
               className="p-3 rounded-xl bg-muted/20 hover:bg-muted/30 transition-colors flex flex-col items-center gap-1"

@@ -449,12 +449,12 @@ export default function UniversalSearchOverlay({ isOpen, onClose }: UniversalSea
                 className="w-full bg-muted border border-border rounded-xl pl-10 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
               />
               {query && (
-                <button onClick={() => setQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2">
+                <button type="button" onClick={() => setQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2">
                   <X className="w-4 h-4 text-muted-foreground" />
                 </button>
               )}
             </div>
-            <button
+            <button type="button"
               onClick={onClose}
               className="text-sm text-muted-foreground font-medium active:text-foreground transition-all duration-200 touch-manipulation"
             >
@@ -469,7 +469,7 @@ export default function UniversalSearchOverlay({ isOpen, onClose }: UniversalSea
                 const count = tabCounts[tab.key];
                 const isActive = activeTab === tab.key;
                 return (
-                  <button
+                  <button type="button"
                     key={tab.key}
                     onClick={() => setActiveTab(tab.key)}
                     className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold transition-all touch-manipulation ${
@@ -501,7 +501,7 @@ export default function UniversalSearchOverlay({ isOpen, onClose }: UniversalSea
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Recent</h3>
-                      <button
+                      <button type="button"
                         onClick={handleClearHistory}
                         className="text-xs text-destructive font-medium flex items-center gap-1 active:opacity-70 touch-manipulation"
                       >
@@ -511,7 +511,7 @@ export default function UniversalSearchOverlay({ isOpen, onClose }: UniversalSea
                     </div>
                     <div className="space-y-0.5">
                       {recentSearches.map((s, i) => (
-                        <button
+                        <button type="button"
                           key={i}
                           onClick={() => setQuery(s.query)}
                           className="w-full flex items-center gap-3 py-2.5 px-2 rounded-xl hover:bg-accent active:bg-accent/80 transition-all duration-200 text-left touch-manipulation"
@@ -530,7 +530,7 @@ export default function UniversalSearchOverlay({ isOpen, onClose }: UniversalSea
                   <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Quick Access</h3>
                   <div className="flex flex-wrap gap-2">
                     {POPULAR_SERVICES.map((svc) => (
-                      <button
+                      <button type="button"
                         key={svc.label}
                         onClick={() => handleNavigate(svc.href)}
                         className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border ${svc.color} active:scale-95 transition-transform touch-manipulation`}
@@ -547,7 +547,7 @@ export default function UniversalSearchOverlay({ isOpen, onClose }: UniversalSea
                   <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Popular Searches</h3>
                   <div className="flex flex-wrap gap-2">
                     {["Pizza", "Airport", "Sushi", "Coffee", "Hotel"].map((term) => (
-                      <button
+                      <button type="button"
                         key={term}
                         onClick={() => setQuery(term)}
                         className="px-3 py-1.5 rounded-full text-xs font-medium bg-muted text-muted-foreground border border-border hover:bg-accent touch-manipulation transition-all duration-200 hover:scale-105 active:scale-[0.97]"
@@ -567,7 +567,7 @@ export default function UniversalSearchOverlay({ isOpen, onClose }: UniversalSea
                     </h3>
                     <div className="space-y-0.5">
                       {nearbyRestaurants.map((r) => (
-                        <button
+                        <button type="button"
                           key={r.id}
                           onClick={() => handleNavigate(`/eats/restaurant/${r.id}`)}
                           className="w-full flex items-center gap-3 py-2.5 px-2 rounded-xl hover:bg-accent active:bg-accent/80 transition-colors text-left touch-manipulation"
@@ -597,7 +597,7 @@ export default function UniversalSearchOverlay({ isOpen, onClose }: UniversalSea
                   </div>
                 )}
                 {filteredCards.map((card) => (
-                  <button
+                  <button type="button"
                     key={card.key}
                     onClick={card.action}
                     className="w-full flex items-center gap-3 py-3 px-2 rounded-xl hover:bg-accent active:bg-accent/80 transition-colors text-left touch-manipulation"

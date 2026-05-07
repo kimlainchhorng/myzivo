@@ -470,13 +470,13 @@ export default function AdminLodgingWiringCheckPage() {
               History
             </CardTitle>
             <div className="inline-flex rounded-lg border border-border overflow-hidden">
-              <button
+              <button type="button"
                 onClick={() => setHistoryTab("runs")}
                 className={`text-[11px] px-2.5 py-1 inline-flex items-center gap-1 ${historyTab === "runs" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-accent"}`}
               >
                 <History className="h-3 w-3" /> Runs
               </button>
-              <button
+              <button type="button"
                 onClick={() => setHistoryTab("actions")}
                 className={`text-[11px] px-2.5 py-1 inline-flex items-center gap-1 ${historyTab === "actions" ? "bg-primary text-primary-foreground" : "bg-background text-muted-foreground hover:bg-accent"}`}
               >
@@ -622,7 +622,7 @@ export default function AdminLodgingWiringCheckPage() {
                       {hasFilter && (
                         <div className="flex items-center justify-between mb-1">
                           <span className="text-[10px] text-muted-foreground">{filtered.length}/{actions.length} matching</span>
-                          <button
+                          <button type="button"
                             onClick={() => { setFilterAdmin(""); setFilterRun(""); setFilterCheck(""); setFilterType(""); }}
                             className="text-[10px] text-primary hover:underline"
                           >
@@ -646,7 +646,7 @@ export default function AdminLodgingWiringCheckPage() {
                                   </Badge>
                                   <span className="text-foreground font-medium truncate">{a.check_name || a.check_id}</span>
                                   {a.run_id && (
-                                    <button
+                                    <button type="button"
                                       onClick={() => setFilterRun(a.run_id!.slice(0, 8))}
                                       className="text-[9px] px-1 rounded bg-muted font-mono hover:bg-accent"
                                       title="Filter by this run"

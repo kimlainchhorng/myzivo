@@ -120,7 +120,7 @@ export default function StorePerformanceSection({ storeId }: Props) {
           { id: "goals" as const, label: "Goals", icon: Target },
           { id: "feedback" as const, label: "Feedback", icon: MessageSquare },
         ].map(t => (
-          <button key={t.id} onClick={() => setTab(t.id)}
+          <button type="button" key={t.id} onClick={() => setTab(t.id)}
             className={cn("flex items-center gap-1.5 px-3 py-1.5 rounded-md text-sm font-medium transition-all",
               tab === t.id ? "bg-background shadow-sm text-foreground" : "text-muted-foreground hover:text-foreground"
             )}>
@@ -144,7 +144,7 @@ export default function StorePerformanceSection({ storeId }: Props) {
       {tab === "reviews" && (
         <div className="space-y-3">
           {reviews.filter(r => r.employeeName.toLowerCase().includes(search.toLowerCase())).map(r => (
-            <button key={r.id} onClick={() => setSelectedReview(r)}
+            <button type="button" key={r.id} onClick={() => setSelectedReview(r)}
               className="w-full text-left rounded-xl border border-border/40 bg-card p-4 hover:shadow-md transition-all">
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-3">

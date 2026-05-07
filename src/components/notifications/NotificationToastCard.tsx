@@ -178,7 +178,7 @@ export default function NotificationToastCard({
 
             <div className="flex shrink-0 items-center gap-1.5">
               {actionLabel && onAction && (
-                <button
+                <button type="button"
                   onClick={() => {
                     onDismiss?.();
                     onAction();
@@ -192,7 +192,7 @@ export default function NotificationToastCard({
                 </button>
               )}
               {onDismiss && (
-                <button
+                <button type="button"
                   onClick={onDismiss}
                   aria-label="Dismiss"
                   className="flex h-7 w-7 items-center justify-center rounded-full text-muted-foreground/70 transition-colors hover:bg-muted hover:text-foreground"

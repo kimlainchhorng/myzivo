@@ -113,7 +113,7 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
           const isActive = activeTab === tab.id;
 
           return (
-            <button
+            <button type="button"
               key={tab.id}
               onPointerDown={() => {
                 // Strip `/login?redirect=...` wrapper so prefetch hits the
@@ -139,7 +139,7 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
                 "flex items-center justify-center flex-1 transition-opacity duration-150 touch-manipulation active:opacity-60 relative min-w-[44px] min-h-[44px]",
                 isActive ? "text-foreground" : "text-foreground/70"
               )}
-              aria-label={tab.id === "live" ? "Live" : t(tab.labelKey)}
+              aria-label={t(tab.labelKey)}
               aria-current={isActive ? "page" : undefined}
             >
               <div className="relative flex items-center justify-center">

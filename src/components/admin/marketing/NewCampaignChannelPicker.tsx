@@ -32,7 +32,7 @@ export default function NewCampaignChannelPicker({ open, onClose, onSelect }: Pr
           {CHANNELS.map((c) => {
             const Icon = c.icon;
             return (
-              <button
+              <button type="button"
                 key={c.id}
                 onClick={() => {
                   onSelect(c.id);

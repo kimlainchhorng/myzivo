@@ -425,7 +425,7 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
           <div className="flex items-center justify-between px-5 pt-2 pb-3 border-b border-border/40">
             <div className="flex items-center gap-3">
               {step !== "choose" && !uploading && (
-                <button
+                <button type="button"
                   onClick={() => setStep("choose")}
                   className="w-9 h-9 -ml-1 flex items-center justify-center rounded-full hover:bg-muted/60 active:scale-95 transition"
                   aria-label="Back"
@@ -447,7 +447,7 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
                 </div>
               </div>
             </div>
-            <button
+            <button type="button"
               onClick={handleAttemptClose}
               aria-label="Close"
               className="w-10 h-10 flex items-center justify-center rounded-full hover:bg-muted/60 active:scale-95 transition"
@@ -536,7 +536,7 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
                     <div className="absolute top-3 left-3 right-3 flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1.5">
                       <Music className="w-3.5 h-3.5 text-white shrink-0" />
                       <span className="text-white text-xs font-medium truncate flex-1">{audioTrack.title}</span>
-                      <button
+                      <button type="button"
                         onClick={() => {
                           previewAudioRef.current?.pause();
                           setAudioPreviewing(false);
@@ -558,7 +558,7 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
                   maxLength={200}
                   className="w-full rounded-2xl border border-border/60 bg-muted/30 px-4 py-3 text-sm outline-none focus:ring-2 focus:ring-primary/40"
                 />
-                <button
+                <button type="button"
                   onClick={() => setShowMusicSheet(true)}
                   className="w-full flex items-center gap-2 rounded-2xl border border-border/60 bg-muted/20 px-4 py-3 text-sm hover:bg-muted/40"
                 >
@@ -591,7 +591,7 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
                     <div className="absolute top-3 left-3 right-3 flex items-center gap-2 bg-black/40 backdrop-blur-sm rounded-full px-3 py-1.5">
                       <Music className="w-3.5 h-3.5 text-white shrink-0" />
                       <span className="text-white text-xs font-medium truncate flex-1">{audioTrack.title}</span>
-                      <button onClick={() => setAudioTrack(null)} aria-label="Remove music" className="shrink-0">
+                      <button type="button" onClick={() => setAudioTrack(null)} aria-label="Remove music" className="shrink-0">
                         <X className="w-3.5 h-3.5 text-white/80" />
                       </button>
                     </div>
@@ -599,7 +599,7 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
                 </div>
                 <div className="flex items-center gap-2 overflow-x-auto pb-1">
                   {TEXT_BACKGROUNDS.map((bg, i) => (
-                    <button
+                    <button type="button"
                       key={i}
                       onClick={() => setBgIdx(i)}
                       aria-label={`Background ${i + 1}`}
@@ -611,7 +611,7 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
                     />
                   ))}
                 </div>
-                <button
+                <button type="button"
                   onClick={() => setShowMusicSheet(true)}
                   className="w-full flex items-center gap-2 rounded-2xl border border-border/60 bg-muted/20 px-4 py-3 text-sm hover:bg-muted/40"
                 >
@@ -634,7 +634,7 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
                     <p className="text-xs font-bold text-destructive">Upload failed</p>
                     <p className="text-[11px] text-destructive/80 break-words">{uploadError}</p>
                   </div>
-                  <button
+                  <button type="button"
                     onClick={publish}
                     className="shrink-0 px-3 h-7 rounded-full bg-destructive text-destructive-foreground text-xs font-bold"
                   >
@@ -660,7 +660,7 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
                 </div>
               )}
 
-              <button
+              <button type="button"
                 onClick={publish}
                 disabled={uploading || (step === "compose-text" && !text.trim())}
                 className="w-full h-11 rounded-full bg-primary text-primary-foreground font-bold text-sm shadow-md disabled:opacity-50 flex items-center justify-center gap-2"
@@ -701,7 +701,7 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
                   <p className="text-sm font-bold flex items-center gap-2">
                     <Music className="w-4 h-4 text-primary" /> Add music
                   </p>
-                  <button
+                  <button type="button"
                     onClick={() => setShowMusicSheet(false)}
                     aria-label="Close"
                     className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted/60"
@@ -723,7 +723,7 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
                           selected ? "bg-primary/10" : "hover:bg-muted/40"
                         )}
                       >
-                        <button
+                        <button type="button"
                           onClick={() => toggleAudioPreview(track)}
                           className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0"
                           aria-label={audioPreviewing && selected ? "Pause preview" : "Play preview"}
@@ -734,7 +734,7 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
                             <Play className="w-4 h-4" />
                           )}
                         </button>
-                        <button
+                        <button type="button"
                           onClick={() => {
                             setAudioTrack(track);
                             setShowMusicSheet(false);
@@ -757,7 +757,7 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
                 </div>
                 {audioTrack && (
                   <div className="border-t border-border/40 p-3 pb-[max(env(safe-area-inset-bottom),12px)]">
-                    <button
+                    <button type="button"
                       onClick={() => {
                         previewAudioRef.current?.pause();
                         setAudioPreviewing(false);
@@ -796,13 +796,13 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
                   Your story is still uploading. Closing now will discard it.
                 </p>
                 <div className="flex items-center gap-2 mt-4">
-                  <button
+                  <button type="button"
                     onClick={() => setShowQuitConfirm(false)}
                     className="flex-1 h-10 rounded-full border border-border/60 text-sm font-bold hover:bg-muted/40"
                   >
                     Keep uploading
                   </button>
-                  <button
+                  <button type="button"
                     onClick={() => {
                       activeUploadRef.current?.abort();
                       setShowQuitConfirm(false);

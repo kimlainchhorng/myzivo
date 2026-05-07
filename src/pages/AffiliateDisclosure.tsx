@@ -129,7 +129,7 @@ const AffiliateDisclosure = () => {
                       Email: <a href="mailto:info@hizivo.com" className="text-primary hover:underline">info@hizivo.com</a>
                     </p>
                     <p className="text-sm">
-                      Website: <button onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl("https://hizivo.com"))} className="text-primary hover:underline">https://hizivo.com</button>
+                      Website: <button type="button" onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl("https://hizivo.com"))} className="text-primary hover:underline">https://hizivo.com</button>
                     </p>
                   </div>
                 </div>

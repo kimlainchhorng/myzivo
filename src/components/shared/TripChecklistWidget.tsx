@@ -136,7 +136,7 @@ const TripChecklistWidget = ({ destination = "Paris", className }: TripChecklist
         {/* Category Tabs */}
         <div className="flex gap-1 overflow-x-auto pb-2 mb-3 -mx-1 px-1">
           {categories.map((cat) => (
-            <button
+            <button type="button"
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
               className={cn(
@@ -161,7 +161,7 @@ const TripChecklistWidget = ({ destination = "Paris", className }: TripChecklist
                 item.checked ? "bg-muted/30" : "hover:bg-muted/50"
               )}
             >
-              <button
+              <button type="button"
                 onClick={() => toggleItem(item.id)}
                 className="shrink-0"
               >
@@ -181,7 +181,7 @@ const TripChecklistWidget = ({ destination = "Paris", className }: TripChecklist
               )}>
                 {item.label}
               </span>
-              <button
+              <button type="button"
                 onClick={() => deleteItem(item.id)}
                 className="opacity-0 group-hover:opacity-100 p-1 rounded hover:bg-destructive/10 transition-opacity"
               >

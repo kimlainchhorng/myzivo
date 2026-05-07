@@ -204,7 +204,7 @@ export default function MerchantViewerHeatmap({ storeId }: Props) {
                     <Gift className="h-3.5 w-3.5 text-primary" />
                     Send Coupon to {selectedCluster.areaName}
                   </p>
-                  <button onClick={() => setSelectedCluster(null)}>
+                  <button type="button" onClick={() => setSelectedCluster(null)}>
                     <X className="h-4 w-4 text-muted-foreground" />
                   </button>
                 </div>

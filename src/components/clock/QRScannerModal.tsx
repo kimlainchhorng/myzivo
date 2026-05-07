@@ -254,7 +254,7 @@ export function QRScannerModal({ open, onClose, onScan, title = "Scan QR Code" }
             <Camera className="w-4 h-4" />
             {title}
           </DialogTitle>
-          <button
+          <button type="button"
             onClick={handleClose}
             aria-label="Close scanner"
             className="absolute right-3 top-3 min-w-[44px] min-h-[44px] -m-2 rounded-full bg-white/10 flex items-center justify-center"
@@ -320,7 +320,7 @@ export function QRScannerModal({ open, onClose, onScan, title = "Scan QR Code" }
                 <XCircle className="w-14 h-14 text-red-400 mb-3" />
                 <p className="text-white text-[15px] font-bold mb-1">Failed</p>
                 <p className="text-red-200 text-[12px] text-center px-6">{message}</p>
-                <button
+                <button type="button"
                   onClick={handleRetry}
                   className="mt-4 px-5 py-2 rounded-full bg-white/20 text-white text-[12px] font-semibold"
                 >

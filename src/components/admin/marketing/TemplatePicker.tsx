@@ -64,7 +64,7 @@ export default function TemplatePicker({ storeId, channel, onPick, onCreateNew, 
       ) : (
         <div className="space-y-1.5 max-h-64 overflow-y-auto">
           {filtered.map((t) => (
-            <button
+            <button type="button"
               key={t.id}
               type="button"
               onClick={() => onPick(t)}

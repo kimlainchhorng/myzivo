@@ -188,7 +188,7 @@ export default function P2PTransferSheet() {
                     : "They'll see it in chat and accept to settle."}
                 </p>
               </div>
-              <button onClick={close} aria-label="Close" className="h-9 w-9 -mr-1.5 flex items-center justify-center rounded-full hover:bg-muted">
+              <button type="button" onClick={close} aria-label="Close" className="h-9 w-9 -mr-1.5 flex items-center justify-center rounded-full hover:bg-muted">
                 <X className="w-4 h-4 text-muted-foreground" />
               </button>
             </div>
@@ -209,7 +209,7 @@ export default function P2PTransferSheet() {
 
               <div className="flex gap-2 justify-center mb-3">
                 {QUICK_AMOUNTS.map((v) => (
-                  <button
+                  <button type="button"
                     key={v}
                     onClick={() => setAmount(String(v))}
                     className="px-3 py-1.5 rounded-full bg-muted/60 hover:bg-muted text-sm font-semibold text-foreground active:scale-95 transition"
@@ -257,7 +257,7 @@ export default function P2PTransferSheet() {
                 const overBalance = detail.mode !== "request" && availableCents != null && cents > availableCents;
                 return (
                   <>
-                    <button
+                    <button type="button"
                       onClick={() => void send()}
                       disabled={sending || !amount || overBalance}
                       className="w-full flex items-center justify-center gap-2 py-3.5 rounded-2xl bg-primary text-primary-foreground font-bold text-base active:opacity-80 transition disabled:opacity-50"

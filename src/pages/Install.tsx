@@ -220,7 +220,7 @@ const Install = () => {
 
       {/* Skip Link */}
       <div className="px-6 pb-8 text-center">
-        <button 
+        <button type="button" 
           onClick={() => navigate("/")}
           className="text-sm text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 mx-auto"
         >

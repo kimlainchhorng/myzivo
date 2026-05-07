@@ -46,7 +46,7 @@ export default function TrendingNearYou() {
             <p className="text-[10px] text-muted-foreground font-medium">Personalized for you</p>
           </div>
         </div>
-        <button
+        <button type="button"
           onClick={() => navigate("/store-map")}
           className="flex items-center gap-0.5 text-xs text-foreground font-semibold active:opacity-60 transition-opacity"
         >

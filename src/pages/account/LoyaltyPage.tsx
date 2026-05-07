@@ -85,7 +85,7 @@ export default function LoyaltyPage() {
       {/* Sticky app header */}
       <div className="sticky top-0 safe-area-top z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">
-          <button
+          <button type="button"
             onClick={() => navigate(-1)}
             className="w-10 h-10 rounded-full bg-muted border border-border/50 flex items-center justify-center"
           >

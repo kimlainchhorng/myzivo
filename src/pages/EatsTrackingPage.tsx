@@ -318,7 +318,7 @@ export default function EatsTrackingPage() {
             </p>
             <div className="flex justify-center gap-2">
               {[1, 2, 3, 4, 5].map(s => (
-                <button key={s} onClick={async () => {
+                <button type="button" key={s} onClick={async () => {
                   setRating(s);
                   await supabase.from("food_orders").update({ rating: s } as any).eq("id", order.id);
                   toast.success(`Rated ${s} stars! Thank you!`);
@@ -345,7 +345,7 @@ export default function EatsTrackingPage() {
 
         {/* Share live order link — only while it's still in progress */}
         {!isDelivered && !isCancelled && (
-          <button
+          <button type="button"
             onClick={async () => {
               const url = `${window.location.origin}/share/order/${order.id}`;
               try {

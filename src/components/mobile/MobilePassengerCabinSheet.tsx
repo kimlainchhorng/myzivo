@@ -154,7 +154,7 @@ export default function MobilePassengerCabinSheet({
                   const isSelected = cabin === option.value;
                   const Icon = option.icon;
                   return (
-                    <button
+                    <button type="button"
                       key={option.value}
                       type="button"
                       className="relative rounded-[18px] p-4 pb-3.5 text-left transition-all duration-200 active:scale-[0.94] touch-manipulation overflow-hidden min-h-[120px] flex flex-col justify-between"

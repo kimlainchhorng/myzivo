@@ -148,7 +148,7 @@ export const AirlinePartnersHub = ({ className, zivoMiles = 45680 }: AirlinePart
           </div>
           <div className="flex gap-2 overflow-x-auto pb-1">
             {ALLIANCES.map(alliance => (
-              <button
+              <button type="button"
                 key={alliance}
                 onClick={() => setSelectedAlliance(alliance)}
                 className={cn(

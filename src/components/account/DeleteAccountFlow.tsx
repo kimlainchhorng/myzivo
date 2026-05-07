@@ -211,6 +211,7 @@ export default function DeleteAccountFlow({ open, onOpenChange }: Props) {
                 <div className="space-y-2">
                   {(reasonId === "too_much_time" || reasonId === "too_many_notifs") && (
                     <button
+                      type="button"
                       onClick={() => {
                         onOpenChange(false);
                         navigate("/account/notifications");
@@ -226,6 +227,7 @@ export default function DeleteAccountFlow({ open, onOpenChange }: Props) {
                   )}
 
                   <button
+                    type="button"
                     onClick={() => {
                       onOpenChange(false);
                       navigate("/account/privacy");
@@ -243,6 +245,7 @@ export default function DeleteAccountFlow({ open, onOpenChange }: Props) {
 
                   {(reasonId === "privacy" || reasonId === "technical") && (
                     <button
+                      type="button"
                       onClick={() => {
                         onOpenChange(false);
                         navigate("/support");

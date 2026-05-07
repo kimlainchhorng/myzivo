@@ -195,7 +195,7 @@ export const StatusTiersDashboard = ({ className }: StatusTiersDashboardProps) =
         <div className="p-4 border-b border-border/50">
           <div className="flex gap-2">
             {TIERS.map(tier => (
-              <button
+              <button type="button"
                 key={tier.id}
                 onClick={() => setSelectedTier(tier.id)}
                 className={cn(

@@ -20,7 +20,7 @@ export function ScrollToTopButton() {
   }, []);
 
   return (
-    <button
+    <button type="button"
       onClick={scrollToTop}
       aria-label="Scroll to top"
       style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 6rem)" }}

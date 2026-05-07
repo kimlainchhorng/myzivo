@@ -191,7 +191,7 @@ export default function CreateMarketingCampaignWizard({ open, onClose, storeId, 
                         const I = c.icon;
                         const sel = channel === c.id;
                         return (
-                          <button
+                          <button type="button"
                             key={c.id}
                             onClick={() => setChannel(c.id)}
                             className={`p-3 rounded-lg border text-left transition-all ${

@@ -307,7 +307,7 @@ export default function StoreMapPicker({ open, onOpenChange, currentAddress, cur
             <div className="absolute left-4 right-4 top-full mt-1 bg-background border border-border rounded-xl shadow-lg z-[60] max-h-40 overflow-y-auto"
                  style={{ backdropFilter: 'blur(8px)', background: 'hsl(var(--background) / 0.97)' }}>
               {suggestions.map((s) => (
-                <button
+                <button type="button"
                   key={s.place_id}
                   type="button"
                   className="w-full text-left px-3 py-2.5 text-sm hover:bg-muted transition-colors flex items-start gap-2 border-b border-border/50 last:border-0"

@@ -510,7 +510,7 @@ export default function StoreProfilePage() {
                 );
               }
               return (
-                <button
+                <button type="button"
                   onClick={() => navigate("/trips")}
                   onContextMenu={(e) => {
                     e.preventDefault();
@@ -1147,7 +1147,7 @@ export default function StoreProfilePage() {
                     </AnimatePresence>
 
                     {/* Like button */}
-                    <button
+                    <button type="button"
                       onClick={(e) => { e.stopPropagation(); toggleLike(product.id); }}
                       className="absolute bottom-1 right-1 h-5 w-5 rounded-full bg-background/60 backdrop-blur flex items-center justify-center z-20"
                     >
@@ -1165,7 +1165,7 @@ export default function StoreProfilePage() {
                     {hasSizes && (
                       <div className="flex gap-0.5 mt-1">
                         {sizeVariants.map((sv, sIdx) => (
-                          <button
+                          <button type="button"
                             key={sv.size}
                             onClick={(e) => { e.stopPropagation(); setSelectedSizes(prev => ({ ...prev, [product.id]: sIdx })); }}
                             className={cn(
@@ -1219,14 +1219,14 @@ export default function StoreProfilePage() {
                     {/* Quantity stepper */}
                     {cartItem && (
                       <div className="flex items-center justify-between bg-primary/[0.08] rounded-lg p-0.5 mt-1">
-                        <button
+                        <button type="button"
                           onClick={(e) => { e.stopPropagation(); cart.updateQuantity(cartKey, cartItem.quantity - 1); }}
                           className="h-5 w-5 rounded-md bg-background/80 flex items-center justify-center touch-manipulation"
                         >
                           <Minus className="h-2.5 w-2.5 text-foreground/60" />
                         </button>
                         <span className="text-[9px] font-black text-primary">{cartItem.quantity}</span>
-                        <button
+                        <button type="button"
                           onClick={(e) => { e.stopPropagation(); cart.updateQuantity(cartKey, cartItem.quantity + 1); }}
                           className="h-5 w-5 rounded-md bg-background/80 flex items-center justify-center touch-manipulation"
                         >
@@ -1290,7 +1290,7 @@ export default function StoreProfilePage() {
             transition={{ type: "spring", stiffness: 300, damping: 25 }}
             className="fixed bottom-24 left-3 right-3 z-50"
           >
-            <button
+            <button type="button"
               onClick={() => setShowCart(true)}
               className="w-full rounded-2xl bg-gradient-to-r from-primary via-primary to-primary/90 text-primary-foreground shadow-2xl shadow-primary/30 border border-primary/30 relative overflow-hidden active:scale-[0.98] transition-transform px-4 py-3"
             >

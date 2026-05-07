@@ -162,7 +162,7 @@ export default function ChatNotificationSettings({ open, onClose, chatPartnerId,
             <div className="w-10 h-1 rounded-full bg-muted-foreground/30 mx-auto mb-4" />
             <div className="flex items-center justify-between">
               <h3 className="text-lg font-bold text-foreground">Notification Settings</h3>
-              <button onClick={onClose} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+              <button type="button" onClick={onClose} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
                 <X className="w-4 h-4 text-muted-foreground" />
               </button>
             </div>
@@ -185,14 +185,14 @@ export default function ChatNotificationSettings({ open, onClose, chatPartnerId,
                         {muteUntil ? `Until ${new Date(muteUntil).toLocaleString()}` : "Forever"}
                       </p>
                     </div>
-                    <button onClick={handleUnmute} className="px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold">
+                    <button type="button" onClick={handleUnmute} className="px-4 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-semibold">
                       Unmute
                     </button>
                   </div>
                 </div>
               ) : (
                 <div>
-                  <button
+                  <button type="button"
                     onClick={() => setShowMuteOptions(!showMuteOptions)}
                     className="w-full p-3 rounded-xl border border-border/40 text-sm text-foreground text-left hover:bg-muted/30 transition-colors"
                   >
@@ -208,7 +208,7 @@ export default function ChatNotificationSettings({ open, onClose, chatPartnerId,
                       >
                         <div className="grid grid-cols-2 gap-2 mt-2">
                           {MUTE_OPTIONS.map((opt) => (
-                            <button
+                            <button type="button"
                               key={opt.hours}
                               onClick={() => handleMute(opt.hours)}
                               className="p-2.5 rounded-xl border border-border/40 text-xs font-medium text-foreground hover:bg-primary/10 hover:border-primary/30 transition-colors"
@@ -232,7 +232,7 @@ export default function ChatNotificationSettings({ open, onClose, chatPartnerId,
               </h4>
               <div className="grid grid-cols-5 gap-2">
                 {NOTIFICATION_TONES.map((t) => (
-                  <button
+                  <button type="button"
                     key={t.id}
                     onClick={() => handleToneChange(t.id)}
                     className={`flex flex-col items-center gap-1.5 p-2.5 rounded-xl border transition-colors ${
@@ -275,7 +275,7 @@ export default function ChatNotificationSettings({ open, onClose, chatPartnerId,
                 </div>
               </div>
               {(dndStart || dndEnd) && (
-                <button onClick={handleDndSave} className="mt-3 w-full h-10 rounded-xl bg-primary text-primary-foreground text-sm font-semibold">
+                <button type="button" onClick={handleDndSave} className="mt-3 w-full h-10 rounded-xl bg-primary text-primary-foreground text-sm font-semibold">
                   Save Schedule
                 </button>
               )}

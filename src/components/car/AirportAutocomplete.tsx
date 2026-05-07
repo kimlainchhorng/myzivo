@@ -206,7 +206,7 @@ export default function AirportAutocomplete({
               </div>
             )}
             {suggestions.map((airport, index) => (
-              <button
+              <button type="button"
                 key={airport.code}
                 type="button"
                 onClick={() => handleSelectAirport(airport)}

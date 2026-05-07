@@ -527,7 +527,7 @@ export default function IncomingCallListener() {
               </div>
 
               <div className="w-full mt-2 flex items-center justify-center gap-6">
-                <button
+                <button type="button"
                   onClick={handleDecline}
                   aria-label="Decline incoming call"
                   title="Decline"
@@ -535,7 +535,7 @@ export default function IncomingCallListener() {
                 >
                   <PhoneOff className="h-6 w-6" />
                 </button>
-                <button
+                <button type="button"
                   onClick={handleAccept}
                   disabled={isAccepting}
                   aria-label="Accept incoming call"

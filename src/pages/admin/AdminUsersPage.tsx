@@ -536,7 +536,7 @@ export default function AdminUsersPage() {
                     const uid = getProfileUid(user);
                     const roles = roleMap[uid] || [];
                     return (
-                    <button
+                    <button type="button"
                       key={uid}
                       onClick={() => setSelectedUser(user)}
                       className="w-full text-left px-4 py-3 hover:bg-muted/20 transition-colors"

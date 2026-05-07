@@ -28,7 +28,7 @@ export default function ConciergeLauncher() {
         animate={{ opacity: 1, y: 0 }}
         className="relative overflow-hidden rounded-lg bg-card border border-border"
       >
-        <button
+        <button type="button"
           onClick={() => open()}
           className="relative w-full text-left p-4 active:bg-muted/50 transition-colors touch-manipulation"
         >
@@ -59,7 +59,7 @@ export default function ConciergeLauncher() {
               {s}
             </motion.button>
           ))}
-          <button
+          <button type="button"
             onClick={() => open()}
             className="ml-auto inline-flex items-center gap-1 rounded-full bg-primary text-primary-foreground px-3 py-1.5 text-[11px] font-bold active:opacity-80 transition-opacity"
           >

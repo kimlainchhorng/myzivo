@@ -101,7 +101,7 @@ const FAQAccordion = ({
               key={index}
               className="bg-card/50 backdrop-blur-xl border border-border/50 rounded-xl overflow-hidden"
             >
-              <button
+              <button type="button"
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
                 className="w-full flex items-center justify-between p-4 text-left hover:bg-muted/30 transition-all duration-200"
               >

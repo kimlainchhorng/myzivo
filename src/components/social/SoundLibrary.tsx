@@ -51,7 +51,7 @@ export default function SoundLibrary({ open, onClose, onSelect }: SoundLibraryPr
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border/40 safe-area-top">
         <h2 className="text-lg font-semibold">Sounds</h2>
-        <button onClick={onClose} className="p-2 rounded-full hover:bg-muted/50">
+        <button type="button" onClick={onClose} className="p-2 rounded-full hover:bg-muted/50">
           <X className="h-5 w-5" />
         </button>
       </div>
@@ -72,7 +72,7 @@ export default function SoundLibrary({ open, onClose, onSelect }: SoundLibraryPr
       {/* Categories */}
       <div className="flex gap-1 px-4 py-2">
         {categories.map((c) => (
-          <button
+          <button type="button"
             key={c}
             onClick={() => setActiveCategory(c)}
             className={cn(
@@ -92,7 +92,7 @@ export default function SoundLibrary({ open, onClose, onSelect }: SoundLibraryPr
             key={sound.id}
             className="flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40"
           >
-            <button
+            <button type="button"
               onClick={() => setPlaying(playing === sound.id ? null : sound.id)}
               className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0"
             >
@@ -108,7 +108,7 @@ export default function SoundLibrary({ open, onClose, onSelect }: SoundLibraryPr
             </div>
             <div className="text-right shrink-0">
               <p className="text-xs text-muted-foreground">{(sound.usageCount / 1000).toFixed(1)}K</p>
-              <button
+              <button type="button"
                 onClick={() => onSelect(sound)}
                 className="text-xs font-medium text-primary mt-0.5"
               >

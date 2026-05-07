@@ -93,7 +93,7 @@ export default function LodgingPromotionsSection({ storeId }: { storeId: string 
           </div>
           <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {PROMO_PRESETS.map((p) => (
-              <button
+              <button type="button"
                 key={p.key}
                 onClick={() => setEditing({ ...blank, ...p.values })}
                 className="rounded-md border border-border bg-background p-2 text-left transition hover:border-primary/40 hover:bg-primary/5"
@@ -111,7 +111,7 @@ export default function LodgingPromotionsSection({ storeId }: { storeId: string 
         {/* Filter chips */}
         <div className="-mx-1 flex flex-wrap gap-1.5 px-1">
           {FILTERS.map((f) => (
-            <button
+            <button type="button"
               key={f.v}
               onClick={() => setFilter(f.v)}
               className={cn(

@@ -20,7 +20,7 @@ export default function GroupCallEntryPage() {
     return (
       <div className="min-h-screen flex flex-col bg-zinc-950 text-white">
         <header className="pt-safe px-3 py-3 flex items-center gap-2">
-          <button
+          <button type="button"
             onClick={goBack}
             aria-label="Back"
             className="p-1.5 rounded-full hover:bg-white/10"

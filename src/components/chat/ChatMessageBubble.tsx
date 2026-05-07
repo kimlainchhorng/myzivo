@@ -16,6 +16,7 @@ import Pin from "lucide-react/dist/esm/icons/pin";
 import Bookmark from "lucide-react/dist/esm/icons/bookmark";
 import Timer from "lucide-react/dist/esm/icons/timer";
 import Play from "lucide-react/dist/esm/icons/play";
+import ExternalLink from "lucide-react/dist/esm/icons/external-link";
 import X from "lucide-react/dist/esm/icons/x";
 import Volume2 from "lucide-react/dist/esm/icons/volume-2";
 import VolumeX from "lucide-react/dist/esm/icons/volume-x";
@@ -267,7 +268,7 @@ function MiniAppCard({ type, message, isMe, time, onAction }: { type: string; me
         </div>
       </div>
       <p className="text-[15px] font-bold text-foreground leading-tight">{title}</p>
-      <button 
+      <button type="button" 
         onClick={(e) => { e.stopPropagation(); onAction?.(type); }}
         className={`w-full py-2.5 rounded-xl ${colorClass} text-white text-[13px] font-bold shadow-md active:scale-95 transition-transform`}
       >
@@ -291,72 +292,85 @@ function MusicCard({ message, isMe, time }: { message: string; isMe: boolean; ti
   const [resolvedPreviewUrl, setResolvedPreviewUrl] = useState(previewUrl);
   const [isPlaying, setIsPlaying] = useState(false);
   const [previewFailed, setPreviewFailed] = useState(false);
+  // Managed imperatively — never stored in JSX to avoid stuck error states
+  // and the AbortError that audio.load() + immediate play() causes in browsers.
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Pause and discard the audio element on unmount.
+  useEffect(() => {
+    return () => {
+      audioRef.current?.pause();
+      audioRef.current = null;
+    };
+  }, []);
+
   useEffect(() => {
     let cancelled = false;
-
     const maybeResolvePreview = async () => {
-      if (previewUrl) {
-        setResolvedPreviewUrl(previewUrl);
-        return;
-      }
-
+      if (previewUrl) { setResolvedPreviewUrl(previewUrl); return; }
       const fromITunes = await lookupItunesPreviewUrl(title, artist || undefined);
-      if (!cancelled && fromITunes) {
-        setResolvedPreviewUrl(fromITunes);
-        setPreviewFailed(false);
-      }
+      if (!cancelled && fromITunes) { setResolvedPreviewUrl(fromITunes); setPreviewFailed(false); }
     };
-
     void maybeResolvePreview();
-
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [artist, previewUrl, title]);
+
+  // Build (or reuse) an Audio object for the given src, wiring up state callbacks.
+  const getAudio = useCallback((src: string): HTMLAudioElement => {
+    const existing = audioRef.current;
+    if (existing && existing.src === src && !existing.error) return existing;
+    existing?.pause();
+    const a = new Audio(src);
+    a.addEventListener("pause",  () => setIsPlaying(false));
+    a.addEventListener("ended",  () => setIsPlaying(false));
+    a.addEventListener("play",   () => setIsPlaying(true));
+    a.addEventListener("error",  () => { setPreviewFailed(true); setIsPlaying(false); });
+    audioRef.current = a;
+    return a;
+  }, []);
 
   const handlePrimaryAction = async (e: React.MouseEvent) => {
     e.stopPropagation();
 
-    if (resolvedPreviewUrl && audioRef.current && !previewFailed) {
-      const audio = audioRef.current;
-      if (audio.paused) {
-        try {
-          await audio.play();
-          setIsPlaying(true);
-        } catch {
-          const appleTrackId = extractAppleTrackId(listenUrl);
-          const fallbackPreview = appleTrackId
-            ? await lookupItunesPreviewUrlByTrackId(appleTrackId)
-            : await lookupItunesPreviewUrl(title, artist || undefined);
+    if (resolvedPreviewUrl) {
+      const current = audioRef.current;
 
-          if (fallbackPreview && fallbackPreview !== resolvedPreviewUrl) {
-            try {
-              setResolvedPreviewUrl(fallbackPreview);
-              setPreviewFailed(false);
-              audio.src = fallbackPreview;
-              await audio.play();
-              setIsPlaying(true);
-              return;
-            } catch {
-              // continue to fallback UX below
-            }
-          }
-
-          setPreviewFailed(true);
-          if (listenUrl) toast.info("Preview unavailable. Tap play again to open source link");
-          else toast.error("Unable to play preview audio");
-        }
-      } else {
-        audio.pause();
+      // Pause if already playing.
+      if (current && !current.paused) {
+        current.pause();
         setIsPlaying(false);
+        return;
       }
-      return;
-    }
 
-    if (previewFailed && listenUrl) {
-      await openExternalUrl(listenUrl);
-      return;
+      setPreviewFailed(false);
+      const audio = getAudio(resolvedPreviewUrl);
+
+      try {
+        await audio.play();
+        setIsPlaying(true);
+        return;
+      } catch {
+        // play() failed — fetch a fresh preview URL and prime the element.
+        // We can't play() again here because the async lookup expires the
+        // user-gesture context; let the user tap once more.
+        const appleTrackId = extractAppleTrackId(listenUrl);
+        const fallbackPreview = appleTrackId
+          ? await lookupItunesPreviewUrlByTrackId(appleTrackId)
+          : await lookupItunesPreviewUrl(title, artist || undefined);
+
+        if (fallbackPreview && fallbackPreview !== resolvedPreviewUrl) {
+          setResolvedPreviewUrl(fallbackPreview);
+          setPreviewFailed(false);
+          getAudio(fallbackPreview); // pre-create so next tap can play immediately
+          toast.info("Preview refreshed — tap play to listen");
+          return;
+        }
+
+        setPreviewFailed(true);
+        if (listenUrl) toast.info("Preview unavailable — tap again to open in app");
+        else toast.error("Unable to play preview");
+        return;
+      }
     }
 
     if (listenUrl) {
@@ -366,6 +380,13 @@ function MusicCard({ message, isMe, time }: { message: string; isMe: boolean; ti
 
     toast.info("No playable link found in this music share");
   };
+
+  const previewAvailable = !!resolvedPreviewUrl;
+  const statusLabel = previewFailed
+    ? "Preview unavailable"
+    : previewAvailable
+      ? "Preview"
+      : "Listen";
 
   return (
     <div className={`p-4 rounded-3xl border ${isMe ? "bg-black text-white border-white/10" : "bg-muted/50 border-border/30"} min-w-[260px] shadow-xl relative overflow-hidden group`}>
@@ -378,33 +399,44 @@ function MusicCard({ message, isMe, time }: { message: string; isMe: boolean; ti
           )}
           <p className="text-[17px] font-black leading-tight tracking-tight mb-1">{title}</p>
           <p className="text-[12px] font-medium opacity-80">{metaLine}</p>
-          <p className="text-[13px] font-bold mt-2">{resolvedPreviewUrl ? "Preview:" : "Listen:"}</p>
+          <p className={`text-[13px] font-bold mt-2 ${previewFailed ? "opacity-50" : ""}`}>{statusLabel}</p>
+          {previewFailed && listenUrl && (
+            <p className="text-[11px] opacity-40 mt-0.5">Tap to open in app</p>
+          )}
         </div>
         <button
           type="button"
-          aria-label={resolvedPreviewUrl ? (isPlaying ? "Pause music preview" : "Play music preview") : "Open music link"}
+          aria-label={
+            previewAvailable && !previewFailed
+              ? isPlaying ? "Pause music preview" : "Play music preview"
+              : "Open music link"
+          }
           onClick={(e) => void handlePrimaryAction(e)}
           className="h-11 w-11 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-white/20 transition-all active:scale-90 shrink-0 shadow-lg border border-white/10"
         >
-          {resolvedPreviewUrl && isPlaying ? (
+          {isPlaying ? (
             <Pause className="w-5 h-5 fill-white text-white" />
+          ) : previewFailed ? (
+            <ExternalLink className="w-4.5 h-4.5 text-white/60" />
           ) : (
             <Play className="w-5 h-5 fill-white text-white ml-0.5" />
           )}
         </button>
       </div>
-      
+
       <button
         type="button"
         onClick={(e) => void handlePrimaryAction(e)}
-        className="mt-4 h-16 w-full rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center relative overflow-hidden"
+        className={`mt-4 h-16 w-full rounded-2xl border flex items-center justify-center relative overflow-hidden transition-opacity ${previewFailed ? "opacity-50 bg-white/5 border-white/10" : "bg-white/5 border-white/10"}`}
       >
         <div className="absolute inset-0 bg-white/5" />
         <div className="text-[15px] font-bold relative z-10 flex items-center gap-2">
-          <span>{title}</span>
+          <span>{previewFailed ? (listenUrl ? "Open in app" : title) : title}</span>
           <span className="h-8 w-8 rounded-full bg-white text-black flex items-center justify-center shadow-sm">
-            {resolvedPreviewUrl && isPlaying ? (
+            {isPlaying ? (
               <Pause className="w-4 h-4 fill-current" />
+            ) : previewFailed ? (
+              <ExternalLink className="w-3.5 h-3.5" />
             ) : (
               <Play className="w-4 h-4 fill-current ml-0.5" />
             )}
@@ -412,7 +444,7 @@ function MusicCard({ message, isMe, time }: { message: string; isMe: boolean; ti
         </div>
         <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded-md bg-black/40 text-[9px] font-black uppercase tracking-widest text-white/40">Zivo</div>
       </button>
-      
+
       <div className="mt-3 flex items-center justify-between">
         <span className="text-[10px] font-bold opacity-40 uppercase tracking-widest">{time}</span>
         <div className="flex items-center gap-1">
@@ -424,20 +456,6 @@ function MusicCard({ message, isMe, time }: { message: string; isMe: boolean; ti
           </div>
         </div>
       </div>
-      {resolvedPreviewUrl && (
-        <audio
-          ref={audioRef}
-          src={resolvedPreviewUrl}
-          preload="none"
-          onPause={() => setIsPlaying(false)}
-          onEnded={() => setIsPlaying(false)}
-          onPlay={() => setIsPlaying(true)}
-          onError={() => {
-            setPreviewFailed(true);
-            setIsPlaying(false);
-          }}
-        />
-      )}
     </div>
   );
 }
@@ -819,7 +837,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
                     <Lock className="h-6 w-6 text-foreground" />
                   </div>
                   <p className="text-white text-xs font-semibold mb-2 drop-shadow">Locked Video</p>
-                  <button
+                  <button type="button"
                     disabled={unlockLoading}
                     onClick={(e) => {
                       e.stopPropagation();
@@ -885,7 +903,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
                   <Lock className="h-6 w-6 text-foreground" />
                 </div>
                 <p className="text-white text-xs font-semibold mb-2 drop-shadow">Locked Photo</p>
-                <button
+                <button type="button"
                   disabled={unlockLoading}
                   onClick={(e) => {
                     e.stopPropagation();
@@ -1180,7 +1198,7 @@ const ChatMessageBubble = memo(function ChatMessageBubble({
                       )}
                       <MsgMenuItem icon={Trash2} label="Delete for me" onClick={() => { (onDeleteForMe ?? onDelete)(id); setShowActions(false); setShowReactions(false); setShowDeleteSub(false); }} destructive />
                       <div className="border-t border-border/30">
-                        <button
+                        <button type="button"
                           onClick={(e) => { e.stopPropagation(); setShowDeleteSub(false); }}
                           className="w-full py-2.5 text-center text-[13px] font-medium text-muted-foreground hover:bg-muted/30 active:bg-muted/50 transition-colors"
                         >
@@ -1385,7 +1403,7 @@ function ActionBtn({ icon: Icon, label, onClick, destructive, active }: {
   icon: IconLike; label: string; onClick: () => void; destructive?: boolean; active?: boolean;
 }) {
   return (
-    <button
+    <button type="button"
       onClick={(e) => { e.stopPropagation(); onClick(); }}
       className={`flex items-center gap-3 w-full px-4 py-3 text-left transition-colors active:scale-[0.98] ${
         destructive
@@ -1405,7 +1423,7 @@ function MsgMenuItem({ icon: Icon, label, onClick, destructive, active, chevron 
   icon: IconLike; label: string; onClick: () => void; destructive?: boolean; active?: boolean; chevron?: boolean;
 }) {
   return (
-    <button
+    <button type="button"
       onClick={(e) => { e.stopPropagation(); onClick(); }}
       className={`flex items-center gap-3 w-full px-4 py-3 text-left transition-colors active:bg-muted/60 border-b border-border/15 last:border-b-0 ${
         destructive ? "text-destructive hover:bg-destructive/5" : active ? "text-primary bg-primary/5" : "text-foreground hover:bg-muted/30"

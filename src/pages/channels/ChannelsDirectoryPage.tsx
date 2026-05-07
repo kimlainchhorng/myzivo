@@ -222,7 +222,7 @@ export default function ChannelsDirectoryPage() {
         canonical="/channels"
       />
       <header className="sticky top-0 z-10 bg-background/85 backdrop-blur-xl border-b border-border/40 pt-safe px-3 py-3 flex items-center gap-2">
-        <button
+        <button type="button"
           onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/feed"))}
           className="p-2 -ml-2 rounded-full hover:bg-muted"
           aria-label="Back"

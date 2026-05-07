@@ -129,7 +129,7 @@ export default function CarRentalCheckoutPage() {
       <SEOHead title="Car Rental Checkout – ZIVO" description="Complete your car rental booking. Review pricing, enter driver information, and choose your payment method." />
       <div className="min-h-screen bg-background pb-32">
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border/40 px-4 py-3 flex items-center gap-3" style={{ paddingTop: "var(--zivo-safe-top-sticky)" }}>
-        <button
+        <button type="button"
           onClick={() => navigate(-1)}
           className="h-9 w-9 rounded-full bg-muted/60 flex items-center justify-center active:scale-95 transition"
         >
@@ -263,7 +263,7 @@ export default function CarRentalCheckoutPage() {
               { key: "cash" as PayMethod, icon: Banknote, label: "Cash", sub: "Pay at pickup" },
               { key: "card" as PayMethod, icon: CreditCard, label: "Pay Online", sub: "Secure payment" },
             ]).map(({ key, icon: Icon, label, sub }) => (
-              <button
+              <button type="button"
                 key={key}
                 onClick={() => setPayMethod(key)}
                 className={cn(

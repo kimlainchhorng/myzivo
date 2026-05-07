@@ -100,7 +100,7 @@ export default function ShopProductsPage() {
       <div className="min-h-dvh bg-background pb-24">
         <div className="sticky top-0 safe-area-top z-30 bg-background/95 backdrop-blur-xl border-b border-border/30">
           <div className="flex items-center gap-3 px-4 py-3">
-            <button onClick={() => navigate("/shop-dashboard")} className="p-2 -ml-2 rounded-full hover:bg-muted/50">
+            <button type="button" onClick={() => navigate("/shop-dashboard")} className="p-2 -ml-2 rounded-full hover:bg-muted/50">
               <ArrowLeft className="h-5 w-5" />
             </button>
             <h1 className="text-lg font-extrabold flex-1">Products</h1>
@@ -125,7 +125,7 @@ export default function ShopProductsPage() {
                 className="w-full bg-card border-t border-border rounded-t-3xl p-5 space-y-4">
                 <div className="flex items-center justify-between">
                   <h2 className="font-bold text-base">New Product</h2>
-                  <button onClick={() => setShowAdd(false)} className="p-2 rounded-full hover:bg-muted">
+                  <button type="button" onClick={() => setShowAdd(false)} className="p-2 rounded-full hover:bg-muted">
                     <X className="h-4 w-4" />
                   </button>
                 </div>
@@ -173,14 +173,14 @@ export default function ShopProductsPage() {
                 </div>
               </div>
               <div className="flex items-center gap-1">
-                <button onClick={() => toggleStock.mutate({ id: product.id, inStock: product.in_stock ?? true })}
+                <button type="button" onClick={() => toggleStock.mutate({ id: product.id, inStock: product.in_stock ?? true })}
                   className="p-1.5 rounded-lg hover:bg-muted/60 transition-colors">
                   {product.in_stock
                     ? <ToggleRight className="h-5 w-5 text-emerald-500" />
                     : <ToggleLeft className="h-5 w-5 text-muted-foreground" />
                   }
                 </button>
-                <button onClick={() => deleteProduct.mutate(product.id)}
+                <button type="button" onClick={() => deleteProduct.mutate(product.id)}
                   className="p-1.5 rounded-lg hover:bg-destructive/10 transition-colors">
                   <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
                 </button>

@@ -138,7 +138,7 @@ export default function AccountSubscriptionsPage() {
         style={{ paddingTop: "var(--zivo-safe-top-sticky)" }}
       >
         <div className="flex items-center gap-3 px-3 h-14 max-w-3xl mx-auto">
-          <button onClick={() => navigate(-1)} aria-label="Back" className="p-2 -ml-2 rounded-lg hover:bg-muted/60">
+          <button type="button" onClick={() => navigate(-1)} aria-label="Back" className="p-2 -ml-2 rounded-lg hover:bg-muted/60">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className="text-base font-bold flex items-center gap-1.5">
@@ -162,7 +162,7 @@ export default function AccountSubscriptionsPage() {
 
         <div className="flex gap-1 mb-4 p-1 bg-muted/40 rounded-xl">
           {(["active", "ended"] as const).map((t) => (
-            <button
+            <button type="button"
               key={t}
               onClick={() => setTab(t)}
               className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${

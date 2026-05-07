@@ -133,7 +133,7 @@ const RealTimeStatusWidget = ({
       </div>
 
       {/* Enable Notifications */}
-      <button className="w-full mt-4 p-2 rounded-lg border border-dashed border-primary/30 text-xs text-primary hover:bg-primary/5 transition-colors">
+      <button type="button" className="w-full mt-4 p-2 rounded-lg border border-dashed border-primary/30 text-xs text-primary hover:bg-primary/5 transition-colors">
         Enable push notifications
       </button>
     </div>

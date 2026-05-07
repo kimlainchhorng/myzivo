@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xargs grep -l \"store_time_entries\")",
+      "Bash(xargs grep -l \"EmployeeQRDisplay\\\\|clock\")",
+      "Bash(xargs grep -l \"clock\\\\|store_time_entries\\\\|clock_qr\")",
+      "Bash(grep -E \"\\\\.\\(tsx|ts\\)$\")",
+      "Bash(xargs grep -h \"CREATE TABLE\")",
+      "Bash(claude auth *)",
+      "Bash(npx tsc *)",
+      "Bash(claude config *)",
+      "WebFetch(domain:127.0.0.1)"
+    ]
+  }
+}

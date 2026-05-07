@@ -1024,7 +1024,7 @@ export default function LegalPoliciesPage() {
           const SectionIcon = section.icon;
           return (
             <div key={section.title} className="rounded-xl bg-card border border-border/30 overflow-hidden">
-              <button
+              <button type="button"
                 onClick={() => toggleSection(sIdx)}
                 className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-accent/30 transition-colors text-left active:scale-[0.99]"
               >
@@ -1041,7 +1041,7 @@ export default function LegalPoliciesPage() {
               {isOpen && (
                 <div className="border-t border-border/20 divide-y divide-border/10">
                   {section.items.map((item) => (
-                    <button
+                    <button type="button"
                       key={item.href + item.label}
                       onClick={() => navigate(item.href)}
                       className="w-full flex items-center gap-2.5 px-3 py-2 pl-5 hover:bg-accent/40 transition-colors text-left active:scale-[0.98]"

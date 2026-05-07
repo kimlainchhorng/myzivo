@@ -53,7 +53,7 @@ export default function PinnedMessagesStack({ count, messages = [] }: Props) {
             >
               <div className="flex items-center justify-between px-4 pt-4 pb-2 border-b border-border/30">
                 <h3 className="font-bold text-base">Pinned Messages</h3>
-                <button
+                <button type="button"
                   onClick={() => setShowStack(false)}
                   className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-muted"
                   aria-label="Close"

@@ -82,7 +82,7 @@ export default function LostItemReport({
                 const Icon = cat.icon;
                 const active = selectedCategory === cat.id;
                 return (
-                  <button
+                  <button type="button"
                     key={cat.id}
                     onClick={() => setSelectedCategory(cat.id)}
                     className={cn(

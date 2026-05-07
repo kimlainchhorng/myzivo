@@ -112,14 +112,14 @@ export default function AdminLodgingQAChecklistPage() {
           <CardHeader><CardTitle className="flex items-center gap-2"><ShieldCheck className="h-5 w-5 text-primary" /> Completion proof</CardTitle></CardHeader>
           <CardContent className="grid gap-2 md:grid-cols-2">
             {completionProof.map((item) => <div key={item} className="flex items-center gap-2 rounded-lg border border-border bg-card p-2 text-sm"><CheckCircle2 className="h-4 w-4 text-primary" /><span>{item}</span></div>)}
-            {completion.incompleteItems.map((item) => <button key={item.key} onClick={() => openTab(item.tab)} className="flex items-center justify-between gap-2 rounded-lg border border-border bg-card p-2 text-left text-sm hover:border-primary/50"><span>{item.label} needs hotel data</span><Badge variant="outline">{item.actionLabel}</Badge></button>)}
+            {completion.incompleteItems.map((item) => <button type="button" key={item.key} onClick={() => openTab(item.tab)} className="flex items-center justify-between gap-2 rounded-lg border border-border bg-card p-2 text-left text-sm hover:border-primary/50"><span>{item.label} needs hotel data</span><Badge variant="outline">{item.actionLabel}</Badge></button>)}
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader><CardTitle className="flex items-center gap-2"><ClipboardCheck className="h-5 w-5 text-primary" /> Empty-state audit</CardTitle></CardHeader>
           <CardContent className="grid gap-2 md:grid-cols-2">
-            {report.emptyStateAudit.map((item) => <button key={item.tab} onClick={() => openTab(item.fixTab)} className="rounded-lg border border-border bg-card p-3 text-left hover:border-primary/50"><div className="flex items-start justify-between gap-2"><p className="text-sm font-semibold text-foreground">{item.label}</p><Badge variant={item.passes ? "secondary" : "outline"}>{item.passes ? "Pass" : "Fail"}</Badge></div><p className="mt-1 text-xs text-muted-foreground">{item.emptyTitle}</p><p className="mt-1 text-[10px] font-semibold text-primary">{item.fixButtonLabel} → {item.fixTab}</p></button>)}
+            {report.emptyStateAudit.map((item) => <button type="button" key={item.tab} onClick={() => openTab(item.fixTab)} className="rounded-lg border border-border bg-card p-3 text-left hover:border-primary/50"><div className="flex items-start justify-between gap-2"><p className="text-sm font-semibold text-foreground">{item.label}</p><Badge variant={item.passes ? "secondary" : "outline"}>{item.passes ? "Pass" : "Fail"}</Badge></div><p className="mt-1 text-xs text-muted-foreground">{item.emptyTitle}</p><p className="mt-1 text-[10px] font-semibold text-primary">{item.fixButtonLabel} → {item.fixTab}</p></button>)}
           </CardContent>
         </Card>
 
@@ -128,7 +128,7 @@ export default function AdminLodgingQAChecklistPage() {
           <CardContent className="space-y-3">
             <div className="h-2 overflow-hidden rounded-full bg-muted"><div className="h-full rounded-full bg-primary" style={{ width: `${completion.percent}%` }} /></div>
             <div className="grid gap-2 md:grid-cols-2">
-              {completion.items.map((item) => <button key={item.key} onClick={() => openTab(item.tab)} className="rounded-lg border border-border bg-card p-3 text-left hover:border-primary/50"><div className="flex items-start justify-between gap-2"><p className="text-sm font-semibold text-foreground">{item.label}</p><Badge variant={item.ready ? "secondary" : "outline"}>{item.ready ? "Ready" : "Fix"}</Badge></div><p className="mt-1 text-xs text-muted-foreground">{item.hint}</p></button>)}
+              {completion.items.map((item) => <button type="button" key={item.key} onClick={() => openTab(item.tab)} className="rounded-lg border border-border bg-card p-3 text-left hover:border-primary/50"><div className="flex items-start justify-between gap-2"><p className="text-sm font-semibold text-foreground">{item.label}</p><Badge variant={item.ready ? "secondary" : "outline"}>{item.ready ? "Ready" : "Fix"}</Badge></div><p className="mt-1 text-xs text-muted-foreground">{item.hint}</p></button>)}
             </div>
           </CardContent>
         </Card>

@@ -203,7 +203,7 @@ export const FavoritesList: React.FC<FavoritesListProps> = ({
           whileHover={{ x: 4 }}
           className="flex items-center gap-4 p-4 rounded-2xl bg-gradient-to-r from-card/80 to-card/50 border border-white/10 hover:border-white/20 transition-all group"
         >
-          <button
+          <button type="button"
             onClick={() => onItemClick?.(item)}
             className="flex items-center gap-4 flex-1 min-w-0 text-left"
           >

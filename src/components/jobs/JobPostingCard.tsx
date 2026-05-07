@@ -66,7 +66,7 @@ export default function JobPostingCard({ job }: Props) {
         {job.remote && <span className="inline-flex items-center gap-0.5"><Wifi className="w-3 h-3" />Remote</span>}
         {job.location && <span className="inline-flex items-center gap-0.5"><MapPin className="w-3 h-3" />{job.location}</span>}
       </div>
-      <button
+      <button type="button"
         onClick={() => void apply()}
         disabled={busy || applied}
         className="w-full py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold active:opacity-80 disabled:opacity-60"

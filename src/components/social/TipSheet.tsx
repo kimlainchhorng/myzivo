@@ -113,7 +113,7 @@ function TipForm({ creatorId, creatorName, onClose }: { creatorId: string; creat
             <p className="text-xs text-muted-foreground">to {creatorName}</p>
           </div>
         </div>
-        <button onClick={onClose} className="p-2 rounded-full hover:bg-muted/50">
+        <button type="button" onClick={onClose} className="p-2 rounded-full hover:bg-muted/50">
           <X className="h-5 w-5" />
         </button>
       </div>
@@ -124,7 +124,7 @@ function TipForm({ creatorId, creatorName, onClose }: { creatorId: string; creat
           {!showCustom ? (
             <div className="grid grid-cols-3 gap-2 mb-4">
               {TIP_AMOUNTS.map((amt) => (
-                <button
+                <button type="button"
                   key={amt}
                   onClick={() => setSelectedAmount(amt)}
                   className={`py-3 rounded-xl text-sm font-semibold transition-all ${
@@ -155,7 +155,7 @@ function TipForm({ creatorId, creatorName, onClose }: { creatorId: string; creat
             </div>
           )}
 
-          <button onClick={() => setShowCustom(!showCustom)} className="text-xs text-primary font-medium mb-4">
+          <button type="button" onClick={() => setShowCustom(!showCustom)} className="text-xs text-primary font-medium mb-4">
             {showCustom ? "← Choose preset amount" : "Enter custom amount →"}
           </button>
 
@@ -174,7 +174,7 @@ function TipForm({ creatorId, creatorName, onClose }: { creatorId: string; creat
             <span className="text-sm text-muted-foreground">Send anonymously</span>
           </label>
 
-          <button
+          <button type="button"
             onClick={handleContinue}
             disabled={finalAmount < 100}
             className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg"
@@ -185,7 +185,7 @@ function TipForm({ creatorId, creatorName, onClose }: { creatorId: string; creat
 
           {/* Alternative rails — hosted redirect */}
           <div className="mt-3 grid grid-cols-2 gap-2">
-            <button
+            <button type="button"
               onClick={async () => {
                 if (finalAmount < 100) return toast.error("Minimum tip is $1.00");
                 setSending(true);
@@ -209,7 +209,7 @@ function TipForm({ creatorId, creatorName, onClose }: { creatorId: string; creat
             >
               🅿️ PayPal
             </button>
-            <button
+            <button type="button"
               onClick={async () => {
                 if (finalAmount < 100) return toast.error("Minimum tip is $1.00");
                 setSending(true);
@@ -238,7 +238,7 @@ function TipForm({ creatorId, creatorName, onClose }: { creatorId: string; creat
         <>
           {/* Card step */}
           <div className="mb-2 text-sm text-muted-foreground flex items-center gap-1.5">
-            <button onClick={() => setStep("amount")} className="text-primary text-xs font-medium">← Back</button>
+            <button type="button" onClick={() => setStep("amount")} className="text-primary text-xs font-medium">← Back</button>
             <span className="ml-auto font-semibold text-foreground">${(finalAmount / 100).toFixed(2)}</span>
           </div>
 
@@ -257,7 +257,7 @@ function TipForm({ creatorId, creatorName, onClose }: { creatorId: string; creat
             />
           </div>
 
-          <button
+          <button type="button"
             onClick={handlePay}
             disabled={sending || !stripe}
             className="w-full py-3.5 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50 shadow-lg"

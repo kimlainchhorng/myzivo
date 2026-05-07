@@ -124,7 +124,7 @@ export default function AdminWalletPage() {
       <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 mb-4">
         <div className="flex gap-1 bg-muted/50 rounded-xl p-1">
           {(["withdrawals", "wallets"] as const).map((t) => (
-            <button
+            <button type="button"
               key={t}
               onClick={() => setTab(t)}
               className={`px-4 py-2 rounded-xl text-sm font-semibold capitalize transition-all ${

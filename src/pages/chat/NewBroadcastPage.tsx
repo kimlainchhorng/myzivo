@@ -91,7 +91,7 @@ export default function NewBroadcastPage() {
   return (
     <div className="min-h-screen bg-background pb-24">
       <header className="sticky top-0 z-10 bg-background/85 backdrop-blur-xl border-b border-border/40 pt-safe px-3 py-3 flex items-center gap-2">
-        <button onClick={goBack} className="p-1.5 rounded-full hover:bg-muted/60">
+        <button type="button" onClick={goBack} className="p-1.5 rounded-full hover:bg-muted/60">
           <ChevronLeft className="w-5 h-5" />
         </button>
         <h1 className="text-base font-semibold flex-1">New broadcast list</h1>
@@ -126,7 +126,7 @@ export default function NewBroadcastPage() {
               const isPicked = picked.has(id);
               return (
                 <li key={id}>
-                  <button onClick={() => toggle(id)} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/40">
+                  <button type="button" onClick={() => toggle(id)} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/40">
                     <Avatar className="w-9 h-9">
                       <AvatarImage src={c.avatar_url || ""} />
                       <AvatarFallback>{(c.full_name || c.username || "?").slice(0, 1)}</AvatarFallback>
@@ -147,7 +147,7 @@ export default function NewBroadcastPage() {
       </div>
 
       <div className="fixed bottom-0 left-0 right-0 bg-background/95 backdrop-blur-xl border-t border-border/40 p-3 pb-[calc(env(safe-area-inset-bottom)+12px)]">
-        <button
+        <button type="button"
           onClick={create}
           disabled={creating}
           className="w-full py-3 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50"

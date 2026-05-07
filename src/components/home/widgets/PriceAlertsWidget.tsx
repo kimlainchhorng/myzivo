@@ -85,7 +85,7 @@ export default function PriceAlertsWidget() {
             Live
           </Badge>
         </h2>
-        <button onClick={() => navigate("/saved-searches")} className="text-xs text-primary font-bold touch-manipulation active:scale-95 min-w-[44px] min-h-[32px] flex items-center gap-0.5 hover:gap-1.5 transition-all">
+        <button type="button" onClick={() => navigate("/saved-searches")} className="text-xs text-primary font-bold touch-manipulation active:scale-95 min-w-[44px] min-h-[32px] flex items-center gap-0.5 hover:gap-1.5 transition-all">
           Alerts <Bell className="w-3 h-3" />
         </button>
       </div>

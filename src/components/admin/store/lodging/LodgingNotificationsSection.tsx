@@ -231,7 +231,7 @@ export default function LodgingNotificationsSection({ storeId }: { storeId: stri
         {/* Filter */}
         <div className="flex gap-1.5 flex-wrap">
           {(["all", "email", "sms", "whatsapp"] as const).map(c => (
-            <button key={c} onClick={() => setFilterChannel(c as any)}
+            <button type="button" key={c} onClick={() => setFilterChannel(c as any)}
               className={`rounded-full border px-2.5 py-1 text-[11px] font-medium capitalize ${filterChannel === c ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-muted-foreground"}`}>
               {c}
             </button>
@@ -354,7 +354,7 @@ export default function LodgingNotificationsSection({ storeId }: { storeId: stri
                 />
                 <div className="flex flex-wrap gap-1 mt-1.5">
                   {VARIABLES.map(v => (
-                    <button key={v} type="button"
+                    <button type="button" key={v} type="button"
                       onClick={() => setForm({ ...form, body: (form.body || "") + v })}
                       className="text-[10px] px-1.5 py-0.5 rounded border border-border bg-muted/30 hover:bg-muted text-muted-foreground font-mono">
                       {v}

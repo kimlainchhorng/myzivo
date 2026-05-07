@@ -133,7 +133,7 @@ const CompanionInvite = ({ tripName = "Paris Trip", className }: CompanionInvite
               <Badge className={cn("text-xs", statusColors[companion.status])}>
                 {companion.status}
               </Badge>
-              <button
+              <button type="button"
                 onClick={() => handleRemoveCompanion(companion.id)}
                 className="p-1 rounded hover:bg-destructive/10 transition-colors"
               >

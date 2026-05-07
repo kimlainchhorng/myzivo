@@ -82,7 +82,7 @@ export default function ImportProductPage() {
       {images.length > 1 && (
         <div className="flex gap-1.5 px-3 pt-2 overflow-x-auto">
           {images.map((src, i) => (
-            <button
+            <button type="button"
               key={i}
               onClick={() => setActiveImage(i)}
               className={`shrink-0 h-14 w-14 rounded-lg overflow-hidden border-2 ${
@@ -116,7 +116,7 @@ export default function ImportProductPage() {
                 <p className="text-[12px] font-semibold mb-1.5">{v.name}</p>
                 <div className="flex flex-wrap gap-1.5">
                   {v.options.map((opt) => (
-                    <button
+                    <button type="button"
                       key={opt}
                       onClick={() => setVariant(opt)}
                       className={`px-3 h-8 rounded-lg text-[12px] border transition ${

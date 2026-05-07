@@ -84,8 +84,20 @@ interface LangItem { id: string; name: string; proficiency: string; }
 const uid = () => crypto.randomUUID();
 
 const SKILL_LEVELS = ["Beginner", "Intermediate", "Advanced", "Expert"];
+const SKILL_LEVEL_COLORS = ["bg-slate-400", "bg-blue-500", "bg-amber-500", "bg-emerald-500"];
 const LANG_LEVELS = ["Basic", "Conversational", "Fluent", "Native"];
 const MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+const JOB_TITLES = [
+  "Software Engineer","Senior Software Engineer","Full Stack Developer","Frontend Developer",
+  "Backend Developer","DevOps Engineer","Data Scientist","Data Analyst","Product Manager",
+  "Project Manager","UX Designer","UI Designer","Graphic Designer","Marketing Manager",
+  "Sales Manager","Business Analyst","Financial Analyst","Accountant","HR Manager",
+  "Operations Manager","Content Writer","Digital Marketing Specialist","SEO Specialist",
+  "Customer Success Manager","Support Engineer","QA Engineer","Machine Learning Engineer",
+  "Cloud Architect","Cybersecurity Analyst","Network Engineer","Database Administrator",
+  "Mobile Developer","iOS Developer","Android Developer","React Developer",
+  "Node.js Developer","Python Developer","Java Developer","Scrum Master","Team Lead",
+];
 const YEARS = Array.from({ length: 40 }, (_, i) => String(2030 - i));
 
 /* ── Date Roller Component ────────────────────────── */
@@ -158,7 +170,7 @@ function PhotoUpload({ photo, onPhotoChange, userId }: { photo: string | null; o
 
   return (
     <div className="flex flex-col items-center gap-2 mb-3">
-      <button onClick={() => fileRef.current?.click()} disabled={uploading}
+      <button type="button" onClick={() => fileRef.current?.click()} disabled={uploading}
         className="relative w-20 h-20 rounded-full border-2 border-dashed border-primary/30 bg-muted/20 flex items-center justify-center overflow-hidden touch-manipulation active:scale-95 transition-transform group">
         {uploading ? <Loader2 className="w-5 h-5 animate-spin text-primary" /> : photo ? (
           <img src={photo} alt="Profile" className="w-full h-full object-cover rounded-full" />
@@ -173,7 +185,7 @@ function PhotoUpload({ photo, onPhotoChange, userId }: { photo: string | null; o
         </div>
       </button>
       <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
-      {photo && !uploading && <button onClick={() => onPhotoChange("")} className="text-[10px] text-destructive/70 font-medium">Remove photo</button>}
+      {photo && !uploading && <button type="button" onClick={() => onPhotoChange("")} className="text-[10px] text-destructive/70 font-medium">Remove photo</button>}
     </div>
   );
 }
@@ -186,7 +198,7 @@ function ProgressTips({ data }: { data: any }) {
   if (!data.summary?.trim()) tips.push("Write a professional summary (2-3 sentences)");
   if (!data.experiences?.some((e: any) => e.description?.trim())) tips.push("Add descriptions to your work experience");
   if ((data.skills?.filter((s: any) => s.name?.trim())?.length || 0) < 3) tips.push("Add at least 3 skills to strengthen your CV");
-  if (!data.linkedin?.trim()) tips.push("Add your LinkedIn profile link");
+  if (!data.linkedin?.trim() && !data.website?.trim()) tips.push("Add your LinkedIn or website link to boost credibility");
   if (tips.length === 0) return null;
   return (
     <div className="bg-primary/5 rounded-xl p-3 border border-primary/10 mb-4">
@@ -367,9 +379,11 @@ function ClassicLayout({ data }: { data: any }) {
         <div className="space-y-2.5">
           <ContactLine icon={Phone} text={data.phone} />
           <ContactLine icon={Mail} text={data.email} />
-          <ContactLine icon={Globe} text={data.website} />
           <ContactLine icon={MapPin} text={data.location} />
+          {data.nationality && <ContactLine icon={Globe} text={data.nationality} />}
+          <ContactLine icon={Globe} text={data.website} />
           <ContactLine icon={Linkedin} text={data.linkedin} />
+          {data.portfolio && <ContactLine icon={Link2} text={data.portfolio} />}
         </div>
         <SkillsList data={data} />
         <LanguagesList data={data} />
@@ -411,6 +425,8 @@ function ModernLayout({ data }: { data: any }) {
             {data.email && <span className="text-[9px] text-white/80 flex items-center gap-1"><Mail className="w-2.5 h-2.5" />{data.email}</span>}
             {data.phone && <span className="text-[9px] text-white/80 flex items-center gap-1"><Phone className="w-2.5 h-2.5" />{data.phone}</span>}
             {data.location && <span className="text-[9px] text-white/80 flex items-center gap-1"><MapPin className="w-2.5 h-2.5" />{data.location}</span>}
+            {data.nationality && <span className="text-[9px] text-white/80 flex items-center gap-1"><Globe className="w-2.5 h-2.5" />{data.nationality}</span>}
+            {data.linkedin && <span className="text-[9px] text-white/80 flex items-center gap-1"><Linkedin className="w-2.5 h-2.5" />{data.linkedin}</span>}
           </div>
         </div>
       </div>
@@ -448,7 +464,9 @@ function MinimalLayout({ data }: { data: any }) {
           {data.email && <span>{data.email}</span>}
           {data.phone && <span>• {data.phone}</span>}
           {data.location && <span>• {data.location}</span>}
+          {data.nationality && <span>• {data.nationality}</span>}
           {data.linkedin && <span>• {data.linkedin}</span>}
+          {data.website && <span>• {data.website}</span>}
         </div>
       </div>
       {data.summary && <div><h3 className="text-[10px] font-bold cv-accent-text uppercase tracking-wider mb-1">Summary</h3><p className="text-[10px] text-foreground/65 leading-relaxed">{data.summary}</p></div>}
@@ -503,8 +521,10 @@ function ProfessionalLayout({ data }: { data: any }) {
             <ContactLine icon={Phone} text={data.phone} />
             <ContactLine icon={Mail} text={data.email} />
             <ContactLine icon={MapPin} text={data.location} />
+            {data.nationality && <ContactLine icon={Globe} text={data.nationality} />}
             <ContactLine icon={Linkedin} text={data.linkedin} />
             <ContactLine icon={Globe} text={data.website} />
+            {data.portfolio && <ContactLine icon={Link2} text={data.portfolio} />}
           </div>
           <SkillsList data={data} />
           <LanguagesList data={data} />
@@ -544,6 +564,9 @@ function PremiumLayout({ data }: { data: any }) {
           {data.email && <span>✉ {data.email}</span>}
           {data.phone && <span>☎ {data.phone}</span>}
           {data.location && <span>◉ {data.location}</span>}
+          {data.nationality && <span>🌐 {data.nationality}</span>}
+          {data.linkedin && <span>in {data.linkedin}</span>}
+          {data.website && <span>🔗 {data.website}</span>}
         </div>
       </div>
       <div className="cv-main p-5 space-y-4">
@@ -582,7 +605,9 @@ function ExecutiveLayout({ data }: { data: any }) {
           {data.email && <span>{data.email}</span>}
           {data.phone && <span>{data.phone}</span>}
           {data.location && <span>{data.location}</span>}
+          {data.nationality && <span>{data.nationality}</span>}
           {data.linkedin && <span>{data.linkedin}</span>}
+          {data.website && <span>{data.website}</span>}
         </div>
       </div>
       <div className="cv-main p-5 space-y-4">
@@ -621,6 +646,9 @@ function CreativeLayout({ data }: { data: any }) {
               {data.email && <span>{data.email}</span>}
               {data.phone && <span>• {data.phone}</span>}
               {data.location && <span>• {data.location}</span>}
+              {data.nationality && <span>• {data.nationality}</span>}
+              {data.linkedin && <span>• {data.linkedin}</span>}
+              {data.website && <span>• {data.website}</span>}
             </div>
           </div>
         </div>
@@ -669,6 +697,9 @@ function ElegantLayout({ data }: { data: any }) {
           {data.email && <span>{data.email}</span>}
           {data.phone && <span>· {data.phone}</span>}
           {data.location && <span>· {data.location}</span>}
+          {data.nationality && <span>· {data.nationality}</span>}
+          {data.linkedin && <span>· {data.linkedin}</span>}
+          {data.website && <span>· {data.website}</span>}
         </div>
       </div>
       <div className="cv-main px-5 pb-5 space-y-4 bg-white mx-3 mb-3 rounded-sm border pt-4" style={{ borderColor: 'hsl(var(--primary) / 0.2)' }}>
@@ -699,6 +730,9 @@ function TimelineLayout({ data }: { data: any }) {
             {data.email && <span>✉ {data.email}</span>}
             {data.phone && <span>☎ {data.phone}</span>}
             {data.location && <span>📍 {data.location}</span>}
+            {data.nationality && <span>🌐 {data.nationality}</span>}
+            {data.linkedin && <span>in {data.linkedin}</span>}
+            {data.website && <span>🔗 {data.website}</span>}
           </div>
         </div>
       </div>
@@ -735,7 +769,7 @@ function CompactLayout({ data }: { data: any }) {
           <h1 className="cv-name text-[18px] font-extrabold leading-tight">{data.fullName || "Your Name"}</h1>
           {data.jobTitle && <p className="text-[10px] cv-accent-text font-bold uppercase tracking-wider">{data.jobTitle}</p>}
           <div className="flex flex-wrap gap-x-2 text-[9px] text-foreground/60 mt-0.5">
-            {data.email && <span>{data.email}</span>}{data.phone && <span>· {data.phone}</span>}{data.location && <span>· {data.location}</span>}
+            {data.email && <span>{data.email}</span>}{data.phone && <span>· {data.phone}</span>}{data.location && <span>· {data.location}</span>}{data.nationality && <span>· {data.nationality}</span>}{data.linkedin && <span>· {data.linkedin}</span>}
           </div>
         </div>
       </div>
@@ -772,7 +806,9 @@ function SidebarLayout({ data }: { data: any }) {
           {data.email && <p className="break-all">✉ {data.email}</p>}
           {data.phone && <p>☎ {data.phone}</p>}
           {data.location && <p>📍 {data.location}</p>}
+          {data.nationality && <p>🌐 {data.nationality}</p>}
           {data.linkedin && <p className="break-all">in/ {data.linkedin}</p>}
+          {data.website && <p className="break-all">🔗 {data.website}</p>}
         </div>
         <div>
           <p className="text-[9px] font-bold uppercase tracking-widest mb-1.5" style={{ color: 'hsl(var(--primary))' }}>Skills</p>
@@ -823,6 +859,13 @@ function BoldLayout({ data }: { data: any }) {
           {data.phone && <div className="bg-white shadow-md rounded-lg p-2 text-[9px]"><p className="cv-accent-text font-bold uppercase">Phone</p><p>{data.phone}</p></div>}
           {data.location && <div className="bg-white shadow-md rounded-lg p-2 text-[9px]"><p className="cv-accent-text font-bold uppercase">Location</p><p>{data.location}</p></div>}
         </div>
+        {(data.nationality || data.linkedin || data.website) && (
+          <div className="flex flex-wrap gap-x-3 text-[9px] text-foreground/55 -mt-2 px-0.5">
+            {data.nationality && <span>🌐 {data.nationality}</span>}
+            {data.linkedin && <span>in {data.linkedin}</span>}
+            {data.website && <span>🔗 {data.website}</span>}
+          </div>
+        )}
         {data.summary && <div><h3 className="text-[12px] font-black cv-accent-text uppercase tracking-wider mb-1.5">▍ About Me</h3><p className="text-[10px] text-foreground/75 leading-relaxed">{data.summary}</p></div>}
         <ExperienceBlock data={data} />
         <EducationBlock data={data} />
@@ -845,6 +888,9 @@ function AcademicLayout({ data }: { data: any }) {
           {data.email && <span>{data.email}</span>}
           {data.phone && <span>· {data.phone}</span>}
           {data.location && <span>· {data.location}</span>}
+          {data.nationality && <span>· {data.nationality}</span>}
+          {data.linkedin && <span>· {data.linkedin}</span>}
+          {data.website && <span>· {data.website}</span>}
         </div>
       </div>
       <div className="cv-main space-y-3">
@@ -872,6 +918,9 @@ function TechLayout({ data }: { data: any }) {
           {data.email && <span>email: <span className="cv-accent-text">{data.email}</span></span>}
           {data.phone && <span>tel: <span className="cv-accent-text">{data.phone}</span></span>}
           {data.location && <span>loc: <span className="cv-accent-text">{data.location}</span></span>}
+          {data.nationality && <span>nat: <span className="cv-accent-text">{data.nationality}</span></span>}
+          {data.linkedin && <span>linkedin: <span className="cv-accent-text">{data.linkedin}</span></span>}
+          {data.website && <span>web: <span className="cv-accent-text">{data.website}</span></span>}
         </div>
       </div>
       <div className="cv-main p-4 space-y-4">
@@ -951,6 +1000,56 @@ const SECTION_DIVIDERS = [
 ] as const;
 type SectionDividerId = typeof SECTION_DIVIDERS[number]["id"];
 
+function TemplateThumbnail({ id, color }: { id: string; color: string }) {
+  const c = color;
+  if (id === "classic") return (
+    <svg viewBox="0 0 110 70" className="w-full h-full"><rect width="110" height="70" fill="#f8fafc"/><rect width="38" height="70" fill={c} opacity=".9"/><circle cx="19" cy="18" r="8" fill="white" opacity=".5"/><rect x="8" y="30" width="22" height="2.5" rx="1.2" fill="white" opacity=".6"/><rect x="8" y="35" width="16" height="2" rx="1" fill="white" opacity=".4"/><rect x="8" y="42" width="22" height="2" rx="1" fill="white" opacity=".4"/><rect x="8" y="47" width="18" height="2" rx="1" fill="white" opacity=".3"/><rect x="8" y="56" width="22" height="2" rx="1" fill="white" opacity=".4"/><rect x="8" y="61" width="14" height="2" rx="1" fill="white" opacity=".3"/><rect x="46" y="8" width="54" height="4" rx="2" fill="#334155" opacity=".5"/><rect x="46" y="15" width="38" height="2.5" rx="1.2" fill="#64748b" opacity=".5"/><rect x="46" y="24" width="22" height="2" rx="1" fill={c} opacity=".7"/><rect x="46" y="28" width="54" height="1.5" rx=".7" fill="#e2e8f0"/><rect x="46" y="32" width="54" height="2" rx="1" fill="#94a3b8" opacity=".4"/><rect x="46" y="36" width="42" height="2" rx="1" fill="#94a3b8" opacity=".3"/><rect x="46" y="44" width="22" height="2" rx="1" fill={c} opacity=".7"/><rect x="46" y="48" width="54" height="1.5" rx=".7" fill="#e2e8f0"/><rect x="46" y="52" width="50" height="2" rx="1" fill="#94a3b8" opacity=".4"/><rect x="46" y="56" width="54" height="2" rx="1" fill="#94a3b8" opacity=".3"/><rect x="46" y="60" width="36" height="2" rx="1" fill="#94a3b8" opacity=".3"/></svg>
+  );
+  if (id === "modern") return (
+    <svg viewBox="0 0 110 70" className="w-full h-full"><rect width="110" height="70" fill="#f8fafc"/><rect width="110" height="24" fill={c}/><circle cx="18" cy="12" r="7" fill="white" opacity=".3"/><rect x="30" y="7" width="46" height="4" rx="2" fill="white" opacity=".9"/><rect x="30" y="14" width="32" height="2.5" rx="1.2" fill="white" opacity=".6"/><rect x="6" y="32" width="28" height="2" rx="1" fill={c} opacity=".7"/><rect x="6" y="36" width="98" height="1.5" rx=".7" fill="#e2e8f0"/><rect x="6" y="40" width="94" height="2" rx="1" fill="#94a3b8" opacity=".4"/><rect x="6" y="44" width="80" height="2" rx="1" fill="#94a3b8" opacity=".3"/><rect x="6" y="52" width="28" height="2" rx="1" fill={c} opacity=".7"/><rect x="6" y="56" width="98" height="1.5" rx=".7" fill="#e2e8f0"/><rect x="6" y="60" width="90" height="2" rx="1" fill="#94a3b8" opacity=".4"/><rect x="6" y="64" width="70" height="2" rx="1" fill="#94a3b8" opacity=".3"/></svg>
+  );
+  if (id === "minimal") return (
+    <svg viewBox="0 0 110 70" className="w-full h-full"><rect width="110" height="70" fill="white"/><rect x="28" y="6" width="54" height="4.5" rx="2.2" fill="#1e293b" opacity=".7"/><rect x="34" y="13" width="42" height="2.5" rx="1.2" fill="#64748b" opacity=".5"/><rect x="6" y="20" width="98" height=".8" rx=".4" fill="#cbd5e1"/><rect x="28" y="26" width="54" height="2" rx="1" fill="#94a3b8" opacity=".5"/><rect x="22" y="30" width="66" height="2" rx="1" fill="#94a3b8" opacity=".4"/><rect x="6" y="38" width="98" height=".8" rx=".4" fill="#e2e8f0"/><rect x="6" y="43" width="20" height="2.5" rx="1.2" fill={c} opacity=".6"/><rect x="6" y="48" width="94" height="2" rx="1" fill="#94a3b8" opacity=".4"/><rect x="6" y="52" width="80" height="2" rx="1" fill="#94a3b8" opacity=".3"/><rect x="6" y="60" width="20" height="2.5" rx="1.2" fill={c} opacity=".6"/><rect x="6" y="65" width="94" height="2" rx="1" fill="#94a3b8" opacity=".4"/></svg>
+  );
+  if (id === "professional") return (
+    <svg viewBox="0 0 110 70" className="w-full h-full"><rect width="110" height="70" fill="#f8fafc"/><rect width="110" height="20" fill="#1e3a8a"/><rect x="6" y="6" width="44" height="4" rx="2" fill="white" opacity=".9"/><rect x="6" y="13" width="28" height="2.5" rx="1.2" fill="white" opacity=".6"/><rect x="78" y="6" width="26" height="3" rx="1.5" fill="white" opacity=".5"/><rect x="78" y="11" width="18" height="2" rx="1" fill="white" opacity=".4"/><rect width="110" height="4" y="20" fill={c} opacity=".4"/><rect x="6" y="30" width="22" height="2.5" rx="1.2" fill={c} opacity=".8"/><rect x="6" y="35" width="94" height="2" rx="1" fill="#94a3b8" opacity=".4"/><rect x="6" y="39" width="80" height="2" rx="1" fill="#94a3b8" opacity=".3"/><rect x="6" y="47" width="22" height="2.5" rx="1.2" fill={c} opacity=".8"/><rect x="6" y="52" width="94" height="2" rx="1" fill="#94a3b8" opacity=".4"/><rect x="6" y="56" width="70" height="2" rx="1" fill="#94a3b8" opacity=".3"/><rect x="6" y="60" width="80" height="2" rx="1" fill="#94a3b8" opacity=".3"/></svg>
+  );
+  if (id === "premium") return (
+    <svg viewBox="0 0 110 70" className="w-full h-full"><rect width="110" height="70" fill="#fffbeb"/><rect width="110" height="22" fill="#b45309"/><circle cx="18" cy="11" r="7" fill="#fbbf24" opacity=".6"/><rect x="30" y="6" width="50" height="4.5" rx="2.2" fill="white" opacity=".9"/><rect x="30" y="14" width="34" height="2.5" rx="1.2" fill="#fde68a"/><rect x="6" y="26" width="98" height=".8" rx=".4" fill="#b45309" opacity=".3"/><rect x="30" y="31" width="50" height="2" rx="1" fill="#78350f" opacity=".4"/><rect x="6" y="37" width="22" height="2.5" rx="1.2" fill="#b45309" opacity=".8"/><rect x="6" y="42" width="94" height="2" rx="1" fill="#92400e" opacity=".3"/><rect x="6" y="46" width="78" height="2" rx="1" fill="#92400e" opacity=".2"/><rect x="6" y="54" width="22" height="2.5" rx="1.2" fill="#b45309" opacity=".8"/><rect x="6" y="59" width="94" height="2" rx="1" fill="#92400e" opacity=".3"/><rect x="6" y="63" width="60" height="2" rx="1" fill="#92400e" opacity=".2"/></svg>
+  );
+  if (id === "executive") return (
+    <svg viewBox="0 0 110 70" className="w-full h-full"><rect width="110" height="70" fill="white"/><rect width="58" height="70" fill="#0f172a"/><rect x="6" y="10" width="46" height="5" rx="2.5" fill="white" opacity=".9"/><rect x="6" y="18" width="32" height="2.5" rx="1.2" fill="#94a3b8"/><rect x="6" y="30" width="46" height=".8" rx=".4" fill="#334155"/><rect x="6" y="34" width="42" height="2" rx="1" fill="#64748b"/><rect x="6" y="38" width="36" height="2" rx="1" fill="#64748b"/><rect x="6" y="44" width="46" height=".8" rx=".4" fill="#334155"/><rect x="6" y="48" width="40" height="2" rx="1" fill="#64748b"/><rect x="6" y="52" width="30" height="2" rx="1" fill="#64748b"/><rect x="6" y="56" width="42" height="2" rx="1" fill="#64748b"/><rect x="6" y="62" width="28" height="2" rx="1" fill="#64748b"/><rect x="64" y="8" width="40" height="2.5" rx="1.2" fill={c} opacity=".8"/><rect x="64" y="13" width="40" height="1.5" rx=".7" fill="#e2e8f0"/><rect x="64" y="18" width="36" height="2" rx="1" fill="#94a3b8" opacity=".4"/><rect x="64" y="22" width="30" height="2" rx="1" fill="#94a3b8" opacity=".3"/><rect x="64" y="30" width="40" height="2.5" rx="1.2" fill={c} opacity=".8"/><rect x="64" y="35" width="40" height="1.5" rx=".7" fill="#e2e8f0"/><rect x="64" y="39" width="36" height="2" rx="1" fill="#94a3b8" opacity=".4"/><rect x="64" y="43" width="30" height="2" rx="1" fill="#94a3b8" opacity=".3"/></svg>
+  );
+  if (id === "creative") return (
+    <svg viewBox="0 0 110 70" className="w-full h-full"><rect width="110" height="70" fill="white"/><polygon points="0,0 110,0 110,30 0,45" fill={c}/><circle cx="20" cy="16" r="9" fill="white" opacity=".3"/><rect x="36" y="8" width="48" height="4.5" rx="2.2" fill="white" opacity=".9"/><rect x="36" y="16" width="34" height="2.5" rx="1.2" fill="white" opacity=".7"/><rect x="6" y="50" width="22" height="2.5" rx="1.2" fill={c} opacity=".7"/><rect x="6" y="55" width="94" height="2" rx="1" fill="#94a3b8" opacity=".4"/><rect x="6" y="59" width="76" height="2" rx="1" fill="#94a3b8" opacity=".3"/><rect x="6" y="63" width="60" height="2" rx="1" fill="#94a3b8" opacity=".2"/></svg>
+  );
+  if (id === "elegant") return (
+    <svg viewBox="0 0 110 70" className="w-full h-full"><rect width="110" height="70" fill="#fdf8f6"/><rect x="28" y="5" width="54" height="5" rx="2.5" fill={c} opacity=".8"/><rect x="36" y="13" width="38" height="2.5" rx="1.2" fill="#92400e" opacity=".5"/><rect x="6" y="20" width="98" height=".6" rx=".3" fill={c} opacity=".3"/><rect x="6" y="22" width="98" height=".6" rx=".3" fill={c} opacity=".15"/><rect x="22" y="27" width="66" height="2" rx="1" fill="#78716c" opacity=".4"/><rect x="28" y="31" width="54" height="2" rx="1" fill="#78716c" opacity=".3"/><rect x="6" y="38" width="22" height="2.5" rx="1.2" fill={c} opacity=".7"/><rect x="6" y="42" width="44" height="1.5" rx=".7" fill={c} opacity=".2"/><rect x="6" y="46" width="94" height="2" rx="1" fill="#a8a29e" opacity=".4"/><rect x="6" y="50" width="78" height="2" rx="1" fill="#a8a29e" opacity=".3"/><rect x="6" y="58" width="22" height="2.5" rx="1.2" fill={c} opacity=".7"/><rect x="6" y="62" width="44" height="1.5" rx=".7" fill={c} opacity=".2"/><rect x="6" y="66" width="94" height="2" rx="1" fill="#a8a29e" opacity=".4"/></svg>
+  );
+  if (id === "timeline") return (
+    <svg viewBox="0 0 110 70" className="w-full h-full"><rect width="110" height="70" fill="#f8fafc"/><rect width="110" height="16" fill={c} opacity=".9"/><rect x="6" y="4" width="44" height="4" rx="2" fill="white" opacity=".9"/><rect x="6" y="11" width="28" height="2" rx="1" fill="white" opacity=".6"/><line x1="22" y1="20" x2="22" y2="68" stroke={c} strokeWidth="2" opacity=".4"/><circle cx="22" cy="24" r="3" fill={c}/><rect x="30" y="22" width="34" height="2.5" rx="1.2" fill="#334155" opacity=".6"/><rect x="30" y="27" width="64" height="2" rx="1" fill="#94a3b8" opacity=".4"/><rect x="30" y="31" width="50" height="2" rx="1" fill="#94a3b8" opacity=".3"/><circle cx="22" cy="41" r="3" fill={c} opacity=".7"/><rect x="30" y="39" width="34" height="2.5" rx="1.2" fill="#334155" opacity=".6"/><rect x="30" y="44" width="64" height="2" rx="1" fill="#94a3b8" opacity=".4"/><rect x="30" y="48" width="42" height="2" rx="1" fill="#94a3b8" opacity=".3"/><circle cx="22" cy="58" r="3" fill={c} opacity=".5"/><rect x="30" y="56" width="30" height="2.5" rx="1.2" fill="#334155" opacity=".5"/><rect x="30" y="61" width="52" height="2" rx="1" fill="#94a3b8" opacity=".3"/></svg>
+  );
+  if (id === "compact") return (
+    <svg viewBox="0 0 110 70" className="w-full h-full"><rect width="110" height="70" fill="#f8fafc"/><rect x="6" y="5" width="60" height="4" rx="2" fill="#1e293b" opacity=".7"/><rect x="6" y="12" width="36" height="2" rx="1" fill={c} opacity=".6"/><rect x="6" y="17" width="98" height=".8" rx=".4" fill="#e2e8f0"/><rect x="6" y="21" width="20" height="2" rx="1" fill="#475569" opacity=".5"/><rect x="30" y="21" width="74" height="2" rx="1" fill="#94a3b8" opacity=".4"/><rect x="6" y="26" width="20" height="2" rx="1" fill="#475569" opacity=".5"/><rect x="30" y="26" width="60" height="2" rx="1" fill="#94a3b8" opacity=".3"/><rect x="6" y="31" width="98" height=".8" rx=".4" fill="#e2e8f0"/><rect x="6" y="35" width="20" height="2" rx="1" fill="#475569" opacity=".5"/><rect x="30" y="35" width="74" height="2" rx="1" fill="#94a3b8" opacity=".4"/><rect x="6" y="40" width="20" height="2" rx="1" fill="#475569" opacity=".5"/><rect x="30" y="40" width="50" height="2" rx="1" fill="#94a3b8" opacity=".3"/><rect x="6" y="45" width="98" height=".8" rx=".4" fill="#e2e8f0"/><rect x="6" y="49" width="20" height="2" rx="1" fill="#475569" opacity=".5"/><rect x="30" y="49" width="66" height="2" rx="1" fill="#94a3b8" opacity=".4"/><rect x="6" y="54" width="20" height="2" rx="1" fill="#475569" opacity=".5"/><rect x="30" y="54" width="44" height="2" rx="1" fill="#94a3b8" opacity=".3"/><rect x="6" y="59" width="20" height="2" rx="1" fill="#475569" opacity=".5"/><rect x="30" y="59" width="74" height="2" rx="1" fill="#94a3b8" opacity=".4"/><rect x="6" y="64" width="20" height="2" rx="1" fill="#475569" opacity=".5"/><rect x="30" y="64" width="38" height="2" rx="1" fill="#94a3b8" opacity=".3"/></svg>
+  );
+  if (id === "sidebar") return (
+    <svg viewBox="0 0 110 70" className="w-full h-full"><rect width="110" height="70" fill="white"/><rect width="36" height="70" fill="#18181b"/><circle cx="18" cy="14" r="8" fill="#3f3f46"/><rect x="6" y="26" width="24" height="3" rx="1.5" fill="white" opacity=".7"/><rect x="8" y="32" width="20" height="2" rx="1" fill="#71717a"/><rect x="8" y="37" width="20" height="2" rx="1" fill="#52525b"/><rect x="6" y="44" width="24" height=".8" rx=".4" fill="#3f3f46"/><rect x="6" y="48" width="16" height="2" rx="1" fill="#71717a"/><rect x="6" y="52" width="20" height="2" rx="1" fill="#52525b"/><rect x="6" y="56" width="14" height="2" rx="1" fill="#52525b"/><rect x="6" y="62" width="18" height="2" rx="1" fill="#52525b"/><rect x="42" y="8" width="60" height="4" rx="2" fill="#18181b" opacity=".7"/><rect x="42" y="15" width="42" height="2.5" rx="1.2" fill={c} opacity=".8"/><rect x="42" y="22" width="62" height=".8" rx=".4" fill="#e4e4e7"/><rect x="42" y="26" width="62" height="2" rx="1" fill="#94a3b8" opacity=".4"/><rect x="42" y="30" width="48" height="2" rx="1" fill="#94a3b8" opacity=".3"/><rect x="42" y="37" width="40" height="2.5" rx="1.2" fill="#18181b" opacity=".5"/><rect x="42" y="42" width="62" height=".8" rx=".4" fill="#e4e4e7"/><rect x="42" y="46" width="58" height="2" rx="1" fill="#94a3b8" opacity=".4"/><rect x="42" y="50" width="44" height="2" rx="1" fill="#94a3b8" opacity=".3"/></svg>
+  );
+  if (id === "bold") return (
+    <svg viewBox="0 0 110 70" className="w-full h-full"><rect width="110" height="70" fill="white"/><rect width="110" height="32" fill={c}/><circle cx="20" cy="16" r="9" fill="white" opacity=".25"/><rect x="36" y="8" width="54" height="5" rx="2.5" fill="white" opacity=".95"/><rect x="36" y="16" width="38" height="2.5" rx="1.2" fill="white" opacity=".75"/><rect x="36" y="22" width="26" height="2" rx="1" fill="white" opacity=".55"/><rect x="6" y="38" width="28" height="2.5" rx="1.2" fill={c} opacity=".7"/><rect x="6" y="43" width="98" height=".8" rx=".4" fill="#e2e8f0"/><rect x="6" y="47" width="94" height="2" rx="1" fill="#94a3b8" opacity=".4"/><rect x="6" y="51" width="76" height="2" rx="1" fill="#94a3b8" opacity=".3"/><rect x="6" y="58" width="28" height="2.5" rx="1.2" fill={c} opacity=".7"/><rect x="6" y="63" width="94" height="2" rx="1" fill="#94a3b8" opacity=".4"/></svg>
+  );
+  if (id === "academic") return (
+    <svg viewBox="0 0 110 70" className="w-full h-full"><rect width="110" height="70" fill="#faf9f7"/><rect x="22" y="5" width="66" height="5" rx="2.5" fill={c} opacity=".8"/><rect x="30" y="13" width="50" height="2.5" rx="1.2" fill="#57534e" opacity=".5"/><rect x="36" y="18" width="38" height="2" rx="1" fill="#a8a29e" opacity=".5"/><rect x="6" y="25" width="98" height="1" rx=".5" fill={c} opacity=".3"/><rect x="6" y="28" width="98" height=".5" rx=".25" fill={c} opacity=".15"/><rect x="18" y="33" width="74" height="2" rx="1" fill="#78716c" opacity=".4"/><rect x="22" y="37" width="66" height="2" rx="1" fill="#a8a29e" opacity=".35"/><rect x="6" y="43" width="22" height="2.5" rx="1.2" fill={c} opacity=".6"/><rect x="6" y="48" width="44" height="1" rx=".5" fill={c} opacity=".2"/><rect x="6" y="52" width="94" height="2" rx="1" fill="#a8a29e" opacity=".4"/><rect x="6" y="56" width="80" height="2" rx="1" fill="#a8a29e" opacity=".3"/><rect x="6" y="63" width="22" height="2.5" rx="1.2" fill={c} opacity=".6"/><rect x="6" y="67" width="94" height="2" rx="1" fill="#a8a29e" opacity=".3"/></svg>
+  );
+  if (id === "tech") return (
+    <svg viewBox="0 0 110 70" className="w-full h-full"><rect width="110" height="70" fill="#0a0e1a"/><rect x="6" y="5" width="12" height="2.5" rx=".5" fill="#22c55e" opacity=".9"/><rect x="20" y="5" width="60" height="2.5" rx=".5" fill="#22c55e" opacity=".6"/><rect x="6" y="11" width="8" height="2" rx=".5" fill="#60a5fa" opacity=".7"/><rect x="16" y="11" width="44" height="2" rx=".5" fill="#64748b" opacity=".6"/><rect x="6" y="18" width="98" height=".5" rx=".25" fill="#1e293b"/><rect x="6" y="22" width="16" height="2" rx=".5" fill="#22c55e" opacity=".7"/><rect x="26" y="22" width="76" height="1.5" rx=".5" fill="#334155" opacity=".8"/><rect x="12" y="27" width="58" height="1.5" rx=".5" fill="#475569" opacity=".6"/><rect x="12" y="31" width="44" height="1.5" rx=".5" fill="#475569" opacity=".5"/><rect x="6" y="38" width="16" height="2" rx=".5" fill="#22c55e" opacity=".7"/><rect x="26" y="38" width="76" height="1.5" rx=".5" fill="#334155" opacity=".8"/><rect x="12" y="43" width="66" height="1.5" rx=".5" fill="#475569" opacity=".6"/><rect x="12" y="47" width="50" height="1.5" rx=".5" fill="#475569" opacity=".5"/><rect x="6" y="54" width="16" height="2" rx=".5" fill="#60a5fa" opacity=".7"/><rect x="26" y="54" width="50" height="1.5" rx=".5" fill="#334155" opacity=".7"/><rect x="6" y="59" width="8" height="1.5" rx=".5" fill="#f59e0b" opacity=".6"/><rect x="16" y="59" width="34" height="1.5" rx=".5" fill="#334155" opacity=".5"/><rect x="6" y="64" width="60" height="1.5" rx=".5" fill="#1e3a5f" opacity=".8"/></svg>
+  );
+  // default (modern fallback)
+  return (
+    <svg viewBox="0 0 110 70" className="w-full h-full"><rect width="110" height="70" fill="#f8fafc"/><rect width="110" height="20" fill={c} opacity=".8"/><rect x="6" y="6" width="44" height="4" rx="2" fill="white" opacity=".9"/><rect x="6" y="13" width="28" height="2.5" rx="1.2" fill="white" opacity=".6"/><rect x="6" y="26" width="22" height="2.5" rx="1.2" fill={c} opacity=".7"/><rect x="6" y="32" width="94" height="2" rx="1" fill="#94a3b8" opacity=".4"/><rect x="6" y="36" width="76" height="2" rx="1" fill="#94a3b8" opacity=".3"/><rect x="6" y="44" width="22" height="2.5" rx="1.2" fill={c} opacity=".7"/><rect x="6" y="50" width="94" height="2" rx="1" fill="#94a3b8" opacity=".4"/><rect x="6" y="54" width="60" height="2" rx="1" fill="#94a3b8" opacity=".3"/></svg>
+  );
+}
+
 export interface CVStyle {
   accent: AccentId;
   header: HeaderStyleId;
@@ -1024,7 +1123,7 @@ const CVPreviewModal = forwardRef<HTMLDivElement, { open: boolean; onClose: () =
             <h2 className="font-bold text-[13px] text-foreground">CV Preview</h2>
             <span className="text-[9px] text-muted-foreground bg-muted/50 px-1.5 py-0.5 rounded capitalize">{template}</span>
           </div>
-          <button onClick={onClose} className="text-[11px] font-semibold text-primary px-3 py-1.5 rounded-lg bg-primary/10 active:scale-95 transition-transform">
+          <button type="button" onClick={onClose} className="text-[11px] font-semibold text-primary px-3 py-1.5 rounded-lg bg-primary/10 active:scale-95 transition-transform">
             Close
           </button>
         </div>
@@ -1069,6 +1168,7 @@ const CreateCVPage = () => {
   const [website, setWebsite] = useState("");
   const [linkedin, setLinkedin] = useState("");
   const [portfolio, setPortfolio] = useState("");
+  const [nationality, setNationality] = useState("");
   const [summary, setSummary] = useState("");
 
   // Sections
@@ -1087,8 +1187,10 @@ const CreateCVPage = () => {
   const [certifications, setCertifications] = useState<Certification[]>([]);
   const [references, setReferences] = useState<Reference[]>([]);
   const [hobbies, setHobbies] = useState("");
+  const [coverLetter, setCoverLetter] = useState("");
 
   // UI state
+  const [cvList, setCvList] = useState<Array<{ id: string; full_name: string; is_primary: boolean }>>([]);
   const [saving, setSaving] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -1105,13 +1207,14 @@ const CreateCVPage = () => {
   useEffect(() => {
     try { localStorage.setItem("zivo.cv.style", JSON.stringify(cvStyle)); } catch {}
   }, [cvStyle]);
+  const [jobTitleFocus, setJobTitleFocus] = useState(false);
   const [showPreview, setShowPreview] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [lastSaved, setLastSaved] = useState<Date | null>(null);
   const [autoSaveStatus, setAutoSaveStatus] = useState<"idle" | "saving" | "saved">("idle");
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     personal: true, experience: true, education: true, skills: true,
-    languages: true, certifications: false, references: false, hobbies: false,
+    languages: true, certifications: false, references: false, hobbies: false, coverLetter: false,
   });
   const [completionPct, setCompletionPct] = useState(0);
   const autoSaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -1119,50 +1222,90 @@ const CreateCVPage = () => {
   const exportRef = useRef<HTMLDivElement>(null);
 
   /* ── Load existing CV ────────────────────────────── */
+  const applyCvData = useCallback((data: any) => {
+    setCvId(data.id);
+    setFullName(data.full_name || "");
+    setJobTitle(data.job_title || "");
+    setDateOfBirth(data.date_of_birth || "");
+    setEmail(data.email || "");
+    setPhone(data.phone || "");
+    setLocation(data.location || "");
+    setWebsite(data.website || "");
+    setLinkedin(data.linkedin || "");
+    setPortfolio(data.portfolio || "");
+    setNationality(data.nationality || "");
+    setSummary(data.summary || "");
+    if (Array.isArray(data.experiences) && data.experiences.length) setExperiences(data.experiences);
+    if (Array.isArray(data.educations) && data.educations.length) setEducations(data.educations);
+    if (Array.isArray(data.skills) && data.skills.length) setSkills(data.skills);
+    if (Array.isArray(data.languages) && data.languages.length) setLanguages(data.languages);
+    if (Array.isArray(data.certifications) && data.certifications.length) setCertifications(data.certifications);
+    if (Array.isArray(data.references_list) && data.references_list.length) setReferences(data.references_list);
+    setHobbies(data.hobbies || "");
+    setShareCode(data.share_code || null);
+    setPhoto(data.photo_url || null);
+    if (data.template) setSelectedTemplate(data.template as TemplateId);
+    setLastSaved(new Date(data.updated_at));
+  }, []);
+
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const { data } = await supabase
+      const { data: allCvs } = await supabase
         .from("user_cvs")
-        .select("*")
+        .select("id, full_name, is_primary, job_title, date_of_birth, email, phone, location, website, linkedin, portfolio, nationality, summary, experiences, educations, skills, languages, certifications, references_list, hobbies, share_code, photo_url, template, updated_at")
         .eq("user_id", user.id)
         .order("is_primary", { ascending: false })
-        .limit(1)
-        .maybeSingle();
-      if (data) {
-        setCvId(data.id);
-        setFullName(data.full_name || "");
-        setJobTitle((data as any).job_title || "");
-        setDateOfBirth((data as any).date_of_birth || "");
-        setEmail(data.email || "");
-        setPhone(data.phone || "");
-        setLocation(data.location || "");
-        setWebsite((data as any).website || "");
-        setLinkedin((data as any).linkedin || "");
-        setPortfolio((data as any).portfolio || "");
-        setSummary(data.summary || "");
-        if (Array.isArray(data.experiences) && data.experiences.length) setExperiences(data.experiences as any);
-        if (Array.isArray(data.educations) && data.educations.length) setEducations(data.educations as any);
-        if (Array.isArray(data.skills) && data.skills.length) setSkills(data.skills as any);
-        if (Array.isArray(data.languages) && data.languages.length) setLanguages(data.languages as any);
-        if (Array.isArray(data.certifications) && data.certifications.length) setCertifications(data.certifications as any);
-        if (Array.isArray((data as any).references_list) && (data as any).references_list.length) setReferences((data as any).references_list as any);
-        setHobbies((data as any).hobbies || "");
-        setShareCode((data as any).share_code || null);
-        setPhoto((data as any).photo_url || null);
-        if ((data as any).template) setSelectedTemplate((data as any).template as TemplateId);
-        setLastSaved(new Date(data.updated_at));
+        .limit(5);
+      if (allCvs && allCvs.length > 0) {
+        setCvList(allCvs.map(c => ({ id: c.id, full_name: c.full_name || "Untitled CV", is_primary: c.is_primary ?? false })));
+        applyCvData(allCvs[0]);
       }
       setLoading(false);
       setTimeout(() => { initialLoadDone.current = true; }, 500);
     };
     void load();
+  }, [user, applyCvData]);
+
+  const switchCv = useCallback(async (id: string) => {
+    if (id === cvId) return;
+    const { data } = await supabase.from("user_cvs").select("*").eq("id", id).maybeSingle();
+    if (data) { initialLoadDone.current = false; applyCvData(data); setTimeout(() => { initialLoadDone.current = true; }, 500); }
+  }, [cvId, applyCvData]);
+
+  const createNewCv = useCallback(() => {
+    initialLoadDone.current = false;
+    setCvId(null); setShareCode(null); setPhoto(null);
+    const parts = (user?.user_metadata?.full_name || "").trim().split(/\s+/);
+    setFirstName(parts[0] || ""); setLastName(parts.slice(1).join(" ") || "");
+    setDateOfBirth(""); setJobTitle(""); setEmail(user?.email || ""); setPhone(""); setLocation("");
+    setWebsite(""); setLinkedin(""); setPortfolio(""); setNationality(""); setSummary("");
+    setExperiences([{ id: uid(), company: "", position: "", startDate: "", endDate: "", current: false, description: "" }]);
+    setEducations([{ id: uid(), school: "", degree: "", field: "", startDate: "", endDate: "", gpa: "" }]);
+    setSkills([{ id: uid(), name: "", level: "Intermediate" }]);
+    setLanguages([{ id: uid(), name: "", proficiency: "Conversational" }]);
+    setCertifications([]); setReferences([]); setHobbies(""); setCoverLetter("");
+    setLastSaved(null); setAutoSaveStatus("idle");
+    setTimeout(() => { initialLoadDone.current = true; }, 500);
   }, [user]);
+
+  // Load cover letter from localStorage
+  useEffect(() => {
+    if (!user) return;
+    const saved = localStorage.getItem(`zivo.cv.cover-letter.${user.id}`);
+    if (saved) setCoverLetter(saved);
+  }, [user]);
+
+  // Persist cover letter to localStorage
+  useEffect(() => {
+    if (!user) return;
+    try { localStorage.setItem(`zivo.cv.cover-letter.${user.id}`, coverLetter); } catch {}
+  }, [coverLetter, user]);
 
   /* ── Completion calculation ──────────────────────── */
   useEffect(() => {
     let filled = 0;
-    const total = 10;
+    const total = 12;
     if (fullName.trim()) filled++;
     if (email.trim()) filled++;
     if (phone.trim()) filled++;
@@ -1173,8 +1316,10 @@ const CreateCVPage = () => {
     if (educations.some(e => e.school.trim())) filled++;
     if (skills.some(s => s.name.trim())) filled++;
     if (languages.some(l => l.name.trim())) filled++;
+    if (linkedin.trim() || website.trim()) filled++;
+    if (location.trim()) filled++;
     setCompletionPct(Math.round((filled / total) * 100));
-  }, [fullName, email, phone, jobTitle, summary, photo, experiences, educations, skills, languages]);
+  }, [fullName, email, phone, jobTitle, summary, photo, experiences, educations, skills, languages, linkedin, website, location]);
 
   /* ── Save (manual + auto) ───────────────────────── */
   const doSave = useCallback(async (silent = false) => {
@@ -1193,6 +1338,7 @@ const CreateCVPage = () => {
       website: website.trim(),
       linkedin: linkedin.trim(),
       portfolio: portfolio.trim(),
+      nationality: nationality.trim(),
       summary: summary.trim(),
       experiences: experiences as any, educations: educations as any, skills: skills as any, languages: languages as any, certifications: certifications as any,
       references_list: references as any,
@@ -1216,17 +1362,33 @@ const CreateCVPage = () => {
       if (!silent) toast.success("CV saved!");
       if (silent) { setAutoSaveStatus("saved"); setTimeout(() => setAutoSaveStatus("idle"), 2000); }
     }
-  }, [user, cvId, fullName, dateOfBirth, jobTitle, email, phone, location, website, linkedin, portfolio, summary, experiences, educations, skills, languages, certifications, references, hobbies, selectedTemplate, photo]);
+  }, [user, cvId, fullName, dateOfBirth, jobTitle, email, phone, location, nationality, website, linkedin, portfolio, summary, experiences, educations, skills, languages, certifications, references, hobbies, selectedTemplate, photo]);
 
   const handleSave = useCallback(() => doSave(false), [doSave]);
+
+  const generateSummary = useCallback(() => {
+    const exp0 = experiences.find(e => e.position || e.company);
+    const edu0 = educations.find(e => e.degree || e.school);
+    const topSkills = skills.filter(s => s.name.trim()).slice(0, 3).map(s => s.name);
+    const nameStr = fullName.trim() || "A dedicated professional";
+    const titleStr = jobTitle.trim() || exp0?.position || "professional";
+    const parts: string[] = [`${nameStr} is a ${titleStr}`];
+    if (exp0?.company) parts.push(`with hands-on experience at ${exp0.company}`);
+    if (edu0?.degree) {
+      const fieldStr = edu0.field ? ` in ${edu0.field}` : "";
+      parts.push(`holding a ${edu0.degree}${fieldStr}`);
+    }
+    if (topSkills.length) parts.push(`skilled in ${topSkills.join(", ")}`);
+    setSummary(parts.join(", ") + ".");
+  }, [fullName, jobTitle, experiences, educations, skills]);
 
   /* ── Auto-save debounce (3s after changes) ──────── */
   useEffect(() => {
     if (!initialLoadDone.current) return;
     if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current);
-    autoSaveTimer.current = setTimeout(() => { doSave(true); }, 3000);
+    autoSaveTimer.current = setTimeout(() => { doSave(true); }, 1500);
     return () => { if (autoSaveTimer.current) clearTimeout(autoSaveTimer.current); };
-  }, [fullName, dateOfBirth, jobTitle, email, phone, location, website, linkedin, portfolio, summary, experiences, educations, skills, languages, certifications, references, hobbies, doSave]);
+  }, [fullName, dateOfBirth, jobTitle, email, phone, location, nationality, website, linkedin, portfolio, summary, experiences, educations, skills, languages, certifications, references, hobbies, doSave]);
 
   /* ── Delete CV ──────────────────────────────────── */
   const handleDelete = useCallback(async () => {
@@ -1267,7 +1429,34 @@ const CreateCVPage = () => {
     );
   }
 
-  const previewData = { photo, firstName, lastName, fullName, dateOfBirth, jobTitle, email, phone, location, website, linkedin, portfolio, summary, experiences, educations, skills, languages, certifications, references, hobbies };
+  const previewData = { photo, firstName, lastName, fullName, dateOfBirth, jobTitle, email, phone, location, nationality, website, linkedin, portfolio, summary, experiences, educations, skills, languages, certifications, references, hobbies, coverLetter };
+
+  const handleDownloadCoverLetter = () => {
+    if (!coverLetter.trim()) return;
+    const pdf = new jsPDF("p", "mm", "a4");
+    const margin = 20;
+    const contentWidth = 210 - 2 * margin;
+    let y = 25;
+    pdf.setFontSize(14);
+    pdf.setFont("helvetica", "bold");
+    pdf.text(fullName || "Cover Letter", margin, y);
+    y += 7;
+    pdf.setFontSize(9);
+    pdf.setFont("helvetica", "normal");
+    const contact = [email, phone, location].filter(Boolean).join(" | ");
+    if (contact) { pdf.text(contact, margin, y); y += 5; }
+    pdf.setDrawColor(180);
+    pdf.line(margin, y + 1, 210 - margin, y + 1);
+    y += 8;
+    pdf.setFontSize(11);
+    const lines = pdf.splitTextToSize(coverLetter, contentWidth);
+    for (const line of lines) {
+      if (y > 270) { pdf.addPage(); y = 25; }
+      pdf.text(line, margin, y);
+      y += 5.5;
+    }
+    downloadBlob(pdf.output("blob"), `cover-letter-${(fullName || "cover-letter").replace(/\s+/g, "-").toLowerCase()}.pdf`);
+  };
 
   const handleShare = () => {
     if (!shareCode) { toast.error("Save your CV first to get a share link"); return; }
@@ -1357,7 +1546,7 @@ const CreateCVPage = () => {
         .replace(/[^a-z0-9]+/g, "-")
         .replace(/(^-|-$)/g, "") || "cv";
 
-      pdf.save(`${fileBaseName}-a4.pdf`);
+      downloadBlob(pdf.output("blob"), `${fileBaseName}-a4.pdf`);
       toast.success("PDF downloaded");
     } catch (error) {
       console.error(error);
@@ -1494,15 +1683,32 @@ const CreateCVPage = () => {
     <AppLayout title="Create CV" hideHeader>
       <div className="flex flex-col px-4 pt-3 pb-28">
         {/* Header */}
-        <div className="flex items-center gap-2.5 mb-1">
-          <button onClick={() => navigate(-1)} className="w-8 h-8 rounded-full bg-muted/60 flex items-center justify-center touch-manipulation active:scale-90 transition-transform">
+        <div className="flex items-center gap-2.5 mb-4">
+          <button type="button" onClick={() => navigate(-1)} aria-label="Go back" className="w-8 h-8 rounded-full bg-muted/60 flex items-center justify-center touch-manipulation active:scale-90 transition-transform">
             <ArrowLeft className="w-4 h-4" />
           </button>
-          <div className="flex-1">
-            <h1 className="font-bold text-base">Create CV</h1>
-            <p className="text-[10px] text-muted-foreground">Professional resume builder</p>
+          <div className="flex-1 min-w-0">
+            <h1 className="font-bold text-base leading-tight">Create CV</h1>
+            <div className="flex items-center gap-1.5">
+              {autoSaveStatus === "saving" && (
+                <span className="flex items-center gap-0.5 text-[9px] text-muted-foreground">
+                  <Loader2 className="w-2 h-2 animate-spin" /> Saving…
+                </span>
+              )}
+              {autoSaveStatus === "saved" && (
+                <span className="flex items-center gap-0.5 text-[9px] text-emerald-500">
+                  <Check className="w-2 h-2" /> Saved
+                </span>
+              )}
+              {autoSaveStatus === "idle" && (
+                <span className="text-[9px] text-muted-foreground/50">
+                  {lastSaved ? `Saved ${lastSaved.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}` : "Resume builder"}
+                </span>
+              )}
+            </div>
           </div>
           <button
+            type="button"
             onClick={handleSave}
             disabled={saving}
             className="h-9 px-4 rounded-xl bg-primary text-primary-foreground text-xs font-bold touch-manipulation active:scale-95 transition-transform flex items-center gap-1.5 disabled:opacity-60 shadow-sm"
@@ -1512,24 +1718,43 @@ const CreateCVPage = () => {
           </button>
         </div>
 
-        {/* Auto-save indicator */}
-        <div className="flex items-center justify-end gap-1.5 mb-3 px-1">
-          {autoSaveStatus === "saving" && (
-            <span className="flex items-center gap-1 text-[9px] text-muted-foreground">
-              <Loader2 className="w-2.5 h-2.5 animate-spin" /> Auto-saving…
-            </span>
-          )}
-          {autoSaveStatus === "saved" && (
-            <span className="flex items-center gap-1 text-[9px] text-primary">
-              <Check className="w-2.5 h-2.5" /> Auto-saved
-            </span>
-          )}
+        {/* Completion bar */}
+        <div className="flex items-center gap-2 mb-3 px-1">
+          <div className="flex-1 h-1 rounded-full bg-muted overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${completionPct}%` }}
+              className={cn("h-full rounded-full", completionPct >= 80 ? "bg-emerald-500" : completionPct >= 40 ? "bg-amber-500" : "bg-muted-foreground/40")}
+            />
+          </div>
+          <span className="text-[9px] text-muted-foreground font-medium shrink-0">{completionPct}% complete</span>
+        </div>
+
+        {/* Legacy auto-save area (keep for spacing) */}
+        <div className="hidden">
           {autoSaveStatus === "idle" && lastSaved && (
             <span className="text-[9px] text-muted-foreground/50">
               Last saved {lastSaved.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
             </span>
           )}
         </div>
+
+        {/* CV Switcher */}
+        {(cvList.length > 1 || cvList.length === 0) && (
+          <div className="mb-3 flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
+            <button type="button" onClick={createNewCv}
+              className="shrink-0 flex items-center gap-1 h-7 px-3 rounded-full border border-dashed border-primary/50 text-[11px] font-semibold text-primary touch-manipulation active:scale-95 transition-all">
+              <Plus className="w-3 h-3" />New
+            </button>
+            {cvList.map(cv => (
+              <button type="button" key={cv.id} type="button" onClick={() => switchCv(cv.id)}
+                className={cn("shrink-0 h-7 px-3 rounded-full border text-[11px] font-semibold touch-manipulation active:scale-95 transition-all truncate max-w-[120px]",
+                  cv.id === cvId ? "border-primary bg-primary/10 text-primary" : "border-border/40 text-foreground/70 bg-card")}>
+                {cv.full_name || "Untitled CV"}
+              </button>
+            ))}
+          </div>
+        )}
 
         {/* Completion bar */}
         <div className="mb-4 bg-card rounded-xl p-3 border border-border/20 shadow-sm">
@@ -1567,26 +1792,11 @@ const CreateCVPage = () => {
               const active = selectedTemplate === t.id;
               const accentHsl = ACCENT_COLORS.find(a => a.id === cvStyle.accent)?.hsl || ACCENT_COLORS[0].hsl;
               return (
-                <button key={t.id} onClick={() => setSelectedTemplate(t.id)}
+                <button type="button" key={t.id} onClick={() => setSelectedTemplate(t.id)}
                   className={cn("shrink-0 w-[110px] sm:w-[140px] md:w-[160px] snap-start rounded-xl border-2 overflow-hidden text-left touch-manipulation active:scale-95 transition-all",
                     active ? "border-primary shadow-md" : "border-border/30 bg-card")}>
-                  <div
-                    className="h-12 sm:h-16 md:h-20 relative"
-                    style={{
-                      background: t.id === "classic"
-                        ? `linear-gradient(135deg, hsl(${accentHsl} / 0.18), hsl(${accentHsl} / 0.05))`
-                        : t.id === "minimal"
-                        ? `linear-gradient(135deg, hsl(${accentHsl} / 0.08), #fafafa)`
-                        : t.id === "executive"
-                        ? `linear-gradient(135deg, #0f172a 0%, #1e293b 100%)`
-                        : t.id === "elegant"
-                        ? `linear-gradient(135deg, hsl(${accentHsl} / 0.12), #fff)`
-                        : `linear-gradient(135deg, hsl(${accentHsl}), hsl(${accentHsl} / 0.55))`,
-                    }}
-                  >
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 rounded-full bg-white/40 backdrop-blur-sm border border-white/60" />
-                    </div>
+                  <div className="h-12 sm:h-16 md:h-20 relative overflow-hidden">
+                    <TemplateThumbnail id={t.id} color={t.color} />
                     {active && (
                       <div className="absolute top-1 right-1 w-4 h-4 sm:w-5 sm:h-5 rounded-full bg-white flex items-center justify-center shadow">
                         <Check className="w-2.5 h-2.5 sm:w-3 sm:h-3 text-primary" strokeWidth={3} />
@@ -1609,7 +1819,7 @@ const CreateCVPage = () => {
           <div className="flex items-center gap-1.5 sm:gap-2">
             <Palette className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-primary" />
             <span className="text-[11px] sm:text-sm md:text-base font-bold text-foreground">Customize Style</span>
-            <button onClick={() => setCvStyle({ accent: "emerald", header: "standard", columns: "auto", fontScale: 1, fontFamily: "sans", photoShape: "default", sectionDivider: "default" })}
+            <button type="button" onClick={() => setCvStyle({ accent: "emerald", header: "standard", columns: "auto", fontScale: 1, fontFamily: "sans", photoShape: "default", sectionDivider: "default" })}
               className="ml-auto text-[9px] sm:text-xs font-semibold text-muted-foreground hover:text-primary">Reset</button>
           </div>
 
@@ -1620,7 +1830,7 @@ const CreateCVPage = () => {
               {ACCENT_COLORS.map(c => {
                 const active = cvStyle.accent === c.id;
                 return (
-                  <button key={c.id} onClick={() => setCvStyle(s => ({ ...s, accent: c.id }))}
+                  <button type="button" key={c.id} onClick={() => setCvStyle(s => ({ ...s, accent: c.id }))}
                     aria-label={c.name}
                     className={cn("w-7 h-7 sm:w-9 sm:h-9 md:w-10 md:h-10 rounded-full border-2 transition-all touch-manipulation active:scale-90",
                       active ? "border-foreground scale-110 shadow-md" : "border-white/60 hover:border-foreground/40")}
@@ -1639,7 +1849,7 @@ const CreateCVPage = () => {
               {COLUMN_STYLES.map(o => {
                 const active = cvStyle.columns === o.id;
                 return (
-                  <button key={o.id} onClick={() => setCvStyle(s => ({ ...s, columns: o.id }))}
+                  <button type="button" key={o.id} onClick={() => setCvStyle(s => ({ ...s, columns: o.id }))}
                     className={cn("px-2 py-1.5 sm:px-3 sm:py-2.5 rounded-lg text-[10px] sm:text-sm font-semibold border transition-all touch-manipulation active:scale-95",
                       active ? "border-primary bg-primary/10 text-primary" : "border-border/40 text-foreground/70")}>
                     {o.name}
@@ -1656,7 +1866,7 @@ const CreateCVPage = () => {
               {HEADER_STYLES.map(o => {
                 const active = cvStyle.header === o.id;
                 return (
-                  <button key={o.id} onClick={() => setCvStyle(s => ({ ...s, header: o.id }))}
+                  <button type="button" key={o.id} onClick={() => setCvStyle(s => ({ ...s, header: o.id }))}
                     className={cn("px-2 py-1.5 sm:px-3 sm:py-2.5 rounded-lg text-[10px] sm:text-sm font-semibold border transition-all touch-manipulation active:scale-95",
                       active ? "border-primary bg-primary/10 text-primary" : "border-border/40 text-foreground/70")}>
                     {o.name}
@@ -1673,7 +1883,7 @@ const CreateCVPage = () => {
               {FONT_FAMILIES.map(o => {
                 const active = (cvStyle.fontFamily || "sans") === o.id;
                 return (
-                  <button key={o.id} onClick={() => setCvStyle(s => ({ ...s, fontFamily: o.id }))}
+                  <button type="button" key={o.id} onClick={() => setCvStyle(s => ({ ...s, fontFamily: o.id }))}
                     style={o.css ? { fontFamily: o.css } : undefined}
                     className={cn("px-2 py-1.5 sm:px-3 sm:py-2.5 rounded-lg text-[10px] sm:text-sm font-semibold border transition-all touch-manipulation active:scale-95",
                       active ? "border-primary bg-primary/10 text-primary" : "border-border/40 text-foreground/70")}>
@@ -1691,7 +1901,7 @@ const CreateCVPage = () => {
               {PHOTO_SHAPES.map(o => {
                 const active = (cvStyle.photoShape || "default") === o.id;
                 return (
-                  <button key={o.id} onClick={() => setCvStyle(s => ({ ...s, photoShape: o.id }))}
+                  <button type="button" key={o.id} onClick={() => setCvStyle(s => ({ ...s, photoShape: o.id }))}
                     className={cn("px-2 py-1.5 sm:px-3 sm:py-2.5 rounded-lg text-[10px] sm:text-sm font-semibold border transition-all touch-manipulation active:scale-95",
                       active ? "border-primary bg-primary/10 text-primary" : "border-border/40 text-foreground/70")}>
                     {o.name}
@@ -1708,7 +1918,7 @@ const CreateCVPage = () => {
               {SECTION_DIVIDERS.map(o => {
                 const active = (cvStyle.sectionDivider || "default") === o.id;
                 return (
-                  <button key={o.id} onClick={() => setCvStyle(s => ({ ...s, sectionDivider: o.id }))}
+                  <button type="button" key={o.id} onClick={() => setCvStyle(s => ({ ...s, sectionDivider: o.id }))}
                     className={cn("px-2 py-1.5 sm:px-3 sm:py-2.5 rounded-lg text-[10px] sm:text-sm font-semibold border transition-all touch-manipulation active:scale-95",
                       active ? "border-primary bg-primary/10 text-primary" : "border-border/40 text-foreground/70")}>
                     {o.name}
@@ -1724,7 +1934,7 @@ const CreateCVPage = () => {
               <p className="text-[9px] uppercase tracking-wider font-semibold text-muted-foreground/70">Font Size</p>
               <span className="text-[10px] font-bold text-primary">{Math.round(cvStyle.fontScale * 100)}%</span>
             </div>
-            <input type="range" min={0.9} max={1.15} step={0.05} value={cvStyle.fontScale}
+            <input type="range" aria-label="Font size" min={0.9} max={1.15} step={0.05} value={cvStyle.fontScale}
               onChange={e => setCvStyle(s => ({ ...s, fontScale: parseFloat(e.target.value) }))}
               className="w-full accent-primary" />
           </div>
@@ -1738,7 +1948,7 @@ const CreateCVPage = () => {
               <span className="text-[11px] font-bold text-foreground">Live Preview</span>
               <span className="text-[9px] text-muted-foreground bg-background px-1.5 py-0.5 rounded capitalize">{selectedTemplate}</span>
             </div>
-            <button onClick={() => setShowPreview(true)}
+            <button type="button" onClick={() => setShowPreview(true)}
               className="text-[10px] font-semibold text-primary px-2 py-1 rounded-md bg-primary/10 active:scale-95 transition-transform">
               Full View
             </button>
@@ -1776,20 +1986,68 @@ const CreateCVPage = () => {
                   <label className={lblCls}>Date of Birth</label>
                   <input type="date" className={inputCls} value={dateOfBirth} onChange={e => setDateOfBirth(e.target.value)} />
                 </div>
-                <div>
+                <div className="relative">
                   <label className={lblCls}>Job Title / Headline</label>
-                  <input className={inputCls} placeholder="Senior Software Engineer" value={jobTitle} onChange={e => setJobTitle(e.target.value)} />
+                  <input className={inputCls} placeholder="Senior Software Engineer" value={jobTitle}
+                    onChange={e => setJobTitle(e.target.value)}
+                    onFocus={() => setJobTitleFocus(true)}
+                    onBlur={() => setTimeout(() => setJobTitleFocus(false), 150)}
+                  />
+                  {jobTitleFocus && jobTitle.length >= 1 && (() => {
+                    const matches = JOB_TITLES.filter(t => t.toLowerCase().includes(jobTitle.toLowerCase())).slice(0, 6);
+                    if (!matches.length) return null;
+                    return (
+                      <div className="absolute left-0 right-0 top-full mt-1 bg-card border border-border/40 rounded-xl shadow-lg z-20 overflow-hidden">
+                        {matches.map(t => (
+                          <button type="button" key={t} type="button" onMouseDown={() => { setJobTitle(t); setJobTitleFocus(false); }}
+                            className="w-full text-left px-3 py-2 text-xs hover:bg-muted/60 transition-colors first:rounded-t-xl last:rounded-b-xl">
+                            {t}
+                          </button>
+                        ))}
+                      </div>
+                    );
+                  })()}
                 </div>
                 <div className="grid grid-cols-2 gap-2">
                   <div><label className={lblCls}>Email</label><input className={inputCls} placeholder="email@example.com" value={email} onChange={e => setEmail(e.target.value)} /></div>
                   <div><label className={lblCls}>Phone</label><input className={inputCls} placeholder="+1 234 567 890" value={phone} onChange={e => setPhone(e.target.value)} /></div>
                 </div>
-                <div>
-                  <label className={lblCls}>Location</label>
-                  <input className={inputCls} placeholder="Phnom Penh, Cambodia" value={location} onChange={e => setLocation(e.target.value)} />
+                <div className="grid grid-cols-2 gap-2">
+                  <div>
+                    <label className={lblCls}>Location</label>
+                    <input className={inputCls} placeholder="Phnom Penh, Cambodia" value={location} onChange={e => setLocation(e.target.value)} />
+                  </div>
+                  <div>
+                    <label className={lblCls}>Nationality</label>
+                    <input className={inputCls} placeholder="Cambodian" value={nationality} onChange={e => setNationality(e.target.value)} />
+                  </div>
+                </div>
+                {/* Online links */}
+                <div className="pt-1">
+                  <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-wider mb-2">Online Presence</p>
+                  <div className="space-y-2">
+                    <div className="relative">
+                      <Linkedin className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-[#0077B5] pointer-events-none" />
+                      <input className={cn(inputCls, "pl-8")} placeholder="linkedin.com/in/yourname" value={linkedin} onChange={e => setLinkedin(e.target.value)} />
+                    </div>
+                    <div className="relative">
+                      <Globe className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+                      <input className={cn(inputCls, "pl-8")} placeholder="yourwebsite.com" value={website} onChange={e => setWebsite(e.target.value)} />
+                    </div>
+                    <div className="relative">
+                      <Link2 className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+                      <input className={cn(inputCls, "pl-8")} placeholder="Portfolio / GitHub / Behance URL" value={portfolio} onChange={e => setPortfolio(e.target.value)} />
+                    </div>
+                  </div>
                 </div>
                 <div>
-                  <label className={lblCls}>Professional Summary</label>
+                  <div className="flex items-center justify-between mb-0.5">
+                    <label className={lblCls}>Professional Summary</label>
+                    <button type="button" onClick={generateSummary}
+                      className="flex items-center gap-1 text-[10px] font-semibold text-primary hover:opacity-80 touch-manipulation active:scale-95 transition-all">
+                      <Star className="w-3 h-3" />Generate
+                    </button>
+                  </div>
                   <textarea className={cn(inputCls, "min-h-[70px] resize-none")} placeholder="Experienced professional with expertise in..." value={summary} onChange={e => setSummary(e.target.value)} />
                 </div>
               </div>
@@ -1869,7 +2127,7 @@ const CreateCVPage = () => {
                     {PRESET_SKILLS.slice(0, 14).map(p => {
                       const already = skills.some(s => s.name.trim().toLowerCase() === p.name.toLowerCase());
                       return (
-                        <button
+                        <button type="button"
                           key={p.slug}
                           type="button"
                           disabled={already}
@@ -1900,11 +2158,19 @@ const CreateCVPage = () => {
                           <SkillLogo name={preset.name} size={16} className="absolute left-2 top-1/2 -translate-y-1/2 pointer-events-none" />
                         )}
                       </div>
-                      <select className={cn(inputCls, "w-[105px] text-[11px]")} value={sk.level} onChange={e => updateSkill(sk.id, "level", e.target.value)}>
-                        {SKILL_LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
-                      </select>
+                      <div className="flex items-center gap-1.5 shrink-0" title={sk.level}>
+                        {SKILL_LEVELS.map((l, i) => (
+                          <button type="button" key={l} type="button" aria-label={l} title={l}
+                            onClick={() => updateSkill(sk.id, "level", l)}
+                            className={cn("w-3.5 h-3.5 rounded-full border-2 transition-all touch-manipulation active:scale-90",
+                              sk.level === l
+                                ? `${SKILL_LEVEL_COLORS[i]} border-transparent scale-125 shadow-sm`
+                                : "bg-muted border-border/40"
+                            )} />
+                        ))}
+                      </div>
                       {skills.length > 1 && (
-                        <button onClick={() => setSkills(p => p.filter(s => s.id !== sk.id))} className="w-7 h-7 rounded-full bg-destructive/10 flex items-center justify-center shrink-0 touch-manipulation"><Trash2 className="w-3 h-3 text-destructive" /></button>
+                        <button type="button" aria-label="Remove skill" onClick={() => setSkills(p => p.filter(s => s.id !== sk.id))} className="w-7 h-7 rounded-full bg-destructive/10 flex items-center justify-center shrink-0 touch-manipulation"><Trash2 className="w-3 h-3 text-destructive" /></button>
                       )}
                     </div>
                   );
@@ -1924,11 +2190,11 @@ const CreateCVPage = () => {
                 {languages.map(lg => (
                   <div key={lg.id} className="flex items-center gap-2">
                     <input className={cn(inputCls, "flex-1")} placeholder="e.g. English, Khmer" value={lg.name} onChange={e => updateLang(lg.id, "name", e.target.value)} />
-                    <select className={cn(inputCls, "w-[115px] text-[11px]")} value={lg.proficiency} onChange={e => updateLang(lg.id, "proficiency", e.target.value)}>
+                    <select aria-label="Language proficiency" className={cn(inputCls, "w-[115px] text-[11px]")} value={lg.proficiency} onChange={e => updateLang(lg.id, "proficiency", e.target.value)}>
                       {LANG_LEVELS.map(l => <option key={l} value={l}>{l}</option>)}
                     </select>
                     {languages.length > 1 && (
-                      <button onClick={() => setLanguages(p => p.filter(l => l.id !== lg.id))} className="w-7 h-7 rounded-full bg-destructive/10 flex items-center justify-center shrink-0 touch-manipulation"><Trash2 className="w-3 h-3 text-destructive" /></button>
+                      <button type="button" aria-label="Remove language" onClick={() => setLanguages(p => p.filter(l => l.id !== lg.id))} className="w-7 h-7 rounded-full bg-destructive/10 flex items-center justify-center shrink-0 touch-manipulation"><Trash2 className="w-3 h-3 text-destructive" /></button>
                     )}
                   </div>
                 ))}
@@ -1997,41 +2263,88 @@ const CreateCVPage = () => {
           )}
         </AnimatePresence>
 
+        {/* ── COVER LETTER ── */}
+        <SectionHeader icon={FileText} title="Cover Letter" sectionKey="coverLetter" expanded={expandedSections.coverLetter} onToggle={toggle} />
+        <AnimatePresence>
+          {expandedSections.coverLetter && (
+            <CollapseWrap>
+              <div className="space-y-2.5">
+                <p className="text-[10px] text-muted-foreground/70 leading-relaxed">
+                  Write a cover letter to accompany your CV. Saved locally on this device.
+                </p>
+                <textarea
+                  className={cn(inputCls, "min-h-[200px] resize-none")}
+                  placeholder={"Dear Hiring Manager,\n\nI am writing to express my interest in the [Position] role..."}
+                  value={coverLetter}
+                  onChange={e => setCoverLetter(e.target.value)}
+                />
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] text-muted-foreground/50">{coverLetter.length} characters</span>
+                  {!coverLetter.trim() && (
+                    <button
+                      type="button"
+                      onClick={() => setCoverLetter(`Dear Hiring Manager,\n\nI am writing to express my strong interest in the [Position] role at [Company]. With my experience in [Field] and a proven track record in [Key Achievement], I am confident I would bring significant value to your team.\n\n[Describe your key qualifications and why you are the best fit for this role]\n\nThank you for considering my application. I would welcome the opportunity to discuss how my background aligns with your needs.\n\nSincerely,\n${fullName || "Your Name"}`)}
+                      className="text-[10px] text-primary font-semibold touch-manipulation active:scale-95 transition-transform"
+                    >
+                      Insert template
+                    </button>
+                  )}
+                </div>
+              </div>
+            </CollapseWrap>
+          )}
+        </AnimatePresence>
+
         {/* Bottom Action Buttons */}
-        <div className="grid grid-cols-2 gap-2.5 mt-5">
-          <button onClick={handleSave} disabled={saving}
-            className="h-12 rounded-xl bg-primary text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 touch-manipulation active:scale-[0.97] transition-all shadow-md disabled:opacity-60">
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-            {saving ? "Saving…" : "Save CV"}
+        <div className="mt-5 space-y-2.5">
+          {/* Primary row */}
+          <div className="grid grid-cols-2 gap-2.5">
+            <button type="button" onClick={handleSave} disabled={saving}
+              className="h-12 rounded-xl bg-primary text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 touch-manipulation active:scale-[0.97] transition-all shadow-md disabled:opacity-60">
+              {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+              {saving ? "Saving…" : "Save CV"}
+            </button>
+            <button type="button" onClick={() => setShowPreview(true)}
+              className="h-12 rounded-xl border-2 border-primary/30 text-primary font-bold text-sm flex items-center justify-center gap-2 touch-manipulation active:scale-[0.97] transition-all">
+              <Eye className="w-4 h-4" /> Preview
+            </button>
+          </div>
+          {/* Export row */}
+          <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wider px-0.5">Export & Share</p>
+          <div className="grid grid-cols-3 gap-2">
+            <button type="button" onClick={() => void handleDownloadPDF()} disabled={downloading}
+              className="h-11 rounded-xl border border-border/40 bg-card text-foreground text-[11px] font-semibold flex flex-col items-center justify-center gap-0.5 touch-manipulation active:scale-[0.97] transition-all disabled:opacity-60">
+              {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5 text-rose-500" />}
+              PDF
+            </button>
+            <button type="button" onClick={() => void handleDownloadWord()} disabled={downloading}
+              className="h-11 rounded-xl border border-border/40 bg-card text-foreground text-[11px] font-semibold flex flex-col items-center justify-center gap-0.5 touch-manipulation active:scale-[0.97] transition-all disabled:opacity-60">
+              <img src="https://cdn.simpleicons.org/microsoftword/2B579A" alt="" className="w-3.5 h-3.5" loading="lazy" />
+              Word
+            </button>
+            <button type="button" onClick={handleDownloadExcel} disabled={downloading}
+              className="h-11 rounded-xl border border-border/40 bg-card text-foreground text-[11px] font-semibold flex flex-col items-center justify-center gap-0.5 touch-manipulation active:scale-[0.97] transition-all disabled:opacity-60">
+              <img src="https://cdn.simpleicons.org/microsoftexcel/217346" alt="" className="w-3.5 h-3.5" loading="lazy" />
+              Excel
+            </button>
+          </div>
+          <button type="button" onClick={handleShare}
+            className="w-full h-10 rounded-xl border border-border/40 bg-card text-foreground text-[12px] font-semibold flex items-center justify-center gap-2 touch-manipulation active:scale-[0.97] transition-all">
+            <Copy className="w-3.5 h-3.5 text-primary" /> Copy Share Link
           </button>
-          <button onClick={() => setShowPreview(true)}
-            className="h-12 rounded-xl border-2 border-primary/30 text-primary font-bold text-sm flex items-center justify-center gap-2 touch-manipulation active:scale-[0.97] transition-all">
-            <Eye className="w-4 h-4" /> Preview
-          </button>
-          <button onClick={() => void handleDownloadPDF()} disabled={downloading}
-            className="h-10 rounded-xl border border-border/40 text-foreground text-xs font-semibold flex items-center justify-center gap-1.5 touch-manipulation active:scale-[0.97] transition-all disabled:opacity-60">
-            {downloading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Download className="w-3.5 h-3.5" />}
-            {downloading ? "Preparing PDF…" : "Download PDF"}
-          </button>
-          <button onClick={handleShare}
-            className="h-10 rounded-xl border border-border/40 text-foreground text-xs font-semibold flex items-center justify-center gap-1.5 touch-manipulation active:scale-[0.97] transition-all">
-            <Share2 className="w-3.5 h-3.5" /> Share Link
-          </button>
-          <button onClick={() => void handleDownloadWord()} disabled={downloading}
-            className="h-10 rounded-xl border border-border/40 text-foreground text-xs font-semibold flex items-center justify-center gap-1.5 touch-manipulation active:scale-[0.97] transition-all disabled:opacity-60">
-            <img src="https://cdn.simpleicons.org/microsoftword/2B579A" alt="" className="w-3.5 h-3.5" loading="lazy" /> Word (.docx)
-          </button>
-          <button onClick={handleDownloadExcel} disabled={downloading}
-            className="h-10 rounded-xl border border-border/40 text-foreground text-xs font-semibold flex items-center justify-center gap-1.5 touch-manipulation active:scale-[0.97] transition-all disabled:opacity-60">
-            <img src="https://cdn.simpleicons.org/microsoftexcel/217346" alt="" className="w-3.5 h-3.5" loading="lazy" /> Excel (.csv)
-          </button>
+          {coverLetter.trim() && (
+            <button type="button" onClick={handleDownloadCoverLetter}
+              className="w-full h-10 rounded-xl border border-border/40 bg-card text-foreground text-[12px] font-semibold flex items-center justify-center gap-2 touch-manipulation active:scale-[0.97] transition-all">
+              <FileText className="w-3.5 h-3.5 text-violet-500" /> Download Cover Letter
+            </button>
+          )}
         </div>
 
         {/* Delete CV */}
         {cvId && (
           <div className="mt-6 pt-4 border-t border-border/20">
             {!showDeleteConfirm ? (
-              <button
+              <button type="button"
                 onClick={() => setShowDeleteConfirm(true)}
                 className="w-full h-10 rounded-xl border border-destructive/20 text-destructive/70 text-xs font-medium flex items-center justify-center gap-1.5 touch-manipulation active:scale-[0.98] transition-all"
               >
@@ -2043,10 +2356,10 @@ const CreateCVPage = () => {
                 <p className="text-[12px] font-semibold text-destructive text-center">Delete this CV permanently?</p>
                 <p className="text-[10px] text-muted-foreground text-center">This action cannot be undone.</p>
                 <div className="flex gap-2">
-                  <button onClick={() => setShowDeleteConfirm(false)} className="flex-1 h-9 rounded-lg bg-muted/60 text-xs font-medium touch-manipulation active:scale-95 transition-transform">
+                  <button type="button" onClick={() => setShowDeleteConfirm(false)} className="flex-1 h-9 rounded-lg bg-muted/60 text-xs font-medium touch-manipulation active:scale-95 transition-transform">
                     Cancel
                   </button>
-                  <button onClick={handleDelete} className="flex-1 h-9 rounded-lg bg-destructive text-destructive-foreground text-xs font-bold touch-manipulation active:scale-95 transition-transform">
+                  <button type="button" onClick={handleDelete} className="flex-1 h-9 rounded-lg bg-destructive text-destructive-foreground text-xs font-bold touch-manipulation active:scale-95 transition-transform">
                     Yes, Delete
                   </button>
                 </div>
@@ -2094,7 +2407,7 @@ function SectionHeader({ icon: Icon, title, sectionKey, expanded, onToggle, coun
   icon: typeof User; title: string; sectionKey: string; expanded: boolean; onToggle: (k: string) => void; count?: number;
 }) {
   return (
-    <button onClick={() => onToggle(sectionKey)} className="flex items-center gap-2 py-2.5 mt-1.5 w-full text-left touch-manipulation group">
+    <button type="button" onClick={() => onToggle(sectionKey)} className="flex items-center gap-2 py-2.5 mt-1.5 w-full text-left touch-manipulation group">
       <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
         <Icon className="w-3.5 h-3.5 text-primary" />
       </div>
@@ -2119,7 +2432,7 @@ function CollapseWrap({ children }: { children: React.ReactNode }) {
 
 function AddBtn({ label, onClick }: { label: string; onClick: () => void }) {
   return (
-    <button onClick={onClick} className="w-full h-10 rounded-xl border-2 border-dashed border-primary/25 text-primary text-xs font-semibold flex items-center justify-center gap-1.5 touch-manipulation active:scale-[0.98] transition-all hover:bg-primary/5">
+    <button type="button" onClick={onClick} className="w-full h-10 rounded-xl border-2 border-dashed border-primary/25 text-primary text-xs font-semibold flex items-center justify-center gap-1.5 touch-manipulation active:scale-[0.98] transition-all hover:bg-primary/5">
       <Plus className="w-3.5 h-3.5" /> {label}
     </button>
   );
@@ -2127,7 +2440,7 @@ function AddBtn({ label, onClick }: { label: string; onClick: () => void }) {
 
 function DelBtn({ onClick }: { onClick: () => void }) {
   return (
-    <button onClick={onClick} className="absolute top-2.5 right-2.5 w-6 h-6 rounded-full bg-destructive/10 flex items-center justify-center touch-manipulation z-10 active:scale-90 transition-transform">
+    <button type="button" aria-label="Remove" onClick={onClick} className="absolute top-2.5 right-2.5 w-6 h-6 rounded-full bg-destructive/10 flex items-center justify-center touch-manipulation z-10 active:scale-90 transition-transform">
       <Trash2 className="w-3 h-3 text-destructive" />
     </button>
   );

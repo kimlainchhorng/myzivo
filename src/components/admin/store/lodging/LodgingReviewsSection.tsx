@@ -91,7 +91,7 @@ export default function LodgingReviewsSection({ storeId }: { storeId: string }) 
 
         <div className="flex flex-wrap gap-2">
           {(["all", "unreplied", "flagged", "low"] as const).map((f) => (
-            <button
+            <button type="button"
               key={f}
               onClick={() => setFilter(f)}
               className={`rounded-full border px-3 py-1 text-xs font-medium capitalize ${filter === f ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-muted-foreground"}`}

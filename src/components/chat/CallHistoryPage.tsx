@@ -229,11 +229,11 @@ export default function CallHistoryPage({ onClose, onCallUser }: CallHistoryPage
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-xl safe-area-top">
         <div className="px-4 pt-3 pb-2 flex items-center gap-2">
-          <button onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center -ml-2 rounded-full hover:bg-muted/50 transition-colors">
+          <button type="button" onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center -ml-2 rounded-full hover:bg-muted/50 transition-colors">
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
           <h1 className="text-xl font-bold text-foreground flex-1">Calls</h1>
-          <button
+          <button type="button"
             onClick={() => setSearchOpen(!searchOpen)}
             className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-muted/50 transition-colors"
           >
@@ -262,7 +262,7 @@ export default function CallHistoryPage({ onClose, onCallUser }: CallHistoryPage
         {/* Tabs */}
         <div className="flex px-4 gap-2 pb-3">
           {tabs.map((t) => (
-            <button
+            <button type="button"
               key={t.key}
               onClick={() => setTab(t.key)}
               className={`relative px-5 py-2 rounded-full text-xs font-semibold transition-all ${
@@ -451,7 +451,7 @@ export default function CallHistoryPage({ onClose, onCallUser }: CallHistoryPage
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
-                    <button
+                    <button type="button"
                       onClick={() => {
                         if (playingVm === vm.id) {
                           setPlayingVm(null);
@@ -474,7 +474,7 @@ export default function CallHistoryPage({ onClose, onCallUser }: CallHistoryPage
                         <Play className="w-4 h-4 ml-0.5" />
                       )}
                     </button>
-                    <button
+                    <button type="button"
                       onClick={() => deleteVoicemail(vm.id)}
                       className="h-10 w-10 rounded-full bg-destructive/8 text-destructive flex items-center justify-center active:scale-95 transition-transform"
                     >

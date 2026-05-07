@@ -231,7 +231,7 @@ export function ChatBellPopover({ className }: ChatBellPopoverProps) {
 
   return (
     <div ref={wrapRef} className={cn("relative", className)}>
-      <button
+      <button type="button"
         onClick={() => setOpen((v) => !v)}
         className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
         aria-label="Notifications"
@@ -260,7 +260,7 @@ export function ChatBellPopover({ className }: ChatBellPopoverProps) {
             <div className="px-4 pt-3 pb-2 flex items-center justify-between">
               <h3 className="text-base font-bold text-foreground">Notifications</h3>
               {unreadCount > 0 && (
-                <button
+                <button type="button"
                   onClick={() => markAllAsRead()}
                   className="text-[11px] font-medium text-primary hover:underline flex items-center gap-1"
                 >
@@ -273,7 +273,7 @@ export function ChatBellPopover({ className }: ChatBellPopoverProps) {
             {/* Tabs */}
             <div className="px-4 pb-2 flex items-center gap-2">
               {(["all", "unread"] as const).map((t) => (
-                <button
+                <button type="button"
                   key={t}
                   onClick={() => setTab(t)}
                   className={cn(
@@ -325,7 +325,7 @@ export function ChatBellPopover({ className }: ChatBellPopoverProps) {
                         >
                           <div className="mt-1 w-2 h-2 rounded-full flex-shrink-0 bg-primary"
                                style={{ opacity: hasUnread ? 1 : 0 }} />
-                          <button
+                          <button type="button"
                             onClick={() => handleClick(g)}
                             className={cn("flex-1 min-w-0 text-left", isRowMuted && "opacity-60")}
                           >
@@ -361,7 +361,7 @@ export function ChatBellPopover({ className }: ChatBellPopoverProps) {
                           </button>
                           {threadId && !isReplying && (
                             <div className="shrink-0 self-center flex items-center gap-1">
-                              <button
+                              <button type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   openReply(threadId, g.ids);
@@ -371,7 +371,7 @@ export function ChatBellPopover({ className }: ChatBellPopoverProps) {
                               >
                                 <CornerUpLeft className="h-4 w-4" />
                               </button>
-                              <button
+                              <button type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setPreviewUserId(threadId);
@@ -381,7 +381,7 @@ export function ChatBellPopover({ className }: ChatBellPopoverProps) {
                               >
                                 <UserCircle className="h-4 w-4" />
                               </button>
-                              <button
+                              <button type="button"
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   // If already muted, single tap unmutes
@@ -418,7 +418,7 @@ export function ChatBellPopover({ className }: ChatBellPopoverProps) {
                             >
                               <div className="px-4 pb-3 pt-0 grid grid-cols-2 gap-1.5">
                                 {MUTE_DURATIONS.map((d) => (
-                                  <button
+                                  <button type="button"
                                     key={d.id}
                                     onClick={(e) => {
                                       e.stopPropagation();
@@ -465,7 +465,7 @@ export function ChatBellPopover({ className }: ChatBellPopoverProps) {
                                   disabled={replySending}
                                   className="flex-1 h-9 px-3 rounded-full bg-background border border-border text-[13px] focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50"
                                 />
-                                <button
+                                <button type="button"
                                   onClick={cancelReply}
                                   disabled={replySending}
                                   aria-label="Cancel reply"
@@ -473,7 +473,7 @@ export function ChatBellPopover({ className }: ChatBellPopoverProps) {
                                 >
                                   Cancel
                                 </button>
-                                <button
+                                <button type="button"
                                   onClick={() => void sendReply()}
                                   disabled={!replyText.trim() || replySending}
                                   aria-label="Send reply"
@@ -498,7 +498,7 @@ export function ChatBellPopover({ className }: ChatBellPopoverProps) {
 
             {/* Footer */}
             <div className="border-t border-border">
-              <button
+              <button type="button"
                 onClick={() => {
                   setOpen(false);
                   navigate("/notifications");

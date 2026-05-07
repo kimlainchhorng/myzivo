@@ -213,7 +213,7 @@ export default function LodgingGroupBookingSection({ storeId }: { storeId: strin
         {/* Filter */}
         <div className="flex gap-1.5 flex-wrap">
           {(["all", "tentative", "confirmed", "cancelled"] as const).map(s => (
-            <button key={s} onClick={() => setFilterStatus(s as any)}
+            <button type="button" key={s} onClick={() => setFilterStatus(s as any)}
               className={`rounded-full border px-2.5 py-1 text-[11px] font-medium capitalize ${filterStatus === s ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-muted-foreground"}`}>
               {s === "all" ? "All" : s}
             </button>

@@ -394,7 +394,7 @@ export default function StoreSetup() {
             const isDone = step > s.id;
             return (
               <div key={s.id} className="flex items-center gap-1.5">
-                <button
+                <button type="button"
                   onClick={() => { if (isDone) goToStep(s.id); }}
                   className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-semibold transition-all duration-300 ${
                     isActive

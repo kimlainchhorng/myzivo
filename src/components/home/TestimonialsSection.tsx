@@ -162,14 +162,14 @@ export default function TestimonialsSection() {
           </AnimatePresence>
 
           {/* Navigation arrows */}
-          <button
+          <button type="button"
             onClick={prev}
             className="absolute left-0 top-1/2 -translate-y-1/2 -translate-x-3 sm:-translate-x-14 w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-card border border-border/50 flex items-center justify-center hover:bg-muted hover:scale-110 active:scale-90 transition-all duration-200 shadow-sm touch-manipulation"
             aria-label="Previous testimonials"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
-          <button
+          <button type="button"
             onClick={next}
             className="absolute right-0 top-1/2 -translate-y-1/2 translate-x-3 sm:translate-x-14 w-11 h-11 min-w-[44px] min-h-[44px] rounded-full bg-card border border-border/50 flex items-center justify-center hover:bg-muted hover:scale-110 active:scale-90 transition-all duration-200 shadow-sm touch-manipulation"
             aria-label="Next testimonials"
@@ -181,7 +181,7 @@ export default function TestimonialsSection() {
         {/* Dots */}
         <div className="flex justify-center gap-2 mt-10">
           {Array.from({ length: totalPages }).map((_, i) => (
-            <button
+            <button type="button"
               key={i}
               onClick={() => goTo(i)}
               className={cn(

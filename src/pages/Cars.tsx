@@ -230,7 +230,7 @@ export default function Cars() {
           <div className="mb-6 -mx-4 px-4 overflow-x-auto scrollbar-hide">
             <div className="flex gap-2 pb-2">
               {["Tesla", "BMW", "Toyota", "Honda", "Mercedes", "Ford", "Chevrolet", "Audi", "Porsche", "Jeep"].map((make) => (
-                <button
+                <button type="button"
                   key={make}
                   onClick={() => updateFilter("make", make.toLowerCase())}
                   className="shrink-0 px-4 py-2 rounded-full border border-border text-sm font-medium hover:bg-muted transition-all duration-200 whitespace-nowrap touch-manipulation active:scale-[0.95] hover:border-primary/30"

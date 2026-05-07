@@ -100,7 +100,7 @@ export default function StorefrontContentCard({
               </p>
               <div className="flex flex-wrap gap-1">
                 {SECTION_PRESETS.map(p => (
-                  <button
+                  <button type="button"
                     key={p} type="button" onClick={() => addSection(p)}
                     className="px-2 py-0.5 rounded-full text-[10px] border border-border bg-background hover:bg-primary/5 hover:border-primary/40 transition"
                   >+ {p}</button>
@@ -192,7 +192,7 @@ export default function StorefrontContentCard({
               {ROOM_FEATURES.map(rf => {
                 const on = (highlights.rooms_with || []).includes(rf);
                 return (
-                  <button
+                  <button type="button"
                     key={rf} type="button" onClick={() => toggleRoomFeature(rf)}
                     className={`px-2 py-0.5 rounded-full text-[10px] border transition ${
                       on ? "bg-primary text-primary-foreground border-primary font-semibold" : "bg-background border-border hover:border-primary/40"
@@ -223,7 +223,7 @@ export default function StorefrontContentCard({
                 const Icon = getAmenityIcon(a);
                 const disabled = !on && popular.length >= 8;
                 return (
-                  <button
+                  <button type="button"
                     key={a} type="button" onClick={() => togglePopular(a)} disabled={disabled}
                     className={`px-2.5 py-1 rounded-full text-[11px] border inline-flex items-center gap-1 transition ${
                       on

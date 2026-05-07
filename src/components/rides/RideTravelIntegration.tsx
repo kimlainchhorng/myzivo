@@ -75,7 +75,7 @@ export default function RideTravelIntegration() {
         {views.map((v) => {
           const Icon = v.icon;
           return (
-            <button
+            <button type="button"
               key={v.id}
               onClick={() => setView(v.id)}
               className={cn(
@@ -136,7 +136,7 @@ export default function RideTravelIntegration() {
               </div>
             </div>
           ))}
-          <button
+          <button type="button"
             onClick={() => navigate("/rides", { state: { planTrip: true } })}
             className="w-full py-2.5 bg-primary/10 rounded-xl text-sm font-bold text-primary flex items-center justify-center gap-2"
           >
@@ -194,7 +194,7 @@ export default function RideTravelIntegration() {
                     <Icon className="w-4 h-4 text-primary" />
                     <span className="text-sm font-semibold text-foreground">{source.name}</span>
                   </div>
-                  <button
+                  <button type="button"
                     onClick={() => toggleSource(source.name)}
                     className={cn(
                       "text-xs font-bold px-3 py-1 rounded-lg",

@@ -200,7 +200,7 @@ const ServiceRecommendations = ({
           const colorClasses = serviceColors[rec.service];
           
           return (
-            <button
+            <button type="button"
               key={rec.id}
               onClick={() => navigate(rec.href)}
               className="w-full flex items-center gap-3 p-3 rounded-xl border border-border/50 hover:bg-muted/50 hover:border-primary/20 transition-all group text-left"

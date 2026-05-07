@@ -42,7 +42,7 @@ export default function RideSocialHub() {
         {sections.map(s => {
           const Icon = s.icon;
           return (
-            <button key={s.id} onClick={() => setActiveSection(s.id)} className={cn("flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all", activeSection === s.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
+            <button type="button" key={s.id} onClick={() => setActiveSection(s.id)} className={cn("flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all", activeSection === s.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
               <Icon className="w-3.5 h-3.5" /> {s.label}
             </button>
           );
@@ -65,7 +65,7 @@ export default function RideSocialHub() {
                     { icon: Mail, label: "Email", action: () => toast.success("Tracking link emailed") },
                     { icon: Smartphone, label: "WhatsApp", action: () => toast.success("Opening WhatsApp...") },
                   ].map(opt => (
-                    <button key={opt.label} onClick={opt.action} className="flex items-center gap-2 p-3 rounded-xl border border-border/40 bg-muted/20 hover:bg-muted/40 transition-colors text-left active:scale-[0.98]">
+                    <button type="button" key={opt.label} onClick={opt.action} className="flex items-center gap-2 p-3 rounded-xl border border-border/40 bg-muted/20 hover:bg-muted/40 transition-colors text-left active:scale-[0.98]">
                       <opt.icon className="w-4 h-4 text-primary shrink-0" />
                       <span className="text-xs font-bold text-foreground">{opt.label}</span>
                     </button>

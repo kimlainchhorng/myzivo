@@ -119,7 +119,7 @@ const EmergencySupportWidget = ({
       {/* Quick Links */}
       <div className="space-y-2">
         {quickLinks.map((link) => (
-          <button 
+          <button type="button" 
             key={link.label}
             onClick={link.onClick}
             className="w-full flex items-center justify-between p-2 rounded-xl hover:bg-muted/20 transition-all duration-200 text-sm active:scale-[0.98] touch-manipulation"

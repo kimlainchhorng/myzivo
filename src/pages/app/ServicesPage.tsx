@@ -3,19 +3,22 @@
  * Premium super-app style with glassmorphism, layered banners, staggered animations
  */
 import { useNavigate } from "react-router-dom";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, Car, Shield, MapPin, Sparkles, Package, Gift, Crown,
-  Users, Wine, ShoppingCart, Pill, Ship, FileCheck, ChevronRight,
-  Search, X, Heart, Tv, Briefcase, Store, Dumbbell,
+  Wine, ShoppingCart, Pill, Ship, FileCheck, ChevronRight,
+  Search, X, Heart, Tv, Briefcase, Store, Dumbbell, Mail, CheckCircle,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { useI18n } from "@/hooks/useI18n";
 import { useCountry } from "@/hooks/useCountry";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import zivoRideIcon from "@/assets/zivo-ride-icon.webp";
 import zivoEatsIcon from "@/assets/zivo-eats-icon.webp";
 import zivoFlightsIcon from "@/assets/zivo-flights-icon.webp";
@@ -100,7 +103,7 @@ const getServiceCategories = (t: (key: string) => string, isCambodia = false): S
       { label: t("services.marketplace"), href: "/marketplace", icon: Store, badge: "Shop", badgeVariant: "promo" },
       { label: t("services.live"), href: "/live", icon: Tv, badge: "Live", badgeVariant: "new" },
       { label: t("services.wellness"), href: "/explore", icon: Dumbbell, badge: "New", badgeVariant: "new" },
-      { label: t("services.creator"), href: "/creator", icon: Briefcase },
+      { label: t("services.creator"), href: "/creator-dashboard", icon: Briefcase },
     ],
   },
 ];
@@ -180,14 +183,42 @@ const badgeStyles = {
   coming_soon: "bg-amber-500 text-white shadow-amber-500/30",
 };
 
+const FAVORITES_KEY = "zivo_favorite_services";
+
 /* ── Page ── */
 export default function ServicesPage() {
   const navigate = useNavigate();
   const { t } = useI18n();
   const { isCambodia } = useCountry();
+  const { user } = useAuth();
   const serviceCategories = getServiceCategories(t, isCambodia);
   const [runningLabel, setRunningLabel] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+  const [waitlistService, setWaitlistService] = useState<string | null>(null);
+  const [waitlistEmail, setWaitlistEmail] = useState(user?.email ?? "");
+  const [waitlistSubmitted, setWaitlistSubmitted] = useState(false);
+  const [waitlistLoading, setWaitlistLoading] = useState(false);
+  const [favorites, setFavorites] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem(FAVORITES_KEY) || "[]"); } catch { return []; }
+  });
+
+  const toggleFavorite = (href: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const next = favorites.includes(href)
+      ? favorites.filter(f => f !== href)
+      : [...favorites, href];
+    setFavorites(next);
+    localStorage.setItem(FAVORITES_KEY, JSON.stringify(next));
+  };
+
+  const allServices = useMemo(
+    () => serviceCategories.flatMap(c => c.services),
+    [serviceCategories]
+  );
+  const favoriteServices = useMemo(
+    () => allServices.filter(s => favorites.includes(s.href)),
+    [allServices, favorites]
+  );
 
   const filteredCategories = useMemo(() => {
     if (!searchQuery.trim()) return serviceCategories;
@@ -202,9 +233,9 @@ export default function ServicesPage() {
 
   const handleServiceClick = (service: ServiceItem) => {
     if (service.comingSoon) {
-      toast(`${service.label} ${t("services.toast.coming_soon_title")}`, {
-        description: t("services.toast.coming_soon_desc"),
-      });
+      setWaitlistService(service.label);
+      setWaitlistSubmitted(false);
+      setWaitlistEmail(user?.email ?? "");
       return;
     }
     if (service.animClass) {
@@ -232,7 +263,7 @@ export default function ServicesPage() {
           transition={{ duration: 0.3 }}
           className="flex items-center gap-3 mb-1"
         >
-          <button
+          <button type="button"
             onClick={() => navigate(-1)}
             className="w-10 h-10 rounded-full bg-muted/60 backdrop-blur-md border border-border/40 flex items-center justify-center active:scale-95 transition-all duration-200 hover:bg-muted"
           >
@@ -267,7 +298,7 @@ export default function ServicesPage() {
             className="pl-9 pr-9 h-10 rounded-full bg-muted/60 border-border/40 text-sm focus-visible:ring-primary/40"
           />
           {searchQuery && (
-            <button
+            <button type="button"
               onClick={() => setSearchQuery("")}
               className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center rounded-full bg-muted-foreground/20 hover:bg-muted-foreground/30 transition-colors"
             >
@@ -276,6 +307,71 @@ export default function ServicesPage() {
           )}
         </motion.div>
       </div>
+
+      {/* Quick Launch — horizontal scroll of popular services */}
+      {!searchQuery && (
+        <div className="px-5 pt-4 relative z-10">
+          <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-3">Popular</p>
+          <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-none -mx-1 px-1">
+            {[
+              { label: t("services.ride"), href: "/rides", image: zivoRideIcon, color: "from-blue-500 to-blue-600" },
+              { label: t("services.food"), href: "/eats", image: zivoEatsIcon, color: "from-orange-500 to-amber-500" },
+              { label: t("services.flights"), href: "/flights", image: zivoFlightsIcon, color: "from-sky-500 to-cyan-500" },
+              { label: t("services.hotels"), href: "/hotels", image: zivoHotelsIcon, color: "from-purple-500 to-violet-600" },
+              { label: t("services.grocery"), href: "/grocery", image: zivoShoppingIcon, color: "from-emerald-500 to-green-600" },
+              { label: t("services.reserve"), href: "/rides?tab=reserve", image: zivoReserveIcon, color: "from-rose-500 to-pink-600" },
+            ].map((s) => (
+              <motion.button
+                key={s.label}
+                type="button"
+                onClick={() => navigate(s.href)}
+                whileTap={{ scale: 0.94 }}
+                className="flex-shrink-0 flex flex-col items-center gap-2 touch-manipulation"
+              >
+                <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${s.color} flex items-center justify-center shadow-md`}>
+                  <img src={s.image} alt={s.label} className="w-9 h-9 object-contain" />
+                </div>
+                <span className="text-[10px] font-semibold text-foreground text-center leading-tight w-16">{s.label}</span>
+              </motion.button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Favorites strip */}
+      {!searchQuery && favoriteServices.length > 0 && (
+        <div className="px-5 pt-4 relative z-10">
+          <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-3">Favorites</p>
+          <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-none -mx-1 px-1">
+            {favoriteServices.map(s => (
+              <motion.button
+                key={s.href + "-fav"}
+                type="button"
+                onClick={() => handleServiceClick(s)}
+                whileTap={{ scale: 0.94 }}
+                className="flex-shrink-0 flex flex-col items-center gap-2 touch-manipulation relative"
+              >
+                <div className="w-16 h-16 rounded-2xl bg-card border border-primary/20 flex items-center justify-center shadow-sm relative">
+                  {s.image ? (
+                    <img src={s.image} alt={s.label} className="w-9 h-9 object-contain" />
+                  ) : s.icon ? (
+                    <s.icon className="w-6 h-6 text-primary" />
+                  ) : null}
+                  <button
+                    type="button"
+                    aria-label="Remove from favorites"
+                    onClick={(e) => toggleFavorite(s.href, e)}
+                    className="absolute -top-1.5 -right-1.5 w-5 h-5 flex items-center justify-center rounded-full bg-card border border-border/40 shadow-sm"
+                  >
+                    <Heart className="w-3 h-3 fill-rose-500 text-rose-500" />
+                  </button>
+                </div>
+                <span className="text-[10px] font-semibold text-foreground text-center leading-tight w-16">{s.label}</span>
+              </motion.button>
+            ))}
+          </div>
+        </div>
+      )}
 
       {/* Hero Reserve Banner */}
       {!searchQuery && (
@@ -346,6 +442,24 @@ export default function ServicesPage() {
                       service.comingSoon && "opacity-60"
                     )}
                   >
+                    {/* Favorite heart */}
+                    <button
+                      type="button"
+                      aria-label={favorites.includes(service.href) ? "Remove from favorites" : "Save to favorites"}
+                      onClick={(e) => toggleFavorite(service.href, e)}
+                      className={cn(
+                        "absolute -top-1 -right-1 z-20 w-5 h-5 flex items-center justify-center rounded-full bg-card/80 backdrop-blur-sm border border-border/30 shadow-sm transition-opacity",
+                        favorites.includes(service.href)
+                          ? "opacity-100"
+                          : "opacity-0 group-hover:opacity-100 focus:opacity-100"
+                      )}
+                    >
+                      <Heart className={cn(
+                        "w-3 h-3 transition-colors",
+                        favorites.includes(service.href) ? "fill-rose-500 text-rose-500" : "text-muted-foreground/60"
+                      )} />
+                    </button>
+
                     {/* Badge */}
                     {service.badge && (
                       <div
@@ -419,6 +533,65 @@ export default function ServicesPage() {
           </div>
         ))}
       </div>
+
+      <Sheet open={!!waitlistService} onOpenChange={(open) => { if (!open) setWaitlistService(null); }}>
+        <SheetContent side="bottom" className="rounded-t-3xl pb-10 max-h-[80dvh]">
+          <SheetHeader className="pb-4">
+            <SheetTitle className="text-lg font-bold">Get early access</SheetTitle>
+          </SheetHeader>
+          {waitlistSubmitted ? (
+            <div className="flex flex-col items-center gap-4 py-8 text-center">
+              <div className="w-16 h-16 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                <CheckCircle className="w-8 h-8 text-emerald-500" />
+              </div>
+              <div>
+                <p className="font-bold text-base">{waitlistService} — you're on the list!</p>
+                <p className="text-sm text-muted-foreground mt-1">We'll email you when it launches.</p>
+              </div>
+              <button type="button" onClick={() => setWaitlistService(null)}
+                className="text-sm text-primary font-semibold">Close</button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                <span className="font-semibold text-foreground">{waitlistService}</span> is coming soon.
+                Drop your email and we'll notify you first.
+              </p>
+              <div className="relative">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  type="email"
+                  placeholder="your@email.com"
+                  value={waitlistEmail}
+                  onChange={(e) => setWaitlistEmail(e.target.value)}
+                  className="w-full h-12 pl-10 pr-4 rounded-xl bg-muted/40 border border-border/50 text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
+                />
+              </div>
+              <button
+                type="button"
+                disabled={!waitlistEmail.trim() || waitlistLoading}
+                onClick={async () => {
+                  if (!waitlistEmail.trim()) return;
+                  setWaitlistLoading(true);
+                  try {
+                    await (supabase as any).from("feedback_submissions").insert({
+                      category: "service_waitlist",
+                      subject: `Waitlist: ${waitlistService}`,
+                      message: `User joined waitlist for: ${waitlistService}`,
+                      user_id: user?.id ?? null,
+                    });
+                  } catch {}
+                  setWaitlistLoading(false);
+                  setWaitlistSubmitted(true);
+                }}
+                className="w-full h-12 rounded-2xl bg-foreground text-background font-bold text-sm disabled:opacity-50 active:scale-[0.98] transition-transform"
+              >
+                {waitlistLoading ? "Joining…" : "Notify me when it launches"}
+              </button>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
 
       <ZivoMobileNav />
     </div>

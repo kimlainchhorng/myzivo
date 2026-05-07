@@ -509,7 +509,7 @@ export default function StoreMarketingSection({ storeId, storeSlug, storeName, s
                               </div>
                               <div className="flex items-center gap-2 mt-1">
                                 <code className="text-xs font-mono bg-muted px-2 py-0.5 rounded">{p.code}</code>
-                                <button onClick={() => copyToClipboard(p.code, "Code")} className="text-muted-foreground hover:text-primary transition-colors">
+                                <button type="button" onClick={() => copyToClipboard(p.code, "Code")} className="text-muted-foreground hover:text-primary transition-colors">
                                   <Copy className="w-3 h-3" />
                                 </button>
                               </div>

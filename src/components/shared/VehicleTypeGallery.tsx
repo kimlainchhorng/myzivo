@@ -132,7 +132,7 @@ export default function VehicleTypeGallery({
         {/* Grid - 3 columns on desktop, 2 on mobile */}
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 max-w-5xl mx-auto">
           {vehicles.map((vehicle, index) => (
-            <button
+            <button type="button"
               key={vehicle.type}
               onClick={() => handleClick(vehicle.type)}
               className={cn(

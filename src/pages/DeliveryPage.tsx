@@ -566,7 +566,7 @@ export default function DeliveryPage() {
 
               {/* Previous deliveries */}
               <div className="space-y-2">
-                <button onClick={() => setShowPreviousDeliveries(!showPreviousDeliveries)}
+                <button type="button" onClick={() => setShowPreviousDeliveries(!showPreviousDeliveries)}
                   className="flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation">
                   <History className="w-3.5 h-3.5" /> Recent Deliveries
                   <ChevronRight className={cn("w-3 h-3 transition-transform", showPreviousDeliveries && "rotate-90")} />
@@ -576,7 +576,7 @@ export default function DeliveryPage() {
                     <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }}
                       className="space-y-1.5 overflow-hidden">
                       {previousDeliveries.map(d => (
-                        <button key={d.id} onClick={() => handleLoadPrevious(d)}
+                        <button type="button" key={d.id} onClick={() => handleLoadPrevious(d)}
                           className="w-full flex items-center gap-3 p-3 rounded-xl bg-card border border-border/30 hover:border-border transition-all touch-manipulation active:scale-[0.98] text-left">
                           <RotateCcw className="w-4 h-4 text-muted-foreground shrink-0" />
                           <div className="flex-1 min-w-0">
@@ -605,7 +605,7 @@ export default function DeliveryPage() {
 
               {/* Notify recipient toggle */}
               <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
-                <button onClick={() => setNotifyRecipient(!notifyRecipient)}
+                <button type="button" onClick={() => setNotifyRecipient(!notifyRecipient)}
                   className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", notifyRecipient ? "bg-violet-500" : "bg-muted/60")}>
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", notifyRecipient ? "left-[18px]" : "left-0.5")} />
                 </button>
@@ -634,10 +634,10 @@ export default function DeliveryPage() {
                     <p className="text-[10px] text-muted-foreground">Same size & destination</p>
                   </div>
                   <div className="flex items-center gap-3">
-                    <button onClick={() => setPackageCount(Math.max(1, packageCount - 1))}
+                    <button type="button" onClick={() => setPackageCount(Math.max(1, packageCount - 1))}
                       className="w-8 h-8 rounded-full bg-muted flex items-center justify-center text-foreground font-bold touch-manipulation active:scale-90">−</button>
                     <span className="text-lg font-bold w-6 text-center">{packageCount}</span>
-                    <button onClick={() => setPackageCount(Math.min(10, packageCount + 1))}
+                    <button type="button" onClick={() => setPackageCount(Math.min(10, packageCount + 1))}
                       className="w-8 h-8 rounded-full bg-foreground text-primary-foreground flex items-center justify-center font-bold touch-manipulation active:scale-90">+</button>
                   </div>
                 </div>
@@ -670,7 +670,7 @@ export default function DeliveryPage() {
                   {deliverySpeed.map(speed => {
                     const Icon = speed.icon;
                     return (
-                      <button key={speed.id} onClick={() => setSelectedSpeed(speed.id)}
+                      <button type="button" key={speed.id} onClick={() => setSelectedSpeed(speed.id)}
                         className={cn(
                           "p-3 rounded-xl border text-center transition-all touch-manipulation active:scale-95",
                           selectedSpeed === speed.id ? "border-violet-500 bg-violet-500/5" : "border-border/40 bg-card hover:border-violet-500/20"
@@ -690,7 +690,7 @@ export default function DeliveryPage() {
                 <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><Calendar className="w-4 h-4 text-foreground" /> Schedule Delivery</h3>
                 <div className="grid grid-cols-2 gap-2">
                   {scheduleTimes.map(time => (
-                    <button key={time.id} onClick={() => setScheduledTime(time.id)}
+                    <button type="button" key={time.id} onClick={() => setScheduledTime(time.id)}
                       className={cn(
                         "p-3 rounded-xl border text-left transition-all touch-manipulation active:scale-95",
                         scheduledTime === time.id ? "border-violet-500 bg-violet-500/5" : "border-border/40 bg-card hover:border-violet-500/20"
@@ -706,7 +706,7 @@ export default function DeliveryPage() {
               <div className="space-y-2">
                 <h3 className="text-sm font-bold text-foreground flex items-center gap-2"><Shield className="w-4 h-4 text-foreground" /> Special Handling</h3>
                 <div className="flex gap-2">
-                  <button onClick={() => setIsFragile(!isFragile)}
+                  <button type="button" onClick={() => setIsFragile(!isFragile)}
                     className={cn(
                       "flex-1 flex items-center gap-2 p-3 rounded-xl border transition-all touch-manipulation active:scale-95",
                       isFragile ? "border-amber-500 bg-amber-500/5" : "border-border/40 bg-card"
@@ -717,7 +717,7 @@ export default function DeliveryPage() {
                       <p className="text-[10px] text-muted-foreground">+$2.99</p>
                     </div>
                   </button>
-                  <button onClick={() => setRequireSignature(!requireSignature)}
+                  <button type="button" onClick={() => setRequireSignature(!requireSignature)}
                     className={cn(
                       "flex-1 flex items-center gap-2 p-3 rounded-xl border transition-all touch-manipulation active:scale-95",
                       requireSignature ? "border-violet-500 bg-violet-500/5" : "border-border/40 bg-card"
@@ -730,7 +730,7 @@ export default function DeliveryPage() {
                   </button>
                 </div>
                 {/* Priority handling */}
-                <button onClick={() => setPriorityHandling(!priorityHandling)}
+                <button type="button" onClick={() => setPriorityHandling(!priorityHandling)}
                   className={cn(
                     "w-full flex items-center gap-3 p-3 rounded-xl border transition-all touch-manipulation active:scale-95",
                     priorityHandling ? "border-violet-500 bg-violet-500/5" : "border-border/40 bg-card"
@@ -754,7 +754,7 @@ export default function DeliveryPage() {
                     <Scale className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                     <Input placeholder="Weight (lbs)" type="number" value={packageWeight} onChange={(e) => setPackageWeight(e.target.value)} className="h-12 rounded-xl pl-10" />
                   </div>
-                  <button onClick={handlePhotoUpload}
+                  <button type="button" onClick={handlePhotoUpload}
                     className={cn("h-12 px-4 rounded-xl border flex items-center gap-2 text-xs font-medium touch-manipulation active:scale-95 transition-all",
                       photoAdded ? "border-violet-500 bg-violet-500/5 text-violet-500" : "border-dashed border-border/60 bg-card text-muted-foreground hover:border-violet-500/40 hover:text-violet-500"
                     )}>
@@ -769,7 +769,7 @@ export default function DeliveryPage() {
 
               {/* Insurance toggle */}
               <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
-                <button onClick={() => setIncludeInsurance(!includeInsurance)}
+                <button type="button" onClick={() => setIncludeInsurance(!includeInsurance)}
                   className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", includeInsurance ? "bg-violet-500" : "bg-muted/60")}>
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", includeInsurance ? "left-[18px]" : "left-0.5")} />
                 </button>
@@ -781,7 +781,7 @@ export default function DeliveryPage() {
 
               {/* Return Shipping */}
               <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
-                <button onClick={() => setReturnShipping(!returnShipping)}
+                <button type="button" onClick={() => setReturnShipping(!returnShipping)}
                   className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", returnShipping ? "bg-violet-500" : "bg-muted/60")}>
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", returnShipping ? "left-[18px]" : "left-0.5")} />
                 </button>
@@ -793,7 +793,7 @@ export default function DeliveryPage() {
 
               {/* Temperature Sensitive */}
               <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
-                <button onClick={() => setTemperatureSensitive(!temperatureSensitive)}
+                <button type="button" onClick={() => setTemperatureSensitive(!temperatureSensitive)}
                   className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", temperatureSensitive ? "bg-amber-500" : "bg-muted/60")}>
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", temperatureSensitive ? "left-[18px]" : "left-0.5")} />
                 </button>
@@ -812,7 +812,7 @@ export default function DeliveryPage() {
 
               {/* Multi-Stop Delivery */}
               <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
-                <button onClick={() => setMultiStop(!multiStop)}
+                <button type="button" onClick={() => setMultiStop(!multiStop)}
                   className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", multiStop ? "bg-violet-500" : "bg-muted/60")}>
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", multiStop ? "left-[18px]" : "left-0.5")} />
                 </button>
@@ -831,7 +831,7 @@ export default function DeliveryPage() {
                         <Input placeholder={`Stop ${i + 2} address`} value={stop}
                           onChange={(e) => setAdditionalStops(prev => prev.map((s, idx) => idx === i ? e.target.value : s))}
                           className="h-10 rounded-xl text-sm flex-1" />
-                        <button onClick={() => setAdditionalStops(prev => prev.filter((_, idx) => idx !== i))}
+                        <button type="button" onClick={() => setAdditionalStops(prev => prev.filter((_, idx) => idx !== i))}
                           className="text-destructive hover:text-destructive/80 touch-manipulation active:scale-90">
                           <X className="w-3.5 h-3.5" />
                         </button>
@@ -847,7 +847,7 @@ export default function DeliveryPage() {
 
               {/* Live Updates Toggle */}
               <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
-                <button onClick={() => setLiveUpdates(!liveUpdates)}
+                <button type="button" onClick={() => setLiveUpdates(!liveUpdates)}
                   className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", liveUpdates ? "bg-violet-500" : "bg-muted/60")}>
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", liveUpdates ? "left-[18px]" : "left-0.5")} />
                 </button>
@@ -858,7 +858,7 @@ export default function DeliveryPage() {
               </div>
 
               {/* Business Account Banner */}
-              <button onClick={() => { setBusinessAccount(!businessAccount); toast.info(businessAccount ? "Switched to personal" : "Business receipts enabled"); }}
+              <button type="button" onClick={() => { setBusinessAccount(!businessAccount); toast.info(businessAccount ? "Switched to personal" : "Business receipts enabled"); }}
                 className="w-full rounded-2xl border border-border p-3 flex items-center gap-3 touch-manipulation active:scale-[0.98] transition-all bg-secondary">
                 <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-secondary">
                   <Award className="w-5 h-5 text-primary-foreground" />
@@ -879,7 +879,7 @@ export default function DeliveryPage() {
                 </h3>
                 <div className="space-y-2">
                   {insuranceTiers.map(tier => (
-                    <button key={tier.id} onClick={() => setSelectedInsuranceTier(tier.id)}
+                    <button type="button" key={tier.id} onClick={() => setSelectedInsuranceTier(tier.id)}
                       className={cn("w-full flex items-center justify-between p-3 rounded-xl transition-all touch-manipulation active:scale-[0.98]",
                         selectedInsuranceTier === tier.id ? "bg-violet-500/10 border border-violet-500/30" : "bg-muted/30 border border-border/30")}>
                       <div>
@@ -899,7 +899,7 @@ export default function DeliveryPage() {
                 </h3>
                 <div className="flex gap-2 flex-wrap">
                   {recurringOptions.map(opt => (
-                    <button key={opt.id} onClick={() => setRecurringSchedule(opt.id)}
+                    <button type="button" key={opt.id} onClick={() => setRecurringSchedule(opt.id)}
                       className={cn("px-3 py-2 rounded-xl text-xs font-bold transition-all touch-manipulation active:scale-95",
                         recurringSchedule === opt.id ? "bg-violet-500 text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
                       {opt.label}
@@ -913,7 +913,7 @@ export default function DeliveryPage() {
 
               {/* Require Photo ID */}
               <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
-                <button onClick={() => setRequirePhotoId(!requirePhotoId)}
+                <button type="button" onClick={() => setRequirePhotoId(!requirePhotoId)}
                   className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", requirePhotoId ? "bg-violet-500" : "bg-muted/60")}>
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", requirePhotoId ? "left-[18px]" : "left-0.5")} />
                 </button>
@@ -925,7 +925,7 @@ export default function DeliveryPage() {
 
               {/* Gift Wrapping */}
               <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
-                <button onClick={() => setGiftWrapping(!giftWrapping)}
+                <button type="button" onClick={() => setGiftWrapping(!giftWrapping)}
                   className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", giftWrapping ? "bg-violet-500" : "bg-muted/60")}>
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", giftWrapping ? "left-[18px]" : "left-0.5")} />
                 </button>
@@ -941,7 +941,7 @@ export default function DeliveryPage() {
 
               {/* Peer Delivery / Driver Bids */}
               <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
-                <button onClick={() => { setPeerDelivery(!peerDelivery); if (!peerDelivery) { setShowDriverBids(true); toast.info("🚗 Finding nearby drivers for your delivery..."); } }}
+                <button type="button" onClick={() => { setPeerDelivery(!peerDelivery); if (!peerDelivery) { setShowDriverBids(true); toast.info("🚗 Finding nearby drivers for your delivery..."); } }}
                   className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", peerDelivery ? "bg-violet-500" : "bg-muted/60")}>
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", peerDelivery ? "left-[18px]" : "left-0.5")} />
                 </button>
@@ -967,7 +967,7 @@ export default function DeliveryPage() {
                       </div>
                     )}
                     {driverBids.map(bid => (
-                      <button key={bid.id} onClick={() => { setSelectedBid(bid.id); toast.success(`Selected ${bid.name}'s offer!`); }}
+                      <button type="button" key={bid.id} onClick={() => { setSelectedBid(bid.id); toast.success(`Selected ${bid.name}'s offer!`); }}
                         className={cn("w-full flex items-center gap-3 p-3 rounded-xl border transition-all touch-manipulation active:scale-[0.98] text-left",
                           selectedBid === bid.id ? "border-violet-500 bg-violet-500/5" : "border-border/40 bg-card")}>
                         <div className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-bold text-foreground bg-secondary">
@@ -996,7 +996,7 @@ export default function DeliveryPage() {
                 <p className="text-xs font-bold text-foreground flex items-center gap-1.5 mb-2"><Truck className="w-3.5 h-3.5 text-foreground" /> Vehicle Type Needed</p>
                 <div className="flex gap-2 flex-wrap">
                   {(["any", "sedan", "suv", "truck", "van"] as const).map(v => (
-                    <button key={v} onClick={() => setVehicleTypeForDelivery(v)}
+                    <button type="button" key={v} onClick={() => setVehicleTypeForDelivery(v)}
                       className={cn("px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all touch-manipulation active:scale-95 capitalize",
                         vehicleTypeForDelivery === v ? "bg-violet-500 text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
                       {v === "any" ? "🚗 Any" : v === "sedan" ? "🚙 Sedan" : v === "suv" ? "🚐 SUV" : v === "truck" ? "🛻 Truck" : "🚐 Van"}
@@ -1007,7 +1007,7 @@ export default function DeliveryPage() {
 
               {/* Large Item Options (Roadie) */}
               <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
-                <button onClick={() => { setLargeItemDelivery(!largeItemDelivery); if (!largeItemDelivery) toast.info("📦 Large item mode — we'll match you with drivers who can handle big deliveries"); }}
+                <button type="button" onClick={() => { setLargeItemDelivery(!largeItemDelivery); if (!largeItemDelivery) toast.info("📦 Large item mode — we'll match you with drivers who can handle big deliveries"); }}
                   className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", largeItemDelivery ? "bg-violet-500" : "bg-muted/60")}>
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", largeItemDelivery ? "left-[18px]" : "left-0.5")} />
                 </button>
@@ -1019,24 +1019,24 @@ export default function DeliveryPage() {
               {largeItemDelivery && (
                 <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-2">
                   <div className="flex gap-2">
-                    <button onClick={() => setTwoPersonLift(!twoPersonLift)}
+                    <button type="button" onClick={() => setTwoPersonLift(!twoPersonLift)}
                       className={cn("flex-1 p-2 rounded-xl text-[10px] font-bold text-center transition-all touch-manipulation",
                         twoPersonLift ? "bg-violet-500/10 border border-violet-500/30 text-violet-500" : "bg-muted/50 text-muted-foreground border border-border/40")}>
                       👥 2-Person Lift (+$15)
                     </button>
-                    <button onClick={() => setAssemblyRequired(!assemblyRequired)}
+                    <button type="button" onClick={() => setAssemblyRequired(!assemblyRequired)}
                       className={cn("flex-1 p-2 rounded-xl text-[10px] font-bold text-center transition-all touch-manipulation",
                         assemblyRequired ? "bg-violet-500/10 border border-violet-500/30 text-violet-500" : "bg-muted/50 text-muted-foreground border border-border/40")}>
                       🔧 Assembly (+$25)
                     </button>
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => setStairDelivery(!stairDelivery)}
+                    <button type="button" onClick={() => setStairDelivery(!stairDelivery)}
                       className={cn("flex-1 p-2 rounded-xl text-[10px] font-bold text-center transition-all touch-manipulation",
                         stairDelivery ? "bg-violet-500/10 border border-violet-500/30 text-violet-500" : "bg-muted/50 text-muted-foreground border border-border/40")}>
                       🪜 Stair Delivery (+$10)
                     </button>
-                    <button onClick={() => setCurbsideOnly(!curbsideOnly)}
+                    <button type="button" onClick={() => setCurbsideOnly(!curbsideOnly)}
                       className={cn("flex-1 p-2 rounded-xl text-[10px] font-bold text-center transition-all touch-manipulation",
                         curbsideOnly ? "bg-violet-500/10 border border-violet-500/30 text-violet-500" : "bg-muted/50 text-muted-foreground border border-border/40")}>
                       🏠 Curbside Only (Free)
@@ -1053,7 +1053,7 @@ export default function DeliveryPage() {
                 <p className="text-xs font-bold text-foreground flex items-center gap-1.5 mb-2"><Clock className="w-3.5 h-3.5 text-foreground" /> Pickup Window</p>
                 <div className="flex gap-2 flex-wrap">
                   {(["flexible", "morning", "afternoon", "evening"] as const).map(w => (
-                    <button key={w} onClick={() => setScheduledPickupWindow(w)}
+                    <button type="button" key={w} onClick={() => setScheduledPickupWindow(w)}
                       className={cn("px-3 py-1.5 rounded-xl text-[10px] font-bold transition-all touch-manipulation active:scale-95 capitalize",
                         scheduledPickupWindow === w ? "bg-violet-500 text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
                       {w === "flexible" ? "🕐 Flexible" : w === "morning" ? "🌅 Morning" : w === "afternoon" ? "☀️ Afternoon" : "🌙 Evening"}
@@ -1066,12 +1066,12 @@ export default function DeliveryPage() {
               <div className="rounded-2xl bg-card border border-border/40 p-4 space-y-2">
                 <p className="text-xs font-bold text-foreground">📸 Photo Verification</p>
                 <div className="flex gap-2">
-                  <button onClick={() => setPhotoOnPickup(!photoOnPickup)}
+                  <button type="button" onClick={() => setPhotoOnPickup(!photoOnPickup)}
                     className={cn("flex-1 p-2 rounded-xl text-[10px] font-bold text-center transition-all touch-manipulation",
                       photoOnPickup ? "bg-violet-500/10 border border-violet-500/30 text-violet-500" : "bg-muted/50 text-muted-foreground border border-border/40")}>
                     📷 Photo on Pickup
                   </button>
-                  <button onClick={() => setPhotoOnDeliveryNew(!photoOnDelivery)}
+                  <button type="button" onClick={() => setPhotoOnDeliveryNew(!photoOnDelivery)}
                     className={cn("flex-1 p-2 rounded-xl text-[10px] font-bold text-center transition-all touch-manipulation",
                       photoOnDelivery ? "bg-violet-500/10 border border-violet-500/30 text-violet-500" : "bg-muted/50 text-muted-foreground border border-border/40")}>
                     📷 Photo on Delivery
@@ -1122,7 +1122,7 @@ export default function DeliveryPage() {
                     { id: "keep-dry" as const, label: "💧 Keep Dry" },
                     { id: "this-side-up" as const, label: "📦 This Side Up" },
                   ]).map(h => (
-                    <button key={h.id} onClick={() => setSpecialHandling(h.id)}
+                    <button type="button" key={h.id} onClick={() => setSpecialHandling(h.id)}
                       className={cn("px-3 py-2 rounded-xl text-[10px] font-bold transition-all touch-manipulation active:scale-95",
                         specialHandling === h.id ? "bg-violet-500 text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
                       {h.label}
@@ -1133,7 +1133,7 @@ export default function DeliveryPage() {
 
               {/* White Glove Service */}
               <div className="rounded-2xl bg-gradient-to-r from-amber-500/10 border border-amber-500/20 p-3 flex items-center gap-3">
-                <button onClick={() => { setWhiteGloveService(!whiteGloveService); if (!whiteGloveService) toast.success("🤵 White-glove service added — premium handling & setup!"); }}
+                <button type="button" onClick={() => { setWhiteGloveService(!whiteGloveService); if (!whiteGloveService) toast.success("🤵 White-glove service added — premium handling & setup!"); }}
                   className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", whiteGloveService ? "bg-amber-500" : "bg-muted/60")}>
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", whiteGloveService ? "left-[18px]" : "left-0.5")} />
                 </button>
@@ -1145,7 +1145,7 @@ export default function DeliveryPage() {
 
               {/* SLA Guarantee */}
               <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
-                <button onClick={() => { setSlaGuarantee(!slaGuarantee); if (!slaGuarantee) toast.info("✅ On-time guarantee — full refund if late!"); }}
+                <button type="button" onClick={() => { setSlaGuarantee(!slaGuarantee); if (!slaGuarantee) toast.info("✅ On-time guarantee — full refund if late!"); }}
                   className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", slaGuarantee ? "bg-emerald-500" : "bg-muted/60")}>
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", slaGuarantee ? "left-[18px]" : "left-0.5")} />
                 </button>
@@ -1157,7 +1157,7 @@ export default function DeliveryPage() {
 
               {/* Leave at Door / Neighbor */}
               <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
-                <button onClick={() => setLeaveAtDoor(!leaveAtDoor)}
+                <button type="button" onClick={() => setLeaveAtDoor(!leaveAtDoor)}
                   className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", leaveAtDoor ? "bg-violet-500" : "bg-muted/60")}>
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", leaveAtDoor ? "left-[18px]" : "left-0.5")} />
                 </button>
@@ -1168,7 +1168,7 @@ export default function DeliveryPage() {
               </div>
 
               <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
-                <button onClick={() => setNeighborDelivery(!neighborDelivery)}
+                <button type="button" onClick={() => setNeighborDelivery(!neighborDelivery)}
                   className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", neighborDelivery ? "bg-violet-500" : "bg-muted/60")}>
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", neighborDelivery ? "left-[18px]" : "left-0.5")} />
                 </button>
@@ -1183,7 +1183,7 @@ export default function DeliveryPage() {
                 <p className="text-xs font-bold text-foreground flex items-center gap-1.5 mb-2"><RefreshCw className="w-3.5 h-3.5 text-foreground" /> Delivery attempts</p>
                 <div className="flex gap-2">
                   {[1, 2, 3].map(n => (
-                    <button key={n} onClick={() => setDeliveryAttempts(n)}
+                    <button type="button" key={n} onClick={() => setDeliveryAttempts(n)}
                       className={cn("flex-1 py-2 rounded-xl text-xs font-bold transition-all touch-manipulation",
                         deliveryAttempts === n ? "bg-violet-500 text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
                       {n} {n === 1 ? "attempt" : "attempts"}
@@ -1195,7 +1195,7 @@ export default function DeliveryPage() {
 
               {/* Shipment Stats */}
               <div className="rounded-2xl bg-card border border-border/40 p-4">
-                <button onClick={() => setShowDeliveryAnalytics(!showDeliveryAnalytics)}
+                <button type="button" onClick={() => setShowDeliveryAnalytics(!showDeliveryAnalytics)}
                   className="w-full flex items-center justify-between">
                   <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Award className="w-3.5 h-3.5 text-amber-500" /> Your shipping stats</p>
                   <ChevronRight className={cn("w-3.5 h-3.5 text-muted-foreground transition-transform", showDeliveryAnalytics && "rotate-90")} />
@@ -1227,7 +1227,7 @@ export default function DeliveryPage() {
                 </AnimatePresence>
               </div>
               <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
-                <button onClick={() => setCarbonNeutral(!carbonNeutral)}
+                <button type="button" onClick={() => setCarbonNeutral(!carbonNeutral)}
                   className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", carbonNeutral ? "bg-emerald-500" : "bg-muted/60")}>
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", carbonNeutral ? "left-[18px]" : "left-0.5")} />
                 </button>
@@ -1247,7 +1247,7 @@ export default function DeliveryPage() {
                     { id: "frozen" as const, label: "🧊 Frozen" },
                     { id: "warm" as const, label: "🔥 Warm" },
                   ]).map(t => (
-                    <button key={t.id} onClick={() => setTempControl(t.id)}
+                    <button type="button" key={t.id} onClick={() => setTempControl(t.id)}
                       className={cn("flex-1 py-2 rounded-xl text-[10px] font-bold transition-all touch-manipulation active:scale-95",
                         tempControl === t.id ? "bg-sky-500 text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
                       {t.label}
@@ -1260,7 +1260,7 @@ export default function DeliveryPage() {
               {/* Package Locker */}
               <div className="rounded-2xl bg-card border border-border/40 p-4">
                 <div className="flex items-center gap-3 mb-2">
-                  <button onClick={() => setPackageLocker(!packageLocker)}
+                  <button type="button" onClick={() => setPackageLocker(!packageLocker)}
                     className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", packageLocker ? "bg-violet-500" : "bg-muted/60")}>
                     <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", packageLocker ? "left-[18px]" : "left-0.5")} />
                   </button>
@@ -1279,7 +1279,7 @@ export default function DeliveryPage() {
               {/* Multi-Address Delivery */}
               <div className="rounded-2xl bg-card border border-border/40 p-4">
                 <div className="flex items-center gap-3 mb-2">
-                  <button onClick={() => setMultiAddress(!multiAddress)}
+                  <button type="button" onClick={() => setMultiAddress(!multiAddress)}
                     className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", multiAddress ? "bg-violet-500" : "bg-muted/60")}>
                     <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", multiAddress ? "left-[18px]" : "left-0.5")} />
                   </button>
@@ -1298,7 +1298,7 @@ export default function DeliveryPage() {
                       </div>
                     ))}
                     {extraAddresses.length < 4 && (
-                      <button onClick={() => setExtraAddresses([...extraAddresses, ""])}
+                      <button type="button" onClick={() => setExtraAddresses([...extraAddresses, ""])}
                         className="text-[10px] text-foreground font-bold flex items-center gap-1 touch-manipulation"><Plus className="w-3 h-3" /> Add address</button>
                     )}
                   </motion.div>
@@ -1308,7 +1308,7 @@ export default function DeliveryPage() {
               {/* Notify Recipient */}
               <div className="rounded-2xl bg-card border border-border/40 p-4">
                 <div className="flex items-center gap-3 mb-2">
-                  <button onClick={() => setNotifyRecipient(!notifyRecipient)}
+                  <button type="button" onClick={() => setNotifyRecipient(!notifyRecipient)}
                     className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", notifyRecipient ? "bg-violet-500" : "bg-muted/60")}>
                     <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", notifyRecipient ? "left-[18px]" : "left-0.5")} />
                   </button>
@@ -1327,7 +1327,7 @@ export default function DeliveryPage() {
 
               {/* Return Label */}
               <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
-                <button onClick={() => { setReturnLabel(!returnLabel); if (!returnLabel) toast.info("📦 Return label will be included!"); }}
+                <button type="button" onClick={() => { setReturnLabel(!returnLabel); if (!returnLabel) toast.info("📦 Return label will be included!"); }}
                   className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", returnLabel ? "bg-violet-500" : "bg-muted/60")}>
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", returnLabel ? "left-[18px]" : "left-0.5")} />
                 </button>
@@ -1339,7 +1339,7 @@ export default function DeliveryPage() {
 
               {/* Saturday Delivery & Express Pickup */}
               <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
-                <button onClick={() => { setSaturdayDelivery(!saturdayDelivery); }}
+                <button type="button" onClick={() => { setSaturdayDelivery(!saturdayDelivery); }}
                   className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", saturdayDelivery ? "bg-violet-500" : "bg-muted/60")}>
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", saturdayDelivery ? "left-[18px]" : "left-0.5")} />
                 </button>
@@ -1350,7 +1350,7 @@ export default function DeliveryPage() {
               </div>
 
               <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
-                <button onClick={() => { setExpressPickup(!expressPickup); if (!expressPickup) toast.success("⚡ Express pickup — courier arrives in 15 min!"); }}
+                <button type="button" onClick={() => { setExpressPickup(!expressPickup); if (!expressPickup) toast.success("⚡ Express pickup — courier arrives in 15 min!"); }}
                   className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", expressPickup ? "bg-amber-500" : "bg-muted/60")}>
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", expressPickup ? "left-[18px]" : "left-0.5")} />
                 </button>
@@ -1362,7 +1362,7 @@ export default function DeliveryPage() {
 
               {/* Past Deliveries */}
               <div className="rounded-2xl bg-card border border-border/40 p-4">
-                <button onClick={() => setShowDeliveryHistory(!showDeliveryHistory)} className="w-full flex items-center justify-between">
+                <button type="button" onClick={() => setShowDeliveryHistory(!showDeliveryHistory)} className="w-full flex items-center justify-between">
                   <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><History className="w-3.5 h-3.5 text-foreground" /> Recent deliveries</p>
                   <ChevronRight className={cn("w-3.5 h-3.5 text-muted-foreground transition-transform", showDeliveryHistory && "rotate-90")} />
                 </button>
@@ -1407,7 +1407,7 @@ export default function DeliveryPage() {
                     { id: "afternoon", label: "Afternoon (12-5)" },
                     { id: "evening", label: "Evening (5-9)" },
                   ].map(w => (
-                    <button key={w.id} onClick={() => setDeliveryWindow(w.id)}
+                    <button type="button" key={w.id} onClick={() => setDeliveryWindow(w.id)}
                       className={cn("px-3 py-2 rounded-xl text-xs font-bold transition-all touch-manipulation active:scale-95",
                         deliveryWindow === w.id ? "bg-violet-500 text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
                       {w.label}
@@ -1592,7 +1592,7 @@ export default function DeliveryPage() {
                 <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
                   <h1 className="text-2xl font-bold text-foreground mb-2">Delivery Confirmed! 📦</h1>
                   <p className="text-muted-foreground">A courier will be assigned shortly.</p>
-                  <button onClick={handleCopyTracking}
+                  <button type="button" onClick={handleCopyTracking}
                     className="text-xs font-mono text-foreground/80 mt-2 bg-secondary px-3 py-1.5 rounded-full inline-flex items-center gap-1.5 hover:bg-secondary transition-all touch-manipulation">
                     Tracking: {trackingId} <Copy className="w-3 h-3" />
                   </button>
@@ -1641,7 +1641,7 @@ export default function DeliveryPage() {
                   <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-3">Rate this delivery</p>
                   <div className="flex justify-center gap-2">
                     {[1, 2, 3, 4, 5].map(s => (
-                      <button key={s} onClick={() => { setRateDelivery(s); toast.success(`Rated ${s} stars!`); }}
+                      <button type="button" key={s} onClick={() => { setRateDelivery(s); toast.success(`Rated ${s} stars!`); }}
                         className="touch-manipulation active:scale-90 transition-transform">
                         <Star className={cn("w-8 h-8 transition-all", rateDelivery && s <= rateDelivery ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30")} />
                       </button>
@@ -1670,7 +1670,7 @@ export default function DeliveryPage() {
       {step === "address" && (
         <div className="px-4 pb-4 space-y-3">
           {/* Shipping Analytics */}
-          <button onClick={() => setShowShippingAnalytics(!showShippingAnalytics)}
+          <button type="button" onClick={() => setShowShippingAnalytics(!showShippingAnalytics)}
             className="w-full flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation">
             <BarChart3 className="w-3.5 h-3.5 text-foreground" /> Shipping Analytics
             <ChevronRight className={cn("w-3 h-3 ml-auto transition-transform", showShippingAnalytics && "rotate-90")} />
@@ -1694,7 +1694,7 @@ export default function DeliveryPage() {
           )}
 
           {/* Bulk Discounts */}
-          <button onClick={() => setShowBulkDiscounts(!showBulkDiscounts)}
+          <button type="button" onClick={() => setShowBulkDiscounts(!showBulkDiscounts)}
             className="w-full flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation">
             <Percent className="w-3.5 h-3.5 text-emerald-500" /> Bulk Discounts
             <ChevronRight className={cn("w-3 h-3 ml-auto transition-transform", showBulkDiscounts && "rotate-90")} />
@@ -1713,7 +1713,7 @@ export default function DeliveryPage() {
           )}
 
           {/* Carrier Comparison */}
-          <button onClick={() => setShowCarrierComparison(!showCarrierComparison)}
+          <button type="button" onClick={() => setShowCarrierComparison(!showCarrierComparison)}
             className="w-full flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation">
             <Truck className="w-3.5 h-3.5 text-foreground" /> Compare Carriers
             <ChevronRight className={cn("w-3 h-3 ml-auto transition-transform", showCarrierComparison && "rotate-90")} />
@@ -1730,7 +1730,7 @@ export default function DeliveryPage() {
           )}
 
           {/* Packaging Guide */}
-          <button onClick={() => setShowPackagingGuide(!showPackagingGuide)}
+          <button type="button" onClick={() => setShowPackagingGuide(!showPackagingGuide)}
             className="w-full flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation">
             <Box className="w-3.5 h-3.5 text-amber-500" /> Packaging Guide
             <ChevronRight className={cn("w-3 h-3 ml-auto transition-transform", showPackagingGuide && "rotate-90")} />
@@ -1747,7 +1747,7 @@ export default function DeliveryPage() {
           )}
 
           {/* Delivery Zones */}
-          <button onClick={() => setShowDeliveryZones(!showDeliveryZones)}
+          <button type="button" onClick={() => setShowDeliveryZones(!showDeliveryZones)}
             className="w-full flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation">
             <MapPin className="w-3.5 h-3.5 text-foreground" /> Delivery Zones & Pricing
             <ChevronRight className={cn("w-3 h-3 ml-auto transition-transform", showDeliveryZones && "rotate-90")} />

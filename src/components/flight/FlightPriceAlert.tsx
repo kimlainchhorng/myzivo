@@ -127,7 +127,7 @@ export const FlightPriceAlert = ({
       )}
     >
       {/* Header - Always Visible */}
-      <button
+      <button type="button"
         onClick={() => !isCreated && setIsExpanded(!isExpanded)}
         className={cn(
           "w-full px-5 py-4 flex items-center justify-between transition-colors",
@@ -312,7 +312,7 @@ export const FlightPriceAlert = ({
               <div className="space-y-3">
                 <Label className="text-sm font-medium">Notification Method</Label>
                 <div className="grid grid-cols-3 gap-3">
-                  <button
+                  <button type="button"
                     onClick={() =>
                       setNotifications((prev) => ({ ...prev, email: !prev.email }))
                     }
@@ -331,7 +331,7 @@ export const FlightPriceAlert = ({
                     />
                     <span className="text-xs font-medium">Email</span>
                   </button>
-                  <button
+                  <button type="button"
                     onClick={() =>
                       setNotifications((prev) => ({ ...prev, push: !prev.push }))
                     }
@@ -350,7 +350,7 @@ export const FlightPriceAlert = ({
                     />
                     <span className="text-xs font-medium">Push</span>
                   </button>
-                  <button
+                  <button type="button"
                     onClick={() =>
                       setNotifications((prev) => ({ ...prev, sms: !prev.sms }))
                     }

@@ -91,15 +91,15 @@ export default function MarketplacePage() {
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-30 bg-background/80 backdrop-blur-xl border-b border-border/30">
         <div className="flex items-center gap-3 px-4 py-3">
-          <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-muted/50">
+          <button type="button" onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-muted/50">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className="text-lg font-bold flex-1">Marketplace</h1>
-          <button onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")} className="p-2 rounded-full hover:bg-muted/50">
+          <button type="button" onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")} className="p-2 rounded-full hover:bg-muted/50">
             {viewMode === "grid" ? <LayoutList className="h-4 w-4" /> : <Grid3X3 className="h-4 w-4" />}
           </button>
           {user && (
-            <button onClick={() => setShowCreate(true)} className="p-2 rounded-full bg-primary text-primary-foreground">
+            <button type="button" onClick={() => setShowCreate(true)} className="p-2 rounded-full bg-primary text-primary-foreground">
               <Plus className="h-4 w-4" />
             </button>
           )}
@@ -121,7 +121,7 @@ export default function MarketplacePage() {
         {/* Condition Filter */}
         <div className="flex gap-2 px-4 pb-3 overflow-x-auto scrollbar-none">
           {CONDITIONS.map((c) => (
-            <button
+            <button type="button"
               key={c}
               onClick={() => setConditionFilter(c)}
               className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
@@ -230,7 +230,7 @@ export default function MarketplacePage() {
                     {imagePreviews.map((src, idx) => (
                       <div key={idx} className="relative shrink-0 w-20 h-20 rounded-xl overflow-hidden border border-border">
                         <img src={src} alt="" className="w-full h-full object-cover" />
-                        <button
+                        <button type="button"
                           onClick={() => {
                             setImageFiles((f) => f.filter((_, i) => i !== idx));
                             setImagePreviews((p) => p.filter((_, i) => i !== idx));
@@ -315,7 +315,7 @@ export default function MarketplacePage() {
                   />
                   <span className="text-sm text-muted-foreground">Price is negotiable</span>
                 </label>
-                <button
+                <button type="button"
                   onClick={() => createMutation.mutate()}
                   disabled={!newListing.title || !newListing.price || createMutation.isPending}
                   className="w-full py-3.5 rounded-2xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50"

@@ -262,7 +262,7 @@ export default function AutoRepairAutoCheckSection({ storeId }: Props) {
           <CardContent className="space-y-1">
             {history.map(h => (
               <div key={h.id} className="flex items-center justify-between group">
-                <button onClick={() => loadHistory(h)}
+                <button type="button" onClick={() => loadHistory(h)}
                   className="flex-1 text-left flex items-center justify-between p-2 rounded-lg hover:bg-muted/50 min-w-0">
                   <span className="font-mono text-xs truncate">{h.vin}</span>
                   <div className="flex items-center gap-3 shrink-0 pl-2">

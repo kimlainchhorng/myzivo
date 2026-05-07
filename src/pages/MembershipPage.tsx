@@ -177,7 +177,7 @@ export default function MembershipPage() {
       <main className="pt-24 pb-16">
         {/* Back Button */}
         <div className="container mx-auto px-4 mb-6">
-          <button
+          <button type="button"
             onClick={() => navigate(-1)}
             className="flex items-center gap-2 text-muted-foreground hover:text-foreground transition-all duration-200"
           >

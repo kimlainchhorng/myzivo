@@ -228,7 +228,7 @@ export const TravelDocuments = ({ className, destinationCode }: TravelDocumentsP
 
         {/* Visa Requirements Section */}
         <div className="p-4 border-b border-border/50">
-          <button
+          <button type="button"
             onClick={() => setShowVisaInfo(!showVisaInfo)}
             className="w-full flex items-center justify-between p-3 rounded-xl bg-secondary border border-border hover:bg-secondary transition-all duration-200 active:scale-[0.98] touch-manipulation"
           >
@@ -402,7 +402,7 @@ export const TravelDocuments = ({ className, destinationCode }: TravelDocumentsP
             </div>
 
             {/* Add New Document */}
-            <button
+            <button type="button"
               onClick={handleUpload}
               className="w-full mt-4 p-6 rounded-xl border-2 border-dashed border-border/50 hover:border-primary/50 hover:bg-primary/5 transition-all flex flex-col items-center gap-2 text-muted-foreground hover:text-foreground"
             >

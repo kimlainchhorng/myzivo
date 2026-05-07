@@ -480,7 +480,7 @@ export default function AdminLodgingReservationDetailPage() {
                     <Label className="text-xs mb-1 block">Quick templates</Label>
                     <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-0.5 px-0.5 scrollbar-none">
                       {NOTE_TEMPLATES[pendingStatus].map((tpl) => (
-                        <button
+                        <button type="button"
                           key={tpl}
                           type="button"
                           onClick={() => appendTemplate(tpl)}

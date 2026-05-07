@@ -64,7 +64,7 @@ export default function FollowSuggestions() {
       <div className="flex gap-3 px-4 overflow-x-auto scrollbar-hide">
         {visible.map((s: any) => (
           <div key={s.id} className="shrink-0 w-[140px] p-3 rounded-2xl bg-card border border-border/40 text-center relative">
-            <button
+            <button type="button"
               onClick={() => setDismissed((p) => [...p, s.id])}
               className="absolute top-2 right-2 p-1 rounded-full hover:bg-muted/50"
             >
@@ -79,7 +79,7 @@ export default function FollowSuggestions() {
               {isBlueVerified(s.is_verified) && <VerifiedBadge size={11} interactive={false} />}
             </p>
             <MutualFollowsBadge mutual={mutualMap?.get(s.id)} className="mb-2 text-center" />
-            <button
+            <button type="button"
               onClick={() => followUser(s.id)}
               className="w-full flex items-center justify-center gap-1 py-1.5 rounded-lg bg-primary text-primary-foreground text-xs font-medium"
             >

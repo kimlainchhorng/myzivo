@@ -138,7 +138,7 @@ export default function ImportCartPage() {
                 { v: "cash_on_delivery", l: "Cash on Delivery", i: Banknote },
                 { v: "wallet", l: "ZIVO Wallet", i: Wallet },
               ] as const).map(({ v, l, i: Icon }) => (
-                <button
+                <button type="button"
                   key={v}
                   onClick={() => setMethod(v)}
                   className={`p-2.5 rounded-xl border text-left flex items-center gap-2 ${

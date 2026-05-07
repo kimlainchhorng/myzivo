@@ -844,11 +844,11 @@ export default function PublicProfilePage() {
       {/* Mobile Header */}
       <div className="lg:hidden sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 safe-area-top">
         <div className="max-w-3xl mx-auto px-4 py-2.5 flex items-center gap-3">
-          <button onClick={() => navigate(-1)} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-muted transition-colors">
+          <button type="button" onClick={() => navigate(-1)} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-muted transition-colors">
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
           <h1 className="text-lg font-bold text-foreground truncate flex-1">{resolvedProfile?.full_name || "Profile"}</h1>
-          <button onClick={handleShare} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-muted transition-colors">
+          <button type="button" onClick={handleShare} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-muted transition-colors">
             <Share2 className="h-5 w-5 text-foreground" />
           </button>
         </div>
@@ -1028,7 +1028,7 @@ export default function PublicProfilePage() {
                     { key: "photos" as PostTab, icon: ImageIcon, label: "Photos", count: photoCount },
                     { key: "videos" as PostTab, icon: Film, label: "Videos", count: videoCount },
                   ]).map((tab) => (
-                    <button key={tab.key} onClick={() => setPostTab(tab.key)}
+                    <button type="button" key={tab.key} onClick={() => setPostTab(tab.key)}
                       className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold uppercase tracking-wider transition-colors relative ${postTab === tab.key ? "text-foreground" : "text-muted-foreground"}`}>
                       <tab.icon className="h-4 w-4" /><span>{tab.label}</span>
                       {postTab === tab.key && <motion.div layoutId="profile-tab-indicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground rounded-full" />}
@@ -1193,17 +1193,17 @@ export default function PublicProfilePage() {
                       {/* Interaction bar */}
                       <div className="flex items-center px-4 py-2.5">
                         <div className="flex items-center gap-4 flex-1">
-                          <button onClick={() => handleLike(post.id)} className="touch-manipulation active:scale-90 transition-transform">
+                          <button type="button" onClick={() => handleLike(post.id)} className="touch-manipulation active:scale-90 transition-transform">
                             <Heart className={`h-[22px] w-[22px] ${likedPosts.has(post.id) ? "fill-red-500 text-red-500" : "text-foreground"}`} strokeWidth={1.5} />
                           </button>
-                          <button onClick={() => setCommentPost(post)} className="touch-manipulation active:scale-90 transition-transform">
+                          <button type="button" onClick={() => setCommentPost(post)} className="touch-manipulation active:scale-90 transition-transform">
                             <MessageCircle className="h-[22px] w-[22px] text-foreground" strokeWidth={1.5} />
                           </button>
-                          <button onClick={() => void handleSharePost(post)} className="touch-manipulation active:scale-90 transition-transform">
+                          <button type="button" onClick={() => void handleSharePost(post)} className="touch-manipulation active:scale-90 transition-transform">
                             <Share2 className="h-[22px] w-[22px] text-foreground" strokeWidth={1.5} />
                           </button>
                         </div>
-                        <button onClick={() => void handleBookmark(post)} className="touch-manipulation active:scale-90 transition-transform">
+                        <button type="button" onClick={() => void handleBookmark(post)} className="touch-manipulation active:scale-90 transition-transform">
                           <Bookmark className={`h-[22px] w-[22px] ${bookmarkedPosts.has(toUserPostInteractionId(post.id)) ? "fill-foreground text-foreground" : "text-foreground"}`} strokeWidth={1.5} />
                         </button>
                       </div>
@@ -1276,7 +1276,7 @@ export default function PublicProfilePage() {
                             startDrag(e);
                           }}
                         >
-                          <button onClick={() => setSelectedPost(null)} className="min-h-[44px] min-w-[44px] flex items-center justify-center -ml-2">
+                          <button type="button" onClick={() => setSelectedPost(null)} className="min-h-[44px] min-w-[44px] flex items-center justify-center -ml-2">
                             <ArrowLeft className="h-5 w-5 text-foreground" />
                           </button>
                           <Avatar className="h-9 w-9 ring-2 ring-primary/20">
@@ -1287,7 +1287,7 @@ export default function PublicProfilePage() {
                             <p className="text-sm font-bold text-foreground truncate">{resolvedProfile.full_name}</p>
                             <p className="text-[11px] text-muted-foreground">{formatTime(selectedPost.created_at)}</p>
                           </div>
-                          <button onClick={(e) => { e.stopPropagation(); void handleSharePost(selectedPost); }} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
+                          <button type="button" onClick={(e) => { e.stopPropagation(); void handleSharePost(selectedPost); }} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
                             <Share2 className="h-5 w-5 text-foreground" />
                           </button>
                         </div>
@@ -1314,7 +1314,7 @@ export default function PublicProfilePage() {
 
                     {/* Action bar */}
                     <div className="flex items-center gap-5 px-4 py-3 border-b border-border">
-                      <button
+                      <button type="button"
                         onClick={() => {
                           const isLiked = likedPosts.has(selectedPost.id);
                           setLikedPosts(prev => {
@@ -1328,7 +1328,7 @@ export default function PublicProfilePage() {
                         <Heart className={`h-6 w-6 transition-colors ${likedPosts.has(selectedPost.id) ? "fill-red-500 text-red-500" : "text-foreground"}`} />
                         <span className="text-sm font-medium text-foreground">{(selectedPost.likes_count || 0) + (likedPosts.has(selectedPost.id) ? 1 : 0)}</span>
                       </button>
-                      <button onClick={() => setCommentPost(selectedPost)} className="flex items-center gap-1.5">
+                      <button type="button" onClick={() => setCommentPost(selectedPost)} className="flex items-center gap-1.5">
                         <MessageCircle className="h-6 w-6 text-foreground" />
                         <span className="text-sm font-medium text-foreground">{selectedPost.comments_count || 0}</span>
                       </button>
@@ -1337,7 +1337,7 @@ export default function PublicProfilePage() {
                         <span className="text-sm text-muted-foreground">{selectedPost.views_count || 0}</span>
                       </div>
                       <div className="flex-1" />
-                      <button onClick={(e) => { e.stopPropagation(); void handleSharePost(selectedPost); }}>
+                      <button type="button" onClick={(e) => { e.stopPropagation(); void handleSharePost(selectedPost); }}>
                         <Share2 className="h-5 w-5 text-foreground" />
                       </button>
                     </div>

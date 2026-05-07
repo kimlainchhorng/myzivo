@@ -124,7 +124,7 @@ export default function FavoritesPage() {
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-50 bg-background/80 backdrop-blur-xl border-b">
         <div className="flex items-center justify-between px-6 py-4 max-w-2xl mx-auto">
-          <button onClick={() => navigate(-1)} className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
+          <button type="button" onClick={() => navigate(-1)} className="w-10 h-10 rounded-full bg-muted flex items-center justify-center">
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="font-bold text-lg">Favorites</h1>
@@ -140,7 +140,7 @@ export default function FavoritesPage() {
             const isActive = activeTab === tab.key;
             const count = tab.key === "all" ? favorites.length : favorites.filter((f) => f.item_type === tab.key).length;
             return (
-              <button
+              <button type="button"
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
                 className={cn(
@@ -175,7 +175,7 @@ export default function FavoritesPage() {
                 className="pl-9 pr-8 h-9 rounded-full bg-muted/40 border-border/40 text-xs"
               />
               {search && (
-                <button
+                <button type="button"
                   onClick={() => setSearch("")}
                   aria-label="Clear search"
                   className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:bg-muted/60"
@@ -200,7 +200,7 @@ export default function FavoritesPage() {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
-            <button
+            <button type="button"
               onClick={() => setViewMode(viewMode === "list" ? "grid" : "list")}
               aria-label={viewMode === "list" ? "Switch to grid view" : "Switch to list view"}
               className="h-9 w-9 rounded-full flex items-center justify-center bg-card border border-border/40 hover:bg-accent/50 active:scale-95 transition-all shrink-0"
@@ -299,7 +299,7 @@ export default function FavoritesPage() {
                     </div>
 
                     {/* Remove button */}
-                    <button
+                    <button type="button"
                       onClick={(e) => {
                         e.stopPropagation();
                         removeFavorite({ itemType: fav.item_type, itemId: fav.item_id });

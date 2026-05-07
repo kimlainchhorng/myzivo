@@ -109,11 +109,11 @@ export default function CreatorAnalyticsPage() {
 
       <div className="sticky top-0 safe-area-top z-30 bg-background/80 backdrop-blur-xl border-b border-border/30 zivo-ribbon">
         <div className="flex items-center gap-3 px-4 py-3">
-          <button onClick={() => navigate("/more")} className="p-2 -ml-2 rounded-full hover:bg-muted/50 touch-manipulation">
+          <button type="button" onClick={() => navigate("/more")} className="p-2 -ml-2 rounded-full hover:bg-muted/50 touch-manipulation">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className="text-lg font-extrabold flex-1 tracking-tight">Creator Analytics</h1>
-          <button onClick={() => navigate("/creator-dashboard")} className="p-2 rounded-full hover:bg-muted/50 touch-manipulation">
+          <button type="button" onClick={() => navigate("/creator-dashboard")} className="p-2 rounded-full hover:bg-muted/50 touch-manipulation">
             <BarChart3 className="h-5 w-5 text-primary" />
           </button>
         </div>
@@ -123,7 +123,7 @@ export default function CreatorAnalyticsPage() {
         {/* Time Range */}
         <div className="flex gap-2 overflow-x-auto scrollbar-hide">
           {timeRanges.map((range, i) => (
-            <button
+            <button type="button"
               key={range}
               onClick={() => setActiveRange(i)}
               className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors touch-manipulation ${

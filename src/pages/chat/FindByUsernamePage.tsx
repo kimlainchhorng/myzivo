@@ -71,7 +71,7 @@ export default function FindByUsernamePage() {
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-xl border-b border-border/30 safe-area-top">
         <div className="px-3 py-2 flex items-center gap-2">
-          <button
+          <button type="button"
             onClick={() => navigate(-1)}
             aria-label="Back"
             className="h-11 w-11 flex items-center justify-center rounded-full hover:bg-muted"
@@ -97,7 +97,7 @@ export default function FindByUsernamePage() {
             className="w-full pl-9 pr-10 py-3 rounded-xl bg-muted/50 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30"
           />
           {raw && (
-            <button
+            <button type="button"
               onClick={() => setRaw("")}
               aria-label="Clear"
               className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 flex items-center justify-center rounded-full hover:bg-muted"
@@ -132,7 +132,7 @@ export default function FindByUsernamePage() {
         )}
 
         {status === "found" && match && (
-          <button
+          <button type="button"
             onClick={() => navigate(`/user/${match.user_id}`)}
             className="w-full flex items-center gap-3 p-3 rounded-2xl bg-muted/30 border border-border/30 hover:bg-muted/50 active:scale-[0.99] transition text-left"
           >

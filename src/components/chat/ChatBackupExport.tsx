@@ -107,7 +107,7 @@ export default function ChatBackupExport({ open, onClose, recipientId, recipient
             <div className="px-5">
               <div className="flex items-center justify-between mb-5">
                 <h3 className="text-base font-bold">Export Chat</h3>
-                <button onClick={onClose} className="p-2 rounded-full hover:bg-muted/50">
+                <button type="button" onClick={onClose} className="p-2 rounded-full hover:bg-muted/50">
                   <X className="h-5 w-5" />
                 </button>
               </div>
@@ -125,7 +125,7 @@ export default function ChatBackupExport({ open, onClose, recipientId, recipient
                 </div>
               ) : (
                 <div className="space-y-3">
-                  <button
+                  <button type="button"
                     onClick={() => handleExport("text")}
                     disabled={exporting}
                     className="w-full flex items-center gap-4 p-4 rounded-2xl bg-muted/30 hover:bg-muted/50 transition-colors"
@@ -140,7 +140,7 @@ export default function ChatBackupExport({ open, onClose, recipientId, recipient
                     {exporting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Download className="h-4 w-4 text-muted-foreground" />}
                   </button>
 
-                  <button
+                  <button type="button"
                     onClick={() => handleExport("json")}
                     disabled={exporting}
                     className="w-full flex items-center gap-4 p-4 rounded-2xl bg-muted/30 hover:bg-muted/50 transition-colors"

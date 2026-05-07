@@ -545,7 +545,7 @@ const CarRentalBooking = () => {
           <div className="container mx-auto px-4">
             <div className="grid md:grid-cols-3 gap-4 max-w-4xl mx-auto">
               <div className="rounded-2xl bg-card border border-border/40 p-4 flex items-center gap-3">
-                <button onClick={() => { setDeliveryToYou(!deliveryToYou); if (!deliveryToYou) toast.success("🚗 Car will be delivered to your location!"); }}
+                <button type="button" onClick={() => { setDeliveryToYou(!deliveryToYou); if (!deliveryToYou) toast.success("🚗 Car will be delivered to your location!"); }}
                   className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", deliveryToYou ? "bg-emerald-500" : "bg-muted/60")}>
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", deliveryToYou ? "left-[18px]" : "left-0.5")} />
                 </button>
@@ -555,7 +555,7 @@ const CarRentalBooking = () => {
                 </div>
               </div>
               <div className="rounded-2xl bg-card border border-border/40 p-4 flex items-center gap-3">
-                <button onClick={() => setInstantBook(!instantBook)}
+                <button type="button" onClick={() => setInstantBook(!instantBook)}
                   className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", instantBook ? "bg-primary" : "bg-muted/60")}>
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", instantBook ? "left-[18px]" : "left-0.5")} />
                 </button>
@@ -565,7 +565,7 @@ const CarRentalBooking = () => {
                 </div>
               </div>
               <div className="rounded-2xl bg-card border border-border/40 p-4 flex items-center gap-3">
-                <button onClick={() => setShowElectricOnly(!showElectricOnly)}
+                <button type="button" onClick={() => setShowElectricOnly(!showElectricOnly)}
                   className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", showElectricOnly ? "bg-emerald-500" : "bg-muted/60")}>
                   <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", showElectricOnly ? "left-[18px]" : "left-0.5")} />
                 </button>
@@ -581,7 +581,7 @@ const CarRentalBooking = () => {
         {/* Car Feature Filters (Turo) */}
         <section className="py-6 border-b border-border/30 bg-muted/5">
           <div className="container mx-auto px-4">
-            <button onClick={() => setShowCarFeatureFilter(!showCarFeatureFilter)}
+            <button type="button" onClick={() => setShowCarFeatureFilter(!showCarFeatureFilter)}
               className="flex items-center gap-2 text-sm font-bold text-foreground hover:text-primary transition-all mb-4">
               <Key className="w-4 h-4 text-foreground" /> Car Features
               <ChevronRight className={cn("w-4 h-4 transition-transform", showCarFeatureFilter && "rotate-90")} />
@@ -589,7 +589,7 @@ const CarRentalBooking = () => {
             {showCarFeatureFilter && (
               <div className="flex gap-2 flex-wrap">
                 {carFeatures.map(f => (
-                  <button key={f.id} onClick={() => setSelectedFeatures(prev => prev.includes(f.id) ? prev.filter(x => x !== f.id) : [...prev, f.id])}
+                  <button type="button" key={f.id} onClick={() => setSelectedFeatures(prev => prev.includes(f.id) ? prev.filter(x => x !== f.id) : [...prev, f.id])}
                     className={cn("px-3 py-2 rounded-xl text-[10px] font-bold transition-all",
                       selectedFeatures.includes(f.id) ? "bg-secondary text-foreground border border-border" : "bg-card text-muted-foreground border border-border/40")}>
                     {f.icon} {f.label}
@@ -611,7 +611,7 @@ const CarRentalBooking = () => {
             </div>
             <div className="grid md:grid-cols-4 gap-3 max-w-5xl mx-auto">
               {protectionTiers.map(tier => (
-                <button key={tier.id} onClick={() => setSelectedProtection(tier.id)}
+                <button type="button" key={tier.id} onClick={() => setSelectedProtection(tier.id)}
                   className={cn("rounded-2xl p-4 text-left transition-all border relative",
                     selectedProtection === tier.id ? "border-foreground bg-secondary" : "border-border bg-card hover:border-foreground/30")}>
                   {"badge" in tier && tier.badge && (
@@ -685,7 +685,7 @@ const CarRentalBooking = () => {
         {/* Damage Inspection Checklist */}
         <section className="py-8 border-b border-border/30">
           <div className="container mx-auto px-4">
-            <button onClick={() => setShowDamageInspection(!showDamageInspection)}
+            <button type="button" onClick={() => setShowDamageInspection(!showDamageInspection)}
               className="flex items-center gap-2 text-sm font-bold text-foreground hover:text-primary transition-all mb-4">
               <CheckCircle className="w-5 h-5 text-foreground" /> Pre-Pickup Inspection Checklist
               <ChevronRight className={cn("w-4 h-4 transition-transform", showDamageInspection && "rotate-90")} />
@@ -708,7 +708,7 @@ const CarRentalBooking = () => {
         {/* Mileage Calculator */}
         <section className="py-8 border-b border-border/30 bg-muted/10">
           <div className="container mx-auto px-4">
-            <button onClick={() => setShowMileageCalc(!showMileageCalc)}
+            <button type="button" onClick={() => setShowMileageCalc(!showMileageCalc)}
               className="flex items-center gap-2 text-sm font-bold text-foreground hover:text-primary transition-all mb-4">
               <Fuel className="w-5 h-5 text-emerald-500" /> Mileage Plans
               <ChevronRight className={cn("w-4 h-4 transition-transform", showMileageCalc && "rotate-90")} />
@@ -733,7 +733,7 @@ const CarRentalBooking = () => {
         {/* Roadside Assistance */}
         <section className="py-8 border-b border-border/30">
           <div className="container mx-auto px-4">
-            <button onClick={() => setShowRoadsideDetails(!showRoadsideDetails)}
+            <button type="button" onClick={() => setShowRoadsideDetails(!showRoadsideDetails)}
               className="flex items-center gap-2 text-sm font-bold text-foreground hover:text-primary transition-all mb-4">
               <Truck className="w-5 h-5 text-foreground" /> 24/7 Roadside Assistance
               <Badge className="bg-emerald-500/10 text-emerald-500 border-0 text-[9px]">Included</Badge>
@@ -761,7 +761,7 @@ const CarRentalBooking = () => {
         {carReviews.length > 0 && (
         <section className="py-8 border-b border-border/30 bg-muted/10">
           <div className="container mx-auto px-4">
-            <button onClick={() => setShowCarReviews(!showCarReviews)}
+            <button type="button" onClick={() => setShowCarReviews(!showCarReviews)}
               className="flex items-center gap-2 text-sm font-bold text-foreground hover:text-primary transition-all mb-4">
               <Star className="w-5 h-5 text-amber-500" /> Renter Reviews
               <ChevronRight className={cn("w-4 h-4 transition-transform", showCarReviews && "rotate-90")} />
@@ -797,7 +797,7 @@ const CarRentalBooking = () => {
             <h2 className="text-xl font-bold text-foreground mb-4">🚗 Road Trip Intelligence</h2>
 
             {/* Fuel Calculator */}
-            <button onClick={() => setShowFuelCalc(!showFuelCalc)} className="w-full flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-all">
+            <button type="button" onClick={() => setShowFuelCalc(!showFuelCalc)} className="w-full flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-all">
               <Fuel className="w-4 h-4 text-amber-500" /> Fuel Cost Estimator
               <ChevronRight className={cn("w-4 h-4 ml-auto transition-transform", showFuelCalc && "rotate-90")} />
             </button>
@@ -813,7 +813,7 @@ const CarRentalBooking = () => {
             )}
 
             {/* Toll Estimator */}
-            <button onClick={() => setShowTollEstimator(!showTollEstimator)} className="w-full flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-all">
+            <button type="button" onClick={() => setShowTollEstimator(!showTollEstimator)} className="w-full flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-all">
               <DollarSign className="w-4 h-4 text-foreground" /> Toll Estimates
               <ChevronRight className={cn("w-4 h-4 ml-auto transition-transform", showTollEstimator && "rotate-90")} />
             </button>
@@ -829,7 +829,7 @@ const CarRentalBooking = () => {
             )}
 
             {/* Parking Finder */}
-            <button onClick={() => setShowParkingFinder(!showParkingFinder)} className="w-full flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-all">
+            <button type="button" onClick={() => setShowParkingFinder(!showParkingFinder)} className="w-full flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-all">
               <MapPin className="w-4 h-4 text-foreground" /> Airport Parking Options
               <ChevronRight className={cn("w-4 h-4 ml-auto transition-transform", showParkingFinder && "rotate-90")} />
             </button>
@@ -845,7 +845,7 @@ const CarRentalBooking = () => {
             )}
 
             {/* Road Trip Stops */}
-            <button onClick={() => setShowRoadTripPlanner(!showRoadTripPlanner)} className="w-full flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-all">
+            <button type="button" onClick={() => setShowRoadTripPlanner(!showRoadTripPlanner)} className="w-full flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-all">
               <Car className="w-4 h-4 text-emerald-500" /> Road Trip Stop Guide
               <ChevronRight className={cn("w-4 h-4 ml-auto transition-transform", showRoadTripPlanner && "rotate-90")} />
             </button>
@@ -862,7 +862,7 @@ const CarRentalBooking = () => {
             )}
 
             {/* Rental Tips */}
-            <button onClick={() => setShowRentalTips(!showRentalTips)} className="w-full flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-all">
+            <button type="button" onClick={() => setShowRentalTips(!showRentalTips)} className="w-full flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-all">
               <Award className="w-4 h-4 text-amber-500" /> Pro Rental Tips
               <Badge className="bg-amber-500/10 text-amber-500 border-0 text-[10px] ml-auto">Expert</Badge>
               <ChevronRight className={cn("w-4 h-4 transition-transform", showRentalTips && "rotate-90")} />

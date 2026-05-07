@@ -38,7 +38,7 @@ export default function MuteDurationSheet({ open, onClose, onPick, isMuted, thre
 
         <div className="mt-3 flex flex-col">
           {OPTIONS.map((o) => (
-            <button
+            <button type="button"
               key={o.hours}
               onClick={() => { onPick(o.hours); onClose(); }}
               className={cn(
@@ -52,7 +52,7 @@ export default function MuteDurationSheet({ open, onClose, onPick, isMuted, thre
           ))}
 
           {isMuted && (
-            <button
+            <button type="button"
               onClick={() => { onPick(-1); onClose(); }}
               className="flex items-center gap-3 px-2 py-3 text-left rounded-xl hover:bg-muted/60 text-emerald-600 active:scale-[0.98] transition-all"
             >

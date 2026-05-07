@@ -156,7 +156,7 @@ export default function CarDetailPage() {
                         </Button>
                         <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5">
                           {images.map((_, idx) => (
-                            <button
+                            <button type="button"
                               key={idx}
                               aria-label={`Go to image ${idx + 1}`}
                               onClick={() => setCurrentImageIndex(idx)}

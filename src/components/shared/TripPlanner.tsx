@@ -81,7 +81,7 @@ const TripPlanner = () => {
                         <Badge variant="outline" className="text-xs">
                           <Clock className="w-3 h-3 mr-1" /> {item.duration}
                         </Badge>
-                        <button 
+                        <button type="button" 
                           onClick={() => removeItem(item.id)}
                           className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-500/20 rounded transition-all"
                         >

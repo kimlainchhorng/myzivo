@@ -70,7 +70,7 @@ export default function AcceptInvitePage() {
               <p className="text-sm text-zinc-500 dark:text-zinc-400">
                 You can now clock in and view your schedule.
               </p>
-              <button
+              <button type="button"
                 onClick={() => navigate("/personal-dashboard")}
                 className="w-full h-9 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 active:scale-[0.99] transition flex items-center justify-center shadow-md"
               >
@@ -82,7 +82,7 @@ export default function AcceptInvitePage() {
               <AlertTriangle className="w-10 h-10 text-amber-500 mx-auto" />
               <h1 className="text-lg font-bold text-zinc-900 dark:text-white">Invite issue</h1>
               <p className="text-sm text-zinc-500 dark:text-zinc-400">{errorMsg || "This invite is no longer valid."}</p>
-              <button
+              <button type="button"
                 onClick={() => navigate("/")}
                 className="w-full h-9 rounded-lg text-sm font-semibold text-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/40 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 active:scale-[0.99] transition flex items-center justify-center"
               >

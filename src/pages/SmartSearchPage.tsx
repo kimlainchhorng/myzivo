@@ -149,7 +149,7 @@ export default function SmartSearchPage() {
               onBlur={() => { if (query.trim()) saveSearch(query.trim()); }}
               className="pl-9 pr-9" autoFocus />
             {query && (
-              <button onClick={() => setQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2">
+              <button type="button" onClick={() => setQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2">
                 <X className="h-4 w-4 text-muted-foreground" />
               </button>
             )}
@@ -163,11 +163,11 @@ export default function SmartSearchPage() {
             <div>
               <div className="flex items-center justify-between mb-2">
                 <h3 className="text-sm font-semibold text-muted-foreground">Recent</h3>
-                <button onClick={clearRecent} className="text-xs text-muted-foreground hover:text-foreground">Clear</button>
+                <button type="button" onClick={clearRecent} className="text-xs text-muted-foreground hover:text-foreground">Clear</button>
               </div>
               <div className="space-y-1">
                 {recentSearches.map((s, i) => (
-                  <button key={i} onClick={() => handleSelectSearch(s)} className="flex items-center gap-2 w-full p-2 rounded-lg hover:bg-accent text-sm text-foreground">
+                  <button type="button" key={i} onClick={() => handleSelectSearch(s)} className="flex items-center gap-2 w-full p-2 rounded-lg hover:bg-accent text-sm text-foreground">
                     <Search className="h-3 w-3 text-muted-foreground" />
                     {s}
                   </button>

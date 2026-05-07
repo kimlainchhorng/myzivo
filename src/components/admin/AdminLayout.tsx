@@ -74,6 +74,12 @@ const adminNavEntries: NavEntry[] = [
   },
 
   {
+    label: "Partners", icon: UserPlus, children: [
+      { label: "Applications", icon: Inbox, path: "/admin/partners/applications" },
+    ],
+  },
+
+  {
     label: "Finance", icon: Wallet, children: [
       { label: "GMV Summary", icon: TrendingUp, path: "/admin/finance/summary" },
       { label: "Wallet", icon: Wallet, path: "/admin/wallet" },
@@ -233,7 +239,7 @@ export default function AdminLayout({ children, title, brandLabel }: AdminLayout
                       {entry.children.map((child) => {
                         const isActive = isPathActive(child.path);
                         return (
-                          <button
+                          <button type="button"
                             key={child.path}
                             onClick={() => { navigate(child.path); setSidebarOpen(false); }}
                             className={cn(
@@ -254,7 +260,7 @@ export default function AdminLayout({ children, title, brandLabel }: AdminLayout
               const item = entry as NavItem;
               const isActive = isPathActive(item.path);
               return (
-                <button
+                <button type="button"
                   key={item.path}
                   onClick={() => { navigate(item.path); setSidebarOpen(false); }}
                   className={cn(
@@ -270,14 +276,14 @@ export default function AdminLayout({ children, title, brandLabel }: AdminLayout
           </nav>
 
           <div className="border-t border-border p-3 space-y-0.5 shrink-0">
-            <button
+            <button type="button"
               onClick={() => navigate("/")}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-all"
             >
               <Home className="w-4 h-4" />
               Back to App
             </button>
-            <button
+            <button type="button"
               onClick={() => signOut()}
               className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-red-500 hover:bg-red-500/10 transition-all"
             >

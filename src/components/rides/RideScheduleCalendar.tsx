@@ -77,11 +77,11 @@ export default function RideScheduleCalendar() {
     <div className="space-y-4">
       {/* Month navigation */}
       <div className="flex items-center justify-between">
-        <button onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-muted/30 min-w-[36px] min-h-[36px]">
+        <button type="button" onClick={() => setCurrentMonth(subMonths(currentMonth, 1))} className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-muted/30 min-w-[36px] min-h-[36px]">
           <ChevronLeft className="w-4 h-4 text-muted-foreground" />
         </button>
         <h3 className="text-sm font-bold text-foreground">{format(currentMonth, "MMMM yyyy")}</h3>
-        <button onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-muted/30 min-w-[36px] min-h-[36px]">
+        <button type="button" onClick={() => setCurrentMonth(addMonths(currentMonth, 1))} className="w-9 h-9 rounded-lg flex items-center justify-center hover:bg-muted/30 min-w-[36px] min-h-[36px]">
           <ChevronRight className="w-4 h-4 text-muted-foreground" />
         </button>
       </div>
@@ -106,7 +106,7 @@ export default function RideScheduleCalendar() {
             const isSelected = isSameDay(day, selectedDate);
             const today = isToday(day);
             return (
-              <button
+              <button type="button"
                 key={dayStr}
                 onClick={() => setSelectedDate(day)}
                 className={cn(
@@ -205,7 +205,7 @@ export default function RideScheduleCalendar() {
                         <p className="text-[9px] text-muted-foreground font-bold mb-1">VEHICLE</p>
                         <div className="flex gap-1">
                           {["Economy", "Premium", "SUV"].map(v => (
-                            <button key={v} onClick={() => setEditDraft(d => ({ ...d, vehicle: v }))} className={cn("flex-1 h-8 rounded-lg text-[9px] font-bold border transition-all", editDraft.vehicle === v ? "bg-primary text-primary-foreground border-primary" : "bg-muted/20 border-border/40")}>
+                            <button type="button" key={v} onClick={() => setEditDraft(d => ({ ...d, vehicle: v }))} className={cn("flex-1 h-8 rounded-lg text-[9px] font-bold border transition-all", editDraft.vehicle === v ? "bg-primary text-primary-foreground border-primary" : "bg-muted/20 border-border/40")}>
                               {v}
                             </button>
                           ))}

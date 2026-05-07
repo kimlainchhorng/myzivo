@@ -5,12 +5,13 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import {
   ArrowLeft, Clock, Users, Calendar, Timer,
-  CheckCircle2, ChevronRight, FileText, Bell, HelpCircle, Settings, Briefcase,
+  CheckCircle2, ChevronRight, ChevronLeft, FileText, Bell, HelpCircle, Settings, Briefcase,
   QrCode, ScanLine, PlusCircle, Send, Search, IdCard, RefreshCw, DollarSign,
   Sunrise, Sun, Moon, BarChart3, MessageCircle, Flame,
-  Building2, UserPlus, Target, TrendingUp, Wifi, Sparkles,
+  Building2, UserPlus, Target, TrendingUp, Wifi, Sparkles, Coffee,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -20,7 +21,8 @@ import AppLayout from "@/components/app/AppLayout";
 import { QRScannerModal } from "@/components/clock/QRScannerModal";
 import { EmployeeQRDisplay } from "@/components/clock/EmployeeQRDisplay";
 import { toast } from "sonner";
-import { format, startOfWeek, startOfMonth, addDays, isAfter, isEqual } from "date-fns";
+import { format, startOfWeek, startOfMonth, addDays, isAfter, isEqual, subWeeks } from "date-fns";
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
 
 const DAILY_HOURS_TARGET = 8;
 
@@ -72,6 +74,12 @@ const PersonalDashboard = () => {
   const [showMyQR, setShowMyQR] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [, setNowTick] = useState(0);
+  const [calendarMonth, setCalendarMonth] = useState(() => new Date());
+  const [onBreak, setOnBreak] = useState(false);
+  const [breakStart, setBreakStart] = useState<Date | null>(null);
+  const [breakTotalMins, setBreakTotalMins] = useState(0);
+  const [shiftSummaryOpen, setShiftSummaryOpen] = useState(false);
+  const [lastShift, setLastShift] = useState<{ grossHrs: number; breakMins: number; netHrs: number; rate: number; payType: string } | null>(null);
 
   // Profile (avatar + name)
   const { data: profile } = useQuery({
@@ -256,6 +264,57 @@ const PersonalDashboard = () => {
     },
   });
 
+  // Last 8 weeks of hours worked — for the performance chart
+  const { data: weeklyHours } = useQuery({
+    queryKey: ["personal-dashboard-weekly-hours", empRecord?.id],
+    enabled: !!empRecord?.id,
+    queryFn: async () => {
+      const since = subWeeks(startOfWeek(new Date(), { weekStartsOn: 1 }), 7);
+      const { data } = await (supabase as any)
+        .from("store_time_entries")
+        .select("clock_in, clock_out")
+        .eq("employee_id", empRecord!.id)
+        .gte("clock_in", since.toISOString())
+        .not("clock_out", "is", null);
+      const entries: Array<{ clock_in: string; clock_out: string }> = Array.isArray(data) ? data : [];
+      const weeks: { label: string; hours: number }[] = [];
+      for (let i = 7; i >= 0; i--) {
+        const wStart = subWeeks(startOfWeek(new Date(), { weekStartsOn: 1 }), i);
+        const wEnd = addDays(wStart, 7);
+        const hrs = entries
+          .filter((e) => {
+            const d = new Date(e.clock_in);
+            return d >= wStart && d < wEnd;
+          })
+          .reduce((sum, e) => sum + (new Date(e.clock_out).getTime() - new Date(e.clock_in).getTime()) / 3600000, 0);
+        weeks.push({ label: i === 0 ? "This wk" : `${i}w ago`, hours: parseFloat(hrs.toFixed(1)) });
+      }
+      return weeks;
+    },
+  });
+
+  // Per-day clock-in dates for the shift calendar
+  const { data: clockedDays } = useQuery({
+    queryKey: ["personal-dashboard-clocked-days", empRecord?.id, calendarMonth.getFullYear(), calendarMonth.getMonth()],
+    enabled: !!empRecord?.id,
+    queryFn: async () => {
+      const start = startOfMonth(calendarMonth);
+      const end = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 0, 23, 59, 59);
+      const { data } = await (supabase as any)
+        .from("store_time_entries")
+        .select("clock_in")
+        .eq("employee_id", empRecord!.id)
+        .gte("clock_in", start.toISOString())
+        .lte("clock_in", end.toISOString());
+      const days: string[] = [];
+      for (const e of (data ?? []) as Array<{ clock_in: string }>) {
+        const d = format(new Date(e.clock_in), "yyyy-MM-dd");
+        if (!days.includes(d)) days.push(d);
+      }
+      return days;
+    },
+  });
+
   // Coworkers currently clocked in at the same store (excluding self)
   const { data: coworkersOnline } = useQuery({
     queryKey: ["personal-dashboard-coworkers", empRecord?.store_id, empRecord?.id],
@@ -345,15 +404,51 @@ const PersonalDashboard = () => {
           setClockStatus("clocked-out");
           const hrs = (new Date(data.clock_out).getTime() - new Date(data.clock_in).getTime()) / 3600000;
           setTotalHoursToday((prev) => prev + hrs);
+          const currentBreakMins = breakStart
+            ? breakTotalMins + Math.round((Date.now() - breakStart.getTime()) / 60000)
+            : breakTotalMins;
+          const netHrs = Math.max(0, hrs - currentBreakMins / 60);
+          const rate = (empRecord as any)?.hourly_rate ?? 0;
+          const payType = (empRecord as any)?.pay_type ?? "hourly";
+          setLastShift({ grossHrs: hrs, breakMins: currentBreakMins, netHrs, rate, payType });
+          setShiftSummaryOpen(true);
           setClockInTime(null);
+          setOnBreak(false);
+          setBreakStart(null);
+          setBreakTotalMins(0);
           toast.success("Clocked Out!", { description: `Worked ${hrs.toFixed(1)}h` });
         }
+        void queryClient.invalidateQueries({ queryKey: ["personal-dashboard-streak"] });
+        void queryClient.invalidateQueries({ queryKey: ["personal-dashboard-month"] });
+        void queryClient.invalidateQueries({ queryKey: ["personal-dashboard-coworkers"] });
         return { success: true, message: data.employee_name || "Success", action: data.action_performed };
       }
 
       return { success: false, message: data?.error || "Clock scan failed" };
     } catch (err: any) {
       return { success: false, message: err?.message || "Network error" };
+    }
+  };
+
+  const formatBreakElapsed = () => {
+    if (!breakStart) return "00:00";
+    const diff = Math.floor((Date.now() - breakStart.getTime()) / 1000);
+    const m = Math.floor(diff / 60).toString().padStart(2, "0");
+    const s = (diff % 60).toString().padStart(2, "0");
+    return `${m}:${s}`;
+  };
+
+  const handleBreakToggle = () => {
+    if (!onBreak) {
+      setBreakStart(new Date());
+      setOnBreak(true);
+      toast.info("Break started");
+    } else {
+      const mins = breakStart ? Math.round((Date.now() - breakStart.getTime()) / 60000) : 0;
+      setBreakTotalMins(prev => prev + mins);
+      setBreakStart(null);
+      setOnBreak(false);
+      toast.success(`Break ended — ${mins}m taken`);
     }
   };
 
@@ -471,10 +566,24 @@ const PersonalDashboard = () => {
       queryClient.invalidateQueries({ queryKey: ["personal-dashboard-coworkers"] }),
       queryClient.invalidateQueries({ queryKey: ["my-employee-record-dashboard"] }),
       queryClient.invalidateQueries({ queryKey: ["my-profile-dashboard"] }),
+      queryClient.invalidateQueries({ queryKey: ["personal-dashboard-weekly-hours"] }),
+      queryClient.invalidateQueries({ queryKey: ["personal-dashboard-clocked-days"] }),
     ]);
     setRefreshing(false);
     toast.success("Dashboard refreshed");
   };
+
+  const calendarDays = useMemo(() => {
+    const start = startOfMonth(calendarMonth);
+    const offset = (start.getDay() + 6) % 7; // Monday-indexed
+    const cells: (Date | null)[] = Array(offset).fill(null);
+    const daysInMonth = new Date(calendarMonth.getFullYear(), calendarMonth.getMonth() + 1, 0).getDate();
+    for (let d = 1; d <= daysInMonth; d++) {
+      cells.push(new Date(calendarMonth.getFullYear(), calendarMonth.getMonth(), d));
+    }
+    while (cells.length % 7 !== 0) cells.push(null);
+    return cells;
+  }, [calendarMonth]);
 
   const greeting = (() => {
     const h = new Date().getHours();
@@ -542,13 +651,15 @@ const PersonalDashboard = () => {
         {/* Header */}
         <div className="flex items-center gap-2.5 mb-3">
           <button
+            type="button"
+            aria-label="Go back"
             onClick={() => navigate(-1)}
             className="w-8 h-8 rounded-full bg-muted/60 flex items-center justify-center touch-manipulation active:scale-90 transition-transform"
           >
             <ArrowLeft className="w-4 h-4" />
           </button>
           <h1 className="font-bold text-[17px] flex-1">Workplace</h1>
-          <button
+          <button type="button"
             onClick={handleRefresh}
             disabled={refreshing}
             aria-label="Refresh"
@@ -623,7 +734,7 @@ const PersonalDashboard = () => {
             { icon: Briefcase, label: "Jobs", onClick: () => navigate("/personal/apply-job"), color: "text-indigo-500", bg: "bg-indigo-500/10" },
             { icon: HelpCircle, label: "Help", onClick: () => navigate("/personal/help"), color: "text-sky-500", bg: "bg-sky-500/10" },
           ].map((qa) => (
-            <button
+            <button type="button"
               key={qa.label}
               onClick={qa.onClick}
               className="flex flex-col items-center gap-1 p-2 rounded-xl border border-border/40 bg-card active:bg-muted/40 transition-colors"
@@ -711,7 +822,13 @@ const PersonalDashboard = () => {
 
           <div className="text-center mb-3">
             <p className="text-2xl font-mono font-bold tracking-wider">{formatElapsed()}</p>
-            <p className="text-[11px] text-muted-foreground">Today: {totalHoursToday.toFixed(1)}h logged</p>
+            {onBreak ? (
+              <p className="text-[11px] text-amber-500 font-semibold">On break · {formatBreakElapsed()}</p>
+            ) : (
+              <p className="text-[11px] text-muted-foreground">
+                Today: {totalHoursToday.toFixed(1)}h logged{breakTotalMins > 0 ? ` · ${breakTotalMins}m break` : ""}
+              </p>
+            )}
           </div>
 
           {/* Today's goal progress */}
@@ -741,6 +858,7 @@ const PersonalDashboard = () => {
           {/* QR-based Clock In/Out buttons */}
           <div className="flex gap-2">
             <button
+              type="button"
               onClick={() => setScannerOpen(true)}
               className={cn(
                 "flex-1 py-2.5 rounded-xl font-semibold text-[13px] flex items-center justify-center gap-1.5 touch-manipulation active:scale-[0.97] transition-all",
@@ -752,11 +870,24 @@ const PersonalDashboard = () => {
               <ScanLine className="w-3.5 h-3.5" />
               {clockStatus === "clocked-in" ? "Scan to Clock Out" : "Scan QR to Clock In"}
             </button>
+            {clockStatus === "clocked-in" && (
+              <button
+                type="button"
+                onClick={handleBreakToggle}
+                className={cn(
+                  "px-3 py-2.5 rounded-xl font-semibold text-[12px] flex items-center gap-1.5 touch-manipulation active:scale-[0.97] transition-all shrink-0",
+                  onBreak ? "bg-amber-500 text-white" : "bg-muted/70 text-foreground"
+                )}
+              >
+                <Coffee className="w-3.5 h-3.5" />
+                {onBreak ? formatBreakElapsed() : "Break"}
+              </button>
+            )}
           </div>
 
           {/* Show My QR toggle */}
           {empRecord && (
-            <button
+            <button type="button"
               onClick={() => setShowMyQR(!showMyQR)}
               className="w-full mt-2 py-2 rounded-xl border border-border/40 text-[12px] font-medium text-muted-foreground flex items-center justify-center gap-1.5 hover:bg-muted/30 transition-colors"
             >
@@ -784,7 +915,7 @@ const PersonalDashboard = () => {
 
         {/* Quick stats strip */}
         <div className="grid grid-cols-3 gap-2 mb-3">
-          <button
+          <button type="button"
             onClick={() => navigate("/personal/my-applications")}
             className="rounded-xl border border-border/40 bg-card p-2.5 text-left active:bg-muted/40 transition-colors"
           >
@@ -792,7 +923,7 @@ const PersonalDashboard = () => {
             <p className="text-lg font-bold leading-tight">{stats?.applications ?? "—"}</p>
             <p className="text-[10px] text-muted-foreground">jobs</p>
           </button>
-          <button
+          <button type="button"
             onClick={() => navigate("/personal/employer")}
             className="rounded-xl border border-border/40 bg-card p-2.5 text-left active:bg-muted/40 transition-colors"
           >
@@ -800,7 +931,7 @@ const PersonalDashboard = () => {
             <p className="text-lg font-bold leading-tight">{stats?.postedJobs ?? "—"}</p>
             <p className="text-[10px] text-muted-foreground">openings</p>
           </button>
-          <button
+          <button type="button"
             onClick={() => navigate("/personal/timesheet")}
             className="rounded-xl border border-border/40 bg-card p-2.5 text-left active:bg-muted/40 transition-colors"
           >
@@ -810,37 +941,203 @@ const PersonalDashboard = () => {
           </button>
         </div>
 
-        {/* Upcoming shift */}
+        {/* Shift Countdown Metric Card */}
         {upcomingShift && (() => {
           const meta = SHIFT_META[upcomingShift.shiftType] || SHIFT_META.full;
-          const Icon = meta.icon;
-          const whenLabel = upcomingShift.isToday
-            ? "Today"
-            : upcomingShift.daysAway === 1
-            ? "Tomorrow"
-            : format(upcomingShift.date, "EEE, MMM d");
+          const ShiftIcon = meta.icon;
+          const whenLabel = upcomingShift.isToday ? "Today" : upcomingShift.daysAway === 1 ? "Tomorrow" : format(upcomingShift.date, "EEE, MMM d");
+
+          // Compute hours until shift start
+          const shiftDate = new Date(upcomingShift.date);
+          const [sh, sm] = (upcomingShift.shiftStart || "09:00").split(":").map(Number);
+          shiftDate.setHours(sh, sm, 0, 0);
+          const diffMs = shiftDate.getTime() - Date.now();
+          const diffH = Math.floor(diffMs / 3600000);
+          const diffMin = Math.floor((diffMs % 3600000) / 60000);
+          const countdownStr = upcomingShift.isToday && clockStatus === "clocked-out"
+            ? (diffMs <= 0 ? "Starting now" : diffH > 0 ? `${diffH}h ${diffMin}m` : `${diffMin}m`)
+            : null;
+
+          const weeklyHrs = weekSummary?.hours ?? 0;
+          const weeklyTarget = (weekSummary?.shifts ?? 0) * DAILY_HOURS_TARGET;
+          const weeklyPct = weeklyTarget > 0 ? Math.min(100, (weeklyHrs / weeklyTarget) * 100) : 0;
+
           return (
-            <motion.button
+            <motion.div
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
-              onClick={() => navigate("/personal/schedule")}
-              className="w-full text-left rounded-xl p-3 mb-3 border border-border/40 bg-card flex items-center gap-3 active:bg-muted/40 transition-colors"
+              className="mb-3 rounded-xl border border-border/40 bg-card p-3.5 shadow-sm"
             >
-              <div className={cn("w-9 h-9 rounded-full flex items-center justify-center shrink-0", meta.bg)}>
-                <Icon className={cn("w-4 h-4", meta.color)} />
+              <div className="flex items-start gap-3 mb-3">
+                <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", meta.bg)}>
+                  <ShiftIcon className={cn("w-5 h-5", meta.color)} />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground leading-none mb-0.5">
+                    Next Shift · {whenLabel}
+                  </p>
+                  <p className="font-bold text-[13px] leading-tight truncate">
+                    {meta.label} · {upcomingShift.shiftStart}–{upcomingShift.shiftEnd}
+                  </p>
+                  {countdownStr && (
+                    <p className={cn("text-[11px] font-semibold mt-0.5", meta.color)}>
+                      Starts in {countdownStr}
+                    </p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  onClick={() => navigate("/personal/schedule")}
+                  className="shrink-0 text-[10px] font-bold text-primary bg-primary/10 border border-primary/20 rounded-lg px-2 py-1 touch-manipulation active:scale-95 transition-all"
+                >
+                  Schedule
+                </button>
               </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[11px] text-muted-foreground uppercase tracking-wide leading-tight">
-                  Next Shift · {whenLabel}
-                </p>
-                <p className="font-semibold text-[13px] leading-tight truncate">
-                  {meta.label} · {upcomingShift.shiftStart}–{upcomingShift.shiftEnd}
-                </p>
-              </div>
-              <ChevronRight className="w-3.5 h-3.5 text-muted-foreground/40 shrink-0" />
-            </motion.button>
+
+              {/* Weekly hours progress */}
+              {weekSummary && weekSummary.shifts > 0 && (
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <span className="text-[10px] font-semibold text-muted-foreground flex items-center gap-1">
+                      <BarChart3 className="w-3 h-3" /> This week
+                    </span>
+                    <span className="text-[10px] font-bold text-foreground">
+                      {weeklyHrs.toFixed(1)} / {weeklyTarget.toFixed(0)}h
+                    </span>
+                  </div>
+                  <div className="h-1.5 w-full rounded-full bg-muted overflow-hidden">
+                    <div
+                      className="h-full rounded-full bg-primary transition-all"
+                      style={{ width: `${weeklyPct}%` }}
+                    />
+                  </div>
+                  {weekSummary.earnings > 0 && (
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      Est. earnings: <span className="font-semibold text-emerald-500">${weekSummary.earnings.toFixed(2)}</span>
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Quick clock-in button when shift is today and user is clocked out */}
+              {upcomingShift.isToday && clockStatus === "clocked-out" && (
+                <button
+                  type="button"
+                  onClick={() => setScannerOpen(true)}
+                  className="mt-2.5 w-full py-2 rounded-xl bg-primary text-primary-foreground text-[12px] font-bold flex items-center justify-center gap-1.5 touch-manipulation active:scale-[0.98] transition-all"
+                >
+                  <QrCode className="w-3.5 h-3.5" /> Clock In Now
+                </button>
+              )}
+            </motion.div>
           );
         })()}
+
+        {/* Shift Calendar */}
+        {scheduleData && empRecord && (
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-3 rounded-xl border border-border/40 bg-card p-3.5"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-primary" />
+                <p className="text-[12px] font-semibold">My Schedule</p>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  aria-label="Previous month"
+                  onClick={() => setCalendarMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1))}
+                  className="w-6 h-6 rounded-full bg-muted/50 flex items-center justify-center touch-manipulation active:scale-90 transition-transform"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5 text-muted-foreground" />
+                </button>
+                <span className="text-[11px] font-semibold text-muted-foreground min-w-[68px] text-center">
+                  {format(calendarMonth, "MMM yyyy")}
+                </span>
+                <button
+                  type="button"
+                  aria-label="Next month"
+                  onClick={() => setCalendarMonth(m => new Date(m.getFullYear(), m.getMonth() + 1, 1))}
+                  className="w-6 h-6 rounded-full bg-muted/50 flex items-center justify-center touch-manipulation active:scale-90 transition-transform"
+                >
+                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground" />
+                </button>
+              </div>
+            </div>
+
+            {/* Day headers */}
+            <div className="grid grid-cols-7 mb-1">
+              {["Mo", "Tu", "We", "Th", "Fr", "Sa", "Su"].map(d => (
+                <div key={d} className="text-center text-[9px] font-bold text-muted-foreground/50">{d}</div>
+              ))}
+            </div>
+
+            {/* Day cells */}
+            <div className="grid grid-cols-7 gap-y-0.5">
+              {calendarDays.map((day, i) => {
+                if (!day) return <div key={i} />;
+                const dateStr = format(day, "yyyy-MM-dd");
+                const isDayOff = scheduleData.daysOff.some(
+                  (d) => d.employeeId === empRecord.id && d.date === dateStr
+                );
+                const dow = (day.getDay() + 6) % 7;
+                const hasShift = !isDayOff && scheduleData.assignments.some(
+                  (a) =>
+                    a.employeeId === empRecord.id &&
+                    a.workDays.includes(dow) &&
+                    (isAfter(day, new Date(a.startDate)) || isEqual(day, new Date(a.startDate))) &&
+                    (isAfter(new Date(a.endDate), day) || isEqual(new Date(a.endDate), day))
+                );
+                const isClockedIn = clockedDays?.includes(dateStr);
+                const isToday = format(new Date(), "yyyy-MM-dd") === dateStr;
+                return (
+                  <div
+                    key={i}
+                    className={cn(
+                      "flex flex-col items-center justify-center py-0.5 rounded text-[10px] font-medium",
+                      isToday && "ring-1 ring-primary ring-offset-1",
+                      isDayOff && "text-orange-500",
+                      hasShift && isClockedIn && "text-emerald-600 dark:text-emerald-400",
+                      hasShift && !isClockedIn && "text-primary",
+                      !hasShift && !isDayOff && "text-foreground/35"
+                    )}
+                  >
+                    <span>{day.getDate()}</span>
+                    {(hasShift || isDayOff) && (
+                      <span
+                        className={cn(
+                          "w-1 h-1 rounded-full",
+                          isDayOff && "bg-orange-400",
+                          hasShift && isClockedIn && "bg-emerald-500",
+                          hasShift && !isClockedIn && "bg-primary/60"
+                        )}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Legend */}
+            <div className="flex items-center gap-3 mt-3 pt-2.5 border-t border-border/20">
+              <div className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+                <span className="text-[9px] text-muted-foreground">Clocked in</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-primary/60 shrink-0" />
+                <span className="text-[9px] text-muted-foreground">Scheduled</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="w-2 h-2 rounded-full bg-orange-400 shrink-0" />
+                <span className="text-[9px] text-muted-foreground">Day off</span>
+              </div>
+            </div>
+          </motion.div>
+        )}
 
         {/* Week summary */}
         {weekSummary && weekSummary.shifts > 0 && (
@@ -909,6 +1206,70 @@ const PersonalDashboard = () => {
           </motion.button>
         )}
 
+        {/* Weekly performance chart */}
+        {weeklyHours && weeklyHours.some((w) => w.hours > 0) && (
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-3 rounded-xl border border-border/40 bg-card p-3.5"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-1.5">
+                <BarChart3 className="w-3.5 h-3.5 text-primary" />
+                <p className="text-[12px] font-semibold">Hours per Week</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate("/personal/timesheet")}
+                className="text-[11px] text-primary font-medium"
+              >
+                Full history
+              </button>
+            </div>
+            <ResponsiveContainer width="100%" height={110}>
+              <BarChart data={weeklyHours} barSize={18} margin={{ top: 4, right: 0, left: -28, bottom: 0 }}>
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <YAxis
+                  tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip
+                  cursor={{ fill: "hsl(var(--muted)/0.4)" }}
+                  contentStyle={{
+                    fontSize: 11,
+                    borderRadius: 8,
+                    border: "1px solid hsl(var(--border))",
+                    background: "hsl(var(--card))",
+                    color: "hsl(var(--foreground))",
+                  }}
+                  formatter={(value: number) => [`${value}h`, "Hours"]}
+                />
+                <ReferenceLine
+                  y={DAILY_HOURS_TARGET * 5}
+                  stroke="hsl(var(--muted-foreground))"
+                  strokeDasharray="3 3"
+                  strokeOpacity={0.4}
+                />
+                <Bar
+                  dataKey="hours"
+                  radius={[4, 4, 0, 0]}
+                  fill="hsl(var(--primary))"
+                  opacity={0.85}
+                />
+              </BarChart>
+            </ResponsiveContainer>
+            <p className="text-[10px] text-muted-foreground text-center mt-1">
+              Dashed line = {DAILY_HOURS_TARGET * 5}h weekly target
+            </p>
+          </motion.div>
+        )}
+
         {/* Coworkers online now */}
         {coworkersOnline && coworkersOnline.length > 0 && (
           <div className="mb-3">
@@ -922,7 +1283,7 @@ const PersonalDashboard = () => {
                   {coworkersOnline.length}
                 </span>
               </div>
-              <button
+              <button type="button"
                 onClick={() => navigate("/personal/employees")}
                 className="text-[11px] text-primary font-medium"
               >
@@ -969,7 +1330,7 @@ const PersonalDashboard = () => {
               <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                 Latest Jobs
               </p>
-              <button
+              <button type="button"
                 onClick={() => navigate("/personal/find-employee")}
                 className="text-[11px] text-primary font-medium"
               >
@@ -978,7 +1339,7 @@ const PersonalDashboard = () => {
             </div>
             <div className="rounded-xl border border-border/40 bg-card overflow-hidden divide-y divide-border/30">
               {recommendedJobs.map((j: any) => (
-                <button
+                <button type="button"
                   key={j.id}
                   onClick={() => navigate(`/personal/jobs/${j.id}`)}
                   className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-muted/30 active:bg-muted/50 transition-colors text-left"
@@ -1000,7 +1361,7 @@ const PersonalDashboard = () => {
                   </div>
                   {j.employment_type && (
                     <span className="text-[10px] uppercase tracking-wide px-1.5 py-0.5 rounded bg-muted/60 text-muted-foreground shrink-0">
-                      {String(j.employment_type).replace("_", " ")}
+                      {String(j.employment_type).replaceAll("_", " ")}
                     </span>
                   )}
                 </button>
@@ -1016,7 +1377,7 @@ const PersonalDashboard = () => {
               <p className="text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
                 Recent Applicants
               </p>
-              <button
+              <button type="button"
                 onClick={() => navigate("/personal/employer")}
                 className="text-[11px] text-primary font-medium"
               >
@@ -1025,7 +1386,7 @@ const PersonalDashboard = () => {
             </div>
             <div className="rounded-xl border border-border/40 bg-card overflow-hidden divide-y divide-border/30">
               {recentApplicants.map((a: any) => (
-                <button
+                <button type="button"
                   key={a.id}
                   onClick={() =>
                     a.career_jobs?.id &&
@@ -1107,6 +1468,48 @@ const PersonalDashboard = () => {
         onScan={handleQRScan}
         title={clockStatus === "clocked-in" ? "Scan to Clock Out" : "Scan to Clock In"}
       />
+
+      {/* Shift summary Sheet */}
+      <Sheet open={shiftSummaryOpen} onOpenChange={setShiftSummaryOpen}>
+        <SheetContent side="bottom" className="rounded-t-2xl pb-safe">
+          <SheetHeader className="mb-4">
+            <SheetTitle className="flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-emerald-500" /> Shift Complete
+            </SheetTitle>
+          </SheetHeader>
+          {lastShift && (
+            <div className="space-y-3">
+              <div className="grid grid-cols-3 gap-2">
+                {[
+                  { label: "Total time", value: `${lastShift.grossHrs.toFixed(1)}h` },
+                  { label: "Break", value: lastShift.breakMins > 0 ? `${lastShift.breakMins}m` : "—" },
+                  { label: "Net hours", value: `${lastShift.netHrs.toFixed(1)}h`, highlight: true },
+                ].map(({ label, value, highlight }) => (
+                  <div key={label} className={cn("rounded-xl border p-3 text-center", highlight ? "border-emerald-500/30 bg-emerald-500/5" : "border-border/40 bg-card")}>
+                    <p className="text-xs text-muted-foreground">{label}</p>
+                    <p className={cn("text-lg font-bold", highlight && "text-emerald-600 dark:text-emerald-400")}>{value}</p>
+                  </div>
+                ))}
+              </div>
+              {lastShift.rate > 0 && lastShift.payType === "hourly" && (
+                <div className="rounded-xl border border-border/40 bg-card p-3 flex items-center justify-between">
+                  <span className="text-sm text-muted-foreground">Estimated earnings</span>
+                  <span className="text-base font-bold text-emerald-600 dark:text-emerald-400">
+                    ${(lastShift.netHrs * lastShift.rate).toFixed(2)}
+                  </span>
+                </div>
+              )}
+              <button
+                type="button"
+                onClick={() => setShiftSummaryOpen(false)}
+                className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm touch-manipulation active:scale-[0.98] transition-all"
+              >
+                Done
+              </button>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </AppLayout>
   );
 };

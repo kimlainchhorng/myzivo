@@ -237,7 +237,7 @@ export default function PromosPage() {
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="flex items-center justify-between px-6 py-4">
-          <button
+          <button type="button"
             onClick={() => navigate(-1)}
             className="w-10 h-10 rounded-full bg-muted border border-border/50 flex items-center justify-center"
           >
@@ -312,7 +312,7 @@ export default function PromosPage() {
                 className="pl-9 pr-8 h-9 rounded-full bg-muted/40 border-border/40 text-xs"
               />
               {search && (
-                <button
+                <button type="button"
                   onClick={() => setSearch("")}
                   aria-label="Clear search"
                   className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:bg-muted/60"

@@ -142,7 +142,7 @@ export default function SavedPostsPage() {
         className="sticky top-0 z-30 flex items-center gap-3 border-b border-border/40 bg-background/95 px-4 py-3 backdrop-blur"
         style={{ paddingTop: "var(--zivo-safe-top-sticky)" }}
       >
-        <button
+        <button type="button"
           onClick={() => navigate(-1)}
           className="rounded-full p-2.5 hover:bg-muted/50 active:scale-95 transition-transform min-w-[44px] min-h-[44px] flex items-center justify-center"
           aria-label="Back"
@@ -161,7 +161,7 @@ export default function SavedPostsPage() {
         <div className="flex flex-col items-center justify-center gap-3 px-6 py-20 text-center">
           <Bookmark className="h-12 w-12 text-muted-foreground/40" />
           <p className="font-semibold">Sign in to see your saved posts</p>
-          <button
+          <button type="button"
             onClick={() => navigate("/login")}
             className="mt-2 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground"
           >
@@ -179,7 +179,7 @@ export default function SavedPostsPage() {
           <p className="text-sm text-muted-foreground">
             Tap the 3-dot menu on any post in your feed and choose "Save post" to bookmark it.
           </p>
-          <button
+          <button type="button"
             onClick={() => navigate("/feed")}
             className="mt-2 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground"
           >
@@ -231,12 +231,12 @@ export default function SavedPostsPage() {
               </div>
 
               {/* Tap targets */}
-              <button
+              <button type="button"
                 onClick={() => navigate(tile.feedHref)}
                 className="absolute inset-0 cursor-pointer focus:outline-none"
                 aria-label={`Open: ${tile.caption ?? "post"}`}
               />
-              <button
+              <button type="button"
                 onClick={(e) => { e.stopPropagation(); handleRemove(tile.bookmarkId); }}
                 className="absolute right-1.5 top-1.5 z-10 rounded-full bg-red-500/90 p-2 text-white shadow-lg opacity-0 group-hover:opacity-100 sm:group-hover:opacity-100 group-active:opacity-100 transition-opacity active:scale-90"
                 aria-label="Remove from saved"

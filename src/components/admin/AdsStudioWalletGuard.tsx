@@ -214,7 +214,7 @@ export default function AdsStudioWalletGuard({ storeId }: Props) {
             ) : ledger.map((row) => {
               const credit = row.entry_type === "topup" || row.entry_type === "refund";
               return (
-                <button
+                <button type="button"
                   key={row.id}
                   onClick={() => setLedgerDetail(row)}
                   className="flex items-center gap-2 p-2.5 sm:p-2 text-[12px] sm:text-[11px] w-full text-left hover:bg-muted/30 active:bg-muted/50 transition touch-manipulation"
@@ -261,7 +261,7 @@ export default function AdsStudioWalletGuard({ storeId }: Props) {
         <div className="space-y-4">
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
             {TOPUP_PRESETS.map((v) => (
-              <button
+              <button type="button"
                 key={v}
                 onClick={() => setTopupAmount(v)}
                 className={cn(

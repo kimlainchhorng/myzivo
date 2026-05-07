@@ -106,7 +106,7 @@ export default function TravelItineraryCard() {
             <p className="text-[10px] text-muted-foreground">{t("home.plan_adventure")}</p>
           </div>
         </div>
-        <button
+        <button type="button"
           onClick={() => navigate("/flights")}
           className="w-full flex items-center justify-center gap-1.5 text-xs font-semibold text-primary-foreground py-2.5 rounded-lg bg-primary touch-manipulation active:opacity-80 transition-opacity"
         >
@@ -178,7 +178,7 @@ export default function TravelItineraryCard() {
       </div>
 
       {/* CTA */}
-      <button
+      <button type="button"
         onClick={() => navigate("/trips")}
         className="mt-4 w-full flex items-center justify-center gap-1.5 text-xs font-semibold text-primary-foreground py-2.5 rounded-lg bg-primary touch-manipulation active:opacity-80 transition-opacity relative z-10"
       >

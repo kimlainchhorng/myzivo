@@ -81,7 +81,7 @@ export default function FeaturedCarsSection() {
 
         <div className="flex gap-2 mb-8 overflow-x-auto scrollbar-hide pb-1">
           {types.map(f => (
-            <button
+            <button type="button"
               key={f}
               onClick={() => setActive(f)}
               className={cn(active === f ? "chip-active" : "chip-inactive", "whitespace-nowrap hover:-translate-y-0.5 active:scale-95 transition-all touch-manipulation min-h-[36px]")}
@@ -123,7 +123,7 @@ export default function FeaturedCarsSection() {
                       Verified
                     </span>
                   )}
-                  <button
+                  <button type="button"
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); openShareToChat({ kind: "ride", title: store.name, subtitle: store.address || store.vehicle_type || "Car rental", meta: store.price_per_day != null ? `$${store.price_per_day}/day` : undefined, image: store.banner_url || store.logo_url || null, deepLink: store.slug ? `/store/${store.slug}` : "/rent-car" }); }}
                     className="absolute top-3 right-3 w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 hover:bg-card active:scale-90 touch-manipulation"
                     aria-label={`Share ${store.name}`}

@@ -72,7 +72,7 @@ export default function ChatFolders({ activeFolder, onSelectFolder }: ChatFolder
   return (
     <div className="flex gap-1.5 px-4 py-2 overflow-x-auto scrollbar-hide">
       {/* All chats */}
-      <button
+      <button type="button"
         onClick={() => onSelectFolder(null)}
         className={cn(
           "shrink-0 px-3 py-1.5 rounded-full text-xs font-medium transition-colors",
@@ -83,7 +83,7 @@ export default function ChatFolders({ activeFolder, onSelectFolder }: ChatFolder
       </button>
 
       {folders.map((f) => (
-        <button
+        <button type="button"
           key={f.id}
           onClick={() => onSelectFolder(f.id)}
           onDoubleClick={() => deleteFolder(f.id)}
@@ -97,7 +97,7 @@ export default function ChatFolders({ activeFolder, onSelectFolder }: ChatFolder
       ))}
 
       {/* Add folder */}
-      <button
+      <button type="button"
         onClick={() => setShowCreate(true)}
         className="shrink-0 h-7 w-7 rounded-full bg-muted/50 flex items-center justify-center"
       >
@@ -117,11 +117,11 @@ export default function ChatFolders({ activeFolder, onSelectFolder }: ChatFolder
             <div className="bg-background rounded-2xl p-4 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-3">
                 <h3 className="text-sm font-semibold">New Folder</h3>
-                <button onClick={() => setShowCreate(false)}><X className="h-4 w-4" /></button>
+                <button type="button" onClick={() => setShowCreate(false)}><X className="h-4 w-4" /></button>
               </div>
               <div className="flex gap-1.5 mb-3">
                 {icons.map((ic) => (
-                  <button
+                  <button type="button"
                     key={ic}
                     onClick={() => setNewIcon(ic)}
                     className={cn("text-lg p-1.5 rounded-lg", newIcon === ic && "bg-primary/10 ring-1 ring-primary/30")}
@@ -137,7 +137,7 @@ export default function ChatFolders({ activeFolder, onSelectFolder }: ChatFolder
                 className="w-full px-3 py-2.5 rounded-xl bg-muted/30 border border-border/40 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-primary/30"
                 autoFocus
               />
-              <button onClick={createFolder} className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium">
+              <button type="button" onClick={createFolder} className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium">
                 Create Folder
               </button>
             </div>

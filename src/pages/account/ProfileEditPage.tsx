@@ -167,7 +167,7 @@ function DesktopSidebar({ activeSection, onSectionClick }: { activeSection: stri
           const isActive = activeSection === section.id;
           const Icon = section.icon;
           return (
-            <button
+            <button type="button"
               key={section.id}
               onClick={() => onSectionClick(section.id)}
               className={cn(
@@ -329,7 +329,7 @@ export default function ProfileEditPage() {
                     <AvatarImage src={avatarPreview || profile?.avatar_url || undefined} alt="Profile" />
                     <AvatarFallback className="bg-gradient-to-br from-primary to-primary/60 text-primary-foreground text-2xl font-bold">{getInitials()}</AvatarFallback>
                   </Avatar>
-                  <button onClick={handleAvatarClick} disabled={uploadAvatar.isPending} className="absolute bottom-0 right-0 p-2.5 bg-primary text-primary-foreground rounded-full shadow-xl ring-2 ring-background disabled:opacity-50">
+                  <button type="button" onClick={handleAvatarClick} disabled={uploadAvatar.isPending} className="absolute bottom-0 right-0 p-2.5 bg-primary text-primary-foreground rounded-full shadow-xl ring-2 ring-background disabled:opacity-50">
                     {uploadAvatar.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Camera className="h-4 w-4" />}
                   </button>
                   <input ref={fileInputRef} type="file" accept="image/jpeg,image/png,image/webp" onChange={handleFileChange} className="hidden" />
@@ -437,7 +437,7 @@ export default function ProfileEditPage() {
                   const isActive = current === opt.value;
                   const Icon = opt.icon;
                   return (
-                    <button key={opt.value} type="button" disabled={updateProfile.isPending} onClick={async () => {
+                    <button type="button" key={opt.value} type="button" disabled={updateProfile.isPending} onClick={async () => {
                       if (isActive) return;
                       try { await updateProfile.mutateAsync({ profile_visibility: opt.value }); }
                       catch (e: any) { toast.error(e?.message || "Failed to update visibility"); }
@@ -500,7 +500,7 @@ export default function ProfileEditPage() {
                     const isActive = current === opt.value;
                     const Icon = opt.icon;
                     return (
-                      <button key={opt.value} type="button" disabled={updateProfile.isPending} onClick={async () => {
+                      <button type="button" key={opt.value} type="button" disabled={updateProfile.isPending} onClick={async () => {
                         if (isActive) return;
                         try { await updateProfile.mutateAsync({ comment_control: opt.value }); }
                         catch (e: any) { toast.error(e?.message || "Failed to update setting"); }

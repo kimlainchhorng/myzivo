@@ -125,7 +125,7 @@ export default function StoryDebugPanel() {
   return (
     <>
       {/* Toggle button */}
-      <button
+      <button type="button"
         onClick={() => setOpen((v) => !v)}
         className="fixed bottom-24 right-3 z-[2000] h-11 w-11 rounded-full bg-foreground text-background shadow-lg flex items-center justify-center active:scale-95"
         aria-label="Story debug panel"
@@ -139,7 +139,7 @@ export default function StoryDebugPanel() {
             <p className="text-sm font-bold flex items-center gap-1.5">
               <Bug className="h-4 w-4" /> Stories debug
             </p>
-            <button
+            <button type="button"
               onClick={() => setOpen(false)}
               className="h-7 w-7 rounded-full hover:bg-muted flex items-center justify-center"
               aria-label="Close"
@@ -154,7 +154,7 @@ export default function StoryDebugPanel() {
               <p className="font-bold uppercase tracking-wide text-[10px] text-muted-foreground">
                 Database (direct)
               </p>
-              <button
+              <button type="button"
                 onClick={() => refetchDb()}
                 disabled={dbFetching}
                 className="h-6 px-2 rounded-full bg-muted text-[10px] font-bold flex items-center gap-1 disabled:opacity-50"
@@ -221,7 +221,7 @@ export default function StoryDebugPanel() {
           </div>
 
           {/* Actions */}
-          <button
+          <button type="button"
             onClick={() => {
               invalidateAllStoryCaches(queryClient, user.id);
               refetchDb();
@@ -232,7 +232,7 @@ export default function StoryDebugPanel() {
           </button>
 
           <p className="mt-2 text-[10px] text-muted-foreground text-center">
-            <button
+            <button type="button"
               className="underline"
               onClick={() => {
                 try {

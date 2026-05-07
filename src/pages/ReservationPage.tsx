@@ -141,7 +141,7 @@ export default function ReservationPage() {
       <div className="relative h-44 w-full overflow-hidden">
         <img src={cover} alt="" className="absolute inset-0 w-full h-full object-cover" />
         <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-black/20" />
-        <button
+        <button type="button"
           onClick={() => navigate(-1)}
           style={{ top: 'calc(env(safe-area-inset-top, 0px) + 0.75rem)' }}
           className="absolute left-3 w-10 h-10 rounded-full bg-black/40 backdrop-blur flex items-center justify-center text-white"
@@ -188,7 +188,7 @@ export default function ReservationPage() {
               </Label>
               <div className="flex flex-wrap gap-2">
                 {PARTY_SIZES.map((n) => (
-                  <button
+                  <button type="button"
                     key={n}
                     onClick={() => setParty(n)}
                     className={`min-w-[44px] h-11 px-4 rounded-xl border text-sm font-bold transition-all touch-manipulation ${
@@ -211,7 +211,7 @@ export default function ReservationPage() {
               </Label>
               <div className="grid grid-cols-4 gap-2">
                 {TIMES.map((t) => (
-                  <button
+                  <button type="button"
                     key={t}
                     onClick={() => setTime(t)}
                     className={`h-11 rounded-xl border text-sm font-semibold transition-all touch-manipulation ${

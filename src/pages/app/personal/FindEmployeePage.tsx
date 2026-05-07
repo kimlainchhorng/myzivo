@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useSmartBack } from "@/lib/smartBack";
 import FindTalentTab from "@/components/careers/FindTalentTab";
+import { cn } from "@/lib/utils";
 
 type CareerCompany = {
   id: string;
@@ -45,6 +46,8 @@ export default function FindEmployeePage() {
   const [jobs, setJobs] = useState<CareerJob[]>([]);
   const [loading, setLoading] = useState(true);
   const [isEmployer, setIsEmployer] = useState(false);
+  const [filterType, setFilterType] = useState<"all" | "remote" | "full_time" | "part_time" | "contract">("all");
+  const [visibleCount, setVisibleCount] = useState(15);
 
   useEffect(() => {
     let cancel = false;
@@ -73,15 +76,23 @@ export default function FindEmployeePage() {
     })();
   }, [user]);
 
+  // Reset pagination when filter/search changes
+  useEffect(() => { setVisibleCount(15); }, [q, filterType]);
+
   const filteredJobs = useMemo(() => {
     const s = q.trim().toLowerCase();
-    if (!s) return jobs;
-    return jobs.filter(j =>
-      j.title.toLowerCase().includes(s) ||
-      (j.location ?? "").toLowerCase().includes(s) ||
-      (j.career_companies?.name ?? "").toLowerCase().includes(s)
-    );
-  }, [q, jobs]);
+    let result = jobs;
+    if (s) {
+      result = result.filter(j =>
+        j.title.toLowerCase().includes(s) ||
+        (j.location ?? "").toLowerCase().includes(s) ||
+        (j.career_companies?.name ?? "").toLowerCase().includes(s)
+      );
+    }
+    if (filterType === "remote") result = result.filter(j => j.is_remote);
+    else if (filterType !== "all") result = result.filter(j => j.employment_type === filterType);
+    return result;
+  }, [q, jobs, filterType]);
 
   const filteredCompanies = useMemo(() => {
     const s = q.trim().toLowerCase();
@@ -100,11 +111,18 @@ export default function FindEmployeePage() {
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <h1 className="text-lg font-bold">Careers</h1>
-        {user && (
-          <Button size="sm" variant="outline" className="ml-auto" onClick={() => navigate("/personal/my-applications")}>
-            <FileText className="mr-1 h-4 w-4" /> My Apps
-          </Button>
-        )}
+        <div className="ml-auto flex items-center gap-2">
+          {user && (
+            <Button size="sm" variant="outline" onClick={() => navigate("/personal/my-applications")}>
+              <FileText className="mr-1 h-4 w-4" /> My Apps
+            </Button>
+          )}
+          {isEmployer && (
+            <Button size="sm" variant="outline" onClick={() => navigate("/personal/employer")}>
+              <Building2 className="mr-1 h-4 w-4" /> My Jobs
+            </Button>
+          )}
+        </div>
       </header>
 
       <div className="space-y-4 p-4">
@@ -118,19 +136,41 @@ export default function FindEmployeePage() {
           />
         </div>
 
-        <Card className="flex items-center justify-between gap-3 p-3">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10">
-              <Building2 className="h-5 w-5 text-emerald-500" />
+        {/* Filter chips */}
+        <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+          {(["all", "remote", "full_time", "part_time", "contract"] as const).map(f => (
+            <button type="button" key={f} type="button" onClick={() => setFilterType(f)}
+              className={cn("shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition-colors",
+                filterType === f ? "bg-foreground text-background" : "bg-muted text-muted-foreground hover:bg-muted/80")}>
+              {f === "all" ? "All" : f === "remote" ? "Remote" : f === "full_time" ? "Full-time" : f === "part_time" ? "Part-time" : "Contract"}
+            </button>
+          ))}
+        </div>
+
+        <Card className="p-3">
+          <div className="flex items-center justify-between gap-3">
+            <div className="flex items-center gap-3">
+              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/10">
+                <Building2 className="h-5 w-5 text-emerald-500" />
+              </div>
+              <div>
+                <div className="text-sm font-semibold">Are you hiring?</div>
+                <div className="text-xs text-muted-foreground">Partner accounts can post jobs</div>
+              </div>
             </div>
-            <div>
-              <div className="text-sm font-semibold">Are you hiring?</div>
-              <div className="text-xs text-muted-foreground">Post jobs as a Partner</div>
-            </div>
+            <Button size="sm" onClick={() => navigate("/personal/employer")}>
+              <Plus className="mr-1 h-4 w-4" /> Post
+            </Button>
           </div>
-          <Button size="sm" onClick={() => navigate("/personal/employer")}>
-            <Plus className="mr-1 h-4 w-4" /> Post
-          </Button>
+          {!isEmployer && (
+            <button
+              type="button"
+              className="mt-2 w-full rounded-md bg-emerald-500/10 py-1.5 text-xs font-medium text-emerald-600 hover:bg-emerald-500/20 transition-colors"
+              onClick={() => navigate("/become-partner")}
+            >
+              Not a Partner yet? Apply for Partner access →
+            </button>
+          )}
         </Card>
 
         <Tabs value={tab} onValueChange={v => setTab(v as any)}>
@@ -156,9 +196,9 @@ export default function FindEmployeePage() {
           <TabsContent value="jobs" className="mt-3 space-y-2">
             {loading && <p className="text-center text-sm text-muted-foreground">Loading…</p>}
             {!loading && filteredJobs.length === 0 && (
-              <Card className="p-6 text-center text-sm text-muted-foreground">No open jobs yet.</Card>
+              <Card className="p-6 text-center text-sm text-muted-foreground">No open jobs match your filters.</Card>
             )}
-            {filteredJobs.map(j => (
+            {filteredJobs.slice(0, visibleCount).map(j => (
               <Card key={j.id} className="cursor-pointer p-4 transition-colors hover:bg-accent" onClick={() => navigate(`/personal/jobs/${j.id}`)}>
                 <div className="flex items-start gap-3">
                   <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted">
@@ -175,7 +215,7 @@ export default function FindEmployeePage() {
                       {(j.location || j.is_remote) && (
                         <span className="inline-flex items-center gap-1"><MapPin className="h-3 w-3" />{j.is_remote ? "Remote" : j.location}</span>
                       )}
-                      {j.employment_type && <span className="rounded-full bg-muted px-2 py-0.5">{j.employment_type.replace("_", " ")}</span>}
+                      {j.employment_type && <span className="rounded-full bg-muted px-2 py-0.5">{j.employment_type.replaceAll("_", " ")}</span>}
                       {(j.salary_min || j.salary_max) && (
                         <span className="font-medium text-foreground">
                           {j.salary_currency ?? "USD"} {j.salary_min ?? "?"}–{j.salary_max ?? "?"}
@@ -187,6 +227,11 @@ export default function FindEmployeePage() {
                 </div>
               </Card>
             ))}
+            {filteredJobs.length > visibleCount && (
+              <Button variant="outline" className="w-full" onClick={() => setVisibleCount(v => v + 15)}>
+                Load More ({filteredJobs.length - visibleCount} more)
+              </Button>
+            )}
           </TabsContent>
 
           <TabsContent value="companies" className="mt-3 space-y-2">

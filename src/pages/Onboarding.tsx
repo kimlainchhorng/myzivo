@@ -58,7 +58,7 @@ export default function Onboarding() {
   return (
     <div className="min-h-[100dvh] flex flex-col items-center justify-center bg-background px-6">
       {/* Skip */}
-      <button
+      <button type="button"
         onClick={finish}
         className="absolute top-6 right-6 text-sm text-muted-foreground hover:text-foreground transition-colors z-10"
       >

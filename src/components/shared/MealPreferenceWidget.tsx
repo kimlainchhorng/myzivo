@@ -112,7 +112,7 @@ const MealPreferenceWidget = ({
           const isSelected = selectedMeal?.id === meal.id;
           
           return (
-            <button
+            <button type="button"
               key={meal.id}
               onClick={() => handleMealClick(meal)}
               className={cn(

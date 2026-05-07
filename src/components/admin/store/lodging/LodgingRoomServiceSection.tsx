@@ -212,7 +212,7 @@ export default function LodgingRoomServiceSection({ storeId }: { storeId: string
         {/* Filter */}
         <div className="flex gap-1.5 flex-wrap">
           {(["active", "all", "placed", "preparing", "on_the_way", "delivered", "cancelled"] as const).map(s => (
-            <button key={s} onClick={() => setFilterStatus(s as any)}
+            <button type="button" key={s} onClick={() => setFilterStatus(s as any)}
               className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${filterStatus === s ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-muted-foreground"}`}>
               {s === "active" ? "Active" : s === "all" ? "All" : STATUS_LABEL[s as OrderStatus]}
             </button>

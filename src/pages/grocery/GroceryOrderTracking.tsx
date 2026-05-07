@@ -228,14 +228,14 @@ export default function GroceryOrderTracking() {
       <div className="relative max-w-md mx-auto px-5">
         {/* Header */}
         <div className="flex items-center gap-3 pt-12 pb-4">
-          <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-xl hover:bg-muted/40 transition-colors">
+          <button type="button" onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-xl hover:bg-muted/40 transition-colors">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="flex-1">
             <h1 className="text-lg font-extrabold tracking-tight">Track Order</h1>
             <p className="text-[11px] text-muted-foreground">from {order.store}</p>
           </div>
-          <button onClick={copyId} className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
+          <button type="button" onClick={copyId} className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors">
             <span className="text-[10px] font-mono font-bold">{orderId?.slice(0, 8).toUpperCase()}</span>
             <Copy className="h-3 w-3 text-muted-foreground" />
           </button>
@@ -334,10 +334,10 @@ export default function GroceryOrderTracking() {
                   </div>
                 </div>
                 <div className="flex gap-2">
-                  <button className="h-10 w-10 rounded-xl bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors">
+                  <button type="button" className="h-10 w-10 rounded-xl bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors">
                     <MessageSquare className="h-4 w-4 text-primary" />
                   </button>
-                  <button className="h-10 w-10 rounded-xl bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors">
+                  <button type="button" className="h-10 w-10 rounded-xl bg-primary/10 hover:bg-primary/20 flex items-center justify-center transition-colors">
                     <Phone className="h-4 w-4 text-primary" />
                   </button>
                 </div>
@@ -442,7 +442,7 @@ export default function GroceryOrderTracking() {
           transition={{ delay: 0.35 }}
           className="rounded-2xl bg-card border border-border/20 overflow-hidden mb-4"
         >
-          <button
+          <button type="button"
             onClick={() => setShowItems(v => !v)}
             className="w-full flex items-center justify-between p-4 hover:bg-muted/10 transition-colors"
           >

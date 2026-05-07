@@ -2342,7 +2342,7 @@ export default function AdminStoreEditPage() {
                 </div>
                 <div className="overflow-y-auto max-h-[360px] p-1">
                   {activeLanguages.map(lang => (
-                    <button
+                    <button type="button"
                       key={lang.code}
                       onClick={() => { changeLanguage(lang.code); setIsLangOpen(false); }}
                       className={cn(
@@ -2446,7 +2446,7 @@ export default function AdminStoreEditPage() {
                   )}
                   {isRepos ? (
                     <div className="absolute top-1.5 right-1.5 flex gap-1">
-                      <button
+                      <button type="button"
                         onClick={async () => {
                           setRepositioningGalleryIdx(null);
                           const { error } = await supabase.from("store_profiles").update({ gallery_positions: galleryPositions } as any).eq("id", storeId!);
@@ -2457,7 +2457,7 @@ export default function AdminStoreEditPage() {
                       >
                         <Check className="h-3 w-3" />
                       </button>
-                      <button
+                      <button type="button"
                         onClick={() => {
                           setRepositioningGalleryIdx(null);
                           setGalleryPositions(prev => ({ ...prev, [url]: galleryDragStartPos }));
@@ -2469,13 +2469,13 @@ export default function AdminStoreEditPage() {
                     </div>
                   ) : (
                     <div className="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      <button
+                      <button type="button"
                         onClick={() => { setRepositioningGalleryIdx(i); setGalleryDragStartPos(pos); }}
                         className="h-6 w-6 rounded-full bg-background/80 backdrop-blur-sm text-foreground flex items-center justify-center shadow-lg border border-border"
                       >
                         <Move className="h-3 w-3" />
                       </button>
-                      <button
+                      <button type="button"
                         onClick={() => removeGalleryImage(i)}
                         className="h-6 w-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg"
                       >
@@ -2487,7 +2487,7 @@ export default function AdminStoreEditPage() {
                 );
               })}
               {galleryImages.length < 20 && (
-                <button
+                <button type="button"
                   onClick={() => galleryInputRef.current?.click()}
                   disabled={uploadingGallery}
                   className="aspect-video rounded-xl border-2 border-dashed border-border hover:border-primary/40 flex flex-col items-center justify-center gap-1.5 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
@@ -2655,10 +2655,10 @@ export default function AdminStoreEditPage() {
                               <span className="text-[9px] text-muted-foreground">{postDate}</span>
                             </div>
                             <div className="flex items-center gap-1">
-                              <button onClick={(e) => { e.stopPropagation(); openEditPost(post); }} className="h-5 w-5 rounded-full hover:bg-muted flex items-center justify-center transition-colors" title="Edit">
+                              <button type="button" onClick={(e) => { e.stopPropagation(); openEditPost(post); }} className="h-5 w-5 rounded-full hover:bg-muted flex items-center justify-center transition-colors" title="Edit">
                                 <Edit className="h-3 w-3 text-muted-foreground" />
                               </button>
-                              <button onClick={(e) => { e.stopPropagation(); setDeletePostId(post.id); }} className="h-5 w-5 rounded-full hover:bg-destructive/10 flex items-center justify-center transition-colors" title="Delete">
+                              <button type="button" onClick={(e) => { e.stopPropagation(); setDeletePostId(post.id); }} className="h-5 w-5 rounded-full hover:bg-destructive/10 flex items-center justify-center transition-colors" title="Delete">
                                 <Trash2 className="h-3 w-3 text-destructive" />
                               </button>
                             </div>
@@ -2743,7 +2743,7 @@ export default function AdminStoreEditPage() {
                   { label: "Vehicles on File", value: arStats.vehicleCount, sub: "customer vehicles", color: "text-blue-500", tab: "ar-vehicles" },
                   { label: "Total Revenue", value: `$${(arStats.paidRevenue / 100).toLocaleString()}`, sub: "all-time paid", color: "text-emerald-500", tab: "ar-fin-income" },
                 ].map((stat) => (
-                  <button
+                  <button type="button"
                     key={stat.tab}
                     onClick={() => handleTabChange(stat.tab)}
                     className="text-left p-4 rounded-2xl bg-muted/40 hover:bg-muted/70 active:scale-95 transition-all border border-border/10"
@@ -2820,7 +2820,7 @@ export default function AdminStoreEditPage() {
                       )}
                       {isRepos ? (
                         <div className="absolute top-1.5 right-1.5 flex gap-1">
-                          <button
+                          <button type="button"
                             onClick={async () => {
                               setRepositioningGalleryIdx(null);
                               const { error } = await supabase.from("store_profiles").update({ gallery_positions: galleryPositions } as any).eq("id", storeId!);
@@ -2831,7 +2831,7 @@ export default function AdminStoreEditPage() {
                           >
                             <Check className="h-3 w-3" />
                           </button>
-                          <button
+                          <button type="button"
                             onClick={() => {
                               setRepositioningGalleryIdx(null);
                               setGalleryPositions(prev => ({ ...prev, [url]: galleryDragStartPos }));
@@ -2843,13 +2843,13 @@ export default function AdminStoreEditPage() {
                         </div>
                       ) : (
                         <div className="absolute top-1.5 right-1.5 flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                          <button
+                          <button type="button"
                             onClick={() => { setRepositioningGalleryIdx(i); setGalleryDragStartPos(pos); }}
                             className="h-6 w-6 rounded-full bg-background/80 backdrop-blur-sm text-foreground flex items-center justify-center shadow-lg border border-border"
                           >
                             <Move className="h-3 w-3" />
                           </button>
-                          <button
+                          <button type="button"
                             onClick={() => removeGalleryImage(i)}
                             className="h-6 w-6 rounded-full bg-destructive text-destructive-foreground flex items-center justify-center shadow-lg"
                           >
@@ -2861,7 +2861,7 @@ export default function AdminStoreEditPage() {
                     );
                   })}
                   {galleryImages.length < 20 && (
-                    <button
+                    <button type="button"
                       onClick={() => galleryInputRef.current?.click()}
                       disabled={uploadingGallery}
                       className="aspect-video rounded-xl border-2 border-dashed border-border hover:border-primary/40 flex flex-col items-center justify-center gap-1.5 text-muted-foreground hover:text-primary transition-colors cursor-pointer"
@@ -3247,7 +3247,7 @@ export default function AdminStoreEditPage() {
                                   const dateStr = getHolidayDate(h, currentYear);
                                   const isAdded = holidayDates.has(dateStr);
                                   return (
-                                    <button
+                                    <button type="button"
                                       key={h.name}
                                       onClick={() => {
                                         if (isAdded) {
@@ -3284,7 +3284,7 @@ export default function AdminStoreEditPage() {
                                   placeholder="e.g. New Year's Day"
                                   className="h-6 text-xs w-32 bg-background"
                                 />
-                                <button onClick={() => removeHoliday(h.date)} className="text-destructive hover:text-destructive/80">
+                                <button type="button" onClick={() => removeHoliday(h.date)} className="text-destructive hover:text-destructive/80">
                                   <X className="h-3 w-3" />
                                 </button>
                               </div>
@@ -3709,7 +3709,7 @@ export default function AdminStoreEditPage() {
                       const allCats = Array.from(new Set(products.map((p: any) => p.category).filter(Boolean))).sort() as string[];
                       return (
                         <div className="flex items-center gap-2 overflow-x-auto pb-2 scrollbar-hide">
-                          <button
+                          <button type="button"
                             onClick={() => setProductCategoryFilter("")}
                             className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
                               !productCategoryFilter
@@ -3722,7 +3722,7 @@ export default function AdminStoreEditPage() {
                           {allCats.map(cat => {
                             const count = products.filter((p: any) => p.category === cat).length;
                             return (
-                              <button
+                              <button type="button"
                                 key={cat}
                                 onClick={() => setProductCategoryFilter(productCategoryFilter === cat ? "" : cat)}
                                 className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
@@ -3736,7 +3736,7 @@ export default function AdminStoreEditPage() {
                             );
                           })}
                           {products.some((p: any) => !p.category) && (
-                            <button
+                            <button type="button"
                               onClick={() => setProductCategoryFilter("__uncategorized__")}
                               className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold border transition-colors ${
                                 productCategoryFilter === "__uncategorized__"
@@ -3819,7 +3819,7 @@ export default function AdminStoreEditPage() {
                         {(["monday","tuesday","wednesday","thursday","friday","saturday","sunday"] as const).map(dayKey => {
                           const dayEn = dayKey.charAt(0).toUpperCase() + dayKey.slice(1);
                           return (
-                            <button
+                            <button type="button"
                               key={dayEn}
                               type="button"
                               onClick={() => {
@@ -4857,7 +4857,7 @@ export default function AdminStoreEditPage() {
                   <Label>Unit / ឯកតា</Label>
                   <div className="flex flex-wrap gap-1.5">
                     {["ចំនួន", "គីឡូ", "កញ្ចប់", "ដប", "កំប៉ុង", "ប្រអប់", "ដុំ", "ចាន", "កែវ", "ថង់", "kg", "g", "pcs", "pack", "bottle", "box", "liter", "dozen"].map(u => (
-                      <button
+                      <button type="button"
                         key={u}
                         type="button"
                         onClick={() => updateProductField("unit", productForm.unit === u ? "" : u)}
@@ -4995,7 +4995,7 @@ export default function AdminStoreEditPage() {
                       { value: "organic", label: "🌿 Organic / ធម្មជាតិ", color: "bg-green-500/15 text-green-500 border-green-500/30" },
                       { value: "imported", label: "✈️ Imported / នាំចូល", color: "bg-violet-500/15 text-violet-500 border-violet-500/30" },
                     ].map(b => (
-                      <button
+                      <button type="button"
                         key={b.value}
                         type="button"
                         onClick={() => updateProductField("badge", productForm.badge === b.value ? "" : b.value)}
@@ -5495,7 +5495,7 @@ export default function AdminStoreEditPage() {
                               <p className="text-xs text-foreground">{comment.content}</p>
                               <span className="text-[10px] text-muted-foreground">{format(new Date(comment.created_at), "MMM d, h:mm a")}</span>
                             </div>
-                            <button onClick={() => deleteComment.mutate(comment.id)} className="shrink-0 h-5 w-5 rounded-full hover:bg-destructive/10 flex items-center justify-center">
+                            <button type="button" onClick={() => deleteComment.mutate(comment.id)} className="shrink-0 h-5 w-5 rounded-full hover:bg-destructive/10 flex items-center justify-center">
                               <Trash2 className="h-3 w-3 text-destructive" />
                             </button>
                           </div>

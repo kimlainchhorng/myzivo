@@ -116,7 +116,7 @@ export function LodgingStaySelector({
         {/* Check-in */}
         <Popover>
           <PopoverTrigger asChild disabled={locked}>
-            <button className="flex flex-col items-start p-2 rounded-lg hover:bg-muted/50 transition text-left" disabled={locked}>
+            <button type="button" className="flex flex-col items-start p-2 rounded-lg hover:bg-muted/50 transition text-left" disabled={locked}>
               <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Check-in</span>
               <span className="text-xs font-semibold text-foreground flex items-center gap-1 mt-0.5">
                 <CalendarIcon className="h-3 w-3" />
@@ -157,7 +157,7 @@ export function LodgingStaySelector({
         {/* Check-out */}
         <Popover>
           <PopoverTrigger asChild disabled={locked}>
-            <button className="flex flex-col items-start p-2 rounded-lg hover:bg-muted/50 transition text-left border-l border-border/50" disabled={locked}>
+            <button type="button" className="flex flex-col items-start p-2 rounded-lg hover:bg-muted/50 transition text-left border-l border-border/50" disabled={locked}>
               <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Check-out</span>
               <span className="text-xs font-semibold text-foreground flex items-center gap-1 mt-0.5">
                 <CalendarIcon className="h-3 w-3" />
@@ -195,7 +195,7 @@ export function LodgingStaySelector({
         {/* Guests */}
         <Popover open={openGuests} onOpenChange={(v) => !locked && setOpenGuests(v)}>
           <PopoverTrigger asChild disabled={locked}>
-            <button className="flex flex-col items-start p-2 rounded-lg hover:bg-muted/50 transition text-left border-l border-border/50" disabled={locked}>
+            <button type="button" className="flex flex-col items-start p-2 rounded-lg hover:bg-muted/50 transition text-left border-l border-border/50" disabled={locked}>
               <span className="text-[9px] font-bold text-muted-foreground uppercase tracking-wide">Guests</span>
               <span className="text-xs font-semibold text-foreground flex items-center gap-1 mt-0.5">
                 <Users className="h-3 w-3" />

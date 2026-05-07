@@ -383,7 +383,7 @@ const TravelCheckoutPage = () => {
                       </div>
                       {appliedPromo.description && <p className="text-[10px] text-emerald-600/80 dark:text-emerald-400/80 truncate">{appliedPromo.description}</p>}
                     </div>
-                    <button onClick={handleRemovePromo} className="p-1 rounded-xl hover:bg-emerald-500/10" aria-label="Remove promo">
+                    <button type="button" onClick={handleRemovePromo} className="p-1 rounded-xl hover:bg-emerald-500/10" aria-label="Remove promo">
                       <X className="w-3.5 h-3.5 text-emerald-500" />
                     </button>
                   </div>

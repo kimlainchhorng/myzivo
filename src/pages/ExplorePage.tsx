@@ -169,7 +169,7 @@ export default function ExplorePage() {
               className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-muted/50 border border-border/40 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
             {search && (
-              <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2">
+              <button type="button" onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2">
                 <X className="h-4 w-4 text-muted-foreground" />
               </button>
             )}
@@ -179,7 +179,7 @@ export default function ExplorePage() {
         {/* Tabs */}
         <div className="flex gap-1 px-4 pb-2">
           {tabs.map((t) => (
-            <button
+            <button type="button"
               key={t.id}
               onClick={() => setActiveTab(t.id)}
               className={cn(
@@ -206,7 +206,7 @@ export default function ExplorePage() {
           <div className="p-4 space-y-2">
             {loadingUsers && <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />}
             {searchResults.map((u: any) => (
-              <button
+              <button type="button"
                 key={u.id}
                 onClick={() => navigate(`/profile/${u.id}`)}
                 className="w-full flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40 hover:bg-accent/50 transition-colors"
@@ -272,7 +272,7 @@ export default function ExplorePage() {
             <h3 className="text-sm font-semibold text-foreground mb-3">Suggested for you</h3>
             {loadingSuggested && <Loader2 className="h-5 w-5 animate-spin mx-auto text-muted-foreground" />}
             {suggestedUsers.map((u: any) => (
-              <button
+              <button type="button"
                 key={u.id}
                 onClick={() => navigate(`/profile/${u.id}`)}
                 className="w-full flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40 hover:bg-accent/50 transition-colors text-left"
@@ -303,7 +303,7 @@ export default function ExplorePage() {
               <div className="mb-3">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-sm font-semibold text-foreground">#{selectedTag}</h3>
-                  <button
+                  <button type="button"
                     onClick={() => setSelectedTag(null)}
                     className="text-xs text-muted-foreground flex items-center gap-1 hover:text-foreground transition-colors"
                   >
@@ -338,7 +338,7 @@ export default function ExplorePage() {
               </div>
             )}
             {!selectedTag && trendingHashtags.map((h) => (
-              <button
+              <button type="button"
                 key={h.tag}
                 onClick={() => setSelectedTag(h.tag)}
                 className="w-full flex items-center gap-3 p-3 rounded-xl bg-card border border-border/40 hover:bg-accent/50 transition-colors text-left"

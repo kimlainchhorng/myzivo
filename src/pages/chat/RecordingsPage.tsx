@@ -164,7 +164,7 @@ export default function RecordingsPage() {
   return (
     <div className="min-h-screen bg-background pt-safe">
       <header className="sticky top-0 z-10 bg-background/85 backdrop-blur-xl border-b border-border/40 px-3 py-2 flex items-center gap-2">
-        <button
+        <button type="button"
           onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/chat"))}
           className="p-2 -ml-2 rounded-full hover:bg-muted"
           aria-label="Back"

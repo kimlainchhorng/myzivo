@@ -98,7 +98,7 @@ export function FareRulesCard({ offer }: FareRulesCardProps) {
         transform: "perspective(600px) rotateX(1deg)",
       }}
     >
-      <button
+      <button type="button"
         onClick={() => setExpanded(!expanded)}
         className="w-full px-5 py-3.5 flex items-center gap-3 hover:bg-muted/20 transition-colors"
       >

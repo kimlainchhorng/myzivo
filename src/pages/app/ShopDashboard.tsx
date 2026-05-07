@@ -25,6 +25,28 @@ const ShopDashboard = () => {
     enabled: !!user,
   });
 
+  const { data: stats } = useQuery({
+    queryKey: ["shop-stats", store?.id],
+    queryFn: async () => {
+      const startOfMonth = new Date(new Date().getFullYear(), new Date().getMonth(), 1).toISOString();
+      const [ordersRes, pendingRes, revenueRes, customersRes] = await Promise.all([
+        supabase.from("store_orders").select("id", { count: "exact", head: true }).eq("store_id", store!.id),
+        supabase.from("store_orders").select("id", { count: "exact", head: true }).eq("store_id", store!.id).eq("status", "pending"),
+        supabase.from("store_orders").select("total_cents").eq("store_id", store!.id).eq("status", "delivered").gte("created_at", startOfMonth),
+        supabase.from("store_orders").select("customer_phone").eq("store_id", store!.id).not("customer_phone", "is", null),
+      ]);
+      const revenueCents = (revenueRes.data ?? []).reduce((s: number, o: { total_cents: number | null }) => s + (o.total_cents ?? 0), 0);
+      const uniqueCustomers = new Set((customersRes.data ?? []).map((o: { customer_phone: string }) => o.customer_phone)).size;
+      return {
+        totalOrders: ordersRes.count ?? 0,
+        pendingOrders: pendingRes.count ?? 0,
+        revenueDollars: (revenueCents / 100).toFixed(2),
+        uniqueCustomers,
+      };
+    },
+    enabled: !!store?.id,
+  });
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -45,12 +67,14 @@ const ShopDashboard = () => {
             Sell products, accept orders and reach the ZIVO community. Setup takes about 2 minutes.
           </p>
           <button
+            type="button"
             onClick={() => navigate("/store/setup")}
             className="w-full h-12 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-all"
           >
             Create my shop <ArrowRight className="w-4 h-4" />
           </button>
           <button
+            type="button"
             onClick={() => navigate("/more")}
             className="w-full h-10 mt-2 rounded-2xl text-sm font-semibold text-muted-foreground hover:bg-muted/40 transition-colors"
           >
@@ -75,19 +99,19 @@ const ShopDashboard = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="rounded-lg border border-border/40 bg-card p-4">
                 <p className="text-sm text-muted-foreground mb-2">Total Work Orders</p>
-                <p className="text-2xl font-bold">0</p>
+                <p className="text-2xl font-bold">{stats?.totalOrders ?? 0}</p>
               </div>
               <div className="rounded-lg border border-border/40 bg-card p-4">
                 <p className="text-sm text-muted-foreground mb-2">Pending Estimates</p>
-                <p className="text-2xl font-bold">0</p>
+                <p className="text-2xl font-bold">{stats?.pendingOrders ?? 0}</p>
               </div>
               <div className="rounded-lg border border-border/40 bg-card p-4">
                 <p className="text-sm text-muted-foreground mb-2">Revenue This Month</p>
-                <p className="text-2xl font-bold">$0</p>
+                <p className="text-2xl font-bold">${stats?.revenueDollars ?? "0.00"}</p>
               </div>
               <div className="rounded-lg border border-border/40 bg-card p-4">
                 <p className="text-sm text-muted-foreground mb-2">Active Customers</p>
-                <p className="text-2xl font-bold">0</p>
+                <p className="text-2xl font-bold">{stats?.uniqueCustomers ?? 0}</p>
               </div>
             </div>
           </div>
@@ -98,6 +122,7 @@ const ShopDashboard = () => {
             <h2 className="text-2xl font-bold">Part Shop</h2>
             <p className="text-muted-foreground">Manage your auto parts inventory</p>
             <button
+              type="button"
               onClick={() => navigate("/shop-dashboard/products")}
               className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium"
             >
@@ -132,6 +157,7 @@ const ShopDashboard = () => {
             <h2 className="text-2xl font-bold">Employees</h2>
             <p className="text-muted-foreground">Manage your technicians and staff</p>
             <button
+              type="button"
               onClick={() => navigate("/shop-dashboard/employees")}
               className="px-4 py-2 bg-primary text-primary-foreground rounded-lg font-medium"
             >

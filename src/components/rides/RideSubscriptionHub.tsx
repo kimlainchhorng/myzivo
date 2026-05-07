@@ -121,7 +121,7 @@ export default function RideSubscriptionHub() {
         {views.map((v) => {
           const Icon = v.icon;
           return (
-            <button
+            <button type="button"
               key={v.id}
               onClick={() => setView(v.id)}
               className={cn(
@@ -166,7 +166,7 @@ export default function RideSubscriptionHub() {
                     ))}
                   </div>
                   {!isCurrent && (
-                    <button
+                    <button type="button"
                       onClick={() => switchPlan(plan.id, plan.name)}
                       className="w-full py-2.5 bg-primary text-primary-foreground rounded-xl text-sm font-bold"
                     >
@@ -210,7 +210,7 @@ export default function RideSubscriptionHub() {
               <p className="text-xs font-bold text-foreground">Member since {usageStats.memberSince}</p>
               <p className="text-[11px] text-muted-foreground">Auto-renews on {usageStats.nextBilling}</p>
             </div>
-            <button onClick={() => setView("plans")} className="text-xs font-bold text-primary">Manage</button>
+            <button type="button" onClick={() => setView("plans")} className="text-xs font-bold text-primary">Manage</button>
           </div>
         </motion.div>
       )}
@@ -232,7 +232,7 @@ export default function RideSubscriptionHub() {
                 {redeemedPerks.includes(perk.id) ? (
                   <span className="text-[10px] text-muted-foreground font-bold">Redeemed</span>
                 ) : (
-                  <button
+                  <button type="button"
                     onClick={() => redeemPerk(perk.id, perk.name)}
                     className="text-xs font-bold text-primary"
                   >

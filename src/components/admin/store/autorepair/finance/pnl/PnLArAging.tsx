@@ -49,7 +49,7 @@ export default function PnLArAging({ aging, onOpenInvoice }: Props) {
             <ul className="space-y-1.5">
               {aging.topUnpaid.map((u) => (
                 <li key={u.id}>
-                  <button
+                  <button type="button"
                     onClick={() => onOpenInvoice?.(u.id)}
                     className="w-full text-left flex items-center justify-between gap-2 rounded-md border p-2 hover:bg-muted/40 transition-colors"
                   >

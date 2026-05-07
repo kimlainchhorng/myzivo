@@ -56,7 +56,7 @@ export default function TrendingHashtags({ posts, selected, onSelect, limit = 12
       <div className="flex gap-2 overflow-x-auto scrollbar-none" style={{ scrollbarWidth: "none" }}>
         {/* "All" clear chip — only shown when a filter is active */}
         {selected && (
-          <button
+          <button type="button"
             onClick={() => onSelect(null)}
             className="shrink-0 inline-flex items-center gap-1 rounded-full bg-muted/60 px-3.5 py-2 sm:px-3 sm:py-1.5 text-[13px] sm:text-xs font-semibold text-foreground border border-border/30 active:scale-95"
           >
@@ -66,7 +66,7 @@ export default function TrendingHashtags({ posts, selected, onSelect, limit = 12
         {tags.map(({ tag, count }) => {
           const isActive = selected === tag;
           return (
-            <button
+            <button type="button"
               key={tag}
               onClick={() => onSelect(isActive ? null : tag)}
               className={[
@@ -104,7 +104,7 @@ export default function TrendingHashtags({ posts, selected, onSelect, limit = 12
       >
         {/* "All" clear chip — only when a filter is active */}
         {selected && (
-          <button
+          <button type="button"
             onClick={() => onSelect(null)}
             className="shrink-0 inline-flex items-center gap-1 rounded-full bg-white/20 backdrop-blur-sm px-3.5 py-2 sm:px-3 sm:py-1.5 text-[13px] sm:text-xs font-semibold text-white border border-white/20 active:scale-95"
           >
@@ -121,7 +121,7 @@ export default function TrendingHashtags({ posts, selected, onSelect, limit = 12
         {tags.map(({ tag, count }) => {
           const isActive = selected === tag;
           return (
-            <button
+            <button type="button"
               key={tag}
               onClick={() => onSelect(isActive ? null : tag)}
               className={[

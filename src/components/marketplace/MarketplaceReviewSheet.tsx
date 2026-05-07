@@ -72,7 +72,7 @@ export default function MarketplaceReviewSheet({ open, onClose, sellerId, listin
             <div className="px-5">
               <div className="flex items-center justify-between mb-5">
                 <h3 className="text-base font-bold">Leave a Review</h3>
-                <button onClick={onClose} className="p-2 rounded-full hover:bg-muted/50">
+                <button type="button" onClick={onClose} className="p-2 rounded-full hover:bg-muted/50">
                   <X className="h-5 w-5" />
                 </button>
               </div>
@@ -80,7 +80,7 @@ export default function MarketplaceReviewSheet({ open, onClose, sellerId, listin
               {/* Star Rating */}
               <div className="flex justify-center gap-2 mb-5">
                 {[1, 2, 3, 4, 5].map((star) => (
-                  <button
+                  <button type="button"
                     key={star}
                     onClick={() => setRating(star)}
                     className="p-1"
@@ -115,7 +115,7 @@ export default function MarketplaceReviewSheet({ open, onClose, sellerId, listin
               />
 
               {/* Submit */}
-              <button
+              <button type="button"
                 onClick={handleSubmit}
                 disabled={submitting || rating < 1}
                 className="w-full py-3.5 rounded-2xl bg-primary text-primary-foreground font-bold text-sm flex items-center justify-center gap-2 disabled:opacity-50"

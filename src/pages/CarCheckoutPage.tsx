@@ -148,7 +148,7 @@ export default function CarCheckoutPage() {
                       </div>
                       {appliedPromo.description && <p className="text-xs text-emerald-600/80 dark:text-emerald-400/80 truncate">{appliedPromo.description}</p>}
                     </div>
-                    <button onClick={handleRemovePromo} className="p-1.5 rounded-lg hover:bg-emerald-500/10" aria-label="Remove promo">
+                    <button type="button" onClick={handleRemovePromo} className="p-1.5 rounded-lg hover:bg-emerald-500/10" aria-label="Remove promo">
                       <X className="w-4 h-4 text-emerald-500" />
                     </button>
                   </div>

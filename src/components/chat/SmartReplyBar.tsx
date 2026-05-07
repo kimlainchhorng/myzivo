@@ -136,7 +136,7 @@ export default function SmartReplyBar({ lastIncomingMessage, userTyping, onPick,
         >
           <Sparkles className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-primary/70 shrink-0" aria-hidden="true" />
           {replies.map((r) => (
-            <button
+            <button type="button"
               key={r}
               onClick={() => onPick(r)}
               className="shrink-0 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full bg-primary/10 hover:bg-primary/20 active:scale-95 text-[11px] sm:text-xs font-semibold text-primary transition-all whitespace-nowrap"

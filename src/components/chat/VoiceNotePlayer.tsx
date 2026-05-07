@@ -91,7 +91,7 @@ export default function VoiceNotePlayer({ audioUrl, durationMs = 0, waveform = [
   return (
     <div className="flex flex-col gap-1 max-w-[280px]">
       <div className="flex items-center gap-2">
-        <button
+        <button type="button"
           onClick={toggle}
           className="w-9 h-9 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0"
           aria-label={playing ? "Pause" : "Play"}
@@ -114,7 +114,7 @@ export default function VoiceNotePlayer({ audioUrl, durationMs = 0, waveform = [
       </div>
       {transcript ? (
         <>
-          <button
+          <button type="button"
             onClick={() => setShowTranscript((s) => !s)}
             className="self-start text-xs text-primary flex items-center gap-1 mt-1 hover:underline"
           >
@@ -127,7 +127,7 @@ export default function VoiceNotePlayer({ audioUrl, durationMs = 0, waveform = [
         </>
       ) : (
         messageId && (
-          <button
+          <button type="button"
             onClick={transcribe}
             disabled={transcribing}
             className="self-start text-xs text-muted-foreground hover:text-primary flex items-center gap-1 mt-1 disabled:opacity-50"

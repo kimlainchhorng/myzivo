@@ -84,7 +84,7 @@ export default function RideEcoTracker() {
       <div className="space-y-2">
         <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider px-1">Green Settings</h3>
         
-        <button onClick={() => { setPreferGreen(!preferGreen); toast.success(preferGreen ? "Green preference off" : "Green vehicles preferred!"); }} className={cn("w-full flex items-center gap-3 p-4 rounded-2xl border transition-all text-left", preferGreen ? "bg-emerald-500/5 border-emerald-500/20" : "bg-card border-border/40")}>
+        <button type="button" onClick={() => { setPreferGreen(!preferGreen); toast.success(preferGreen ? "Green preference off" : "Green vehicles preferred!"); }} className={cn("w-full flex items-center gap-3 p-4 rounded-2xl border transition-all text-left", preferGreen ? "bg-emerald-500/5 border-emerald-500/20" : "bg-card border-border/40")}>
           <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", preferGreen ? "bg-emerald-500/10" : "bg-muted/50")}>
             <Leaf className={cn("w-5 h-5", preferGreen ? "text-emerald-500" : "text-muted-foreground")} />
           </div>
@@ -97,7 +97,7 @@ export default function RideEcoTracker() {
           </div>
         </button>
 
-        <button onClick={() => { setOffsetEnabled(!offsetEnabled); toast.success(offsetEnabled ? "Carbon offset disabled" : "Carbon offset enabled!"); }} className={cn("w-full flex items-center gap-3 p-4 rounded-2xl border transition-all text-left", offsetEnabled ? "bg-emerald-500/5 border-emerald-500/20" : "bg-card border-border/40")}>
+        <button type="button" onClick={() => { setOffsetEnabled(!offsetEnabled); toast.success(offsetEnabled ? "Carbon offset disabled" : "Carbon offset enabled!"); }} className={cn("w-full flex items-center gap-3 p-4 rounded-2xl border transition-all text-left", offsetEnabled ? "bg-emerald-500/5 border-emerald-500/20" : "bg-card border-border/40")}>
           <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", offsetEnabled ? "bg-emerald-500/10" : "bg-muted/50")}>
             <TreePine className={cn("w-5 h-5", offsetEnabled ? "text-emerald-500" : "text-muted-foreground")} />
           </div>

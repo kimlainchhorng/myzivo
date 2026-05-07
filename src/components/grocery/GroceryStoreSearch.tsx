@@ -101,7 +101,7 @@ export function GroceryStoreSearch({ placeholder, storeName, query, onSearch, on
                     <Clock className="h-3 w-3 text-muted-foreground" />
                     <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Recent</span>
                   </div>
-                  <button
+                  <button type="button"
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => { clearRecentSearches(); setRecent([]); }}
                     className="text-[10px] text-destructive/70 hover:text-destructive font-medium"
@@ -109,7 +109,7 @@ export function GroceryStoreSearch({ placeholder, storeName, query, onSearch, on
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {recent.map((term) => (
-                    <button
+                    <button type="button"
                       key={term}
                       onMouseDown={(e) => e.preventDefault()}
                       onClick={() => handleSelect(term)}
@@ -128,7 +128,7 @@ export function GroceryStoreSearch({ placeholder, storeName, query, onSearch, on
               </div>
               <div className="grid grid-cols-2 gap-1">
                 {TRENDING_ITEMS.map((term, i) => (
-                  <button
+                  <button type="button"
                     key={term}
                     onMouseDown={(e) => e.preventDefault()}
                     onClick={() => handleSelect(term)}

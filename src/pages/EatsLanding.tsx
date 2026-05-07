@@ -3,7 +3,7 @@
  * Connected to Supabase: restaurants, menu_items, food_orders
  */
 import { useState, useMemo, useEffect } from "react";
-import { Star, Clock, Truck, ShoppingCart, Search, MapPin, UtensilsCrossed, Plus, Minus, ArrowLeft, CheckCircle, CreditCard, Package, Timer, Heart, Sparkles, MessageSquare, Percent, Leaf, Award, Loader2, Share2 } from "lucide-react";
+import { Star, Clock, Truck, ShoppingCart, Search, MapPin, UtensilsCrossed, Plus, Minus, ArrowLeft, CheckCircle, CreditCard, Package, Timer, Heart, Sparkles, MessageSquare, Percent, Leaf, Award, Loader2, Share2, X } from "lucide-react";
 import { openShareToChat } from "@/components/chat/ShareToChatSheet";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -109,10 +109,39 @@ function EatsStepIndicator({ currentStep }: { currentStep: string }) {
 
 
 // ─── Main Component ──────────────────────────────────────────────────
+const ORDER_STAGES = [
+  { label: "Order Placed", icon: CheckCircle },
+  { label: "Confirmed", icon: CheckCircle },
+  { label: "Preparing", icon: Package },
+  { label: "Out for Delivery", icon: Truck },
+  { label: "Delivered", icon: CheckCircle },
+] as const;
+
 export default function EatsLanding() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { placeOrder, placing: placingOrder } = useEatsOrder();
+
+  // Order status tracker
+  const [trackedOrderId, setTrackedOrderId] = useState<string | null>(null);
+  const [statusStep, setStatusStep] = useState(0);
+  const [cancelCountdown, setCancelCountdown] = useState(60);
+
+  useEffect(() => {
+    if (!trackedOrderId) return;
+    if (statusStep >= ORDER_STAGES.length - 1) {
+      const t = setTimeout(() => { setTrackedOrderId(null); navigate(`/eats/track/${trackedOrderId}`); }, 1800);
+      return () => clearTimeout(t);
+    }
+    const t = setTimeout(() => setStatusStep(s => s + 1), 15000);
+    return () => clearTimeout(t);
+  }, [trackedOrderId, statusStep, navigate]);
+
+  useEffect(() => {
+    if (!trackedOrderId || cancelCountdown <= 0) return;
+    const t = setInterval(() => setCancelCountdown(c => c - 1), 1000);
+    return () => clearInterval(t);
+  }, [trackedOrderId, cancelCountdown]);
 
   // Wallet balance for checkout
   const [walletBalanceCents, setWalletBalanceCents] = useState<number>(0);
@@ -154,6 +183,7 @@ export default function EatsLanding() {
   const [selectedTip, setSelectedTip] = useState("20");
   const [promoCode, setPromoCode] = useState("");
   const [promoApplied, setPromoApplied] = useState(false);
+  const [promoData, setPromoData] = useState<{ discount_percent: number | null; discount_amount_cents: number | null } | null>(null);
   const [selectedSpeed, setSelectedSpeed] = useState("standard");
   const [noUtensils, setNoUtensils] = useState(false);
   const [specialInstructions, setSpecialInstructions] = useState<Record<string, string>>({});
@@ -161,6 +191,30 @@ export default function EatsLanding() {
 
   // Favorites — persisted via localStorage and shared across the app
   const { favorites, toggle: toggleFavoriteHook } = useNetworkFavorites("restaurant");
+
+  // Recent orders for "Order again" strip
+  const [recentOrders, setRecentOrders] = useState<Array<{ store_id: string; store_name: string; cuisine: string }>>([]);
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await (supabase as any)
+        .from("food_orders")
+        .select("store_id, store_profiles!inner(name, cuisine_type)")
+        .eq("customer_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(15);
+      const seen = new Set<string>();
+      const unique: typeof recentOrders = [];
+      for (const o of (data || [])) {
+        if (!seen.has(o.store_id)) {
+          seen.add(o.store_id);
+          unique.push({ store_id: o.store_id, store_name: o.store_profiles?.name || "Restaurant", cuisine: o.store_profiles?.cuisine_type || "" });
+        }
+        if (unique.length >= 4) break;
+      }
+      setRecentOrders(unique);
+    })();
+  }, [user]);
 
   // ─── Derived Data ────────────────────────────────────────────────
   const currentRestaurant = useMemo(
@@ -207,7 +261,12 @@ export default function EatsLanding() {
   const tipPct = tipOptions.find(t => t.id === selectedTip)?.pct ?? 0;
   const tipAmount = Math.round(cartTotal * tipPct * 100) / 100;
   const speedExtra = deliverySpeedOptions.find(o => o.id === selectedSpeed)?.extraCost ?? 0;
-  const promoDiscount = promoApplied ? Math.round(cartTotal * 0.1 * 100) / 100 : 0;
+  const promoDiscount = useMemo(() => {
+    if (!promoApplied || !promoData) return 0;
+    if (promoData.discount_amount_cents) return Math.min(promoData.discount_amount_cents / 100, cartTotal);
+    if (promoData.discount_percent) return Math.round(cartTotal * (promoData.discount_percent / 100) * 100) / 100;
+    return 0;
+  }, [promoApplied, promoData, cartTotal]);
   const grandTotal = Math.round((cartTotal + deliveryFee + serviceFee + tipAmount + speedExtra - promoDiscount) * 100) / 100;
 
   // ─── Cart Actions ────────────────────────────────────────────────
@@ -267,7 +326,9 @@ export default function EatsLanding() {
       pickupLng: currentRestaurant?.lng ?? undefined,
     });
     if (result) {
-      navigate(`/eats/track/${result.orderId}`);
+      setTrackedOrderId(result.orderId);
+      setStatusStep(0);
+      setCancelCountdown(60);
     }
   };
 
@@ -314,10 +375,32 @@ export default function EatsLanding() {
 
             <section className="py-8">
               <div className="container mx-auto px-4">
+                {/* Order again strip */}
+                {recentOrders.length > 0 && (
+                  <div className="mb-5">
+                    <p className="text-xs font-semibold text-muted-foreground mb-2">Order again</p>
+                    <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
+                      {recentOrders.map(o => (
+                        <button type="button" key={o.store_id} type="button"
+                          onClick={() => { setSelectedRestaurantId(o.store_id); setStep("restaurant"); }}
+                          className="flex items-center gap-2 px-3 py-2 rounded-xl bg-card border border-border/50 text-left shrink-0 active:scale-95 transition-transform touch-manipulation">
+                          <span className="text-xl leading-none">
+                            {CUISINE_EMOJI[(o.cuisine || "").toLowerCase().split(" ")[0]] ?? "🍽️"}
+                          </span>
+                          <div>
+                            <p className="text-xs font-semibold truncate max-w-[100px]">{o.store_name}</p>
+                            <p className="text-[10px] text-primary font-medium">Reorder →</p>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 {/* Categories */}
                 <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-3 mb-4">
                   {categories.map(c => (
-                    <button key={c} onClick={() => setActiveCategory(c)} className={cn(
+                    <button type="button" key={c} onClick={() => setActiveCategory(c)} className={cn(
                       "whitespace-nowrap px-4 py-2 rounded-full text-xs font-bold transition-all touch-manipulation active:scale-95",
                       activeCategory === c ? "bg-primary text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40"
                     )}>{c}</button>
@@ -327,7 +410,7 @@ export default function EatsLanding() {
                 {/* Sort */}
                 <div className="flex gap-2 mb-6">
                   {(["recommended", "rating", "time"] as const).map(s => (
-                    <button key={s} onClick={() => setSortBy(s)}
+                    <button type="button" key={s} onClick={() => setSortBy(s)}
                       className={cn("px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all touch-manipulation active:scale-95 capitalize",
                         sortBy === s ? "bg-primary/10 text-primary border border-primary/20" : "text-muted-foreground"
                       )}>{s === "recommended" ? "🔥 Recommended" : s === "rating" ? "⭐ Top Rated" : "⚡ Fastest"}</button>
@@ -355,7 +438,7 @@ export default function EatsLanding() {
                   {filtered.map((restaurant, i) => (
                     <motion.div key={restaurant.id} initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ duration: 0.4, delay: i * 0.05 }}>
                       <div className="group relative rounded-2xl bg-card border border-border/40 overflow-hidden hover:shadow-lg hover:-translate-y-1 transition-all duration-200">
-                        <button onClick={() => { setSelectedRestaurantId(restaurant.id); setStep("restaurant"); }} className="block w-full text-left touch-manipulation active:scale-[0.99]">
+                        <button type="button" onClick={() => { setSelectedRestaurantId(restaurant.id); setStep("restaurant"); }} className="block w-full text-left touch-manipulation active:scale-[0.99]">
                           <div className="relative aspect-[16/10] overflow-hidden bg-muted/20">
                             {restaurant.cover_image_url ? (
                               <img src={restaurant.cover_image_url} alt={restaurant.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
@@ -394,7 +477,7 @@ export default function EatsLanding() {
                             </div>
                           </div>
                         </button>
-                        <button
+                        <button type="button"
                           onClick={(e) => {
                             e.stopPropagation();
                             navigate(`/eats/reserve?restaurantId=${restaurant.id}&restaurantName=${encodeURIComponent(restaurant.name)}`);
@@ -403,7 +486,7 @@ export default function EatsLanding() {
                         >
                           📅 Reserve table
                         </button>
-                        <button onClick={(e) => { e.stopPropagation(); toggleFavorite(restaurant.id); }}
+                        <button type="button" onClick={(e) => { e.stopPropagation(); toggleFavorite(restaurant.id); }}
                           className="absolute top-3 right-3 w-8 h-8 rounded-full bg-card/80 backdrop-blur flex items-center justify-center touch-manipulation active:scale-90 shadow-sm">
                           <Heart className={cn("w-4 h-4 transition-all", favorites.has(restaurant.id) ? "fill-red-500 text-red-500" : "text-muted-foreground")} />
                         </button>
@@ -436,11 +519,11 @@ export default function EatsLanding() {
                   <h1 className="text-base font-bold text-foreground">{currentRestaurant.name}</h1>
                   <p className="text-[10px] text-muted-foreground">{canonicalCuisine(currentRestaurant.cuisine_type)} · {currentRestaurant.avg_prep_time ?? 25}-{(currentRestaurant.avg_prep_time ?? 25) + 15} min</p>
                 </div>
-                <button onClick={() => toggleFavorite(currentRestaurant.id)}
+                <button type="button" onClick={() => toggleFavorite(currentRestaurant.id)}
                   className="w-10 h-10 rounded-xl bg-card/80 border border-border/40 flex items-center justify-center touch-manipulation">
                   <Heart className={cn("w-5 h-5", favorites.has(currentRestaurant.id) ? "fill-red-500 text-red-500" : "text-muted-foreground")} />
                 </button>
-                <button
+                <button type="button"
                   onClick={() => openShareToChat({
                     kind: "eats",
                     title: currentRestaurant.name,
@@ -486,7 +569,7 @@ export default function EatsLanding() {
             {/* Quick actions: Reserve · Ride · Save */}
             <div className="px-4 pt-4 max-w-lg mx-auto">
               <div className="grid grid-cols-3 gap-2">
-                <button
+                <button type="button"
                   onClick={() =>
                     navigate(
                       `/eats/reserve?restaurantId=${currentRestaurant.id}&restaurantName=${encodeURIComponent(currentRestaurant.name)}`,
@@ -497,7 +580,7 @@ export default function EatsLanding() {
                   <span className="text-base">📅</span>
                   <span className="text-[11px] font-bold text-foreground">Reserve</span>
                 </button>
-                <button
+                <button type="button"
                   onClick={() =>
                     navigate(
                       `/rides?dropoff=${encodeURIComponent(currentRestaurant.name)}`,
@@ -508,7 +591,7 @@ export default function EatsLanding() {
                   <span className="text-base">🚗</span>
                   <span className="text-[11px] font-bold text-foreground">Ride here</span>
                 </button>
-                <button
+                <button type="button"
                   onClick={() => toggleFavorite(currentRestaurant.id)}
                   className="flex flex-col items-center gap-1 rounded-2xl border border-border/50 bg-card hover:bg-muted/40 active:scale-[0.98] transition-all py-3 touch-manipulation"
                 >
@@ -570,9 +653,9 @@ export default function EatsLanding() {
                       </div>
                       {inCart ? (
                         <div className="flex items-center gap-2 shrink-0">
-                          <button aria-label="Decrease" onClick={() => updateQuantity(item.id, -1)} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center touch-manipulation active:scale-90"><Minus className="w-3.5 h-3.5" /></button>
+                          <button type="button" aria-label="Decrease" onClick={() => updateQuantity(item.id, -1)} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center touch-manipulation active:scale-90"><Minus className="w-3.5 h-3.5" /></button>
                           <span className="text-sm font-bold w-5 text-center">{inCart.quantity}</span>
-                          <button aria-label="Increase" onClick={() => updateQuantity(item.id, 1)} className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center touch-manipulation active:scale-90"><Plus className="w-3.5 h-3.5" /></button>
+                          <button type="button" aria-label="Increase" onClick={() => updateQuantity(item.id, 1)} className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center touch-manipulation active:scale-90"><Plus className="w-3.5 h-3.5" /></button>
                         </div>
                       ) : (
                         <Button size="sm" variant="outline" onClick={() => addToCart(item, currentRestaurant.id)} className="rounded-xl h-9 px-4 gap-1.5 font-bold text-xs border-primary/30 text-primary hover:bg-primary/5 shrink-0">
@@ -642,22 +725,22 @@ export default function EatsLanding() {
                         <p className="text-xs text-muted-foreground mt-0.5">${item.price.toFixed(2)} each</p>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <button aria-label="Decrease" onClick={() => updateQuantity(item.menuItemId, -1)} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center touch-manipulation active:scale-90"><Minus className="w-3.5 h-3.5" /></button>
+                        <button type="button" aria-label="Decrease" onClick={() => updateQuantity(item.menuItemId, -1)} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center touch-manipulation active:scale-90"><Minus className="w-3.5 h-3.5" /></button>
                         <span className="text-sm font-bold w-5 text-center">{item.quantity}</span>
-                        <button aria-label="Increase" onClick={() => updateQuantity(item.menuItemId, 1)} className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center touch-manipulation active:scale-90"><Plus className="w-3.5 h-3.5" /></button>
+                        <button type="button" aria-label="Increase" onClick={() => updateQuantity(item.menuItemId, 1)} className="w-8 h-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center touch-manipulation active:scale-90"><Plus className="w-3.5 h-3.5" /></button>
                       </div>
                       <span className="font-bold text-sm text-foreground w-16 text-right shrink-0">${(item.price * item.quantity).toFixed(2)}</span>
                     </div>
                   ))}
 
-                  <button onClick={() => setStep("restaurant")}
+                  <button type="button" onClick={() => setStep("restaurant")}
                     className="w-full flex items-center justify-center gap-2 p-3 rounded-xl border border-dashed border-border/60 text-xs font-bold text-muted-foreground hover:text-foreground hover:border-primary/30 transition-all touch-manipulation active:scale-[0.98]">
                     <Plus className="w-3.5 h-3.5" /> Add more items
                   </button>
 
                   {/* Skip utensils */}
                   <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
-                    <button onClick={() => setNoUtensils(!noUtensils)}
+                    <button type="button" onClick={() => setNoUtensils(!noUtensils)}
                       className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", noUtensils ? "bg-emerald-500" : "bg-muted/60")}>
                       <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", noUtensils ? "left-[18px]" : "left-0.5")} />
                     </button>
@@ -711,7 +794,7 @@ export default function EatsLanding() {
                 <Input placeholder="Enter delivery address" value={deliveryAddress} onChange={(e) => setDeliveryAddress(e.target.value)} className="h-12 rounded-xl" />
                 <Input placeholder="Delivery instructions (e.g., buzz #204)" value={deliveryInstructions} onChange={(e) => setDeliveryInstructions(e.target.value)} className="h-10 rounded-xl text-sm" />
                 <div className="flex items-center gap-3 pt-1">
-                  <button onClick={() => setContactlessDelivery(!contactlessDelivery)}
+                  <button type="button" onClick={() => setContactlessDelivery(!contactlessDelivery)}
                     className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", contactlessDelivery ? "bg-primary" : "bg-muted/60")}>
                     <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", contactlessDelivery ? "left-[18px]" : "left-0.5")} />
                   </button>
@@ -724,7 +807,7 @@ export default function EatsLanding() {
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2 flex items-center gap-1.5"><Truck className="w-3 h-3" /> Delivery speed</h3>
                 <div className="space-y-2">
                   {deliverySpeedOptions.map(opt => (
-                    <button key={opt.id} onClick={() => setSelectedSpeed(opt.id)}
+                    <button type="button" key={opt.id} onClick={() => setSelectedSpeed(opt.id)}
                       className={cn("w-full flex items-center justify-between p-3 rounded-xl transition-all touch-manipulation active:scale-[0.98]",
                         selectedSpeed === opt.id ? "bg-primary/10 border border-primary/30" : "bg-muted/30 border border-border/30")}>
                       <div className="flex items-center gap-2">
@@ -751,7 +834,7 @@ export default function EatsLanding() {
                     { id: "paypal" as const, label: "🅿️ PayPal" },
                     { id: "square" as const, label: "🟦 Square" },
                   ]).map(p => (
-                    <button key={p.id} onClick={() => {
+                    <button type="button" key={p.id} onClick={() => {
                       if (p.id === "wallet" && walletBalanceCents < Math.round(grandTotal * 100)) {
                         toast.error(`Insufficient wallet balance ($${(walletBalanceCents / 100).toFixed(2)})`);
                         return;
@@ -777,7 +860,7 @@ export default function EatsLanding() {
                 <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Driver tip</h3>
                 <div className="flex gap-2">
                   {tipOptions.map(t => (
-                    <button key={t.id} onClick={() => setSelectedTip(t.id)}
+                    <button type="button" key={t.id} onClick={() => setSelectedTip(t.id)}
                       className={cn("flex-1 py-2.5 rounded-xl text-xs font-bold transition-all touch-manipulation active:scale-95",
                         selectedTip === t.id ? "bg-primary text-primary-foreground shadow-md" : "bg-muted/50 text-muted-foreground border border-border/40")}>
                       {t.label}
@@ -792,34 +875,43 @@ export default function EatsLanding() {
                 <div className="flex gap-2">
                   <Input placeholder="Enter promo code" value={promoCode} onChange={(e) => setPromoCode(e.target.value)}
                     disabled={promoApplied} className="h-10 rounded-xl flex-1 text-sm" />
-                  <Button variant={promoApplied ? "outline" : "default"} size="sm"
-                    onClick={async () => {
-                      if (!promoCode.trim()) return;
-                      // Validate promo code against DB
-                      const { data: promo } = await (supabase as any)
-                        .from("promo_codes")
-                        .select("id, discount_percent, discount_amount_cents, is_active, min_order_cents, expires_at")
-                        .eq("code", promoCode.trim().toUpperCase())
-                        .eq("is_active", true)
-                        .maybeSingle() as { data: any };
-                      if (!promo) {
-                        toast.error("Invalid or expired promo code");
-                        return;
-                      }
-                      if (promo.expires_at && new Date(promo.expires_at) < new Date()) {
-                        toast.error("This promo code has expired");
-                        return;
-                      }
-                      if (promo.min_order_cents && cartTotal * 100 < promo.min_order_cents) {
-                        toast.error(`Minimum order $${(promo.min_order_cents / 100).toFixed(2)} required`);
-                        return;
-                      }
-                      setPromoApplied(true);
-                      toast.success("Promo applied!");
-                    }}
-                    disabled={promoApplied || !promoCode.trim()} className="rounded-xl h-10 px-4 text-xs font-bold">
-                    {promoApplied ? <><CheckCircle className="w-3.5 h-3.5 mr-1" /> Applied</> : "Apply"}
-                  </Button>
+                  {promoApplied ? (
+                    <Button variant="outline" size="sm"
+                      onClick={() => { setPromoApplied(false); setPromoData(null); setPromoCode(""); }}
+                      className="rounded-xl h-10 px-4 text-xs font-bold">
+                      <X className="w-3.5 h-3.5 mr-1" /> Remove
+                    </Button>
+                  ) : (
+                    <Button variant="default" size="sm"
+                      onClick={async () => {
+                        if (!promoCode.trim()) return;
+                        // Validate promo code against DB
+                        const { data: promo } = await (supabase as any)
+                          .from("promo_codes")
+                          .select("id, discount_percent, discount_amount_cents, is_active, min_order_cents, expires_at")
+                          .eq("code", promoCode.trim().toUpperCase())
+                          .eq("is_active", true)
+                          .maybeSingle() as { data: any };
+                        if (!promo) {
+                          toast.error("Invalid or expired promo code");
+                          return;
+                        }
+                        if (promo.expires_at && new Date(promo.expires_at) < new Date()) {
+                          toast.error("This promo code has expired");
+                          return;
+                        }
+                        if (promo.min_order_cents && cartTotal * 100 < promo.min_order_cents) {
+                          toast.error(`Minimum order $${(promo.min_order_cents / 100).toFixed(2)} required`);
+                          return;
+                        }
+                        setPromoApplied(true);
+                        setPromoData({ discount_percent: promo.discount_percent, discount_amount_cents: promo.discount_amount_cents });
+                        toast.success("Promo applied!");
+                      }}
+                      disabled={!promoCode.trim()} className="rounded-xl h-10 px-4 text-xs font-bold">
+                      Apply
+                    </Button>
+                  )}
                 </div>
               </div>
 
@@ -856,6 +948,88 @@ export default function EatsLanding() {
               </Button>
             </div>
         </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ═══ ORDER STATUS OVERLAY ═══ */}
+      <AnimatePresence>
+        {trackedOrderId && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 bg-background/98 backdrop-blur-xl flex flex-col items-center justify-center p-6"
+          >
+            {/* Animated ring */}
+            <motion.div
+              initial={{ scale: 0.7, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 200, damping: 18 }}
+              className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-emerald-500 flex items-center justify-center mb-6 shadow-xl shadow-primary/30"
+            >
+              {statusStep >= ORDER_STAGES.length - 1
+                ? <CheckCircle className="w-10 h-10 text-white" />
+                : <Timer className="w-10 h-10 text-white" />}
+            </motion.div>
+
+            <h2 className="text-xl font-bold mb-1 text-center">
+              {ORDER_STAGES[statusStep].label}
+            </h2>
+            <p className="text-sm text-muted-foreground mb-8 text-center">
+              {statusStep === 0 && "Your order is on its way to the restaurant."}
+              {statusStep === 1 && "The restaurant has accepted your order."}
+              {statusStep === 2 && "Your food is being freshly prepared."}
+              {statusStep === 3 && "Your rider is heading to you now."}
+              {statusStep === 4 && "Enjoy your meal!"}
+            </p>
+
+            {/* Stage timeline */}
+            <div className="w-full max-w-xs space-y-3 mb-8">
+              {ORDER_STAGES.map((stage, i) => {
+                const Icon = stage.icon;
+                const done = i <= statusStep;
+                const active = i === statusStep;
+                return (
+                  <div key={stage.label} className="flex items-center gap-3">
+                    <div className={cn(
+                      "w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-all",
+                      done ? "bg-emerald-500" : "bg-muted"
+                    )}>
+                      <Icon className={cn("w-3.5 h-3.5", done ? "text-white" : "text-muted-foreground")} />
+                    </div>
+                    <span className={cn(
+                      "text-[13px] font-medium transition-colors",
+                      active ? "text-foreground font-bold" : done ? "text-foreground" : "text-muted-foreground"
+                    )}>
+                      {stage.label}
+                    </span>
+                    {active && statusStep < ORDER_STAGES.length - 1 && (
+                      <motion.div
+                        animate={{ opacity: [1, 0.3, 1] }}
+                        transition={{ repeat: Infinity, duration: 1.5 }}
+                        className="ml-auto w-2 h-2 rounded-full bg-primary"
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="flex flex-col items-center gap-3 w-full max-w-xs">
+              <button type="button"
+                onClick={() => { setTrackedOrderId(null); navigate(`/eats/track/${trackedOrderId}`); }}
+                className="w-full rounded-2xl bg-foreground text-background font-bold py-3 text-sm active:scale-[0.98] transition-transform">
+                View Full Tracking
+              </button>
+              {cancelCountdown > 0 && statusStep === 0 && (
+                <button type="button"
+                  onClick={() => { setTrackedOrderId(null); setStep("cart"); }}
+                  className="text-[12px] text-muted-foreground underline-offset-2 hover:underline">
+                  Cancel order ({cancelCountdown}s)
+                </button>
+              )}
+            </div>
+          </motion.div>
         )}
       </AnimatePresence>
     </div>

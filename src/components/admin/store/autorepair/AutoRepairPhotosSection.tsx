@@ -158,7 +158,7 @@ export default function AutoRepairPhotosSection({ storeId }: Props) {
                     <p className="text-sm font-medium truncate">{pendingFile.name}</p>
                     <div className="flex gap-1.5 flex-wrap">
                       {UPLOAD_TYPES.map((t) => (
-                        <button
+                        <button type="button"
                           key={t.value}
                           onClick={() => setUploadType(t.value)}
                           className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
@@ -178,7 +178,7 @@ export default function AutoRepairPhotosSection({ storeId }: Props) {
                       className="w-full text-sm px-2.5 py-1.5 rounded-lg border border-border bg-background outline-none focus:ring-1 focus:ring-primary/40"
                     />
                   </div>
-                  <button onClick={resetUploadState} className="p-1 rounded-full hover:bg-muted/50">
+                  <button type="button" onClick={resetUploadState} className="p-1 rounded-full hover:bg-muted/50">
                     <X className="w-4 h-4 text-muted-foreground" />
                   </button>
                 </div>

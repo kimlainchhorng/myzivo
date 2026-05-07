@@ -203,7 +203,7 @@ export default function ShopEmployeeDetailPage() {
     <AppLayout title="Employee" hideHeader>
       <div className="flex flex-col px-4 pt-3 pb-24 max-w-2xl mx-auto">
         <div className="flex items-center gap-2.5 mb-5">
-          <button
+          <button type="button"
             onClick={() => navigate(-1)}
             className="w-8 h-8 rounded-full bg-muted/60 flex items-center justify-center active:scale-90 transition-transform"
           >
@@ -304,7 +304,7 @@ export default function ShopEmployeeDetailPage() {
               <div className="flex items-center gap-2 mb-2">
                 <Calendar className="w-4 h-4 text-blue-500" />
                 <p className="text-sm font-semibold flex-1">This week's shifts</p>
-                <button
+                <button type="button"
                   onClick={() => navigate("/shop-dashboard/employee-schedule")}
                   className="text-[11px] font-semibold text-primary"
                 >
@@ -411,7 +411,7 @@ export default function ShopEmployeeDetailPage() {
                   {rules.map((rule) => {
                     const acked = ackedRuleIds.has(rule.id);
                     return (
-                      <button
+                      <button type="button"
                         key={rule.id}
                         onClick={() => toggleAck(rule)}
                         className={cn(

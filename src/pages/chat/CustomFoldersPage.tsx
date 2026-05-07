@@ -116,11 +116,11 @@ export default function CustomFoldersPage() {
   return (
     <div className="min-h-screen bg-background pb-20">
       <header className="sticky top-0 z-10 bg-background/85 backdrop-blur-xl border-b border-border/40 pt-safe px-3 py-3 flex items-center gap-2">
-        <button onClick={goBack} className="p-1.5 rounded-full hover:bg-muted/60">
+        <button type="button" onClick={goBack} className="p-1.5 rounded-full hover:bg-muted/60">
           <ChevronLeft className="w-5 h-5" />
         </button>
         <h1 className="text-base font-semibold flex-1">Chat Folders</h1>
-        <button
+        <button type="button"
           onClick={() => setEditing({ name: "", icon: "📁" })}
           className="p-1.5 rounded-full hover:bg-muted/60"
           aria-label="New folder"
@@ -138,7 +138,7 @@ export default function CustomFoldersPage() {
           <div className="text-xs font-semibold text-primary mb-2">Suggested folders</div>
           <div className="flex flex-wrap gap-1.5">
             {SUGGESTED_FOLDERS.map((p) => (
-              <button
+              <button type="button"
                 key={p.name}
                 onClick={() => addSuggested(p)}
                 className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-background border border-border/60 text-xs font-medium hover:bg-muted/60"
@@ -165,16 +165,16 @@ export default function CustomFoldersPage() {
               <div className="text-sm font-medium truncate">{f.name}</div>
               <div className="text-[11px] text-muted-foreground">Position {idx + 1}</div>
             </div>
-            <button onClick={() => move(idx, -1)} disabled={idx === 0} className="p-1.5 rounded-full hover:bg-muted/60 disabled:opacity-30">
+            <button type="button" onClick={() => move(idx, -1)} disabled={idx === 0} className="p-1.5 rounded-full hover:bg-muted/60 disabled:opacity-30">
               <ArrowUp className="w-4 h-4" />
             </button>
-            <button onClick={() => move(idx, 1)} disabled={idx === folders.length - 1} className="p-1.5 rounded-full hover:bg-muted/60 disabled:opacity-30">
+            <button type="button" onClick={() => move(idx, 1)} disabled={idx === folders.length - 1} className="p-1.5 rounded-full hover:bg-muted/60 disabled:opacity-30">
               <ArrowDown className="w-4 h-4" />
             </button>
-            <button onClick={() => setEditing({ id: f.id, name: f.name, icon: f.icon })} className="p-1.5 rounded-full hover:bg-muted/60">
+            <button type="button" onClick={() => setEditing({ id: f.id, name: f.name, icon: f.icon })} className="p-1.5 rounded-full hover:bg-muted/60">
               <Pencil className="w-4 h-4" />
             </button>
-            <button onClick={() => remove(f.id)} className="p-1.5 rounded-full hover:bg-muted/60 text-destructive">
+            <button type="button" onClick={() => remove(f.id)} className="p-1.5 rounded-full hover:bg-muted/60 text-destructive">
               <Trash2 className="w-4 h-4" />
             </button>
           </div>
@@ -186,11 +186,11 @@ export default function CustomFoldersPage() {
           <div className="bg-background rounded-2xl p-4 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold">{editing.id ? "Edit folder" : "New folder"}</h3>
-              <button onClick={() => setEditing(null)}><X className="w-4 h-4" /></button>
+              <button type="button" onClick={() => setEditing(null)}><X className="w-4 h-4" /></button>
             </div>
             <div className="flex flex-wrap gap-1.5 mb-3">
               {ICONS.map((ic) => (
-                <button
+                <button type="button"
                   key={ic}
                   onClick={() => setEditing({ ...editing, icon: ic })}
                   className={`text-lg p-2 rounded-lg ${editing.icon === ic ? "bg-primary/10 ring-1 ring-primary/40" : "hover:bg-muted/50"}`}
@@ -206,7 +206,7 @@ export default function CustomFoldersPage() {
               autoFocus
               className="w-full px-3 py-2.5 rounded-xl bg-muted/30 border border-border/40 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
-            <button onClick={save} className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium">
+            <button type="button" onClick={save} className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium">
               {editing.id ? "Save changes" : "Create folder"}
             </button>
           </div>

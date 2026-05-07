@@ -82,7 +82,7 @@ export default function FlightSearchForm({
             { id: "oneway", label: "One Way", icon: Plane },
             { id: "multicity", label: "Multi-City", icon: MapPin },
           ].map((type) => (
-            <button
+            <button type="button"
               key={type.id}
               onClick={() => setTripType(type.id as typeof tripType)}
               className={cn(

@@ -179,7 +179,7 @@ export default function LinkedDevicesPage() {
         className="sticky top-0 z-30 flex items-center gap-3 border-b border-border/40 bg-background/85 px-4 backdrop-blur-xl safe-area-top"
         style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 12px)", paddingBottom: 12 }}
       >
-        <button
+        <button type="button"
           aria-label="Back"
           onClick={() => navigate(-1)}
           className="-ml-2 rounded-full p-2 hover:bg-foreground/5"
@@ -230,7 +230,7 @@ export default function LinkedDevicesPage() {
                 className="pl-9 pr-8 h-9 rounded-full bg-muted/40 border-border/40 text-xs"
               />
               {search && (
-                <button
+                <button type="button"
                   onClick={() => setSearch("")}
                   aria-label="Clear search"
                   className="absolute right-2 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:bg-muted/60"

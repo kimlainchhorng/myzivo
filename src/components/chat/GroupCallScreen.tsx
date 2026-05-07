@@ -143,7 +143,7 @@ export default function GroupCallScreen({
 
         {/* Add participant tile */}
         {totalParticipants < 8 && (
-          <button
+          <button type="button"
             onClick={onInvite}
             className="rounded-2xl border-2 border-dashed border-border/20 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary/30 hover:text-primary transition-colors backdrop-blur-sm"
           >

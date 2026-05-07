@@ -70,7 +70,7 @@ export default function BundleProgressBanner({ step, completed }: Props) {
             const isDone = completedSet.has(s.key);
             return (
               <div key={s.key} className="flex items-center gap-1.5 shrink-0">
-                <button
+                <button type="button"
                   onClick={() => navigate(propagate(s.to))}
                   className={`flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-bold transition-colors ${
                     isActive
@@ -96,7 +96,7 @@ export default function BundleProgressBanner({ step, completed }: Props) {
           })}
         </div>
 
-        <button
+        <button type="button"
           onClick={exitBundle}
           className="w-7 h-7 rounded-full bg-white/15 flex items-center justify-center"
           aria-label="Exit bundle"

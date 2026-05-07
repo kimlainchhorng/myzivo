@@ -28,7 +28,7 @@ export function ThemeToggle({ onChange }: ThemeToggleProps) {
   return (
     <div className="grid grid-cols-3 gap-2">
       {options.map(({ value, label, icon: Icon }) => (
-        <button
+        <button type="button"
           key={value}
           onClick={() => handleChange(value)}
           className={cn(

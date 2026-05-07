@@ -47,7 +47,7 @@ const FlightCompareWidget = ({ compareList, onRemove }: FlightCompareWidgetProps
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {compareList.map((flight, index) => (
             <div key={flight.id} className="relative bg-card/50 backdrop-blur-xl border border-border/50 rounded-2xl p-4">
-              <button
+              <button type="button"
                 onClick={() => onRemove(flight.id)}
                 className="absolute top-2 right-2 p-1.5 rounded-full bg-destructive/10 text-destructive hover:bg-destructive/20 transition-all duration-200 active:scale-[0.90] touch-manipulation"
               >
@@ -97,7 +97,7 @@ const FlightCompareWidget = ({ compareList, onRemove }: FlightCompareWidgetProps
           ))}
 
           {compareList.length < 3 && compareList.length > 0 && (
-            <button
+            <button type="button"
               onClick={() => {
                 toast.info("Search for flights to add", { description: "Tap the compare icon on a flight in the search results." });
                 navigate("/book-flight");

@@ -166,7 +166,7 @@ export default function StoreSideRail({
               <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Address</p>
               <p className="mt-0.5 text-sm text-foreground leading-snug">{store.address}</p>
             </div>
-            <button
+            <button type="button"
               onClick={handleCopyAddress}
               className="h-8 w-8 rounded-lg border border-border/40 bg-background/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-background/80 transition-colors"
               aria-label="Copy address"

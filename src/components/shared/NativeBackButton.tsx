@@ -21,7 +21,7 @@ export default function NativeBackButton({ to = "/" }: NativeBackButtonProps) {
   return (
     <div className="fixed top-0 left-0 right-0 z-30 safe-area-top pointer-events-none">
       <div className="px-3 pt-2 pointer-events-auto inline-block">
-        <button
+        <button type="button"
           onClick={() => (to === -1 ? navigate(-1) : navigate(to))}
           aria-label="Back"
           className="w-10 h-10 rounded-full bg-card/80 backdrop-blur-md border border-border/40 flex items-center justify-center shadow-sm touch-manipulation active:scale-90 transition-transform"

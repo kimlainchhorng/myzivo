@@ -384,7 +384,7 @@ export default function MessageRequestsPage() {
       >
         {selectMode ? (
           <>
-            <button
+            <button type="button"
               onClick={exitSelectMode}
               aria-label="Exit selection"
               className="h-9 w-9 rounded-full hover:bg-muted/60 flex items-center justify-center"
@@ -396,7 +396,7 @@ export default function MessageRequestsPage() {
                 {selectedIds.size > 0 ? `${selectedIds.size} selected` : "Select"}
               </h1>
             </div>
-            <button
+            <button type="button"
               onClick={handleSelectAll}
               className="text-[12px] font-semibold text-primary px-2 py-1 rounded-full hover:bg-muted/50"
             >
@@ -405,7 +405,7 @@ export default function MessageRequestsPage() {
           </>
         ) : (
           <>
-            <button
+            <button type="button"
               onClick={goBack}
               aria-label="Back"
               className="h-9 w-9 rounded-full hover:bg-muted/60 flex items-center justify-center"
@@ -419,7 +419,7 @@ export default function MessageRequestsPage() {
               )}
             </div>
             {totalUnread > 0 && (
-              <button
+              <button type="button"
                 onClick={handleMarkAllRead}
                 className="text-[12px] font-semibold text-primary flex items-center gap-1 px-2 py-1 rounded-full hover:bg-muted/50"
               >
@@ -439,7 +439,7 @@ export default function MessageRequestsPage() {
             const count = v === "active" ? activeRequests.length : dismissedRequests.length;
             const selected = view === v;
             return (
-              <button
+              <button type="button"
                 key={v}
                 onClick={() => setView(v)}
                 className={cn(
@@ -464,7 +464,7 @@ export default function MessageRequestsPage() {
             );
           })}
           {view === "dismissed" && (
-            <button
+            <button type="button"
               onClick={handleClearDismissed}
               className="ml-auto text-[12px] font-semibold text-primary flex items-center gap-1 px-2 py-1 rounded-full hover:bg-muted/50"
             >
@@ -496,7 +496,7 @@ export default function MessageRequestsPage() {
                 : "Off — the requests row is hidden from your inbox."}
             </p>
           </div>
-          <button
+          <button type="button"
             role="switch"
             aria-checked={allowMessageRequests}
             onClick={() => {
@@ -573,7 +573,7 @@ export default function MessageRequestsPage() {
                   {isSelected && <Check className="h-3.5 w-3.5" />}
                 </div>
               ) : (
-                <button
+                <button type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     setPreviewUserId(r.otherUserId);
@@ -587,7 +587,7 @@ export default function MessageRequestsPage() {
                   </Avatar>
                 </button>
               )}
-              <button
+              <button type="button"
                 onClick={(e) => {
                   e.stopPropagation();
                   if (selectMode) {
@@ -613,21 +613,21 @@ export default function MessageRequestsPage() {
               </button>
               {!selectMode && view === "active" && (
                 <div className="flex flex-col gap-1.5 shrink-0">
-                  <button
+                  <button type="button"
                     onClick={(e) => { e.stopPropagation(); handleAccept(r); }}
                     aria-label={`Accept ${r.name}`}
                     className="h-8 w-8 rounded-full bg-primary text-primary-foreground flex items-center justify-center active:scale-90 transition-transform"
                   >
                     <Check className="h-4 w-4" />
                   </button>
-                  <button
+                  <button type="button"
                     onClick={(e) => { e.stopPropagation(); handleDismiss(r); }}
                     aria-label={`Delete ${r.name}'s request`}
                     className="h-8 w-8 rounded-full bg-muted text-muted-foreground flex items-center justify-center active:scale-90 transition-transform"
                   >
                     <X className="h-4 w-4" />
                   </button>
-                  <button
+                  <button type="button"
                     onClick={(e) => { e.stopPropagation(); handleBlock(r); }}
                     aria-label={`Block ${r.name}`}
                     className="h-8 w-8 rounded-full bg-destructive/15 text-destructive flex items-center justify-center active:scale-90 transition-transform"
@@ -637,7 +637,7 @@ export default function MessageRequestsPage() {
                 </div>
               )}
               {!selectMode && view === "dismissed" && (
-                <button
+                <button type="button"
                   onClick={(e) => { e.stopPropagation(); handleRestore(r); }}
                   className="shrink-0 h-9 px-3 rounded-full bg-primary/10 text-primary text-xs font-semibold flex items-center gap-1.5 active:scale-95 transition-transform"
                 >
@@ -658,14 +658,14 @@ export default function MessageRequestsPage() {
           className="fixed inset-x-0 bottom-0 z-20 bg-background/95 backdrop-blur border-t border-border/40 px-4 py-3 flex items-center gap-2"
           style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom, 0px))" }}
         >
-          <button
+          <button type="button"
             onClick={handleBulkDismiss}
             className="flex-1 h-11 rounded-full bg-muted text-foreground font-semibold text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
           >
             <X className="h-4 w-4" />
             Delete {selectedIds.size}
           </button>
-          <button
+          <button type="button"
             onClick={handleBulkBlock}
             className="flex-1 h-11 rounded-full bg-destructive text-destructive-foreground font-semibold text-sm flex items-center justify-center gap-2 active:scale-[0.98] transition-transform"
           >

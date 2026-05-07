@@ -156,7 +156,7 @@ export default function MultiStopRideBuilder() {
       {/* Header */}
       <header className="sticky top-0 z-30 bg-background/90 backdrop-blur border-b border-border/40 pt-safe">
         <div className="max-w-screen-md mx-auto px-4 py-3 flex items-center gap-3">
-          <button
+          <button type="button"
             onClick={() => navigate(-1)}
             className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center"
             aria-label="Back"
@@ -211,7 +211,7 @@ export default function MultiStopRideBuilder() {
                   exit={{ opacity: 0, x: -10 }}
                   className="rounded-2xl border border-border/50 bg-card p-3 flex items-center gap-2 shadow-sm"
                 >
-                  <button
+                  <button type="button"
                     onClick={() => moveStop(i, i - 1)}
                     disabled={i === 0}
                     className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-[11px] font-bold disabled:opacity-40"
@@ -219,7 +219,7 @@ export default function MultiStopRideBuilder() {
                   >
                     ↑
                   </button>
-                  <button
+                  <button type="button"
                     onClick={() => moveStop(i, i + 1)}
                     disabled={i === stops.length - 1}
                     className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center text-[11px] font-bold disabled:opacity-40"
@@ -239,7 +239,7 @@ export default function MultiStopRideBuilder() {
                     />
                   </div>
                   {stops.length > 1 && (
-                    <button
+                    <button type="button"
                       onClick={() => removeStop(i)}
                       className="w-9 h-9 rounded-xl bg-destructive/10 text-destructive flex items-center justify-center"
                       aria-label="Remove stop"
@@ -270,7 +270,7 @@ export default function MultiStopRideBuilder() {
             </Label>
             <div className="flex flex-wrap gap-2">
               {favorites.slice(0, 8).map((p) => (
-                <button
+                <button type="button"
                   key={`${p.kind}-${p.id}`}
                   onClick={() => {
                     const firstEmpty = stops.findIndex((s) => !s.trim());

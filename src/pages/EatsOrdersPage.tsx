@@ -152,7 +152,7 @@ export default function EatsOrdersPage() {
             { id: "delivered" as const, label: "Delivered" },
             { id: "cancelled" as const, label: "Cancelled" },
           ]).map(f => (
-            <button key={f.id} onClick={() => setFilter(f.id)}
+            <button type="button" key={f.id} onClick={() => setFilter(f.id)}
               className={cn("px-3 py-1.5 rounded-full text-[10px] font-bold transition-all touch-manipulation active:scale-95",
                 filter === f.id ? "bg-primary text-primary-foreground shadow-sm" : "bg-muted/50 text-muted-foreground border border-border/40")}>
               {f.label}
@@ -188,7 +188,7 @@ export default function EatsOrdersPage() {
           return (
             <motion.div key={order.id} initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.03 }}>
-              <button onClick={() => setSelectedOrder(order)}
+              <button type="button" onClick={() => setSelectedOrder(order)}
                 className="w-full text-left rounded-2xl bg-card border border-border/40 p-4 hover:border-primary/20 transition-all touch-manipulation active:scale-[0.99] space-y-3">
                 <div className="flex items-center gap-3">
                   {restaurant?.logo_url ? (
@@ -258,7 +258,7 @@ export default function EatsOrdersPage() {
                     <Receipt className="w-5 h-5 text-primary" />
                     <h2 className="text-lg font-bold text-foreground">Order Receipt</h2>
                   </div>
-                  <button onClick={() => setSelectedOrder(null)}
+                  <button type="button" onClick={() => setSelectedOrder(null)}
                     className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center touch-manipulation active:scale-90">
                     <X className="w-4 h-4" />
                   </button>

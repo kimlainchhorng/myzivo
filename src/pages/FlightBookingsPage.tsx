@@ -171,7 +171,7 @@ export default function FlightBookingsPage() {
           {/* Filter tabs — horizontal scroll */}
           <div className="flex gap-1.5 mb-5 overflow-x-auto pb-1 scrollbar-none -mx-1 px-1">
             {FILTER_TABS.map(({ key, label, icon: Icon }) => (
-              <button
+              <button type="button"
                 key={key}
                 onClick={() => setActiveTab(key)}
                 className={cn(
@@ -432,7 +432,7 @@ function BookingDetailsModal({ bookingId, onClose }: { bookingId: string | null;
               <div className="space-y-2.5 text-sm">
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Booking Ref</span>
-                  <button onClick={handleCopy} className="flex items-center gap-1.5 font-mono font-bold hover:text-[hsl(var(--flights))] transition-colors">
+                  <button type="button" onClick={handleCopy} className="flex items-center gap-1.5 font-mono font-bold hover:text-[hsl(var(--flights))] transition-colors">
                     {booking.booking_reference}
                     {copied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3 text-muted-foreground" />}
                   </button>
@@ -507,10 +507,10 @@ function BookingDetailsModal({ bookingId, onClose }: { bookingId: string | null;
                   <Separator className="bg-border/30" />
                   <div className="p-3 rounded-xl bg-destructive/5 border border-destructive/20 space-y-2">
                     <p className="text-xs font-semibold text-destructive">Need help?</p>
-                    <button onClick={() => import("@/lib/openExternalUrl").then(({ openSystemUrl }) => openSystemUrl("mailto:support@hizovo.com"))} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                    <button type="button" onClick={() => import("@/lib/openExternalUrl").then(({ openSystemUrl }) => openSystemUrl("mailto:support@hizovo.com"))} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors">
                       <Mail className="w-3.5 h-3.5" /> support@hizovo.com
                     </button>
-                    <button onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl("https://hizovo.com/help"))} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors">
+                    <button type="button" onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl("https://hizovo.com/help"))} className="flex items-center gap-2 text-xs text-muted-foreground hover:text-foreground transition-colors">
                       <MessageCircle className="w-3.5 h-3.5" /> Help Center
                     </button>
                   </div>

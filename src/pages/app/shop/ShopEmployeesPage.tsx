@@ -538,7 +538,7 @@ export default function ShopEmployeesPage() {
     <AppLayout title="Employees" hideHeader>
       <div className="flex flex-col px-4 pt-3 pb-24 max-w-2xl mx-auto">
         <div className="flex items-center gap-2.5 mb-5">
-          <button
+          <button type="button"
             onClick={() => navigate(-1)}
             className="w-8 h-8 rounded-full bg-muted/60 flex items-center justify-center active:scale-90 transition-transform"
           >
@@ -579,7 +579,7 @@ export default function ShopEmployeesPage() {
 
             {/* Quick links */}
             <div className="grid grid-cols-2 gap-2">
-              <button
+              <button type="button"
                 onClick={() => navigate("/shop-dashboard/employee-schedule")}
                 className="flex items-center gap-2 rounded-2xl border border-border/30 bg-card p-3 active:scale-[0.98] transition-transform text-left"
               >
@@ -592,7 +592,7 @@ export default function ShopEmployeesPage() {
                 </div>
                 <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
               </button>
-              <button
+              <button type="button"
                 onClick={() => navigate("/shop-dashboard/employee-rules")}
                 className="flex items-center gap-2 rounded-2xl border border-border/30 bg-card p-3 active:scale-[0.98] transition-transform text-left"
               >
@@ -616,7 +616,7 @@ export default function ShopEmployeesPage() {
                 </div>
                 <div className="flex items-center gap-2">
                   {isOnline ? <Wifi className="w-4 h-4 text-emerald-500" /> : <WifiOff className="w-4 h-4 text-amber-500" />}
-                  <button
+                  <button type="button"
                     onClick={syncOfflineSales}
                     className="text-xs px-2 py-1 rounded-md border border-border/40 flex items-center gap-1"
                     disabled={syncing}
@@ -627,13 +627,13 @@ export default function ShopEmployeesPage() {
               </div>
 
               <div className="grid grid-cols-2 gap-2 mt-3">
-                <button
+                <button type="button"
                   onClick={() => handleClock("clock_in")}
                   className="h-9 rounded-lg bg-emerald-500 text-white text-xs font-semibold flex items-center justify-center gap-1"
                 >
                   <Clock3 className="w-3.5 h-3.5" /> Clock In (GPS)
                 </button>
-                <button
+                <button type="button"
                   onClick={() => handleClock("clock_out")}
                   className="h-9 rounded-lg bg-slate-700 text-white text-xs font-semibold flex items-center justify-center gap-1"
                 >
@@ -673,7 +673,7 @@ export default function ShopEmployeesPage() {
                 />
               </div>
 
-              <button onClick={handleSellNow} className="mt-2 h-9 w-full rounded-lg bg-primary text-primary-foreground text-xs font-semibold">
+              <button type="button" onClick={handleSellNow} className="mt-2 h-9 w-full rounded-lg bg-primary text-primary-foreground text-xs font-semibold">
                 Sell From Truck
               </button>
             </div>
@@ -701,7 +701,7 @@ export default function ShopEmployeesPage() {
                   <Users className="w-4 h-4 text-blue-500" />
                   <p className="text-sm font-semibold">Team</p>
                 </div>
-                <button
+                <button type="button"
                   onClick={openAddEmployee}
                   className="text-[11px] font-semibold text-primary flex items-center gap-1"
                 >
@@ -795,19 +795,19 @@ export default function ShopEmployeesPage() {
                           <ChevronRight className="w-4 h-4 text-muted-foreground/40 mt-1" />
                         </button>
                         <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border/30">
-                          <button
+                          <button type="button"
                             onClick={() => openEditEmployee(employee)}
                             className="flex-1 h-8 rounded-lg bg-background/60 border border-border/30 text-[11px] font-semibold flex items-center justify-center gap-1"
                           >
                             <Pencil className="w-3 h-3" /> Edit
                           </button>
-                          <button
+                          <button type="button"
                             onClick={() => toggleStatus(employee)}
                             className="flex-1 h-8 rounded-lg bg-background/60 border border-border/30 text-[11px] font-semibold flex items-center justify-center gap-1"
                           >
                             <Power className="w-3 h-3" /> {employee.status === "active" ? "Disable" : "Enable"}
                           </button>
-                          <button
+                          <button type="button"
                             onClick={() => deleteEmployee(employee)}
                             className="w-8 h-8 rounded-lg bg-rose-500/10 text-rose-600 dark:text-rose-400 flex items-center justify-center"
                             aria-label="Remove employee"
@@ -847,7 +847,7 @@ export default function ShopEmployeesPage() {
                 <p className="font-semibold text-[15px]">
                   {editingEmployeeId ? "Edit employee" : "Add employee"}
                 </p>
-                <button onClick={closeEmployeeForm} className="p-1 rounded-lg hover:bg-muted/60">
+                <button type="button" onClick={closeEmployeeForm} className="p-1 rounded-lg hover:bg-muted/60">
                   <X className="w-4 h-4 text-muted-foreground" />
                 </button>
               </div>

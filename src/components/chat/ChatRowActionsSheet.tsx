@@ -87,7 +87,7 @@ export default function ChatRowActionsSheet({
 
         {customFolders.length > 0 && (
           <div className="mt-3 rounded-xl border border-border/50 bg-muted/20 p-2">
-            <button
+            <button type="button"
               onClick={() => setShowFolderMenu((v) => !v)}
               className="w-full flex items-center justify-between gap-2 px-2 py-1.5 rounded-lg hover:bg-muted/60"
             >
@@ -103,7 +103,7 @@ export default function ChatRowActionsSheet({
                 {customFolders.map((folder) => {
                   const inFolder = membership.has(folder.id);
                   return (
-                    <button
+                    <button type="button"
                       key={folder.id}
                       onClick={() => {
                         if (inFolder) {
@@ -141,7 +141,7 @@ export default function ChatRowActionsSheet({
             const Icon = it.icon;
             const disabled = (it as { disabled?: boolean }).disabled;
             return (
-              <button
+              <button type="button"
                 key={it.key}
                 disabled={disabled}
                 onClick={() => { it.onClick(); onClose(); }}

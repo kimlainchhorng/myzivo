@@ -97,7 +97,7 @@ export default function CoinPurchaseSuccess() {
               {isLiveReturn ? `Back to Live (${countdown})` : "Back to Wallet"}
             </Button>
             {isLiveReturn && (
-              <button
+              <button type="button"
                 onClick={() => navigate("/wallet")}
                 className="mt-3 text-xs text-muted-foreground underline"
               >

@@ -164,7 +164,7 @@ export default function FlightPriceCalendar({ className, onSelectDate, basePrice
                   const isLowest = dayData.price === lowestPrice;
 
                   return (
-                    <button
+                    <button type="button"
                       key={day}
                       onClick={() =>
                         onSelectDate?.(

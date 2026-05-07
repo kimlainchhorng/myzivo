@@ -68,7 +68,7 @@ export default function GiftSendSheet({ open, onClose, recipientId }: Props) {
 
         <div className="grid grid-cols-4 gap-2 mt-4">
           {GIFT_CATALOG.slice(0, 32).map((g) => (
-            <button
+            <button type="button"
               key={g.name}
               onClick={() => setSelected(g)}
               className={cn(
@@ -99,7 +99,7 @@ export default function GiftSendSheet({ open, onClose, recipientId }: Props) {
               maxLength={80}
               className="w-full px-3 py-2.5 rounded-xl bg-muted/30 border border-border/40 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
-            <button
+            <button type="button"
               onClick={send}
               disabled={sending}
               className="mt-3 w-full py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-500 text-white text-sm font-semibold disabled:opacity-50"

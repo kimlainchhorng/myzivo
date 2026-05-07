@@ -194,7 +194,7 @@ export default function HeroSearchCard() {
                   <InputField icon={MapPin} placeholder="Where from?" />
                   <div className="relative">
                     <InputField icon={MapPin} placeholder="Where to?" />
-                    <button
+                    <button type="button"
                       className="absolute -left-5 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-card border border-border/40 flex items-center justify-center hover:bg-primary/10 hover:border-primary/30 hover:rotate-180 transition-all duration-300 z-10 hidden sm:flex hover:scale-110"
                       style={{ boxShadow: "0 2px 8px -2px hsl(var(--foreground) / 0.08)" }}
                       aria-label="Swap origin and destination"

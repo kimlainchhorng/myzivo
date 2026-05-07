@@ -153,7 +153,7 @@ export default function ChatSecurity({ open, onClose, chatPartnerId, chatPartner
               <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
                 <Shield className="w-5 h-5 text-primary" /> Privacy & Security
               </h3>
-              <button onClick={onClose} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
+              <button type="button" onClick={onClose} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center">
                 <X className="w-4 h-4 text-muted-foreground" />
               </button>
             </div>
@@ -179,7 +179,7 @@ export default function ChatSecurity({ open, onClose, chatPartnerId, chatPartner
               </h4>
               <div className="grid grid-cols-3 gap-2">
                 {RETENTION_OPTIONS.map((opt) => (
-                  <button
+                  <button type="button"
                     key={opt.days}
                     onClick={() => handleRetention(opt.days)}
                     className={`py-2.5 rounded-xl border text-xs font-medium transition-colors ${
@@ -193,7 +193,7 @@ export default function ChatSecurity({ open, onClose, chatPartnerId, chatPartner
             </div>
 
             {/* Block user */}
-            <button
+            <button type="button"
               onClick={() => isBlocked ? handleBlock() : setShowBlockConfirm(true)}
               className={`w-full flex items-center gap-3 p-4 rounded-2xl border transition-colors ${
                 isBlocked ? "border-destructive/30 bg-destructive/5" : "border-border/30 hover:bg-muted/30"
@@ -213,7 +213,7 @@ export default function ChatSecurity({ open, onClose, chatPartnerId, chatPartner
             </button>
 
             {/* Report */}
-            <button
+            <button type="button"
               onClick={() => setShowReportForm(!showReportForm)}
               className="w-full flex items-center gap-3 p-4 rounded-2xl border border-border/30 hover:bg-muted/30 transition-colors"
             >
@@ -234,7 +234,7 @@ export default function ChatSecurity({ open, onClose, chatPartnerId, chatPartner
               >
                 <div className="space-y-1.5">
                   {REPORT_REASONS.map((reason) => (
-                    <button
+                    <button type="button"
                       key={reason}
                       onClick={() => setReportReason(reason)}
                       className={`w-full text-left px-3 py-2.5 rounded-xl border text-xs transition-colors ${
@@ -251,14 +251,14 @@ export default function ChatSecurity({ open, onClose, chatPartnerId, chatPartner
                   onChange={(e) => setReportDetails(e.target.value)}
                   className="w-full h-20 px-3 py-2 rounded-xl border border-border/40 bg-muted/30 text-sm text-foreground placeholder:text-muted-foreground resize-none"
                 />
-                <button onClick={handleReport} className="w-full h-10 rounded-xl bg-amber-500 text-white text-sm font-semibold">
+                <button type="button" onClick={handleReport} className="w-full h-10 rounded-xl bg-amber-500 text-white text-sm font-semibold">
                   Submit Report
                 </button>
               </motion.div>
             )}
 
             {/* Clear chat */}
-            <button
+            <button type="button"
               onClick={() => setShowClearConfirm(true)}
               className="w-full flex items-center gap-3 p-4 rounded-2xl border border-destructive/20 hover:bg-destructive/5 transition-colors"
             >
@@ -288,10 +288,10 @@ export default function ChatSecurity({ open, onClose, chatPartnerId, chatPartner
                   <h4 className="text-base font-bold text-foreground">Block {chatPartnerName}?</h4>
                   <p className="text-xs text-muted-foreground">They won't be able to send you messages or see your online status.</p>
                   <div className="flex gap-3">
-                    <button onClick={() => setShowBlockConfirm(false)} className="flex-1 h-11 rounded-xl bg-muted text-sm font-semibold text-foreground">
+                    <button type="button" onClick={() => setShowBlockConfirm(false)} className="flex-1 h-11 rounded-xl bg-muted text-sm font-semibold text-foreground">
                       Cancel
                     </button>
-                    <button onClick={handleBlock} className="flex-1 h-11 rounded-xl bg-destructive text-destructive-foreground text-sm font-semibold">
+                    <button type="button" onClick={handleBlock} className="flex-1 h-11 rounded-xl bg-destructive text-destructive-foreground text-sm font-semibold">
                       Block
                     </button>
                   </div>
@@ -316,10 +316,10 @@ export default function ChatSecurity({ open, onClose, chatPartnerId, chatPartner
                   <h4 className="text-base font-bold text-foreground">Clear all messages?</h4>
                   <p className="text-xs text-muted-foreground">This will delete all messages you sent in this conversation. This can't be undone.</p>
                   <div className="flex gap-3">
-                    <button onClick={() => setShowClearConfirm(false)} className="flex-1 h-11 rounded-xl bg-muted text-sm font-semibold text-foreground">
+                    <button type="button" onClick={() => setShowClearConfirm(false)} className="flex-1 h-11 rounded-xl bg-muted text-sm font-semibold text-foreground">
                       Cancel
                     </button>
-                    <button onClick={handleClearChat} className="flex-1 h-11 rounded-xl bg-destructive text-destructive-foreground text-sm font-semibold">
+                    <button type="button" onClick={handleClearChat} className="flex-1 h-11 rounded-xl bg-destructive text-destructive-foreground text-sm font-semibold">
                       Clear
                     </button>
                   </div>

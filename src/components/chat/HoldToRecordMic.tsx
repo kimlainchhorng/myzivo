@@ -348,7 +348,7 @@ export default function HoldToRecordMic({ voice, className }: Props) {
             style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}
           >
             <div className="mx-2 mb-1 px-3 py-2.5 rounded-2xl bg-card/90 backdrop-blur-2xl border border-border/40 shadow-xl flex items-center gap-2">
-              <button
+              <button type="button"
                 onClick={handleLockedCancel}
                 className="h-10 w-10 rounded-full bg-destructive/10 text-destructive flex items-center justify-center active:scale-90 transition-transform"
                 aria-label="Cancel recording"
@@ -378,14 +378,14 @@ export default function HoldToRecordMic({ voice, className }: Props) {
                 </div>
               </div>
 
-              <button
+              <button type="button"
                 onClick={togglePause}
                 className="h-10 w-10 rounded-full bg-muted text-foreground flex items-center justify-center active:scale-90 transition-transform"
                 aria-label={paused ? "Resume" : "Pause"}
               >
                 {paused ? <Play className="h-4 w-4" /> : <Pause className="h-4 w-4" />}
               </button>
-              <button
+              <button type="button"
                 onClick={handleLockedSend}
                 className="h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center active:scale-90 transition-transform shadow-md"
                 aria-label="Send voice note"

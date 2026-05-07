@@ -169,7 +169,7 @@ export default function StoreTrainingSection({ storeId }: Props) {
           { id: "assignments" as const, label: "Assignments", icon: Users },
           { id: "certifications" as const, label: "Certifications", icon: Award },
         ].map((t) => (
-          <button
+          <button type="button"
             key={t.id}
             onClick={() => setTab(t.id)}
             className={cn(
@@ -216,7 +216,7 @@ export default function StoreTrainingSection({ storeId }: Props) {
             filtered.map((p) => {
               const cfg = TYPE_CONFIG[p.type];
               return (
-                <button
+                <button type="button"
                   key={p.id}
                   onClick={() => setSelectedProgram(p)}
                   className="w-full text-left rounded-xl border border-border/40 bg-card p-4 hover:shadow-md transition-all"
@@ -250,7 +250,7 @@ export default function StoreTrainingSection({ storeId }: Props) {
       {tab === "certifications" && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {programs.filter((p) => p.type === "certification").map((p) => (
-            <button
+            <button type="button"
               key={p.id}
               onClick={() => setSelectedProgram(p)}
               className="text-left rounded-xl border border-border/40 bg-card p-4 hover:shadow-md transition-all"
@@ -342,7 +342,7 @@ export default function StoreTrainingSection({ storeId }: Props) {
               <Label>Type</Label>
               <div className="flex gap-2">
                 {(["training", "onboarding", "certification"] as const).map((t) => (
-                  <button
+                  <button type="button"
                     key={t}
                     onClick={() => setNewProgram((p) => ({ ...p, type: t }))}
                     className={cn(
@@ -398,7 +398,7 @@ function AssignmentsView({ programs, employees }: { programs: TrainingProgram[];
     <div className="space-y-3">
       <div className="flex items-center gap-2 flex-wrap">
         {programs.map((p) => (
-          <button
+          <button type="button"
             key={p.id}
             onClick={() => setSelectedProgramId(p.id)}
             className={cn(

@@ -98,7 +98,7 @@ export default function CreatorLiveEarningsPage() {
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-30 bg-background/85 backdrop-blur-xl border-b border-border/30">
         <div className="flex items-center gap-3 px-4 py-3">
-          <button
+          <button type="button"
             onClick={() => navigate(-1)}
             className="h-11 w-11 -ml-2 rounded-full hover:bg-muted/50 active:scale-95 touch-manipulation flex items-center justify-center transition-transform"
             aria-label="Back"
@@ -149,7 +149,7 @@ export default function CreatorLiveEarningsPage() {
                   </p>
                 </div>
               </div>
-              <button
+              <button type="button"
                 onClick={() => navigate("/account/wallet")}
                 className="h-9 px-3 rounded-xl bg-white/10 hover:bg-white/15 backdrop-blur-md border border-white/10 text-[11px] font-bold text-white/90 active:scale-95 transition"
               >
@@ -450,7 +450,7 @@ export default function CreatorLiveEarningsPage() {
             {/* Quick amounts */}
             <div className="flex gap-2 flex-wrap">
               {QUICK_AMOUNTS.filter((a) => a * 100 <= availableCents).map((a) => (
-                <button
+                <button type="button"
                   key={a}
                   onClick={() => setAmount(String(a))}
                   className="h-10 px-4 rounded-xl bg-muted text-sm font-extrabold hover:bg-muted/70 active:scale-95 transition tabular-nums"
@@ -459,7 +459,7 @@ export default function CreatorLiveEarningsPage() {
                 </button>
               ))}
               {availableCents >= 1000 && (
-                <button
+                <button type="button"
                   onClick={() => setAmount((availableCents / 100).toFixed(2))}
                   className="h-10 px-4 rounded-xl bg-emerald-500/10 text-emerald-600 text-sm font-extrabold hover:bg-emerald-500/20 active:scale-95 transition"
                 >
@@ -478,7 +478,7 @@ export default function CreatorLiveEarningsPage() {
                   const Icon = m.icon;
                   const selected = method === m.id;
                   return (
-                    <button
+                    <button type="button"
                       key={m.id}
                       onClick={() => setMethod(m.id)}
                       className={`w-full h-14 px-3.5 rounded-2xl border-2 flex items-center gap-3 active:scale-[0.99] transition ${

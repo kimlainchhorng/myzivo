@@ -97,7 +97,7 @@ const TripModificationWidget = ({
           const isSelected = selectedOption === option.id;
           
           return (
-            <button
+            <button type="button"
               key={option.id}
               onClick={() => option.available && setSelectedOption(isSelected ? null : option.id)}
               disabled={!option.available}

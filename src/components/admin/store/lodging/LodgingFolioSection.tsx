@@ -234,7 +234,7 @@ export default function LodgingFolioSection({ storeId }: { storeId: string }) {
                 <p className="p-4 text-xs text-muted-foreground text-center">No reservations found</p>
               ) : (
                 filtered.map(r => (
-                  <button
+                  <button type="button"
                     key={r.id}
                     onClick={() => setSelectedId(r.id)}
                     className={`w-full text-left px-3 py-2.5 border-b border-border last:border-b-0 transition hover:bg-muted/30 ${selectedId === r.id ? "bg-primary/5 border-l-2 border-l-primary" : ""}`}
@@ -292,7 +292,7 @@ export default function LodgingFolioSection({ storeId }: { storeId: string }) {
                       <span className="text-xs flex-1 truncate">{c.label}</span>
                       <div className="flex items-center gap-2">
                         <span className="text-xs font-medium">{fmt(c.amount_cents)}</span>
-                        <button
+                        <button type="button"
                           onClick={() => removeCharge.mutate(c)}
                           className="text-destructive/60 hover:text-destructive"
                           title="Remove charge"

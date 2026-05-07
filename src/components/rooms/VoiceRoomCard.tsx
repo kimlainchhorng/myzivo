@@ -54,7 +54,7 @@ export default function VoiceRoomCard({ room, onJoin }: Props) {
             </span>
           )}
         </div>
-        <button
+        <button type="button"
           onClick={() => onJoin?.(room.id)}
           className="px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-bold active:scale-95 transition"
         >

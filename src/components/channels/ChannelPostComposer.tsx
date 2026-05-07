@@ -328,7 +328,7 @@ export function ChannelPostComposer({ channelId, onPosted }: Props) {
               ) : (
                 <img src={m.url} alt="" className="h-full w-full object-cover" />
               )}
-              <button
+              <button type="button"
                 onClick={() => removeMedia(i)}
                 className="absolute right-1 top-1 rounded-full bg-background/80 p-1 text-foreground hover:bg-background"
                 aria-label={`Remove ${m.type}`}

@@ -77,7 +77,7 @@ export default function GuestEssentialsCard({ value, onChange }: Props) {
           {ID_TYPES.map((t) => {
             const on = accepted.includes(t);
             return (
-              <button key={t} type="button" onClick={() => toggleId(t)}
+              <button type="button" key={t} type="button" onClick={() => toggleId(t)}
                 className={`px-2.5 py-1 rounded-full text-[11px] border transition ${on ? "bg-primary text-primary-foreground border-primary font-semibold" : "bg-background border-border text-foreground hover:border-primary/40"}`}>
                 {t}
               </button>

@@ -67,7 +67,7 @@ export default function ExpenseSplitCard({ expense, currentUserId, onSettle }: P
           const isMine = s.user_id === currentUserId;
           const settled = !!s.settled_at;
           return (
-            <button
+            <button type="button"
               key={s.user_id}
               onClick={() => isMine && !settled && onSettle?.(expense.id)}
               disabled={!isMine || settled}
@@ -100,7 +100,7 @@ export default function ExpenseSplitCard({ expense, currentUserId, onSettle }: P
       </div>
 
       {myShare && !myShare.settled_at && !isPayer && (
-        <button
+        <button type="button"
           onClick={() => onSettle?.(expense.id)}
           className="mt-2.5 w-full py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold active:opacity-80"
         >

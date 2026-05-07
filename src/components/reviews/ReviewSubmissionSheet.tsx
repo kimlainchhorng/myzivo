@@ -120,7 +120,7 @@ export function ReviewSubmissionSheet({
           >
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-bold">Write a Review</h2>
-              <button
+              <button type="button"
                 onClick={onClose}
                 className="h-8 w-8 rounded-full bg-muted flex items-center justify-center"
               >
@@ -133,7 +133,7 @@ export function ReviewSubmissionSheet({
                 <p className="text-sm text-muted-foreground mb-2">Rating</p>
                 <div className="flex gap-2">
                   {[1, 2, 3, 4, 5].map((star) => (
-                    <button
+                    <button type="button"
                       key={star}
                       onClick={() => setRating(star)}
                       className="transition-transform hover:scale-110"
@@ -197,7 +197,7 @@ export function ReviewSubmissionSheet({
                     {photos.map((photo, idx) => (
                       <div key={idx} className="relative w-20 h-20 rounded-lg overflow-hidden border border-border/30">
                         <img src={photo} alt={`Photo ${idx + 1}`} className="w-full h-full object-cover" />
-                        <button
+                        <button type="button"
                           onClick={() => handleRemovePhoto(idx)}
                           className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 hover:opacity-100 transition"
                         >

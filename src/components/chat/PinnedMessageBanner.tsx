@@ -63,7 +63,7 @@ export default function PinnedMessageBanner({ conversationId, onJumpTo, onUnpin,
   if (!pinned) return null;
 
   return (
-    <button
+    <button type="button"
       onClick={() => pinned && onJumpTo?.(pinned.id)}
       className="w-full flex items-center gap-2 px-3 py-2 bg-primary/5 border-b border-primary/20 text-left"
     >
@@ -73,7 +73,7 @@ export default function PinnedMessageBanner({ conversationId, onJumpTo, onUnpin,
         <div className="text-sm truncate">{pinned.message || "Attachment"}</div>
       </div>
       {canUnpin && (
-        <button
+        <button type="button"
           onClick={(e) => { e.stopPropagation(); onUnpin?.(pinned.id); }}
           className="p-1 rounded hover:bg-muted"
           aria-label="Unpin"

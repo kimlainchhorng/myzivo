@@ -101,11 +101,11 @@ export default function ShopAttendancePage() {
       <div className="flex flex-col pb-28">
         {/* Header */}
         <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-border/30 px-4 py-3 flex items-center gap-3" style={{ paddingTop: "var(--zivo-safe-top-sticky)" }}>
-          <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-full bg-muted/60 flex items-center justify-center">
+          <button type="button" onClick={() => navigate(-1)} className="w-9 h-9 rounded-full bg-muted/60 flex items-center justify-center">
             <ArrowLeft className="w-4 h-4" />
           </button>
           <h1 className="font-bold text-lg flex-1">Attendance & Leave</h1>
-          <button
+          <button type="button"
             onClick={() => setShowForm(true)}
             className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center"
           >
@@ -138,7 +138,7 @@ export default function ShopAttendancePage() {
               >
                 <div className="flex items-center justify-between">
                   <p className="font-semibold text-sm">Add Attendance Record</p>
-                  <button onClick={() => setShowForm(false)}><X className="w-4 h-4 text-muted-foreground" /></button>
+                  <button type="button" onClick={() => setShowForm(false)}><X className="w-4 h-4 text-muted-foreground" /></button>
                 </div>
                 <input
                   className="w-full text-sm px-3 py-2 rounded-xl border border-border/40 bg-background outline-none focus:ring-1 focus:ring-primary/30"
@@ -154,7 +154,7 @@ export default function ShopAttendancePage() {
                 />
                 <div className="flex gap-1.5 flex-wrap">
                   {(Object.keys(STATUS_META) as RecordType[]).map((s) => (
-                    <button
+                    <button type="button"
                       key={s}
                       onClick={() => setForm({ ...form, status: s })}
                       className={cn(
@@ -172,7 +172,7 @@ export default function ShopAttendancePage() {
                   value={form.notes}
                   onChange={(e) => setForm({ ...form, notes: e.target.value })}
                 />
-                <button
+                <button type="button"
                   onClick={handleSave}
                   disabled={saving}
                   className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50"
@@ -186,7 +186,7 @@ export default function ShopAttendancePage() {
           {/* Filter tabs */}
           <div className="flex gap-1.5 overflow-x-auto pb-1 -mx-4 px-4 scrollbar-none">
             {filterTabs.map((tab) => (
-              <button
+              <button type="button"
                 key={tab}
                 onClick={() => setFilterTab(tab)}
                 className={cn(

@@ -66,7 +66,7 @@ export default function LodgingTripHelpDrawer({ reservationNumber, propertyName,
             <div key={section.title} className="space-y-2">
               <p className="text-xs font-semibold uppercase tracking-normal text-muted-foreground">{section.title}</p>
               {section.items.map(({ href, label, icon: Icon, text }) => (
-                <button key={href} type="button" onClick={() => go(href)} className="w-full rounded-lg border bg-card p-3 text-left transition-colors hover:bg-accent">
+                <button type="button" key={href} type="button" onClick={() => go(href)} className="w-full rounded-lg border bg-card p-3 text-left transition-colors hover:bg-accent">
                   <span className="flex items-start gap-3">
                     <span className="mt-0.5 rounded-md bg-primary/10 p-2 text-primary"><Icon className="h-4 w-4" /></span>
                     <span className="min-w-0">

@@ -255,7 +255,7 @@ export default function PublicOrderSharePage() {
         </motion.div>
 
         {orderId && (
-          <button
+          <button type="button"
             onClick={() => {
               if (watchlist.has("order", orderId)) watchlist.remove("order", orderId);
               else watchlist.add("order", orderId, order.restaurant_name ?? null);

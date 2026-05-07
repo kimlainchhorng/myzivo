@@ -188,7 +188,7 @@ export default function AccountAnalyticsPage() {
         </div>
         <div className="flex gap-1 px-4 pb-2">
           {(["7d", "30d", "90d"] as Period[]).map((p) => (
-            <button
+            <button type="button"
               key={p}
               onClick={() => setPeriod(p)}
               className={cn(
@@ -231,7 +231,7 @@ export default function AccountAnalyticsPage() {
                 { id: "today" as Bucket, label: "Today" },
                 { id: "this_week" as Bucket, label: "This week" },
               ]).map((b) => (
-                <button
+                <button type="button"
                   key={b.id}
                   onClick={() => setTopBucket(b.id)}
                   className={cn(
@@ -249,7 +249,7 @@ export default function AccountAnalyticsPage() {
                 const Icon = m.icon;
                 const active = topMetric === m.id;
                 return (
-                  <button
+                  <button type="button"
                     key={m.id}
                     onClick={() => setTopMetric(m.id)}
                     className={cn(
@@ -280,7 +280,7 @@ export default function AccountAnalyticsPage() {
               </div>
             )}
             {!topLoading && topPosts && topPosts.map((post, i) => (
-              <button
+              <button type="button"
                 key={post.id}
                 onClick={() => navigate(`/reels?post=${post.id}`)}
                 className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted/30 active:bg-muted/40 transition-colors text-left"

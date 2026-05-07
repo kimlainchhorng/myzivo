@@ -79,7 +79,7 @@ export default function CreatePollModal({ open, onClose, onCreated }: CreatePoll
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-border/40">
             <h2 className="text-lg font-semibold">Create {isQuiz ? "Quiz" : "Poll"}</h2>
-            <button onClick={onClose} className="p-2 rounded-full hover:bg-muted/50">
+            <button type="button" onClick={onClose} className="p-2 rounded-full hover:bg-muted/50">
               <X className="h-5 w-5" />
             </button>
           </div>
@@ -108,7 +108,7 @@ export default function CreatePollModal({ open, onClose, onCreated }: CreatePoll
               {options.map((opt, i) => (
                 <div key={i} className="flex items-center gap-2">
                   {isQuiz && (
-                    <button
+                    <button type="button"
                       onClick={() => setCorrectIndex(i)}
                       className={cn(
                         "h-6 w-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-colors",
@@ -129,14 +129,14 @@ export default function CreatePollModal({ open, onClose, onCreated }: CreatePoll
                     className="flex-1 px-3 py-2.5 rounded-xl bg-muted/30 border border-border/40 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
                   />
                   {options.length > 2 && (
-                    <button onClick={() => removeOption(i)} className="p-1.5 rounded-full hover:bg-destructive/10">
+                    <button type="button" onClick={() => removeOption(i)} className="p-1.5 rounded-full hover:bg-destructive/10">
                       <Trash2 className="h-3.5 w-3.5 text-muted-foreground" />
                     </button>
                   )}
                 </div>
               ))}
               {options.length < 6 && (
-                <button
+                <button type="button"
                   onClick={addOption}
                   className="flex items-center gap-2 px-3 py-2.5 rounded-xl border border-dashed border-border/60 text-sm text-muted-foreground hover:border-primary/40 w-full"
                 >

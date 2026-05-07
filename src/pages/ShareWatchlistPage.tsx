@@ -28,7 +28,7 @@ export default function ShareWatchlistPage() {
     <div className="min-h-[100dvh] bg-background pb-20">
       <header className="sticky top-0 z-30 bg-background/90 backdrop-blur border-b border-border/40 pt-safe">
         <div className="max-w-screen-md mx-auto px-4 py-3 flex items-center gap-3">
-          <button
+          <button type="button"
             onClick={() => navigate(-1)}
             className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center"
             aria-label="Back"
@@ -150,14 +150,14 @@ function Row({
           {entry.kind === "trip" ? "Live ride" : "Live order"} · added {timeAgo(entry.addedAt)}
         </div>
       </div>
-      <button
+      <button type="button"
         onClick={() => setEditing(true)}
         className="w-9 h-9 rounded-xl bg-muted/60 hover:bg-muted flex items-center justify-center"
         aria-label="Rename"
       >
         <Pencil className="w-4 h-4 text-muted-foreground" />
       </button>
-      <button
+      <button type="button"
         onClick={onRemove}
         className="w-9 h-9 rounded-xl bg-destructive/10 text-destructive flex items-center justify-center"
         aria-label="Remove"

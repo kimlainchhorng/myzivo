@@ -114,7 +114,7 @@ export default function AdminBlockedLinksPage() {
           <CardContent>
             <div className="flex flex-wrap gap-1.5">
               {stats.byEndpoint.map(([ep, n]) => (
-                <button
+                <button type="button"
                   key={ep}
                   onClick={() => setEndpointFilter(ep === endpointFilter ? "all" : ep)}
                   className={`rounded-full border px-2 py-0.5 text-[11px] font-semibold transition ${
@@ -127,7 +127,7 @@ export default function AdminBlockedLinksPage() {
                 </button>
               ))}
               {endpointFilter !== "all" && (
-                <button
+                <button type="button"
                   onClick={() => setEndpointFilter("all")}
                   className="rounded-full border border-border bg-card px-2 py-0.5 text-[11px] font-semibold text-muted-foreground"
                 >
@@ -211,7 +211,7 @@ export default function AdminBlockedLinksPage() {
                       <User className="h-3 w-3" /> profile
                       <ExternalLink className="h-2.5 w-2.5" />
                     </Link>
-                    <button
+                    <button type="button"
                       onClick={() => setUserFilter(row.user_id)}
                       className="rounded border border-border bg-background px-1.5 py-0.5 text-primary hover:border-primary/40 hover:bg-primary/5"
                       title="Show only this user's attempts"

@@ -584,7 +584,7 @@ export const MyTripsDashboard = ({ className, onViewTrip, onDownloadBoardingPass
                                   <p className="text-xs text-muted-foreground">Booking Reference</p>
                                   <div className="flex items-center gap-2">
                                     <p className="font-mono font-semibold">{trip.bookingRef}</p>
-                                    <button 
+                                    <button type="button" 
                                       onClick={(e) => {
                                         e.stopPropagation();
                                         handleCopyBookingRef(trip.bookingRef);
@@ -600,7 +600,7 @@ export const MyTripsDashboard = ({ className, onViewTrip, onDownloadBoardingPass
                                     <p className="text-xs text-muted-foreground">PNR</p>
                                     <div className="flex items-center gap-2">
                                       <p className="font-mono font-semibold">{trip.pnr}</p>
-                                      <button 
+                                      <button type="button" 
                                         onClick={(e) => {
                                           e.stopPropagation();
                                           handleCopyBookingRef(trip.pnr!);

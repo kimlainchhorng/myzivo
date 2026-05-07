@@ -181,7 +181,7 @@ export default function LodgingParkingSection({ storeId }: { storeId: string }) 
         <div className="flex gap-2">
           <div className="flex rounded-lg border border-border overflow-hidden">
             {(["grid", "list"] as const).map(m => (
-              <button key={m} onClick={() => setViewMode(m)}
+              <button type="button" key={m} onClick={() => setViewMode(m)}
                 className={`px-2.5 py-1 text-[11px] font-medium capitalize ${viewMode === m ? "bg-primary text-primary-foreground" : "bg-card text-muted-foreground"}`}>
                 {m}
               </button>
@@ -229,7 +229,7 @@ export default function LodgingParkingSection({ storeId }: { storeId: string }) 
         {/* Filter */}
         <div className="flex gap-1.5 flex-wrap">
           {(["all", "available", "occupied", "reserved", "maintenance"] as const).map(s => (
-            <button key={s} onClick={() => setFilterStatus(s as any)}
+            <button type="button" key={s} onClick={() => setFilterStatus(s as any)}
               className={`rounded-full border px-2.5 py-1 text-[11px] font-medium capitalize ${filterStatus === s ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-muted-foreground"}`}>
               {s}
             </button>
@@ -250,7 +250,7 @@ export default function LodgingParkingSection({ storeId }: { storeId: string }) 
               const isOccupied = slot.status === "occupied";
               const isOverdue = isOccupied && slot.expected_out && slot.expected_out < today;
               return (
-                <button
+                <button type="button"
                   key={slot.id}
                   onClick={() => openEdit(slot)}
                   className={`rounded-lg border p-2 text-center transition hover:scale-105 ${isOverdue ? "border-rose-500/50 bg-rose-500/10" : STATUS_COLOR[slot.status]}`}

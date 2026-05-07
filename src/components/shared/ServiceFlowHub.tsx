@@ -94,7 +94,7 @@ const ServiceFlowHub = ({ currentService, className }: ServiceFlowHubProps) => {
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {recommendedServices.map((service) => (
-                <button
+                <button type="button"
                   key={service.id}
                   onClick={() => navigate(service.href)}
                   className={cn(
@@ -118,7 +118,7 @@ const ServiceFlowHub = ({ currentService, className }: ServiceFlowHubProps) => {
           <p className="text-xs text-muted-foreground mb-3">More services</p>
           <div className="flex flex-wrap gap-2">
             {otherServices.slice(0, 5).map((service) => (
-              <button
+              <button type="button"
                 key={service.id}
                 onClick={() => navigate(service.href)}
                 className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/50 hover:bg-muted transition-all duration-200 active:scale-[0.97] touch-manipulation"

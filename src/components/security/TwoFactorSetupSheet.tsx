@@ -112,7 +112,7 @@ export default function TwoFactorSetupSheet() {
                 <Shield className="w-5 h-5 text-primary" />
                 <h3 className="text-base font-bold">Two-factor authentication</h3>
               </div>
-              <button onClick={close} aria-label="Close" className="h-9 w-9 -mr-1.5 flex items-center justify-center rounded-full hover:bg-muted">
+              <button type="button" onClick={close} aria-label="Close" className="h-9 w-9 -mr-1.5 flex items-center justify-center rounded-full hover:bg-muted">
                 <X className="w-4 h-4 text-muted-foreground" />
               </button>
             </div>
@@ -126,7 +126,7 @@ export default function TwoFactorSetupSheet() {
                     <p className="font-mono text-sm break-all mt-1">{secret}</p>
                   </div>
                   <a href={otpauthUrl} className="block w-full py-2.5 rounded-xl bg-muted text-foreground text-sm font-semibold text-center">Open in app</a>
-                  <button onClick={() => setStep("verify")} className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold">Next: enter code</button>
+                  <button type="button" onClick={() => setStep("verify")} className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold">Next: enter code</button>
                 </>
               )}
               {step === "verify" && (
@@ -139,7 +139,7 @@ export default function TwoFactorSetupSheet() {
                     className="w-full text-center text-2xl font-mono tracking-[0.4em] py-3 rounded-xl bg-muted/40 border border-border/30 outline-none focus:ring-2 focus:ring-primary/30"
                     placeholder="000000"
                   />
-                  <button onClick={() => void verify()} disabled={busy || code.length < 6} className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold disabled:opacity-50">
+                  <button type="button" onClick={() => void verify()} disabled={busy || code.length < 6} className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold disabled:opacity-50">
                     Verify & enable
                   </button>
                 </>
@@ -150,7 +150,7 @@ export default function TwoFactorSetupSheet() {
                   <div className="grid grid-cols-2 gap-2">
                     {recovery.map((c) => <div key={c} className="font-mono text-xs text-center py-2 rounded-lg bg-muted/40">{c}</div>)}
                   </div>
-                  <button onClick={close} className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold">Done</button>
+                  <button type="button" onClick={close} className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-bold">Done</button>
                 </>
               )}
             </div>

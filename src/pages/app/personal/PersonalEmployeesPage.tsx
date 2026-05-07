@@ -60,12 +60,12 @@ export default function PersonalEmployeesPage() {
       <div className="flex flex-col px-4 pt-3 pb-24 space-y-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <button onClick={() => navigate(-1)} className="w-8 h-8 rounded-full bg-muted/60 flex items-center justify-center active:scale-90 transition-transform">
+            <button type="button" aria-label="Go back" onClick={() => navigate(-1)} className="w-8 h-8 rounded-full bg-muted/60 flex items-center justify-center active:scale-90 transition-transform">
               <ArrowLeft className="w-4 h-4" />
             </button>
             <h1 className="font-bold text-[17px]">Employees</h1>
           </div>
-          <button onClick={() => setShowAdd(v => !v)} className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center active:scale-90 transition-transform">
+          <button type="button" aria-label="Add employee" onClick={() => setShowAdd(v => !v)} className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center active:scale-90 transition-transform">
             <Plus className="w-4 h-4 text-primary" />
           </button>
         </div>
@@ -100,7 +100,7 @@ export default function PersonalEmployeesPage() {
                 className="w-full rounded-xl border border-border bg-background px-3 py-2.5 text-[13px] focus:outline-none focus:ring-1 focus:ring-primary/40" />
               <div className="flex flex-wrap gap-1.5">
                 {ROLES.map(r => (
-                  <button key={r} onClick={() => setNewRole(r)}
+                  <button type="button" key={r} onClick={() => setNewRole(r)}
                     className={cn("px-3 py-1 rounded-full text-[11px] font-bold border transition-colors",
                       newRole === r ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/40")}>
                     {r}
@@ -138,11 +138,11 @@ export default function PersonalEmployeesPage() {
                   <p className="text-[10px] text-muted-foreground mt-0.5">Since {emp.joinDate}</p>
                 </div>
                 <div className="flex flex-col gap-1.5 shrink-0">
-                  <button onClick={() => toggleStatus(emp.id)}
+                  <button type="button" aria-label="Toggle status" onClick={() => toggleStatus(emp.id)}
                     className={cn("w-8 h-5 rounded-full flex items-center px-0.5 transition-colors", emp.status === "active" ? "bg-emerald-500 justify-end" : "bg-muted justify-start")}>
                     <div className="w-4 h-4 rounded-full bg-background shadow-sm" />
                   </button>
-                  <button onClick={() => removeEmployee(emp.id)} className="p-1 rounded-lg hover:bg-muted/60">
+                  <button type="button" aria-label="Remove employee" onClick={() => removeEmployee(emp.id)} className="p-1 rounded-lg hover:bg-muted/60">
                     <X className="w-3 h-3 text-muted-foreground/50" />
                   </button>
                 </div>

@@ -81,7 +81,7 @@ export default function SurgePricingMap() {
             <TrendingUp className="w-3 h-3 mr-1" />
             Avg {avgSurge.toFixed(1)}x
           </Badge>
-          <button onClick={() => setShowInfo(!showInfo)} className="p-1 rounded-lg hover:bg-muted/50">
+          <button type="button" onClick={() => setShowInfo(!showInfo)} className="p-1 rounded-lg hover:bg-muted/50">
             <Info className="w-3.5 h-3.5 text-muted-foreground" />
           </button>
         </div>
@@ -173,7 +173,7 @@ export default function SurgePricingMap() {
                   </div>
                 </div>
               </div>
-              <button onClick={() => setSelectedZone(null)} className="p-1 rounded-full hover:bg-muted">
+              <button type="button" onClick={() => setSelectedZone(null)} className="p-1 rounded-full hover:bg-muted">
                 <X className="w-3.5 h-3.5 text-muted-foreground" />
               </button>
             </div>

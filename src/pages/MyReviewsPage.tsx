@@ -41,6 +41,11 @@ export default function MyReviewsPage() {
   const [loading, setLoading] = useState(true);
   const [filterType, setFilterType] = useState<string>("all");
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState("");
+  const [editBody, setEditBody] = useState("");
+  const [editRating, setEditRating] = useState(5);
+  const [editSaving, setEditSaving] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -87,6 +92,35 @@ export default function MyReviewsPage() {
     }
   };
 
+  const handleEdit = (review: UserReview) => {
+    setEditingId(review.id);
+    setEditTitle(review.title);
+    setEditBody(review.body);
+    setEditRating(review.rating);
+    setDeleteConfirm(null);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingId) return;
+    setEditSaving(true);
+    try {
+      const { error } = await (supabase as any)
+        .from("reviews")
+        .update({ title: editTitle.trim(), body: editBody.trim(), rating: editRating })
+        .eq("id", editingId);
+      if (error) throw error;
+      setReviews(prev => prev.map(r =>
+        r.id === editingId ? { ...r, title: editTitle.trim(), body: editBody.trim(), rating: editRating } : r
+      ));
+      setEditingId(null);
+      toast.success("Review updated");
+    } catch {
+      toast.error("Could not save review");
+    } finally {
+      setEditSaving(false);
+    }
+  };
+
   const filteredReviews = filterType === "all"
     ? reviews
     : reviews.filter(r => r.service_type === filterType);
@@ -100,8 +134,10 @@ export default function MyReviewsPage() {
         description="View and manage your reviews."
       />
 
-      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border/40 px-4 py-3 flex items-center gap-3" style={{ paddingTop: "var(--zivo-safe-top-sticky)" }}>
+      <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border/40 px-4 py-3 flex items-center gap-3 pt-[var(--zivo-safe-top-sticky)]">
         <button
+          type="button"
+          aria-label="Go back"
           onClick={() => navigate(-1)}
           className="h-9 w-9 rounded-full bg-muted/60 flex items-center justify-center active:scale-95 transition"
         >
@@ -124,8 +160,9 @@ export default function MyReviewsPage() {
             className="flex gap-2 overflow-x-auto pb-2 -mx-4 px-4"
           >
             {serviceTypes.map(type => (
-              <button
+              <button type="button"
                 key={type}
+                type="button"
                 onClick={() => setFilterType(type)}
                 className={cn(
                   "px-3 py-1.5 rounded-full border text-[12px] font-semibold whitespace-nowrap transition-all",
@@ -186,43 +223,102 @@ export default function MyReviewsPage() {
                   </div>
                   <div className="flex gap-1.5">
                     <button
+                      type="button"
                       onClick={() => navigate(`/my-trips`)}
                       className="h-8 w-8 rounded-lg bg-muted/40 flex items-center justify-center hover:bg-muted/60 transition"
-                      title="View trip"
+                      aria-label="View trip"
                     >
                       <MessageSquare className="w-4 h-4 text-muted-foreground" />
                     </button>
                     <button
-                      onClick={() => toast.info("Edit coming soon")}
-                      className="h-8 w-8 rounded-lg bg-muted/40 flex items-center justify-center hover:bg-muted/60 transition"
-                      title="Edit review"
+                      type="button"
+                      onClick={() => editingId === review.id ? setEditingId(null) : handleEdit(review)}
+                      className={cn(
+                        "h-8 w-8 rounded-lg flex items-center justify-center transition",
+                        editingId === review.id
+                          ? "bg-primary/10 text-primary"
+                          : "bg-muted/40 hover:bg-muted/60"
+                      )}
+                      aria-label="Edit review"
                     >
-                      <Edit2 className="w-4 h-4 text-muted-foreground" />
+                      <Edit2 className="w-4 h-4" />
                     </button>
                     <button
+                      type="button"
                       onClick={() => setDeleteConfirm(review.id)}
                       className="h-8 w-8 rounded-lg bg-muted/40 flex items-center justify-center hover:bg-red-500/10 hover:text-red-600 transition"
-                      title="Delete review"
+                      aria-label="Delete review"
                     >
                       <Trash2 className="w-4 h-4 text-muted-foreground" />
                     </button>
                   </div>
                 </div>
 
-                {/* Body */}
-                <p className="text-[13px] text-foreground line-clamp-2 mb-2">
-                  {review.body}
-                </p>
+                {/* Inline Edit Form */}
+                {editingId === review.id ? (
+                  <motion.div
+                    initial={{ opacity: 0, y: -6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mt-2 pt-3 border-t border-border/20 space-y-3"
+                  >
+                    {/* Star rating picker */}
+                    <div className="flex items-center gap-1">
+                      {Array.from({ length: 5 }).map((_, i) => (
+                        <button type="button"
+                          key={i}
+                          type="button"
+                          aria-label={`Rate ${i + 1} star${i !== 0 ? "s" : ""}`}
+                          onClick={() => setEditRating(i + 1)}
+                          className="touch-manipulation active:scale-90 transition-transform"
+                        >
+                          <Star className={cn("w-5 h-5", i < editRating ? "fill-amber-400 text-amber-400" : "text-muted-foreground/30")} />
+                        </button>
+                      ))}
+                    </div>
+                    <input
+                      type="text"
+                      value={editTitle}
+                      onChange={e => setEditTitle(e.target.value)}
+                      placeholder="Review title"
+                      className="w-full h-9 px-3 rounded-xl bg-muted/30 border border-border/40 text-sm focus:outline-none focus:ring-1 focus:ring-primary/30"
+                    />
+                    <textarea
+                      value={editBody}
+                      onChange={e => setEditBody(e.target.value)}
+                      placeholder="Share your experience…"
+                      rows={3}
+                      className="w-full px-3 py-2 rounded-xl bg-muted/30 border border-border/40 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary/30"
+                    />
+                    <div className="flex gap-2">
+                      <Button size="sm" variant="outline" onClick={() => setEditingId(null)} className="flex-1 h-8 text-xs">
+                        Cancel
+                      </Button>
+                      <Button
+                        size="sm"
+                        onClick={handleSaveEdit}
+                        disabled={editSaving || !editTitle.trim() || !editBody.trim()}
+                        className="flex-1 h-8 text-xs"
+                      >
+                        {editSaving ? "Saving…" : "Save"}
+                      </Button>
+                    </div>
+                  </motion.div>
+                ) : (
+                  /* Body */
+                  <p className="text-[13px] text-foreground line-clamp-2 mb-2">
+                    {review.body}
+                  </p>
+                )}
 
                 {/* Status Badge */}
-                {review.status !== "published" && (
+                {review.status !== "published" && editingId !== review.id && (
                   <div className={cn(
                     "inline-block px-2 py-1 rounded-full text-[10px] font-semibold",
                     review.status === "pending"
                       ? "bg-amber-500/10 text-amber-700"
                       : review.status === "rejected"
-                      ? "bg-red-500/10 text-red-700"
-                      : "bg-muted/20 text-muted-foreground"
+                        ? "bg-red-500/10 text-red-700"
+                        : "bg-muted/20 text-muted-foreground"
                   )}>
                     {review.status === "pending" ? "Pending Review" : "Rejected"}
                   </div>

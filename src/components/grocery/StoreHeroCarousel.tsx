@@ -105,14 +105,14 @@ export default function StoreHeroCarousel({ images, storeName, positions }: Stor
       {/* Side arrows — desktop hover only */}
       {images.length > 1 && (
         <>
-          <button
+          <button type="button"
             onClick={() => emblaApi?.scrollPrev()}
             aria-label="Previous photo"
             className="hidden md:flex absolute left-2 top-1/2 -translate-y-1/2 z-[3] h-8 w-8 items-center justify-center rounded-full bg-black/45 backdrop-blur-md border border-white/15 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/65"
           >
             <ChevronLeft className="h-4 w-4" />
           </button>
-          <button
+          <button type="button"
             onClick={() => emblaApi?.scrollNext()}
             aria-label="Next photo"
             className="hidden md:flex absolute right-2 top-1/2 -translate-y-1/2 z-[3] h-8 w-8 items-center justify-center rounded-full bg-black/45 backdrop-blur-md border border-white/15 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-black/65"
@@ -126,7 +126,7 @@ export default function StoreHeroCarousel({ images, storeName, positions }: Stor
       {images.length > 1 && (
         <div className="absolute bottom-3 right-3 z-[3] flex items-center gap-1">
           {images.slice(0, Math.min(images.length, 8)).map((_, i) => (
-            <button
+            <button type="button"
               key={i}
               onClick={() => emblaApi?.scrollTo(i)}
               aria-label={`Go to photo ${i + 1}`}

@@ -20,7 +20,7 @@ import { toast } from "sonner";
 function BackHeader({ onBack }: { onBack: () => void }) {
   return (
     <header className="sticky top-0 z-10 bg-background/85 backdrop-blur-xl border-b border-border/40 pt-safe px-3 py-3 flex items-center gap-2">
-      <button
+      <button type="button"
         onClick={onBack}
         aria-label="Back"
         className="p-1.5 rounded-full hover:bg-muted/60"

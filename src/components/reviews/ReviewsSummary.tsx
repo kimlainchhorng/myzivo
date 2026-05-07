@@ -69,7 +69,7 @@ export function ReviewsSummary({
         </p>
       </div>
       {onWriteClick && (
-        <button
+        <button type="button"
           onClick={onWriteClick}
           className="text-xs font-semibold text-primary hover:underline"
         >

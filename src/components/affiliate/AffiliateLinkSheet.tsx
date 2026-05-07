@@ -71,20 +71,20 @@ export default function AffiliateLinkSheet() {
             className="w-full sm:max-w-md bg-background rounded-t-2xl sm:rounded-2xl pb-[max(1rem,env(safe-area-inset-bottom))] flex flex-col overflow-hidden">
             <div className="flex items-center justify-between px-4 pt-4 pb-2 border-b border-border/30">
               <h3 className="text-base font-bold">Share & earn</h3>
-              <button onClick={() => setOpen(false)} aria-label="Close" className="h-9 w-9 -mr-1.5 flex items-center justify-center rounded-full hover:bg-muted">
+              <button type="button" onClick={() => setOpen(false)} aria-label="Close" className="h-9 w-9 -mr-1.5 flex items-center justify-center rounded-full hover:bg-muted">
                 <X className="w-4 h-4 text-muted-foreground" />
               </button>
             </div>
             <div className="px-4 py-4 space-y-3">
               <p className="text-sm text-muted-foreground">Generate a personalized link — earn rewards when friends book through it.</p>
               {!shortUrl ? (
-                <button onClick={() => void generate()} disabled={busy} className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50">
+                <button type="button" onClick={() => void generate()} disabled={busy} className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50">
                   {busy ? "Creating…" : "Generate my link"}
                 </button>
               ) : (
                 <>
                   <div className="rounded-xl bg-muted/40 p-3 break-all font-mono text-sm">{shortUrl}</div>
-                  <button onClick={() => void copy()} className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm">
+                  <button type="button" onClick={() => void copy()} className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm">
                     <Copy className="w-4 h-4" />Copy link
                   </button>
                 </>

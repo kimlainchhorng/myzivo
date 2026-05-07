@@ -91,7 +91,7 @@ export default function CrossSellSection({
 
             <div className="space-y-1.5 sm:space-y-2 mb-2 sm:mb-3">
               {hotelPartners.slice(0, 2).map((partner) => (
-                <button
+                <button type="button"
                   key={partner.id}
                   onClick={() => handlePartnerClick(partner)}
                   className="w-full flex items-center justify-between p-2 rounded-xl bg-background/50 hover:bg-background transition-colors text-left touch-manipulation active:scale-[0.98]"
@@ -135,7 +135,7 @@ export default function CrossSellSection({
 
             <div className="space-y-1.5 sm:space-y-2 mb-2 sm:mb-3">
               {carPartners.map((partner) => (
-                <button
+                <button type="button"
                   key={partner.id}
                   onClick={() => handlePartnerClick(partner)}
                   className="w-full flex items-center justify-between p-2 rounded-xl bg-background/50 hover:bg-background transition-colors text-left touch-manipulation active:scale-[0.98]"
@@ -179,7 +179,7 @@ export default function CrossSellSection({
 
             <div className="space-y-1.5 sm:space-y-2 mb-2 sm:mb-3">
               {insurancePartners.map((partner) => (
-                <button
+                <button type="button"
                   key={partner.id}
                   onClick={() => handlePartnerClick(partner)}
                   className="w-full flex items-center justify-between p-2 rounded-xl bg-background/50 hover:bg-background transition-colors text-left touch-manipulation active:scale-[0.98]"

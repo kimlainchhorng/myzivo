@@ -191,14 +191,14 @@ function PayForm({
       </div>
 
       <div className="flex gap-3 w-full">
-        <button
+        <button type="button"
           onClick={onBack}
           disabled={submitting}
           className="flex-1 py-3 rounded-2xl bg-white/10 text-white/70 font-semibold text-sm disabled:opacity-50"
         >
           Back
         </button>
-        <button
+        <button type="button"
           onClick={handleConfirm}
           disabled={!stripe || submitting || !paymentReady}
           className="flex-1 py-3 rounded-2xl bg-gradient-to-r from-amber-500 to-yellow-400 text-black font-bold text-sm shadow-lg shadow-amber-500/30 active:scale-95 transition-transform disabled:opacity-60 flex items-center justify-center gap-2"
@@ -306,7 +306,7 @@ export default function CoinRechargeSheet({ open, onClose, currentBalance, onPur
                       </p>
                     </div>
                   </div>
-                  <button
+                  <button type="button"
                     onClick={handleClose}
                     className="w-8 h-8 rounded-full bg-white/10 flex items-center justify-center"
                   >
@@ -316,7 +316,7 @@ export default function CoinRechargeSheet({ open, onClose, currentBalance, onPur
 
                 <div className="grid grid-cols-2 gap-2.5">
                   {coinPackages.map((pkg) => (
-                    <button
+                    <button type="button"
                       key={pkg.id}
                       onClick={() => handleSelect(pkg)}
                       className={`relative rounded-2xl border p-3 text-left transition-all active:scale-[0.97] ${

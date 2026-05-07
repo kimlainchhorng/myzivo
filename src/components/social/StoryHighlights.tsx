@@ -52,7 +52,7 @@ export default function StoryHighlights({ userId, isOwnProfile }: StoryHighlight
       <div className="flex gap-3 px-4 overflow-x-auto scrollbar-hide">
         {/* Add new */}
         {isOwnProfile && (
-          <button
+          <button type="button"
             onClick={() => setShowCreate(true)}
             className="flex flex-col items-center gap-1 shrink-0"
           >
@@ -64,7 +64,7 @@ export default function StoryHighlights({ userId, isOwnProfile }: StoryHighlight
         )}
 
         {highlights.map((h: any) => (
-          <button
+          <button type="button"
             key={h.id}
             className="flex flex-col items-center gap-1 shrink-0"
           >
@@ -91,7 +91,7 @@ export default function StoryHighlights({ userId, isOwnProfile }: StoryHighlight
           <div className="bg-background rounded-2xl p-4 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-sm font-semibold">New Highlight</h3>
-              <button onClick={() => setShowCreate(false)}><X className="h-4 w-4" /></button>
+              <button type="button" onClick={() => setShowCreate(false)}><X className="h-4 w-4" /></button>
             </div>
             <input
               value={newTitle}
@@ -100,7 +100,7 @@ export default function StoryHighlights({ userId, isOwnProfile }: StoryHighlight
               className="w-full px-3 py-2.5 rounded-xl bg-muted/30 border border-border/40 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-primary/30"
               autoFocus
             />
-            <button
+            <button type="button"
               onClick={createHighlight}
               className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium"
             >

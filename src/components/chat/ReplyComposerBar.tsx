@@ -20,7 +20,7 @@ export default function ReplyComposerBar({ message, onCancel }: Props) {
           {message.message || (message.image_url ? "📷 Photo" : message.voice_url ? "🎤 Voice" : "Attachment")}
         </div>
       </div>
-      <button onClick={onCancel} className="p-1 rounded hover:bg-muted" aria-label="Cancel reply">
+      <button type="button" onClick={onCancel} className="p-1 rounded hover:bg-muted" aria-label="Cancel reply">
         <X className="w-4 h-4" />
       </button>
     </div>

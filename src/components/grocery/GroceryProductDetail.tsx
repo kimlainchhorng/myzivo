@@ -353,7 +353,7 @@ export function GroceryProductDetail({
                 {/* ── Expandable Sections ── */}
                 <div className="space-y-0 rounded-2xl border border-border/20 overflow-hidden bg-muted/10">
                   {/* Product Details */}
-                  <button
+                  <button type="button"
                     onClick={() => toggleSection("details")}
                     className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-muted/20 transition-colors"
                   >
@@ -403,7 +403,7 @@ export function GroceryProductDetail({
                   <div className="h-px bg-border/15 mx-4" />
 
                   {/* Highlights */}
-                  <button
+                  <button type="button"
                     onClick={() => toggleSection("highlights")}
                     className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-muted/20 transition-colors"
                   >
@@ -445,7 +445,7 @@ export function GroceryProductDetail({
                   <div className="h-px bg-border/15 mx-4" />
 
                   {/* Return Policy */}
-                  <button
+                  <button type="button"
                     onClick={() => toggleSection("returns")}
                     className="w-full flex items-center justify-between px-4 py-3.5 hover:bg-muted/20 transition-colors"
                   >

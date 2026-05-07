@@ -52,13 +52,13 @@ export function PWAUpdatePrompt() {
           <p className="text-sm font-semibold">New version available</p>
           <p className="text-xs text-muted-foreground">Tap update to refresh</p>
         </div>
-        <button
+        <button type="button"
           onClick={handleUpdate}
           className="px-3 py-1.5 text-xs font-semibold rounded-xl bg-primary text-primary-foreground hover:bg-primary/90 transition-all duration-200 flex-shrink-0 active:scale-[0.95] touch-manipulation"
         >
           Update
         </button>
-        <button
+        <button type="button"
           onClick={handleDismiss}
           className="w-6 h-6 rounded-full bg-muted/50 flex items-center justify-center hover:bg-muted transition-colors flex-shrink-0"
           aria-label="Dismiss"

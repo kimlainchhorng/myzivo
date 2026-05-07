@@ -366,7 +366,7 @@ const FlightTerms = () => {
                 <h4>DOT Complaints</h4>
                 <p>
                   You may also file complaints with the U.S. Department of Transportation regarding airline service issues at{" "}
-                  <button onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl("https://www.transportation.gov/airconsumer"))} className="text-primary hover:underline inline">
+                  <button type="button" onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl("https://www.transportation.gov/airconsumer"))} className="text-primary hover:underline inline">
                     transportation.gov/airconsumer
                   </button>.
                 </p>

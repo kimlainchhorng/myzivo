@@ -173,7 +173,7 @@ export default function PublicUserProfilePage() {
       <div className="min-h-[100dvh] bg-background">
         <header className="sticky top-0 z-30 bg-background/90 backdrop-blur border-b border-border/30 pt-safe">
           <div className="flex items-center justify-between px-2 py-2">
-            <button onClick={goBack} className="h-10 w-10 rounded-full hover:bg-muted/50 flex items-center justify-center" aria-label="Back">
+            <button type="button" onClick={goBack} className="h-10 w-10 rounded-full hover:bg-muted/50 flex items-center justify-center" aria-label="Back">
               <ArrowLeft className="h-5 w-5" />
             </button>
             <div className="flex-1" />
@@ -208,7 +208,7 @@ export default function PublicUserProfilePage() {
     <div className="min-h-[100dvh] bg-background">
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-border/30 pt-safe">
         <div className="flex items-center justify-between px-2 py-2">
-          <button
+          <button type="button"
             onClick={goBack}
             className="h-10 w-10 rounded-full hover:bg-muted/50 flex items-center justify-center"
             aria-label="Back"
@@ -219,7 +219,7 @@ export default function PublicUserProfilePage() {
             {profile.username ? `@${profile.username}` : profile.full_name || "Profile"}
           </p>
           <div className="relative">
-            <button
+            <button type="button"
               onClick={() => setShowMenu((v) => !v)}
               className="h-10 w-10 rounded-full hover:bg-muted/50 flex items-center justify-center"
               aria-label="More options"
@@ -230,7 +230,7 @@ export default function PublicUserProfilePage() {
               <>
                 <div className="fixed inset-0 z-40" onClick={() => setShowMenu(false)} />
                 <div className="absolute right-0 top-full mt-1 z-50 min-w-[180px] rounded-xl border border-border bg-card shadow-lg overflow-hidden">
-                  <button
+                  <button type="button"
                     onClick={() => {
                       setShowMenu(false);
                       const url = `${window.location.origin}/user/${profile.user_id}`;
@@ -246,7 +246,7 @@ export default function PublicUserProfilePage() {
                     Share profile
                   </button>
                   {!isOwnProfile && friendStatus === "accepted" && (
-                    <button
+                    <button type="button"
                       onClick={() => { setShowMenu(false); void unfriend(); }}
                       className="w-full px-3 py-2.5 text-left text-sm text-rose-500 hover:bg-muted/50"
                     >
@@ -305,7 +305,7 @@ export default function PublicUserProfilePage() {
                       Get it on Google Play
                     </a>
                   )}
-                  <button
+                  <button type="button"
                     onClick={() => navigate(`/auth?redirect=${encodeURIComponent(`/user/${profile.user_id}`)}`)}
                     className="flex-1 inline-flex items-center justify-center px-3 py-2 rounded-xl bg-muted text-foreground text-sm font-semibold active:scale-[0.98]"
                   >

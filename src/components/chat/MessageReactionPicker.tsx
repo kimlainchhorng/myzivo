@@ -29,7 +29,7 @@ export default function MessageReactionPicker({ messageId, onClose, onReacted }:
       className="grid grid-cols-8 gap-1 bg-card border border-border/60 rounded-2xl px-3 py-2 shadow-xl max-w-[320px]"
     >
       {QUICK_EMOJIS.map((emoji) => (
-        <button
+        <button type="button"
           key={emoji}
           onClick={() => handle(emoji)}
           className="hover:scale-125 active:scale-110 transition-transform text-2xl p-1 leading-none"

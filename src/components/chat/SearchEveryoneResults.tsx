@@ -76,7 +76,7 @@ export default function SearchEveryoneResults({ query }: { query: string }) {
             const name = h.full_name || (h.username ? `@${h.username}` : "ZIVO user");
             return (
               <li key={h.user_id} className="flex items-center gap-3 px-3 py-2.5">
-                <button
+                <button type="button"
                   onClick={() => navigate(h.username ? `/u/${h.username}` : `/profile/${h.user_id}`)}
                   className="flex items-center gap-3 flex-1 min-w-0 text-left"
                 >

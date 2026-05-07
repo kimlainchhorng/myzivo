@@ -156,7 +156,7 @@ const ConnectWebsitePage = () => {
               <h3 className="text-sm font-semibold mb-3">1. Pick your content niche</h3>
               <div className="grid grid-cols-2 gap-3">
                 {NICHES.map((n) => (
-                  <button
+                  <button type="button"
                     key={n.id}
                     onClick={() => handleNicheChange(n.id)}
                     className={cn(
@@ -184,7 +184,7 @@ const ConnectWebsitePage = () => {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center justify-between gap-3">
                   <div className="font-semibold text-sm">Dofollow backlink</div>
-                  <button
+                  <button type="button"
                     onClick={handleDofollowToggle}
                     className={cn(
                       "h-6 w-11 rounded-full transition-colors relative shrink-0",
@@ -260,7 +260,7 @@ const ConnectWebsitePage = () => {
             <div>
               <h3 className="text-sm font-semibold mb-3">Publish status</h3>
               <div className="grid sm:grid-cols-2 gap-3">
-                <button
+                <button type="button"
                   onClick={() => handleStatusChange("live")}
                   className={cn(
                     "text-left p-4 rounded-xl border-2 transition-all",
@@ -280,7 +280,7 @@ const ConnectWebsitePage = () => {
                   <p className="text-sm text-muted-foreground mt-1">Goes live immediately</p>
                 </button>
 
-                <button
+                <button type="button"
                   onClick={() => handleStatusChange("draft")}
                   className={cn(
                     "text-left p-4 rounded-xl border-2 transition-all",
@@ -320,7 +320,7 @@ const ConnectWebsitePage = () => {
             {/* Theme toggle */}
             <div className="grid grid-cols-2 gap-1 p-1 bg-muted rounded-full">
               {(["light", "dark"] as const).map((t) => (
-                <button
+                <button type="button"
                   key={t}
                   onClick={() => setTheme(t)}
                   className={cn(

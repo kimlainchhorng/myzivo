@@ -143,7 +143,7 @@ export default function ChatQuickReplies({ open, onClose, onSelect }: ChatQuickR
             style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 8px)" }}
           >
             <div className="sticky top-0 z-10 flex items-center justify-between px-5 py-3 border-b border-border/30 bg-background/95 backdrop-blur-md rounded-t-3xl">
-              <button
+              <button type="button"
                 onClick={onClose}
                 className="w-8 h-8 rounded-full hover:bg-muted/50 flex items-center justify-center"
                 aria-label="Close"
@@ -157,7 +157,7 @@ export default function ChatQuickReplies({ open, onClose, onSelect }: ChatQuickR
                   ⌘K
                 </span>
               </div>
-              <button
+              <button type="button"
                 onClick={startAdd}
                 disabled={replies.length >= MAX_REPLIES}
                 className={cn(
@@ -224,21 +224,21 @@ export default function ChatQuickReplies({ open, onClose, onSelect }: ChatQuickR
                   key={r.id}
                   className="group flex items-center gap-2 rounded-2xl bg-muted/30 hover:bg-muted/50 transition-colors px-3 py-2.5"
                 >
-                  <button
+                  <button type="button"
                     onClick={() => handleSelect(r)}
                     className="flex-1 text-left text-sm text-foreground line-clamp-2 break-words min-w-0"
                   >
                     {r.text}
                   </button>
                   <div className="flex items-center gap-1 shrink-0 opacity-60 group-hover:opacity-100 transition-opacity">
-                    <button
+                    <button type="button"
                       onClick={() => startEdit(r)}
                       className="w-7 h-7 rounded-full hover:bg-muted/70 flex items-center justify-center"
                       aria-label="Edit reply"
                     >
                       <Pencil className="w-3.5 h-3.5" />
                     </button>
-                    <button
+                    <button type="button"
                       onClick={() => remove(r.id)}
                       className="w-7 h-7 rounded-full hover:bg-destructive/10 hover:text-destructive flex items-center justify-center"
                       aria-label="Delete reply"

@@ -109,7 +109,7 @@ const ServiceQuickNav = () => {
         {services.map((service) => {
           const active = isActive(service.href);
           return (
-            <button
+            <button type="button"
               key={service.id}
               onClick={() => navigate(service.href)}
               className={cn(

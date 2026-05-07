@@ -103,6 +103,7 @@ export default function PrivacySettingsPage() {
         {/* GDPR / CCPA cross-link */}
         <section className="grid grid-cols-2 gap-2">
           <button
+            type="button"
             onClick={() => navigate("/account/data-rights")}
             className="flex flex-col items-start gap-1.5 p-3 rounded-2xl bg-card border border-border/40 hover:bg-accent/50 transition-all text-left active:scale-[0.98]"
           >
@@ -116,6 +117,7 @@ export default function PrivacySettingsPage() {
             <p className="text-[11px] text-muted-foreground leading-tight">Access, download, or delete your data (GDPR/CCPA)</p>
           </button>
           <button
+            type="button"
             onClick={() => navigate("/account/data-rights#cookies")}
             className="flex flex-col items-start gap-1.5 p-3 rounded-2xl bg-card border border-border/40 hover:bg-accent/50 transition-all text-left active:scale-[0.98]"
           >
@@ -138,6 +140,7 @@ export default function PrivacySettingsPage() {
           <div className="space-y-2">
             {visibilityOptions.map((opt) => (
               <button
+                type="button"
                 key={opt.value}
                 onClick={() => updateSetting("profile_visibility", opt.value)}
                 className={cn(

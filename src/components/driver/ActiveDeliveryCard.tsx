@@ -115,7 +115,7 @@ export default function ActiveDeliveryCard({ order, onComplete, onNavigate }: Ac
             <p className="font-semibold text-foreground truncate text-sm">{order.customer.name}</p>
             <p className="text-xs text-muted-foreground truncate">{order.customer.address}</p>
           </div>
-          <button
+          <button type="button"
             className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center shrink-0"
             onClick={() => window.location.href = `tel:${order.customer.phone}`}
           >

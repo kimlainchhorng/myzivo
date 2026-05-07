@@ -115,7 +115,7 @@ const LoyaltyTierWidget = ({
       </div>
 
       {/* Next Tier Preview */}
-      <button className="w-full p-3 rounded-xl bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border border-amber-500/20 flex items-center justify-between hover:from-amber-500/20 hover:to-yellow-500/20 transition-all">
+      <button type="button" className="w-full p-3 rounded-xl bg-gradient-to-r from-amber-500/10 to-yellow-500/10 border border-amber-500/20 flex items-center justify-between hover:from-amber-500/20 hover:to-yellow-500/20 transition-all">
         <div className="text-left">
           <p className="text-xs text-muted-foreground">Unlock with {nextTier.name}</p>
           <p className="text-sm font-medium">Lounge access + 2x miles</p>

@@ -79,7 +79,7 @@ export function GroceryShoppingList({ onSearchItem }: GroceryShoppingListProps) 
         </div>
         <div className="flex items-center gap-1.5">
           {list.checkedCount > 0 && (
-            <button onClick={list.clearChecked} className="text-[10px] text-muted-foreground hover:text-destructive font-medium transition-colors">
+            <button type="button" onClick={list.clearChecked} className="text-[10px] text-muted-foreground hover:text-destructive font-medium transition-colors">
               Clear done
             </button>
           )}
@@ -141,7 +141,7 @@ export function GroceryShoppingList({ onSearchItem }: GroceryShoppingListProps) 
                 >
                   {item.checked && <Check className="h-3 w-3 text-primary-foreground" />}
                 </motion.button>
-                <button
+                <button type="button"
                   onClick={() => onSearchItem?.(item.text)}
                   className={`flex-1 text-left text-[12px] font-medium transition-all hover:text-primary ${
                     item.checked

@@ -160,7 +160,7 @@ export default function RideNotificationCenter() {
           </div>
         </div>
         <div className="flex gap-2">
-          <button onClick={fetchNotifs} className="w-8 h-8 rounded-full bg-muted/30 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors" aria-label="Refresh">
+          <button type="button" onClick={fetchNotifs} className="w-8 h-8 rounded-full bg-muted/30 flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors" aria-label="Refresh">
             <RefreshCw className="w-3.5 h-3.5" />
           </button>
           {unreadCount > 0 && (
@@ -176,7 +176,7 @@ export default function RideNotificationCenter() {
         {tabs.map(tab => {
           const Icon = tab.icon;
           return (
-            <button
+            <button type="button"
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
@@ -353,7 +353,7 @@ export default function RideNotificationCenter() {
                       <div className="flex gap-2">
                         <input value={alertThreshold} onChange={e => setAlertThreshold(e.target.value)} placeholder="Alert below (e.g. $20)"
                           className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-xs focus:outline-none focus:ring-1 focus:ring-primary/40" />
-                        <button disabled={!alertRoute.trim() || !alertThreshold.trim()}
+                        <button type="button" disabled={!alertRoute.trim() || !alertThreshold.trim()}
                           onClick={() => {
                             toast.success(`Alert set for ${alertRoute} below ${alertThreshold}`);
                             setAlertRoute(""); setAlertThreshold(""); setShowAlertForm(false);

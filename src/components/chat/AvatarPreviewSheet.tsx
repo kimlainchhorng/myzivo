@@ -29,7 +29,7 @@ export default function AvatarPreviewSheet({ open, src, name, initials, onClose 
           aria-modal="true"
           aria-label={`${name} profile photo`}
         >
-          <button
+          <button type="button"
             onClick={(e) => { e.stopPropagation(); onClose(); }}
             aria-label="Close preview"
             className="absolute top-[max(1rem,env(safe-area-inset-top))] right-4 h-11 w-11 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 backdrop-blur"

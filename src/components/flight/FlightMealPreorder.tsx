@@ -88,7 +88,7 @@ const FlightMealPreorder = () => {
             const isSelected = selectedMeal === meal.id;
 
             return (
-              <button
+              <button type="button"
                 key={meal.id}
                 onClick={() => setSelectedMeal(meal.id)}
                 className={cn(
@@ -158,7 +158,7 @@ const FlightMealPreorder = () => {
               { name: "Dessert Platter", price: 8, addonIcon: Cake, gradient: "from-muted to-muted", color: "text-pink-400" },
               { name: "Cheese Board", price: 12, addonIcon: UtensilsCrossed, gradient: "from-amber-500/20 to-orange-500/20", color: "text-amber-500" },
             ] as const).map((addon) => (
-              <button
+              <button type="button"
                 key={addon.name}
                 className="p-4 rounded-xl bg-muted/30 hover:bg-muted/50 transition-colors text-center"
               >

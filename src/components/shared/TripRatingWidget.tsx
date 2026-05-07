@@ -112,7 +112,7 @@ const TripRatingWidget = ({
                 const isRated = (ratings[category.id] || 0) >= star;
                 
                 return (
-                  <button
+                  <button type="button"
                     key={star}
                     onMouseEnter={() => setHoveredStar({ category: category.id, star })}
                     onMouseLeave={() => setHoveredStar(null)}
@@ -150,7 +150,7 @@ const TripRatingWidget = ({
       </div>
 
       {/* Photo Upload */}
-      <button className="w-full p-3 rounded-xl border border-dashed border-border/50 text-xs text-muted-foreground hover:text-foreground hover:border-border transition-colors flex items-center justify-center gap-2 mb-4">
+      <button type="button" className="w-full p-3 rounded-xl border border-dashed border-border/50 text-xs text-muted-foreground hover:text-foreground hover:border-border transition-colors flex items-center justify-center gap-2 mb-4">
         <Camera className="w-4 h-4" />
         Add photos
       </button>

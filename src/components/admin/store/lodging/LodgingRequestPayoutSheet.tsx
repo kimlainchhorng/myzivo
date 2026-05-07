@@ -123,7 +123,7 @@ export default function LodgingRequestPayoutSheet({ storeId, storeCountry, avail
                     : `${m.bank_name || "Bank"} ···${(m.account_number || "").slice(-4)}`;
                   const isSelected = methodId === m.id;
                   return (
-                    <button
+                    <button type="button"
                       key={m.id}
                       type="button"
                       onClick={() => setMethodId(m.id)}

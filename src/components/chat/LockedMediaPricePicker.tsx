@@ -60,7 +60,7 @@ export default function LockedMediaPricePicker({ open, onClose, onConfirm }: Pro
                 <p className="text-[11px] text-muted-foreground">Recipient pays to view</p>
               </div>
             </div>
-            <button onClick={onClose} className="p-1.5 rounded-full hover:bg-muted">
+            <button type="button" onClick={onClose} className="p-1.5 rounded-full hover:bg-muted">
               <X className="w-4 h-4 text-muted-foreground" />
             </button>
           </div>
@@ -68,7 +68,7 @@ export default function LockedMediaPricePicker({ open, onClose, onConfirm }: Pro
           {/* Preset prices */}
           <div className="grid grid-cols-3 gap-2">
             {PRESET_PRICES.map((price) => (
-              <button
+              <button type="button"
                 key={price}
                 onClick={() => { setSelectedPrice(price); setUseCustom(false); }}
                 className={`py-2.5 rounded-xl text-sm font-bold transition-all ${
@@ -84,7 +84,7 @@ export default function LockedMediaPricePicker({ open, onClose, onConfirm }: Pro
 
           {/* Custom price */}
           <div className="space-y-1.5">
-            <button
+            <button type="button"
               onClick={() => setUseCustom(true)}
               className={`text-xs font-semibold ${useCustom ? "text-primary" : "text-muted-foreground"}`}
             >

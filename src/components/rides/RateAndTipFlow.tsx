@@ -143,7 +143,7 @@ export default function RateAndTipFlow({
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="px-4 pb-4">
                 <div className="flex justify-center gap-3">
                   {emojiReactions.map((er) => (
-                    <button
+                    <button type="button"
                       key={er.label}
                       onClick={() => setSelectedEmoji(er.label)}
                       className={cn(
@@ -170,7 +170,7 @@ export default function RateAndTipFlow({
                     const Icon = tag.icon;
                     const active = selectedTags.includes(tag.id);
                     return (
-                      <button
+                      <button type="button"
                         key={tag.id}
                         onClick={() => toggleTag(tag.id)}
                         className={cn(
@@ -232,7 +232,7 @@ export default function RateAndTipFlow({
             <div className="px-4 pb-4">
               <div className="flex gap-2 mb-4">
                 {tipOptions.map((opt, i) => (
-                  <button
+                  <button type="button"
                     key={i}
                     onClick={() => {
                       if (opt.custom) {

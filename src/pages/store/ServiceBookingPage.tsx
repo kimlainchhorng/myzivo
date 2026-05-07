@@ -277,14 +277,14 @@ export default function ServiceBookingPage() {
 
           {/* Quick action chips */}
           <div className="grid grid-cols-3 gap-2 mb-4">
-            <button
+            <button type="button"
               onClick={() => window.open(calendarUrl, "_blank")}
               className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-card hover:bg-accent border border-border transition active:scale-95"
             >
               <CalendarPlus className="w-5 h-5 text-primary" />
               <span className="text-[11px] font-bold">Add Calendar</span>
             </button>
-            <button
+            <button type="button"
               onClick={() => store.phone && window.open(`tel:${store.phone}`, "_self")}
               disabled={!store.phone}
               className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-card hover:bg-accent border border-border transition active:scale-95 disabled:opacity-40"
@@ -292,7 +292,7 @@ export default function ServiceBookingPage() {
               <Phone className="w-5 h-5 text-primary" />
               <span className="text-[11px] font-bold">Call Shop</span>
             </button>
-            <button
+            <button type="button"
               onClick={() => directionsUrl && window.open(directionsUrl, "_blank")}
               disabled={!directionsUrl}
               className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-card hover:bg-accent border border-border transition active:scale-95 disabled:opacity-40"
@@ -309,7 +309,7 @@ export default function ServiceBookingPage() {
                 <p className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">Confirmation #</p>
                 <p className="font-mono font-black text-base text-primary">{confirmation.ref}</p>
               </div>
-              <button onClick={copyRef} className="p-2 rounded-lg hover:bg-primary/10 transition" aria-label="Copy">
+              <button type="button" onClick={copyRef} className="p-2 rounded-lg hover:bg-primary/10 transition" aria-label="Copy">
                 <Copy className="w-4 h-4 text-primary" />
               </button>
             </div>

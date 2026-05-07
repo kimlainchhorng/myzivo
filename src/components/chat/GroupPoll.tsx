@@ -52,7 +52,7 @@ export default function GroupPoll({ poll, onVote, disabled }: Props) {
           const pct = totalVotes > 0 ? Math.round((count / totalVotes) * 100) : 0;
           const isMine = poll.myVotes.has(opt.id);
           return (
-            <button
+            <button type="button"
               key={opt.id}
               onClick={() => !disabled && !closed && onVote(opt.id)}
               disabled={disabled || closed}

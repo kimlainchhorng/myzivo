@@ -123,7 +123,7 @@ export default function ChatPollCreator({ open, onClose, onSubmit }: ChatPollCre
             style={{ paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 16px)" }}
           >
             <div className="sticky top-0 z-10 flex items-center justify-between px-4 sm:px-5 py-3 border-b border-border/30 bg-background/95 backdrop-blur-md rounded-t-3xl">
-              <button
+              <button type="button"
                 onClick={close}
                 className="w-8 h-8 rounded-full hover:bg-muted/50 flex items-center justify-center"
                 aria-label="Close"
@@ -173,7 +173,7 @@ export default function ChatPollCreator({ open, onClose, onSubmit }: ChatPollCre
                         placeholder={`Option ${idx + 1}`}
                         className="h-10 rounded-xl text-sm flex-1"
                       />
-                      <button
+                      <button type="button"
                         onClick={() => removeOption(idx)}
                         disabled={options.length <= MIN_OPTIONS}
                         className={cn(
@@ -190,7 +190,7 @@ export default function ChatPollCreator({ open, onClose, onSubmit }: ChatPollCre
                   ))}
                 </div>
                 {options.length < MAX_OPTIONS && (
-                  <button
+                  <button type="button"
                     onClick={addOption}
                     className="w-full mt-1 py-2.5 rounded-xl bg-muted/40 hover:bg-muted/60 text-xs font-bold text-muted-foreground hover:text-foreground transition-colors flex items-center justify-center gap-1.5"
                   >

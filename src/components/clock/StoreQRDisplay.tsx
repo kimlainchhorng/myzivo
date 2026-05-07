@@ -72,7 +72,7 @@ export function StoreQRDisplay({ storeId }: StoreQRDisplayProps) {
             <p className="text-[10px] text-muted-foreground">Employees scan to clock in/out</p>
           </div>
         </div>
-        <button
+        <button type="button"
           onClick={generateToken}
           disabled={loading}
           className="w-8 h-8 rounded-full bg-muted/40 flex items-center justify-center hover:bg-muted/60 transition-colors"

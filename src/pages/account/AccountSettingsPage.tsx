@@ -871,21 +871,21 @@ export default function AccountSettingsPage() {
       {/* Share toolbar */}
       {user && (
         <div className="mt-2 grid grid-cols-3 gap-2 px-3">
-          <button
+          <button type="button"
             onClick={handlePreviewProfile}
             className="flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl bg-card border border-border/40 hover:bg-accent/50 transition-all active:scale-[0.97]"
           >
             <ExternalLink className="h-3.5 w-3.5 text-primary shrink-0" />
             <span className="text-[11px] font-semibold">Preview</span>
           </button>
-          <button
+          <button type="button"
             onClick={handleShareProfile}
             className="flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl bg-card border border-border/40 hover:bg-accent/50 transition-all active:scale-[0.97]"
           >
             <Share2 className="h-3.5 w-3.5 text-primary shrink-0" />
             <span className="text-[11px] font-semibold">Share</span>
           </button>
-          <button
+          <button type="button"
             onClick={handleCopyId}
             className="flex items-center justify-center gap-1.5 px-2 py-2 rounded-xl bg-card border border-border/40 hover:bg-accent/50 transition-all active:scale-[0.97]"
           >
@@ -898,21 +898,21 @@ export default function AccountSettingsPage() {
       {/* Quick stats bar */}
       {user && (
         <div className="mt-2 grid grid-cols-3 gap-2 px-3">
-          <button
+          <button type="button"
             onClick={() => navigate("/profile?tab=followers")}
             className="flex flex-col items-center justify-center py-2 px-1 rounded-xl bg-card border border-border/40 hover:bg-accent/50 transition-all active:scale-[0.97]"
           >
             <span className="text-sm font-bold text-foreground tabular-nums">{formatCount(socialStats?.followers ?? 0)}</span>
             <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Followers</span>
           </button>
-          <button
+          <button type="button"
             onClick={() => navigate("/profile?tab=following")}
             className="flex flex-col items-center justify-center py-2 px-1 rounded-xl bg-card border border-border/40 hover:bg-accent/50 transition-all active:scale-[0.97]"
           >
             <span className="text-sm font-bold text-foreground tabular-nums">{formatCount(socialStats?.following ?? 0)}</span>
             <span className="text-[10px] text-muted-foreground uppercase tracking-wide">Following</span>
           </button>
-          <button
+          <button type="button"
             onClick={() => navigate("/account/loyalty")}
             className="flex flex-col items-center justify-center py-2 px-1 rounded-xl bg-card border border-border/40 hover:bg-accent/50 transition-all active:scale-[0.97]"
           >
@@ -935,7 +935,7 @@ export default function AccountSettingsPage() {
               <Sparkles className="h-5 w-5 text-primary" />
               <span className="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 rounded-full bg-primary ring-2 ring-background" />
             </div>
-            <button onClick={openWhatsNew} className="flex-1 text-left min-w-0">
+            <button type="button" onClick={openWhatsNew} className="flex-1 text-left min-w-0">
               <p className="text-[13px] font-semibold text-foreground">
                 What's new in v{packageJson.version}
               </p>
@@ -943,7 +943,7 @@ export default function AccountSettingsPage() {
                 Accessibility, auto-translate, cookies & more
               </p>
             </button>
-            <button
+            <button type="button"
               onClick={dismissWhatsNew}
               aria-label="Dismiss"
               className="shrink-0 p-1.5 rounded-md text-muted-foreground hover:bg-muted/50 hover:text-foreground"
@@ -957,7 +957,7 @@ export default function AccountSettingsPage() {
       {/* Quick toggles */}
       {user && (
         <div className="mt-3 grid grid-cols-3 gap-2 px-3">
-          <button
+          <button type="button"
             onClick={() => {
               const next = isDark ? "light" : "dark";
               setTheme(next);
@@ -973,7 +973,7 @@ export default function AccountSettingsPage() {
               <p className="text-[10px] text-muted-foreground leading-tight">Theme</p>
             </div>
           </button>
-          <button
+          <button type="button"
             onClick={() => {
               const enable = notificationsMuted;
               updateNotifPrefs.mutate({ inAppEnabled: enable });
@@ -989,7 +989,7 @@ export default function AccountSettingsPage() {
               <p className="text-[10px] text-muted-foreground leading-tight">Notifications</p>
             </div>
           </button>
-          <button
+          <button type="button"
             onClick={() => {
               const next = !a11yPrefs.reducedMotion;
               updateA11yPref("reducedMotion", next);
@@ -1025,7 +1025,7 @@ export default function AccountSettingsPage() {
                     {setupDone} of {setupTotal} done · {setupPct}%
                   </p>
                 </div>
-                <button
+                <button type="button"
                   onClick={dismissSetup}
                   aria-label="Dismiss setup checklist"
                   className="shrink-0 p-1.5 rounded-md text-muted-foreground hover:bg-muted/50 hover:text-foreground"
@@ -1046,7 +1046,7 @@ export default function AccountSettingsPage() {
               {setupSteps.map((step) => {
                 const Icon = step.icon;
                 return (
-                  <button
+                  <button type="button"
                     key={step.id}
                     onClick={() => navigate(step.href)}
                     disabled={step.done}
@@ -1085,7 +1085,7 @@ export default function AccountSettingsPage() {
           transition={{ duration: 0.25, delay: 0.2 }}
           className="mt-3 px-3"
         >
-          <button
+          <button type="button"
             onClick={() => navigate("/account/security")}
             className="w-full flex items-center gap-3 p-3 rounded-2xl bg-card border border-border/40 hover:bg-accent/50 transition-all text-left active:scale-[0.99]"
           >
@@ -1132,7 +1132,7 @@ export default function AccountSettingsPage() {
         <div className="mt-3 px-3">
           <div className="flex items-center justify-between mb-1.5">
             <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Recently visited</p>
-            <button
+            <button type="button"
               onClick={clearRecents}
               className="text-[10px] text-muted-foreground hover:text-foreground"
             >
@@ -1141,7 +1141,7 @@ export default function AccountSettingsPage() {
           </div>
           <div className="flex gap-1.5 overflow-x-auto no-scrollbar -mx-3 px-3 pb-1">
             {recentItems.map((item) => (
-              <button
+              <button type="button"
                 key={item.href}
                 onClick={() => navigate(item.href)}
                 className="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/40 border border-border/30 text-[12px] font-medium text-foreground hover:bg-muted/70 active:scale-[0.97] transition"
@@ -1167,7 +1167,7 @@ export default function AccountSettingsPage() {
             className="pl-9 pr-16 h-10 rounded-xl bg-muted/50 border-border/40 text-sm"
           />
           {search ? (
-            <button
+            <button type="button"
               onClick={() => setSearch("")}
               aria-label="Clear search"
               className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:bg-muted/70 hover:text-foreground"
@@ -1294,7 +1294,7 @@ export default function AccountSettingsPage() {
                   System
                 </p>
                 <div className="rounded-xl bg-card border border-border/40 overflow-hidden">
-                  <button
+                  <button type="button"
                     onClick={() => setDiagOpen((o) => !o)}
                     className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-accent/40 transition-colors text-left"
                   >

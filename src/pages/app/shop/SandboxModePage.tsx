@@ -125,7 +125,7 @@ export default function SandboxModePage() {
         {/* Header */}
         <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border/30 px-4 py-3 pt-safe">
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate(-1)}>
+            <button type="button" onClick={() => navigate(-1)}>
               <ArrowLeft className="h-5 w-5" />
             </button>
             <TestTube className="h-5 w-5 text-amber-500" />
@@ -154,7 +154,7 @@ export default function SandboxModePage() {
           <div>
             <Label className="text-sm font-bold mb-2 block">Transaction Type</Label>
             <div className="grid grid-cols-2 gap-3">
-              <button
+              <button type="button"
                 onClick={() => setTestType("truck_sale")}
                 className={`p-4 rounded-2xl border-2 transition-all ${
                   testType === "truck_sale"
@@ -166,7 +166,7 @@ export default function SandboxModePage() {
                 <p className="text-sm font-bold">Truck Sale</p>
                 <p className="text-[10px] text-muted-foreground">Product sold from truck</p>
               </button>
-              <button
+              <button type="button"
                 onClick={() => setTestType("ride")}
                 className={`p-4 rounded-2xl border-2 transition-all ${
                   testType === "ride"

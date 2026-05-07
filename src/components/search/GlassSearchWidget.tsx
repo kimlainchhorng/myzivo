@@ -156,7 +156,7 @@
          {/* Tab Selection */}
           <div className="flex gap-4 sm:gap-6 mb-6 sm:mb-8 border-b border-border/50 dark:border-white/5 pb-4 overflow-x-auto hide-scrollbar">
            {tabs.map((tab) => (
-             <button
+             <button type="button"
                key={tab.id}
                onClick={() => setActiveTab(tab.id)}
                className={cn(
@@ -205,7 +205,7 @@
              {/* Divider with swap button */}
              <div className="hidden md:flex items-center justify-center w-8 relative">
                <div className="w-[1px] h-8 bg-border/50 dark:bg-white/10" />
-               <button
+               <button type="button"
                  onClick={handleSwap}
                  className="absolute w-8 h-8 rounded-full bg-background border border-border/50 flex items-center justify-center hover:bg-muted transition-all duration-200 hover:rotate-180 duration-500"
                >

@@ -378,7 +378,7 @@ export default function AutoRepairLaborTimeSection({ storeId }: Props) {
                   );
                 })}
               <div className="text-center pt-1">
-                <button onClick={() => setTab("log")} className="text-xs text-primary font-semibold hover:underline flex items-center gap-1 mx-auto">View all <ArrowRight className="h-3 w-3" /></button>
+                <button type="button" onClick={() => setTab("log")} className="text-xs text-primary font-semibold hover:underline flex items-center gap-1 mx-auto">View all <ArrowRight className="h-3 w-3" /></button>
               </div>
             </CardContent>
           </Card>
@@ -529,7 +529,7 @@ export default function AutoRepairLaborTimeSection({ storeId }: Props) {
               <motion.div key={key} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
                 <Card className="border-border/40">
                   <CardContent className="p-0">
-                    <button className="w-full p-4 flex items-center gap-3 text-left hover:bg-muted/20 transition-colors rounded-xl" onClick={() => setExpandedVehicle(isExpanded ? null : key)}>
+                    <button type="button" className="w-full p-4 flex items-center gap-3 text-left hover:bg-muted/20 transition-colors rounded-xl" onClick={() => setExpandedVehicle(isExpanded ? null : key)}>
                       <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center shrink-0"><Car className="h-5 w-5 text-primary" /></div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-foreground truncate">{group.label}</p>

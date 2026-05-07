@@ -433,7 +433,7 @@ export default function AdminSystemHealth() {
                   { label: "Auth Shield Control", path: "/admin/auth-shield", icon: Shield },
                   { label: "Webhook Status", path: "/admin/payments/webhook-status", icon: Zap },
                 ].map((link) => (
-                  <button
+                  <button type="button"
                     key={link.path}
                     onClick={() => navigate(link.path)}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl border border-border text-sm text-foreground hover:bg-muted transition-colors text-left"

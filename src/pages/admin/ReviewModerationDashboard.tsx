@@ -153,7 +153,7 @@ export default function ReviewModerationDashboard() {
         {/* Filter */}
         <div className="flex gap-2">
           {["all", "open", "resolved", "rejected"].map(status => (
-            <button
+            <button type="button"
               key={status}
               onClick={() => setFilterStatus(status)}
               className={cn(

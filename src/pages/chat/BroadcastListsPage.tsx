@@ -31,11 +31,11 @@ export default function BroadcastListsPage() {
   return (
     <div className="min-h-screen bg-background pb-20">
       <header className="sticky top-0 z-10 bg-background/85 backdrop-blur-xl border-b border-border/40 pt-safe px-3 py-3 flex items-center gap-2">
-        <button onClick={goBack} className="p-1.5 rounded-full hover:bg-muted/60">
+        <button type="button" onClick={goBack} className="p-1.5 rounded-full hover:bg-muted/60">
           <ChevronLeft className="w-5 h-5" />
         </button>
         <h1 className="text-base font-semibold flex-1">Broadcast Lists</h1>
-        <button onClick={() => nav("/chat/broadcasts/new")} className="p-1.5 rounded-full hover:bg-muted/60">
+        <button type="button" onClick={() => nav("/chat/broadcasts/new")} className="p-1.5 rounded-full hover:bg-muted/60">
           <Plus className="w-5 h-5" />
         </button>
       </header>
@@ -51,7 +51,7 @@ export default function BroadcastListsPage() {
           <Megaphone className="w-10 h-10 mx-auto text-muted-foreground mb-3" />
           <p className="text-sm font-semibold mb-1">No broadcast lists</p>
           <p className="text-xs text-muted-foreground mb-4">Create one to message many contacts at once.</p>
-          <button onClick={() => nav("/chat/broadcasts/new")} className="px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium">
+          <button type="button" onClick={() => nav("/chat/broadcasts/new")} className="px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium">
             New broadcast list
           </button>
         </div>
@@ -66,13 +66,13 @@ export default function BroadcastListsPage() {
                 <div className="text-sm font-medium truncate">{l.name}</div>
                 <div className="text-[11px] text-muted-foreground">{l.member_count ?? 0} members</div>
               </div>
-              <button
+              <button type="button"
                 onClick={() => setComposeFor(l.id)}
                 className="px-3 py-1.5 text-xs font-medium rounded-full bg-primary text-primary-foreground"
               >
                 Send
               </button>
-              <button onClick={() => deleteList(l.id)} className="p-1.5 rounded-full hover:bg-muted/60 text-destructive">
+              <button type="button" onClick={() => deleteList(l.id)} className="p-1.5 rounded-full hover:bg-muted/60 text-destructive">
                 <Trash2 className="w-4 h-4" />
               </button>
             </div>
@@ -85,7 +85,7 @@ export default function BroadcastListsPage() {
           <div className="bg-background rounded-2xl p-4 w-full max-w-sm" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold">Broadcast message</h3>
-              <button onClick={() => setComposeFor(null)}><X className="w-4 h-4" /></button>
+              <button type="button" onClick={() => setComposeFor(null)}><X className="w-4 h-4" /></button>
             </div>
             <textarea
               value={text}
@@ -95,7 +95,7 @@ export default function BroadcastListsPage() {
               rows={4}
               className="w-full px-3 py-2.5 rounded-xl bg-muted/30 border border-border/40 text-sm mb-3 focus:outline-none focus:ring-2 focus:ring-primary/30 resize-none"
             />
-            <button
+            <button type="button"
               onClick={send}
               disabled={sending || !text.trim()}
               className="w-full py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium flex items-center justify-center gap-2 disabled:opacity-50"

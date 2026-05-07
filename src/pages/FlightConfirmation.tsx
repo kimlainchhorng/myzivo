@@ -236,10 +236,10 @@ const FlightConfirmation = () => {
                     <Separator className="mb-4 bg-destructive/10" />
                     <p className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wider">Contact Support</p>
                     <div className="space-y-2.5">
-                      <button onClick={() => import("@/lib/openExternalUrl").then(({ openSystemUrl }) => openSystemUrl("mailto:support@hizovo.com"))} className="flex items-center gap-3 text-sm hover:text-[hsl(var(--flights))] transition-colors">
+                      <button type="button" onClick={() => import("@/lib/openExternalUrl").then(({ openSystemUrl }) => openSystemUrl("mailto:support@hizovo.com"))} className="flex items-center gap-3 text-sm hover:text-[hsl(var(--flights))] transition-colors">
                         <Mail className="w-4 h-4 text-muted-foreground" /> support@hizovo.com
                       </button>
-                      <button onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl("https://hizovo.com/help"))} className="flex items-center gap-3 text-sm hover:text-[hsl(var(--flights))] transition-colors">
+                      <button type="button" onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl("https://hizovo.com/help"))} className="flex items-center gap-3 text-sm hover:text-[hsl(var(--flights))] transition-colors">
                         <MessageCircle className="w-4 h-4 text-muted-foreground" /> Help Center
                       </button>
                     </div>
@@ -277,7 +277,7 @@ const FlightConfirmation = () => {
                   {/* Booking ref with copy */}
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-muted-foreground">Booking Reference</span>
-                    <button
+                    <button type="button"
                       onClick={handleCopyRef}
                       className="flex items-center gap-1.5 font-mono font-bold text-base tracking-wider hover:text-[hsl(var(--flights))] transition-colors"
                     >

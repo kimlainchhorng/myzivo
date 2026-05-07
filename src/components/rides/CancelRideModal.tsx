@@ -172,7 +172,7 @@ export default function CancelRideModal({
                 <h3 className="text-lg font-bold text-foreground">
                   {role === "customer" ? t("ride.cancel_ride") : "Cancel trip"}
                 </h3>
-                <button onClick={handleClose} className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center">
+                <button type="button" onClick={handleClose} className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center">
                   <X className="w-4 h-4 text-muted-foreground" />
                 </button>
               </div>
@@ -199,7 +199,7 @@ export default function CancelRideModal({
 
               <div className="space-y-2 max-h-[45vh] overflow-y-auto">
                 {reasons.map((reason) => (
-                  <button
+                  <button type="button"
                     key={reason.id}
                     onClick={() => handleSelectReason(reason)}
                     className="w-full flex items-center gap-3 p-3 rounded-xl border border-border/30 hover:border-foreground/20 hover:bg-muted/30 transition-all active:scale-[0.98] text-left"
@@ -222,10 +222,10 @@ export default function CancelRideModal({
             <div className="px-5 pb-6">
               {/* Confirm step */}
               <div className="flex items-center justify-between mb-4">
-                <button onClick={handleBack} className="text-sm font-semibold text-primary">
+                <button type="button" onClick={handleBack} className="text-sm font-semibold text-primary">
                   {t("ride.back")}
                 </button>
-                <button onClick={handleClose} className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center">
+                <button type="button" onClick={handleClose} className="w-8 h-8 rounded-full bg-muted/50 flex items-center justify-center">
                   <X className="w-4 h-4 text-muted-foreground" />
                 </button>
               </div>

@@ -216,7 +216,7 @@ export default function StoryForwardSheet({
                   Forward this story or copy its link
                 </p>
               </div>
-              <button
+              <button type="button"
                 onClick={onClose}
                 aria-label="Close"
                 className="w-9 h-9 rounded-full flex items-center justify-center hover:bg-muted"
@@ -227,7 +227,7 @@ export default function StoryForwardSheet({
 
             {/* Quick action: Copy link */}
             <div className="px-4 py-3 border-b border-border/40">
-              <button
+              <button type="button"
                 onClick={handleCopyLink}
                 className="w-full flex items-center gap-3 p-3 rounded-2xl bg-muted/60 hover:bg-muted transition active:scale-[0.99]"
               >
@@ -277,7 +277,7 @@ export default function StoryForwardSheet({
                     const isSelected = selected.has(f.id);
                     return (
                       <li key={f.id}>
-                        <button
+                        <button type="button"
                           onClick={() => toggle(f.id)}
                           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted/60 transition"
                         >
@@ -319,7 +319,7 @@ export default function StoryForwardSheet({
                   placeholder="Write a message…"
                   className="w-full bg-muted rounded-full px-4 py-2.5 text-sm outline-none text-foreground placeholder:text-muted-foreground"
                 />
-                <button
+                <button type="button"
                   onClick={handleSend}
                   disabled={sending}
                   className="w-full flex items-center justify-center gap-2 bg-primary text-primary-foreground rounded-full py-3 font-semibold text-sm disabled:opacity-60 active:scale-[0.99] transition"

@@ -198,7 +198,7 @@ const PriceAlertWidget = ({ className }: PriceAlertWidgetProps) => {
                     onCheckedChange={() => toggleAlert(alert.id)}
                     className="scale-75"
                   />
-                  <button
+                  <button type="button"
                     onClick={() => removeAlert(alert.id)}
                     aria-label="Remove alert"
                     className="p-1 rounded hover:bg-destructive/10 transition-colors"
@@ -223,7 +223,7 @@ const PriceAlertWidget = ({ className }: PriceAlertWidgetProps) => {
 
         {/* Show More */}
         {alerts.length > 3 && (
-          <button
+          <button type="button"
             onClick={() => setShowAll(!showAll)}
             className="w-full text-center text-sm text-primary hover:underline py-2"
           >

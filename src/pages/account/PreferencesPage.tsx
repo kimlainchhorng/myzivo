@@ -292,7 +292,7 @@ const PreferencesPage = () => {
                 {distanceOptions.map((opt) => {
                   const active = unitPrefs.distance === opt.value;
                   return (
-                    <button
+                    <button type="button"
                       key={opt.value}
                       onClick={() => { updateUnitPref("distance", opt.value); toast.success(`Distance: ${opt.label}`); }}
                       className={`flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl transition-all duration-200 active:scale-[0.97] ${active ? "bg-primary/10 text-primary ring-1 ring-primary/25" : "bg-muted/30 hover:bg-muted/60"}`}
@@ -314,7 +314,7 @@ const PreferencesPage = () => {
                 {temperatureOptions.map((opt) => {
                   const active = unitPrefs.temperature === opt.value;
                   return (
-                    <button
+                    <button type="button"
                       key={opt.value}
                       onClick={() => { updateUnitPref("temperature", opt.value); toast.success(`Temperature: ${opt.label}`); }}
                       className={`flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl transition-all duration-200 active:scale-[0.97] ${active ? "bg-primary/10 text-primary ring-1 ring-primary/25" : "bg-muted/30 hover:bg-muted/60"}`}
@@ -336,7 +336,7 @@ const PreferencesPage = () => {
                 {timeFormatOptions.map((opt) => {
                   const active = unitPrefs.timeFormat === opt.value;
                   return (
-                    <button
+                    <button type="button"
                       key={opt.value}
                       onClick={() => { updateUnitPref("timeFormat", opt.value); toast.success(`Time format: ${opt.label}`); }}
                       className={`flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl transition-all duration-200 active:scale-[0.97] ${active ? "bg-primary/10 text-primary ring-1 ring-primary/25" : "bg-muted/30 hover:bg-muted/60"}`}
@@ -358,7 +358,7 @@ const PreferencesPage = () => {
                 {dateFormatOptions.map((opt) => {
                   const active = unitPrefs.dateFormat === opt.value;
                   return (
-                    <button
+                    <button type="button"
                       key={opt.value}
                       onClick={() => { updateUnitPref("dateFormat", opt.value); toast.success(`Date format: ${opt.label}`); }}
                       className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl transition-all duration-200 active:scale-[0.99] ${active ? "bg-primary/10 text-primary ring-1 ring-primary/25" : "bg-muted/30 hover:bg-muted/60"}`}
@@ -385,7 +385,7 @@ const PreferencesPage = () => {
                       {fontScaleOptions.map((opt) => {
                         const active = a11yPrefs.fontScale === opt.value;
                         return (
-                          <button
+                          <button type="button"
                             key={opt.value}
                             onClick={() => { updateA11yPref("fontScale", opt.value); toast.success(`Text size: ${opt.label}`); }}
                             className={`flex flex-col items-center justify-center gap-0.5 px-2 py-2.5 rounded-xl transition-all active:scale-[0.97] ${active ? "bg-primary/10 text-primary ring-1 ring-primary/25" : "bg-muted/30 hover:bg-muted/60"}`}

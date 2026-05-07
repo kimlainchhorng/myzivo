@@ -47,7 +47,7 @@ const AppHeader = ({
       <div className="flex items-center justify-between h-14 px-4">
         {/* Left */}
         {showBack ? (
-          <button
+          <button type="button"
             onClick={handleBack}
             className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center hover:bg-muted transition-all active:scale-90 touch-manipulation min-w-[44px] min-h-[44px]"
             aria-label="Go back"
@@ -74,7 +74,7 @@ const AppHeader = ({
 
         {/* Right - Notifications Bell */}
         {rightAction || (
-          <button
+          <button type="button"
             onClick={() => navigate("/notifications")}
             className="relative w-10 h-10 -mr-2 rounded-xl flex items-center justify-center hover:bg-muted transition-all active:scale-90 touch-manipulation min-w-[44px] min-h-[44px]"
             aria-label="Notifications"

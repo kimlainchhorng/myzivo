@@ -73,7 +73,7 @@ export default function OnboardingTour() {
           >
             <div className="relative bg-foreground text-background h-32 flex items-center justify-center text-5xl">
               {stepIdx === 0 ? "👋" : stepIdx === 1 ? "💬" : stepIdx === 2 ? "✈️" : stepIdx === 3 ? "💵" : "✨"}
-              <button onClick={() => void finish()} aria-label="Skip tour" className="absolute top-3 right-3 h-8 w-8 flex items-center justify-center rounded-full bg-black/30 text-white hover:bg-black/50">
+              <button type="button" onClick={() => void finish()} aria-label="Skip tour" className="absolute top-3 right-3 h-8 w-8 flex items-center justify-center rounded-full bg-black/30 text-white hover:bg-black/50">
                 <X className="w-4 h-4" />
               </button>
               <div className="absolute bottom-2 left-0 right-0 flex justify-center gap-1">
@@ -83,7 +83,7 @@ export default function OnboardingTour() {
             <div className="p-5">
               <h3 className="text-xl font-bold mb-1">{step.title}</h3>
               <p className="text-sm text-muted-foreground">{step.body}</p>
-              <button
+              <button type="button"
                 onClick={() => isLast ? void finish() : setStepIdx(stepIdx + 1)}
                 className="mt-4 w-full inline-flex items-center justify-center gap-1 py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm active:opacity-80 transition"
               >

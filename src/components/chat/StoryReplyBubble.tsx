@@ -16,7 +16,7 @@ interface Props {
 export default function StoryReplyBubble({ thumb, caption, storyId, isMine }: Props) {
   const nav = useNavigate();
   return (
-    <button
+    <button type="button"
       onClick={() => storyId && nav(`/stories/${storyId}`)}
       className={`flex items-center gap-2 mb-1 px-2 py-1.5 rounded-xl border w-full max-w-[260px] active:scale-[0.98] transition-all ${
         isMine ? "bg-white/15 border-white/20" : "bg-muted/40 border-border/30"

@@ -155,7 +155,7 @@ function CellActionMenu({ cellMenu, employees, onClose, onQuickAssign, onCustom,
           {/* Other Shifts */}
           <div className="space-y-0.5 pt-1">
             {SHIFT_PRESETS.filter(p => p.type !== selectedShift).map(p => (
-              <button
+              <button type="button"
                 key={p.type}
                 onClick={() => setSelectedShift(p.type)}
                 className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all text-left hover:bg-muted/40 active:scale-[0.99]"
@@ -169,7 +169,7 @@ function CellActionMenu({ cellMenu, employees, onClose, onQuickAssign, onCustom,
           </div>
 
           {/* Custom Shift */}
-          <button
+          <button type="button"
             className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted/40 transition-colors text-left"
             onClick={() => onCustom(cellMenu.empId, date)}
           >
@@ -190,7 +190,7 @@ function CellActionMenu({ cellMenu, employees, onClose, onQuickAssign, onCustom,
               { reason: "Sick Leave", icon: Thermometer },
               { reason: "Personal", icon: User },
             ].map(item => (
-              <button key={item.reason}
+              <button type="button" key={item.reason}
                 className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl transition-all text-left border border-border/40 hover:bg-muted/40 hover:border-border hover:shadow-sm active:scale-[0.98]"
                 onClick={() => onDayOff(cellMenu.empId, date, item.reason)}
               >
@@ -445,8 +445,8 @@ export default function StoreScheduleSection({ storeId }: Props) {
         <div className="flex items-center justify-between mb-3">
           <p className="text-xs font-semibold">Daily Coverage</p>
           <div className="flex items-center gap-1 rounded-lg bg-muted/50 p-0.5">
-            <button onClick={() => setViewMode("week")} className={cn("text-[10px] px-2.5 py-1 rounded-md font-medium transition-all", viewMode === "week" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground")}>7 days</button>
-            <button onClick={() => setViewMode("2week")} className={cn("text-[10px] px-2.5 py-1 rounded-md font-medium transition-all", viewMode === "2week" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground")}>14 days</button>
+            <button type="button" onClick={() => setViewMode("week")} className={cn("text-[10px] px-2.5 py-1 rounded-md font-medium transition-all", viewMode === "week" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground")}>7 days</button>
+            <button type="button" onClick={() => setViewMode("2week")} className={cn("text-[10px] px-2.5 py-1 rounded-md font-medium transition-all", viewMode === "2week" ? "bg-card shadow-sm text-foreground" : "text-muted-foreground")}>14 days</button>
           </div>
         </div>
         <div className="flex items-end gap-1.5">
@@ -576,13 +576,13 @@ export default function StoreScheduleSection({ storeId }: Props) {
                       return (
                         <td key={date.toISOString()} className={cn("px-1.5 py-2 text-center align-middle", isToday && "bg-primary/[0.03]")}>
                           {status === "off" ? (
-                            <button onClick={() => setDetailDialog({ empId: emp.id, dayIdx })}
+                            <button type="button" onClick={() => setDetailDialog({ empId: emp.id, dayIdx })}
                               className="w-full rounded-xl bg-muted/40 border border-dashed border-muted-foreground/15 px-2 py-2.5 transition-all hover:bg-muted/60 active:scale-95">
                               <Coffee className="w-4 h-4 text-muted-foreground/50 mx-auto" />
                               <div className="text-[10px] font-medium text-muted-foreground/70 mt-1">{dayOff?.reason}</div>
                             </button>
                           ) : status === "working" && assignment ? (
-                            <button
+                            <button type="button"
                               onClick={() => setDetailDialog({ empId: emp.id, dayIdx })}
                               className={cn("w-full rounded-xl border px-2 py-2 transition-all hover:shadow-md active:scale-[0.97]", preset?.color || SHIFT_PRESETS[3].color)}
                             >
@@ -590,7 +590,7 @@ export default function StoreScheduleSection({ storeId }: Props) {
                               <div className="text-[10px] opacity-70 font-medium mt-0.5">{assignment.shiftStart}–{assignment.shiftEnd}</div>
                             </button>
                           ) : (
-                            <button
+                            <button type="button"
                               onClick={() => setCellMenu(isMenuOpen ? null : { empId: emp.id, date })}
                               className={cn(
                                 "w-full h-[52px] rounded-xl border border-dashed flex items-center justify-center transition-all",
@@ -696,7 +696,7 @@ export default function StoreScheduleSection({ storeId }: Props) {
                       )}>{d.charAt(0)}</span>
                     ))}
                   </div>
-                  <button onClick={() => removeAssignment(a.id)} className="opacity-0 group-hover:opacity-100 w-6 h-6 rounded-md hover:bg-destructive/10 flex items-center justify-center transition-all">
+                  <button type="button" onClick={() => removeAssignment(a.id)} className="opacity-0 group-hover:opacity-100 w-6 h-6 rounded-md hover:bg-destructive/10 flex items-center justify-center transition-all">
                     <Trash2 className="w-3 h-3 text-destructive" />
                   </button>
                 </div>
@@ -722,7 +722,7 @@ export default function StoreScheduleSection({ storeId }: Props) {
                   <span className="text-muted-foreground">{format(parseISO(off.date), "MMM d")}</span>
                   <span className="text-muted-foreground/60">·</span>
                   <span className="text-muted-foreground">{off.reason}</span>
-                  <button onClick={() => removeDayOff(off.id)} className="opacity-0 group-hover:opacity-100 ml-0.5 hover:text-destructive transition-all">
+                  <button type="button" onClick={() => removeDayOff(off.id)} className="opacity-0 group-hover:opacity-100 ml-0.5 hover:text-destructive transition-all">
                     <X className="w-3 h-3" />
                   </button>
                 </div>
@@ -765,7 +765,7 @@ export default function StoreScheduleSection({ storeId }: Props) {
               <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Working Days</Label>
               <div className="flex gap-1">
                 {DAYS.map((d, i) => (
-                  <button key={i} onClick={() => toggleWorkDay(i)}
+                  <button type="button" key={i} onClick={() => toggleWorkDay(i)}
                     className={cn("flex-1 h-9 rounded-lg text-[11px] font-bold border transition-all",
                       assignForm.workDays.includes(i)
                         ? "bg-primary text-primary-foreground border-primary shadow-sm scale-105"
@@ -774,16 +774,16 @@ export default function StoreScheduleSection({ storeId }: Props) {
                 ))}
               </div>
               <div className="flex gap-3 mt-1">
-                <button className="text-[10px] text-primary font-medium hover:underline" onClick={() => setAssignForm(f => ({ ...f, workDays: [0,1,2,3,4] }))}>Mon–Fri</button>
-                <button className="text-[10px] text-primary font-medium hover:underline" onClick={() => setAssignForm(f => ({ ...f, workDays: [0,1,2,3,4,5] }))}>Mon–Sat</button>
-                <button className="text-[10px] text-primary font-medium hover:underline" onClick={() => setAssignForm(f => ({ ...f, workDays: [0,1,2,3,4,5,6] }))}>All</button>
+                <button type="button" className="text-[10px] text-primary font-medium hover:underline" onClick={() => setAssignForm(f => ({ ...f, workDays: [0,1,2,3,4] }))}>Mon–Fri</button>
+                <button type="button" className="text-[10px] text-primary font-medium hover:underline" onClick={() => setAssignForm(f => ({ ...f, workDays: [0,1,2,3,4,5] }))}>Mon–Sat</button>
+                <button type="button" className="text-[10px] text-primary font-medium hover:underline" onClick={() => setAssignForm(f => ({ ...f, workDays: [0,1,2,3,4,5,6] }))}>All</button>
               </div>
             </div>
             <div className="space-y-1.5">
               <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Shift</Label>
               <div className="grid grid-cols-3 gap-1.5">
                 {SHIFT_PRESETS.map(p => (
-                  <button key={p.type} onClick={() => setAssignForm(f => ({ ...f, shiftType: p.type, shiftStart: p.start, shiftEnd: p.end }))}
+                  <button type="button" key={p.type} onClick={() => setAssignForm(f => ({ ...f, shiftType: p.type, shiftStart: p.start, shiftEnd: p.end }))}
                     className={cn("flex flex-col items-center gap-1 p-2 rounded-lg border transition-all",
                       assignForm.shiftType === p.type ? cn(p.color, "border-current shadow-sm scale-[1.02]") : "bg-muted/20 border-transparent hover:bg-muted/40"
                     )}>
@@ -851,7 +851,7 @@ export default function StoreScheduleSection({ storeId }: Props) {
               <Label className="text-[11px] uppercase tracking-wider text-muted-foreground">Reason</Label>
               <div className="grid grid-cols-2 gap-1.5">
                 {OFF_REASONS.map(r => (
-                  <button key={r} onClick={() => setOffForm(f => ({ ...f, reason: r }))}
+                  <button type="button" key={r} onClick={() => setOffForm(f => ({ ...f, reason: r }))}
                     className={cn("px-3 py-2 rounded-lg border text-[11px] font-medium transition-all text-left",
                       offForm.reason === r ? "bg-primary/10 border-primary/30 text-primary" : "bg-muted/20 border-transparent hover:bg-muted/40 text-muted-foreground"
                     )}>

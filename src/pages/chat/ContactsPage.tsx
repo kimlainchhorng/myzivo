@@ -138,7 +138,7 @@ export default function ContactsPage() {
     const name = displayName(c);
     return (
       <li className="flex items-center gap-3 px-3 py-2.5 hover:bg-muted/40">
-        <button
+        <button type="button"
           onClick={() => openChat(c, name)}
           className="flex items-center gap-3 flex-1 min-w-0 text-left"
         >
@@ -187,7 +187,7 @@ export default function ContactsPage() {
   return (
     <div className="min-h-[100dvh] bg-background">
       <header className="sticky top-0 z-20 bg-background/80 backdrop-blur border-b px-4 py-3 flex items-center gap-2 safe-area-top">
-        <button
+        <button type="button"
           onClick={goBack}
           aria-label="Go back"
           title="Back"
@@ -223,7 +223,7 @@ export default function ContactsPage() {
       </header>
 
       <div className="px-4 py-3 space-y-3">
-        <button
+        <button type="button"
           onClick={() => setUsernameOpen(true)}
           className="w-full flex items-center gap-3 p-3 rounded-2xl border bg-card hover:bg-muted/50 active:scale-[0.99] transition text-left"
         >

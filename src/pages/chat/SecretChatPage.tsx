@@ -124,7 +124,7 @@ export default function SecretChatPage() {
       <header
         className="flex shrink-0 items-center gap-2 border-b border-border bg-background/85 px-3 pb-2.5 backdrop-blur-xl pt-safe"
       >
-        <button
+        <button type="button"
           aria-label="Back"
           onClick={goBack}
           className="-ml-1 rounded-full p-2 hover:bg-foreground/5"
@@ -151,7 +151,7 @@ export default function SecretChatPage() {
 
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button aria-label="Options" className="rounded-full p-2 hover:bg-foreground/5">
+            <button type="button" aria-label="Options" className="rounded-full p-2 hover:bg-foreground/5">
               <MoreVertical className="h-5 w-5" />
             </button>
           </DropdownMenuTrigger>
@@ -236,7 +236,7 @@ export default function SecretChatPage() {
                     <span>{formatDistanceToNow(new Date(m.created_at), { addSuffix: true })}</span>
                     {m.expires_at && <Clock className="h-2.5 w-2.5" />}
                     {mine && (
-                      <button
+                      <button type="button"
                         onClick={() => void deleteMessage(m.id)}
                         className="opacity-0 transition group-hover:opacity-100 hover:text-destructive"
                         aria-label="Delete message"

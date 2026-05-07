@@ -60,7 +60,7 @@ export default function InvoiceListRow({
 
   return (
     <div className="flex items-center justify-between p-3 rounded-xl border border-border hover:bg-muted/40 transition">
-      <button onClick={onView} className="min-w-0 flex-1 text-left">
+      <button type="button" onClick={onView} className="min-w-0 flex-1 text-left">
         <div className="flex items-center gap-2 mb-0.5 flex-wrap">
           <span className="font-semibold text-sm">{doc.number}</span>
           <Badge variant="outline" className={`text-[10px] ${status.cls}`}>{status.label}</Badge>

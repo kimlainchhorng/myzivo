@@ -50,7 +50,7 @@ export default function LodgingQuickJump({ active }: { active: string }) {
       {CHIPS.map((c) => {
         const isActive = c.id === active;
         return (
-          <button
+          <button type="button"
             key={c.id}
             onClick={() => goTab(c.id)}
             className={cn(

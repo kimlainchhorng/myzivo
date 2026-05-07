@@ -159,10 +159,10 @@ export default function CheckInPage() {
                 </div>
               )}
               <div className="flex items-center gap-4 text-muted-foreground">
-                <button className="flex items-center gap-1 text-xs hover:text-red-500 transition-colors">
+                <button type="button" className="flex items-center gap-1 text-xs hover:text-red-500 transition-colors">
                   <Heart className="h-3 w-3" /> {checkin.likes}
                 </button>
-                <button className="flex items-center gap-1 text-xs hover:text-blue-500 transition-colors">
+                <button type="button" className="flex items-center gap-1 text-xs hover:text-blue-500 transition-colors">
                   <MessageCircle className="h-3 w-3" /> {checkin.comments}
                 </button>
               </div>

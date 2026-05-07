@@ -90,7 +90,7 @@ const FAQSection = ({
                   : "border-border/50 bg-card/50 hover:border-primary/20"
               )}
             >
-              <button
+              <button type="button"
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
                 className="w-full flex items-center justify-between p-5 text-left"
               >

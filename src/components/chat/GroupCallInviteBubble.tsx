@@ -68,7 +68,7 @@ export default function GroupCallInviteBubble({
       {/* Join button */}
       {isActive && (
         <div className="px-4 pb-3">
-          <button
+          <button type="button"
             onClick={onJoin}
             className="w-full py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 active:scale-[0.98] transition-all flex items-center justify-center gap-2"
           >

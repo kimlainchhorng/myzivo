@@ -134,7 +134,7 @@ export default function PaymentsTable({ storeId, payments, invoices, onOpenInvoi
             <thead>
               <tr className="text-left text-[11px] text-muted-foreground border-b">
                 <th className="px-2 py-1.5 font-medium">
-                  <button className="inline-flex items-center gap-1 hover:text-foreground" onClick={() => toggleSort("date")}>
+                  <button type="button" className="inline-flex items-center gap-1 hover:text-foreground" onClick={() => toggleSort("date")}>
                     Date <ArrowUpDown className="w-3 h-3" />
                   </button>
                 </th>
@@ -143,7 +143,7 @@ export default function PaymentsTable({ storeId, payments, invoices, onOpenInvoi
                 <th className="px-2 py-1.5 font-medium">Customer</th>
                 <th className="px-2 py-1.5 font-medium">Reference</th>
                 <th className="px-2 py-1.5 font-medium text-right">
-                  <button className="inline-flex items-center gap-1 hover:text-foreground" onClick={() => toggleSort("amount")}>
+                  <button type="button" className="inline-flex items-center gap-1 hover:text-foreground" onClick={() => toggleSort("amount")}>
                     Amount <ArrowUpDown className="w-3 h-3" />
                   </button>
                 </th>
@@ -167,7 +167,7 @@ export default function PaymentsTable({ storeId, payments, invoices, onOpenInvoi
                     </td>
                     <td className="px-2 py-1.5">
                       {inv ? (
-                        <button onClick={() => onOpenInvoice?.(inv.id)} className="hover:underline inline-flex items-center gap-1">
+                        <button type="button" onClick={() => onOpenInvoice?.(inv.id)} className="hover:underline inline-flex items-center gap-1">
                           {inv.number || inv.id.slice(0, 8)}
                           <ExternalLink className="w-3 h-3 text-muted-foreground" />
                         </button>

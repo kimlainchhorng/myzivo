@@ -126,7 +126,7 @@ function HotelCard({ name, roomType, checkInDate, city }: HotelCardProps) {
           <h3 className="text-xl font-bold text-foreground mb-2">{name}</h3>
           <p className="text-sm text-muted-foreground">{roomType}</p>
           
-          <button className="mt-4 text-xs font-bold text-foreground bg-muted/50 px-4 py-2 rounded-xl hover:bg-muted active:scale-[0.95] transition-all duration-200 flex items-center gap-2 touch-manipulation min-h-[36px]">
+          <button type="button" className="mt-4 text-xs font-bold text-foreground bg-muted/50 px-4 py-2 rounded-xl hover:bg-muted active:scale-[0.95] transition-all duration-200 flex items-center gap-2 touch-manipulation min-h-[36px]">
             Get Directions <ArrowRight className="w-3 h-3" />
           </button>
         </div>

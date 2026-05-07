@@ -222,7 +222,7 @@ const ThingsToDo = () => {
                         </Badge>
                       )}
                     </div>
-                    <button className="absolute top-3 right-3 p-2 rounded-full bg-black/30 backdrop-blur-sm hover:bg-secondary transition-all touch-manipulation">
+                    <button type="button" className="absolute top-3 right-3 p-2 rounded-full bg-black/30 backdrop-blur-sm hover:bg-secondary transition-all touch-manipulation">
                       <Heart className="h-4 w-4 text-primary-foreground" />
                     </button>
                     <div className="absolute bottom-3 left-3 right-3">
@@ -317,7 +317,7 @@ const ThingsToDo = () => {
                       loading="lazy"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                    <button aria-label="Save to favorites" className="absolute top-2 right-2 p-1.5 rounded-full bg-black/30 backdrop-blur-sm hover:bg-secondary transition-all touch-manipulation">
+                    <button type="button" aria-label="Save to favorites" className="absolute top-2 right-2 p-1.5 rounded-full bg-black/30 backdrop-blur-sm hover:bg-secondary transition-all touch-manipulation">
                       <Heart className="h-3.5 w-3.5 text-primary-foreground" />
                     </button>
                   </div>

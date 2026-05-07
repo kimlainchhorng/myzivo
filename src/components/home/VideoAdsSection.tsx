@@ -161,7 +161,7 @@ export default function VideoAdsSection() {
           {/* Dots navigation */}
           <div className="flex items-center justify-center gap-2 mt-5">
             {promos.map((promo, i) => (
-              <button
+              <button type="button"
                 key={promo.id}
                 onClick={() => setActiveIndex(i)}
                 className={cn(
@@ -181,7 +181,7 @@ export default function VideoAdsSection() {
             {promos.map((promo, i) => {
               const PIcon = promo.icon;
               return (
-                <button
+                <button type="button"
                   key={promo.id}
                   onClick={() => setActiveIndex(i)}
                   className={cn(

@@ -184,7 +184,7 @@ export default function FeaturedCreatorsRow({ fullBleed = true }: Props) {
           </h2>
           <p className="text-xs sm:text-sm text-white/60 mt-0.5">People worth following on ZIVO</p>
         </div>
-        <button
+        <button type="button"
           onClick={() => navigate("/explore")}
           className="shrink-0 flex items-center gap-1 text-emerald-400 text-xs sm:text-sm font-semibold hover:text-emerald-300 px-3 py-2 sm:p-0 rounded-full sm:rounded-none active:scale-95 transition-transform"
         >

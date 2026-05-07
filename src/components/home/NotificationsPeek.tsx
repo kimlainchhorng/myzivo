@@ -204,7 +204,7 @@ export default function NotificationsPeek() {
         <h2 className="text-sm font-bold text-foreground flex items-center gap-2">
           <Bell className="w-4 h-4 text-primary" /> Recent activity
         </h2>
-        <button
+        <button type="button"
           onClick={() => navigate("/activity")}
           className="text-[11px] text-primary font-bold flex items-center gap-0.5"
         >

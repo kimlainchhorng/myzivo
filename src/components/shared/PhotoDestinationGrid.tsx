@@ -87,7 +87,7 @@ export default function PhotoDestinationGrid({
           {destinations.map((cityKey, index) => {
             const destination = destinationPhotos[cityKey];
             return (
-              <button
+              <button type="button"
                 key={cityKey}
                 onClick={() => navigate(getRoute(destination.city))}
                 className={cn(

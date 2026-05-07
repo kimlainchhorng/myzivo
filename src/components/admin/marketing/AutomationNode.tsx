@@ -28,7 +28,7 @@ export default function AutomationNode({
   const Icon = m.icon;
   return (
     <div className={`rounded-lg border-2 p-2 min-w-[140px] shrink-0 ${m.tone} relative group`}>
-      <button onClick={onRemove} className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-background border flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
+      <button type="button" onClick={onRemove} className="absolute -top-1.5 -right-1.5 w-4 h-4 rounded-full bg-background border flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
         <X className="w-2.5 h-2.5" />
       </button>
       <div className="flex items-center gap-1.5 mb-1.5">

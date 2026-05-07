@@ -233,7 +233,7 @@ export default function LodgingGiftVouchersSection({ storeId }: { storeId: strin
           </div>
           <div className="flex gap-1.5 flex-wrap">
             {(["all", "active", "partially_used", "redeemed", "expired", "voided"] as const).map(s => (
-              <button key={s} onClick={() => setFilterStatus(s as any)}
+              <button type="button" key={s} onClick={() => setFilterStatus(s as any)}
                 className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${filterStatus === s ? "border-primary bg-primary text-primary-foreground" : "border-border bg-card text-muted-foreground"}`}>
                 {s === "all" ? "All" : s.replace("_", " ")}
               </button>

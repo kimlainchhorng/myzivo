@@ -68,7 +68,7 @@ export default function RideFamilyAccounts() {
         {tabs.map((tab) => {
           const Icon = tab.icon;
           return (
-            <button
+            <button type="button"
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
@@ -100,7 +100,7 @@ export default function RideFamilyAccounts() {
               {!member.isOwner && <ChevronRight className="w-4 h-4 text-muted-foreground" />}
             </div>
           ))}
-          <button
+          <button type="button"
             onClick={() => setShowInvite(v => !v)}
             className="w-full py-2.5 bg-primary/10 rounded-xl text-sm font-bold text-primary flex items-center justify-center gap-2"
           >
@@ -115,7 +115,7 @@ export default function RideFamilyAccounts() {
                 <div className="flex gap-2">
                   <input value={invitePhone} onChange={e => setInvitePhone(e.target.value)} placeholder="Phone number" type="tel"
                     className="flex-1 rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
-                  <button disabled={!inviteName.trim() || !invitePhone.trim()}
+                  <button type="button" disabled={!inviteName.trim() || !invitePhone.trim()}
                     onClick={() => { toast.success(`Invite sent to ${inviteName}!`); setInviteName(""); setInvitePhone(""); setShowInvite(false); }}
                     className="px-3 rounded-lg bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-40">
                     Send
@@ -139,7 +139,7 @@ export default function RideFamilyAccounts() {
                 <p className="text-sm font-bold text-foreground">{control.label}</p>
                 <p className="text-xs text-muted-foreground">{control.desc}</p>
               </div>
-              <button
+              <button type="button"
                 onClick={() => toggleControl(control.id)}
                 className={cn("w-10 h-6 rounded-full flex items-center transition-all px-0.5", control.active ? "bg-primary justify-end" : "bg-muted justify-start")}
               >

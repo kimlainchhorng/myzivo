@@ -137,7 +137,7 @@ const CarbonFootprintWidget = ({
         {offsetOptions.map((option) => {
           const Icon = option.icon;
           return (
-            <button
+            <button type="button"
               key={option.id}
               onClick={() => setOffsetSelected(!offsetSelected)}
               className={cn(

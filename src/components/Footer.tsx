@@ -119,7 +119,7 @@ const Footer = ({ className }: { className?: string }) => {
 
             {/* App Store */}
             <div className="flex flex-wrap gap-2">
-              <button
+              <button type="button"
                 onClick={() => handleAppStore("App Store")}
                 className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-primary-foreground/10 hover:bg-primary-foreground/15 active:scale-[0.97] transition-all text-xs font-medium text-primary-foreground/80 touch-manipulation min-h-[44px]"
               >
@@ -131,7 +131,7 @@ const Footer = ({ className }: { className?: string }) => {
             {/* Social */}
             <div className="flex items-center gap-2">
               {socialLinks.map((social) => (
-                <button
+                <button type="button"
                   key={social.label}
                   onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(social.href))}
                   className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-lg bg-primary-foreground/10 flex items-center justify-center text-primary-foreground/50 hover:text-primary-foreground hover:bg-primary/20 hover:shadow-[0_0_12px_hsl(var(--primary)/0.3)] active:scale-90 transition-all touch-manipulation"
@@ -191,7 +191,7 @@ const Footer = ({ className }: { className?: string }) => {
               <Heart className="w-3.5 h-3.5 text-primary fill-primary" /> for travelers.
             </p>
 
-            <button
+            <button type="button"
               onClick={scrollToTop}
               className="group/top inline-flex items-center gap-1.5 text-xs text-primary-foreground/40 hover:text-primary px-3 py-1.5 rounded-full border border-primary-foreground/10 hover:border-primary/30 active:scale-95 transition-all touch-manipulation min-h-[36px]"
             >

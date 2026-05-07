@@ -1109,7 +1109,7 @@ function ProfileCard({
           </div>
         )}
         {acc.coverUrl && !coverRepositioning && (
-          <button
+          <button type="button"
             className="absolute top-2 right-2 inline-flex items-center gap-1 rounded-full border border-border/40 bg-card/90 px-2 py-1 text-[10px] font-semibold text-foreground shadow-sm opacity-0 group-hover:opacity-100 transition-opacity z-10"
             onClick={(e) => { e.stopPropagation(); setCoverRepositioning(true); }}
           >
@@ -1118,13 +1118,13 @@ function ProfileCard({
         )}
         {coverRepositioning && (
           <div className="absolute bottom-2 right-2 flex gap-1.5 z-10">
-            <button
+            <button type="button"
               className="rounded-full bg-card px-3 py-1 text-[10px] font-semibold text-foreground border border-border/40 shadow-sm"
               onClick={(e) => { e.stopPropagation(); setLocalCoverPos(acc.coverPosition); setCoverRepositioning(false); }}
             >
               Cancel
             </button>
-            <button
+            <button type="button"
               className="rounded-full bg-primary px-3 py-1 text-[10px] font-semibold text-primary-foreground shadow-sm"
               onClick={(e) => { e.stopPropagation(); saveCoverPosition(); }}
             >
@@ -1286,7 +1286,7 @@ function ProfileCard({
                 ) : (
                   <div className="flex flex-wrap gap-2 p-3 bg-muted/40 rounded-xl">
                     {availablePlatforms.map((platform) => (
-                      <button
+                      <button type="button"
                         key={platform.key}
                         type="button"
                         onClick={() => {
@@ -1634,7 +1634,7 @@ function ProfileCard({
 
                    <div className="flex gap-2 overflow-x-auto pb-1">
                      {newPostPreviews.map((preview, previewIndex) => (
-                       <button
+                       <button type="button"
                          key={`${preview}-${previewIndex}`}
                          type="button"
                          onClick={() => setActivePreviewIndex(previewIndex)}
@@ -1716,7 +1716,7 @@ function ProfileCard({
                       autoFocus
                     />
                     {newPostLocation && (
-                      <button onClick={() => setNewPostLocation("")} className="shrink-0">
+                      <button type="button" onClick={() => setNewPostLocation("")} className="shrink-0">
                         <X className="h-3.5 w-3.5 text-muted-foreground" />
                       </button>
                     )}
@@ -1751,7 +1751,7 @@ function ProfileCard({
         {/* Post tabs */}
         <div className="flex items-center border-b border-border/30 mx-3 mt-3">
           {(["all", "photos", "reels"] as const).map((tab) => (
-            <button
+            <button type="button"
               key={tab}
               onClick={() => setPostTab(tab)}
               className={`flex-1 py-2 text-xs font-medium text-center transition-colors border-b-2 ${
@@ -1789,7 +1789,7 @@ function ProfileCard({
                 {filtered.map((post) => {
                   const isVideo = post.media_type === "video";
                   return (
-                   <button
+                   <button type="button"
                      key={post.id}
                      type="button"
                      onClick={() => setSelectedPost(post)}

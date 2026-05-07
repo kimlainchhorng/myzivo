@@ -87,7 +87,7 @@ export default function ShopTimeClockPage() {
     <AppLayout title="Time Clock" hideHeader>
       <div className="flex flex-col px-4 pt-3 pb-24 max-w-2xl mx-auto">
         <div className="flex items-center gap-2.5 mb-5">
-          <button onClick={() => navigate(-1)} className="w-8 h-8 rounded-full bg-muted/60 flex items-center justify-center active:scale-90 transition-transform">
+          <button type="button" onClick={() => navigate(-1)} className="w-8 h-8 rounded-full bg-muted/60 flex items-center justify-center active:scale-90 transition-transform">
             <ArrowLeft className="w-4 h-4" />
           </button>
           <h1 className="font-bold text-[17px]">Time Clock</h1>
@@ -151,11 +151,11 @@ export default function ShopTimeClockPage() {
                     autoFocus
                   />
                   <Button size="sm" onClick={clockAction} disabled={!employeeName.trim()} className="h-10">Record</Button>
-                  <button onClick={() => setShowForm(false)} className="p-2 rounded-xl hover:bg-muted/60 text-muted-foreground text-sm">✕</button>
+                  <button type="button" onClick={() => setShowForm(false)} className="p-2 rounded-xl hover:bg-muted/60 text-muted-foreground text-sm">✕</button>
                 </div>
                 <div className="flex flex-wrap gap-1.5 mt-2">
                   {[...clockedInNames].map((name) => (
-                    <button key={name} onClick={() => setEmployeeName(name)}
+                    <button type="button" key={name} onClick={() => setEmployeeName(name)}
                       className="text-[11px] px-2 py-0.5 rounded-full border border-border hover:border-primary/50 text-muted-foreground transition-colors">
                       {name}
                     </button>

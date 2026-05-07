@@ -22,6 +22,7 @@ export interface UnifiedTrip {
   icon: string;
   details: Record<string, unknown>;
   orderNumber?: string;
+  detailPath?: string;
 }
 
 export interface TripsFilter {
@@ -65,7 +66,7 @@ export function useUnifiedTrips(filter: TripsFilter = {}) {
           // Determine primary type and icon
           const types = [...new Set(items.map((item: any) => item.type))] as string[];
           const primaryType = types[0] || "hotels";
-          const icon = primaryType === "hotel" ? "building-2" : primaryType === "activity" ? "target" : primaryType === "transfer" ? "car" : "plane";
+          const icon = primaryType === "hotel" ? "building-2" : primaryType === "activity" ? "target" : primaryType === "flight" ? "plane" : primaryType === "transfer" ? "car" : "plane";
 
           // Build subtitle from items
           const itemTitles = items.slice(0, 2).map((item: any) => item.title).join(", ");
@@ -80,7 +81,7 @@ export function useUnifiedTrips(filter: TripsFilter = {}) {
 
           trips.push({
             id: order.id,
-            service: primaryType === "hotel" ? "hotels" : primaryType === "activity" ? "activities" : "transfers",
+            service: primaryType === "hotel" ? "hotels" : primaryType === "activity" ? "activities" : primaryType === "flight" ? "flights" : "transfers",
             title: `Travel Order ${order.order_number}`,
             subtitle,
             status: displayStatus,
@@ -90,6 +91,7 @@ export function useUnifiedTrips(filter: TripsFilter = {}) {
             icon,
             details: { order, items },
             orderNumber: order.order_number,
+            detailPath: `/my-trips/${order.order_number}`,
           });
         });
       }
@@ -115,16 +117,18 @@ export function useUnifiedTrips(filter: TripsFilter = {}) {
             currency: "USD",
             icon: "car-front",
             details: { booking: b },
+            orderNumber: b.id,
+            detailPath: `/my-trips/cars/${b.id}`,
           });
         });
       }
 
-      // Fetch Ride bookings
+      // Fetch Ride bookings (jobs table)
       if (!services || services.includes("rides")) {
         const { data } = await (supabase as any)
-          .from("trips")
-          .select("id, status, created_at, pickup_address, dropoff_address")
-          .eq("user_id", user!.id)
+          .from("jobs")
+          .select("id, status, created_at, pickup_address, dropoff_address, estimated_fare, job_type")
+          .eq("customer_id", user!.id)
           .order("created_at", { ascending: false })
           .limit(limit);
 
@@ -136,10 +140,12 @@ export function useUnifiedTrips(filter: TripsFilter = {}) {
             subtitle: `${t.pickup_address?.split(",")[0] || "Pickup"} → ${t.dropoff_address?.split(",")[0] || "Dropoff"}`,
             status: t.status,
             date: t.created_at,
-            amount: 0,
+            amount: Number(t.estimated_fare) || 0,
             currency: "USD",
             icon: "car-taxi-front",
             details: { trip: t },
+            orderNumber: t.id,
+            detailPath: `/trip-status/${t.id}`,
           });
         });
       }
@@ -165,6 +171,8 @@ export function useUnifiedTrips(filter: TripsFilter = {}) {
             currency: "USD",
             icon: "utensils-crossed",
             details: { order: o },
+            orderNumber: o.id,
+            detailPath: `/grocery/track/${o.id}`,
           });
         });
       }
@@ -190,6 +198,36 @@ export function useUnifiedTrips(filter: TripsFilter = {}) {
             currency: "USD",
             icon: "car",
             details: { rental: r },
+            orderNumber: r.id,
+            detailPath: `/my-trips/cars/${r.id}`,
+          });
+        });
+      }
+
+      // Fetch Move jobs
+      if (!services || services.includes("move")) {
+        const { data } = await (supabase as any)
+          .from("jobs")
+          .select("id, status, created_at, pickup_address, dropoff_address, estimated_fare, job_type")
+          .eq("customer_id", user!.id)
+          .eq("job_type", "move")
+          .order("created_at", { ascending: false })
+          .limit(limit);
+
+        (data || []).forEach((m: any) => {
+          trips.push({
+            id: m.id,
+            service: "move",
+            title: "ZIVO Move",
+            subtitle: `${m.pickup_address?.split(",")[0] || "Pickup"} → ${m.dropoff_address?.split(",")[0] || "Dropoff"}`,
+            status: m.status,
+            date: m.created_at,
+            amount: Number(m.estimated_fare) || 0,
+            currency: "USD",
+            icon: "package",
+            details: { trip: m },
+            orderNumber: m.id,
+            detailPath: `/trip-status/${m.id}`,
           });
         });
       }

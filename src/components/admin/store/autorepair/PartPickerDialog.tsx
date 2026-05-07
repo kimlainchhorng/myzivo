@@ -114,14 +114,14 @@ export default function PartPickerDialog({ open, onOpenChange, storeId, onPick }
               onChange={e => setQ(e.target.value)}
             />
             {q && (
-              <button onClick={() => setQ("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+              <button type="button" onClick={() => setQ("")} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
                 <X className="w-4 h-4" />
               </button>
             )}
           </div>
           <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
             {CATS.map(c => (
-              <button
+              <button type="button"
                 key={c}
                 onClick={() => setCat(c)}
                 className={`shrink-0 px-3 py-1 rounded-full text-[11px] font-semibold transition-all border ${
@@ -153,7 +153,7 @@ export default function PartPickerDialog({ open, onOpenChange, storeId, onPick }
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2">Search on supplier sites</p>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                     {QUICK_SUPPLIERS.map(s => (
-                      <button
+                      <button type="button"
                         key={s.id}
                         onClick={() => {
                           const url = s.searchUrlTemplate!.replace("{q}", encodeURIComponent(q));
@@ -222,13 +222,13 @@ export default function PartPickerDialog({ open, onOpenChange, storeId, onPick }
                       {added ? (
                         <div className="flex flex-col items-center gap-0.5">
                           <CheckCircle2 className="w-5 h-5 text-primary" />
-                          <button
+                          <button type="button"
                             onClick={() => handlePick(p)}
                             className="text-[9px] text-primary hover:underline"
                           >+1 more</button>
                         </div>
                       ) : (
-                        <button
+                        <button type="button"
                           onClick={() => handlePick(p)}
                           disabled={outOfStock}
                           className={`h-8 w-8 rounded-full flex items-center justify-center transition-colors ${

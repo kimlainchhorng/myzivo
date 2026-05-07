@@ -176,7 +176,7 @@ export default function SafetyCenterPage() {
                 { value: "standard", label: "Standard", desc: "Recommended" },
                 { value: "strict", label: "Strict", desc: "Maximum safety" },
               ].map((level) => (
-                <button
+                <button type="button"
                   key={level.value}
                   onClick={() => handleContentFilterChange(level.value)}
                   className={`flex-1 p-3 rounded-lg text-center border transition-colors ${contentFilter === level.value ? "border-primary bg-primary/10" : "border-border"}`}

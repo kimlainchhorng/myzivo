@@ -375,7 +375,7 @@ export default function NotificationCenterPage() {
             const isActive = activeTab === tab.key;
             const badge = tabUnreadCount(tab.key);
             return (
-              <button
+              <button type="button"
                 key={tab.key}
                 onClick={() => setActiveTab(tab.key)}
                 className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold border transition-all touch-manipulation ${
@@ -499,7 +499,7 @@ export default function NotificationCenterPage() {
                         {notif.hasUnread && <div className="w-2 h-2 rounded-full bg-primary mt-1" />}
                         {isChat && !isReplying && (
                           <>
-                            <button
+                            <button type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 // Mark every notif in the group as read on
@@ -514,14 +514,14 @@ export default function NotificationCenterPage() {
                             >
                               <CornerUpLeft className="h-4 w-4" />
                             </button>
-                            <button
+                            <button type="button"
                               onClick={(e) => { e.stopPropagation(); setPreviewUserId(threadId!); }}
                               aria-label="Preview profile"
                               className="h-8 w-8 rounded-full text-muted-foreground hover:bg-muted hover:text-foreground active:scale-90 transition-all flex items-center justify-center"
                             >
                               <UserCircle2 className="h-4 w-4" />
                             </button>
-                            <button
+                            <button type="button"
                               onClick={(e) => {
                                 e.stopPropagation();
                                 if (rowMuted) {
@@ -541,7 +541,7 @@ export default function NotificationCenterPage() {
                             </button>
                           </>
                         )}
-                        <button
+                        <button type="button"
                           onClick={e => {
                             e.stopPropagation();
                             // Deleting a grouped row removes every collapsed
@@ -587,14 +587,14 @@ export default function NotificationCenterPage() {
                               disabled={replySending}
                               className="flex-1 h-9 px-3 rounded-full bg-background border border-border text-[13px] focus:outline-none focus:ring-2 focus:ring-primary/40 disabled:opacity-50"
                             />
-                            <button
+                            <button type="button"
                               onClick={() => { setReplyOpenFor(null); setReplyText(""); }}
                               disabled={replySending}
                               className="shrink-0 h-9 px-3 text-[12px] font-medium text-muted-foreground hover:text-foreground"
                             >
                               Cancel
                             </button>
-                            <button
+                            <button type="button"
                               onClick={() => void sendReply()}
                               disabled={!replyText.trim() || replySending}
                               aria-label="Send reply"
@@ -619,7 +619,7 @@ export default function NotificationCenterPage() {
                         >
                           <div className="px-4 pb-3 pt-0 grid grid-cols-2 gap-1.5">
                             {MUTE_DURATIONS.map((d) => (
-                              <button
+                              <button type="button"
                                 key={d.id}
                                 onClick={(e) => {
                                   e.stopPropagation();

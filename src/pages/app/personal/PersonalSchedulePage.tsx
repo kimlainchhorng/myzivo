@@ -2,14 +2,15 @@
  * Personal Schedule — 2026 Facebook-density style
  * Features: mini calendar strip, next shift countdown, hours progress, estimated earnings
  */
-import { ArrowLeft, Calendar, Clock, Coffee, Palmtree, Thermometer, User, ChevronLeft, ChevronRight, Sunrise, Sun, Moon, BarChart3, Briefcase, DollarSign, Timer, Zap } from "lucide-react";
+import { ArrowLeft, Calendar, Clock, Coffee, Palmtree, Thermometer, User, ChevronLeft, ChevronRight, Sunrise, Sun, Moon, BarChart3, Briefcase, DollarSign, Timer, Zap, Plus, Send } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import AppLayout from "@/components/app/AppLayout";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
-import { format, startOfWeek, addDays, addWeeks, subWeeks, isSameDay, differenceInMinutes, isAfter, isBefore, isEqual } from "date-fns";
+import { format, startOfWeek, addDays, addWeeks, subWeeks, isSameDay, differenceInMinutes, isAfter, isBefore, isEqual, isSameWeek } from "date-fns";
 import { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
@@ -47,6 +48,14 @@ export default function PersonalSchedulePage() {
   const { user } = useAuth();
   const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [now, setNow] = useState(new Date());
+  const queryClient = useQueryClient();
+  const [showRequestSheet, setShowRequestSheet] = useState(false);
+  const [reqType, setReqType] = useState<"time_off" | "swap">("time_off");
+  const [reqDate, setReqDate] = useState("");
+  const [reqReason, setReqReason] = useState("Vacation");
+  const [reqNote, setReqNote] = useState("");
+  const [reqSubmitting, setReqSubmitting] = useState(false);
+  const [reqDone, setReqDone] = useState(false);
   const weekDates = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const today = new Date();
 
@@ -101,9 +110,35 @@ export default function PersonalSchedulePage() {
     enabled: !!empRecord?.store_id,
   });
 
-  const isLoading = empLoading || schedLoading;
+  const { data: empShifts, isLoading: shiftsLoading } = useQuery({
+    queryKey: ["emp-shifts", empRecord?.id],
+    queryFn: async () => {
+      if (!empRecord?.id) return [];
+      const { data } = await (supabase as any)
+        .from("employee_shifts")
+        .select("id, day_index, start_time, end_time, role, week_offset")
+        .eq("employee_id", empRecord.id)
+        .gte("week_offset", -4)
+        .lte("week_offset", 4)
+        .order("day_index");
+      return Array.isArray(data) ? data : [];
+    },
+    enabled: !!empRecord?.id,
+  });
+
+  const isLoading = empLoading || schedLoading || shiftsLoading;
   const myAssignments = (scheduleData?.assignments || []).filter(a => a.employeeId === empRecord?.id);
   const myDaysOff = (scheduleData?.daysOff || []).filter(d => d.employeeId === empRecord?.id);
+
+  // Shifts from employee_shifts table (week_offset === 0 = current week)
+  const currentWeekDbShifts = (empShifts || []).filter((s: any) => s.week_offset === 0);
+
+  // Build a set of dayIndexes already covered by myAssignments for current weekDates
+  // Used to fall back to DB shifts when myAssignments has no entry for that day.
+  type DbShiftRow = { id: string; day_index: number; start_time: string; end_time: string; role: string; week_offset: number };
+  const dbShiftsByDayIndex = new Map<number, DbShiftRow>(
+    currentWeekDbShifts.map((s: DbShiftRow) => [s.day_index, s])
+  );
 
   const getDayInfo = (date: Date) => {
     const dateStr = format(date, "yyyy-MM-dd");
@@ -116,7 +151,13 @@ export default function PersonalSchedulePage() {
     });
     if (assignment) {
       const meta = SHIFT_META[assignment.shiftType] || SHIFT_META.full;
-      return { type: "shift" as const, shiftType: assignment.shiftType, start: assignment.shiftStart, end: assignment.shiftEnd, meta };
+      return { type: "shift" as const, shiftType: assignment.shiftType, start: assignment.shiftStart, end: assignment.shiftEnd, meta, fromDb: false };
+    }
+    // Fallback: check employee_shifts for current week (week_offset 0)
+    const dbShift = isSameWeek(date, weekStart) ? dbShiftsByDayIndex.get(dow) : undefined;
+    if (dbShift) {
+      const meta = SHIFT_META.full;
+      return { type: "shift" as const, shiftType: "full" as const, start: dbShift.start_time, end: dbShift.end_time, meta, fromDb: true };
     }
     return { type: "none" as const };
   };
@@ -179,6 +220,24 @@ export default function PersonalSchedulePage() {
 
   const empId = empRecord ? `EMP-${empRecord.created_at ? new Date(empRecord.created_at).getFullYear() : "2024"}-${String(empRecord.employee_number || 0).padStart(5, "0")}` : "";
 
+  const submitRequest = async () => {
+    if (!reqDate) return;
+    setReqSubmitting(true);
+    try {
+      await (supabase as any).from("feedback_submissions").insert({
+        category: reqType === "time_off" ? "time_off_request" : "shift_swap_request",
+        subject: `${reqType === "time_off" ? "Time off" : "Shift swap"}: ${reqDate}`,
+        message: `Employee: ${empRecord?.name ?? "Unknown"} (${empRecord?.id ?? ""})\nDate: ${reqDate}\nReason: ${reqReason}\nNote: ${reqNote || "(none)"}`,
+        user_id: user?.id ?? null,
+      });
+      setReqDone(true);
+    } catch {
+      /* silent fail */
+    } finally {
+      setReqSubmitting(false);
+    }
+  };
+
   return (
     <AppLayout title="Schedule" hideHeader>
       <div className="flex flex-col min-h-screen bg-background">
@@ -186,10 +245,17 @@ export default function PersonalSchedulePage() {
         <div className="sticky top-0 z-20 bg-background/80 backdrop-blur-xl border-b border-border/40 pt-safe">
           <div className="safe-area-top" />
           <div className="flex items-center gap-3 px-4 h-11">
-            <button onClick={() => navigate(-1)} className="w-8 h-8 rounded-full flex items-center justify-center active:scale-90 transition-transform -ml-1">
+            <button type="button" aria-label="Go back" onClick={() => navigate(-1)} className="w-8 h-8 rounded-full flex items-center justify-center active:scale-90 transition-transform -ml-1">
               <ArrowLeft className="w-[18px] h-[18px] text-foreground" />
             </button>
-            <h1 className="font-bold text-[15px] text-foreground">My Schedule</h1>
+            <h1 className="font-bold text-[15px] text-foreground flex-1">My Schedule</h1>
+            <button
+              type="button"
+              onClick={() => { setShowRequestSheet(true); setReqDone(false); setReqDate(""); setReqNote(""); }}
+              className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary/10 text-primary text-[11px] font-bold active:scale-95 transition-transform"
+            >
+              <Plus className="w-3 h-3" /> Request
+            </button>
           </div>
         </div>
 
@@ -247,16 +313,16 @@ export default function PersonalSchedulePage() {
               {/* Week Navigator */}
               <div className="flex items-center justify-between mb-2">
                 <div className="flex items-center gap-0 bg-muted/30 rounded-full p-[3px]">
-                  <button onClick={() => setWeekStart(subWeeks(weekStart, 1))} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted/60 active:scale-90 transition-all">
+                  <button type="button" onClick={() => setWeekStart(subWeeks(weekStart, 1))} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted/60 active:scale-90 transition-all">
                     <ChevronLeft className="w-3.5 h-3.5" />
                   </button>
-                  <button
+                  <button type="button"
                     onClick={() => setWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }))}
                     className="text-[11px] font-semibold h-7 px-3 rounded-full hover:bg-muted/60 active:scale-95 transition-all"
                   >
                     Today
                   </button>
-                  <button onClick={() => setWeekStart(addWeeks(weekStart, 1))} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted/60 active:scale-90 transition-all">
+                  <button type="button" onClick={() => setWeekStart(addWeeks(weekStart, 1))} className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-muted/60 active:scale-90 transition-all">
                     <ChevronRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
@@ -392,9 +458,14 @@ export default function PersonalSchedulePage() {
                         <div className="flex-1 min-w-0">
                           {info.type === "shift" && (
                             <div>
-                              <div className="flex items-center gap-1.5">
+                              <div className="flex items-center gap-1.5 flex-wrap">
                                 <div className={cn("w-2 h-2 rounded-full shrink-0", info.meta.dot)} />
                                 <span className="text-[12px] font-semibold text-foreground">{info.meta.label}</span>
+                                {info.fromDb && (
+                                  <span className="text-[9px] font-bold text-emerald-600 bg-emerald-500/10 border border-emerald-500/20 rounded-full px-1.5 py-0.5 leading-none">
+                                    DB Shift
+                                  </span>
+                                )}
                               </div>
                               <span className="text-[9px] text-muted-foreground/60 ml-3.5">
                                 {getShiftHours(info.start, info.end).toFixed(1)}h
@@ -430,6 +501,76 @@ export default function PersonalSchedulePage() {
           )}
         </div>
       </div>
+      <Sheet open={showRequestSheet} onOpenChange={(v) => { setShowRequestSheet(v); if (!v) setReqDone(false); }}>
+        <SheetContent side="bottom" className="rounded-t-3xl pb-10 max-h-[90dvh] overflow-auto">
+          <SheetHeader className="pb-3">
+            <SheetTitle className="text-base font-bold">
+              {reqType === "time_off" ? "Request Time Off" : "Request Shift Swap"}
+            </SheetTitle>
+          </SheetHeader>
+
+          {reqDone ? (
+            <div className="flex flex-col items-center gap-3 py-8 text-center">
+              <div className="w-14 h-14 rounded-full bg-emerald-500/10 flex items-center justify-center">
+                <Send className="w-7 h-7 text-emerald-500" />
+              </div>
+              <p className="font-semibold text-[14px]">Request sent!</p>
+              <p className="text-[12px] text-muted-foreground">Your manager will review it and respond soon.</p>
+              <button type="button" onClick={() => setShowRequestSheet(false)}
+                className="mt-2 text-sm text-primary font-semibold">Close</button>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {/* Request type toggle */}
+              <div className="flex gap-2">
+                {(["time_off", "swap"] as const).map((t) => (
+                  <button type="button" key={t} type="button" onClick={() => setReqType(t)}
+                    className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
+                      reqType === t ? "bg-primary text-primary-foreground" : "bg-muted/40 text-muted-foreground"
+                    }`}>
+                    {t === "time_off" ? "Time Off" : "Shift Swap"}
+                  </button>
+                ))}
+              </div>
+
+              {/* Date */}
+              <div className="space-y-1.5">
+                <label htmlFor="req-date" className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Date *</label>
+                <input id="req-date" type="date" value={reqDate} onChange={(e) => setReqDate(e.target.value)}
+                  title="Request date"
+                  className="w-full h-11 px-3 rounded-xl bg-muted/30 border border-border/50 text-sm focus:outline-none focus:ring-1 focus:ring-primary/40" />
+              </div>
+
+              {/* Reason */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Reason</label>
+                <select value={reqReason} onChange={(e) => setReqReason(e.target.value)}
+                  className="w-full h-11 px-3 rounded-xl bg-muted/30 border border-border/50 text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
+                  aria-label="Reason for request">
+                  {reqType === "time_off"
+                    ? ["Vacation", "Sick Leave", "Personal", "Family", "Other"].map(r => <option key={r}>{r}</option>)
+                    : ["Personal conflict", "Medical appointment", "Family emergency", "Other"].map(r => <option key={r}>{r}</option>)}
+                </select>
+              </div>
+
+              {/* Note */}
+              <div className="space-y-1.5">
+                <label className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Note (optional)</label>
+                <textarea value={reqNote} onChange={(e) => setReqNote(e.target.value)}
+                  placeholder="Any additional context for your manager…"
+                  rows={3}
+                  className="w-full px-3 py-2.5 rounded-xl bg-muted/30 border border-border/50 text-sm resize-none focus:outline-none focus:ring-1 focus:ring-primary/40" />
+              </div>
+
+              <button type="button" disabled={!reqDate || reqSubmitting} onClick={submitRequest}
+                className="w-full h-12 rounded-2xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50 active:scale-[0.98] transition-transform flex items-center justify-center gap-2">
+                <Send className="w-4 h-4" />
+                {reqSubmitting ? "Sending…" : "Submit Request"}
+              </button>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </AppLayout>
   );
 }

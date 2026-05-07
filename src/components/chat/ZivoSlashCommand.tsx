@@ -84,7 +84,7 @@ export default function ZivoSlashCommand({ open, query, onClose, onAction }: Pro
           {filtered.map((cmd) => {
             const Icon = cmd.icon;
             return (
-              <button
+              <button type="button"
                 key={cmd.action}
                 onClick={() => { onAction(cmd.action); onClose(); }}
                 className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-muted/40 active:bg-muted/60 transition text-left"

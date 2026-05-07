@@ -214,7 +214,7 @@ export default function ChatSocialShareSheet({ open, onClose, onShareLink, onSha
               <h3 className="text-[17px] font-bold text-foreground">
                 {platform ? `Share ${platform.label}` : "Share Social Profile"}
               </h3>
-              <button
+              <button type="button"
                 onClick={onClose}
                 className="h-9 w-9 rounded-full hover:bg-muted/50 flex items-center justify-center"
                 aria-label="Close"
@@ -226,7 +226,7 @@ export default function ChatSocialShareSheet({ open, onClose, onShareLink, onSha
             <div className="overflow-y-auto px-5 pb-5">
               {!platform ? (
                 <>
-                  <button
+                  <button type="button"
                     onClick={shareMyZivoProfile}
                     className="w-full flex items-center gap-3 p-3 rounded-2xl bg-gradient-to-r from-primary/10 to-primary/5 hover:from-primary/15 hover:to-primary/10 active:scale-[0.99] transition-all mb-3"
                   >
@@ -247,7 +247,7 @@ export default function ChatSocialShareSheet({ open, onClose, onShareLink, onSha
                           if (!rp) return null;
                           const RIcon = rp.icon;
                           return (
-                            <button
+                            <button type="button"
                               key={`recent-${rid}`}
                               onClick={() => pickPlatform(rid)}
                               className="flex items-center gap-2 px-3 py-2 rounded-full bg-muted/50 hover:bg-muted/80 active:scale-95 transition-all flex-shrink-0"
@@ -268,7 +268,7 @@ export default function ChatSocialShareSheet({ open, onClose, onShareLink, onSha
                   )}
                   <div className="grid grid-cols-3 sm:grid-cols-4 gap-3 pt-1">
                     {PLATFORMS.map((p) => (
-                    <button
+                    <button type="button"
                       key={p.id}
                       onClick={() => pickPlatform(p.id)}
                       className="flex flex-col items-center gap-2 group"
@@ -301,7 +301,7 @@ export default function ChatSocialShareSheet({ open, onClose, onShareLink, onSha
                       <p className="text-[14px] font-semibold text-foreground">{platform.label}</p>
                       <p className="text-[12px] text-muted-foreground truncate">{platform.prefix}…</p>
                     </div>
-                    <button
+                    <button type="button"
                       onClick={() => setSelected(null)}
                       className="text-[12px] font-medium text-primary hover:opacity-70"
                     >
@@ -334,7 +334,7 @@ export default function ChatSocialShareSheet({ open, onClose, onShareLink, onSha
 
                   <div className="flex flex-col gap-2">
                     {onShareSocialCard && (
-                      <button
+                      <button type="button"
                         onClick={handleSendAsCard}
                         disabled={!finalUrl}
                         className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-[15px] disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-transform"
@@ -343,14 +343,14 @@ export default function ChatSocialShareSheet({ open, onClose, onShareLink, onSha
                       </button>
                     )}
                     <div className="flex gap-2">
-                      <button
+                      <button type="button"
                         onClick={async () => { if (finalUrl) { try { await openExternalUrl(finalUrl); } catch { /* noop */ } } }}
                         disabled={!finalUrl}
                         className="px-4 py-3 rounded-xl bg-muted/60 text-foreground font-semibold text-[15px] disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-transform"
                       >
                         Open
                       </button>
-                      <button
+                      <button type="button"
                         onClick={handleShare}
                         disabled={!finalUrl}
                         className={`flex-1 py-3 rounded-xl ${onShareSocialCard ? "bg-muted/60 text-foreground" : "bg-primary text-primary-foreground"} font-semibold text-[15px] disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] transition-transform`}

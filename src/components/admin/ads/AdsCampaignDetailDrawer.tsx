@@ -361,7 +361,7 @@ export default function AdsCampaignDetailDrawer({
               </div>
               <div className="flex gap-0.5 p-0.5 bg-muted rounded-md">
                 {(["1:1", "9:16", "1.91:1"] as AspectRatio[]).map((r) => (
-                  <button
+                  <button type="button"
                     key={r}
                     type="button"
                     onClick={() => setRatio(r)}

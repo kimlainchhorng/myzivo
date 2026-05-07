@@ -9,8 +9,9 @@ import {
   Users, Gift, Trophy,
   Clock, DollarSign, ChevronRight, Eye, EyeOff,
   TrendingUp, Zap, Banknote, Building2, Send, AlertCircle,
-  Radio, Coins, CheckCircle,
+  Radio, Coins, CheckCircle, MoreHorizontal,
 } from "lucide-react";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { useAuth } from "@/contexts/AuthContext";
@@ -122,6 +123,11 @@ export default function WalletPage() {
     aba_account_id: "",
   });
   const [selectedPayoutId, setSelectedPayoutId] = useState<string | null>(null);
+  const [refundTx, setRefundTx] = useState<{ id: string; description: string | null; service_type: string | null; amount: number | string } | null>(null);
+  const [refundReason, setRefundReason] = useState("");
+  const [refundNote, setRefundNote] = useState("");
+  const [refundSubmitting, setRefundSubmitting] = useState(false);
+  const [refundDone, setRefundDone] = useState(false);
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
@@ -329,6 +335,8 @@ export default function WalletPage() {
       <div className="sticky top-0 safe-area-top z-50 bg-background/80 backdrop-blur-2xl border-b border-border/30">
         <div className="flex items-center px-5 py-3.5 gap-3">
           <button
+            type="button"
+            aria-label="Go back"
             onClick={() => navigate(-1)}
             className="w-9 h-9 rounded-full bg-muted/60 flex items-center justify-center active:scale-95 transition-transform"
           >
@@ -338,6 +346,8 @@ export default function WalletPage() {
             <h1 className="font-bold text-[17px] leading-tight">Wallet</h1>
           </div>
           <button
+            type="button"
+            aria-label={balanceHidden ? "Show balance" : "Hide balance"}
             onClick={() => setBalanceHidden(!balanceHidden)}
             className="w-9 h-9 rounded-full bg-muted/60 flex items-center justify-center"
           >
@@ -430,7 +440,7 @@ export default function WalletPage() {
         {/* ── TABS ── */}
         <div className="flex bg-muted/40 rounded-2xl p-1 gap-0.5">
           {TAB_ITEMS.map(({ key, label, icon: Icon }) => (
-            <button
+            <button type="button"
               key={key}
               onClick={() => setActiveTab(key)}
               className={`flex-1 flex items-center justify-center gap-1.5 text-[13px] font-semibold py-2.5 rounded-[14px] transition-all duration-200 touch-manipulation ${
@@ -514,7 +524,7 @@ export default function WalletPage() {
                       </div>
                       <div className="flex items-center gap-0.5">
                         {!card.is_default && (
-                          <button
+                          <button type="button"
                             onClick={() => setDefault.mutate(card.id)}
                             disabled={setDefault.isPending}
                             className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground/50 hover:text-amber-500 transition-colors"
@@ -522,7 +532,7 @@ export default function WalletPage() {
                             <Star className="w-4 h-4" />
                           </button>
                         )}
-                        <button
+                        <button type="button"
                           onClick={() => { if (confirm("Remove this card?")) deleteCard.mutate(card.id); }}
                           disabled={deleteCard.isPending}
                           className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground/50 hover:text-destructive transition-colors"
@@ -540,7 +550,7 @@ export default function WalletPage() {
           {activeTab === "gifts" && (
             <motion.div key="gifts" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }} className="space-y-4">
               {/* Live gift earnings hero */}
-              <button
+              <button type="button"
                 onClick={() => navigate("/creator/live-earnings")}
                 className="w-full text-left relative rounded-2xl overflow-hidden active:scale-[0.99] transition-transform"
               >
@@ -703,7 +713,7 @@ export default function WalletPage() {
                       {/* Type toggle */}
                       <div className="flex gap-2">
                         {CASHOUT_METHODS.map(({ id, label, icon: Icon }) => (
-                          <button
+                          <button type="button"
                             key={id}
                             onClick={() => setPayoutForm(f => ({ ...f, method_type: id as any }))}
                             className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl text-[12px] font-semibold transition-all ${
@@ -836,7 +846,7 @@ export default function WalletPage() {
                 ) : (
                   <div className="space-y-2">
                     {payoutMethods.map((pm: any) => (
-                      <button
+                      <button type="button"
                         key={pm.id}
                         onClick={() => {
                           setSelectedPayoutId(pm.id);
@@ -867,7 +877,7 @@ export default function WalletPage() {
                           </p>
                         </div>
                         <div className="flex items-center gap-1">
-                          <button
+                          <button type="button"
                             onClick={(e) => {
                               e.stopPropagation();
                               if (confirm("Remove this payout method?")) deletePayoutMethod.mutate(pm.id);
@@ -895,7 +905,7 @@ export default function WalletPage() {
                     <h3 className="font-bold text-[13px] mb-2.5">Amount</h3>
                     <div className="flex gap-2 flex-wrap mb-3">
                       {QUICK_AMOUNTS.filter(a => a <= balanceDollars).map((amt) => (
-                        <button
+                        <button type="button"
                           key={amt}
                           onClick={() => setCashoutAmount(String(amt))}
                           className={`px-3.5 py-1.5 rounded-xl text-[13px] font-semibold transition-all ${
@@ -908,7 +918,7 @@ export default function WalletPage() {
                         </button>
                       ))}
                       {balanceDollars >= 5 && (
-                        <button
+                        <button type="button"
                           onClick={() => setCashoutAmount(balanceDollars.toFixed(2))}
                           className={`px-3.5 py-1.5 rounded-xl text-[13px] font-semibold transition-all ${
                             cashoutAmount === balanceDollars.toFixed(2)
@@ -1067,14 +1077,87 @@ export default function WalletPage() {
                             {formatDistanceToNow(new Date(tx.created_at), { addSuffix: true })}
                           </p>
                         </div>
-                        <p className={`font-bold text-sm tabular-nums ${isCredit ? "text-emerald-500" : "text-foreground"}`}>
-                          {isCredit ? "+" : "−"}${Math.abs(Number(tx.amount)).toFixed(2)}
-                        </p>
+                        <div className="flex items-center gap-1.5">
+                          <p className={`font-bold text-sm tabular-nums ${isCredit ? "text-emerald-500" : "text-foreground"}`}>
+                            {isCredit ? "+" : "−"}${Math.abs(Number(tx.amount)).toFixed(2)}
+                          </p>
+                          {!isCredit && (
+                            <button type="button" aria-label="Request refund"
+                              onClick={() => { setRefundTx(tx); setRefundReason(""); setRefundNote(""); setRefundDone(false); }}
+                              className="w-6 h-6 rounded-lg bg-muted/60 flex items-center justify-center hover:bg-muted transition-colors">
+                              <MoreHorizontal className="w-3 h-3 text-muted-foreground" />
+                            </button>
+                          )}
+                        </div>
                       </motion.div>
                     );
                   })}
                 </div>
               )}
+              {/* Refund request sheet */}
+              <Sheet open={!!refundTx} onOpenChange={open => !open && setRefundTx(null)}>
+                <SheetContent side="bottom" className="rounded-t-3xl px-4 pb-10">
+                  {refundDone ? (
+                    <div className="text-center py-8">
+                      <CheckCircle className="w-12 h-12 text-emerald-500 mx-auto mb-3" />
+                      <p className="font-bold text-lg">Request submitted</p>
+                      <p className="text-sm text-muted-foreground mt-1">We'll review and respond within 2–3 business days.</p>
+                      <button type="button" onClick={() => setRefundTx(null)}
+                        className="mt-5 w-full rounded-2xl bg-foreground text-background font-bold py-3 text-sm">
+                        Done
+                      </button>
+                    </div>
+                  ) : (
+                    <>
+                      <SheetHeader className="mb-4">
+                        <SheetTitle className="text-left">Request Refund</SheetTitle>
+                        {refundTx && (
+                          <p className="text-sm text-muted-foreground">
+                            {refundTx.description || refundTx.service_type} · ${Math.abs(Number(refundTx.amount)).toFixed(2)}
+                          </p>
+                        )}
+                      </SheetHeader>
+                      <div className="space-y-3">
+                        <select aria-label="Refund reason" value={refundReason} onChange={e => setRefundReason(e.target.value)}
+                          className="w-full rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm">
+                          <option value="">Select reason…</option>
+                          <option value="wrong_charge">Wrong amount charged</option>
+                          <option value="duplicate">Duplicate payment</option>
+                          <option value="service_not_received">Service not received</option>
+                          <option value="unauthorized">Unauthorized charge</option>
+                          <option value="other">Other</option>
+                        </select>
+                        <textarea value={refundNote} onChange={e => setRefundNote(e.target.value)}
+                          placeholder="Additional details (optional)" rows={3}
+                          className="w-full rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm resize-none outline-none focus:ring-1 focus:ring-foreground/20" />
+                        <button type="button" disabled={!refundReason || refundSubmitting}
+                          onClick={async () => {
+                            if (!refundTx) return;
+                            setRefundSubmitting(true);
+                            const refundDetails = [
+                              refundReason,
+                              refundNote,
+                              `TX: ${refundTx.id}`,
+                              `Amount: $${Math.abs(Number(refundTx.amount)).toFixed(2)}`,
+                              refundTx.description ? `Service: ${refundTx.description}` : null,
+                            ].filter(Boolean).join(" | ");
+                            const { error } = await (supabase as any).from("feedback_submissions").insert({
+                              user_id: user?.id ?? null,
+                              category: "refund_request",
+                              message: refundDetails,
+                            });
+                            setRefundSubmitting(false);
+                            if (error) { toast.error("Failed to submit"); return; }
+                            setRefundDone(true);
+                          }}
+                          className="w-full rounded-2xl bg-foreground text-background font-bold py-3 text-sm disabled:opacity-40 active:scale-[0.98] transition-transform">
+                          {refundSubmitting ? "Submitting…" : "Submit Request"}
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </SheetContent>
+              </Sheet>
             </motion.div>
           )}
 
@@ -1134,7 +1217,7 @@ export default function WalletPage() {
                   { label: "Achievements", desc: "Milestones & rewards", icon: Trophy, path: "/account/rewards" },
                   { label: "Gift Cards", desc: "Buy, send, or redeem", icon: Gift, path: "/account/gift-cards" },
                 ].map(({ label, desc, icon: Icon, path }) => (
-                  <button
+                  <button type="button"
                     key={path}
                     onClick={() => navigate(path)}
                     className="w-full flex items-center gap-3 p-3.5 rounded-2xl bg-card border border-border/30 hover:border-primary/20 transition-colors text-left active:scale-[0.98]"
@@ -1200,7 +1283,7 @@ export default function WalletPage() {
             <div className="px-5 py-4 space-y-3">
               <div className="grid grid-cols-5 gap-2">
                 {TOPUP_QUICK.map((amt) => (
-                  <button
+                  <button type="button"
                     key={amt}
                     type="button"
                     onClick={() => setTopupAmount(String(amt))}

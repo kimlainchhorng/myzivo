@@ -119,7 +119,7 @@ export default function StorageManagerPage() {
   return (
     <div className="min-h-screen bg-background pb-20">
       <header className="sticky top-0 z-10 bg-background/85 backdrop-blur-xl border-b border-border/40 pt-safe px-3 py-3 flex items-center gap-2">
-        <button onClick={goBack} className="p-1.5 rounded-full hover:bg-muted/60">
+        <button type="button" onClick={goBack} className="p-1.5 rounded-full hover:bg-muted/60">
           <ChevronLeft className="w-5 h-5" />
         </button>
         <h1 className="text-base font-semibold">Data & Storage</h1>
@@ -136,7 +136,7 @@ export default function StorageManagerPage() {
               {usageMB == null ? "Calculating…" : `${usageMB} MB used`}
             </div>
           </div>
-          <button
+          <button type="button"
             onClick={clearCache}
             disabled={clearing}
             className="px-3 py-1.5 text-xs font-medium rounded-full bg-destructive text-destructive-foreground flex items-center gap-1 disabled:opacity-50"

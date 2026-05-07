@@ -251,7 +251,7 @@ const VerifyNewDevice = () => {
         </div>
 
         <div className="mt-3 bg-white dark:bg-zinc-900/90 border border-zinc-200/80 dark:border-white/10 rounded-xl px-6 py-4 text-center shadow-sm">
-          <button
+          <button type="button"
             onClick={() => navigate("/login", { replace: true })}
             className="inline-flex items-center justify-center gap-1 text-sm font-semibold text-zinc-700 dark:text-zinc-200 hover:text-rose-500 dark:hover:text-rose-400 transition-colors"
           >

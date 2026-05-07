@@ -961,7 +961,7 @@ export default function GoLivePage() {
 <h1 className="text-white font-bold flex-1 text-center mr-9">Go Live</h1>
  )}
  {isPaired && (
-<button
+<button type="button"
  onClick={() =>{
  clearPairedIdentity();
  setPaired(null);
@@ -981,7 +981,7 @@ export default function GoLivePage() {
 <div className="flex items-center justify-between mb-1.5 px-1">
 <span className="text-white/80 text-xs font-semibold">Stream templates</span>
  {streamTemplate && (
-<button onClick={() =>setStreamTemplate(null)} className="text-[10px] text-white/50 hover:text-white">Reset</button>
+<button type="button" onClick={() =>setStreamTemplate(null)} className="text-[10px] text-white/50 hover:text-white">Reset</button>
  )}
 </div>
 <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
@@ -995,7 +995,7 @@ export default function GoLivePage() {
  { id: "asmr", label: "ASMR Sleep", emoji: "", topic: "ASMR" },
  { id: "study", label: "Study With Me", emoji: "", topic: "Education" },
  ].map((t) =>(
-<button
+<button type="button"
  key={t.id}
  onClick={() =>{
  setStreamTemplate(t.id);
@@ -1055,7 +1055,7 @@ export default function GoLivePage() {
  {STREAM_TYPES.map((t) =>{
  const active = streamType === t.id;
  return (
-<button
+<button type="button"
  key={t.id}
  onClick={() =>setStreamType(t.id)}
  className={cn(
@@ -1137,7 +1137,7 @@ export default function GoLivePage() {
 <span className="text-white/80 text-xs font-semibold mb-1.5 block px-1">Category · {topic}</span>
 <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1">
  {TOPICS.map((t) =>(
-<button
+<button type="button"
  key={t.name}
  onClick={() =>setTopic(t.name)}
  className={cn(
@@ -1156,7 +1156,7 @@ export default function GoLivePage() {
 <div className="flex items-center justify-between mb-1.5 px-1">
 <span className="text-white/80 text-xs font-semibold">Stream tags ({streamTags.length})</span>
  {streamTags.length >0 && (
-<button onClick={() =>setStreamTags([])} className="text-[10px] text-white/50 hover:text-white">Clear</button>
+<button type="button" onClick={() =>setStreamTags([])} className="text-[10px] text-white/50 hover:text-white">Clear</button>
  )}
 </div>
 <div className="flex flex-wrap gap-1.5">
@@ -1167,7 +1167,7 @@ export default function GoLivePage() {
  ].map((tag) =>{
  const on = streamTags.includes(tag);
  return (
-<button
+<button type="button"
  key={tag}
  onClick={() =>setStreamTags((prev) =>(prev.includes(tag) ? prev.filter((x) =>x !== tag) : [...prev, tag]))}
  className={cn(
@@ -1209,7 +1209,7 @@ export default function GoLivePage() {
  { id: "fr", label: "Français", flag: "FR" },
  { id: "id", label: "Indonesia", flag: "ID" },
  ].map((l) =>(
-<button
+<button type="button"
  key={l.id}
  onClick={() =>setLanguage(l.id)}
  className={cn(
@@ -1241,7 +1241,7 @@ export default function GoLivePage() {
  { id: "ph", label: "Philippines", flag: "PH" },
  { id: "in", label: "India", flag: "IN" },
  ].map((c) =>(
-<button
+<button type="button"
  key={c.id}
  onClick={() =>setCountry(c.id)}
  className={cn(
@@ -1272,7 +1272,7 @@ export default function GoLivePage() {
  ].map((e) =>{
  const active = arEffect === e.id;
  return (
-<button
+<button type="button"
  key={e.label}
  onClick={() =>setArEffect(e.id)}
  className={cn(
@@ -1316,7 +1316,7 @@ export default function GoLivePage() {
 <div className="flex items-center justify-between mb-1.5 px-1">
 <span className="text-white/80 text-xs font-semibold">Schedule for later</span>
  {scheduleAt && (
-<button onClick={() =>setScheduleAt("")} className="text-[10px] text-white/50 hover:text-white">Clear</button>
+<button type="button" onClick={() =>setScheduleAt("")} className="text-[10px] text-white/50 hover:text-white">Clear</button>
  )}
 </div>
 <input
@@ -1343,7 +1343,7 @@ export default function GoLivePage() {
  { id: "angel", label: "AngelClub", emoji: "" },
  { id: "royal", label: "RoyalCrew", emoji: "" },
  ].map((f) =>(
-<button
+<button type="button"
  key={f.label}
  onClick={() =>setAgency(f.id)}
  className={cn(
@@ -1378,7 +1378,7 @@ export default function GoLivePage() {
  {PRIVACY_OPTIONS.map((p) =>{
  const active = privacy === p.id;
  return (
-<button
+<button type="button"
  key={p.id}
  onClick={() =>setPrivacy(p.id)}
  className={cn(
@@ -1400,14 +1400,14 @@ export default function GoLivePage() {
 <div className="flex items-center justify-between mb-1.5 px-1">
 <span className="text-white/80 text-xs font-semibold">Coin goal · {coinGoal >0 ? coinGoal.toLocaleString() : "Off"}</span>
  {coinGoal >0 && (
-<button onClick={() =>setCoinGoal(0)} className="text-[10px] text-white/50 hover:text-white">Clear</button>
+<button type="button" onClick={() =>setCoinGoal(0)} className="text-[10px] text-white/50 hover:text-white">Clear</button>
  )}
 </div>
 <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1">
  {[0, 1000, 5000, 10000, 50000, 100000].map((g) =>{
  const active = coinGoal === g;
  return (
-<button
+<button type="button"
  key={g}
  onClick={() =>setCoinGoal(g)}
  className={cn(
@@ -1442,7 +1442,7 @@ export default function GoLivePage() {
  { id: "mysterious", label: "Mysterious", emoji: "", gradient: "from-muted to-muted" },
  { id: "energetic", label: "Energetic", emoji: "", gradient: "from-yellow-500/40 to-amber-500/30" },
  ].map((m) =>(
-<button
+<button type="button"
  key={m.id}
  onClick={() =>setStreamMood(m.id)}
  className={cn(
@@ -1461,7 +1461,7 @@ export default function GoLivePage() {
 <div className="flex items-center justify-between mb-1.5 px-1">
 <span className="text-white/80 text-xs font-semibold">Charity / Cause goal</span>
  {donationCause && (
-<button onClick={() =>{ setDonationCause(null); setDonationGoal(0); }} className="text-[10px] text-white/50 hover:text-white">Clear</button>
+<button type="button" onClick={() =>{ setDonationCause(null); setDonationGoal(0); }} className="text-[10px] text-white/50 hover:text-white">Clear</button>
  )}
 </div>
 <div className="flex gap-2 overflow-x-auto scrollbar-hide pb-1 mb-2">
@@ -1476,7 +1476,7 @@ export default function GoLivePage() {
  { id: "lgbt", label: "LGBTQ+", emoji: "" },
  { id: "veterans", label: "Veterans", emoji: "" },
  ].map((d) =>(
-<button
+<button type="button"
  key={d.label}
  onClick={() =>setDonationCause(d.id)}
  className={cn(
@@ -1491,7 +1491,7 @@ export default function GoLivePage() {
  {donationCause && (
 <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1">
  {[100, 500, 1000, 5000, 10000].map((amt) =>(
-<button
+<button type="button"
  key={amt}
  onClick={() =>setDonationGoal(amt)}
  className={cn(
@@ -1513,7 +1513,7 @@ export default function GoLivePage() {
  {connTested === "ok" &&<span className="text-[10px] text-emerald-400 font-bold">Stable</span>}
  {connTested === "weak" &&<span className="text-[10px] text-amber-400 font-bold">Weak signal</span>}
 </div>
-<button
+<button type="button"
  onClick={() =>{
  setConnTested("testing");
  setTimeout(() =>{
@@ -1566,7 +1566,7 @@ export default function GoLivePage() {
  { id: "khmer", label: "Khmer pop", emoji: "KH" },
  { id: "edm", label: "EDM festival", emoji: "" },
  ].map((m) =>(
-<button
+<button type="button"
  key={m.label}
  onClick={() =>setBgm(m.id)}
  className={cn(
@@ -1611,7 +1611,7 @@ export default function GoLivePage() {
  { id: "kid", label: "Kid", emoji: "" },
  { id: "bee", label: "Bee", emoji: "" },
  ].map((v) =>(
-<button
+<button type="button"
  key={v.id}
  onClick={() =>setVoiceEffect(v.id)}
  className={cn(
@@ -1639,7 +1639,7 @@ export default function GoLivePage() {
  { label: "Ding", emoji: "" },
  { label: "Crickets", emoji: "" },
  ].map((s) =>(
-<button
+<button type="button"
  key={s.label}
  onClick={() => playSFX(s.label)}
  className="aspect-square rounded-2xl bg-gradient-to-br from-white/10 to-white/5 border border-white/15 flex flex-col items-center justify-center gap-0.5 active:scale-90 transition-transform"
@@ -1665,7 +1665,7 @@ export default function GoLivePage() {
  { id: "dreamy", label: "Dreamy", emoji: "" },
  { id: "cinema", label: "Cinema", emoji: "" },
  ].map((f) =>(
-<button
+<button type="button"
  key={f.id}
  onClick={() =>setCameraFilter(f.id)}
  className={cn(
@@ -1684,7 +1684,7 @@ export default function GoLivePage() {
 <div className="flex items-center justify-between mb-1.5 px-1">
 <span className="text-white/80 text-xs font-semibold">Goal milestones</span>
  {milestones.length >0 && (
-<button onClick={() =>setMilestones([])} className="text-[10px] text-white/50 hover:text-white">Clear all</button>
+<button type="button" onClick={() =>setMilestones([])} className="text-[10px] text-white/50 hover:text-white">Clear all</button>
  )}
 </div>
 <div className="space-y-1.5">
@@ -1697,7 +1697,7 @@ export default function GoLivePage() {
  ].map((m, i) =>{
  const set = milestones.some((x) =>x.viewers === m.viewers);
  return (
-<button
+<button type="button"
  key={i}
  onClick={() =>{
  setMilestones((prev) =>
@@ -1752,7 +1752,7 @@ export default function GoLivePage() {
  ].map((p) =>{
  const pinned = products.includes(p.id);
  return (
-<button
+<button type="button"
  key={p.id}
  onClick={() =>setProducts((prev) =>(prev.includes(p.id) ? prev.filter((x) =>x !== p.id) : [...prev, p.id]))}
  className="shrink-0 w-[100px] rounded-2xl overflow-hidden border-2 transition-all relative active:scale-95"
@@ -1786,7 +1786,7 @@ export default function GoLivePage() {
  { val: 10, label: "10s" },
  { val: 30, label: "30s" },
  ] as const).map((p) =>(
-<button
+<button type="button"
  key={p.val}
  onClick={() =>setPreRoll(p.val)}
  className={cn(
@@ -1812,7 +1812,7 @@ export default function GoLivePage() {
  { val: 120, label: "2h" },
  { val: 240, label: "4h" },
  ] as const).map((a) =>(
-<button
+<button type="button"
  key={a.val}
  onClick={() =>setAutoEnd(a.val)}
  className={cn(
@@ -1831,7 +1831,7 @@ export default function GoLivePage() {
 <div className="flex items-center justify-between mb-1.5 px-1">
 <span className="text-white/80 text-xs font-semibold">Pre-set polls ({polls.length})</span>
  {polls.length >0 && (
-<button onClick={() =>setPolls([])} className="text-[10px] text-white/50 hover:text-white">Clear</button>
+<button type="button" onClick={() =>setPolls([])} className="text-[10px] text-white/50 hover:text-white">Clear</button>
  )}
 </div>
 <div className="flex gap-1.5">
@@ -1842,7 +1842,7 @@ export default function GoLivePage() {
  maxLength={120}
  className="flex-1 bg-white/10 border-white/20 text-white placeholder:text-white/40 h-10 text-sm"
  />
-<button
+<button type="button"
  onClick={() =>{
  if (newPollQ.trim()) {
  setPolls([...polls, { q: newPollQ.trim(), opts: ["Yes", "No"] }]);
@@ -1860,7 +1860,7 @@ export default function GoLivePage() {
 <div key={i} className="flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-500/10 border border-blue-500/20">
 <span className="text-base"></span>
 <p className="flex-1 text-[11px] font-semibold text-white truncate">{p.q}</p>
-<button
+<button type="button"
  onClick={() =>setPolls(polls.filter((_, j) =>j !== i))}
  className="text-white/50 hover:text-red-400"
  >
@@ -1873,7 +1873,7 @@ export default function GoLivePage() {
 </div>
 
  {/* Q&A queue toggle */}
-<button
+<button type="button"
  onClick={() =>setQaQueue((v) =>!v)}
  className={cn(
  "w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl border transition-colors text-left",
@@ -1894,7 +1894,7 @@ export default function GoLivePage() {
 </button>
 
  {/* Subscriber-only mode toggle */}
-<button
+<button type="button"
  onClick={() =>setSubscriberOnly((v) =>!v)}
  className={cn(
  "w-full flex items-center gap-3 px-3 py-2.5 rounded-2xl border transition-colors text-left",
@@ -1933,7 +1933,7 @@ export default function GoLivePage() {
  ].map((d) =>{
  const on = multistream.includes(d.id);
  return (
-<button
+<button type="button"
  key={d.id}
  onClick={() =>setMultistream((prev) =>(prev.includes(d.id) ? prev.filter((x) =>x !== d.id) : [...prev, d.id]))}
  className={cn(
@@ -1958,7 +1958,7 @@ export default function GoLivePage() {
 <p className="text-[14px] font-black text-amber-300 leading-tight">{coinBalance.toLocaleString()}</p>
 </div>
 </div>
-<button
+<button type="button"
  onClick={() =>setShowRechargeSheet(true)}
  className="px-3 py-1.5 rounded-full bg-gradient-to-r from-amber-500 to-orange-500 text-amber-950 text-[11px] font-bold active:scale-95 transition-transform"
  >
@@ -1967,7 +1967,7 @@ export default function GoLivePage() {
 </div>
 
  {/* Advanced toggles */}
-<button
+<button type="button"
  onClick={() =>setShowAdvanced((v) =>!v)}
  className="w-full flex items-center justify-between px-3 py-2 rounded-2xl bg-white/5 border border-white/15 active:scale-[0.99] transition-transform"
  >
@@ -1985,7 +1985,7 @@ export default function GoLivePage() {
  { label: "Auto-clip best moments", desc: "AI saves top reactions as Reels", value: autoClip, set: setAutoClip, icon: "" },
  { label: "Notify followers", desc: "Push alert when you go live", value: pushFollowers, set: setPushFollowers, icon: "" },
  ].map((t) =>(
-<button
+<button type="button"
  key={t.label}
  onClick={() =>t.set(!t.value)}
  className="w-full flex items-center gap-3 px-3 py-2 rounded-xl bg-white/5 border border-white/10"
@@ -2012,7 +2012,7 @@ export default function GoLivePage() {
 <span className="text-white/80 text-xs font-semibold mb-1.5 block px-1">Stream quality</span>
 <div className="grid grid-cols-3 gap-1.5">
  {(["480p", "720p", "1080p"] as const).map((q) =>(
-<button
+<button type="button"
  key={q}
  onClick={() =>setQuality(q)}
  className={cn(
@@ -2039,7 +2039,7 @@ export default function GoLivePage() {
  { val: 10, label: "10s" },
  { val: 30, label: "30s" },
  ] as const).map((s) =>(
-<button
+<button type="button"
  key={s.val}
  onClick={() =>setSlowMode(s.val)}
  className={cn(
@@ -2091,7 +2091,7 @@ export default function GoLivePage() {
  ].map((m) =>{
  const on = moderators.includes(m.id);
  return (
-<button
+<button type="button"
  key={m.id}
  onClick={() =>setModerators((prev) =>(prev.includes(m.id) ? prev.filter((x) =>x !== m.id) : [...prev, m.id]))}
  className="shrink-0 flex flex-col items-center gap-1 w-[52px]"
@@ -2139,7 +2139,7 @@ export default function GoLivePage() {
  ].map((c) =>{
  const invited = coHosts.includes(c.id);
  return (
-<button
+<button type="button"
  key={c.id}
  onClick={() =>
  setCoHosts((prev) =>(prev.includes(c.id) ? prev.filter((x) =>x !== c.id) : [...prev, c.id]))
@@ -2328,7 +2328,7 @@ export default function GoLivePage() {
  {BG_PRESETS.map((p) =>{
  const active = bgChoice.id === p.id;
  return (
-<button
+<button type="button"
  key={p.id}
  onClick={() =>setBgChoice(p)}
  className={cn(
@@ -2356,13 +2356,13 @@ export default function GoLivePage() {
 </div>
 
 <div className="flex justify-center gap-3 py-2">
-<button onClick={toggleCamera} className="w-12 h-12 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center">
+<button type="button" onClick={toggleCamera} className="w-12 h-12 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center">
  {cameraOn ?<Camera className="h-5 w-5 text-white" />:<CameraOff className="h-5 w-5 text-white/50" />}
 </button>
-<button onClick={toggleMic} className="w-12 h-12 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center">
+<button type="button" onClick={toggleMic} className="w-12 h-12 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center">
  {micOn ?<Mic className="h-5 w-5 text-white" />:<MicOff className="h-5 w-5 text-white/50" />}
 </button>
-<button onClick={flipCamera} className="w-12 h-12 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center">
+<button type="button" onClick={flipCamera} className="w-12 h-12 rounded-full bg-white/15 backdrop-blur-sm flex items-center justify-center">
 <RotateCcw className="h-5 w-5 text-white" />
 </button>
 </div>
@@ -2467,7 +2467,7 @@ export default function GoLivePage() {
 </div>
 <div className="flex-1" />
 <span className="text-white font-mono text-[10px] bg-black/50 backdrop-blur-sm rounded-full px-2 py-1 drop-shadow">{formatTime(elapsed)}</span>
-<button onClick={() =>setShowEndConfirm(true)} aria-label="End stream" className="min-w-[44px] min-h-[44px] -my-1.5 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center shadow-lg">
+<button type="button" onClick={() =>setShowEndConfirm(true)} aria-label="End stream" className="min-w-[44px] min-h-[44px] -my-1.5 rounded-full bg-black/60 backdrop-blur-sm flex items-center justify-center shadow-lg">
 <X className="h-4 w-4 text-white drop-shadow" />
 </button>
 </div>
@@ -2510,16 +2510,16 @@ export default function GoLivePage() {
  className="absolute right-2.5 z-10 flex flex-col gap-1.5 items-center bg-black/35 backdrop-blur-md rounded-full px-1.5 py-2 border border-white/10 shadow-xl shadow-black/40"
  style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 80px)" }}
  >
-<button onClick={toggleMic} className="w-11 h-11 rounded-full bg-white/5 hover:bg-white/15 active:scale-95 transition flex items-center justify-center">
+<button type="button" onClick={toggleMic} className="w-11 h-11 rounded-full bg-white/5 hover:bg-white/15 active:scale-95 transition flex items-center justify-center">
  {micOn ?<Mic className="h-4 w-4 text-white" />:<MicOff className="h-4 w-4 text-red-400" />}
 </button>
-<button onClick={toggleCamera} className="w-11 h-11 rounded-full bg-white/5 hover:bg-white/15 active:scale-95 transition flex items-center justify-center">
+<button type="button" onClick={toggleCamera} className="w-11 h-11 rounded-full bg-white/5 hover:bg-white/15 active:scale-95 transition flex items-center justify-center">
  {cameraOn ?<Camera className="h-4 w-4 text-white" />:<CameraOff className="h-4 w-4 text-red-400" />}
 </button>
-<button onClick={flipCamera} className="w-11 h-11 rounded-full bg-white/5 hover:bg-white/15 active:scale-95 transition flex items-center justify-center">
+<button type="button" onClick={flipCamera} className="w-11 h-11 rounded-full bg-white/5 hover:bg-white/15 active:scale-95 transition flex items-center justify-center">
 <RotateCcw className="h-4 w-4 text-white" />
 </button>
-<button
+<button type="button"
  onClick={() =>setShowBgSheet(true)}
  className={cn(
  "w-11 h-11 rounded-full active:scale-95 transition flex flex-col items-center justify-center",
@@ -2529,7 +2529,7 @@ export default function GoLivePage() {
 <ImageIcon className="h-3.5 w-3.5 text-white" />
 <span className="text-[7px] text-white/90 -mt-0.5 font-semibold">BG</span>
 </button>
-<button onClick={() =>setShowRechargeSheet(true)} className="w-11 h-11 rounded-full bg-amber-500/40 hover:bg-amber-500/55 border border-amber-400/60 active:scale-95 transition flex flex-col items-center justify-center">
+<button type="button" onClick={() =>setShowRechargeSheet(true)} className="w-11 h-11 rounded-full bg-amber-500/40 hover:bg-amber-500/55 border border-amber-400/60 active:scale-95 transition flex flex-col items-center justify-center">
 <img src={goldCoinIcon} alt="" className="h-3.5 w-3.5" />
 <span className="text-[7px] text-amber-100 -mt-0.5 font-bold">+Coin</span>
 </button>
@@ -2579,7 +2579,7 @@ export default function GoLivePage() {
  {BG_PRESETS.map((p) =>{
  const active = bgChoice.id === p.id;
  return (
-<button
+<button type="button"
  key={p.id}
  onClick={() =>setBgChoice(p)}
  className={cn(

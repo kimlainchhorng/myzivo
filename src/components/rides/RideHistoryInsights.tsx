@@ -70,7 +70,7 @@ export default function RideHistoryInsights() {
           </div>
           <div className="flex gap-1">
             {(["week", "month"] as const).map(p => (
-              <button
+              <button type="button"
                 key={p}
                 onClick={() => setPeriod(p)}
                 className={cn(

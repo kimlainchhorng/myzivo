@@ -37,7 +37,7 @@ export default function PasscodeKeypad({ length = 4, onComplete, resetSignal, ti
       </div>
       <div className="grid grid-cols-3 gap-3">
         {["1","2","3","4","5","6","7","8","9"].map((d) => (
-          <button
+          <button type="button"
             key={d}
             onClick={() => press(d)}
             className="w-16 h-16 rounded-full bg-muted text-foreground text-2xl font-light hover:bg-muted/70 active:scale-95 transition"
@@ -46,13 +46,13 @@ export default function PasscodeKeypad({ length = 4, onComplete, resetSignal, ti
           </button>
         ))}
         <div />
-        <button
+        <button type="button"
           onClick={() => press("0")}
           className="w-16 h-16 rounded-full bg-muted text-foreground text-2xl font-light hover:bg-muted/70 active:scale-95 transition"
         >
           0
         </button>
-        <button
+        <button type="button"
           onClick={back}
           aria-label="Delete"
           className="w-16 h-16 rounded-full flex items-center justify-center text-muted-foreground hover:text-foreground"

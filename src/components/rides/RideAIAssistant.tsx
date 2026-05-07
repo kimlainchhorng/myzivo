@@ -123,7 +123,7 @@ export default function RideAIAssistant() {
           </div>
           <div className="flex flex-wrap gap-1.5 mt-3">
             {exampleCommands.map((cmd) => (
-              <button
+              <button type="button"
                 key={cmd}
                 onClick={() => { setCommand(cmd); toast.info("Try pressing Enter!"); }}
                 className="text-[10px] px-2 py-1 rounded-full bg-muted/50 text-muted-foreground hover:bg-muted transition-colors"
@@ -178,7 +178,7 @@ export default function RideAIAssistant() {
         </CardHeader>
         <CardContent className="space-y-2">
           {predictions.map((p) => (
-            <button
+            <button type="button"
               key={p.id}
               onClick={() => navigate("/rides", { state: { initialDestinationAddress: p.place.split("—")[0].trim() } })}
               className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-muted/30 transition-colors text-left"

@@ -111,7 +111,7 @@ const Header = () => {
                   </div>
                   <div className="overflow-y-auto max-h-[360px] p-1">
                     {activeLanguages.map((lang) => (
-                      <button
+                      <button type="button"
                         key={lang.code}
                         onClick={() => { changeLanguage(lang.code); setIsLangOpen(false); }}
                         className={cn(
@@ -228,7 +228,7 @@ const Header = () => {
             </div>
 
             {/* Mobile Menu Button */}
-            <button
+            <button type="button"
               className="lg:hidden p-2.5 -mr-2 ml-auto text-foreground hover:bg-secondary rounded-xl transition-colors"
               onClick={() => setIsMobileMenuOpen(true)}
               aria-label="Open menu"

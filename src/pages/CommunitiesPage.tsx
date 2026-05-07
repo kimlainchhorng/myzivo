@@ -109,12 +109,12 @@ export default function CommunitiesPage() {
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-30 bg-background/80 backdrop-blur-xl border-b border-border/30">
         <div className="flex items-center gap-3 px-4 py-3">
-          <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-muted/50">
+          <button type="button" onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-muted/50">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className="text-lg font-bold flex-1">Communities</h1>
           {user && (
-            <button onClick={() => setShowCreate(true)} className="p-2 rounded-full bg-primary text-primary-foreground">
+            <button type="button" onClick={() => setShowCreate(true)} className="p-2 rounded-full bg-primary text-primary-foreground">
               <Plus className="h-4 w-4" />
             </button>
           )}
@@ -123,7 +123,7 @@ export default function CommunitiesPage() {
         {/* Tabs */}
         <div className="flex gap-1 px-4 pb-2">
           {(["discover", "joined"] as const).map((t) => (
-            <button
+            <button type="button"
               key={t}
               onClick={() => setTab(t)}
               className={`flex-1 py-2 rounded-xl text-xs font-medium transition-all ${
@@ -208,7 +208,7 @@ export default function CommunitiesPage() {
                 </div>
 
                 {user && (
-                  <button
+                  <button type="button"
                     onClick={(e) => { e.stopPropagation(); joinMutation.mutate(community.id); }}
                     disabled={joinMutation.isPending}
                     className={`w-full mt-3 py-2 rounded-xl text-xs font-semibold transition-all ${
@@ -260,7 +260,7 @@ export default function CommunitiesPage() {
                 />
                 <div className="flex gap-2">
                   {["public", "private"].map((p) => (
-                    <button
+                    <button type="button"
                       key={p}
                       onClick={() => setNewCommunity({ ...newCommunity, privacy: p })}
                       className={`flex-1 py-2.5 rounded-xl text-xs font-medium ${
@@ -273,7 +273,7 @@ export default function CommunitiesPage() {
                     </button>
                   ))}
                 </div>
-                <button
+                <button type="button"
                   onClick={() => createMutation.mutate()}
                   disabled={!newCommunity.name || createMutation.isPending}
                   className="w-full py-3.5 rounded-2xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50"

@@ -205,7 +205,7 @@ export default function ZivoReserve({ onReserve }: { onReserve?: () => void } = 
             exit={{ opacity: 0, x: -30 }}
             className="flex flex-col flex-1 px-5 pt-4 pb-4"
           >
-            <button onClick={handleBack} className="self-start mb-4">
+            <button type="button" onClick={handleBack} className="self-start mb-4">
               <ArrowLeft className="w-5 h-5 text-foreground" />
             </button>
 
@@ -253,7 +253,7 @@ export default function ZivoReserve({ onReserve }: { onReserve?: () => void } = 
               ].map((p) => {
                 const Icon = p.icon;
                 return (
-                  <button
+                  <button type="button"
                     key={p.name}
                     onClick={() => {
                       setDropoff(p.name);
@@ -299,7 +299,7 @@ export default function ZivoReserve({ onReserve }: { onReserve?: () => void } = 
             exit={{ opacity: 0, x: -30 }}
             className="flex flex-col flex-1 px-5 pt-4 pb-4"
           >
-            <button onClick={handleBack} className="self-start mb-4">
+            <button type="button" onClick={handleBack} className="self-start mb-4">
               <ArrowLeft className="w-5 h-5 text-foreground" />
             </button>
 
@@ -337,7 +337,7 @@ export default function ZivoReserve({ onReserve }: { onReserve?: () => void } = 
                   </div>
                 );
               })}
-              <button className="text-xs text-primary font-semibold hover:underline">
+              <button type="button" className="text-xs text-primary font-semibold hover:underline">
                 See terms
               </button>
             </div>
@@ -360,7 +360,7 @@ export default function ZivoReserve({ onReserve }: { onReserve?: () => void } = 
             animate={{ opacity: 1, x: 0 }}
             className="flex flex-col flex-1 px-5 pt-4 pb-4"
           >
-            <button onClick={handleBack} className="self-start mb-6">
+            <button type="button" onClick={handleBack} className="self-start mb-6">
               <ArrowLeft className="w-5 h-5 text-foreground" />
             </button>
 
@@ -415,10 +415,10 @@ export default function ZivoReserve({ onReserve }: { onReserve?: () => void } = 
 
                   {/* Actions */}
                   <div className="flex items-center gap-4 pt-2 border-t border-border/20">
-                    <button className="text-sm font-bold text-foreground underline underline-offset-2">
+                    <button type="button" className="text-sm font-bold text-foreground underline underline-offset-2">
                       Details
                     </button>
-                    <button className="text-sm font-bold text-primary underline underline-offset-2">
+                    <button type="button" className="text-sm font-bold text-primary underline underline-offset-2">
                       See terms
                     </button>
                   </div>

@@ -62,7 +62,7 @@ export default function CurrencyPickerSheet() {
                 <h3 className="text-base font-bold">Currency</h3>
                 <p className="text-[11px] text-muted-foreground">All prices update across the app.</p>
               </div>
-              <button onClick={close} aria-label="Close" className="h-9 w-9 -mr-1.5 flex items-center justify-center rounded-full hover:bg-muted">
+              <button type="button" onClick={close} aria-label="Close" className="h-9 w-9 -mr-1.5 flex items-center justify-center rounded-full hover:bg-muted">
                 <X className="w-4 h-4 text-muted-foreground" />
               </button>
             </div>
@@ -83,7 +83,7 @@ export default function CurrencyPickerSheet() {
               {filtered.map((c) => {
                 const selected = c.code === currency;
                 return (
-                  <button
+                  <button type="button"
                     key={c.code}
                     onClick={() => { setCurrency(c.code); close(); }}
                     className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-left transition ${selected ? "bg-primary/10" : "hover:bg-muted/40 active:bg-muted/60"}`}

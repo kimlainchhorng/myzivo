@@ -96,7 +96,7 @@ export default function DeliveryChatPage() {
       <div className="flex flex-col h-[100dvh]">
         <div className="shrink-0 sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border/40">
           <div className="flex items-center gap-2.5 px-4 pt-safe pb-3">
-            <button
+            <button type="button"
               onClick={() => navigate(-1)}
               className="w-9 h-9 rounded-full bg-muted/60 flex items-center justify-center active:scale-90 transition-transform"
             >
@@ -149,7 +149,7 @@ export default function DeliveryChatPage() {
               placeholder="Message your driver…"
               className="flex-1 bg-transparent outline-none text-[14px]"
             />
-            <button
+            <button type="button"
               onClick={() => void send()}
               disabled={!input.trim() || sending}
               className={cn(

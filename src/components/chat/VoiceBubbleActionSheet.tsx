@@ -109,7 +109,7 @@ export default function VoiceBubbleActionSheet({
           {actions.map((a) => {
             const Icon = a.icon;
             return (
-              <button
+              <button type="button"
                 key={a.key}
                 type="button"
                 onClick={a.onSelect}

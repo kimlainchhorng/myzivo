@@ -372,7 +372,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
               <Users className="w-5 h-5 text-primary" />
               <h3 className="text-base font-bold text-foreground">New Group</h3>
             </div>
-            <button
+            <button type="button"
               onClick={onClose}
               aria-label="Close"
               className="h-11 w-11 -mr-2 flex items-center justify-center rounded-full hover:bg-muted active:bg-muted/80"
@@ -424,7 +424,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
                   className="w-full pl-9 pr-9 py-2 rounded-xl bg-muted/50 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30"
                 />
                 {search && (
-                  <button
+                  <button type="button"
                     onClick={() => setSearch("")}
                     aria-label="Clear search"
                     className="absolute right-2 top-1/2 -translate-y-1/2 h-7 w-7 flex items-center justify-center rounded-full hover:bg-muted"
@@ -440,7 +440,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
                     : `${selected.size} ${friendsLabel} selected`}
                 </span>
                 {selected.size > 0 && (
-                  <button
+                  <button type="button"
                     onClick={() => setSelected(new Set())}
                     className="text-[11px] font-semibold text-primary hover:underline"
                   >
@@ -462,7 +462,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
                     className="inline-flex items-center gap-1 pl-2.5 pr-1 py-1 bg-primary/10 text-primary rounded-full text-xs font-medium"
                   >
                     {f?.name || "User"}
-                    <button
+                    <button type="button"
                       onClick={() => toggleSelect(id)}
                       aria-label={`Remove ${f?.name || "User"}`}
                       className="h-5 w-5 flex items-center justify-center rounded-full hover:bg-primary/20"
@@ -497,7 +497,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
               filteredFriends.map((f) => {
                 const isSelected = selected.has(f.id);
                 return (
-                  <button
+                  <button type="button"
                     key={f.id}
                     onClick={() => toggleSelect(f.id)}
                     aria-pressed={isSelected}
@@ -531,7 +531,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
 
           {/* Create button */}
           <div className="p-4 border-t border-border/30 pb-[max(1rem,env(safe-area-inset-bottom))]">
-            <button
+            <button type="button"
               onClick={handleCreate}
               disabled={!canSubmit}
               className="w-full h-11 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.97] transition-transform flex items-center justify-center gap-2"

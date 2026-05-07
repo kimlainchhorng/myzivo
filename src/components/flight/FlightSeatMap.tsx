@@ -78,7 +78,7 @@ const FlightSeatMap = () => {
                     seat === null ? (
                       <div key={idx} className="w-8 h-8" />
                     ) : (
-                      <button
+                      <button type="button"
                         key={`${row.row}${seat}`}
                         onClick={() => {
                           const seatId = `${row.row}${seat}`;

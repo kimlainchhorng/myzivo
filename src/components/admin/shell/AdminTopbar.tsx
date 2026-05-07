@@ -73,7 +73,7 @@ export function AdminTopbar({ vertical }: AdminTopbarProps) {
             {results.length > 0 && (
               <div className="absolute top-full left-0 right-0 mt-1 bg-popover border border-border rounded-xl shadow-lg z-50 overflow-hidden">
                 {results.map(r => (
-                  <button key={r.path} onClick={() => handleSelect(r.path)}
+                  <button type="button" key={r.path} onClick={() => handleSelect(r.path)}
                     className="w-full text-left px-3 py-2 text-sm hover:bg-accent flex items-center gap-2">
                     {r.label}
                   </button>

@@ -73,7 +73,7 @@ export default function NearbyMap({ onClose }: NearbyMapProps) {
       <div className="absolute top-0 left-0 right-0 z-10 safe-area-top">
         <div className="flex items-center justify-between px-4 py-3 bg-background/80 backdrop-blur-md">
           <h2 className="text-lg font-semibold">Nearby</h2>
-          <button onClick={onClose} className="p-2 rounded-full bg-muted/50">
+          <button type="button" onClick={onClose} className="p-2 rounded-full bg-muted/50">
             <X className="h-5 w-5" />
           </button>
         </div>

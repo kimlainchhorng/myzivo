@@ -112,7 +112,7 @@ export default function LodgingGallerySection({ storeId }: { storeId: string }) 
           {TABS.map((t) => {
             const count = t.key === "all" ? photos.length : t.key === "property" ? propertyPhotos.length : roomPhotos.length;
             return (
-              <button
+              <button type="button"
                 key={t.key}
                 onClick={() => setTab(t.key)}
                 className={cn(
@@ -143,7 +143,7 @@ export default function LodgingGallerySection({ storeId }: { storeId: string }) 
         ) : (
           <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
             {visible.map((p, i) => (
-              <button
+              <button type="button"
                 key={`${p.url}-${i}`}
                 onClick={() => goTab(p.source === "room" ? "lodge-rooms" : "lodge-property")}
                 className="group relative aspect-video overflow-hidden rounded-lg border border-border bg-muted text-left transition hover:border-primary/40"

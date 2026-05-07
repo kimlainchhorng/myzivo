@@ -58,7 +58,7 @@ export default function ReactionPicker({ open, onClose, onPick }: Props) {
           className="absolute -top-16 sm:-top-14 right-0 z-50 flex items-center gap-1 sm:gap-0.5 rounded-full bg-black/80 backdrop-blur-md px-2.5 py-2 sm:px-2 sm:py-1.5 shadow-2xl border border-white/10"
         >
           {REACTIONS.map(({ emoji, label }) => (
-            <button
+            <button type="button"
               key={emoji}
               onClick={(e) => {
                 e.stopPropagation();

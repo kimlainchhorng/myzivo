@@ -112,7 +112,7 @@ export default function BusinessInvoicesPage() {
         {/* Header */}
         <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b safe-area-top">
           <div className="flex items-center gap-3 px-4 py-3">
-            <button
+            <button type="button"
               onClick={() => navigate(-1)}
               className="p-2.5 -ml-2 rounded-full hover:bg-muted touch-manipulation active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center"
             >
@@ -146,7 +146,7 @@ export default function BusinessInvoicesPage() {
       {/* Header */}
       <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b safe-area-top">
         <div className="flex items-center gap-3 px-4 py-3">
-          <button
+          <button type="button"
             onClick={() => navigate(-1)}
             className="p-2.5 -ml-2 rounded-full hover:bg-muted touch-manipulation active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center"
           >

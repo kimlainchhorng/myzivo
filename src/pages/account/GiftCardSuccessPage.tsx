@@ -68,7 +68,7 @@ export default function GiftCardSuccessPage() {
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="flex items-center justify-between px-6 py-4">
-          <button
+          <button type="button"
             onClick={() => navigate("/account/gift-cards")}
             className="w-10 h-10 rounded-full bg-muted border border-border/50 flex items-center justify-center"
           >
@@ -129,7 +129,7 @@ export default function GiftCardSuccessPage() {
               {/* Code */}
               <div className="bg-muted/50 rounded-xl p-4 flex items-center justify-between">
                 <span className="font-mono text-lg tracking-wider">{giftCard.code}</span>
-                <button
+                <button type="button"
                   onClick={copyCode}
                   className="p-2 rounded-xl hover:bg-muted transition-colors"
                 >

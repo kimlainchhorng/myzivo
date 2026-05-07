@@ -179,7 +179,7 @@ export default function GlobalChatSearch({ open, onClose }: Props) {
             className="flex-1 bg-transparent outline-none text-sm py-2"
             autoComplete="off"
           />
-          <button onClick={onClose} className="p-1.5 rounded-full hover:bg-muted/60" aria-label="Close">
+          <button type="button" onClick={onClose} className="p-1.5 rounded-full hover:bg-muted/60" aria-label="Close">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -299,7 +299,7 @@ function Row({
   avatar, title, subtitle, onClick,
 }: { avatar: React.ReactNode; title: React.ReactNode; subtitle: React.ReactNode; onClick: () => void }) {
   return (
-    <button onClick={onClick} className={cn("w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-muted/40 active:scale-[0.99] transition-all")}>
+    <button type="button" onClick={onClick} className={cn("w-full flex items-center gap-3 px-3 py-2.5 text-left hover:bg-muted/40 active:scale-[0.99] transition-all")}>
       {avatar}
       <div className="flex-1 min-w-0">
         <div className="text-sm font-medium truncate">{title}</div>

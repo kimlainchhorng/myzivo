@@ -98,7 +98,7 @@ export default function ReelsPreviewRow({ fullBleed = true }: Props) {
           <h2 className="text-xl sm:text-2xl md:text-3xl font-extrabold text-white drop-shadow tracking-tight">Trending Reels 🔥</h2>
           <p className="text-xs sm:text-sm text-white/60 mt-0.5">Most-watched videos this week</p>
         </div>
-        <button
+        <button type="button"
           onClick={() => navigate("/reels")}
           className="shrink-0 flex items-center gap-1 text-emerald-400 text-xs sm:text-sm font-semibold hover:text-emerald-300 px-3 py-2 sm:p-0 rounded-full sm:rounded-none active:scale-95 transition-transform"
         >

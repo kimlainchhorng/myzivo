@@ -109,7 +109,7 @@ export default function RideLoyaltyCard() {
       {/* Tab switcher */}
       <div className="flex gap-1 p-1 rounded-xl bg-muted/30">
         {tabs.map(tab => (
-          <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={cn("flex-1 py-2 rounded-lg text-xs font-bold transition-all", activeTab === tab.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
+          <button type="button" key={tab.id} onClick={() => setActiveTab(tab.id)} className={cn("flex-1 py-2 rounded-lg text-xs font-bold transition-all", activeTab === tab.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
             {tab.label}
           </button>
         ))}
@@ -152,7 +152,7 @@ export default function RideLoyaltyCard() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between px-1">
                   <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Redeem Points</h3>
-                  <button onClick={() => setShowPerks(!showPerks)} className="text-[10px] font-bold text-primary">{showPerks ? "Show less" : "View all"}</button>
+                  <button type="button" onClick={() => setShowPerks(!showPerks)} className="text-[10px] font-bold text-primary">{showPerks ? "Show less" : "View all"}</button>
                 </div>
                 {perks.slice(0, showPerks ? perks.length : 2).map(perk => {
                   const Icon = perk.icon;
@@ -210,7 +210,7 @@ export default function RideLoyaltyCard() {
                 <p className="text-[11px] text-muted-foreground mt-1">Share your code and both of you get $10 ride credit</p>
                 <div className="flex items-center gap-2 mt-4 mx-auto max-w-[200px] bg-card/80 rounded-xl px-4 py-2.5 border border-border/40">
                   <span className="text-sm font-black text-foreground tracking-widest flex-1">ZIVO-AK7M</span>
-                  <button onClick={() => { navigator.clipboard.writeText("ZIVO-AK7M"); toast.success("Code copied!"); }}>
+                  <button type="button" onClick={() => { navigator.clipboard.writeText("ZIVO-AK7M"); toast.success("Code copied!"); }}>
                     <Copy className="w-4 h-4 text-primary" />
                   </button>
                 </div>

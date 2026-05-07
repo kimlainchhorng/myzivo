@@ -95,7 +95,7 @@ export default function HotelsResortsDirectoryPage() {
       {/* Header */}
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border">
         <div className="px-4 py-3 flex items-center gap-2 safe-area-top">
-          <button
+          <button type="button"
             onClick={() => navigate(-1)}
             aria-label="Back"
             className="h-9 w-9 -ml-1 rounded-full flex items-center justify-center active:bg-muted transition"
@@ -103,7 +103,7 @@ export default function HotelsResortsDirectoryPage() {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="text-base font-bold text-foreground flex-1 truncate">Hotels & Resorts</h1>
-          <button
+          <button type="button"
             aria-label="Filters"
             className="h-9 w-9 rounded-full flex items-center justify-center active:bg-muted transition"
           >
@@ -131,7 +131,7 @@ export default function HotelsResortsDirectoryPage() {
           {FILTERS.map((f) => {
             const active = f.id === activeFilter;
             return (
-              <button
+              <button type="button"
                 key={f.id}
                 onClick={() => setActiveFilter(f.id)}
                 className={

@@ -112,7 +112,7 @@ const TravelInsuranceWidget = ({
         {/* Plans */}
         <div className="space-y-2 mb-4">
           {insurancePlans.map((plan) => (
-            <button
+            <button type="button"
               key={plan.id}
               onClick={() => setSelectedPlan(plan.id)}
               className={cn(
@@ -162,7 +162,7 @@ const TravelInsuranceWidget = ({
         </div>
 
         {/* No Coverage Option */}
-        <button
+        <button type="button"
           onClick={() => setSelectedPlan(null)}
           className={cn(
             "w-full p-3 rounded-xl border-2 transition-all text-left mb-4",
@@ -187,7 +187,7 @@ const TravelInsuranceWidget = ({
         </button>
 
         {/* View Details Toggle */}
-        <button
+        <button type="button"
           onClick={() => setShowDetails(!showDetails)}
           className="w-full flex items-center justify-center gap-1 text-sm text-primary hover:underline"
         >

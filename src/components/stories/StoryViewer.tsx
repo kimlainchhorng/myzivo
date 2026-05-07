@@ -664,7 +664,7 @@ export default function StoryViewer({
           </div>
           <div className="flex items-center gap-1.5 shrink-0">
             {currentStory.audioUrl && (
-              <button
+              <button type="button"
                 onClick={() => setMuted((m) => !m)}
                 aria-label={muted ? "Unmute" : "Mute"}
                 className="w-9 h-9 flex items-center justify-center rounded-full bg-black/35 backdrop-blur-xl border border-white/10 ring-1 ring-[hsl(160_84%_55%)/0.2] hover:ring-[hsl(160_84%_55%)/0.5] transition"
@@ -672,7 +672,7 @@ export default function StoryViewer({
                 {muted ? <VolumeX className="w-4 h-4 text-white" /> : <Volume2 className="w-4 h-4 text-white" />}
               </button>
             )}
-            <button
+            <button type="button"
               data-testid="story-pause"
               onClick={() => setPaused((p) => !p)}
               aria-label={paused ? "Play" : "Pause"}
@@ -680,7 +680,7 @@ export default function StoryViewer({
             >
               {paused ? <Play className="w-4 h-4 text-white" /> : <Pause className="w-4 h-4 text-white" />}
             </button>
-            <button
+            <button type="button"
               data-testid="story-close"
               onClick={() => closeWithMeta()}
               aria-label="Close"
@@ -711,7 +711,7 @@ export default function StoryViewer({
         {/* Right-side actions — only for non-owners (owners get the IG-style bottom toolbar) */}
         {!isOwner && (
           <div className="absolute right-4 bottom-[160px] flex flex-col items-center gap-4 z-20">
-            <button onClick={toggleLike} className="flex flex-col items-center gap-1" aria-label="Like story">
+            <button type="button" onClick={toggleLike} className="flex flex-col items-center gap-1" aria-label="Like story">
               <motion.div
                 key={myReaction || "none"}
                 animate={myReaction === "❤️" ? { scale: [1, 1.3, 1] } : {}}
@@ -725,7 +725,7 @@ export default function StoryViewer({
               <span className="text-white/80 text-[10px] font-medium">Like</span>
             </button>
 
-            <button
+            <button type="button"
               onClick={() => { setPaused(true); setShowComments(true); }}
               className="flex flex-col items-center gap-1"
             >
@@ -740,7 +740,7 @@ export default function StoryViewer({
               <span className="text-white/80 text-[10px] font-medium">Comment</span>
             </button>
 
-            <button onClick={handleShare} className="flex flex-col items-center gap-1">
+            <button type="button" onClick={handleShare} className="flex flex-col items-center gap-1">
               <div className="w-11 h-11 rounded-full bg-white/10 backdrop-blur-sm flex items-center justify-center">
                 <Send className="w-5 h-5 text-white" />
               </div>
@@ -781,7 +781,7 @@ export default function StoryViewer({
                   {["❤️", "😂", "😮", "🔥", "😢", "👏"].map((emoji) => {
                     const active = myReaction === emoji;
                     return (
-                      <button
+                      <button type="button"
                         key={emoji}
                         onClick={() => reactToStory.mutate(active ? null : emoji)}
                         className={cn(
@@ -799,7 +799,7 @@ export default function StoryViewer({
                       </button>
                     );
                   })}
-                  <button
+                  <button type="button"
                     onClick={() => setShowQuickReact((v) => !v)}
                     className={cn(
                       "w-9 h-9 rounded-full bg-white/10 backdrop-blur-md border border-white/15 flex items-center justify-center transition active:scale-90",
@@ -826,7 +826,7 @@ export default function StoryViewer({
                           {["😍","🥹","🤩","😎","😭","🤣","👏","🙌","💯","🔥","✨","💖","🥳","😱","😤","🫶","🤝","👀","🌟","⚡","🎉","🍿","🤔","🙏"].map((emoji) => {
                             const active = myReaction === emoji;
                             return (
-                              <button
+                              <button type="button"
                                 key={emoji}
                                 onClick={() => {
                                   reactToStory.mutate(active ? null : emoji);
@@ -863,7 +863,7 @@ export default function StoryViewer({
                     onFocus={() => setPaused(true)}
                     onBlur={() => setPaused(false)}
                   />
-                  <button
+                  <button type="button"
                     onClick={() => { if (commentText.trim()) sendDmReply.mutate(commentText.trim()); }}
                     disabled={sendDmReply.isPending || !commentText.trim()}
                     aria-label="Send reply via chat"
@@ -881,7 +881,7 @@ export default function StoryViewer({
           {isOwner && (
             <div className="px-3 pb-3 pt-2 flex items-center gap-2.5">
               {/* Insights pill — tap for viewers */}
-              <button
+              <button type="button"
                 onClick={() => { setPaused(true); setShowViewers(true); }}
                 className="group flex items-center gap-2 pl-3 pr-3.5 py-2.5 rounded-full bg-black/45 backdrop-blur-2xl border border-white/10 ring-1 ring-[hsl(160_84%_55%)/0.22] hover:ring-[hsl(160_84%_55%)/0.45] active:scale-[0.97] transition"
                 aria-label="Story insights"
@@ -896,7 +896,7 @@ export default function StoryViewer({
               </button>
 
               {/* Hero Boost / Share button */}
-              <button
+              <button type="button"
                 onClick={handleShare}
                 className="flex-1 relative h-[46px] rounded-full overflow-hidden active:scale-[0.98] transition shadow-[0_8px_28px_-6px_hsl(160_84%_45%/0.65)]"
                 aria-label="Boost story"
@@ -911,7 +911,7 @@ export default function StoryViewer({
               </button>
 
               {/* More — single subtle glass dot */}
-              <button
+              <button type="button"
                 onClick={() => { setPaused(true); setShowMore(true); }}
                 className="shrink-0 w-11 h-11 flex items-center justify-center rounded-full bg-black/45 backdrop-blur-2xl border border-white/10 ring-1 ring-[hsl(160_84%_55%)/0.22] hover:ring-[hsl(160_84%_55%)/0.45] active:scale-[0.95] transition"
                 aria-label="More options"
@@ -938,7 +938,7 @@ export default function StoryViewer({
                   <span className="w-1.5 h-5 rounded-full bg-gradient-to-b from-[hsl(160_84%_55%)] to-[hsl(190_85%_55%)]" />
                   <span className="text-sm font-bold text-foreground">Story insights</span>
                 </div>
-                <button
+                <button type="button"
                   onClick={() => { setShowViewers(false); setPaused(false); }}
                   aria-label="Close insights"
                 >
@@ -947,7 +947,7 @@ export default function StoryViewer({
               </div>
               {/* Tabs */}
               <div className="flex items-center gap-1 px-3 pt-2 pb-1">
-                <button
+                <button type="button"
                   onClick={() => setViewersTab("viewers")}
                   className={cn(
                     "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[13px] font-semibold transition",
@@ -960,7 +960,7 @@ export default function StoryViewer({
                   Viewers
                   <span className="ml-0.5 text-[11px] opacity-70">{viewers.length}</span>
                 </button>
-                <button
+                <button type="button"
                   onClick={() => setViewersTab("reactions")}
                   className={cn(
                     "flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-[13px] font-semibold transition",
@@ -1029,7 +1029,7 @@ export default function StoryViewer({
                               Reacted {formatDistanceToNow(new Date(r.created_at), { addSuffix: true })}
                             </p>
                           </div>
-                          <button
+                          <button type="button"
                             onClick={() => {
                               setOpenThreadId(isOpen ? null : r.id);
                               setThreadDraft("");
@@ -1093,7 +1093,7 @@ export default function StoryViewer({
                                   placeholder="Reply in thread..."
                                   className="flex-1 bg-muted rounded-full px-3 py-1.5 text-[12px] outline-none text-foreground placeholder:text-muted-foreground"
                                 />
-                                <button
+                                <button type="button"
                                   onClick={() => {
                                     if (threadDraft.trim()) {
                                       postComment.mutate(`[react:${r.id}] ${threadDraft.trim()}`);
@@ -1133,7 +1133,7 @@ export default function StoryViewer({
                   <MessageCircle className="w-4 h-4 text-primary" />
                   <span className="text-sm font-bold text-foreground">Comments ({comments.length})</span>
                 </div>
-                <button onClick={() => { setShowComments(false); setPaused(false); }} aria-label="Close comments">
+                <button type="button" onClick={() => { setShowComments(false); setPaused(false); }} aria-label="Close comments">
                   <X className="w-5 h-5 text-muted-foreground" />
                 </button>
               </div>
@@ -1179,7 +1179,7 @@ export default function StoryViewer({
                     placeholder="Add a comment..."
                     className="flex-1 bg-transparent text-sm outline-none text-foreground placeholder:text-muted-foreground"
                   />
-                  <button
+                  <button type="button"
                     onClick={() => { if (commentText.trim()) postComment.mutate(commentText.trim()); }}
                     disabled={postComment.isPending || !commentText.trim()}
                     className="text-primary disabled:opacity-40"
@@ -1213,7 +1213,7 @@ export default function StoryViewer({
                 onClick={(e) => e.stopPropagation()}
               >
                 <div className="mx-auto h-1 w-10 rounded-full bg-muted-foreground/30 my-2" />
-                <button
+                <button type="button"
                   onClick={async () => {
                     try {
                       const res = await fetch(currentStory.mediaUrl, { mode: "cors" });
@@ -1232,7 +1232,7 @@ export default function StoryViewer({
                   <Download className="w-5 h-5 text-foreground" />
                   <span className="text-sm font-medium text-foreground">Save to device</span>
                 </button>
-                <button
+                <button type="button"
                   onClick={() => {
                     const url = `${getPublicOrigin()}/stories/${currentStory.id}`;
                     if (navigator.share) navigator.share({ url }).catch(() => {});
@@ -1244,7 +1244,7 @@ export default function StoryViewer({
                   <Share2 className="w-5 h-5 text-foreground" />
                   <span className="text-sm font-medium text-foreground">Share link</span>
                 </button>
-                <button
+                <button type="button"
                   onClick={() => {
                     if (!currentStory) return;
                     const last = viewingGroup.stories.length <= 1;
@@ -1257,7 +1257,7 @@ export default function StoryViewer({
                   <Trash2 className="w-5 h-5 text-destructive" />
                   <span className="text-sm font-semibold text-destructive">Delete story</span>
                 </button>
-                <button
+                <button type="button"
                   onClick={() => { setShowMore(false); setPaused(false); }}
                   className="w-full px-4 py-3 mt-1 rounded-xl text-sm font-medium text-muted-foreground hover:bg-muted"
                 >
@@ -1298,7 +1298,7 @@ export default function StoryViewer({
                     className="flex-1 bg-transparent text-sm outline-none text-foreground placeholder:text-muted-foreground"
                     autoFocus
                   />
-                  <button
+                  <button type="button"
                     className="text-primary text-sm font-semibold disabled:opacity-40"
                     disabled={!commentText.trim() || postComment.isPending}
                     onClick={() => {

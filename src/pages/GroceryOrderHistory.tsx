@@ -141,7 +141,7 @@ function OrderCard({ order, onReorder, onRate, onTrack }: {
           : "border-border/20 bg-card/80"
       }`}
     >
-      <button onClick={() => setExpanded(!expanded)} className="w-full p-4 text-left">
+      <button type="button" onClick={() => setExpanded(!expanded)} className="w-full p-4 text-left">
         <div className="flex items-start gap-3">
           <div className={`h-10 w-10 rounded-xl ${cfg.bg} flex items-center justify-center shrink-0`}>
             <StatusIcon className={`h-5 w-5 ${cfg.color}`} />
@@ -205,7 +205,7 @@ function OrderCard({ order, onReorder, onRate, onTrack }: {
           >
             <div className="px-4 pb-4 space-y-3">
               {/* Order ID */}
-              <button
+              <button type="button"
                 onClick={copyOrderId}
                 className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/20 border border-border/10 w-full text-left"
               >
@@ -299,7 +299,7 @@ function OrderCard({ order, onReorder, onRate, onTrack }: {
 
               {/* Receipt photo */}
               {order.receipt_photo_url && (
-                <button
+                <button type="button"
                   onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(order.receipt_photo_url))}
                   className="flex items-center gap-2.5 p-2.5 rounded-xl bg-muted/20 border border-border/10 hover:bg-muted/30 transition-colors w-full text-left"
                 >

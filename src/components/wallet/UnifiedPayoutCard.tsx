@@ -68,7 +68,7 @@ export default function UnifiedPayoutCard({ balanceDollars }: Props) {
   return (
     <div className="space-y-3">
       <div className="grid grid-cols-2 gap-2">
-        <button
+        <button type="button"
           onClick={() => choose("stripe")}
           className={`relative p-3 rounded-2xl border-2 transition-all text-left ${
             provider === "stripe" ? "border-[#635bff] bg-[#635bff]/5" : "border-border/40 bg-card opacity-70"
@@ -85,7 +85,7 @@ export default function UnifiedPayoutCard({ balanceDollars }: Props) {
             </span>
           )}
         </button>
-        <button
+        <button type="button"
           onClick={() => choose("paypal")}
           className={`relative p-3 rounded-2xl border-2 transition-all text-left ${
             provider === "paypal" ? "border-[#003087] bg-[#003087]/5" : "border-border/40 bg-card opacity-70"

@@ -146,7 +146,7 @@ export default function ChatContactPicker({ open, onOpenChange, onConfirm }: Pro
           {filtered.map((c) => {
             const isPicked = pickedId === c.contact_user_id;
             return (
-              <button
+              <button type="button"
                 key={c.id}
                 onClick={() => setPickedId(isPicked ? null : c.contact_user_id)}
                 className={cn(

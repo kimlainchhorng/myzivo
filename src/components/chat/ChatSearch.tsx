@@ -68,21 +68,21 @@ export default function ChatSearch({ messages, onClose, onScrollToMessage, curre
           </span>
         )}
         <div className="flex items-center gap-0.5">
-          <button onClick={() => navigate(-1)} disabled={results.length === 0} className="p-1 rounded hover:bg-muted disabled:opacity-30">
+          <button type="button" onClick={() => navigate(-1)} disabled={results.length === 0} className="p-1 rounded hover:bg-muted disabled:opacity-30">
             <ArrowUp className="w-3.5 h-3.5 text-foreground" />
           </button>
-          <button onClick={() => navigate(1)} disabled={results.length === 0} className="p-1 rounded hover:bg-muted disabled:opacity-30">
+          <button type="button" onClick={() => navigate(1)} disabled={results.length === 0} className="p-1 rounded hover:bg-muted disabled:opacity-30">
             <ArrowDown className="w-3.5 h-3.5 text-foreground" />
           </button>
         </div>
-        <button onClick={onClose} className="p-1 rounded hover:bg-muted">
+        <button type="button" onClick={onClose} className="p-1 rounded hover:bg-muted">
           <X className="w-4 h-4 text-muted-foreground" />
         </button>
       </div>
       {currentUserId && (
         <div className="flex gap-1.5 px-3 pb-2">
           {(["all", "me", "them"] as SenderFilter[]).map(f => (
-            <button
+            <button type="button"
               key={f}
               onClick={() => setSenderFilter(f)}
               className={`px-2.5 py-1 rounded-full text-[11px] font-semibold transition-colors ${senderFilter === f ? "bg-primary text-primary-foreground" : "bg-muted/50 text-muted-foreground"}`}

@@ -200,7 +200,7 @@ export default function StoreAttendanceSection({ storeId }: Props) {
                         {Object.entries(ATTENDANCE_STATUS).map(([key, s]) => {
                           const isActive = record?.status === key;
                           return (
-                            <button key={key} onClick={() => markAttendance(emp.id, key)}
+                            <button type="button" key={key} onClick={() => markAttendance(emp.id, key)}
                               className={cn(
                                 "px-2.5 py-1.5 rounded-lg text-[10px] font-medium border transition-all",
                                 isActive ? s.color + " border-current shadow-sm" : "bg-muted/20 text-muted-foreground border-transparent hover:bg-muted"
@@ -374,7 +374,7 @@ export default function StoreAttendanceSection({ storeId }: Props) {
                 {LEAVE_TYPES.map(t => {
                   const Icon = t.icon;
                   return (
-                    <button key={t.value} onClick={() => setLeaveForm(f => ({ ...f, type: t.value }))}
+                    <button type="button" key={t.value} onClick={() => setLeaveForm(f => ({ ...f, type: t.value }))}
                       className={cn("flex items-center gap-2 p-2.5 rounded-xl border text-left text-[12px] font-medium transition-all",
                         leaveForm.type === t.value ? t.bg + " " + t.color + " border-current shadow-sm" : "bg-muted/20 text-muted-foreground border-transparent hover:bg-muted")}>
                       <Icon className="w-4 h-4 shrink-0" />{t.label}

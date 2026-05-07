@@ -118,7 +118,7 @@ export default function ChatStories() {
       <div className="px-3 pt-2 pb-1.5">
         <div className="flex gap-2.5 overflow-x-auto scrollbar-hide pb-0.5">
           {/* Your Story */}
-          <button
+          <button type="button"
             onClick={() => {
               if (hasMyStory) openViewer(myStories!);
               else setShowCreate(true);
@@ -186,7 +186,7 @@ export default function ChatStories() {
           {storyGroups
             .filter((g) => g.userId !== user?.id)
             .map((group) => (
-              <button
+              <button type="button"
                 key={group.userId}
                 onClick={() => openViewer(group)}
                 className="flex flex-col items-center gap-1 flex-shrink-0 w-[58px]"

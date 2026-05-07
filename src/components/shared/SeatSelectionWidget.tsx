@@ -156,7 +156,7 @@ const SeatSelectionWidget = ({
                 {seats
                   .filter((s) => s.row === row && ["A", "B", "C"].includes(s.position))
                   .map((seat) => (
-                    <button
+                    <button type="button"
                       key={seat.id}
                       onClick={() => handleSeatClick(seat)}
                       disabled={seat.status === "occupied"}
@@ -186,7 +186,7 @@ const SeatSelectionWidget = ({
                 {seats
                   .filter((s) => s.row === row && ["D", "E", "F"].includes(s.position))
                   .map((seat) => (
-                    <button
+                    <button type="button"
                       key={seat.id}
                       onClick={() => handleSeatClick(seat)}
                       disabled={seat.status === "occupied"}

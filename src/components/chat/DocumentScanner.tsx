@@ -223,14 +223,14 @@ export default function DocumentScanner({ open, onClose, onComplete }: DocumentS
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 h-14 border-b border-border/40 shrink-0">
-          <button onClick={onClose} className="h-9 w-9 rounded-full hover:bg-muted/60 flex items-center justify-center">
+          <button type="button" onClick={onClose} className="h-9 w-9 rounded-full hover:bg-muted/60 flex items-center justify-center">
             <X className="h-5 w-5" />
           </button>
           <div className="flex items-center gap-2">
             <FileText className="h-4 w-4 text-primary" />
             <span className="font-semibold text-sm">Scan Document</span>
           </div>
-          <button
+          <button type="button"
             disabled={!pages.length || busy}
             onClick={buildPdf}
             className="px-3 h-9 rounded-full bg-primary text-primary-foreground text-sm font-medium disabled:opacity-40"
@@ -260,10 +260,10 @@ export default function DocumentScanner({ open, onClose, onComplete }: DocumentS
                     Page {idx + 1}
                   </div>
                   <div className="absolute top-1 right-1 flex gap-1">
-                    <button onClick={() => rotatePage(p.id)} className="h-7 w-7 rounded-full bg-background/80 backdrop-blur flex items-center justify-center">
+                    <button type="button" onClick={() => rotatePage(p.id)} className="h-7 w-7 rounded-full bg-background/80 backdrop-blur flex items-center justify-center">
                       <RotateCw className="h-3.5 w-3.5" />
                     </button>
-                    <button onClick={() => removePage(p.id)} className="h-7 w-7 rounded-full bg-background/80 backdrop-blur flex items-center justify-center text-foreground">
+                    <button type="button" onClick={() => removePage(p.id)} className="h-7 w-7 rounded-full bg-background/80 backdrop-blur flex items-center justify-center text-foreground">
                       <Trash2 className="h-3.5 w-3.5" />
                     </button>
                   </div>
@@ -277,7 +277,7 @@ export default function DocumentScanner({ open, onClose, onComplete }: DocumentS
         <div className="px-4 pb-2 space-y-2 shrink-0">
           <div className="flex gap-1.5 overflow-x-auto no-scrollbar">
             {(["auto", "color", "gray", "bw"] as Filter[]).map((f) => (
-              <button
+              <button type="button"
                 key={f}
                 onClick={() => reapplyFilter(f)}
                 disabled={busy}
@@ -290,7 +290,7 @@ export default function DocumentScanner({ open, onClose, onComplete }: DocumentS
             ))}
             <div className="w-px bg-border/40 mx-1" />
             {(["a4", "letter", "original"] as PageSize[]).map((s) => (
-              <button
+              <button type="button"
                 key={s}
                 onClick={() => setPageSize(s)}
                 className={`px-3 h-8 rounded-full text-xs font-medium whitespace-nowrap ${
@@ -305,13 +305,13 @@ export default function DocumentScanner({ open, onClose, onComplete }: DocumentS
 
         {/* Action bar */}
         <div className="grid grid-cols-2 gap-2 p-4 pt-2 border-t border-border/40 shrink-0" style={{ paddingBottom: "calc(16px + env(safe-area-inset-bottom))" }}>
-          <button
+          <button type="button"
             onClick={() => cameraRef.current?.click()}
             className="h-12 rounded-2xl bg-primary text-primary-foreground flex items-center justify-center gap-2 font-medium"
           >
             <Camera className="h-5 w-5" /> Capture
           </button>
-          <button
+          <button type="button"
             onClick={() => galleryRef.current?.click()}
             className="h-12 rounded-2xl bg-muted flex items-center justify-center gap-2 font-medium"
           >

@@ -62,7 +62,7 @@ export default function ImportShopPage() {
         <ScrollArea className="w-full">
           <div className="flex gap-1.5 px-3 pb-2.5">
             {CATEGORIES.map((c) => (
-              <button
+              <button type="button"
                 key={c}
                 onClick={() => setCategory(c)}
                 className={`px-3 h-7 rounded-full text-[12px] font-semibold whitespace-nowrap transition ${

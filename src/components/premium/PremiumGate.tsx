@@ -41,7 +41,7 @@ export default function PremiumGate({ feature, description, children, fallback }
         <p className="text-[11px] font-bold uppercase tracking-widest text-amber-700 dark:text-amber-400 mb-1">ZIVO+ exclusive</p>
         <h3 className="text-lg font-bold text-foreground mb-1.5">{feature}</h3>
         {description && <p className="text-sm text-muted-foreground mb-4">{description}</p>}
-        <button
+        <button type="button"
           onClick={() => navigate("/zivo-plus")}
           className="inline-flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-gradient-to-r from-amber-500 text-white font-bold text-sm shadow-lg active:scale-95 transition"
         >

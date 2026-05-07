@@ -90,7 +90,7 @@ export default function DriverProfileCard() {
               ))}
             </div>
           </div>
-          <button
+          <button type="button"
             onClick={() => { setIsFavorite(!isFavorite); toast.success(isFavorite ? "Removed from favorites" : "Added to favorites!"); }}
             className="w-10 h-10 rounded-full border border-border/40 flex items-center justify-center active:scale-90 transition-transform min-w-[44px] min-h-[44px]"
             aria-label={isFavorite ? "Remove from favorites" : "Add to favorites"}
@@ -137,7 +137,7 @@ export default function DriverProfileCard() {
       <div className="rounded-2xl bg-card border border-border/40 p-4 space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Recent Reviews</h3>
-          <button onClick={() => setShowReviews(!showReviews)} className="text-[10px] font-bold text-primary">
+          <button type="button" onClick={() => setShowReviews(!showReviews)} className="text-[10px] font-bold text-primary">
             {showReviews ? "Show less" : "View all"}
           </button>
         </div>
@@ -204,11 +204,11 @@ export default function DriverProfileCard() {
             className="rounded-2xl border border-destructive/20 bg-destructive/5 p-4 space-y-3">
             <div className="flex items-center justify-between">
               <p className="text-sm font-bold text-destructive">Report Driver</p>
-              <button onClick={() => setShowReport(false)} className="p-1 rounded-lg hover:bg-muted/60"><X className="w-4 h-4 text-muted-foreground" /></button>
+              <button type="button" onClick={() => setShowReport(false)} className="p-1 rounded-lg hover:bg-muted/60"><X className="w-4 h-4 text-muted-foreground" /></button>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {["Rude behavior", "Unsafe driving", "Wrong route", "Vehicle issue", "Other"].map((r) => (
-                <button key={r} onClick={() => setReportReason(r)}
+                <button type="button" key={r} onClick={() => setReportReason(r)}
                   className={cn("text-[11px] px-2.5 py-1 rounded-full border transition-colors",
                     reportReason === r ? "bg-destructive text-destructive-foreground border-destructive" : "border-border text-muted-foreground hover:border-destructive/50")}>
                   {r}

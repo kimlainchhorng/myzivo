@@ -792,7 +792,7 @@ export default function MonetizationArticlesPage() {
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-30 bg-background/80 backdrop-blur-xl border-b border-border/30">
         <div className="flex items-center gap-3 px-4 py-3">
-          <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-muted/50 touch-manipulation">
+          <button type="button" onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-muted/50 touch-manipulation">
             <ArrowLeft className="h-5 w-5" />
           </button>
           {searchOpen ? (
@@ -807,7 +807,7 @@ export default function MonetizationArticlesPage() {
           ) : (
             <h1 className="text-base font-bold flex-1 text-center">Creator Academy</h1>
           )}
-          <button
+          <button type="button"
             onClick={() => { setSearchOpen(!searchOpen); setSearchQuery(""); }}
             className="p-2 -mr-2 rounded-full hover:bg-muted/50 touch-manipulation"
           >
@@ -819,7 +819,7 @@ export default function MonetizationArticlesPage() {
         {!searchOpen && (
           <div className="flex overflow-x-auto no-scrollbar">
             {TABS.map((tab) => (
-              <button
+              <button type="button"
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
                 className={`shrink-0 px-4 py-2.5 text-[13px] font-semibold border-b-2 transition-colors whitespace-nowrap ${

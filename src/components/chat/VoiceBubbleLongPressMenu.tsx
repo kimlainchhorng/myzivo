@@ -52,7 +52,7 @@ function MenuItem({
   chevron?: boolean;
 }) {
   return (
-    <button
+    <button type="button"
       onClick={(e) => { e.stopPropagation(); onClick(); }}
       className={`w-full flex items-center justify-between gap-3 px-4 py-2.5 text-[14px] font-medium transition-colors hover:bg-muted/40 active:bg-muted/60 ${
         destructive ? "text-destructive" : active ? "text-primary" : "text-foreground"
@@ -181,7 +181,7 @@ export default function VoiceBubbleLongPressMenu({
                       <MenuItem icon={Trash2} label="Delete for me" onClick={() => { onDeleteForMe(); setShowDeleteSub(false); onClose(); }} destructive />
                     )}
                     <div className="border-t border-border/30">
-                      <button
+                      <button type="button"
                         onClick={(e) => { e.stopPropagation(); setShowDeleteSub(false); }}
                         className="w-full py-2.5 text-center text-[13px] font-medium text-muted-foreground hover:bg-muted/30 active:bg-muted/50 transition-colors"
                       >

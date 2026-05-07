@@ -1057,13 +1057,13 @@ function ReelCard({
             <p className="flex-1 text-white text-[13px] font-semibold truncate">
               {post.source === "user" ? post.author_name : post.store_name} is LIVE now
             </p>
-            <button
+            <button type="button"
               onClick={(e) => { e.stopPropagation(); navigate(`/live/${post.author_id}`); }}
               className="shrink-0 px-3 py-1 rounded-full bg-red-500 text-white text-[11px] font-bold active:scale-95 transition-transform"
             >
               Join
             </button>
-            <button
+            <button type="button"
               onClick={(e) => { e.stopPropagation(); setLiveAlertDismissed(true); }}
               className="shrink-0 p-1"
               aria-label="Dismiss"
@@ -1598,7 +1598,7 @@ function ReelCard({
             <>
               <div className="flex flex-wrap gap-1.5 mb-2">
                 {tags.map((tag) => (
-                  <button
+                  <button type="button"
                     key={tag}
                     type="button"
                     onClick={(e) => {
@@ -2172,7 +2172,7 @@ function ReelCard({
                 <div className="w-10 h-1 rounded-full bg-muted-foreground/20" />
               </div>
               <div className="px-2 py-2 space-y-0.5">
-                <button
+                <button type="button"
                   onClick={() => {
                     setShowMoreMenu(false);
                     const url = `${window.location.origin}/reels/${post.id}`;
@@ -2192,7 +2192,7 @@ function ReelCard({
                   <Link2 className="h-5 w-5 text-foreground" />
                   <span className="text-sm font-medium text-foreground">Copy link</span>
                 </button>
-                <button
+                <button type="button"
                   onClick={() => { setShowMoreMenu(false); setShowSpeedPicker(true); }}
                   className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl"
                 >
@@ -2200,7 +2200,7 @@ function ReelCard({
                   <span className="text-sm font-medium text-foreground flex-1 text-left">Playback speed</span>
                   <span className="text-xs font-semibold text-muted-foreground tabular-nums">{playbackSpeed}×</span>
                 </button>
-                <button
+                <button type="button"
                   onClick={async () => {
                     setShowMoreMenu(false);
                     const v = videoRef.current;
@@ -2223,7 +2223,7 @@ function ReelCard({
                   <PictureInPicture className="h-5 w-5 text-foreground" />
                   <span className="text-sm font-medium text-foreground">Picture-in-picture</span>
                 </button>
-                <button
+                <button type="button"
                   onClick={() => {
                     setShowMoreMenu(false);
                     if (!userId) { toast.error("Please sign in to send a tip"); return; }
@@ -2240,7 +2240,7 @@ function ReelCard({
                   <Gift className="h-5 w-5 text-amber-500" />
                   <span className="text-sm font-medium text-foreground">Tip Creator</span>
                 </button>
-                <button
+                <button type="button"
                   onClick={() => {
                     setShowMoreMenu(false);
                     toast.success("Duet — record your response and tag the original creator!");
@@ -2252,7 +2252,7 @@ function ReelCard({
                   <Film className="h-5 w-5 text-foreground" />
                   <span className="text-sm font-medium text-foreground">Duet</span>
                 </button>
-                <button
+                <button type="button"
                   onClick={() => {
                     setShowMoreMenu(false);
                     toast.success("Stitch — clip this reel and record your take on it!");
@@ -2264,7 +2264,7 @@ function ReelCard({
                   <Scissors className="h-5 w-5 text-foreground" />
                   <span className="text-sm font-medium text-foreground">Stitch</span>
                 </button>
-                <button
+                <button type="button"
                   onClick={async () => {
                     setShowMoreMenu(false);
                     const mediaUrl = post.media_urls?.[0];
@@ -2288,7 +2288,7 @@ function ReelCard({
                   <Download className="h-5 w-5 text-foreground" />
                   <span className="text-sm font-medium text-foreground">Download</span>
                 </button>
-                <button
+                <button type="button"
                   onClick={() => {
                     setShowMoreMenu(false);
                     navigate("/feed", { state: { openCreate: true, shareToStory: true, storyMedia: post.media_urls?.[0], storyPostId: post.id } });
@@ -2300,7 +2300,7 @@ function ReelCard({
                   <span className="text-sm font-medium text-foreground">Share to Story</span>
                 </button>
                 {userId && post.author_id && userId === post.author_id && (
-                  <button
+                  <button type="button"
                     onClick={async () => {
                       setShowMoreMenu(false);
                       const rawId = post.id.startsWith("u-") ? post.id.slice(2) : post.id;
@@ -2314,7 +2314,7 @@ function ReelCard({
                     <span className="text-sm font-medium text-foreground">Pin to Profile</span>
                   </button>
                 )}
-                <button
+                <button type="button"
                   onClick={() => {
                     setShowMoreMenu(false);
                     window.dispatchEvent(new CustomEvent("zivo-reel-hide", { detail: { postId: post.id } }));
@@ -2324,7 +2324,7 @@ function ReelCard({
                   <EyeOff className="h-5 w-5 text-foreground" />
                   <span className="text-sm font-medium text-foreground">Not interested</span>
                 </button>
-                <button
+                <button type="button"
                   onClick={() => {
                     setShowMoreMenu(false);
                     if (!userId) { toast.error("Please sign in to report"); return; }
@@ -2367,7 +2367,7 @@ function ReelCard({
                 {[0.5, 1.0, 1.5, 2.0].map((rate) => {
                   const active = Math.abs(playbackSpeed - rate) < 0.01;
                   return (
-                    <button
+                    <button type="button"
                       key={rate}
                       onClick={() => { haptic("selection"); setPlaybackSpeed(rate); setShowSpeedPicker(false); }}
                       className={cn(
@@ -3062,7 +3062,7 @@ function FeedSearchOverlay({ onClose, onNavigate }: { onClose: () => void; onNav
           <div className="px-4 pt-3">
             <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">Shops</p>
             {storeResults.map((store: any) => (
-              <button
+              <button type="button"
                 key={store.id}
                 type="button"
                 onClick={() => { onNavigate(`/grocery/shop/${store.slug}`); onClose(); }}
@@ -3088,7 +3088,7 @@ function FeedSearchOverlay({ onClose, onNavigate }: { onClose: () => void; onNav
           <div className="px-4 pt-3">
             <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-2">People</p>
             {profileResults.map((person: any) => (
-              <button
+              <button type="button"
                 key={person.id}
                 type="button"
                 onClick={() => { onNavigate(`/user/${person.id}`); onClose(); }}
@@ -3223,14 +3223,14 @@ function SoundOverlay({
                 {reelCount} reel{reelCount !== 1 ? "s" : ""} • Tap to watch
               </p>
             </div>
-            <button onClick={onClose} aria-label="Close sound overlay" title="Close sound overlay" className="p-2 -mr-1 rounded-full hover:bg-muted/60 transition-colors">
+            <button type="button" onClick={onClose} aria-label="Close sound overlay" title="Close sound overlay" className="p-2 -mr-1 rounded-full hover:bg-muted/60 transition-colors">
               <XIcon className="h-5 w-5 text-muted-foreground" />
             </button>
           </div>
 
           {/* Use this sound button */}
           <div className="px-5 pb-3">
-            <button
+            <button type="button"
               onClick={() => {
                 onClose();
                 onUseSound();
@@ -3263,7 +3263,7 @@ function SoundOverlay({
                 {reels.map((reel) => {
                   const thumb = (reel.media_urls || []).map((u: string) => normalizeStorePostMediaUrl(u)).filter(Boolean)[0];
                   return (
-                    <button
+                    <button type="button"
                       key={reel.id}
                       onClick={() => onNavigateToReel(reel.id)}
                       className="relative aspect-[9/16] bg-muted/80 overflow-hidden group rounded-xl"
@@ -3357,7 +3357,7 @@ function DiscoverPeopleOverlay({ onClose, onNavigate }: { onClose: () => void; o
       className="fixed inset-0 z-[1500] bg-background flex flex-col"
     >
       <div data-testid="feed-discover-header" className="safe-area-top pt-3 pb-3 flex items-center gap-3 px-4 border-b border-border/30">
-        <button onClick={onClose} aria-label="Close discover people" title="Close discover people" className="p-2 rounded-full hover:bg-muted/50">
+        <button type="button" onClick={onClose} aria-label="Close discover people" title="Close discover people" className="p-2 rounded-full hover:bg-muted/50">
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
         <div>
@@ -3399,7 +3399,7 @@ function DiscoverPeopleOverlay({ onClose, onNavigate }: { onClose: () => void; o
                     </p>
                   )}
                 </div>
-                <button
+                <button type="button"
                   onClick={() => handleFollow(profile.id)}
                   disabled={followingIds.has(profile.id)}
                   className={`w-full mt-2.5 py-1.5 rounded-lg text-xs font-semibold transition-all ${
@@ -3496,7 +3496,7 @@ function ReelReportDialog({
         <p className="px-4 pt-3 text-xs text-muted-foreground">Why are you reporting this post?</p>
         <div className="px-2 py-2">
           {REPORT_REASONS.map((r) => (
-            <button
+            <button type="button"
               key={r}
               type="button"
               onClick={() => setReason(r)}
@@ -3577,19 +3577,27 @@ export default function FeedPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<{ name: string; avatar: string | null } | null>(null);
   const [userLikedPostIds, setUserLikedPostIds] = useState<Set<string>>(new Set());
-  const [feedMode, setFeedMode] = useState<"foryou" | "following">(() => {
+  const [feedMode, setFeedMode] = useState<"foryou" | "following" | "trending">(() => {
     // Persist tab preference — TikTok remembers For You vs Following, so
     // users who actively curate their following feed don't have to re-pick
     // it every time they enter Reels.
     if (typeof window === "undefined") return "foryou";
     try {
       const stored = localStorage.getItem("zivo_reel_mode");
-      return stored === "following" ? "following" : "foryou";
+      if (stored === "following") return "following";
+      if (stored === "trending") return "trending";
+      return "foryou";
     } catch { return "foryou"; }
   });
   useEffect(() => {
     try { localStorage.setItem("zivo_reel_mode", feedMode); } catch {}
   }, [feedMode]);
+  // Reset to For You when the user is logged out — "following" mode with no
+  // userId shows a blank black screen since neither the empty state nor the
+  // tab controls render without a user.
+  useEffect(() => {
+    if (!userId && feedMode === "following") setFeedMode("foryou");
+  }, [userId, feedMode]);
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
   const [showSwipeHint, setShowSwipeHint] = useState(false);
   const [showShortcutsHelp, setShowShortcutsHelp] = useState(false);
@@ -3844,7 +3852,7 @@ export default function FeedPage() {
     },
   });
 
-  // Posts shown in the snap-scroller — filtered by For You / Following + hashtag.
+  // Posts shown in the snap-scroller — filtered by For You / Following / Trending + hashtag.
   // Memoized so cardRefs / activeIndex stay aligned with what's rendered.
   const visiblePosts = useMemo(() => {
     let list = posts;
@@ -3862,6 +3870,13 @@ export default function FeedPage() {
     }
     if (selectedHashtag) {
       list = list.filter((p) => postHasHashtag(p.caption, selectedHashtag));
+    }
+    if (feedMode === "trending") {
+      list = [...list].sort((a, b) => {
+        const scoreA = (a.likes_count ?? 0) * 2 + (a.comments_count ?? 0) + (a.reposts_count ?? 0);
+        const scoreB = (b.likes_count ?? 0) * 2 + (b.comments_count ?? 0) + (b.reposts_count ?? 0);
+        return scoreB - scoreA;
+      });
     }
     return list;
   }, [posts, feedMode, userId, followingIds, hiddenAuthorIds, deletedPostIds, hiddenPosts, selectedHashtag]);
@@ -4224,7 +4239,7 @@ export default function FeedPage() {
       <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-4 z-50 px-8 text-center">
         <p className="text-white font-semibold">No reels with #{selectedHashtag} yet</p>
         <p className="text-white/50 text-sm">Try a different tag, or clear the filter to see all reels.</p>
-        <button
+        <button type="button"
           onClick={() => setSelectedHashtag(null)}
           className="mt-2 px-5 py-2 rounded-full bg-white text-black text-sm font-bold active:scale-95 transition-transform"
         >
@@ -4242,13 +4257,13 @@ export default function FeedPage() {
         <UserPlus className="h-14 w-14 text-white/20" />
         <p className="text-white font-semibold">No reels from people you follow</p>
         <p className="text-white/50 text-sm">Follow creators to see their reels here, or switch back to For You to discover new ones.</p>
-        <button
+        <button type="button"
           onClick={() => setFeedMode("foryou")}
           className="mt-2 px-5 py-2 rounded-full bg-white text-black text-sm font-bold active:scale-95 transition-transform"
         >
           Back to For You
         </button>
-        <button
+        <button type="button"
           onClick={() => setShowDiscover(true)}
           className="text-white/70 text-sm underline"
         >
@@ -4294,9 +4309,9 @@ export default function FeedPage() {
           so we max() the safe-area inset with 16px so the tabs sit inside the
           frame instead of floating above it on tablets without a notch. */}
       {userId && (
-        <div className="absolute left-1/2 top-safe-overlay -translate-x-1/2 z-50 flex items-center gap-5 sm:gap-6 lg:gap-8">
-          {(["foryou", "following"] as const).map((mode) => (
-            <button
+        <div className="absolute left-1/2 top-safe-overlay -translate-x-1/2 z-50 flex items-center gap-4 sm:gap-5 lg:gap-7">
+          {(["foryou", "following", "trending"] as const).map((mode) => (
+            <button type="button"
               key={mode}
               type="button"
               onClick={() => {
@@ -4323,7 +4338,7 @@ export default function FeedPage() {
                 feedMode === mode ? "text-white" : "text-white/60",
               )}
             >
-              {mode === "foryou" ? "For You" : "Following"}
+              {mode === "foryou" ? "For You" : mode === "following" ? "Following" : "🔥 Trending"}
               {feedMode === mode && (
                 <motion.span
                   layoutId="reel-tab-underline"
@@ -4485,7 +4500,7 @@ export default function FeedPage() {
                 <p className="text-white/60 text-sm max-w-xs">
                   Follow some creators or shops and their posts will show up here.
                 </p>
-                <button
+                <button type="button"
                   onClick={() => setShowDiscover(true)}
                   className="mt-5 rounded-full bg-emerald-500 px-5 py-2 text-sm font-semibold text-white"
                 >
@@ -4619,7 +4634,7 @@ export default function FeedPage() {
                 <div className="flex items-start justify-between gap-2"><div><h3 className="text-sm font-semibold text-foreground">Hotel / Resort Admin</h3><p className="mt-0.5 text-xs text-muted-foreground truncate">{ownerStore.name}</p></div><span className="rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-bold text-primary">{lodgingCompletion.percent}%</span></div>
                 <div className="mt-3 h-1.5 overflow-hidden rounded-full bg-muted"><motion.div className="h-full rounded-full bg-primary" animate={{ width: `${lodgingCompletion.percent}%` }} transition={{ duration: 0.25, ease: "easeOut" }} /></div>
                 <p className="mt-2 text-[11px] text-muted-foreground">Next: {lodgingCompletion.nextBestAction.actionLabel}</p>
-                <div className="mt-3 grid grid-cols-2 gap-2 text-xs"><button onClick={() => navigate(`/admin/stores/${ownerStore.id}?tab=lodge-overview`)} className="rounded-lg bg-primary px-2 py-2 font-semibold text-primary-foreground">Open Hotel Admin</button><button onClick={() => navigate("/admin/lodging/qa-checklist")} className="rounded-lg bg-muted px-2 py-2 font-semibold text-foreground">Run QA</button><button onClick={() => navigate("/admin/lodging/qa-checklist")} className="col-span-2 rounded-lg bg-muted px-2 py-2 font-semibold text-foreground">View QA Report</button></div>
+                <div className="mt-3 grid grid-cols-2 gap-2 text-xs"><button type="button" onClick={() => navigate(`/admin/stores/${ownerStore.id}?tab=lodge-overview`)} className="rounded-lg bg-primary px-2 py-2 font-semibold text-primary-foreground">Open Hotel Admin</button><button type="button" onClick={() => navigate("/admin/lodging/qa-checklist")} className="rounded-lg bg-muted px-2 py-2 font-semibold text-foreground">Run QA</button><button type="button" onClick={() => navigate("/admin/lodging/qa-checklist")} className="col-span-2 rounded-lg bg-muted px-2 py-2 font-semibold text-foreground">View QA Report</button></div>
               </div>
             )}
             <div className="px-1">
@@ -4631,12 +4646,12 @@ export default function FeedPage() {
             <div className="mt-2 rounded-xl border border-border/30 bg-card/40 p-3">
               <h3 className="text-sm font-semibold text-foreground mb-2">Quick links</h3>
               <div className="grid grid-cols-2 gap-2 text-xs">
-                <button onClick={() => navigate("/flights")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left flex items-center gap-2"><Plane className="w-4 h-4 text-primary shrink-0" /> Flights</button>
-                <button onClick={() => navigate("/hotels")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left flex items-center gap-2"><Building2 className="w-4 h-4 text-primary shrink-0" /> Hotels</button>
-                <button onClick={() => navigate("/eats")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left flex items-center gap-2"><UtensilsCrossed className="w-4 h-4 text-primary shrink-0" /> Eats</button>
-                <button onClick={() => navigate("/rides")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left flex items-center gap-2"><Car className="w-4 h-4 text-primary shrink-0" /> Rides</button>
-                <button onClick={() => navigate("/jobs")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left flex items-center gap-2"><Briefcase className="w-4 h-4 text-primary shrink-0" /> Jobs</button>
-                <button onClick={() => navigate("/shop")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left flex items-center gap-2"><ShoppingBag className="w-4 h-4 text-primary shrink-0" /> Shop</button>
+                <button type="button" onClick={() => navigate("/flights")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left flex items-center gap-2"><Plane className="w-4 h-4 text-primary shrink-0" /> Flights</button>
+                <button type="button" onClick={() => navigate("/hotels")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left flex items-center gap-2"><Building2 className="w-4 h-4 text-primary shrink-0" /> Hotels</button>
+                <button type="button" onClick={() => navigate("/eats")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left flex items-center gap-2"><UtensilsCrossed className="w-4 h-4 text-primary shrink-0" /> Eats</button>
+                <button type="button" onClick={() => navigate("/rides")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left flex items-center gap-2"><Car className="w-4 h-4 text-primary shrink-0" /> Rides</button>
+                <button type="button" onClick={() => navigate("/jobs")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left flex items-center gap-2"><Briefcase className="w-4 h-4 text-primary shrink-0" /> Jobs</button>
+                <button type="button" onClick={() => navigate("/shop")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left flex items-center gap-2"><ShoppingBag className="w-4 h-4 text-primary shrink-0" /> Shop</button>
               </div>
             </div>
             <p className="text-[11px] text-muted-foreground/70 mt-auto px-1 pt-4">© ZIVO LLC · hizivo.com</p>
@@ -4645,7 +4660,7 @@ export default function FeedPage() {
 
         {/* Desktop up/down navigation buttons */}
         <div className="hidden md:flex flex-col gap-3 absolute right-8 top-1/2 -translate-y-1/2 z-50">
-          <button
+          <button type="button"
             onClick={() => {
               if (activeIndex > 0) {
                 cardRefs.current[activeIndex - 1]?.scrollIntoView({ behavior: "smooth" });
@@ -4657,7 +4672,7 @@ export default function FeedPage() {
           >
             <ChevronUp className="w-6 h-6" />
           </button>
-          <button
+          <button type="button"
             onClick={() => {
               if (activeIndex < visiblePosts.length - 1) {
                 cardRefs.current[activeIndex + 1]?.scrollIntoView({ behavior: "smooth" });

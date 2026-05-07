@@ -63,7 +63,7 @@ export default function ProfileCompletionNudge() {
         >
           Edit
         </Link>
-        <button
+        <button type="button"
           onClick={handleDismiss}
           aria-label="Dismiss"
           className="shrink-0 self-start text-muted-foreground hover:text-foreground p-1 -m-1"

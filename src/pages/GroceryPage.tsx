@@ -98,14 +98,14 @@ export default function GroceryPage() {
       {/* ── Header ── */}
       <div className="sticky top-0 safe-area-top z-30 bg-background/95 backdrop-blur border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">
-          <button onClick={() => navigate(-1)} className="p-1.5 rounded-xl hover:bg-muted">
+          <button type="button" onClick={() => navigate(-1)} className="p-1.5 rounded-xl hover:bg-muted">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="flex items-center gap-2 flex-1 min-w-0">
             <img src={storeCfg.logo} alt={selectedStore} className="h-7 w-7 rounded-lg object-contain" />
             <h1 className="text-lg font-bold truncate">Grocery</h1>
           </div>
-          <button onClick={() => setShowCart(!showCart)} className="relative p-2 rounded-xl hover:bg-muted">
+          <button type="button" onClick={() => setShowCart(!showCart)} className="relative p-2 rounded-xl hover:bg-muted">
             <ShoppingCart className="h-5 w-5" />
             {cart.itemCount > 0 && (
               <span className="absolute -top-0.5 -right-0.5 flex items-center justify-center rounded-full bg-primary text-primary-foreground text-[10px] font-bold min-w-[18px] h-[18px] px-1">
@@ -118,7 +118,7 @@ export default function GroceryPage() {
         {/* ── Store Tabs (horizontal scroll) ── */}
         <div className="flex gap-2 px-4 pb-2 overflow-x-auto no-scrollbar">
           {marketStores.map((store) => (
-            <button
+            <button type="button"
               key={store.name}
               onClick={() => handleStoreChange(store.name)}
               className={cn(
@@ -145,7 +145,7 @@ export default function GroceryPage() {
               className="pl-10 pr-8 rounded-xl bg-muted/50 border-border/50"
             />
             {query && (
-              <button onClick={() => { setQuery(""); clearResults(); }} className="absolute right-3 top-1/2 -translate-y-1/2">
+              <button type="button" onClick={() => { setQuery(""); clearResults(); }} className="absolute right-3 top-1/2 -translate-y-1/2">
                 <X className="h-4 w-4 text-muted-foreground" />
               </button>
             )}
@@ -166,7 +166,7 @@ export default function GroceryPage() {
               <div className="flex items-center justify-between mb-3">
                 <h3 className="font-semibold">Shopping Cart ({cart.itemCount})</h3>
                 {cart.items.length > 0 && (
-                  <button onClick={cart.clearCart} className="text-xs text-destructive hover:underline">Clear all</button>
+                  <button type="button" onClick={cart.clearCart} className="text-xs text-destructive hover:underline">Clear all</button>
                 )}
               </div>
 
@@ -185,10 +185,10 @@ export default function GroceryPage() {
                         </div>
                       </div>
                       <div className="flex items-center gap-1">
-                        <button onClick={() => cart.updateQuantity(item.productId, item.quantity - 1)} className="p-1 rounded-lg hover:bg-muted"><Minus className="h-3 w-3" /></button>
+                        <button type="button" onClick={() => cart.updateQuantity(item.productId, item.quantity - 1)} className="p-1 rounded-lg hover:bg-muted"><Minus className="h-3 w-3" /></button>
                         <span className="text-xs font-semibold w-5 text-center">{item.quantity}</span>
-                        <button onClick={() => cart.updateQuantity(item.productId, item.quantity + 1)} className="p-1 rounded-lg hover:bg-muted"><Plus className="h-3 w-3" /></button>
-                        <button onClick={() => cart.removeItem(item.productId)} className="p-1 rounded-lg hover:bg-destructive/10 ml-1"><Trash2 className="h-3 w-3 text-destructive" /></button>
+                        <button type="button" onClick={() => cart.updateQuantity(item.productId, item.quantity + 1)} className="p-1 rounded-lg hover:bg-muted"><Plus className="h-3 w-3" /></button>
+                        <button type="button" onClick={() => cart.removeItem(item.productId)} className="p-1 rounded-lg hover:bg-destructive/10 ml-1"><Trash2 className="h-3 w-3 text-destructive" /></button>
                       </div>
                     </div>
                   ))}

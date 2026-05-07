@@ -1634,7 +1634,7 @@ export default function AdminAnalyticsDashboard() {
             <Activity className="w-3.5 h-3.5" /> Operational Queues <span className="text-[10px] font-normal normal-case opacity-60">· needs attention</span>
           </h2>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-            <button
+            <button type="button"
               onClick={() => navigate("/admin/drivers/verification")}
               className="text-left"
             >
@@ -1646,7 +1646,7 @@ export default function AdminAnalyticsDashboard() {
                 color={opsQueues && opsQueues.pendingDrivers > 0 ? "orange" : "sky"}
               />
             </button>
-            <button
+            <button type="button"
               onClick={() => navigate("/admin/payments/refunds")}
               className="text-left"
             >
@@ -1658,7 +1658,7 @@ export default function AdminAnalyticsDashboard() {
                 color={opsQueues && opsQueues.queuedRefunds > 0 ? "orange" : "sky"}
               />
             </button>
-            <button
+            <button type="button"
               onClick={() => navigate("/admin/moderation")}
               className="text-left"
             >
@@ -3015,7 +3015,7 @@ export default function AdminAnalyticsDashboard() {
               { label: "Remote Config", path: "/admin/remote-config", emoji: "⚙️" },
               { label: "Auth Shield", path: "/admin/auth-shield", emoji: "🔐" },
             ].map((link) => (
-              <button
+              <button type="button"
                 key={link.path}
                 onClick={() => navigate(link.path)}
                 className="flex flex-col items-center gap-2 p-3 rounded-xl border border-border bg-card hover:bg-muted transition-colors text-center"

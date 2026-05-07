@@ -186,7 +186,7 @@ function LegalSheet({ title, onClose, children }: { title: string; onClose: () =
           <div className="w-10 h-1 rounded-full bg-muted-foreground/20 mx-auto mb-3" />
           <div className="flex items-center justify-between">
             <h2 className="text-[16px] font-bold text-foreground">{title}</h2>
-            <button onClick={onClose} className="p-2 rounded-xl hover:bg-muted/60 transition-colors">
+            <button type="button" onClick={onClose} className="p-2 rounded-xl hover:bg-muted/60 transition-colors">
               <X className="h-4 w-4 text-muted-foreground" />
             </button>
           </div>
@@ -429,8 +429,8 @@ export default function ZivoPlusPage() {
 
             <p className="text-[9px] text-muted-foreground/60 text-center leading-relaxed px-4">
               Cancel anytime from your account settings. By subscribing you agree to our{" "}
-              <button onClick={() => setLegalSheet("terms")} className="text-primary/60 underline hover:text-primary transition-colors">Terms</button> and{" "}
-              <button onClick={() => setLegalSheet("privacy")} className="text-primary/60 underline hover:text-primary transition-colors">Privacy Policy</button>.
+              <button type="button" onClick={() => setLegalSheet("terms")} className="text-primary/60 underline hover:text-primary transition-colors">Terms</button> and{" "}
+              <button type="button" onClick={() => setLegalSheet("privacy")} className="text-primary/60 underline hover:text-primary transition-colors">Privacy Policy</button>.
             </p>
           </div>
         )}

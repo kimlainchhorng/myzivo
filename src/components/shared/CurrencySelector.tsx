@@ -32,7 +32,7 @@ const CurrencySelector = ({ variant = "dropdown", className }: CurrencySelectorP
     return (
       <div className={cn("flex items-center gap-2 flex-wrap", className)}>
         {currencies.slice(0, 6).map((curr) => (
-          <button
+          <button type="button"
             key={curr.code}
             onClick={() => setCurrency(curr.code)}
             className={cn(
@@ -79,7 +79,7 @@ const CurrencySelector = ({ variant = "dropdown", className }: CurrencySelectorP
         >
           <div className="overflow-y-auto max-h-[360px] p-1">
             {currencies.map((curr) => (
-              <button
+              <button type="button"
                 key={curr.code}
                 onClick={() => {
                   setCurrency(curr.code);
@@ -145,7 +145,7 @@ const CurrencySelector = ({ variant = "dropdown", className }: CurrencySelectorP
         <ScrollArea className="max-h-[360px]">
           <div className="p-2">
             {currencies.map((curr) => (
-              <button
+              <button type="button"
                 key={curr.code}
                 onClick={() => {
                   setCurrency(curr.code);

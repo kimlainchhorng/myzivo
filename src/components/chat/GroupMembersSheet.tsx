@@ -134,7 +134,7 @@ export default function GroupMembersSheet({ open, onOpenChange, groupId, onLeft 
                 {canManage && (
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <button className="p-1.5 rounded-md hover:bg-muted" aria-label="Member actions">
+                      <button type="button" className="p-1.5 rounded-md hover:bg-muted" aria-label="Member actions">
                         <MoreVertical className="w-4 h-4" />
                       </button>
                     </DropdownMenuTrigger>

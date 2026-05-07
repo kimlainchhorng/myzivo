@@ -383,7 +383,7 @@ export default function AccountExportPage() {
           <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-1 mb-2">Format</p>
           <div className="grid grid-cols-2 gap-2">
             {(["json", "csv"] as const).map((f) => (
-              <button
+              <button type="button"
                 key={f}
                 onClick={() => setFormat(f)}
                 className={`flex flex-col items-start p-3 rounded-xl border transition-all active:scale-[0.98] text-left ${
@@ -408,9 +408,9 @@ export default function AccountExportPage() {
               Categories ({selectedCount}/{categories.length} selected)
             </p>
             <div className="flex gap-2 text-[11px]">
-              <button onClick={() => toggleAll(true)} className="text-primary hover:underline">All</button>
+              <button type="button" onClick={() => toggleAll(true)} className="text-primary hover:underline">All</button>
               <span className="text-muted-foreground/40">·</span>
-              <button onClick={() => toggleAll(false)} className="text-primary hover:underline">None</button>
+              <button type="button" onClick={() => toggleAll(false)} className="text-primary hover:underline">None</button>
             </div>
           </div>
           <div className="space-y-1.5">
@@ -419,7 +419,7 @@ export default function AccountExportPage() {
               const count = counts[c.id];
               const Icon = c.icon;
               return (
-                <button
+                <button type="button"
                   key={c.id}
                   type="button"
                   onClick={() => setSelected((s) => ({ ...s, [c.id]: !s[c.id] }))}

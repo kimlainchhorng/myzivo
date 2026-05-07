@@ -58,7 +58,7 @@ export default function RideEntertainment() {
         {tabs.map(tab => {
           const Icon = tab.icon;
           return (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={cn("flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all", activeTab === tab.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
+            <button type="button" key={tab.id} onClick={() => setActiveTab(tab.id)} className={cn("flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all", activeTab === tab.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
               <Icon className="w-3.5 h-3.5" /> {tab.label}
             </button>
           );
@@ -96,7 +96,7 @@ export default function RideEntertainment() {
 
                   {/* Controls */}
                   <div className="flex items-center justify-center gap-4 mt-3">
-                    <button onClick={prevTrack} className="w-10 h-10 rounded-full bg-muted/30 flex items-center justify-center active:scale-95 transition-transform">
+                    <button type="button" onClick={prevTrack} className="w-10 h-10 rounded-full bg-muted/30 flex items-center justify-center active:scale-95 transition-transform">
                       <SkipBack className="w-4 h-4 text-foreground" />
                     </button>
                     <motion.button
@@ -106,7 +106,7 @@ export default function RideEntertainment() {
                     >
                       {isPlaying ? <Pause className="w-6 h-6 text-primary-foreground" /> : <Play className="w-6 h-6 text-primary-foreground ml-0.5" />}
                     </motion.button>
-                    <button onClick={nextTrack} className="w-10 h-10 rounded-full bg-muted/30 flex items-center justify-center active:scale-95 transition-transform">
+                    <button type="button" onClick={nextTrack} className="w-10 h-10 rounded-full bg-muted/30 flex items-center justify-center active:scale-95 transition-transform">
                       <SkipForward className="w-4 h-4 text-foreground" />
                     </button>
                   </div>
@@ -136,7 +136,7 @@ export default function RideEntertainment() {
                       </div>
                       <div className="flex gap-1.5">
                         {setting.options.map(opt => (
-                          <button key={opt} onClick={() => setAmbientPrefs(prev => ({ ...prev, [setting.id]: opt }))} className={cn("flex-1 py-1.5 rounded-lg text-[10px] font-bold border transition-all", ambientPrefs[setting.id] === opt ? "bg-primary text-primary-foreground border-primary" : "bg-muted/20 text-foreground border-border/40")}>
+                          <button type="button" key={opt} onClick={() => setAmbientPrefs(prev => ({ ...prev, [setting.id]: opt }))} className={cn("flex-1 py-1.5 rounded-lg text-[10px] font-bold border transition-all", ambientPrefs[setting.id] === opt ? "bg-primary text-primary-foreground border-primary" : "bg-muted/20 text-foreground border-border/40")}>
                             {opt}
                           </button>
                         ))}
@@ -202,7 +202,7 @@ export default function RideEntertainment() {
                       <p className="text-[10px] text-muted-foreground">{t.artist}</p>
                     </div>
                     <span className="text-[10px] text-muted-foreground">{t.duration}</span>
-                    <button onClick={e => { e.stopPropagation(); setLikedTracks(prev => { const next = new Set(prev); next.has(t.id) ? next.delete(t.id) : next.add(t.id); return next; }); }} className="w-8 h-8 flex items-center justify-center">
+                    <button type="button" onClick={e => { e.stopPropagation(); setLikedTracks(prev => { const next = new Set(prev); next.has(t.id) ? next.delete(t.id) : next.add(t.id); return next; }); }} className="w-8 h-8 flex items-center justify-center">
                       <Heart className={cn("w-3.5 h-3.5 transition-colors", isLiked ? "text-red-500 fill-red-500" : "text-muted-foreground")} />
                     </button>
                   </motion.button>

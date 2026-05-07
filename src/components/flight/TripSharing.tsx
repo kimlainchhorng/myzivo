@@ -136,7 +136,7 @@ export const TripSharing = ({
               { value: 'link', icon: Link2, label: 'Link' },
               { value: 'public', icon: Globe, label: 'Public' },
             ].map(option => (
-              <button
+              <button type="button"
                 key={option.value}
                 onClick={() => setVisibility(option.value as any)}
                 className={cn(
@@ -243,7 +243,7 @@ export const TripSharing = ({
               />
             </div>
             <div className="flex items-center gap-1 p-1 rounded-xl bg-muted/50">
-              <button
+              <button type="button"
                 onClick={() => setInvitePermission('view')}
                 className={cn(
                   "px-3 py-1.5 rounded-md text-sm transition-all flex items-center gap-1",
@@ -255,7 +255,7 @@ export const TripSharing = ({
                 <Eye className="w-3 h-3" />
                 View
               </button>
-              <button
+              <button type="button"
                 onClick={() => setInvitePermission('edit')}
                 className={cn(
                   "px-3 py-1.5 rounded-md text-sm transition-all flex items-center gap-1",
@@ -311,7 +311,7 @@ export const TripSharing = ({
                   
                   <div className="flex items-center gap-2">
                     <div className="flex items-center gap-1 p-1 rounded-xl bg-muted/50">
-                      <button
+                      <button type="button"
                         onClick={() => updatePermission(user.id, 'view')}
                         className={cn(
                           "px-2 py-1 rounded text-xs transition-all",
@@ -322,7 +322,7 @@ export const TripSharing = ({
                       >
                         View
                       </button>
-                      <button
+                      <button type="button"
                         onClick={() => updatePermission(user.id, 'edit')}
                         className={cn(
                           "px-2 py-1 rounded text-xs transition-all",

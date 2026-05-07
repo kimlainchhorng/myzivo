@@ -479,14 +479,14 @@ export default function ReelsFeedPage() {
         .select("user_id, friend_id")
         .eq("status", "accepted")
         .or(`user_id.eq.${userId},friend_id.eq.${userId}`)
-        .limit(10);
+        .limit(500);
       if (!fships?.length) return;
       const fIds = fships.map((r: any) => r.user_id === userId ? r.friend_id : r.user_id);
       setFriendIds(new Set(fIds));
       const { data: profs } = await supabase
         .from("profiles")
         .select("user_id, full_name, avatar_url")
-        .in("user_id", fIds)
+        .in("user_id", fIds.slice(0, 8))
         .limit(8);
       if (profs) setSidebarContacts(profs.map((p: any) => ({ id: p.user_id, name: p.full_name || "User", avatar: p.avatar_url || null })));
     })();
@@ -1139,7 +1139,7 @@ export default function ReelsFeedPage() {
                       scroll stays focused on actual posts. */}
                   <Sheet>
                     <SheetTrigger asChild>
-                      <button
+                      <button type="button"
                         className="shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition"
                         aria-label="Open menu"
                       >
@@ -1163,7 +1163,7 @@ export default function ReelsFeedPage() {
                           <div className="rounded-2xl bg-card border border-border/50 overflow-hidden">
                             <div className="flex items-center justify-between px-4 pt-3 pb-2">
                               <h3 className="text-[15px] font-bold text-foreground">Create</h3>
-                              <button
+                              <button type="button"
                                 onClick={() => setShowCreate(true)}
                                 className="text-[12px] font-semibold text-primary hover:underline"
                               >
@@ -1183,7 +1183,7 @@ export default function ReelsFeedPage() {
                                 { label: "Spaces", desc: "Audio room", icon: Mic2, color: "text-violet-500", route: "/spaces" },
                                 { label: "Post", desc: "Photo, text, poll", icon: Plus, color: "text-foreground", action: "compose" as const },
                               ].map((item) => (
-                                <button
+                                <button type="button"
                                   key={item.label}
                                   onClick={() => {
                                     // `item` is a heterogeneous union — some
@@ -1224,7 +1224,7 @@ export default function ReelsFeedPage() {
                               { label: "History", icon: History, route: "/history" },
                               { label: "Settings", icon: Settings2, route: "/settings" },
                             ].map((item) => (
-                              <button
+                              <button type="button"
                                 key={item.label}
                                 onClick={() => navigate(item.route)}
                                 className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted/50 active:bg-muted transition-colors"
@@ -1250,19 +1250,19 @@ export default function ReelsFeedPage() {
                       className="w-full pl-8 pr-7 py-1 rounded-full bg-muted/40 border border-border/30 text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"
                     />
                     {searchQuery && (
-                      <button onClick={() => { setSearchQuery(""); setSearchResults([]); }} className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                      <button type="button" onClick={() => { setSearchQuery(""); setSearchResults([]); }} className="absolute right-2.5 top-1/2 -translate-y-1/2">
                         <XIcon className="h-3.5 w-3.5 text-muted-foreground" />
                       </button>
                     )}
                   </div>
-                  <button
+                  <button type="button"
                     onClick={() => userId ? setShowCreate(true) : navigate("/auth")}
                     className="shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition"
                     aria-label="Create post"
                   >
                     <Plus className="h-[18px] w-[18px]" />
                   </button>
-                  <button
+                  <button type="button"
                     onClick={() => navigate("/notifications")}
                     className="shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition relative"
                     aria-label={notificationUnread > 0 ? `Notifications, ${notificationUnread} unread` : "Notifications"}
@@ -1274,7 +1274,7 @@ export default function ReelsFeedPage() {
                       </span>
                     )}
                   </button>
-                  <button
+                  <button type="button"
                     onClick={() => navigate("/chat")}
                     className="shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition relative"
                     aria-label={headerChatUnread > 0 ? `Messages, ${headerChatUnread} unread` : "Messages"}
@@ -1291,7 +1291,7 @@ export default function ReelsFeedPage() {
                 {userId && (
                   <div className="flex justify-center gap-6 px-3 pb-1.5">
                     {(["For You", "Friends", "Following"] as const).map((label) => (
-                      <button
+                      <button type="button"
                         key={label}
                         onClick={() => setFeedTab(label)}
                         className={cn(
@@ -1310,7 +1310,7 @@ export default function ReelsFeedPage() {
                 {/* Content type filter chips */}
                 <div className="flex gap-1.5 px-3 pb-1 overflow-x-auto scrollbar-hide">
                   {(["all", "photos", "videos", "text"] as const).map((f) => (
-                    <button
+                    <button type="button"
                       key={f}
                       onClick={() => setFeedFilter(f)}
                       className={cn(
@@ -1340,7 +1340,7 @@ export default function ReelsFeedPage() {
                 transition={{ duration: 0.2 }}
               >
                 <div data-testid="search-overlay-header" className="flex items-center gap-2 px-3 py-2 border-b border-border/30" style={{ paddingTop: 'var(--zivo-safe-top-sticky)' }}>
-                  <button onClick={() => { setShowSearch(false); setSearchQuery(""); setSearchResults([]); }} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
+                  <button type="button" onClick={() => { setShowSearch(false); setSearchQuery(""); setSearchResults([]); }} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
                     <ChevronLeft className="h-5 w-5 text-foreground" />
                   </button>
                   <div className="flex-1 relative">
@@ -1353,7 +1353,7 @@ export default function ReelsFeedPage() {
                       className="w-full pl-9 pr-8 py-2.5 rounded-full bg-muted/50 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                     />
                     {searchQuery && (
-                      <button onClick={() => { setSearchQuery(""); setSearchResults([]); }} className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <button type="button" onClick={() => { setSearchQuery(""); setSearchResults([]); }} className="absolute right-3 top-1/2 -translate-y-1/2">
                         <XIcon className="h-4 w-4 text-muted-foreground" />
                       </button>
                     )}
@@ -1380,7 +1380,7 @@ export default function ReelsFeedPage() {
                         <div>
                           <p className="px-4 py-2 text-[11px] font-bold text-muted-foreground uppercase tracking-wider bg-muted/30">Shops</p>
                           {storeSearchResults.map((s: any) => (
-                            <button
+                            <button type="button"
                               key={s.id}
                               onClick={() => { setShowSearch(false); setSearchQuery(""); setSearchResults([]); setStoreSearchResults([]); navigate(`/grocery/shop/${s.slug}`); }}
                               className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors border-b border-border/10"
@@ -1406,7 +1406,7 @@ export default function ReelsFeedPage() {
                             <p className="px-4 py-2 text-[11px] font-bold text-muted-foreground uppercase tracking-wider bg-muted/30">People</p>
                           )}
                           {searchResults.map((p: any) => (
-                            <button
+                            <button type="button"
                               key={p.id}
                               onClick={() => { setShowSearch(false); setSearchQuery(""); setSearchResults([]); setStoreSearchResults([]); navigate(`/user/${p.id}`); }}
                               className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/30 transition-colors border-b border-border/10"
@@ -1450,7 +1450,7 @@ export default function ReelsFeedPage() {
                     </div>
                   )}
                 </div>
-                <button
+                <button type="button"
                   onClick={() => setShowCreate(true)}
                   className="flex-1 text-left px-4 py-2 rounded-full bg-muted/40 border border-border/30 text-sm text-muted-foreground hover:bg-muted/60 transition-colors"
                 >
@@ -1509,7 +1509,7 @@ export default function ReelsFeedPage() {
 
           {/* Live Now Banner — only when there's actually something to watch */}
           {liveStreamsCount > 0 && (
-            <button
+            <button type="button"
               onClick={() => navigate("/live")}
               className="mx-3 mt-1.5 mb-0.5 flex w-[calc(100%-1.5rem)] items-center gap-2 px-3 py-2 rounded-xl bg-gradient-to-r from-red-500/10 via-rose-500/5 to-amber-500/10 border border-red-500/20 hover:border-red-500/40 transition-colors"
             >
@@ -1557,7 +1557,7 @@ export default function ReelsFeedPage() {
                   </>
                 )}
               </div>
-              <button
+              <button type="button"
                 onClick={() => {
                   setSelectedHashtag(null);
                   setFeedTab("For You");
@@ -1574,11 +1574,6 @@ export default function ReelsFeedPage() {
               menu in the feed header — they're secondary destinations that
               don't need to compete with actual posts for vertical real estate.
               Open the ≡ menu to access them. */}
-
-          {/* New posts pill — appears when realtime detects fresh inserts */}
-          <Suspense fallback={null}>
-            <NewPostsPill count={newPostsCount} onClick={handleShowNewPosts} />
-          </Suspense>
 
           {/* On this day — Facebook-style memories */}
           <Suspense fallback={null}><OnThisDay /></Suspense>
@@ -1608,7 +1603,7 @@ export default function ReelsFeedPage() {
             <div className="hidden lg:flex justify-center sticky lg:top-[60px] z-20 bg-background/95 backdrop-blur-xl border-b border-border/20">
               <div className="flex gap-2">
                 {(["For You", "Friends", "Following"] as const).map((label) => (
-                  <button
+                  <button type="button"
                     key={label}
                     onClick={() => setFeedTab(label)}
                     className={cn(
@@ -1650,7 +1645,7 @@ export default function ReelsFeedPage() {
               <p className="text-base font-bold text-foreground mb-1">No posts yet</p>
               <p className="text-sm text-muted-foreground mb-4">Be the first to share something amazing!</p>
               {userId && (
-                <button
+                <button type="button"
                   onClick={() => setShowCreate(true)}
                   className="px-6 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-bold active:scale-95 transition-transform shadow-lg shadow-primary/20"
                 >
@@ -1681,7 +1676,7 @@ export default function ReelsFeedPage() {
                     <p className="text-sm text-muted-foreground">
                       No posts with <span className="font-semibold text-foreground">#{selectedHashtag}</span> yet
                     </p>
-                    <button
+                    <button type="button"
                       onClick={() => setSelectedHashtag(null)}
                       className="rounded-full bg-primary text-primary-foreground text-xs font-semibold px-4 py-2 active:scale-95 transition-transform"
                     >
@@ -1699,7 +1694,7 @@ export default function ReelsFeedPage() {
                           ? "Follow creators to see their posts here."
                           : "Add friends or follow more people to fill this tab."}
                       </p>
-                      <button
+                      <button type="button"
                         onClick={() => setFeedTab("For You")}
                         className="rounded-full bg-primary text-primary-foreground text-xs font-semibold px-4 py-2 active:scale-95 transition-transform"
                       >
@@ -1764,7 +1759,7 @@ export default function ReelsFeedPage() {
                           <Users className="h-4 w-4 text-blue-500" />
                           Groups for you
                         </h3>
-                        <button onClick={() => navigate("/communities")} className="text-[12px] font-semibold text-primary">See all</button>
+                        <button type="button" onClick={() => navigate("/communities")} className="text-[12px] font-semibold text-primary">See all</button>
                       </div>
                       <div className="flex gap-3 overflow-x-auto pb-1 scrollbar-hide">
                         {[
@@ -1774,7 +1769,7 @@ export default function ReelsFeedPage() {
                           { name: "Photography", members: "6.2k", Icon: Camera, color: "from-rose-500/30 to-pink-400/20", iconColor: "text-rose-600" },
                           { name: "Fitness", members: "15k", Icon: Dumbbell, color: "from-emerald-500/30 to-green-400/20", iconColor: "text-emerald-600" },
                         ].map((group) => (
-                          <button
+                          <button type="button"
                             key={group.name}
                             onClick={() => navigate("/communities")}
                             className="shrink-0 flex flex-col items-center gap-1.5 w-[88px] p-2 rounded-xl bg-muted/30 border border-border/20 active:opacity-70"
@@ -1802,7 +1797,7 @@ export default function ReelsFeedPage() {
                   {idx === 10 && <Suspense fallback={null}><FeaturedCreatorsRow /></Suspense>}
                   {/* Inject Marketplace banner after 8th post */}
                   {idx === 7 && (
-                    <button
+                    <button type="button"
                       onClick={() => navigate("/marketplace")}
                       className="block w-full bg-gradient-to-r from-amber-500/10 via-card to-primary/10 border-b border-border/10 px-3 py-3 text-left active:opacity-70 transition-opacity"
                     >
@@ -1827,7 +1822,7 @@ export default function ReelsFeedPage() {
                   )}
                   {/* Inject Events strip after 12th post */}
                   {idx === 11 && (
-                    <button
+                    <button type="button"
                       onClick={() => navigate("/explore")}
                       className="block w-full bg-gradient-to-r from-emerald-500/10 via-card to-blue-500/10 border-b border-border/10 px-3 py-3 text-left active:opacity-70 transition-opacity"
                     >
@@ -1845,7 +1840,7 @@ export default function ReelsFeedPage() {
                   )}
                   {/* Fundraiser card after 14th post */}
                   {idx === 13 && (
-                    <button
+                    <button type="button"
                       onClick={() => navigate("/explore")}
                       className="block w-full bg-gradient-to-r from-rose-500/10 via-card to-orange-500/10 border-b border-border/10 px-3 py-3 text-left active:opacity-70 transition-opacity"
                     >
@@ -1866,7 +1861,7 @@ export default function ReelsFeedPage() {
                   {idx === 17 && <Suspense fallback={null}><FriendActivity /></Suspense>}
                   {/* Inject On This Day memory card after 16th post */}
                   {idx === 15 && (
-                    <button
+                    <button type="button"
                       onClick={() => navigate("/saved")}
                       className="block w-full bg-gradient-to-r from-violet-500/10 via-card to-indigo-500/10 border-b border-border/10 px-3 py-3 text-left active:opacity-70 transition-opacity"
                     >
@@ -1930,7 +1925,7 @@ export default function ReelsFeedPage() {
                       <span className="text-[10px] text-muted-foreground">{videoCount === 1 ? "Video" : "Videos"}</span>
                     </div>
                   </div>
-                  <button
+                  <button type="button"
                     onClick={() => navigate("/explore")}
                     className="mt-2 px-5 py-2 rounded-full bg-primary text-primary-foreground text-[12px] font-semibold active:scale-95 transition-transform"
                   >
@@ -2048,7 +2043,7 @@ export default function ReelsFeedPage() {
                           testId="post-detail-grab-handle"
                         />
                         <div className="flex items-center gap-3 px-3 pb-2.5">
-                          <button
+                          <button type="button"
                             onClick={() => setFullscreenIndex(null)}
                             aria-label="Close post"
                             className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full hover:bg-muted/50 active:bg-muted transition-colors"
@@ -2059,7 +2054,7 @@ export default function ReelsFeedPage() {
                             type="button"
                             onClick={() => {
                               if (post.source === "store" && post.store_slug) {
-                                navigate(`/store/${post.store_slug}`);
+                                navigate(`/grocery/shop/${post.store_slug}`);
                               } else if (post.author_id) {
                                 navigate(`/user/${post.author_id}`);
                               }
@@ -2133,7 +2128,7 @@ export default function ReelsFeedPage() {
                 { label: "Delivery", icon: Package, path: "/delivery", color: "bg-violet-500/10 text-violet-600" },
                 { label: "Explore", icon: Globe, path: "/explore", color: "bg-primary/10 text-primary" },
               ].map(({ label, icon: Icon, path, color }) => (
-                <button
+                <button type="button"
                   key={label}
                   onClick={() => navigate(path)}
                   className="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-muted/60 transition-colors group"
@@ -2152,7 +2147,7 @@ export default function ReelsFeedPage() {
             <div>
               <div className="flex items-center justify-between mb-2 px-1">
                 <h3 className="text-sm font-semibold text-foreground">Suggested for you</h3>
-                <button onClick={() => navigate("/explore")} className="text-[11px] text-primary hover:underline">See all</button>
+                <button type="button" onClick={() => navigate("/explore")} className="text-[11px] text-primary hover:underline">See all</button>
               </div>
               <Suspense fallback={null}>
                 <SuggestedUsersCarousel />
@@ -2165,11 +2160,11 @@ export default function ReelsFeedPage() {
             <div>
               <div className="flex items-center justify-between mb-2 px-1">
                 <h3 className="text-sm font-semibold text-foreground">Contacts</h3>
-                <button onClick={() => navigate("/chat/contacts")} className="text-[11px] text-primary hover:underline">See all</button>
+                <button type="button" onClick={() => navigate("/chat/contacts")} className="text-[11px] text-primary hover:underline">See all</button>
               </div>
               <div className="space-y-0.5">
                 {sidebarContacts.map((c) => (
-                  <button
+                  <button type="button"
                     key={c.id}
                     onClick={() => navigate(`/user/${c.id}`)}
                     className="w-full flex items-center gap-2.5 px-2 py-2 rounded-xl hover:bg-muted/50 transition-colors"
@@ -2202,7 +2197,7 @@ export default function ReelsFeedPage() {
               </div>
               <div className="space-y-0.5">
                 {trendingTags.map((tag) => (
-                  <button
+                  <button type="button"
                     key={tag}
                     onClick={() => {
                       setSelectedHashtag(selectedHashtag === tag.replace("#", "") ? null : tag.replace("#", ""));
@@ -2228,7 +2223,7 @@ export default function ReelsFeedPage() {
                 <h3 className="text-sm font-semibold text-foreground">ZIVO+</h3>
               </div>
               <p className="text-[11px] text-muted-foreground mb-2.5 leading-relaxed">Unlock exclusive features, locked content, chat tools, and more.</p>
-              <button
+              <button type="button"
                 onClick={() => navigate("/zivo-plus")}
                 className="w-full py-1.5 rounded-lg bg-gradient-to-r from-amber-500 to-primary text-white text-[12px] font-semibold hover:opacity-90 transition-opacity active:scale-95"
               >
@@ -2244,7 +2239,7 @@ export default function ReelsFeedPage() {
               <h3 className="text-sm font-semibold text-foreground">Birthdays</h3>
             </div>
             <p className="text-[12px] text-muted-foreground mb-2">See which friends have birthdays today.</p>
-            <button
+            <button type="button"
               onClick={() => navigate("/friends")}
               className="text-[12px] font-semibold text-primary hover:underline"
             >
@@ -2259,7 +2254,7 @@ export default function ReelsFeedPage() {
               <h3 className="text-sm font-semibold text-foreground">Events</h3>
             </div>
             <p className="text-[12px] text-muted-foreground mb-2">Discover events happening near you.</p>
-            <button
+            <button type="button"
               onClick={() => navigate("/explore")}
               className="text-[12px] font-semibold text-primary hover:underline"
             >
@@ -2586,7 +2581,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
       </AnimatePresence>
 
       {/* Close button - top left, safe-area aware */}
-      <button
+      <button type="button"
         onClick={onClose}
         aria-label="Close"
         data-testid="reel-close-button"
@@ -2605,14 +2600,14 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
         style={{ bottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 1.5rem), 2.5rem)' }}
       >
         {/* Mute */}
-        <button onClick={() => setMuted(!muted)} className="flex flex-col items-center gap-1 min-h-[44px] min-w-[44px] justify-center">
+        <button type="button" onClick={() => setMuted(!muted)} className="flex flex-col items-center gap-1 min-h-[44px] min-w-[44px] justify-center">
           <div className="h-10 w-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
             {muted ? <VolumeX className="h-5 w-5 text-white" /> : <Volume2 className="h-5 w-5 text-white" />}
           </div>
         </button>
 
         {/* Like */}
-        <button onClick={handleLike} className="flex flex-col items-center gap-1 min-h-[44px] min-w-[44px] justify-center">
+        <button type="button" onClick={handleLike} className="flex flex-col items-center gap-1 min-h-[44px] min-w-[44px] justify-center">
           <Heart className={cn("h-7 w-7 drop-shadow-lg transition-all", liked ? "text-red-500 fill-red-500 scale-110" : "text-white")} />
           {!item.hide_like_counts && (
             <span className="text-white text-[11px] font-semibold drop-shadow">
@@ -2622,7 +2617,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
         </button>
 
         {/* Comment */}
-        <button
+        <button type="button"
           onClick={() => {
             if (!currentUserId) { toast.error("Please sign in to comment"); return; }
             setShowComments(true);
@@ -2645,7 +2640,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
 
         {/* Watch Party — video posts only */}
         {item.media_type === "video" && (
-          <button
+          <button type="button"
             onClick={() => {
               navigator.clipboard?.writeText(shareUrl).catch(() => {});
               toast.success("Watch Party link copied — send it to friends");
@@ -2658,7 +2653,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
         )}
 
         {/* Share */}
-        <button
+        <button type="button"
           onClick={async () => {
             const text = item.caption || `Check out this post by ${item.author_name}`;
             try {
@@ -2678,7 +2673,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
         </button>
 
         {item.commerce_link && (
-          <button onClick={handleBuyNow} className="flex flex-col items-center gap-1 min-h-[44px] min-w-[44px] justify-center">
+          <button type="button" onClick={handleBuyNow} className="flex flex-col items-center gap-1 min-h-[44px] min-w-[44px] justify-center">
             <div className="px-2.5 py-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-bold shadow-lg">
               Buy Now
             </div>
@@ -2696,7 +2691,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
 
           return (
             <div className="relative">
-              <button
+              <button type="button"
                 onClick={() => {
                   onClose();
                   if (displaySource === "store" && displayStoreSlug) {
@@ -2718,7 +2713,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
               </button>
               {/* Follow button */}
               {displaySource === "user" && displayAuthorId && displayAuthorId !== currentUserId && (
-                <button
+                <button type="button"
                   onClick={handleReelFollow}
                   disabled={followLoading}
                   className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 h-5 w-5 rounded-full flex items-center justify-center shadow-lg"
@@ -2774,7 +2769,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
           return (
             <>
               <div className="mb-1 flex items-center gap-2">
-                <button
+                <button type="button"
                   onClick={() => {
                     onClose();
                     if (displaySource === "store" && displayStoreSlug) {
@@ -2801,7 +2796,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
                 </button>
                 {/* Follow button next to author */}
                 {displaySource === "user" && displayAuthorId && displayAuthorId !== currentUserId && (
-                  <button
+                  <button type="button"
                     onClick={handleReelFollow}
                     disabled={followLoading}
                     className={cn(
@@ -2959,7 +2954,7 @@ function FeedPollCard() {
         {options.map((opt, i) => {
           const pct = Math.round(((opt.votes + (voted === i ? 1 : 0)) / (total + (voted !== null ? 1 : 0))) * 100);
           return (
-            <button
+            <button type="button"
               key={opt.label}
               onClick={() => setVoted(i)}
               disabled={voted !== null}
@@ -3727,7 +3722,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
               </button>
               {/* Follow button */}
               {!isOwner && item.author_id && currentUserId && (
-                <button
+                <button type="button"
                   onClick={handleFollowToggle}
                   disabled={followLoading}
                   className={cn(
@@ -3738,7 +3733,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                   {followLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : isFollowingAuthor ? "Following" : "Follow"}
                 </button>
               )}
-              <button
+              <button type="button"
                 onClick={(e) => { e.stopPropagation(); setShowPostMenu(true); }}
                 className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center"
               >
@@ -3793,7 +3788,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
               </button>
               {/* Follow button */}
               {sharedAuthorId && !isSharedAuthorOwner && (
-                <button
+                <button type="button"
                   onClick={handleSharedAuthorFollowToggle}
                   disabled={followLoading}
                   className={cn(
@@ -3833,11 +3828,11 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                       className="h-full w-full object-contain cursor-pointer"
                     />
                     {!isPlaying && (
-                      <button onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()} className="absolute inset-0 flex items-center justify-center bg-black/10">
+                      <button type="button" onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()} className="absolute inset-0 flex items-center justify-center bg-black/10">
                         <Play className="h-14 w-14 text-white/80 fill-white/80 drop-shadow-lg" />
                       </button>
                     )}
-                    <button
+                    <button type="button"
                       onClick={(e) => { e.stopPropagation(); setMuted(!muted); }}
                       className="absolute bottom-3 right-3 h-8 w-8 rounded-full bg-black/50 flex items-center justify-center min-h-[44px] min-w-[44px]"
                     >
@@ -3942,7 +3937,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
               </button>
               {/* Follow button */}
               {!isOwner && item.author_id && currentUserId && (
-                <button
+                <button type="button"
                   onClick={handleFollowToggle}
                   disabled={followLoading}
                   className={cn(
@@ -3957,7 +3952,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                   ) : isFollowingAuthor ? "Following" : "Follow"}
                 </button>
               )}
-              <button
+              <button type="button"
                 onClick={(e) => { e.stopPropagation(); setShowPostMenu(true); }}
                 className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center"
               >
@@ -3981,7 +3976,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                     <div className="bg-muted/40 rounded-lg px-3 py-2 border border-border/20">
                       <p className="text-[11px] text-muted-foreground mb-1 font-semibold uppercase tracking-wide">Translated</p>
                       <p className="text-[13px] text-foreground leading-snug">{translatedCaption}</p>
-                      <button
+                      <button type="button"
                         onClick={() => setTranslatedCaption(null)}
                         className="text-[11px] text-primary mt-1 font-semibold"
                       >
@@ -3989,7 +3984,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                       </button>
                     </div>
                   ) : (
-                    <button
+                    <button type="button"
                       onClick={async () => {
                         setIsTranslating(true);
                         try {
@@ -4060,18 +4055,18 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                     className="h-full w-full object-cover cursor-pointer"
                   />
                   {!isPlaying && (
-                    <button onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()} className="absolute inset-0 flex items-center justify-center bg-black/10">
+                    <button type="button" onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()} className="absolute inset-0 flex items-center justify-center bg-black/10">
                       <Play className="h-14 w-14 text-white/80 fill-white/80 drop-shadow-lg" />
                     </button>
                   )}
-                  <button
+                  <button type="button"
                     onClick={(e) => { e.stopPropagation(); setMuted(!muted); }}
                     className="absolute bottom-3 right-3 h-8 w-8 rounded-full bg-black/50 flex items-center justify-center min-h-[44px] min-w-[44px]"
                   >
                     {muted ? <VolumeX className="h-4 w-4 text-white" /> : <Volume2 className="h-4 w-4 text-white" />}
                   </button>
                   {item.commerce_link && (
-                    <button
+                    <button type="button"
                       onClick={(e) => { e.stopPropagation(); handleBuyNow(); }}
                       className="absolute bottom-3 left-3 px-3 py-2 rounded-full bg-primary text-primary-foreground text-xs font-semibold shadow-lg min-h-[44px]"
                     >
@@ -4268,7 +4263,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
             </div>
             <div className="flex items-center gap-2.5">
               {localComments > 0 && (
-                <button onClick={handleComment} className="text-[12px] text-muted-foreground hover:text-foreground hover:underline transition-colors">
+                <button type="button" onClick={handleComment} className="text-[12px] text-muted-foreground hover:text-foreground hover:underline transition-colors">
                   {localComments === 1 ? "1 comment" : `${localComments >= 1000 ? `${(localComments / 1000).toFixed(1)}k` : localComments} comments`}
                 </button>
               )}
@@ -4316,7 +4311,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                 </motion.div>
               )}
             </AnimatePresence>
-            <button
+            <button type="button"
               onClick={() => {
                 if (longPressFired.current) { longPressFired.current = false; return; }
                 handleLike();
@@ -4358,7 +4353,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
             </button>
           </div>
           {commentSetting !== "off" && (
-            <button
+            <button type="button"
               onClick={handleComment}
               aria-label={`Open comments${formatCount(localComments) ? `, ${formatCount(localComments)} comments` : ""}`}
               className="min-h-[44px] min-w-[36px] sm:min-w-[40px] flex items-center justify-center text-foreground gap-1"
@@ -4372,7 +4367,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
             </button>
           )}
           {item.allow_sharing !== false && (
-            <button
+            <button type="button"
               onClick={handleShare}
               aria-label={`Share post${formatCount(item.shares_count) ? `, ${formatCount(item.shares_count)} shares` : ""}`}
               className="min-h-[44px] min-w-[36px] sm:min-w-[40px] flex items-center justify-center text-foreground gap-1"
@@ -4386,7 +4381,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
             </button>
           )}
         </div>
-        <button
+        <button type="button"
           onClick={handleSave}
           aria-label={saved ? "Remove bookmark" : "Save post"}
           aria-pressed={saved}
@@ -4412,7 +4407,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
               )}
             </p>
           </div>
-          <button
+          <button type="button"
             onClick={() => navigate("/admin/marketing/campaigns")}
             className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary text-primary-foreground text-[11px] font-bold shrink-0 active:scale-95 transition-transform"
           >
@@ -4424,7 +4419,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
 
       {item.commerce_link && (
         <div className="px-3 pb-2">
-          <button
+          <button type="button"
             onClick={handleBuyNow}
             className="w-full rounded-xl bg-primary text-primary-foreground py-2.5 text-sm font-semibold"
           >
@@ -4538,7 +4533,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                   <QrCode className="h-5 w-5 text-foreground" />
                   <span className="text-base font-bold text-foreground">Share via QR</span>
                 </div>
-                <button onClick={() => setShowQrModal(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors">
+                <button type="button" onClick={() => setShowQrModal(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors">
                   <XIcon className="h-4 w-4 text-muted-foreground" />
                 </button>
               </div>
@@ -4552,7 +4547,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                   />
                 </div>
                 <p className="text-[12px] text-muted-foreground text-center px-4">Scan with any camera to open this post</p>
-                <button
+                <button type="button"
                   onClick={() => { navigator.clipboard.writeText(shareUrl).then(() => toast.success("Link copied")).catch(() => toast.error("Could not copy")); }}
                   className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-muted hover:bg-muted/80 text-sm font-semibold text-foreground transition-colors active:scale-95"
                 >
@@ -4579,14 +4574,14 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
               relevant rows when viewing one's own post. */}
           {isOwner && (
             <>
-              <button
+              <button type="button"
                 onClick={() => { setShowPostMenu(false); setEditCaptionText(item.caption || ""); setShowEditCaption(true); }}
                 className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
               >
                 <Pencil className="h-5 w-5 text-foreground" />
                 <span className="text-sm font-medium text-foreground">Edit caption</span>
               </button>
-              <button
+              <button type="button"
                 onClick={async () => {
                   setShowPostMenu(false);
                   const realId = item.id.replace(/^u-/, "");
@@ -4599,14 +4594,14 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                 <Pin className="h-5 w-5 text-foreground" />
                 <span className="text-sm font-medium text-foreground">Pin to profile</span>
               </button>
-              <button
+              <button type="button"
                 onClick={() => { setShowPostMenu(false); setShowCommentSettings(true); }}
                 className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
               >
                 <Settings2 className="h-5 w-5 text-foreground" />
                 <span className="text-sm font-medium text-foreground">Comment settings</span>
               </button>
-              <button
+              <button type="button"
                 onClick={async () => {
                   if (!confirm("Delete this post permanently? This cannot be undone.")) return;
                   setShowPostMenu(false);
@@ -4628,28 +4623,28 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
               <hr className="my-1 border-border/40" />
             </>
           )}
-          <button
+          <button type="button"
             onClick={() => { setShowPostMenu(false); setShowReportSheet(true); setReportStep("categories"); setReportCategory(""); }}
             className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
           >
             <Flag className="h-5 w-5 text-destructive" />
             <span className="text-sm font-medium text-destructive">Report</span>
           </button>
-          <button
+          <button type="button"
             onClick={() => { setNotificationsOn(!notificationsOn); setShowPostMenu(false); toast.success(notificationsOn ? "Notifications turned off" : "Notifications turned on for this post"); }}
             className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
           >
             {notificationsOn ? <BellOff className="h-5 w-5 text-foreground" /> : <Bell className="h-5 w-5 text-foreground" />}
             <span className="text-sm font-medium text-foreground">{notificationsOn ? "Turn off notifications" : "Turn on notifications"}</span>
           </button>
-          <button
+          <button type="button"
             onClick={() => { setShowPostMenu(false); handleCopyLink(); }}
             className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
           >
             <Link2 className="h-5 w-5 text-foreground" />
             <span className="text-sm font-medium text-foreground">Copy link</span>
           </button>
-          <button
+          <button type="button"
             onClick={() => {
               setShowPostMenu(false);
               hiddenPosts.hide(item.id);
@@ -4664,7 +4659,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
           {/* Sponsored-only: ad explanation */}
           {item.source === "store" && (
             <>
-              <button
+              <button type="button"
                 onClick={() => {
                   setShowPostMenu(false);
                   toast.info("This is a sponsored post from a business on ZIVO. Ads are shown based on your activity and location.");
@@ -4674,7 +4669,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                 <HelpCircle className="h-5 w-5 text-foreground" />
                 <span className="text-sm font-medium text-foreground">Why am I seeing this?</span>
               </button>
-              <button
+              <button type="button"
                 onClick={() => { setShowPostMenu(false); toast.success("Ad hidden — you'll see fewer ads from this business"); }}
                 className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
               >
@@ -4684,7 +4679,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
             </>
           )}
           {!isOwner && item.author_name && (
-            <button
+            <button type="button"
               onClick={() => { setShowPostMenu(false); toast.success(`${item.author_name} snoozed for 30 days`); }}
               className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
             >
@@ -4692,7 +4687,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
               <span className="text-sm font-medium text-foreground">Snooze {item.author_name} for 30 days</span>
             </button>
           )}
-          <button
+          <button type="button"
             onClick={() => { setShowPostMenu(false); setShowShareSheet(true); }}
             className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
           >
@@ -4702,7 +4697,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
 
           {/* Save to device */}
           {item.media_urls.length > 0 && (
-            <button
+            <button type="button"
               onClick={async () => {
                 setShowPostMenu(false);
                 const url = item.media_urls[0];
@@ -4728,7 +4723,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
           )}
 
           {/* Embed post */}
-          <button
+          <button type="button"
             onClick={() => {
               setShowPostMenu(false);
               const embedCode = `<iframe src="https://hizivo.com/embed/${item.id.replace(/^u-/, "")}" width="400" height="500" frameborder="0" allowfullscreen></iframe>`;
@@ -4746,7 +4741,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
           </button>
 
           {/* QR code share */}
-          <button
+          <button type="button"
             onClick={() => { setShowPostMenu(false); setShowQrModal(true); }}
             className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
           >
@@ -4756,7 +4751,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
 
           {/* Tip creator */}
           {!isOwner && item.author_id && (
-            <button
+            <button type="button"
               onClick={() => { setShowPostMenu(false); setTipTarget({ id: item.author_id!, name: item.author_name }); }}
               className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px]"
             >
@@ -4808,7 +4803,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                 { icon: ShieldAlert, label: "Intellectual property", desc: "Using content without permission" },
                 { icon: HelpCircle, label: "Something else", desc: "Other issue not listed above" },
               ].map((r) => (
-                <button
+                <button type="button"
                   key={r.label}
                   onClick={() => { setReportCategory(r.label); setReportStep("sub"); }}
                   className="flex items-center gap-4 w-full px-4 py-3.5 hover:bg-muted/50 rounded-xl min-h-[48px] text-left"
@@ -4841,7 +4836,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                 };
                 return (subMap[reportCategory] || ["Other"]).map((s) => ({ label: s }));
               })().map((sub) => (
-                <button
+                <button type="button"
                   key={sub.label}
                   onClick={async () => {
                     // Step to the success screen first so the UI feels instant.
@@ -4883,7 +4878,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
             <p className="text-sm text-muted-foreground text-center max-w-[260px]">
               We'll review this post and take action if it violates our community guidelines.
             </p>
-            <button
+            <button type="button"
               onClick={() => setShowReportSheet(false)}
               className="mt-4 px-8 py-3 rounded-full bg-primary text-primary-foreground font-semibold text-sm min-h-[48px]"
             >
@@ -4908,7 +4903,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
             { value: "friends" as const, icon: UserCheck, label: "Friends only", desc: "Only your friends can comment" },
             { value: "off" as const, icon: MessageSquareOff, label: "Turn off comments", desc: "No one can comment on this post" },
           ] as const).map((opt) => (
-            <button
+            <button type="button"
               key={opt.value}
               onClick={() => {
                 setCommentSetting(opt.value);
@@ -4956,13 +4951,13 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
           />
           <p className="text-[10px] text-muted-foreground mt-1 mb-3">{editCaptionText.length}/2,200</p>
           <div className="flex gap-2">
-            <button
+            <button type="button"
               onClick={() => setShowEditCaption(false)}
               className="flex-1 py-2.5 rounded-xl bg-muted text-foreground text-sm font-medium"
             >
               Cancel
             </button>
-            <button
+            <button type="button"
               onClick={handleEditPost}
               disabled={editSaving}
               className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50"

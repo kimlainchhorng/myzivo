@@ -123,7 +123,7 @@ export default function CallLobby({
           >
             Copy invite
           </button>
-          <button
+          <button type="button"
             onClick={onCancel}
             className="rounded-full bg-white/10 p-2 hover:bg-white/20"
             aria-label="Cancel"
@@ -157,7 +157,7 @@ export default function CallLobby({
 
         {/* In-preview controls */}
         <div className="absolute inset-x-0 bottom-3 flex items-center justify-center gap-3">
-          <button
+          <button type="button"
             onClick={() => setMicOn((v) => !v)}
             className={`grid h-12 w-12 place-items-center rounded-full ${
               micOn ? "bg-white/15 hover:bg-white/25" : "bg-rose-500 hover:bg-rose-600"
@@ -167,7 +167,7 @@ export default function CallLobby({
             {micOn ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
           </button>
           {callType === "video" && (
-            <button
+            <button type="button"
               onClick={() => setCamOn((v) => !v)}
               className={`grid h-12 w-12 place-items-center rounded-full ${
                 camOn ? "bg-white/15 hover:bg-white/25" : "bg-rose-500 hover:bg-rose-600"

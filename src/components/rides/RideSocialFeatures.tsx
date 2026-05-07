@@ -171,14 +171,14 @@ export default function RideSocialFeatures() {
                     <SafeCaption text={review.text} />
                   </p>
                   <div className="flex items-center gap-3">
-                    <button
+                    <button type="button"
                       className={`flex items-center gap-1 text-xs transition-colors ${likedReviews.includes(review.id) ? "text-primary" : "text-muted-foreground"}`}
                       onClick={() => toggleLike(review.id)}
                     >
                       <ThumbsUp className={`w-3 h-3 ${likedReviews.includes(review.id) ? "fill-primary" : ""}`} />
                       {review.likes + (likedReviews.includes(review.id) ? 1 : 0)}
                     </button>
-                    <button className="flex items-center gap-1 text-xs text-muted-foreground">
+                    <button type="button" className="flex items-center gap-1 text-xs text-muted-foreground">
                       <MessageCircle className="w-3 h-3" /> Reply
                     </button>
                   </div>
@@ -196,7 +196,7 @@ export default function RideSocialFeatures() {
                 className="rounded-xl border border-primary/20 bg-card p-4 space-y-3">
                 <div className="flex gap-1">
                   {[1,2,3,4,5].map(n => (
-                    <button key={n} onClick={() => setReviewRating(n)}>
+                    <button type="button" key={n} onClick={() => setReviewRating(n)}>
                       <Star className={`w-5 h-5 ${n <= reviewRating ? "fill-amber-400 text-amber-400" : "text-muted-foreground"}`} />
                     </button>
                   ))}

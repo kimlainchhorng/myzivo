@@ -104,12 +104,12 @@ export default function EventsPage() {
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-30 bg-background/80 backdrop-blur-xl border-b border-border/30">
         <div className="flex items-center gap-3 px-4 py-3">
-          <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-muted/50">
+          <button type="button" onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-muted/50">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className="text-lg font-bold flex-1">Events</h1>
           {user && (
-            <button onClick={() => setShowCreate(true)} className="p-2 rounded-full bg-primary text-primary-foreground">
+            <button type="button" onClick={() => setShowCreate(true)} className="p-2 rounded-full bg-primary text-primary-foreground">
               <Plus className="h-4 w-4" />
             </button>
           )}
@@ -131,7 +131,7 @@ export default function EventsPage() {
         {/* Categories */}
         <div className="flex gap-2 px-4 pb-3 overflow-x-auto scrollbar-none">
           {CATEGORIES.map((cat) => (
-            <button
+            <button type="button"
               key={cat}
               onClick={() => setSelectedCategory(cat)}
               className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
@@ -220,7 +220,7 @@ export default function EventsPage() {
                   </div>
 
                   {user && !past && (
-                    <button
+                    <button type="button"
                       onClick={() => rsvpMutation.mutate(event.id)}
                       disabled={rsvpMutation.isPending}
                       className={`w-full py-2.5 rounded-xl text-sm font-semibold transition-all ${
@@ -292,7 +292,7 @@ export default function EventsPage() {
                     <option key={c} value={c}>{c}</option>
                   ))}
                 </select>
-                <button
+                <button type="button"
                   onClick={() => createMutation.mutate()}
                   disabled={!newEvent.title || !newEvent.start_time || createMutation.isPending}
                   className="w-full py-3.5 rounded-2xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50"

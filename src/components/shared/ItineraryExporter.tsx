@@ -57,7 +57,7 @@ const ItineraryExporter = ({ className, tripName = "Paris Adventure" }: Itinerar
           const isExporting = exporting === option.id;
           
           return (
-            <button
+            <button type="button"
               key={option.id}
               onClick={() => handleExport(option.id)}
               disabled={isExporting}

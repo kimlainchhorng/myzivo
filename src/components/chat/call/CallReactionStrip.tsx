@@ -17,7 +17,7 @@ export default function CallReactionStrip({ onReaction }: Props) {
     >
       <div className="pointer-events-auto flex items-center gap-1 rounded-full bg-black/60 px-2 py-1.5 backdrop-blur-xl ring-1 ring-white/10 shadow-lg">
         {QUICK_REACTIONS.map((emo) => (
-          <button
+          <button type="button"
             key={emo}
             type="button"
             aria-label={`Send ${emo} reaction`}

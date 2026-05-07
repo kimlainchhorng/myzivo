@@ -211,7 +211,7 @@ export default function LinkHubPage() {
         <h3 className="text-sm font-semibold text-muted-foreground mb-2 flex items-center gap-1"><Palette className="h-4 w-4" /> Theme</h3>
         <div className="flex gap-2">
           {THEMES.map((t) => (
-            <button key={t.id} onClick={() => setSelectedTheme(t.id)}
+            <button type="button" key={t.id} onClick={() => setSelectedTheme(t.id)}
               className={`px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${selectedTheme === t.id ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"}`}>
               {t.label}
             </button>

@@ -139,7 +139,7 @@ export default function RideDriverComm() {
                     {msg.sender === "user" && msg.read && <CheckCheck className="w-3 h-3" />}
                   </div>
                   {autoTranslate && msg.sender === "driver" && (
-                    <button
+                    <button type="button"
                       className="flex items-center gap-1 mt-1 text-[10px] text-primary underline"
                       onClick={() => {
                         const key = Object.keys(TRANSLATION_MAP).find((k) => msg.text.includes(k));
@@ -203,7 +203,7 @@ export default function RideDriverComm() {
         </CardHeader>
         <CardContent className="space-y-2">
           {instructions.map((instr, i) => (
-            <button
+            <button type="button"
               key={i}
               className={`w-full flex items-center gap-3 p-3 rounded-xl border text-sm text-left transition-colors ${
                 instr.active ? "bg-primary/10 border-primary/30 text-foreground" : "bg-muted/20 border-border/50 text-muted-foreground"

@@ -104,7 +104,7 @@ export default function WhiteboardPage() {
         {showColors && (
           <div className="flex gap-2 flex-wrap pb-2">
             {COLORS.map((c) => (
-              <button key={c} onClick={() => { setColor(c); setShowColors(false); }}
+              <button type="button" key={c} onClick={() => { setColor(c); setShowColors(false); }}
                 className={`h-7 w-7 rounded-full border-2 ${color === c ? "border-primary scale-110" : "border-muted"}`}
                 style={{ backgroundColor: c }} />
             ))}
@@ -124,7 +124,7 @@ export default function WhiteboardPage() {
           </div>
           <div className="flex gap-1">
             {SIZES.map((s) => (
-              <button key={s} onClick={() => setSize(s)}
+              <button type="button" key={s} onClick={() => setSize(s)}
                 className={`h-8 w-8 rounded-lg flex items-center justify-center ${size === s ? "bg-primary text-primary-foreground" : "bg-muted"}`}>
                 <div className="rounded-full bg-current" style={{ width: s + 2, height: s + 2 }} />
               </button>

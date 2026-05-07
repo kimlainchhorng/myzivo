@@ -1,4 +1,4 @@
-import { useState, useRef, useCallback, useEffect, Fragment } from "react";
+import { useState, useRef, useCallback, useEffect, useMemo, Fragment } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { createPortal } from "react-dom";
 import { useNavigate, Link, useLocation } from "react-router-dom";
@@ -527,6 +527,37 @@ const Profile = () => {
 
   const currentLang = LANGS.find(l => l.code === currentLanguage) || LANGS[0];
 
+  const { data: recentApps } = useQuery({
+    queryKey: ["profile-recent-apps", user?.id],
+    enabled: !!user?.id,
+    staleTime: 60_000,
+    queryFn: async () => {
+      if (!user?.id) return [];
+      const { data } = await (supabase as any)
+        .from("career_applications")
+        .select("id, status, created_at, career_jobs!inner(title)")
+        .eq("applicant_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(5);
+      return (data ?? []) as Array<{ id: string; status: string; created_at: string; career_jobs: { title: string } | null }>;
+    },
+  });
+
+  const recentActivity = useMemo(() => {
+    const items: Array<{ label: string; date: string; iconType: "car" | "briefcase"; href: string }> = [];
+    for (const b of (bookings || []).slice(0, 3)) {
+      if (!(b as any).created_at) continue;
+      items.push({ label: "Trip", date: (b as any).created_at, iconType: "car", href: "/trips" });
+    }
+    for (const a of (recentApps || []).slice(0, 3)) {
+      if (!a.created_at) continue;
+      items.push({ label: `Applied: ${a.career_jobs?.title || "Job"}`, date: a.created_at, iconType: "briefcase", href: "/personal/my-applications" });
+    }
+    return items
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 5);
+  }, [bookings, recentApps]);
+
   const handlePullRefresh = useCallback(async () => {
     await queryClient.invalidateQueries({ queryKey: ["user-profile"] });
   }, [queryClient]);
@@ -610,6 +641,24 @@ const Profile = () => {
             </span>
             {profile?.is_verified && <VerifiedBadge size={14} />}
           </div>
+          <motion.button
+            type="button"
+            onClick={() => {
+              const url = `https://hizivo.com/u/${claimedUsername || user?.id || ""}`;
+              navigator.clipboard.writeText(url)
+                .then(() => toast.success("Profile link copied!"))
+                .catch(() => toast.error("Couldn't copy link"));
+            }}
+            aria-label="Copy profile link"
+            whileTap={{ scale: 0.86 }}
+            transition={{ type: "spring", stiffness: 400, damping: 22 }}
+            className={cn(
+              "h-9 w-9 flex items-center justify-center rounded-full transition focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:outline-none",
+              overCover ? "hover:bg-white/15 text-white drop-shadow-md" : "hover:bg-muted/60 text-foreground"
+            )}
+          >
+            <Share2 className="h-5 w-5" />
+          </motion.button>
           <div className="relative">
           <motion.button
             ref={notifBellRef}
@@ -676,7 +725,7 @@ const Profile = () => {
                     )}
                   </div>
                   {notifUnreadCount > 0 && (
-                    <button
+                    <button type="button"
                       onClick={handleMarkAllRead}
                       className="rounded-full px-2 py-1 text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
                     >
@@ -687,7 +736,7 @@ const Profile = () => {
                 {/* Filter chips */}
                 <div className="flex items-center gap-1.5 px-3 pt-2.5 pb-1">
                   {(["all", "unread"] as const).map((f) => (
-                    <button
+                    <button type="button"
                       key={f}
                       onClick={() => setNotifFilter(f)}
                       className={cn(
@@ -705,7 +754,7 @@ const Profile = () => {
                 <div className="max-h-[60vh] overflow-y-auto overscroll-contain px-1.5 py-1.5">
                   {/* Friend requests pinned */}
                   {socialCount > 0 && (
-                    <button
+                    <button type="button"
                       onClick={() => { selectionChanged(); setShowNotifPanel(false); navigate("/notifications?tab=requests"); }}
                       className="flex w-full items-center gap-3 rounded-xl border border-primary/15 bg-primary/5 p-2.5 text-left transition-colors hover:bg-primary/10"
                     >
@@ -822,7 +871,7 @@ const Profile = () => {
                 </div>
                 {/* Footer */}
                 <div className="border-t border-border/40 px-2 py-1.5">
-                  <button
+                  <button type="button"
                     onClick={() => { setShowNotifPanel(false); navigate("/notifications"); }}
                     className="w-full rounded-xl py-2 text-center text-xs font-semibold text-primary transition-colors hover:bg-primary/10"
                   >
@@ -1245,7 +1294,7 @@ const Profile = () => {
                           { label: "Mode", icon: Repeat, onClick: () => { selectionChanged(); setModeOpen(true); } },
                           { label: "Monetization", icon: DollarSign, onClick: () => { selectionChanged(); navigate("/monetization"); } },
                         ].map((a) => (
-                          <button
+                          <button type="button"
                             key={a.label}
                             type="button"
                             onClick={a.onClick}
@@ -1339,6 +1388,44 @@ const Profile = () => {
                 </ParallaxSection>
               )}
 
+              {/* ── Recent Activity ── */}
+              {user && recentActivity.length > 0 && (
+                <ParallaxSection index={1.3}>
+                  <div className="mx-3 lg:mx-0">
+                    <div className="flex items-center justify-between mb-2 px-1">
+                      <h3 className="text-sm font-bold text-foreground">Recent Activity</h3>
+                      <button type="button" className="text-xs font-medium text-primary"
+                        onClick={() => { selectionChanged(); navigate("/trips"); }}>
+                        See all
+                      </button>
+                    </div>
+                    <div className="rounded-2xl border border-border/40 bg-card overflow-hidden">
+                      {recentActivity.map((item, i) => (
+                        <button
+                          type="button"
+                          key={i}
+                          onClick={() => { selectionChanged(); navigate(item.href); }}
+                          className="w-full flex items-center gap-3 px-4 py-3 text-left border-b border-border/20 last:border-0 hover:bg-muted/30 active:bg-muted/40 transition-colors"
+                        >
+                          <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center shrink-0">
+                            {item.iconType === "car"
+                              ? <Car className="w-4 h-4 text-muted-foreground" />
+                              : <Briefcase className="w-4 h-4 text-muted-foreground" />}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-foreground truncate">{item.label}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {(() => { try { return formatDistanceToNowStrict(new Date(item.date), { addSuffix: true }); } catch { return ""; } })()}
+                            </p>
+                          </div>
+                          <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </ParallaxSection>
+              )}
+
               {/* Profile Completeness & Referral cards moved to /more page */}
 
               {/* ── Phone Required Card ── */}
@@ -1424,7 +1511,7 @@ const Profile = () => {
               const active = activeMode === m.id;
               const Icon = m.icon;
               return (
-                <button
+                <button type="button"
                   key={m.id}
                   type="button"
                   onClick={() => {
@@ -1478,7 +1565,7 @@ const Profile = () => {
                 ].map((a) => {
                   const Icon = a.icon;
                   return (
-                    <button
+                    <button type="button"
                       key={a.label}
                       type="button"
                       onClick={() => {
@@ -1520,7 +1607,7 @@ const Profile = () => {
                 ].map((a) => {
                   const Icon = a.icon;
                   return (
-                    <button
+                    <button type="button"
                       key={a.label}
                       type="button"
                       onClick={() => { setModeOpen(false); navigate(a.route); }}
@@ -1551,7 +1638,7 @@ const Profile = () => {
                 ].map((a) => {
                   const Icon = a.icon;
                   return (
-                    <button
+                    <button type="button"
                       key={a.label}
                       type="button"
                       onClick={() => { setModeOpen(false); navigate(a.route); }}

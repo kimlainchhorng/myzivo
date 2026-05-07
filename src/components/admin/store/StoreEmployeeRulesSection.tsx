@@ -164,7 +164,7 @@ export default function StoreEmployeeRulesSection({ storeId }: Props) {
           { id: "access" as const, label: "Access Levels", icon: Lock },
           { id: "policies" as const, label: "Policies", icon: FileText },
         ].map((t) => (
-          <button
+          <button type="button"
             key={t.id}
             onClick={() => setTab(t.id)}
             className={cn(
@@ -215,7 +215,7 @@ export default function StoreEmployeeRulesSection({ storeId }: Props) {
             <>
               <div className="flex items-center gap-2 flex-wrap">
                 {["All", ...categories].map((c) => (
-                  <button
+                  <button type="button"
                     key={c}
                     onClick={() => setCategoryFilter(c)}
                     className={cn(
@@ -355,7 +355,7 @@ export default function StoreEmployeeRulesSection({ storeId }: Props) {
               <Label>Severity</Label>
               <div className="flex gap-2 flex-wrap">
                 {(["low", "medium", "high", "critical"] as const).map((s) => (
-                  <button
+                  <button type="button"
                     key={s}
                     onClick={() => setForm((p) => ({ ...p, severity: s }))}
                     className={cn(

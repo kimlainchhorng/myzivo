@@ -120,7 +120,7 @@ export default function AccessibilityHub() {
 
         {/* Category filters */}
         <div className="flex gap-1.5">
-          <button
+          <button type="button"
             onClick={() => setActiveCategory(null)}
             className={cn(
               "px-3 py-1.5 rounded-full text-[10px] font-bold transition-all",
@@ -132,7 +132,7 @@ export default function AccessibilityHub() {
           {categories.map((cat) => {
             const Icon = cat.icon;
             return (
-              <button
+              <button type="button"
                 key={cat.id}
                 onClick={() => setActiveCategory(activeCategory === cat.id ? null : cat.id)}
                 className={cn(

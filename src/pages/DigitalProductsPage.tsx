@@ -111,7 +111,7 @@ export default function DigitalProductsPage() {
 
       <div className="sticky top-0 safe-area-top z-30 bg-background/80 backdrop-blur-xl border-b border-border/30 zivo-ribbon">
         <div className="flex items-center gap-3 px-4 py-3">
-          <button onClick={() => navigate("/more")} className="p-2 -ml-2 rounded-full hover:bg-muted/50 touch-manipulation">
+          <button type="button" onClick={() => navigate("/more")} className="p-2 -ml-2 rounded-full hover:bg-muted/50 touch-manipulation">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className="text-lg font-extrabold flex-1 tracking-tight">Digital Products</h1>
@@ -142,7 +142,7 @@ export default function DigitalProductsPage() {
         {/* Tabs */}
         <div className="flex gap-2 overflow-x-auto scrollbar-hide">
           {tabs.map((tab, i) => (
-            <button
+            <button type="button"
               key={tab}
               onClick={() => setActiveTab(i)}
               className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors touch-manipulation ${
@@ -163,7 +163,7 @@ export default function DigitalProductsPage() {
             <Package className="w-12 h-12 text-muted-foreground/20 mx-auto mb-3" />
             <p className="font-bold text-sm mb-1">No products yet</p>
             <p className="text-xs text-muted-foreground mb-4">Start selling by creating your first digital product.</p>
-            <button
+            <button type="button"
               onClick={() => setActiveTab(1)}
               className="zivo-btn-signature px-5 py-2.5 text-xs inline-flex items-center gap-1.5 touch-manipulation"
             >
@@ -205,7 +205,7 @@ export default function DigitalProductsPage() {
               ) : (
                 <motion.div key="create-form" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }} className="space-y-4">
                   <div className="flex items-center gap-3">
-                    <button onClick={() => setSelectedType(null)} className="p-2 rounded-full hover:bg-muted/50 touch-manipulation">
+                    <button type="button" onClick={() => setSelectedType(null)} className="p-2 rounded-full hover:bg-muted/50 touch-manipulation">
                       <ArrowLeft className="w-4 h-4" />
                     </button>
                     <div className="flex items-center gap-2 flex-1">

@@ -67,7 +67,7 @@ export default function EventRSVPCard({ event, myStatus, onRSVP }: Props) {
         </div>
         <div className="mt-3 flex gap-1.5">
           {(["going","maybe","declined"] as const).map((s) => (
-            <button
+            <button type="button"
               key={s}
               onClick={() => void rsvp(s)}
               disabled={busy}

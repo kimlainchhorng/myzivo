@@ -233,7 +233,7 @@ export default function LodgingInventorySection({ storeId }: { storeId: string }
               ))}
             </SelectContent>
           </Select>
-          <button
+          <button type="button"
             onClick={() => setFilterLow(v => !v)}
             className={`rounded-full border px-2.5 py-1 text-[11px] font-medium ${filterLow ? "border-amber-500 bg-amber-500/10 text-amber-700" : "border-border bg-card text-muted-foreground"}`}>
             Low stock only

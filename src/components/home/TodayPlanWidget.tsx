@@ -186,7 +186,7 @@ export default function TodayPlanWidget() {
             const m = META[e.kind];
             const Icon = m.icon;
             return (
-              <button
+              <button type="button"
                 key={e.id}
                 onClick={() => navigate(e.href)}
                 className="w-full flex items-center gap-3 rounded-xl px-2 py-2 hover:bg-muted/40 transition-colors text-left touch-manipulation"

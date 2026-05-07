@@ -111,7 +111,7 @@ export default function LodgingChannelManagerSection({ storeId }: { storeId: str
             )},
             { key: "events", label: "Events", className: "w-20", render: (r) => String(r.events_imported || 0) },
             { key: "export", label: "Export URL", render: (r) => (
-              <button
+              <button type="button"
                 className="flex items-center gap-1.5 truncate text-xs text-primary hover:underline"
                 onClick={() => {
                   navigator.clipboard.writeText(`${exportBase}${r.ical_export_token}`);

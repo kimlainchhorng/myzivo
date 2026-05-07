@@ -268,7 +268,7 @@ export default function PublicTripSharePage() {
         </motion.div>
 
         {tripId && (
-          <button
+          <button type="button"
             onClick={() => {
               if (watchlist.has("trip", tripId))
                 watchlist.remove("trip", tripId);

@@ -72,7 +72,7 @@ export default function RideRewardsGamification() {
         {tabs.map((tab) => {
           const Icon = tab.icon;
           return (
-            <button
+            <button type="button"
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(

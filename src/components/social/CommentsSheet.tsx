@@ -122,7 +122,7 @@ export default function CommentsSheet({
         {comments.length >= 2 && (
           <div className={cn("shrink-0 flex gap-1 px-4 pt-2 pb-1 border-b", border)}>
             {(["recent", "top"] as const).map((s) => (
-              <button
+              <button type="button"
                 key={s}
                 onClick={() => setSort(s)}
                 className={cn(
@@ -183,7 +183,7 @@ export default function CommentsSheet({
               <span className={cn("text-xs", mutedText)}>
                 Replying to <span className="font-semibold">{replyTo.name}</span>
               </span>
-              <button onClick={() => setReplyTo(null)} aria-label="Cancel reply">
+              <button type="button" onClick={() => setReplyTo(null)} aria-label="Cancel reply">
                 <X className="h-3.5 w-3.5" />
               </button>
             </div>
@@ -191,7 +191,7 @@ export default function CommentsSheet({
 
           <div className={cn("flex items-center gap-1.5 px-3 py-1.5 border-t overflow-x-auto scrollbar-none", border)}>
             {["😂", "❤️", "🔥", "👏", "😮", "😢"].map((e) => (
-              <button
+              <button type="button"
                 key={e}
                 type="button"
                 onClick={() => {
@@ -220,7 +220,7 @@ export default function CommentsSheet({
               className={cn("flex-1 rounded-full px-4 py-2.5 text-[13px] outline-none", inputBg)}
             />
             {text.trim() && (
-              <button
+              <button type="button"
                 onClick={handleSubmit}
                 disabled={submitting}
                 className="h-9 w-9 rounded-full bg-primary flex items-center justify-center shrink-0"
@@ -344,14 +344,14 @@ function CommentItem({
         {!editing && (
           <div className="flex flex-wrap items-center gap-3 mt-1">
             <span className={cn("text-[11px]", mutedText)}>{timeAgo}</span>
-            <button
+            <button type="button"
               onClick={() => onReply(comment.id, comment.author_name)}
               className={cn("text-[11px] font-semibold", mutedText)}
             >
               Reply
             </button>
             {/* Reaction picker toggle */}
-            <button
+            <button type="button"
               onClick={() => setShowReactionsFor(showReactionsFor === comment.id ? null : comment.id)}
               className={cn("text-[11px]", mutedText)}
               aria-label="Add reaction"
@@ -359,7 +359,7 @@ function CommentItem({
               😊
             </button>
             {isOwn && onEdit && (
-              <button
+              <button type="button"
                 onClick={() => { haptic("selection"); setEditText(comment.content); setEditing(true); }}
                 className={cn("text-[11px] font-semibold flex items-center gap-0.5", mutedText)}
                 aria-label="Edit comment"
@@ -368,7 +368,7 @@ function CommentItem({
               </button>
             )}
             {isPostAuthor && onTogglePin && !isReply && (
-              <button
+              <button type="button"
                 onClick={async () => {
                   haptic(comment.is_pinned ? "light" : "medium");
                   const next = await onTogglePin(comment.id);
@@ -384,7 +384,7 @@ function CommentItem({
               </button>
             )}
             {isOwn && (
-              <button
+              <button type="button"
                 onClick={() => { haptic("medium"); onDelete(comment.id); toast.success("Comment deleted"); }}
                 aria-label="Delete comment"
               >
@@ -398,7 +398,7 @@ function CommentItem({
         {comment.reactions && comment.reactions.length > 0 && (
           <div className="flex flex-wrap gap-1 mt-1.5">
             {comment.reactions.map((r) => (
-              <button
+              <button type="button"
                 key={r.emoji}
                 onClick={() => onToggleReaction(comment.id, r.emoji)}
                 className={cn(
@@ -427,7 +427,7 @@ function CommentItem({
               )}
             >
               {REACTION_EMOJIS.map((emoji) => (
-                <button
+                <button type="button"
                   key={emoji}
                   onClick={() => { onToggleReaction(comment.id, emoji); setShowReactionsFor(null); }}
                   className="h-8 w-8 flex items-center justify-center rounded-full hover:bg-primary/10 transition-all text-base hover:scale-125"
@@ -442,7 +442,7 @@ function CommentItem({
         {/* Replies */}
         {!isReply && comment.replies && comment.replies.length > 0 && (
           <div className="mt-2">
-            <button
+            <button type="button"
               onClick={() => setShowReplies(!showReplies)}
               className={cn("flex items-center gap-1 text-[11px] font-semibold", mutedText)}
             >

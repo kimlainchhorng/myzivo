@@ -408,7 +408,7 @@ export default function StoresListPage() {
           selected ? "bg-rose-50 border-rose-300" : "bg-card border-border/40"
         }`}
       >
-        <button
+        <button type="button"
           onClick={() => { if (inManage) toggleSelected(s.id); else setDrawerStore(s); }}
           className="w-full p-3.5 flex items-center gap-3 text-left"
         >
@@ -469,7 +469,7 @@ export default function StoresListPage() {
             </div>
           ) : (
             <div className="flex flex-col gap-1.5 shrink-0">
-              <button
+              <button type="button"
                 onClick={(e) => { e.stopPropagation(); handleToggleFavorite(s); }}
                 className={`w-9 h-9 rounded-full inline-flex items-center justify-center transition ${
                   fav ? "bg-rose-50 text-rose-500" : "bg-muted/40 text-muted-foreground hover:bg-muted"
@@ -478,7 +478,7 @@ export default function StoresListPage() {
               >
                 <Heart className={`w-4 h-4 ${fav ? "fill-current" : ""}`} />
               </button>
-              <button
+              <button type="button"
                 onClick={(e) => { e.stopPropagation(); navigate(`/store-map?focus=${s.id}`); }}
                 className="w-9 h-9 rounded-full inline-flex items-center justify-center bg-muted/40 text-muted-foreground hover:bg-muted transition"
                 aria-label="Show on map"
@@ -491,14 +491,14 @@ export default function StoresListPage() {
         </button>
         {!inManage && (
           <div className="flex border-t border-border/30">
-            <button
+            <button type="button"
               onClick={(e) => { e.stopPropagation(); handleRide(s); }}
               className="flex-1 h-10 inline-flex items-center justify-center gap-1.5 text-[12px] font-semibold text-primary hover:bg-primary/5 transition"
             >
               <Car className="w-3.5 h-3.5" /> Ride
             </button>
             <div className="w-px bg-border/30" />
-            <button
+            <button type="button"
               onClick={(e) => { e.stopPropagation(); shareStore(s, distMi); }}
               className="flex-1 h-10 inline-flex items-center justify-center gap-1.5 text-[12px] font-semibold text-primary hover:bg-primary/5 transition"
             >
@@ -507,7 +507,7 @@ export default function StoresListPage() {
             {s.phone && (
               <>
                 <div className="w-px bg-border/30" />
-                <button
+                <button type="button"
                   onClick={(e) => { e.stopPropagation(); window.open(`tel:${s.phone}`, "_self"); }}
                   className="flex-1 h-10 inline-flex items-center justify-center gap-1.5 text-[12px] font-semibold text-primary hover:bg-primary/5 transition"
                 >
@@ -545,7 +545,7 @@ export default function StoresListPage() {
                 exit={{ opacity: 0, scale: 0.96 }}
                 className="flex items-center gap-2.5 rounded-2xl px-3.5 py-2.5 bg-card border border-border/40 shadow-sm"
               >
-                <button
+                <button type="button"
                   onClick={() => { setSearchOpen(false); setSearchQuery(""); }}
                   className="w-9 h-9 -ml-1 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted transition"
                   aria-label="Close search"
@@ -563,7 +563,7 @@ export default function StoresListPage() {
                   className="flex-1 bg-transparent text-sm outline-none text-foreground placeholder:text-muted-foreground/60"
                 />
                 {searchQuery && (
-                  <button
+                  <button type="button"
                     onClick={() => setSearchQuery("")}
                     className="w-7 h-7 rounded-full flex items-center justify-center bg-muted/60 text-muted-foreground"
                     aria-label="Clear"
@@ -580,7 +580,7 @@ export default function StoresListPage() {
                 exit={{ opacity: 0, scale: 0.96 }}
                 className="flex items-center gap-2"
               >
-                <button
+                <button type="button"
                   onClick={manageMode ? exitManageMode : goBackToMap}
                   className="w-10 h-10 rounded-full flex items-center justify-center bg-card border border-border/40 shadow-sm text-foreground hover:bg-muted transition"
                   aria-label={manageMode ? "Exit manage mode" : "Back to map"}
@@ -603,7 +603,7 @@ export default function StoresListPage() {
                   </p>
                 </div>
                 {!manageMode && favoriteIds.size > 0 && (
-                  <button
+                  <button type="button"
                     onClick={enterManageMode}
                     className="h-10 px-3 inline-flex items-center gap-1.5 rounded-full bg-card border border-border/40 shadow-sm text-foreground text-[12px] font-semibold"
                     aria-label="Manage favorites"
@@ -614,7 +614,7 @@ export default function StoresListPage() {
                 )}
                 {!manageMode && (
                   <>
-                    <button
+                    <button type="button"
                       onClick={() => requestGps()}
                       disabled={recentering}
                       className="h-10 px-3 inline-flex items-center gap-1.5 rounded-full bg-card border border-border/40 shadow-sm text-foreground text-[12px] font-semibold disabled:opacity-60"
@@ -629,7 +629,7 @@ export default function StoresListPage() {
                       <span className="hidden xs:inline">Recenter</span>
                     </button>
                     {/* Sort cycle button: distance → rating → name → open → distance */}
-                    <button
+                    <button type="button"
                       onClick={() => setSortMode((m) => m === "distance" ? "rating" : m === "rating" ? "name" : m === "name" ? "open" : "distance")}
                       className="w-10 h-10 rounded-full flex items-center justify-center bg-card border border-border/40 shadow-sm text-muted-foreground hover:bg-muted transition relative"
                       aria-label="Sort stores"
@@ -640,7 +640,7 @@ export default function StoresListPage() {
                         {sortMode === "distance" ? "↔" : sortMode === "rating" ? "★" : sortMode === "name" ? "A" : "○"}
                       </span>
                     </button>
-                    <button
+                    <button type="button"
                       onClick={() => { setSearchOpen(true); setTimeout(() => searchInputRef.current?.focus(), 80); }}
                       className="w-10 h-10 rounded-full flex items-center justify-center bg-card border border-border/40 shadow-sm text-muted-foreground hover:bg-muted transition"
                       aria-label="Search"
@@ -655,7 +655,7 @@ export default function StoresListPage() {
 
           {/* Pending sync pill */}
           {pendingSyncCount > 0 && !manageMode && (
-            <button
+            <button type="button"
               onClick={handleSyncNow}
               className="mt-2 w-full inline-flex items-center justify-center gap-1.5 text-[11px] font-semibold rounded-full px-3 py-1.5 bg-amber-50 text-amber-800 border border-amber-200"
             >
@@ -757,7 +757,7 @@ export default function StoresListPage() {
               </p>
             </div>
             <div className="flex flex-col gap-1.5 shrink-0">
-              <button
+              <button type="button"
                 onClick={() => requestGps()}
                 disabled={recentering}
                 className="h-8 px-2.5 inline-flex items-center gap-1 rounded-full bg-amber-100 hover:bg-amber-200 text-amber-900 text-[12px] font-semibold disabled:opacity-60"
@@ -765,7 +765,7 @@ export default function StoresListPage() {
                 {recentering ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
                 Try again
               </button>
-              <button
+              <button type="button"
                 onClick={() => setGpsBannerDismissed(true)}
                 className="h-7 px-2.5 inline-flex items-center justify-center rounded-full text-amber-800 text-[11px] font-semibold hover:bg-amber-100"
               >

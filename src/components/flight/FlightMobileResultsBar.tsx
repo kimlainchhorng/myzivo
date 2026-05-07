@@ -85,7 +85,7 @@ export default function FlightMobileResultsBar({
               
               <div className="space-y-2">
                 {sortOptions.map((option) => (
-                  <button
+                  <button type="button"
                     key={option.value}
                     className={cn(
                       "w-full flex items-center justify-between p-4 rounded-2xl border transition-all touch-manipulation active:scale-[0.98] min-h-[56px]",

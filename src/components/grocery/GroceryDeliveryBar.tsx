@@ -283,7 +283,7 @@ export default function GroceryDeliveryBar({ onAddressChange }: GroceryDeliveryB
                         <Check className="h-4 w-4 text-primary" />
                       </motion.div>
                     )}
-                    <button
+                    <button type="button"
                       onClick={(e) => { e.stopPropagation(); removeAddress(addr.id); }}
                       className="opacity-0 group-hover:opacity-100 p-1 rounded-lg hover:bg-destructive/10 transition-all"
                     >
@@ -342,7 +342,7 @@ export default function GroceryDeliveryBar({ onAddressChange }: GroceryDeliveryB
                       {(["Home", "Work", "Other"] as const).map((label) => {
                         const Icon = LABEL_ICONS[label];
                         return (
-                          <button
+                          <button type="button"
                             key={label}
                             onClick={() => setNewLabel(label)}
                             className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[11px] font-semibold transition-all ${
@@ -402,7 +402,7 @@ export default function GroceryDeliveryBar({ onAddressChange }: GroceryDeliveryB
                             className="absolute left-0 right-0 top-full mt-1 z-50 bg-background border border-border/30 rounded-xl shadow-xl overflow-hidden max-h-[200px] overflow-y-auto"
                           >
                             {suggestions.map((s, i) => (
-                              <button
+                              <button type="button"
                                 key={i}
                                 onClick={() => selectSuggestion(s)}
                                 className="w-full flex items-start gap-2.5 px-3 py-2.5 hover:bg-muted/30 transition-colors text-left border-b border-border/10 last:border-0"

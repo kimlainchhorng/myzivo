@@ -320,7 +320,7 @@ export default function DriverShopPage() {
       {/* ── Header ── */}
       <div className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-border/50 safe-area-top">
         <div className="flex items-center gap-3 px-4 py-3">
-          <button onClick={() => navigate("/driver/orders")} className="p-2 rounded-xl hover:bg-muted touch-manipulation active:scale-95">
+          <button type="button" onClick={() => navigate("/driver/orders")} className="p-2 rounded-xl hover:bg-muted touch-manipulation active:scale-95">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="flex-1 min-w-0">
@@ -428,21 +428,21 @@ export default function DriverShopPage() {
                   {/* Action buttons */}
                   {!isActioned ? (
                     <div className="grid grid-cols-3 border-t border-border/30">
-                      <button
+                      <button type="button"
                         onClick={() => markFound(item.productId)}
                         className="flex items-center justify-center gap-1.5 py-3.5 text-xs font-bold text-emerald-600 bg-emerald-500/5 hover:bg-emerald-500/10 touch-manipulation active:scale-95 transition-all"
                       >
                         <CheckCircle className="h-4 w-4" />
                         Found
                       </button>
-                      <button
+                      <button type="button"
                         onClick={() => openReplace(item.productId)}
                         className="flex items-center justify-center gap-1.5 py-3.5 text-xs font-bold text-amber-600 bg-amber-500/5 hover:bg-amber-500/10 border-x border-border/30 touch-manipulation active:scale-95 transition-all"
                       >
                         <RefreshCw className="h-4 w-4" />
                         Replace
                       </button>
-                      <button
+                      <button type="button"
                         onClick={() => markUnavailable(item.productId)}
                         className="flex items-center justify-center gap-1.5 py-3.5 text-xs font-bold text-destructive bg-destructive/5 hover:bg-destructive/10 touch-manipulation active:scale-95 transition-all"
                       >
@@ -452,7 +452,7 @@ export default function DriverShopPage() {
                     </div>
                   ) : (
                     <div className="border-t border-border/30 px-3 py-2 flex justify-end">
-                      <button
+                      <button type="button"
                         onClick={() => resetItem(item.productId)}
                         className="text-[11px] text-muted-foreground hover:text-foreground touch-manipulation"
                       >
@@ -501,7 +501,7 @@ export default function DriverShopPage() {
                 alt="Receipt"
                 className="w-full max-h-64 object-contain rounded-2xl border border-border/50"
               />
-              <button
+              <button type="button"
                 onClick={handleReceiptUpload}
                 className="absolute bottom-3 right-3 px-3 py-1.5 rounded-xl bg-background/90 backdrop-blur text-xs font-medium border border-border/50 touch-manipulation active:scale-95"
               >
@@ -509,7 +509,7 @@ export default function DriverShopPage() {
               </button>
             </div>
           ) : (
-            <button
+            <button type="button"
               onClick={handleReceiptUpload}
               disabled={isUploading}
               className="w-full h-40 rounded-2xl border-2 border-dashed border-border/50 flex flex-col items-center justify-center gap-2 text-muted-foreground hover:border-primary/30 hover:text-primary transition-colors touch-manipulation active:scale-[0.98]"
@@ -640,7 +640,7 @@ export default function DriverShopPage() {
 
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-bold">Replace Item</h3>
-                <button onClick={() => setReplaceTarget(null)} className="p-1.5 rounded-xl hover:bg-muted">
+                <button type="button" onClick={() => setReplaceTarget(null)} className="p-1.5 rounded-xl hover:bg-muted">
                   <X className="h-5 w-5" />
                 </button>
               </div>

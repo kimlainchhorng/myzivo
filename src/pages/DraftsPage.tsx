@@ -70,7 +70,7 @@ export default function DraftsPage() {
         </div>
         <div className="flex gap-1 px-4 pb-2">
           {(["drafts", "scheduled"] as DraftTab[]).map((t) => (
-            <button
+            <button type="button"
               key={t}
               onClick={() => setActiveTab(t)}
               className={cn(
@@ -109,10 +109,10 @@ export default function DraftsPage() {
                   {d.publish_at ? `Scheduled: ${new Date(d.publish_at).toLocaleDateString()}` : `Updated ${formatDistanceToNow(new Date(d.updated_at), { addSuffix: true })}`}
                 </p>
                 <div className="flex items-center gap-2">
-                  <button onClick={() => publishDraft(d)} className="p-2 rounded-full hover:bg-primary/10">
+                  <button type="button" onClick={() => publishDraft(d)} className="p-2 rounded-full hover:bg-primary/10">
                     <Send className="h-4 w-4 text-primary" />
                   </button>
-                  <button onClick={() => deleteDraft(d.id)} className="p-2 rounded-full hover:bg-destructive/10">
+                  <button type="button" onClick={() => deleteDraft(d.id)} className="p-2 rounded-full hover:bg-destructive/10">
                     <Trash2 className="h-4 w-4 text-muted-foreground" />
                   </button>
                 </div>

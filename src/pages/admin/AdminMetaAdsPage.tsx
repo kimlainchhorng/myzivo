@@ -645,7 +645,7 @@ export default function AdminMetaAdsPage() {
                       <p className="text-xs font-semibold text-[#1877F2]">Your Pages — click one to select it:</p>
                       <div className="space-y-1.5">
                         {availablePages.map((page) => (
-                          <button
+                          <button type="button"
                             key={page.id}
                             onClick={() => selectPage(page)}
                             className="w-full flex items-center gap-3 p-2.5 rounded-lg border border-[#1877F2]/20 bg-white/50 hover:bg-[#1877F2]/10 hover:border-[#1877F2]/40 transition-all text-left"
@@ -1195,7 +1195,7 @@ export default function AdminMetaAdsPage() {
                     <Label className="flex items-center gap-1.5"><DollarSign className="h-3.5 w-3.5" /> Daily Budget (USD)</Label>
                     <div className="flex flex-wrap gap-2">
                       {["3", "5", "10", "20", "50"].map((v) => (
-                        <button key={v} onClick={() => setBoostBudget(v)} className={`px-3 py-1.5 rounded-lg text-sm border transition-all font-medium ${boostBudget === v ? "bg-[#1877F2] text-white border-[#1877F2]" : "border-border hover:bg-muted"}`}>${v}</button>
+                        <button type="button" key={v} onClick={() => setBoostBudget(v)} className={`px-3 py-1.5 rounded-lg text-sm border transition-all font-medium ${boostBudget === v ? "bg-[#1877F2] text-white border-[#1877F2]" : "border-border hover:bg-muted"}`}>${v}</button>
                       ))}
                       <Input type="number" min="1" value={boostBudget} onChange={(e) => setBoostBudget(e.target.value)} className="w-24 h-9" placeholder="Custom" />
                     </div>
@@ -1206,7 +1206,7 @@ export default function AdminMetaAdsPage() {
                     <Label>Duration</Label>
                     <div className="flex flex-wrap gap-2">
                       {[["1", "1 day"], ["3", "3 days"], ["7", "7 days"], ["14", "14 days"], ["30", "30 days"]].map(([v, label]) => (
-                        <button key={v} onClick={() => setBoostDays(v)} className={`px-3 py-1.5 rounded-lg text-sm border transition-all font-medium ${boostDays === v ? "bg-[#1877F2] text-white border-[#1877F2]" : "border-border hover:bg-muted"}`}>{label}</button>
+                        <button type="button" key={v} onClick={() => setBoostDays(v)} className={`px-3 py-1.5 rounded-lg text-sm border transition-all font-medium ${boostDays === v ? "bg-[#1877F2] text-white border-[#1877F2]" : "border-border hover:bg-muted"}`}>{label}</button>
                       ))}
                     </div>
                   </div>
@@ -1218,7 +1218,7 @@ export default function AdminMetaAdsPage() {
                       {[["KH", "🇰🇭 Cambodia"], ["TH", "🇹🇭 Thailand"], ["VN", "🇻🇳 Vietnam"], ["SG", "🇸🇬 Singapore"], ["MY", "🇲🇾 Malaysia"]].map(([code, label]) => {
                         const selected = boostCountries.includes(code);
                         return (
-                          <button key={code} onClick={() => setBoostCountries(prev => selected ? prev.filter(c => c !== code) : [...prev, code])}
+                          <button type="button" key={code} onClick={() => setBoostCountries(prev => selected ? prev.filter(c => c !== code) : [...prev, code])}
                             className={`px-2.5 py-1.5 rounded-lg text-xs border transition-all font-medium ${selected ? "bg-[#1877F2] text-white border-[#1877F2]" : "border-border hover:bg-muted"}`}>
                             {label}
                           </button>
@@ -1233,7 +1233,7 @@ export default function AdminMetaAdsPage() {
                     <Label>Objective</Label>
                     <div className="flex gap-2">
                       {[["POST_ENGAGEMENT", "Engagement"], ["REACH", "Reach"]].map(([val, label]) => (
-                        <button key={val} onClick={() => setBoostObjective(val)}
+                        <button type="button" key={val} onClick={() => setBoostObjective(val)}
                           className={`flex-1 py-2 rounded-lg text-sm border transition-all font-medium ${boostObjective === val ? "bg-[#1877F2] text-white border-[#1877F2]" : "border-border hover:bg-muted"}`}>
                           {label}
                         </button>

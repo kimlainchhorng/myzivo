@@ -110,7 +110,7 @@ const FlightReviewsWidget = () => {
                     <label className="text-sm font-medium mb-2 block">Rating</label>
                     <div className="flex gap-1">
                       {Array.from({ length: 5 }, (_, i) => (
-                        <button key={i} onClick={() => setNewRating(i + 1)} aria-label={`Rate ${i + 1} stars`}>
+                        <button type="button" key={i} onClick={() => setNewRating(i + 1)} aria-label={`Rate ${i + 1} stars`}>
                           <Star
                             className={cn(
                               "w-8 h-8 transition-colors",
@@ -180,7 +180,7 @@ const FlightReviewsWidget = () => {
                     </div>
                     {review.comment && <p className="text-sm text-muted-foreground"><SafeCaption text={review.comment} /></p>}
                     <div className="flex items-center gap-4 mt-3">
-                      <button
+                      <button type="button"
                         onClick={() => handleHelpful(review.id)}
                         className={cn(
                           "flex items-center gap-1.5 text-xs transition-colors",

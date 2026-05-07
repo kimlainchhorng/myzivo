@@ -117,7 +117,7 @@ export default function ChatHeaderProfileSheet({
   };
 
   const QuickBtn = ({ icon: Icon, label, onClick, active }: QuickBtnProps) => (
-    <button
+    <button type="button"
       onClick={onClick}
       className="flex-1 flex flex-col items-center gap-1.5 py-3 rounded-xl bg-muted/50 hover:bg-muted active:scale-95 transition-all"
     >
@@ -180,12 +180,12 @@ export default function ChatHeaderProfileSheet({
         </div>
 
         <div className="bg-card/60 rounded-xl mx-3 mt-3 divide-y divide-border/30">
-          <button onClick={() => { onClose(); onClearHistory?.(); }} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/40">
+          <button type="button" onClick={() => { onClose(); onClearHistory?.(); }} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/40">
             <Eraser className="w-4 h-4" />
             <span className="text-sm font-medium">Clear history</span>
           </button>
           <div>
-            <button onClick={() => { setShowReport(v => !v); setReportReason(null); }} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/40">
+            <button type="button" onClick={() => { setShowReport(v => !v); setReportReason(null); }} className="w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-muted/40">
               <Flag className="w-4 h-4" />
               <span className="text-sm font-medium">Report user</span>
             </button>
@@ -195,12 +195,12 @@ export default function ChatHeaderProfileSheet({
                   <p className="text-xs text-muted-foreground mb-2">Select a reason:</p>
                   <div className="flex flex-wrap gap-1.5 mb-3">
                     {REPORT_REASONS.map(r => (
-                      <button key={r} onClick={() => setReportReason(r)} className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${reportReason === r ? "bg-destructive text-destructive-foreground border-destructive" : "bg-muted/40 border-border/30"}`}>
+                      <button type="button" key={r} onClick={() => setReportReason(r)} className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition-all ${reportReason === r ? "bg-destructive text-destructive-foreground border-destructive" : "bg-muted/40 border-border/30"}`}>
                         {r}
                       </button>
                     ))}
                   </div>
-                  <button
+                  <button type="button"
                     disabled={!reportReason}
                     onClick={async () => {
                       if (user?.id) {
@@ -218,7 +218,7 @@ export default function ChatHeaderProfileSheet({
               )}
             </AnimatePresence>
           </div>
-          <button onClick={block} className="w-full flex items-center gap-3 px-4 py-3 text-left text-destructive hover:bg-destructive/10">
+          <button type="button" onClick={block} className="w-full flex items-center gap-3 px-4 py-3 text-left text-destructive hover:bg-destructive/10">
             <ShieldOff className="w-4 h-4" />
             <span className="text-sm font-medium">Block user</span>
           </button>

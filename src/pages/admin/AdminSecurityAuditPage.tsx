@@ -177,7 +177,7 @@ export default function AdminSecurityAuditPage() {
           <CardContent className="space-y-1">
             {stats.types.map(([type, n]) => (
               <div key={type} className="flex items-center justify-between text-sm">
-                <button
+                <button type="button"
                   className="font-mono text-xs hover:underline"
                   onClick={() => { setQuickFilter("all"); setTextFilter(type); }}
                 >

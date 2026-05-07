@@ -52,7 +52,7 @@ export default function PinnedMessagesPanel({ open, onClose, messages, onJumpToM
                   <h3 className="text-base font-semibold">Pinned Messages</h3>
                   <span className="text-xs text-muted-foreground">({messages.length})</span>
                 </div>
-                <button onClick={onClose} className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-muted">
+                <button type="button" onClick={onClose} className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-muted">
                   <X className="h-4 w-4" />
                 </button>
               </div>
@@ -78,7 +78,7 @@ export default function PinnedMessagesPanel({ open, onClose, messages, onJumpToM
                         <p className="text-sm text-foreground line-clamp-2">{msg.message || "📷 Media"}</p>
                         <p className="text-[10px] text-muted-foreground mt-0.5">{msg.time}</p>
                       </div>
-                      <button
+                      <button type="button"
                         onClick={(e) => { e.stopPropagation(); onUnpin(msg.id); }}
                         className="text-[10px] text-muted-foreground hover:text-destructive px-2 py-1 rounded-lg hover:bg-destructive/10 transition-colors shrink-0"
                       >

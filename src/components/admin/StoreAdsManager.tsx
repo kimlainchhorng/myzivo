@@ -414,7 +414,7 @@ export default function StoreAdsManager({ storeId }: Props) {
           <p className="flex-1 text-amber-900 dark:text-amber-300/90 leading-tight">
             <span className="font-semibold">API approvals pending</span> — drafts allowed; live launches activate once each platform is approved.
           </p>
-          <button
+          <button type="button"
             onClick={() => setBannerDismissed(true)}
             className="text-amber-700 dark:text-amber-300/70 hover:text-amber-900 text-[10px] uppercase tracking-wider shrink-0"
             aria-label="Dismiss banner"
@@ -504,7 +504,7 @@ export default function StoreAdsManager({ storeId }: Props) {
                 const count = statusCounts[f.id] ?? 0;
                 const active = filter === f.id;
                 return (
-                  <button
+                  <button type="button"
                     key={f.id}
                     type="button"
                     onClick={() => setFilter(f.id)}

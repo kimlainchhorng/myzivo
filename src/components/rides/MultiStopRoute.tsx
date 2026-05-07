@@ -116,7 +116,7 @@ export default function MultiStopRoute({ pickup = "Current location", onConfirm,
                       className="h-8 text-xs flex-1 bg-transparent border-0 p-0 focus-visible:ring-0"
                     />
                     {stops.length > 1 && (
-                      <button onClick={() => removeStop(stop.id)} className="p-1 rounded-full hover:bg-muted shrink-0">
+                      <button type="button" onClick={() => removeStop(stop.id)} className="p-1 rounded-full hover:bg-muted shrink-0">
                         <X className="w-3 h-3 text-muted-foreground" />
                       </button>
                     )}
@@ -128,7 +128,7 @@ export default function MultiStopRoute({ pickup = "Current location", onConfirm,
                     <span className="text-[10px] text-muted-foreground">Wait:</span>
                     <div className="flex gap-1">
                       {[0, 2, 5, 10].map(mins => (
-                        <button
+                        <button type="button"
                           key={mins}
                           onClick={() => updateWaitTime(stop.id, mins)}
                           className={cn(
@@ -153,7 +153,7 @@ export default function MultiStopRoute({ pickup = "Current location", onConfirm,
       {/* Add stop */}
       {stops.length < maxStops && (
         <div className="px-4 pt-2">
-          <button
+          <button type="button"
             onClick={addStop}
             className="w-full flex items-center gap-2 p-3 rounded-xl border border-dashed border-border/50 hover:border-primary/30 hover:bg-primary/5 transition-all text-xs font-medium text-muted-foreground"
           >

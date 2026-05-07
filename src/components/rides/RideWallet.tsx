@@ -30,7 +30,7 @@ export default function RideWallet() {
         {tabs.map(tab => {
           const Icon = tab.icon;
           return (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={cn("flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all", activeTab === tab.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
+            <button type="button" key={tab.id} onClick={() => setActiveTab(tab.id)} className={cn("flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all", activeTab === tab.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
               <Icon className="w-3.5 h-3.5" /> {tab.label}
             </button>
           );
@@ -96,7 +96,7 @@ function PaymentMethodsTab() {
           layout
           className={cn("flex items-center gap-3 p-3.5 rounded-2xl border transition-all", pm.isDefault ? "border-primary/30 bg-primary/5 shadow-sm" : "border-border/40 bg-card")}
         >
-          <button onClick={() => { setDefault(pm.id); toast.success(`${pm.brand} set as default`); }} className="flex items-center gap-3 flex-1 text-left touch-manipulation">
+          <button type="button" onClick={() => { setDefault(pm.id); toast.success(`${pm.brand} set as default`); }} className="flex items-center gap-3 flex-1 text-left touch-manipulation">
             <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center", pm.isDefault ? "bg-primary/10" : "bg-muted/50")}>
               <CreditCard className={cn("w-5 h-5", pm.isDefault ? "text-primary" : "text-muted-foreground")} />
             </div>
@@ -106,7 +106,7 @@ function PaymentMethodsTab() {
             </div>
           </button>
           {pm.isDefault && <Badge className="bg-primary/10 text-primary border-0 text-[9px] font-bold">Default</Badge>}
-          <button onClick={() => { deleteCard(pm.id); toast.success("Card removed"); }} className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors" aria-label="Remove card">
+          <button type="button" onClick={() => { deleteCard(pm.id); toast.success("Card removed"); }} className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:text-red-500 hover:bg-red-500/10 transition-colors" aria-label="Remove card">
             <Trash2 className="w-3.5 h-3.5" />
           </button>
         </motion.div>
@@ -118,7 +118,7 @@ function PaymentMethodsTab() {
             <div className="rounded-2xl border border-primary/20 bg-card p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-bold text-foreground">Add Card</h3>
-                <button onClick={() => setShowAddForm(false)} className="w-6 h-6 rounded-full bg-muted/50 flex items-center justify-center"><X className="w-3 h-3 text-muted-foreground" /></button>
+                <button type="button" onClick={() => setShowAddForm(false)} className="w-6 h-6 rounded-full bg-muted/50 flex items-center justify-center"><X className="w-3 h-3 text-muted-foreground" /></button>
               </div>
               <div>
                 <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Card Number</label>
@@ -208,7 +208,7 @@ function WalletTab() {
               </h3>
               <div className="grid grid-cols-4 gap-2">
                 {topUpPresets.map(amt => (
-                  <button key={amt} onClick={() => setTopUpAmount(String(amt))} className={cn("py-2.5 rounded-xl text-sm font-bold border transition-all", topUpAmount === String(amt) ? "bg-primary text-primary-foreground border-primary" : "bg-muted/20 text-foreground border-border/40 hover:border-primary/30")}>
+                  <button type="button" key={amt} onClick={() => setTopUpAmount(String(amt))} className={cn("py-2.5 rounded-xl text-sm font-bold border transition-all", topUpAmount === String(amt) ? "bg-primary text-primary-foreground border-primary" : "bg-muted/20 text-foreground border-border/40 hover:border-primary/30")}>
                     ${amt}
                   </button>
                 ))}
@@ -412,7 +412,7 @@ function SplitFareTab() {
       {splitLink && (
         <div className="flex items-center gap-2 p-3 rounded-xl bg-muted/20 border border-border/30">
           <span className="text-[10px] text-muted-foreground flex-1 font-mono truncate">{splitLink}</span>
-          <button onClick={() => { navigator.clipboard.writeText(splitLink); toast.success("Copied!"); }}>
+          <button type="button" onClick={() => { navigator.clipboard.writeText(splitLink); toast.success("Copied!"); }}>
             <Copy className="w-3.5 h-3.5 text-primary" />
           </button>
         </div>

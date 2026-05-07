@@ -129,7 +129,7 @@ export default function GrocerySmartSearch({ value, onChange }: Props) {
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1">
                     <Clock className="h-2.5 w-2.5" /> Recent
                   </p>
-                  <button onClick={clearRecent} className="text-[9px] text-destructive hover:underline font-medium">Clear</button>
+                  <button type="button" onClick={clearRecent} className="text-[9px] text-destructive hover:underline font-medium">Clear</button>
                 </div>
                 {recentSearches.map((term) => (
                   <motion.button

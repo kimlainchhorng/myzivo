@@ -168,7 +168,7 @@ export default function RideOptionsSheet({
         {categories.map((cat) => {
           const isActive = activeCategory === cat;
           return (
-            <button
+            <button type="button"
               key={cat}
               onClick={() => setActiveCategory(cat)}
               className={`rounded-full px-4 py-1.5 text-sm font-medium transition-colors ${
@@ -188,7 +188,7 @@ export default function RideOptionsSheet({
         {filteredOptions.map((ride) => {
           const isSelected = selectedRideId === ride.id;
           return (
-            <button
+            <button type="button"
               key={ride.id}
               onClick={() => setSelectedRideId(ride.id)}
               className={`flex w-full items-center gap-3 rounded-2xl px-3 py-3 text-left transition-colors ${
@@ -303,14 +303,14 @@ export default function RideOptionsSheet({
 
       {/* Payment + Confirm — pinned bottom */}
       <div className="mt-auto border-t border-border bg-background px-5 pb-safe-bottom">
-        <button className="flex w-full items-center gap-3 py-3 hover:bg-muted/40 transition-colors rounded-xl px-1">
+        <button type="button" className="flex w-full items-center gap-3 py-3 hover:bg-muted/40 transition-colors rounded-xl px-1">
           <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
             <CreditCard className="h-5 w-5 text-muted-foreground" />
           </div>
           <span className="text-sm text-foreground font-medium">Payment method</span>
           <ArrowLeft className="ml-auto h-4 w-4 rotate-180 text-muted-foreground" />
         </button>
-        <button
+        <button type="button"
           onClick={() => onConfirm?.(selectedRide.id)}
           className="w-full rounded-2xl bg-emerald-500 py-4 text-center text-base font-bold text-white transition-opacity hover:opacity-90 mb-3"
         >

@@ -57,7 +57,7 @@ export default function PnLExpenseBreakdown({ expenses }: Props) {
                   const pct = total > 0 ? Math.round((v / total) * 100) : 0;
                   return (
                     <li key={k}>
-                      <button
+                      <button type="button"
                         onClick={() => setDrillKey(k)}
                         className="w-full text-left hover:bg-muted/40 rounded p-1 -m-1 transition-colors"
                       >

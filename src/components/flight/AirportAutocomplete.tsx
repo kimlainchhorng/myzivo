@@ -120,7 +120,7 @@ const AirportAutocomplete = ({
               </p>
               <div className="flex flex-wrap gap-1.5">
                 {recentSearches.slice(0, 3).map((search, i) => (
-                  <button
+                  <button type="button"
                     key={i}
                     onClick={() => {
                       setQuery(search);
@@ -158,7 +158,7 @@ const AirportAutocomplete = ({
           <div className="max-h-[280px] sm:max-h-[320px] overflow-y-auto">
             {results.length > 0 ? (
               results.map((airport) => (
-                <button
+                <button type="button"
                   key={airport.code}
                   onClick={() => handleSelect(airport)}
                   className="w-full px-3 py-3 flex items-center gap-3 hover:bg-secondary transition-colors text-left group border-b border-border/20 last:border-0 touch-manipulation active:scale-[0.99]"

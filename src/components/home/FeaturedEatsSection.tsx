@@ -91,7 +91,7 @@ export default function FeaturedEatsSection() {
 
         <div className="flex gap-2 mb-8 overflow-x-auto scrollbar-hide pb-1">
           {(liveCategories as string[]).map((c) => (
-            <button
+            <button type="button"
               key={c}
               onClick={() => setActiveCategory(c)}
               className={cn(activeCategory === c ? "chip-active" : "chip-inactive", "whitespace-nowrap hover:-translate-y-0.5 active:scale-95 transition-all touch-manipulation min-h-[36px]")}
@@ -134,14 +134,14 @@ export default function FeaturedEatsSection() {
                         <Truck className="w-3 h-3" /> Free Delivery
                       </span>
                     )}
-                    <button
+                    <button type="button"
                       onClick={(e) => handleQuickOrder(e, store.name)}
                       className="absolute bottom-3 right-3 w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-primary text-primary-foreground flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 hover:scale-110 active:scale-90 shadow-lg touch-manipulation"
                       aria-label={`Order from ${store.name}`}
                     >
                       <ShoppingCart className="w-4 h-4" />
                     </button>
-                    <button
+                    <button type="button"
                       onClick={(e) => { e.preventDefault(); e.stopPropagation(); openShareToChat({ kind: "eats", title: store.name, subtitle: store.address || store.category, meta: store.delivery_min != null ? `${store.delivery_min} min delivery` : undefined, image: store.banner_url || store.logo_url || null, deepLink: store.slug ? `/store/${store.slug}` : "/eats" }); }}
                       className="absolute top-3 right-3 w-9 h-9 min-w-[36px] min-h-[36px] rounded-full bg-card/80 backdrop-blur-sm flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 hover:bg-card active:scale-90 touch-manipulation"
                       aria-label={`Share ${store.name}`}
@@ -195,7 +195,7 @@ export default function FeaturedEatsSection() {
                         <Truck className="w-3 h-3" /> Free Delivery
                       </span>
                     )}
-                    <button
+                    <button type="button"
                       onClick={(e) => handleQuickOrder(e, food.name)}
                       className="absolute bottom-3 right-3 w-10 h-10 min-w-[40px] min-h-[40px] rounded-full bg-primary text-primary-foreground flex items-center justify-center sm:opacity-0 sm:group-hover:opacity-100 transition-all duration-200 hover:scale-110 active:scale-90 shadow-lg touch-manipulation"
                     >

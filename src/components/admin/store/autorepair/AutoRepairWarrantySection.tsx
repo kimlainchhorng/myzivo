@@ -256,7 +256,7 @@ export default function AutoRepairWarrantySection({ storeId }: Props) {
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-1.5 max-h-[280px] overflow-auto">
             {filteredNetworks.map((n) => (
-              <button
+              <button type="button"
                 key={n.id}
                 onClick={() => { setForm((f) => ({ ...f, network_id: n.id })); setOpen(true); }}
                 className="flex items-center gap-2.5 text-left text-[12px] border border-border rounded-md px-2 py-1.5 hover:border-primary hover:bg-primary/5 transition-colors"

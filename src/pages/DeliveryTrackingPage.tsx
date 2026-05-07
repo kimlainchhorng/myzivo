@@ -186,7 +186,7 @@ export default function DeliveryTrackingPage() {
     <AppLayout title="Track Delivery" hideHeader>
       <div className="flex flex-col px-4 pt-3 pb-24">
         <div className="flex items-center gap-2.5 mb-4">
-          <button
+          <button type="button"
             onClick={() => navigate("/delivery")}
             className="w-8 h-8 rounded-full bg-muted/60 flex items-center justify-center active:scale-90 transition-transform"
           >
@@ -222,7 +222,7 @@ export default function DeliveryTrackingPage() {
                 >
                   {delivery.status.replace(/_/g, " ")}
                 </span>
-                <button
+                <button type="button"
                   onClick={copyId}
                   className="flex items-center gap-1 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors"
                 >
@@ -278,7 +278,7 @@ export default function DeliveryTrackingPage() {
             {!isCompleted && (canCancel || delivery.driver_user_id) && (
               <div className="flex gap-2 mb-3">
                 {delivery.driver_user_id && (
-                  <button
+                  <button type="button"
                     onClick={messageDriver}
                     className="flex-1 h-11 rounded-xl bg-violet-500 text-white font-semibold text-[13px] flex items-center justify-center gap-1.5 active:scale-[0.98] transition-transform"
                   >
@@ -286,7 +286,7 @@ export default function DeliveryTrackingPage() {
                   </button>
                 )}
                 {canCancel && (
-                  <button
+                  <button type="button"
                     onClick={cancelDelivery}
                     className="h-11 px-4 rounded-xl border border-destructive/30 text-destructive font-semibold text-[13px] flex items-center justify-center gap-1.5 active:scale-[0.98] transition-transform"
                   >

@@ -133,7 +133,7 @@ const SellerOfTravel = () => {
                     <p className="text-sm text-muted-foreground">
                       Seller of Travel Registration: Application submitted
                     </p>
-                    <button 
+                    <button type="button" 
                       onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl("https://www.ag.ca.gov/consumers/travel"))}
                       className="text-xs text-primary hover:underline flex items-center gap-1 mt-2"
                     >
@@ -151,7 +151,7 @@ const SellerOfTravel = () => {
                     <p className="text-sm text-muted-foreground">
                       Seller of Travel Registration: Application submitted
                     </p>
-                    <button 
+                    <button type="button" 
                       onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl("https://www.fdacs.gov/Consumer-Resources/Travel"))}
                       className="text-xs text-primary hover:underline flex items-center gap-1 mt-2"
                     >

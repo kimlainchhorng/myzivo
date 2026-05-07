@@ -117,7 +117,7 @@ export default function PayPalPayoutCard({ balanceDollars }: Props) {
               <p className="text-sm font-semibold truncate">{savedEmail}</p>
             </div>
           </div>
-          <button onClick={() => setEditing(true)} className="text-[11px] underline opacity-80 hover:opacity-100 shrink-0">
+          <button type="button" onClick={() => setEditing(true)} className="text-[11px] underline opacity-80 hover:opacity-100 shrink-0">
             Change
           </button>
         </div>
@@ -127,7 +127,7 @@ export default function PayPalPayoutCard({ balanceDollars }: Props) {
       <div>
         <div className="flex gap-2 flex-wrap mb-2">
           {[5, 25, 50, 100].filter((a) => a <= balanceDollars).map((amt) => (
-            <button
+            <button type="button"
               key={amt}
               onClick={() => setAmount(String(amt))}
               className={`px-3 py-1.5 rounded-xl text-[12px] font-semibold ${
@@ -138,7 +138,7 @@ export default function PayPalPayoutCard({ balanceDollars }: Props) {
             </button>
           ))}
           {balanceDollars >= 1 && (
-            <button
+            <button type="button"
               onClick={() => setAmount(balanceDollars.toFixed(2))}
               className={`px-3 py-1.5 rounded-xl text-[12px] font-semibold ${
                 amount === balanceDollars.toFixed(2) ? "bg-[#003087] text-white" : "bg-muted/50 border border-border/40"

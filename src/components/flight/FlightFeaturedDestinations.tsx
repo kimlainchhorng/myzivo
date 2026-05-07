@@ -115,7 +115,7 @@ export default function FlightFeaturedDestinations({
                 </Badge>
 
                 {/* Like Button */}
-                <button
+                <button type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     toggleLike(dest.id);

@@ -33,7 +33,7 @@ export default function RichLinkPreview({ text, isMe }: Props) {
   } catch { /* keep raw */ }
 
   return (
-    <button
+    <button type="button"
       onClick={(e) => { e.stopPropagation(); openExternalUrl(url); }}
       className={`mt-1.5 w-full text-left flex items-center gap-2 px-2.5 py-2 rounded-xl border transition active:scale-[0.98] ${
         isMe ? "border-primary-foreground/20 bg-primary-foreground/5" : "border-border/40 bg-muted/40"

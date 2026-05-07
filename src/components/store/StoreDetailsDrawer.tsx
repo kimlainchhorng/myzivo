@@ -191,7 +191,7 @@ export default function StoreDetailsDrawer({
                 </div>
               )}
             </div>
-            <button
+            <button type="button"
               onClick={onClose}
               className="w-9 h-9 rounded-full flex items-center justify-center bg-muted/50 text-muted-foreground hover:bg-muted transition"
               aria-label="Close"
@@ -248,7 +248,7 @@ export default function StoreDetailsDrawer({
 
           {/* Promo code */}
           <div className="mt-4 rounded-xl border border-border/40 bg-muted/20 overflow-hidden">
-            <button
+            <button type="button"
               onClick={() => setPromoOpen((v) => !v)}
               className="w-full px-3.5 py-3 flex items-center gap-2 text-left"
               aria-expanded={promoOpen}
@@ -337,7 +337,7 @@ export default function StoreDetailsDrawer({
           </div>
 
           {onOpenInMap && (
-            <button
+            <button type="button"
               onClick={() => onOpenInMap(store)}
               className="mt-3 w-full h-10 inline-flex items-center justify-center gap-1.5 text-[13px] font-semibold text-muted-foreground hover:text-foreground transition"
             >

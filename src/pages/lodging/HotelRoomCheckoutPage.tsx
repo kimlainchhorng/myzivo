@@ -174,7 +174,7 @@ export default function HotelRoomCheckoutPage() {
       />
       {/* Header */}
       <div className="sticky top-0 z-20 bg-background/95 backdrop-blur border-b border-border/40 px-4 py-3 flex items-center gap-3" style={{ paddingTop: "var(--zivo-safe-top-sticky)" }}>
-        <button
+        <button type="button"
           onClick={() => navigate(-1)}
           className="h-9 w-9 rounded-full bg-muted/60 flex items-center justify-center active:scale-95 transition"
         >
@@ -357,7 +357,7 @@ export default function HotelRoomCheckoutPage() {
               { key: "cash" as PayMethod, icon: Banknote, label: "Cash at hotel", sub: "Pay when you arrive" },
               { key: "card" as PayMethod, icon: CreditCard, label: "Pay online", sub: "Secure card payment" },
             ]).map(({ key, icon: Icon, label, sub }) => (
-              <button
+              <button type="button"
                 key={key}
                 onClick={() => setPayMethod(key)}
                 className={cn(

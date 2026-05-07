@@ -148,7 +148,7 @@ export default function SafeCaption({ text, className }: SafeCaptionProps) {
             // inline text (no emerald highlight, no underline) but remain
             // clickable so users can still tap through to /tag/<token>.
             // Use <span role="button"> so SafeCaption can be safely nested
-            // inside another <button> (post tap-to-expand) without producing
+            // inside another <button type="button"> (post tap-to-expand) without producing
             // invalid DOM (button-in-button).
             return (
               <span

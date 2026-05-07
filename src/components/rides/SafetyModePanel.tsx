@@ -79,7 +79,7 @@ export default function SafetyModePanel({ onClose }: { onClose?: () => void }) {
           <div className="flex items-center gap-2">
             <Switch checked={enabled} onCheckedChange={setEnabled} />
             {onClose && (
-              <button onClick={onClose} className="p-1 rounded-full hover:bg-muted">
+              <button type="button" onClick={onClose} className="p-1 rounded-full hover:bg-muted">
                 <X className="w-4 h-4 text-muted-foreground" />
               </button>
             )}
@@ -108,7 +108,7 @@ export default function SafetyModePanel({ onClose }: { onClose?: () => void }) {
                 const Icon = feat.icon;
                 const active = features[feat.id];
                 return (
-                  <button
+                  <button type="button"
                     key={feat.id}
                     onClick={() => toggleFeature(feat.id)}
                     className={cn(
@@ -173,7 +173,7 @@ export default function SafetyModePanel({ onClose }: { onClose?: () => void }) {
               ))}
 
               {!showAddContact ? (
-                <button
+                <button type="button"
                   onClick={() => setShowAddContact(true)}
                   className="w-full flex items-center gap-2 p-2.5 rounded-xl border border-dashed border-border/50 text-xs text-muted-foreground hover:border-border hover:bg-secondary transition-all"
                 >

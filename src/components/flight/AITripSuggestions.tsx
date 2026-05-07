@@ -302,7 +302,7 @@ export const AITripSuggestions = ({
           </label>
           <div className="flex flex-wrap gap-2">
             {PREFERENCE_TAGS.map(tag => (
-              <button
+              <button type="button"
                 key={tag.id}
                 onClick={() => toggleTag(tag.id)}
                 className={cn(
@@ -324,7 +324,7 @@ export const AITripSuggestions = ({
           <label className="text-sm font-medium">Preferred Climate</label>
           <div className="grid grid-cols-3 gap-2">
             {CLIMATE_OPTIONS.map(opt => (
-              <button
+              <button type="button"
                 key={opt.id}
                 onClick={() => setSelectedClimate(opt.id)}
                 className={cn(
@@ -352,7 +352,7 @@ export const AITripSuggestions = ({
                 { value: 'mid', label: '$$' },
                 { value: 'luxury', label: '$$$' },
               ].map(option => (
-                <button
+                <button type="button"
                   key={option.value}
                   onClick={() => setBudget(option.value as any)}
                   className={cn(
@@ -393,7 +393,7 @@ export const AITripSuggestions = ({
         </div>
 
         {/* Advanced Filters Toggle */}
-        <button
+        <button type="button"
           onClick={() => setShowAdvanced(!showAdvanced)}
           className="flex items-center gap-2 text-sm text-foreground hover:text-primary transition-colors"
         >
@@ -447,7 +447,7 @@ export const AITripSuggestions = ({
                 <label className="text-sm text-muted-foreground">Travel Style</label>
                 <div className="flex flex-wrap gap-2">
                   {TRAVEL_STYLE.map(style => (
-                    <button
+                    <button type="button"
                       key={style.id}
                       onClick={() => toggleStyle(style.id)}
                       className={cn(

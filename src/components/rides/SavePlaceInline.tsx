@@ -104,7 +104,7 @@ export default function SavePlaceInline({ address }: Props) {
             >
               Save
             </Button>
-            <button
+            <button type="button"
               onClick={() => {
                 setEditingCustom(false);
                 setDraftLabel("");
@@ -160,7 +160,7 @@ function Pill({
   tone: string;
 }) {
   return (
-    <button
+    <button type="button"
       onClick={onClick}
       className={`flex flex-col items-center gap-1 rounded-xl border px-2 py-2.5 active:scale-[0.97] transition-transform ${tone}`}
     >

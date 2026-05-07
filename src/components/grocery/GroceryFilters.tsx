@@ -155,7 +155,7 @@ export function GroceryFilters({ isOpen, onClose, filters, onApply, products }: 
               </div>
               <div className="flex items-center gap-3">
                 {hasActiveFilters(draft) && (
-                  <button onClick={handleClear} className="text-[11px] text-destructive font-semibold">
+                  <button type="button" onClick={handleClear} className="text-[11px] text-destructive font-semibold">
                     Clear All
                   </button>
                 )}
@@ -177,7 +177,7 @@ export function GroceryFilters({ isOpen, onClose, filters, onApply, products }: 
                   {PRICE_RANGES.map((range) => {
                     const active = draft.priceRange?.min === range.min && draft.priceRange?.max === range.max;
                     return (
-                      <button
+                      <button type="button"
                         key={range.label}
                         onClick={() => setDraft((d) => ({ ...d, priceRange: active ? null : range }))}
                         className={`px-3 py-2 rounded-xl text-[11px] font-semibold transition-all border ${
@@ -203,7 +203,7 @@ export function GroceryFilters({ isOpen, onClose, filters, onApply, products }: 
                   {RATING_FILTERS.map((rf) => {
                     const active = draft.minRating === rf.min;
                     return (
-                      <button
+                      <button type="button"
                         key={rf.label}
                         onClick={() => setDraft((d) => ({ ...d, minRating: active ? null : rf.min }))}
                         className={`px-3 py-2 rounded-xl text-[11px] font-semibold transition-all border ${
@@ -229,7 +229,7 @@ export function GroceryFilters({ isOpen, onClose, filters, onApply, products }: 
                   {DIETARY_FILTERS.map((df) => {
                     const active = draft.dietary.includes(df.keyword);
                     return (
-                      <button
+                      <button type="button"
                         key={df.keyword}
                         onClick={() => toggleDietary(df.keyword)}
                         className={`flex items-center gap-1 px-3 py-2 rounded-xl text-[11px] font-semibold transition-all border ${
@@ -257,7 +257,7 @@ export function GroceryFilters({ isOpen, onClose, filters, onApply, products }: 
                     {topBrands.map((brand) => {
                       const active = draft.brands.includes(brand);
                       return (
-                        <button
+                        <button type="button"
                           key={brand}
                           onClick={() => toggleBrand(brand)}
                           className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-[10px] font-semibold transition-all border ${

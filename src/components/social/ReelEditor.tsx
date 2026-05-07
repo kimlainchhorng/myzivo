@@ -56,11 +56,11 @@ export default function ReelEditor({ videoUrl, onSave, onClose }: ReelEditorProp
     <div className="fixed inset-0 z-50 bg-black flex flex-col">
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 safe-area-top">
-        <button onClick={onClose} className="p-2 rounded-full bg-white/10">
+        <button type="button" onClick={onClose} className="p-2 rounded-full bg-white/10">
           <X className="h-5 w-5 text-white" />
         </button>
         <h2 className="text-white font-semibold">Edit Reel</h2>
-        <button
+        <button type="button"
           onClick={() => onSave({ filterCss: VIDEO_FILTERS[filter].css, speed, textOverlay: textOverlay || undefined })}
           className="p-2 rounded-full bg-primary"
         >
@@ -93,7 +93,7 @@ export default function ReelEditor({ videoUrl, onSave, onClose }: ReelEditorProp
       <div className="bg-black/80 pb-safe">
         <div className="flex gap-1 px-4 py-2">
           {tabs.map((t) => (
-            <button
+            <button type="button"
               key={t.id}
               onClick={() => setActiveTab(t.id)}
               className={cn(
@@ -112,7 +112,7 @@ export default function ReelEditor({ videoUrl, onSave, onClose }: ReelEditorProp
           {activeTab === "filter" && (
             <div className="flex gap-2 overflow-x-auto scrollbar-hide">
               {VIDEO_FILTERS.map((f, i) => (
-                <button
+                <button type="button"
                   key={f.name}
                   onClick={() => setFilter(i)}
                   className={cn(
@@ -129,7 +129,7 @@ export default function ReelEditor({ videoUrl, onSave, onClose }: ReelEditorProp
           {activeTab === "speed" && (
             <div className="flex gap-3 justify-center">
               {SPEED_OPTIONS.map((s) => (
-                <button
+                <button type="button"
                   key={s.value}
                   onClick={() => setSpeed(s.value)}
                   className={cn(

@@ -172,7 +172,7 @@ const FlightDetails = () => {
                 {/* Segments detail toggle */}
                 {segments.length > 0 && (
                   <>
-                    <button
+                    <button type="button"
                       onClick={() => setShowSegments(!showSegments)}
                       className="flex items-center gap-1.5 text-xs font-medium text-[hsl(var(--flights))] hover:underline transition-colors"
                     >

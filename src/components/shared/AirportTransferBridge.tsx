@@ -133,7 +133,7 @@ const AirportTransferBridge = ({
           <p className="text-sm font-medium text-muted-foreground">Select transfer type:</p>
           <div className="space-y-2">
             {transferOptions.map((option) => (
-              <button
+              <button type="button"
                 key={option.id}
                 onClick={() => setSelectedTransfer(option.id)}
                 className={cn(

@@ -81,7 +81,7 @@ export default function ScheduleRideSheet({
           <h3 className="text-sm font-bold text-foreground">Schedule Ride</h3>
         </div>
         {onClose && (
-          <button onClick={onClose} className="p-1.5 rounded-full hover:bg-muted">
+          <button type="button" onClick={onClose} className="p-1.5 rounded-full hover:bg-muted">
             <X className="w-4 h-4 text-muted-foreground" />
           </button>
         )}
@@ -115,7 +115,7 @@ export default function ScheduleRideSheet({
 
       {/* Time picker */}
       <div className="px-4 pb-3">
-        <button
+        <button type="button"
           onClick={() => setShowTimes(!showTimes)}
           className={cn(
             "w-full flex items-center justify-between h-11 px-3 rounded-lg border text-sm transition-all",
@@ -141,7 +141,7 @@ export default function ScheduleRideSheet({
             >
               <div className="flex flex-wrap gap-1.5 mt-2 max-h-32 overflow-y-auto">
                 {timeSlots.map((time) => (
-                  <button
+                  <button type="button"
                     key={time}
                     onClick={() => { setSelectedTime(time); setShowTimes(false); }}
                     className={cn(
@@ -167,7 +167,7 @@ export default function ScheduleRideSheet({
         </span>
         <div className="flex flex-wrap gap-1.5">
           {recurringOptions.map((opt) => (
-            <button
+            <button type="button"
               key={opt.id}
               onClick={() => setRecurring(opt.id)}
               className={cn(
@@ -186,7 +186,7 @@ export default function ScheduleRideSheet({
         {recurring === "custom" && (
           <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex gap-1.5 mt-2">
             {weekDays.map((day) => (
-              <button
+              <button type="button"
                 key={day}
                 onClick={() => toggleDay(day)}
                 className={cn(

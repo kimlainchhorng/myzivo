@@ -102,8 +102,8 @@ describe("Story deep-link back/forward navigation", () => {
       const { openStory } = useStoryDeepLink({ source: "profile" });
       return (
         <div>
-          <button onClick={() => openStory("A")}>open-A</button>
-          <button onClick={() => openStory("B")}>open-B</button>
+          <button type="button" onClick={() => openStory("A")}>open-A</button>
+          <button type="button" onClick={() => openStory("B")}>open-B</button>
           <StubCarousel />
         </div>
       );

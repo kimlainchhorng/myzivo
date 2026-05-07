@@ -234,7 +234,7 @@ export default function CreateCampaignWizard({
               const Icon = o.icon;
               const selected = form.objective === o.id;
               return (
-                <button
+                <button type="button"
                   key={o.id}
                   type="button"
                   onClick={() => setForm({ ...form, objective: o.id })}
@@ -269,7 +269,7 @@ export default function CreateCampaignWizard({
                 const selected = form.platforms.includes(p.id);
                 const connected = connectedPlatforms.has(p.id);
                 return (
-                  <button
+                  <button type="button"
                     key={p.id}
                     type="button"
                     onClick={() => connected ? togglePlatform(p.id) : onConnectPlatform?.(p.id)}
@@ -302,7 +302,7 @@ export default function CreateCampaignWizard({
               {AUDIENCES.map((a) => {
                 const selected = audience === a.id;
                 return (
-                  <button
+                  <button type="button"
                     key={a.id}
                     type="button"
                     onClick={() => setAudience(a.id)}

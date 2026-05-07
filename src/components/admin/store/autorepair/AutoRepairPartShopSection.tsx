@@ -461,7 +461,7 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
               <Badge className="text-[10px] bg-primary/10 text-primary border-primary/20 border">
                 {selectedJobs.size} job{selectedJobs.size > 1 ? "s" : ""} selected
               </Badge>
-              <button onClick={() => setSelectedJobs(new Set())}
+              <button type="button" onClick={() => setSelectedJobs(new Set())}
                 className="text-[11px] text-muted-foreground hover:text-foreground flex items-center gap-1">
                 <X className="w-3 h-3" /> Clear
               </button>
@@ -533,7 +533,7 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
             {outOfStock > 0 && <span><strong>{outOfStock}</strong> part{outOfStock > 1 ? "s" : ""} out of stock · </span>}
             {lowStock > 0 && <span><strong>{lowStock}</strong> part{lowStock > 1 ? "s" : ""} running low</span>}
           </p>
-          <button onClick={() => setLowStockOnly(s => !s)} className="text-xs font-semibold text-amber-700 dark:text-amber-300 underline-offset-2 hover:underline">
+          <button type="button" onClick={() => setLowStockOnly(s => !s)} className="text-xs font-semibold text-amber-700 dark:text-amber-300 underline-offset-2 hover:underline">
             {lowStockOnly ? "Show all" : "View low stock"}
           </button>
         </div>
@@ -541,7 +541,7 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
 
       {/* Vehicle fitment selector */}
       <Card>
-        <button
+        <button type="button"
           className="w-full flex items-center justify-between px-4 py-3 text-left"
           onClick={() => setVehicleExpanded(s => !s)}
         >
@@ -582,7 +582,7 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
               </div>
             </div>
             {vehicleActive && (
-              <button onClick={() => { setVehicleYear(""); setVehicleMake(""); setVehicleModel(""); }}
+              <button type="button" onClick={() => { setVehicleYear(""); setVehicleMake(""); setVehicleModel(""); }}
                 className="mt-2 flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground">
                 <X className="w-3 h-3" /> Clear vehicle
               </button>
@@ -629,7 +629,7 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
               onChange={e => setQ(e.target.value)}
             />
             {q && (
-              <button onClick={() => setQ("")} className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground">
+              <button type="button" onClick={() => setQ("")} className="absolute right-2.5 top-2.5 text-muted-foreground hover:text-foreground">
                 <X className="w-4 h-4" />
               </button>
             )}
@@ -648,7 +648,7 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
             <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
               <span className="text-xs text-muted-foreground shrink-0 flex items-center gap-1"><ArrowUpDown className="w-3 h-3" /> Sort:</span>
               {(["name", "price", "stock", "brand"] as SortKey[]).map(k => (
-                <button key={k} onClick={() => toggleSort(k)}
+                <button type="button" key={k} onClick={() => toggleSort(k)}
                   className={`text-xs px-2.5 py-1 rounded-full border transition-colors shrink-0 ${sort === k ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50"}`}>
                   {k.charAt(0).toUpperCase() + k.slice(1)}
                   {sort === k && <span className="ml-1">{sortDir === "asc" ? "↑" : "↓"}</span>}
@@ -656,11 +656,11 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
               ))}
             </div>
             <div className="flex border rounded-md overflow-hidden shrink-0">
-              <button onClick={() => setView("grid")}
+              <button type="button" onClick={() => setView("grid")}
                 className={`p-1.5 transition-colors ${view === "grid" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}>
                 <LayoutGrid className="w-3.5 h-3.5" />
               </button>
-              <button onClick={() => setView("list")}
+              <button type="button" onClick={() => setView("list")}
                 className={`p-1.5 transition-colors ${view === "list" ? "bg-primary text-primary-foreground" : "text-muted-foreground hover:bg-muted"}`}>
                 <List className="w-3.5 h-3.5" />
               </button>
@@ -801,7 +801,7 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
                   </span>
                 </label>
                 {(form as any).image_url && (
-                  <button onClick={() => setForm(f => ({ ...f, image_url: null } as any))}
+                  <button type="button" onClick={() => setForm(f => ({ ...f, image_url: null } as any))}
                     className="text-xs text-muted-foreground hover:text-destructive flex items-center gap-1">
                     <X className="w-3 h-3" /> Remove
                   </button>
@@ -831,7 +831,7 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
               {/* Mode tabs */}
               <div className="flex rounded-lg overflow-hidden border border-border text-xs">
                 {(["receive", "use", "set"] as const).map(m => (
-                  <button key={m} onClick={() => setAdjustMode(m)}
+                  <button type="button" key={m} onClick={() => setAdjustMode(m)}
                     className={`flex-1 py-1.5 font-medium transition-colors ${adjustMode === m ? "bg-primary text-primary-foreground" : "hover:bg-muted"}`}>
                     {m === "receive" ? "Receive" : m === "use" ? "Use / Consume" : "Set Exact"}
                   </button>
@@ -841,7 +841,7 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
               {adjustMode !== "set" && (
                 <div className="flex gap-1.5">
                   {[1, 5, 10, 25].map(n => (
-                    <button key={n} onClick={() => setAdjustDelta(String(n))}
+                    <button type="button" key={n} onClick={() => setAdjustDelta(String(n))}
                       className="flex-1 text-xs py-1.5 rounded-md border border-border hover:bg-muted transition-colors">
                       {adjustMode === "receive" ? `+${n}` : `-${n}`}
                     </button>
@@ -1008,7 +1008,7 @@ function SuppliersNetworkCard({ query, storeId }: { query: string; storeId: stri
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-1.5 max-h-[320px] overflow-auto">
           {list.map(s => (
-            <button key={s.id} onClick={() => setActiveSupplier(s)}
+            <button type="button" key={s.id} onClick={() => setActiveSupplier(s)}
               className="flex items-center gap-2.5 text-left text-[12px] border border-border rounded-lg px-2.5 py-2 hover:border-primary hover:bg-primary/5 transition-colors group">
               <PartsSupplierLogo supplier={s} size="md" />
               <div className="min-w-0 flex-1">

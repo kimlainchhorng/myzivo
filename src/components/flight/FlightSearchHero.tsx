@@ -234,7 +234,7 @@ export default function FlightSearchHero({
                     { type: "roundtrip" as const, label: "Round", fullLabel: "Round Trip", icon: RefreshCw },
                     { type: "oneway" as const, label: "One Way", fullLabel: "One Way", icon: Plane },
                   ].map((item) => (
-                    <button
+                    <button type="button"
                       key={item.type}
                       onClick={() => setTripType(item.type)}
                       className={cn(
@@ -249,7 +249,7 @@ export default function FlightSearchHero({
                       <span className="hidden sm:inline">{item.fullLabel}</span>
                     </button>
                   ))}
-                  <button className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-semibold text-[11px] sm:text-xs bg-muted/80 text-foreground/70 flex items-center gap-1.5 sm:gap-2 border border-border/60 flex-shrink-0 touch-manipulation active:scale-95">
+                  <button type="button" className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl font-semibold text-[11px] sm:text-xs bg-muted/80 text-foreground/70 flex items-center gap-1.5 sm:gap-2 border border-border/60 flex-shrink-0 touch-manipulation active:scale-95">
                     <MapPin className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                     Multi
                   </button>
@@ -317,14 +317,14 @@ export default function FlightSearchHero({
                   </div>
 
                   {/* Swap Button - Mobile inline, Desktop center */}
-                  <button
+                  <button type="button"
                     onClick={swapCities}
                     className="flex md:hidden w-full h-8 items-center justify-center rounded-xl bg-muted/60 text-muted-foreground border border-border/50 my-1 touch-manipulation active:scale-95 gap-1.5"
                   >
                     <ArrowLeftRight className="w-3.5 h-3.5" />
                     <span className="text-[10px] font-medium">Swap</span>
                   </button>
-                  <button
+                  <button type="button"
                     onClick={swapCities}
                     className="hidden md:flex absolute left-1/2 top-[36px] -translate-x-1/2 w-9 h-9 items-center justify-center rounded-full bg-foreground text-background transition-transform z-20 hover:scale-105 active:scale-95 ring-2 ring-background"
                   >
@@ -541,7 +541,7 @@ export default function FlightSearchHero({
                 </div>
 
                 {/* Advanced Options Toggle - Mobile friendly */}
-                <button
+                <button type="button"
                   onClick={() => setShowAdvanced(!showAdvanced)}
                   className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors mb-3 sm:mb-4 touch-manipulation active:scale-95"
                 >
@@ -599,7 +599,7 @@ export default function FlightSearchHero({
                   </div>
                   <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-2 -mx-3 px-3 sm:mx-0 sm:px-0 sm:flex-wrap scrollbar-hide">
                     {quickDestinations.slice(0, 6).map((dest, index) => (
-                      <button
+                      <button type="button"
                         key={dest.code}
                         onClick={() => setToCity(`${dest.city} (${dest.code})`)}
                         className={cn(
@@ -633,7 +633,7 @@ export default function FlightSearchHero({
                 {/* Price Calendar Toggle - Mobile compact */}
                 {toCity && (
                   <div className="pt-3 sm:pt-4 border-t border-border/40 mt-3 sm:mt-4">
-                    <button
+                    <button type="button"
                       onClick={() => setShowPriceCalendar(!showPriceCalendar)}
                       className="flex items-center gap-1.5 sm:gap-2 text-[10px] sm:text-xs font-bold text-foreground transition-colors touch-manipulation active:scale-95"
                     >

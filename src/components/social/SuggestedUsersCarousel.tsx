@@ -125,7 +125,7 @@ const SuggestedUsersCarousel = memo(forwardRef<HTMLDivElement, SuggestedUsersCar
                   </div>
                   <MutualFollowsBadge mutual={mutualMap?.get(profile.id)} className="mt-0.5" />
                 </div>
-                <button
+                <button type="button"
                   onClick={() => handleFollow(profile.id)}
                   disabled={following.has(profile.id)}
                   className={`px-3 py-1 rounded-lg text-[11px] font-semibold transition-all shrink-0 ${
@@ -152,7 +152,7 @@ const SuggestedUsersCarousel = memo(forwardRef<HTMLDivElement, SuggestedUsersCar
           <Users className="h-3.5 w-3.5 text-primary" />
           <h3 className="text-xs font-bold text-foreground">Suggested for you</h3>
         </div>
-        <button className="text-[10px] text-primary font-medium">See all</button>
+        <button type="button" className="text-[10px] text-primary font-medium">See all</button>
       </div>
 
       <div className="flex gap-2 px-3 overflow-x-auto scrollbar-none pb-1">
@@ -167,7 +167,7 @@ const SuggestedUsersCarousel = memo(forwardRef<HTMLDivElement, SuggestedUsersCar
               className="flex-shrink-0 w-[120px] bg-card rounded-xl border border-border/30 p-2.5 text-center relative group"
             >
               {/* Dismiss */}
-              <button
+              <button type="button"
                 onClick={() => setDismissed((prev) => new Set([...prev, profile.id]))}
                 className="absolute top-1.5 right-1.5 p-0.5 rounded-full hover:bg-muted/50 opacity-0 group-hover:opacity-100 transition-opacity"
               >
@@ -211,7 +211,7 @@ const SuggestedUsersCarousel = memo(forwardRef<HTMLDivElement, SuggestedUsersCar
               </div>
 
               {/* Follow button */}
-              <button
+              <button type="button"
                 onClick={() => handleFollow(profile.id)}
                 disabled={following.has(profile.id)}
                 className={`w-full py-1 rounded-lg text-[10px] font-semibold transition-all ${

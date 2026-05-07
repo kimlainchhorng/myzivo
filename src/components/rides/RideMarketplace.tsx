@@ -154,7 +154,7 @@ export default function RideMarketplace() {
                   <CardContent className="p-4 space-y-3">
                     <div className="flex items-center justify-between">
                       <p className="text-sm font-bold">New Ride Request</p>
-                      <button onClick={() => setShowRequestForm(false)}><X className="w-4 h-4 text-muted-foreground" /></button>
+                      <button type="button" onClick={() => setShowRequestForm(false)}><X className="w-4 h-4 text-muted-foreground" /></button>
                     </div>
                     <Input placeholder="From (pickup location)" value={reqFrom} onChange={e => setReqFrom(e.target.value)} className="h-9 text-sm" />
                     <Input placeholder="To (destination)" value={reqTo} onChange={e => setReqTo(e.target.value)} className="h-9 text-sm" />

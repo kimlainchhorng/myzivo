@@ -107,7 +107,7 @@ export default function AutoRepairInboxSection({ storeId }: Props) {
                 className={!msg.is_read ? "border-primary/40 bg-primary/5" : ""}
               >
                 <CardContent className="p-0">
-                  <button
+                  <button type="button"
                     className="w-full text-left p-4 flex items-start gap-3"
                     onClick={() => toggle(msg)}
                   >

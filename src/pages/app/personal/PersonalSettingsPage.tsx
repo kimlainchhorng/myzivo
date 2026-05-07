@@ -1,10 +1,12 @@
-import { useState } from "react";
-import { ArrowLeft, Bell, MapPin, Shield, Eye, Moon, Smartphone, Globe, ChevronRight } from "lucide-react";
+import { useState, useEffect } from "react";
+import { ArrowLeft, Bell, MapPin, Shield, Eye, EyeOff, Moon, Smartphone, Globe, ChevronRight, Lock } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import AppLayout from "@/components/app/AppLayout";
 import { Switch } from "@/components/ui/switch";
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const SETTINGS_KEY = "zivo_personal_settings";
 
@@ -30,13 +32,39 @@ export default function PersonalSettingsPage() {
     catch { return DEFAULT_SETTINGS; }
   });
 
+  // Sync dark mode class on mount and on change
+  useEffect(() => {
+    if (settings.dark_mode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [settings.dark_mode]);
+
+  // Change password state
+  const [showChangePw, setShowChangePw] = useState(false);
+  const [newPw, setNewPw] = useState("");
+  const [confirmPw, setConfirmPw] = useState("");
+  const [showPw, setShowPw] = useState(false);
+  const [pwLoading, setPwLoading] = useState(false);
+
+  const handleUpdatePassword = async () => {
+    if (newPw.length < 8) { toast.error("Password must be at least 8 characters"); return; }
+    if (newPw !== confirmPw) { toast.error("Passwords don't match"); return; }
+    setPwLoading(true);
+    const { error } = await supabase.auth.updateUser({ password: newPw });
+    setPwLoading(false);
+    if (error) { toast.error(error.message); return; }
+    toast.success("Password updated");
+    setShowChangePw(false);
+    setNewPw(""); setConfirmPw("");
+  };
+
   const toggle = (key: SettingsKey) => {
     if (typeof settings[key] !== "boolean") return;
-    setSettings(prev => {
-      const next = { ...prev, [key]: !prev[key] };
-      localStorage.setItem(SETTINGS_KEY, JSON.stringify(next));
-      return next;
-    });
+    const next = { ...settings, [key]: !settings[key] };
+    setSettings(next);
+    localStorage.setItem(SETTINGS_KEY, JSON.stringify(next));
     toast.success("Setting updated");
   };
 
@@ -84,7 +112,7 @@ export default function PersonalSettingsPage() {
     <AppLayout title="Settings" hideHeader>
       <div className="flex flex-col px-4 pt-3 pb-24 space-y-4">
         <div className="flex items-center gap-2.5">
-          <button onClick={() => navigate(-1)} className="w-8 h-8 rounded-full bg-muted/60 flex items-center justify-center active:scale-90 transition-transform">
+          <button type="button" onClick={() => navigate(-1)} className="w-8 h-8 rounded-full bg-muted/60 flex items-center justify-center active:scale-90 transition-transform">
             <ArrowLeft className="w-4 h-4" />
           </button>
           <h1 className="font-bold text-[17px]">Settings</h1>
@@ -117,22 +145,69 @@ export default function PersonalSettingsPage() {
             <Globe className="w-4 h-4 text-foreground" />
             <span className="text-[12px] font-bold text-foreground">Account</span>
           </div>
-          {[
-            { label: "Language", value: settings.language, href: "/settings" },
-            { label: "Change Password", value: "", href: "/account/security" },
-            { label: "Delete Account", value: "", href: "/profile/delete-account", danger: true },
-          ].map((row, i) => (
-            <button key={row.label} onClick={() => navigate(row.href)}
-              className={cn("w-full flex items-center justify-between px-4 py-3.5 active:bg-muted/30 transition-colors", i > 0 && "border-t border-border/20")}>
-              <span className={cn("text-[13px] font-semibold", row.danger ? "text-red-500" : "text-foreground")}>{row.label}</span>
-              <div className="flex items-center gap-1">
-                {row.value && <span className="text-[12px] text-muted-foreground">{row.value}</span>}
-                <ChevronRight className={cn("w-4 h-4", row.danger ? "text-red-400/60" : "text-muted-foreground/50")} />
-              </div>
-            </button>
-          ))}
+          <button type="button" onClick={() => navigate("/settings")}
+            className="w-full flex items-center justify-between px-4 py-3.5 active:bg-muted/30 transition-colors">
+            <span className="text-[13px] font-semibold text-foreground">Language</span>
+            <div className="flex items-center gap-1">
+              <span className="text-[12px] text-muted-foreground">{settings.language}</span>
+              <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
+            </div>
+          </button>
+          <button type="button" onClick={() => setShowChangePw(true)}
+            className="w-full flex items-center justify-between px-4 py-3.5 border-t border-border/20 active:bg-muted/30 transition-colors">
+            <div className="flex items-center gap-2">
+              <Lock className="w-3.5 h-3.5 text-muted-foreground" />
+              <span className="text-[13px] font-semibold text-foreground">Change Password</span>
+            </div>
+            <ChevronRight className="w-4 h-4 text-muted-foreground/50" />
+          </button>
+          <button type="button" onClick={() => navigate("/profile/delete-account")}
+            className="w-full flex items-center justify-between px-4 py-3.5 border-t border-border/20 active:bg-muted/30 transition-colors">
+            <span className="text-[13px] font-semibold text-red-500">Delete Account</span>
+            <ChevronRight className="w-4 h-4 text-red-400/60" />
+          </button>
         </div>
       </div>
+      {/* Change Password Sheet */}
+      <Sheet open={showChangePw} onOpenChange={setShowChangePw}>
+        <SheetContent side="bottom" className="rounded-t-3xl px-4 pb-10">
+          <SheetHeader className="mb-5">
+            <SheetTitle className="text-left">Change Password</SheetTitle>
+          </SheetHeader>
+          <div className="space-y-3">
+            <div className="relative">
+              <input
+                type={showPw ? "text" : "password"}
+                placeholder="New password (min 8 characters)"
+                value={newPw}
+                onChange={e => setNewPw(e.target.value)}
+                className="w-full rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm pr-11 outline-none focus:ring-1 focus:ring-foreground/20"
+              />
+              <button type="button" aria-label={showPw ? "Hide password" : "Show password"} onClick={() => setShowPw(!showPw)} className="absolute right-3 top-3.5">
+                {showPw ? <EyeOff className="w-4 h-4 text-muted-foreground" /> : <Eye className="w-4 h-4 text-muted-foreground" />}
+              </button>
+            </div>
+            <input
+              type={showPw ? "text" : "password"}
+              placeholder="Confirm new password"
+              value={confirmPw}
+              onChange={e => setConfirmPw(e.target.value)}
+              className="w-full rounded-xl border border-border bg-muted/30 px-4 py-3 text-sm outline-none focus:ring-1 focus:ring-foreground/20"
+            />
+            {newPw.length > 0 && confirmPw.length > 0 && newPw !== confirmPw && (
+              <p className="text-[11px] text-red-500 text-center">Passwords don't match</p>
+            )}
+            <button
+              type="button"
+              disabled={pwLoading || newPw.length < 8 || newPw !== confirmPw}
+              onClick={handleUpdatePassword}
+              className="w-full rounded-2xl bg-foreground text-background font-bold py-3 text-sm disabled:opacity-40 active:scale-[0.98] transition-transform"
+            >
+              {pwLoading ? "Updating…" : "Update Password"}
+            </button>
+          </div>
+        </SheetContent>
+      </Sheet>
     </AppLayout>
   );
 }

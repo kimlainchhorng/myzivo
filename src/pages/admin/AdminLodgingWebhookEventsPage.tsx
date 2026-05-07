@@ -258,7 +258,7 @@ export default function AdminLodgingWebhookEventsPage() {
                         </td>
                         <td className="px-3 py-2 font-mono text-[10px]">
                           {e.reservation_id ? (
-                            <button
+                            <button type="button"
                               onClick={() => setResId(e.reservation_id!)}
                               className="text-primary hover:underline"
                               title="Filter by this reservation"

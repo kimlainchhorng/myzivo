@@ -728,7 +728,7 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
                 const Icon = opt.icon;
                 const active = (draft as any).intakeMethod === opt.id;
                 return (
-                  <button
+                  <button type="button"
                     key={opt.id}
                     type="button"
                     onClick={() => setDraft(d => ({ ...d, intakeMethod: opt.id } as any))}
@@ -783,7 +783,7 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
                           No {cat === "part" ? "parts" : cat === "labor" ? "labor lines" : "diagnosis fees"} yet.
                         </p>
                         {cat === "part" && (
-                          <button
+                          <button type="button"
                             onClick={() => setShowPartPicker(true)}
                             className="inline-flex items-center gap-1.5 text-xs text-primary font-semibold hover:underline"
                           >

@@ -144,7 +144,7 @@ export default function StoryPollsPage() {
               {options.map((opt, i) => (
                 <div key={i} className="flex gap-2 items-center">
                   {createType === "quiz" && (
-                    <button onClick={() => setCorrectIndex(i)} className={`h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 ${i === correctIndex ? "border-primary bg-primary" : "border-muted-foreground"}`}>
+                    <button type="button" onClick={() => setCorrectIndex(i)} className={`h-5 w-5 rounded-full border-2 flex items-center justify-center shrink-0 ${i === correctIndex ? "border-primary bg-primary" : "border-muted-foreground"}`}>
                       {i === correctIndex && <CheckCircle className="h-3 w-3 text-primary-foreground" />}
                     </button>
                   )}

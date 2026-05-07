@@ -103,7 +103,7 @@ export default function DatingPage() {
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-30 bg-background/80 backdrop-blur-xl border-b border-border/30">
         <div className="flex items-center gap-3 px-4 py-3">
-          <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-muted/50">
+          <button type="button" onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-muted/50">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className="text-lg font-bold flex-1 flex items-center gap-2">
@@ -120,7 +120,7 @@ export default function DatingPage() {
             <Heart className="h-16 w-16 text-muted-foreground/20 mx-auto mb-4" />
             <p className="text-sm font-medium text-foreground">No more profiles</p>
             <p className="text-xs text-muted-foreground mt-1">Check back later for new people</p>
-            <button
+            <button type="button"
               onClick={() => { setCurrentIndex(0); queryClient.invalidateQueries({ queryKey: ["dating-profiles"] }); }}
               className="mt-4 px-6 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-medium"
             >
@@ -196,14 +196,14 @@ export default function DatingPage() {
 
             {/* Action Buttons */}
             <div className="flex items-center gap-5 mt-8">
-              <button
+              <button type="button"
                 onClick={() => handleSwipe("left")}
                 className="h-14 w-14 rounded-full bg-card border-2 border-destructive/30 flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
               >
                 <X className="h-7 w-7 text-destructive" />
               </button>
 
-              <button
+              <button type="button"
                 onClick={() => {
                   if (currentProfile) {
                     navigate(`/chat`, { state: { recipientId: currentProfile.id } });
@@ -214,7 +214,7 @@ export default function DatingPage() {
                 <MessageCircle className="h-5 w-5 text-primary" />
               </button>
 
-              <button
+              <button type="button"
                 onClick={() => handleSwipe("right")}
                 className="h-14 w-14 rounded-full bg-card border-2 border-emerald-500/30 flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
               >

@@ -58,7 +58,7 @@ export default function BugReportSheet() {
             className="w-full sm:max-w-md bg-background rounded-t-2xl sm:rounded-2xl pb-[max(1rem,env(safe-area-inset-bottom))]">
             <div className="flex items-center justify-between px-4 pt-4 pb-2 border-b border-border/30">
               <div className="flex items-center gap-2"><Bug className="w-5 h-5 text-primary" /><h3 className="text-base font-bold">Report a problem</h3></div>
-              <button onClick={() => setOpen(false)} aria-label="Close" className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-muted">
+              <button type="button" onClick={() => setOpen(false)} aria-label="Close" className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-muted">
                 <X className="w-4 h-4 text-muted-foreground" />
               </button>
             </div>
@@ -71,7 +71,7 @@ export default function BugReportSheet() {
                 placeholder="What went wrong? Screenshots help — but a clear description goes a long way."
                 className="w-full px-3 py-2.5 rounded-xl bg-muted/40 border border-border/30 text-sm outline-none focus:ring-2 focus:ring-primary/30 resize-none"
               />
-              <button onClick={() => void submit()} disabled={busy || !desc.trim()} className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50">
+              <button type="button" onClick={() => void submit()} disabled={busy || !desc.trim()} className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50">
                 {busy ? "Sending…" : "Send report"}
               </button>
             </div>

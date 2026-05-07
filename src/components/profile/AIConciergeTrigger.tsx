@@ -113,7 +113,7 @@ export function AIConciergeTrigger() {
                   </div>
                 </div>
               </div>
-              <button 
+              <button type="button" 
                 onClick={() => setIsOpen(false)} 
                 className="text-primary-foreground/80 hover:text-primary-foreground transition-colors"
               >
@@ -154,7 +154,7 @@ export function AIConciergeTrigger() {
             <div className="px-4 pb-2">
               <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
                 {quickReplies.map((reply) => (
-                  <button
+                  <button type="button"
                     key={reply}
                     onClick={() => sendMessage(reply)}
                     className="flex-shrink-0 px-3 py-1.5 text-xs bg-muted rounded-full hover:bg-muted/80 transition-colors text-foreground"
@@ -176,7 +176,7 @@ export function AIConciergeTrigger() {
                   placeholder="Type a message..."
                   className="flex-1 px-4 py-2 bg-muted rounded-full text-sm outline-none focus:ring-2 focus:ring-primary/50 text-foreground placeholder:text-muted-foreground"
                 />
-                <button
+                <button type="button"
                   onClick={() => sendMessage(input)}
                   className="w-10 h-10 bg-primary rounded-full flex items-center justify-center hover:bg-primary/90 transition-colors"
                 >

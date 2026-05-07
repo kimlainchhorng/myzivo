@@ -538,7 +538,7 @@ export default function GroceryStorePage() {
                 </div>
                 <div className="flex items-center gap-2">
                   {cart.items.length > 0 && (
-                    <button onClick={cart.clearCart} className="text-[11px] text-destructive hover:underline font-medium">Clear</button>
+                    <button type="button" onClick={cart.clearCart} className="text-[11px] text-destructive hover:underline font-medium">Clear</button>
                   )}
                   <motion.button whileTap={{ scale: 0.9 }} onClick={() => setShowCart(false)} className="p-1 rounded-lg hover:bg-muted/60 transition-colors">
                     <ChevronUp className="h-4 w-4 text-muted-foreground" />

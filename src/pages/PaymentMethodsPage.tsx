@@ -118,7 +118,7 @@ const PaymentMethodsPage = () => {
     <div className="min-h-screen bg-background text-foreground pb-8">
       {/* Header */}
       <header className="sticky top-0 safe-area-top z-50 flex items-center gap-3 px-4 py-4 bg-background/95 backdrop-blur-xl border-b border-border/50">
-        <button
+        <button type="button"
           onClick={() => navigate(-1)}
           className="p-2 rounded-full hover:bg-muted transition-colors touch-manipulation"
           aria-label="Go back"
@@ -234,7 +234,7 @@ const PaymentMethodsPage = () => {
                       </p>
                     </div>
                     <div className="flex items-center gap-1">
-                      <button
+                      <button type="button"
                         onClick={() => handleSetDefault(card)}
                         disabled={card.isDefault}
                         className={cn(
@@ -252,7 +252,7 @@ const PaymentMethodsPage = () => {
                           )}
                         />
                       </button>
-                      <button
+                      <button type="button"
                         onClick={() => handleDelete(card)}
                         className="p-2 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors touch-manipulation"
                         aria-label="Delete card"

@@ -152,11 +152,11 @@ export default function CreatorDashboardPage() {
       {/* Header with ZIVO ribbon */}
       <div className="sticky top-0 safe-area-top z-30 bg-background/80 backdrop-blur-xl border-b border-border/30 zivo-ribbon">
         <div className="flex items-center gap-3 px-4 py-3">
-          <button onClick={() => navigate("/more")} className="p-2 -ml-2 rounded-full hover:bg-muted/50 touch-manipulation">
+          <button type="button" onClick={() => navigate("/more")} className="p-2 -ml-2 rounded-full hover:bg-muted/50 touch-manipulation">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className="text-lg font-extrabold flex-1 tracking-tight">Creator Dashboard</h1>
-          <button onClick={() => navigate("/creator-analytics")} className="p-2 rounded-full hover:bg-muted/50 touch-manipulation">
+          <button type="button" onClick={() => navigate("/creator-analytics")} className="p-2 rounded-full hover:bg-muted/50 touch-manipulation">
             <BarChart3 className="h-5 w-5 text-primary" />
           </button>
         </div>
@@ -175,10 +175,10 @@ export default function CreatorDashboardPage() {
           <p className="text-[11px] text-muted-foreground mb-1 uppercase tracking-wider font-medium">Lifetime Earnings</p>
           <p className="text-4xl font-extrabold tracking-tight">${(totalEarnings / 100).toFixed(2)}</p>
           <div className="flex justify-center gap-3 mt-4">
-            <button onClick={() => navigate("/wallet")} className="zivo-btn-signature px-5 py-2.5 text-xs flex items-center gap-1.5 touch-manipulation">
+            <button type="button" onClick={() => navigate("/wallet")} className="zivo-btn-signature px-5 py-2.5 text-xs flex items-center gap-1.5 touch-manipulation">
               <Wallet className="w-3.5 h-3.5" /> Withdraw
             </button>
-            <button onClick={() => navigate("/creator-analytics")} className="px-5 py-2.5 rounded-2xl bg-muted/60 text-foreground text-xs font-bold touch-manipulation active:scale-95 flex items-center gap-1.5 border border-border/30">
+            <button type="button" onClick={() => navigate("/creator-analytics")} className="px-5 py-2.5 rounded-2xl bg-muted/60 text-foreground text-xs font-bold touch-manipulation active:scale-95 flex items-center gap-1.5 border border-border/30">
               <TrendingUp className="w-3.5 h-3.5" /> Analytics
             </button>
           </div>

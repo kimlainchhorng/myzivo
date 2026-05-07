@@ -71,7 +71,7 @@ export default function BlockedUsersPage() {
   return (
     <div className="min-h-[100dvh] bg-background">
       <header className="sticky top-0 z-20 bg-background/80 backdrop-blur border-b px-4 py-3 flex items-center gap-2 safe-area-top">
-        <button
+        <button type="button"
           onClick={goBack}
           aria-label="Go back"
           className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"

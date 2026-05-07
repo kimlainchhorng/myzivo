@@ -5,12 +5,13 @@
  *
  * Route: /hotels
  */
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import { format, addDays, differenceInCalendarDays } from "date-fns";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
+import Heart from "lucide-react/dist/esm/icons/heart";
 import CalendarIcon from "lucide-react/dist/esm/icons/calendar";
 import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
 import Coffee from "lucide-react/dist/esm/icons/coffee";
@@ -127,8 +128,22 @@ export default function HotelsLandingPage() {
   const [rooms, setRooms] = useState<number>(1);
   const [datesOpen, setDatesOpen] = useState(false);
   const [guestsOpen, setGuestsOpen] = useState(false);
-  const [sortBy, setSortBy] = useState<"default" | "price_asc" | "price_desc">("default");
+  const [sortBy, setSortBy] = useState<"default" | "price_asc" | "price_desc" | "near_me">("default");
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [favorites, setFavorites] = useState<Set<string>>(() => {
+    try { return new Set(JSON.parse(localStorage.getItem("hotel_faves") || "[]") as string[]); }
+    catch { return new Set<string>(); }
+  });
+
+  const toggleFavorite = useCallback((id: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setFavorites(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      try { localStorage.setItem("hotel_faves", JSON.stringify([...next])); } catch {}
+      return next;
+    });
+  }, []);
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
@@ -237,26 +252,32 @@ export default function HotelsLandingPage() {
     },
   });
 
-  // Amenities per store
+  type PropertyProfile = { amenities: string[]; rating: number | null };
+
+  // Amenities + ratings per store
   const amenitiesQuery = useQuery({
     queryKey: ["lodge-amenities", storeIds],
     enabled: storeIds.length > 0,
-    queryFn: async (): Promise<Record<string, string[]>> => {
+    queryFn: async (): Promise<Record<string, PropertyProfile>> => {
       const { data, error } = await (supabase as any)
         .from("lodge_property_profile")
-        .select("store_id, popular_amenities, facilities")
+        .select("store_id, popular_amenities, facilities, avg_guest_rating")
         .in("store_id", storeIds);
       if (error) throw error;
-      const map: Record<string, string[]> = {};
+      const map: Record<string, PropertyProfile> = {};
       for (const r of (data || []) as Array<{
         store_id: string;
         popular_amenities: string[] | null;
         facilities: string[] | null;
+        avg_guest_rating?: number | null;
       }>) {
         const list = [...(r.popular_amenities || []), ...(r.facilities || [])]
           .filter(Boolean)
           .map((s) => String(s).toLowerCase());
-        map[r.store_id] = Array.from(new Set(list));
+        map[r.store_id] = {
+          amenities: Array.from(new Set(list)),
+          rating: typeof r.avg_guest_rating === "number" ? r.avg_guest_rating : null,
+        };
       }
       return map;
     },
@@ -270,7 +291,10 @@ export default function HotelsLandingPage() {
   const requestNearMe = () => {
     if (!("geolocation" in navigator)) return;
     navigator.geolocation.getCurrentPosition(
-      (pos) => setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      (pos) => {
+        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setSortBy("near_me");
+      },
       () => setCoords(null),
       { timeout: 8000, enableHighAccuracy: false },
     );
@@ -296,7 +320,7 @@ export default function HotelsLandingPage() {
         if (!haystack.includes(q)) return false;
       }
       if (activeTags.length > 0) {
-        const am = amenitiesMap[store.id] || [];
+        const am = amenitiesMap[store.id]?.amenities || [];
         const haystack = [...am, store.description?.toLowerCase() || ""].join(" ");
         const ok = activeTags.every((tagId) => {
           const tag = QUICK_TAGS.find((t) => t.id === tagId);
@@ -316,8 +340,16 @@ export default function HotelsLandingPage() {
     if (sortBy === "price_desc") {
       return [...filtered].sort((a, b) => (minRates[b.id]?.base ?? 0) - (minRates[a.id]?.base ?? 0));
     }
+    if (sortBy === "near_me") {
+      // Favorites float to top when near-me is active; distance sort requires geocoded store coords
+      return [...filtered].sort((a, b) => {
+        const fa = favorites.has(a.id) ? 0 : 1;
+        const fb = favorites.has(b.id) ? 0 : 1;
+        return fa - fb;
+      });
+    }
     return filtered;
-  }, [filtered, sortBy, minRates]);
+  }, [filtered, sortBy, minRates, favorites]);
 
   const toggleTag = (id: string) => {
     setActiveTags((prev) => (prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]));
@@ -364,7 +396,7 @@ export default function HotelsLandingPage() {
 
         <div className="relative px-4 pt-3 pb-4 safe-area-top">
           <div className="flex items-center gap-2">
-            <button
+            <button type="button"
               onClick={() => navigate(-1)}
               aria-label="Back"
               className="h-9 w-9 -ml-1 rounded-full flex items-center justify-center bg-white/15 backdrop-blur active:bg-white/25 transition"
@@ -400,7 +432,7 @@ export default function HotelsLandingPage() {
           <div className="mt-2 grid grid-cols-2 gap-2">
             <Popover open={datesOpen} onOpenChange={setDatesOpen}>
               <PopoverTrigger asChild>
-                <button className="h-11 rounded-2xl bg-white/95 backdrop-blur shadow-md text-left px-3 flex items-center gap-2 active:scale-[0.98] transition">
+                <button type="button" className="h-11 rounded-2xl bg-white/95 backdrop-blur shadow-md text-left px-3 flex items-center gap-2 active:scale-[0.98] transition">
                   <CalendarIcon className="w-4 h-4 text-primary shrink-0" />
                   <div className="min-w-0 flex-1">
                     <p className="text-[10px] uppercase tracking-wide text-muted-foreground leading-none">
@@ -438,7 +470,7 @@ export default function HotelsLandingPage() {
 
             <Popover open={guestsOpen} onOpenChange={setGuestsOpen}>
               <PopoverTrigger asChild>
-                <button className="h-11 rounded-2xl bg-white/95 backdrop-blur shadow-md text-left px-3 flex items-center gap-2 active:scale-[0.98] transition">
+                <button type="button" className="h-11 rounded-2xl bg-white/95 backdrop-blur shadow-md text-left px-3 flex items-center gap-2 active:scale-[0.98] transition">
                   <Users className="w-4 h-4 text-primary shrink-0" />
                   <div className="min-w-0 flex-1">
                     <p className="text-[10px] uppercase tracking-wide text-muted-foreground leading-none">
@@ -468,9 +500,9 @@ export default function HotelsLandingPage() {
       {/* Quick filter chips */}
       <section className="pt-3">
         <div className="flex gap-1.5 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-          <button
+          <button type="button"
             onClick={() => {
-              if (coords) setCoords(null);
+              if (coords) { setCoords(null); setSortBy("default"); }
               else requestNearMe();
             }}
             className={cn(
@@ -486,7 +518,7 @@ export default function HotelsLandingPage() {
           {QUICK_TAGS.map((tag) => {
             const active = activeTags.includes(tag.id);
             return (
-              <button
+              <button type="button"
                 key={tag.id}
                 onClick={() => toggleTag(tag.id)}
                 className={cn(
@@ -515,7 +547,7 @@ export default function HotelsLandingPage() {
           {POPULAR_DESTINATIONS.map((dest) => {
             const active = search.toLowerCase() === dest.city;
             return (
-              <button
+              <button type="button"
                 key={dest.id}
                 onClick={() => {
                   setSearch(active ? "" : dest.city);
@@ -555,7 +587,7 @@ export default function HotelsLandingPage() {
               <Sparkles className="w-4 h-4 text-amber-500" />
               Featured properties
             </h3>
-            <button
+            <button type="button"
               onClick={() => document.getElementById("hotels-all")?.scrollIntoView({ behavior: "smooth", block: "start" })}
               className="text-[11px] font-semibold text-primary flex items-center gap-0.5"
             >
@@ -566,7 +598,7 @@ export default function HotelsLandingPage() {
             {featured.map((store) => {
               const minCents = minRates[store.id];
               return (
-                <button
+                <button type="button"
                   key={store.id}
                   onClick={() => navigate(`/hotel/${store.id}?ci=${format(checkIn, "yyyy-MM-dd")}&co=${format(checkOut, "yyyy-MM-dd")}&adults=${guests}&children=${children}`)}
                   className="shrink-0 w-[210px] rounded-2xl border border-border bg-card overflow-hidden text-left active:scale-[0.98] transition shadow-sm"
@@ -634,7 +666,7 @@ export default function HotelsLandingPage() {
             { id: "price_asc", label: "Price ↑" },
             { id: "price_desc", label: "Price ↓" },
           ] as const).map((opt) => (
-            <button
+            <button type="button"
               key={opt.id}
               onClick={() => setSortBy(opt.id)}
               className={
@@ -654,7 +686,7 @@ export default function HotelsLandingPage() {
           {FILTERS.map((f) => {
             const active = f.id === activeFilter;
             return (
-              <button
+              <button type="button"
                 key={f.id}
                 onClick={() => setActiveFilter(f.id)}
                 className={
@@ -687,7 +719,7 @@ export default function HotelsLandingPage() {
                   : "Be the first — list your property on ZIVO."}
               </p>
               {(search || activeTags.length > 0) ? (
-                <button
+                <button type="button"
                   onClick={() => {
                     setSearch("");
                     setActiveTags([]);
@@ -715,7 +747,10 @@ export default function HotelsLandingPage() {
                   index={idx}
                   rateInfo={minRates[store.id]}
                   promo={promotions[store.id]}
-                  amenities={amenitiesMap[store.id] || []}
+                  amenities={amenitiesMap[store.id]?.amenities || []}
+                  rating={amenitiesMap[store.id]?.rating ?? null}
+                  isFavorite={favorites.has(store.id)}
+                  onToggleFavorite={(e) => toggleFavorite(store.id, e)}
                   nights={nights}
                   onOpen={() => navigate(`/hotel/${store.id}?ci=${format(checkIn, "yyyy-MM-dd")}&co=${format(checkOut, "yyyy-MM-dd")}&adults=${guests}&children=${children}`)}
                 />
@@ -795,7 +830,10 @@ function PropertyCard({
   rateInfo,
   promo,
   amenities,
+  rating,
   nights,
+  isFavorite,
+  onToggleFavorite,
   onOpen,
 }: {
   store: DirectoryStore;
@@ -803,7 +841,10 @@ function PropertyCard({
   rateInfo?: RateInfoProp;
   promo?: PromoInfoProp;
   amenities: string[];
+  rating?: number | null;
   nights: number;
+  isFavorite?: boolean;
+  onToggleFavorite?: (e: React.MouseEvent) => void;
   onOpen: () => void;
 }) {
   const location = store.address || "";
@@ -885,13 +926,21 @@ function PropertyCard({
               -{pctOff}%
             </Badge>
           )}
+          <button
+            type="button"
+            aria-label={isFavorite ? "Remove from favorites" : "Save to favorites"}
+            onClick={onToggleFavorite}
+            className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-black/30 backdrop-blur flex items-center justify-center active:scale-90 transition-transform"
+          >
+            <Heart className={cn("w-3.5 h-3.5", isFavorite ? "fill-rose-500 text-rose-500" : "text-white")} />
+          </button>
         </div>
         <div className="flex-1 min-w-0 p-3">
           <div className="flex items-start gap-2">
             <h3 className="text-sm font-bold text-foreground truncate flex-1">{store.name}</h3>
             <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-amber-600 shrink-0">
               <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
-              New
+              {typeof rating === "number" ? rating.toFixed(1) : "New"}
             </span>
           </div>
           {location && (

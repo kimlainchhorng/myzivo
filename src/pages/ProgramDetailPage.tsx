@@ -443,7 +443,7 @@ export default function ProgramDetailPage() {
         <div className="text-center">
           <AlertCircle className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
           <p className="font-bold text-lg">Program not found</p>
-          <button onClick={() => navigate("/monetization")} className="mt-4 text-primary font-semibold text-sm">
+          <button type="button" onClick={() => navigate("/monetization")} className="mt-4 text-primary font-semibold text-sm">
             ← Back to Monetization
           </button>
         </div>
@@ -465,11 +465,11 @@ export default function ProgramDetailPage() {
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-30 bg-background/80 backdrop-blur-xl border-b border-border/30">
         <div className="flex items-center gap-3 px-4 py-3">
-          <button onClick={() => navigate("/monetization")} className="p-2 -ml-2 rounded-full hover:bg-muted/50 touch-manipulation">
+          <button type="button" onClick={() => navigate("/monetization")} className="p-2 -ml-2 rounded-full hover:bg-muted/50 touch-manipulation">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className="text-sm font-bold flex-1 text-center truncate">{program.label}</h1>
-          <button
+          <button type="button"
             onClick={() => {
               navigator.clipboard.writeText(`${window.location.origin}/monetization/program/${programId}`);
               toast.success("Link copied!");
@@ -521,7 +521,7 @@ export default function ProgramDetailPage() {
               <div className="flex items-center justify-center gap-2 py-3 rounded-xl bg-primary/10 text-primary font-bold text-sm">
                 <CheckCircle className="w-4 h-4" /> You're enrolled
               </div>
-              <button
+              <button type="button"
                 onClick={() => leaveMutation.mutate()}
                 disabled={leaveMutation.isPending}
                 className="w-full py-2.5 rounded-xl border border-destructive/30 text-destructive text-xs font-semibold touch-manipulation active:scale-[0.98] transition-transform"
@@ -530,7 +530,7 @@ export default function ProgramDetailPage() {
               </button>
             </div>
           ) : (
-            <button
+            <button type="button"
               onClick={() => user ? joinMutation.mutate() : toast.error("Please sign in to join")}
               disabled={joinMutation.isPending}
               className="w-full py-3.5 rounded-xl font-bold text-sm text-white touch-manipulation active:scale-[0.98] transition-transform"
@@ -544,7 +544,7 @@ export default function ProgramDetailPage() {
         {/* Tab Navigation */}
         <div className="flex gap-1 p-1 rounded-xl bg-muted/40">
           {(["overview", "earnings", "stories"] as const).map((tab) => (
-            <button
+            <button type="button"
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`flex-1 py-2 rounded-lg text-xs font-semibold capitalize transition-colors ${
@@ -635,7 +635,7 @@ export default function ProgramDetailPage() {
                 </h3>
                 <div className="space-y-2">
                   {program.faq.map((item, i) => (
-                    <button
+                    <button type="button"
                       key={i}
                       onClick={() => setExpandedFaq(expandedFaq === i ? null : i)}
                       className="w-full rounded-xl border border-border/40 bg-card p-3.5 text-left touch-manipulation"

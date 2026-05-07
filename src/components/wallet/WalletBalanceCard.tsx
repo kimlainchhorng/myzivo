@@ -76,13 +76,13 @@ export default function WalletBalanceCard() {
         <p className="text-3xl font-bold tabular-nums tracking-tight mb-4">{fmt(wallet.available_cents)}</p>
 
         <div className="flex gap-2">
-          <button
+          <button type="button"
             onClick={() => trigger("topup")}
             className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white text-foreground font-bold text-sm active:scale-95 transition"
           >
             <Plus className="w-4 h-4" /> Top up
           </button>
-          <button
+          <button type="button"
             onClick={() => trigger("withdraw")}
             className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white/15 backdrop-blur-sm border border-white/30 text-white font-bold text-sm active:scale-95 transition"
           >

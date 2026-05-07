@@ -95,14 +95,14 @@ export default function ChatGiftPanel({ open, onClose, recipientId, recipientNam
                   {recipientName && <div className="text-[11px] text-muted-foreground">to {recipientName}</div>}
                 </div>
               </div>
-              <button onClick={onClose} className="w-8 h-8 rounded-full bg-muted/60 flex items-center justify-center">
+              <button type="button" onClick={onClose} className="w-8 h-8 rounded-full bg-muted/60 flex items-center justify-center">
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             {/* Balance pill */}
             <div className="px-5 py-3 flex items-center justify-between">
-              <button
+              <button type="button"
                 onClick={() => navigate("/wallet")}
                 className="flex items-center gap-2 px-3 py-1.5 rounded-full bg-amber-500/10 border border-amber-500/30"
               >
@@ -118,7 +118,7 @@ export default function ChatGiftPanel({ open, onClose, recipientId, recipientNam
             {/* Tabs */}
             <div className="flex gap-1 px-5 pb-2">
               {TABS.map((t) => (
-                <button
+                <button type="button"
                   key={t.id}
                   onClick={() => setTab(t.id)}
                   className={cn(
@@ -138,7 +138,7 @@ export default function ChatGiftPanel({ open, onClose, recipientId, recipientNam
                 {items.map((g) => {
                   const isSel = selected?.name === g.name;
                   return (
-                    <button
+                    <button type="button"
                       key={g.name}
                       onClick={() => { setSelected(g); setCombo(1); }}
                       className={cn(
@@ -173,7 +173,7 @@ export default function ChatGiftPanel({ open, onClose, recipientId, recipientNam
                 <div className="flex items-center gap-2">
                   <div className="flex gap-1">
                     {COMBO_STEPS.map((c) => (
-                      <button
+                      <button type="button"
                         key={c}
                         onClick={() => setCombo(c)}
                         className={cn(

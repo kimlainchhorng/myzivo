@@ -271,7 +271,7 @@ const LiveChatWidget = () => {
               )}
             </motion.button>
             {/* Dismiss button */}
-            <button
+            <button type="button"
               onClick={(e) => { e.stopPropagation(); setIsDismissed(true); }}
               className="absolute -top-1.5 -left-1.5 w-6 h-6 bg-muted border border-border rounded-full flex items-center justify-center shadow-md hover:bg-destructive hover:text-destructive-foreground transition-colors z-10"
               aria-label="Close chat widget"
@@ -316,14 +316,14 @@ const LiveChatWidget = () => {
               </div>
               <div className="flex items-center gap-2">
                 {/* Mode toggle */}
-                <button
+                <button type="button"
                   onClick={() => switchMode(chatMode === "ai" ? "human" : "ai")}
                   className="w-8 h-8 rounded-full bg-white/15 hover:bg-white/25 flex items-center justify-center transition-colors"
                   title={chatMode === "ai" ? "Switch to human" : "Switch to AI"}
                 >
                   <ArrowLeftRight className="w-4 h-4 text-primary-foreground" />
                 </button>
-                <button onClick={() => setIsOpen(false)} className="text-primary-foreground/80 hover:text-primary-foreground">
+                <button type="button" onClick={() => setIsOpen(false)} className="text-primary-foreground/80 hover:text-primary-foreground">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -331,7 +331,7 @@ const LiveChatWidget = () => {
 
             {/* Mode indicator bar */}
             <div className="flex border-b border-border/30 shrink-0">
-              <button
+              <button type="button"
                 onClick={() => switchMode("ai")}
                 className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium transition-colors ${
                   chatMode === "ai" ? "text-primary border-b-2 border-primary bg-primary/5" : "text-muted-foreground hover:text-foreground"
@@ -340,7 +340,7 @@ const LiveChatWidget = () => {
                 <Sparkles className="w-3 h-3" />
                 AI Assistant
               </button>
-              <button
+              <button type="button"
                 onClick={() => switchMode("human")}
                 className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-medium transition-colors ${
                   chatMode === "human" ? "text-primary border-b-2 border-primary bg-primary/5" : "text-muted-foreground hover:text-foreground"
@@ -393,7 +393,7 @@ const LiveChatWidget = () => {
                 <p className="text-xs font-semibold text-foreground">Connect to human support</p>
                 <div className="flex gap-1.5 flex-wrap">
                   {ESCALATION_CATEGORIES.map((cat) => (
-                    <button
+                    <button type="button"
                       key={cat.value}
                       onClick={() => setEscalationCategory(cat.value)}
                       className={`px-2.5 py-1 text-xs rounded-full border transition-all duration-200 ${
@@ -438,7 +438,7 @@ const LiveChatWidget = () => {
               <div className="px-4 pb-2 shrink-0">
                 <div className="flex gap-1.5 overflow-x-auto pb-1.5 scrollbar-hide">
                   {quickReplies.map((reply) => (
-                    <button
+                    <button type="button"
                       key={reply}
                       onClick={() => sendMessage(reply)}
                       disabled={isStreaming}

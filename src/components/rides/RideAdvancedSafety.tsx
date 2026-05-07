@@ -107,7 +107,7 @@ export default function RideAdvancedSafety() {
         {tabs.map((tab) => {
           const Icon = tab.icon;
           return (
-            <button
+            <button type="button"
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
@@ -135,7 +135,7 @@ export default function RideAdvancedSafety() {
                     <MapPin className="w-4 h-4 text-primary" />
                     <p className="text-sm font-bold text-foreground">Live Location Sharing</p>
                   </div>
-                  <button
+                  <button type="button"
                     onClick={() => { setLiveSharing(!liveSharing); toast.success(liveSharing ? "Sharing stopped" : "Sharing started"); }}
                     className={cn(
                       "w-11 h-6 rounded-full flex items-center transition-all px-0.5",
@@ -150,7 +150,7 @@ export default function RideAdvancedSafety() {
                     <p className="text-xs text-muted-foreground">Your trusted contacts can see your real-time location during this ride</p>
                     <div className="flex gap-2">
                       {["SMS", "WhatsApp", "Email"].map((method) => (
-                        <button
+                        <button type="button"
                           key={method}
                           onClick={() => toast.success(`Shared via ${method}`)}
                           className="flex-1 py-2 bg-primary/10 rounded-lg text-xs font-bold text-primary"
@@ -192,13 +192,13 @@ export default function RideAdvancedSafety() {
                       <span className="text-4xl font-black text-destructive">{panicCountdown}</span>
                     </div>
                     <p className="text-sm font-bold text-destructive">Contacting emergency services...</p>
-                    <button onClick={cancelPanic} className="w-full py-3 bg-muted rounded-xl text-sm font-bold text-foreground">
+                    <button type="button" onClick={cancelPanic} className="w-full py-3 bg-muted rounded-xl text-sm font-bold text-foreground">
                       Cancel
                     </button>
                   </motion.div>
                 ) : (
                   <>
-                    <button
+                    <button type="button"
                       onClick={startPanic}
                       className="w-28 h-28 mx-auto rounded-full bg-destructive flex items-center justify-center shadow-lg active:scale-95 transition-transform"
                     >
@@ -231,7 +231,7 @@ export default function RideAdvancedSafety() {
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <p className="text-sm font-bold text-foreground">Trusted Contacts</p>
-                <button onClick={() => setShowAddContact((v) => !v)} className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
+                <button type="button" onClick={() => setShowAddContact((v) => !v)} className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center">
                   <Plus className="w-3.5 h-3.5 text-primary" />
                 </button>
               </div>
@@ -257,7 +257,7 @@ export default function RideAdvancedSafety() {
                         className="flex-1 rounded-lg border border-border bg-muted/30 px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-primary/40"
                         onKeyDown={(e) => e.key === "Enter" && addContact()}
                       />
-                      <button onClick={addContact} disabled={!newContact.name.trim() || !newContact.phone.trim()}
+                      <button type="button" onClick={addContact} disabled={!newContact.name.trim() || !newContact.phone.trim()}
                         className="px-3 rounded-lg bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-40">
                         Add
                       </button>
@@ -275,14 +275,14 @@ export default function RideAdvancedSafety() {
                     <p className="text-sm font-bold text-foreground">{contact.name}</p>
                     <p className="text-xs text-muted-foreground">{contact.phone}</p>
                   </div>
-                  <button
+                  <button type="button"
                     onClick={() => toggleContact(contact.id)}
                     className={cn("w-10 h-6 rounded-full flex items-center px-1 transition-colors shrink-0",
                       contact.active ? "bg-green-500 justify-end" : "bg-muted justify-start")}
                   >
                     <div className="w-4 h-4 rounded-full bg-background shadow-sm" />
                   </button>
-                  <button onClick={() => removeContact(contact.id)} className="p-1 rounded-lg hover:bg-muted/60 shrink-0">
+                  <button type="button" onClick={() => removeContact(contact.id)} className="p-1 rounded-lg hover:bg-muted/60 shrink-0">
                     <X className="w-3.5 h-3.5 text-muted-foreground/50" />
                   </button>
                 </div>

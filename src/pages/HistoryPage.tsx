@@ -199,7 +199,7 @@ export default function HistoryPage() {
       <div className="min-h-screen bg-background flex flex-col items-center justify-center gap-4 px-6 text-center">
         <Clock className="h-12 w-12 text-muted-foreground/30" />
         <p className="text-base font-semibold text-foreground">Sign in to view your history</p>
-        <button onClick={() => navigate("/login")} className="px-6 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold">
+        <button type="button" onClick={() => navigate("/login")} className="px-6 py-2 rounded-full bg-primary text-primary-foreground text-sm font-semibold">
           Sign in
         </button>
       </div>
@@ -214,7 +214,7 @@ export default function HistoryPage() {
         {/* Header */}
         <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/20 safe-area-top">
           <div className="flex items-center gap-3 px-4 py-3 max-w-2xl mx-auto">
-            <button onClick={() => navigate(-1)} className="p-1.5 rounded-full hover:bg-muted/60 transition-colors">
+            <button type="button" onClick={() => navigate(-1)} className="p-1.5 rounded-full hover:bg-muted/60 transition-colors">
               <ChevronLeft className="h-5 w-5 text-foreground" />
             </button>
             <div className="flex items-center gap-2">
@@ -226,7 +226,7 @@ export default function HistoryPage() {
           {/* Tabs — horizontal scroll on mobile */}
           <div className="flex max-w-2xl mx-auto px-4 gap-2 pb-3 overflow-x-auto scrollbar-none">
             {tabConfig.map(({ id, label, icon: Icon }) => (
-              <button
+              <button type="button"
                 key={id}
                 onClick={() => setTab(id)}
                 className={cn(
@@ -266,7 +266,7 @@ export default function HistoryPage() {
                      "Your activity across all ZIVO services will appear here."}
                   </p>
                 </div>
-                <button
+                <button type="button"
                   onClick={() => navigate(
                     tab === "rides" ? "/rides" :
                     tab === "eats" ? "/eats" :
@@ -284,7 +284,7 @@ export default function HistoryPage() {
                 {displayItems.map((item) => {
                   const Icon = item.icon;
                   return (
-                    <button
+                    <button type="button"
                       key={item.id}
                       onClick={() => {
                         if (item.type === "ride") navigate("/rides");

@@ -243,7 +243,7 @@ export default function FlightSearchFormPro({
           { id: "oneway" as TripType, label: t("flights.oneway"), icon: Plane },
           { id: "multicity" as TripType, label: "Multi-City", icon: MapPin },
         ].map((type) => (
-          <button
+          <button type="button"
             key={type.id}
             onClick={() => setTripType(type.id)}
             className={cn(
@@ -599,7 +599,7 @@ export default function FlightSearchFormPro({
                       <PopoverContent className="w-48 p-2" align="start">
                         <div className="space-y-1">
                           {cabinOptions.map((opt) => (
-                            <button
+                            <button type="button"
                               key={opt.value}
                               onClick={() => setCabin(opt.value)}
                               className={cn(

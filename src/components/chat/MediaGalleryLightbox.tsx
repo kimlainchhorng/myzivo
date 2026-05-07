@@ -35,7 +35,7 @@ export default function MediaGalleryLightbox({ open, images, initialIndex = 0, o
           role="dialog"
           aria-modal="true"
         >
-          <button
+          <button type="button"
             onClick={onClose}
             className="absolute top-4 right-4 z-10 h-10 w-10 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white"
             aria-label="Close"
@@ -59,7 +59,7 @@ export default function MediaGalleryLightbox({ open, images, initialIndex = 0, o
           </motion.div>
 
           {canPrev && (
-            <button
+            <button type="button"
               onClick={(e) => { e.stopPropagation(); setCurrentIndex(c => c - 1); }}
               className="absolute left-4 z-10 h-12 w-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white active:scale-90"
               aria-label="Previous"
@@ -69,7 +69,7 @@ export default function MediaGalleryLightbox({ open, images, initialIndex = 0, o
           )}
 
           {canNext && (
-            <button
+            <button type="button"
               onClick={(e) => { e.stopPropagation(); setCurrentIndex(c => c + 1); }}
               className="absolute right-4 z-10 h-12 w-12 flex items-center justify-center rounded-full bg-white/10 hover:bg-white/20 text-white active:scale-90"
               aria-label="Next"

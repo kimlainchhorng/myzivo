@@ -34,7 +34,7 @@ export default function PaymentsOutstandingPanel({ items, onApply, onOpenInvoice
                 : "bg-muted text-muted-foreground border-border";
               return (
                 <li key={it.id} className="py-2 flex items-center justify-between gap-2 text-sm">
-                  <button onClick={() => onOpenInvoice?.(it.id)} className="text-left min-w-0 flex-1 hover:underline">
+                  <button type="button" onClick={() => onOpenInvoice?.(it.id)} className="text-left min-w-0 flex-1 hover:underline">
                     <div className="font-medium truncate">{it.number || it.id.slice(0, 8)} · {it.customer}</div>
                     <div className="text-[11px] text-muted-foreground truncate">{it.vehicle}</div>
                   </button>

@@ -119,7 +119,7 @@ export default function ReactedBySheet({ open, messageId, onClose }: Props) {
           >
             <div className="flex items-center justify-between p-4 border-b border-border/30">
               <h3 className="text-base font-bold text-foreground">Reactions</h3>
-              <button
+              <button type="button"
                 onClick={onClose}
                 aria-label="Close"
                 className="h-9 w-9 -mr-1.5 flex items-center justify-center rounded-full hover:bg-muted"
@@ -131,7 +131,7 @@ export default function ReactedBySheet({ open, messageId, onClose }: Props) {
             {/* Emoji filter pills */}
             {emojis.length > 1 && (
               <div className="flex gap-1.5 px-4 py-2 border-b border-border/20 overflow-x-auto">
-                <button
+                <button type="button"
                   onClick={() => setFilter(null)}
                   className={`px-2.5 py-1 rounded-full text-xs font-semibold ${
                     filter == null ? "bg-primary text-primary-foreground" : "bg-muted text-foreground/70"
@@ -140,7 +140,7 @@ export default function ReactedBySheet({ open, messageId, onClose }: Props) {
                   All · {(items || []).length}
                 </button>
                 {emojis.map((e) => (
-                  <button
+                  <button type="button"
                     key={e}
                     onClick={() => setFilter(e)}
                     className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${

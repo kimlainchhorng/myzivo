@@ -159,7 +159,7 @@ export default function RideTrackingPage() {
     <AppLayout title="Live Tracking" showBack onBack={() => navigate("/rides")} hideNav>
       <div className="p-4 space-y-4">
         {tripData?.status === "completed" && queue && queue.upcoming.length > 0 && (
-          <button
+          <button type="button"
             onClick={handleNextLeg}
             className="w-full flex items-center gap-3 rounded-2xl border border-primary/40 bg-gradient-to-r from-primary/15 to-primary/5 p-3 text-left active:scale-[0.99] transition-transform touch-manipulation"
           >
@@ -180,7 +180,7 @@ export default function RideTrackingPage() {
           </button>
         )}
         {tripData?.status && tripData.status !== "completed" && tripData.status !== "cancelled" && (
-          <button
+          <button type="button"
             onClick={shareTrip}
             className="w-full flex items-center gap-3 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-3 text-left active:scale-[0.99] transition-transform touch-manipulation"
           >
@@ -210,7 +210,7 @@ export default function RideTrackingPage() {
           </>
         )}
         {tripData?.status && ["en_route", "arrived", "in_progress"].includes(tripData.status) && tripData?.dropoff_address && (
-          <button
+          <button type="button"
             onClick={() => navigate(`/eats?q=${encodeURIComponent(tripData.dropoff_address)}`)}
             className="w-full flex items-center gap-3 rounded-2xl border border-orange-500/30 bg-gradient-to-r from-orange-500/10 to-amber-500/5 p-3 text-left active:scale-[0.99] transition-transform touch-manipulation"
           >

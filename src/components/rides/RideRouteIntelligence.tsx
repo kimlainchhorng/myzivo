@@ -67,7 +67,7 @@ export default function RideRouteIntelligence() {
         {tabs.map((tab) => {
           const Icon = tab.icon;
           return (
-            <button
+            <button type="button"
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
@@ -146,7 +146,7 @@ export default function RideRouteIntelligence() {
                 <span className="text-xs text-muted-foreground flex items-center gap-1">
                   <Clock className="w-3.5 h-3.5" /> {match.time}
                 </span>
-                <button
+                <button type="button"
                   onClick={() => navigate("/chat", { state: { openChat: { userId: match.id?.toString(), name: match.name } } })}
                   className="text-xs font-bold text-primary"
                 >

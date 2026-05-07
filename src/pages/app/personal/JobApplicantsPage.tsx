@@ -1,7 +1,7 @@
 /** Employer view: applicants for a single job */
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Download, Mail } from "lucide-react";
+import { ArrowLeft, Download, Mail, UserCircle } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -9,6 +9,14 @@ import { toast } from "sonner";
 import { useSmartBack } from "@/lib/smartBack";
 
 const STATUSES = ["submitted", "reviewed", "shortlisted", "rejected", "hired"] as const;
+
+const statusColor: Record<string, string> = {
+  submitted: "bg-blue-500/10 text-blue-600",
+  reviewed: "bg-amber-500/10 text-amber-600",
+  shortlisted: "bg-emerald-500/10 text-emerald-600",
+  rejected: "bg-red-500/10 text-red-600",
+  hired: "bg-emerald-600/10 text-emerald-700",
+};
 
 export default function JobApplicantsPage() {
   const { id } = useParams<{ id: string }>();
@@ -23,7 +31,7 @@ export default function JobApplicantsPage() {
     (async () => {
       const [{ data: j }, { data: a }] = await Promise.all([
         (supabase as any).from("career_jobs").select("id,title").eq("id", id).maybeSingle(),
-        (supabase as any).from("career_applications").select("*").eq("job_id", id).order("created_at", { ascending: false }),
+        (supabase as any).from("career_applications").select("*, profiles(full_name, avatar_url)").eq("job_id", id).order("created_at", { ascending: false }),
       ]);
       setJob(j);
       setApps(a ?? []);
@@ -59,11 +67,18 @@ export default function JobApplicantsPage() {
         {apps.map(a => (
           <Card key={a.id} className="space-y-2 p-3">
             <div className="flex items-center justify-between gap-2">
-              <div className="min-w-0 flex-1">
-                <div className="truncate text-sm font-semibold">{a.applicant_email ?? "Applicant"}</div>
-                <div className="text-[11px] text-muted-foreground">{new Date(a.created_at).toLocaleString()}</div>
+              <div className="flex min-w-0 flex-1 items-center gap-2">
+                {a.profiles?.avatar_url ? (
+                  <img src={a.profiles.avatar_url} alt="" className="h-8 w-8 shrink-0 rounded-full object-cover" />
+                ) : (
+                  <UserCircle className="h-8 w-8 shrink-0 text-muted-foreground" />
+                )}
+                <div className="min-w-0">
+                  <div className="truncate text-sm font-semibold">{a.profiles?.full_name ?? a.applicant_email ?? "Applicant"}</div>
+                  <div className="truncate text-[11px] text-muted-foreground">{a.applicant_email} · {new Date(a.created_at).toLocaleString()}</div>
+                </div>
               </div>
-              <span className="rounded-full bg-muted px-2 py-0.5 text-[10px]">{a.status}</span>
+              <span className={`rounded-full px-2 py-0.5 text-[10px] font-medium ${statusColor[a.status] ?? "bg-muted text-muted-foreground"}`}>{a.status}</span>
             </div>
             {a.cover_note && <p className="whitespace-pre-wrap text-xs text-muted-foreground">{a.cover_note}</p>}
             <div className="flex flex-wrap items-center gap-2">
@@ -78,6 +93,7 @@ export default function JobApplicantsPage() {
                 </a>
               )}
               <select
+                aria-label="Application status"
                 value={a.status}
                 onChange={e => setStatus(a.id, e.target.value)}
                 className="ml-auto rounded-md border bg-background px-2 py-1 text-xs"

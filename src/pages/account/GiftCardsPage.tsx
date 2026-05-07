@@ -123,7 +123,7 @@ export default function GiftCardsPage() {
     <div className="space-y-3">
       <div className="grid grid-cols-5 gap-2">
         {PRESET_AMOUNTS.map((amt) => (
-          <button
+          <button type="button"
             key={amt.cents}
             onClick={() => { setCustomMode(false); setSelectedAmount(amt.cents); }}
             className={`py-3 rounded-xl font-bold text-base transition-all ${
@@ -135,7 +135,7 @@ export default function GiftCardsPage() {
             {amt.label}
           </button>
         ))}
-        <button
+        <button type="button"
           onClick={() => setCustomMode(true)}
           className={`py-3 rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-1 ${
             customMode
@@ -206,7 +206,7 @@ export default function GiftCardsPage() {
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-50 bg-background/80 backdrop-blur-xl border-b border-border/50">
         <div className="flex items-center justify-between px-6 py-4">
-          <button
+          <button type="button"
             onClick={() => navigate(-1)}
             className="w-10 h-10 rounded-full bg-muted border border-border/50 flex items-center justify-center"
           >
@@ -415,7 +415,7 @@ export default function GiftCardsPage() {
                     ] as const).map((opt) => {
                       const c = counts[opt.key];
                       return (
-                        <button
+                        <button type="button"
                           key={opt.key}
                           onClick={() => setCardFilter(opt.key)}
                           className={`shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
@@ -468,7 +468,7 @@ export default function GiftCardsPage() {
                       <div className="flex items-center gap-2">
                         <Gift className="w-4 h-4 text-primary" />
                         <span className="font-mono text-sm">{card.code}</span>
-                        <button
+                        <button type="button"
                           onClick={() => copyCode(card.code, card.id)}
                           className="p-1 rounded hover:bg-muted"
                         >

@@ -94,7 +94,7 @@ const FlightToHotelBridge = ({
           <p className="text-sm font-medium text-muted-foreground">Top picks for you:</p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             {suggestedHotels.map((hotel) => (
-              <button
+              <button type="button"
                 key={hotel.id}
                 onClick={() => setSelectedHotel(hotel.id)}
                 className={cn(

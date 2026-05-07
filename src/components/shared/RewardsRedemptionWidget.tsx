@@ -74,7 +74,7 @@ const RewardsRedemptionWidget = ({
 
       <div className="flex gap-2 mb-4">
         {[25, 50, 100].map((percent) => (
-          <button
+          <button type="button"
             key={percent}
             onClick={() => setMilesValue([Math.floor(maxRedeemable * percent / 100)])}
             className={cn(

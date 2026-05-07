@@ -46,7 +46,7 @@ export default function ReferAFriendPage() {
         {/* Header */}
         <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border/30 px-4 py-3 pt-safe">
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate(-1)}>
+            <button type="button" onClick={() => navigate(-1)}>
               <ArrowLeft className="h-5 w-5" />
             </button>
             <Gift className="h-5 w-5 text-primary" />
@@ -220,7 +220,7 @@ export default function ReferAFriendPage() {
 
             <p className="text-[9px] text-center text-muted-foreground/60">
               ZiVo Credits have no cash value. Credits are applied to future purchases.
-              See <button onClick={() => navigate("/terms")} className="text-primary underline">Terms</button> for details.
+              See <button type="button" onClick={() => navigate("/terms")} className="text-primary underline">Terms</button> for details.
             </p>
           </div>
         )}

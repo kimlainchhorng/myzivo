@@ -277,6 +277,7 @@ const SmartNowCard = ({ onNavigate }: { onNavigate: (to: string) => void }) => {
           <div className="flex-1 min-w-0">
             <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-muted-foreground">{cfg.greeting}</p>
             <button
+              type="button"
               onClick={() => onNavigate(cfg.primary.to)}
               className="mt-0.5 flex items-center gap-1 text-sm font-bold text-foreground active:opacity-70 transition-opacity touch-manipulation"
             >
@@ -539,7 +540,7 @@ const SectionHeader = ({ icon: Icon, iconColor, title, badge, actionLabel, onSee
         </Badge>
       )}
     </h2>
-    <button onClick={onSeeAll} className="text-xs text-primary font-bold touch-manipulation active:scale-95 min-w-[44px] min-h-[32px] flex items-center gap-0.5 hover:gap-1.5 transition-all">
+    <button type="button" onClick={onSeeAll} className="text-xs text-primary font-bold touch-manipulation active:scale-95 min-w-[44px] min-h-[32px] flex items-center gap-0.5 hover:gap-1.5 transition-all">
       {actionLabel}
       <ChevronRight className="w-3.5 h-3.5" />
     </button>
@@ -752,7 +753,7 @@ const AppHome = () => {
           {/* ─── GREETING HEADER ─── */}
           {user ? (
             <div className="flex items-center justify-between px-5 pt-safe pb-3">
-              <button onClick={() => navigate("/profile")} className="flex items-center gap-2.5 touch-manipulation active:opacity-75 transition-opacity">
+              <button type="button" onClick={() => navigate("/profile")} className="flex items-center gap-2.5 touch-manipulation active:opacity-75 transition-opacity">
                 {avatarUrl ? (
                   <img src={avatarUrl} alt={userName} width={40} height={40} className="w-10 h-10 rounded-full object-cover ring-2 ring-primary/25" />
                 ) : (
@@ -768,6 +769,7 @@ const AppHome = () => {
               <div className="flex items-center gap-2">
                 {balanceDollars != null && balanceDollars > 0 && (
                   <button
+                    type="button"
                     onClick={() => navigate("/account/wallet")}
                     className="flex items-center gap-1.5 bg-primary/10 rounded-full px-3 py-1.5 touch-manipulation active:scale-95 transition-transform"
                   >
@@ -776,6 +778,8 @@ const AppHome = () => {
                   </button>
                 )}
                 <button
+                  type="button"
+                  aria-label="Activity"
                   onClick={() => navigate("/activity")}
                   className="relative w-9 h-9 rounded-full bg-muted/50 flex items-center justify-center touch-manipulation active:scale-90 transition-transform"
                 >
@@ -789,7 +793,7 @@ const AppHome = () => {
           <div className={cn("pb-5", user ? "pt-1" : "pt-safe")}>
             <div className="flex items-center justify-between mb-3 px-5">
               <h2 className="text-base font-bold text-foreground">{t("home.more_services")}</h2>
-              <button onClick={() => navigate("/services")} className="w-8 h-8 flex items-center justify-center touch-manipulation rounded-full hover:bg-muted/50 transition-colors">
+              <button type="button" aria-label="View all services" onClick={() => navigate("/services")} className="w-8 h-8 flex items-center justify-center touch-manipulation rounded-full hover:bg-muted/50 transition-colors">
                 <ArrowRight className="w-4.5 h-4.5 text-muted-foreground" />
               </button>
             </div>
@@ -876,6 +880,36 @@ const AppHome = () => {
 
           {/* ─── QUICK PICKS (fast-access shortcut chips) ─── */}
           <QuickPicksBar onNavigate={navigate} />
+
+          {/* ─── PINNED SAVED PLACES (elevated to top for one-tap access) ─── */}
+          {user && savedLocations && savedLocations.length > 0 && (
+            <div className="pb-3">
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide px-5" style={{ WebkitOverflowScrolling: "touch" }}>
+                {savedLocations.slice(0, 6).map((loc) => {
+                  const Icon = savedPlaceIconMap[loc.icon] || MapPin;
+                  return (
+                    <motion.button
+                      key={loc.id}
+                      whileTap={{ scale: 0.94 }}
+                      onClick={() => navigate(`/rides?destination=${encodeURIComponent(loc.address)}`)}
+                      className="shrink-0 flex items-center gap-1.5 bg-card border border-border/50 rounded-full px-3 py-2 shadow-sm touch-manipulation hover:border-primary/30 transition-colors"
+                    >
+                      <Icon className="w-3.5 h-3.5 text-primary" />
+                      <span className="text-xs font-semibold text-foreground whitespace-nowrap">{loc.label}</span>
+                    </motion.button>
+                  );
+                })}
+                <motion.button
+                  whileTap={{ scale: 0.94 }}
+                  onClick={() => navigate("/account/addresses")}
+                  className="shrink-0 flex items-center gap-1.5 bg-muted/50 border border-dashed border-border/50 rounded-full px-3 py-2 touch-manipulation"
+                >
+                  <Plus className="w-3 h-3 text-muted-foreground" />
+                  <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Add place</span>
+                </motion.button>
+              </div>
+            </div>
+          )}
 
           {/* ─── DAILY MISSION (rotates by day of week, ties into rewards) ─── */}
           {user && <DailyMissionCard onNavigate={navigate} />}
@@ -1053,7 +1087,9 @@ const AppHome = () => {
             <div className="flex justify-center gap-1.5 mt-3">
               {promos.map((_, i) => (
                 <button
+                  type="button"
                   key={i}
+                  aria-label={`Go to slide ${i + 1}`}
                   onClick={() => emblaApi?.scrollTo(i)}
                   className={cn(
                     "rounded-full transition-all duration-200",
@@ -1116,6 +1152,7 @@ const AppHome = () => {
                   </div>
                   {lodgingCompletion && lodgingCompletion.percent < 100 && lodgingCompletion.nextBestAction && (
                     <button
+                      type="button"
                       onClick={(e) => { e.stopPropagation(); navigate(`/admin/stores/${ownerStore.id}?tab=${lodgingCompletion.nextBestAction.tab}`); }}
                       className="mt-2 flex w-full items-center justify-between rounded-lg border border-primary/25 bg-primary/8 px-3 py-2 text-left transition-colors hover:bg-primary/12 active:scale-[0.99]"
                     >
@@ -1145,7 +1182,7 @@ const AppHome = () => {
                 </div>
               </motion.div>
             ) : (
-              <button onClick={() => navigate("/business/new")} className="flex w-full items-center justify-between rounded-2xl border border-border bg-card p-4 text-left shadow-sm active:scale-[0.99]">
+              <button type="button" onClick={() => navigate("/business/new")} className="flex w-full items-center justify-between rounded-2xl border border-border bg-card p-4 text-left shadow-sm active:scale-[0.99]">
                 <span className="flex items-center gap-3"><span className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary"><Briefcase className="h-5 w-5" /></span><span><span className="block text-sm font-bold text-foreground">Business Page</span><span className="block text-xs text-muted-foreground">Create your business page on Zivo</span></span></span>
                 <ArrowRight className="h-4 w-4 text-muted-foreground" />
               </button>
@@ -1159,7 +1196,7 @@ const AppHome = () => {
           <div className="pb-5">
             <div className="flex items-center justify-between mb-3 px-5">
               <h2 className="text-base font-bold text-foreground">Discover</h2>
-              <button onClick={() => navigate("/more")} className="w-8 h-8 flex items-center justify-center touch-manipulation rounded-full hover:bg-muted/50 transition-colors">
+              <button type="button" aria-label="View more" onClick={() => navigate("/more")} className="w-8 h-8 flex items-center justify-center touch-manipulation rounded-full hover:bg-muted/50 transition-colors">
                 <ArrowRight className="w-4.5 h-4.5 text-muted-foreground" />
               </button>
             </div>

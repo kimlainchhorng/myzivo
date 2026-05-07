@@ -113,7 +113,7 @@ export function NextActions({ actions }: { actions: { label: string; tab: string
   return (
     <div className="grid gap-2 md:grid-cols-3">
       {actions.map((action) => (
-        <button key={action.label} onClick={() => goTab(action.tab)} className="rounded-lg border border-border bg-card p-3 text-left transition hover:border-primary/50 hover:bg-primary/5">
+        <button type="button" key={action.label} onClick={() => goTab(action.tab)} className="rounded-lg border border-border bg-card p-3 text-left transition hover:border-primary/50 hover:bg-primary/5">
           <p className="text-sm font-semibold text-foreground">{action.label}</p>
           <p className="mt-1 text-xs text-muted-foreground">{action.hint}</p>
         </button>

@@ -120,7 +120,7 @@ export default function OutboundRedirect() {
                 </p>
                 
                 {/* Continue Button */}
-                <button
+                <button type="button"
                   onClick={handleContinue}
                   className="w-full py-3 px-6 rounded-xl bg-primary text-primary-foreground font-semibold hover:bg-primary/90 transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.98] touch-manipulation min-h-[48px] shadow-lg shadow-primary/20"
                 >
@@ -179,7 +179,7 @@ export default function OutboundRedirect() {
                   try {
                     const decoded = decodeURIComponent(searchParams.get('url') || '');
                     return isAllowedPartnerUrl(decoded) ? (
-                      <button
+                      <button type="button"
                         onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(decoded))}
                         className="inline-flex items-center gap-2 text-primary hover:underline"
                       >

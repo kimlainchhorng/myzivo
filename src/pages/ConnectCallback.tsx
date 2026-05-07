@@ -127,7 +127,7 @@ export default function ConnectCallback() {
           <p className="text-xs text-muted-foreground py-4 text-center">{emptyHint}</p>
         ) : (
           items.map((row) => (
-            <button
+            <button type="button"
               key={row.id}
               onClick={() => setDefault(row)}
               disabled={savingId === row.id}

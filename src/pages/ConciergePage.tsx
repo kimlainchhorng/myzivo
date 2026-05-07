@@ -138,7 +138,7 @@ export default function ConciergePage() {
       {/* Header */}
       <header className="sticky top-0 z-30 bg-background/90 backdrop-blur border-b border-border/40 pt-safe">
         <div className="max-w-screen-md mx-auto px-4 py-3 flex items-center gap-3">
-          <button
+          <button type="button"
             onClick={() => navigate(-1)}
             className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center"
             aria-label="Back"
@@ -174,7 +174,7 @@ export default function ConciergePage() {
                 Jumping to: {plan.steps[0].title}
               </div>
             </div>
-            <button
+            <button type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 cancelAutorun();
@@ -233,7 +233,7 @@ export default function ConciergePage() {
           )}
           <div className="mt-3 flex flex-wrap gap-1.5">
             {EXAMPLES.map((s) => (
-              <button
+              <button type="button"
                 key={s}
                 onClick={() => submit(s)}
                 className="rounded-full bg-muted hover:bg-muted/70 px-2.5 py-1 text-[11px] font-bold text-foreground transition-colors"

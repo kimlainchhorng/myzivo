@@ -20,7 +20,7 @@ export default function PrivacySecurityPage() {
     <div className="min-h-screen bg-background pb-[env(safe-area-inset-bottom)]">
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur border-b border-border safe-area-top">
         <div className="flex items-center gap-2 h-14 px-2">
-          <button onClick={goBack} aria-label="Back" className="p-2 -ml-2 rounded-full hover:bg-muted">
+          <button type="button" onClick={goBack} aria-label="Back" className="p-2 -ml-2 rounded-full hover:bg-muted">
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="text-base font-semibold">Privacy & Security</h1>
@@ -30,28 +30,28 @@ export default function PrivacySecurityPage() {
       <div className="max-w-2xl mx-auto px-4 py-4 space-y-4">
         {/* Security shortcuts */}
         <section className="rounded-2xl bg-card border border-border divide-y divide-border">
-          <button onClick={() => navigate("/chat/settings/sessions")} className="w-full flex items-center gap-3 p-4 text-left hover:bg-muted/40">
+          <button type="button" onClick={() => navigate("/chat/settings/sessions")} className="w-full flex items-center gap-3 p-4 text-left hover:bg-muted/40">
             <Smartphone className="w-5 h-5 text-foreground" />
             <div className="flex-1">
               <div className="text-sm font-medium">Active sessions</div>
               <div className="text-xs text-muted-foreground">{sessions.length} device{sessions.length === 1 ? "" : "s"} signed in</div>
             </div>
           </button>
-          <button onClick={() => navigate("/chat/settings/two-step")} className="w-full flex items-center gap-3 p-4 text-left hover:bg-muted/40">
+          <button type="button" onClick={() => navigate("/chat/settings/two-step")} className="w-full flex items-center gap-3 p-4 text-left hover:bg-muted/40">
             <KeyRound className="w-5 h-5 text-foreground" />
             <div className="flex-1">
               <div className="text-sm font-medium">Two-step verification</div>
               <div className="text-xs text-muted-foreground">{twoStepOn ? "On" : "Off"}</div>
             </div>
           </button>
-          <button onClick={() => navigate("/chat/settings/passcode")} className="w-full flex items-center gap-3 p-4 text-left hover:bg-muted/40">
+          <button type="button" onClick={() => navigate("/chat/settings/passcode")} className="w-full flex items-center gap-3 p-4 text-left hover:bg-muted/40">
             <Lock className="w-5 h-5 text-foreground" />
             <div className="flex-1">
               <div className="text-sm font-medium">App passcode</div>
               <div className="text-xs text-muted-foreground">{passcodeOn ? "On" : "Off"}</div>
             </div>
           </button>
-          <button onClick={() => navigate("/chat/settings/login-alerts")} className="w-full flex items-center gap-3 p-4 text-left hover:bg-muted/40">
+          <button type="button" onClick={() => navigate("/chat/settings/login-alerts")} className="w-full flex items-center gap-3 p-4 text-left hover:bg-muted/40">
             <Bell className="w-5 h-5 text-foreground" />
             <div className="flex-1">
               <div className="text-sm font-medium">Login alerts</div>

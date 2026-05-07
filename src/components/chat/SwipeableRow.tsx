@@ -58,7 +58,7 @@ export default function SwipeableRow({ leftActions = [], rightActions = [], chil
           className="absolute inset-y-0 left-0 flex items-stretch z-0"
         >
           {leftActions.map((a) => (
-            <button
+            <button type="button"
               key={a.key}
               onClick={() => {
                 snap(0);
@@ -84,7 +84,7 @@ export default function SwipeableRow({ leftActions = [], rightActions = [], chil
           className="absolute inset-y-0 right-0 flex items-stretch z-0"
         >
           {rightActions.map((a) => (
-            <button
+            <button type="button"
               key={a.key}
               onClick={() => {
                 snap(0);

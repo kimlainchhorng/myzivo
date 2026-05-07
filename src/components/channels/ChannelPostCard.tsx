@@ -435,7 +435,7 @@ export function ChannelPostCard({ post, canManage = false, canComment = true, on
               const isOverflow = media.length > 6 && i === 5;
               const video = isVideo(m);
               return (
-                <button
+                <button type="button"
                   key={i}
                   onClick={() => setLightboxIdx(i)}
                   className={`relative overflow-hidden rounded-md bg-muted ${
@@ -483,7 +483,7 @@ export function ChannelPostCard({ post, canManage = false, canComment = true, on
               const mine = myReaction === e;
               const count = reactions[e] ?? 0;
               return (
-                <button
+                <button type="button"
                   key={e}
                   onClick={() => react(e)}
                   disabled={reacting}
@@ -547,7 +547,7 @@ export function ChannelPostCard({ post, canManage = false, canComment = true, on
           className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur"
           onClick={() => setLightboxIdx(null)}
         >
-          <button
+          <button type="button"
             onClick={(e) => {
               e.stopPropagation();
               setLightboxIdx(null);
@@ -558,7 +558,7 @@ export function ChannelPostCard({ post, canManage = false, canComment = true, on
             <X className="h-5 w-5" />
           </button>
           {lightboxIdx > 0 && (
-            <button
+            <button type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 setLightboxIdx(lightboxIdx - 1);
@@ -570,7 +570,7 @@ export function ChannelPostCard({ post, canManage = false, canComment = true, on
             </button>
           )}
           {lightboxIdx < media.length - 1 && (
-            <button
+            <button type="button"
               onClick={(e) => {
                 e.stopPropagation();
                 setLightboxIdx(lightboxIdx + 1);

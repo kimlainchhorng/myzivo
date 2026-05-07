@@ -206,7 +206,7 @@ export default function StripeConnectPayoutCard({ balanceDollars, detectedCountr
                 </p>
               </div>
             </div>
-            <button
+            <button type="button"
               onClick={openOnboarding}
               className="text-[11px] underline opacity-80 hover:opacity-100"
             >
@@ -217,7 +217,7 @@ export default function StripeConnectPayoutCard({ balanceDollars, detectedCountr
 
         {/* Method toggle */}
         <div className="flex gap-2">
-          <button
+          <button type="button"
             onClick={() => setMethod("instant")}
             disabled={!status.instant_eligible}
             className={`flex-1 p-3 rounded-2xl border-2 transition-all text-left ${
@@ -232,7 +232,7 @@ export default function StripeConnectPayoutCard({ balanceDollars, detectedCountr
             </div>
             <p className="text-[10px] text-muted-foreground">Minutes · 1.5% fee</p>
           </button>
-          <button
+          <button type="button"
             onClick={() => setMethod("standard")}
             className={`flex-1 p-3 rounded-2xl border-2 transition-all text-left ${
               method === "standard" ? "border-[#635bff] bg-[#635bff]/5" : "border-border/40 bg-card opacity-70"
@@ -250,7 +250,7 @@ export default function StripeConnectPayoutCard({ balanceDollars, detectedCountr
         <div>
           <div className="flex gap-2 flex-wrap mb-2">
             {[5, 25, 50, 100].filter((a) => a <= balanceDollars).map((amt) => (
-              <button
+              <button type="button"
                 key={amt}
                 onClick={() => setAmount(String(amt))}
                 className={`px-3 py-1.5 rounded-xl text-[12px] font-semibold ${
@@ -261,7 +261,7 @@ export default function StripeConnectPayoutCard({ balanceDollars, detectedCountr
               </button>
             ))}
             {balanceDollars >= 1 && (
-              <button
+              <button type="button"
                 onClick={() => setAmount(balanceDollars.toFixed(2))}
                 className={`px-3 py-1.5 rounded-xl text-[12px] font-semibold ${
                   amount === balanceDollars.toFixed(2) ? "bg-[#635bff] text-white" : "bg-muted/50 border border-border/40"

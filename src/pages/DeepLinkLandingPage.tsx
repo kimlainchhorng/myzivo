@@ -81,7 +81,7 @@ export default function DeepLinkLandingPage() {
         >
           Download ZiVo
         </a>
-        <button
+        <button type="button"
           onClick={() => navigate(webPath, { replace: true })}
           className="text-xs text-muted-foreground underline"
         >

@@ -44,7 +44,7 @@ function OrderList() {
           <div className="py-16 text-center text-sm text-muted-foreground">No orders yet.</div>
         ) : (
           orders.map((o: any) => (
-            <button
+            <button type="button"
               key={o.id}
               onClick={() => navigate(`/shop/orders/${o.id}`)}
               className="w-full text-left bg-card rounded-2xl border border-border/30 p-3"

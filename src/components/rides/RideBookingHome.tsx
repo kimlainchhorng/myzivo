@@ -325,7 +325,7 @@ function MapSection({
           className="absolute inset-0 h-full w-full"
         />
       </div>
-      <button
+      <button type="button"
         onClick={handleLocateClick}
         className="absolute right-3 top-14 z-20 w-10 h-10 rounded-full bg-card shadow-lg shadow-black/10 flex items-center justify-center border border-border/30 backdrop-blur-sm"
         aria-label="Center on my location"
@@ -364,7 +364,7 @@ function VehicleRow({
   const isDiscount = vehicle.surgeMultiplier < 1.0;
 
   return (
-    <button
+    <button type="button"
       onClick={onSelect}
       className={cn(
         "w-full flex items-center gap-4 px-4 py-3.5 text-left transition-all border-b border-border/10 last:border-0",
@@ -2333,7 +2333,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
                 "Allow Location Access"
               )}
             </Button>
-            <button
+            <button type="button"
               onClick={() => {
                 setLocationPermission("denied");
                 setUserLocation(fallbackPickupCenter);
@@ -2357,7 +2357,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
       {/* ═══════ 1. HEADER — visible on non-home steps ═══════ */}
       {viewStep !== "home" && viewStep !== "trip-complete" && viewStep !== "confirm-ride" && (
         <div className="relative z-50 flex items-center h-14 px-4 bg-background/95 backdrop-blur-xl border-b border-border/10">
-          <button
+          <button type="button"
             onClick={handleBack}
             className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all duration-200 active:scale-90 touch-manipulation"
             aria-label="Go back"
@@ -2369,7 +2369,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
           </h1>
           <div className="flex items-center gap-1 -mr-2">
             <div className="relative">
-              <button
+              <button type="button"
                 onClick={() => setShowLangMenu(!showLangMenu)}
                 className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all duration-200 active:scale-90 touch-manipulation"
                 aria-label="Change language"
@@ -2385,7 +2385,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
                     </div>
                     <div className="max-h-[320px] overflow-y-auto py-1">
                       {LANGS.map(l => (
-                        <button
+                        <button type="button"
                           key={l.code}
                           onClick={() => { changeLanguage(l.code); setShowLangMenu(false); }}
                           className={cn(
@@ -2404,7 +2404,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
                 </>
               )}
             </div>
-            <button
+            <button type="button"
               onClick={() => navigate("/notifications")}
               className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all duration-200 active:scale-90 touch-manipulation"
               aria-label="Notifications"
@@ -2745,7 +2745,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
                           <span className="text-[9px] font-black text-primary-foreground leading-none">S</span>
                         </div>
                         <span className="flex-1 text-xs font-medium text-foreground truncate">{stop.display || "Tap to set stop"}</span>
-                        <button
+                        <button type="button"
                           onClick={() => {
                             ensureAutoPickup();
                             setPickupConfirmed(true);
@@ -2757,7 +2757,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
                           }}
                           className="text-[10px] font-semibold text-primary px-2 py-1 rounded-lg hover:bg-primary/10"
                         >Edit</button>
-                        <button onClick={() => handleRemoveStop(stop.id)} className="text-muted-foreground hover:text-destructive">
+                        <button type="button" onClick={() => handleRemoveStop(stop.id)} className="text-muted-foreground hover:text-destructive">
                           <X className="w-4 h-4" />
                         </button>
                       </div>
@@ -2767,7 +2767,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
 
                 {/* Add stop button */}
                 {pickupConfirmed && destination && stops.length < MAX_STOPS && (
-                  <button
+                  <button type="button"
                     onClick={() => {
                       ensureAutoPickup();
                       setPickupConfirmed(true);
@@ -2788,7 +2788,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
                       {savedPlaces.map((place) => {
                         const Icon = place.icon;
                         return (
-                          <button
+                          <button type="button"
                             key={place.id}
                             onClick={() => handleDestinationSelect({ address: place.address, lat: place.lat, lng: place.lng })}
                             className="flex items-center gap-2 px-3 py-2 rounded-xl bg-muted/15 border border-border/20 hover:border-primary/20 shrink-0 transition-all active:scale-[0.97]"
@@ -2808,7 +2808,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
                     <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">{t("ride.recent") || "Recent"}</p>
                     <div className="space-y-1">
                       {recentDestinations.slice(0, 3).map((dest) => (
-                        <button
+                        <button type="button"
                           key={dest.id}
                           onClick={() => handleDestinationSelect({ address: dest.address, lat: dest.lat, lng: dest.lng })}
                           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl hover:bg-muted/15 transition-all active:scale-[0.98]"
@@ -2853,7 +2853,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
         <>
           {/* Header for home */}
           <div className="relative z-20 flex items-center h-14 px-4 bg-background/95 backdrop-blur-xl border-b border-border/10">
-            <button
+            <button type="button"
               onClick={handleBack}
               className="w-10 h-10 -ml-2 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all duration-200 active:scale-90 touch-manipulation"
               aria-label="Go back"
@@ -2865,7 +2865,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
             </h1>
             <div className="flex items-center gap-1 -mr-2">
               <div className="relative">
-                <button
+                <button type="button"
                   onClick={() => setShowLangMenu(!showLangMenu)}
                   className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all duration-200 active:scale-90 touch-manipulation"
                   aria-label="Change language"
@@ -2881,7 +2881,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
                       </div>
                       <div className="max-h-[320px] overflow-y-auto py-1">
                         {LANGS.map(l => (
-                          <button
+                          <button type="button"
                             key={l.code}
                             onClick={() => { changeLanguage(l.code); setShowLangMenu(false); }}
                             className={cn(
@@ -2900,7 +2900,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
                   </>
                 )}
               </div>
-              <button
+              <button type="button"
                 onClick={() => navigate("/notifications")}
                 className="w-10 h-10 rounded-xl flex items-center justify-center hover:bg-muted/50 transition-all duration-200 active:scale-90 touch-manipulation"
                 aria-label="Notifications"
@@ -2966,7 +2966,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
                 </div>
 
                 {/* Destination input */}
-                <button
+                <button type="button"
                   onClick={() => {
                     // If destination was auto-set from map center and matches pickup location, clear it
                     const effectivePickup = pickup ?? (userLocation ? { address: "", lat: userLocation.lat, lng: userLocation.lng } : null);
@@ -3022,8 +3022,8 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
             bottom: `calc(${COLLAPSED_SHEET_HEIGHT}px + ${BOTTOM_NAV_HEIGHT}px + 16px + ${SAFE_BOTTOM})`,
           }}
         >
-          <button className="h-12 w-12 rounded-2xl bg-card shadow-md flex items-center justify-center text-foreground font-bold text-base" aria-label="Zoom in">+</button>
-          <button className="h-12 w-12 rounded-2xl bg-card shadow-md flex items-center justify-center text-foreground font-bold text-base" aria-label="Zoom out">-</button>
+          <button type="button" className="h-12 w-12 rounded-2xl bg-card shadow-md flex items-center justify-center text-foreground font-bold text-base" aria-label="Zoom in">+</button>
+          <button type="button" className="h-12 w-12 rounded-2xl bg-card shadow-md flex items-center justify-center text-foreground font-bold text-base" aria-label="Zoom out">-</button>
         </div>
       )}
 
@@ -3090,7 +3090,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
                               country={rideCountry}
                               className="[&_input]:h-8 [&_input]:rounded-lg [&_input]:text-xs [&_input]:font-medium [&_input]:bg-muted/30 [&_input]:border-border/30 [&_input]:px-2"
                             />
-                            <button
+                            <button type="button"
                               onClick={() => handleRemoveStop(stop.id)}
                               className="absolute right-1 top-1/2 -translate-y-1/2 p-0.5 rounded-full hover:bg-muted/50"
                             >
@@ -3176,7 +3176,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
 
               {/* Add Stop button */}
               <div className="px-5 pt-1 pb-1 shrink-0">
-                <button
+                <button type="button"
                   onClick={handleAddStop}
                   disabled={stops.length >= MAX_STOPS}
                   className={cn(
@@ -3352,7 +3352,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
           {/* Category tabs */}
           <div className="flex gap-1.5 px-5 pb-3 shrink-0">
             {(["popular", "premium", "accessible"] as const).map((cat) => (
-              <button
+              <button type="button"
                 key={cat}
                 onClick={() => setRideCategory(cat)}
                 className={cn(
@@ -3384,7 +3384,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
               const originalPrice = isDiscount ? calcPrice({ ...v, surgeMultiplier: 1.0 }, routeData?.distance_miles ?? 0, routeData?.duration_minutes ?? 0) : null;
 
               return (
-                <button
+                <button type="button"
                   key={v.id}
                   onClick={() => setSelectedVehicle(v.id)}
                   className={cn(
@@ -3525,7 +3525,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
 
           {/* Payment row */}
           <div className="shrink-0 border-t border-border/15">
-            <button
+            <button type="button"
               className="w-full flex items-center gap-3.5 px-5 py-3.5 hover:bg-muted/8 transition-colors active:scale-[0.98]"
               onClick={() => { setPaymentStep("idle"); setViewStep("confirm-ride"); }}
             >
@@ -3558,7 +3558,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
             className="w-full px-4 pb-2 shrink-0"
             style={{ paddingTop: "max(calc(env(safe-area-inset-top, 0px) + 0.75rem), 20px)" }}
           >
-            <button
+            <button type="button"
               onClick={() => setViewStep("ride-options")}
               className="w-10 h-10 flex items-center justify-center rounded-full bg-muted hover:bg-muted/80 transition-colors shrink-0 active:scale-95 touch-manipulation"
               aria-label="Go back"
@@ -4237,7 +4237,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
             <h4 className="text-sm font-bold text-foreground mb-3">Rate {assignedDriver.name}</h4>
             <div className="flex justify-center gap-2 mb-1">
               {[1, 2, 3, 4, 5].map((star) => (
-                <button key={star} onClick={() => setRating(star)} className="touch-manipulation">
+                <button type="button" key={star} onClick={() => setRating(star)} className="touch-manipulation">
                   <Star
                     className={cn(
                       "w-8 h-8 transition-colors",
@@ -4257,7 +4257,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
                 const tipAmount = Math.round(currentPrice * pct) / 100;
                 const isSelected = tip !== null && Math.abs(tip - tipAmount) < 0.01;
                 return (
-                  <button
+                  <button type="button"
                     key={pct}
                     onClick={() => setTip(isSelected ? null : tipAmount)}
                     className={cn(
@@ -4272,7 +4272,7 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
                   </button>
                 );
               })}
-              <button
+              <button type="button"
                 onClick={() => {
                   const input = prompt("Enter custom tip amount ($):");
                   if (input) {

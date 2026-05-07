@@ -133,11 +133,11 @@ export default function DriverOrdersPage() {
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-30 bg-background/95 backdrop-blur border-b border-border/50">
         <div className="flex items-center gap-3 px-4 py-3">
-          <button onClick={() => navigate(-1)} className="p-1.5 rounded-xl hover:bg-muted">
+          <button type="button" onClick={() => navigate(-1)} className="p-1.5 rounded-xl hover:bg-muted">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className="text-lg font-bold flex-1">Shopping Orders</h1>
-          <button onClick={refetch} className="p-1.5 rounded-xl hover:bg-muted" disabled={isLoading}>
+          <button type="button" onClick={refetch} className="p-1.5 rounded-xl hover:bg-muted" disabled={isLoading}>
             <RefreshCw className={cn("h-4 w-4", isLoading && "animate-spin")} />
           </button>
         </div>

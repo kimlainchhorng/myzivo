@@ -35,7 +35,7 @@ export default function SelfDestructPicker({ value, onChange }: Props) {
       </PopoverTrigger>
       <PopoverContent side="top" className="w-48 p-1">
         {OPTIONS.map((o) => (
-          <button
+          <button type="button"
             key={String(o.value)}
             onClick={() => onChange(o.value)}
             className="w-full flex items-center justify-between px-3 py-2 text-sm rounded-md hover:bg-muted"

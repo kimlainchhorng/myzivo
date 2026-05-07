@@ -265,7 +265,7 @@ export default function AutoRepairServiceCatalogSection({ storeId }: Props) {
           {/* Category filter pills */}
           <div className="flex gap-1.5 overflow-x-auto pb-1 no-scrollbar">
             {CATEGORIES.map((c) => (
-              <button
+              <button type="button"
                 key={c.id}
                 onClick={() => setCatFilter(c.id)}
                 className={`shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium border transition-colors ${
@@ -343,7 +343,7 @@ export default function AutoRepairServiceCatalogSection({ storeId }: Props) {
                       {fmt(total)}
                     </div>
                     <div className="flex items-center gap-1">
-                      <button
+                      <button type="button"
                         onClick={() => toggleActive.mutate({ id: s.id, is_active: !s.is_active })}
                         className={`text-[10px] px-2 py-0.5 rounded-full border transition-colors ${
                           s.is_active
@@ -464,7 +464,7 @@ export default function AutoRepairServiceCatalogSection({ storeId }: Props) {
                     <div key={i} className="flex items-center gap-2 text-sm bg-muted/40 rounded-lg px-3 py-1.5">
                       <span className="flex-1 truncate">{p.name}</span>
                       <span className="text-muted-foreground shrink-0">{fmt(p.price_cents)}</span>
-                      <button onClick={() => removePart(i)} className="text-muted-foreground hover:text-destructive">
+                      <button type="button" onClick={() => removePart(i)} className="text-muted-foreground hover:text-destructive">
                         <X className="h-3.5 w-3.5" />
                       </button>
                     </div>

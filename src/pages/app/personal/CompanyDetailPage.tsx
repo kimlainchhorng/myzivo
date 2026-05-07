@@ -68,7 +68,7 @@ export default function CompanyDetailPage() {
             {jobs.map(j => (
               <Card key={j.id} className="cursor-pointer p-3 transition-colors hover:bg-accent" onClick={() => navigate(`/personal/jobs/${j.id}`)}>
                 <div className="text-sm font-semibold">{j.title}</div>
-                <div className="text-xs text-muted-foreground">{j.is_remote ? "Remote" : j.location ?? "—"} · {j.employment_type?.replace("_", " ") ?? "—"}</div>
+                <div className="text-xs text-muted-foreground">{j.is_remote ? "Remote" : j.location ?? "—"} · {j.employment_type?.replaceAll("_", " ") ?? "—"}</div>
               </Card>
             ))}
           </div>

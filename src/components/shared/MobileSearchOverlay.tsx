@@ -69,12 +69,12 @@ export function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOverlayProp
                 className="flex-1 bg-transparent text-foreground text-base placeholder:text-muted-foreground outline-none"
               />
               {query && (
-                <button onClick={() => setQuery("")} className="touch-manipulation active:scale-90">
+                <button type="button" onClick={() => setQuery("")} className="touch-manipulation active:scale-90">
                   <X className="w-4 h-4 text-muted-foreground" />
                 </button>
               )}
             </div>
-            <button
+            <button type="button"
               onClick={onClose}
               className="text-sm font-medium text-primary touch-manipulation active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center"
             >
@@ -87,7 +87,7 @@ export function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOverlayProp
             <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">Quick Access</p>
             <div className="flex gap-3">
               {quickLinks.map((link) => (
-                <button
+                <button type="button"
                   key={link.label}
                   onClick={() => { navigate(link.href); onClose(); }}
                   className={cn(
@@ -112,7 +112,7 @@ export function MobileSearchOverlay({ isOpen, onClose }: MobileSearchOverlayProp
               </p>
               <div className="space-y-1">
                 {trending.map((item) => (
-                  <button
+                  <button type="button"
                     key={item}
                     onClick={() => { setQuery(item); }}
                     className="w-full flex items-center gap-3 px-3 py-3 rounded-xl hover:bg-muted/50 touch-manipulation active:scale-[0.98] transition-transform"

@@ -94,7 +94,7 @@ const LaunchModeBanner = ({
             <ChevronRight className="w-3 h-3" />
           </Link>
         )}
-        <button
+        <button type="button"
           onClick={() => setIsDismissed(true)}
           className="absolute right-4 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-background/50 transition-colors"
           aria-label="Dismiss banner"

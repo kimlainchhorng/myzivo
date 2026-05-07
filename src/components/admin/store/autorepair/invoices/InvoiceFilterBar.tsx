@@ -74,7 +74,7 @@ export default function InvoiceFilterBar({
 
       <div className="flex flex-wrap gap-1.5">
         {STATUSES.filter((s) => showOverdue || s.key !== "overdue").map((s) => (
-          <button
+          <button type="button"
             key={s.key}
             onClick={() => onStatus(s.key)}
             className={`px-2.5 py-1 rounded-full text-[11px] font-medium transition border ${

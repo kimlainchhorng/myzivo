@@ -154,7 +154,7 @@ export default function MonetizationPage() {
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-30 bg-background/80 backdrop-blur-xl border-b border-border/30 zivo-ribbon">
         <div className="flex items-center gap-3 px-4 py-3">
-          <button onClick={() => navigate("/more")} className="p-2 -ml-2 rounded-full hover:bg-muted/50 touch-manipulation">
+          <button type="button" onClick={() => navigate("/more")} className="p-2 -ml-2 rounded-full hover:bg-muted/50 touch-manipulation">
             <ArrowLeft className="h-5 w-5" />
           </button>
           {searchOpen ? (
@@ -169,7 +169,7 @@ export default function MonetizationPage() {
           ) : (
             <h1 className="text-lg font-extrabold flex-1 tracking-tight">Monetization</h1>
           )}
-          <button
+          <button type="button"
             onClick={() => { setSearchOpen(!searchOpen); if (searchOpen) setSearchQuery(""); }}
             className="p-2 -mr-1 rounded-full hover:bg-muted/50 touch-manipulation"
           >
@@ -252,7 +252,7 @@ export default function MonetizationPage() {
           {/* Filter chips */}
           <div className="flex gap-2 overflow-x-auto scrollbar-hide mb-3 -mx-1 px-1">
             {programFilter.map((filter) => (
-              <button
+              <button type="button"
                 key={filter}
                 onClick={() => setActiveFilter(filter)}
                 className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
@@ -320,7 +320,7 @@ export default function MonetizationPage() {
             {filteredPrograms.length === 0 && (
               <div className="text-center py-8">
                 <p className="text-sm text-muted-foreground">No programs match your filter</p>
-                <button onClick={() => { setActiveFilter("All"); setSearchQuery(""); }} className="text-xs text-primary font-semibold mt-2">
+                <button type="button" onClick={() => { setActiveFilter("All"); setSearchQuery(""); }} className="text-xs text-primary font-semibold mt-2">
                   Show all programs
                 </button>
               </div>
@@ -336,7 +336,7 @@ export default function MonetizationPage() {
             <h2 className="font-bold text-[15px] flex items-center gap-2">
               <BookOpen className="w-4 h-4 text-primary" /> Resources
             </h2>
-            <button
+            <button type="button"
               onClick={() => navigate("/monetization/articles")}
               className="text-xs text-primary font-semibold flex items-center gap-0.5 touch-manipulation"
             >
@@ -346,7 +346,7 @@ export default function MonetizationPage() {
 
           <div className="flex gap-2 overflow-x-auto scrollbar-hide mb-4 -mx-1 px-1">
             {resourceTabs.map((tab, i) => (
-              <button
+              <button type="button"
                 key={tab}
                 onClick={() => setActiveResTab(i)}
                 className={`shrink-0 px-3.5 py-1.5 rounded-full text-xs font-semibold transition-colors ${
@@ -401,7 +401,7 @@ export default function MonetizationPage() {
               { step: "Earn Your First Dollar", done: balance > 0 },
               { step: "Reach 1K Followers", done: false },
             ].map((item, i) => (
-              <button
+              <button type="button"
                 key={item.step}
                 onClick={() => item.href && navigate(item.href)}
                 className="flex items-center gap-3 w-full text-left touch-manipulation"

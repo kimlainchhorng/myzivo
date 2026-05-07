@@ -112,7 +112,7 @@ const CrossSellBanner = ({
           </Button>
           
           {dismissible && (
-            <button
+            <button type="button"
               onClick={() => setIsDismissed(true)}
               className="p-2 rounded-xl hover:bg-black/5 transition-all duration-200 active:scale-[0.90] touch-manipulation"
             >

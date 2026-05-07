@@ -387,7 +387,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
           <p id="sidebar-group-manage" className="px-3 pb-1.5 text-[10px] uppercase tracking-[0.12em] font-semibold text-muted-foreground/70">Manage</p>
           {isLodging && (
             <div className="mb-1.5 rounded-md border border-primary/15 bg-primary/5 px-2 py-1 text-primary">
-              <button
+              <button type="button"
                 onClick={() => { onTabChange?.(lodgingSetupProgress?.nextBestAction?.tab || "lodge-overview"); closeSidebar(); }}
                 className="flex w-full items-center justify-between gap-1.5 text-left text-[10px] font-semibold"
               >
@@ -410,7 +410,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
               const isActive = activeTab === item.id;
               const badgeCount = badgeFor(item.id);
               return (
-                <button
+                <button type="button"
                   key={item.id}
                   onClick={() => { onTabChange?.(item.id); closeSidebar(); }}
                   className={cn(
@@ -439,7 +439,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
 
           <p id="sidebar-group-team" className="px-3 pb-1.5 text-[10px] uppercase tracking-[0.12em] font-semibold text-muted-foreground/70">Team</p>
           <div className="space-y-0.5" role="group" aria-labelledby="sidebar-group-team">
-            <button
+            <button type="button"
               onClick={() => setEmployeesOpen((v) => !v)}
               className={cn(
                 "w-full flex items-center gap-2.5 px-2.5 py-1.5 rounded-lg text-[13px] font-medium transition-colors",
@@ -459,7 +459,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
                 {employeeItems.map((item) => {
                   const isActive = activeTab === item.id;
                   return (
-                    <button
+                    <button type="button"
                       key={item.id}
                       onClick={() => { onTabChange?.(item.id); closeSidebar(); }}
                       className={cn(
@@ -482,7 +482,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
           className="border-t border-border p-1 space-y-0.5 shrink-0"
           style={{ paddingBottom: 'calc(env(safe-area-inset-bottom, 0px) + 4px)' }}
         >
-          <button
+          <button type="button"
             onClick={() => { onTabChange?.("settings"); closeSidebar(); }}
             className={cn(
               "w-full flex items-center gap-2 px-2 py-1 rounded-md text-[12px] transition-colors",
@@ -492,7 +492,7 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
             <Settings className="w-3.5 h-3.5" />
             Settings
           </button>
-          <button
+          <button type="button"
             onClick={() => { onTabChange?.("software"); closeSidebar(); }}
             className={cn(
               "w-full flex items-center gap-2 px-2 py-1 rounded-md text-[12px] transition-colors",
@@ -502,14 +502,14 @@ export default function StoreOwnerLayout({ children, title, storeId, storeName, 
             <Download className="w-3.5 h-3.5" />
             Software & Apps
           </button>
-          <button
+          <button type="button"
             onClick={() => navigate("/")}
             className="w-full flex items-center gap-2 px-2 py-1 rounded-md text-[12px] text-foreground/75 hover:bg-muted hover:text-foreground transition-colors"
           >
             <Home className="w-3.5 h-3.5" />
             Back to App
           </button>
-          <button
+          <button type="button"
             onClick={() => signOut()}
             className="w-full flex items-center gap-2 px-2 py-1 rounded-md text-[12px] text-destructive hover:bg-destructive/10 transition-colors"
           >

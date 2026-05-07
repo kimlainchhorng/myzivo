@@ -201,7 +201,7 @@ export default function LodgingMaintenanceSection({ storeId }: { storeId: string
         {/* Status chip strip */}
         <div className="flex gap-1.5 flex-wrap">
           {(["all", "open", "in_progress", "blocked", "done"] as const).map(s => (
-            <button
+            <button type="button"
               key={s}
               onClick={() => setFilterStatus(s)}
               className={cn(
@@ -359,7 +359,7 @@ export default function LodgingMaintenanceSection({ storeId }: { storeId: string
               <Label>Priority</Label>
               <div className="flex gap-1.5">
                 {(["low", "normal", "high", "urgent"] as MaintenancePriority[]).map(p => (
-                  <button key={p} onClick={() => setForm({ ...form, priority: p })}
+                  <button type="button" key={p} onClick={() => setForm({ ...form, priority: p })}
                     className={cn(
                       "flex-1 px-3 py-2 rounded-lg text-xs font-bold border",
                       form.priority === p ? "border-primary bg-primary/10 text-primary" : "border-border bg-card hover:bg-muted",

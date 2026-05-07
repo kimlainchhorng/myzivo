@@ -63,7 +63,7 @@ export default function DriverAppDownloadSheet({
           <div className="absolute -bottom-12 -left-12 w-36 h-36 rounded-full bg-secondary blur-2xl" />
 
           {/* Close button */}
-          <button
+          <button type="button"
             onClick={() => onOpenChange(false)}
             className="absolute top-3 right-3 h-10 w-10 rounded-full bg-white/15 backdrop-blur hover:bg-white/25 active:scale-95 flex items-center justify-center transition"
             aria-label="Close"
@@ -123,7 +123,7 @@ export default function DriverAppDownloadSheet({
             </p>
 
             {/* App Store */}
-            <button
+            <button type="button"
               onClick={() => openExternal(APP_STORE_URL)}
               className="w-full h-16 rounded-2xl bg-foreground text-background flex items-center gap-3 px-4 active:scale-[0.98] transition shadow-lg"
             >
@@ -140,7 +140,7 @@ export default function DriverAppDownloadSheet({
             </button>
 
             {/* Website */}
-            <button
+            <button type="button"
               onClick={() => openExternal(DRIVER_WEBSITE_URL)}
               className="w-full h-16 rounded-2xl border-2 border-border bg-card flex items-center gap-3 px-4 active:scale-[0.98] transition hover:border-primary/40"
             >

@@ -390,7 +390,7 @@ export default function ZivoCardPicker({ open, onClose, onPick }: Props) {
                   </p>
                 </div>
               </div>
-              <button
+              <button type="button"
                 onClick={onClose}
                 aria-label="Close"
                 className="h-9 w-9 -mr-1.5 flex items-center justify-center rounded-full hover:bg-muted shrink-0"
@@ -402,7 +402,7 @@ export default function ZivoCardPicker({ open, onClose, onPick }: Props) {
             {stage === "category" ? (
               <div className="space-y-2">
                 {OPTIONS.map((o) => (
-                  <button
+                  <button type="button"
                     key={o.kind}
                     onClick={() => { setActive(o); setStage("compose"); }}
                     className="w-full flex items-center gap-3 p-3 rounded-xl border border-border/30 bg-muted/20 hover:bg-muted/40 active:scale-[0.99] transition text-left"
@@ -440,7 +440,7 @@ export default function ZivoCardPicker({ open, onClose, onPick }: Props) {
                 {/* Trip type */}
                 <div className="flex gap-1 p-1 rounded-xl bg-muted/40 border border-border/30">
                   {(["roundtrip", "oneway"] as const).map((t) => (
-                    <button
+                    <button type="button"
                       key={t}
                       type="button"
                       onClick={() => setTripType(t)}
@@ -762,7 +762,7 @@ export default function ZivoCardPicker({ open, onClose, onPick }: Props) {
                 {active.examples && (
                   <div className="flex flex-wrap gap-1.5">
                     {active.examples.map((ex) => (
-                      <button
+                      <button type="button"
                         key={ex}
                         type="button"
                         onClick={() => setText(ex)}

@@ -460,11 +460,11 @@ export default function CreatePostModal({
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border/30 sticky top-0 bg-card z-10 rounded-t-3xl">
-          <button onClick={onClose} className="text-muted-foreground active:scale-90 transition-transform">
+          <button type="button" onClick={onClose} className="text-muted-foreground active:scale-90 transition-transform">
             <XIcon className="h-5 w-5" />
           </button>
           <h2 className="text-sm font-bold text-foreground">Create Post</h2>
-          <button
+          <button type="button"
             onClick={handlePost}
             disabled={(files.length === 0 && !hasSharedLink && !caption.trim() && !isPoll) || uploading}
             className={cn(
@@ -513,7 +513,7 @@ export default function CreatePostModal({
         <div className="px-4 pb-2 flex items-center gap-2 flex-wrap">
           {/* Visibility dropdown */}
           <div className="relative">
-            <button
+            <button type="button"
               onClick={() => setShowVisibilityMenu(!showVisibilityMenu)}
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/40 border border-border/30 text-xs font-medium text-foreground min-h-[36px]"
             >
@@ -536,7 +536,7 @@ export default function CreatePostModal({
                     { value: "friends" as const, label: "Friends", icon: Users },
                     { value: "onlyme" as const, label: "Only me", icon: Lock },
                   ]).map((opt) => (
-                    <button
+                    <button type="button"
                       key={opt.value}
                       onClick={() => { setVisibility(opt.value); setShowVisibilityMenu(false); }}
                       className={cn(
@@ -556,7 +556,7 @@ export default function CreatePostModal({
 
           {/* Album button — inline input instead of prompt() */}
           <div className="relative">
-            <button
+            <button type="button"
               onClick={() => {
                 if (album) {
                   setAlbum(null);
@@ -599,7 +599,7 @@ export default function CreatePostModal({
                     }}
                     className="w-full bg-muted/30 rounded-lg px-3 py-2 text-xs text-foreground placeholder:text-muted-foreground/50 outline-none border border-border/20 focus:border-primary/40"
                   />
-                  <button
+                  <button type="button"
                     onClick={() => {
                       if (albumInput.trim()) {
                         setAlbum(albumInput.trim());
@@ -618,7 +618,7 @@ export default function CreatePostModal({
           </div>
 
           {/* Location tag */}
-          <button
+          <button type="button"
             onClick={() => setShowLocationSearch(!showLocationSearch)}
             className={cn(
               "flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium min-h-[36px]",
@@ -632,7 +632,7 @@ export default function CreatePostModal({
           </button>
 
           {/* Tag people */}
-          <button
+          <button type="button"
             onClick={() => { setShowTagSearch(true); setTagQuery(""); handleTagSearch(""); }}
             className={cn(
               "flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium min-h-[36px]",
@@ -667,12 +667,12 @@ export default function CreatePostModal({
                     autoFocus
                   />
                   {location && (
-                    <button onClick={() => { setLocation(null); setShowLocationSearch(false); }} className="text-xs text-destructive">Clear</button>
+                    <button type="button" onClick={() => { setLocation(null); setShowLocationSearch(false); }} className="text-xs text-destructive">Clear</button>
                   )}
                 </div>
                 <div className="max-h-[120px] overflow-y-auto space-y-0.5">
                   {filteredLocations.map((loc) => (
-                    <button
+                    <button type="button"
                       key={loc}
                       onClick={() => { setLocation(loc); setShowLocationSearch(false); setLocationQuery(""); }}
                       className={cn(
@@ -710,14 +710,14 @@ export default function CreatePostModal({
                     className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 outline-none"
                     autoFocus
                   />
-                  <button onClick={() => setShowTagSearch(false)} className="text-xs text-muted-foreground">Done</button>
+                  <button type="button" onClick={() => setShowTagSearch(false)} className="text-xs text-muted-foreground">Done</button>
                 </div>
                 {tagSearching && <p className="text-xs text-muted-foreground py-2 text-center">Searching...</p>}
                 <div className="max-h-[140px] overflow-y-auto space-y-0.5">
                   {tagResults.map((u: any) => {
                     const isTagged = taggedUsers.some((t) => t.id === u.id);
                     return (
-                      <button
+                      <button type="button"
                         key={u.id}
                         onClick={() => {
                           if (isTagged) {
@@ -758,7 +758,7 @@ export default function CreatePostModal({
             {taggedUsers.map((t) => (
               <span key={t.id} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-medium">
                 @{t.name}
-                <button onClick={() => setTaggedUsers((prev) => prev.filter((u) => u.id !== t.id))}>
+                <button type="button" onClick={() => setTaggedUsers((prev) => prev.filter((u) => u.id !== t.id))}>
                   <XIcon className="h-3 w-3" />
                 </button>
               </span>
@@ -781,7 +781,7 @@ export default function CreatePostModal({
 
           {/* Character counter & emoji toggle */}
           <div className="flex items-center justify-between mt-1 mb-2">
-            <button
+            <button type="button"
               onClick={() => setShowEmojis(!showEmojis)}
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
@@ -806,7 +806,7 @@ export default function CreatePostModal({
               >
                 <div className="flex gap-1.5 flex-wrap">
                   {QUICK_EMOJIS.map((e) => (
-                    <button
+                    <button type="button"
                       key={e}
                       onClick={() => insertEmoji(e)}
                       className="h-9 w-9 flex items-center justify-center rounded-lg hover:bg-muted/50 text-lg transition-colors active:scale-90"
@@ -829,7 +829,7 @@ export default function CreatePostModal({
                 className="absolute left-0 right-0 bottom-full mb-1 bg-card border border-border/40 rounded-xl shadow-lg z-20 max-h-[160px] overflow-y-auto"
               >
                 {tagResults.map((u: any) => (
-                  <button
+                  <button type="button"
                     key={u.id}
                     onClick={() => insertMention(u)}
                     className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted/50 transition-colors"
@@ -862,7 +862,7 @@ export default function CreatePostModal({
                 <p className="text-[11px] font-semibold text-muted-foreground mb-2 uppercase tracking-wide">How are you feeling?</p>
                 <div className="grid grid-cols-4 gap-1.5">
                   {FEELINGS.map((f) => (
-                    <button
+                    <button type="button"
                       key={f.label}
                       onClick={() => { setFeeling(feeling?.label === f.label ? null : f); setShowFeelingPicker(false); }}
                       className={cn(
@@ -907,14 +907,14 @@ export default function CreatePostModal({
                       className="flex-1 px-3 py-2 rounded-xl bg-muted/40 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
                     />
                     {pollOptions.length > 2 && (
-                      <button onClick={() => setPollOptions(pollOptions.filter((_, j) => j !== i))} className="text-muted-foreground hover:text-destructive">
+                      <button type="button" onClick={() => setPollOptions(pollOptions.filter((_, j) => j !== i))} className="text-muted-foreground hover:text-destructive">
                         <XIcon className="h-4 w-4" />
                       </button>
                     )}
                   </div>
                 ))}
                 {pollOptions.length < 6 && (
-                  <button
+                  <button type="button"
                     onClick={() => setPollOptions([...pollOptions, ""])}
                     className="w-full flex items-center justify-center gap-1.5 py-2 rounded-xl border border-dashed border-border/40 text-xs text-primary font-medium hover:bg-primary/5 transition-colors"
                   >
@@ -949,7 +949,7 @@ export default function CreatePostModal({
               )}
 
               {files.length > 0 && (
-                <button
+                <button type="button"
                   onClick={() => removeMedia(currentPreview)}
                   className="absolute top-2 left-2 h-7 w-7 rounded-full bg-black/60 flex items-center justify-center active:scale-90 transition-transform"
                 >
@@ -974,8 +974,8 @@ export default function CreatePostModal({
             {previews.length >= 1 && (
               <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
                 {previews.map((p, i) => (
-                  // Thumbnail is a div role="button" (not a <button>) so the
-                  // remove-X <button> nested inside is valid DOM.
+                  // Thumbnail is a div role="button" (not a <button type="button">) so the
+                  // remove-X <button type="button"> nested inside is valid DOM.
                   <div
                     key={i}
                     role="button"
@@ -1004,7 +1004,7 @@ export default function CreatePostModal({
                 ))}
                 {/* Add more inline */}
                 {files.length < 10 && (
-                  <button
+                  <button type="button"
                     onClick={() => {
                       if (fileRef.current) {
                         fileRef.current.accept = "image/*,video/*";
@@ -1028,7 +1028,7 @@ export default function CreatePostModal({
             <p className="text-[10px] font-semibold text-muted-foreground mb-2">Filter</p>
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
               {FILTERS.map((f, i) => (
-                <button
+                <button type="button"
                   key={f.name}
                   onClick={() => setActiveFilter(i)}
                   className="shrink-0 flex flex-col items-center gap-1"
@@ -1081,7 +1081,7 @@ export default function CreatePostModal({
                   autoFocus
                 />
                 {audioName && (
-                  <button onClick={() => { setAudioName(""); setShowAudioInput(false); }} className="text-muted-foreground hover:text-foreground">
+                  <button type="button" onClick={() => { setAudioName(""); setShowAudioInput(false); }} className="text-muted-foreground hover:text-foreground">
                     <XIcon className="w-4 h-4" />
                   </button>
                 )}
@@ -1104,7 +1104,7 @@ export default function CreatePostModal({
                   Create a reel with this sound
                 </p>
                 <div className="grid grid-cols-2 gap-2">
-                  <button
+                  <button type="button"
                     onClick={() => {
                       if (cameraRef.current) {
                         cameraRef.current.click();
@@ -1116,7 +1116,7 @@ export default function CreatePostModal({
                     <Film className="h-6 w-6 text-primary" />
                     <span className="text-xs font-semibold text-primary">Record Video</span>
                   </button>
-                  <button
+                  <button type="button"
                     onClick={() => {
                       if (fileRef.current) {
                         fileRef.current.accept = "video/*";
@@ -1155,7 +1155,7 @@ export default function CreatePostModal({
                 (opt.action === "poll" && isPoll) ||
                 (["photo", "video", "reel"].includes(opt.action) && selectedType === (opt.label as any));
               return (
-                <button
+                <button type="button"
                   key={opt.label}
                   onClick={() => {
                     if (opt.action === "live") { onClose(); navigate("/live"); return; }
@@ -1194,7 +1194,7 @@ export default function CreatePostModal({
         {/* Add more media button */}
         {files.length > 0 && files.length < 10 && (
           <div className="px-4 pb-2">
-            <button
+            <button type="button"
               onClick={() => {
                 if (fileRef.current) {
                   fileRef.current.accept = "image/*";

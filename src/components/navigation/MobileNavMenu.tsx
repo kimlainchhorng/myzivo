@@ -76,7 +76,7 @@ const MobileNavSection = ({
               </h4>
               <div className="space-y-1">
                 {section.items.map((item) => (
-                  <button
+                  <button type="button"
                     key={item.label}
                     onClick={() => onNavigate(item.href)}
                     className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors text-left"
@@ -101,7 +101,7 @@ const MobileNavSection = ({
             </h4>
             <div className="flex flex-wrap gap-2">
               {data.policies.map((policy) => (
-                <button
+                <button type="button"
                   key={policy.label}
                   onClick={() => onNavigate(policy.href)}
                   className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
@@ -141,7 +141,7 @@ const MobileNavMenu = ({ isOpen, onClose, user, signOut }: MobileNavMenuProps) =
           <div className="flex items-center gap-2">
             <ZivoLogo size="sm" />
           </div>
-          <button onClick={onClose} className="p-2 rounded-lg hover:bg-muted transition-colors">
+          <button type="button" onClick={onClose} className="p-2 rounded-lg hover:bg-muted transition-colors">
             <X className="w-5 h-5" />
           </button>
         </div>
@@ -164,19 +164,19 @@ const MobileNavMenu = ({ isOpen, onClose, user, signOut }: MobileNavMenuProps) =
                   Your Account
                 </h4>
                 <div className="space-y-1">
-                  <button
+                  <button type="button"
                     onClick={() => handleNavigate("/profile")}
                     className="w-full text-left py-2 text-foreground font-medium"
                   >
                     Profile Settings
                   </button>
-                  <button
+                  <button type="button"
                     onClick={() => handleNavigate("/app")}
                     className="w-full text-left py-2 text-foreground font-medium"
                   >
                     My Dashboard
                   </button>
-                  <button
+                  <button type="button"
                     onClick={() => handleNavigate("/trips")}
                     className="w-full text-left py-2 text-foreground font-medium"
                   >
@@ -188,7 +188,7 @@ const MobileNavMenu = ({ isOpen, onClose, user, signOut }: MobileNavMenuProps) =
 
             {/* Become a Driver Section */}
             <div className="mt-4 pt-4 border-t border-border">
-              <button
+              <button type="button"
                 onClick={() => {
                   navigate("/drive");
                   onClose();

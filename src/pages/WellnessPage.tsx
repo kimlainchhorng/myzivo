@@ -127,7 +127,7 @@ export default function WellnessPage() {
       {/* Header */}
       <header className="sticky top-0 z-30 bg-background/85 backdrop-blur-xl border-b border-border/40 flex items-center gap-2 px-3 pb-2 pt-safe"
         style={{ paddingTop: "var(--zivo-safe-top-sticky, env(safe-area-inset-top, 0px))" }}>
-        <button
+        <button type="button"
           onClick={() => (active === "hub" ? navigate("/more") : navigate("/wellness"))}
           aria-label="Go back"
           className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-muted/60 active:scale-90 transition-transform text-foreground"
@@ -262,7 +262,7 @@ function HubView() {
 
 function ActionRow({ icon: Icon, label, subtitle, onClick }: { icon: any; label: string; subtitle?: string; onClick: () => void }) {
   return (
-    <button
+    <button type="button"
       onClick={onClick}
       className="w-full flex items-center gap-3 p-2.5 rounded-xl hover:bg-muted/60 active:scale-[0.98] transition-all text-left"
     >
@@ -307,7 +307,7 @@ function ActivityView() {
             <p className="text-3xl font-bold">{day.steps > 0 ? day.steps.toLocaleString() : "0"}</p>
             <p className="text-[12px] text-muted-foreground mt-1">Goal: {stepsGoal.toLocaleString()}</p>
           </div>
-          <button
+          <button type="button"
             onClick={() => setShowStepsForm(true)}
             className="h-16 w-16 rounded-full border-4 flex items-center justify-center transition-colors active:scale-95"
             style={{ borderColor: `hsl(var(--primary) / 0.3)`, borderTopColor: "hsl(var(--primary))" }}
@@ -343,7 +343,7 @@ function ActivityView() {
                   autoFocus
                 />
                 <Button size="sm" onClick={submitSteps} className="h-10">Save</Button>
-                <button onClick={() => setShowStepsForm(false)} className="p-2 rounded-xl hover:bg-muted/60">
+                <button type="button" onClick={() => setShowStepsForm(false)} className="p-2 rounded-xl hover:bg-muted/60">
                   <X className="w-4 h-4 text-muted-foreground" />
                 </button>
               </div>
@@ -508,7 +508,7 @@ function VitalsView() {
             <Card className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <p className="font-semibold text-[14px]">Log {form.type}</p>
-                <button onClick={() => setShowForm(false)} className="p-1 rounded-lg hover:bg-muted/60">
+                <button type="button" onClick={() => setShowForm(false)} className="p-1 rounded-lg hover:bg-muted/60">
                   <X className="w-4 h-4 text-muted-foreground" />
                 </button>
               </div>
@@ -526,7 +526,7 @@ function VitalsView() {
               </div>
               <div className="flex flex-wrap gap-2 mt-3">
                 {vitalTemplates.map((v) => (
-                  <button
+                  <button type="button"
                     key={v.type}
                     onClick={() => setForm({ type: v.type, value: "", unit: v.unit })}
                     className={cn("text-[11px] font-medium px-2.5 py-1 rounded-full border transition-colors", form.type === v.type ? "bg-primary text-primary-foreground border-primary" : "border-border text-muted-foreground hover:border-primary/50")}
@@ -724,7 +724,7 @@ function TelehealthView() {
                 <span className={cn("inline-block w-2 h-2 rounded-full", d.color)} />
                 <p className="text-[10px] text-muted-foreground mt-0.5 mb-1">{d.available}</p>
                 {d.online && (
-                  <button
+                  <button type="button"
                     onClick={() => handleBook(d.name, "video")}
                     className="text-[10px] font-semibold text-foreground bg-secondary px-2 py-0.5 rounded-full"
                   >
@@ -808,7 +808,7 @@ function MedsView() {
           const taken = takenToday.has(m.name);
           return (
             <Card key={m.name} className={cn("p-3 flex items-center gap-3", taken && "opacity-60")}>
-              <button
+              <button type="button"
                 onClick={() => toggleTaken(m.name)}
                 className={cn("w-12 h-12 rounded-xl flex items-center justify-center shrink-0 transition-colors", taken ? "bg-emerald-500/20" : "bg-amber-500/15")}
               >
@@ -824,7 +824,7 @@ function MedsView() {
                 ) : (
                   <Bell className="w-4 h-4 text-muted-foreground" />
                 )}
-                <button onClick={() => removeMed(m.name)} className="p-1 rounded-lg hover:bg-muted/60">
+                <button type="button" onClick={() => removeMed(m.name)} className="p-1 rounded-lg hover:bg-muted/60">
                   <X className="w-3.5 h-3.5 text-muted-foreground/50" />
                 </button>
               </div>
@@ -839,7 +839,7 @@ function MedsView() {
             <Card className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <p className="font-semibold text-[14px]">Add medication</p>
-                <button onClick={() => setShowForm(false)} className="p-1 rounded-lg hover:bg-muted/60">
+                <button type="button" onClick={() => setShowForm(false)} className="p-1 rounded-lg hover:bg-muted/60">
                   <X className="w-4 h-4 text-muted-foreground" />
                 </button>
               </div>
@@ -921,7 +921,7 @@ function NutritionView() {
             <Card className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <p className="font-semibold text-[14px]">Log a meal</p>
-                <button onClick={() => setShowForm(false)} className="p-1 rounded-lg hover:bg-muted/60">
+                <button type="button" onClick={() => setShowForm(false)} className="p-1 rounded-lg hover:bg-muted/60">
                   <X className="w-4 h-4 text-muted-foreground" />
                 </button>
               </div>
@@ -948,7 +948,7 @@ function NutritionView() {
               </div>
               <div className="flex flex-wrap gap-1.5 mt-2">
                 {["Breakfast ~400", "Lunch ~600", "Dinner ~700", "Snack ~200"].map((q) => (
-                  <button
+                  <button type="button"
                     key={q}
                     onClick={() => {
                       const [name, cal] = q.split("~");
@@ -1072,7 +1072,7 @@ function GoalsView() {
                   <p className="text-[11px] text-muted-foreground">{g.target} • {g.streak} streak</p>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <button
+                  <button type="button"
                     onClick={incrementProgress}
                     disabled={g.progress >= 100}
                     className={cn(
@@ -1085,7 +1085,7 @@ function GoalsView() {
                     {g.progress >= 100 ? <Check className="w-3.5 h-3.5" /> : "+"}
                   </button>
                   <span className="text-[12px] font-bold tabular-nums w-8 text-right">{g.progress}%</span>
-                  <button onClick={() => removeGoal(g.label)} className="p-1 rounded-lg hover:bg-muted/60">
+                  <button type="button" onClick={() => removeGoal(g.label)} className="p-1 rounded-lg hover:bg-muted/60">
                     <X className="w-3.5 h-3.5 text-muted-foreground/50" />
                   </button>
                 </div>
@@ -1102,7 +1102,7 @@ function GoalsView() {
             <Card className="p-4">
               <div className="flex items-center justify-between mb-3">
                 <p className="font-semibold text-[14px]">Add a goal</p>
-                <button onClick={() => setShowForm(false)} className="p-1 rounded-lg hover:bg-muted/60">
+                <button type="button" onClick={() => setShowForm(false)} className="p-1 rounded-lg hover:bg-muted/60">
                   <X className="w-4 h-4 text-muted-foreground" />
                 </button>
               </div>
@@ -1128,7 +1128,7 @@ function GoalsView() {
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {["Run 5km weekly", "No sugar this week", "7-day workout streak", "10k steps daily", "Drink 3L water daily"].map((q) => (
-                    <button
+                    <button type="button"
                       key={q}
                       onClick={() => setForm((f) => ({ ...f, label: q }))}
                       className="text-[11px] font-medium px-2 py-1 rounded-full border border-border text-muted-foreground hover:border-primary/50 transition-colors"

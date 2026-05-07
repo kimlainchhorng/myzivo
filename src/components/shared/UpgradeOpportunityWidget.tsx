@@ -122,7 +122,7 @@ const UpgradeOpportunityWidget = ({
           const config = availabilityConfig[upgrade.availability];
           
           return (
-            <button
+            <button type="button"
               key={upgrade.id}
               onClick={() => setSelectedUpgrade(isSelected ? null : upgrade.id)}
               className={cn(

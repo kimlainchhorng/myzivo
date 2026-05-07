@@ -229,7 +229,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                       transition={{ type: "spring", stiffness: 400, damping: 22 }}
                     >
                       {isChat ? (
-                        <button
+                        <button type="button"
                           onClick={() => window.dispatchEvent(new CustomEvent("zivo-toggle-chat"))}
                           className="flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold tracking-wide transition-all duration-300 whitespace-nowrap"
                           style={{
@@ -330,7 +330,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                     </div>
                     <div className="overflow-y-auto max-h-[360px] p-1">
                       {activeLanguages.map((lang) => (
-                        <button
+                        <button type="button"
                           key={lang.code}
                           onClick={() => { changeLanguage(lang.code); setIsLangOpen(false); }}
                           className={cn(
@@ -570,7 +570,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
             >
               <div className="p-4 border-b border-border/20 flex items-center justify-between">
                 <ZivoLogo size="sm" />
-                <button
+                <button type="button"
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="p-2 hover:bg-muted rounded-xl transition-all touch-manipulation active:scale-90 min-w-[44px] min-h-[44px] flex items-center justify-center"
                 >

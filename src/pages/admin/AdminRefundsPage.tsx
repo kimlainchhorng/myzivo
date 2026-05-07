@@ -106,7 +106,7 @@ export default function AdminRefundsPage() {
               ) : (
                 <div className="divide-y divide-border">
                   {items.map((r) => (
-                    <button key={r.id} onClick={() => openDrawer(r)} className="w-full text-left p-4 hover:bg-muted/40 transition-colors">
+                    <button type="button" key={r.id} onClick={() => openDrawer(r)} className="w-full text-left p-4 hover:bg-muted/40 transition-colors">
                       <div className="flex items-center justify-between gap-4">
                         <div className="min-w-0 flex-1">
                           <div className="flex items-center gap-2 mb-1">

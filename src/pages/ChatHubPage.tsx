@@ -1461,7 +1461,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
         </div>
         <p className="text-xl font-bold text-foreground mb-2">Sign in to chat</p>
         <p className="text-sm text-muted-foreground mb-6 max-w-[260px]">Connect with friends, shops, and support — all in one place</p>
-        <button onClick={() => navigate(withRedirectParam("/login", "/chat"))} className="px-8 py-3 bg-primary text-primary-foreground rounded-full text-sm font-bold shadow-lg shadow-primary/25 active:scale-95 transition-transform">
+        <button type="button" onClick={() => navigate(withRedirectParam("/login", "/chat"))} className="px-8 py-3 bg-primary text-primary-foreground rounded-full text-sm font-bold shadow-lg shadow-primary/25 active:scale-95 transition-transform">
           Sign In
         </button>
       </div>
@@ -1491,7 +1491,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
               <div className="px-5 pt-2 pb-3 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   {selectionMode ? (
-                    <button
+                    <button type="button"
                       onClick={clearSelectionMode}
                       className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
                       aria-label="Exit selection"
@@ -1500,7 +1500,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                       <X className="w-5 h-5 text-foreground" />
                     </button>
                   ) : (
-                    <button
+                    <button type="button"
                       onClick={() => navigate('/')}
                       className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
                       aria-label="Back"
@@ -1517,7 +1517,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                 </div>
                 <div className="flex items-center gap-1">
                   {active === "personal" && !selectionMode && !search && (
-                    <button
+                    <button type="button"
                       onClick={() => setShowAddContact(true)}
                       className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
                       aria-label="New message"
@@ -1527,7 +1527,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                     </button>
                   )}
                   {active === "personal" && !selectionMode && !search && (
-                    <button
+                    <button type="button"
                       onClick={() => setSelectionMode(true)}
                       className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
                       aria-label="Select chats"
@@ -1537,7 +1537,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                     </button>
                   )}
                   {active === "personal" && (
-                    <button
+                    <button type="button"
                       onClick={() => void handleMarkAllPersonalRead()}
                       className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
                       aria-label="Mark all as read"
@@ -1547,7 +1547,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                     </button>
                   )}
                   {active === "personal" && (
-                    <button
+                    <button type="button"
                       onClick={() => navigate('/chat/contacts')}
                       className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
                       aria-label="Contacts"
@@ -1558,7 +1558,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                   {active === "personal" && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
-                        <button
+                        <button type="button"
                           className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
                           aria-label="Chat tools"
                           title="Chat tools"
@@ -1591,7 +1591,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                     </DropdownMenu>
                   )}
                   {active === "personal" && (
-                    <button
+                    <button type="button"
                       onClick={() => setShowCreateGroup(true)}
                       className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
                       aria-label="New group"
@@ -1637,7 +1637,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                   )}
                 />
                 {search ? (
-                  <button onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2" aria-label="Clear search" title="Clear search">
+                  <button type="button" onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2" aria-label="Clear search" title="Clear search">
                     <X className="w-3.5 h-3.5 text-muted-foreground" />
                   </button>
                 ) : (
@@ -1655,7 +1655,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                     const isActiveFilter = searchFilter === f;
                     const enabled = true;
                     return (
-                      <button
+                      <button type="button"
                         key={f}
                         onClick={() => enabled && setSearchFilter(f)}
                         disabled={!enabled}
@@ -1685,7 +1685,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                 </div>
                 <div className="flex gap-3 overflow-x-auto no-scrollbar pb-0.5">
                   {(mergedPersonalList as any[]).filter((c) => !c.isGroup && onlineIds.has(c.id)).slice(0, 12).map((c) => (
-                    <button
+                    <button type="button"
                       key={c.id}
                       onClick={() => setOpenPersonalChat({ id: c.id, name: c.name, avatar: c.avatar, isVerified: c.isVerified === true })}
                       className="flex flex-col items-center gap-1 w-[54px] shrink-0 active:scale-95 transition-transform"
@@ -1714,7 +1714,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
             )}
 
             <div className={cn("flex px-5 gap-2 pb-3 overflow-x-auto scrollbar-hide", embedded && "px-3 gap-1.5 pb-2")}>
-              <button
+              <button type="button"
                 onClick={() => navigate('/chat/folders')}
                 className={cn(
                   "flex items-center gap-1 px-3 py-1.5 text-xs font-semibold rounded-full bg-muted/40 text-muted-foreground hover:bg-muted whitespace-nowrap active:scale-95 transition-all",
@@ -1729,7 +1729,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                 const isActiveFolder = folder === f.id;
                 const unread = folderUnreadMap[f.id] || 0;
                 return (
-                  <button
+                  <button type="button"
                     key={f.id}
                     onClick={() => setFolder(f.id)}
                     className={cn(
@@ -1765,7 +1765,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                   <p className="text-xs font-bold text-primary">Share to chat</p>
                   <p className="text-[11px] text-muted-foreground truncate mt-0.5">{sharePayload.shareText || sharePayload.shareUrl}</p>
                 </div>
-                <button
+                <button type="button"
                   onClick={() => setSharePayload(null)}
                   className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0 active:scale-90 transition-transform"
                   aria-label="Cancel share"
@@ -1809,7 +1809,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                         : currentCategory.emptyDesc}
                     </p>
                     {active === "support" && (
-                      <button
+                      <button type="button"
                         onClick={() => navigate("/support")}
                         className="px-6 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-bold active:scale-95 transition-transform"
                       >
@@ -1818,7 +1818,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                     )}
                     {active === "personal" && search.trim().length < 2 && (
                       <div className="grid grid-cols-3 gap-2.5 w-full max-w-[360px] mt-1">
-                        <button
+                        <button type="button"
                           onClick={async () => {
                             const url = `${window.location.origin}/`;
                             const text = "Join me on ZIVO";
@@ -1834,7 +1834,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                           </div>
                           <span className="text-[11px] font-semibold text-foreground leading-tight">Invite friends</span>
                         </button>
-                        <button
+                        <button type="button"
                           onClick={() => navigate("/chat/nearby")}
                           className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl bg-card border border-border/40 shadow-sm active:scale-95 transition-transform"
                         >
@@ -1843,7 +1843,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                           </div>
                           <span className="text-[11px] font-semibold text-foreground leading-tight">People nearby</span>
                         </button>
-                        <button
+                        <button type="button"
                           onClick={() => setShowCreateGroup(true)}
                           className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl bg-card border border-border/40 shadow-sm active:scale-95 transition-transform"
                         >
@@ -1859,7 +1859,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                   <div className={cn("divide-y divide-border/20", embedded && "px-1")}>
                     {/* Contact Requests notification row */}
                     {!search && active === "personal" && pendingRequests.length > 0 && (
-                      <button
+                      <button type="button"
                         onClick={() => navigate("/chat/contacts/requests")}
                         className="w-full flex items-center gap-3 px-4 py-3 active:bg-muted/60 active:scale-[0.99] transition-all"
                       >
@@ -1885,7 +1885,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
 
                     {/* Archived chats row */}
                     {!search && archivedList.length > 0 && active === "personal" && (
-                      <button
+                      <button type="button"
                         onClick={() => setShowArchived((v) => !v)}
                         className="w-full flex items-center gap-3 px-4 py-3 active:bg-muted/50 transition-colors"
                       >
@@ -1912,7 +1912,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
 
                     {/* Saved Messages — Telegram-style self chat */}
                     {!search && active === "personal" && user && (
-                      <button
+                      <button type="button"
                         onClick={() => setOpenPersonalChat({ id: user.id, name: "Saved Messages", avatar: null, isVerified: false })}
                         className="w-full flex items-center gap-3 px-4 py-3 active:bg-muted/50 transition-colors"
                       >
@@ -2001,7 +2001,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                 },
                               ] : []}
                             >
-                              <button
+                              <button type="button"
                                 className={cn(
                                   "w-full flex items-center gap-3 text-left transition-all",
                                   embedded ? "px-3 py-2.5" : "px-4 py-3",
@@ -2240,7 +2240,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                           <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Archived</span>
                         </div>
                         {archivedList.map((chat: any) => (
-                          <button
+                          <button type="button"
                             key={`archived-${chat.id}`}
                             onClick={() => {
                               if ((chat as any).isGroup) {
@@ -2266,7 +2266,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                               <p className="text-sm font-semibold text-foreground truncate">{chat.name}</p>
                               <p className="text-[11px] text-muted-foreground truncate">{parseRichMessagePreview(chat.lastMessage || "")}</p>
                             </div>
-                            <button
+                            <button type="button"
                               onClick={(e) => { e.stopPropagation(); toggleArchive(chat.id); toast.success("Unarchived"); }}
                               className="w-8 h-8 rounded-full bg-muted flex items-center justify-center active:scale-90"
                               aria-label="Unarchive"
@@ -2293,13 +2293,13 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                             {selectedSummary.count} selected{selectedSummary.unread > 0 ? ` · ${selectedSummary.unread} unread` : ""}
                           </div>
                           <div className="flex items-center gap-2 mb-2">
-                            <button
+                            <button type="button"
                               onClick={() => void selectAllVisible()}
                               className="flex-1 h-8 rounded-lg bg-muted text-foreground text-[11px] font-semibold"
                             >
                               Select All Visible
                             </button>
-                            <button
+                            <button type="button"
                               onClick={() => void selectUnreadVisible()}
                               className="flex-1 h-8 rounded-lg bg-muted text-foreground text-[11px] font-semibold"
                             >
@@ -2307,70 +2307,70 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                             </button>
                           </div>
                           <div className="grid grid-cols-3 gap-2">
-                            <button
+                            <button type="button"
                               onClick={() => setBulkFolderAction((prev) => prev === "add" ? null : "add")}
                               disabled={selectedChatIds.size === 0 || customFolders.length === 0}
                               className="flex-1 h-10 rounded-xl bg-primary/10 text-primary text-xs font-semibold disabled:opacity-40"
                             >
                               Move To Folder
                             </button>
-                            <button
+                            <button type="button"
                               onClick={() => setBulkFolderAction((prev) => prev === "remove" ? null : "remove")}
                               disabled={selectedChatIds.size === 0 || customFolders.length === 0}
                               className="flex-1 h-10 rounded-xl bg-amber-500/10 text-amber-600 text-xs font-semibold disabled:opacity-40"
                             >
                               Remove Folder
                             </button>
-                            <button
+                            <button type="button"
                               onClick={() => void handleBulkMarkRead()}
                               disabled={selectedChatIds.size === 0}
                               className="flex-1 h-10 rounded-xl bg-muted text-foreground text-xs font-semibold disabled:opacity-40"
                             >
                               Mark Read
                             </button>
-                            <button
+                            <button type="button"
                               onClick={() => handleBulkSetPinned(true)}
                               disabled={selectedChatIds.size === 0}
                               className="flex-1 h-10 rounded-xl bg-secondary text-foreground text-xs font-semibold disabled:opacity-40"
                             >
                               Pin
                             </button>
-                            <button
+                            <button type="button"
                               onClick={() => handleBulkSetPinned(false)}
                               disabled={selectedChatIds.size === 0}
                               className="flex-1 h-10 rounded-xl bg-secondary text-foreground text-xs font-semibold disabled:opacity-40"
                             >
                               Unpin
                             </button>
-                            <button
+                            <button type="button"
                               onClick={() => handleBulkSetMuted(true)}
                               disabled={selectedChatIds.size === 0}
                               className="flex-1 h-10 rounded-xl bg-orange-500/10 text-orange-600 text-xs font-semibold disabled:opacity-40"
                             >
                               Mute
                             </button>
-                            <button
+                            <button type="button"
                               onClick={() => handleBulkSetMuted(false)}
                               disabled={selectedChatIds.size === 0}
                               className="flex-1 h-10 rounded-xl bg-orange-500/10 text-orange-600 text-xs font-semibold disabled:opacity-40"
                             >
                               Unmute
                             </button>
-                            <button
+                            <button type="button"
                               onClick={() => handleBulkSetArchive(true)}
                               disabled={selectedChatIds.size === 0}
                               className="flex-1 h-10 rounded-xl bg-emerald-500/10 text-emerald-600 text-xs font-semibold disabled:opacity-40"
                             >
                               Archive
                             </button>
-                            <button
+                            <button type="button"
                               onClick={() => handleBulkSetArchive(false)}
                               disabled={selectedChatIds.size === 0}
                               className="flex-1 h-10 rounded-xl bg-secondary text-foreground text-xs font-semibold disabled:opacity-40"
                             >
                               Unarchive
                             </button>
-                            <button
+                            <button type="button"
                               onClick={() => setShowBulkDeleteConfirm(true)}
                               disabled={selectedChatIds.size === 0}
                               className="flex-1 h-10 rounded-xl bg-destructive/10 text-destructive text-xs font-semibold disabled:opacity-40"
@@ -2379,7 +2379,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                             </button>
                           </div>
                           <div className="mt-2">
-                            <button
+                            <button type="button"
                               onClick={clearSelectionMode}
                               className="w-full h-10 px-3 rounded-xl bg-muted text-muted-foreground text-xs font-semibold"
                             >
@@ -2389,7 +2389,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                           {bulkFolderAction && customFolders.length > 0 && (
                             <div className="mt-2 grid grid-cols-1 gap-1 max-h-44 overflow-y-auto">
                               {customFolders.map((folderDef) => (
-                                <button
+                                <button type="button"
                                   key={folderDef.id}
                                   onClick={() => {
                                     if (bulkFolderAction === "add") {
@@ -2498,13 +2498,13 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                 Remove <strong className="text-foreground">{selectedChatIds.size}</strong> selected conversation{selectedChatIds.size === 1 ? "" : "s"}?
               </p>
               <div className="flex gap-3">
-                <button
+                <button type="button"
                   onClick={() => setShowBulkDeleteConfirm(false)}
                   className="flex-1 h-11 rounded-xl bg-muted text-sm font-semibold text-foreground active:scale-[0.97] transition-transform"
                 >
                   Cancel
                 </button>
-                <button
+                <button type="button"
                   onClick={() => { setShowBulkDeleteConfirm(false); void handleBulkDeleteSelected(); }}
                   className="flex-1 h-11 rounded-xl bg-destructive text-destructive-foreground text-sm font-bold active:scale-[0.97] transition-transform"
                 >
@@ -2544,13 +2544,13 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                 Delete your conversation with <strong className="text-foreground">{deleteConfirm.name}</strong>?
               </p>
               <div className="flex gap-3">
-                <button
+                <button type="button"
                   onClick={() => { setDeleteConfirm(null); setSwipedId(null); }}
                   className="flex-1 h-11 rounded-xl bg-muted text-sm font-semibold text-foreground active:scale-[0.97] transition-transform"
                 >
                   Cancel
                 </button>
-                <button
+                <button type="button"
                   onClick={() => handleDeleteChat(deleteConfirm.id, deleteConfirm.category)}
                   className="flex-1 h-11 rounded-xl bg-destructive text-destructive-foreground text-sm font-bold active:scale-[0.97] transition-transform"
                 >
@@ -2580,7 +2580,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
           <Suspense fallback={
             <div className="fixed inset-0 z-[1300] bg-background flex flex-col" style={{ transform: "translateX(0)" }}>
               <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-2xl border-b border-border/10 px-2 py-2.5 flex items-center gap-3">
-                <button
+                <button type="button"
                   onClick={() => setOpenPersonalChat(null)}
                   className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-muted/50 active:scale-90 transition-transform"
                   aria-label="Back to chat list"
@@ -2633,7 +2633,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
           <Suspense fallback={
             <div className="fixed inset-0 z-50 bg-background flex flex-col">
               <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-xl border-b border-border/30 px-2 py-2.5 flex items-center gap-3">
-                <button
+                <button type="button"
                   onClick={() => setOpenGroupChat(null)}
                   className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-muted/50 active:scale-90 transition-transform"
                   aria-label="Back to chat list"

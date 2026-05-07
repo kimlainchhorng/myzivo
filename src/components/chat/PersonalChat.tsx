@@ -2023,7 +2023,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-2xl border-b border-border/5 safe-area-top">
         <div className="px-2 py-2.5 flex items-center gap-3">
-          <button onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-90 transition-transform rounded-full hover:bg-muted/50" aria-label="Back" title="Back">
+          <button type="button" onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-90 transition-transform rounded-full hover:bg-muted/50" aria-label="Back" title="Back">
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
           <button
@@ -2099,7 +2099,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="h-11 w-11 rounded-full flex items-center justify-center hover:bg-muted/50 active:scale-90 transition-all" aria-label="More chat options" title="More chat options">
+                <button type="button" className="h-11 w-11 rounded-full flex items-center justify-center hover:bg-muted/50 active:scale-90 transition-all" aria-label="More chat options" title="More chat options">
                   <MoreVertical className="h-5 w-5 text-foreground/50" />
                 </button>
             </DropdownMenuTrigger>
@@ -2201,7 +2201,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
         {/* Pinned messages bar */}
         {pinnedMessages.length > 0 && (
-          <button
+          <button type="button"
             onClick={() => setShowPinnedPanel(true)}
             className="w-full px-4 py-1.5 bg-primary/5 border-t border-primary/10 flex items-center gap-2 text-left"
           >
@@ -2228,14 +2228,14 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                   : "Tap below to call back."}
               </p>
             </div>
-            <button
+            <button type="button"
               onClick={() => { void handleStartCall(latestMissedCall.call_type as "voice" | "video"); }}
               className="h-9 px-4 rounded-full bg-foreground text-background text-[13px] font-bold active:scale-95 transition-transform flex items-center gap-1.5"
             >
               <Phone className="h-3.5 w-3.5 fill-current" />
               Call back
             </button>
-            <button
+            <button type="button"
               onClick={() => setDismissedMissedCallId(latestMissedCall.id)}
               className="h-8 w-8 rounded-full flex items-center justify-center text-muted-foreground hover:bg-background transition-colors"
               aria-label="Dismiss"
@@ -2245,7 +2245,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           </div>
         )}
         {activeCall && pipMode && (
-          <button
+          <button type="button"
             onClick={() => setPipMode(false)}
             className="w-full px-4 py-2 bg-emerald-500/10 border-t border-emerald-500/20 flex items-center justify-between gap-2 text-left"
           >
@@ -2425,7 +2425,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           <div ref={timelineRef} className="mt-auto space-y-2">
             {timeline.length > visibleTimelineCount && (
               <div className="flex justify-center pb-2">
-                <button
+                <button type="button"
                   onClick={() => setVisibleTimelineCount((prev) => Math.min(prev + VISIBLE_TIMELINE_STEP, timeline.length))}
                   className="rounded-full border border-border/40 bg-background/80 px-3 py-1 text-[11px] font-medium text-muted-foreground transition-colors hover:bg-muted/40"
                 >
@@ -2714,7 +2714,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
                     {/* Failed-send indicator with tap-to-retry */}
                     {msg._upload_status === "failed" && isMe && (
-                      <button
+                      <button type="button"
                         onClick={() => retryFailedSend(msg.id)}
                         className="self-end mt-0.5 mr-1 inline-flex items-center gap-1 text-[11px] font-medium text-destructive hover:underline"
                       >
@@ -2761,7 +2761,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               <p className="text-[10px] font-semibold text-amber-600 dark:text-amber-400">Editing message</p>
               <p className="text-xs text-muted-foreground truncate">Press send to save · 48h limit</p>
             </div>
-            <button onClick={handleCancelEdit} className="h-7 w-7 rounded-full flex items-center justify-center" aria-label="Cancel edit" title="Cancel edit">
+            <button type="button" onClick={handleCancelEdit} className="h-7 w-7 rounded-full flex items-center justify-center" aria-label="Cancel edit" title="Cancel edit">
               <X className="h-3.5 w-3.5 text-muted-foreground" />
             </button>
           </motion.div>
@@ -2782,7 +2782,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               <p className="text-[10px] font-semibold text-primary">{replyTo.isMe ? "You" : recipientName}</p>
               <p className="text-xs text-muted-foreground truncate">{replyTo.message}</p>
             </div>
-            <button onClick={() => setReplyTo(null)} className="h-7 w-7 rounded-full flex items-center justify-center" aria-label="Close reply" title="Close reply">
+            <button type="button" onClick={() => setReplyTo(null)} className="h-7 w-7 rounded-full flex items-center justify-center" aria-label="Close reply" title="Close reply">
               <X className="h-3.5 w-3.5 text-muted-foreground" />
             </button>
           </motion.div>
@@ -2856,7 +2856,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           {stickerSuggestions.length > 0 && slashQuery == null && !editingId && (
             <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 -mx-1 px-1">
               {stickerSuggestions.map((s) => (
-                <button
+                <button type="button"
                   key={s.id}
                   type="button"
                   onClick={() => {
@@ -2877,7 +2877,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             <div className="flex items-end gap-0.5 shrink-0">
               {/* Attach */}
               <div className="relative shrink-0">
-                <button
+                <button type="button"
                   data-attach-trigger
                   onClick={() => setShowAttachMenu(!showAttachMenu)}
                   disabled={uploadingMedia}
@@ -2920,7 +2920,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               </div>
 
               {/* Quick replies — saved canned responses */}
-              <button
+              <button type="button"
                 onClick={() => setShowQuickReplies(true)}
                 className="h-11 w-11 rounded-full flex items-center justify-center transition-all shrink-0 text-muted-foreground/60 hover:bg-muted/50 hover:text-amber-500"
                 aria-label="Quick replies"
@@ -2985,7 +2985,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                       Commands
                     </div>
                     {slashCandidates.map((cmd, i) => (
-                      <button
+                      <button type="button"
                         key={cmd.id}
                         type="button"
                         onMouseDown={(e) => { e.preventDefault(); runSlashCommand(cmd); }}
@@ -3025,7 +3025,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               />
               <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center">
                 <div className="relative">
-                  <button
+                  <button type="button"
                     onClick={() => setShowEffectPicker((s) => !s)}
                     className={`h-9 w-9 rounded-full flex items-center justify-center transition-all active:scale-90 ${
                       pendingEffect ? "text-amber-500 bg-amber-500/10" : "text-muted-foreground/40 hover:text-muted-foreground"
@@ -3054,7 +3054,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                           { id: "confetti", emoji: "🎊", label: "Confetti" },
                           { id: "lasers", emoji: "⚡", label: "Lasers" },
                         ] as const).map((opt) => (
-                          <button
+                          <button type="button"
                             key={opt.id}
                             type="button"
                             onClick={() => { setPendingEffect(opt.id); setShowEffectPicker(false); }}
@@ -3077,7 +3077,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                     </>
                   )}
                 </div>
-                <button
+                <button type="button"
                   onClick={() => setShowStickerKeyboard(!showStickerKeyboard)}
                   className={`h-9 w-9 rounded-full flex items-center justify-center transition-all active:scale-90 ${
                     showStickerKeyboard ? "text-primary bg-primary/10" : "text-muted-foreground/40 hover:text-muted-foreground"
@@ -3092,7 +3092,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
             {/* Send or Mic */}
             {input.trim() ? (
-              <button
+              <button type="button"
                 onClick={() => editingId ? handleSaveEdit() : handleSend()}
                 onContextMenu={(e) => { e.preventDefault(); setShowScheduler(true); }}
                 disabled={sending}

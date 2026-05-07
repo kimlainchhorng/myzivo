@@ -195,7 +195,7 @@ export default function AdsStudioWizard({ storeId, storeName, storeSlug }: Props
           <div className="flex items-center gap-2"><Target className="h-4 w-4 text-primary" /><h3 className="font-semibold text-sm sm:text-base">Pick your goal</h3></div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
             {GOALS.map((g) => (
-              <button key={g.id} onClick={() => setGoal(g.id)}
+              <button type="button" key={g.id} onClick={() => setGoal(g.id)}
                 className={`text-left p-3 rounded-xl border-2 transition active:scale-[0.98] touch-manipulation min-h-[64px] ${
                   goal === g.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/50"
                 }`}>
@@ -271,7 +271,7 @@ export default function AdsStudioWizard({ storeId, storeName, storeSlug }: Props
               {(Object.keys(PLATFORM_META) as Platform[]).map((p) => {
                 const M = PLATFORM_META[p]; const Icon = M.icon; const on = platforms.includes(p);
                 return (
-                  <button key={p} onClick={() => togglePlatform(p)}
+                  <button type="button" key={p} onClick={() => togglePlatform(p)}
                     className={`flex items-center gap-2 p-2.5 rounded-lg border-2 text-sm active:scale-[0.98] touch-manipulation min-h-[44px] ${
                       on ? "border-primary bg-primary/5" : "border-border"
                     }`}>
@@ -328,7 +328,7 @@ export default function AdsStudioWizard({ storeId, storeName, storeSlug }: Props
                   {(lines as string[]).map((h, i) => (
                     <div key={i} className="flex items-center gap-2 text-sm bg-muted/40 rounded px-2 py-1.5">
                       <span className="flex-1">{h}</span>
-                      <button onClick={() => copy(h)} className="text-muted-foreground hover:text-primary"><Copy className="h-3.5 w-3.5" /></button>
+                      <button type="button" onClick={() => copy(h)} className="text-muted-foreground hover:text-primary"><Copy className="h-3.5 w-3.5" /></button>
                     </div>
                   ))}
                 </div>
@@ -343,7 +343,7 @@ export default function AdsStudioWizard({ storeId, storeName, storeSlug }: Props
               {[...(result.copy.descriptions.short || []), ...(result.copy.descriptions.long || [])].map((d: string, i: number) => (
                 <div key={i} className="flex items-start gap-2 text-sm bg-muted/40 rounded px-2 py-1.5">
                   <span className="flex-1">{d}</span>
-                  <button onClick={() => copy(d)} className="text-muted-foreground hover:text-primary"><Copy className="h-3.5 w-3.5" /></button>
+                  <button type="button" onClick={() => copy(d)} className="text-muted-foreground hover:text-primary"><Copy className="h-3.5 w-3.5" /></button>
                 </div>
               ))}
               {result.copy.hashtags?.length > 0 && (

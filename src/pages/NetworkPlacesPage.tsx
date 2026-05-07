@@ -118,7 +118,7 @@ export default function NetworkPlacesPage() {
       <header className="sticky top-0 z-30 bg-background/90 backdrop-blur border-b border-border/40 pt-safe">
         <div className="px-4 pt-3 pb-3 max-w-screen-md mx-auto">
           <div className="flex items-center gap-2 mb-3">
-            <button
+            <button type="button"
               onClick={() => navigate(-1)}
               className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center"
               aria-label="Back"
@@ -145,7 +145,7 @@ export default function NetworkPlacesPage() {
 
           <div className="flex gap-2 mt-3">
             {(["all", "restaurants", "hotels"] as Tab[]).map((t) => (
-              <button
+              <button type="button"
                 key={t}
                 onClick={() => onTab(t)}
                 className={`px-3 py-1.5 rounded-full text-xs font-bold capitalize transition-colors ${
@@ -237,7 +237,7 @@ function RestaurantCard({
       transition={{ delay }}
       className="relative rounded-2xl overflow-hidden border border-border/40 bg-card shadow-sm"
     >
-      <button
+      <button type="button"
         onClick={() => navigate(`/eats/restaurant/${r.id}`)}
         className="block w-full text-left active:scale-[0.99] transition-transform touch-manipulation"
       >
@@ -301,7 +301,7 @@ function HotelCard({
       transition={{ delay }}
       className="relative rounded-2xl overflow-hidden border border-border/40 bg-card shadow-sm"
     >
-      <button
+      <button type="button"
         onClick={() => navigate(`/hotels?hotelId=${h.id}`)}
         className="block w-full text-left active:scale-[0.99] transition-transform touch-manipulation"
       >

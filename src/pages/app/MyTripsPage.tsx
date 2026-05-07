@@ -2,8 +2,8 @@
  * My Trips Page — 3D/4D Spatial UI
  */
 
-import { useCallback, useState } from "react";
-import { Link } from "react-router-dom";
+import { useCallback, useState, useMemo } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
 import {
   ArrowLeft, ChevronRight,
@@ -84,9 +84,7 @@ function TripCard({ trip, index }: { trip: UnifiedTrip; index: number }) {
     cancel_requested: "bg-orange-500/12 text-orange-600 border-orange-500/20",
   };
 
-  const detailPath = trip.orderNumber 
-    ? `/my-trips/${trip.orderNumber}` 
-    : undefined;
+  const detailPath = trip.detailPath;
 
   const cardContent = (
     <motion.div
@@ -143,9 +141,68 @@ function TripCard({ trip, index }: { trip: UnifiedTrip; index: number }) {
   return detailPath ? <Link to={detailPath}>{cardContent}</Link> : cardContent;
 }
 
+function NextTripCard({ trips }: { trips: UnifiedTrip[] | undefined }) {
+  const next = useMemo(() => {
+    if (!trips) return null;
+    const upcoming = trips.filter(t => t.status === "confirmed" || t.status === "pending" || t.status === "approved");
+    if (!upcoming.length) return null;
+    return upcoming.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())[0];
+  }, [trips]);
+
+  if (!next) return null;
+
+  const tripDate = new Date(next.date);
+  const now = new Date();
+  const diffMs = tripDate.getTime() - now.getTime();
+  const diffH = Math.floor(diffMs / 3600000);
+  const diffD = Math.floor(diffMs / 86400000);
+  const countdownLabel = diffMs < 0 ? "Departing now" : diffH < 1 ? "In less than 1 hr" : diffH < 24 ? `In ${diffH}h` : `In ${diffD}d`;
+  const meta = getServiceMeta(next.service);
+  const TripIconEl = ({ className }: { className?: string }) => {
+    const I = { "plane": Plane, "car": Car, "car-front": CarFront, "car-taxi-front": CarTaxiFront }[next.icon] || Plane;
+    return <I className={className} />;
+  };
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -8 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="mx-4 mb-4 rounded-2xl overflow-hidden shadow-lg shadow-primary/[0.08]"
+    >
+      <div className="relative rounded-2xl overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/15 via-primary/8 to-primary/5 backdrop-blur-xl" />
+        <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-primary/20" />
+        <div className="relative z-10 flex items-center gap-3.5 p-4">
+          <div className="w-12 h-12 rounded-2xl bg-primary/15 border border-primary/20 flex items-center justify-center shrink-0">
+            <TripIconEl className="w-5.5 h-5.5 text-primary" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 mb-0.5">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-primary/70">Next Trip</p>
+              <span className="text-[10px] font-bold bg-primary/20 text-primary rounded-full px-2 py-0.5">{countdownLabel}</span>
+            </div>
+            <p className="font-bold text-sm text-foreground truncate">{next.title}</p>
+            <p className="text-[11px] text-muted-foreground">{meta.label} · {format(tripDate, "MMM d, h:mm a")}</p>
+          </div>
+          {next.detailPath && (
+            <Link to={next.detailPath}
+              className="shrink-0 text-[11px] font-bold text-primary bg-primary/10 border border-primary/20 rounded-xl px-3 py-1.5 touch-manipulation active:scale-95 transition-all">
+              View
+            </Link>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function MyTripsPage() {
-  const [serviceFilter, setServiceFilter] = useState<ServiceType | "all">("all");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const serviceFilter = (searchParams.get("service") || "all") as ServiceType | "all";
+  const statusFilter = searchParams.get("status") || "all";
+
+  const setServiceFilter = (v: ServiceType | "all") => setSearchParams(p => { const n = new URLSearchParams(p); v === "all" ? n.delete("service") : n.set("service", v); return n; }, { replace: true });
+  const setStatusFilter = (v: string) => setSearchParams(p => { const n = new URLSearchParams(p); v === "all" ? n.delete("status") : n.set("status", v); return n; }, { replace: true });
 
   const { data: trips, isLoading, refetch } = useUnifiedTrips({
     services: serviceFilter === "all" ? undefined : [serviceFilter],
@@ -206,8 +263,13 @@ export default function MyTripsPage() {
             </div>
           </div>
 
+          {/* ── Next Trip Countdown ── */}
+          <div className="pt-4 max-w-lg mx-auto">
+            <NextTripCard trips={trips} />
+          </div>
+
           {/* ── Filters ── */}
-          <div className="px-4 pt-4 space-y-3 max-w-lg mx-auto">
+          <div className="px-4 space-y-3 max-w-lg mx-auto">
             {/* Service Filter — Clean Pill Chips (matching reference) */}
             <motion.div
               initial={{ opacity: 0, y: 15 }}

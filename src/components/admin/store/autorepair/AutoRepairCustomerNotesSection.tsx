@@ -202,7 +202,7 @@ export default function AutoRepairCustomerNotesSection({ storeId }: Props) {
                 <p className="text-[11px] text-muted-foreground">Quick templates</p>
                 <div className="flex flex-wrap gap-1.5">
                   {QUICK_TEMPLATES.map((t) => (
-                    <button
+                    <button type="button"
                       key={t.label}
                       onClick={() => setBody(t.body)}
                       className="text-[10px] px-2 py-0.5 rounded-full border border-border hover:bg-muted transition-colors"
@@ -290,7 +290,7 @@ export default function AutoRepairCustomerNotesSection({ storeId }: Props) {
                       </div>
                       <p className="text-sm text-muted-foreground leading-relaxed">{n.body}</p>
                     </div>
-                    <button
+                    <button type="button"
                       onClick={() => { if (confirm("Delete this note?")) remove.mutate(n.id); }}
                       className="text-muted-foreground hover:text-destructive transition-colors shrink-0 mt-0.5"
                     >

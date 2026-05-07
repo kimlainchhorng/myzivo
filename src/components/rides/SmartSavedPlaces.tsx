@@ -125,7 +125,7 @@ export default function SmartSavedPlaces({ onSelect }: SmartSavedPlacesProps) {
             const cfg = iconMap[place.icon];
             const Icon = cfg.icon;
             return (
-              <button
+              <button type="button"
                 key={place.id}
                 onClick={() => onSelect?.(place)}
                 className="flex-1 flex items-center gap-2 p-3 rounded-xl bg-gradient-to-br from-primary/5 to-transparent border border-primary/10 hover:border-primary/20 transition-all active:scale-[0.98]"
@@ -144,7 +144,7 @@ export default function SmartSavedPlaces({ onSelect }: SmartSavedPlacesProps) {
       </div>
 
       {/* All saved places */}
-      <button
+      <button type="button"
         onClick={() => setShowAll(!showAll)}
         className="w-full flex items-center justify-center gap-1 py-2 text-[11px] font-bold text-muted-foreground hover:text-foreground border-t border-border/20"
       >
@@ -161,7 +161,7 @@ export default function SmartSavedPlaces({ onSelect }: SmartSavedPlacesProps) {
                 const Icon = cfg.icon;
                 return (
                   <div key={place.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-muted/20 transition-all group">
-                    <button onClick={() => onSelect?.(place)} className="flex items-center gap-3 flex-1 min-w-0 text-left">
+                    <button type="button" onClick={() => onSelect?.(place)} className="flex items-center gap-3 flex-1 min-w-0 text-left">
                       <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center shrink-0", cfg.bg)}>
                         <Icon className={cn("w-4 h-4", cfg.color)} />
                       </div>
@@ -172,7 +172,7 @@ export default function SmartSavedPlaces({ onSelect }: SmartSavedPlacesProps) {
                     </button>
                     <div className="flex items-center gap-1 shrink-0">
                       <Badge variant="outline" className="text-[8px] h-4">{place.visits}x</Badge>
-                      <button onClick={() => removePlace(place.id)} className="p-1 rounded-full opacity-0 group-hover:opacity-100 hover:bg-muted">
+                      <button type="button" onClick={() => removePlace(place.id)} className="p-1 rounded-full opacity-0 group-hover:opacity-100 hover:bg-muted">
                         <Trash2 className="w-3 h-3 text-muted-foreground" />
                       </button>
                     </div>
@@ -182,7 +182,7 @@ export default function SmartSavedPlaces({ onSelect }: SmartSavedPlacesProps) {
 
               {/* Add place */}
               {!showAdd ? (
-                <button
+                <button type="button"
                   onClick={() => setShowAdd(true)}
                   className="w-full flex items-center gap-2 p-2.5 rounded-xl border border-dashed border-border/50 text-xs text-muted-foreground hover:border-primary/30 transition-all"
                 >
@@ -195,7 +195,7 @@ export default function SmartSavedPlaces({ onSelect }: SmartSavedPlacesProps) {
                       const cfg = iconMap[key];
                       const Icon = cfg.icon;
                       return (
-                        <button
+                        <button type="button"
                           key={key}
                           onClick={() => setNewIcon(key)}
                           className={cn(

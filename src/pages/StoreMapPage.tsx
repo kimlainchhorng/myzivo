@@ -1293,7 +1293,7 @@ export default function StoreMapPage() {
                         `${tripStops.length} stop${tripStops.length > 1 ? "s" : ""} · ${formatDistLabel(tripKm)} total`}
                     </p>
                   </div>
-                  <button onClick={handleExitTripMode}
+                  <button type="button" onClick={handleExitTripMode}
                     className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white">
                     <X className="w-4 h-4" />
                   </button>
@@ -1314,7 +1314,7 @@ export default function StoreMapPage() {
                       autoFocus
                       className="flex-1 bg-transparent text-sm outline-none text-foreground placeholder:text-muted-foreground/60"
                     />
-                    <button onClick={() => { setSearchOpen(false); setSearchQuery(""); }}
+                    <button type="button" onClick={() => { setSearchOpen(false); setSearchQuery(""); }}
                       className="p-1.5 rounded-full bg-muted/60 text-muted-foreground">
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -1325,7 +1325,7 @@ export default function StoreMapPage() {
                       <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider mb-2">Recent searches</p>
                       <div className="flex flex-wrap gap-1.5">
                         {recentSearches.map((term) => (
-                          <button
+                          <button type="button"
                             key={term}
                             onClick={() => setSearchQuery(term)}
                             className="flex items-center gap-1 px-3 py-1 rounded-full bg-muted/50 border border-border/20 text-[12px] font-semibold text-foreground hover:bg-muted transition-colors"
@@ -1340,7 +1340,7 @@ export default function StoreMapPage() {
                   {autoSuggestions.length > 0 && (
                     <div className="border-t border-border/15">
                       {autoSuggestions.map((s) => (
-                        <button
+                        <button type="button"
                           key={s.id}
                           className="w-full flex items-center gap-3 px-4 py-2.5 hover:bg-muted/30 transition-colors text-left"
                           onClick={() => {
@@ -1390,7 +1390,7 @@ export default function StoreMapPage() {
                         {radiusKm && ` within ${radiusKm < 1 ? radiusKm * 1000 + " m" : radiusKm + " km"}`}
                         {trendingCount > 0 && <span className="ml-1 text-emerald-600 font-semibold">· {trendingCount} live</span>}
                         {searchCenter && (
-                          <button onClick={() => setSearchCenter(null)} className="ml-1.5 text-primary font-semibold underline">reset</button>
+                          <button type="button" onClick={() => setSearchCenter(null)} className="ml-1.5 text-primary font-semibold underline">reset</button>
                         )}
                       </p>
                     </div>
@@ -1406,7 +1406,7 @@ export default function StoreMapPage() {
                     >
                       <List className="w-4 h-4" /> See all
                     </motion.button>
-                    <button
+                    <button type="button"
                       onClick={() => { setSearchOpen(true); setTimeout(() => searchInputRef.current?.focus(), 100); }}
                       className="w-10 h-10 rounded-xl flex items-center justify-center bg-muted/60 hover:bg-muted"
                     >
@@ -1630,7 +1630,7 @@ export default function StoreMapPage() {
                   <div className="bg-card/96 backdrop-blur-xl rounded-2xl px-5 py-4 shadow-xl border border-border/20 text-center">
                     <p className="text-[15px] font-bold text-foreground">{title}</p>
                     <p className="text-[12px] text-muted-foreground mt-1 leading-snug">{hint}</p>
-                    <button
+                    <button type="button"
                       onClick={() => { setActiveCategory("all"); setOpenNowOnly(false); setTrendingOnly(false); setSmartFilterActive(false); setRadiusKm(null); setSearchQuery(""); setSearchCenter(null); }}
                       className="mt-3 px-5 py-2 rounded-full bg-primary text-primary-foreground text-[12px] font-bold shadow-sm"
                     >
@@ -1652,7 +1652,7 @@ export default function StoreMapPage() {
               exit={{ y: -20, opacity: 0 }}
               className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[1050]"
             >
-              <button
+              <button type="button"
                 onClick={handleSearchArea}
                 className="flex items-center gap-2 rounded-full px-4 py-2.5 bg-card/95 backdrop-blur-xl shadow-xl border border-border/20 text-[13px] font-bold text-foreground"
               >
@@ -1674,7 +1674,7 @@ export default function StoreMapPage() {
             >
               <Locate className="w-4 h-4 shrink-0" />
               <span className="flex-1">Location unavailable — distances won't show</span>
-              <button
+              <button type="button"
                 onClick={() => { handleLocateMe(); }}
                 className="text-[11px] font-bold underline underline-offset-2 hover:no-underline"
               >
@@ -1701,7 +1701,7 @@ export default function StoreMapPage() {
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">Recently viewed</p>
                   <div className="flex gap-2 overflow-x-auto scrollbar-hide">
                     {recentStores.map((s) => (
-                      <button
+                      <button type="button"
                         key={s.id}
                         onClick={() => { setSelectedStore(s); setSheetExpanded(false); mapRef.current?.panTo({ lat: s.latitude, lng: s.longitude }); const z = mapRef.current?.getZoom() || 14; if (z < 14) mapRef.current?.setZoom(14); }}
                         className="flex-shrink-0 flex items-center gap-1.5 bg-muted/40 hover:bg-muted/70 border border-border/20 rounded-xl px-2.5 py-1.5 transition-colors"
@@ -1718,7 +1718,7 @@ export default function StoreMapPage() {
               <div className="px-3 pt-2.5 pb-1 flex items-center gap-2 overflow-x-auto scrollbar-hide">
                 <SlidersHorizontal className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
                 {RADIUS_OPTIONS.map((opt) => (
-                  <button
+                  <button type="button"
                     key={String(opt.value)}
                     onClick={() => setRadiusKm(opt.value)}
                     className={`px-3 py-1 rounded-full text-[11px] font-bold whitespace-nowrap border transition-all ${
@@ -1733,7 +1733,7 @@ export default function StoreMapPage() {
               </div>
 
               {/* Sheet header */}
-              <button
+              <button type="button"
                 onClick={() => setSheetExpanded((v) => !v)}
                 className="w-full flex items-center gap-2 px-4 py-2 border-t border-border/10"
               >
@@ -1797,7 +1797,7 @@ export default function StoreMapPage() {
                             {idx + 1}
                           </span>
                           <p className="text-[11px] font-semibold text-foreground whitespace-nowrap max-w-[100px] truncate">{stop.name}</p>
-                          <button
+                          <button type="button"
                             onClick={() => setTripStops((prev) => prev.filter((s) => s.id !== stop.id))}
                             className="text-foreground hover:text-red-500"
                           >
@@ -1809,13 +1809,13 @@ export default function StoreMapPage() {
                   </div>
                 </div>
                 <div className="flex border-t border-border">
-                  <button className="flex-1 py-3 text-[12px] font-bold text-red-500 hover:bg-red-50" onClick={handleExitTripMode}>
+                  <button type="button" className="flex-1 py-3 text-[12px] font-bold text-red-500 hover:bg-red-50" onClick={handleExitTripMode}>
                     Clear
                   </button>
                   <div className="w-px bg-foreground" />
                   {tripStops.length >= 3 && (
                     <>
-                      <button
+                      <button type="button"
                         className="flex-1 py-3 text-[12px] font-bold text-foreground hover:bg-foreground flex items-center justify-center gap-1"
                         onClick={() => {
                           const optimized = optimizeTrailStops(tripStops, userLocation);
@@ -1828,14 +1828,14 @@ export default function StoreMapPage() {
                       <div className="w-px bg-foreground" />
                     </>
                   )}
-                  <button
+                  <button type="button"
                     className="flex-1 py-3 text-[12px] font-bold text-primary hover:bg-primary/5 flex items-center justify-center gap-1"
                     onClick={handleShareTrail}
                   >
                     <Share2 className="w-3.5 h-3.5" /> Share
                   </button>
                   <div className="w-px bg-foreground" />
-                  <button
+                  <button type="button"
                     className="flex-1 py-3 text-[12px] font-bold text-foreground hover:bg-foreground flex items-center justify-center gap-1.5"
                     onClick={() => navigateShoppingTrail(tripStops, userLocation)}
                   >
@@ -1948,7 +1948,7 @@ export default function StoreMapPage() {
                     )}
                     {/* GPS nudge */}
                     {!effectiveCenter && (
-                      <button
+                      <button type="button"
                         onClick={(e) => { e.stopPropagation(); handleLocateMe(); }}
                         className="text-[11px] mt-0.5 text-primary font-semibold flex items-center gap-1"
                       >
@@ -1982,7 +1982,7 @@ export default function StoreMapPage() {
                 </div>
 
                 <div className="flex border-t border-border/20 flex-wrap">
-                  <button
+                  <button type="button"
                     className="flex-1 min-w-[33%] py-3 text-[12px] font-bold text-center text-primary hover:bg-primary/5 flex items-center justify-center gap-1.5"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -2000,14 +2000,14 @@ export default function StoreMapPage() {
                   {selectedStore.category !== "auto-repair" && (
                     <>
                       <div className="w-px bg-border/20" />
-                      <button
+                      <button type="button"
                         className="flex-1 min-w-[33%] py-3 text-[12px] font-bold text-center text-primary hover:bg-primary/5 flex items-center justify-center gap-1.5"
                         onClick={(e) => { e.stopPropagation(); navigate(`/grocery/shop/${selectedStore.slug}`); }}
                       >
                         <Store className="w-3.5 h-3.5" /> View Store
                       </button>
                       <div className="w-px bg-border/20" />
-                      <button
+                      <button type="button"
                         className="flex-1 min-w-[33%] py-3 text-[12px] font-bold text-center text-primary hover:bg-primary/5 flex items-center justify-center gap-1.5"
                         onClick={(e) => { e.stopPropagation(); handleShareSelected(selectedStore); }}
                       >
@@ -2016,7 +2016,7 @@ export default function StoreMapPage() {
                       {selectedStore.phone && (
                         <>
                           <div className="w-px bg-border/20" />
-                          <button
+                          <button type="button"
                             className="flex-1 min-w-[33%] py-3 text-[12px] font-bold text-center text-primary hover:bg-primary/5 flex items-center justify-center gap-1.5"
                             onClick={(e) => { e.stopPropagation(); window.open(`tel:${selectedStore.phone}`, "_self"); }}
                           >
@@ -2029,7 +2029,7 @@ export default function StoreMapPage() {
                 </div>
 
                 <div className="flex items-center gap-2 px-3 py-2 border-t border-border/20 bg-muted/10">
-                  <button
+                  <button type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       setTripMode(true);
@@ -2041,7 +2041,7 @@ export default function StoreMapPage() {
                   >
                     <Route className="w-4 h-4" /> Add to Trail
                   </button>
-                  <button
+                  <button type="button"
                     onClick={(e) => { e.stopPropagation(); handleToggleFavoriteSelected(selectedStore); }}
                     aria-pressed={isFavorite(selectedStore.id)}
                     className={`flex-1 h-11 rounded-xl inline-flex items-center justify-center gap-1.5 text-[12px] font-bold transition-colors ${
@@ -2051,7 +2051,7 @@ export default function StoreMapPage() {
                     <Heart className={`w-4 h-4 ${isFavorite(selectedStore.id) ? "fill-current" : ""}`} />
                     {isFavorite(selectedStore.id) ? "Saved" : "Save"}
                   </button>
-                  <button
+                  <button type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       openDirections({ lat: selectedStore.latitude, lng: selectedStore.longitude, label: selectedStore.name, address: selectedStore.address });
@@ -2060,7 +2060,7 @@ export default function StoreMapPage() {
                   >
                     <Navigation className="w-4 h-4" />
                   </button>
-                  <button
+                  <button type="button"
                     onClick={(e) => { e.stopPropagation(); setDrawerStore(selectedStore); }}
                     className="h-11 w-11 rounded-xl bg-card border border-border/40 inline-flex items-center justify-center text-foreground"
                   >
@@ -2080,13 +2080,13 @@ export default function StoreMapPage() {
                   )}
                   {selectedStore.category === "auto-repair" && (
                     <div className="grid grid-cols-2 gap-2 mb-2">
-                      <button
+                      <button type="button"
                         className="h-10 rounded-lg bg-primary text-primary-foreground text-xs font-semibold inline-flex items-center justify-center gap-1.5"
                         onClick={(e) => { e.stopPropagation(); navigate(`/book/${selectedStore.slug}`); }}
                       >
                         <Wrench className="w-3.5 h-3.5" /> Book Service
                       </button>
-                      <button
+                      <button type="button"
                         className="h-10 rounded-lg border border-primary/30 text-primary text-xs font-semibold inline-flex items-center justify-center gap-1.5 disabled:opacity-50"
                         disabled={!selectedStore.phone}
                         onClick={(e) => { e.stopPropagation(); if (selectedStore.phone) window.open(`tel:${selectedStore.phone}`, "_self"); }}
@@ -2108,7 +2108,7 @@ export default function StoreMapPage() {
                         ))}
                       </select>
                       <div className="grid grid-cols-2 gap-2 mt-2">
-                        <button
+                        <button type="button"
                           className="h-9 rounded-lg bg-primary text-primary-foreground text-xs font-semibold"
                           onClick={(e) => {
                             e.stopPropagation();
@@ -2127,7 +2127,7 @@ export default function StoreMapPage() {
                         >
                           Create Reel
                         </button>
-                        <button
+                        <button type="button"
                           className="h-9 rounded-lg border border-primary/30 text-primary text-xs font-semibold"
                           onClick={(e) => {
                             e.stopPropagation();

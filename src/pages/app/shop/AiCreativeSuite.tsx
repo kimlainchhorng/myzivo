@@ -132,7 +132,7 @@ export default function AiCreativeSuite() {
                     className="hidden"
                     onChange={(e) => onPickImage(idx, e)}
                   />
-                  <button
+                  <button type="button"
                     onClick={() => fileRefs[idx].current?.click()}
                     className="w-full h-28 rounded-xl border-2 border-dashed border-border/60 hover:border-primary/50 transition-colors overflow-hidden"
                   >

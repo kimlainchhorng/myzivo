@@ -129,7 +129,7 @@ export default function ChatMediaGallery({ open, onClose, recipientId, recipient
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-xl border-b border-border/30 safe-area-top">
         <div className="px-4 py-3 flex items-center gap-3">
-          <button onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center" aria-label="Back" title="Back">
+          <button type="button" onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center" aria-label="Back" title="Back">
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
           <div className="flex-1">
@@ -141,7 +141,7 @@ export default function ChatMediaGallery({ open, onClose, recipientId, recipient
         {/* Tabs */}
         <div className="flex px-4 gap-1 pb-1">
           {tabs.map((t) => (
-            <button
+            <button type="button"
               key={t.id}
               onClick={() => setTab(t.id)}
               className={`flex-1 flex items-center justify-center gap-1.5 py-2 text-xs font-semibold rounded-lg transition-colors ${
@@ -176,7 +176,7 @@ export default function ChatMediaGallery({ open, onClose, recipientId, recipient
         ) : tab === "photos" ? (
           <div className="grid grid-cols-3 gap-1.5">
             {filtered.map((item) => (
-              <button
+              <button type="button"
                 key={item.id}
                 onClick={() => { setPreviewUrl(item.url); setPreviewType("image"); }}
                 className="aspect-square rounded-xl overflow-hidden bg-muted"
@@ -190,7 +190,7 @@ export default function ChatMediaGallery({ open, onClose, recipientId, recipient
         ) : tab === "videos" ? (
           <div className="grid grid-cols-2 gap-2">
             {filtered.map((item) => (
-              <button
+              <button type="button"
                 key={item.id}
                 onClick={() => { setPreviewUrl(item.url); setPreviewType("video"); }}
                 className="aspect-video rounded-xl overflow-hidden bg-muted relative"
@@ -250,7 +250,7 @@ export default function ChatMediaGallery({ open, onClose, recipientId, recipient
         ) : (
           <div className="space-y-2">
             {filtered.map((item) => (
-              <button
+              <button type="button"
                 key={item.id}
                 onClick={() => {
                   void openExternalUrl(item.url);
@@ -282,7 +282,7 @@ export default function ChatMediaGallery({ open, onClose, recipientId, recipient
             className="fixed inset-0 z-[99999] bg-black flex items-center justify-center"
             onClick={() => setPreviewUrl(null)}
           >
-            <button className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center safe-area-top" aria-label="Close preview" title="Close preview">
+            <button type="button" className="absolute top-4 right-4 z-10 w-10 h-10 rounded-full bg-white/10 flex items-center justify-center safe-area-top" aria-label="Close preview" title="Close preview">
               <X className="w-5 h-5 text-white" />
             </button>
             {previewType === "image" ? (

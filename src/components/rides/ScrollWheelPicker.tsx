@@ -93,7 +93,7 @@ function ScrollWheelColumn({
           const distance = Math.abs(i - selectedIndex);
 
           return (
-            <button
+            <button type="button"
               key={`${item}-${i}`}
               onClick={() => onSelect(i)}
               className={cn(

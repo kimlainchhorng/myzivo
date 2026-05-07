@@ -157,18 +157,18 @@ export default function MonetizationArticleDetailPage() {
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-30 bg-background/80 backdrop-blur-xl border-b border-border/30">
         <div className="flex items-center gap-3 px-4 py-3">
-          <button onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-muted/50 touch-manipulation">
+          <button type="button" onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-muted/50 touch-manipulation">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className="text-sm font-bold flex-1 text-center truncate">{title}</h1>
           <div className="flex items-center gap-1">
-            <button
+            <button type="button"
               onClick={() => { toast.success("Link copied!"); navigator.clipboard?.writeText(window.location.href); }}
               className="p-2 rounded-full hover:bg-muted/50 touch-manipulation"
             >
               <Share2 className="h-4 w-4" />
             </button>
-            <button
+            <button type="button"
               onClick={() => { setSaved(!saved); toast.success(saved ? "Removed from saved" : "Article saved!"); }}
               className={`p-2 -mr-2 rounded-full hover:bg-muted/50 touch-manipulation ${saved ? "text-primary" : ""}`}
             >
@@ -243,7 +243,7 @@ export default function MonetizationArticleDetailPage() {
 
         {/* Quick Action Cards */}
         <div className="grid grid-cols-2 gap-3">
-          <button
+          <button type="button"
             onClick={() => navigate("/creator-dashboard")}
             className="rounded-xl border border-border/40 bg-card p-3 text-left touch-manipulation active:scale-[0.97] transition-transform"
           >
@@ -251,7 +251,7 @@ export default function MonetizationArticleDetailPage() {
             <p className="text-xs font-bold">Creator Dashboard</p>
             <p className="text-[10px] text-muted-foreground mt-0.5">View your earnings</p>
           </button>
-          <button
+          <button type="button"
             onClick={() => navigate("/monetization")}
             className="rounded-xl border border-border/40 bg-card p-3 text-left touch-manipulation active:scale-[0.97] transition-transform"
           >
@@ -259,7 +259,7 @@ export default function MonetizationArticleDetailPage() {
             <p className="text-xs font-bold">Monetization Hub</p>
             <p className="text-[10px] text-muted-foreground mt-0.5">Explore programs</p>
           </button>
-          <button
+          <button type="button"
             onClick={() => navigate("/shop-dashboard")}
             className="rounded-xl border border-border/40 bg-card p-3 text-left touch-manipulation active:scale-[0.97] transition-transform"
           >
@@ -267,7 +267,7 @@ export default function MonetizationArticleDetailPage() {
             <p className="text-xs font-bold">ZIVO Shop</p>
             <p className="text-[10px] text-muted-foreground mt-0.5">Sell products</p>
           </button>
-          <button
+          <button type="button"
             onClick={() => navigate("/account/settings")}
             className="rounded-xl border border-border/40 bg-card p-3 text-left touch-manipulation active:scale-[0.97] transition-transform"
           >
@@ -279,19 +279,19 @@ export default function MonetizationArticleDetailPage() {
 
         {/* Actions */}
         <div className="flex items-center gap-3 py-3 border-t border-border/30">
-          <button
+          <button type="button"
             onClick={() => { setLiked(!liked); toast.success(liked ? "Removed" : "Marked as helpful!"); }}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-semibold touch-manipulation active:scale-95 transition-all ${liked ? "bg-primary/15 text-primary" : "bg-muted/50"}`}
           >
             <ThumbsUp className={`w-3.5 h-3.5 ${liked ? "fill-primary" : ""}`} /> Helpful
           </button>
-          <button
+          <button type="button"
             onClick={() => { toast.success("Link copied!"); navigator.clipboard?.writeText(window.location.href); }}
             className="flex items-center gap-1.5 px-3 py-2 rounded-full bg-muted/50 text-xs font-semibold touch-manipulation active:scale-95 transition-transform"
           >
             <Share2 className="w-3.5 h-3.5" /> Share
           </button>
-          <button
+          <button type="button"
             onClick={() => { setSaved(!saved); toast.success(saved ? "Removed" : "Saved!"); }}
             className={`flex items-center gap-1.5 px-3 py-2 rounded-full text-xs font-semibold touch-manipulation active:scale-95 transition-all ${saved ? "bg-primary/15 text-primary" : "bg-muted/50"}`}
           >
@@ -304,7 +304,7 @@ export default function MonetizationArticleDetailPage() {
           <h3 className="font-bold text-base mb-3">Related Articles</h3>
           <div className="space-y-2">
             {relatedArticles.map((related) => (
-              <button
+              <button type="button"
                 key={related}
                 onClick={() => navigate(`/monetization/articles/${related.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/-+$/, "")}`)}
                 className="w-full flex items-center gap-3 p-3 rounded-xl border border-border/30 bg-card text-left touch-manipulation active:scale-[0.98] transition-transform"
@@ -320,7 +320,7 @@ export default function MonetizationArticleDetailPage() {
         </div>
 
         {/* Browse All */}
-        <button
+        <button type="button"
           onClick={() => navigate("/monetization/articles")}
           className="w-full py-3 rounded-xl bg-primary text-primary-foreground text-sm font-bold touch-manipulation active:scale-[0.98] transition-transform"
         >

@@ -171,11 +171,11 @@ export default function PostActionsMenu({
               <div className="px-4">
                 <div className="mb-3 flex items-center justify-between">
                   <h3 className="text-base font-semibold">Why are you reporting?</h3>
-                  <button onClick={() => setView("main")} className="text-sm text-muted-foreground">Back</button>
+                  <button type="button" onClick={() => setView("main")} className="text-sm text-muted-foreground">Back</button>
                 </div>
                 <div className="space-y-1">
                   {REPORT_REASONS.map((r) => (
-                    <button
+                    <button type="button"
                       key={r.id}
                       onClick={() => { onReport(r.id); handleClose(); }}
                       className="flex w-full items-center justify-between rounded-lg px-3 py-3 text-left text-sm hover:bg-muted"
@@ -192,7 +192,7 @@ export default function PostActionsMenu({
               <div className="px-4 py-2">
                 <div className="mb-3 flex items-center justify-between">
                   <h3 className="text-base font-semibold">Why you're seeing this</h3>
-                  <button onClick={() => setView("main")} className="text-sm text-muted-foreground">Back</button>
+                  <button type="button" onClick={() => setView("main")} className="text-sm text-muted-foreground">Back</button>
                 </div>
                 <div className="rounded-lg bg-muted/40 p-4 text-sm text-muted-foreground space-y-2">
                   <p>This post was ranked using:</p>
@@ -211,7 +211,7 @@ export default function PostActionsMenu({
               <div className="px-4 py-2">
                 <div className="mb-3 flex items-center justify-between">
                   <h3 className="text-base font-semibold text-red-600">Delete this post?</h3>
-                  <button onClick={() => setView("main")} className="text-sm text-muted-foreground">Back</button>
+                  <button type="button" onClick={() => setView("main")} className="text-sm text-muted-foreground">Back</button>
                 </div>
                 <div className="rounded-lg bg-red-500/5 border border-red-500/20 p-4 text-sm text-foreground space-y-2">
                   <p>This will permanently remove the post from your profile and the feed.</p>
@@ -222,13 +222,13 @@ export default function PostActionsMenu({
                   </ul>
                 </div>
                 <div className="mt-4 flex gap-2">
-                  <button
+                  <button type="button"
                     onClick={() => setView("main")}
                     className="flex-1 rounded-xl border border-border bg-background px-3 py-2.5 text-sm font-medium hover:bg-muted active:scale-95 transition-transform min-h-[44px]"
                   >
                     Cancel
                   </button>
-                  <button
+                  <button type="button"
                     onClick={() => { onDeletePost?.(); handleClose(); }}
                     className="flex-1 rounded-xl bg-red-600 px-3 py-2.5 text-sm font-semibold text-white hover:bg-red-700 active:scale-95 transition-transform min-h-[44px] flex items-center justify-center gap-2"
                   >
@@ -249,7 +249,7 @@ function MenuRow({
   icon, label, sub, onClick,
 }: { icon: React.ReactNode; label: string; sub?: string; onClick: () => void }) {
   return (
-    <button
+    <button type="button"
       onClick={onClick}
       className="flex w-full items-center gap-3 rounded-xl px-3 py-3.5 sm:py-3 text-left hover:bg-muted active:bg-muted/80 transition-colors min-h-[52px] sm:min-h-[44px]"
     >

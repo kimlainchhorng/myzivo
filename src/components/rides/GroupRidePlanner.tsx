@@ -74,14 +74,14 @@ export default function GroupRidePlanner({ onStartRide, onClose }: GroupRidePlan
             </div>
           </div>
           {onClose && (
-            <button onClick={onClose} className="p-1.5 rounded-full hover:bg-muted">
+            <button type="button" onClick={onClose} className="p-1.5 rounded-full hover:bg-muted">
               <X className="w-4 h-4 text-muted-foreground" />
             </button>
           )}
         </div>
 
         {/* Share code */}
-        <button
+        <button type="button"
           onClick={() => { navigator.clipboard?.writeText(shareCode); toast.success("Code copied!"); }}
           className="w-full flex items-center justify-between p-3 rounded-xl bg-card/50 border border-border/20"
         >
@@ -158,7 +158,7 @@ export default function GroupRidePlanner({ onStartRide, onClose }: GroupRidePlan
                 </div>
               )}
               {member.id !== "1" && (
-                <button onClick={() => removeMember(member.id)} className="p-1 rounded-full hover:bg-muted shrink-0">
+                <button type="button" onClick={() => removeMember(member.id)} className="p-1 rounded-full hover:bg-muted shrink-0">
                   <X className="w-3 h-3 text-muted-foreground" />
                 </button>
               )}
@@ -168,7 +168,7 @@ export default function GroupRidePlanner({ onStartRide, onClose }: GroupRidePlan
 
         {/* Add member */}
         {!showInvite ? (
-          <button
+          <button type="button"
             onClick={() => setShowInvite(true)}
             className="w-full flex items-center gap-2 p-3 rounded-xl border border-dashed border-border/50 text-xs text-muted-foreground hover:border-border hover:bg-secondary transition-all mt-2"
           >

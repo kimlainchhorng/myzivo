@@ -65,14 +65,14 @@ export default function CreatorSubscribeSheet() {
                 <h3 className="text-base font-bold inline-flex items-center gap-1.5"><Sparkles className="w-4 h-4 text-primary" />Support {detail.creatorName}</h3>
                 <p className="text-[11px] text-muted-foreground">Monthly subscription · cancel anytime.</p>
               </div>
-              <button onClick={() => setOpen(false)} aria-label="Close" className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-muted">
+              <button type="button" onClick={() => setOpen(false)} aria-label="Close" className="h-9 w-9 flex items-center justify-center rounded-full hover:bg-muted">
                 <X className="w-4 h-4 text-muted-foreground" />
               </button>
             </div>
 
             <div className="px-4 py-4 space-y-2">
               {FALLBACK_TIERS.map((tier) => (
-                <button
+                <button type="button"
                   key={tier.id}
                   onClick={() => setSelectedTier(tier.id)}
                   className={`w-full text-left rounded-2xl border p-3 transition ${selectedTier === tier.id ? "border-primary bg-primary/5" : "border-border/40 bg-card hover:bg-muted/30"}`}
@@ -86,7 +86,7 @@ export default function CreatorSubscribeSheet() {
                   </ul>
                 </button>
               ))}
-              <button onClick={subscribe} disabled={!selectedTier} className="w-full mt-2 py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50">
+              <button type="button" onClick={subscribe} disabled={!selectedTier} className="w-full mt-2 py-3 rounded-xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-50">
                 Subscribe
               </button>
             </div>

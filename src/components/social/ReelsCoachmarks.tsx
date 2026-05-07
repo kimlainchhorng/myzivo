@@ -61,7 +61,7 @@ export default function ReelsCoachmarks() {
               <Hint icon={<VolumeX className="h-5 w-5" />} title="Tap the right edge" sub="Mute or unmute sound" />
             </ul>
 
-            <button
+            <button type="button"
               onClick={dismiss}
               className="mt-6 w-full rounded-full bg-white text-black font-bold py-3 active:scale-95 transition-transform"
             >

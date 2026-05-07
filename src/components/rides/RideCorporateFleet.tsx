@@ -228,7 +228,7 @@ export default function RideCorporateFleet() {
         {sections.map((s) => {
           const Icon = s.icon;
           return (
-            <button key={s.id} onClick={() => setSection(s.id)}
+            <button type="button" key={s.id} onClick={() => setSection(s.id)}
               className={cn("flex-1 flex items-center justify-center gap-1.5 py-2 rounded-lg text-xs font-bold transition-all",
                 section === s.id ? "bg-background text-foreground shadow-sm" : "text-muted-foreground")}>
               <Icon className="w-3.5 h-3.5" />
@@ -284,7 +284,7 @@ export default function RideCorporateFleet() {
         <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="space-y-3">
           <div className="flex justify-between items-center">
             <p className="text-sm font-bold text-foreground">Team Members ({teamMembers.length})</p>
-            <button onClick={() => {
+            <button type="button" onClick={() => {
               const link = `https://zivo.app/corp/invite/${Date.now().toString(36)}`;
               navigator.clipboard.writeText(link).then(() => toast.success("Invite link copied!")).catch(() => toast.success("Invite link copied!"));
             }} className="flex items-center gap-1 text-xs font-bold text-primary">
@@ -328,10 +328,10 @@ export default function RideCorporateFleet() {
                 <p className="text-xs text-muted-foreground truncate">{pol.value}</p>
               </div>
               <div className="flex items-center gap-2">
-                <button onClick={() => openEditPolicy(pol)} className="p-1 rounded-lg hover:bg-muted/60">
+                <button type="button" onClick={() => openEditPolicy(pol)} className="p-1 rounded-lg hover:bg-muted/60">
                   <Settings className="w-3.5 h-3.5 text-muted-foreground" />
                 </button>
-                <button
+                <button type="button"
                   onClick={() => togglePolicy(pol.id)}
                   className={cn("w-10 h-6 rounded-full flex items-center transition-all px-1", pol.active ? "bg-primary justify-end" : "bg-muted justify-start")}
                 >
@@ -340,7 +340,7 @@ export default function RideCorporateFleet() {
               </div>
             </div>
           ))}
-          <button onClick={() => setEditPolicyOpen(true)}
+          <button type="button" onClick={() => setEditPolicyOpen(true)}
             className="w-full py-2.5 rounded-xl bg-primary/10 text-primary text-sm font-bold flex items-center justify-center gap-2">
             <Settings className="w-4 h-4" /> Manage Policies
           </button>
@@ -432,7 +432,7 @@ export default function RideCorporateFleet() {
           ) : (
             <div className="space-y-2">
               {policies.map((pol: any) => (
-                <button key={pol.id} onClick={() => openEditPolicy(pol)}
+                <button type="button" key={pol.id} onClick={() => openEditPolicy(pol)}
                   className="w-full flex items-center justify-between p-2.5 rounded-xl hover:bg-muted/60 text-left transition-colors">
                   <div>
                     <p className="text-sm font-semibold">{pol.name}</p>

@@ -222,7 +222,7 @@ export default function ShareToChatSheet() {
                     : `${selected.size} selected`}
                 </p>
               </div>
-              <button
+              <button type="button"
                 onClick={handleClose}
                 aria-label="Close"
                 className="h-9 w-9 -mr-1.5 flex items-center justify-center rounded-full hover:bg-muted"
@@ -267,7 +267,7 @@ export default function ShareToChatSheet() {
                         Groups
                       </p>
                       {filteredGroups.map((g) => (
-                        <button
+                        <button type="button"
                           key={`g:${g.id}`}
                           onClick={() => toggleSelect(g.id)}
                           disabled={sending}
@@ -297,7 +297,7 @@ export default function ShareToChatSheet() {
                         Friends
                       </p>
                       {filteredFriends.map((f) => (
-                        <button
+                        <button type="button"
                           key={`f:${f.user_id}`}
                           onClick={() => toggleSelect(f.user_id)}
                           disabled={sending}
@@ -331,7 +331,7 @@ export default function ShareToChatSheet() {
             {/* Sticky send button — appears once at least one recipient selected */}
             {selected.size > 0 && (
               <div className="px-4 pt-2 pb-1 border-t border-border/20">
-                <button
+                <button type="button"
                   onClick={() => void sendSelected()}
                   disabled={sending}
                   className="w-full flex items-center justify-center gap-2 py-3 rounded-2xl bg-primary text-primary-foreground font-semibold text-sm active:opacity-80 transition disabled:opacity-60"

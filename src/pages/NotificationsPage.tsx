@@ -128,7 +128,7 @@ const SocialNotifItem = ({ notif, index, onClick }: { notif: SocialNotification;
       transition={{ delay: index * 0.03, duration: 0.3 }}
     >
       <GlassCard3D glow={!notif.is_read}>
-        <button onClick={onClick} className="w-full flex items-center gap-3 p-3 text-left touch-manipulation">
+        <button type="button" onClick={onClick} className="w-full flex items-center gap-3 p-3 text-left touch-manipulation">
           <div className="relative shrink-0">
             <Avatar className="h-10 w-10">
               <AvatarImage src={notif.actor_avatar || undefined} />
@@ -393,7 +393,7 @@ const NotificationsPage = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <motion.div whileHover={{ scale: 1.1, rotateY: 10 }} whileTap={{ scale: 0.88 }}>
-                    <button
+                    <button type="button"
                       onClick={() => navigate(-1)}
                       className="w-10 h-10 min-w-[44px] min-h-[44px] rounded-2xl bg-card/60 backdrop-blur-xl border border-border/30 flex items-center justify-center touch-manipulation shadow-lg shadow-primary/[0.05] hover:bg-card/80 transition-all"
                       aria-label="Go back"
@@ -675,7 +675,7 @@ const NotificationsPage = () => {
             className="pb-4"
           >
             <GlassCard3D className="shadow-xl">
-              <button
+              <button type="button"
                 onClick={() => navigate("/account/notifications")}
                 className="w-full p-4 text-left flex items-center gap-3 active:scale-[0.99] transition-transform"
               >

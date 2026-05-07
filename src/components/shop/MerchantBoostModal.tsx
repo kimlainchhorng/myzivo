@@ -100,7 +100,7 @@ export default function MerchantBoostModal({
               <p className="text-sm font-semibold mb-2">Select Budget</p>
               <div className="grid grid-cols-3 gap-2">
                 {BOOST_TIERS.map((t, i) => (
-                  <button
+                  <button type="button"
                     key={t.amount}
                     onClick={() => setSelectedTier(i)}
                     className={cn(
@@ -121,7 +121,7 @@ export default function MerchantBoostModal({
             <div>
               <p className="text-sm font-semibold mb-2">Payment Method</p>
               <div className="grid grid-cols-2 gap-2">
-                <button
+                <button type="button"
                   onClick={() => setPaymentMethod("stripe")}
                   className={cn(
                     "flex items-center gap-2 rounded-xl border-2 p-3 transition-all",
@@ -137,7 +137,7 @@ export default function MerchantBoostModal({
                   </div>
                   {paymentMethod === "stripe" && <Check className="h-4 w-4 text-primary ml-auto" />}
                 </button>
-                <button
+                <button type="button"
                   onClick={() => setPaymentMethod("khqr")}
                   className={cn(
                     "flex items-center gap-2 rounded-xl border-2 p-3 transition-all",

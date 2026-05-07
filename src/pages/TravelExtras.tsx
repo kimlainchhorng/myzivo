@@ -310,7 +310,7 @@ export default function TravelExtras() {
                     return (
                       <Tooltip key={partner.id}>
                         <TooltipTrigger asChild>
-                          <button
+                          <button type="button"
                             onClick={(e) => { e.preventDefault(); import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(outboundUrl)); }}
                             className="block w-full text-left"
                           >

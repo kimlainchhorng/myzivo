@@ -93,7 +93,7 @@ export function PWAInstallBanner() {
             {/* Glow accent */}
             <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary via-emerald-400 to-primary" />
 
-            <button
+            <button type="button"
               onClick={handleDismiss}
               className="absolute top-3 right-3 w-8 h-8 flex items-center justify-center rounded-full bg-muted/50 text-muted-foreground hover:bg-muted touch-manipulation active:scale-90"
             >

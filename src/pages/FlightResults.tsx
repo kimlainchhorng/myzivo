@@ -474,7 +474,7 @@ const FlightResults = () => {
             { val: 1, label: "1 Stop" },
             { val: 2, label: "2+ Stops" },
           ].map(item => (
-            <button
+            <button type="button"
               key={item.val}
               onClick={() => toggleArray("stops", item.val)}
               className={cn(
@@ -497,7 +497,7 @@ const FlightResults = () => {
         <p className="text-xs font-semibold mb-2.5">Departure Time</p>
         <div className="grid grid-cols-2 gap-1.5">
           {timeOptions.map(t => (
-            <button
+            <button type="button"
               key={t.id}
               onClick={() => toggleArray("departureTime", t.id)}
               className={cn(
@@ -522,7 +522,7 @@ const FlightResults = () => {
         <p className="text-xs font-semibold mb-2.5">Arrival Time</p>
         <div className="grid grid-cols-2 gap-1.5">
           {timeOptions.map(t => (
-            <button
+            <button type="button"
               key={t.id}
               onClick={() => toggleArray("arrivalTime", t.id)}
               className={cn(
@@ -693,7 +693,7 @@ const FlightResults = () => {
                       cabinClass={cabinClass}
                       currentLowestPrice={lowestPrice}
                     />
-                    <button
+                    <button type="button"
                       onClick={() => setEditMode(!editMode)}
                       className={cn(
                         "h-7 px-2.5 text-[11px] font-semibold rounded-lg border flex items-center gap-1 active:scale-95 transition-all",
@@ -819,7 +819,7 @@ const FlightResults = () => {
                     { key: "cheapest" as SortBy, label: "Cheapest", emoji: "🔥" },
                     { key: "fastest" as SortBy, label: "Fastest", emoji: "⚡" },
                   ]).map(s => (
-                    <button
+                    <button type="button"
                       key={s.key}
                       onClick={() => setSortBy(s.key)}
                       className={cn(
@@ -840,7 +840,7 @@ const FlightResults = () => {
                 {/* Filter button */}
                 <Sheet open={sheetOpen} onOpenChange={(open) => { if (open) handleOpenSheet(); else setSheetOpen(false); }}>
                   <SheetTrigger asChild>
-                    <button
+                    <button type="button"
                       className={cn(
                         "flex items-center gap-1 px-3 py-2 rounded-lg text-[11px] font-semibold transition-all active:scale-[0.97] relative",
                         activeFilterCount > 0
@@ -861,7 +861,7 @@ const FlightResults = () => {
                     <SheetHeader className="px-4 pt-4 pb-2 border-b border-border/30 shrink-0">
                       <div className="flex items-center justify-between">
                         <SheetTitle className="text-base">Filters</SheetTitle>
-                        <button onClick={handleResetSheet} className="text-[11px] font-medium text-[hsl(var(--flights))]">
+                        <button type="button" onClick={handleResetSheet} className="text-[11px] font-medium text-[hsl(var(--flights))]">
                           Reset all
                         </button>
                       </div>
@@ -887,7 +887,7 @@ const FlightResults = () => {
                   {availableAirlines.slice(0, 6).map(al => {
                     const isActive = filters.airlines.includes(al.code);
                     return (
-                      <button
+                      <button type="button"
                         key={al.code}
                         onClick={() => {
                           setFilters(prev => {
@@ -937,7 +937,7 @@ const FlightResults = () => {
                   <X className="w-2.5 h-2.5" />
                 </Badge>
               ))}
-              <button
+              <button type="button"
                 onClick={clearFilters}
                 className="text-[10px] font-medium text-destructive hover:underline px-1"
               >
@@ -1176,7 +1176,7 @@ const FlightResults = () => {
                     }}
                   >
                     {/* Step 1: Outbound */}
-                    <button
+                    <button type="button"
                       onClick={selectionStep === "return" ? handleBackToOutbound : undefined}
                       className={cn(
                         "flex items-center gap-2 flex-1 px-2 py-2.5 rounded-xl transition-all text-left min-w-0",

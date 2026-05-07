@@ -251,7 +251,7 @@ export default function LodgingAmenitiesSection({ storeId }: { storeId: string }
           {cat.items.map((item) => {
             const selected = isSelected(cat.key, item.key);
             return (
-              <button
+              <button type="button"
                 key={item.key}
                 type="button"
                 onClick={() => toggleAmenity(cat.key, item.key)}
@@ -340,7 +340,7 @@ export default function LodgingAmenitiesSection({ storeId }: { storeId: string }
                 >
                   <div className="flex items-center justify-between gap-2 px-2 h-9 rounded-xl bg-muted/30 border border-border">
                     <CollapsibleTrigger asChild>
-                      <button className="flex items-center gap-2 flex-1 text-left">
+                      <button type="button" className="flex items-center gap-2 flex-1 text-left">
                         {open ? (
                           <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />
                         ) : (

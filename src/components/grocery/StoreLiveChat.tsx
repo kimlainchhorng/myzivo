@@ -156,13 +156,13 @@ function ConfirmDialog({ open, message, onConfirm, onCancel }: { open: boolean; 
       >
         <p className="text-sm font-medium text-foreground text-center">{message}</p>
         <div className="flex gap-3">
-          <button
+          <button type="button"
             onClick={onCancel}
             className="flex-1 h-10 rounded-xl border border-border/30 text-sm font-medium text-muted-foreground hover:bg-muted transition-colors"
           >
             Cancel
           </button>
-          <button
+          <button type="button"
             onClick={onConfirm}
             className="flex-1 h-10 rounded-xl bg-destructive text-destructive-foreground text-sm font-medium hover:bg-destructive/90 transition-colors"
           >
@@ -271,7 +271,7 @@ function AdminChatList({
           <p className="text-sm font-bold text-foreground truncate">{storeName}</p>
           <p className="text-[10px] text-muted-foreground">Customer Chats</p>
         </div>
-        <button onClick={onClose} className="p-2 rounded-full hover:bg-muted transition-colors">
+        <button type="button" onClick={onClose} className="p-2 rounded-full hover:bg-muted transition-colors">
           <X className="h-5 w-5 text-muted-foreground" />
         </button>
       </div>
@@ -327,7 +327,7 @@ function AdminChatList({
                     {new Date(chat.last_message_at).toLocaleDateString([], { month: "short", day: "numeric" })}
                   </span>
                 )}
-                <button
+                <button type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     setDeleteConfirmId(chat.id);
@@ -572,7 +572,7 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
                 {/* Header */}
                 <div className="flex items-center gap-3 px-4 py-3 border-b border-border/30 shrink-0">
                   {isAdmin && (
-                    <button
+                    <button type="button"
                       onClick={() => { setSelectedChat(null); setChatId(null); setMessages([]); }}
                       className="p-1.5 rounded-full hover:bg-muted transition-colors"
                     >
@@ -593,14 +593,14 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
                     <p className="text-[10px] text-muted-foreground truncate">{chatSubtitle}</p>
                   </div>
                   {isAdmin && chatId && (
-                    <button
+                    <button type="button"
                       onClick={() => setConfirmDeleteInChat(true)}
                       className="p-2 rounded-full hover:bg-destructive/10 transition-colors"
                     >
                       <Trash2 className="h-4 w-4 text-destructive" />
                     </button>
                   )}
-                  <button onClick={onClose} className="p-2 rounded-full hover:bg-muted transition-colors">
+                  <button type="button" onClick={onClose} className="p-2 rounded-full hover:bg-muted transition-colors">
                     <X className="h-5 w-5 text-muted-foreground" />
                   </button>
                 </div>
@@ -663,7 +663,7 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
                 {/* Admin action buttons */}
                 {isAdmin && chatId && (
                   <div className="px-4 pt-2 flex items-center gap-2 border-t border-border/10">
-                    <button
+                    <button type="button"
                       onClick={async () => {
                         const { data: store } = await supabase
                           .from("store_profiles")
@@ -688,7 +688,7 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
                       <MapPin className="h-3.5 w-3.5" />
                       Location
                     </button>
-                    <button
+                    <button type="button"
                       onClick={() => {
                         const url = prompt("Paste your payment link or URL:");
                         if (!url?.trim()) return;
@@ -718,7 +718,7 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
                       <QrCode className="h-3.5 w-3.5" />
                       Payment
                     </button>
-                    <button
+                    <button type="button"
                       onClick={() => {
                         const orderId = prompt("Enter order ID to share tracking:");
                         if (!orderId?.trim()) return;
@@ -756,7 +756,7 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
                       placeholder={isAdmin ? "Reply as store..." : "Type a message..."}
                       className="flex-1 h-10 px-4 rounded-full bg-muted border border-border/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:border-primary/30"
                     />
-                    <button
+                    <button type="button"
                       onClick={sendMessage}
                       disabled={!input.trim() || sending}
                       className="h-10 w-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center shrink-0 disabled:opacity-50 transition-opacity"

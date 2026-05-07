@@ -175,7 +175,7 @@ export default function CarTravelerInfoPage() {
                   type="tel"
                   value={formData.phone}
                   onChange={(e) => setFormData(prev => ({ ...prev, phone: e.target.value }))}
-                  placeholder="+1 (555) 123-4567"
+                  placeholder="+1 (234) 567-8900"
                   className={errors.phone ? "border-destructive" : ""}
                 />
                 {errors.phone && (

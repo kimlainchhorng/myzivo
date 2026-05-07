@@ -58,7 +58,7 @@ export default function EventsHubPage() {
             <h1 className="text-2xl font-bold">Events</h1>
             <p className="text-sm text-muted-foreground">RSVP to local meetups, parties, and meetings.</p>
           </div>
-          <button onClick={() => navigate("/events-hub/create")} className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold">
+          <button type="button" onClick={() => navigate("/events-hub/create")} className="inline-flex items-center gap-1 px-3 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-bold">
             <Plus className="w-4 h-4" /> Create
           </button>
         </div>

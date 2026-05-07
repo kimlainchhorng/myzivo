@@ -44,7 +44,7 @@ export default function ChatWalletSheet({ open, onClose, recipientId, recipientN
               <Coins className="w-4 h-4 text-amber-500" /> Wallet
             </SheetTitle>
           </SheetHeader>
-          <button onClick={onClose} className="w-8 h-8 rounded-full bg-muted/60 flex items-center justify-center">
+          <button type="button" onClick={onClose} className="w-8 h-8 rounded-full bg-muted/60 flex items-center justify-center">
             <X className="w-4 h-4" />
           </button>
         </div>
@@ -74,7 +74,7 @@ export default function ChatWalletSheet({ open, onClose, recipientId, recipientN
 
             <div className="flex flex-wrap gap-2 mb-3">
               {QUICK.map((q) => (
-                <button
+                <button type="button"
                   key={q}
                   onClick={() => setAmount(q)}
                   className={cn(
@@ -110,7 +110,7 @@ export default function ChatWalletSheet({ open, onClose, recipientId, recipientN
           </div>
 
           <div className="px-5 py-4">
-            <button onClick={() => navigate("/wallet")} className="w-full text-center text-xs text-primary font-medium">
+            <button type="button" onClick={() => navigate("/wallet")} className="w-full text-center text-xs text-primary font-medium">
               Open full wallet →
             </button>
           </div>

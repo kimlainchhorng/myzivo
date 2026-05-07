@@ -146,7 +146,7 @@ export function PriceAlertsDashboard({ className, onBookNow }: PriceAlertsDashbo
         <div className="flex items-center gap-1 text-xs">
           <span className="text-muted-foreground">Sort:</span>
           {['date', 'price', 'savings'].map((option) => (
-            <button
+            <button type="button"
               key={option}
               onClick={() => setSortBy(option as typeof sortBy)}
               className={cn(

@@ -142,7 +142,7 @@ const RefundTrackerWidget = ({
 
       {/* Travel Credit Alternative */}
       {travelCreditOffer.enabled && (
-        <button 
+        <button type="button" 
           onClick={onChooseTravelCredit}
           className="w-full p-3 rounded-xl bg-amber-500/10 border border-amber-500/20 hover:bg-amber-500/15 transition-colors"
         >

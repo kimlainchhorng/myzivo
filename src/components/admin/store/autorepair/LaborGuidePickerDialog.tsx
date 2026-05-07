@@ -66,7 +66,7 @@ export default function LaborGuidePickerDialog({ open, onOpenChange, onSelect, t
           </div>
           <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-0.5">
             {LABOR_GUIDE_CATEGORIES.map(c => (
-              <button
+              <button type="button"
                 key={c}
                 onClick={() => setCat(c)}
                 className={cn(

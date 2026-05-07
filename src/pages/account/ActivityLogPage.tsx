@@ -177,7 +177,7 @@ export default function ActivityLogPage() {
             aria-label="Search activity"
           />
           {search && (
-            <button
+            <button type="button"
               onClick={() => setSearch("")}
               aria-label="Clear search"
               className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded-md text-muted-foreground hover:bg-muted/70 hover:text-foreground"
@@ -191,7 +191,7 @@ export default function ActivityLogPage() {
       {/* Filter pills */}
       <div className="px-4 pt-3 pb-1 flex gap-2 overflow-x-auto no-scrollbar">
         {FILTER_OPTIONS.map(opt => (
-          <button
+          <button type="button"
             key={opt.value}
             onClick={() => setFilter(opt.value)}
             className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
@@ -210,7 +210,7 @@ export default function ActivityLogPage() {
         <p className="px-4 pt-2 text-[11px] text-muted-foreground">
           {filtered.length} of {activities.length} record{activities.length === 1 ? "" : "s"}
           {filtered.length !== activities.length && (
-            <button
+            <button type="button"
               onClick={() => { setFilter("all"); setSearch(""); }}
               className="ml-2 text-primary hover:underline"
             >

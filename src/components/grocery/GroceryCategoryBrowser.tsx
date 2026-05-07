@@ -586,7 +586,7 @@ function CategorySection({ category, store, onAdd, cartProductIds, onBrowse, onS
               <span className="text-sm">{category.emoji}</span>
             </div>
             <span className="text-[13px] font-bold text-foreground tracking-tight">{category.label}</span>
-            <button
+            <button type="button"
               onClick={() => onBrowse(category.query)}
               className="ml-auto flex items-center gap-0.5 text-[10px] text-primary font-semibold hover:underline group"
             >

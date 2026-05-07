@@ -11,6 +11,8 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { z } from "zod";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 /* -----------------------------------------------------------
  * Partner Onboarding Wizard
@@ -34,6 +36,7 @@ const PARTNER_LABELS: Record<string, { title: string; emoji: string; nameLabel: 
   "service-pro": { title: "Service Pro", emoji: "🧰", nameLabel: "Business Name", namePlaceholder: "e.g. Spotless Cleaning" },
   photographer: { title: "Photographer", emoji: "📸", nameLabel: "Studio / Your Name", namePlaceholder: "e.g. Lens & Light" },
   event: { title: "Event Partner", emoji: "🎤", nameLabel: "Business Name", namePlaceholder: "e.g. Beat Events" },
+  employer: { title: "Employer / HR", emoji: "💼", nameLabel: "Company Name", namePlaceholder: "e.g. Bright Futures Inc." },
 };
 
 const FALLBACK = { title: "Partner Onboarding", emoji: "🤝", nameLabel: "Business Name", namePlaceholder: "Your business name" };
@@ -80,6 +83,7 @@ const emailSchema = z.string().trim().email().max(255);
 export default function PartnerOnboarding() {
   const [params] = useSearchParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const type = params.get("type") || "store";
   const meta = PARTNER_LABELS[type] || FALLBACK;
   const storageKey = `partner_onboarding_${type}`;
@@ -129,10 +133,63 @@ export default function PartnerOnboarding() {
 
   const submit = async () => {
     setSubmitting(true);
-    await new Promise((r) => setTimeout(r, 900));
-    setSubmitting(false);
-    setSubmitted(true);
-    try { localStorage.removeItem(storageKey); } catch {}
+    try {
+      const documents = {
+        address: form.address,
+        city: form.city,
+        hours: form.hours,
+        profileUrl: form.profileUrl,
+        coverUrl: form.coverUrl,
+      };
+
+      if (user) {
+        // Try to update the pending application created during signup
+        const { data: existing } = await (supabase as any)
+          .from("partner_applications")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("partner_kind", type)
+          .eq("status", "pending")
+          .maybeSingle();
+
+        if (existing?.id) {
+          const { error } = await (supabase as any)
+            .from("partner_applications")
+            .update({
+              business_name: form.name || undefined,
+              contact_phone: form.phone || null,
+              contact_email: form.email || null,
+              description: form.description || null,
+              documents,
+              status: "submitted",
+            })
+            .eq("id", existing.id);
+          if (error) throw error;
+        } else {
+          const { error } = await (supabase as any)
+            .from("partner_applications")
+            .insert({
+              user_id: user.id,
+              business_name: form.name,
+              partner_kind: type,
+              contact_email: form.email,
+              contact_phone: form.phone || null,
+              description: form.description || null,
+              documents,
+              status: "submitted",
+            });
+          if (error) throw error;
+        }
+      }
+
+      try { localStorage.removeItem(storageKey); } catch {}
+      setSubmitted(true);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Submission failed. Please try again.";
+      toast.error(msg);
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const progress = useMemo(() => ((step + 1) / STEPS.length) * 100, [step]);

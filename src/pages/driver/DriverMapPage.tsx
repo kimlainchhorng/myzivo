@@ -5,6 +5,7 @@
  * Shows flight arrival info for airport pickups
  */
 import { useState, useCallback, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import { useDriverMapState } from "@/hooks/useDriverMapState";
 import { useCustomerLocation } from "@/hooks/useCustomerLocation";
 import { useGpsPermission } from "@/hooks/useGpsPermission";
@@ -32,6 +33,7 @@ interface RideOffer {
 }
 
 export default function DriverMapPage() {
+  const navigate = useNavigate();
   const mapState = useDriverMapState();
   const [isOnline, setIsOnline] = useState(false);
   const { permission: gpsPermission, requestPermission: requestGps, skipPermission: skipGps } = useGpsPermission();
@@ -40,12 +42,15 @@ export default function DriverMapPage() {
   const [activeOffer, setActiveOffer] = useState<RideOffer | null>(null);
   const [isRespondingToOffer, setIsRespondingToOffer] = useState(false);
   const [acceptedJobId, setAcceptedJobId] = useState<string | null>(null);
+  const [acceptedJobStatus, setAcceptedJobStatus] = useState<string | null>(null);
+  const [updatingJobStatus, setUpdatingJobStatus] = useState(false);
   const [acceptedJobFlight, setAcceptedJobFlight] = useState<{
     flightNumber: string | null;
     flightArrivalTime: string | null;
     isAirportPickup: boolean;
   } | null>(null);
   const locationIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const acceptedJobChannelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   // Subscribe to customer's live location after accepting a ride
   const { location: customerLocation, isConnected: customerConnected } = useCustomerLocation(acceptedJobId);
@@ -353,6 +358,81 @@ export default function DriverMapPage() {
     toast.success("Ride declined");
   }, [activeOffer]);
 
+  // Subscribe to accepted job status changes for trip lifecycle
+  useEffect(() => {
+    if (!acceptedJobId) {
+      setAcceptedJobStatus(null);
+      if (acceptedJobChannelRef.current) {
+        supabase.removeChannel(acceptedJobChannelRef.current);
+        acceptedJobChannelRef.current = null;
+      }
+      return;
+    }
+
+    supabase.from("jobs").select("status").eq("id", acceptedJobId).maybeSingle()
+      .then(({ data }) => { if (data?.status) setAcceptedJobStatus(data.status as string); });
+
+    const ch = supabase
+      .channel(`driver-job-status-${acceptedJobId}`)
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "jobs", filter: `id=eq.${acceptedJobId}` },
+        (payload) => {
+          const newStatus = (payload.new as any).status as string;
+          if (newStatus) setAcceptedJobStatus(newStatus);
+          if (newStatus === "completed" || newStatus === "cancelled") {
+            setAcceptedJobId(null);
+            setAcceptedJobFlight(null);
+          }
+        })
+      .subscribe();
+
+    acceptedJobChannelRef.current = ch;
+    return () => {
+      if (acceptedJobChannelRef.current) {
+        supabase.removeChannel(acceptedJobChannelRef.current);
+        acceptedJobChannelRef.current = null;
+      }
+    };
+  }, [acceptedJobId]);
+
+  const handleUpdateJobStatus = useCallback(async (newStatus: string) => {
+    if (!acceptedJobId || updatingJobStatus) return;
+    setUpdatingJobStatus(true);
+
+    const { data: job, error } = await (supabase as any)
+      .from("jobs")
+      .update({ status: newStatus })
+      .eq("id", acceptedJobId)
+      .select("customer_id")
+      .maybeSingle();
+
+    setUpdatingJobStatus(false);
+    if (error) { toast.error("Could not update trip status"); return; }
+
+    setAcceptedJobStatus(newStatus);
+
+    const notifMap: Record<string, { title: string; body: string; type: string }> = {
+      arrived: { title: "Driver Has Arrived", body: "Your driver is waiting at the pickup location.", type: "driver_arrived" },
+      in_progress: { title: "Trip Started", body: "You're on your way!", type: "trip_started" },
+      completed: { title: "Trip Completed", body: "Thanks for riding with ZIVO!", type: "trip_completed" },
+    };
+    const notif = notifMap[newStatus];
+    if (notif && job?.customer_id) {
+      supabase.functions.invoke("send-push-notification", {
+        body: { user_id: job.customer_id, notification_type: notif.type, title: notif.title, body: notif.body, data: { type: notif.type, job_id: acceptedJobId } },
+      }).catch(() => {});
+    }
+
+    if (newStatus === "completed") {
+      toast.success("Trip completed! Great job.");
+      setAcceptedJobId(null);
+      setAcceptedJobFlight(null);
+      navigate("/driver");
+    } else {
+      const labels: Record<string, string> = { arrived: "Marked as arrived at pickup", in_progress: "Trip started" };
+      toast.success(labels[newStatus] || "Status updated");
+    }
+  }, [acceptedJobId, updatingJobStatus, navigate]);
+
   return (
     <div className="h-[100dvh] flex flex-col bg-background relative overflow-hidden">
       {/* GPS Permission Prompt */}
@@ -376,7 +456,7 @@ export default function DriverMapPage() {
             >
               Allow Location Access
             </Button>
-            <button
+            <button type="button"
               onClick={skipGps}
               className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
@@ -571,24 +651,63 @@ export default function DriverMapPage() {
         ) : null}
 
         <div className="absolute bottom-20 left-0 right-0 px-4 pointer-events-auto">
-          <motion.button
-            whileTap={{ scale: 0.97 }}
-            onClick={handleToggleOnline}
-            className="w-full py-4 rounded-2xl font-bold text-base shadow-lg transition-all"
-            style={{
-              background: isOnline
-                ? "hsl(var(--destructive))"
-                : "linear-gradient(135deg, hsl(var(--primary)), hsl(152 55% 30%))",
-              color: isOnline
-                ? "hsl(var(--destructive-foreground))"
-                : "hsl(var(--primary-foreground))",
-              boxShadow: isOnline
-                ? "0 8px 24px -8px hsl(var(--destructive) / 0.4)"
-                : "0 8px 24px -8px hsl(var(--primary) / 0.4)",
-            }}
-          >
-            {isOnline ? "Go Offline" : "Go Online"}
-          </motion.button>
+          {acceptedJobId ? (
+            (acceptedJobStatus === "accepted" || acceptedJobStatus === "en_route") ? (
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => handleUpdateJobStatus("arrived")}
+                disabled={updatingJobStatus}
+                className="w-full py-4 rounded-2xl font-bold text-base shadow-lg bg-emerald-500 text-white flex items-center justify-center gap-2 disabled:opacity-70"
+              >
+                {updatingJobStatus ? <Loader2 className="w-4 h-4 animate-spin" /> : <MapPin className="w-4 h-4" />}
+                Arrived at Pickup
+              </motion.button>
+            ) : acceptedJobStatus === "arrived" ? (
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => handleUpdateJobStatus("in_progress")}
+                disabled={updatingJobStatus}
+                className="w-full py-4 rounded-2xl font-bold text-base shadow-lg flex items-center justify-center gap-2 disabled:opacity-70"
+                style={{
+                  background: "linear-gradient(135deg, hsl(var(--primary)), hsl(152 55% 30%))",
+                  color: "hsl(var(--primary-foreground))",
+                  boxShadow: "0 8px 24px -8px hsl(var(--primary) / 0.4)",
+                }}
+              >
+                {updatingJobStatus ? <Loader2 className="w-4 h-4 animate-spin" /> : <Car className="w-4 h-4" />}
+                Start Trip
+              </motion.button>
+            ) : acceptedJobStatus === "in_progress" ? (
+              <motion.button
+                whileTap={{ scale: 0.97 }}
+                onClick={() => handleUpdateJobStatus("completed")}
+                disabled={updatingJobStatus}
+                className="w-full py-4 rounded-2xl font-bold text-base shadow-lg bg-emerald-600 text-white flex items-center justify-center gap-2 disabled:opacity-70"
+              >
+                {updatingJobStatus ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
+                Complete Trip
+              </motion.button>
+            ) : null
+          ) : (
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              onClick={handleToggleOnline}
+              className="w-full py-4 rounded-2xl font-bold text-base shadow-lg transition-all"
+              style={{
+                background: isOnline
+                  ? "hsl(var(--destructive))"
+                  : "linear-gradient(135deg, hsl(var(--primary)), hsl(152 55% 30%))",
+                color: isOnline
+                  ? "hsl(var(--destructive-foreground))"
+                  : "hsl(var(--primary-foreground))",
+                boxShadow: isOnline
+                  ? "0 8px 24px -8px hsl(var(--destructive) / 0.4)"
+                  : "0 8px 24px -8px hsl(var(--primary) / 0.4)",
+              }}
+            >
+              {isOnline ? "Go Offline" : "Go Online"}
+            </motion.button>
+          )}
         </div>
       </div>
 

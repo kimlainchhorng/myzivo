@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 
 type Talent = {
@@ -17,13 +18,16 @@ type Talent = {
   bio: string | null;
   city: string | null;
   country: string | null;
+  skills: string[] | null;
 };
 
 export default function FindTalentTab() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [q, setQ] = useState("");
   const [talents, setTalents] = useState<Talent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [inviting, setInviting] = useState<string | null>(null);
 
   useEffect(() => {
     let cancel = false;
@@ -31,7 +35,7 @@ export default function FindTalentTab() {
       setLoading(true);
       const { data } = await (supabase as any)
         .from("profiles")
-        .select("user_id,full_name,avatar_url,bio,city,country")
+        .select("user_id,full_name,avatar_url,bio,city,country,skills")
         .eq("open_to_work", true)
         .order("updated_at", { ascending: false })
         .limit(60);
@@ -48,13 +52,28 @@ export default function FindTalentTab() {
     if (!s) return talents;
     return talents.filter(t => {
       const name = (t.full_name ?? "").toLowerCase();
-      return name.includes(s) || (t.bio ?? "").toLowerCase().includes(s) || (t.city ?? "").toLowerCase().includes(s);
+      const skillMatch = (t.skills ?? []).some(sk => sk.toLowerCase().includes(s));
+      return name.includes(s) || (t.bio ?? "").toLowerCase().includes(s) || (t.city ?? "").toLowerCase().includes(s) || skillMatch;
     });
   }, [q, talents]);
 
-  const inviteToApply = (t: Talent) => {
+  const inviteToApply = async (t: Talent) => {
+    if (!user) return toast.error("You must be signed in.");
+    if (inviting === t.user_id) return;
+    setInviting(t.user_id);
+    const { error } = await (supabase as any).from("notifications").insert({
+      user_id: t.user_id,
+      title: "You've been invited to apply",
+      body: "An employer thinks you're a great fit. Check open jobs on Zivo Careers.",
+      category: "operational",
+      channel: "in_app",
+      template: "job_invite",
+      action_url: "/personal/find-employee",
+      status: "sent",
+    });
+    setInviting(null);
+    if (error) return toast.error("Could not send invite.");
     toast.success(`Invite sent to ${t.full_name ?? "talent"}`);
-    // Hook into notification/email pipeline as needed
   };
 
   return (
@@ -98,12 +117,20 @@ export default function FindTalentTab() {
                     </p>
                   )}
                   {t.bio && <p className="mt-1 line-clamp-2 text-[11px] text-muted-foreground">{t.bio}</p>}
+                  {t.skills && t.skills.length > 0 && (
+                    <div className="mt-1 flex flex-wrap gap-1">
+                      {t.skills.slice(0, 4).map(s => (
+                        <span key={s} className="rounded-full bg-muted px-1.5 py-0.5 text-[10px]">{s}</span>
+                      ))}
+                      {t.skills.length > 4 && <span className="text-[10px] text-muted-foreground">+{t.skills.length - 4}</span>}
+                    </div>
+                  )}
                   <div className="mt-2 flex gap-2">
                     <Button size="sm" variant="outline" className="h-7 text-[11px]" onClick={() => navigate(`/u/${t.user_id}`)}>
                       View
                     </Button>
-                    <Button size="sm" className="h-7 text-[11px]" onClick={() => inviteToApply(t)}>
-                      <Send className="mr-1 h-3 w-3" /> Invite to apply
+                    <Button size="sm" className="h-7 text-[11px]" disabled={inviting === t.user_id} onClick={() => inviteToApply(t)}>
+                      <Send className="mr-1 h-3 w-3" /> {inviting === t.user_id ? "Sending…" : "Invite"}
                     </Button>
                   </div>
                 </div>

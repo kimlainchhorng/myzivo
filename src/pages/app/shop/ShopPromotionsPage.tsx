@@ -190,7 +190,7 @@ export default function ShopPromotionsPage() {
             <Card className="p-4">
               <div className="flex items-start justify-between mb-2">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <button
+                  <button type="button"
                     onClick={() => copyCode(promo.code)}
                     className="font-mono text-sm font-bold text-primary bg-primary/10 px-2 py-0.5 rounded flex items-center gap-1 hover:bg-primary/20 transition-colors"
                   >

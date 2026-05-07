@@ -235,7 +235,7 @@ const HelpCenter = () => {
                 <CardContent>
                   <div className="grid md:grid-cols-2 gap-1 sm:gap-2">
                     {popularArticles.map((article, i) => (
-                      <button
+                      <button type="button"
                         key={i}
                         className="flex items-center justify-between p-3 sm:p-4 rounded-xl hover:bg-muted/50 transition-colors text-left group touch-manipulation active:scale-[0.98]"
                       >

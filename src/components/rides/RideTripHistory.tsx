@@ -144,7 +144,7 @@ export default function RideTripHistory({ onRebook }: RideTripHistoryProps = {})
       {/* Status filter */}
       <div className="px-4 flex gap-2">
         {(["all", "completed", "cancelled"] as const).map(s => (
-          <button
+          <button type="button"
             key={s}
             onClick={() => setStatusFilter(s)}
             className={cn(
@@ -173,7 +173,7 @@ export default function RideTripHistory({ onRebook }: RideTripHistoryProps = {})
                 animate={{ opacity: 1, y: 0 }}
                 className="rounded-xl bg-card border border-border/30 overflow-hidden"
               >
-                <button
+                <button type="button"
                   onClick={() => setExpandedTrip(expandedTrip === trip.id ? null : trip.id)}
                   className="w-full p-3 flex items-center gap-3 text-left"
                 >

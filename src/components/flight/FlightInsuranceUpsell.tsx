@@ -111,7 +111,7 @@ const FlightInsuranceUpsell = () => {
             const colors = getColorClasses(plan.color, isSelected);
 
             return (
-              <button
+              <button type="button"
                 key={plan.id}
                 onClick={() => setSelectedPlan(plan.id)}
                 className={cn(

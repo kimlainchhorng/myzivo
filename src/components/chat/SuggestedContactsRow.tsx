@@ -91,7 +91,7 @@ export default function SuggestedContactsRow() {
                 key={s.user_id}
                 className="relative shrink-0 w-[120px] rounded-2xl border bg-card p-2.5 flex flex-col items-center text-center"
               >
-                <button
+                <button type="button"
                   onClick={() => void dismiss(s.user_id)}
                   aria-label={`Dismiss ${name}`}
                   className="absolute top-1 right-1 w-5 h-5 rounded-full bg-muted/70 hover:bg-muted flex items-center justify-center focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:outline-none"

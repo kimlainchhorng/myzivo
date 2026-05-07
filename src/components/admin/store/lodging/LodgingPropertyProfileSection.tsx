@@ -447,7 +447,7 @@ export default function LodgingPropertyProfileSection({ storeId }: { storeId: st
                         <Input className="col-span-2 h-8 text-[11px]" type="number" inputMode="numeric" placeholder="km" value={n.km ?? ""} onChange={e => setNearby(i, { km: e.target.value === "" ? undefined : parseFloat(e.target.value) })} />
                         <div className="col-span-2 flex gap-0.5">
                           {([{ k: "walk", I: Footprints }, { k: "drive", I: Car }, { k: "boat", I: Ship }] as const).map(({ k, I }) => (
-                            <button
+                            <button type="button"
                               key={k} type="button" onClick={() => setNearby(i, { mode: k as any })}
                               className={`flex-1 h-8 rounded-lg flex items-center justify-center transition ${
                                 (n.mode || "walk") === k ? "bg-primary text-primary-foreground" : "bg-background border border-border text-muted-foreground hover:border-primary/40"
@@ -507,7 +507,7 @@ function ChipGroup({ options, selected, onToggle, max, labelMap, withIcons }: {
         const disabled = !on && atMax;
         const Icon = withIcons ? getAmenityIcon(o) : null;
         return (
-          <button
+          <button type="button"
             key={o} type="button" disabled={disabled} onClick={() => onToggle(o)}
             className={`px-2.5 py-1 rounded-full text-[11px] border transition inline-flex items-center gap-1 ${
               on

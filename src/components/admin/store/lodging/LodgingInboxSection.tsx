@@ -170,7 +170,7 @@ export default function LodgingInboxSection({ storeId }: { storeId: string }) {
                 const unread = thread.filter((m) => m.sender_role === "guest" && !m.read_at).length;
                 const isActive = r.id === activeReservationId;
                 return (
-                  <button
+                  <button type="button"
                     key={r.id}
                     onClick={() => setActiveReservationId(r.id)}
                     className={cn(
@@ -211,7 +211,7 @@ export default function LodgingInboxSection({ storeId }: { storeId: string }) {
                       <div className="mt-1 flex items-center justify-between gap-2">
                         <p className="text-[10px] opacity-70">{new Date(m.created_at).toLocaleString()}</p>
                         {m.sender_role === "guest" && (
-                          <button
+                          <button type="button"
                             onClick={() => createConciergeTask.mutate(m)}
                             disabled={createConciergeTask.isPending}
                             className="rounded-full bg-foreground/10 px-2 py-0.5 text-[10px] font-semibold text-foreground/80 opacity-0 transition group-hover:opacity-100 hover:bg-primary hover:text-primary-foreground disabled:opacity-50"

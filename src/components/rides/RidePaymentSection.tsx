@@ -133,7 +133,7 @@ function CambodiaPaymentSelector({
           const Icon = m.icon;
           const isSelected = selected === m.id;
           return (
-            <button
+            <button type="button"
               key={m.id}
               onClick={() => { setSelected(m.id); onMethodChange?.(m.id); }}
               className={cn(
@@ -725,7 +725,7 @@ export default function RidePaymentSection({
         <>
           <div className="rounded-2xl bg-card border border-border/20 overflow-hidden">
             {savedCards.map((card) => (
-              <button
+              <button type="button"
                 key={card.id}
                 onClick={() => setSelectedCardId(card.id)}
                 className={cn(
@@ -753,7 +753,7 @@ export default function RidePaymentSection({
                 ) : (
                   <div className="w-6 h-6 rounded-full border-2 border-muted-foreground/30 shrink-0" />
                 )}
-                <button
+                <button type="button"
                   onClick={(e) => { e.stopPropagation(); handleDeleteCard(card.id); }}
                   className="ml-1 w-7 h-7 rounded-lg flex items-center justify-center hover:bg-destructive/10 transition-colors shrink-0"
                   disabled={deletingId === card.id}
@@ -768,7 +768,7 @@ export default function RidePaymentSection({
             ))}
 
             {/* Add another card */}
-            <button
+            <button type="button"
               onClick={handleAddCard}
               disabled={addingCard}
               className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-muted/10 transition-all text-left disabled:opacity-50"

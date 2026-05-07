@@ -90,7 +90,7 @@ export default function HeartedDestinationsRail() {
 
   if (!total) {
     return (
-      <button
+      <button type="button"
         onClick={() => navigate("/network")}
         className="w-full mx-auto max-w-screen-md flex items-center gap-3 rounded-2xl border border-dashed border-border/50 bg-card/60 p-3 text-left active:scale-[0.99] transition-transform touch-manipulation"
       >
@@ -115,14 +115,14 @@ export default function HeartedDestinationsRail() {
           <Heart className="w-3 h-3 text-red-500 fill-red-500" /> Saved drop-offs
         </div>
         <div className="flex items-center gap-2">
-          <button
+          <button type="button"
             onClick={() => navigate("/rides/multi-stop")}
             className="text-[11px] text-primary font-bold flex items-center gap-0.5"
           >
             Multi-stop <ChevronRight className="w-3 h-3" />
           </button>
           <span className="text-muted-foreground/40 text-[11px]">·</span>
-          <button
+          <button type="button"
             onClick={() => navigate("/network/saved")}
             className="text-[11px] text-primary font-bold flex items-center gap-0.5"
           >

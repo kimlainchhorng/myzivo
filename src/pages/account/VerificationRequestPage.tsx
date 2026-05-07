@@ -198,7 +198,7 @@ export default function VerificationRequestPage() {
           <h3 className="text-sm font-medium text-foreground mb-2">Category</h3>
           <div className="space-y-2">
             {categories.map((c) => (
-              <button key={c.value} disabled={hasPendingRequest || isApproved} onClick={() => setCategory(c.value)} className={cn("w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-colors disabled:opacity-60", category === c.value ? "bg-primary/10 border-primary/30" : "bg-card border-border/40")}>
+              <button type="button" key={c.value} disabled={hasPendingRequest || isApproved} onClick={() => setCategory(c.value)} className={cn("w-full flex items-center gap-3 p-3 rounded-xl border text-left transition-colors disabled:opacity-60", category === c.value ? "bg-primary/10 border-primary/30" : "bg-card border-border/40")}>
                 <div>
                   <p className="text-sm font-medium">{c.label}</p>
                   <p className="text-xs text-muted-foreground">{c.desc}</p>

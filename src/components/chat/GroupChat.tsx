@@ -174,7 +174,7 @@ function renderMessageWithMentions(
       const isSelf = matched.user_id === currentUserId;
       const onClick = (e: React.MouseEvent) => { e.stopPropagation(); onMentionClick(matched!.user_id); };
       out.push(
-        <button
+        <button type="button"
           key={`m-${key++}`}
           type="button"
           onClick={onClick}
@@ -1049,7 +1049,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-xl border-b border-border/30 safe-area-top">
         <div className="px-3 py-2 flex items-center gap-3">
-          <button onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center" aria-label="Back" title="Back">
+          <button type="button" onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center" aria-label="Back" title="Back">
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
           <button
@@ -1070,7 +1070,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
             </p>
           </div>
           <div className="flex items-center gap-0.5">
-            <button
+            <button type="button"
               onClick={() => { void primeCallAudio(); setGroupCall("video"); }}
               className="h-11 w-11 flex items-center justify-center rounded-full hover:bg-blue-500/10"
               aria-label="Video call"
@@ -1078,7 +1078,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
             >
               <Video className="h-5 w-5 text-blue-500" />
             </button>
-            <button
+            <button type="button"
               onClick={() => { void primeCallAudio(); setGroupCall("audio"); }}
               className="h-11 w-11 flex items-center justify-center rounded-full hover:bg-emerald-500/10"
               aria-label="Voice call"
@@ -1086,7 +1086,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
             >
               <Phone className="h-[19px] w-[19px] text-emerald-500" />
             </button>
-            <button
+            <button type="button"
               onClick={() => setShowMembers(true)}
               className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full hover:bg-muted/50"
               aria-label="Members"
@@ -1097,7 +1097,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
             <span className="text-xs text-muted-foreground">{members.length}</span>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full hover:bg-muted/50" aria-label="More options" title="More options">
+                <button type="button" className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full hover:bg-muted/50" aria-label="More options" title="More options">
                   <MoreVertical className="h-4 w-4 text-muted-foreground" />
                 </button>
               </DropdownMenuTrigger>
@@ -1131,7 +1131,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
               <Search className="h-4 w-4 text-muted-foreground shrink-0" />
               <input autoFocus value={groupSearchQ} onChange={(e) => setGroupSearchQ(e.target.value)}
                 placeholder="Search messages..." className="flex-1 text-sm bg-transparent outline-none" />
-              <button onClick={() => { setShowGroupSearch(false); setGroupSearchQ(""); }} className="h-7 w-7 flex items-center justify-center rounded-full hover:bg-muted/60">
+              <button type="button" onClick={() => { setShowGroupSearch(false); setGroupSearchQ(""); }} className="h-7 w-7 flex items-center justify-center rounded-full hover:bg-muted/60">
                 <X className="h-3.5 w-3.5 text-muted-foreground" />
               </button>
             </div>
@@ -1269,7 +1269,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
 
                   {/* Failed-send indicator with tap-to-retry */}
                   {msg._upload_status === "failed" && isMe && (
-                    <button
+                    <button type="button"
                       onClick={() => retryFailedGroupSend(msg.id)}
                       className="self-end mt-0.5 mr-1 inline-flex items-center gap-1 text-[11px] font-medium text-destructive hover:underline"
                     >
@@ -1327,7 +1327,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
               <p className="text-[10px] font-semibold text-primary">{replyTo.senderName}</p>
               <p className="text-xs text-muted-foreground truncate">{replyTo.message}</p>
             </div>
-            <button onClick={() => setReplyTo(null)} className="h-7 w-7 rounded-full flex items-center justify-center" aria-label="Close reply" title="Close reply">
+            <button type="button" onClick={() => setReplyTo(null)} className="h-7 w-7 rounded-full flex items-center justify-center" aria-label="Close reply" title="Close reply">
               <X className="h-3.5 w-3.5 text-muted-foreground" />
             </button>
           </motion.div>
@@ -1505,7 +1505,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
                   { label: "Forward", icon: Forward, color: "bg-violet-500", action: () => { navigator.clipboard?.writeText(actionTarget.message || ""); toast.success("Copied to forward"); setActionTarget(null); } },
                   { label: "Delete", icon: Trash2, color: "bg-red-500", action: () => { void handleDeleteMsg(actionTarget.id); setActionTarget(null); } },
                 ].map((item) => (
-                  <button key={item.label} onClick={item.action}
+                  <button type="button" key={item.label} onClick={item.action}
                     className="flex flex-col items-center gap-2 active:scale-95 transition-transform">
                     <div className={`w-12 h-12 rounded-2xl ${item.color} flex items-center justify-center shadow-sm`}>
                       <item.icon className="w-5 h-5 text-white" />
@@ -1526,7 +1526,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
         {stickerSuggestions.length > 0 && slashQuery == null && (
           <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2 -mx-1 px-1">
             {stickerSuggestions.map((s) => (
-              <button
+              <button type="button"
                 key={s.id}
                 type="button"
                 onClick={() => {
@@ -1545,7 +1545,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
         <div className="flex items-end gap-1.5">
           {/* Attach button with full attach menu */}
           <div className="relative shrink-0">
-            <button
+            <button type="button"
               data-attach-trigger
               onClick={() => setShowAttachMenu(!showAttachMenu)}
               disabled={uploadingImage}
@@ -1595,7 +1595,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
                   Mention
                 </div>
                 {mentionCandidates.map((m, i) => (
-                  <button
+                  <button type="button"
                     key={m.user_id}
                     type="button"
                     onMouseDown={(e) => { e.preventDefault(); applyMention(m.name); }}
@@ -1623,7 +1623,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
                     Group commands
                   </div>
                   {slashCandidates.map((cmd, i) => (
-                    <button
+                    <button type="button"
                       key={cmd.id}
                       type="button"
                       onMouseDown={(e) => { e.preventDefault(); runSlashCommand(cmd); }}
@@ -1702,7 +1702,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
               }`}
             />
             <div className="absolute right-1.5 top-1/2 -translate-y-1/2">
-              <button
+              <button type="button"
                 onClick={() => setShowStickerKeyboard(!showStickerKeyboard)}
                 className={`h-9 w-9 rounded-full flex items-center justify-center transition-all active:scale-90 ${showStickerKeyboard ? "text-primary bg-primary/10" : "text-muted-foreground/40 hover:text-muted-foreground"}`}
                 aria-label="Open stickers"
@@ -1715,7 +1715,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
 
           {/* Send or mic */}
           {input.trim() ? (
-            <button
+            <button type="button"
               onClick={() => handleSend()}
               disabled={sending}
               className="h-12 w-12 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-40 active:scale-90 transition-all shrink-0 shadow-sm"
@@ -1777,8 +1777,8 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
                 </div>
               </div>
               <div className="flex gap-3">
-                <button onClick={() => setShowLeaveConfirm(false)} className="flex-1 h-11 rounded-xl bg-muted text-sm font-semibold">Cancel</button>
-                <button onClick={() => { setShowLeaveConfirm(false); void handleLeaveGroup(); }} className="flex-1 h-11 rounded-xl bg-destructive text-destructive-foreground text-sm font-bold">Leave</button>
+                <button type="button" onClick={() => setShowLeaveConfirm(false)} className="flex-1 h-11 rounded-xl bg-muted text-sm font-semibold">Cancel</button>
+                <button type="button" onClick={() => { setShowLeaveConfirm(false); void handleLeaveGroup(); }} className="flex-1 h-11 rounded-xl bg-destructive text-destructive-foreground text-sm font-bold">Leave</button>
               </div>
             </motion.div>
           </motion.div>

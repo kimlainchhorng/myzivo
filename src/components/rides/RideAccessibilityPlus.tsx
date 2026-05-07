@@ -107,7 +107,7 @@ export default function RideAccessibilityPlus() {
             <span className="font-bold text-foreground">{enabled.length}</span> accessibility feature{enabled.length !== 1 && "s"} active
           </p>
           {!savedProfile && (
-            <button onClick={saveProfile} className="text-xs font-bold text-primary">
+            <button type="button" onClick={saveProfile} className="text-xs font-bold text-primary">
               Save Profile
             </button>
           )}

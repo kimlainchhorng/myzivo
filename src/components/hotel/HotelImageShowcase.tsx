@@ -92,7 +92,7 @@ export default function HotelImageShowcase({ onSelect, className }: HotelImageSh
                     <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-primary-foreground border-0 shadow-lg">
                       Verified
                     </Badge>
-                    <button className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/40 transition-all duration-200 group/heart">
+                    <button type="button" className="w-10 h-10 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center hover:bg-white/40 transition-all duration-200 group/heart">
                       <Heart className="w-5 h-5 text-primary-foreground group-hover/heart:text-red-400 group-hover/heart:fill-red-400 transition-all duration-200" />
                     </button>
                   </div>

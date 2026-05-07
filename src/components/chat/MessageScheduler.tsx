@@ -68,7 +68,7 @@ export default function MessageScheduler({ open, onClose, onSchedule, message }:
                   <Clock className="h-5 w-5 text-primary" />
                   <h3 className="text-base font-semibold">Schedule Message</h3>
                 </div>
-                <button onClick={onClose} className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-muted">
+                <button type="button" onClick={onClose} className="h-8 w-8 rounded-full flex items-center justify-center hover:bg-muted">
                   <X className="h-4 w-4" />
                 </button>
               </div>
@@ -87,7 +87,7 @@ export default function MessageScheduler({ open, onClose, onSchedule, message }:
                 {QUICK_OPTIONS.map((opt) => {
                   const date = opt.getDate();
                   return (
-                    <button
+                    <button type="button"
                       key={opt.label}
                       onClick={() => onSchedule(date)}
                       className="flex flex-col items-start gap-0.5 p-3 rounded-xl bg-muted/50 border border-border/40 hover:bg-accent/50 transition-colors text-left active:scale-[0.97]"

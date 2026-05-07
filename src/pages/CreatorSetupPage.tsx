@@ -170,7 +170,7 @@ export default function CreatorSetupPage() {
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-30 bg-background/85 backdrop-blur-xl border-b border-border/30">
         <div className="flex items-center gap-3 px-4 py-3">
-          <button onClick={() => navigate("/creator-dashboard")} className="p-2 -ml-2 rounded-full hover:bg-muted/50 touch-manipulation">
+          <button type="button" onClick={() => navigate("/creator-dashboard")} className="p-2 -ml-2 rounded-full hover:bg-muted/50 touch-manipulation">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="flex-1 min-w-0">
@@ -197,7 +197,7 @@ export default function CreatorSetupPage() {
           {steps.map((s, i) => {
             const isActive = s.key === active;
             return (
-              <button
+              <button type="button"
                 key={s.key}
                 onClick={() => { setActive(s.key); setParams({ step: s.key }); }}
                 className={`shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-bold border transition-colors touch-manipulation ${
@@ -375,7 +375,7 @@ function CategoryPicker({ value, onChange }: { value: string; onChange: (v: stri
             {CREATOR_CATEGORIES.map((c) => {
               const active = value === c;
               return (
-                <button
+                <button type="button"
                   key={c}
                   type="button"
                   onClick={() => { onChange(c); setOpen(false); }}
@@ -613,8 +613,8 @@ function TierStep({ tiers, userId, onSaved }: any) {
                   {t.is_free ? "Free" : `$${((t.price_cents || 0) / 100).toFixed(2)} / ${(t.billing_interval || "month").replace("_", " ")}`}
                 </p>
               </div>
-              <button onClick={() => startEdit(t)} className="text-[10px] font-bold text-primary px-2 py-1 hover:underline">Edit</button>
-              <button onClick={() => remove(t.id)} className="text-[10px] font-bold text-destructive px-2 py-1 hover:underline">Delete</button>
+              <button type="button" onClick={() => startEdit(t)} className="text-[10px] font-bold text-primary px-2 py-1 hover:underline">Edit</button>
+              <button type="button" onClick={() => remove(t.id)} className="text-[10px] font-bold text-destructive px-2 py-1 hover:underline">Delete</button>
             </div>
           ))}
         </div>
@@ -626,7 +626,7 @@ function TierStep({ tiers, userId, onSaved }: any) {
             {editingId ? "Edit tier" : tiers.length > 0 ? "Add another tier" : "Create your first tier"}
           </p>
           {editingId && (
-            <button onClick={reset} className="text-[10px] font-bold text-muted-foreground hover:text-foreground">Cancel</button>
+            <button type="button" onClick={reset} className="text-[10px] font-bold text-muted-foreground hover:text-foreground">Cancel</button>
           )}
         </div>
 
@@ -866,10 +866,10 @@ function PromoCodesManager({ userId }: { userId: string }) {
                 {c.uses_count}{c.max_uses ? `/${c.max_uses}` : ""} uses
                 {c.expires_at && ` · exp ${new Date(c.expires_at).toLocaleDateString()}`}
               </span>
-              <button onClick={() => toggle(c.id, c.is_active)} className="text-[10px] font-bold text-muted-foreground hover:text-foreground">
+              <button type="button" onClick={() => toggle(c.id, c.is_active)} className="text-[10px] font-bold text-muted-foreground hover:text-foreground">
                 {c.is_active ? "Pause" : "Resume"}
               </button>
-              <button onClick={() => remove(c.id)} className="text-[10px] font-bold text-destructive">Delete</button>
+              <button type="button" onClick={() => remove(c.id)} className="text-[10px] font-bold text-destructive">Delete</button>
             </div>
           ))}
         </div>

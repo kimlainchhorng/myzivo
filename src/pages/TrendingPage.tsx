@@ -170,7 +170,7 @@ export default function TrendingPage() {
         {/* Header */}
         <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/20" style={{ paddingTop: "var(--zivo-safe-top-sticky)" }}>
           <div className="flex items-center gap-3 px-4 py-3 max-w-2xl mx-auto">
-            <button onClick={() => navigate(-1)} className="p-1.5 rounded-full hover:bg-muted/60 transition-colors">
+            <button type="button" onClick={() => navigate(-1)} className="p-1.5 rounded-full hover:bg-muted/60 transition-colors">
               <ChevronLeft className="h-5 w-5 text-foreground" />
             </button>
             <div className="flex items-center gap-2">
@@ -182,7 +182,7 @@ export default function TrendingPage() {
           {/* Tabs */}
           <div className="flex max-w-2xl mx-auto px-4 gap-1 pb-0">
             {tabs.map(({ id, label }) => (
-              <button
+              <button type="button"
                 key={id}
                 onClick={() => setTab(id)}
                 className={cn(
@@ -224,7 +224,7 @@ export default function TrendingPage() {
                 ) : (
                   <div className="divide-y divide-border/20">
                     {trendingPosts.map((post, idx) => (
-                      <button
+                      <button type="button"
                         key={post.id}
                         onClick={() => navigate(post.source === "user" ? `/feed?post=${post.rawId}` : `/store/${post.author_id}`)}
                         className="w-full flex items-start gap-3 px-4 py-3 hover:bg-muted/30 transition-colors text-left"
@@ -299,7 +299,7 @@ export default function TrendingPage() {
                     <p className="text-sm">No hashtags yet</p>
                   </div>
                 ) : hashtagCounts.map(({ tag, count, likes }, idx) => (
-                  <button
+                  <button type="button"
                     key={tag}
                     onClick={() => navigate(`/explore?tag=${encodeURIComponent(tag.replace("#", ""))}`)}
                     className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-muted/40 border border-border/20 transition-colors"
@@ -330,7 +330,7 @@ export default function TrendingPage() {
                     <p className="text-sm">No people yet</p>
                   </div>
                 ) : trendingPeople.map((person: any, idx: number) => (
-                  <button
+                  <button type="button"
                     key={person.id}
                     onClick={() => navigate(`/user/${person.id}`)}
                     className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-muted/40 border border-border/20 transition-colors"
@@ -371,7 +371,7 @@ export default function TrendingPage() {
                     <p className="text-sm">No communities yet</p>
                   </div>
                 ) : communities.map((c: any, idx: number) => (
-                  <button
+                  <button type="button"
                     key={c.id}
                     onClick={() => navigate(`/communities/${c.id}`)}
                     className="w-full flex items-center gap-3 px-4 py-3 rounded-2xl hover:bg-muted/40 border border-border/20 transition-colors"

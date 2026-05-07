@@ -216,7 +216,7 @@ export default function RewardsPage() {
                 { value: "redeem", icon: Gift, label: "Redeem" },
                 { value: "refer", icon: Users, label: "Refer" },
               ].map(tab => (
-                <button
+                <button type="button"
                   key={tab.value}
                   onClick={() => setActiveTab(tab.value)}
                   className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-bold rounded-lg transition-all duration-200 touch-manipulation ${

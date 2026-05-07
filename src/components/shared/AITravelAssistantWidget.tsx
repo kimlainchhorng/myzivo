@@ -143,7 +143,7 @@ const AITravelAssistantWidget = ({
         {quickSuggestions.map((suggestion) => {
           const Icon = suggestion.icon;
           return (
-            <button
+            <button type="button"
               key={suggestion.id}
               onClick={() => handleSend(suggestion.text)}
               className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-muted/30 border border-border/30 text-xs hover:bg-muted/50 transition-all duration-200"

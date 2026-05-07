@@ -234,7 +234,7 @@ export default function AdminPromoCodesPage() {
                       <TableCell>
                         <div className="flex items-center gap-1">
                           <span className="font-mono font-bold text-sm">{c.code}</span>
-                          <button onClick={() => copyCode(c.code, c.id)} className="text-muted-foreground hover:text-foreground transition-colors">
+                          <button type="button" onClick={() => copyCode(c.code, c.id)} className="text-muted-foreground hover:text-foreground transition-colors">
                             {copiedId === c.id ? <Check className="h-3.5 w-3.5 text-primary" /> : <Copy className="h-3.5 w-3.5" />}
                           </button>
                         </div>

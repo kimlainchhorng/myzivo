@@ -259,7 +259,7 @@ export function AddressAutocomplete({
       {isOpen && suggestions.length > 0 && (
         <div className="absolute z-50 w-full mt-1 bg-popover border rounded-md shadow-lg max-h-80 overflow-auto">
           {suggestions.map((suggestion, index) => (
-            <button
+            <button type="button"
               key={suggestion.place_id}
               type="button"
               onClick={() => handleSelectSuggestion(suggestion)}

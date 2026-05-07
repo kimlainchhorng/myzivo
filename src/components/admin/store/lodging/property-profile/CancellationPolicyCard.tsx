@@ -43,7 +43,7 @@ export default function CancellationPolicyCard({ policy, windowHours, onChange }
             const Icon = p.icon;
             const active = matched?.key === p.key;
             return (
-              <button
+              <button type="button"
                 key={p.key}
                 type="button"
                 onClick={() => onChange({ cancellation_policy: p.description, cancellation_window_hours: p.windowHours })}

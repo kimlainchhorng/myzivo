@@ -232,7 +232,7 @@ export default function SocialListModal({ open, onClose, initialTab = "friends",
       >
         {/* Header */}
         <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-xl border-b border-border/30 px-4 py-2.5 flex items-center gap-3 pt-safe">
-          <button onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
+          <button type="button" onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
           <h1 className="text-lg font-bold text-foreground">Social</h1>
@@ -241,7 +241,7 @@ export default function SocialListModal({ open, onClose, initialTab = "friends",
         {/* Tabs */}
         <div className="flex border-b border-border/30">
           {tabItems.map((t) => (
-            <button
+            <button type="button"
               key={t.key}
               onClick={() => setTab(t.key)}
               className={`flex-1 py-3 text-sm font-semibold transition-colors relative ${
@@ -264,7 +264,7 @@ export default function SocialListModal({ open, onClose, initialTab = "friends",
           <span className="text-xs text-muted-foreground font-medium">
             {list.length} {tab}
           </span>
-          <button
+          <button type="button"
             onClick={() => setSort((s) => (s === "newest" ? "oldest" : "newest"))}
             className="flex items-center gap-1.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded-md hover:bg-muted/50"
           >
@@ -290,7 +290,7 @@ export default function SocialListModal({ open, onClose, initialTab = "friends",
               {list.map((item) => (
                 <div key={item.relationId} className="relative">
                   <div className="flex items-center gap-3 px-4 py-3">
-                    <button
+                    <button type="button"
                       onClick={() => { onClose(); navigate(`/user/${item.id}`); }}
                       className="flex items-center gap-3 flex-1 min-w-0"
                     >
@@ -311,7 +311,7 @@ export default function SocialListModal({ open, onClose, initialTab = "friends",
                     </button>
 
                     {/* Action button */}
-                    <button
+                    <button type="button"
                       onClick={() => setExpandedItem(expandedItem === item.relationId ? null : item.relationId)}
                       className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full hover:bg-muted/50 transition-colors shrink-0"
                     >

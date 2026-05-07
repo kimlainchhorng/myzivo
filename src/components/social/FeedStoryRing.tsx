@@ -150,7 +150,7 @@ export default function FeedStoryRing() {
     <>
       <div className="flex gap-3 px-3 py-2.5 overflow-x-auto scrollbar-none border-b border-border/20">
         {/* Your story (Instagram-style) */}
-        <button
+        <button type="button"
           onClick={handleOwnRingClick}
           className="flex flex-col items-center gap-1 shrink-0 w-[72px]"
         >
@@ -211,7 +211,7 @@ export default function FeedStoryRing() {
         {groups.filter((g) => g.userId !== user.id).map((g) => {
           const hasUnviewed = groupHasUnviewed(g);
           return (
-            <button
+            <button type="button"
               key={g.userId}
               className="flex flex-col items-center gap-1 shrink-0 w-[72px]"
               onClick={() => handleRingClick(g)}
@@ -247,7 +247,7 @@ export default function FeedStoryRing() {
             <SheetTitle className="text-left">Your story</SheetTitle>
           </SheetHeader>
           <div className="flex flex-col gap-2 pt-3">
-            <button
+            <button type="button"
               className="w-full text-left px-4 py-3 rounded-xl bg-muted/40 hover:bg-muted/60 active:scale-[0.99] transition font-medium"
               onClick={() => {
                 setShowOwnSheet(false);
@@ -256,7 +256,7 @@ export default function FeedStoryRing() {
             >
               View your story
             </button>
-            <button
+            <button type="button"
               className="w-full text-left px-4 py-3 rounded-xl bg-primary text-primary-foreground hover:opacity-95 active:scale-[0.99] transition font-medium"
               onClick={() => {
                 setShowOwnSheet(false);

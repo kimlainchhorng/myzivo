@@ -278,13 +278,13 @@ export default function DriverEnRouteTracker({
 
           {/* Action buttons */}
           <div className="flex gap-2">
-            <button
+            <button type="button"
               onClick={() => onContact?.("call")}
               className="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center active:scale-95 transition-transform"
             >
               <Phone className="w-4 h-4 text-emerald-500" />
             </button>
-            <button
+            <button type="button"
               onClick={() => onContact?.("message")}
               className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center active:scale-95 transition-transform"
             >
@@ -295,7 +295,7 @@ export default function DriverEnRouteTracker({
       </div>
 
       {/* Expandable details */}
-      <button
+      <button type="button"
         onClick={() => setExpanded(!expanded)}
         className="w-full flex items-center justify-center gap-1 py-2 border-t border-border/30 text-[11px] font-bold text-muted-foreground hover:bg-muted/30"
       >

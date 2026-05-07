@@ -161,7 +161,7 @@ export default function GroceryOrderConfirmed() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Order ID</p>
-                <button onClick={copyOrderId} className="flex items-center gap-1.5 mt-0.5 group">
+                <button type="button" onClick={copyOrderId} className="flex items-center gap-1.5 mt-0.5 group">
                   <p className="text-[14px] font-mono font-bold text-foreground">{orderId.slice(0, 8).toUpperCase()}</p>
                   <Copy className="h-3 w-3 text-muted-foreground/40 group-hover:text-primary transition-colors" />
                 </button>

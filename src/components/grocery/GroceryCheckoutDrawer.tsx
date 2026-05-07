@@ -771,7 +771,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                         className="absolute left-0 right-0 top-full mt-1 z-50 bg-background border border-border/30 rounded-xl shadow-xl overflow-hidden max-h-[180px] overflow-y-auto"
                       >
                         {addressSuggestions.map((s, i) => (
-                          <button
+                          <button type="button"
                             key={i}
                             onMouseDown={(e) => e.preventDefault()}
                             onClick={() => selectAddressSuggestion(s)}
@@ -832,7 +832,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                           {(["home", "work", "other"] as const).map((label) => {
                             const Icon = label === "home" ? Home : label === "work" ? Building2 : MapPin;
                             return (
-                              <button
+                              <button type="button"
                                 key={label}
                                 type="button"
                                 onClick={() => setSaveLabel(label)}
@@ -961,7 +961,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
 
                 {/* Item preview */}
                 <div className="rounded-2xl bg-muted/15 border border-border/20 overflow-hidden mb-4">
-                  <button
+                  <button type="button"
                     onClick={() => setShowItems(!showItems)}
                     className="w-full flex items-center justify-between p-3.5 hover:bg-muted/10 transition-colors"
                   >
@@ -1001,7 +1001,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                               <span className="text-muted-foreground truncate flex-1">{item.name}</span>
                               {onUpdateQuantity ? (
                                 <div className="flex items-center gap-1.5 shrink-0">
-                                  <button
+                                  <button type="button"
                                     onClick={() => {
                                       if (item.quantity <= 1) {
                                         onRemoveItem?.(item.productId);
@@ -1014,7 +1014,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                                     −
                                   </button>
                                   <span className="text-[11px] font-bold w-5 text-center tabular-nums">{item.quantity}</span>
-                                  <button
+                                  <button type="button"
                                     onClick={() => onUpdateQuantity(item.productId, item.quantity + 1)}
                                     className="h-6 w-6 rounded-lg bg-muted/50 hover:bg-muted flex items-center justify-center text-xs font-bold transition-colors"
                                   >
@@ -1029,7 +1029,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                                 </>
                               )}
                               {onRemoveItem && (
-                                <button
+                                <button type="button"
                                   onClick={() => onRemoveItem(item.productId)}
                                   className="h-6 w-6 rounded-lg hover:bg-destructive/10 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors shrink-0"
                                 >
@@ -1135,7 +1135,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                       <span className="text-[10px] text-muted-foreground">{deliveryNote}</span>
                     </div>
                   )}
-                  <button
+                  <button type="button"
                     onClick={handleBackToDetails}
                     className="text-[10px] text-primary font-semibold mt-2 hover:underline"
                   >
@@ -1175,7 +1175,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
 
                 {/* Full order summary */}
                 <div className="rounded-2xl bg-muted/15 border border-border/20 overflow-hidden mb-4">
-                  <button
+                  <button type="button"
                     onClick={() => setShowItems(!showItems)}
                     className="w-full flex items-center justify-between p-3.5 hover:bg-muted/10 transition-colors"
                   >
@@ -1213,7 +1213,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                               <span className="text-muted-foreground truncate flex-1">{item.name}</span>
                               {onUpdateQuantity ? (
                                 <div className="flex items-center gap-1.5 shrink-0">
-                                  <button
+                                  <button type="button"
                                     onClick={() => {
                                       if (item.quantity <= 1) {
                                         onRemoveItem?.(item.productId);
@@ -1226,7 +1226,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                                     −
                                   </button>
                                   <span className="text-[11px] font-bold w-5 text-center tabular-nums">{item.quantity}</span>
-                                  <button
+                                  <button type="button"
                                     onClick={() => onUpdateQuantity(item.productId, item.quantity + 1)}
                                     className="h-6 w-6 rounded-lg bg-muted/50 hover:bg-muted flex items-center justify-center text-xs font-bold transition-colors"
                                   >
@@ -1241,7 +1241,7 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                                 </>
                               )}
                               {onRemoveItem && (
-                                <button
+                                <button type="button"
                                   onClick={() => onRemoveItem(item.productId)}
                                   className="h-6 w-6 rounded-lg hover:bg-destructive/10 flex items-center justify-center text-muted-foreground hover:text-destructive transition-colors shrink-0"
                                 >

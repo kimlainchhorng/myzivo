@@ -148,7 +148,7 @@ export const GiftCardsCredits = ({
         {/* ZIVO Credits */}
         {zivoCredits > 0 && (
           <div className="p-4 border-b border-border/50">
-            <button
+            <button type="button"
               onClick={() => setUseCredits(!useCredits)}
               className={cn(
                 "w-full flex items-center gap-4 p-4 rounded-xl border transition-all",
@@ -306,7 +306,7 @@ export const GiftCardsCredits = ({
               <p className="text-sm text-muted-foreground mb-2">Your gift cards:</p>
               <div className="space-y-2">
                 {userGiftCards.filter(gc => !appliedGiftCards.find(a => a.id === gc.id)).map(gc => (
-                  <button
+                  <button type="button"
                     key={gc.id}
                     onClick={() => {
                       setAppliedGiftCards([...appliedGiftCards, gc]);

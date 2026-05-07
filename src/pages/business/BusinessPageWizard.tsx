@@ -492,7 +492,7 @@ export default function BusinessPageWizard() {
         className="sticky top-0 z-10 flex items-center gap-3 border-b border-border bg-background/95 px-4 py-3 backdrop-blur pt-safe"
         style={{ paddingTop: "calc(env(safe-area-inset-top) + 12px)" }}
       >
-        <button
+        <button type="button"
           onClick={onHeaderBack}
           className="flex h-10 w-10 items-center justify-center rounded-full hover:bg-muted active:scale-95"
           aria-label="Back"
@@ -538,7 +538,7 @@ export default function BusinessPageWizard() {
           const done = completedSteps.has(stepNum);
           const active = step === stepNum;
           return (
-            <button
+            <button type="button"
               key={label}
               type="button"
               onClick={() => done && setStep(stepNum)}
@@ -645,7 +645,7 @@ export default function BusinessPageWizard() {
                         {opts.map((opt) => {
                           const active = category === opt.value;
                           return (
-                            <button
+                            <button type="button"
                               key={opt.value}
                               type="button"
                               onClick={() => setCategory(opt.value)}
@@ -734,7 +734,7 @@ export default function BusinessPageWizard() {
                       )}
                     </div>
                     {logoUrl && (
-                      <button
+                      <button type="button"
                         onClick={() => setLogoUrl(null)}
                         className="absolute right-0 top-0 flex h-7 w-7 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow"
                         aria-label="Remove"
@@ -791,7 +791,7 @@ export default function BusinessPageWizard() {
                       </div>
                     )}
                     {bannerUrl && (
-                      <button
+                      <button type="button"
                         onClick={() => setBannerUrl(null)}
                         className="absolute right-2 top-2 flex h-8 w-8 items-center justify-center rounded-full bg-destructive text-destructive-foreground shadow"
                         aria-label="Remove"

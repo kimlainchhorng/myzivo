@@ -78,7 +78,7 @@ export default function SmartReplyChips({ recent, composerHasText, onPick }: Pro
         </span>
       ) : (
         chips.map((c, i) => (
-          <button
+          <button type="button"
             key={`${i}-${c}`}
             type="button"
             onClick={() => onPick(c)}

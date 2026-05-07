@@ -141,7 +141,7 @@ export default function HeroSection() {
 
           <div className="flex gap-2 mt-6 justify-center">
             {heroSlides.map((_, i) => (
-              <button key={i} onClick={() => goToSlide(i)} className="relative rounded-full overflow-hidden touch-manipulation min-w-[24px] min-h-[24px] flex items-center justify-center" aria-label={`Slide ${i + 1}`}>
+              <button type="button" key={i} onClick={() => goToSlide(i)} className="relative rounded-full overflow-hidden touch-manipulation min-w-[24px] min-h-[24px] flex items-center justify-center" aria-label={`Slide ${i + 1}`}>
                 <div className={`transition-all duration-300 ${i === currentSlide ? "w-8 h-2.5 bg-primary/30" : "w-2.5 h-2.5 bg-muted-foreground/30"} rounded-full`} />
                 {i === currentSlide && <div className="absolute left-0 top-0 h-full bg-primary rounded-full" style={{ width: `${progress}%` }} />}
               </button>
@@ -399,7 +399,7 @@ export default function HeroSection() {
         {/* Progress indicators */}
         <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex gap-3 z-20">
           {heroSlides.map((s, i) => (
-            <button
+            <button type="button"
               key={i}
               onClick={() => goToSlide(i)}
               className="group relative rounded-full overflow-hidden touch-manipulation flex items-center"

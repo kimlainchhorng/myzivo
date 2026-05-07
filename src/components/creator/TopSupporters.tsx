@@ -98,7 +98,7 @@ export default function TopSupporters({ creatorId }: Props) {
           const initials = (s.full_name || "?").trim().slice(0, 2).toUpperCase();
           const showAmount = s.total_cents > 0;
           return (
-            <button
+            <button type="button"
               key={s.user_id}
               type="button"
               onClick={() => navigate(`/user/${s.user_id}`)}

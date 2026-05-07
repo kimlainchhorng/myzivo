@@ -51,7 +51,7 @@ export function BedConfigBuilder({ value, onChange }: Props) {
       ))}
       <div className="flex flex-wrap gap-1.5 pt-1">
         {BED_TYPES.map(t => (
-          <button
+          <button type="button"
             key={t}
             type="button"
             onClick={() => add(t)}

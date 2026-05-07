@@ -195,7 +195,7 @@ export function FlightFiltersContent({
           </div>
           
           {availableAirlines.length > 6 && (
-            <button
+            <button type="button"
               onClick={() => setShowAllAirlines(!showAllAirlines)}
               className="flex items-center gap-1 text-sm text-foreground hover:text-primary mt-2 font-medium transition-colors"
             >
@@ -220,7 +220,7 @@ export function FlightFiltersContent({
         <Label className="text-sm font-semibold mb-3 block">Departure Time</Label>
         <div className="grid grid-cols-2 gap-2">
           {timeOptions.map((time) => (
-            <button
+            <button type="button"
               key={time.id}
               onClick={() => toggleDepartureTime(time.id)}
               className={cn(
@@ -243,7 +243,7 @@ export function FlightFiltersContent({
         <Label className="text-sm font-semibold mb-3 block">Arrival Time</Label>
         <div className="grid grid-cols-2 gap-2">
           {timeOptions.map((time) => (
-            <button
+            <button type="button"
               key={time.id}
               onClick={() => toggleArrivalTime(time.id)}
               className={cn(

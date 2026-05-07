@@ -411,7 +411,7 @@ export default function FlightLegCard({
 
         {/* Expand toggle */}
         {segments.length > 0 && (
-          <button
+          <button type="button"
             onClick={() => setExpanded(prev => !prev)}
             className="w-full flex items-center justify-center gap-1 mt-3 pt-2.5 border-t border-border/15 text-[10px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
           >

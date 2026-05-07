@@ -1346,24 +1346,49 @@ export default function MorePage() {
         </div>
       )}
 
-      {/* Profile completion meter */}
+      {/* Profile completion meter + checklist */}
       {completion < 100 && (
-        <Link to="/account/profile-edit" className="block mt-3">
-          <div className="flex items-center justify-between mb-1">
-            <p className="text-[10px] font-semibold text-muted-foreground">
-              Profile {completion}% complete
+        <div className="mt-3">
+          <div className="flex items-center justify-between mb-1.5">
+            <p className="text-[10px] font-semibold text-muted-foreground flex items-center gap-1">
+              <ListChecks className="h-3 w-3" /> Profile {completion}% complete
             </p>
-            <p className="text-[10px] font-semibold text-primary">Finish setup →</p>
           </div>
-          <div className="h-1.5 bg-muted/60 rounded-full overflow-hidden">
+          <div className="h-1.5 bg-muted/60 rounded-full overflow-hidden mb-2.5">
             <motion.div
-              className="h-full bg-gradient-to-r from-primary"
+              className="h-full bg-gradient-to-r from-primary to-primary/70"
               initial={{ width: 0 }}
               animate={{ width: `${completion}%` }}
               transition={{ duration: 0.8, ease: "easeOut" }}
             />
           </div>
-        </Link>
+          <div className="grid grid-cols-2 gap-1.5">
+            {[
+              { label: "Profile photo", done: !!profile?.avatar_url, href: "/account/profile-edit" },
+              { label: "Display name", done: !!profile?.full_name?.trim(), href: "/account/profile-edit" },
+              { label: "Username", done: !!claimedUsername, href: "/account/username" },
+              { label: "Verified", done: !!isVerified, href: "/account/verification" },
+              { label: "Bio", done: !!(profile as any)?.bio, href: "/account/profile-edit" },
+              { label: "Phone", done: !!(profile as any)?.phone, href: "/account/contact" },
+            ].map(({ label, done, href }) => (
+              <Link key={label} to={done ? "#" : href}
+                className={cn(
+                  "flex items-center gap-1.5 rounded-lg px-2 py-1.5 text-[10.5px] font-medium border transition-colors",
+                  done
+                    ? "border-emerald-500/20 bg-emerald-500/5 text-emerald-600 dark:text-emerald-400 pointer-events-none"
+                    : "border-border/40 bg-muted/30 text-muted-foreground hover:bg-muted/60"
+                )}>
+                <span className={cn("w-3.5 h-3.5 rounded-full border flex items-center justify-center shrink-0",
+                  done ? "border-emerald-500 bg-emerald-500" : "border-muted-foreground/40"
+                )}>
+                  {done && <svg className="w-2 h-2 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" /></svg>}
+                </span>
+                {label}
+                {!done && <ArrowRight className="h-2.5 w-2.5 ml-auto opacity-50" />}
+              </Link>
+            ))}
+          </div>
+        </div>
       )}
     </motion.div>
   );
@@ -1557,7 +1582,7 @@ export default function MorePage() {
         transition={{ delay: si * 0.04, duration: 0.3 }}
         style={{ scrollMarginTop: 88 }}
       >
-        <button
+        <button type="button"
           onClick={() => setExpandedSection(isOpen ? null : section.title)}
           className="w-full flex items-center justify-between py-3 touch-manipulation"
         >
@@ -1664,7 +1689,7 @@ export default function MorePage() {
         className="lg:hidden sticky top-0 z-30 bg-background/85 backdrop-blur-xl border-b border-border/40 flex items-center gap-2 px-3 pb-2 pt-safe"
         style={{ paddingTop: "var(--zivo-safe-top-sticky, env(safe-area-inset-top, 0px))" }}
       >
-        <button
+        <button type="button"
           onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/profile"))}
           aria-label="Go back"
           className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-muted/60 active:scale-90 transition-transform text-foreground"
@@ -1889,7 +1914,7 @@ export default function MorePage() {
               animate={{ opacity: 1, y: 0 }}
               className="grid grid-cols-3 gap-2 mb-5"
             >
-              <button
+              <button type="button"
                 onClick={() => {
                   const next = (resolvedTheme ?? theme) === "dark" ? "light" : "dark";
                   setTheme(next);
@@ -1906,7 +1931,7 @@ export default function MorePage() {
                   <p className="text-[9px] text-muted-foreground truncate">Theme</p>
                 </div>
               </button>
-              <button
+              <button type="button"
                 onClick={toggleDnd}
                 className="zivo-card-organic flex items-center gap-2 px-3 py-2.5 active:scale-[0.97] transition-transform"
               >
@@ -1918,7 +1943,7 @@ export default function MorePage() {
                   <p className="text-[9px] text-muted-foreground truncate">Notifications</p>
                 </div>
               </button>
-              <button
+              <button type="button"
                 onClick={toggleSound}
                 className="zivo-card-organic flex items-center gap-2 px-3 py-2.5 active:scale-[0.97] transition-transform"
               >
@@ -1945,7 +1970,7 @@ export default function MorePage() {
               <Sliders className="w-4 h-4 text-muted-foreground shrink-0" />
               <div className="flex items-center gap-1 shrink-0">
                 {fontSizes.map((f) => (
-                  <button
+                  <button type="button"
                     key={f.code}
                     onClick={() => setFontSizeCode(f.code)}
                     aria-label={`${f.label} text`}
@@ -1965,7 +1990,7 @@ export default function MorePage() {
                 ))}
               </div>
               <div className="h-6 w-px bg-border/50 shrink-0" />
-              <button
+              <button type="button"
                 onClick={toggleReducedMotion}
                 aria-pressed={reducedMotion}
                 className={cn(
@@ -1991,7 +2016,7 @@ export default function MorePage() {
                 </span>
               </button>
               <div className="h-6 w-px bg-border/50 shrink-0" />
-              <button
+              <button type="button"
                 onClick={toggleHaptics}
                 aria-pressed={hapticsOn}
                 className={cn(
@@ -2028,7 +2053,7 @@ export default function MorePage() {
                 Language
               </span>
               {languages.map((l) => (
-                <button
+                <button type="button"
                   key={l.code}
                   onClick={() => setLanguage(l.code)}
                   className={cn(
@@ -2054,7 +2079,7 @@ export default function MorePage() {
                 Currency
               </span>
               {currencies.map((c) => (
-                <button
+                <button type="button"
                   key={c.code}
                   onClick={() => setCurrencyCode(c.code)}
                   className={cn(
@@ -2080,7 +2105,7 @@ export default function MorePage() {
                 Region
               </span>
               {regions.map((r) => (
-                <button
+                <button type="button"
                   key={r.code}
                   onClick={() => setRegionCode(r.code)}
                   className={cn(
@@ -2114,13 +2139,13 @@ export default function MorePage() {
                   Add to home screen for instant access
                 </p>
               </div>
-              <button
+              <button type="button"
                 onClick={triggerInstall}
                 className="px-3 py-1.5 rounded-full bg-primary text-primary-foreground font-bold text-[11px] active:scale-95 transition-transform"
               >
                 Install
               </button>
-              <button
+              <button type="button"
                 onClick={dismissInstall}
                 aria-label="Dismiss"
                 className="p-1 -mr-1 rounded-full hover:bg-muted/60 active:scale-90 transition-transform"
@@ -2183,7 +2208,7 @@ export default function MorePage() {
             />
             <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
               {search && (
-                <button
+                <button type="button"
                   onClick={() => setSearch("")}
                   aria-label="Clear search"
                   className="p-1 rounded-full hover:bg-muted active:scale-90 transition-transform"
@@ -2192,7 +2217,7 @@ export default function MorePage() {
                 </button>
               )}
               {speechRef && (
-                <button
+                <button type="button"
                   onClick={startVoiceSearch}
                   aria-label="Voice search"
                   className={cn(
@@ -2216,7 +2241,7 @@ export default function MorePage() {
                 Recent:
               </span>
               {searchHistory.map((q) => (
-                <button
+                <button type="button"
                   key={q}
                   onClick={() => setSearch(q)}
                   className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-muted/60 hover:bg-muted text-foreground/80 active:scale-95 transition"
@@ -2224,7 +2249,7 @@ export default function MorePage() {
                   {q}
                 </button>
               ))}
-              <button
+              <button type="button"
                 onClick={() => {
                   setSearchHistory([]);
                   try { window.localStorage.removeItem(SEARCH_HISTORY_KEY); } catch {}
@@ -2242,7 +2267,7 @@ export default function MorePage() {
           {!searchResults && (
             <div className="flex gap-1.5 overflow-x-auto scrollbar-hide pb-1 -mx-1 px-1 mb-3">
               {sections.map((s) => (
-                <button
+                <button type="button"
                   key={s.title}
                   onClick={() => {
                     setExpandedSection(s.title);
@@ -2265,14 +2290,14 @@ export default function MorePage() {
           {!searchResults && (
             <div className="flex items-center justify-between mb-3 px-1">
               <div className="flex items-center gap-3">
-                <button
+                <button type="button"
                   onClick={toggleAll}
                   className="flex items-center gap-1.5 text-[12px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <Layers className="w-3.5 h-3.5" />
                   {allExpanded ? "Collapse all" : "Expand all"}
                 </button>
-                <button
+                <button type="button"
                   onClick={togglePrivacy}
                   className={cn(
                     "flex items-center gap-1.5 text-[12px] font-semibold transition-colors",
@@ -2286,7 +2311,7 @@ export default function MorePage() {
                 </button>
               </div>
               <div className="flex items-center gap-3">
-                <button
+                <button type="button"
                   onClick={() => user ? setShowShareProfile(true) : shareApp()}
                   className="flex items-center gap-1.5 text-[12px] font-semibold text-muted-foreground hover:text-foreground transition-colors"
                   aria-label="Share"
@@ -2315,7 +2340,7 @@ export default function MorePage() {
                     {recentLinks.length}
                   </span>
                 </div>
-                <button
+                <button type="button"
                   onClick={() => {
                     setRecentHrefs([]);
                     try { window.localStorage.removeItem(RECENT_KEY); } catch {}
@@ -2364,7 +2389,7 @@ export default function MorePage() {
                     {pinnedLinks.length}
                   </span>
                 </div>
-                <button
+                <button type="button"
                   onClick={() => {
                     setPinnedHrefs([]);
                     try { window.localStorage.removeItem(PIN_KEY); } catch {}
@@ -2458,7 +2483,7 @@ export default function MorePage() {
                       ))}
                     </ul>
                   )}
-                  <button
+                  <button type="button"
                     onClick={toggleBeta}
                     className={cn(
                       "px-3 py-1.5 rounded-full text-[11px] font-bold active:scale-95 transition-transform",
@@ -2490,7 +2515,7 @@ export default function MorePage() {
           {/* Sign Out */}
           {user && (
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="mt-4">
-              <button
+              <button type="button"
                 onClick={() => setConfirmAction("signout")}
                 className="w-full py-3 rounded-2xl border border-border/50 bg-card text-foreground font-semibold text-sm touch-manipulation active:scale-[0.98] transition-all flex items-center justify-center gap-2"
               >
@@ -2553,7 +2578,7 @@ export default function MorePage() {
 
             {/* Social row */}
             <div className="flex justify-center gap-2 mb-3">
-              <button
+              <button type="button"
                 onClick={shareApp}
                 aria-label="Share ZIVO"
                 className="w-9 h-9 rounded-full bg-muted/50 hover:bg-muted flex items-center justify-center active:scale-90 transition-transform"
@@ -2601,7 +2626,7 @@ export default function MorePage() {
                 {isOnline ? "Online" : "Offline"}
               </span>
             </div>
-            <button
+            <button type="button"
               onClick={() => setShowWhatsNew(true)}
               className="mt-1 text-[10px] font-semibold text-primary/70 hover:text-primary transition-colors flex items-center gap-1"
             >
@@ -2730,7 +2755,7 @@ export default function MorePage() {
       </AnimatePresence>
 
       {/* Floating Help FAB */}
-      <button
+      <button type="button"
         onClick={() => setShowHelpSheet(true)}
         aria-label="Open help"
         className="fixed bottom-24 lg:bottom-8 right-5 z-30 w-12 h-12 rounded-full bg-gradient-to-br from-primary shadow-lg shadow-primary/30 flex items-center justify-center active:scale-90 transition-transform"
@@ -2764,7 +2789,7 @@ export default function MorePage() {
             <p className="flex-1 text-[12px] font-mono text-foreground/80 truncate">
               {profileShareUrl}
             </p>
-            <button
+            <button type="button"
               onClick={copyProfileLink}
               className="text-[11px] font-bold text-primary px-2 py-1 rounded-lg bg-primary/10 active:scale-95 transition-transform shrink-0"
             >
@@ -2772,7 +2797,7 @@ export default function MorePage() {
             </button>
           </div>
           <div className="grid grid-cols-3 gap-2">
-            <button
+            <button type="button"
               onClick={() => {
                 setShowShareProfile(false);
                 shareApp();
@@ -2790,7 +2815,7 @@ export default function MorePage() {
               <QrCode className="w-5 h-5 text-foreground" />
               <span className="text-[11px] font-bold">QR code</span>
             </Link>
-            <button
+            <button type="button"
               onClick={copyProfileLink}
               className="zivo-card-organic flex flex-col items-center gap-1.5 p-3 active:scale-[0.95] transition-transform"
             >

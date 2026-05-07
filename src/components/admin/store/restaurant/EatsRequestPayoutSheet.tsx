@@ -121,7 +121,7 @@ export default function EatsRequestPayoutSheet({ restaurantId, restaurantCountry
                   const Icon = RAIL_ICON[rail] || Banknote;
                   const sel = methodId === m.id;
                   return (
-                    <button
+                    <button type="button"
                       key={m.id}
                       type="button"
                       onClick={() => setMethodId(m.id)}

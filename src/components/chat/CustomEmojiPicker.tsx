@@ -37,7 +37,7 @@ export default function CustomEmojiPicker({ groupId, onPick }: Props) {
       <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Reactions</p>
       <div className="grid grid-cols-6 gap-1.5 mb-3">
         {STANDARD.map((e) => (
-          <button key={e} onClick={() => onPick({ kind: "emoji", value: e })} className="h-9 text-xl rounded-lg hover:bg-muted active:scale-90 transition">
+          <button type="button" key={e} onClick={() => onPick({ kind: "emoji", value: e })} className="h-9 text-xl rounded-lg hover:bg-muted active:scale-90 transition">
             {e}
           </button>
         ))}
@@ -47,7 +47,7 @@ export default function CustomEmojiPicker({ groupId, onPick }: Props) {
           <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">{pack.name}</p>
           <div className="grid grid-cols-6 gap-1.5">
             {pack.emojis.map((e) => (
-              <button key={e.id} onClick={() => onPick({ kind: "custom", value: e.label, image: e.image_url })} className="h-9 rounded-lg hover:bg-muted active:scale-90 transition flex items-center justify-center">
+              <button type="button" key={e.id} onClick={() => onPick({ kind: "custom", value: e.label, image: e.image_url })} className="h-9 rounded-lg hover:bg-muted active:scale-90 transition flex items-center justify-center">
                 <img src={e.image_url} alt={e.label} className="h-7 w-7 object-contain" />
               </button>
             ))}

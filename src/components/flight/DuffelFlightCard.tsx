@@ -454,7 +454,7 @@ export default function DuffelFlightCard({
             <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider mb-1.5">Choose fare</p>
             <div className="flex gap-1.5 overflow-x-auto pb-1">
               {offer.fareVariants!.map((variant, idx) => (
-                <button
+                <button type="button"
                   key={variant.id}
                   onClick={(e) => { e.stopPropagation(); setSelectedVariantIdx(idx); }}
                   className={cn(
@@ -602,7 +602,7 @@ export default function DuffelFlightCard({
 
         {/* Expand toggle */}
         {offer.segments?.length > 0 && (
-          <button
+          <button type="button"
             onClick={toggleExpand}
             className="w-full flex items-center justify-center gap-1 mt-2.5 pt-2 border-t border-border/20 text-[10px] font-medium text-muted-foreground hover:text-foreground transition-colors"
           >

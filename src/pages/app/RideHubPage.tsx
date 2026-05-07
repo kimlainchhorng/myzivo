@@ -461,7 +461,7 @@ export default function RideHubPage() {
               const isActive = activeCategory === cat.id;
               const count = cat.id === "all" ? tabs.length : tabs.filter(tb => tb.category === cat.id).length;
               return (
-                <button
+                <button type="button"
                   key={cat.id}
                   onClick={() => setActiveCategory(cat.id)}
                   className={cn(
@@ -498,7 +498,7 @@ export default function RideHubPage() {
               // "features" tab is active when we're on any non-primary tab
               const active = activeTab === tab.id || (tab.id === "features" && !isPrimary);
               return (
-                <button
+                <button type="button"
                   key={tab.id}
                   onClick={() => selectTab(tab.id)}
                   className={cn(
@@ -592,7 +592,7 @@ export default function RideHubPage() {
                         {group.items.map((item) => {
                           const ItemIcon = item.icon;
                           return (
-                            <button
+                            <button type="button"
                               key={item.id}
                               onClick={() => goToFeature(item.id)}
                               className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-card border border-border/40 hover:border-primary/30 hover:bg-primary/5 active:scale-95 transition-all"

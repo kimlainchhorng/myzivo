@@ -148,7 +148,7 @@ export default function HotelBookingConfirmedPage() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-semibold">Reservation</p>
-                <button onClick={copyRef} className="flex items-center gap-1.5 mt-0.5 group">
+                <button type="button" onClick={copyRef} className="flex items-center gap-1.5 mt-0.5 group">
                   <p className="text-[15px] font-mono font-bold text-foreground">
                     {reservation.number || reservationId.slice(0, 8).toUpperCase()}
                   </p>

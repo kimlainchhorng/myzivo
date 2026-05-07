@@ -126,7 +126,7 @@ const TripComparisonWidget = ({
       {/* Selection Pills */}
       <div className="flex gap-2 mb-4 overflow-x-auto pb-1">
         {flightOptions.map((flight) => (
-          <button
+          <button type="button"
             key={flight.id}
             onClick={() => toggleOption(flight.id)}
             className={cn(

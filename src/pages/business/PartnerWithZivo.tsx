@@ -1,13 +1,19 @@
-import { useNavigate, Link } from "react-router-dom";
-import { ArrowLeft, Handshake, Plane, Hotel, Car, DollarSign, BarChart3, Users, CheckCircle, ChevronRight, Mail, Building2, Globe, Sparkles, ArrowRight, Shield, Star, TrendingUp, UserPlus, Store, UtensilsCrossed, Truck, ShoppingBag } from "lucide-react";
+import { useState } from "react";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
+import {
+  ArrowLeft, Handshake, Plane, Hotel, Car, DollarSign, BarChart3, Users,
+  CheckCircle, ChevronRight, Mail, Building2, Globe, Sparkles, ArrowRight,
+  Shield, Star, TrendingUp, UserPlus, Store, UtensilsCrossed, Truck,
+  ShoppingBag, Briefcase, Loader2,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion } from "framer-motion";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const PARTNER_TYPES = [
   {
@@ -74,6 +80,14 @@ const PARTNER_TYPES = [
     glow: "shadow-orange-500/25",
     stat: "1M+ Orders",
   },
+  {
+    icon: Briefcase,
+    title: "Employers",
+    description: "Post jobs and manage shift workers through the ZIVO workforce hub",
+    gradient: "from-amber-500 to-yellow-500",
+    glow: "shadow-amber-500/25",
+    stat: "HR & Staffing",
+  },
 ];
 
 const BENEFITS = [
@@ -90,16 +104,82 @@ const STEPS = [
   { step: "04", title: "Grow", description: "Start reaching millions of travelers" },
 ];
 
+/* Map URL ?type= param values to Select values */
+const TYPE_PARAM_MAP: Record<string, string> = {
+  driver: "driver",
+  restaurant: "restaurant",
+  lodging: "hotel",
+  property: "property",
+  employer: "employer",
+  hotel: "hotel",
+  store: "store",
+  airline: "airline",
+};
+
 export default function PartnerWithZivo() {
   const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const initialType = TYPE_PARAM_MAP[params.get("type") ?? ""] ?? "";
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [companyName, setCompanyName] = useState("");
+  const [partnerType, setPartnerType] = useState(initialType);
+  const [contactName, setContactName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [website, setWebsite] = useState("");
+  const [agreed, setAgreed] = useState(false);
+  const [loading, setLoading] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    toast.success("Thanks for your interest!", {
-      description: "Our partnerships team will contact you within 2–3 business days.",
-      duration: 6000,
-    });
-    (e.currentTarget as HTMLFormElement).reset();
+    if (password !== confirmPassword) {
+      toast.error("Passwords don't match");
+      return;
+    }
+    if (!partnerType) {
+      toast.error("Please select a partner type");
+      return;
+    }
+    if (!agreed) {
+      toast.error("Please agree to the Terms of Service");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const { data: authData, error: authErr } = await supabase.auth.signUp({
+        email,
+        password,
+        options: { data: { full_name: contactName, company: companyName } },
+      });
+      if (authErr) throw authErr;
+      const userId = authData.user?.id;
+      if (!userId) throw new Error("Could not create account — please try again.");
+
+      const { error: appErr } = await (supabase as any)
+        .from("partner_applications")
+        .insert({
+          user_id: userId,
+          business_name: companyName,
+          partner_kind: partnerType,
+          contact_email: email,
+          contact_phone: phone || null,
+          status: "pending",
+        });
+      if (appErr) throw appErr;
+
+      toast.success("Account created!", {
+        description: "Let's finish setting up your partner profile.",
+      });
+      navigate(`/partner-onboarding?type=${partnerType}`);
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : "Something went wrong. Please try again.";
+      toast.error(msg);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -168,9 +248,7 @@ export default function PartnerWithZivo() {
         <section>
           <div className="text-center mb-10">
             <p className="text-primary text-xs font-bold tracking-widest uppercase mb-2">Partnership Categories</p>
-            <h3 className="font-display text-2xl sm:text-3xl font-extrabold">
-              Who We Partner With
-            </h3>
+            <h3 className="font-display text-2xl sm:text-3xl font-extrabold">Who We Partner With</h3>
           </div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
             {PARTNER_TYPES.map((type, i) => (
@@ -183,10 +261,8 @@ export default function PartnerWithZivo() {
                 whileTap={{ scale: 0.97 }}
                 style={{ transformStyle: "preserve-3d" }}
               >
-                <Card className={`relative overflow-hidden border-0 bg-card shadow-xl ${type.glow} h-full group cursor-default`}>
-                  {/* Top accent line */}
+                <Card className={`relative overflow-hidden border-0 bg-card shadow-xl ${type.glow} h-full cursor-default`}>
                   <div className={`absolute inset-x-0 top-0 h-1 bg-gradient-to-r ${type.gradient}`} />
-                  {/* 3D inner highlight */}
                   <div className="absolute inset-0 bg-gradient-to-b from-white/[0.04] via-transparent to-black/[0.02] pointer-events-none" />
                   <CardContent className="p-6 text-center relative z-10">
                     <div className={`w-16 h-16 rounded-2xl bg-gradient-to-br ${type.gradient} flex items-center justify-center mx-auto mb-4 shadow-lg ${type.glow} relative`}>
@@ -209,9 +285,7 @@ export default function PartnerWithZivo() {
         <section>
           <div className="text-center mb-10">
             <p className="text-primary text-xs font-bold tracking-widest uppercase mb-2">Simple Process</p>
-            <h3 className="font-display text-2xl sm:text-3xl font-extrabold">
-              How It Works
-            </h3>
+            <h3 className="font-display text-2xl sm:text-3xl font-extrabold">How It Works</h3>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {STEPS.map((s, i) => (
@@ -228,7 +302,6 @@ export default function PartnerWithZivo() {
                 </div>
                 <h4 className="font-bold text-sm mb-1">{s.title}</h4>
                 <p className="text-[11px] text-muted-foreground leading-snug">{s.description}</p>
-                {/* Connector arrow (not on last) */}
                 {i < STEPS.length - 1 && (
                   <div className="hidden sm:block absolute top-7 -right-2 text-muted-foreground/30">
                     <ArrowRight className="w-4 h-4" />
@@ -243,9 +316,7 @@ export default function PartnerWithZivo() {
         <section>
           <div className="text-center mb-10">
             <p className="text-primary text-xs font-bold tracking-widest uppercase mb-2">Advantages</p>
-            <h3 className="font-display text-2xl sm:text-3xl font-extrabold">
-              Why Partner with ZIVO?
-            </h3>
+            <h3 className="font-display text-2xl sm:text-3xl font-extrabold">Why Partner with ZIVO?</h3>
           </div>
           <div className="grid sm:grid-cols-2 gap-4">
             {BENEFITS.map((benefit, i) => (
@@ -255,11 +326,10 @@ export default function PartnerWithZivo() {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.1 * i }}
                 whileHover={{ scale: 1.02 }}
-                className="relative overflow-hidden rounded-2xl bg-card border border-border/50 p-5 shadow-lg group"
+                className="relative overflow-hidden rounded-2xl bg-card border border-border/50 p-5 shadow-lg"
                 style={{ transformStyle: "preserve-3d" }}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] via-transparent to-transparent pointer-events-none" />
-                <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] via-transparent to-black/[0.02] pointer-events-none" />
                 <div className="flex items-start gap-4 relative z-10">
                   <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0 border border-primary/10 relative">
                     <div className="absolute inset-0 rounded-2xl bg-gradient-to-b from-white/10 to-transparent" />
@@ -278,7 +348,7 @@ export default function PartnerWithZivo() {
           </div>
         </section>
 
-        {/* Setup Partner Account */}
+        {/* Signup Form */}
         <motion.section
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -286,7 +356,6 @@ export default function PartnerWithZivo() {
           className="max-w-2xl mx-auto"
         >
           <Card className="relative overflow-hidden border-0 bg-card shadow-2xl">
-            {/* Top gradient accent */}
             <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-primary via-primary/80 to-primary/50" />
             <div className="absolute inset-0 bg-gradient-to-b from-white/[0.03] via-transparent to-transparent pointer-events-none" />
             <CardHeader className="relative z-10 pb-2">
@@ -307,22 +376,45 @@ export default function PartnerWithZivo() {
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* Account credentials */}
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold">Business Email *</Label>
-                  <Input required type="email" placeholder="business@company.com" className="h-11 rounded-xl bg-muted/30 border-border/50 focus:border-primary/50" />
+                  <Label htmlFor="email" className="text-xs font-semibold">Business Email *</Label>
+                  <Input
+                    id="email"
+                    required
+                    type="email"
+                    placeholder="business@company.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="h-11 rounded-xl bg-muted/30 border-border/50 focus:border-primary/50"
+                  />
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold">Password *</Label>
-                    <Input required type="password" placeholder="Create a password" className="h-11 rounded-xl bg-muted/30 border-border/50 focus:border-primary/50" />
+                    <Label htmlFor="password" className="text-xs font-semibold">Password *</Label>
+                    <Input
+                      id="password"
+                      required
+                      type="password"
+                      placeholder="Create a password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      className="h-11 rounded-xl bg-muted/30 border-border/50 focus:border-primary/50"
+                    />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold">Confirm Password *</Label>
-                    <Input required type="password" placeholder="Confirm password" className="h-11 rounded-xl bg-muted/30 border-border/50 focus:border-primary/50" />
+                    <Label htmlFor="confirm-password" className="text-xs font-semibold">Confirm Password *</Label>
+                    <Input
+                      id="confirm-password"
+                      required
+                      type="password"
+                      placeholder="Confirm password"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      className="h-11 rounded-xl bg-muted/30 border-border/50 focus:border-primary/50"
+                    />
                   </div>
                 </div>
 
-                {/* Divider */}
                 <div className="flex items-center gap-3 py-1">
                   <div className="flex-1 h-px bg-border/50" />
                   <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">Business Details</span>
@@ -331,13 +423,24 @@ export default function PartnerWithZivo() {
 
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold">Company Name *</Label>
-                    <Input required placeholder="Your company name" className="h-11 rounded-xl bg-muted/30 border-border/50 focus:border-primary/50" />
+                    <Label htmlFor="company-name" className="text-xs font-semibold">Company Name *</Label>
+                    <Input
+                      id="company-name"
+                      required
+                      placeholder="Your company name"
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      className="h-11 rounded-xl bg-muted/30 border-border/50 focus:border-primary/50"
+                    />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold">Partner Type *</Label>
-                    <Select required>
-                      <SelectTrigger className="h-11 rounded-xl bg-muted/30 border-border/50">
+                    <Label htmlFor="partner-type" className="text-xs font-semibold">Partner Type *</Label>
+                    <Select
+                      required
+                      value={partnerType}
+                      onValueChange={setPartnerType}
+                    >
+                      <SelectTrigger id="partner-type" className="h-11 rounded-xl bg-muted/30 border-border/50">
                         <SelectValue placeholder="Select type" />
                       </SelectTrigger>
                       <SelectContent>
@@ -349,6 +452,8 @@ export default function PartnerWithZivo() {
                         <SelectItem value="driver">Driver</SelectItem>
                         <SelectItem value="food_delivery">Food Delivery</SelectItem>
                         <SelectItem value="agency">Travel Agency</SelectItem>
+                        <SelectItem value="employer">Employer / HR</SelectItem>
+                        <SelectItem value="property">Property Rental</SelectItem>
                         <SelectItem value="affiliate">Affiliate Marketer</SelectItem>
                         <SelectItem value="other">Other</SelectItem>
                       </SelectContent>
@@ -358,23 +463,50 @@ export default function PartnerWithZivo() {
 
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold">Contact Name *</Label>
-                    <Input required placeholder="Full name" className="h-11 rounded-xl bg-muted/30 border-border/50 focus:border-primary/50" />
+                    <Label htmlFor="contact-name" className="text-xs font-semibold">Contact Name *</Label>
+                    <Input
+                      id="contact-name"
+                      required
+                      placeholder="Full name"
+                      value={contactName}
+                      onChange={(e) => setContactName(e.target.value)}
+                      className="h-11 rounded-xl bg-muted/30 border-border/50 focus:border-primary/50"
+                    />
                   </div>
                   <div className="space-y-1.5">
-                    <Label className="text-xs font-semibold">Phone</Label>
-                    <Input type="tel" placeholder="+1 (555) 000-0000" className="h-11 rounded-xl bg-muted/30 border-border/50 focus:border-primary/50" />
+                    <Label htmlFor="phone" className="text-xs font-semibold">Phone</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      placeholder="+1 (555) 000-0000"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value)}
+                      className="h-11 rounded-xl bg-muted/30 border-border/50 focus:border-primary/50"
+                    />
                   </div>
                 </div>
 
                 <div className="space-y-1.5">
-                  <Label className="text-xs font-semibold">Website</Label>
-                  <Input type="url" placeholder="https://yourcompany.com" className="h-11 rounded-xl bg-muted/30 border-border/50 focus:border-primary/50" />
+                  <Label htmlFor="website" className="text-xs font-semibold">Website</Label>
+                  <Input
+                    id="website"
+                    type="url"
+                    placeholder="https://yourcompany.com"
+                    value={website}
+                    onChange={(e) => setWebsite(e.target.value)}
+                    className="h-11 rounded-xl bg-muted/30 border-border/50 focus:border-primary/50"
+                  />
                 </div>
 
-                {/* Terms checkbox */}
-                <label className="flex items-start gap-3 cursor-pointer group py-1">
-                  <input type="checkbox" required className="mt-0.5 w-4 h-4 rounded border-border accent-primary" />
+                {/* Terms */}
+                <label className="flex items-start gap-3 cursor-pointer py-1">
+                  <input
+                    type="checkbox"
+                    required
+                    checked={agreed}
+                    onChange={(e) => setAgreed(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 rounded border-border accent-primary"
+                  />
                   <span className="text-xs text-muted-foreground leading-relaxed">
                     I agree to the{" "}
                     <Link to="/terms" className="text-primary hover:underline font-medium">Terms of Service</Link>
@@ -387,22 +519,25 @@ export default function PartnerWithZivo() {
                 <motion.div whileTap={{ scale: 0.97 }}>
                   <Button
                     type="submit"
+                    disabled={loading}
                     className="w-full bg-gradient-to-r from-primary to-primary/80 text-primary-foreground h-13 rounded-2xl font-bold text-sm shadow-xl shadow-primary/20 relative overflow-hidden group"
                   >
                     <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-transparent to-black/10 pointer-events-none" />
-                    <UserPlus className="h-4 w-4 mr-2 relative z-10" />
-                    <span className="relative z-10">Create Partner Account</span>
-                    <ArrowRight className="h-4 w-4 ml-2 relative z-10 group-hover:translate-x-1 transition-transform" />
+                    {loading ? (
+                      <Loader2 className="h-4 w-4 mr-2 animate-spin relative z-10" />
+                    ) : (
+                      <UserPlus className="h-4 w-4 mr-2 relative z-10" />
+                    )}
+                    <span className="relative z-10">{loading ? "Creating account…" : "Create Partner Account"}</span>
+                    {!loading && <ArrowRight className="h-4 w-4 ml-2 relative z-10 group-hover:translate-x-1 transition-transform" />}
                   </Button>
                 </motion.div>
 
-                {/* Trust indicators */}
                 <div className="flex items-center justify-center gap-4 pt-2 text-[10px] text-muted-foreground">
-                  <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> Secure & Encrypted</span>
+                  <span className="flex items-center gap-1"><Shield className="w-3 h-3" /> Secure &amp; Encrypted</span>
                   <span className="flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Free to join</span>
                 </div>
 
-                {/* Already have account */}
                 <p className="text-center text-xs text-muted-foreground pt-1">
                   Already a partner?{" "}
                   <Link to="/login" className="text-primary font-semibold hover:underline">Sign in</Link>

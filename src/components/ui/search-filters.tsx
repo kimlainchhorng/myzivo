@@ -600,7 +600,7 @@ export const ActiveFilters: React.FC<ActiveFiltersProps> = ({
             className="flex items-center gap-1.5 pr-1.5 pl-3 py-1.5 rounded-xl bg-primary/10 text-primary border-primary/20 font-medium"
           >
             {filter.label}
-            <button
+            <button type="button"
               onClick={() => onRemove(filter.id)}
               className="ml-1 p-1 rounded-full hover:bg-primary/20 transition-colors"
             >

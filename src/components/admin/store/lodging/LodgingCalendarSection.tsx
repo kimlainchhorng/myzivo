@@ -164,7 +164,7 @@ export default function LodgingCalendarSection({ storeId }: { storeId: string })
           <>
             <div className="flex flex-wrap gap-2">
               {rooms.map(r => (
-                <button key={r.id} onClick={() => setRoomId(r.id)}
+                <button type="button" key={r.id} onClick={() => setRoomId(r.id)}
                   className={`px-3 py-1.5 rounded-full text-xs font-semibold border ${activeRoomId === r.id ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border"}`}>
                   {r.name}
                 </button>
@@ -195,7 +195,7 @@ export default function LodgingCalendarSection({ storeId }: { storeId: string })
                       ? "bg-destructive/15 text-destructive border-destructive/30"
                       : "bg-background border-border hover:bg-muted";
                 return (
-                  <button key={i} onClick={() => !reserved && !ota && toggleBlock(key)}
+                  <button type="button" key={i} onClick={() => !reserved && !ota && toggleBlock(key)}
                     disabled={reserved || !!ota}
                     title={ota ? `OTA: ${ota}` : reserved ? "Booked" : blocked ? "Blocked" : "Available"}
                     className={`relative aspect-square rounded-md text-xs font-medium border transition ${cls}`}>

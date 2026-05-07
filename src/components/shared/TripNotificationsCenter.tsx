@@ -83,7 +83,7 @@ const TripNotificationsCenter = ({ className }: TripNotificationsCenterProps) =>
                   <p className="text-xs">{notif.message}</p>
                   <p className="text-[10px] text-muted-foreground">{notif.time}</p>
                 </div>
-                <button className="p-1 hover:bg-muted rounded">
+                <button type="button" className="p-1 hover:bg-muted rounded">
                   <X className="w-3 h-3 text-muted-foreground" />
                 </button>
               </div>

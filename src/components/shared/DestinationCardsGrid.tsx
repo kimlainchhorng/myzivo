@@ -262,7 +262,7 @@ export default function DestinationCardsGrid({
               </p>
             </div>
           </div>
-          <button className="hidden sm:flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-200">
+          <button type="button" className="hidden sm:flex items-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-200">
             View all <ArrowRight className="w-4 h-4" />
           </button>
         </div>
@@ -334,7 +334,7 @@ export default function DestinationCardsGrid({
         </div>
 
         {/* Mobile view all */}
-        <button className="sm:hidden w-full mt-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-200 flex items-center justify-center gap-2 rounded-xl bg-card border border-border hover:border-primary/20 hover:shadow-sm active:scale-[0.98] touch-manipulation">
+        <button type="button" className="sm:hidden w-full mt-4 py-3 text-sm font-medium text-muted-foreground hover:text-foreground transition-all duration-200 flex items-center justify-center gap-2 rounded-xl bg-card border border-border hover:border-primary/20 hover:shadow-sm active:scale-[0.98] touch-manipulation">
           View all destinations <ArrowRight className="w-4 h-4" />
         </button>
       </div>

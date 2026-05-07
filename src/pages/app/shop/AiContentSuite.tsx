@@ -122,7 +122,7 @@ export default function AiContentSuite() {
               {photos.map((url, i) => (
                 <div key={i} className="relative rounded-xl overflow-hidden aspect-square">
                   <img src={url} alt={`Product ${i + 1}`} className="w-full h-full object-cover" />
-                  <button
+                  <button type="button"
                     onClick={() => removePhoto(i)}
                     className="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center"
                   >
@@ -134,7 +134,7 @@ export default function AiContentSuite() {
                 </div>
               ))}
               {photos.length < 3 && (
-                <button
+                <button type="button"
                   onClick={() => fileRef.current?.click()}
                   className="aspect-square rounded-xl border-2 border-dashed border-border/60 flex flex-col items-center justify-center gap-1 hover:border-primary/50 transition-colors"
                 >
@@ -181,7 +181,7 @@ export default function AiContentSuite() {
                 <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Suggested Tracks</p>
                 <div className="space-y-1">
                   {tracks.map((t, i) => (
-                    <button
+                    <button type="button"
                       key={t.name}
                       onClick={() => setSelectedTrack(i)}
                       className={`w-full flex items-center gap-2 px-3 py-2 rounded-xl text-left transition-all text-sm ${

@@ -845,7 +845,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
   return (
     <div className="space-y-4">
       {/* Create Post Bar */}
-      <button
+      <button type="button"
         onClick={() => setShowCreatePost(true)}
         className="w-full flex items-center gap-3 px-4 py-3.5 border-b border-border/10 bg-card hover:bg-muted/20 transition-colors rounded-2xl"
       >
@@ -878,7 +878,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
           const Icon = tab.icon;
           const active = activeTab === tab.id;
           return (
-            <button
+            <button type="button"
               key={tab.id}
               data-testid={`profile-tab-${tab.id}`}
               onClick={() => setActiveTab(tab.id)}
@@ -993,7 +993,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                 style={{ touchAction: "none" }}
                 data-profile-post-drag-handle
               >
-                <button data-testid="profile-post-close" aria-label="Close post" onClick={() => { setSelectedPost(null); setShowPostMenu(false); setEditingCaption(false); }} className="text-white/80 p-1 min-h-[44px] min-w-[44px] flex items-center justify-center">
+                <button type="button" data-testid="profile-post-close" aria-label="Close post" onClick={() => { setSelectedPost(null); setShowPostMenu(false); setEditingCaption(false); }} className="text-white/80 p-1 min-h-[44px] min-w-[44px] flex items-center justify-center">
                   <X className="w-6 h-6" />
                 </button>
                 {selectedPost.user.avatar ? (
@@ -1008,7 +1008,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                   <p className="text-white/50 text-[10px]">{selectedPost.time} ago</p>
                 </div>
                 {profileOwnerId === user?.id && (
-                  <button
+                  <button type="button"
                     aria-label="Post options"
                     onClick={() => setShowPostMenu(!showPostMenu)}
                     className="text-white/70 hover:text-white p-2 rounded-full hover:bg-white/10 transition-colors"
@@ -1069,13 +1069,13 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                         if (e.key === "Escape") setEditingCaption(false);
                       }}
                     />
-                    <button
+                    <button type="button"
                       onClick={() => handleEditCaption(selectedPost.id, editCaptionValue)}
                       className="px-3 py-2 bg-primary text-primary-foreground text-xs font-semibold rounded-lg"
                     >
                       Save
                     </button>
-                    <button
+                    <button type="button"
                       onClick={() => setEditingCaption(false)}
                       className="px-3 py-2 text-white/60 text-xs"
                     >
@@ -1086,7 +1086,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                   <p className="text-white/90 text-sm"><SafeCaption text={selectedPost.caption} /></p>
                 )}
                 <div className="flex items-center gap-5">
-                  <button
+                  <button type="button"
                     className="flex items-center gap-1.5 transition-colors"
                     onClick={() => {
                       const postId = selectedPost.id;
@@ -1105,7 +1105,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                     <Heart className={cn("w-6 h-6", likedPosts.has(selectedPost.id) ? "fill-red-500 text-red-500" : "text-white/70 hover:text-white")} />
                     <span className="text-sm font-medium text-white/90">{selectedPost.likes}</span>
                   </button>
-                  <button onClick={() => openComments(selectedPost)} className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors">
+                  <button type="button" onClick={() => openComments(selectedPost)} className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors">
                     <MessageCircle className="w-6 h-6" />
                     <span className="text-sm font-medium">{selectedPost.comments}</span>
                   </button>
@@ -1113,7 +1113,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                     <Eye className="w-5 h-5" />
                     <span className="text-sm">{(selectedPost.views || 0) > 1000 ? `${((selectedPost.views || 0) / 1000).toFixed(1)}k` : selectedPost.views || 0}</span>
                   </span>
-                  <button
+                  <button type="button"
                     className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors ml-auto"
                     onClick={() => setSharePostId(selectedPost.id)}
                   >
@@ -1235,7 +1235,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                   {(() => {
                     const alreadyReported = reportedPosts.has(selectedPost.id);
                     return (
-                      <button
+                      <button type="button"
                         data-testid="profile-menu-report"
                         role="menuitem"
                         aria-disabled={alreadyReported}
@@ -1267,7 +1267,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                       </button>
                     );
                   })()}
-                  <button
+                  <button type="button"
                     role="menuitem"
                     aria-label={
                       notifPosts.has(selectedPost.id)
@@ -1291,7 +1291,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                     <Bell className="w-5 h-5" aria-hidden="true" />
                     {notifPosts.has(selectedPost.id) ? "Turn off notifications" : "Turn on notifications"}
                   </button>
-                  <button
+                  <button type="button"
                     role="menuitem"
                     aria-label="Copy link to this post"
                     onClick={() => {
@@ -1304,7 +1304,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                     <Link2 className="w-5 h-5" aria-hidden="true" />
                     Copy link
                   </button>
-                  <button
+                  <button type="button"
                     role="menuitem"
                     aria-label="Hide this post — not interested"
                     onClick={() => {
@@ -1324,7 +1324,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                     <EyeOff className="w-5 h-5" aria-hidden="true" />
                     Not interested
                   </button>
-                  <button
+                  <button type="button"
                     role="menuitem"
                     aria-label="Share this post"
                     onClick={() => { setSharePostId(selectedPost.id); setShowPostMenu(false); }}
@@ -1334,7 +1334,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                     Share
                   </button>
                   {profileOwnerId === user?.id && (
-                    <button
+                    <button type="button"
                       role="menuitem"
                       aria-label="Comment settings"
                       onClick={() => { setShowPostMenu(false); setShowCommentSettingsSheet(true); }}
@@ -1347,7 +1347,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                   )}
                   {profileOwnerId === user?.id && (
                     <>
-                      <button
+                      <button type="button"
                         role="menuitem"
                         aria-label="Edit caption"
                         onClick={() => {
@@ -1360,7 +1360,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                         <Settings2 className="w-5 h-5" aria-hidden="true" />
                         Edit caption
                       </button>
-                      <button
+                      <button type="button"
                         role="menuitem"
                         aria-label="Delete this post"
                         onClick={() => {
@@ -1456,7 +1456,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                       "Intellectual property",
                       "Something else",
                     ].map((label) => (
-                      <button
+                      <button type="button"
                         key={label}
                         onClick={() => { setReportCategory(label); setReportStep("sub"); }}
                         className="w-full flex items-center justify-between gap-3 px-4 py-3.5 hover:bg-muted/50 rounded-xl text-sm text-foreground"
@@ -1473,7 +1473,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                     <p className="text-sm text-foreground mb-4">
                       Thanks for letting us know. Your report is anonymous and our team will review this content.
                     </p>
-                    <button
+                    <button type="button"
                       data-testid="profile-report-submit"
                       onClick={async () => {
                         const targetId = selectedPost?.id;
@@ -1523,7 +1523,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                       Thanks for helping keep ZIVO safe. Our team will review this post. You can see its status as <span className="font-medium text-foreground">Reported</span> in the post menu.
                     </p>
                     {undoSecondsLeft > 0 && undoTargetRef.current && (
-                      <button
+                      <button type="button"
                         data-testid="profile-report-undo"
                         onClick={() => {
                           const t = undoTargetRef.current;
@@ -1535,7 +1535,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                         Undo report ({undoSecondsLeft}s)
                       </button>
                     )}
-                    <button
+                    <button type="button"
                       onClick={() => setShowReportSheet(false)}
                       className="w-full bg-primary text-primary-foreground rounded-xl py-3 min-h-[44px] text-sm font-semibold"
                     >
@@ -1575,7 +1575,7 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                     { key: "followers", label: "Followers only" },
                     { key: "off", label: "Turn off comments" },
                   ] as const).map((opt) => (
-                    <button
+                    <button type="button"
                       key={opt.key}
                       onClick={() => {
                         setCommentControl(opt.key);
@@ -1746,7 +1746,7 @@ function ComposerForm({
   return (
     <div className="p-5 space-y-4">
       <div className="flex items-center justify-between">
-        <button onClick={onBack} className="text-sm text-primary font-medium">← Back</button>
+        <button type="button" onClick={onBack} className="text-sm text-primary font-medium">← Back</button>
         <h3 className="text-base font-bold text-foreground">New {label}</h3>
         <motion.button whileTap={{ scale: 0.95 }} disabled={isPosting} onClick={handlePost} className="bg-primary text-primary-foreground text-sm font-bold px-4 py-1.5 rounded-full disabled:opacity-70">
           {isPosting ? "Posting..." : "Post"}
@@ -1770,7 +1770,7 @@ function ComposerForm({
               style={{ filter: COMPOSER_FILTERS[activeFilter]?.css || "none" }}
             />
           )}
-            <button onClick={clearMediaPreview} aria-label="Remove media" className="absolute top-2 right-2 min-w-[44px] min-h-[44px] -m-2 rounded-full bg-black/60 flex items-center justify-center">
+            <button type="button" onClick={clearMediaPreview} aria-label="Remove media" className="absolute top-2 right-2 min-w-[44px] min-h-[44px] -m-2 rounded-full bg-black/60 flex items-center justify-center">
             <X className="w-4 h-4 text-white" />
           </button>
         </div>
@@ -1791,7 +1791,7 @@ function ComposerForm({
           <p className="text-xs font-semibold text-muted-foreground">Choose filter style</p>
           <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
             {COMPOSER_FILTERS.map((filter, index) => (
-              <button
+              <button type="button"
                 key={filter.name}
                 type="button"
                 onClick={() => setActiveFilter(index)}
@@ -1821,7 +1821,7 @@ function ComposerForm({
       <div className="flex items-center gap-3 text-muted-foreground">
         {/* Visibility picker */}
         <div className="relative">
-          <button
+          <button type="button"
             onClick={() => setShowVisibilityPicker(!showVisibilityPicker)}
             className="flex items-center gap-1.5 text-xs font-medium hover:text-foreground transition-colors bg-muted/40 rounded-lg px-2.5 py-1.5 border border-border/20"
           >
@@ -1840,7 +1840,7 @@ function ComposerForm({
                 {VISIBILITY_OPTIONS.map((opt) => {
                   const OptIcon = opt.icon;
                   return (
-                    <button
+                    <button type="button"
                       key={opt.id}
                       onClick={() => { setVisibility(opt.id); setShowVisibilityPicker(false); }}
                       className={cn(
@@ -1858,7 +1858,7 @@ function ComposerForm({
           </AnimatePresence>
         </div>
 
-        <button className="flex items-center gap-1.5 text-xs hover:text-foreground transition-colors">
+        <button type="button" className="flex items-center gap-1.5 text-xs hover:text-foreground transition-colors">
           <MapPin className="w-4 h-4" /> Location
         </button>
       </div>
@@ -5064,7 +5064,7 @@ function LiveBroadcast({
       {aiResultOverlay && (
         <div className="absolute bottom-32 left-3 z-[4] w-[132px] h-[184px] rounded-2xl overflow-hidden shadow-2xl border border-white/30 bg-black/20 backdrop-blur-sm">
           <img src={aiResultOverlay} alt="AI result preview" className="w-full h-full object-cover" />
-          <button
+          <button type="button"
             onClick={() => { setAiResultOverlay(null); setAiSelectedMode(null); }}
             className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-black/60 flex items-center justify-center"
           >
@@ -5117,7 +5117,7 @@ function LiveBroadcast({
                 <span className="text-white text-xs font-bold">{viewers}</span>
               </div>
             )}
-            <button onClick={isLive ? endLive : onClose} className="w-8 h-8 rounded-full bg-black/40 flex items-center justify-center">
+            <button type="button" onClick={isLive ? endLive : onClose} className="w-8 h-8 rounded-full bg-black/40 flex items-center justify-center">
               <X className="w-5 h-5 text-white" />
             </button>
           </div>
@@ -5152,14 +5152,14 @@ function LiveBroadcast({
             <div className="bg-black/70 backdrop-blur-xl pt-3 pb-6 rounded-t-3xl">
               {/* Category tabs */}
               <div className="flex items-center gap-1 px-4 mb-3 overflow-x-auto scrollbar-none">
-                <button
+                <button type="button"
                   onClick={() => setShowFilters(false)}
                   className="flex-shrink-0 w-8 h-8 flex items-center justify-center"
                 >
                   <X className="w-4 h-4 text-white/60" />
                 </button>
                 {(["ar", "ai"] as const).map((tab) => (
-                  <button
+                  <button type="button"
                     key={tab}
                     onClick={() => { setFilterTab(tab); setFilterGroup("all"); setActiveFilter(0); if (tab !== "ar") setActiveSticker(0); }}
                     className={cn(
@@ -5180,7 +5180,7 @@ function LiveBroadcast({
                   { id: "new", label: "New" },
                   { id: "pro", label: "Pro" },
                 ] as const).map((group) => (
-                  <button
+                  <button type="button"
                     key={group.id}
                     onClick={() => setFilterGroup(group.id)}
                     className={cn(
@@ -5193,7 +5193,7 @@ function LiveBroadcast({
                     {group.label}
                   </button>
                 ))}
-                <button
+                <button type="button"
                   onClick={randomizeCurrentTabFilter}
                   className="ml-auto flex-shrink-0 px-3 py-1 rounded-full text-[11px] bg-primary/75 text-primary-foreground"
                 >
@@ -5205,7 +5205,7 @@ function LiveBroadcast({
               {filterTab === "ar" && (
                 <div className="flex items-center gap-1 px-4 mb-3 overflow-x-auto scrollbar-none">
                   {AR_CATEGORIES.map(cat => (
-                    <button
+                    <button type="button"
                       key={cat}
                       onClick={() => setArCategory(cat)}
                       className={cn(
@@ -5224,7 +5224,7 @@ function LiveBroadcast({
               <div className="grid grid-cols-4 gap-3 px-4 pr-5 max-h-[48vh] overflow-y-auto">
                 {filterTab === "ai" ? (
                   AI_MODES.map((m) => (
-                    <button
+                    <button type="button"
                       key={m.id}
                       onClick={() => runAiFaceEdit(m.id)}
                       disabled={aiProcessing}
@@ -5264,7 +5264,7 @@ function LiveBroadcast({
                   visibleFilterIndexes.map((i) => {
                     const s = AR_STICKERS[i];
                     return (
-                    <button
+                    <button type="button"
                       key={`${s.name}-${i}`}
                       onClick={() => setActiveSticker(i)}
                       className="flex flex-col items-center gap-1.5"
@@ -5315,26 +5315,26 @@ function LiveBroadcast({
               placeholder="Say something..."
               className="flex-1 bg-white/15 backdrop-blur-sm text-white text-sm rounded-full px-4 py-2.5 placeholder:text-white/50 outline-none border border-white/10"
             />
-            <button onClick={toggleFilters} className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center">
+            <button type="button" onClick={toggleFilters} className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center">
               <Sparkles className="w-5 h-5 text-white" />
             </button>
-            <button
+            <button type="button"
               onClick={isRecordingClip ? stopClipRecording : startClipRecording}
               disabled={isPublishingClip}
               className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center disabled:opacity-60"
             >
               <Film className={cn("w-5 h-5", isRecordingClip ? "text-red-400" : "text-white")} />
             </button>
-            <button onClick={toggleMic} className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center">
+            <button type="button" onClick={toggleMic} className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center">
               {muted ? <MicOff className="w-5 h-5 text-white" /> : <Mic className="w-5 h-5 text-white" />}
             </button>
-            <button onClick={endLive} className="px-4 py-2.5 bg-destructive rounded-full">
+            <button type="button" onClick={endLive} className="px-4 py-2.5 bg-destructive rounded-full">
               <span className="text-white text-sm font-bold">End</span>
             </button>
           </div>
         ) : (
           <div className="flex flex-col items-center gap-3">
-            <button
+            <button type="button"
               onClick={toggleFilters}
               className={cn(
                 "flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium mb-1",
@@ -5344,10 +5344,10 @@ function LiveBroadcast({
               <Sparkles className="w-3.5 h-3.5" /> Filters
             </button>
             <div className="flex items-center gap-5">
-              <button onClick={flipCamera} className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center">
+              <button type="button" onClick={flipCamera} className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center">
                 <SwitchCamera className="w-5 h-5 text-white" />
               </button>
-              <button
+              <button type="button"
                 onClick={isRecordingClip ? stopClipRecording : startClipRecording}
                 disabled={isPublishingClip}
                 className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center disabled:opacity-60"
@@ -5361,7 +5361,7 @@ function LiveBroadcast({
               >
                 <Camera className="w-6 h-6 text-white" />
               </motion.button>
-              <button onClick={toggleMic} className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center">
+              <button type="button" onClick={toggleMic} className="w-10 h-10 rounded-full bg-white/15 flex items-center justify-center">
                 {muted ? <MicOff className="w-5 h-5 text-white" /> : <Mic className="w-5 h-5 text-white" />}
               </button>
             </div>

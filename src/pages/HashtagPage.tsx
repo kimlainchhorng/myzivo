@@ -151,7 +151,7 @@ export default function HashtagPage() {
         className="sticky top-0 z-30 flex items-center gap-3 border-b border-border/40 bg-background/95 px-4 py-3 backdrop-blur"
         style={{ paddingTop: "var(--zivo-safe-top-sticky)" }}
       >
-        <button
+        <button type="button"
           onClick={() => navigate(-1)}
           className="rounded-full p-2.5 hover:bg-muted/50 active:scale-95 transition-transform min-w-[44px] min-h-[44px] flex items-center justify-center"
           aria-label="Back"
@@ -200,7 +200,7 @@ export default function HashtagPage() {
           <p className="text-sm text-muted-foreground max-w-xs">
             Be the first — create a post and include #{safeTag} in your caption.
           </p>
-          <button
+          <button type="button"
             onClick={() => navigate("/feed")}
             className="mt-2 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground active:scale-95 transition-transform"
           >

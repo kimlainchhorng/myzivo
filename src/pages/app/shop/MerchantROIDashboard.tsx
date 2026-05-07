@@ -145,7 +145,7 @@ export default function MerchantROIDashboard() {
         {/* Header */}
         <div className="sticky top-0 z-30 bg-background/95 backdrop-blur-md border-b border-border/30 px-4 py-3 pt-safe">
           <div className="flex items-center gap-3">
-            <button onClick={() => navigate(-1)}>
+            <button type="button" onClick={() => navigate(-1)}>
               <ArrowLeft className="h-5 w-5" />
             </button>
             <BarChart3 className="h-5 w-5 text-primary" />

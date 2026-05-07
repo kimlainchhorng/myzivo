@@ -109,7 +109,7 @@ export default function WithdrawalReceipt({ open, onOpenChange, data, onViewHist
           </div>
           <div className="border-t border-border/40 pt-3 flex items-center justify-between">
             <span className="text-xs text-muted-foreground font-medium uppercase tracking-wider">Reference</span>
-            <button
+            <button type="button"
               onClick={copyRef}
               className="font-mono text-xs font-semibold flex items-center gap-1.5 hover:text-emerald-600 transition-colors"
             >

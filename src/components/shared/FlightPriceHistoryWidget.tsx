@@ -62,7 +62,7 @@ const FlightPriceHistoryWidget = ({
         {priceHistory.map((point, i) => {
           const height = ((point.price - minPrice + 20) / (maxPrice - minPrice + 40)) * 100;
           return (
-            <button
+            <button type="button"
               key={i}
               onClick={() => setSelectedMonth(point)}
               className="flex-1 flex flex-col items-center gap-1 group"

@@ -345,7 +345,7 @@ export function LodgingRoomDetailsModal({
               </button>
               <div className="absolute bottom-2.5 left-1/2 -translate-x-1/2 flex gap-1 z-10">
                 {orderedPhotos.map((_, i) => (
-                  <button
+                  <button type="button"
                     key={i}
                     type="button"
                     aria-label={`Go to photo ${i + 1}`}

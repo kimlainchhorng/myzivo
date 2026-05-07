@@ -45,7 +45,7 @@ export default function DesktopHotDeals() {
           Hot Deals
           <Badge variant="secondary" className="text-xs bg-orange-500/10 text-orange-500 border-0">LIVE</Badge>
         </h2>
-        <button
+        <button type="button"
           onClick={() => navigate("/flights")}
           className="text-sm text-primary font-semibold flex items-center gap-1 hover:gap-2 transition-all"
         >

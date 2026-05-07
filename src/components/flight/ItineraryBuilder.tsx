@@ -201,7 +201,7 @@ export const ItineraryBuilder = ({
             className="rounded-xl border border-border/50 overflow-hidden"
           >
             {/* Day Header */}
-            <button
+            <button type="button"
               onClick={() => setExpandedDay(expandedDay === day.id ? null : day.id)}
               className="w-full flex items-center justify-between p-4 hover:bg-muted/30 transition-all duration-200 touch-manipulation"
             >
@@ -321,7 +321,7 @@ export const ItineraryBuilder = ({
                               </div>
 
                               <div className="flex items-center gap-1">
-                                <button
+                                <button type="button"
                                   onClick={() => updateItem(day.id, item.id, { confirmed: !item.confirmed })}
                                   className={cn(
                                     "p-1.5 rounded-xl transition-all duration-200 active:scale-[0.90] touch-manipulation",
@@ -332,13 +332,13 @@ export const ItineraryBuilder = ({
                                 >
                                   <Check className="w-4 h-4" />
                                 </button>
-                                <button
+                                <button type="button"
                                   onClick={() => setEditingItem(isEditing ? null : item.id)}
                                   className="p-1.5 rounded-xl text-muted-foreground hover:bg-muted transition-all duration-200 active:scale-[0.90] touch-manipulation"
                                 >
                                   <Edit2 className="w-4 h-4" />
                                 </button>
-                                <button
+                                <button type="button"
                                   onClick={() => removeItem(day.id, item.id)}
                                   className="p-1.5 rounded-xl text-red-400 hover:bg-red-500/20 transition-all duration-200 active:scale-[0.90] touch-manipulation opacity-0 group-hover:opacity-100"
                                 >

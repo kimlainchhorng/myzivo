@@ -168,7 +168,7 @@ export default function StoreDocumentsSection({ storeId }: Props) {
       {/* Category Filter */}
       <div className="flex items-center gap-2 flex-wrap">
         {CATEGORIES.map((c) => (
-          <button
+          <button type="button"
             key={c}
             onClick={() => setCategory(c)}
             className={cn(
@@ -314,7 +314,7 @@ export default function StoreDocumentsSection({ storeId }: Props) {
                 <Button variant="ghost" size="sm" onClick={openFilePicker}>Change</Button>
               </div>
             ) : (
-              <button
+              <button type="button"
                 onClick={openFilePicker}
                 className="w-full border-2 border-dashed border-border rounded-xl p-8 text-center hover:bg-muted/30 transition-colors"
               >

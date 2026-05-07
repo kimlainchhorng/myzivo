@@ -69,7 +69,7 @@ export default function PollCreatorSheet({ open, onClose, onSendPoll }: PollCrea
                 </div>
                 <h2 className="text-[16px] font-bold text-foreground">New Poll</h2>
               </div>
-              <button onClick={onClose} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center active:scale-90 transition-transform">
+              <button type="button" onClick={onClose} className="w-8 h-8 rounded-full bg-muted flex items-center justify-center active:scale-90 transition-transform">
                 <X className="w-4 h-4 text-muted-foreground" />
               </button>
             </div>
@@ -100,7 +100,7 @@ export default function PollCreatorSheet({ open, onClose, onSendPoll }: PollCrea
                       className="flex-1 px-3 py-2.5 rounded-xl bg-muted/60 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 border border-border/20"
                     />
                     {options.length > 2 && (
-                      <button onClick={() => removeOption(i)} className="w-7 h-7 rounded-full bg-muted flex items-center justify-center active:scale-90 transition-transform flex-shrink-0">
+                      <button type="button" onClick={() => removeOption(i)} className="w-7 h-7 rounded-full bg-muted flex items-center justify-center active:scale-90 transition-transform flex-shrink-0">
                         <X className="w-3.5 h-3.5 text-muted-foreground" />
                       </button>
                     )}
@@ -108,7 +108,7 @@ export default function PollCreatorSheet({ open, onClose, onSendPoll }: PollCrea
                 ))}
               </div>
               {options.length < 10 && (
-                <button
+                <button type="button"
                   onClick={addOption}
                   className="mt-2 flex items-center gap-1.5 text-primary text-sm font-medium active:opacity-70 transition-opacity"
                 >
@@ -117,7 +117,7 @@ export default function PollCreatorSheet({ open, onClose, onSendPoll }: PollCrea
               )}
             </div>
 
-            <button
+            <button type="button"
               onClick={handleSend}
               disabled={!canSend}
               className="w-full h-12 rounded-2xl bg-primary text-primary-foreground font-bold text-sm disabled:opacity-40 active:scale-[0.98] transition-all"

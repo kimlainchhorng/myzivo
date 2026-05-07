@@ -63,7 +63,7 @@ export default function BookmarksPage() {
         </div>
         <div className="flex gap-1 px-4 pb-2">
           {tabs.map((t) => (
-            <button
+            <button type="button"
               key={t.id}
               onClick={() => setActiveTab(t.id)}
               className={cn(
@@ -128,7 +128,7 @@ export default function BookmarksPage() {
                   </p>
                 </div>
               </button>
-              <button onClick={() => removeBookmark(b.id)} className="p-2 rounded-full hover:bg-destructive/10 self-start">
+              <button type="button" onClick={() => removeBookmark(b.id)} className="p-2 rounded-full hover:bg-destructive/10 self-start">
                 <Trash2 className="h-4 w-4 text-muted-foreground" />
               </button>
             </motion.div>

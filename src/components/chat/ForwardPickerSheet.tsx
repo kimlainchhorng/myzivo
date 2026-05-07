@@ -118,7 +118,7 @@ export default function ForwardPickerSheet({ open, onOpenChange, onConfirm }: Pr
             <p className="text-sm text-muted-foreground text-center py-8">No contacts found</p>
           )}
           {filtered.map((c) => (
-            <button
+            <button type="button"
               key={c.id}
               onClick={() => toggle(c.contact_user_id)}
               className="w-full flex items-center gap-3 p-2 rounded-lg hover:bg-muted/50"

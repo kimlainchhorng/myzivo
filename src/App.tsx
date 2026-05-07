@@ -163,6 +163,7 @@ const ReviewModerationDashboard = lazy(() => import("./pages/admin/ReviewModerat
 
 const SupportCenterPage = lazy(() => import("./pages/app/SupportCenterPage"));
 const RideTrackingPage = lazy(() => import("./pages/app/RideTrackingPage"));
+const TripStatusPage = lazy(() => import("./pages/TripStatusPage"));
 const RideHubPage = lazy(() => import("./pages/app/RideHubPage"));
 const EatsLanding = lazy(() => import("./pages/EatsLanding"));
 const EatsTrackingPage = lazy(() => import("./pages/EatsTrackingPage"));
@@ -343,6 +344,7 @@ const AdminPromoCodesPage = lazy(() => import("./pages/admin/AdminPromoCodesPage
 const AdminBroadcastPage = lazy(() => import("./pages/admin/AdminBroadcastPage"));
 const AdminFeedbackReplyPage = lazy(() => import("./pages/admin/AdminFeedbackReplyPage"));
 const AdminStoreVerificationPage = lazy(() => import("./pages/admin/AdminStoreVerificationPage"));
+const AdminPartnerApplicationsPage = lazy(() => import("./pages/admin/AdminPartnerApplicationsPage"));
 const AdminFinanceSummaryPage = lazy(() => import("./pages/admin/AdminFinanceSummaryPage"));
 const AdminWebhookStatusPage = lazy(() => import("./pages/admin/AdminWebhookStatusPage"));
 const AdminDriverVerificationPage = lazy(() => import("./pages/admin/AdminDriverVerificationPage"));
@@ -885,6 +887,7 @@ const App = () => (
                 <Route path="/travel-extras" element={<PreserveQueryRedirect to="/extras" />} />
                 <Route path="/rides" element={<PreserveQueryRedirect to="/rides/hub" />} />
                 <Route path="/rides/track/:tripId" element={<ProtectedRoute><PhoneRequiredGate><RideTrackingPage /></PhoneRequiredGate></ProtectedRoute>} />
+                <Route path="/trip-status/:id" element={<ProtectedRoute><PhoneRequiredGate><TripStatusPage /></PhoneRequiredGate></ProtectedRoute>} />
                 <Route path="/rides/hub" element={<ProtectedRoute><PhoneRequiredGate><RideHubPage /></PhoneRequiredGate></ProtectedRoute>} />
                 <Route path="/ride" element={<PreserveQueryRedirect to="/rides" />} />
                 <Route path="/eats" element={<ProtectedRoute><PhoneRequiredGate><EatsLanding /></PhoneRequiredGate></ProtectedRoute>} />
@@ -1037,6 +1040,7 @@ const App = () => (
                 <Route path="/admin/marketing/broadcast" element={<ProtectedRoute requireAdmin={true}><AdminBroadcastPage /></ProtectedRoute>} />
                 <Route path="/admin/feedback" element={<ProtectedRoute requireAdmin={true}><AdminFeedbackReplyPage /></ProtectedRoute>} />
                 <Route path="/admin/stores/verification" element={<ProtectedRoute requireAdmin={true}><AdminStoreVerificationPage /></ProtectedRoute>} />
+                <Route path="/admin/partners/applications" element={<ProtectedRoute requireAdmin={true}><AdminPartnerApplicationsPage /></ProtectedRoute>} />
                 <Route path="/admin/finance/summary" element={<ProtectedRoute requireAdmin={true}><AdminFinanceSummaryPage /></ProtectedRoute>} />
                 <Route path="/admin/payments/webhook-status" element={<ProtectedRoute requireAdmin={true}><AdminWebhookStatusPage /></ProtectedRoute>} />
                 <Route path="/admin/drivers/verification" element={<ProtectedRoute requireAdmin={true}><AdminDriverVerificationPage /></ProtectedRoute>} />
@@ -1209,7 +1213,7 @@ const App = () => (
                 <Route path="/account/data-rights" element={<ProtectedRoute><PrivacyControls /></ProtectedRoute>} />
                 <Route path="/account/notifications" element={<ProtectedRoute><NotificationSettings /></ProtectedRoute>} />
                 <Route path="/account/referrals" element={<ProtectedRoute><AccountReferralsPage /></ProtectedRoute>} />
-                <Route path="/account/wallet" element={<ProtectedRoute><AccountWalletPage /></ProtectedRoute>} />
+                <Route path="/account/wallet" element={<PreserveQueryRedirect to="/wallet" />} />
                 <Route path="/account/gift-cards" element={<ProtectedRoute><GiftCardsPage /></ProtectedRoute>} />
                 <Route path="/account/gift-cards/success" element={<ProtectedRoute><GiftCardSuccessPage /></ProtectedRoute>} />
                 <Route path="/account/travelers" element={<ProtectedRoute><TravelerProfilesPage /></ProtectedRoute>} />

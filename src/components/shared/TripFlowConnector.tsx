@@ -107,7 +107,7 @@ const TripFlowConnector = ({
           
           <div className="space-y-3">
             {steps.map((step, index) => (
-              <button
+              <button type="button"
                 key={step.id}
                 onClick={() => navigate(step.href)}
                 className={cn(

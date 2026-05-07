@@ -102,7 +102,7 @@ export default function InstallAppCard() {
   return (
     <>
       <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20 overflow-hidden relative">
-        <button
+        <button type="button"
           aria-label="Dismiss"
           onClick={handleDismiss}
           className="absolute top-2 right-2 p-1.5 rounded-full hover:bg-background/60 text-muted-foreground transition-colors"

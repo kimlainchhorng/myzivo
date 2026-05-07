@@ -296,7 +296,7 @@ export default function ShareSheet({
         {/* In-app sharing row */}
         <div className="grid grid-cols-4 gap-4 px-6 py-4">
           {inAppOptions.map((opt) => (
-            <button
+            <button type="button"
               key={opt.key}
               onClick={opt.onClick}
               className="flex flex-col items-center gap-2 min-h-[48px]"
@@ -312,7 +312,7 @@ export default function ShareSheet({
         {/* External sharing row */}
         <div className="grid grid-cols-4 gap-4 px-6 py-4 border-t border-border/10">
           {shareOptions.map((opt) => (
-            <button
+            <button type="button"
               key={opt.label}
               onClick={() => handleOptionClick(opt)}
               className="flex flex-col items-center gap-2 min-h-[48px]"
@@ -323,13 +323,13 @@ export default function ShareSheet({
               <span className="text-[10px] font-medium text-foreground">{opt.label}</span>
             </button>
           ))}
-          <button onClick={handleCopyLink} className="flex flex-col items-center gap-2 min-h-[48px]">
+          <button type="button" onClick={handleCopyLink} className="flex flex-col items-center gap-2 min-h-[48px]">
             <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center">
               <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" /></svg>
             </div>
             <span className="text-[10px] font-medium text-foreground">Copy link</span>
           </button>
-          <button onClick={() => setShowMoreOptions(!showMoreOptions)} className="flex flex-col items-center gap-2 min-h-[48px]">
+          <button type="button" onClick={() => setShowMoreOptions(!showMoreOptions)} className="flex flex-col items-center gap-2 min-h-[48px]">
             <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center">
               <MoreHorizontal className="h-5 w-5 text-muted-foreground" />
             </div>
@@ -347,7 +347,7 @@ export default function ShareSheet({
             >
               <div className="grid grid-cols-4 gap-4 px-6 py-4 border-t border-border/20">
                 {moreShareOptions.map((opt) => (
-                  <button
+                  <button type="button"
                     key={opt.label}
                     onClick={() => handleOptionClick(opt)}
                     className="flex flex-col items-center gap-2 min-h-[48px]"

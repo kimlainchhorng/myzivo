@@ -68,7 +68,7 @@ export default function ChatPollBubble({ pollId, question, options, isAnonymous,
           const isMyVote = myVote?.option_index === i;
 
           return (
-            <button
+            <button type="button"
               key={i}
               onClick={() => handleVote(i)}
               disabled={!!myVote}

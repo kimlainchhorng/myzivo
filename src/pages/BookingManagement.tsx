@@ -376,7 +376,7 @@ const BookingManagement = () => {
               { icon: FileText, label: "View Receipt", action: () => {} },
               { icon: ExternalLink, label: "Airline Website", action: () => {} },
             ].map((act) => (
-              <button
+              <button type="button"
                 key={act.label}
                 onClick={act.action}
                 className="flex items-center gap-3 p-4 rounded-xl border border-border/50 hover:border-primary/30 hover:bg-muted/30 transition-all duration-200 active:scale-[0.98] touch-manipulation"

@@ -80,7 +80,7 @@ export default function UsernameShareSheet({ open, username, displayName, onClos
           >
             <div className="flex items-center justify-between mb-4">
               <h3 className="text-base font-bold text-foreground">Share your profile</h3>
-              <button
+              <button type="button"
                 onClick={onClose}
                 aria-label="Close"
                 className="h-9 w-9 -mr-1.5 flex items-center justify-center rounded-full hover:bg-muted"
@@ -104,14 +104,14 @@ export default function UsernameShareSheet({ open, username, displayName, onClos
                 </div>
 
                 <div className="grid grid-cols-2 gap-2 mt-4">
-                  <button
+                  <button type="button"
                     onClick={copy}
                     className="h-11 inline-flex items-center justify-center gap-2 rounded-xl border border-border/40 bg-muted/30 text-sm font-semibold text-foreground hover:bg-muted/50 active:scale-[0.98] transition"
                   >
                     {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
                     {copied ? "Copied" : "Copy link"}
                   </button>
-                  <button
+                  <button type="button"
                     onClick={shareNative}
                     className="h-11 inline-flex items-center justify-center gap-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold active:scale-[0.98] transition"
                   >

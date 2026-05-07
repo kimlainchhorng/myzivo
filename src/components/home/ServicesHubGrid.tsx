@@ -133,7 +133,7 @@ export default function ServicesHubGrid() {
         <h2 className="text-sm font-semibold text-foreground flex items-center gap-2">
           <CalendarClock className="w-4 h-4" /> Your services
         </h2>
-        <button
+        <button type="button"
           onClick={() => navigate("/services")}
           className="text-[11px] text-foreground font-semibold flex items-center gap-0.5 active:opacity-60 transition-opacity"
         >

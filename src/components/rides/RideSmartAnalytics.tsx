@@ -72,7 +72,7 @@ export default function RideSmartAnalytics() {
       {/* Period selector */}
       <div className="flex gap-1 p-1 rounded-xl bg-muted/30">
         {(["week", "month", "year"] as const).map(p => (
-          <button key={p} onClick={() => setPeriod(p)} className={cn("flex-1 py-2 rounded-lg text-xs font-bold transition-all capitalize", period === p ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
+          <button type="button" key={p} onClick={() => setPeriod(p)} className={cn("flex-1 py-2 rounded-lg text-xs font-bold transition-all capitalize", period === p ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
             {p}
           </button>
         ))}

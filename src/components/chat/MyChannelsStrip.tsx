@@ -20,7 +20,7 @@ export default function MyChannelsStrip() {
           <Megaphone className="w-3.5 h-3.5 text-muted-foreground" />
           <span className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Channels</span>
         </div>
-        <button
+        <button type="button"
           onClick={() => nav("/channels")}
           className="text-[12px] font-semibold text-primary active:opacity-70 transition-opacity"
         >
@@ -39,7 +39,7 @@ export default function MyChannelsStrip() {
           </>
         )}
         {!loading && channels.length === 0 && (
-          <button
+          <button type="button"
             onClick={() => nav("/channels")}
             className="flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-muted/60 border border-border/30 text-[12px] font-medium text-muted-foreground whitespace-nowrap active:scale-95 transition-transform"
           >
@@ -48,7 +48,7 @@ export default function MyChannelsStrip() {
           </button>
         )}
         {channels.slice(0, 12).map((c) => (
-          <button
+          <button type="button"
             key={c.id}
             onClick={() => nav(`/c/${c.handle}`)}
             className="flex flex-col items-center gap-1 w-[68px] shrink-0 group active:scale-95 transition-transform"
@@ -69,7 +69,7 @@ export default function MyChannelsStrip() {
             )}
           </button>
         ))}
-        <button
+        <button type="button"
           onClick={() => nav("/channels")}
           className="flex flex-col items-center gap-1 w-[68px] shrink-0 group active:scale-95 transition-transform"
         >

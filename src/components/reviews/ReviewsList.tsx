@@ -108,11 +108,11 @@ export function ReviewsList({ serviceType, serviceId }: ReviewsListProps) {
               })}
             </span>
             <div className="flex gap-3">
-              <button className="flex items-center gap-1 hover:text-primary transition">
+              <button type="button" className="flex items-center gap-1 hover:text-primary transition">
                 <ThumbsUp className="w-3 h-3" />
                 {review.helpful_count}
               </button>
-              <button className="flex items-center gap-1 hover:text-primary transition">
+              <button type="button" className="flex items-center gap-1 hover:text-primary transition">
                 <Flag className="w-3 h-3" />
               </button>
             </div>

@@ -18,7 +18,7 @@ export default function EditMessageBar({ message, onCancel }: Props) {
         <div className="text-xs font-medium text-amber-500">Editing message</div>
         <div className="text-sm text-muted-foreground truncate">{message.message}</div>
       </div>
-      <button onClick={onCancel} className="p-1 rounded hover:bg-muted" aria-label="Cancel edit">
+      <button type="button" onClick={onCancel} className="p-1 rounded hover:bg-muted" aria-label="Cancel edit">
         <X className="w-4 h-4" />
       </button>
     </div>

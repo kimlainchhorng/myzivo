@@ -106,7 +106,7 @@ export default function RideFeedbackCenter() {
         {tabs.map(tab => {
           const Icon = tab.icon;
           return (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={cn("flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all", activeTab === tab.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
+            <button type="button" key={tab.id} onClick={() => setActiveTab(tab.id)} className={cn("flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all", activeTab === tab.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
               <Icon className="w-3.5 h-3.5" /> {tab.label}
             </button>
           );
@@ -137,7 +137,7 @@ export default function RideFeedbackCenter() {
                         const Icon = mood.icon;
                         const selected = surveyMood === mood.id;
                         return (
-                          <button key={mood.id} onClick={() => { setSurveyMood(mood.id); setSurveyStep(1); }} className={cn("flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all", selected ? "border-primary/40 bg-primary/5" : "border-border/40 hover:border-primary/20")}>
+                          <button type="button" key={mood.id} onClick={() => { setSurveyMood(mood.id); setSurveyStep(1); }} className={cn("flex flex-col items-center gap-2 p-4 rounded-2xl border transition-all", selected ? "border-primary/40 bg-primary/5" : "border-border/40 hover:border-primary/20")}>
                             <Icon className={cn("w-10 h-10", mood.color)} />
                             <span className="text-xs font-bold text-foreground">{mood.label}</span>
                           </button>
@@ -160,7 +160,7 @@ export default function RideFeedbackCenter() {
                     <p className="text-sm font-bold text-foreground text-center">Add compliments</p>
                     <div className="flex flex-wrap gap-2 justify-center">
                       {complimentTags.map(tag => (
-                        <button key={tag.id} onClick={() => toggleCompliment(tag.id)} className={cn("flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-bold transition-all", selectedCompliments.includes(tag.id) ? "bg-primary/10 border-primary/30 text-primary" : "bg-muted/20 border-border/40 text-foreground hover:border-primary/20")}>
+                        <button type="button" key={tag.id} onClick={() => toggleCompliment(tag.id)} className={cn("flex items-center gap-1.5 px-3 py-2 rounded-xl border text-xs font-bold transition-all", selectedCompliments.includes(tag.id) ? "bg-primary/10 border-primary/30 text-primary" : "bg-muted/20 border-border/40 text-foreground hover:border-primary/20")}>
                           <span>{tag.icon}</span> {tag.label}
                         </button>
                       ))}
@@ -183,7 +183,7 @@ export default function RideFeedbackCenter() {
                     <Button className="w-full h-11 rounded-xl font-bold gap-2" onClick={submitSurvey}>
                       <Send className="w-4 h-4" /> Submit Feedback
                     </Button>
-                    <button onClick={submitSurvey} className="w-full text-xs text-muted-foreground font-bold py-2">Skip</button>
+                    <button type="button" onClick={submitSurvey} className="w-full text-xs text-muted-foreground font-bold py-2">Skip</button>
                   </motion.div>
                 )}
               </AnimatePresence>

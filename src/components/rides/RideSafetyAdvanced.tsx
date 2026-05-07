@@ -71,7 +71,7 @@ export default function RideSafetyAdvanced() {
         {sections.map(s => {
           const Icon = s.icon;
           return (
-            <button key={s.id} onClick={() => setSection(s.id)} className={cn("flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all", section === s.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
+            <button type="button" key={s.id} onClick={() => setSection(s.id)} className={cn("flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all", section === s.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
               <Icon className="w-3.5 h-3.5" /> {s.label}
             </button>
           );
@@ -119,7 +119,7 @@ export default function RideSafetyAdvanced() {
                       <Eye className="w-3.5 h-3.5 text-muted-foreground" />
                       <span className="text-xs font-bold text-foreground">Auto-Record All Rides</span>
                     </div>
-                    <button onClick={() => setAutoRecord(!autoRecord)} className={cn("w-10 h-5 rounded-full transition-colors flex items-center px-0.5", autoRecord ? "bg-primary" : "bg-muted")}>
+                    <button type="button" onClick={() => setAutoRecord(!autoRecord)} className={cn("w-10 h-5 rounded-full transition-colors flex items-center px-0.5", autoRecord ? "bg-primary" : "bg-muted")}>
                       <div className={cn("w-4 h-4 rounded-full bg-card shadow transition-transform", autoRecord && "translate-x-5")} />
                     </button>
                   </div>
@@ -149,7 +149,7 @@ export default function RideSafetyAdvanced() {
                     className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 space-y-3">
                     <div className="flex flex-wrap gap-1.5">
                       {["Minor Collision", "Unsafe Driving", "Wrong Route", "Driver Misconduct", "Vehicle Issue", "Other"].map(t => (
-                        <button key={t} onClick={() => setIncidentType(t)}
+                        <button type="button" key={t} onClick={() => setIncidentType(t)}
                           className={cn("text-[10px] px-2.5 py-1 rounded-full border transition-colors",
                             incidentType === t ? "bg-destructive text-destructive-foreground border-destructive" : "border-border text-muted-foreground hover:border-destructive/40")}>
                           {t}
@@ -256,7 +256,7 @@ export default function RideSafetyAdvanced() {
                     </div>
                     <div className="flex items-center gap-2">
                       {c.autoNotify && <Badge variant="secondary" className="text-[8px] font-bold">Auto-Alert</Badge>}
-                      <button onClick={() => { window.location.href = `tel:${c.phone.replace(/\D/g, "")}`; }} className="p-2 rounded-full bg-primary/10 text-primary">
+                      <button type="button" onClick={() => { window.location.href = `tel:${c.phone.replace(/\D/g, "")}`; }} className="p-2 rounded-full bg-primary/10 text-primary">
                         <Phone className="w-3.5 h-3.5" />
                       </button>
                     </div>

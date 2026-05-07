@@ -153,7 +153,7 @@ const AppTravel = () => {
         <div className="px-4 pt-3 pb-2 sticky top-14 bg-background/95 backdrop-blur-xl z-10">
           <div className="flex gap-1.5 bg-muted/50 rounded-xl p-1">
             {tabs.map((tab) => (
-              <button
+              <button type="button"
                 key={tab.id}
                 onClick={() => handleTabChange(tab.id)}
                 className={cn(

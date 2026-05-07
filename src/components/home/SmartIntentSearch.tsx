@@ -73,7 +73,7 @@ export default function SmartIntentSearch() {
 
   return (
     <>
-      <button
+      <button type="button"
         onClick={() => setOpen(true)}
         className="w-full mx-4 mb-3 flex items-center gap-3 rounded-2xl border border-border/50 bg-card/95 backdrop-blur px-4 py-3 shadow-sm active:scale-[0.99] transition-transform touch-manipulation"
         style={{ width: "calc(100% - 2rem)" }}
@@ -125,7 +125,7 @@ export default function SmartIntentSearch() {
                       className="h-12 pl-10 pr-4 text-base rounded-xl"
                     />
                   </div>
-                  <button
+                  <button type="button"
                     onClick={() => setOpen(false)}
                     className="w-10 h-10 rounded-xl bg-muted flex items-center justify-center"
                     aria-label="Close"
@@ -141,7 +141,7 @@ export default function SmartIntentSearch() {
                     const Icon = meta.icon;
                     const active = match?.intent === intent;
                     return (
-                      <button
+                      <button type="button"
                         key={intent}
                         onClick={() =>
                           submit(buildMatch(intent, query) ?? defaultMatch(intent))
@@ -159,7 +159,7 @@ export default function SmartIntentSearch() {
 
                 {/* Suggestion preview */}
                 {match && query.trim() && (
-                  <button
+                  <button type="button"
                     onClick={() => submit()}
                     className="mt-3 w-full flex items-center gap-3 rounded-2xl border border-primary/30 bg-primary/5 p-3 text-left active:scale-[0.99] transition-transform"
                   >
@@ -194,7 +194,7 @@ export default function SmartIntentSearch() {
                       "hotel in Bali",
                       "sushi tonight",
                     ].map((s) => (
-                      <button
+                      <button type="button"
                         key={s}
                         onClick={() => setQuery(s)}
                         className="rounded-full bg-muted/70 hover:bg-muted px-2.5 py-1 text-[11px] text-foreground"

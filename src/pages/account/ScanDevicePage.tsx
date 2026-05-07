@@ -103,7 +103,7 @@ export default function ScanDevicePage() {
         className="sticky top-0 z-30 flex items-center gap-3 border-b border-border/40 bg-background/85 px-4 backdrop-blur-xl safe-area-top"
         style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 12px)", paddingBottom: 12 }}
       >
-        <button
+        <button type="button"
           aria-label="Back"
           onClick={() => {
             stopScanner();

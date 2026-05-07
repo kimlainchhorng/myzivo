@@ -109,7 +109,7 @@ export default function PartnerSignupSheet() {
                 <h3 className="text-base font-bold">Partner with ZIVO</h3>
                 <p className="text-[11px] text-muted-foreground">Reach customers on the super-app.</p>
               </div>
-              <button onClick={close} aria-label="Close" className="h-9 w-9 -mr-1.5 flex items-center justify-center rounded-full hover:bg-muted">
+              <button type="button" onClick={close} aria-label="Close" className="h-9 w-9 -mr-1.5 flex items-center justify-center rounded-full hover:bg-muted">
                 <X className="w-4 h-4 text-muted-foreground" />
               </button>
             </div>
@@ -122,7 +122,7 @@ export default function PartnerSignupSheet() {
                     {KINDS.map((k) => {
                       const Icon = k.icon;
                       return (
-                        <button
+                        <button type="button"
                           key={k.kind}
                           onClick={() => setKind(k.kind)}
                           className="flex flex-col items-center gap-2 p-4 rounded-2xl border border-border/40 bg-card hover:bg-muted/40 active:scale-[0.97] transition"
@@ -144,8 +144,8 @@ export default function PartnerSignupSheet() {
                   <textarea value={desc} onChange={(e) => setDesc(e.target.value)} placeholder="Tell us a bit about your business…" rows={4} className="w-full px-3 py-2.5 rounded-xl bg-muted/40 border border-border/30 text-sm outline-none focus:ring-2 focus:ring-primary/30 resize-none" />
 
                   <div className="flex gap-2 pt-1">
-                    <button onClick={() => setKind(null)} className="flex-1 py-2.5 rounded-xl bg-muted text-foreground font-semibold text-sm">Back</button>
-                    <button onClick={() => void submit()} disabled={submitting || !name} className="flex-1 flex items-center justify-center gap-1 py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm active:opacity-80 disabled:opacity-50">
+                    <button type="button" onClick={() => setKind(null)} className="flex-1 py-2.5 rounded-xl bg-muted text-foreground font-semibold text-sm">Back</button>
+                    <button type="button" onClick={() => void submit()} disabled={submitting || !name} className="flex-1 flex items-center justify-center gap-1 py-2.5 rounded-xl bg-primary text-primary-foreground font-bold text-sm active:opacity-80 disabled:opacity-50">
                       {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Submit"}
                     </button>
                   </div>

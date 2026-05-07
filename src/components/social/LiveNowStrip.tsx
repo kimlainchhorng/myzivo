@@ -80,7 +80,7 @@ export default function LiveNowStrip() {
           const viewers = s.viewer_count ?? 0;
           const targetUser = s.user_id;
           return (
-            <button
+            <button type="button"
               key={s.id}
               type="button"
               onClick={() => navigate(targetUser ? `/user/${targetUser}` : "/live")}

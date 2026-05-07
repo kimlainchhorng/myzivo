@@ -719,7 +719,7 @@ const FlightTravelerInfo = () => {
         </AnimatePresence>
 
         <div className="flex items-center justify-between gap-3">
-          <button onClick={() => setShowBreakdown(!showBreakdown)} className="text-left active:scale-[0.98] transition-transform">
+          <button type="button" onClick={() => setShowBreakdown(!showBreakdown)} className="text-left active:scale-[0.98] transition-transform">
             <p className="text-[9px] text-muted-foreground font-medium flex items-center gap-0.5">
               Total
               <ChevronDown className={cn("w-2.5 h-2.5 transition-transform", showBreakdown && "rotate-180")} />

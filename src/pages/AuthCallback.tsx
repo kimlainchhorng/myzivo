@@ -354,13 +354,13 @@ const AuthCallback = () => {
               {errorMessage || error || "This email is not authorized, or the link is invalid. Please request an invitation or contact support."}
             </p>
             <div className="flex gap-2">
-              <button
+              <button type="button"
                 onClick={() => navigate("/")}
                 className="flex-1 h-9 rounded-lg text-sm font-semibold text-zinc-700 dark:text-zinc-200 border border-zinc-200 dark:border-zinc-700 bg-white dark:bg-zinc-800/40 hover:bg-zinc-50 dark:hover:bg-zinc-800/80 active:scale-[0.99] transition"
               >
                 Go home
               </button>
-              <button
+              <button type="button"
                 onClick={() => navigate(withRedirectParam("/login", redirectTo))}
                 className="flex-1 h-9 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 active:scale-[0.99] transition shadow-md"
               >

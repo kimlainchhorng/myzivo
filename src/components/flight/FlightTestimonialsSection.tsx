@@ -235,7 +235,7 @@ export default function FlightTestimonialsSection({ className }: FlightTestimoni
             
             <div className="flex items-center gap-2">
               {testimonials.map((_, index) => (
-                <button
+                <button type="button"
                   key={index}
                   aria-label={`Go to testimonial ${index + 1}`}
                   onClick={() => setActiveIndex(index)}

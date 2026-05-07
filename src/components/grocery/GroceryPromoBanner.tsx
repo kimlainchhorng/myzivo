@@ -89,7 +89,7 @@ export function GroceryPromoBanner() {
               <div className="absolute -top-6 -right-6 h-20 w-20 rounded-full bg-white/10 blur-sm pointer-events-none" />
               <div className="absolute -bottom-4 -left-4 h-14 w-14 rounded-full bg-white/5 blur-sm pointer-events-none" />
 
-              <button
+              <button type="button"
                 onClick={() => handleDismiss(info.id)}
                 className="absolute top-2.5 right-2.5 p-1 rounded-full bg-black/15 backdrop-blur-sm opacity-0 group-hover:opacity-100 transition-all duration-200 hover:bg-black/25"
               >
@@ -154,7 +154,7 @@ export function GroceryPromoInput({
 
   return (
     <div className="mt-3">
-      <button
+      <button type="button"
         onClick={() => setExpanded(!expanded)}
         className="flex items-center gap-1.5 text-[11px] font-semibold text-primary hover:text-primary/80 transition-colors"
       >

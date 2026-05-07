@@ -91,7 +91,7 @@ const PackingList = () => {
                   {category.items.map((item) => {
                     const isChecked = checkedItems.includes(item);
                     return (
-                      <button
+                      <button type="button"
                         key={item}
                         onClick={() => toggleItem(item)}
                         className={`w-full flex items-center gap-3 p-2 rounded-xl text-left transition-all duration-200 ${

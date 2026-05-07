@@ -362,7 +362,7 @@ export default function LoginHistorySection() {
                       : "border-border bg-muted/30"
                   }`}
                 >
-                  <button
+                  <button type="button"
                     className="w-full p-3 flex items-center gap-3 text-left"
                     onClick={() => toggleExpand(login.id)}
                   >

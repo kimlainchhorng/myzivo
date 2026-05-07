@@ -160,7 +160,7 @@ export default function FeedSidebar() {
                   {username ? (
                     `@${username}`
                   ) : (
-                    <button
+                    <button type="button"
                       onClick={() => navigate("/account/profile-edit")}
                       className="text-primary hover:underline"
                     >
@@ -170,7 +170,7 @@ export default function FeedSidebar() {
                 </p>
               </div>
 
-              <button
+              <button type="button"
                 onClick={() => navigate("/profile")}
                 className="mt-3 flex w-full items-center justify-between rounded-lg bg-muted/50 px-3 py-1.5 text-[12px] font-medium text-foreground hover:bg-muted transition-colors"
               >
@@ -178,7 +178,7 @@ export default function FeedSidebar() {
                 <ChevronRight className="h-3.5 w-3.5 text-muted-foreground" />
               </button>
 
-              <button
+              <button type="button"
                 onClick={() => setShowSwitch(true)}
                 className="mt-1.5 flex w-full items-center justify-center gap-1.5 rounded-lg border border-border/50 bg-background/80 px-3 py-1.5 text-[12px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
                 aria-label="Switch account"
@@ -197,7 +197,7 @@ export default function FeedSidebar() {
               Your Business Pages
             </p>
             {ownerStores.length > 0 && ownerStores.map((store) => (
-              <button
+              <button type="button"
                 key={store.id}
                 onClick={() => {
                   navigate(resolvePublicBusinessPageRoute(store.category, store.id, (store as any).slug));
@@ -222,7 +222,7 @@ export default function FeedSidebar() {
                 </div>
               </button>
             ))}
-            <button
+            <button type="button"
               onClick={() => navigate("/business/new?new=1")}
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
             >
@@ -235,7 +235,7 @@ export default function FeedSidebar() {
         {/* Main nav */}
         <p className="text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-wider px-3 pt-4 pb-1">Navigate</p>
         {NAV_ITEMS.map((item) => (
-          <button
+          <button type="button"
             key={item.label}
             onClick={() => navigate(item.path)}
             className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors group"
@@ -245,7 +245,7 @@ export default function FeedSidebar() {
           </button>
         ))}
         {/* Chat button — opens slide panel */}
-        <button
+        <button type="button"
           onClick={() => setShowChat(true)}
           className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors group"
         >
@@ -256,7 +256,7 @@ export default function FeedSidebar() {
         {/* Social */}
         <p className="text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-wider px-3 pt-4 pb-1">Social</p>
         {SOCIAL_ITEMS.map((item) => (
-          <button
+          <button type="button"
             key={item.label}
             onClick={() => navigate(item.path)}
             className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors group"
@@ -269,7 +269,7 @@ export default function FeedSidebar() {
         {/* Services */}
         <p className="text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-wider px-3 pt-4 pb-1">Services</p>
         {SERVICE_ITEMS.map((item) => (
-          <button
+          <button type="button"
             key={item.label}
             onClick={() => navigate(item.path)}
             className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors group"
@@ -282,7 +282,7 @@ export default function FeedSidebar() {
         {/* More */}
         <p className="text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-wider px-3 pt-4 pb-1">More</p>
         {MORE_ITEMS.map((item) => (
-          <button
+          <button type="button"
             key={item.label}
             onClick={() => navigate(item.path)}
             className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground/80 hover:bg-muted/50 transition-colors"
@@ -296,7 +296,7 @@ export default function FeedSidebar() {
         {user && (
           <div className="mt-4 pt-3 border-t border-border/30 space-y-0.5">
             {isMember ? (
-              <button
+              <button type="button"
                 onClick={() => navigate("/account/membership")}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors w-full"
               >
@@ -304,7 +304,7 @@ export default function FeedSidebar() {
                 <span>Membership</span>
               </button>
             ) : (
-              <button
+              <button type="button"
                 onClick={() => navigate("/membership")}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-amber-600 hover:bg-amber-500/10 transition-colors w-full"
               >
@@ -312,7 +312,7 @@ export default function FeedSidebar() {
                 <span>Join ZIVO+</span>
               </button>
             )}
-            <button
+            <button type="button"
               onClick={() => signOut()}
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors w-full"
             >
@@ -351,7 +351,7 @@ export default function FeedSidebar() {
                 <p className="text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-wider px-3 pb-1">Dashboards</p>
                 
                 {isAdmin && (
-                  <button
+                  <button type="button"
                     onClick={() => { setShowSwitch(false); navigate("/admin/analytics"); }}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
                   >
@@ -361,7 +361,7 @@ export default function FeedSidebar() {
                 )}
 
                 {isStoreOwner && (
-                  <button
+                  <button type="button"
                     onClick={() => {
                       setShowSwitch(false);
                       navigate("/shop-dashboard");
@@ -374,7 +374,7 @@ export default function FeedSidebar() {
                 )}
 
                 {isDriver && (
-                  <button
+                  <button type="button"
                     onClick={() => { setShowSwitch(false); navigate("/driver/home"); }}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
                   >
@@ -384,7 +384,7 @@ export default function FeedSidebar() {
                 )}
 
                 {isRestaurantOwner && (
-                  <button
+                  <button type="button"
                     onClick={() => { setShowSwitch(false); navigate("/eats/restaurant-dashboard"); }}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
                   >
@@ -394,7 +394,7 @@ export default function FeedSidebar() {
                 )}
 
                 {isSupport && (
-                  <button
+                  <button type="button"
                     onClick={() => { setShowSwitch(false); navigate("/admin/support"); }}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
                   >
@@ -404,7 +404,7 @@ export default function FeedSidebar() {
                 )}
 
                 {isModerator && (
-                  <button
+                  <button type="button"
                     onClick={() => { setShowSwitch(false); navigate("/admin/moderation"); }}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
                   >
@@ -414,7 +414,7 @@ export default function FeedSidebar() {
                 )}
 
                 {isOperations && (
-                  <button
+                  <button type="button"
                     onClick={() => { setShowSwitch(false); navigate("/admin/operations"); }}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
                   >
@@ -424,7 +424,7 @@ export default function FeedSidebar() {
                 )}
 
                 {isHotelOwner && (
-                  <button
+                  <button type="button"
                     onClick={() => { setShowSwitch(false); navigate("/hotel/dashboard"); }}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
                   >
@@ -433,7 +433,7 @@ export default function FeedSidebar() {
                   </button>
                 )}
 
-                <button
+                <button type="button"
                   onClick={() => { setShowSwitch(false); navigate("/more"); }}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
                 >
@@ -449,7 +449,7 @@ export default function FeedSidebar() {
                 <p className="text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-wider px-3 pb-1">Become a Partner</p>
                 
                 {!isStoreOwner && (
-                  <button
+                  <button type="button"
                     onClick={() => { setShowSwitch(false); navigate("/partner-with-zivo"); }}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
                   >
@@ -459,7 +459,7 @@ export default function FeedSidebar() {
                 )}
 
                 {!isDriver && (
-                  <button
+                  <button type="button"
                     onClick={() => { setShowSwitch(false); navigate("/partner-with-zivo"); }}
                     className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
                   >
@@ -474,7 +474,7 @@ export default function FeedSidebar() {
             {!hasDashboard && (
               <div className="pt-3 space-y-1">
                 <p className="text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-wider px-3 pb-1">Account</p>
-                <button
+                <button type="button"
                   onClick={() => { setShowSwitch(false); navigate("/more"); }}
                   className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"
                 >
@@ -502,7 +502,7 @@ export default function FeedSidebar() {
                 <MessageCircle className="h-5 w-5 text-primary" />
                 <h2 className="text-base font-semibold text-foreground">Messages</h2>
               </div>
-              <button
+              <button type="button"
                 onClick={() => setChatOpen(false)}
                 className="flex items-center justify-center h-8 w-8 rounded-full hover:bg-muted/80 active:scale-90 transition-all"
                 aria-label="Close chat"

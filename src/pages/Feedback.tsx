@@ -132,7 +132,7 @@ export default function Feedback() {
           {/* Feedback Type Selection */}
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
             {feedbackTypes.map((type) => (
-              <button
+              <button type="button"
                 key={type.id}
                 onClick={() => setSelectedType(type.id)}
                 className={cn(
@@ -197,7 +197,7 @@ export default function Feedback() {
                       <Label>How would you rate your experience?</Label>
                       <div className="flex gap-2">
                         {[1, 2, 3, 4, 5].map((star) => (
-                          <button
+                          <button type="button"
                             key={star}
                             type="button"
                             onMouseEnter={() => setHoverRating(star)}

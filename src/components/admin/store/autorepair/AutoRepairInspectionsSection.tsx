@@ -270,7 +270,7 @@ export default function AutoRepairInspectionsSection({ storeId, onCreateEstimate
                     </div>
                     <div className="flex gap-1">
                       {(["good", "attention", "urgent"] as Status[]).map(opt => (
-                        <button
+                        <button type="button"
                           key={opt}
                           onClick={() => setStatuses({ ...statuses, [point]: opt })}
                           className={`w-6 h-6 rounded-full border-2 transition ${

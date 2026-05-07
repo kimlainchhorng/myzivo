@@ -198,7 +198,7 @@ export default function ProfileFeedCard({
                 </div>
               </div>
             </button>
-            <button onClick={(e) => { e.stopPropagation(); onOpenMenu(item); }} className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center">
+            <button type="button" onClick={(e) => { e.stopPropagation(); onOpenMenu(item); }} className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center">
               <MoreVertical className="h-5 w-5" />
             </button>
           </div>
@@ -267,11 +267,11 @@ export default function ProfileFeedCard({
                     <video ref={videoRef} src={item.url!} muted={muted} loop playsInline preload="metadata"
                       onClick={togglePlay} className="h-full w-full object-cover cursor-pointer" />
                     {!isPlaying && (
-                      <button onClick={togglePlay} className="absolute inset-0 flex items-center justify-center bg-black/10">
+                      <button type="button" onClick={togglePlay} className="absolute inset-0 flex items-center justify-center bg-black/10">
                         <Play className="h-14 w-14 text-white/80 fill-white/80 drop-shadow-lg" />
                       </button>
                     )}
-                    <button onClick={(e) => { e.stopPropagation(); setMuted(!muted); }}
+                    <button type="button" onClick={(e) => { e.stopPropagation(); setMuted(!muted); }}
                       className="absolute bottom-3 right-3 h-8 w-8 rounded-full bg-black/50 flex items-center justify-center min-h-[44px] min-w-[44px]">
                       {muted ? <VolumeX className="h-4 w-4 text-white" /> : <Volume2 className="h-4 w-4 text-white" />}
                     </button>
@@ -329,7 +329,7 @@ export default function ProfileFeedCard({
                 </div>
               </div>
             </button>
-            <button onClick={(e) => { e.stopPropagation(); onOpenMenu(item); }} className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center">
+            <button type="button" onClick={(e) => { e.stopPropagation(); onOpenMenu(item); }} className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center">
               <MoreVertical className="h-5 w-5" />
             </button>
           </div>
@@ -358,11 +358,11 @@ export default function ProfileFeedCard({
                   <video ref={videoRef} src={item.url!} muted={muted} loop playsInline preload="metadata"
                     onClick={togglePlay} className="h-full w-full object-cover cursor-pointer" />
                   {!isPlaying && (
-                    <button onClick={togglePlay} className="absolute inset-0 flex items-center justify-center bg-black/10">
+                    <button type="button" onClick={togglePlay} className="absolute inset-0 flex items-center justify-center bg-black/10">
                       <Play className="h-14 w-14 text-white/80 fill-white/80 drop-shadow-lg" />
                     </button>
                   )}
-                  <button onClick={(e) => { e.stopPropagation(); setMuted(!muted); }}
+                  <button type="button" onClick={(e) => { e.stopPropagation(); setMuted(!muted); }}
                     className="absolute bottom-3 right-3 h-8 w-8 rounded-full bg-black/50 flex items-center justify-center min-h-[44px] min-w-[44px]">
                     {muted ? <VolumeX className="h-4 w-4 text-white" /> : <Volume2 className="h-4 w-4 text-white" />}
                   </button>
@@ -394,7 +394,7 @@ export default function ProfileFeedCard({
             role="toolbar" aria-label="Reactions"
             className="flex items-center gap-1 px-3 py-2 mx-3 mt-1 bg-card rounded-full shadow-lg border border-border/30 w-fit">
             {REACTIONS.map((emoji) => (
-              <button key={emoji} onClick={() => handleReaction(emoji)}
+              <button type="button" key={emoji} onClick={() => handleReaction(emoji)}
                 aria-label={`React with ${emoji}`}
                 aria-pressed={selectedReaction === emoji}
                 className={cn("text-xl p-1.5 rounded-full transition-all active:scale-125 hover:bg-muted",

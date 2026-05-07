@@ -327,7 +327,7 @@ export default function AdminGoogleAdsPage() {
                   <Label>Campaign Type</Label>
                   <div className="flex gap-2 flex-wrap">
                     {[["SEARCH", "Search"], ["DISPLAY", "Display"], ["PERFORMANCE_MAX", "Performance Max"], ["VIDEO", "Video"]].map(([val, label]) => (
-                      <button key={val} onClick={() => setCampaignType(val)}
+                      <button type="button" key={val} onClick={() => setCampaignType(val)}
                         className={`px-3 py-1.5 rounded-lg text-sm border transition-all font-medium ${campaignType === val ? "text-white border-transparent" : "border-border hover:bg-muted"}`}
                         style={campaignType === val ? { background: GOOGLE_BLUE } : {}}>
                         {label}

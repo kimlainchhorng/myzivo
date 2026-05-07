@@ -204,12 +204,12 @@ export default function PartnerLogin() {
           {/* Header */}
           <div className="text-center mb-5 relative z-20" style={{ transform: "translateZ(30px)" }}>
             <div className="absolute -left-1 -top-1">
-              <button onClick={() => navigate("/")} className="w-12 h-12 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all active:scale-90 touch-manipulation" aria-label={t("auth.go_home")}>
+              <button type="button" onClick={() => navigate("/")} className="w-12 h-12 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all active:scale-90 touch-manipulation" aria-label={t("auth.go_home")}>
                 <Home className="w-5 h-5 text-white/70" />
               </button>
             </div>
             <div className="absolute -right-2 -top-2">
-              <button onClick={(e) => { e.stopPropagation(); setShowLangMenu(!showLangMenu); }} className="w-12 h-12 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all active:scale-90 touch-manipulation relative z-30" aria-label="Change language">
+              <button type="button" onClick={(e) => { e.stopPropagation(); setShowLangMenu(!showLangMenu); }} className="w-12 h-12 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all active:scale-90 touch-manipulation relative z-30" aria-label="Change language">
                 <Globe className="w-5 h-5 text-white/70" />
               </button>
             </div>
@@ -364,7 +364,7 @@ export default function PartnerLogin() {
             {/* Customer login link */}
             <p className="text-center text-white/40 text-[11px] mt-3">
               {t("auth.customer_login")}{" "}
-              <button onClick={() => navigate("/login")} className="text-primary hover:text-primary/80 font-medium transition-colors">
+              <button type="button" onClick={() => navigate("/login")} className="text-primary hover:text-primary/80 font-medium transition-colors">
                 {t("auth.sign_in_here")}
               </button>
             </p>
@@ -386,7 +386,7 @@ export default function PartnerLogin() {
               </div>
               <div className="max-h-[320px] overflow-y-auto py-1">
                 {LANGS.map(l => (
-                  <button
+                  <button type="button"
                     key={l.code}
                     onClick={() => { changeLanguage(l.code); setShowLangMenu(false); }}
                     className={cn(

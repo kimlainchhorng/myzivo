@@ -111,7 +111,7 @@ export default function PriceCalendar({
             selectedDate.getMonth() === month.getMonth() && selectedDate.getFullYear() === month.getFullYear();
 
           return (
-            <button
+            <button type="button"
               key={day}
               onClick={() => onSelectDate?.(new Date(month.getFullYear(), month.getMonth(), day))}
               className={cn(

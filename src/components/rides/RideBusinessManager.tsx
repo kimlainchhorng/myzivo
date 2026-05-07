@@ -55,7 +55,7 @@ export default function RideBusinessManager() {
         {tabs.map(tab => {
           const Icon = tab.icon;
           return (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id)} className={cn("flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all", activeTab === tab.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
+            <button type="button" key={tab.id} onClick={() => setActiveTab(tab.id)} className={cn("flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-lg text-xs font-bold transition-all", activeTab === tab.id ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground")}>
               <Icon className="w-3.5 h-3.5" /> {tab.label}
             </button>
           );
@@ -110,7 +110,7 @@ export default function RideBusinessManager() {
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {["Client Meeting", "Conference", "Airport Transfer", "Team Dinner"].map(t => (
-                    <button key={t} onClick={() => setExpenseTag(t)} className="px-2.5 py-1 rounded-lg bg-muted/20 border border-border/40 text-[10px] font-medium text-foreground hover:border-primary/20 transition-colors">
+                    <button type="button" key={t} onClick={() => setExpenseTag(t)} className="px-2.5 py-1 rounded-lg bg-muted/20 border border-border/40 text-[10px] font-medium text-foreground hover:border-primary/20 transition-colors">
                       {t}
                     </button>
                   ))}

@@ -224,13 +224,13 @@ function PostMenuRegressionPageInner() {
           <code className="text-xs">ReelsFeedPage</code> overlays.
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-3">
-          <button
+          <button type="button"
             onClick={runAll}
             className="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-sm font-semibold text-primary-foreground hover:bg-primary/90"
           >
             <Play className="h-4 w-4" /> Run all checks
           </button>
-          <button
+          <button type="button"
             data-testid="regression-copy-results"
             onClick={copyResults}
             disabled={!hasResults}
@@ -260,7 +260,7 @@ function PostMenuRegressionPageInner() {
                   <p className="text-xs text-muted-foreground">{row.description}</p>
                 </div>
                 <StatusPill result={r} />
-                <button
+                <button type="button"
                   onClick={() => runOne(row)}
                   disabled={r.state === "running"}
                   className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium hover:bg-muted disabled:opacity-50"

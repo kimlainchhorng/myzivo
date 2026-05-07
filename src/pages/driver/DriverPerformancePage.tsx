@@ -43,7 +43,7 @@ export default function DriverPerformancePage() {
       {/* Header */}
       <header className="sticky top-0 safe-area-top z-40 bg-card/95 backdrop-blur-md border-b border-border px-4 py-3">
         <div className="flex items-center gap-3">
-          <button
+          <button type="button"
             onClick={() => navigate(-1)}
             className="p-2 rounded-xl bg-muted hover:bg-muted/80 transition-colors"
           >

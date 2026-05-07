@@ -85,7 +85,7 @@ export default function GroupCallControls(props: Props) {
         <PopoverContent side="top" className="w-auto p-2">
           <div className="flex gap-1">
             {REACTIONS.map((emo) => (
-              <button
+              <button type="button"
                 key={emo}
                 onClick={() => {
                   props.onReaction(emo);

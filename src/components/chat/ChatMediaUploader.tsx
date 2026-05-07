@@ -198,7 +198,7 @@ export function ChatMediaUploader({ recipientId, onMediaSent, renderTrigger }: C
                   />
                 </div>
               </div>
-              <button onClick={cancelUpload} className="p-1">
+              <button type="button" onClick={cancelUpload} className="p-1">
                 <X className="w-4 h-4 text-muted-foreground" />
               </button>
             </div>

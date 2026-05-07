@@ -167,7 +167,7 @@ export default function SupportCenterPage() {
         {/* Status Tabs */}
         <div className="flex gap-1 bg-muted/50 rounded-xl p-1">
           {[{ id: "all", label: "All" }, { id: "open", label: "Open" }, { id: "in_progress", label: "Active" }, { id: "resolved", label: "Resolved" }].map((f) => (
-            <button
+            <button type="button"
               key={f.id}
               onClick={() => setStatusFilter(f.id)}
               className={`flex-1 text-[11px] font-bold py-2.5 rounded-xl transition-all duration-200 touch-manipulation ${

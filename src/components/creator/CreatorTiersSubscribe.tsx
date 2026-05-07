@@ -208,7 +208,7 @@ export default function CreatorTiersSubscribe({ creatorId, creatorName, isOwnPro
 
           {!isOwnProfile && (
             subscribedTierId === tier.id ? (
-              <button
+              <button type="button"
                 onClick={() => navigate("/account/subscriptions")}
                 className="w-full mt-4 bg-white/15 backdrop-blur text-white font-extrabold uppercase tracking-wide rounded-full py-3 text-sm border border-white/30 active:scale-[0.99] transition flex items-center justify-center gap-2"
               >
@@ -216,7 +216,7 @@ export default function CreatorTiersSubscribe({ creatorId, creatorName, isOwnPro
                 Subscribed · Manage
               </button>
             ) : (
-              <button
+              <button type="button"
                 onClick={() => handleSubscribe(tier)}
                 disabled={joining === tier.id || !!subscribedTierId}
                 className="w-full mt-4 bg-white text-black font-extrabold uppercase tracking-wide rounded-full py-3 text-sm hover:bg-white/90 active:scale-[0.99] transition shadow disabled:opacity-60 flex items-center justify-center gap-2"
@@ -270,7 +270,7 @@ export default function CreatorTiersSubscribe({ creatorId, creatorName, isOwnPro
         </div>
         {!isOwnProfile && (
           subscribedTierId === tier.id ? (
-            <button
+            <button type="button"
               onClick={() => navigate("/account/subscriptions")}
               className="text-[11px] font-extrabold uppercase tracking-wide px-3 py-2 rounded-full bg-emerald-500/15 text-emerald-600 border border-emerald-500/30 active:scale-95 transition flex items-center gap-1"
             >
@@ -278,7 +278,7 @@ export default function CreatorTiersSubscribe({ creatorId, creatorName, isOwnPro
               Joined
             </button>
           ) : (
-            <button
+            <button type="button"
               onClick={() => handleSubscribe(tier)}
               disabled={joining === tier.id || !!subscribedTierId}
               className="text-[11px] font-extrabold uppercase tracking-wide px-3 py-2 rounded-full bg-foreground text-background hover:opacity-90 active:scale-95 transition disabled:opacity-50 flex items-center gap-1"
@@ -308,14 +308,14 @@ export default function CreatorTiersSubscribe({ creatorId, creatorName, isOwnPro
           )}
         </h3>
         {isOwnProfile ? (
-          <button
+          <button type="button"
             onClick={() => navigate("/creator/setup?step=tier")}
             className="text-[11px] font-semibold text-primary hover:underline"
           >
             Manage tiers
           </button>
         ) : subscribedTierId ? (
-          <button
+          <button type="button"
             onClick={() => navigate("/account/subscriptions")}
             className="text-[11px] font-semibold text-primary hover:underline flex items-center gap-1"
           >

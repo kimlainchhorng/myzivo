@@ -406,7 +406,7 @@ export default function ChatContactInfo({
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-2xl border-b border-border/30 safe-area-top">
         <div className="px-2 py-2.5 flex items-center gap-3">
-          <button
+          <button type="button"
             onClick={onClose}
             className="min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-90 transition-transform rounded-full hover:bg-muted/50"
             aria-label="Back"
@@ -416,7 +416,7 @@ export default function ChatContactInfo({
           </button>
           <p className="text-[17px] font-bold text-foreground tracking-tight">Contact Info</p>
           <div className="flex-1" />
-          <button
+          <button type="button"
             onClick={handleCopyProfile}
             className="min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-90 transition-transform rounded-full hover:bg-muted/50"
             aria-label="Copy profile link"
@@ -486,7 +486,7 @@ export default function ChatContactInfo({
             { icon: UserRound, label: "Profile", action: handleViewProfile },
             { icon: isFavorite ? StarOff : Star, label: isFavorite ? "Unfav" : "Favorite", action: toggleFavorite },
           ].map(({ icon: Icon, label, action }) => (
-            <button
+            <button type="button"
               key={label}
               onClick={action}
               className="flex flex-col items-center gap-1.5 min-w-[52px] group"
@@ -512,7 +512,7 @@ export default function ChatContactInfo({
               <div className="px-4 pb-3">
                 <div className="grid grid-cols-3 gap-1.5 rounded-xl overflow-hidden">
                   {sharedMedia.slice(0, 6).map((media) => (
-                    <button
+                    <button type="button"
                       key={media.id}
                       onClick={onOpenMediaGallery}
                       className="aspect-square bg-muted overflow-hidden relative group"
@@ -530,7 +530,7 @@ export default function ChatContactInfo({
                     </button>
                   ))}
                 </div>
-                <button
+                <button type="button"
                   onClick={onOpenMediaGallery}
                   className="w-full mt-2 py-2 text-xs font-semibold text-primary text-center active:opacity-70"
                 >
@@ -552,7 +552,7 @@ export default function ChatContactInfo({
                   if (!meta) return null;
                   const Icon = meta.icon;
                   return (
-                    <button
+                    <button type="button"
                       key={link.id}
                       onClick={async () => {
                         try { await openExternalUrl(link.url); }
@@ -576,7 +576,7 @@ export default function ChatContactInfo({
                   );
                 })}
               </div>
-              <button
+              <button type="button"
                 onClick={() => {
                   const text = socialLinks.map((l) => `${l.label}: ${l.url}`).join("\n");
                   navigator.clipboard.writeText(text);
@@ -598,7 +598,7 @@ export default function ChatContactInfo({
               <div className="px-4 pb-3">
                 <div className="flex flex-wrap gap-2">
                   {mutualFriends.slice(0, 6).map((friend) => (
-                    <button
+                    <button type="button"
                       key={friend.id}
                       onClick={() => { onClose(); navigate(`/user/${friend.id}`); }}
                       className="flex items-center gap-2 px-3 py-2 bg-muted/40 rounded-xl active:scale-95 transition-transform"
@@ -696,7 +696,7 @@ export default function ChatContactInfo({
 
           {/* Notifications */}
           <Section title="Notifications">
-            <button
+            <button type="button"
               onClick={() => setShowMuteSheet(true)}
               className="w-full flex items-center justify-between px-4 py-3.5 active:bg-muted/40 transition-colors"
             >
@@ -745,7 +745,7 @@ export default function ChatContactInfo({
               </span>
               <div className="flex bg-muted/40 rounded-full p-0.5">
                 {(["all", "mentions", "none"] as const).map((m) => (
-                  <button
+                  <button type="button"
                     key={m}
                     onClick={async () => {
                       await setMode(threadId, m);
@@ -789,7 +789,7 @@ export default function ChatContactInfo({
 
           {/* Delete conversation */}
           <div className="py-2">
-            <button
+            <button type="button"
               onClick={handleDeleteConversation}
               className="w-full flex items-center gap-3.5 px-4 py-3.5 active:bg-destructive/5 transition-colors"
             >
@@ -845,7 +845,7 @@ function SectionButton({
   onClick?: () => void;
 }) {
   return (
-    <button
+    <button type="button"
       onClick={onClick}
       className="w-full flex items-center gap-3.5 px-4 py-3.5 active:bg-muted/40 transition-colors"
     >

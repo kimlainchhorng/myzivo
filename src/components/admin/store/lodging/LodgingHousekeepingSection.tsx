@@ -115,10 +115,10 @@ export default function LodgingHousekeepingSection({ storeId }: { storeId: strin
           : (
             <div className="space-y-3">
               <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
-                {STATUSES.map(s => <button key={s} onClick={() => setStatusFilter(s)} className={`rounded-lg border p-2 text-left ${statusFilter === s ? "border-primary bg-primary/10" : "border-border bg-card"}`}><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{LABEL[s]}</p><p className="text-lg font-bold">{tasks.filter(t => t.status === s).length}</p></button>)}
+                {STATUSES.map(s => <button type="button" key={s} onClick={() => setStatusFilter(s)} className={`rounded-lg border p-2 text-left ${statusFilter === s ? "border-primary bg-primary/10" : "border-border bg-card"}`}><p className="text-[10px] uppercase tracking-wider text-muted-foreground">{LABEL[s]}</p><p className="text-lg font-bold">{tasks.filter(t => t.status === s).length}</p></button>)}
               </div>
               <div className="flex gap-2">
-                <button onClick={() => setStatusFilter("all")} className={`rounded-md border px-3 text-xs ${statusFilter === "all" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"}`}>All</button>
+                <button type="button" onClick={() => setStatusFilter("all")} className={`rounded-md border px-3 text-xs ${statusFilter === "all" ? "border-primary bg-primary/10 text-primary" : "border-border text-muted-foreground"}`}>All</button>
                 <div className="relative flex-1"><Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" /><Input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search room" className="pl-9" /></div>
               </div>
               {filteredTasks.map(t => {

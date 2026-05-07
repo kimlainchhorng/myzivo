@@ -63,7 +63,7 @@ export default function InAppBrowserInterstitial() {
           className="fixed inset-0 z-[9999] bg-background flex flex-col items-center justify-center p-6"
         >
           {/* Close button */}
-          <button
+          <button type="button"
             onClick={dismiss}
             className="absolute top-4 right-4 p-2.5 rounded-full bg-muted hover:bg-muted/80 transition-colors"
             aria-label="Close"
@@ -121,7 +121,7 @@ export default function InAppBrowserInterstitial() {
                 Download on {storeName}
               </a>
 
-              <button
+              <button type="button"
                 onClick={dismiss}
                 className="w-full py-3 text-sm text-muted-foreground font-medium underline underline-offset-4 decoration-muted-foreground/30"
               >
