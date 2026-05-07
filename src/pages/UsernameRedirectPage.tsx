@@ -13,6 +13,24 @@ import UserX from "lucide-react/dist/esm/icons/user-x";
 import { Button } from "@/components/ui/button";
 import SEOHead from "@/components/SEOHead";
 
+function isMobileBrowser(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+}
+
+function isNativeWebView(): boolean {
+  const maybeCapacitor = (window as any)?.Capacitor;
+  if (!maybeCapacitor) return false;
+  if (typeof maybeCapacitor.isNativePlatform === "function") {
+    try {
+      return Boolean(maybeCapacitor.isNativePlatform());
+    } catch {
+      return false;
+    }
+  }
+  return false;
+}
+
 export default function UsernameRedirectPage() {
   const { username } = useParams<{ username: string }>();
   const navigate = useNavigate();
@@ -20,6 +38,23 @@ export default function UsernameRedirectPage() {
 
   useEffect(() => {
     let cancelled = false;
+    const timers: number[] = [];
+
+    const openAppThenFallback = (targetUserId: string) => {
+      const webPath = `/user/${targetUserId}`;
+      if (isMobileBrowser() && !isNativeWebView()) {
+        const nativeUrl = `com.hizovo.app://user/${encodeURIComponent(targetUserId)}`;
+        timers.push(window.setTimeout(() => {
+          window.location.assign(nativeUrl);
+        }, 120));
+        timers.push(window.setTimeout(() => {
+          navigate(webPath, { replace: true });
+        }, 1500));
+        return;
+      }
+      navigate(webPath, { replace: true });
+    };
+
     const run = async () => {
       if (!username) {
         setStatus("not_found");
@@ -29,7 +64,7 @@ export default function UsernameRedirectPage() {
       // so detect that shape and forward straight to the user-id profile.
       const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
       if (UUID_RE.test(username)) {
-        navigate(`/user/${username}`, { replace: true });
+        openAppThenFallback(username);
         return;
       }
       // Compare case-insensitively — usernames are unique but stored in
@@ -46,13 +81,16 @@ export default function UsernameRedirectPage() {
       }
       const userId = (data as { user_id?: string } | null)?.user_id;
       if (userId) {
-        navigate(`/user/${userId}`, { replace: true });
+        openAppThenFallback(userId);
       } else {
         setStatus("not_found");
       }
     };
     void run();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      timers.forEach((id) => window.clearTimeout(id));
+    };
   }, [username, navigate]);
 
   if (status === "loading") {

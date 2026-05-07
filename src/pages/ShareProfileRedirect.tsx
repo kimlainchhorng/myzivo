@@ -30,6 +30,19 @@ export default function ShareProfileRedirect() {
 
   useEffect(() => {
     if (!code) return;
+    // Fast path: for external mobile browsers, immediately try opening the app
+    // using the exact shared path (/p/:code) before any async lookup.
+    if (isMobileBrowser() && !isNativeWebView()) {
+      const path = window.location.pathname.replace(/^\//, "");
+      const nativeUrl = `com.hizovo.app://${path}${window.location.search}`;
+      window.setTimeout(() => {
+        window.location.assign(nativeUrl);
+      }, 80);
+    }
+  }, [code]);
+
+  useEffect(() => {
+    if (!code) return;
     supabase
       .from("profiles")
       .select("id, user_id")
@@ -44,19 +57,6 @@ export default function ShareProfileRedirect() {
           // happens to be null (rare, legacy rows).
           const targetId = data.user_id || data.id;
           const webPath = `/user/${targetId}?${redirectParams.toString()}`;
-
-          // If opened from an external mobile browser, first attempt app scheme.
-          // If the app is unavailable, continue to web profile shortly after.
-          if (isMobileBrowser() && !isNativeWebView()) {
-            const nativeUrl = `com.hizovo.app://user/${encodeURIComponent(targetId)}?${redirectParams.toString()}`;
-            window.setTimeout(() => {
-              window.location.assign(nativeUrl);
-            }, 120);
-            window.setTimeout(() => {
-              navigate(webPath, { replace: true });
-            }, 1500);
-            return;
-          }
 
           navigate(webPath, { replace: true });
         } else {
