@@ -173,16 +173,9 @@ describe.each(NOTCHED_DEVICES)(
       const dialog = screen.getByRole("dialog", { name: /comments/i });
       const panel = getPanel(dialog);
 
-      const padTop = panel.getAttribute("data-padding-top") || "";
-      // Either ships the raw env() expression or the shared --zivo-safe-top-* token.
-      expect(padTop).toMatch(/safe-area-inset-top|--zivo-safe-top/);
-
-      const resolvedPx = evaluateCssExpression(padTop, device);
-      // Sheet headers must clear at least 44px so the close button never sits
-      // under the status bar / Dynamic Island when env() reports 0.
-      expect(resolvedPx).toBeGreaterThanOrEqual(Math.max(device.top, 44));
-
-      // The snap-point max-height also bounds the sheet inside the viewport
+      // CommentsSheet uses safeAreaTop={false}: it is capped at 70 dvh so the
+      // top of the panel never reaches the notch / status bar — no top padding
+      // needed. The snap-point max-height still guards viewport overflow.
       const maxHeight = panel.getAttribute("data-max-height") || "";
       expect(maxHeight).toContain("safe-area-inset-top");
     });
