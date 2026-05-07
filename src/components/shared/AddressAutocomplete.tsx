@@ -146,7 +146,7 @@ export function AddressAutocomplete({
       });
 
       if (!fnError && data?.ok && data.lat != null && data.lng != null) {
-        console.log("[AddressAutocomplete] Place details success:", data.address, data.lat, data.lng);
+        if (import.meta.env.DEV) console.log("[AddressAutocomplete] Place details success:", data.address, data.lat, data.lng);
         onSelect({
           address: data.address || suggestion.description,
           lat: data.lat,
@@ -163,7 +163,7 @@ export function AddressAutocomplete({
       });
 
       if (!geoError && geoData?.ok && geoData.lat != null && geoData.lng != null) {
-        console.log("[AddressAutocomplete] Geocode fallback success:", geoData.lat, geoData.lng);
+        if (import.meta.env.DEV) console.log("[AddressAutocomplete] Geocode fallback success:", geoData.lat, geoData.lng);
         onSelect({
           address: suggestion.description,
           lat: geoData.lat,

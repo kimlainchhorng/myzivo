@@ -83,7 +83,7 @@ function CardForm({ onClose }: { onClose: () => void }) {
               <CreditCard className="w-4 h-4 text-primary" />
               <span className="text-sm font-bold">Card Details</span>
             </div>
-            <Button type="button" variant="ghost" size="icon" onClick={onClose} className="rounded-xl -mr-2">
+            <Button type="button" variant="ghost" size="icon" aria-label="Close" onClick={onClose} className="rounded-xl -mr-2">
               <X className="w-4 h-4" />
             </Button>
           </div>

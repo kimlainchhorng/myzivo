@@ -3328,6 +3328,7 @@ function DiscoverPeopleOverlay({ onClose, onNavigate }: { onClose: () => void; o
         .from("profiles")
         .select("id, full_name, avatar_url, bio, is_verified")
         .neq("id", userId || "")
+        .eq("is_of_creator", false)
         .limit(20);
       return (data || []).sort(() => Math.random() - 0.5);
     },

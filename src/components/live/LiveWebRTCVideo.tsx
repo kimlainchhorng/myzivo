@@ -99,12 +99,12 @@ export default function LiveWebRTCVideo({
     };
 
     pc.oniceconnectionstatechange = () => {
-      console.log("[live-viewer] iceConnectionState=", pc.iceConnectionState);
+      if (import.meta.env.DEV) console.log("[live-viewer] iceConnectionState=", pc.iceConnectionState);
     };
 
     pc.onconnectionstatechange = () => {
       const next = pc.connectionState;
-      console.log("[live-viewer] connectionState=", next);
+      if (import.meta.env.DEV) console.log("[live-viewer] connectionState=", next);
       if (next === "connected") {
         setState("live");
         restartAttempted = false;

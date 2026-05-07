@@ -242,12 +242,14 @@ export default function TravelerDashboard() {
                             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                               <Button
                                 variant="ghost" size="icon" className="h-6 w-6"
+                                aria-label={s.price_alert_enabled ? "Disable price alert" : "Enable price alert"}
                                 onClick={() => toggleAlert({ id: s.id, enabled: !s.price_alert_enabled })}
                               >
                                 {s.price_alert_enabled ? <BellOff className="w-3 h-3" /> : <Bell className="w-3 h-3" />}
                               </Button>
                               <Button
                                 variant="ghost" size="icon" className="h-6 w-6 text-destructive/60 hover:text-destructive"
+                                aria-label="Delete saved search"
                                 onClick={() => deleteSearch(s.id)}
                               >
                                 <Trash2 className="w-3 h-3" />

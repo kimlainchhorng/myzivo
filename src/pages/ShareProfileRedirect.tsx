@@ -3,6 +3,24 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Loader2 } from "lucide-react";
 
+function isMobileBrowser(): boolean {
+  if (typeof navigator === "undefined") return false;
+  return /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+}
+
+function isNativeWebView(): boolean {
+  const maybeCapacitor = (window as any)?.Capacitor;
+  if (!maybeCapacitor) return false;
+  if (typeof maybeCapacitor.isNativePlatform === "function") {
+    try {
+      return Boolean(maybeCapacitor.isNativePlatform());
+    } catch {
+      return false;
+    }
+  }
+  return false;
+}
+
 export default function ShareProfileRedirect() {
   const { code } = useParams<{ code: string }>();
   const [searchParams] = useSearchParams();
@@ -25,7 +43,22 @@ export default function ShareProfileRedirect() {
           // Falling back to data.id keeps older links working when user_id
           // happens to be null (rare, legacy rows).
           const targetId = data.user_id || data.id;
-          navigate(`/user/${targetId}?${redirectParams.toString()}`, { replace: true });
+          const webPath = `/user/${targetId}?${redirectParams.toString()}`;
+
+          // If opened from an external mobile browser, first attempt app scheme.
+          // If the app is unavailable, continue to web profile shortly after.
+          if (isMobileBrowser() && !isNativeWebView()) {
+            const nativeUrl = `com.hizovo.app://user/${encodeURIComponent(targetId)}?${redirectParams.toString()}`;
+            window.setTimeout(() => {
+              window.location.assign(nativeUrl);
+            }, 120);
+            window.setTimeout(() => {
+              navigate(webPath, { replace: true });
+            }, 1500);
+            return;
+          }
+
+          navigate(webPath, { replace: true });
         } else {
           setNotFound(true);
         }

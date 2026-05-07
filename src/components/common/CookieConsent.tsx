@@ -196,7 +196,7 @@ const CookieConsent = () => {
                       <h3 className="font-display font-bold text-xl">Cookie Preferences</h3>
                     </div>
                     <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
-                      <Button variant="ghost" size="icon" onClick={() => setShowDetails(false)} className="rounded-xl active:scale-90 transition-all duration-200 touch-manipulation">
+                      <Button variant="ghost" size="icon" aria-label="Close cookie preferences" onClick={() => setShowDetails(false)} className="rounded-xl active:scale-90 transition-all duration-200 touch-manipulation">
                         <X className="h-4 w-4" />
                       </Button>
                     </motion.div>

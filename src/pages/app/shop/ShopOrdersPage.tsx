@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
@@ -66,6 +66,34 @@ export default function ShopOrdersPage() {
     onError: () => toast.error("Failed to update order"),
   });
 
+  // Track IDs of orders that arrived after the page mounted (realtime "New" badge)
+  const [newOrderIds, setNewOrderIds] = useState<Set<string>>(new Set());
+  const initialLoadDone = useRef(false);
+
+  useEffect(() => {
+    if (!store?.id) return;
+    // Mark initial batch as seen once loaded
+    if (!initialLoadDone.current && orders.length > 0) {
+      initialLoadDone.current = true;
+    }
+    const channel = supabase
+      .channel(`shop-orders-realtime-${store.id}`)
+      .on("postgres_changes", {
+        event: "INSERT",
+        schema: "public",
+        table: "store_orders",
+        filter: `store_id=eq.${store.id}`,
+      }, (payload) => {
+        if (initialLoadDone.current) {
+          setNewOrderIds(prev => new Set([...prev, payload.new.id]));
+          toast("New order received!", { icon: "🛒" });
+        }
+        queryClient.invalidateQueries({ queryKey: ["shop-orders"] });
+      })
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [store?.id, orders.length, queryClient]);
+
   const filtered = orders.filter(o =>
     (o.customer_name ?? "").toLowerCase().includes(search.toLowerCase()) ||
     o.id.toLowerCase().includes(search.toLowerCase())
@@ -122,10 +150,15 @@ export default function ShopOrdersPage() {
             };
             return (
               <motion.div key={order.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.03 }}
-                className="p-4 rounded-xl bg-card border border-border/40 space-y-3">
+                className={cn("p-4 rounded-xl bg-card border space-y-3", newOrderIds.has(order.id) ? "border-primary/40 ring-1 ring-primary/20" : "border-border/40")}>
                 <div className="flex items-start justify-between">
                   <div>
-                    <p className="font-bold text-sm">{order.customer_name || "Customer"}</p>
+                    <div className="flex items-center gap-2">
+                      <p className="font-bold text-sm">{order.customer_name || "Customer"}</p>
+                      {newOrderIds.has(order.id) && (
+                        <span className="px-1.5 py-0.5 rounded-full bg-primary text-primary-foreground text-[9px] font-bold animate-pulse">NEW</span>
+                      )}
+                    </div>
                     <p className="text-xs text-muted-foreground">{format(new Date(order.created_at), "MMM d, h:mm a")}</p>
                   </div>
                   <div className={cn("flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold", cfg.color)}>

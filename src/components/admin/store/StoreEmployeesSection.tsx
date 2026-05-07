@@ -297,8 +297,8 @@ export default function StoreEmployeesSection({ storeId }: Props) {
                     <div className="flex gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 transition-opacity shrink-0" onClick={e => e.stopPropagation()}>
                       <Button variant="ghost" size="icon" className="h-7 w-7 text-emerald-600" disabled={!emp.email || inviteMutation.isPending} title="Send Email Invite" onClick={() => inviteMutation.mutate({ emp, channel: "email" })}><MailCheck className="w-3.5 h-3.5" /></Button>
                       <Button variant="ghost" size="icon" className="h-7 w-7 text-blue-600" disabled={!emp.phone || inviteMutation.isPending} title="Send SMS Invite" onClick={() => inviteMutation.mutate({ emp, channel: "sms" })}><MessageSquare className="w-3.5 h-3.5" /></Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(emp)}><Edit className="w-3 h-3" /></Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => setDeleteId(emp.id)}><Trash2 className="w-3 h-3" /></Button>
+                      <Button variant="ghost" size="icon" aria-label="Edit employee" className="h-7 w-7" onClick={() => openEdit(emp)}><Edit className="w-3 h-3" /></Button>
+                      <Button variant="ghost" size="icon" aria-label="Remove employee" className="h-7 w-7 text-destructive" onClick={() => setDeleteId(emp.id)}><Trash2 className="w-3 h-3" /></Button>
                     </div>
                   </div>
                   <div className="mt-3 space-y-1.5 text-[11px] text-muted-foreground">

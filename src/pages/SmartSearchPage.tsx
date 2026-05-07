@@ -68,6 +68,7 @@ export default function SmartSearchPage() {
       supabase.from("profiles")
         .select("id, full_name, username, bio, avatar_url")
         .or(`full_name.ilike.${term},username.ilike.${term}`)
+        .eq("is_of_creator", false)
         .limit(10),
       supabase.from("store_posts")
         .select("id, caption, store_profiles!inner(name)")

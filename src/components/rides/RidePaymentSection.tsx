@@ -431,7 +431,7 @@ export default function RidePaymentSection({
       const resp = await supabase.functions.invoke("manage-payment-methods", {
         body: { action: "list" },
       });
-      console.log("[RidePayment] list cards response:", JSON.stringify(resp));
+      if (import.meta.env.DEV) console.log("[RidePayment] list cards response:", JSON.stringify(resp));
       if (!resp.error && resp.data?.ok) {
         const cards = resp.data.cards || [];
         setSavedCards(cards);
@@ -602,7 +602,7 @@ export default function RidePaymentSection({
       const resp = await supabase.functions.invoke("manage-payment-methods", {
         body: { action: "create_setup_intent" },
       });
-      console.log("[RidePayment] create_setup_intent response:", JSON.stringify(resp));
+      if (import.meta.env.DEV) console.log("[RidePayment] create_setup_intent response:", JSON.stringify(resp));
       
       const data = resp.data;
       const error = resp.error;

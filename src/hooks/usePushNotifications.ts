@@ -205,7 +205,7 @@ export const usePushNotifications = () => {
             console.error("[Push] Web push registration error:", error);
           } else {
             setState(prev => ({ ...prev, isRegistered: true, token: subJson.endpoint }));
-            console.log("[Push] Web push subscription registered");
+            if (import.meta.env.DEV) console.log("[Push] Web push subscription registered");
           }
         }
         return true;
@@ -274,7 +274,7 @@ export const usePushNotifications = () => {
 
       delete tokenRetryAttemptsRef.current[token];
       pendingNativeTokenRef.current = null;
-      console.log(`[Push] ${platform} token registered successfully`);
+      if (import.meta.env.DEV) console.log(`[Push] ${platform} token registered successfully`);
     } catch (error) {
       console.error("[Push] Error saving token:", error);
     }

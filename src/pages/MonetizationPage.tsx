@@ -20,6 +20,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useCustomerWallet } from "@/hooks/useCustomerWallet";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import SEOHead from "@/components/SEOHead";
+import { Switch } from "@/components/ui/switch";
+import { useZivoOFMode } from "@/hooks/useZivoOFMode";
 
 type ProgramStatus = "join" | "explore" | "active" | "coming_soon";
 
@@ -76,6 +78,26 @@ const quickActions = [
 ];
 
 const programFilter = ["All", "Joined", "Available", "Coming Soon"] as const;
+const zivoOFProgramIds = new Set([
+  "subscription",
+  "locked-media",
+  "paid-dms",
+  "live-gifts",
+  "tips-donations",
+  "creator-rewards",
+]);
+const zivoOFQuickActionHrefs = new Set([
+  "/creator-dashboard",
+  "/creator-analytics",
+  "/wallet",
+]);
+const zivoOFResourceTitles = new Set([
+  "Getting started with Subscription",
+  "Going LIVE on ZIVO!",
+  "Unlocking LIVE monetization",
+  "Monetizing your content",
+]);
+const zivoOFResourceTabs = ["Recommended", "Subscription", "LIVE rewards", "Creator Rewards"];
 
 export default function MonetizationPage() {
   const navigate = useNavigate();
@@ -84,6 +106,7 @@ export default function MonetizationPage() {
   const [activeFilter, setActiveFilter] = useState<typeof programFilter[number]>("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
+  const { isOFMode: zivoOFMode, setOFMode: setZivoOFMode } = useZivoOFMode();
 
   // Real customer wallet balance (cents)
   const { balance: walletBalanceCents } = useCustomerWallet();
@@ -133,6 +156,10 @@ export default function MonetizationPage() {
 
   // Filter programs
   const filteredPrograms = monetizationPrograms.filter((prog) => {
+    if (zivoOFMode && !zivoOFProgramIds.has(prog.programId)) {
+      return false;
+    }
+
     const matchesSearch = !searchQuery || 
       prog.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
       prog.description.toLowerCase().includes(searchQuery.toLowerCase());
@@ -147,6 +174,16 @@ export default function MonetizationPage() {
     }
   });
 
+  const visibleQuickActions = zivoOFMode
+    ? quickActions.filter((action) => zivoOFQuickActionHrefs.has(action.href))
+    : quickActions;
+
+  const visibleResourceTabs = zivoOFMode ? zivoOFResourceTabs : resourceTabs;
+
+  const visibleLearningResources = zivoOFMode
+    ? learningResources.filter((res) => zivoOFResourceTitles.has(res.title))
+    : learningResources;
+
   return (
     <div className="min-h-dvh bg-background pb-24">
       <SEOHead title="Monetization – ZIVO" description="Earn money on ZIVO with subscriptions, tips, gifts, and creator rewards." />
@@ -154,7 +191,7 @@ export default function MonetizationPage() {
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-30 bg-background/80 backdrop-blur-xl border-b border-border/30 zivo-ribbon">
         <div className="flex items-center gap-3 px-4 py-3">
-          <button type="button" onClick={() => navigate("/more")} className="p-2 -ml-2 rounded-full hover:bg-muted/50 touch-manipulation">
+          <button type="button" title="Back" aria-label="Back" onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/profile"))} className="p-2 -ml-2 rounded-full hover:bg-muted/50 touch-manipulation">
             <ArrowLeft className="h-5 w-5" />
           </button>
           {searchOpen ? (
@@ -170,6 +207,8 @@ export default function MonetizationPage() {
             <h1 className="text-lg font-extrabold flex-1 tracking-tight">Monetization</h1>
           )}
           <button type="button"
+            title={searchOpen ? "Close search" : "Open search"}
+            aria-label={searchOpen ? "Close search" : "Open search"}
             onClick={() => { setSearchOpen(!searchOpen); if (searchOpen) setSearchQuery(""); }}
             className="p-2 -mr-1 rounded-full hover:bg-muted/50 touch-manipulation"
           >
@@ -179,6 +218,67 @@ export default function MonetizationPage() {
       </div>
 
       <div className="px-4 py-5 space-y-6 zivo-aurora">
+        {/* ZIVO OF mode */}
+        <div className="zivo-card-organic p-4 flex items-start gap-3">
+          <div className="zivo-icon-pill w-10 h-10 rounded-xl shrink-0 text-rose-500 bg-rose-500/10">
+            <Crown className="h-5 w-5 text-rose-500" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="font-bold text-[13px]">ZIVO OF Mode</p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">Show an exclusive-content focused monetization setup like OF style.</p>
+              </div>
+              <Switch
+                checked={zivoOFMode}
+                onCheckedChange={setZivoOFMode}
+                aria-label="Toggle ZIVO OF Mode"
+              />
+            </div>
+            {zivoOFMode && (
+              <p className="text-[10px] font-semibold text-primary mt-2">OF Mode is ON: focused programs are shown first.</p>
+            )}
+          </div>
+        </div>
+
+        {/* Creator workflow + public profile preview */}
+        {zivoOFMode && user && (
+          <div className="zivo-card-organic p-4 space-y-3">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="font-bold text-[13px]">Creator Workflow</p>
+                <p className="text-[11px] text-muted-foreground">Set up, preview, and test your subscription funnel end-to-end.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => navigate(`/user/${user.id}?from=monetization&as=visitor`)}
+                className="zivo-btn-signature px-3.5 py-2 text-[11px] flex items-center gap-1.5"
+              >
+                <Eye className="w-3.5 h-3.5" /> Preview profile
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 gap-2">
+              {[
+                { title: "1. Setup tiers", desc: "Create or edit your subscription plans.", href: "/creator/setup?step=tier" },
+                { title: "2. Public profile preview", desc: "Check how your profile page appears to fans.", href: `/user/${user.id}?from=monetization&as=visitor` },
+                { title: "3. Go live with programs", desc: "Enable monetization programs and launch.", href: "/creator/setup?step=launch" },
+                { title: "4. Account subscriptions", desc: "Review active subscriptions from account side.", href: "/account/subscriptions" },
+              ].map((item) => (
+                <button
+                  key={item.title}
+                  type="button"
+                  onClick={() => navigate(item.href)}
+                  className="text-left rounded-xl border border-border/40 bg-muted/20 px-3 py-2.5 hover:bg-muted/35 transition-colors touch-manipulation"
+                >
+                  <p className="text-[12px] font-bold leading-tight">{item.title}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">{item.desc}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
         {/* Earnings Hero — Real Data */}
         {user && (
           <motion.div
@@ -222,7 +322,7 @@ export default function MonetizationPage() {
             <Zap className="w-4 h-4 text-primary" /> Quick Actions
           </h2>
           <div className="grid grid-cols-3 gap-2">
-            {quickActions.map((action, i) => (
+            {visibleQuickActions.map((action, i) => (
               <Link key={action.label} to={action.href}>
                 <motion.div
                   initial={{ opacity: 0, scale: 0.95 }}
@@ -345,7 +445,7 @@ export default function MonetizationPage() {
           </div>
 
           <div className="flex gap-2 overflow-x-auto scrollbar-hide mb-4 -mx-1 px-1">
-            {resourceTabs.map((tab, i) => (
+            {visibleResourceTabs.map((tab, i) => (
               <button type="button"
                 key={tab}
                 onClick={() => setActiveResTab(i)}
@@ -361,7 +461,7 @@ export default function MonetizationPage() {
           </div>
 
           <div className="space-y-3">
-            {learningResources.map((res, i) => (
+            {visibleLearningResources.map((res, i) => (
               <motion.button
                 key={res.title}
                 initial={{ opacity: 0, y: 10 }}

@@ -372,7 +372,7 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 
 const Profile = lazy(() => lazyRetry(() => import("./pages/Profile")));
 const MorePage = lazy(() => import("./pages/MorePage"));
-const PublicProfilePage = lazy(() => import("./pages/user/PublicUserProfilePage"));
+const PublicProfilePage = lazy(() => import("./pages/PublicProfilePage"));
 const UsernameRedirectPage = lazy(() => import("./pages/UsernameRedirectPage"));
 const DeleteAccountPage = lazy(() => import("./pages/profile/DeleteAccountPage"));
 const ShareProfileRedirect = lazy(() => import("./pages/ShareProfileRedirect"));
@@ -532,6 +532,7 @@ const Help = lazy(() => import("./pages/Help"));
 
 // Account pages
 const AccountSettingsPage = lazy(() => import("./pages/account/AccountSettingsPage"));
+const UsernamePage = lazy(() => import("./pages/account/UsernamePage"));
 const LegalPoliciesPage = lazy(() => import("./pages/account/LegalPoliciesPage"));
 const ProfileEditPage = lazy(() => import("./pages/account/ProfileEditPage"));
 const AccountSecurity = lazy(() => import("./pages/account/AccountSecurity"));
@@ -1203,6 +1204,7 @@ const App = () => (
 
                 {/* Account sub-pages */}
                 <Route path="/account/settings" element={<ProtectedRoute><AccountSettingsPage /></ProtectedRoute>} />
+                <Route path="/account/username" element={<ProtectedRoute><UsernamePage /></ProtectedRoute>} />
                 <Route path="/account/legal" element={<LegalPoliciesPage />} />
                 <Route path="/account/profile-edit" element={<ProtectedRoute><ProfileEditPage /></ProtectedRoute>} />
                 <Route path="/account/security" element={<ProtectedRoute><AccountSecurity /></ProtectedRoute>} />

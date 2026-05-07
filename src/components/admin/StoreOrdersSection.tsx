@@ -220,7 +220,7 @@ export default function StoreOrdersSection({ storeId }: Props) {
             </div>
           </div>
           <div className="flex gap-2">
-            <Button variant="ghost" size="icon" onClick={() => refetch()} className="rounded-xl">
+            <Button variant="ghost" size="icon" aria-label="Refresh orders" onClick={() => refetch()} className="rounded-xl">
               <RefreshCw className="h-4 w-4" />
             </Button>
             <Button variant="outline" size="sm" onClick={exportCSV} className="rounded-xl text-xs gap-1">

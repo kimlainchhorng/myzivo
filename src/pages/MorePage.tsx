@@ -3,7 +3,7 @@
  * Full hub with real user profile, quick actions, 70+ links, and organic design.
  */
 import { Fragment, useEffect, useMemo, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { useQuery } from "@tanstack/react-query";
 import { useUsername } from "@/hooks/useUsername";
@@ -523,6 +523,7 @@ const sections = [
 export default function MorePage() {
   const { t } = useI18n();
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, signOut, isAdmin } = useAuth();
   const { theme, setTheme, resolvedTheme } = useTheme();
   const [showPartnerSheet, setShowPartnerSheet] = useState(false);
@@ -1690,7 +1691,12 @@ export default function MorePage() {
         style={{ paddingTop: "var(--zivo-safe-top-sticky, env(safe-area-inset-top, 0px))" }}
       >
         <button type="button"
-          onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/profile"))}
+          onClick={() => {
+            const params = new URLSearchParams(location.search);
+            const from = params.get("from");
+            if (from) navigate(`/${from}`);
+            else navigate("/profile");
+          }}
           aria-label="Go back"
           className="h-10 w-10 flex items-center justify-center rounded-full hover:bg-muted/60 active:scale-90 transition-transform text-foreground"
         >

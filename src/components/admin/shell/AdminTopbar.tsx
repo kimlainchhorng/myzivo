@@ -81,7 +81,7 @@ export function AdminTopbar({ vertical }: AdminTopbarProps) {
               </div>
             )}
           </div>
-          <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0"
+          <Button variant="ghost" size="icon" aria-label="Close search" className="h-8 w-8 shrink-0"
             onClick={() => { setSearchOpen(false); setQuery(""); }}>
             <X className="w-4 h-4" />
           </Button>

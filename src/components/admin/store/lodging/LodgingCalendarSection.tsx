@@ -172,9 +172,9 @@ export default function LodgingCalendarSection({ storeId }: { storeId: string })
             </div>
 
             <div className="flex items-center justify-between">
-              <Button variant="ghost" size="icon" onClick={() => setCursor(new Date(year, month - 1, 1))}><ChevronLeft className="h-4 w-4" /></Button>
+              <Button variant="ghost" size="icon" aria-label="Previous month" onClick={() => setCursor(new Date(year, month - 1, 1))}><ChevronLeft className="h-4 w-4" /></Button>
               <p className="font-semibold text-sm">{cursor.toLocaleString(undefined, { month: "long", year: "numeric" })}</p>
-              <Button variant="ghost" size="icon" onClick={() => setCursor(new Date(year, month + 1, 1))}><ChevronRight className="h-4 w-4" /></Button>
+              <Button variant="ghost" size="icon" aria-label="Next month" onClick={() => setCursor(new Date(year, month + 1, 1))}><ChevronRight className="h-4 w-4" /></Button>
             </div>
 
             <div className="grid grid-cols-7 gap-1 text-center text-[10px] text-muted-foreground font-semibold">

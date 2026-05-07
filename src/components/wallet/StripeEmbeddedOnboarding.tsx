@@ -137,7 +137,7 @@ export default function StripeEmbeddedOnboarding({ open, onClose, onComplete, co
           <h2 className="text-base font-bold">Stripe Setup</h2>
           <p className="text-[11px] text-muted-foreground">Secure onboarding by Stripe</p>
         </div>
-        <Button variant="ghost" size="icon" onClick={onClose} className="rounded-full">
+        <Button variant="ghost" size="icon" aria-label="Close" onClick={onClose} className="rounded-full">
           <X className="w-5 h-5" />
         </Button>
       </div>

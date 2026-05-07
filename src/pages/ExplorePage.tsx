@@ -63,6 +63,7 @@ export default function ExplorePage() {
         .from("profiles")
         .select("id, full_name, avatar_url, is_verified")
         .ilike("full_name", `%${search}%`)
+        .eq("is_of_creator", false)
         .limit(20);
       return data || [];
     },
@@ -77,6 +78,7 @@ export default function ExplorePage() {
         .from("profiles")
         .select("id, full_name, avatar_url, is_verified, bio")
         .not("id", "eq", user?.id ?? "")
+        .eq("is_of_creator", false)
         .order("created_at", { ascending: false })
         .limit(20);
       return data || [];

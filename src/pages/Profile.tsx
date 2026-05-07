@@ -16,7 +16,7 @@ import {
   Handshake, Car, Wrench, UtensilsCrossed, Building2, Truck, Phone, AlertCircle, Bell, MoreHorizontal,
   Pencil, RotateCcw, Share2, BarChart3, Link as LinkIcon,
   Repeat, DollarSign, Briefcase, User as UserIcon,
-  Heart, Lock, Gift, MessageCircle, Video, TrendingUp,
+  Heart, Lock, Gift, MessageCircle, Video, TrendingUp, Eye,
 } from "lucide-react";
 import { useHaptics } from "@/hooks/useHaptics";
 import { Button } from "@/components/ui/button";
@@ -53,6 +53,7 @@ import { useReferrals } from "@/hooks/useReferrals";
 import { useBookingHistory } from "@/hooks/useBookingHistory";
 import PullToRefresh from "@/components/shared/PullToRefresh";
 import { useNotifications } from "@/hooks/useNotifications";
+import { useZivoOFMode } from "@/hooks/useZivoOFMode";
 import { resolveBusinessDashboardRoute } from "@/lib/business/dashboardRoute";
 import { formatDistanceToNowStrict } from "date-fns";
 
@@ -362,6 +363,15 @@ const Profile = () => {
     if (typeof window === "undefined") return "personal";
     return localStorage.getItem("zivo:active_mode") || "personal";
   });
+  const { isOFMode: zivoOFMode, setOFMode: setZivoOFMode } = useZivoOFMode();
+
+  useEffect(() => {
+    if (!zivoOFMode) return;
+    setActiveMode("creator");
+    try { localStorage.setItem("zivo:active_mode", "creator"); } catch {}
+  }, [zivoOFMode]);
+
+  const workflowMode = zivoOFMode ? "creator" : activeMode;
 
   const getShopDashboardPath = useCallback(() => {
     if (!ownerStore?.id) return "/shop-dashboard";
@@ -884,7 +894,7 @@ const Profile = () => {
           </AnimatePresence>
           </div>
           <motion.button
-            onClick={() => navigate("/more")}
+            onClick={() => navigate("/more?from=profile")}
             aria-label="More account options"
             whileTap={{ scale: 0.86 }}
             transition={{ type: "spring", stiffness: 400, damping: 22 }}
@@ -1239,6 +1249,16 @@ const Profile = () => {
                         <motion.button
                           type="button"
                           whileTap={{ scale: 0.93 }}
+                          onClick={() => { if (user?.id) { selectionChanged(); navigate(`/user/${user.id}?from=profile&as=visitor`); } }}
+                          aria-label="Preview public profile"
+                          disabled={!user?.id}
+                          className="h-9 w-9 flex items-center justify-center rounded-full border border-border/60 bg-muted/30 hover:bg-muted/50 transition-colors focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          <Eye className="h-4 w-4 text-foreground" />
+                        </motion.button>
+                        <motion.button
+                          type="button"
+                          whileTap={{ scale: 0.93 }}
                           onClick={() => { selectionChanged(); navigate("/account/analytics"); }}
                           aria-label="Profile analytics"
                           className="h-9 w-9 flex items-center justify-center rounded-full border border-border/60 bg-muted/30 hover:bg-muted/50 transition-colors focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
@@ -1500,21 +1520,47 @@ const Profile = () => {
             <SheetTitle className="text-base font-bold">Switch mode</SheetTitle>
           </SheetHeader>
           <div className="flex flex-col gap-2">
-            {[
-              { id: "personal", label: "Personal", desc: "Your everyday account", icon: UserIcon, route: "/profile" },
-              { id: "fan", label: "Fan", desc: "Subscribe to creators & unlock content", icon: Heart, route: "/account/subscriptions" },
-              { id: "creator", label: "Creator", desc: "Subscriptions, PPV & tips", icon: Sparkles, route: "/creator-dashboard" },
-              { id: "business", label: "Business", desc: "Manage company travel & teams", icon: Briefcase, route: "/business" },
-              { id: "driver", label: "Driver", desc: "Go online and accept rides", icon: Car, route: "/driver/home" },
-              { id: "shop", label: "Shop Partner", desc: "Open your store dashboard", icon: Store, route: getShopDashboardPath() },
-            ].map((m) => {
-              const active = activeMode === m.id;
+            {zivoOFMode && (
+              <div className="mb-1 rounded-2xl border border-rose-500/30 bg-rose-500/5 px-3 py-2.5 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-[12px] font-semibold text-foreground">ZIVO OF Mode is active</p>
+                  <p className="text-[11px] text-muted-foreground">Creator workflow is locked while OF mode is on.</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setZivoOFMode(false);
+                    toast.success("ZIVO OF Mode turned off");
+                  }}
+                  className="shrink-0 text-[11px] font-semibold rounded-lg border border-border/40 px-2.5 py-1.5 hover:bg-muted/50"
+                >
+                  Turn off
+                </button>
+              </div>
+            )}
+            {(zivoOFMode
+              ? [
+                  { id: "creator", label: "Creator", desc: "Subscriptions, PPV & tips", icon: Sparkles, route: "/creator-dashboard" },
+                ]
+              : [
+                  { id: "personal", label: "Personal", desc: "Your everyday account", icon: UserIcon, route: "/profile" },
+                  { id: "fan", label: "Fan", desc: "Subscribe to creators & unlock content", icon: Heart, route: "/account/subscriptions" },
+                  { id: "creator", label: "Creator", desc: "Subscriptions, PPV & tips", icon: Sparkles, route: "/creator-dashboard" },
+                  { id: "business", label: "Business", desc: "Manage company travel & teams", icon: Briefcase, route: "/business" },
+                  { id: "driver", label: "Driver", desc: "Go online and accept rides", icon: Car, route: "/driver/home" },
+                  { id: "shop", label: "Shop Partner", desc: "Open your store dashboard", icon: Store, route: getShopDashboardPath() },
+                ]).map((m) => {
+              const active = workflowMode === m.id;
               const Icon = m.icon;
               return (
                 <button type="button"
                   key={m.id}
                   type="button"
                   onClick={() => {
+                    if (zivoOFMode && m.id !== "creator") {
+                      toast.info("Disable ZIVO OF Mode in Monetization to switch modes");
+                      return;
+                    }
                     setActiveMode(m.id);
                     try { localStorage.setItem("zivo:active_mode", m.id); } catch {}
                     toast.success(`Switched to ${m.label} mode`);
@@ -1539,7 +1585,7 @@ const Profile = () => {
             })}
           </div>
 
-          {activeMode === "personal" && (
+          {workflowMode === "personal" && (
             <div className="mt-5 pt-4 border-t border-border/40">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Personal controls</span>
@@ -1584,10 +1630,12 @@ const Profile = () => {
             </div>
           )}
 
-          {activeMode === "creator" && (
+          {workflowMode === "creator" && (
             <div className="mt-5 pt-4 border-t border-border/40">
               <div className="flex items-center justify-between mb-3">
-                <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Creator tools</span>
+                <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+                  {zivoOFMode ? "ZIVO OF tools" : "Creator tools"}
+                </span>
                 <button
                   type="button"
                   onClick={() => { setModeOpen(false); navigate("/monetization"); }}
@@ -1597,14 +1645,23 @@ const Profile = () => {
                 </button>
               </div>
               <div className="grid grid-cols-3 gap-2">
-                {[
-                  { label: "Subscribers", icon: Users, route: "/creator/subscribers" },
-                  { label: "PPV posts", icon: Lock, route: "/monetization" },
-                  { label: "Tips", icon: Gift, route: "/creator/tips" },
-                  { label: "Mass DM", icon: MessageCircle, route: "/chat" },
-                  { label: "Earnings", icon: TrendingUp, route: "/creator-analytics" },
-                  { label: "Go live", icon: Video, route: "/live" },
-                ].map((a) => {
+                {(zivoOFMode
+                  ? [
+                      { label: "Subscribers", icon: Users, route: "/creator/subscribers" },
+                      { label: "Subscription", icon: Crown, route: "/monetization/program/subscription" },
+                      { label: "Locked media", icon: Lock, route: "/monetization/program/locked-media" },
+                      { label: "Paid DMs", icon: MessageCircle, route: "/monetization/program/paid-dms" },
+                      { label: "Tips", icon: Gift, route: "/monetization/program/tips-donations" },
+                      { label: "Payouts", icon: DollarSign, route: "/wallet" },
+                    ]
+                  : [
+                      { label: "Subscribers", icon: Users, route: "/creator/subscribers" },
+                      { label: "PPV posts", icon: Lock, route: "/monetization" },
+                      { label: "Tips", icon: Gift, route: "/creator/tips" },
+                      { label: "Mass DM", icon: MessageCircle, route: "/chat" },
+                      { label: "Earnings", icon: TrendingUp, route: "/creator-analytics" },
+                      { label: "Go live", icon: Video, route: "/live" },
+                    ]).map((a) => {
                   const Icon = a.icon;
                   return (
                     <button type="button"
@@ -1622,7 +1679,7 @@ const Profile = () => {
             </div>
           )}
 
-          {activeMode === "fan" && (
+          {workflowMode === "fan" && (
             <div className="mt-5 pt-4 border-t border-border/40">
               <div className="flex items-center justify-between mb-3">
                 <span className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">My fan activity</span>

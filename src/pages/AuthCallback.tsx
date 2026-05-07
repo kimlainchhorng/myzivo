@@ -199,7 +199,7 @@ const AuthCallback = () => {
       supabase.auth.getSession().then(({ data: { session } }) => {
         if (session?.user) {
           // User is authenticated despite the error param — redirect gracefully
-          console.log("User has valid session despite OAuth error param, redirecting...");
+          if (import.meta.env.DEV) console.log("User has valid session despite OAuth error param, redirecting...");
           checkSetupAndNavigate(session.user);
         } else {
           setErrorMessage(friendlyMessage);
@@ -248,7 +248,7 @@ const AuthCallback = () => {
           // Check if user actually has a session despite the exchange error
           const { data: { session } } = await supabase.auth.getSession();
           if (session?.user) {
-            console.log("User has valid session despite code exchange error, redirecting...");
+            if (import.meta.env.DEV) console.log("User has valid session despite code exchange error, redirecting...");
             await checkSetupAndNavigate(session.user);
             return;
           }

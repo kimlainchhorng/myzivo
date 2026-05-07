@@ -479,7 +479,7 @@ export default function StoreScheduleSection({ storeId }: Props) {
       {/* ── Week Navigation ── */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-0.5 bg-muted/40 rounded-full p-0.5">
-          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-background hover:shadow-sm transition-all" onClick={() => setWeekStart(subWeeks(weekStart, 1))}>
+          <Button variant="ghost" size="icon" aria-label="Previous week" className="h-9 w-9 rounded-full hover:bg-background hover:shadow-sm transition-all" onClick={() => setWeekStart(subWeeks(weekStart, 1))}>
             <ChevronLeft className="w-4 h-4" />
           </Button>
           <Button
@@ -490,7 +490,7 @@ export default function StoreScheduleSection({ storeId }: Props) {
           >
             Today
           </Button>
-          <Button variant="ghost" size="icon" className="h-9 w-9 rounded-full hover:bg-background hover:shadow-sm transition-all" onClick={() => setWeekStart(addWeeks(weekStart, 1))}>
+          <Button variant="ghost" size="icon" aria-label="Next week" className="h-9 w-9 rounded-full hover:bg-background hover:shadow-sm transition-all" onClick={() => setWeekStart(addWeeks(weekStart, 1))}>
             <ChevronRight className="w-4 h-4" />
           </Button>
         </div>

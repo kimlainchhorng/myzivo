@@ -263,10 +263,10 @@ export default function StoreEmployeeRulesSection({ storeId }: Props) {
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
                         <Switch checked={r.is_active} onCheckedChange={() => handleToggle(r)} className="scale-90" />
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEdit(r)}>
+                        <Button variant="ghost" size="icon" aria-label="Edit rule" className="h-7 w-7" onClick={() => openEdit(r)}>
                           <Edit className="w-3.5 h-3.5" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDelete(r.id)}>
+                        <Button variant="ghost" size="icon" aria-label="Delete rule" className="h-7 w-7 text-destructive" onClick={() => handleDelete(r.id)}>
                           <Trash2 className="w-3.5 h-3.5" />
                         </Button>
                       </div>

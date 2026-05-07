@@ -40,6 +40,7 @@ export default function SearchEveryoneResults({ query }: { query: string }) {
           .select("user_id, full_name, username, avatar_url")
           .or(`username.ilike.%${clean}%,full_name.ilike.%${clean}%`)
           .neq("full_name", "Zivo Driver")
+          .eq("is_of_creator", false)
           .limit(8);
         if (!cancelled) setHits((data ?? []) as Hit[]);
       } finally {

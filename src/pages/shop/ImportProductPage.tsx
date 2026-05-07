@@ -61,11 +61,11 @@ export default function ImportProductPage() {
   return (
     <div className="min-h-screen bg-background pb-28">
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-border/40 flex items-center px-3 py-2.5 gap-2" style={{ paddingTop: "var(--zivo-safe-top-sticky)" }}>
-        <Button variant="ghost" size="icon" className="h-9 w-9" onClick={() => navigate(-1)}>
+        <Button variant="ghost" size="icon" aria-label="Go back" className="h-9 w-9" onClick={() => navigate(-1)}>
           <ArrowLeft className="h-5 w-5" />
         </Button>
         <h1 className="text-sm font-bold flex-1 truncate">{product.title}</h1>
-        <Button variant="ghost" size="icon" className="h-9 w-9 relative" onClick={() => navigate("/shop/cart")}>
+        <Button variant="ghost" size="icon" aria-label="View cart" className="h-9 w-9 relative" onClick={() => navigate("/shop/cart")}>
           <ShoppingCart className="h-5 w-5" />
           {itemCount > 0 && (
             <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full h-4 min-w-4 px-1 flex items-center justify-center">

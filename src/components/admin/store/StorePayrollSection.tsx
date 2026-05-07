@@ -290,7 +290,7 @@ export default function StorePayrollSection({ storeId }: Props) {
                         <td className="px-4 py-3 text-right font-mono text-[13px] font-bold text-emerald-600">${net.toLocaleString()}</td>
                         <td className="px-4 py-3 text-center"><Badge className="text-[10px] bg-amber-500/10 text-amber-600">Pending</Badge></td>
                         <td className="px-4 py-3 text-center">
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditEmp(emp)}>
+                          <Button variant="ghost" size="icon" aria-label="Edit payroll" className="h-7 w-7" onClick={() => openEditEmp(emp)}>
                             <Edit className="w-3.5 h-3.5 text-muted-foreground" />
                           </Button>
                         </td>

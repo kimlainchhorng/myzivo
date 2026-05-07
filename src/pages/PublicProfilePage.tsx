@@ -16,7 +16,6 @@ import VerifiedBadge from "@/components/VerifiedBadge";
 import { formatCount } from "@/lib/social/formatCount";
 import { isBlueVerified } from "@/lib/verification";
 import { MutualFollowsBadge, useMutualFollows } from "@/components/social/MutualFollowsBadge";
-const TopFans = lazy(() => import("@/components/social/TopFans"));
 import {
   ArrowLeft, Loader2, User, ImageIcon, Film, Grid3X3, UserPlus, UserCheck, UserX,
   Heart, MessageCircle, Lock, ShieldCheck, Users, Share2, Play, Eye, Bookmark, Globe,
@@ -42,6 +41,8 @@ import TopSupporters from "@/components/creator/TopSupporters";
 import TipSheet from "@/components/social/TipSheet";
 import { useSwipeDownClose } from "@/components/social/useSwipeDownClose";
 import { SwipeGrabHandle } from "@/components/social/SwipeGrabHandle";
+
+const TopFans = lazy(() => import("@/components/social/TopFans"));
 
 /** Fullscreen post overlay with swipe-down-to-close from header. */
 function PublicPostOverlay({
@@ -226,6 +227,8 @@ export default function PublicProfilePage() {
   const [searchParams] = useSearchParams();
   const shareCodeFromUrl = searchParams.get("sc") || "";
   const postIdFromUrl = searchParams.get("post") || "";
+  const source = (searchParams.get("from") || "").toLowerCase();
+  const viewAs = (searchParams.get("as") || "").toLowerCase();
   const navigate = useNavigate();
   const { user } = useAuth();
   const queryClient = useQueryClient();
@@ -236,6 +239,26 @@ export default function PublicProfilePage() {
   const [commentPost, setCommentPost] = useState<any>(null);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [bookmarkedPosts, setBookmarkedPosts] = useState<Set<string>>(new Set());
+  // OF creator age gate — confirmed once per session
+  const [ofAgeConfirmed, setOfAgeConfirmed] = useState(false);
+
+  const backTarget = useMemo(() => {
+    if (source === "monetization") return "/monetization";
+    if (source === "profile") return "/profile";
+    return null;
+  }, [source]);
+
+  const handleBack = useCallback(() => {
+    if (backTarget) {
+      navigate(backTarget);
+      return;
+    }
+    if (window.history.length > 1) {
+      navigate(-1);
+      return;
+    }
+    navigate("/");
+  }, [backTarget, navigate]);
 
   // Fetch profile with cover photo + bio
   const { data: profile, isLoading: profileLoading } = useQuery({
@@ -245,7 +268,7 @@ export default function PublicProfilePage() {
 
       const { data, error } = await (supabase as any)
         .from("profiles")
-        .select("id, user_id, full_name, avatar_url, bio, cover_url, cover_position, profile_visibility, is_verified, share_code, updated_at")
+        .select("id, user_id, full_name, avatar_url, bio, cover_url, cover_position, profile_visibility, is_verified, share_code, updated_at, is_of_creator")
         .or(`id.eq.${userId},user_id.eq.${userId}`)
         .limit(10);
 
@@ -370,7 +393,9 @@ export default function PublicProfilePage() {
   }, [fallbackProfile, localAdminCreatedAccount, profile, userId]);
 
   const targetUserId = resolvedProfile?.user_id || resolvedProfile?.id || userId || "";
-  const isOwnProfile = !!user?.id && !!targetUserId && user.id === targetUserId;
+  const isSameAsSignedInUser = !!user?.id && !!targetUserId && user.id === targetUserId;
+  const isVisitorPreview = isSameAsSignedInUser && viewAs === "visitor";
+  const isOwnProfile = isSameAsSignedInUser && !isVisitorPreview;
 
   const { data: friendshipStatus = "none" } = useQuery({
     queryKey: ["friendship-status", targetUserId],
@@ -378,7 +403,7 @@ export default function PublicProfilePage() {
       const { data } = await supabase.rpc("get_friendship_status", { target_user_id: targetUserId });
       return (data as string) || "none";
     },
-    enabled: !!targetUserId && !!user && !isOwnProfile,
+    enabled: !!targetUserId && !!user && !isSameAsSignedInUser,
   });
 
   const visibility = resolvedProfile?.profile_visibility || "public";
@@ -467,13 +492,13 @@ export default function PublicProfilePage() {
   const { data: isFollowing = false } = useQuery({
     queryKey: ["is-following", targetUserId],
     queryFn: async () => { const { data } = await supabase.rpc("is_following", { target_user_id: targetUserId }); return data || false; },
-    enabled: !!targetUserId && !!user && !isOwnProfile,
+    enabled: !!targetUserId && !!user && !isSameAsSignedInUser,
   });
 
   // Mutual followers — "Followed by Alice + 3 others". Self-hides when
   // the visitor has no overlap, when this is their own profile, or when
   // the profile is locked.
-  const mutualTargets = (!isOwnProfile && !isLocked && targetUserId) ? [targetUserId] : [];
+  const mutualTargets = (!isSameAsSignedInUser && !isLocked && targetUserId) ? [targetUserId] : [];
   const { data: mutualMap } = useMutualFollows(mutualTargets);
   const mutual = mutualMap?.get(targetUserId);
 
@@ -844,7 +869,7 @@ export default function PublicProfilePage() {
       {/* Mobile Header */}
       <div className="lg:hidden sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 safe-area-top">
         <div className="max-w-3xl mx-auto px-4 py-2.5 flex items-center gap-3">
-          <button type="button" onClick={() => navigate(-1)} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-muted transition-colors">
+          <button type="button" onClick={handleBack} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-muted transition-colors">
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
           <h1 className="text-lg font-bold text-foreground truncate flex-1">{resolvedProfile?.full_name || "Profile"}</h1>
@@ -860,6 +885,20 @@ export default function PublicProfilePage() {
         <div className="flex flex-col items-center justify-center h-60 text-muted-foreground"><User className="h-10 w-10 mb-2" /><p className="text-sm">Profile not found</p></div>
       ) : (
         <>
+          {/* OF Creator Age Gate */}
+          {(resolvedProfile as any).is_of_creator && !ofAgeConfirmed && (
+            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+              <div className="bg-card border border-rose-500/40 rounded-2xl max-w-sm w-full p-6 flex flex-col items-center gap-4 text-center shadow-2xl">
+                <span className="text-5xl">🔞</span>
+                <h2 className="text-xl font-bold text-foreground">18+ Content</h2>
+                <p className="text-sm text-muted-foreground">This profile belongs to an OF Creator and may contain adult content. You must be 18 or older to view it.</p>
+                <div className="flex gap-3 w-full mt-2">
+                  <button onClick={() => navigate(-1)} className="flex-1 px-4 py-2 rounded-xl border border-border text-sm text-muted-foreground hover:bg-muted transition-colors">Go back</button>
+                  <button onClick={() => setOfAgeConfirmed(true)} className="flex-1 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-semibold transition-colors">I am 18+</button>
+                </div>
+              </div>
+            </div>
+          )}
           {/* Cover + Avatar */}
           <div className="relative max-w-3xl mx-auto">
             <div className="w-full h-36 sm:h-48 md:h-56 bg-gradient-to-br from-primary/20 via-primary/10 to-muted overflow-hidden">
@@ -883,6 +922,11 @@ export default function PublicProfilePage() {
               <span>{resolvedProfile.full_name}</span>
               {isBlueVerified(resolvedProfile.is_verified) && <VerifiedBadge size={28} />}
             </h2>
+            {isVisitorPreview && (
+              <p className="mt-2 text-[11px] font-semibold text-primary bg-primary/10 border border-primary/20 rounded-full px-3 py-1">
+                Visitor preview mode
+              </p>
+            )}
             {resolvedProfile.bio && (
               <p className="mt-2 max-w-md text-center text-sm text-muted-foreground whitespace-pre-wrap break-words">
                 <SafeCaption text={resolvedProfile.bio} />

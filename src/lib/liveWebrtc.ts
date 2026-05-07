@@ -58,7 +58,7 @@ export async function getIceServers(): Promise<RTCIceServer[]> {
           ? s.urls.some((u: string) => u.startsWith("turn"))
           : typeof s.urls === "string" && s.urls.startsWith("turn"),
       );
-      console.log(
+      if (import.meta.env.DEV) console.log(
         `[liveWebrtc] ICE servers loaded (${servers.length}), TURN=${hasTurn}, ttl=${ttlSeconds}s`,
       );
       return servers;
@@ -92,7 +92,7 @@ export async function logSelectedCandidatePair(
       if (r.id === pair.localCandidateId) local = r;
       if (r.id === pair.remoteCandidateId) remote = r;
     });
-    console.log(
+    if (import.meta.env.DEV) console.log(
       `[${tag}] selected candidate pair: local=${local?.candidateType}/${local?.protocol} remote=${remote?.candidateType}/${remote?.protocol}`,
     );
   } catch (e) {

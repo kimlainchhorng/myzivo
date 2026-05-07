@@ -92,6 +92,23 @@ export default function EatsOrdersPage() {
   const { data: orders = [], isLoading } = useEatsOrderHistory();
   const [selectedOrder, setSelectedOrder] = useState<FoodOrder | null>(null);
   const [filter, setFilter] = useState<"all" | "active" | "delivered" | "cancelled">("all");
+  const [hoverRating, setHoverRating] = useState(0);
+  const [savingRating, setSavingRating] = useState(false);
+
+  const handleRate = async (orderId: string, stars: number) => {
+    setSavingRating(true);
+    const { error } = await supabase.from("food_orders").update({ rating: stars } as any).eq("id", orderId);
+    setSavingRating(false);
+    if (!error) {
+      setSelectedOrder(prev => prev ? { ...prev, rating: stars } : prev);
+      queryClient.setQueryData(["eats-order-history", queryClient], (old: FoodOrder[] | undefined) =>
+        old ? old.map(o => o.id === orderId ? { ...o, rating: stars } : o) : old
+      );
+      toast.success(`Rated ${stars} star${stars !== 1 ? "s" : ""} — thanks!`);
+    } else {
+      toast.error("Couldn't save rating.");
+    }
+  };
 
   const queryClient = useQueryClient();
   const restaurantIds = [...new Set(orders.map(o => o.restaurant_id))];
@@ -352,6 +369,30 @@ export default function EatsOrdersPage() {
                     <span className="text-foreground capitalize">{selectedOrder.payment_type || "Card"}</span>
                   </div>
                 </div>
+
+                {/* Rate this order */}
+                {selectedOrder.status === "delivered" && !selectedOrder.rating && (
+                  <div className="pt-3 border-t border-border/30">
+                    <p className="text-xs font-semibold text-foreground mb-2">Rate your order</p>
+                    <div className="flex gap-2">
+                      {[1, 2, 3, 4, 5].map(s => (
+                        <button key={s} type="button" aria-label={`Rate ${s} star${s !== 1 ? "s" : ""}`} disabled={savingRating}
+                          onMouseEnter={() => setHoverRating(s)}
+                          onMouseLeave={() => setHoverRating(0)}
+                          onClick={() => handleRate(selectedOrder.id, s)}
+                          className="flex-1 flex items-center justify-center py-2 rounded-xl border border-border/40 bg-muted/30 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors active:scale-90 touch-manipulation">
+                          <Star className={`w-5 h-5 transition-colors ${s <= (hoverRating || 0) ? "fill-amber-400 text-amber-400" : "text-muted-foreground/40"}`} />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {selectedOrder.rating != null && selectedOrder.rating > 0 && (
+                  <div className="pt-2 flex items-center gap-1">
+                    {[1,2,3,4,5].map(s => <Star key={s} className={`w-3.5 h-3.5 ${s <= selectedOrder.rating! ? "fill-amber-400 text-amber-400" : "text-muted-foreground/20"}`} />)}
+                    <span className="text-[10px] text-muted-foreground ml-1">Your rating</span>
+                  </div>
+                )}
 
                 {/* Actions */}
                 <div className="flex gap-3 pt-2">

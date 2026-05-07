@@ -39,7 +39,7 @@ export default function InlineLegalSheet({ open, onOpenChange, title, url }: Inl
         {/* Custom header — single close button */}
         <div className="px-5 pt-5 pb-3 border-b border-border/30 flex items-center justify-between shrink-0">
           <h3 className="text-base font-bold">{title}</h3>
-          <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="rounded-full h-8 w-8 shrink-0">
+          <Button variant="ghost" size="icon" aria-label="Close" onClick={() => onOpenChange(false)} className="rounded-full h-8 w-8 shrink-0">
             <X className="w-4 h-4" />
           </Button>
         </div>

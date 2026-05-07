@@ -113,13 +113,13 @@ export default function HoldToRecordMic({ voice, className }: Props) {
     guardTimer.current = setTimeout(async () => {
       if (!pendingStart.current) return;
       haptic(15);
-      console.log("[HoldToRecordMic] Starting voice recording after hold guard");
+      if (import.meta.env.DEV) console.log("[HoldToRecordMic] Starting voice recording after hold guard");
       try {
         await voice.startRecording();
         recordingStarted.current = true;
         recordingBeganAt.current = Date.now();
         startPromise.current = Promise.resolve();
-        console.log("[HoldToRecordMic] Recording started successfully");
+        if (import.meta.env.DEV) console.log("[HoldToRecordMic] Recording started successfully");
       } catch (err) {
         console.error("[HoldToRecordMic] Recording start failed:", err);
         recordingStarted.current = false;

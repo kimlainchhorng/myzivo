@@ -14,6 +14,7 @@ import { useUsername } from "@/hooks/useUsername";
 import { useAuth } from "@/contexts/AuthContext";
 import { useContacts } from "@/hooks/useContacts";
 import { useContactRequests } from "@/hooks/useContactRequests";
+import { getPublicOrigin } from "@/lib/getPublicOrigin";
 
 export default function InviteFriendsSheet({
   open,
@@ -34,9 +35,10 @@ export default function InviteFriendsSheet({
   const [sending, setSending] = useState(false);
 
   const inviteLink = useMemo(() => {
-    const handle = username ? `@${username}` : (user?.id ? `u/${user.id.slice(0, 8)}` : "join");
-    const base = typeof window !== "undefined" ? window.location.origin : "https://hizivo.com";
-    return username ? `${base}/u/${username}` : `${base}/${handle}`;
+    const base = getPublicOrigin();
+    if (username) return `${base}/u/${encodeURIComponent(username)}`;
+    if (user?.id) return `${base}/user/${encodeURIComponent(user.id)}`;
+    return base;
   }, [username, user]);
 
   const message = `Join me on ZIVO — ${inviteLink}`;

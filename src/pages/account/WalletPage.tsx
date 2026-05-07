@@ -124,6 +124,7 @@ export default function WalletPage() {
   });
   const [selectedPayoutId, setSelectedPayoutId] = useState<string | null>(null);
   const [refundTx, setRefundTx] = useState<{ id: string; description: string | null; service_type: string | null; amount: number | string } | null>(null);
+  const [txFilter, setTxFilter] = useState<"all" | "in" | "out">("all");
   const [refundReason, setRefundReason] = useState("");
   const [refundNote, setRefundNote] = useState("");
   const [refundSubmitting, setRefundSubmitting] = useState(false);
@@ -1034,7 +1035,43 @@ export default function WalletPage() {
 
           {activeTab === "history" && (
             <motion.div key="history" initial={{ opacity: 0, x: -8 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 8 }} className="space-y-3">
-              <h2 className="font-bold text-[15px]">Recent Transactions</h2>
+              <div className="flex items-center justify-between">
+                <h2 className="font-bold text-[15px]">Recent Transactions</h2>
+                <button type="button"
+                  onClick={() => {
+                    const rows = walletTransactions
+                      .filter(tx => {
+                        const isIn = tx.transaction_type !== "payment";
+                        if (txFilter === "in") return isIn;
+                        if (txFilter === "out") return !isIn;
+                        return true;
+                      })
+                      .map(tx => [
+                        tx.created_at ? format(new Date(tx.created_at), "yyyy-MM-dd HH:mm") : "",
+                        tx.description || tx.service_type || "",
+                        tx.transaction_type !== "payment" ? "In" : "Out",
+                        Math.abs(Number(tx.amount)).toFixed(2),
+                      ]);
+                    const csv = ["Date,Description,Type,Amount", ...rows.map(r => r.join(","))].join("\n");
+                    const a = document.createElement("a");
+                    a.href = URL.createObjectURL(new Blob([csv], { type: "text/csv" }));
+                    a.download = "transactions.csv";
+                    a.click();
+                  }}
+                  className="flex items-center gap-1 text-[11px] font-semibold text-primary hover:opacity-80 transition-opacity">
+                  <TrendingUp className="w-3.5 h-3.5" /> Export CSV
+                </button>
+              </div>
+              <div className="flex gap-1.5">
+                {(["all", "in", "out"] as const).map(f => (
+                  <button type="button" key={f} onClick={() => setTxFilter(f)}
+                    className={`px-3 py-1.5 rounded-full text-[10px] font-bold transition-all ${
+                      txFilter === f ? "bg-foreground text-background" : "bg-muted/50 text-muted-foreground border border-border/40"
+                    }`}>
+                    {f === "all" ? "All" : f === "in" ? "↓ Money In" : "↑ Money Out"}
+                  </button>
+                ))}
+              </div>
               {txLoading ? (
                 <div className="space-y-2">
                   {[1, 2, 3].map((i) => (
@@ -1051,7 +1088,12 @@ export default function WalletPage() {
                 </div>
               ) : (
                 <div className="space-y-1.5">
-                  {walletTransactions.map((tx, i) => {
+                  {walletTransactions.filter(tx => {
+                    const isIn = tx.transaction_type !== "payment";
+                    if (txFilter === "in") return isIn;
+                    if (txFilter === "out") return !isIn;
+                    return true;
+                  }).map((tx, i) => {
                     const isCredit = tx.transaction_type !== "payment";
                     return (
                       <motion.div

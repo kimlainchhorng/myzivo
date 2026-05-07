@@ -159,7 +159,7 @@ export default function AIChatbotWidget() {
                     <p className="text-xs opacity-80">Powered by Gemini</p>
                   </div>
                 </div>
-                <Button variant="ghost" size="icon" className="text-primary-foreground hover:bg-primary-foreground/20" onClick={() => setIsOpen(false)}>
+                <Button variant="ghost" size="icon" aria-label="Close chat" className="text-primary-foreground hover:bg-primary-foreground/20" onClick={() => setIsOpen(false)}>
                   <X className="h-4 w-4" />
                 </Button>
               </div>

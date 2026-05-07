@@ -25,6 +25,7 @@ import { useNotifications } from "@/hooks/useNotifications";
 import { useRecentSettings } from "@/hooks/useRecentSettings";
 import { usePinnedSettings } from "@/hooks/usePinnedSettings";
 import { useLinkedDevices } from "@/hooks/useLinkedDevices";
+import { useZivoOFMode } from "@/hooks/useZivoOFMode";
 import ProfileShareDialog from "@/components/account/ProfileShareDialog";
 import { useTheme } from "next-themes";
 import { useQuery } from "@tanstack/react-query";
@@ -73,7 +74,7 @@ const settingsGroups: SettingsGroup[] = [
       { icon: ShieldCheck, label: "Verification", description: "Request verified badge", href: "/account/verification", color: "bg-blue-500/15", iconColor: "text-blue-500" },
       { icon: MapPin, label: "Saved Addresses", description: "Manage saved places & addresses", href: "/account/addresses", color: "bg-lime-500/15", iconColor: "text-lime-500" },
       { icon: Plane, label: "Traveler Profiles", description: "Manage travel profiles & preferences", href: "/account/travelers", color: "bg-violet-500/15", iconColor: "text-violet-500" },
-      { icon: Hash, label: "Username", description: "Change your @handle", href: "/account/profile-edit", color: "bg-blue-500/15", iconColor: "text-blue-500" },
+      { icon: Hash, label: "Username", description: "Change your @handle", href: "/account/username", color: "bg-blue-500/15", iconColor: "text-blue-500" },
     ],
   },
   {
@@ -188,11 +189,10 @@ const settingsGroups: SettingsGroup[] = [
   },
 ];
 
-const allItems = settingsGroups.flatMap(g => g.items);
-
 export default function AccountSettingsPage() {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
+  const { isOFMode: zivoOFMode, setOFMode: setZivoOFMode } = useZivoOFMode();
   const { data: profile } = useUserProfile();
   const { username } = useUsername();
   const { points } = useLoyaltyPoints();
@@ -418,13 +418,27 @@ export default function AccountSettingsPage() {
   // ── Profile share / preview / copy ID ─────────────
   const profileUrl = useMemo(() => {
     if (!user?.id || typeof window === "undefined") return "";
-    return `${window.location.origin}/user/${user.id}`;
-  }, [user?.id]);
+    const suffix = zivoOFMode ? "?from=account&as=visitor" : "?from=account";
+    return `${window.location.origin}/user/${user.id}${suffix}`;
+  }, [user?.id, zivoOFMode]);
 
   const handlePreviewProfile = () => {
     if (!profileUrl) return;
     window.open(profileUrl, "_blank", "noopener,noreferrer");
   };
+
+  const visibleSettingsGroups = useMemo(() => {
+    if (!zivoOFMode) return settingsGroups;
+    const ofTitles = new Set([
+      "Account",
+      "Creator & Monetization",
+      "Payments & Rewards",
+      "Data & Activity",
+    ]);
+    return settingsGroups.filter((group) => ofTitles.has(group.title));
+  }, [zivoOFMode]);
+
+  const visibleItems = useMemo(() => visibleSettingsGroups.flatMap((g) => g.items), [visibleSettingsGroups]);
 
   const [shareDialogOpen, setShareDialogOpen] = useState(false);
   const handleShareProfile = () => setShareDialogOpen(true);
@@ -704,15 +718,15 @@ export default function AccountSettingsPage() {
   const filtered = useMemo(() => {
     if (!search.trim()) return null;
     const q = search.toLowerCase();
-    return allItems.filter(
+    return visibleItems.filter(
       i => i.label.toLowerCase().includes(q) || i.description.toLowerCase().includes(q)
     );
-  }, [search]);
+  }, [search, visibleItems]);
 
   // Items the user has pinned, in pin order
   const pinnedItems = useMemo(() => {
-    return allItems.filter((i) => isPinned(i.href));
-  }, [isPinned]);
+    return visibleItems.filter((i) => isPinned(i.href));
+  }, [isPinned, visibleItems]);
 
   const initials = useMemo(() => {
     if (profile?.full_name) return profile.full_name.split(" ").map(n => n[0]).join("").toUpperCase().slice(0, 2);
@@ -1008,6 +1022,52 @@ export default function AccountSettingsPage() {
         </div>
       )}
 
+      {/* ZIVO OF workflow quick panel */}
+      {user && zivoOFMode && (
+        <motion.div
+          initial={{ opacity: 0, y: -6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.25, delay: 0.12 }}
+          className="mt-3 px-3"
+        >
+          <div className="rounded-2xl border border-rose-500/25 bg-rose-500/5 p-3.5">
+            <div className="flex items-center justify-between gap-3 mb-2.5">
+              <div className="min-w-0">
+                <p className="text-[13px] font-semibold text-foreground">ZIVO OF workflow</p>
+                <p className="text-[11px] text-muted-foreground">Account and creator shortcuts optimized for subscription workflow.</p>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setZivoOFMode(false);
+                  toast.success("ZIVO OF Mode turned off");
+                }}
+                className="inline-flex items-center text-[10px] font-bold uppercase tracking-wide px-2 py-1 rounded-full bg-rose-500/15 text-rose-500 border border-rose-500/25 hover:bg-rose-500/20 transition-colors"
+              >
+                OF mode on · Turn off
+              </button>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {[
+                { label: "Public preview", href: "/profile" },
+                { label: "Monetization", href: "/monetization" },
+                { label: "Subscribers", href: "/creator/subscribers" },
+                { label: "Subscriptions", href: "/account/subscriptions" },
+              ].map((item) => (
+                <button
+                  key={item.label}
+                  type="button"
+                  onClick={() => navigate(item.href)}
+                  className="text-left rounded-xl border border-border/40 bg-card/70 px-3 py-2 hover:bg-accent/50 transition-colors"
+                >
+                  <p className="text-[12px] font-semibold text-foreground leading-tight">{item.label}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+        </motion.div>
+      )}
+
       {/* Account Setup checklist */}
       {showSetup && (
         <motion.div
@@ -1216,7 +1276,7 @@ export default function AccountSettingsPage() {
                 </div>
               )}
 
-              {settingsGroups.map((group) => (
+              {visibleSettingsGroups.map((group) => (
                 <div key={group.title}>
                   <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider px-1 mb-2">
                     {group.title}

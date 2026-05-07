@@ -70,7 +70,7 @@ export default function PriceCalendar({
     <div className={cn("rounded-xl border border-border/50 bg-card/80 backdrop-blur p-4", className)}>
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => {
+        <Button variant="ghost" size="icon" aria-label="Previous month" className="h-7 w-7" onClick={() => {
           const prev = new Date(month.getFullYear(), month.getMonth() - 1);
           if (!isBefore(prev, startOfToday())) setMonth(prev);
         }}>
@@ -79,7 +79,7 @@ export default function PriceCalendar({
         <span className="text-sm font-semibold">
           {format(month, "MMMM yyyy")}
         </span>
-        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => {
+        <Button variant="ghost" size="icon" aria-label="Next month" className="h-7 w-7" onClick={() => {
           const next = new Date(month.getFullYear(), month.getMonth() + 1);
           const max = new Date(); max.setMonth(max.getMonth() + 11);
           if (isBefore(next, max)) setMonth(next);

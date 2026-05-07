@@ -11,6 +11,9 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useContacts } from "@/hooks/useContacts";
 import { toast } from "sonner";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUsername } from "@/hooks/useUsername";
+import { getPublicOrigin } from "@/lib/getPublicOrigin";
 
 interface ContactSearchResult {
   user_id: string;
@@ -27,12 +30,20 @@ export default function AddContactSheet({
   onOpenChange: (v: boolean) => void;
 }) {
   const { findByUsername, add } = useContacts();
+  const { user } = useAuth();
+  const { username } = useUsername();
   const navigate = useNavigate();
   const [value, setValue] = useState("");
   const [searching, setSearching] = useState(false);
   const [result, setResult] = useState<ContactSearchResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [adding, setAdding] = useState(false);
+
+  const inviteLink = username
+    ? `${getPublicOrigin()}/u/${encodeURIComponent(username)}`
+    : user?.id
+      ? `${getPublicOrigin()}/user/${encodeURIComponent(user.id)}`
+      : getPublicOrigin();
 
   async function onSearch() {
     setError(null); setResult(null);
@@ -119,7 +130,7 @@ export default function AddContactSheet({
             </button>
             <button type="button"
               onClick={() => {
-                navigator.clipboard?.writeText(`${window.location.origin}/u/me`);
+                navigator.clipboard?.writeText(inviteLink);
                 toast.success("Invite link copied");
               }}
               className="flex flex-col items-center gap-2 p-4 rounded-2xl border bg-card hover:bg-muted active:scale-95 transition"

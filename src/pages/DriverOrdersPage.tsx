@@ -14,6 +14,7 @@ import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useDriverShoppingOrders, ShoppingOrder } from "@/hooks/useDriverShoppingOrders";
 import { toast } from "sonner";
 import { useEatsNotifications } from "@/hooks/useEatsNotifications";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
 
@@ -23,12 +24,16 @@ function OrderCard({
   onTap,
   isAccepting,
   showAccept,
+  onAdvance,
+  isAdvancing,
 }: {
   order: ShoppingOrder;
   onAccept?: () => void;
   onTap: () => void;
   isAccepting?: boolean;
   showAccept?: boolean;
+  onAdvance?: () => void;
+  isAdvancing?: boolean;
 }) {
   const itemCount = Array.isArray(order.items) ? order.items.length : 0;
   const timeAgo = order.placed_at
@@ -98,13 +103,34 @@ function OrderCard({
           Accept Order
         </Button>
       ) : (
-        <div className="flex items-center justify-end text-xs text-primary font-medium">
-          View details <ChevronRight className="h-3.5 w-3.5 ml-0.5" />
+        <div className="space-y-2">
+          {STATUS_ADVANCE[order.status] && (
+            <button type="button"
+              onClick={(e) => { e.stopPropagation(); onAdvance?.(); }}
+              disabled={isAdvancing}
+              className="w-full py-2 rounded-xl bg-primary text-primary-foreground text-xs font-bold touch-manipulation active:scale-[0.98] transition-all disabled:opacity-50">
+              {isAdvancing ? "Updating…" : STATUS_ADVANCE_LABEL[order.status]}
+            </button>
+          )}
+          <div className="flex items-center justify-end text-xs text-primary font-medium">
+            View details <ChevronRight className="h-3.5 w-3.5 ml-0.5" />
+          </div>
         </div>
       )}
     </motion.div>
   );
 }
+
+const STATUS_ADVANCE: Record<string, string> = {
+  accepted: "shopping",
+  shopping: "shopping_complete",
+  shopping_complete: "picked_up",
+};
+const STATUS_ADVANCE_LABEL: Record<string, string> = {
+  accepted: "Start Shopping →",
+  shopping: "Shopping Done →",
+  shopping_complete: "Picked Up →",
+};
 
 export default function DriverOrdersPage() {
   const navigate = useNavigate();
@@ -113,6 +139,21 @@ export default function DriverOrdersPage() {
   const handlePullRefresh = useCallback(async () => { await refetch(); }, [refetch]);
   const [tab, setTab] = useState<"available" | "my">("available");
   const [acceptingId, setAcceptingId] = useState<string | null>(null);
+  const [advancingId, setAdvancingId] = useState<string | null>(null);
+
+  const handleAdvance = async (orderId: string, currentStatus: string) => {
+    const next = STATUS_ADVANCE[currentStatus];
+    if (!next) return;
+    setAdvancingId(orderId);
+    const { error } = await (supabase as any).from("shopping_orders").update({ status: next }).eq("id", orderId);
+    setAdvancingId(null);
+    if (error) {
+      toast.error("Could not update status.");
+      return;
+    }
+    await refetch();
+    toast.success(`Status: ${next.replace(/_/g, " ")}`);
+  };
 
   const handleAccept = async (orderId: string) => {
     setAcceptingId(orderId);
@@ -181,6 +222,8 @@ export default function DriverOrdersPage() {
                 isAccepting={acceptingId === order.id}
                 onAccept={() => handleAccept(order.id)}
                 onTap={() => navigate(`/driver/shopping/${order.id}`)}
+                onAdvance={() => handleAdvance(order.id, order.status)}
+                isAdvancing={advancingId === order.id}
               />
             ))}
           </AnimatePresence>

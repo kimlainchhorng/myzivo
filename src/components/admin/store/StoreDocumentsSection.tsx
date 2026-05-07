@@ -258,12 +258,13 @@ export default function StoreDocumentsSection({ storeId }: Props) {
                     </td>
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center gap-1 justify-end">
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleView(d)}>
+                        <Button variant="ghost" size="icon" aria-label="View document" className="h-7 w-7" onClick={() => handleView(d)}>
                           <Eye className="w-3.5 h-3.5" />
                         </Button>
                         <Button
                           variant="ghost"
                           size="icon"
+                          aria-label="Delete document"
                           className="h-7 w-7 text-destructive hover:text-destructive"
                           onClick={() => setSelectedDoc(d)}
                         >

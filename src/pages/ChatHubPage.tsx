@@ -1111,6 +1111,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
           .select("user_id, full_name, avatar_url, email, is_verified")
           .or(`full_name.ilike.${term},email.ilike.${term}`)
           .neq("user_id", user!.id)
+          .eq("is_of_creator", false)
           .limit(15);
         if (alive && data) {
           setProfileResults(

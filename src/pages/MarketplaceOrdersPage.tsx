@@ -1,7 +1,7 @@
 /**
  * MarketplaceOrdersPage — Track marketplace purchases and sales
  */
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { useState } from "react";
+import { toast } from "sonner";
 
 const STATUS_CONFIG: Record<string, { icon: any; color: string; label: string }> = {
   pending: { icon: Clock, color: "text-amber-500", label: "Pending" },
@@ -23,7 +24,30 @@ const STATUS_CONFIG: Record<string, { icon: any; color: string; label: string }>
 export default function MarketplaceOrdersPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const queryClient = useQueryClient();
   const [tab, setTab] = useState<"purchases" | "sales">("purchases");
+  const [advancingId, setAdvancingId] = useState<string | null>(null);
+  const [buyerRating, setBuyerRating] = useState<Record<string, number>>({});
+
+  const advanceSaleStatus = async (orderId: string, current: string) => {
+    const next: Record<string, string> = { pending: "confirmed", confirmed: "shipped", shipped: "delivered" };
+    const nextStatus = next[current];
+    if (!nextStatus) return;
+    setAdvancingId(orderId);
+    const { error } = await (supabase as any).from("marketplace_orders").update({ status: nextStatus }).eq("id", orderId);
+    setAdvancingId(null);
+    if (error) { toast.error(error.message); return; }
+    queryClient.setQueryData(["marketplace-sales", user?.id], (old: any[] | undefined) =>
+      old ? old.map(o => o.id === orderId ? { ...o, status: nextStatus } : o) : old
+    );
+    toast.success(`Marked as ${nextStatus}`);
+  };
+
+  const submitBuyerReview = async (orderId: string, stars: number) => {
+    setBuyerRating(prev => ({ ...prev, [orderId]: stars }));
+    await (supabase as any).from("marketplace_orders").update({ buyer_rating: stars } as any).eq("id", orderId);
+    toast.success(`Rated ${stars} star${stars !== 1 ? "s" : ""}`);
+  };
 
   // Purchases (I'm the buyer)
   const { data: purchases = [] } = useQuery({
@@ -149,6 +173,36 @@ export default function MarketplaceOrdersPage() {
 
                 {order.notes && (
                   <p className="text-[11px] text-muted-foreground mt-2 italic">"{order.notes}"</p>
+                )}
+
+                {/* Seller: advance status */}
+                {tab === "sales" && ["pending", "confirmed", "shipped"].includes(order.status) && (
+                  <button type="button" disabled={advancingId === order.id}
+                    onClick={() => advanceSaleStatus(order.id, order.status)}
+                    className="mt-3 w-full py-2 rounded-xl bg-primary/10 text-primary text-xs font-bold border border-primary/20 active:scale-[0.98] transition-all touch-manipulation disabled:opacity-50">
+                    {advancingId === order.id ? "Updating…" : order.status === "pending" ? "Mark as Confirmed →" : order.status === "confirmed" ? "Mark as Shipped →" : "Mark as Delivered →"}
+                  </button>
+                )}
+
+                {/* Buyer: star review for delivered orders */}
+                {tab === "purchases" && order.status === "delivered" && !order.buyer_rating && !buyerRating[order.id] && (
+                  <div className="mt-3">
+                    <p className="text-[10px] font-semibold text-muted-foreground mb-1.5">Rate this purchase</p>
+                    <div className="flex gap-1.5">
+                      {[1,2,3,4,5].map(s => (
+                        <button key={s} type="button" aria-label={`Rate ${s} star${s !== 1 ? "s" : ""}`}
+                          onClick={() => submitBuyerReview(order.id, s)}
+                          className="flex-1 flex items-center justify-center py-1.5 rounded-lg border border-border/40 bg-muted/30 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-colors active:scale-90">
+                          <Star className="w-4 h-4 text-muted-foreground/40 hover:fill-amber-400 hover:text-amber-400 transition-colors" />
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {(order.buyer_rating || buyerRating[order.id]) && (
+                  <div className="flex items-center gap-0.5 mt-2">
+                    {[1,2,3,4,5].map(s => <Star key={s} className={`w-3 h-3 ${s <= (buyerRating[order.id] || order.buyer_rating) ? "fill-amber-400 text-amber-400" : "text-muted-foreground/20"}`} />)}
+                  </div>
                 )}
               </motion.div>
             );

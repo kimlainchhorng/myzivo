@@ -79,7 +79,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         // Ignore events that fire before getSession has finished
         if (!initializedRef.current) return;
 
-        console.log("[Auth] onAuthStateChange", {
+        if (import.meta.env.DEV) console.log("[Auth] onAuthStateChange", {
           event,
           hasSession: !!session,
           userId: session?.user?.id ?? null,

@@ -150,9 +150,7 @@ async function fetchNearbyForType(
             console.warn(`[NearbyPlaces] Photo fetch failed for ${r.name}:`, e);
           }
         }
-        if (!iconUrl) {
-          console.log(`[NearbyPlaces] No photo available for: ${r.name}`);
-        }
+        // iconUrl remains undefined if no photo is available
 
         return {
           name: r.name ?? "Unknown",
