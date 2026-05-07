@@ -1524,7 +1524,6 @@ function ReelCard({
                   !captionExpanded && "line-clamp-2",
                   isLong ? "cursor-pointer" : "cursor-default",
                 )}
-                aria-expanded={captionExpanded ? "true" : "false"}
               >
                 <Suspense fallback={<span>{post.caption}</span>}>
                   <SafeCaption text={post.caption} />
@@ -2688,7 +2687,6 @@ function CommentSheet({
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground hover:bg-muted/80",
               )}
-              aria-pressed={commentSort === "newest" ? "true" : "false"}
             >
               Newest
             </button>
@@ -2701,7 +2699,6 @@ function CommentSheet({
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted text-muted-foreground hover:bg-muted/80",
               )}
-              aria-pressed={commentSort === "top" ? "true" : "false"}
             >
               Top
             </button>
@@ -2863,7 +2860,6 @@ function CommentSheet({
                             return next;
                           })}
                           className="ml-9 self-start text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
-                          aria-expanded={isExpanded ? "true" : "false"}
                         >
                           <span className="inline-block w-6 border-t border-muted-foreground/30" />
                           {isExpanded

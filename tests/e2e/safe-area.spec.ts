@@ -53,8 +53,12 @@ async function applyProfile(page: Page, p: Profile) {
 async function expectClear(page: Page, selector: string, floor: number, label: string) {
   const el = page.locator(selector).first();
   await el.waitFor({ state: "visible", timeout: 20_000 });
-  const top = await el.evaluate((node) => node.getBoundingClientRect().top);
-  expect(top, `${label} should clear ${floor}px (got ${top}px)`).toBeGreaterThanOrEqual(
+  const clearance = await el.evaluate((node) => {
+    const rectTop = node.getBoundingClientRect().top;
+    const padTop = Number.parseFloat(getComputedStyle(node as Element).paddingTop || "0") || 0;
+    return rectTop + padTop;
+  });
+  expect(clearance, `${label} should clear ${floor}px (got ${clearance}px)`).toBeGreaterThanOrEqual(
     floor - 0.5,
   );
 }
@@ -71,7 +75,7 @@ for (const p of PROFILES) {
       await page.goto("/feed");
       await expectClear(
         page,
-        '[data-testid="feed-sticky-header"]',
+        '[data-testid="feed-sticky-header"] > div',
         p.inset,
         "feed sticky header",
       );

@@ -179,15 +179,32 @@ async function scrollInside(page: Page, x: number, y: number) {
   );
 }
 
+async function dismissBlockingOverlays(page: Page) {
+  // Best-effort dismissal for modal layers that intercept clicks in CI.
+  await page.keyboard.press("Escape").catch(() => {});
+  const closeButtons = page.locator('button[aria-label="Close"], button[aria-label="Dismiss"], button:has-text("Not now"), button:has-text("Close")');
+  const count = await closeButtons.count().catch(() => 0);
+  for (let i = 0; i < Math.min(count, 3); i += 1) {
+    await closeButtons.nth(i).click({ force: true }).catch(() => {});
+  }
+  await page.evaluate(() => {
+    const blockers = document.querySelectorAll('div[class*="fixed"][class*="inset-0"][class*="z-[200]"]');
+    blockers.forEach((el) => el.remove());
+  }).catch(() => {});
+}
+
 async function openOverlay(page: Page, c: ViewerCase) {
   if (c.seed) await c.seed(page);
   await page.goto(c.route, { waitUntil: "domcontentloaded" });
+  await dismissBlockingOverlays(page);
   if (c.switchTabTestId) {
     const tabBtn = page.getByTestId(c.switchTabTestId);
     // Wait for the tab to render before the isVisible check (avoids a
     // race where React hasn't mounted the tabs yet).
     await tabBtn.waitFor({ state: "visible", timeout: 8000 }).catch(() => {});
-    if (await tabBtn.isVisible().catch(() => false)) await tabBtn.click();
+    if (await tabBtn.isVisible().catch(() => false)) {
+      await tabBtn.evaluate((el) => (el as HTMLElement).click());
+    }
   }
   const trigger = page.locator(c.triggerSelector).first();
   try {

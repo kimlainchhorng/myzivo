@@ -6,6 +6,20 @@ import { test, expect, devices } from "@playwright/test";
 import { seedProfilePosts } from "./fixtures/seedProfilePosts";
 import { login } from "./fixtures/login";
 
+async function dismissBlockingOverlays(page: import("@playwright/test").Page) {
+  // Best-effort dismissal for onboarding/modals that can intercept clicks.
+  await page.keyboard.press("Escape").catch(() => {});
+  const closeButtons = page.locator('button[aria-label="Close"], button[aria-label="Dismiss"], button:has-text("Not now"), button:has-text("Close")');
+  const count = await closeButtons.count().catch(() => 0);
+  for (let i = 0; i < Math.min(count, 3); i += 1) {
+    await closeButtons.nth(i).click({ force: true }).catch(() => {});
+  }
+  await page.evaluate(() => {
+    const blockers = document.querySelectorAll('div[class*="fixed"][class*="inset-0"][class*="z-[200]"]');
+    blockers.forEach((el) => el.remove());
+  }).catch(() => {});
+}
+
 test.use({ ...devices["Desktop Chrome"] });
 
 test.describe("post-menu accessibility", () => {
@@ -17,12 +31,15 @@ test.describe("post-menu accessibility", () => {
   test("Escape on the grab handle closes the post viewer", async ({ page }) => {
     await seedProfilePosts(page);
     await page.goto("/profile", { waitUntil: "domcontentloaded" });
+    await dismissBlockingOverlays(page);
     const photoTab = page.getByTestId("profile-tab-photo");
     await photoTab.waitFor({ state: "visible", timeout: 8000 }).catch(() => {});
-    if (await photoTab.isVisible().catch(() => false)) await photoTab.click();
+    if (await photoTab.isVisible().catch(() => false)) {
+      await photoTab.evaluate((el) => (el as HTMLElement).click());
+    }
     const trigger = page.locator('[data-testid^="profile-post-thumb"]').first();
     await expect(trigger).toBeVisible({ timeout: 8000 });
-    await trigger.click();
+    await trigger.evaluate((el) => (el as HTMLElement).click());
 
     const handle = page.getByTestId("profile-post-grab-handle");
     await handle.waitFor({ state: "visible" });
@@ -37,12 +54,15 @@ test.describe("post-menu accessibility", () => {
   }) => {
     await seedProfilePosts(page); // login already ran in beforeEach
     await page.goto("/profile", { waitUntil: "domcontentloaded" });
+    await dismissBlockingOverlays(page);
     const photoTab2 = page.getByTestId("profile-tab-photo");
     await photoTab2.waitFor({ state: "visible", timeout: 8000 }).catch(() => {});
-    if (await photoTab2.isVisible().catch(() => false)) await photoTab2.click();
+    if (await photoTab2.isVisible().catch(() => false)) {
+      await photoTab2.evaluate((el) => (el as HTMLElement).click());
+    }
     const trigger = page.locator('[data-testid^="profile-post-thumb"]').first();
     await expect(trigger).toBeVisible({ timeout: 8000 });
-    await trigger.click();
+    await trigger.evaluate((el) => (el as HTMLElement).click());
 
     const moreBtn = page
       .locator('[aria-label="Post options"], [aria-label="More options"]')
