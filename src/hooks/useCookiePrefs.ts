@@ -9,6 +9,10 @@ export interface CookiePrefs {
   updatedAt: string;
 }
 
+type WindowWithAnalyticsLoader = Window & {
+  __zivoLoadAnalytics?: () => void;
+};
+
 const STORAGE_KEY = "zivo_cookie_consent";
 
 const defaults: CookiePrefs = {
@@ -50,6 +54,9 @@ export function useCookiePrefs() {
       const next: CookiePrefs = { ...prev, [key]: value, updatedAt: new Date().toISOString() };
       try {
         window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        if (next.analytics) {
+          (window as WindowWithAnalyticsLoader).__zivoLoadAnalytics?.();
+        }
       } catch {
         // ignore quota errors
       }
@@ -69,6 +76,7 @@ export function useCookiePrefs() {
       };
       try {
         window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+        (window as WindowWithAnalyticsLoader).__zivoLoadAnalytics?.();
       } catch {
         // ignore quota errors
       }
