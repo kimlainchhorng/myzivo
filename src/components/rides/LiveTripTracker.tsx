@@ -220,10 +220,25 @@ export default function LiveTripTracker({
             </div>
           </div>
           <div className="flex gap-2">
-            <button onClick={() => navigate("/chat", { state: { openChat: { userId: "driver", name: "Marcus T." } } })} className="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center active:scale-95 transition-transform min-w-[44px] min-h-[44px]" aria-label="Call driver">
+            <button
+              onClick={() =>
+                navigate("/chat", {
+                  state: {
+                    openChat: { userId: "driver", name: "Marcus T." },
+                    startCall: "voice",
+                  },
+                })
+              }
+              className="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center active:scale-95 transition-transform min-w-[44px] min-h-[44px]"
+              aria-label="Call driver"
+            >
               <Phone className="w-4 h-4 text-emerald-500" />
             </button>
-            <button onClick={() => navigate("/chat")} className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center active:scale-95 transition-transform min-w-[44px] min-h-[44px]" aria-label="Message driver">
+            <button
+              onClick={() => navigate("/chat", { state: { openChat: { userId: "driver", name: "Marcus T." } } })}
+              className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center active:scale-95 transition-transform min-w-[44px] min-h-[44px]"
+              aria-label="Message driver"
+            >
               <MessageSquare className="w-4 h-4 text-primary" />
             </button>
           </div>
@@ -247,7 +262,11 @@ export default function LiveTripTracker({
                 <p className="text-xs font-bold text-foreground">Share your trip</p>
                 <div className="flex items-center gap-2 p-2.5 rounded-xl bg-muted/20 border border-border/30">
                   <span className="text-[10px] text-muted-foreground flex-1 font-mono truncate">{shareLink}</span>
-                  <button onClick={() => { navigator.clipboard.writeText(`https://${shareLink}`); toast.success("Link copied!"); }}>
+                  <button
+                    onClick={() => { navigator.clipboard.writeText(`https://${shareLink}`); toast.success("Link copied!"); }}
+                    aria-label="Copy trip share link"
+                    title="Copy trip share link"
+                  >
                     <Copy className="w-3.5 h-3.5 text-primary" />
                   </button>
                 </div>

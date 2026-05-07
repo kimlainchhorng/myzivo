@@ -214,7 +214,18 @@ export default function RideDriverMatch() {
                 </div>
               </div>
               <div className="flex flex-col gap-1.5">
-                <button onClick={() => navigate("/chat", { state: { openChat: { userId: matchedDriver?.id, name: matchedDriver?.name } } })} className="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center active:scale-95 transition-transform" aria-label="Call driver">
+                <button
+                  onClick={() =>
+                    navigate("/chat", {
+                      state: {
+                        openChat: { userId: matchedDriver?.id, name: matchedDriver?.name },
+                        startCall: "voice",
+                      },
+                    })
+                  }
+                  className="w-10 h-10 rounded-full bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center active:scale-95 transition-transform"
+                  aria-label="Call driver"
+                >
                   <Phone className="w-4 h-4 text-emerald-500" />
                 </button>
                 <button onClick={() => navigate("/chat", { state: { openChat: { userId: matchedDriver?.id, name: matchedDriver?.name } } })} className="w-10 h-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center active:scale-95 transition-transform" aria-label="Message driver">
