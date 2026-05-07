@@ -149,6 +149,11 @@ type OpenChatState = {
   avatar?: string | null;
 };
 
+type SplitRequestState = {
+  amount?: number;
+  riders?: number;
+};
+
 function normalizeOpenChatState(openChat?: OpenChatState | null) {
   if (!openChat) return null;
 
@@ -446,8 +451,24 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
       startCall?: "voice" | "video";
       shareUrl?: string;
       shareText?: string;
+      shareMessage?: string;
+      splitRequest?: SplitRequestState;
     } | null;
     const normalizedOpenChat = normalizeOpenChatState(state?.openChat);
+
+    const splitAmount =
+      typeof state?.splitRequest?.amount === "number" && Number.isFinite(state.splitRequest.amount)
+        ? state.splitRequest.amount
+        : null;
+    const splitRiders =
+      typeof state?.splitRequest?.riders === "number" && Number.isFinite(state.splitRequest.riders)
+        ? state.splitRequest.riders
+        : null;
+    const splitPrefill = splitAmount !== null
+      ? `Split ride fare: $${splitAmount.toFixed(2)}${splitRiders ? ` each (${splitRiders} riders)` : ""}`
+      : "";
+    const sharedPrefill = (state?.shareMessage || "").trim() || splitPrefill;
+
     if (normalizedOpenChat) {
       setOpenPersonalChat(normalizedOpenChat);
       if (state.startCall) {
@@ -455,6 +476,16 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
       }
       window.history.replaceState({}, document.title);
     }
+
+    if (!normalizedOpenChat && sharedPrefill) {
+      try {
+        sessionStorage.setItem("pendingForwardPrefill", sharedPrefill);
+      } catch {}
+      setActive("personal");
+      toast("Choose a chat to send your message");
+      window.history.replaceState({}, document.title);
+    }
+
     if (state?.shareUrl) {
       setSharePayload({ shareUrl: state.shareUrl, shareText: state.shareText || "" });
       setActive("personal");
@@ -476,9 +507,18 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
       startCall?: "voice" | "video";
       shareUrl?: string;
       shareText?: string;
+      shareMessage?: string;
+      splitRequest?: SplitRequestState;
     } | null;
 
-    if (searchParams.get("with") || searchParams.get("unlocked") || normalizeOpenChatState(routeState?.openChat) || routeState?.shareUrl) return;
+    if (
+      searchParams.get("with") ||
+      searchParams.get("unlocked") ||
+      normalizeOpenChatState(routeState?.openChat) ||
+      routeState?.shareUrl ||
+      routeState?.shareMessage ||
+      routeState?.splitRequest
+    ) return;
 
     try {
       const raw = localStorage.getItem(`${LAST_OPEN_CHAT_KEY}:${user.id}`);
