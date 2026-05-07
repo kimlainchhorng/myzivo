@@ -282,19 +282,26 @@ function MusicCard({ message, isMe, time }: { message: string; isMe: boolean; ti
   const listenUrl = listenMatch?.[1] || firstUrlMatch?.[0] || "";
   const previewUrl = previewMatch?.[1] || "";
   const [isPlaying, setIsPlaying] = useState(false);
+  const [previewFailed, setPreviewFailed] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const handlePrimaryAction = async (e: React.MouseEvent) => {
     e.stopPropagation();
 
-    if (previewUrl && audioRef.current) {
+    if (previewUrl && audioRef.current && !previewFailed) {
       const audio = audioRef.current;
       if (audio.paused) {
         try {
           await audio.play();
           setIsPlaying(true);
         } catch {
-          toast.error("Unable to play preview audio");
+          setPreviewFailed(true);
+          if (listenUrl) {
+            await openExternalUrl(listenUrl);
+            toast.info("Preview unavailable, opened source link");
+          } else {
+            toast.error("Unable to play preview audio");
+          }
         }
       } else {
         audio.pause();
@@ -376,6 +383,10 @@ function MusicCard({ message, isMe, time }: { message: string; isMe: boolean; ti
           onPause={() => setIsPlaying(false)}
           onEnded={() => setIsPlaying(false)}
           onPlay={() => setIsPlaying(true)}
+          onError={() => {
+            setPreviewFailed(true);
+            setIsPlaying(false);
+          }}
         />
       )}
     </div>
