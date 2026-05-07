@@ -296,17 +296,18 @@ function MusicCard({ message, isMe, time }: { message: string; isMe: boolean; ti
           setIsPlaying(true);
         } catch {
           setPreviewFailed(true);
-          if (listenUrl) {
-            await openExternalUrl(listenUrl);
-            toast.info("Preview unavailable, opened source link");
-          } else {
-            toast.error("Unable to play preview audio");
-          }
+          if (listenUrl) toast.info("Preview unavailable. Tap play again to open source link");
+          else toast.error("Unable to play preview audio");
         }
       } else {
         audio.pause();
         setIsPlaying(false);
       }
+      return;
+    }
+
+    if (previewFailed && listenUrl) {
+      await openExternalUrl(listenUrl);
       return;
     }
 
