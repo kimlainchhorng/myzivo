@@ -2171,8 +2171,9 @@ function ReelCard({
             >
               <div className="flex justify-center pt-2 pb-1">
                 <div className="w-10 h-1 rounded-full bg-muted-foreground/20" />
-              <motion.div
+              </div>
               <div className="px-2 py-2 space-y-0.5">
+                <button
                   onClick={() => {
                     setShowMoreMenu(false);
                     const url = `${window.location.origin}/reels/${post.id}`;
@@ -4287,8 +4288,9 @@ export default function FeedPage() {
             <div className="mx-3 px-4 py-2 rounded-full bg-zinc-900/95 backdrop-blur-md border border-white/15 shadow-xl flex items-center justify-center gap-2 pointer-events-auto">
               <span className="w-2 h-2 rounded-full bg-amber-400 animate-pulse" />
               <span className="text-white text-xs font-semibold">You're offline — reels will resume when you reconnect</span>
-            <motion.div
+            </div>
           </motion.div>
+        )}
       </AnimatePresence>
 
       {/* For You / Following tabs — TikTok-style top center segmented control.

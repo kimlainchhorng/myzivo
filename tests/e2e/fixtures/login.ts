@@ -24,8 +24,15 @@ export async function login(page: Page) {
   await page.goto("/login");
   await page.waitForLoadState("domcontentloaded");
   if (!page.url().includes("/login")) return;
+
+  // If saved-account picker is shown, switch to the full login form.
+  const addAccount = page.getByRole("button", { name: "Log into another account" });
+  if (await addAccount.isVisible().catch(() => false)) {
+    await addAccount.click();
+  }
+
   await page.locator("#login-email").fill(EMAIL);
-  await page.locator("#login-password").fill(PASSWORD);
+  await page.locator("#login-password-full, #login-password").first().fill(PASSWORD);
   await page.locator('button[type="submit"]').click();
   await page.waitForURL((url) => !url.pathname.includes("/login"), { timeout: 25_000 });
 }

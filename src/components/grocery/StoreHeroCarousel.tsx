@@ -67,7 +67,7 @@ export default function StoreHeroCarousel({ images, storeName, positions }: Stor
                   "w-full h-full object-cover transition-transform ease-out will-change-transform",
                   i === selectedIndex ? "scale-110" : "scale-100"
                 )}
-                // Inline transition-duration avoids the `duration-[6000ms]` Tailwind
+                // Inline transition-duration avoids Tailwind arbitrary-value
                 // ambiguity (the bracket form is parsed as a content-utility otherwise).
                 style={{
                   objectPosition: `center ${positions?.[src] ?? 50}%`,
