@@ -2580,7 +2580,12 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
           <Suspense fallback={
             <div className="fixed inset-0 z-[1300] bg-background flex flex-col" style={{ transform: "translateX(0)" }}>
               <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-2xl border-b border-border/10 px-2 py-2.5 flex items-center gap-3">
-                <button onClick={() => setOpenPersonalChat(null)} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-muted/50 active:scale-90 transition-transform">
+                <button
+                  onClick={() => setOpenPersonalChat(null)}
+                  className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-muted/50 active:scale-90 transition-transform"
+                  aria-label="Back to chat list"
+                  title="Back to chat list"
+                >
                   <ArrowLeft className="h-5 w-5 text-foreground" />
                 </button>
                 <div className="w-9 h-9 rounded-full bg-muted animate-pulse" />
@@ -2628,7 +2633,12 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
           <Suspense fallback={
             <div className="fixed inset-0 z-50 bg-background flex flex-col">
               <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-xl border-b border-border/30 px-2 py-2.5 flex items-center gap-3">
-                <button onClick={() => setOpenGroupChat(null)} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-muted/50 active:scale-90 transition-transform">
+                <button
+                  onClick={() => setOpenGroupChat(null)}
+                  className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-muted/50 active:scale-90 transition-transform"
+                  aria-label="Back to chat list"
+                  title="Back to chat list"
+                >
                   <ArrowLeft className="h-5 w-5 text-foreground" />
                 </button>
                 <div className="w-9 h-9 rounded-full bg-muted animate-pulse" />
