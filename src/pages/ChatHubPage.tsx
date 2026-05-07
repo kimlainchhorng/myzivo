@@ -154,6 +154,13 @@ type SplitRequestState = {
   riders?: number;
 };
 
+type StartCallState = "voice" | "video" | "audio";
+
+function normalizeStartCall(kind?: StartCallState | null): "voice" | "video" | null {
+  if (!kind) return null;
+  return kind === "audio" ? "voice" : kind;
+}
+
 function normalizeOpenChatState(openChat?: OpenChatState | null) {
   if (!openChat) return null;
 
@@ -448,7 +455,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   useEffect(() => {
     const state = location.state as {
       openChat?: OpenChatState;
-      startCall?: "voice" | "video";
+      startCall?: StartCallState;
       shareUrl?: string;
       shareText?: string;
       shareMessage?: string;
@@ -468,11 +475,12 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
       ? `Split ride fare: $${splitAmount.toFixed(2)}${splitRiders ? ` each (${splitRiders} riders)` : ""}`
       : "";
     const sharedPrefill = (state?.shareMessage || "").trim() || splitPrefill;
+    const normalizedStartCall = normalizeStartCall(state?.startCall);
 
     if (normalizedOpenChat) {
       setOpenPersonalChat(normalizedOpenChat);
-      if (state.startCall) {
-        setPendingCall(state.startCall);
+      if (normalizedStartCall) {
+        setPendingCall(normalizedStartCall);
       }
       window.history.replaceState({}, document.title);
     }
@@ -504,7 +512,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
 
     const routeState = location.state as {
       openChat?: OpenChatState;
-      startCall?: "voice" | "video";
+      startCall?: StartCallState;
       shareUrl?: string;
       shareText?: string;
       shareMessage?: string;
