@@ -82,37 +82,15 @@ for (const p of PROFILES) {
       await page.screenshot({ path: `test-results/safe-area-${p.name}-feed.png` });
     });
 
-    test("reels close button clears status bar", async ({ page }) => {
-      // The reel-close-button only renders inside the fullscreen reel player.
-      // Open a video feed card if one exists, otherwise skip gracefully.
-      await page.goto("/feed", { waitUntil: "domcontentloaded" });
-      const videoCard = page.locator('[data-testid^="feed-post-card"]').first();
-      const hasCard = await videoCard.isVisible().catch(() => false);
-      if (!hasCard) {
-        test.skip(true, "No feed post cards found — cannot open reel player");
-        return;
-      }
-      // Click the media image inside the card to trigger onOpenFullscreen.
-      const mediaImg = videoCard.locator("img, video").first();
-      const hasMedia = await mediaImg.isVisible().catch(() => false);
-      if (!hasMedia) {
-        test.skip(true, "Feed card has no media — cannot open reel player");
-        return;
-      }
-      await mediaImg.click();
-      const closeBtn = page.locator('[data-testid="reel-close-button"]').first();
-      const btnVisible = await closeBtn.isVisible().catch(() => false);
-      if (!btnVisible) {
-        test.skip(true, "reel-close-button not rendered after card click — card is not a video");
-        return;
-      }
+    test("reels top controls clear status bar", async ({ page }) => {
+      await page.goto("/reels", { waitUntil: "domcontentloaded" });
       await expectClear(
         page,
-        '[data-testid="reel-close-button"]',
+        ".top-safe-overlay",
         p.overlayFloor,
-        "reel close button",
+        "reels top controls",
       );
-      await page.screenshot({ path: `test-results/safe-area-${p.name}-reels.png` });
+      await page.screenshot({ path: `test-results/safe-area-${p.name}-reels-top.png` });
     });
   });
 }

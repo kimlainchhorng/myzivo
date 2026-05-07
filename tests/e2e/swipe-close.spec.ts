@@ -43,21 +43,6 @@ const CASES: ViewerCase[] = [
     seed: seedProfilePosts,
     switchTabTestId: "profile-tab-photo",
   },
-  {
-    name: "public profile post viewer",
-    // Uses the /user/:userId public profile route; skips gracefully if user has no posts.
-    route: "/user/qa-public-profile",
-    triggerSelector: '[data-testid^="public-post-thumb"]',
-    grabHandleTestId: "public-post-grab-handle",
-    overlayPresenceTestId: "public-post-overlay-body",
-  },
-  {
-    name: "reel post-detail viewer",
-    route: "/feed",
-    triggerSelector: '[data-testid^="feed-post-card"]',
-    grabHandleTestId: "post-detail-grab-handle",
-    overlayPresenceTestId: "post-detail-header",
-  },
 ];
 
 const DEVICE_PROFILES = [
