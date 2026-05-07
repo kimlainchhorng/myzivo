@@ -273,35 +273,88 @@ function MusicCard({ message, isMe, time }: { message: string; isMe: boolean; ti
   const lines = message.split("\n");
   const titleLine = lines[0].replace("🎵 ", "").split(" — ");
   const title = titleLine[0] || "Unknown Track";
-  const artist = titleLine[1] || "Unknown Artist";
+  const artist = titleLine[1] || "";
   const metaLine = lines[1] || "";
+  const listenMatch = message.match(/^\s*Listen:\s*(https?:\/\/\S+)\s*$/im);
+  const previewMatch = message.match(/^\s*Preview:\s*(https?:\/\/\S+)\s*$/im);
+  const firstUrlMatch = message.match(/https?:\/\/\S+/i);
+  const listenUrl = listenMatch?.[1] || firstUrlMatch?.[0] || "";
+  const previewUrl = previewMatch?.[1] || "";
+  const [isPlaying, setIsPlaying] = useState(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  const handlePrimaryAction = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+
+    if (previewUrl && audioRef.current) {
+      const audio = audioRef.current;
+      if (audio.paused) {
+        try {
+          await audio.play();
+          setIsPlaying(true);
+        } catch {
+          toast.error("Unable to play preview audio");
+        }
+      } else {
+        audio.pause();
+        setIsPlaying(false);
+      }
+      return;
+    }
+
+    if (listenUrl) {
+      await openExternalUrl(listenUrl);
+      return;
+    }
+
+    toast.info("No playable link found in this music share");
+  };
 
   return (
     <div className={`p-4 rounded-3xl border ${isMe ? "bg-black text-white border-white/10" : "bg-muted/50 border-border/30"} min-w-[260px] shadow-xl relative overflow-hidden group`}>
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0 flex-1">
-          <p className="text-[13px] font-bold opacity-60 flex items-center gap-1.5 mb-1">
-            <Music2 className="w-3.5 h-3.5" /> {artist}
-          </p>
+          {artist && (
+            <p className="text-[13px] font-bold opacity-60 flex items-center gap-1.5 mb-1">
+              <Music2 className="w-3.5 h-3.5" /> {artist}
+            </p>
+          )}
           <p className="text-[17px] font-black leading-tight tracking-tight mb-1">{title}</p>
           <p className="text-[12px] font-medium opacity-80">{metaLine}</p>
-          <p className="text-[13px] font-bold mt-2">Listen:</p>
+          <p className="text-[13px] font-bold mt-2">{previewUrl ? "Preview:" : "Listen:"}</p>
         </div>
-        <button className="h-11 w-11 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-white/20 transition-all active:scale-90 shrink-0 shadow-lg border border-white/10">
-          <Play className="w-5 h-5 fill-white text-white ml-0.5" />
+        <button
+          type="button"
+          aria-label={previewUrl ? (isPlaying ? "Pause music preview" : "Play music preview") : "Open music link"}
+          onClick={(e) => void handlePrimaryAction(e)}
+          className="h-11 w-11 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-white/20 transition-all active:scale-90 shrink-0 shadow-lg border border-white/10"
+        >
+          {previewUrl && isPlaying ? (
+            <Pause className="w-5 h-5 fill-white text-white" />
+          ) : (
+            <Play className="w-5 h-5 fill-white text-white ml-0.5" />
+          )}
         </button>
       </div>
       
-      <div className="mt-4 h-16 rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center relative overflow-hidden">
+      <button
+        type="button"
+        onClick={(e) => void handlePrimaryAction(e)}
+        className="mt-4 h-16 w-full rounded-2xl bg-white/5 border border-white/10 flex items-center justify-center relative overflow-hidden"
+      >
         <div className="absolute inset-0 bg-white/5" />
         <div className="text-[15px] font-bold relative z-10 flex items-center gap-2">
           <span>{title}</span>
           <span className="h-8 w-8 rounded-full bg-white text-black flex items-center justify-center shadow-sm">
-            <Play className="w-4 h-4 fill-current ml-0.5" />
+            {previewUrl && isPlaying ? (
+              <Pause className="w-4 h-4 fill-current" />
+            ) : (
+              <Play className="w-4 h-4 fill-current ml-0.5" />
+            )}
           </span>
         </div>
         <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded-md bg-black/40 text-[9px] font-black uppercase tracking-widest text-white/40">Zivo</div>
-      </div>
+      </button>
       
       <div className="mt-3 flex items-center justify-between">
         <span className="text-[10px] font-bold opacity-40 uppercase tracking-widest">{time}</span>
@@ -314,6 +367,16 @@ function MusicCard({ message, isMe, time }: { message: string; isMe: boolean; ti
           </div>
         </div>
       </div>
+      {previewUrl && (
+        <audio
+          ref={audioRef}
+          src={previewUrl}
+          preload="none"
+          onPause={() => setIsPlaying(false)}
+          onEnded={() => setIsPlaying(false)}
+          onPlay={() => setIsPlaying(true)}
+        />
+      )}
     </div>
   );
 }
