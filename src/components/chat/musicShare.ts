@@ -58,3 +58,26 @@ export function parseLegacyMusicShare(messageText?: string | null): LegacyMusicS
     previewUrl,
   };
 }
+
+type ITunesSearchResponse = {
+  results?: Array<{
+    previewUrl?: string;
+  }>;
+};
+
+export async function lookupItunesPreviewUrl(title: string, artist?: string): Promise<string | null> {
+  const query = [title, artist].filter(Boolean).join(" ").trim();
+  if (!query) return null;
+
+  try {
+    const res = await fetch(
+      `https://itunes.apple.com/search?term=${encodeURIComponent(query)}&entity=song&limit=1`,
+    );
+    if (!res.ok) return null;
+
+    const data = (await res.json()) as ITunesSearchResponse;
+    return data.results?.[0]?.previewUrl || null;
+  } catch {
+    return null;
+  }
+}

@@ -40,7 +40,7 @@ import ExternalLinkWarning from "@/components/security/ExternalLinkWarning";
 import { assessLinkSync } from "@/hooks/useLinkRisk";
 import { assessChatMessageRisk, assessIncomingChatRisk } from "@/lib/security/chatContentSafety";
 import { useAutoTranslateMessage } from "@/hooks/useAutoTranslateMessage";
-import { parseLegacyMusicShare, slugifySoundName, humanizeSoundSlug } from "./musicShare";
+import { parseLegacyMusicShare, slugifySoundName, humanizeSoundSlug, lookupItunesPreviewUrl } from "./musicShare";
 
 import { ILLUSTRATED_PACKS } from "@/config/illustratedStickers";
 import { getAnimatedStickerUrl } from "@/config/animatedStickerMap";
@@ -281,14 +281,37 @@ function MusicCard({ message, isMe, time }: { message: string; isMe: boolean; ti
   const firstUrlMatch = message.match(/https?:\/\/\S+/i);
   const listenUrl = listenMatch?.[1] || firstUrlMatch?.[0] || "";
   const previewUrl = previewMatch?.[1] || "";
+  const [resolvedPreviewUrl, setResolvedPreviewUrl] = useState(previewUrl);
   const [isPlaying, setIsPlaying] = useState(false);
   const [previewFailed, setPreviewFailed] = useState(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+
+    const maybeResolvePreview = async () => {
+      if (previewUrl) {
+        setResolvedPreviewUrl(previewUrl);
+        return;
+      }
+
+      const fromITunes = await lookupItunesPreviewUrl(title, artist || undefined);
+      if (!cancelled && fromITunes) {
+        setResolvedPreviewUrl(fromITunes);
+        setPreviewFailed(false);
+      }
+    };
+
+    void maybeResolvePreview();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [artist, previewUrl, title]);
 
   const handlePrimaryAction = async (e: React.MouseEvent) => {
     e.stopPropagation();
 
-    if (previewUrl && audioRef.current && !previewFailed) {
+    if (resolvedPreviewUrl && audioRef.current && !previewFailed) {
       const audio = audioRef.current;
       if (audio.paused) {
         try {
@@ -330,15 +353,15 @@ function MusicCard({ message, isMe, time }: { message: string; isMe: boolean; ti
           )}
           <p className="text-[17px] font-black leading-tight tracking-tight mb-1">{title}</p>
           <p className="text-[12px] font-medium opacity-80">{metaLine}</p>
-          <p className="text-[13px] font-bold mt-2">{previewUrl ? "Preview:" : "Listen:"}</p>
+          <p className="text-[13px] font-bold mt-2">{resolvedPreviewUrl ? "Preview:" : "Listen:"}</p>
         </div>
         <button
           type="button"
-          aria-label={previewUrl ? (isPlaying ? "Pause music preview" : "Play music preview") : "Open music link"}
+          aria-label={resolvedPreviewUrl ? (isPlaying ? "Pause music preview" : "Play music preview") : "Open music link"}
           onClick={(e) => void handlePrimaryAction(e)}
           className="h-11 w-11 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-white/20 transition-all active:scale-90 shrink-0 shadow-lg border border-white/10"
         >
-          {previewUrl && isPlaying ? (
+          {resolvedPreviewUrl && isPlaying ? (
             <Pause className="w-5 h-5 fill-white text-white" />
           ) : (
             <Play className="w-5 h-5 fill-white text-white ml-0.5" />
@@ -355,7 +378,7 @@ function MusicCard({ message, isMe, time }: { message: string; isMe: boolean; ti
         <div className="text-[15px] font-bold relative z-10 flex items-center gap-2">
           <span>{title}</span>
           <span className="h-8 w-8 rounded-full bg-white text-black flex items-center justify-center shadow-sm">
-            {previewUrl && isPlaying ? (
+            {resolvedPreviewUrl && isPlaying ? (
               <Pause className="w-4 h-4 fill-current" />
             ) : (
               <Play className="w-4 h-4 fill-current ml-0.5" />
@@ -376,10 +399,10 @@ function MusicCard({ message, isMe, time }: { message: string; isMe: boolean; ti
           </div>
         </div>
       </div>
-      {previewUrl && (
+      {resolvedPreviewUrl && (
         <audio
           ref={audioRef}
-          src={previewUrl}
+          src={resolvedPreviewUrl}
           preload="none"
           onPause={() => setIsPlaying(false)}
           onEnded={() => setIsPlaying(false)}
