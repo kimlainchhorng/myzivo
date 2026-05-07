@@ -1,15 +1,49 @@
+import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Hash, ImageIcon, Link as LinkIcon, Users } from "lucide-react";
 import { useChannel } from "@/hooks/useChannel";
 import { ChannelHeader } from "@/components/channels/ChannelHeader";
 import { ChannelPostCard } from "@/components/channels/ChannelPostCard";
 import { ChannelPostComposer } from "@/components/channels/ChannelPostComposer";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+
+type ViewTab = "posts" | "media" | "links";
 
 export default function ChannelPage() {
   const { handle } = useParams<{ handle: string }>();
   const navigate = useNavigate();
+  const [activeTab, setActiveTab] = useState<ViewTab>("posts");
+  const [controlOpen, setControlOpen] = useState(false);
   const { channel, posts, isSubscribed, notificationsOn, role, loading, userId, subscribe, unsubscribe, setNotifications, refresh } =
     useChannel(handle);
+
+  const sortedPosts = [...posts].sort((a, b) => Number(!!b.is_pinned) - Number(!!a.is_pinned));
+
+  const pinnedPost = sortedPosts.find((p) => p.is_pinned);
+
+  const filteredPosts =
+    activeTab === "posts"
+      ? sortedPosts
+      : activeTab === "media"
+        ? sortedPosts.filter((p) =>
+            Array.isArray(p.media) &&
+            p.media.some((m: any) => {
+              if (!m?.url) return false;
+              const type = String(m?.type || "").toLowerCase();
+              return type.startsWith("image") || type.startsWith("video");
+            }),
+          )
+        : sortedPosts.filter((p) => /https?:\/\//i.test(p.body || ""));
+
+  useEffect(() => {
+    if (!channel?.id) return;
+    try {
+      setControlOpen(localStorage.getItem(`zivo:channel:control-open:${channel.id}`) === "1");
+    } catch {
+      setControlOpen(false);
+    }
+  }, [channel?.id]);
 
   if (loading) {
     return <div className="p-8 text-center text-sm text-muted-foreground">Loading…</div>;
@@ -20,10 +54,12 @@ export default function ChannelPage() {
 
   const isOwner = userId === channel.owner_id;
   const canPost = isOwner || role === "admin" || role === "owner";
+  const canViewComments = isSubscribed || canPost;
 
   return (
-    <div className="mx-auto max-w-2xl pt-safe">
-      <div className="sticky top-0 z-10 bg-background/85 backdrop-blur-xl border-b border-border/40 px-3 py-2 flex items-center gap-2">
+    <div className="mx-auto max-w-2xl pt-safe pb-24">
+      <div className="sticky top-0 z-20 bg-background/90 backdrop-blur-xl border-b border-border/40 px-3 py-2">
+        <div className="flex items-center gap-2">
         <button type="button"
           onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/channels"))}
           className="p-2 -ml-2 rounded-full hover:bg-muted"
@@ -31,8 +67,39 @@ export default function ChannelPage() {
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
-        <span className="text-sm font-medium truncate">@{channel.handle}</span>
+          <div className="min-w-0 flex-1">
+            <p className="text-sm font-semibold truncate">{channel.name}</p>
+            <p className="text-[11px] text-muted-foreground truncate inline-flex items-center gap-1">
+              <Users className="w-3 h-3" /> {channel.subscriber_count} subscribers
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-2 grid grid-cols-3 rounded-xl bg-muted/50 p-1">
+          {([
+            { id: "posts", label: "Posts", icon: Hash },
+            { id: "media", label: "Media", icon: ImageIcon },
+            { id: "links", label: "Links", icon: LinkIcon },
+          ] as const).map((tab) => {
+            const Icon = tab.icon;
+            const active = activeTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setActiveTab(tab.id)}
+                className={cn(
+                  "h-8 rounded-lg text-[12px] font-semibold inline-flex items-center justify-center gap-1.5 transition-colors",
+                  active ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+                )}
+              >
+                <Icon className="w-3.5 h-3.5" /> {tab.label}
+              </button>
+            );
+          })}
+        </div>
       </div>
+
       <ChannelHeader
         channel={channel}
         isSubscribed={isSubscribed}
@@ -42,25 +109,48 @@ export default function ChannelPage() {
         onUnsubscribe={unsubscribe}
         onSetNotifications={setNotifications}
       />
+
+      {pinnedPost && (
+        <button
+          type="button"
+          onClick={() => setActiveTab("posts")}
+          className="w-full text-left border-b border-border/40 px-4 py-2.5 bg-primary/5 hover:bg-primary/10 transition-colors"
+        >
+          <p className="text-[10px] font-bold uppercase tracking-wide text-primary">Pinned message</p>
+          <p className="text-[12px] text-foreground/90 truncate mt-0.5">{pinnedPost.body || "Pinned post"}</p>
+        </button>
+      )}
+
       <div className="space-y-3 p-4">
-        {canPost && <ChannelPostComposer channelId={channel.id} onPosted={refresh} />}
-        {[...posts]
-          .sort((a, b) => Number(!!b.is_pinned) - Number(!!a.is_pinned))
-          .map((p) => (
+        {canPost && activeTab === "posts" && <ChannelPostComposer channelId={channel.id} onPosted={refresh} />}
+        {filteredPosts.map((p) => (
             <ChannelPostCard
               key={p.id}
               post={p}
               canManage={canPost}
-              canComment={isSubscribed || canPost}
+              canComment={canViewComments}
+              protectContent={!canPost && !controlOpen}
               onPinChanged={refresh}
             />
           ))}
-        {posts.length === 0 && (
+        {filteredPosts.length === 0 && (
           <div className="rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-            No posts yet.
+            {activeTab === "posts" ? "No posts yet." : activeTab === "media" ? "No media shared yet." : "No links shared yet."}
           </div>
         )}
       </div>
+
+      {!isSubscribed && !canPost && (
+        <div className="fixed bottom-16 left-0 right-0 z-30 px-4 pb-3">
+          <div className="mx-auto max-w-2xl rounded-2xl border border-primary/20 bg-background/95 backdrop-blur p-3 flex items-center justify-between gap-3 shadow-lg">
+            <div className="min-w-0">
+              <p className="text-[12px] font-semibold truncate">Join @{channel.handle}</p>
+              <p className="text-[11px] text-muted-foreground truncate">Get new posts and channel updates.</p>
+            </div>
+            <Button onClick={subscribe} className="shrink-0">Join</Button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

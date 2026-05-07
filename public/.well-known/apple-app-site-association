@@ -3,21 +3,25 @@
     "apps": [],
     "details": [
       {
-        "appID": "TEAM_ID.com.hizovo.app",
+        "appID": "9KWY67J6LX.com.hizovo.app",
         "paths": [
+          "/p/*",
+          "/u/*",
+          "/@*",
+          "/user/*",
+          "/dl/*",
           "/reels/*",
           "/shop/*",
           "/grocery/shop/*",
           "/marketplace",
-          "/flights/*",
-          "/p/*"
+          "/flights/*"
         ]
       }
     ]
   },
   "webcredentials": {
     "apps": [
-      "TEAM_ID.com.hizovo.app"
+      "9KWY67J6LX.com.hizovo.app"
     ]
   }
 }

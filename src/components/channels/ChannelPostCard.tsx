@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState, lazy, Suspense } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Eye, X, ChevronLeft, ChevronRight, Pin, PinOff, Share2, MoreHorizontal, Pencil, Trash2, Link as LinkIcon, Check, Loader2 } from "lucide-react";
-import { useNavigate } from "react-router-dom";
 import { formatDistanceToNow } from "date-fns";
 import { toast } from "sonner";
 import type { ChannelPost } from "@/hooks/useChannel";
+import { getPublicOrigin } from "@/lib/getPublicOrigin";
+import { openShareToChat } from "@/components/chat/ShareToChatSheet";
 
 const ChannelPostComments = lazy(() => import("./ChannelPostComments"));
 const ChannelPostInsights = lazy(() => import("./ChannelPostInsights"));
@@ -18,6 +19,8 @@ interface Props {
   canManage?: boolean;
   /** True if the viewer can comment (subscribed or manager). */
   canComment?: boolean;
+  /** Best-effort client-side protection against simple save/download gestures. */
+  protectContent?: boolean;
   /** Called after pin toggles so the parent can re-order the list. */
   onPinChanged?: () => void;
 }
@@ -29,8 +32,7 @@ interface MediaItem {
   waveform?: number[];
 }
 
-export function ChannelPostCard({ post, canManage = false, canComment = true, onPinChanged }: Props) {
-  const navigate = useNavigate();
+export function ChannelPostCard({ post, canManage = false, canComment = true, protectContent = false, onPinChanged }: Props) {
   const [pinning, setPinning] = useState(false);
   // Admin "more" menu — open/close + edit/delete state.
   const [menuOpen, setMenuOpen] = useState(false);
@@ -57,7 +59,7 @@ export function ChannelPostCard({ post, canManage = false, canComment = true, on
     setMenuOpen(false);
     const handle = (post as any).channel_handle as string | undefined;
     const path = handle ? `/c/${handle}?post=${post.id}` : `/c/?post=${post.id}`;
-    const url = `${window.location.origin}${path}`;
+    const url = `${getPublicOrigin()}${path}`;
     try {
       await navigator.clipboard?.writeText(url);
       toast.success("Post link copied");
@@ -108,27 +110,27 @@ export function ChannelPostCard({ post, canManage = false, canComment = true, on
     }
   }
 
-  // Build a deep link to this post so it can be forwarded into a DM. The
-  // /c/:handle route doesn't yet support a #post anchor, so we send a plain
-  // channel link + the body excerpt as the message preview.
+  // Forward via ChatHub's built-in share flow so users can pick recipients in
+  // one place (Telegram-style) instead of relying on clipboard handoff.
   async function forwardToDm() {
     const handle = (post as any).channel_handle as string | undefined;
-    const path = handle ? `/c/${handle}` : `/c/?post=${post.id}`;
-    const url = `${window.location.origin}${path}`;
+    const path = handle ? `/c/${handle}?post=${post.id}` : `/c/?post=${post.id}`;
+    const url = `${getPublicOrigin()}${path}`;
     const excerpt = (post.body ?? "").slice(0, 240);
-    const prefill = excerpt ? `${excerpt}\n\n${url}` : url;
-    try {
-      await navigator.clipboard?.writeText(prefill);
-    } catch {
-      /* clipboard may be blocked in iframes */
-    }
-    try {
-      sessionStorage.setItem("pendingForwardPrefill", prefill);
-    } catch {
-      /* private mode */
-    }
-    toast.success("Pick a chat — the post will be pre-filled.");
-    navigate("/chat");
+    const previewImage =
+      Array.isArray(post.media)
+        ? post.media.find((m: any) => typeof m?.url === "string" && !String(m?.type ?? "").startsWith("video"))?.url ?? null
+        : null;
+    openShareToChat({
+      kind: "activity",
+      title: excerpt || `Post from ${handle ? `@${handle}` : "channel"}`,
+      subtitle: handle ? `@${handle}` : "Channel",
+      meta: "Forwarded from channel",
+      image: previewImage,
+      deepLink: path,
+      badge: "CHANNEL",
+    });
+    toast.success("Choose chat recipients");
   }
 
   async function togglePin() {
@@ -153,6 +155,11 @@ export function ChannelPostCard({ post, canManage = false, canComment = true, on
   const [myReaction, setMyReaction] = useState<string | null>(null);
   const [reacting, setReacting] = useState(false);
   const [lightboxIdx, setLightboxIdx] = useState<number | null>(null);
+
+  const blockSaveGestures = (e: React.SyntheticEvent) => {
+    if (!protectContent) return;
+    e.preventDefault();
+  };
 
   // Load the viewer's existing reaction on mount.
   useEffect(() => {
@@ -303,7 +310,14 @@ export function ChannelPostCard({ post, canManage = false, canComment = true, on
 
   return (
     <>
-      <div ref={ref} className={`rounded-lg border bg-card p-4 ${post.is_pinned ? "border-primary/50 ring-1 ring-primary/20" : "border-border"}`}>
+      <div
+        ref={ref}
+        className={`rounded-2xl border p-4 shadow-sm ${
+          post.is_pinned
+            ? "border-primary/40 bg-primary/[0.07] ring-1 ring-primary/20"
+            : "border-border/50 bg-card/95"
+        }`}
+      >
         {(post.is_pinned || canManage) && (
           <div className="mb-2 flex items-center justify-between gap-2">
             {post.is_pinned ? (
@@ -327,15 +341,14 @@ export function ChannelPostCard({ post, canManage = false, canComment = true, on
                   <button
                     type="button"
                     onClick={() => setMenuOpen((v) => !v)}
-                    aria-haspopup="menu"
-                    aria-expanded={menuOpen}
+                    aria-haspopup="true"
                     aria-label="Post actions"
                     className="p-1 -mr-1 rounded-full text-muted-foreground hover:text-foreground hover:bg-muted/50"
                   >
                     <MoreHorizontal className="w-4 h-4" />
                   </button>
                   {menuOpen && (
-                    <div role="menu" className="absolute right-0 top-full mt-1 z-30 min-w-[170px] rounded-xl border border-border bg-card shadow-lg overflow-hidden text-sm">
+                    <div className="absolute right-0 top-full mt-1 z-30 min-w-[170px] rounded-xl border border-border bg-card shadow-lg overflow-hidden text-sm">
                       <button
                         type="button"
                         onClick={() => { setMenuOpen(false); setEditBody(localBody ?? post.body ?? ""); setEditing(true); }}
@@ -369,6 +382,7 @@ export function ChannelPostCard({ post, canManage = false, canComment = true, on
             <textarea
               value={editBody}
               onChange={(e) => setEditBody(e.target.value)}
+              aria-label="Edit channel post text"
               rows={Math.min(8, Math.max(3, editBody.split("\n").length))}
               className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
@@ -393,7 +407,9 @@ export function ChannelPostCard({ post, canManage = false, canComment = true, on
             </div>
           </div>
         ) : (
-          (localBody ?? post.body) && <p className="whitespace-pre-wrap text-sm">{localBody ?? post.body}</p>
+          (localBody ?? post.body) && (
+            <p className="whitespace-pre-wrap text-[14px] leading-relaxed text-foreground/95">{localBody ?? post.body}</p>
+          )
         )}
 
         {pollAttachment && (
@@ -438,10 +454,13 @@ export function ChannelPostCard({ post, canManage = false, canComment = true, on
                 <button type="button"
                   key={i}
                   onClick={() => setLightboxIdx(i)}
-                  className={`relative overflow-hidden rounded-md bg-muted ${
+                  className={`relative overflow-hidden rounded-xl bg-muted ${
                     isFirstOfThree ? "col-span-2 aspect-[2/1]" : "aspect-square"
                   }`}
                   aria-label={video ? `Play video ${i + 1}` : `Open image ${i + 1}`}
+                  onContextMenu={blockSaveGestures}
+                  onContextMenuCapture={blockSaveGestures}
+                  onDragStartCapture={blockSaveGestures}
                 >
                   {video ? (
                     <>
@@ -450,7 +469,12 @@ export function ChannelPostCard({ post, canManage = false, canComment = true, on
                         muted
                         playsInline
                         preload="metadata"
+                        controlsList={protectContent ? "nodownload noplaybackrate noremoteplayback" : undefined}
+                        disablePictureInPicture={protectContent}
                         className="h-full w-full object-cover"
+                        onContextMenu={blockSaveGestures}
+                        onContextMenuCapture={blockSaveGestures}
+                        onDragStartCapture={blockSaveGestures}
                       />
                       <div className="absolute inset-0 flex items-center justify-center bg-black/15">
                         <div className="h-9 w-9 rounded-full bg-black/60 backdrop-blur flex items-center justify-center">
@@ -463,7 +487,11 @@ export function ChannelPostCard({ post, canManage = false, canComment = true, on
                       src={m.url}
                       alt=""
                       loading="lazy"
+                      draggable={false}
                       className="h-full w-full object-cover transition-transform hover:scale-[1.02]"
+                      onContextMenu={blockSaveGestures}
+                      onContextMenuCapture={blockSaveGestures}
+                      onDragStartCapture={blockSaveGestures}
                     />
                   )}
                   {isOverflow && (
@@ -477,8 +505,8 @@ export function ChannelPostCard({ post, canManage = false, canComment = true, on
           </div>
         )}
 
-        <div className="mt-3 flex items-center justify-between">
-          <div className="flex flex-wrap gap-1">
+        <div className="mt-3 flex items-start justify-between gap-3">
+          <div className="flex flex-wrap gap-1.5">
             {REACTIONS.map((e) => {
               const mine = myReaction === e;
               const count = reactions[e] ?? 0;
@@ -487,11 +515,10 @@ export function ChannelPostCard({ post, canManage = false, canComment = true, on
                   key={e}
                   onClick={() => react(e)}
                   disabled={reacting}
-                  aria-pressed={mine}
-                  className={`rounded-full px-2 py-1 text-xs transition disabled:opacity-60 ${
+                  className={`rounded-full px-2.5 py-1 text-[11px] font-medium transition disabled:opacity-60 ${
                     mine
                       ? "bg-primary/15 ring-1 ring-primary/40 text-foreground"
-                      : "bg-muted hover:bg-muted/70"
+                      : "bg-muted/70 hover:bg-muted"
                   }`}
                 >
                   {e}
@@ -504,7 +531,7 @@ export function ChannelPostCard({ post, canManage = false, canComment = true, on
               );
             })}
           </div>
-          <div className="flex items-center gap-3 text-xs text-muted-foreground">
+          <div className="flex flex-col items-end gap-1 text-[11px] text-muted-foreground min-w-[110px]">
             <button
               type="button"
               onClick={forwardToDm}
@@ -512,16 +539,21 @@ export function ChannelPostCard({ post, canManage = false, canComment = true, on
               aria-label="Forward to chat"
               title="Forward to chat"
             >
-              <Share2 className="h-3 w-3" /> Share
+              <Share2 className="h-3 w-3" /> Forward
             </button>
-            <span className="flex items-center gap-1">
-              <Eye className="h-3 w-3" /> {post.view_count}
-            </span>
-            {post.published_at && (
-              <span>{formatDistanceToNow(new Date(post.published_at), { addSuffix: true })}</span>
-            )}
+            <div className="inline-flex items-center gap-2">
+              <span className="inline-flex items-center gap-1">
+                <Eye className="h-3 w-3" /> {post.view_count}
+              </span>
+              {post.published_at && (
+                <span>{formatDistanceToNow(new Date(post.published_at), { addSuffix: true })}</span>
+              )}
+            </div>
           </div>
         </div>
+        {protectContent && media.length > 0 && (
+          <p className="mt-2 text-[10px] text-muted-foreground/80">Protected content: download/save is disabled.</p>
+        )}
 
         {canManage && (
           <Suspense fallback={null}>
@@ -587,15 +619,24 @@ export function ChannelPostCard({ post, canManage = false, canComment = true, on
               autoPlay
               controls
               playsInline
+              controlsList={protectContent ? "nodownload noplaybackrate noremoteplayback" : undefined}
+              disablePictureInPicture={protectContent}
               className="max-h-[90vh] max-w-[92vw] rounded-lg shadow-2xl bg-black"
               onClick={(e) => e.stopPropagation()}
+              onContextMenu={blockSaveGestures}
+              onContextMenuCapture={blockSaveGestures}
+              onDragStartCapture={blockSaveGestures}
             />
           ) : (
             <img
               src={media[lightboxIdx].url}
               alt=""
+              draggable={false}
               className="max-h-[90vh] max-w-[92vw] rounded-lg object-contain shadow-2xl"
               onClick={(e) => e.stopPropagation()}
+              onContextMenu={blockSaveGestures}
+              onContextMenuCapture={blockSaveGestures}
+              onDragStartCapture={blockSaveGestures}
             />
           )}
           {media.length > 1 && (

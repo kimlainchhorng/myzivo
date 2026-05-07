@@ -3,6 +3,8 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useChannel } from "@/hooks/useChannel";
 import { useSmartBack } from "@/lib/smartBack";
+import { getPublicOrigin } from "@/lib/getPublicOrigin";
+import { openShareToChat } from "@/components/chat/ShareToChatSheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
@@ -11,7 +13,183 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ChannelMemberRow, type MemberRow } from "@/components/channels/ChannelMemberRow";
 import { toast } from "sonner";
-import { ChevronLeft, BadgeCheck, Loader2 } from "lucide-react";
+import { ChevronLeft, BadgeCheck, Loader2, Download, Link2, Share2, Forward } from "lucide-react";
+
+const SNAPSHOT_WIDTH = 1080;
+const SNAPSHOT_HEIGHT = 1350;
+
+type SnapshotInput = {
+  name: string;
+  description: string;
+  handle: string;
+  avatarUrl: string | null;
+  subscribers: number;
+  isPublic: boolean;
+};
+
+const loadImage = (src: string) =>
+  new Promise<HTMLImageElement>((resolve, reject) => {
+    const img = new Image();
+    img.crossOrigin = "anonymous";
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+
+function wrapLines(ctx: CanvasRenderingContext2D, text: string, maxWidth: number, maxLines: number): string[] {
+  const words = text.split(/\s+/).filter(Boolean);
+  const lines: string[] = [];
+  let line = "";
+  for (const word of words) {
+    const next = line ? `${line} ${word}` : word;
+    if (ctx.measureText(next).width <= maxWidth) {
+      line = next;
+      continue;
+    }
+    if (line) lines.push(line);
+    line = word;
+    if (lines.length >= maxLines) break;
+  }
+  if (line && lines.length < maxLines) lines.push(line);
+  if (lines.length === maxLines && words.length > 0) {
+    const last = lines[maxLines - 1];
+    const clipped = `${last.slice(0, Math.max(0, last.length - 1))}...`;
+    lines[maxLines - 1] = clipped;
+  }
+  return lines;
+}
+
+async function buildChannelSetupSnapshot(input: SnapshotInput): Promise<Blob> {
+  const canvas = document.createElement("canvas");
+  canvas.width = SNAPSHOT_WIDTH;
+  canvas.height = SNAPSHOT_HEIGHT;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("Canvas not available");
+
+  const bg = ctx.createLinearGradient(0, 0, SNAPSHOT_WIDTH, SNAPSHOT_HEIGHT);
+  bg.addColorStop(0, "#0b1220");
+  bg.addColorStop(1, "#162237");
+  ctx.fillStyle = bg;
+  ctx.fillRect(0, 0, SNAPSHOT_WIDTH, SNAPSHOT_HEIGHT);
+
+  ctx.fillStyle = "rgba(255,255,255,0.08)";
+  ctx.beginPath();
+  ctx.arc(900, 180, 180, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.fillStyle = "rgba(255,255,255,0.95)";
+  ctx.font = "700 54px system-ui, -apple-system, Segoe UI, sans-serif";
+  ctx.fillText("Channel Setup Snapshot", 72, 100);
+
+  ctx.fillStyle = "rgba(255,255,255,0.7)";
+  ctx.font = "500 30px system-ui, -apple-system, Segoe UI, sans-serif";
+  ctx.fillText(`@${input.handle}`, 72, 148);
+
+  const cardX = 56;
+  const cardY = 200;
+  const cardW = SNAPSHOT_WIDTH - 112;
+  const cardH = SNAPSHOT_HEIGHT - 286;
+  ctx.fillStyle = "rgba(255,255,255,0.97)";
+  ctx.beginPath();
+  ctx.roundRect(cardX, cardY, cardW, cardH, 34);
+  ctx.fill();
+
+  const avatarSize = 200;
+  const avatarX = cardX + 64;
+  const avatarY = cardY + 64;
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(avatarX + avatarSize / 2, avatarY + avatarSize / 2, avatarSize / 2, 0, Math.PI * 2);
+  ctx.closePath();
+  ctx.clip();
+  let drewAvatar = false;
+  if (input.avatarUrl) {
+    try {
+      const img = await loadImage(input.avatarUrl);
+      ctx.drawImage(img, avatarX, avatarY, avatarSize, avatarSize);
+      drewAvatar = true;
+    } catch {
+      drewAvatar = false;
+    }
+  }
+  if (!drewAvatar) {
+    const initials = (input.name || "CH").slice(0, 2).toUpperCase();
+    const grad = ctx.createLinearGradient(avatarX, avatarY, avatarX + avatarSize, avatarY + avatarSize);
+    grad.addColorStop(0, "#3b82f6");
+    grad.addColorStop(1, "#14b8a6");
+    ctx.fillStyle = grad;
+    ctx.fillRect(avatarX, avatarY, avatarSize, avatarSize);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "700 72px system-ui, -apple-system, Segoe UI, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(initials, avatarX + avatarSize / 2, avatarY + avatarSize / 2);
+  }
+  ctx.restore();
+
+  ctx.fillStyle = "#0f172a";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+  ctx.font = "700 58px system-ui, -apple-system, Segoe UI, sans-serif";
+  ctx.fillText(input.name || "Untitled channel", avatarX + avatarSize + 44, avatarY + 92);
+
+  ctx.fillStyle = "#475569";
+  ctx.font = "500 34px system-ui, -apple-system, Segoe UI, sans-serif";
+  ctx.fillText(`@${input.handle}`, avatarX + avatarSize + 44, avatarY + 142);
+
+  const badge = input.isPublic ? "Public" : "Private";
+  const badgeTextW = ctx.measureText(badge).width;
+  const badgeX = avatarX + avatarSize + 44;
+  const badgeY = avatarY + 166;
+  ctx.fillStyle = "#e2e8f0";
+  ctx.beginPath();
+  ctx.roundRect(badgeX, badgeY, badgeTextW + 48, 52, 26);
+  ctx.fill();
+  ctx.fillStyle = "#334155";
+  ctx.font = "600 28px system-ui, -apple-system, Segoe UI, sans-serif";
+  ctx.fillText(badge, badgeX + 24, badgeY + 35);
+
+  ctx.fillStyle = "#0f172a";
+  ctx.font = "600 34px system-ui, -apple-system, Segoe UI, sans-serif";
+  ctx.fillText(`${input.subscribers.toLocaleString()} subscribers`, cardX + 64, cardY + 358);
+
+  ctx.fillStyle = "#64748b";
+  ctx.font = "500 28px system-ui, -apple-system, Segoe UI, sans-serif";
+  ctx.fillText("Description", cardX + 64, cardY + 430);
+
+  ctx.fillStyle = "#1e293b";
+  ctx.font = "500 32px system-ui, -apple-system, Segoe UI, sans-serif";
+  const desc = input.description.trim() || "No description";
+  const lines = wrapLines(ctx, desc, cardW - 128, 8);
+  lines.forEach((line, i) => {
+    ctx.fillText(line, cardX + 64, cardY + 484 + i * 46);
+  });
+
+  ctx.fillStyle = "#64748b";
+  ctx.font = "500 24px system-ui, -apple-system, Segoe UI, sans-serif";
+  ctx.fillText(`Generated ${new Date().toLocaleString()}`, cardX + 64, cardY + cardH - 36);
+
+  return await new Promise<Blob>((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error("Failed to generate image"));
+        return;
+      }
+      resolve(blob);
+    }, "image/png", 0.95);
+  });
+}
+
+function triggerDownload(blob: Blob, fileName: string) {
+  const href = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = href;
+  a.download = fileName;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(href);
+}
 
 export default function ManageChannelPage() {
   const { handle } = useParams<{ handle: string }>();
@@ -24,6 +202,9 @@ export default function ManageChannelPage() {
   const [isPublic, setIsPublic] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [verifyBusy, setVerifyBusy] = useState(false);
+  const [shotBusy, setShotBusy] = useState(false);
+  const [controlOpen, setControlOpen] = useState(false);
+  const downloadsLocked = !controlOpen;
 
   // Check if the signed-in user is a platform admin (controls visibility of
   // the "Verified" toggle below). The set_channel_verified RPC also enforces
@@ -77,10 +258,25 @@ export default function ManageChannelPage() {
     setName(channel.name);
     setDesc(channel.description ?? "");
     setIsPublic(channel.is_public);
+    try {
+      const saved = localStorage.getItem(`zivo:channel:control-open:${channel.id}`);
+      setControlOpen(saved === "1");
+    } catch {
+      setControlOpen(false);
+    }
     loadMembers();
     loadScheduled();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [channel?.id]);
+
+  useEffect(() => {
+    if (!channel?.id) return;
+    try {
+      localStorage.setItem(`zivo:channel:control-open:${channel.id}`, controlOpen ? "1" : "0");
+    } catch {
+      // Ignore storage errors in private mode.
+    }
+  }, [channel?.id, controlOpen]);
 
   const loadMembers = async () => {
     if (!channel) return;
@@ -117,16 +313,100 @@ export default function ManageChannelPage() {
     setScheduled(data ?? []);
   };
 
-  const saveMeta = async () => {
+  const saveMeta = async (silent = false) => {
     if (!channel) return;
     const { error } = await supabase
       .from("channels")
       .update({ name: name.trim(), description: desc.trim() || null, is_public: isPublic })
       .eq("id", channel.id);
-    if (error) toast.error(error.message);
-    else {
-      toast.success("Saved");
-      refresh();
+    if (error) {
+      if (!silent) toast.error(error.message);
+      return false;
+    }
+    if (!silent) toast.success("Saved");
+    refresh();
+    return true;
+  };
+
+  const buildSnapshotInput = (): SnapshotInput => ({
+    name: name.trim() || channel.name,
+    description: desc,
+    handle: channel.handle,
+    avatarUrl: channel.avatar_url,
+    subscribers: channel.subscriber_count,
+    isPublic,
+  });
+
+  const channelShareUrl = channel ? `${getPublicOrigin()}/c/${channel.handle}` : "";
+
+  const copyChannelLink = async () => {
+    try {
+      await navigator.clipboard.writeText(channelShareUrl);
+      toast.success("Channel link copied");
+    } catch {
+      toast.error("Could not copy link");
+    }
+  };
+
+  const shareChannelLink = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: name.trim() || channel.name,
+          text: desc.trim() || `Join @${channel.handle} on ZIVO`,
+          url: channelShareUrl,
+        });
+        return;
+      }
+      await copyChannelLink();
+    } catch {
+      // User cancel on share sheet should not show an error.
+    }
+  };
+
+  const forwardToChat = () => {
+    openShareToChat({
+      kind: "activity",
+      title: name.trim() || channel.name,
+      subtitle: `@${channel.handle}`,
+      meta: `${channel.subscriber_count.toLocaleString()} subscribers`,
+      image: channel.avatar_url,
+      deepLink: `/c/${channel.handle}`,
+      badge: "CHANNEL",
+    });
+    toast.success("Pick chat recipients");
+  };
+
+  const downloadSnapshot = async () => {
+    if (!channel || shotBusy) return;
+    setShotBusy(true);
+    try {
+      const blob = await buildChannelSetupSnapshot(buildSnapshotInput());
+      triggerDownload(blob, `${channel.handle}-setup-snapshot.png`);
+      toast.success("Screenshot downloaded");
+    } catch {
+      toast.error("Could not download screenshot");
+    } finally {
+      setShotBusy(false);
+    }
+  };
+
+  const saveAndDownload = async () => {
+    if (!channel || shotBusy) return;
+    setShotBusy(true);
+    try {
+      const ok = await saveMeta(true);
+      if (!ok) {
+        toast.error("Save failed");
+        return;
+      }
+      const blob = await buildChannelSetupSnapshot(buildSnapshotInput());
+      triggerDownload(blob, `${channel.handle}-setup-snapshot.png`);
+      toast.success("Saved and downloaded");
+    } catch {
+      toast.error("Could not complete save + download");
+    } finally {
+      setShotBusy(false);
     }
   };
 
@@ -191,6 +471,18 @@ export default function ManageChannelPage() {
             <Label>Public</Label>
             <Switch checked={isPublic} onCheckedChange={setIsPublic} />
           </div>
+          <div className="flex items-center justify-between rounded-md border border-border/60 p-3">
+            <div className="space-y-0.5">
+              <Label>Content Control</Label>
+              <p className="text-[11px] text-muted-foreground">
+                {controlOpen ? "Open: users can download/save media." : "Close: users cannot download/save media."}
+              </p>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-muted-foreground">{controlOpen ? "Open" : "Close"}</span>
+              <Switch checked={controlOpen} onCheckedChange={setControlOpen} aria-label="Toggle content control open or close" />
+            </div>
+          </div>
           {isAdmin && (
             <div className="flex items-center justify-between rounded-md border border-sky-500/30 bg-sky-500/5 p-3">
               <div className="space-y-0.5">
@@ -212,7 +504,36 @@ export default function ManageChannelPage() {
               </Button>
             </div>
           )}
-          <Button onClick={saveMeta}>Save</Button>
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+            <Button variant="outline" onClick={() => void copyChannelLink()}>
+              <Link2 className="mr-2 h-4 w-4" />
+              Copy Link
+            </Button>
+            <Button variant="outline" onClick={() => void shareChannelLink()}>
+              <Share2 className="mr-2 h-4 w-4" />
+              Share
+            </Button>
+            <Button variant="outline" onClick={() => void forwardToChat()}>
+              <Forward className="mr-2 h-4 w-4" />
+              Forward to Chat
+            </Button>
+            <Button onClick={() => void saveMeta()}>Save</Button>
+            {!downloadsLocked && (
+              <Button variant="secondary" onClick={() => void saveAndDownload()} disabled={shotBusy}>
+                {shotBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                Save + Download
+              </Button>
+            )}
+            {!downloadsLocked && (
+              <Button variant="outline" onClick={() => void downloadSnapshot()} disabled={shotBusy}>
+                {shotBusy ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+                Download PNG
+              </Button>
+            )}
+          </div>
+          <p className="text-[11px] text-muted-foreground">
+            Download is locked by content-control policy for this setup.
+          </p>
         </TabsContent>
 
         <TabsContent value="members" className="space-y-2">

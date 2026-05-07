@@ -1,6 +1,6 @@
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Settings, Users, BadgeCheck } from "lucide-react";
+import { Settings, Users, BadgeCheck, Globe2, Lock, Megaphone } from "lucide-react";
 import { Link } from "react-router-dom";
 import { SubscribeButton } from "./SubscribeButton";
 import type { Channel } from "@/hooks/useChannel";
@@ -16,41 +16,21 @@ interface Props {
 }
 
 export function ChannelHeader({ channel, isSubscribed, isOwner, notificationsOn = true, onSubscribe, onUnsubscribe, onSetNotifications }: Props) {
+  const memberLabel = `${channel.subscriber_count} subscriber${channel.subscriber_count === 1 ? "" : "s"}`;
+  const showInlineSubscribe = isSubscribed || isOwner;
+
   return (
-    <div className="border-b border-border bg-card">
-      <div
-        className="h-40 w-full bg-gradient-to-br from-primary/30 to-accent/30"
-        style={
-          channel.banner_url
-            ? { backgroundImage: `url(${channel.banner_url})`, backgroundSize: "cover", backgroundPosition: "center" }
-            : undefined
-        }
-      />
+    <div className="border-b border-border/50 bg-card/70">
       <div className="px-4 pb-4">
-        <div className="-mt-10 flex items-end justify-between">
-          <Avatar className="h-20 w-20 border-4 border-background">
+        <div className="pt-4">
+          <Avatar className="h-24 w-24 border-4 border-background shadow-md">
             <AvatarImage src={channel.avatar_url ?? undefined} />
             <AvatarFallback>{channel.name.slice(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
-          <div className="flex gap-2">
-            {isOwner && (
-              <Button asChild variant="outline" size="sm" className="gap-1">
-                <Link to={`/c/${channel.handle}/manage`}>
-                  <Settings className="h-4 w-4" /> Manage
-                </Link>
-              </Button>
-            )}
-            <SubscribeButton
-              isSubscribed={isSubscribed}
-              notificationsOn={notificationsOn}
-              onSubscribe={onSubscribe}
-              onUnsubscribe={onUnsubscribe}
-              onSetNotifications={onSetNotifications}
-            />
-          </div>
         </div>
+
         <div className="mt-3">
-          <h1 className="text-xl font-bold inline-flex items-center gap-1.5">
+          <h1 className="text-[22px] leading-tight font-bold inline-flex items-center gap-1.5">
             {channel.name}
             {(channel as any).is_verified && (
               <BadgeCheck
@@ -59,13 +39,44 @@ export function ChannelHeader({ channel, isSubscribed, isOwner, notificationsOn 
               />
             )}
           </h1>
-          <p className="text-sm text-muted-foreground">@{channel.handle}</p>
+
+          <div className="mt-1 flex items-center gap-2 text-[12px] text-muted-foreground">
+            <span className="inline-flex items-center gap-1">
+              <Megaphone className="h-3.5 w-3.5" /> @{channel.handle}
+            </span>
+            <span>•</span>
+            <span className="inline-flex items-center gap-1">
+              {channel.is_public ? <Globe2 className="h-3.5 w-3.5" /> : <Lock className="h-3.5 w-3.5" />}
+              {channel.is_public ? "Public" : "Private"}
+            </span>
+          </div>
+
           {channel.description && (
-            <p className="mt-2 text-sm">{channel.description}</p>
+            <p className="mt-3 text-[14px] leading-relaxed text-foreground/90">{channel.description}</p>
           )}
-          <div className="mt-2 flex items-center gap-1 text-xs text-muted-foreground">
-            <Users className="h-3 w-3" />
-            {channel.subscriber_count} subscriber{channel.subscriber_count === 1 ? "" : "s"}
+
+          <div className="mt-3 inline-flex items-center gap-1 rounded-full bg-muted/60 px-3 py-1 text-[11px] font-medium text-muted-foreground">
+            <Users className="h-3.5 w-3.5" /> {memberLabel}
+          </div>
+
+          <div className="mt-3 flex items-center gap-2">
+            {showInlineSubscribe && (
+              <SubscribeButton
+                className="h-9 px-4"
+                isSubscribed={isSubscribed}
+                notificationsOn={notificationsOn}
+                onSubscribe={onSubscribe}
+                onUnsubscribe={onUnsubscribe}
+                onSetNotifications={onSetNotifications}
+              />
+            )}
+            {isOwner && (
+              <Button asChild variant="outline" size="sm" className="h-9 px-3 gap-1">
+                <Link to={`/c/${channel.handle}/manage`}>
+                  <Settings className="h-4 w-4" /> Manage
+                </Link>
+              </Button>
+            )}
           </div>
         </div>
       </div>

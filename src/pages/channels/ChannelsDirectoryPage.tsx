@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { ChevronLeft, Plus, Search, Users, Megaphone, Sparkles, Check } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { format, formatDistanceToNow, isToday } from "date-fns";
 import { toast } from "sonner";
 import SEOHead from "@/components/SEOHead";
 
@@ -19,10 +19,25 @@ type Channel = {
   subscriber_count: number;
   created_at: string;
   last_post_at?: string | null;
+  last_post_preview?: string | null;
 };
 
 const fallbackInitials = (name?: string | null) =>
   (name ?? "??").trim().slice(0, 2).toUpperCase() || "??";
+
+const postPreview = (body: string | null | undefined, media: unknown): string => {
+  const text = (body ?? "").trim();
+  if (text) return text.replace(/\s+/g, " ");
+  if (Array.isArray(media) && media.length > 0) return "Media post";
+  return "No posts yet";
+};
+
+const formatListTime = (iso?: string | null): string => {
+  if (!iso) return "";
+  const dt = new Date(iso);
+  if (Number.isNaN(dt.getTime())) return "";
+  return isToday(dt) ? format(dt, "HH:mm") : format(dt, "MMM d");
+};
 
 export default function ChannelsDirectoryPage() {
   const navigate = useNavigate();
@@ -63,16 +78,25 @@ export default function ChannelsDirectoryPage() {
         const ids = list.map((c) => c.id);
         const { data: posts } = await (supabase as any)
           .from("channel_posts")
-          .select("channel_id, published_at")
+          .select("channel_id, published_at, body, media")
           .in("channel_id", ids)
           .not("published_at", "is", null)
           .order("published_at", { ascending: false });
         if (cancelled) return;
-        const lastByChan = new Map<string, string>();
-        (posts ?? []).forEach((p: { channel_id: string; published_at: string }) => {
-          if (!lastByChan.has(p.channel_id)) lastByChan.set(p.channel_id, p.published_at);
+        const lastByChan = new Map<string, { published_at: string; preview: string }>();
+        (posts ?? []).forEach((p: { channel_id: string; published_at: string; body: string | null; media: unknown }) => {
+          if (!lastByChan.has(p.channel_id)) {
+            lastByChan.set(p.channel_id, {
+              published_at: p.published_at,
+              preview: postPreview(p.body, p.media),
+            });
+          }
         });
-        list.forEach((c) => { c.last_post_at = lastByChan.get(c.id) ?? null; });
+        list.forEach((c) => {
+          const last = lastByChan.get(c.id);
+          c.last_post_at = last?.published_at ?? null;
+          c.last_post_preview = last?.preview ?? null;
+        });
       }
 
       setChannels(list);
@@ -169,7 +193,7 @@ export default function ChannelsDirectoryPage() {
     return (
       <div
         key={c.id}
-        className="flex items-center gap-3 rounded-xl border border-border bg-card p-3 hover:bg-muted/40 transition-colors"
+        className="flex items-center gap-3 rounded-2xl border border-transparent bg-card/60 p-3 transition-colors hover:border-border/60 hover:bg-card"
       >
         <Link to={`/c/${c.handle}`} className="flex items-center gap-3 min-w-0 flex-1">
           <Avatar className="h-12 w-12">
@@ -177,38 +201,40 @@ export default function ChannelsDirectoryPage() {
             <AvatarFallback>{fallbackInitials(c.name)}</AvatarFallback>
           </Avatar>
           <div className="min-w-0 flex-1">
-            <div className="flex items-center gap-1.5">
-              <span className="font-medium truncate">{c.name}</span>
-              {isSubbed && (
-                <span className="text-[10px] font-semibold text-emerald-600 bg-emerald-500/10 px-1.5 py-0.5 rounded-full inline-flex items-center gap-0.5">
-                  <Check className="h-2.5 w-2.5" /> Following
-                </span>
+            <div className="flex items-center gap-2">
+              <span className="font-semibold truncate">{c.name}</span>
+              {isSubbed && <Check className="h-3.5 w-3.5 text-emerald-500 shrink-0" aria-label="Following" />}
+              {c.last_post_at && (
+                <span className="ml-auto text-[11px] text-muted-foreground/80 shrink-0">{formatListTime(c.last_post_at)}</span>
               )}
             </div>
-            <div className="text-xs text-muted-foreground truncate">@{c.handle}</div>
-            {c.description && (
-              <div className="line-clamp-1 text-xs text-muted-foreground/80 mt-0.5">{c.description}</div>
-            )}
-            <div className="flex items-center gap-2 mt-1 text-[11px] text-muted-foreground">
-              <span className="inline-flex items-center gap-0.5">
+            <div className="line-clamp-1 text-sm text-muted-foreground mt-0.5">
+              {c.last_post_preview ?? c.description ?? "No posts yet"}
+            </div>
+            <div className="flex items-center gap-2 mt-1 text-[11px] text-muted-foreground/80">
+              <span className="truncate">@{c.handle}</span>
+              <span className="inline-flex items-center gap-0.5 shrink-0">
                 <Users className="h-3 w-3" /> {c.subscriber_count.toLocaleString()}
               </span>
               {c.last_post_at && (
-                <span className="text-muted-foreground/70">
-                  · active {formatDistanceToNow(new Date(c.last_post_at), { addSuffix: true })}
+                <span className="truncate text-muted-foreground/70">
+                  active {formatDistanceToNow(new Date(c.last_post_at), { addSuffix: true })}
                 </span>
               )}
             </div>
+            {c.description && !c.last_post_preview && (
+              <div className="line-clamp-1 text-xs text-muted-foreground/75 mt-0.5">{c.description}</div>
+            )}
           </div>
         </Link>
         <Button
           size="sm"
-          variant={isSubbed ? "outline" : "default"}
+          variant={isSubbed ? "ghost" : "default"}
           disabled={pendingId === c.id}
           onClick={() => handleToggleFollow(c)}
-          className="shrink-0 min-w-[88px]"
+          className="shrink-0 min-w-[72px]"
         >
-          {pendingId === c.id ? "…" : isSubbed ? "Following" : "Follow"}
+          {pendingId === c.id ? "..." : isSubbed ? "Joined" : "Join"}
         </Button>
       </div>
     );

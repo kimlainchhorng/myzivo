@@ -59,6 +59,7 @@ export default function ChannelPostComments({
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const [count, setCount] = useState(initialCount);
+  const [replyTo, setReplyTo] = useState<{ id: string; label: string } | null>(null);
 
   useEffect(() => { setCount(initialCount); }, [initialCount]);
 
@@ -114,13 +115,15 @@ export default function ChannelPostComments({
     }
     const body = draft.trim();
     if (!body) return;
+    const payload = replyTo ? `@${replyTo.label} ${body}` : body;
     setSending(true);
     try {
       const { error } = await (supabase as any)
         .from("channel_post_comments")
-        .insert({ post_id: postId, channel_id: channelId, user_id: user.id, body });
+        .insert({ post_id: postId, channel_id: channelId, user_id: user.id, body: payload });
       if (error) throw error;
       setDraft("");
+      setReplyTo(null);
     } catch (e: any) {
       // RLS rejects when the user isn't subscribed or comments are disabled.
       const msg =
@@ -212,6 +215,18 @@ export default function ChannelPostComments({
                   <p className={`text-xs leading-snug mt-0.5 ${isDeleted ? "italic text-muted-foreground" : ""}`}>
                     {isDeleted ? "Comment deleted" : r.body}
                   </p>
+                  {!isDeleted && (
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const label = r.author?.username || r.author?.full_name || "user";
+                        setReplyTo({ id: r.id, label: label.replace(/^@+/, "").replace(/\s+/g, "") });
+                      }}
+                      className="mt-1 text-[10px] font-semibold text-primary/90 hover:text-primary"
+                    >
+                      Reply
+                    </button>
+                  )}
                 </div>
                 {canDelete && !isDeleted && (
                   <button
@@ -230,7 +245,22 @@ export default function ChannelPostComments({
       )}
 
       {canComment && (
-        <div className="flex items-end gap-2 pt-1">
+        <div className="space-y-2 pt-1">
+          {replyTo && (
+            <div className="flex items-center justify-between rounded-lg border border-primary/20 bg-primary/5 px-2.5 py-1.5">
+              <p className="text-[11px] text-primary/90">
+                Replying to <span className="font-semibold">@{replyTo.label}</span>
+              </p>
+              <button
+                type="button"
+                onClick={() => setReplyTo(null)}
+                className="text-[10px] font-semibold text-muted-foreground hover:text-foreground"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+          <div className="flex items-end gap-2">
           <textarea
             value={draft}
             onChange={(e) => setDraft(e.target.value)}
@@ -240,7 +270,7 @@ export default function ChannelPostComments({
                 send();
               }
             }}
-            placeholder="Write a comment…"
+            placeholder={replyTo ? `Reply to @${replyTo.label}...` : "Write a comment..."}
             rows={1}
             maxLength={2000}
             className="flex-1 min-h-[36px] max-h-32 rounded-lg border border-border bg-background px-2.5 py-1.5 text-xs resize-none focus:outline-none focus:ring-1 focus:ring-primary/50"
@@ -254,6 +284,7 @@ export default function ChannelPostComments({
           >
             {sending ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
           </button>
+          </div>
         </div>
       )}
     </div>

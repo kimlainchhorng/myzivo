@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Bell, BellOff, Check, Plus, LogOut } from "lucide-react";
+import { cn } from "@/lib/utils";
 
 interface Props {
   isSubscribed: boolean;
@@ -9,6 +10,7 @@ interface Props {
   onUnsubscribe: () => void;
   onSetNotifications?: (next: boolean) => void | Promise<void>;
   disabled?: boolean;
+  className?: string;
 }
 
 /**
@@ -19,7 +21,15 @@ interface Props {
  *    The previous implementation showed a bell-off icon next to "Subscribed"
  *    and a single tap unsubscribed silently — easy to do by mistake.
  */
-export function SubscribeButton({ isSubscribed, notificationsOn = true, onSubscribe, onUnsubscribe, onSetNotifications, disabled }: Props) {
+export function SubscribeButton({
+  isSubscribed,
+  notificationsOn = true,
+  onSubscribe,
+  onUnsubscribe,
+  onSetNotifications,
+  disabled,
+  className,
+}: Props) {
   const [open, setOpen] = useState(false);
   const wrapperRef = useRef<HTMLDivElement>(null);
   // Mirrors the prop so the icon flips immediately while the persist runs;
@@ -51,7 +61,7 @@ export function SubscribeButton({ isSubscribed, notificationsOn = true, onSubscr
 
   if (!isSubscribed) {
     return (
-      <Button onClick={onSubscribe} disabled={disabled} className="gap-1.5">
+      <Button onClick={onSubscribe} disabled={disabled} className={cn("gap-1.5", className)}>
         <Plus className="h-4 w-4" /> Join
       </Button>
     );
@@ -65,13 +75,12 @@ export function SubscribeButton({ isSubscribed, notificationsOn = true, onSubscr
         disabled={disabled}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="gap-1.5"
+        className={cn("gap-1.5", className)}
       >
         <Check className="h-4 w-4" /> Subscribed
       </Button>
       {open && (
         <div
-          role="menu"
           className="absolute right-0 top-full mt-1 z-50 min-w-[180px] rounded-xl border border-border bg-card shadow-lg overflow-hidden text-sm"
         >
           <button
