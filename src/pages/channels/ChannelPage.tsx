@@ -7,6 +7,8 @@ import { ChannelPostCard } from "@/components/channels/ChannelPostCard";
 import { ChannelPostComposer } from "@/components/channels/ChannelPostComposer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { getPublicOrigin } from "@/lib/getPublicOrigin";
+import { toast } from "sonner";
 
 type ViewTab = "posts" | "media" | "links";
 
@@ -55,10 +57,34 @@ export default function ChannelPage() {
   const isOwner = userId === channel.owner_id;
   const canPost = isOwner || role === "admin" || role === "owner";
   const canViewComments = isSubscribed || canPost;
+  const showInlineJoin = !isSubscribed && !canPost && filteredPosts.length === 0;
+
+  const shareChannel = async () => {
+    const url = `${getPublicOrigin()}/c/${channel.handle}`;
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `${channel.name} on ZIVO`,
+          text: `Join @${channel.handle} on ZIVO`,
+          url,
+        });
+        return;
+      }
+    } catch (error: any) {
+      if (error?.name === "AbortError") return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Channel link copied");
+    } catch {
+      toast.error("Could not copy channel link");
+    }
+  };
 
   return (
-    <div className="mx-auto max-w-2xl pt-safe pb-24">
-      <div className="sticky top-0 z-20 bg-background/90 backdrop-blur-xl border-b border-border/40 px-3 py-2">
+    <div className="zivo-shell-mobile mx-auto max-w-2xl pt-safe pb-20">
+      <div className="zivo-sticky-mobile-header z-20 px-3 py-2">
         <div className="flex items-center gap-2">
         <button type="button"
           onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/channels"))}
@@ -75,7 +101,7 @@ export default function ChannelPage() {
           </div>
         </div>
 
-        <div className="mt-2 grid grid-cols-3 rounded-xl bg-muted/50 p-1">
+        <div className="mt-2 grid grid-cols-3 rounded-xl bg-muted/60 p-1">
           {([
             { id: "posts", label: "Posts", icon: Hash },
             { id: "media", label: "Media", icon: ImageIcon },
@@ -89,11 +115,13 @@ export default function ChannelPage() {
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
                 className={cn(
-                  "h-8 rounded-lg text-[12px] font-semibold inline-flex items-center justify-center gap-1.5 transition-colors",
-                  active ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground",
+                  "h-8 rounded-lg text-[13px] font-semibold inline-flex items-center justify-center gap-1.5 transition-colors",
+                  active
+                    ? "bg-background text-foreground shadow-sm"
+                    : "text-foreground/75 hover:text-foreground",
                 )}
               >
-                <Icon className="w-3.5 h-3.5" /> {tab.label}
+                <Icon className={cn("w-3.5 h-3.5", !active && "opacity-90")} /> {tab.label}
               </button>
             );
           })}
@@ -134,13 +162,37 @@ export default function ChannelPage() {
             />
           ))}
         {filteredPosts.length === 0 && (
-          <div className="rounded-lg border border-dashed border-border p-8 text-center text-sm text-muted-foreground">
-            {activeTab === "posts" ? "No posts yet." : activeTab === "media" ? "No media shared yet." : "No links shared yet."}
+          <div className="rounded-lg border border-dashed border-border p-6 sm:p-8 text-center">
+            <p className="text-sm text-muted-foreground">
+              {activeTab === "posts" ? "No posts yet." : activeTab === "media" ? "No media shared yet." : "No links shared yet."}
+            </p>
+            {activeTab === "posts" && (
+              <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
+                <Button type="button" size="sm" variant="outline" onClick={() => void shareChannel()}>
+                  Share Channel
+                </Button>
+                {!isSubscribed && !canPost && !showInlineJoin && (
+                  <Button type="button" size="sm" onClick={subscribe}>
+                    Join Channel
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
+
+        {showInlineJoin && (
+          <div className="mx-auto max-w-2xl rounded-2xl border border-primary/20 bg-background/95 backdrop-blur p-3 flex items-center justify-between gap-3 shadow-sm">
+            <div className="min-w-0">
+              <p className="text-[12px] font-semibold truncate">Join @{channel.handle}</p>
+              <p className="text-[11px] text-muted-foreground truncate">Get new posts and channel updates.</p>
+            </div>
+            <Button onClick={subscribe} className="shrink-0">Join</Button>
           </div>
         )}
       </div>
 
-      {!isSubscribed && !canPost && (
+      {!isSubscribed && !canPost && !showInlineJoin && (
         <div className="fixed bottom-16 left-0 right-0 z-30 px-4 pb-3">
           <div className="mx-auto max-w-2xl rounded-2xl border border-primary/20 bg-background/95 backdrop-blur p-3 flex items-center justify-between gap-3 shadow-lg">
             <div className="min-w-0">

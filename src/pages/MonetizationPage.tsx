@@ -99,6 +99,21 @@ const zivoOFResourceTitles = new Set([
 ]);
 const zivoOFResourceTabs = ["Recommended", "Subscription", "LIVE rewards", "Creator Rewards"];
 
+const accentClassMap: Record<string, { text: string; bg: string }> = {
+  "hsl(340 75% 55%)": { text: "text-rose-500", bg: "bg-rose-500/15" },
+  "hsl(221 83% 53%)": { text: "text-blue-500", bg: "bg-blue-500/15" },
+  "hsl(38 92% 50%)": { text: "text-amber-500", bg: "bg-amber-500/15" },
+  "hsl(263 70% 58%)": { text: "text-violet-500", bg: "bg-violet-500/15" },
+  "hsl(142 71% 45%)": { text: "text-emerald-500", bg: "bg-emerald-500/15" },
+  "hsl(25 95% 53%)": { text: "text-orange-500", bg: "bg-orange-500/15" },
+  "hsl(300 70% 55%)": { text: "text-fuchsia-500", bg: "bg-fuchsia-500/15" },
+  "hsl(172 66% 50%)": { text: "text-teal-500", bg: "bg-teal-500/15" },
+  "hsl(199 89% 48%)": { text: "text-sky-500", bg: "bg-sky-500/15" },
+  "hsl(198 93% 59%)": { text: "text-cyan-500", bg: "bg-cyan-500/15" },
+};
+
+const getAccentClasses = (accent: string) => accentClassMap[accent] ?? { text: "text-primary", bg: "bg-primary/15" };
+
 export default function MonetizationPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -288,8 +303,8 @@ export default function MonetizationPage() {
           >
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-3">
-                <div className="zivo-icon-pill w-10 h-10 rounded-xl" style={{ color: "hsl(142 71% 45%)", background: "hsl(142 71% 45% / 0.12)" }}>
-                  <Wallet className="h-5 w-5" style={{ color: "hsl(142 71% 45%)" }} />
+                <div className="zivo-icon-pill w-10 h-10 rounded-xl text-emerald-500 bg-emerald-500/15">
+                  <Wallet className="h-5 w-5 text-emerald-500" />
                 </div>
                 <div>
                   <p className="text-[11px] text-muted-foreground uppercase tracking-wider font-medium">Wallet Balance</p>
@@ -330,8 +345,8 @@ export default function MonetizationPage() {
                   transition={{ delay: i * 0.03 }}
                   className="zivo-card-organic p-3 flex flex-col items-center gap-2 touch-manipulation"
                 >
-                  <div className="zivo-icon-pill w-10 h-10 rounded-xl" style={{ color: action.accent, background: `${action.accent}15` }}>
-                    <action.icon className="w-5 h-5" style={{ color: action.accent }} />
+                  <div className={`zivo-icon-pill w-10 h-10 rounded-xl ${getAccentClasses(action.accent).text} ${getAccentClasses(action.accent).bg}`}>
+                    <action.icon className={`w-5 h-5 ${getAccentClasses(action.accent).text}`} />
                   </div>
                   <span className="text-[10px] font-bold text-center leading-tight">{action.label}</span>
                 </motion.div>
@@ -384,8 +399,8 @@ export default function MonetizationPage() {
                   >
                     <Link to={`/monetization/program/${prog.programId}`}>
                       <div className="zivo-card-organic flex items-start gap-3 p-3.5 touch-manipulation">
-                        <div className="zivo-icon-pill w-9 h-9 rounded-xl shrink-0 mt-0.5" style={{ color: prog.accent, background: `${prog.accent}15` }}>
-                          <prog.icon className="h-4 w-4" style={{ color: prog.accent }} />
+                        <div className={`zivo-icon-pill w-9 h-9 rounded-xl shrink-0 mt-0.5 ${getAccentClasses(prog.accent).text} ${getAccentClasses(prog.accent).bg}`}>
+                          <prog.icon className={`h-4 w-4 ${getAccentClasses(prog.accent).text}`} />
                         </div>
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-0.5">
@@ -478,8 +493,8 @@ export default function MonetizationPage() {
                     <p className="text-[10px] text-muted-foreground/60">{res.views}</p>
                   </div>
                 </div>
-                <div className="zivo-icon-pill w-14 h-14 rounded-2xl shrink-0" style={{ color: res.accent, background: `${res.accent}10` }}>
-                  <res.icon className="w-6 h-6" style={{ color: res.accent }} />
+                <div className={`zivo-icon-pill w-14 h-14 rounded-2xl shrink-0 ${getAccentClasses(res.accent).text} ${getAccentClasses(res.accent).bg}`}>
+                  <res.icon className={`w-6 h-6 ${getAccentClasses(res.accent).text}`} />
                 </div>
               </motion.button>
             ))}
@@ -537,8 +552,8 @@ export default function MonetizationPage() {
               transition={{ delay: 0.5 + i * 0.05 }}
               className="zivo-card-organic p-4 flex items-center gap-3 touch-manipulation"
             >
-              <div className="zivo-icon-pill w-10 h-10 rounded-xl shrink-0" style={{ color: cta.accent, background: `${cta.accent}12` }}>
-                <cta.icon className="h-5 w-5" style={{ color: cta.accent }} />
+              <div className={`zivo-icon-pill w-10 h-10 rounded-xl shrink-0 ${getAccentClasses(cta.accent).text} ${getAccentClasses(cta.accent).bg}`}>
+                <cta.icon className={`h-5 w-5 ${getAccentClasses(cta.accent).text}`} />
               </div>
               <div className="flex-1 min-w-0">
                 <p className="font-bold text-[13px]">{cta.title}</p>

@@ -18,7 +18,7 @@ import { isBlueVerified } from "@/lib/verification";
 import { MutualFollowsBadge, useMutualFollows } from "@/components/social/MutualFollowsBadge";
 import {
   ArrowLeft, Loader2, User, ImageIcon, Film, Grid3X3, UserPlus, UserCheck, UserX,
-  Heart, MessageCircle, Lock, ShieldCheck, Users, Share2, Play, Eye, Bookmark, Globe,
+  Heart, MessageCircle, Lock, ShieldCheck, Users, Share2, Play, Eye, Bookmark, Globe, MoreHorizontal,
   Phone, Video, Gift,
 } from "lucide-react";
 import {
@@ -92,6 +92,7 @@ type FullProfileCandidate = {
   profile_visibility: string | null;
   is_verified: boolean | null;
   share_code: string | null;
+  is_of_creator?: boolean | null;
   updated_at: string | null;
 };
 
@@ -175,6 +176,9 @@ function resolveFullProfile(candidates: FullProfileCandidate[], requestedId: str
       ? true
       : ((pickFirstPresent(ranked, (candidate) => candidate.is_verified) as boolean | null) ?? false),
     share_code: (pickFirstPresent(ranked, (candidate) => candidate.share_code) as string | null) ?? null,
+    is_of_creator: ranked.some((candidate) => candidate.is_of_creator === true)
+      ? true
+      : ((pickFirstPresent(ranked, (candidate) => candidate.is_of_creator) as boolean | null) ?? false),
   };
 }
 
@@ -239,6 +243,8 @@ export default function PublicProfilePage() {
   const [commentPost, setCommentPost] = useState<any>(null);
   const [likedPosts, setLikedPosts] = useState<Set<string>>(new Set());
   const [bookmarkedPosts, setBookmarkedPosts] = useState<Set<string>>(new Set());
+  const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [blockingUser, setBlockingUser] = useState(false);
   // OF creator age gate — confirmed once per session
   const [ofAgeConfirmed, setOfAgeConfirmed] = useState(false);
 
@@ -266,11 +272,30 @@ export default function PublicProfilePage() {
     queryFn: async () => {
       if (!userId) return null;
 
-      const { data, error } = await (supabase as any)
+      const selectWithOfCreator =
+        "id, user_id, full_name, avatar_url, bio, cover_url, cover_position, profile_visibility, is_verified, share_code, updated_at, is_of_creator";
+      const selectWithoutOfCreator =
+        "id, user_id, full_name, avatar_url, bio, cover_url, cover_position, profile_visibility, is_verified, share_code, updated_at";
+
+      let { data, error } = await (supabase as any)
         .from("profiles")
-        .select("id, user_id, full_name, avatar_url, bio, cover_url, cover_position, profile_visibility, is_verified, share_code, updated_at, is_of_creator")
+        .select(selectWithOfCreator)
         .or(`id.eq.${userId},user_id.eq.${userId}`)
         .limit(10);
+
+      const missingOfCreatorColumn =
+        error?.code === "42703" ||
+        String(error?.message || "").toLowerCase().includes("is_of_creator");
+
+      if (missingOfCreatorColumn) {
+        const retry = await (supabase as any)
+          .from("profiles")
+          .select(selectWithoutOfCreator)
+          .or(`id.eq.${userId},user_id.eq.${userId}`)
+          .limit(10);
+        data = retry.data;
+        error = retry.error;
+      }
 
       if (error) {
         console.error("Error loading public profile:", error);
@@ -307,6 +332,7 @@ export default function PublicProfilePage() {
         profile_visibility: "public",
         is_verified: false,
         share_code: null,
+        is_of_creator: false,
       };
     },
     enabled: !!userId,
@@ -339,6 +365,7 @@ export default function PublicProfilePage() {
           profile_visibility: "public",
           is_verified: false,
           share_code: shareCodeFromUrl || null,
+          is_of_creator: false,
         };
       }
 
@@ -501,6 +528,7 @@ export default function PublicProfilePage() {
   const mutualTargets = (!isSameAsSignedInUser && !isLocked && targetUserId) ? [targetUserId] : [];
   const { data: mutualMap } = useMutualFollows(mutualTargets);
   const mutual = mutualMap?.get(targetUserId);
+  const canMessageProfile = friendshipStatus === "friends";
 
   // Follow mutation
   const followMutation = useMutation({
@@ -532,8 +560,20 @@ export default function PublicProfilePage() {
     mutationFn: async (action: "add" | "cancel" | "accept" | "unfriend") => {
       if (!user || !targetUserId || user.id === targetUserId) throw new Error("Invalid");
       if (action === "add") {
-        if (!isFollowing) await (supabase as any).from("user_followers").insert({ follower_id: user.id, following_id: targetUserId }).throwOnError();
-        await supabase.from("friendships").insert({ user_id: user.id, friend_id: targetUserId, status: "pending" }).throwOnError();
+        if (!isFollowing) {
+          await (supabase as any)
+            .from("user_followers")
+            .upsert({ follower_id: user.id, following_id: targetUserId }, { onConflict: "follower_id,following_id", ignoreDuplicates: true })
+            .throwOnError();
+        }
+
+        const { error: friendshipInsertError } = await supabase
+          .from("friendships")
+          .insert({ user_id: user.id, friend_id: targetUserId, status: "pending" });
+
+        if (friendshipInsertError && friendshipInsertError.code !== "23505") {
+          throw friendshipInsertError;
+        }
         try {
           const { data: sp } = await supabase.from("profiles").select("full_name, avatar_url").eq("user_id", user.id).single();
           await supabase.functions.invoke("send-push-notification", {
@@ -543,7 +583,12 @@ export default function PublicProfilePage() {
       } else if (action === "cancel" || action === "unfriend") {
         await supabase.from("friendships").delete().or(`and(user_id.eq.${user.id},friend_id.eq.${targetUserId}),and(user_id.eq.${targetUserId},friend_id.eq.${user.id})`).throwOnError();
       } else if (action === "accept") {
-        if (!isFollowing) await (supabase as any).from("user_followers").insert({ follower_id: user.id, following_id: targetUserId }).throwOnError();
+        if (!isFollowing) {
+          await (supabase as any)
+            .from("user_followers")
+            .upsert({ follower_id: user.id, following_id: targetUserId }, { onConflict: "follower_id,following_id", ignoreDuplicates: true })
+            .throwOnError();
+        }
         await supabase.from("friendships").update({ status: "accepted", accepted_at: new Date().toISOString() }).eq("user_id", targetUserId).eq("friend_id", user.id).throwOnError();
         // Notify the requester
         try {
@@ -624,6 +669,47 @@ export default function PublicProfilePage() {
       document.execCommand("copy");
       document.body.removeChild(ta);
       toast.success("Profile link copied!");
+    }
+  };
+
+  const handleReportProfile = () => {
+    setShowProfileMenu(false);
+    navigate(`/feedback?type=profile&target=${encodeURIComponent(targetUserId || "")}`);
+  };
+
+  const handleBlockProfile = async () => {
+    if (!user) {
+      toast.error("Sign in to block users");
+      navigate("/auth");
+      return;
+    }
+    if (!targetUserId || targetUserId === user.id) {
+      toast.error("Cannot block this profile");
+      return;
+    }
+
+    setBlockingUser(true);
+    try {
+      const { error } = await (supabase as any)
+        .from("blocked_users")
+        .upsert({ blocker_id: user.id, blocked_id: targetUserId }, { onConflict: "blocker_id,blocked_id", ignoreDuplicates: true });
+
+      if (error) throw error;
+
+      // Best-effort cleanup so blocked users are detached from social graph.
+      await Promise.all([
+        (supabase as any).from("user_followers").delete().eq("follower_id", user.id).eq("following_id", targetUserId),
+        (supabase as any).from("user_followers").delete().eq("follower_id", targetUserId).eq("following_id", user.id),
+        (supabase as any).from("friendships").delete().or(`and(user_id.eq.${user.id},friend_id.eq.${targetUserId}),and(user_id.eq.${targetUserId},friend_id.eq.${user.id})`),
+      ]);
+
+      setShowProfileMenu(false);
+      toast.success("User blocked");
+      navigate("/chat/blocked");
+    } catch (error: any) {
+      toast.error(error?.message || "Could not block user");
+    } finally {
+      setBlockingUser(false);
     }
   };
 
@@ -849,7 +935,7 @@ export default function PublicProfilePage() {
   const profileAvatar = resolvedProfile?.avatar_url || undefined;
 
   return (
-    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-20">
+    <PullToRefresh onRefresh={handlePullRefresh} className="zivo-shell-mobile bg-background pb-[calc(4.25rem+env(safe-area-inset-bottom,0px))]">
       <SEOHead
         title={`${profileName} – ZIVO`}
         description={profileBio}
@@ -867,15 +953,46 @@ export default function PublicProfilePage() {
       </div>
 
       {/* Mobile Header */}
-      <div className="lg:hidden sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 safe-area-top">
-        <div className="max-w-3xl mx-auto px-4 py-2.5 flex items-center gap-3">
-          <button type="button" onClick={handleBack} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-muted transition-colors">
+      <div className="lg:hidden zivo-sticky-mobile-header safe-area-top">
+        <div className="max-w-3xl mx-auto zivo-mobile-header-row flex items-center gap-2.5">
+          <button type="button" onClick={handleBack} aria-label="Back" className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-muted transition-colors">
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
-          <h1 className="text-lg font-bold text-foreground truncate flex-1">{resolvedProfile?.full_name || "Profile"}</h1>
-          <button type="button" onClick={handleShare} className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-muted transition-colors">
+          <h1 className="text-base sm:text-lg font-bold text-foreground truncate flex-1">{resolvedProfile?.full_name || "Profile"}</h1>
+          <button type="button" onClick={handleShare} aria-label="Share profile" className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-muted transition-colors">
             <Share2 className="h-5 w-5 text-foreground" />
           </button>
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowProfileMenu((prev) => !prev)}
+              aria-label="Profile actions"
+              className="min-h-[44px] min-w-[44px] flex items-center justify-center rounded-full hover:bg-muted transition-colors"
+            >
+              <MoreHorizontal className="h-5 w-5 text-foreground" />
+            </button>
+            {showProfileMenu && (
+              <>
+                <button type="button" className="fixed inset-0 z-40" aria-label="Close menu" onClick={() => setShowProfileMenu(false)} />
+                <div className="absolute right-0 top-full mt-1 z-50 w-48 rounded-xl border border-border bg-card shadow-xl overflow-hidden">
+                  <button type="button" onClick={handleShare} className="w-full px-3 py-2.5 text-left text-sm hover:bg-muted/60">Share profile</button>
+                  {!isOwnProfile && (
+                    <>
+                      <button type="button" onClick={handleReportProfile} className="w-full px-3 py-2.5 text-left text-sm hover:bg-muted/60">Report profile</button>
+                      <button
+                        type="button"
+                        onClick={() => void handleBlockProfile()}
+                        disabled={blockingUser}
+                        className="w-full px-3 py-2.5 text-left text-sm text-destructive hover:bg-muted/60 disabled:opacity-60"
+                      >
+                        {blockingUser ? "Blocking..." : "Block user"}
+                      </button>
+                    </>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
@@ -901,14 +1018,14 @@ export default function PublicProfilePage() {
           )}
           {/* Cover + Avatar */}
           <div className="relative max-w-3xl mx-auto">
-            <div className="w-full h-36 sm:h-48 md:h-56 bg-gradient-to-br from-primary/20 via-primary/10 to-muted overflow-hidden">
+            <div className="w-full h-32 sm:h-48 md:h-56 bg-gradient-to-br from-primary/20 via-primary/10 to-muted overflow-hidden">
               {resolvedProfile.cover_url && (
-                <img src={resolvedProfile.cover_url} alt="Cover" className="w-full h-full object-cover" style={{ objectPosition: `center ${resolvedProfile.cover_position ?? 50}%` }} />
+                <img src={resolvedProfile.cover_url} alt="Cover" className="w-full h-full object-cover object-center" />
               )}
             </div>
-            <div className="absolute left-1/2 -translate-x-1/2 -bottom-14 sm:-bottom-16">
+            <div className="absolute left-1/2 -translate-x-1/2 -bottom-12 sm:-bottom-16">
               <div className="relative">
-                <Avatar className="h-28 w-28 sm:h-32 sm:w-32 border-4 border-background shadow-lg">
+                <Avatar className="h-24 w-24 sm:h-32 sm:w-32 border-4 border-background shadow-lg">
                   <AvatarImage src={resolvedProfile.avatar_url || undefined} />
                   <AvatarFallback className="text-3xl sm:text-4xl font-bold bg-muted text-muted-foreground">{initials}</AvatarFallback>
                 </Avatar>
@@ -917,8 +1034,8 @@ export default function PublicProfilePage() {
           </div>
 
           {/* Profile Info */}
-          <div className="flex flex-col items-center pt-16 sm:pt-20 pb-4 px-4 max-w-3xl mx-auto">
-            <h2 className="text-2xl font-bold tracking-tight text-foreground inline-flex items-center gap-2">
+          <div className="flex flex-col items-center pt-14 sm:pt-20 pb-4 px-4 max-w-3xl mx-auto">
+            <h2 className="text-[28px] sm:text-2xl font-bold tracking-tight text-foreground inline-flex items-center gap-2">
               <span>{resolvedProfile.full_name}</span>
               {isBlueVerified(resolvedProfile.is_verified) && <VerifiedBadge size={28} />}
             </h2>
@@ -928,31 +1045,31 @@ export default function PublicProfilePage() {
               </p>
             )}
             {resolvedProfile.bio && (
-              <p className="mt-2 max-w-md text-center text-sm text-muted-foreground whitespace-pre-wrap break-words">
+              <p className="mt-2 max-w-md text-center text-[13px] sm:text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap break-words">
                 <SafeCaption text={resolvedProfile.bio} />
               </p>
             )}
 
             {!isLocked ? (
-              <div className="mt-3 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 text-sm">
+              <div className="mt-2.5 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 text-sm">
                 <span className="inline-flex items-baseline gap-1">
                   <span className="font-bold text-foreground">{formatCount(followerCount) ?? "0"}</span>
-                  <span className="font-medium text-muted-foreground">followers</span>
+                  <span className="font-medium text-foreground/75">followers</span>
                 </span>
                 <span aria-hidden="true" className="text-muted-foreground/70">·</span>
                 <span className="inline-flex items-baseline gap-1">
                   <span className="font-bold text-foreground">{formatCount(followingCount) ?? "0"}</span>
-                  <span className="font-medium text-muted-foreground">following</span>
+                  <span className="font-medium text-foreground/75">following</span>
                 </span>
                 <span aria-hidden="true" className="text-muted-foreground/70">·</span>
                 <span className="inline-flex items-baseline gap-1">
                   <span className="font-bold text-foreground">{formatCount(posts.length) ?? "0"}</span>
-                  <span className="font-medium text-muted-foreground">posts</span>
+                  <span className="font-medium text-foreground/75">posts</span>
                 </span>
                 <span aria-hidden="true" className="text-muted-foreground/70">·</span>
                 <span className="inline-flex items-baseline gap-1">
                   <span className="font-bold text-foreground">{formatCount(friendCount) ?? "0"}</span>
-                  <span className="font-medium text-muted-foreground">friends</span>
+                  <span className="font-medium text-foreground/75">friends</span>
                 </span>
               </div>
             ) : (
@@ -960,15 +1077,15 @@ export default function PublicProfilePage() {
             )}
 
             {/* Social proof: mutual followers between visitor and this profile. */}
-            <MutualFollowsBadge mutual={mutual} className="mt-2 text-center text-[11px]" />
+            <MutualFollowsBadge mutual={mutual} className="mt-1.5 text-center text-[11px]" />
 
             {/* Actions */}
             {!isOwnProfile && user && (
-              <div className="flex gap-2.5 mt-5 w-full max-w-sm px-2">
+              <div className="flex gap-2 mt-4.5 w-full max-w-sm px-2">
                 <motion.button whileTap={{ scale: 0.95 }} onClick={() => { if (isFollowing) { setConfirmAction({ action: "unfollow", label: `Unfollow ${resolvedProfile?.full_name}?` }); } else { followMutation.mutate(); } }} disabled={followMutation.isPending}
-                  className={`flex-1 h-11 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 transition-all ${isFollowing ? "bg-muted text-foreground border border-border" : "bg-primary text-primary-foreground"}`}>
-                  <Heart className={`h-4 w-4 ${isFollowing ? "fill-primary text-primary" : ""}`} />
-                  {isFollowing ? "Following" : "Follow"}
+                  className={`flex-1 h-10 sm:h-11 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 transition-all ${isFollowing ? "bg-muted text-foreground border border-border" : "bg-primary text-primary-foreground"}`}>
+                  {followMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Heart className={`h-4 w-4 ${isFollowing ? "fill-primary text-primary" : ""}`} />}
+                  {followMutation.isPending ? "Updating" : isFollowing ? "Following" : "Follow"}
                 </motion.button>
                 <motion.button whileTap={{ scale: 0.95 }}
                   onClick={() => {
@@ -977,17 +1094,18 @@ export default function PublicProfilePage() {
                     else friendMutation.mutate(friendBtn.action);
                   }}
                   disabled={friendMutation.isPending}
-                  className={`flex-1 h-11 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                  className={`flex-1 h-10 sm:h-11 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 transition-all ${
                     friendshipStatus === "friends" ? "bg-primary/10 text-primary border border-primary/30"
                       : friendshipStatus === "request_sent" ? "bg-muted text-muted-foreground border border-border"
                       : friendshipStatus === "request_received" ? "bg-primary text-primary-foreground"
                       : "bg-muted text-foreground border border-border"
                   }`}>
-                  <friendBtn.icon className="h-4 w-4" />{friendBtn.label}
+                  {friendMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <friendBtn.icon className="h-4 w-4" />}
+                  {friendMutation.isPending ? "Updating" : friendBtn.label}
                 </motion.button>
                 <motion.button whileTap={{ scale: 0.95 }}
                   onClick={() => {
-                    if (friendshipStatus === "friends") {
+                    if (canMessageProfile) {
                       navigate(`/chat`, {
                         state: {
                           openChat: {
@@ -998,10 +1116,12 @@ export default function PublicProfilePage() {
                         },
                       });
                     } else {
-                      toast("Add as friend to chat");
+                      toast("Add as friend to message");
                     }
                   }}
-                  className={`h-11 w-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${friendshipStatus === "friends" ? "bg-primary text-primary-foreground" : "bg-muted border border-border text-muted-foreground opacity-60"}`}>
+                  disabled={!canMessageProfile}
+                  title={canMessageProfile ? "Message" : "Add as friend to message"}
+                  className={`h-10 w-10 sm:h-11 sm:w-11 rounded-xl flex items-center justify-center flex-shrink-0 transition-all ${canMessageProfile ? "bg-primary text-primary-foreground" : "bg-muted border border-border text-muted-foreground opacity-60"}`}>
                   <MessageCircle className="h-4 w-4" />
                 </motion.button>
                 <motion.button whileTap={{ scale: 0.95 }}
@@ -1010,7 +1130,7 @@ export default function PublicProfilePage() {
                     setTipOpen(true);
                   }}
                   aria-label={`Send a tip to ${resolvedProfile?.full_name || "this creator"}`}
-                  className="h-11 w-11 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-md hover:opacity-95 active:scale-95 transition-all">
+                  className="h-10 w-10 sm:h-11 sm:w-11 rounded-xl flex items-center justify-center flex-shrink-0 bg-gradient-to-br from-amber-400 to-orange-500 text-white shadow-md hover:opacity-95 active:scale-95 transition-all">
                   <Gift className="h-4 w-4" />
                 </motion.button>
               </div>
@@ -1073,9 +1193,9 @@ export default function PublicProfilePage() {
                     { key: "videos" as PostTab, icon: Film, label: "Videos", count: videoCount },
                   ]).map((tab) => (
                     <button type="button" key={tab.key} onClick={() => setPostTab(tab.key)}
-                      className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-xs font-semibold uppercase tracking-wider transition-colors relative ${postTab === tab.key ? "text-foreground" : "text-muted-foreground"}`}>
+                      className={`flex-1 flex items-center justify-center gap-1.5 py-3 text-xs uppercase tracking-wider transition-colors relative ${postTab === tab.key ? "text-foreground font-bold" : "text-muted-foreground font-semibold"}`}>
                       <tab.icon className="h-4 w-4" /><span>{tab.label}</span>
-                      {postTab === tab.key && <motion.div layoutId="profile-tab-indicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-foreground rounded-full" />}
+                      {postTab === tab.key && <motion.div layoutId="profile-tab-indicator" className="absolute bottom-0 left-0 right-0 h-1 bg-foreground rounded-full" />}
                     </button>
                   ))}
                 </div>
@@ -1237,17 +1357,17 @@ export default function PublicProfilePage() {
                       {/* Interaction bar */}
                       <div className="flex items-center px-4 py-2.5">
                         <div className="flex items-center gap-4 flex-1">
-                          <button type="button" onClick={() => handleLike(post.id)} className="touch-manipulation active:scale-90 transition-transform">
+                          <button type="button" aria-label="Like post" title="Like post" onClick={() => handleLike(post.id)} className="touch-manipulation active:scale-90 transition-transform">
                             <Heart className={`h-[22px] w-[22px] ${likedPosts.has(post.id) ? "fill-red-500 text-red-500" : "text-foreground"}`} strokeWidth={1.5} />
                           </button>
-                          <button type="button" onClick={() => setCommentPost(post)} className="touch-manipulation active:scale-90 transition-transform">
+                          <button type="button" aria-label="Open comments" title="Open comments" onClick={() => setCommentPost(post)} className="touch-manipulation active:scale-90 transition-transform">
                             <MessageCircle className="h-[22px] w-[22px] text-foreground" strokeWidth={1.5} />
                           </button>
-                          <button type="button" onClick={() => void handleSharePost(post)} className="touch-manipulation active:scale-90 transition-transform">
+                          <button type="button" aria-label="Share post" title="Share post" onClick={() => void handleSharePost(post)} className="touch-manipulation active:scale-90 transition-transform">
                             <Share2 className="h-[22px] w-[22px] text-foreground" strokeWidth={1.5} />
                           </button>
                         </div>
-                        <button type="button" onClick={() => void handleBookmark(post)} className="touch-manipulation active:scale-90 transition-transform">
+                        <button type="button" aria-label="Bookmark post" title="Bookmark post" onClick={() => void handleBookmark(post)} className="touch-manipulation active:scale-90 transition-transform">
                           <Bookmark className={`h-[22px] w-[22px] ${bookmarkedPosts.has(toUserPostInteractionId(post.id)) ? "fill-foreground text-foreground" : "text-foreground"}`} strokeWidth={1.5} />
                         </button>
                       </div>
@@ -1312,15 +1432,14 @@ export default function PublicProfilePage() {
                             which is brittle inside framer-motion transformed
                             ancestors. */}
                         <div
-                          className="z-10 flex items-center gap-3 px-4 py-2 bg-background/80 backdrop-blur-lg border-b border-border cursor-grab active:cursor-grabbing select-none shrink-0"
-                          style={{ touchAction: "none" }}
+                          className="z-10 flex items-center gap-3 px-4 py-2 bg-background/80 backdrop-blur-lg border-b border-border cursor-grab active:cursor-grabbing select-none shrink-0 touch-none"
                           onPointerDown={(e) => {
                             const target = e.target as HTMLElement | null;
                             if (target?.closest("button, a, input, textarea")) return;
                             startDrag(e);
                           }}
                         >
-                          <button type="button" onClick={() => setSelectedPost(null)} className="min-h-[44px] min-w-[44px] flex items-center justify-center -ml-2">
+                          <button type="button" aria-label="Close post" title="Close post" onClick={() => setSelectedPost(null)} className="min-h-[44px] min-w-[44px] flex items-center justify-center -ml-2">
                             <ArrowLeft className="h-5 w-5 text-foreground" />
                           </button>
                           <Avatar className="h-9 w-9 ring-2 ring-primary/20">
@@ -1331,7 +1450,7 @@ export default function PublicProfilePage() {
                             <p className="text-sm font-bold text-foreground truncate">{resolvedProfile.full_name}</p>
                             <p className="text-[11px] text-muted-foreground">{formatTime(selectedPost.created_at)}</p>
                           </div>
-                          <button type="button" onClick={(e) => { e.stopPropagation(); void handleSharePost(selectedPost); }} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
+                          <button type="button" aria-label="Share post" title="Share post" onClick={(e) => { e.stopPropagation(); void handleSharePost(selectedPost); }} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
                             <Share2 className="h-5 w-5 text-foreground" />
                           </button>
                         </div>
@@ -1381,7 +1500,7 @@ export default function PublicProfilePage() {
                         <span className="text-sm text-muted-foreground">{selectedPost.views_count || 0}</span>
                       </div>
                       <div className="flex-1" />
-                      <button type="button" onClick={(e) => { e.stopPropagation(); void handleSharePost(selectedPost); }}>
+                      <button type="button" aria-label="Share post" title="Share post" onClick={(e) => { e.stopPropagation(); void handleSharePost(selectedPost); }}>
                         <Share2 className="h-5 w-5 text-foreground" />
                       </button>
                     </div>

@@ -52,9 +52,9 @@ export default function BookmarksPage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="zivo-shell-mobile bg-background pb-20">
       <SEOHead title="Bookmarks – ZIVO" description="Your saved flights, restaurants, and content on ZIVO." canonical="/bookmarks" noIndex />
-      <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border/50 safe-area-top">
+      <div className="zivo-sticky-mobile-header safe-area-top">
         <div className="flex items-center gap-3 px-4 py-3">
           <Button aria-label="Back" variant="ghost" size="icon" className="h-10 w-10 rounded-full" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-5 w-5" />
@@ -128,7 +128,7 @@ export default function BookmarksPage() {
                   </p>
                 </div>
               </button>
-              <button type="button" onClick={() => removeBookmark(b.id)} className="p-2 rounded-full hover:bg-destructive/10 self-start">
+              <button type="button" onClick={() => removeBookmark(b.id)} aria-label="Remove bookmark" title="Remove bookmark" className="p-2 rounded-full hover:bg-destructive/10 self-start">
                 <Trash2 className="h-4 w-4 text-muted-foreground" />
               </button>
             </motion.div>

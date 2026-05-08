@@ -154,7 +154,7 @@ const RestaurantCard = ({ restaurant, onNavigate }: { restaurant: HomeRestaurant
     whileTap={{ scale: 0.94, rotateX: 5 }}
     whileHover={{ y: -6, rotateX: -2 }}
     className="shrink-0 w-[170px] rounded-2xl overflow-hidden bg-card border border-border/40 shadow-sm hover:shadow-xl transition-all duration-300 touch-manipulation text-left group card-3d"
-    style={{ transformStyle: "preserve-3d" }}
+    
   >
     <div className="relative h-[120px] overflow-hidden">
       <img
@@ -177,7 +177,7 @@ const RestaurantCard = ({ restaurant, onNavigate }: { restaurant: HomeRestaurant
         <Heart className="w-3.5 h-3.5 text-primary-foreground" />
       </div>
     </div>
-    <div className="p-3" style={{ transform: "translateZ(8px)" }}>
+    <div className="p-3 [transform:translateZ(8px)]">
       <div className="text-xs font-bold text-foreground truncate">{restaurant.name}</div>
       {restaurant.cuisine_type && (
         <div className="text-[10px] text-muted-foreground truncate mt-0.5">{restaurant.cuisine_type}</div>
@@ -322,7 +322,7 @@ const QUICK_PICKS: QuickPick[] = [
 
 const QuickPicksBar = ({ onNavigate }: { onNavigate: (to: string) => void }) => (
   <div className="px-4 pb-3">
-    <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1" style={{ WebkitOverflowScrolling: "touch" }}>
+    <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1">
       {QUICK_PICKS.map((p) => {
         const Icon = p.icon;
         return (
@@ -738,14 +738,13 @@ const AppHome = () => {
           feel. */}
       <div
         aria-hidden
-        className="fixed top-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-xl pointer-events-none"
-        style={{ height: 'env(safe-area-inset-top, 0px)' }}
+        className="fixed top-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-xl pointer-events-none [height:env(safe-area-inset-top,0px)]"
       />
 
       {/* 3D Ambient orbs — contained within scrollable area only */}
 
       {/* Scrollable content */}
-      <div className="scroll-momentum relative z-10" style={{ paddingBottom: 'calc(56px + env(safe-area-inset-bottom, 0px) + 24px)' }}>
+      <div className="scroll-momentum relative z-10 [padding-bottom:calc(56px+env(safe-area-inset-bottom,0px)+24px)]">
         {/* Ambient orbs removed on mobile — they triggered CLS and constant repaints. */}
         {/* ─── HEADER ─── */}
         <div className="bg-background relative">
@@ -800,7 +799,7 @@ const AppHome = () => {
             {/* Row 1 */}
             <div className="grid grid-cols-4 gap-3 px-5 pb-3 preserve-3d">
               {([
-                isKH && { label: t("home.ride"), image: zivoRideIcon, href: "/rides", badge: "Hot Deal", badgeVariant: "promo" as const },
+                { label: t("home.ride"), image: zivoRideIcon, href: "/rides", badge: "Hot Deal", badgeVariant: "promo" as const },
                 { label: t("home.eats"), image: zivoEatsIcon, href: "/eats", badge: null, badgeVariant: "promo" as const },
                 { label: t("home.flights"), image: zivoFlightsIcon, href: "/flights", badge: "Deals", badgeVariant: "discount" as const },
                 { label: t("home.hotels"), image: zivoHotelsIcon, href: "/hotels", badge: null, badgeVariant: "promo" as const },
@@ -833,7 +832,7 @@ const AppHome = () => {
             <div className="grid grid-cols-4 gap-3 px-5 pb-2 preserve-3d">
               {(([
                 { label: t("home.rental_cars"), image: zivoRentalCarIcon, icon: null, href: "/rent-car", badge: "Promo" },
-                isKH && { label: "Reserve", image: zivoReserveIcon, icon: null, href: "/rides/hub?tab=reserve", badge: null },
+                { label: "Reserve", image: zivoReserveIcon, icon: null, href: "/rides/hub?tab=reserve", badge: null },
                 { label: t("home.shopping"), image: zivoShoppingIcon, icon: null, href: "/grocery", badge: null },
                 { label: "Delivery", image: null, icon: Package, href: "/delivery", badge: null },
               ].filter(Boolean)) as Array<{ label: string; image: string | null; icon: typeof Package | null; href: string; badge: string | null }>).map((s) => {
@@ -884,7 +883,7 @@ const AppHome = () => {
           {/* ─── PINNED SAVED PLACES (elevated to top for one-tap access) ─── */}
           {user && savedLocations && savedLocations.length > 0 && (
             <div className="pb-3">
-              <div className="flex gap-2 overflow-x-auto scrollbar-hide px-5" style={{ WebkitOverflowScrolling: "touch" }}>
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide px-5">
                 {savedLocations.slice(0, 6).map((loc) => {
                   const Icon = savedPlaceIconMap[loc.icon] || MapPin;
                   return (
@@ -967,7 +966,7 @@ const AppHome = () => {
           {user && recentItems.length > 0 && (
             <div className="px-5 pb-3">
               <SectionHeader icon={Clock} iconColor="text-muted-foreground" title="Recently Viewed" actionLabel="Clear" onSeeAll={() => navigate("/more")} />
-              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-5 px-5" style={{ WebkitOverflowScrolling: "touch" }}>
+              <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-5 px-5">
                 {recentItems.slice(0, 8).map((item: any) => (
                   <motion.button
                     key={item.id}
@@ -1017,7 +1016,7 @@ const AppHome = () => {
           {/* ─── SAVED PLACES QUICK ACCESS ─── */}
           {user && savedLocations && savedLocations.length > 0 && (
             <div className="pb-3">
-              <div className="flex gap-2 overflow-x-auto scrollbar-hide px-5" style={{ WebkitOverflowScrolling: "touch" }}>
+              <div className="flex gap-2 overflow-x-auto scrollbar-hide px-5">
                 {savedLocations.slice(0, 6).map((loc) => {
                   const Icon = savedPlaceIconMap[loc.icon] || MapPin;
                   return (
@@ -1200,7 +1199,7 @@ const AppHome = () => {
                 <ArrowRight className="w-4.5 h-4.5 text-muted-foreground" />
               </button>
             </div>
-            <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1 px-5" style={{ WebkitOverflowScrolling: "touch" }}>
+            <div className="flex gap-3 overflow-x-auto scrollbar-hide pb-1 px-5">
               {[
                 { icon: Briefcase, label: "Workplace", desc: "Clock in, jobs & schedule", href: "/personal-dashboard", gradient: "from-foreground to-foreground/80" },
                 { icon: Tv, label: "Live", desc: "Watch live", href: "/live", gradient: "from-foreground to-foreground/80" },
@@ -1292,7 +1291,7 @@ const AppHome = () => {
 
               {/* More destinations label + horizontal scroll */}
               <p className="text-[9px] uppercase font-bold text-muted-foreground/40 tracking-[0.15em] mb-2">More to explore</p>
-              <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide -mx-5 px-5" style={{ WebkitOverflowScrolling: 'touch' }}>
+              <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide -mx-5 px-5">
                 {(isKH ? cambodiaDestKeysKH : popularDestKeysUS).slice(4).map((key) => {
                   const dest = destinationPhotos[key as keyof typeof destinationPhotos];
                   if (!dest) return null;
@@ -1407,10 +1406,10 @@ const AppHome = () => {
               animate={{ opacity: 1, y: 0, rotateX: 0 }}
               whileHover={{ y: -4, rotateX: 2 }}
               className="rounded-2xl bg-gradient-to-br from-primary/12 to-primary/10 border border-primary/20 p-6 relative overflow-hidden shadow-sm card-3d"
-              style={{ transformStyle: "preserve-3d" }}
+              
             >
               <div className="absolute -top-10 -right-10 w-28 h-28 bg-primary/10 rounded-full blur-3xl breathe-glow" />
-              <div className="relative z-10" style={{ transform: "translateZ(15px)" }}>
+              <div className="relative z-10 [transform:translateZ(15px)]">
                 <h3 className="text-base font-bold text-foreground mb-1">{t("home.join_free")}</h3>
                 <p className="text-xs text-muted-foreground mb-4">
                   {t("home.join_desc")}

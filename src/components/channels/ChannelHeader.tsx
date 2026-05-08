@@ -21,16 +21,16 @@ export function ChannelHeader({ channel, isSubscribed, isOwner, notificationsOn 
 
   return (
     <div className="border-b border-border/50 bg-card/70">
-      <div className="px-4 pb-4">
-        <div className="pt-4">
-          <Avatar className="h-24 w-24 border-4 border-background shadow-md">
+      <div className="px-4 pb-3 sm:pb-4">
+        <div className="pt-3 sm:pt-4">
+          <Avatar className="h-20 w-20 sm:h-24 sm:w-24 border-4 border-background shadow-md">
             <AvatarImage src={channel.avatar_url ?? undefined} />
             <AvatarFallback>{channel.name.slice(0, 2).toUpperCase()}</AvatarFallback>
           </Avatar>
         </div>
 
-        <div className="mt-3">
-          <h1 className="text-[22px] leading-tight font-bold inline-flex items-center gap-1.5">
+        <div className="mt-2.5 sm:mt-3">
+          <h1 className="text-[20px] sm:text-[22px] leading-tight font-bold inline-flex items-center gap-1.5">
             {channel.name}
             {(channel as any).is_verified && (
               <BadgeCheck
@@ -52,14 +52,14 @@ export function ChannelHeader({ channel, isSubscribed, isOwner, notificationsOn 
           </div>
 
           {channel.description && (
-            <p className="mt-3 text-[14px] leading-relaxed text-foreground/90">{channel.description}</p>
+            <p className="mt-2.5 text-[14px] leading-relaxed text-foreground/90">{channel.description}</p>
           )}
 
-          <div className="mt-3 inline-flex items-center gap-1 rounded-full bg-muted/60 px-3 py-1 text-[11px] font-medium text-muted-foreground">
+          <div className="mt-2.5 inline-flex items-center gap-1 rounded-full bg-muted/60 px-3 py-1 text-[11px] font-medium text-muted-foreground">
             <Users className="h-3.5 w-3.5" /> {memberLabel}
           </div>
 
-          <div className="mt-3 flex items-center gap-2">
+          <div className="mt-2.5 sm:mt-3 flex items-center gap-2">
             {showInlineSubscribe && (
               <SubscribeButton
                 className="h-9 px-4"

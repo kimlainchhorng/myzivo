@@ -1455,6 +1455,8 @@ export default function AccountSettingsPage() {
                     ref={importInputRef}
                     type="file"
                     accept="application/json"
+                    aria-label="Import preferences JSON"
+                    title="Import preferences JSON"
                     className="hidden"
                     onChange={(e) => {
                       const file = e.target.files?.[0];

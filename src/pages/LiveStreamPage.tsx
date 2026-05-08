@@ -525,7 +525,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
   <button type="button"
     onClick={onLeave}
     className="px-5 py-2.5 rounded-full bg-white text-black font-semibold text-sm active:scale-95 transition-transform"
-  >
+   title="Back to live list">
     Back to Live
   </button>
 </div>
@@ -543,12 +543,11 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
  {doubleTapHeart && (
 <motion.div
  key={doubleTapHeart.id}
- initial={{ scale: 0, opacity: 1 }}
- animate={{ scale: 1.5, opacity: 0, y: -60 }}
+ initial={{ scale: 0, opacity: 1, x: doubleTapHeart.x - 24, y: doubleTapHeart.y - 24 }}
+ animate={{ scale: 1.5, opacity: 0, x: doubleTapHeart.x - 24, y: doubleTapHeart.y - 84 }}
  exit={{ opacity: 0 }}
  transition={{ duration: 0.8, ease: "easeOut" }}
  className="absolute pointer-events-none z-40"
- style={{ left: doubleTapHeart.x - 24, top: doubleTapHeart.y - 24 }}
  >
 <Heart className="h-12 w-12 text-red-500 fill-red-500" />
 </motion.div>
@@ -558,10 +557,9 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
 
  {/* Top bar */}
 <div
- className="relative z-20 flex items-center gap-2 px-3 pt-2"
- style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 8px)" }}
+ className="zivo-live-topbar-safe relative z-20 flex items-center gap-2 px-3 pt-2"
  >
-<button type="button" onClick={onLeave} aria-label="Leave stream" className="min-w-[44px] min-h-[44px] -my-1.5 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
+<button type="button" onClick={onLeave} aria-label="Leave stream" title="Leave stream" className="min-w-[44px] min-h-[44px] -my-1.5 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center">
 <X className="h-4 w-4 text-white" />
 </button>
 
@@ -590,6 +588,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
         : "bg-rose-500 text-white hover:bg-rose-600",
     )}
     aria-label={isFollowingHost ? "Following" : "Follow host"}
+    title={isFollowingHost ? "Following" : "Follow host"}
   >
     {isFollowingHost ? "Following" : "Follow"}
   </button>
@@ -645,24 +644,23 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
 
  {/* Right sidebar actions */}
 <div
- className="absolute right-3 z-20 flex flex-col gap-2.5 items-center"
- style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 160px)" }}
+ className="zivo-live-actions-offset absolute right-3 z-20 flex flex-col gap-2.5 items-center"
  >
-<button type="button" onClick={() =>setMuted(!muted)} className="w-11 h-11 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
+<button type="button" onClick={() =>setMuted(!muted)} aria-label={muted ? "Unmute stream" : "Mute stream"} title={muted ? "Unmute stream" : "Mute stream"} className="w-11 h-11 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
  {muted ?<VolumeX className="h-4 w-4 text-white/70" />:<Volume2 className="h-4 w-4 text-white/70" />}
 </button>
-<button type="button" onClick={handleShare} className="w-11 h-11 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
+<button type="button" onClick={handleShare} aria-label="Share stream" title="Share stream" className="w-11 h-11 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
 <Share2 className="h-4 w-4 text-white" />
 </button>
-<button type="button" onClick={sendLike} className="w-11 h-11 rounded-full bg-black/30 backdrop-blur-sm flex flex-col items-center justify-center">
+<button type="button" onClick={sendLike} aria-label="Like stream" title="Like stream" className="w-11 h-11 rounded-full bg-black/30 backdrop-blur-sm flex flex-col items-center justify-center">
 <Heart className="h-4 w-4 text-red-400 fill-red-400" />
  {likes >0 &&<span className="text-[8px] text-white/60 -mt-0.5">{likes >999 ? `${(likes / 1000).toFixed(1)}k` : likes}</span>}
 </button>
-<button type="button" onClick={() =>setShowViewerList((s) =>!s)} className="w-11 h-11 rounded-full bg-black/30 backdrop-blur-sm flex flex-col items-center justify-center">
+<button type="button" onClick={() =>setShowViewerList((s) =>!s)} aria-label={showViewerList ? "Hide viewers" : "Show viewers"} title={showViewerList ? "Hide viewers" : "Show viewers"} className="w-11 h-11 rounded-full bg-black/30 backdrop-blur-sm flex flex-col items-center justify-center">
 <Eye className="h-4 w-4 text-white/70" />
 <span className="text-[7px] text-white/50 -mt-0.5">{viewerCount >999 ? `${(viewerCount / 1000).toFixed(1)}k` : viewerCount}</span>
 </button>
-<button type="button" onClick={() =>setShowGiftPanel(true)} className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/30 animate-pulse">
+<button type="button" onClick={() =>setShowGiftPanel(true)} aria-label="Open gifts" title="Open gifts" className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-lg shadow-amber-500/30 animate-pulse">
 <Gift className="h-5 w-5 text-white" />
 </button>
 </div>
@@ -675,12 +673,11 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
  animate={{ x: 0, opacity: 1 }}
  exit={{ x: 200, opacity: 0 }}
  transition={{ type: "spring", damping: 20 }}
- className="absolute right-2 z-40 w-56 bg-black/80 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden"
- style={{ top: "calc(env(safe-area-inset-top, 0px) + 80px)" }}
+ className="zivo-live-viewers-offset absolute right-2 z-40 w-56 bg-black/80 backdrop-blur-xl rounded-2xl border border-white/10 overflow-hidden"
  >
 <div className="flex items-center justify-between px-3 py-2 border-b border-white/10">
 <span className="text-xs font-bold text-white">Viewers ({viewerCount})</span>
-<button type="button" onClick={() =>setShowViewerList(false)} className="text-white/40">
+<button type="button" onClick={() =>setShowViewerList(false)} aria-label="Close viewer list" title="Close viewer list" className="text-white/40">
 <X className="h-3.5 w-3.5" />
 </button>
 </div>
@@ -704,7 +701,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
 </AnimatePresence>
 
  {/* Chat overlay */}
-<div className="absolute left-0 right-16 z-20" style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 60px)" }}>
+<div className="zivo-live-chat-offset absolute left-0 right-16 z-20">
 <div className="pl-3 pr-16 max-h-[180px] overflow-y-auto scrollbar-hide space-y-2 flex flex-col items-start">
  {chatMessages.length === 0 ? (
 <div className="text-[11px] text-white/40 italic px-2 py-1">Be the first to say hi</div>
@@ -729,7 +726,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
 </div>
 
  {/* Bottom input */}
-<div className="absolute left-0 right-0 z-30 px-3 pb-3 flex items-center gap-2" style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 0px)" }}>
+<div className="zivo-live-input-offset absolute left-0 right-0 z-30 px-3 pb-3 flex items-center gap-2">
 <div className="flex-1 relative">
 <input
  placeholder={user ? "Say something..." : "Sign in to chat"}
@@ -740,10 +737,10 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
  className="w-full px-3 py-2 rounded-full bg-white/10 backdrop-blur-sm text-white text-sm placeholder:text-white/30 focus:outline-none focus:ring-1 focus:ring-white/20 border border-white/10 disabled:opacity-50"
  />
 </div>
-<button type="button" onClick={() =>setShowGiftPanel(true)} aria-label="Send gift" className="w-11 h-11 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/20">
+<button type="button" onClick={() =>setShowGiftPanel(true)} aria-label="Send gift" title="Send gift" className="w-11 h-11 rounded-full bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/20">
 <Gift className="h-4 w-4 text-white" />
 </button>
-<button type="button" onClick={sendChat} aria-label="Send" className="w-11 h-11 rounded-full bg-primary flex items-center justify-center shrink-0">
+<button type="button" onClick={sendChat} aria-label="Send" title="Send" className="w-11 h-11 rounded-full bg-primary flex items-center justify-center shrink-0">
 <Send className="h-4 w-4 text-primary-foreground" />
 </button>
 </div>
@@ -756,8 +753,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
  animate={{ y: 0 }}
  exit={{ y: "100%" }}
  transition={{ type: "spring", damping: 25, stiffness: 300 }}
- className="absolute bottom-0 left-0 right-0 z-50 bg-zinc-900/98 backdrop-blur-xl rounded-t-3xl border-t border-white/10"
- style={{ maxHeight: "55vh", paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 8px)" }}
+ className="zivo-live-gift-panel absolute bottom-0 left-0 right-0 z-50 bg-zinc-900/98 backdrop-blur-xl rounded-t-3xl border-t border-white/10"
  >
 <div className="flex justify-center py-2"><div className="w-10 h-1 rounded-full bg-white/20" /></div>
 
@@ -771,22 +767,23 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
  onClick={() =>setShowRechargeSheet(true)}
  className="w-6 h-6 rounded-full bg-amber-500/20 flex items-center justify-center border border-amber-500/30 active:scale-90 transition-transform"
  aria-label="Add coins"
+ title="Add coins"
  >
 <span className="text-amber-300 text-xs font-bold leading-none">+</span>
 </button>
 </div>
 <div className="flex-1" />
-<button type="button" onClick={() =>{ setShowGiftPanel(false); setSelectedGift(null); }} className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center shrink-0">
+<button type="button" onClick={() => { setShowGiftPanel(false); setSelectedGift(null); }} aria-label="Close gifts" title="Close gifts" className="w-7 h-7 rounded-full bg-white/10 flex items-center justify-center shrink-0">
 <X className="h-3.5 w-3.5 text-white/60" />
 </button>
 </div>
 
-<div className="overflow-y-auto px-2 py-3" style={{ maxHeight: selectedGift ? "calc(55vh - 210px)" : "calc(55vh - 140px)" }}>
+<div className={cn("overflow-y-auto px-2 py-3", selectedGift ? "zivo-live-gifts-scroll-compact" : "zivo-live-gifts-scroll-default")}>
 <div className="grid grid-cols-4 gap-1.5">
  {allGifts[giftTab].map((gift) =>(
 <button type="button"
  key={gift.name}
- onClick={() =>{ setSelectedGift(selectedGift?.name === gift.name ? null : gift); setGiftQty(1); }}
+ onClick={() => { setSelectedGift(selectedGift?.name === gift.name ? null : gift); setGiftQty(1); }}
  className={cn(
  "relative flex flex-col items-center gap-0.5 py-2.5 px-1 rounded-xl transition-all",
  selectedGift?.name === gift.name ? "bg-amber-500/15 ring-2 ring-amber-500/40 scale-105" : "hover:bg-white/5 active:scale-90"
@@ -870,7 +867,7 @@ function LiveWatcher({ stream, onLeave }: { stream: LiveStream; onLeave: () =>vo
  {(["gifts", "interactive", "exclusive"] as const).map((tab) =>(
 <button type="button"
  key={tab}
- onClick={() =>{ setGiftTab(tab); setSelectedGift(null); }}
+ onClick={() => { setGiftTab(tab); setSelectedGift(null); }}
  className={cn("px-3 py-1.5 rounded-full text-xs font-semibold capitalize transition-colors", giftTab === tab ? "text-white bg-white/10" : "text-white/40")}
  >
  {tab === "gifts" ? "Gifts" : tab === "interactive" ? "Interactive" : "Exclusive"}
@@ -1070,10 +1067,10 @@ export default function LiveStreamPage() {
  };
 
  return (
-<div className="min-h-screen bg-background pb-20 scroll-smooth lg:max-w-4xl lg:mx-auto">
-<div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30 pt-safe">
+<div className="zivo-shell-mobile bg-background pb-20 scroll-smooth lg:max-w-4xl lg:mx-auto">
+<div className="zivo-sticky-mobile-header pt-safe">
 <div className="flex items-center gap-2 px-4 py-2.5">
-<button type="button" onClick={() =>navigate(-1)} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
+<button type="button" onClick={() =>navigate(-1)} aria-label="Back" title="Back" className="min-h-[44px] min-w-[44px] flex items-center justify-center">
 <ArrowLeft className="h-5 w-5 text-foreground" />
 </button>
 <Radio className="h-5 w-5 text-red-500" />
@@ -1178,7 +1175,7 @@ export default function LiveStreamPage() {
  {recentlyWatched.map((r) =>(
 <button type="button"
   key={r.hostId}
-  onClick={() =>{
+  onClick={() => {
     if (r.isLive) toast.success(`Resuming ${r.name}'s stream`);
     else toast.info(`${r.name} isn't live — we'll notify you when they go live`);
   }}
@@ -1312,7 +1309,7 @@ export default function LiveStreamPage() {
  ].map((b) =>(
 <button type="button"
  key={b.name}
- onClick={() =>{
+ onClick={() => {
    if (b.today) toast.success(`Sending birthday gift to ${b.name}!`, { description: "Opening gift menu..." });
    else toast.info(`Reminder set for ${b.name}'s birthday ${b.when}`);
  }}
@@ -1403,7 +1400,7 @@ export default function LiveStreamPage() {
 <Swords className="w-4 h-4 text-amber-500" />PK Season 4
 <Badge className="bg-gradient-to-r from-amber-500 to-orange-500 text-white border-0 text-[9px]">Ends in 12d</Badge>
 </h2>
-<button type="button" className="text-[11px] text-muted-foreground flex items-center gap-0.5">
+<button type="button" className="text-[11px] text-muted-foreground flex items-center gap-0.5" title="View PK rules">
  Rules<ChevronRight className="w-3 h-3" />
 </button>
 </div>
@@ -1433,7 +1430,7 @@ export default function LiveStreamPage() {
 <p className="text-[10px] text-muted-foreground">Win 3 more PKs to reach Gold</p>
 </div>
 </div>
-<button type="button" className="text-[11px] font-bold text-amber-600 dark:text-amber-400">
+<button type="button" className="text-[11px] font-bold text-amber-600 dark:text-amber-400" title="View season ladder">
  View ladder →
 </button>
 </div>
@@ -1447,7 +1444,7 @@ export default function LiveStreamPage() {
 <Users className="w-4 h-4 text-indigo-500" />Top Families
 <Badge className="bg-indigo-500 text-white border-0 text-[9px]">Join one</Badge>
 </h2>
-<button type="button" className="text-[11px] text-muted-foreground flex items-center gap-0.5">
+<button type="button" className="text-[11px] text-muted-foreground flex items-center gap-0.5" title="See all families">
  See all<ChevronRight className="w-3 h-3" />
 </button>
 </div>
@@ -1464,7 +1461,7 @@ export default function LiveStreamPage() {
    return (
 <button type="button"
  key={f.name}
- onClick={() =>{
+ onClick={() => {
    if (isJoined) {
      setJoinedFamily(null);
      toast.info(`Left ${f.name}`);
@@ -1610,7 +1607,7 @@ export default function LiveStreamPage() {
 <button type="button"
  onClick={handleGoLive}
  className="w-full relative rounded-2xl overflow-hidden p-4 bg-gradient-to-br from-violet-600 via-purple-600 to-fuchsia-600 text-left active:scale-[0.99] transition-transform shadow-lg"
- >
+  title="Become a ZIVO host">
 <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=600&q=50&auto=format&fit=crop')] bg-cover bg-center mix-blend-overlay opacity-25" />
 <div className="relative z-10 flex items-center gap-3">
 <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shrink-0">
@@ -1651,7 +1648,7 @@ export default function LiveStreamPage() {
  ].map((a, i) =>(
 <button type="button"
  key={i}
- onClick={() =>{
+ onClick={() => {
    const next = a.current + Math.ceil(a.current * 0.05);
    toast.success(`Bid placed: $${next.toLocaleString()}`, { description: `${a.item} · ends in ${a.ends}` });
  }}
@@ -1748,7 +1745,7 @@ export default function LiveStreamPage() {
    return (
 <button type="button"
   key={i}
-  onClick={() =>{
+  onClick={() => {
     setCompletedMissions((prev) => {
       if (prev.includes(i)) return prev.filter((x) =>x !== i);
       toast.success(`Mission complete! +${m.reward} coins`);
@@ -1811,7 +1808,7 @@ export default function LiveStreamPage() {
 <p className="text-[10px] text-blue-600 dark:text-blue-400 font-semibold mt-0.5"><Clock className="inline w-2.5 h-2.5" /> {s.time}</p>
 </div>
 <button type="button"
-  onClick={() =>{
+  onClick={() => {
     setReminded((prev) => {
       if (prev.includes(key)) {
         toast.info(`Reminder removed for ${s.name}`);
@@ -2078,7 +2075,7 @@ export default function LiveStreamPage() {
  ].map((z, i) =>(
 <button type="button"
  key={z.sign}
- onClick={() =>{
+ onClick={() => {
    const horoscopes: Record<string, string> = {
      Aries: "A bold opportunity surfaces today — say yes",
      Taurus: "Slow down and savor a small win",
@@ -2322,7 +2319,7 @@ export default function LiveStreamPage() {
  {s.growth}
 </Badge>
 <button type="button"
-  onClick={() =>{
+  onClick={() => {
     setFollowedCreators((prev) => {
       if (prev.includes(s.name)) {
         toast.info(`Unfollowed ${s.name}`);
@@ -2522,7 +2519,7 @@ export default function LiveStreamPage() {
  {/* ─── Coin Recharge promo (limited offer) ─── */}
 <div className="px-4 pt-4 pb-1">
 <button type="button"
-  onClick={() =>{
+  onClick={() => {
     toast.success("Opening recharge with +50% bonus locked in", { description: "First recharge of the day" });
     navigate("/wallet");
   }}
@@ -2613,7 +2610,7 @@ export default function LiveStreamPage() {
    return (
 <button type="button"
   key={c.name}
-  onClick={() =>{
+  onClick={() => {
     setFollowedCreators((prev) => {
       if (prev.includes(c.name)) {
         toast.info(`Unfollowed ${c.name}`);
@@ -2749,7 +2746,7 @@ export default function LiveStreamPage() {
  return (
 <motion.div key={stream.id} initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}>
 <button type="button"
- onClick={() =>{
+ onClick={() => {
  if (stream.status === "ended") { toast.info("This stream has ended"); return; }
  setActiveStream(stream);
  }}
@@ -2809,12 +2806,12 @@ export default function LiveStreamPage() {
       initial={{ opacity: 0, y: 20, scale: 0.8 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={{ opacity: 0, y: 20, scale: 0.8 }}
-      className="fixed right-4 z-[60] flex flex-col gap-2"
-      style={{ bottom: "calc(env(safe-area-inset-bottom, 0px) + 88px)" }}
+      className="zivo-live-fab-offset fixed right-4 z-[60] flex flex-col gap-2"
     >
       <button type="button"
         onClick={handleGoLive}
         aria-label="Go Live"
+        title="Go Live"
         className="w-12 h-12 rounded-full bg-gradient-to-br from-rose-500 to-red-600 flex items-center justify-center shadow-xl shadow-rose-500/40 active:scale-90 transition-transform"
       >
         <Plus className="h-5 w-5 text-white" />
@@ -2832,3 +2829,4 @@ export default function LiveStreamPage() {
 </div>
  );
 }
+

@@ -91,7 +91,7 @@ const DocumentScanner = lazy(() => import("./DocumentScanner"));
 import { useChatFiles } from "@/hooks/useChatFiles";
 import type { StickerSendPayload } from "./StickerKeyboard";
 import { suggestStickersFor } from "@/lib/stickerSuggest";
-import { getWallpaperClass, getWallpaperStyle } from "./chatPersonalizationStyles";
+import { getWallpaperClass } from "./chatPersonalizationStyles";
 import CallEventBubble from "./CallEventBubble";
 import VoiceMessageBubble from "./VoiceMessageBubble";
 
@@ -2102,9 +2102,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               ) : recipientTyping ? (
                 <span className="inline-flex items-center gap-[3px] text-primary font-medium">
                   typing
-                  {[0,1,2].map(i => (
-                    <span key={i} className="inline-block w-1 h-1 rounded-full bg-primary animate-bounce" style={{ animationDelay: `${i * 0.15}s`, animationDuration: "0.8s" }} />
-                  ))}
+                  <span className="inline-block w-1 h-1 rounded-full bg-primary animate-bounce [animation-delay:0ms] [animation-duration:0.8s]" />
+                  <span className="inline-block w-1 h-1 rounded-full bg-primary animate-bounce [animation-delay:150ms] [animation-duration:0.8s]" />
+                  <span className="inline-block w-1 h-1 rounded-full bg-primary animate-bounce [animation-delay:300ms] [animation-duration:0.8s]" />
                 </span>
               ) : recipientOnline ? (
                 <span className="text-emerald-500 font-medium">Online</span>
@@ -2247,13 +2247,18 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         {pinnedMessages.length > 0 && (
           <button type="button"
             onClick={() => setShowPinnedPanel(true)}
-            className="w-full px-4 py-1.5 bg-primary/5 border-t border-primary/10 flex items-center gap-2 text-left"
+            className="w-full px-4 py-2 bg-gradient-to-r from-sky-500/10 via-sky-400/5 to-transparent border-t border-sky-400/25 flex items-center gap-2 text-left hover:from-sky-500/15 hover:via-sky-400/10 transition-colors"
+            aria-label="Open pinned messages"
+            title="Open pinned messages"
           >
-            <Pin className="w-3 h-3 text-primary shrink-0" />
-            <span className="text-[11px] text-foreground truncate flex-1">
-              {pinnedMessages[pinnedMessages.length - 1].message || "📷 Media"}
-            </span>
-            <span className="text-[9px] text-muted-foreground">{pinnedMessages.length} pinned</span>
+            <div className="flex items-center gap-2 border-l-2 border-sky-500/70 pl-2 min-w-0 flex-1">
+              <Pin className="w-3 h-3 text-sky-600 dark:text-sky-300 shrink-0" />
+              <span className="text-[11px] font-semibold text-sky-700 dark:text-sky-300 shrink-0">Pinned</span>
+              <span className="text-[11px] text-foreground/85 truncate">
+                {pinnedMessages[pinnedMessages.length - 1].message || "📷 Media"}
+              </span>
+            </div>
+            <span className="text-[9px] text-muted-foreground shrink-0">{pinnedMessages.length}</span>
           </button>
         )}
 
@@ -2424,14 +2429,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             toast.error("Drop an image or video — for other files, use the attach menu");
           }
         }}
-        className={`relative flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-3 flex flex-col ${getWallpaperClass(chatStyle.wallpaper)}`}
-        style={{
-          ...getWallpaperStyle(chatStyle.wallpaper),
-          WebkitOverflowScrolling: "touch",
-          touchAction: "pan-y",
-          transform: "translateZ(0)",
-          contain: "layout paint" as React.CSSProperties["contain"],
-        }}
+        className={`relative flex-1 min-h-0 overflow-y-auto overscroll-contain px-4 py-3 flex flex-col bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.07),transparent_34%),linear-gradient(to_bottom,rgba(148,163,184,0.04),transparent_30%)] [-webkit-overflow-scrolling:touch] touch-pan-y [transform:translateZ(0)] [contain:layout_paint] ${getWallpaperClass(chatStyle.wallpaper)}`}
       >
         {/* Drag-over overlay for desktop/iPad file drop */}
         {isDragOver && (
@@ -2775,9 +2773,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               <div className="flex justify-start px-1 animate-in fade-in slide-in-from-bottom-2 duration-200">
                 <div className="bg-muted/70 backdrop-blur-xl rounded-[22px] rounded-bl-[6px] px-4 py-3 flex items-center gap-2 shadow-sm border border-border/10">
                   <div className="flex items-center gap-1">
-                    <span className="h-[6px] w-[6px] rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "0ms", animationDuration: "1s" }} />
-                    <span className="h-[6px] w-[6px] rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "150ms", animationDuration: "1s" }} />
-                    <span className="h-[6px] w-[6px] rounded-full bg-primary/60 animate-bounce" style={{ animationDelay: "300ms", animationDuration: "1s" }} />
+                    <span className="h-[6px] w-[6px] rounded-full bg-primary/60 animate-bounce [animation-delay:0ms] [animation-duration:1s]" />
+                    <span className="h-[6px] w-[6px] rounded-full bg-primary/60 animate-bounce [animation-delay:150ms] [animation-duration:1s]" />
+                    <span className="h-[6px] w-[6px] rounded-full bg-primary/60 animate-bounce [animation-delay:300ms] [animation-duration:1s]" />
                   </div>
                   <span className="text-[10px] text-muted-foreground/60 font-medium">{recipientName.split(" ")[0]} is typing</span>
                 </div>
@@ -2859,7 +2857,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       </AnimatePresence>
 
       {/* Smart reply suggestions — chips above the composer */}
-      <div className="bg-background/80 backdrop-blur-2xl border-t border-border/5 px-2.5 py-2 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
+      <div className="bg-background/85 backdrop-blur-2xl border-t border-border/10 px-2.5 py-2 relative [padding-bottom:max(env(safe-area-inset-bottom,0px),0.5rem)]">
           {/* AI smart-reply chips — appears when latest visible message is from
               the other side and the composer is empty. Tap a chip to seed the
               composer (does not auto-send so the user can edit). */}

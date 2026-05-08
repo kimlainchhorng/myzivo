@@ -234,8 +234,7 @@ export default function UsernamePage() {
 
       {/* Header */}
       <header
-        className="sticky top-0 z-30 bg-background/85 backdrop-blur-xl border-b border-border/40 flex items-center gap-2 px-3 pb-2 pt-safe"
-        style={{ paddingTop: "var(--zivo-safe-top-sticky, env(safe-area-inset-top, 0px))" }}
+        className="zivo-pt-safe-sticky sticky top-0 z-30 bg-background/85 backdrop-blur-xl border-b border-border/40 flex items-center gap-2 px-3 pb-2 pt-safe"
       >
         <button
           type="button"

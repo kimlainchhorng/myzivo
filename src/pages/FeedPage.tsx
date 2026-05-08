@@ -3357,7 +3357,7 @@ function DiscoverPeopleOverlay({ onClose, onNavigate }: { onClose: () => void; o
       exit={{ opacity: 0 }}
       className="fixed inset-0 z-[1500] bg-background flex flex-col"
     >
-      <div data-testid="feed-discover-header" className="safe-area-top pt-3 pb-3 flex items-center gap-3 px-4 border-b border-border/30">
+      <div data-testid="feed-discover-header" className="safe-area-top zivo-mobile-header-row flex items-center gap-3 border-b border-border/30">
         <button type="button" onClick={onClose} aria-label="Close discover people" title="Close discover people" className="p-2 rounded-full hover:bg-muted/50">
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
@@ -4357,7 +4357,7 @@ export default function FeedPage() {
           sits in a 420-px-wide phone frame, the buttons hug the right edge
           of the frame instead of floating in the black gutter outside it. */}
       <div className="absolute inset-x-0 top-safe-overlay z-50 mx-auto md:max-w-[420px] pointer-events-none lg:hidden">
-      <div data-testid="feed-floating-actions" className="flex justify-end gap-2 sm:gap-2.5 px-3 sm:px-4 pointer-events-auto">
+      <div data-testid="feed-floating-actions" className="flex justify-end gap-2 sm:gap-2.5 px-3 sm:px-4">
         {/* Live entry — also reachable via the bottom nav, so hide on the
             smallest phones (<sm) where the row would collide with center tabs. */}
         <button
@@ -4365,7 +4365,7 @@ export default function FeedPage() {
           onClick={() => navigate("/live")}
           aria-label="Watch live"
           title="Live"
-          className="hidden sm:flex w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 backdrop-blur-sm items-center justify-center active:scale-95 transition-transform border border-white/10"
+          className="pointer-events-auto hidden sm:flex w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 backdrop-blur-sm items-center justify-center active:scale-95 transition-transform border border-white/10"
         >
           <Radio className="w-5 h-5 text-red-400" />
         </button>
@@ -4376,7 +4376,7 @@ export default function FeedPage() {
           onClick={() => setShowDiscover(true)}
           aria-label="Discover people"
           title="Discover people"
-          className="hidden sm:flex w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 backdrop-blur-sm items-center justify-center active:scale-95 transition-transform border border-white/10"
+          className="pointer-events-auto hidden sm:flex w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 backdrop-blur-sm items-center justify-center active:scale-95 transition-transform border border-white/10"
         >
           <UserPlus className="w-5 h-5 text-white" />
         </button>
@@ -4385,7 +4385,7 @@ export default function FeedPage() {
           onClick={() => setShowSearch(true)}
           aria-label="Search"
           title="Search"
-          className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform border border-white/10"
+          className="pointer-events-auto w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform border border-white/10"
         >
           <Search className="w-5 h-5 text-white" />
         </button>
@@ -4395,7 +4395,7 @@ export default function FeedPage() {
             onClick={() => setShowCreatePost(true)}
             aria-label="Create post"
             title="Create"
-            className="w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-primary/90 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform border border-primary/40 shadow-lg shadow-primary/30"
+            className="pointer-events-auto w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-primary/90 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform border border-primary/40 shadow-lg shadow-primary/30"
           >
             <Plus className="w-5 h-5 text-primary-foreground" />
           </button>
@@ -4410,7 +4410,7 @@ export default function FeedPage() {
           onClick={() => window.dispatchEvent(new CustomEvent("zivo-reel-open-speed"))}
           aria-label="Playback speed"
           title="Playback speed"
-          className="hidden sm:flex w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 backdrop-blur-sm items-center justify-center active:scale-95 transition-transform border border-white/10"
+          className="pointer-events-auto hidden sm:flex w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 backdrop-blur-sm items-center justify-center active:scale-95 transition-transform border border-white/10"
         >
           <Gauge className="w-5 h-5 text-white" />
         </button>

@@ -31,6 +31,7 @@ import BellOff from "lucide-react/dist/esm/icons/bell-off";
 import Bell from "lucide-react/dist/esm/icons/bell";
 import Search from "lucide-react/dist/esm/icons/search";
 import LogOut from "lucide-react/dist/esm/icons/log-out";
+import Pin from "lucide-react/dist/esm/icons/pin";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { motion, AnimatePresence } from "framer-motion";
@@ -1036,6 +1037,15 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
     ? messages.filter((m) => m.message?.toLowerCase().includes(groupSearchQ.toLowerCase()))
     : messages;
 
+  const pinnedPreview = useMemo(() => {
+    const candidate = [...messages]
+      .reverse()
+      .find((m) => !m.id.startsWith("opt-") && m.message_type === "text" && (m.message || "").trim().length > 0);
+    if (!candidate) return null;
+    const text = candidate.message.trim();
+    return text.length > 78 ? `${text.slice(0, 78)}...` : text;
+  }, [messages]);
+
   const initials = (groupName || "G").split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 
   return (
@@ -1131,7 +1141,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
               <Search className="h-4 w-4 text-muted-foreground shrink-0" />
               <input autoFocus value={groupSearchQ} onChange={(e) => setGroupSearchQ(e.target.value)}
                 placeholder="Search messages..." className="flex-1 text-sm bg-transparent outline-none" />
-              <button type="button" onClick={() => { setShowGroupSearch(false); setGroupSearchQ(""); }} className="h-7 w-7 flex items-center justify-center rounded-full hover:bg-muted/60">
+              <button type="button" onClick={() => { setShowGroupSearch(false); setGroupSearchQ(""); }} className="h-7 w-7 flex items-center justify-center rounded-full hover:bg-muted/60" aria-label="Close search" title="Close search">
                 <X className="h-3.5 w-3.5 text-muted-foreground" />
               </button>
             </div>
@@ -1142,18 +1152,31 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
         )}
       </AnimatePresence>
 
+      {pinnedPreview && (
+        <button
+          type="button"
+          onClick={() => {
+            setShowGroupSearch(true);
+            setGroupSearchQ(pinnedPreview);
+          }}
+          className="w-full border-b border-sky-400/30 bg-gradient-to-r from-sky-500/10 via-sky-400/5 to-transparent px-3 py-2 text-left hover:from-sky-500/15 hover:via-sky-400/10 transition-colors"
+          aria-label="Open pinned message in search"
+          title="Open pinned message in search"
+        >
+          <div className="flex items-center gap-2 border-l-2 border-sky-500/70 pl-2">
+            <Pin className="h-3.5 w-3.5 text-sky-500 shrink-0" />
+            <span className="text-[11px] font-semibold text-sky-700 dark:text-sky-300">Pinned</span>
+            <span className="text-[11px] text-muted-foreground truncate">{pinnedPreview}</span>
+          </div>
+        </button>
+      )}
+
       {/* Messages */}
       <StickyDatePill scrollRef={scrollRef} />
       <div
         ref={scrollRef}
         onScroll={handleTimelineScroll}
-        className="flex-1 overflow-y-auto overscroll-contain px-4 py-3 space-y-2"
-        style={{
-          WebkitOverflowScrolling: "touch",
-          touchAction: "pan-y",
-          transform: "translateZ(0)",
-          contain: "layout paint" as React.CSSProperties["contain"],
-        }}
+        className="flex-1 overflow-y-auto overscroll-contain px-4 py-3 space-y-2 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.07),transparent_35%),linear-gradient(to_bottom,rgba(148,163,184,0.04),transparent_30%)] [-webkit-overflow-scrolling:touch] touch-pan-y [transform:translateZ(0)] [contain:layout_paint]"
       >
         {loading ? (
           <div className="flex items-center justify-center h-40">
@@ -1520,7 +1543,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
       </AnimatePresence>
 
       {/* Input */}
-      <div className="bg-background/80 backdrop-blur-2xl border-t border-border/5 px-2.5 py-2 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
+      <div className="bg-background/80 backdrop-blur-2xl border-t border-border/5 px-2.5 py-2 relative [padding-bottom:max(env(safe-area-inset-bottom,0px),0.5rem)]">
         {/* Sticker auto-suggestions (Telegram parity) — shown when the user types an emoji.
             Hidden during slash mode so the popovers don't fight. */}
         {stickerSuggestions.length > 0 && slashQuery == null && (

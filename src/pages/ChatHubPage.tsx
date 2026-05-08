@@ -1484,9 +1484,8 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
               "shrink-0",
               embedded
                 ? "border-b border-border/15 bg-background/95 backdrop-blur-2xl"
-                : "sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/20 pt-safe"
+                : "zivo-sticky-mobile-header pt-safe zivo-pt-safe-sticky"
             )}
-            style={!embedded ? { paddingTop: "var(--zivo-safe-top-sticky)" } : undefined}
           >
             {!embedded ? (
               <div className="px-5 pt-2 pb-3 flex items-center justify-between">
@@ -2163,9 +2162,9 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                               "inline-flex items-center gap-[3px] leading-snug text-primary font-medium"
                                             )}>
                                               typing
-                                              {[0,1,2].map(i => (
-                                                <span key={i} className="inline-block w-[3px] h-[3px] rounded-full bg-primary animate-bounce" style={{ animationDelay: `${i*0.15}s`, animationDuration: "0.8s" }} />
-                                              ))}
+                                              <span className="zivo-typing-dot-1 inline-block w-[3px] h-[3px] rounded-full bg-primary animate-bounce" />
+                                              <span className="zivo-typing-dot-2 inline-block w-[3px] h-[3px] rounded-full bg-primary animate-bounce" />
+                                              <span className="zivo-typing-dot-3 inline-block w-[3px] h-[3px] rounded-full bg-primary animate-bounce" />
                                             </span>
                                           );
                                         }
@@ -2579,7 +2578,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
       <AnimatePresence>
         {openPersonalChat && (
           <Suspense fallback={
-            <div className="fixed inset-0 z-[1300] bg-background flex flex-col" style={{ transform: "translateX(0)" }}>
+            <div className="fixed inset-0 z-[1300] bg-background flex flex-col">
               <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-2xl border-b border-border/10 px-2 py-2.5 flex items-center gap-3">
                 <button type="button"
                   onClick={() => setOpenPersonalChat(null)}
@@ -2599,7 +2598,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                 {[...Array(5)].map((_, i) => (
                   <div key={i} className={`flex gap-2 ${i % 2 === 0 ? "" : "flex-row-reverse"}`}>
                     <div className="w-8 h-8 rounded-full bg-muted animate-pulse flex-shrink-0 mt-1" />
-                    <div className={`h-10 rounded-2xl bg-muted animate-pulse ${i % 2 === 0 ? "w-48" : "w-36"}`} style={{ animationDelay: `${i * 0.1}s` }} />
+                    <div className={`h-10 rounded-2xl bg-muted animate-pulse ${i % 2 === 0 ? "w-48 zivo-anim-delay-0" : "w-36 zivo-anim-delay-100"}`} />
                   </div>
                 ))}
               </div>
@@ -2652,7 +2651,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                 {[...Array(5)].map((_, i) => (
                   <div key={i} className={`flex gap-2 ${i % 2 === 0 ? "" : "flex-row-reverse"}`}>
                     <div className="w-8 h-8 rounded-full bg-muted animate-pulse flex-shrink-0 mt-1" />
-                    <div className={`h-10 rounded-2xl bg-muted animate-pulse ${i % 2 === 0 ? "w-48" : "w-36"}`} style={{ animationDelay: `${i * 0.1}s` }} />
+                    <div className={`h-10 rounded-2xl bg-muted animate-pulse ${i % 2 === 0 ? "w-48 zivo-anim-delay-0" : "w-36 zivo-anim-delay-100"}`} />
                   </div>
                 ))}
               </div>
@@ -2693,7 +2692,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   }
 
   return (
-    <PullToRefresh onRefresh={handlePullRefresh} enabled={!hasOverlayChatOpen} className="min-h-screen bg-background pb-24 overscroll-none">
+    <PullToRefresh onRefresh={handlePullRefresh} enabled={!hasOverlayChatOpen} className="zivo-shell-mobile bg-background overscroll-none">
       <SEOHead
         title="Messages – ZIVO | Chat with Friends & Businesses"
         description="Send messages, share photos, video call, and chat with friends and businesses on ZIVO."

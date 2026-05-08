@@ -375,6 +375,8 @@ export default function NotificationSettings() {
         <div className="flex items-center gap-3 px-4 py-3">
           <button type="button"
             onClick={() => navigate(-1)}
+            aria-label="Go back"
+            title="Go back"
             className="p-2.5 -ml-2 rounded-full hover:bg-muted touch-manipulation active:scale-95 min-w-[44px] min-h-[44px] flex items-center justify-center"
           >
             <ArrowLeft className="w-5 h-5" />

@@ -53,6 +53,21 @@ const toChannel = (label: string | undefined): ShareChannel => {
   return CHANNEL_FROM_LABEL[k] ?? "other";
 };
 
+const SHARE_OPTION_BG_CLASS: Record<string, string> = {
+  WhatsApp: "bg-green-500/15",
+  Telegram: "bg-sky-500/15",
+  Facebook: "bg-blue-600/15",
+  X: "bg-zinc-900/10",
+  Email: "bg-red-500/15",
+  SMS: "bg-cyan-500/15",
+  TikTok: "bg-zinc-900/10",
+  Instagram: "bg-pink-500/15",
+  Snapchat: "bg-yellow-400/30",
+  LinkedIn: "bg-blue-700/15",
+  Pinterest: "bg-rose-600/15",
+  Reddit: "bg-orange-500/15",
+};
+
 export default function ShareSheet({
   shareUrl,
   shareText,
@@ -294,46 +309,46 @@ export default function ShareSheet({
     >
 
         {/* In-app sharing row */}
-        <div className="grid grid-cols-4 gap-4 px-6 py-4">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 px-5 py-3">
           {inAppOptions.map((opt) => (
             <button type="button"
               key={opt.key}
               onClick={opt.onClick}
-              className="flex flex-col items-center gap-2 min-h-[48px]"
+              className="flex flex-col items-center gap-1.5 min-h-[44px]"
             >
-              <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
-                <opt.icon className="h-6 w-6 text-primary" />
+              <div className="h-11 w-11 rounded-full bg-primary/10 flex items-center justify-center">
+                <opt.icon className="h-5 w-5 text-primary" />
               </div>
-              <span className="text-[10px] font-medium text-foreground">{opt.label}</span>
+              <span className="text-[11px] font-medium text-foreground">{opt.label}</span>
             </button>
           ))}
         </div>
 
         {/* External sharing row */}
-        <div className="grid grid-cols-4 gap-4 px-6 py-4 border-t border-border/10">
+        <div className="grid grid-cols-4 gap-3 px-5 py-3 border-t border-border/10">
           {shareOptions.map((opt) => (
             <button type="button"
               key={opt.label}
               onClick={() => handleOptionClick(opt)}
-              className="flex flex-col items-center gap-2 min-h-[48px]"
+              className="flex flex-col items-center gap-1.5 min-h-[44px]"
             >
-              <div className="h-12 w-12 rounded-full flex items-center justify-center" style={{ backgroundColor: `${opt.color}15` }}>
-                <svg viewBox="0 0 24 24" className="h-6 w-6" fill={opt.color}><path d={opt.svg} /></svg>
+              <div className={`h-11 w-11 rounded-full flex items-center justify-center ${SHARE_OPTION_BG_CLASS[opt.label] ?? "bg-muted/40"}`}>
+                <svg viewBox="0 0 24 24" className="h-5 w-5" fill={opt.color}><path d={opt.svg} /></svg>
               </div>
-              <span className="text-[10px] font-medium text-foreground">{opt.label}</span>
+              <span className="text-[11px] font-medium text-foreground">{opt.label}</span>
             </button>
           ))}
-          <button type="button" onClick={handleCopyLink} className="flex flex-col items-center gap-2 min-h-[48px]">
-            <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center">
+          <button type="button" onClick={handleCopyLink} className="flex flex-col items-center gap-1.5 min-h-[44px]">
+            <div className="h-11 w-11 rounded-full bg-muted/50 flex items-center justify-center">
               <svg viewBox="0 0 24 24" className="h-5 w-5" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M10 13a5 5 0 007.54.54l3-3a5 5 0 00-7.07-7.07l-1.72 1.71" /><path d="M14 11a5 5 0 00-7.54-.54l-3 3a5 5 0 007.07 7.07l1.71-1.71" /></svg>
             </div>
-            <span className="text-[10px] font-medium text-foreground">Copy link</span>
+            <span className="text-[11px] font-medium text-foreground">Copy link</span>
           </button>
-          <button type="button" onClick={() => setShowMoreOptions(!showMoreOptions)} className="flex flex-col items-center gap-2 min-h-[48px]">
-            <div className="h-12 w-12 rounded-full bg-muted/50 flex items-center justify-center">
+          <button type="button" onClick={() => setShowMoreOptions(!showMoreOptions)} className="flex flex-col items-center gap-1.5 min-h-[44px]">
+            <div className="h-11 w-11 rounded-full bg-muted/50 flex items-center justify-center">
               <MoreHorizontal className="h-5 w-5 text-muted-foreground" />
             </div>
-            <span className="text-[10px] font-medium text-foreground">{showMoreOptions ? "Less" : "More"}</span>
+            <span className="text-[11px] font-medium text-foreground">{showMoreOptions ? "Less" : "More"}</span>
           </button>
         </div>
 
@@ -345,17 +360,17 @@ export default function ShareSheet({
               exit={{ height: 0, opacity: 0 }}
               className="overflow-hidden"
             >
-              <div className="grid grid-cols-4 gap-4 px-6 py-4 border-t border-border/20">
+              <div className="grid grid-cols-4 gap-3 px-5 py-3 border-t border-border/20">
                 {moreShareOptions.map((opt) => (
                   <button type="button"
                     key={opt.label}
                     onClick={() => handleOptionClick(opt)}
-                    className="flex flex-col items-center gap-2 min-h-[48px]"
+                    className="flex flex-col items-center gap-1.5 min-h-[44px]"
                   >
-                    <div className="h-12 w-12 rounded-full flex items-center justify-center" style={{ backgroundColor: `${opt.color}15` }}>
-                      <svg viewBox="0 0 24 24" className="h-6 w-6" fill={opt.color}><path d={opt.svg} /></svg>
+                    <div className={`h-11 w-11 rounded-full flex items-center justify-center ${SHARE_OPTION_BG_CLASS[opt.label] ?? "bg-muted/40"}`}>
+                      <svg viewBox="0 0 24 24" className="h-5 w-5" fill={opt.color}><path d={opt.svg} /></svg>
                     </div>
-                    <span className="text-[10px] font-medium text-foreground">{opt.label}</span>
+                    <span className="text-[11px] font-medium text-foreground">{opt.label}</span>
                   </button>
                 ))}
               </div>

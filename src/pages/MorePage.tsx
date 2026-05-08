@@ -142,6 +142,26 @@ const quickActions = [
   { icon: Search, label: "Search", href: "/smart-search", accent: "hsl(263 70% 58%)" },
 ];
 
+const ACCENT_CLASS_MAP: Record<string, { text: string; bg: string; border: string }> = {
+  "hsl(199 89% 48%)": { text: "text-sky-500", bg: "bg-sky-500/15", border: "border-l-sky-500" },
+  "hsl(142 71% 45%)": { text: "text-emerald-500", bg: "bg-emerald-500/15", border: "border-l-emerald-500" },
+  "hsl(221 83% 53%)": { text: "text-blue-500", bg: "bg-blue-500/15", border: "border-l-blue-500" },
+  "hsl(340 75% 55%)": { text: "text-rose-500", bg: "bg-rose-500/15", border: "border-l-rose-500" },
+  "hsl(263 70% 58%)": { text: "text-violet-500", bg: "bg-violet-500/15", border: "border-l-violet-500" },
+  "hsl(38 92% 50%)": { text: "text-amber-500", bg: "bg-amber-500/15", border: "border-l-amber-500" },
+  "hsl(198 93% 59%)": { text: "text-cyan-500", bg: "bg-cyan-500/15", border: "border-l-cyan-500" },
+  "hsl(0 84% 60%)": { text: "text-red-500", bg: "bg-red-500/15", border: "border-l-red-500" },
+  "hsl(172 66% 50%)": { text: "text-teal-500", bg: "bg-teal-500/15", border: "border-l-teal-500" },
+  "hsl(25 95% 53%)": { text: "text-orange-500", bg: "bg-orange-500/15", border: "border-l-orange-500" },
+  "hsl(45 93% 58%)": { text: "text-yellow-500", bg: "bg-yellow-500/15", border: "border-l-yellow-500" },
+  "hsl(300 70% 55%)": { text: "text-fuchsia-500", bg: "bg-fuchsia-500/15", border: "border-l-fuchsia-500" },
+  "hsl(215 16% 47%)": { text: "text-slate-500", bg: "bg-slate-500/15", border: "border-l-slate-500" },
+  "hsl(var(--primary))": { text: "text-primary", bg: "bg-primary/15", border: "border-l-primary" },
+  "hsl(var(--muted-foreground))": { text: "text-muted-foreground", bg: "bg-muted/50", border: "border-l-muted-foreground" },
+};
+
+const getAccentClasses = (accent: string) => ACCENT_CLASS_MAP[accent] ?? { text: "text-primary", bg: "bg-primary/15", border: "border-l-primary" };
+
 /* ============================================= */
 /*  LINK TYPES                                   */
 /* ============================================= */
@@ -665,7 +685,13 @@ export default function MorePage() {
       return n;
     });
   };
-  const fontScale = fontSizes.find((f) => f.code === fontSize)?.scale ?? 1;
+  const fontScaleClass = fontSize === "S"
+    ? "[font-size:0.92rem]"
+    : fontSize === "L"
+      ? "[font-size:1.1rem]"
+      : fontSize === "XL"
+        ? "[font-size:1.22rem]"
+        : "[font-size:1rem]";
 
   // ===== Device info (UA-based, lightweight) =====
   const deviceInfo = useMemo(() => {
@@ -1509,16 +1535,13 @@ export default function MorePage() {
           density === "compact" ? "gap-2 p-2" : "gap-3.5 p-3",
         )}
       >
-        <div
-          className="zivo-icon-pill"
-          style={{ color: link.accent, background: `${link.accent}15` }}
-        >
+          <div className={cn("zivo-icon-pill", getAccentClasses(link.accent).text, getAccentClasses(link.accent).bg)}>
           {isTheme ? (
             (resolvedTheme ?? theme) === "dark"
-              ? <Moon className="w-[18px] h-[18px]" style={{ color: link.accent }} />
-              : <Sun className="w-[18px] h-[18px]" style={{ color: link.accent }} />
+              ? <Moon className={cn("w-[18px] h-[18px]", getAccentClasses(link.accent).text)} />
+              : <Sun className={cn("w-[18px] h-[18px]", getAccentClasses(link.accent).text)} />
           ) : (
-            <link.icon className="w-[18px] h-[18px]" style={{ color: link.accent }} />
+            <link.icon className={cn("w-[18px] h-[18px]", getAccentClasses(link.accent).text)} />
           )}
         </div>
         <div className="flex-1 min-w-0">
@@ -1581,7 +1604,7 @@ export default function MorePage() {
         initial={{ opacity: 0, y: 10 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: si * 0.04, duration: 0.3 }}
-        style={{ scrollMarginTop: 88 }}
+        className="[scroll-margin-top:88px]"
       >
         <button type="button"
           onClick={() => setExpandedSection(isOpen ? null : section.title)}
@@ -1687,8 +1710,7 @@ export default function MorePage() {
 
       {/* Mobile sticky header with back button (or scroll-aware search) */}
       <header
-        className="lg:hidden sticky top-0 z-30 bg-background/85 backdrop-blur-xl border-b border-border/40 flex items-center gap-2 px-3 pb-2 pt-safe"
-        style={{ paddingTop: "var(--zivo-safe-top-sticky, env(safe-area-inset-top, 0px))" }}
+        className="zivo-pt-safe-sticky lg:hidden sticky top-0 z-30 bg-background/85 backdrop-blur-xl border-b border-border/40 flex items-center gap-2 px-3 pb-2 pt-safe"
       >
         <button type="button"
           onClick={() => {
@@ -1715,9 +1737,9 @@ export default function MorePage() {
         <main
           className={cn(
             "flex-1 flex flex-col px-5 pb-28 pt-4 lg:pt-6 lg:pb-8 lg:max-w-3xl lg:mx-auto zivo-aurora",
+            fontScaleClass,
             reducedMotion && "[&_*]:!transition-none [&_*]:!animate-none",
           )}
-          style={{ fontSize: `${fontScale}rem` }}
         >
           {/* Profile Card */}
           {user && renderProfileCard()}
@@ -1782,14 +1804,12 @@ export default function MorePage() {
                 initial={{ opacity: 0, y: 4 }}
                 animate={{ opacity: 1, y: 0 }}
                 whileTap={{ scale: 0.98 }}
-                className="zivo-card-organic flex items-center gap-3 p-3 active:scale-[0.99] transition-transform border-l-4"
-                style={{ borderLeftColor: suggestedAction.accent }}
+                className={cn("zivo-card-organic flex items-center gap-3 p-3 active:scale-[0.99] transition-transform border-l-4", getAccentClasses(suggestedAction.accent).border)}
               >
                 <div
-                  className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
-                  style={{ background: `${suggestedAction.accent}15`, color: suggestedAction.accent }}
+                  className={cn("w-10 h-10 rounded-xl flex items-center justify-center shrink-0", getAccentClasses(suggestedAction.accent).bg, getAccentClasses(suggestedAction.accent).text)}
                 >
-                  <suggestedAction.icon className="w-5 h-5" style={{ color: suggestedAction.accent }} />
+                  <suggestedAction.icon className={cn("w-5 h-5", getAccentClasses(suggestedAction.accent).text)} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
@@ -1998,11 +2018,11 @@ export default function MorePage() {
               <div className="h-6 w-px bg-border/50 shrink-0" />
               <button type="button"
                 onClick={toggleReducedMotion}
-                aria-pressed={reducedMotion}
                 className={cn(
                   "flex items-center justify-between gap-1.5 px-2 py-1 rounded-lg transition flex-1",
                   reducedMotion ? "bg-emerald-500/10" : "hover:bg-muted/50",
                 )}
+                title={reducedMotion ? "Reduce motion enabled" : "Reduce motion disabled"}
               >
                 <span className="text-[11px] font-semibold text-foreground/80 truncate">
                   Reduce motion
@@ -2024,11 +2044,11 @@ export default function MorePage() {
               <div className="h-6 w-px bg-border/50 shrink-0" />
               <button type="button"
                 onClick={toggleHaptics}
-                aria-pressed={hapticsOn}
                 className={cn(
                   "flex items-center justify-between gap-1.5 px-2 py-1 rounded-lg transition flex-1",
                   hapticsOn ? "bg-fuchsia-500/10" : "hover:bg-muted/50",
                 )}
+                title={hapticsOn ? "Haptics enabled" : "Haptics disabled"}
               >
                 <span className="text-[11px] font-semibold text-foreground/80 truncate">
                   Haptics
@@ -2310,7 +2330,7 @@ export default function MorePage() {
                     privacyMode ? "text-rose-500" : "text-muted-foreground hover:text-foreground",
                   )}
                   aria-label="Toggle privacy mode"
-                  aria-pressed={privacyMode}
+                  title={privacyMode ? "Privacy mode enabled" : "Privacy mode disabled"}
                 >
                   <Eye className="w-3.5 h-3.5" />
                   {privacyMode ? "Private" : "Privacy"}
@@ -2364,11 +2384,8 @@ export default function MorePage() {
                     onClick={() => trackRecent(link.href)}
                     className="zivo-card-organic flex items-center gap-2 px-3 py-2 shrink-0 active:scale-[0.97] transition-transform"
                   >
-                    <div
-                      className="w-7 h-7 rounded-lg flex items-center justify-center"
-                      style={{ color: link.accent, background: `${link.accent}15` }}
-                    >
-                      <link.icon className="w-3.5 h-3.5" style={{ color: link.accent }} />
+                    <div className={cn("w-7 h-7 rounded-lg flex items-center justify-center", getAccentClasses(link.accent).bg, getAccentClasses(link.accent).text)}>
+                      <link.icon className={cn("w-3.5 h-3.5", getAccentClasses(link.accent).text)} />
                     </div>
                     <p className="text-[12px] font-semibold whitespace-nowrap">{link.label}</p>
                   </Link>
@@ -2657,11 +2674,8 @@ export default function MorePage() {
                 onClick={() => setShowPartnerSheet(false)}
                 className="zivo-card-organic flex items-center gap-3 p-3 touch-manipulation"
               >
-                <div
-                  className="zivo-icon-pill"
-                  style={{ color: opt.accent, background: `${opt.accent}15` }}
-                >
-                  <opt.icon className="w-5 h-5" style={{ color: opt.accent }} />
+                <div className={cn("zivo-icon-pill", getAccentClasses(opt.accent).text, getAccentClasses(opt.accent).bg)}>
+                  <opt.icon className={cn("w-5 h-5", getAccentClasses(opt.accent).text)} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm">{opt.label}</p>
@@ -2859,11 +2873,8 @@ export default function MorePage() {
                 onClick={() => setShowHelpSheet(false)}
                 className="zivo-card-organic flex items-center gap-3 p-3 active:scale-[0.98] transition-transform"
               >
-                <div
-                  className="zivo-icon-pill"
-                  style={{ color: opt.accent, background: `${opt.accent}15` }}
-                >
-                  <opt.icon className="w-5 h-5" style={{ color: opt.accent }} />
+                <div className={cn("zivo-icon-pill", getAccentClasses(opt.accent).text, getAccentClasses(opt.accent).bg)}>
+                  <opt.icon className={cn("w-5 h-5", getAccentClasses(opt.accent).text)} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-sm">{opt.label}</p>

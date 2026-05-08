@@ -204,6 +204,7 @@ function PostDetailOverlay({
         type="button"
         onClick={onClose}
         aria-label="Close post"
+        title="Close post"
         className="hidden lg:flex fixed top-4 right-4 z-[1510] h-11 w-11 items-center justify-center rounded-full bg-background/90 text-foreground shadow-xl ring-1 ring-border/50 backdrop-blur-md hover:bg-background transition-colors"
       >
         <XIcon className="h-5 w-5" />
@@ -1119,19 +1120,18 @@ export default function ReelsFeedPage() {
         <Suspense fallback={null}><FeedSidebar /></Suspense>
 
         {/* Main Feed Content */}
-        <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background pb-20 lg:pb-0 flex-1 lg:max-w-2xl xl:max-w-3xl lg:mx-auto">
+        <PullToRefresh onRefresh={handlePullRefresh} className="zivo-shell-mobile bg-background lg:pb-0 flex-1 lg:max-w-2xl xl:max-w-3xl lg:mx-auto">
           {/* Header — hidden on desktop since the global NavBar already provides search */}
           <div
             data-testid="feed-sticky-header"
-            className="lg:hidden sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/30"
+            className="lg:hidden zivo-sticky-mobile-header"
           >
-            <div style={{ paddingTop: 'var(--zivo-safe-top-sticky, 0px)' }}>
+            <div className="zivo-pt-safe-sticky">
               <div
-                className="overflow-hidden transition-all duration-300 ease-out"
-                style={{
-                  maxHeight: headerHidden ? 0 : 200,
-                  opacity: headerHidden ? 0 : 1,
-                }}
+                className={cn(
+                  "overflow-hidden transition-all duration-300 ease-out",
+                  headerHidden ? "max-h-0 opacity-0" : "max-h-[200px] opacity-100"
+                )}
               >
                 <div className="px-3 py-1 flex items-center gap-1.5">
                   {/* Hamburger menu — Facebook-style entry point for secondary
@@ -1142,6 +1142,7 @@ export default function ReelsFeedPage() {
                       <button type="button"
                         className="shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition"
                         aria-label="Open menu"
+                        title="Open menu"
                       >
                         <Menu className="h-[18px] w-[18px]" />
                       </button>
@@ -1250,7 +1251,7 @@ export default function ReelsFeedPage() {
                       className="w-full pl-8 pr-7 py-1 rounded-full bg-muted/40 border border-border/30 text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"
                     />
                     {searchQuery && (
-                      <button type="button" onClick={() => { setSearchQuery(""); setSearchResults([]); }} className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                      <button type="button" onClick={() => { setSearchQuery(""); setSearchResults([]); }} aria-label="Clear search" title="Clear search" className="absolute right-2.5 top-1/2 -translate-y-1/2">
                         <XIcon className="h-3.5 w-3.5 text-muted-foreground" />
                       </button>
                     )}
@@ -1259,6 +1260,7 @@ export default function ReelsFeedPage() {
                     onClick={() => userId ? setShowCreate(true) : navigate("/auth")}
                     className="shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition"
                     aria-label="Create post"
+                    title="Create post"
                   >
                     <Plus className="h-[18px] w-[18px]" />
                   </button>
@@ -1266,6 +1268,7 @@ export default function ReelsFeedPage() {
                     onClick={() => navigate("/notifications")}
                     className="shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition relative"
                     aria-label={notificationUnread > 0 ? `Notifications, ${notificationUnread} unread` : "Notifications"}
+                    title={notificationUnread > 0 ? `Notifications, ${notificationUnread} unread` : "Notifications"}
                   >
                     <Bell className="h-[18px] w-[18px]" />
                     {notificationUnread > 0 && (
@@ -1278,6 +1281,7 @@ export default function ReelsFeedPage() {
                     onClick={() => navigate("/chat")}
                     className="shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition relative"
                     aria-label={headerChatUnread > 0 ? `Messages, ${headerChatUnread} unread` : "Messages"}
+                    title={headerChatUnread > 0 ? `Messages, ${headerChatUnread} unread` : "Messages"}
                   >
                     <MessageCircle className="h-[18px] w-[18px]" />
                     {headerChatUnread > 0 && (
@@ -1339,8 +1343,8 @@ export default function ReelsFeedPage() {
                 exit={{ opacity: 0, y: -20 }}
                 transition={{ duration: 0.2 }}
               >
-                <div data-testid="search-overlay-header" className="flex items-center gap-2 px-3 py-2 border-b border-border/30" style={{ paddingTop: 'var(--zivo-safe-top-sticky)' }}>
-                  <button type="button" onClick={() => { setShowSearch(false); setSearchQuery(""); setSearchResults([]); }} className="min-h-[44px] min-w-[44px] flex items-center justify-center">
+                <div data-testid="search-overlay-header" className="zivo-pt-safe-sticky flex items-center gap-2 px-3 py-2 border-b border-border/30">
+                  <button type="button" onClick={() => { setShowSearch(false); setSearchQuery(""); setSearchResults([]); }} aria-label="Close search" title="Close search" className="min-h-[44px] min-w-[44px] flex items-center justify-center">
                     <ChevronLeft className="h-5 w-5 text-foreground" />
                   </button>
                   <div className="flex-1 relative">
@@ -1353,7 +1357,7 @@ export default function ReelsFeedPage() {
                       className="w-full pl-9 pr-8 py-2.5 rounded-full bg-muted/50 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                     />
                     {searchQuery && (
-                      <button type="button" onClick={() => { setSearchQuery(""); setSearchResults([]); }} className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <button type="button" onClick={() => { setSearchQuery(""); setSearchResults([]); }} aria-label="Clear search" title="Clear search" className="absolute right-3 top-1/2 -translate-y-1/2">
                         <XIcon className="h-4 w-4 text-muted-foreground" />
                       </button>
                     )}
@@ -1461,23 +1465,23 @@ export default function ReelsFeedPage() {
                 </button>
               </div>
               <div className="border-t border-border/20 pt-1.5 flex overflow-x-auto scrollbar-hide lg:max-w-md lg:mx-auto lg:gap-2" role="toolbar" aria-label="Create post">
-                <button type="button" onClick={() => { setCreateMode("photo"); setShowCreate(true); }} aria-label="Share a photo" className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
+                <button type="button" onClick={() => { setCreateMode("photo"); setShowCreate(true); }} aria-label="Share a photo" title="Share a photo" className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
                   <ImageIcon className="h-4 w-4 text-emerald-500" />
                   <span className="text-[10px] font-semibold text-muted-foreground">Photo</span>
                 </button>
-                <button type="button" onClick={() => { setCreateMode("reel"); setShowCreate(true); }} aria-label="Create a Reel" className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
+                <button type="button" onClick={() => { setCreateMode("reel"); setShowCreate(true); }} aria-label="Create a Reel" title="Create a Reel" className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
                   <Film className="h-4 w-4 text-violet-500" />
                   <span className="text-[10px] font-semibold text-muted-foreground">Reels</span>
                 </button>
-                <button type="button" onClick={() => { setCreateMode("poll"); setShowCreate(true); }} aria-label="Create a poll" className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
+                <button type="button" onClick={() => { setCreateMode("poll"); setShowCreate(true); }} aria-label="Create a poll" title="Create a poll" className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
                   <TrendingUp className="h-4 w-4 text-amber-500" />
                   <span className="text-[10px] font-semibold text-muted-foreground">Poll</span>
                 </button>
-                <button type="button" onClick={() => navigate("/check-in")} aria-label="Check in to a place" className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
+                <button type="button" onClick={() => navigate("/check-in")} aria-label="Check in to a place" title="Check in to a place" className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
                   <MapPin className="h-4 w-4 text-red-500" />
                   <span className="text-[10px] font-semibold text-muted-foreground">Check In</span>
                 </button>
-                <button type="button" onClick={() => navigate("/live")} aria-label="Go live" className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
+                <button type="button" onClick={() => navigate("/live")} aria-label="Go live" title="Go live" className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
                   <Radio className="h-4 w-4 text-rose-600" />
                   <span className="text-[10px] font-semibold text-muted-foreground">Live</span>
                 </button>
@@ -1935,7 +1939,7 @@ export default function ReelsFeedPage() {
                 );
               })()}
               {/* Spacer so last post clears the fixed bottom nav */}
-              <div className="md:hidden" style={{ height: 'max(calc(env(safe-area-inset-bottom, 0px) + 6rem), 6rem)' }} aria-hidden="true" />
+              <div className="md:hidden zivo-reels-bottom-spacer" aria-hidden="true" />
             </div>
             );
           })()}
@@ -2007,6 +2011,7 @@ export default function ReelsFeedPage() {
                     type="button"
                     onClick={() => setReelsStartIndex(null)}
                     aria-label="Close reels viewer"
+                    title="Close reels viewer"
                     className="hidden lg:flex fixed top-4 right-4 z-[1510] h-11 w-11 items-center justify-center rounded-full bg-background/90 text-foreground shadow-xl ring-1 ring-border/50 backdrop-blur-md hover:bg-background transition-colors"
                   >
                     <XIcon className="h-5 w-5" />
@@ -2027,8 +2032,7 @@ export default function ReelsFeedPage() {
                     <>
                       <div
                         data-testid="post-detail-header"
-                        className="shrink-0 z-10 bg-background/95 backdrop-blur-xl border-b border-border/30 cursor-grab active:cursor-grabbing select-none"
-                        style={{ paddingTop: 'var(--zivo-safe-top-overlay)', touchAction: 'none' }}
+                        className="zivo-pt-safe-overlay touch-none shrink-0 z-10 bg-background/95 backdrop-blur-xl border-b border-border/30 cursor-grab active:cursor-grabbing select-none"
                         onPointerDown={(e) => {
                           const target = e.target as HTMLElement | null;
                           // Don't start drag from interactive children (buttons, links)
@@ -2046,6 +2050,7 @@ export default function ReelsFeedPage() {
                           <button type="button"
                             onClick={() => setFullscreenIndex(null)}
                             aria-label="Close post"
+                            title="Close post"
                             className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full hover:bg-muted/50 active:bg-muted transition-colors"
                           >
                             <XIcon className="h-5 w-5 text-foreground" />
@@ -2061,6 +2066,7 @@ export default function ReelsFeedPage() {
                             }}
                             className="flex-1 flex items-center gap-2.5 min-w-0 text-left rounded-lg px-1 py-0.5 hover:bg-muted/40 active:bg-muted/60 transition-colors"
                             aria-label={`View ${post.author_name}'s profile`}
+                            title={`View ${post.author_name}'s profile`}
                           >
                             <div className="h-9 w-9 rounded-full overflow-hidden bg-muted flex-shrink-0 ring-1 ring-border/40">
                               {post.author_avatar ? (
@@ -2096,8 +2102,7 @@ export default function ReelsFeedPage() {
                       </div>
                       <div
                         ref={fullscreenScrollRef}
-                        className="flex-1 min-h-0 overflow-y-auto"
-                        style={{ paddingBottom: 'env(safe-area-inset-bottom, 0px)', touchAction: 'pan-y' }}
+                        className="zivo-pb-safe-inset touch-pan-y flex-1 min-h-0 overflow-y-auto"
                       >
                         <FeedCard key={post.id} item={post} currentUserId={userId} detailMode />
                       </div>
@@ -2584,30 +2589,26 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
       <button type="button"
         onClick={onClose}
         aria-label="Close"
+        title="Close"
         data-testid="reel-close-button"
-        className="absolute h-10 w-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center"
-        style={{
-          top: 'var(--zivo-safe-top-overlay)',
-          left: 'max(env(safe-area-inset-left, 0px), 16px)',
-        }}
+        className="zivo-reel-close-offset absolute h-10 w-10 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center"
       >
         <XIcon className="h-5 w-5 text-white" />
       </button>
 
       {/* Right side action buttons */}
       <div
-        className="absolute right-3 flex flex-col items-center gap-4"
-        style={{ bottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 1.5rem), 2.5rem)' }}
+        className="zivo-reel-actions-offset absolute right-3 flex flex-col items-center gap-4"
       >
         {/* Mute */}
-        <button type="button" onClick={() => setMuted(!muted)} className="flex flex-col items-center gap-1 min-h-[44px] min-w-[44px] justify-center">
+        <button type="button" onClick={() => setMuted(!muted)} aria-label={muted ? "Unmute reel" : "Mute reel"} title={muted ? "Unmute reel" : "Mute reel"} className="flex flex-col items-center gap-1 min-h-[44px] min-w-[44px] justify-center">
           <div className="h-10 w-10 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
             {muted ? <VolumeX className="h-5 w-5 text-white" /> : <Volume2 className="h-5 w-5 text-white" />}
           </div>
         </button>
 
         {/* Like */}
-        <button type="button" onClick={handleLike} className="flex flex-col items-center gap-1 min-h-[44px] min-w-[44px] justify-center">
+        <button type="button" onClick={handleLike} aria-label={liked ? "Unlike reel" : "Like reel"} title={liked ? "Unlike reel" : "Like reel"} className="flex flex-col items-center gap-1 min-h-[44px] min-w-[44px] justify-center">
           <Heart className={cn("h-7 w-7 drop-shadow-lg transition-all", liked ? "text-red-500 fill-red-500 scale-110" : "text-white")} />
           {!item.hide_like_counts && (
             <span className="text-white text-[11px] font-semibold drop-shadow">
@@ -2622,6 +2623,8 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
             if (!currentUserId) { toast.error("Please sign in to comment"); return; }
             setShowComments(true);
           }}
+          aria-label="Open comments"
+          title="Open comments"
           className="flex flex-col items-center gap-1 min-h-[44px] min-w-[44px] justify-center"
         >
           <MessageCircle className="h-7 w-7 text-white drop-shadow-lg" />
@@ -2645,6 +2648,8 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
               navigator.clipboard?.writeText(shareUrl).catch(() => {});
               toast.success("Watch Party link copied — send it to friends");
             }}
+            aria-label="Copy watch party link"
+            title="Copy watch party link"
             className="flex flex-col items-center gap-1 min-h-[44px] min-w-[44px] justify-center"
           >
             <Tv2 className="h-7 w-7 text-white drop-shadow-lg" />
@@ -2666,6 +2671,8 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
             }
             setShowShareSheet(true);
           }}
+          aria-label="Share reel"
+          title="Share reel"
           className="flex flex-col items-center gap-1 min-h-[44px] min-w-[44px] justify-center"
         >
           <Send className="h-7 w-7 text-white drop-shadow-lg" />
@@ -2673,7 +2680,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
         </button>
 
         {item.commerce_link && (
-          <button type="button" onClick={handleBuyNow} className="flex flex-col items-center gap-1 min-h-[44px] min-w-[44px] justify-center">
+          <button type="button" onClick={handleBuyNow} className="flex flex-col items-center gap-1 min-h-[44px] min-w-[44px] justify-center" title="Buy now">
             <div className="px-2.5 py-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-bold shadow-lg">
               Buy Now
             </div>
@@ -2716,8 +2723,12 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
                 <button type="button"
                   onClick={handleReelFollow}
                   disabled={followLoading}
-                  className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 h-5 w-5 rounded-full flex items-center justify-center shadow-lg"
-                  style={{ backgroundColor: isFollowing ? 'hsl(var(--muted))' : 'hsl(var(--primary))' }}
+                  aria-label={isFollowing ? "Unfollow creator" : "Follow creator"}
+                  title={isFollowing ? "Unfollow creator" : "Follow creator"}
+                  className={cn(
+                    "absolute -bottom-1.5 left-1/2 -translate-x-1/2 h-5 w-5 rounded-full flex items-center justify-center shadow-lg",
+                    isFollowing ? "bg-muted" : "bg-primary"
+                  )}
                 >
                   {followLoading ? (
                     <Loader2 className="h-2.5 w-2.5 animate-spin text-primary-foreground" />
@@ -2736,8 +2747,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
       {/* Floating Product Card — "Buy from [Shop] - Xkm away" */}
       {item.commerce_link && (
         <div
-          className="absolute left-4 right-20"
-          style={{ bottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 5.5rem), 7rem)' }}
+          className="zivo-reel-product-offset absolute left-4 right-20"
         >
           <Suspense fallback={null}>
             <FloatingProductCard
@@ -2754,8 +2764,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
 
 
       <div
-        className="absolute left-0 right-16 bottom-0 px-4"
-        style={{ paddingBottom: 'max(calc(env(safe-area-inset-bottom, 0px) + 1rem), 2rem)' }}
+        className="zivo-reel-caption-offset absolute left-0 right-16 bottom-0 px-4"
       >
         {/* Author info — show original creator for shared posts */}
         {(() => {
@@ -2799,6 +2808,8 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
                   <button type="button"
                     onClick={handleReelFollow}
                     disabled={followLoading}
+                    aria-label={isFollowing ? "Unfollow creator" : "Follow creator"}
+                    title={isFollowing ? "Unfollow creator" : "Follow creator"}
                     className={cn(
                       "shrink-0 px-4 py-1 rounded-md text-xs font-semibold transition-all",
                       isFollowing
@@ -2965,9 +2976,11 @@ function FeedPollCard() {
               )}
             >
               {voted !== null && (
-                <div
-                  className={cn("absolute inset-y-0 left-0 rounded-xl transition-all duration-700", voted === i ? "bg-primary/15" : "bg-muted/40")}
-                  style={{ width: `${pct}%` }}
+                <motion.div
+                  className={cn("absolute inset-y-0 left-0 right-0 origin-left rounded-xl", voted === i ? "bg-primary/15" : "bg-muted/40")}
+                  initial={false}
+                  animate={{ scaleX: pct / 100 }}
+                  transition={{ duration: 0.7, ease: "easeOut" }}
                 />
               )}
               <div className="relative flex items-center justify-between">
@@ -3674,6 +3687,9 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
 
   const mediaUrl = item.media_urls[currentMedia] || item.media_urls[0];
   const hasMedia = Boolean(mediaUrl);
+  const videoAspectClass = videoAspect
+    ? (videoAspect >= 1.2 ? "aspect-video" : videoAspect >= 0.95 ? "aspect-square" : videoAspect >= 0.75 ? "aspect-[4/5]" : "aspect-[9/16]")
+    : "aspect-[4/5]";
 
   const isSharedPost = Boolean(item.shared_from_post_id || item.shared_from_user_id);
 
@@ -3725,6 +3741,8 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                 <button type="button"
                   onClick={handleFollowToggle}
                   disabled={followLoading}
+                  aria-label={isFollowingAuthor ? "Unfollow author" : "Follow author"}
+                  title={isFollowingAuthor ? "Unfollow author" : "Follow author"}
                   className={cn(
                     "text-[12px] font-semibold px-3 py-1 rounded-md transition-all active:scale-95",
                     isFollowingAuthor ? "text-muted-foreground" : "text-primary"
@@ -3735,6 +3753,8 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
               )}
               <button type="button"
                 onClick={(e) => { e.stopPropagation(); setShowPostMenu(true); }}
+                aria-label="Post actions"
+                title="Post actions"
                 className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center"
               >
                 <MoreHorizontal className="h-5 w-5" />
@@ -3791,6 +3811,8 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                 <button type="button"
                   onClick={handleSharedAuthorFollowToggle}
                   disabled={followLoading}
+                  aria-label={isFollowingSharedAuthor ? "Unfollow author" : "Follow author"}
+                  title={isFollowingSharedAuthor ? "Unfollow author" : "Follow author"}
                   className={cn(
                     "text-[12px] font-semibold px-2 py-1 rounded-md transition-all active:scale-95",
                     isFollowingSharedAuthor ? "text-muted-foreground" : "text-primary"
@@ -3828,7 +3850,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                       className="h-full w-full object-contain cursor-pointer"
                     />
                     {!isPlaying && (
-                      <button type="button" onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()} className="absolute inset-0 flex items-center justify-center bg-black/10">
+                      <button type="button" onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()} aria-label="Play video" title="Play video" className="absolute inset-0 flex items-center justify-center bg-black/10">
                         <Play className="h-14 w-14 text-white/80 fill-white/80 drop-shadow-lg" />
                       </button>
                     )}
@@ -3940,6 +3962,8 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                 <button type="button"
                   onClick={handleFollowToggle}
                   disabled={followLoading}
+                  aria-label={isFollowingAuthor ? "Unfollow author" : "Follow author"}
+                  title={isFollowingAuthor ? "Unfollow author" : "Follow author"}
                   className={cn(
                     "text-[12px] font-semibold px-3 py-1 rounded-md transition-all active:scale-95",
                     isFollowingAuthor
@@ -3954,6 +3978,8 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
               )}
               <button type="button"
                 onClick={(e) => { e.stopPropagation(); setShowPostMenu(true); }}
+                aria-label="Post actions"
+                title="Post actions"
                 className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center"
               >
                 <MoreHorizontal className="h-5 w-5" />
@@ -4028,12 +4054,10 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
             onTouchStart={item.media_urls.length > 1 && item.media_type !== "video" ? undefined : (item.media_urls.length > 1 ? handleTouchStart : undefined)}
             onTouchMove={item.media_urls.length > 1 && item.media_type !== "video" ? undefined : (item.media_urls.length > 1 ? handleTouchMove : undefined)}
             onTouchEnd={item.media_urls.length > 1 && item.media_type !== "video" ? undefined : (item.media_urls.length > 1 ? handleTouchEnd : undefined)}
-            className={cn("relative overflow-hidden", hasMedia ? (item.media_type === "video" ? "max-h-[500px] lg:max-h-[680px] xl:max-h-[760px] w-full mx-auto bg-black rounded-xl" : "") : "")}
-            style={
-              hasMedia && item.media_type === "video"
-                ? { aspectRatio: videoAspect ? String(videoAspect) : "4 / 5" }
-                : undefined
-            }
+            className={cn(
+              "relative overflow-hidden",
+              hasMedia ? (item.media_type === "video" ? cn("max-h-[500px] lg:max-h-[680px] xl:max-h-[760px] w-full mx-auto bg-black rounded-xl", videoAspectClass) : "") : ""
+            )}
           >
             {hasMedia ? (
               item.media_type === "video" ? (
@@ -4055,12 +4079,14 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                     className="h-full w-full object-cover cursor-pointer"
                   />
                   {!isPlaying && (
-                    <button type="button" onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()} className="absolute inset-0 flex items-center justify-center bg-black/10">
+                    <button type="button" onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()} aria-label="Play video" title="Play video" className="absolute inset-0 flex items-center justify-center bg-black/10">
                       <Play className="h-14 w-14 text-white/80 fill-white/80 drop-shadow-lg" />
                     </button>
                   )}
                   <button type="button"
                     onClick={(e) => { e.stopPropagation(); setMuted(!muted); }}
+                    aria-label={muted ? "Unmute video" : "Mute video"}
+                    title={muted ? "Unmute video" : "Mute video"}
                     className="absolute bottom-3 right-3 h-8 w-8 rounded-full bg-black/50 flex items-center justify-center min-h-[44px] min-w-[44px]"
                   >
                     {muted ? <VolumeX className="h-4 w-4 text-white" /> : <Volume2 className="h-4 w-4 text-white" />}
@@ -4078,8 +4104,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                 /* Detail mode — horizontal swipeable carousel with dots */
                 <div className="relative w-full">
                   <div
-                    className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide w-full"
-                    style={{ scrollbarWidth: 'none', msOverflowStyle: 'none', WebkitOverflowScrolling: 'touch' }}
+                    className="flex overflow-x-auto snap-x snap-mandatory scrollbar-hide no-scrollbar w-full"
                     onScroll={(e) => {
                       const el = e.currentTarget;
                       const idx = Math.round(el.scrollLeft / el.clientWidth);
@@ -4263,7 +4288,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
             </div>
             <div className="flex items-center gap-2.5">
               {localComments > 0 && (
-                <button type="button" onClick={handleComment} className="text-[12px] text-muted-foreground hover:text-foreground hover:underline transition-colors">
+                <button type="button" onClick={handleComment} className="text-[12px] text-muted-foreground hover:text-foreground hover:underline transition-colors" title="Action">
                   {localComments === 1 ? "1 comment" : `${localComments >= 1000 ? `${(localComments / 1000).toFixed(1)}k` : localComments} comments`}
                 </button>
               )}
@@ -4336,9 +4361,8 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
               }}
               onContextMenu={(e) => { e.preventDefault(); setShowReactionPicker(!showReactionPicker); }}
               aria-label={liked ? `Unlike post${!item.hide_like_counts && formatCount(localLikes) ? `, ${formatCount(localLikes)} likes` : ""}` : `Like post${!item.hide_like_counts && formatCount(localLikes) ? `, ${formatCount(localLikes)} likes` : ""}`}
-              aria-pressed={liked}
-              style={{ WebkitTouchCallout: "none", WebkitUserSelect: "none", userSelect: "none", WebkitTapHighlightColor: "transparent" } as React.CSSProperties}
-              className="min-h-[44px] min-w-[36px] sm:min-w-[40px] flex items-center justify-center gap-1 group"
+              title={liked ? "Unlike post" : "Like post"}
+              className="zivo-touch-no-callout min-h-[44px] min-w-[36px] sm:min-w-[40px] flex items-center justify-center gap-1 group"
             >
               {selectedReaction ? (
                 <span className="text-lg" aria-hidden>{selectedReaction}</span>
@@ -4357,7 +4381,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
               onClick={handleComment}
               aria-label={`Open comments${formatCount(localComments) ? `, ${formatCount(localComments)} comments` : ""}`}
               className="min-h-[44px] min-w-[36px] sm:min-w-[40px] flex items-center justify-center text-foreground gap-1"
-            >
+             title="Action">
               <MessageCircle aria-hidden className="h-[22px] w-[22px]" />
               {formatCount(localComments) && (
                 <span aria-hidden className="text-[12px] text-muted-foreground font-semibold whitespace-nowrap">
@@ -4371,7 +4395,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
               onClick={handleShare}
               aria-label={`Share post${formatCount(item.shares_count) ? `, ${formatCount(item.shares_count)} shares` : ""}`}
               className="min-h-[44px] min-w-[36px] sm:min-w-[40px] flex items-center justify-center text-foreground gap-1"
-            >
+             title="Action">
               <Send aria-hidden className="h-[22px] w-[22px]" />
               {formatCount(item.shares_count) && (
                 <span aria-hidden className="text-[12px] text-muted-foreground font-semibold whitespace-nowrap">
@@ -4384,7 +4408,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
         <button type="button"
           onClick={handleSave}
           aria-label={saved ? "Remove bookmark" : "Save post"}
-          aria-pressed={saved}
+          title={saved ? "Remove bookmark" : "Save post"}
           className="min-h-[44px] min-w-[44px] flex items-center justify-center"
         >
           <Bookmark aria-hidden className={cn("h-[22px] w-[22px] transition-all", saved ? "text-primary fill-primary" : "text-foreground")} />
@@ -4422,7 +4446,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
           <button type="button"
             onClick={handleBuyNow}
             className="w-full rounded-xl bg-primary text-primary-foreground py-2.5 text-sm font-semibold"
-          >
+           title="Action">
             Buy Now
           </button>
         </div>
@@ -4533,7 +4557,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                   <QrCode className="h-5 w-5 text-foreground" />
                   <span className="text-base font-bold text-foreground">Share via QR</span>
                 </div>
-                <button type="button" onClick={() => setShowQrModal(false)} className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors">
+                <button type="button" onClick={() => setShowQrModal(false)} aria-label="Close QR modal" title="Close QR modal" className="w-8 h-8 flex items-center justify-center rounded-full hover:bg-muted transition-colors">
                   <XIcon className="h-4 w-4 text-muted-foreground" />
                 </button>
               </div>
@@ -4960,6 +4984,8 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
             <button type="button"
               onClick={handleEditPost}
               disabled={editSaving}
+              aria-label={editSaving ? "Saving post" : "Save post"}
+              title={editSaving ? "Saving post" : "Save post"}
               className="flex-1 py-2.5 rounded-xl bg-primary text-primary-foreground text-sm font-semibold disabled:opacity-50"
             >
               {editSaving ? "Saving..." : "Save"}
@@ -5026,3 +5052,6 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
     prev.detailMode === next.detailMode
   );
 });
+
+
+

@@ -150,7 +150,7 @@ export default function SmartSearchPage() {
               onBlur={() => { if (query.trim()) saveSearch(query.trim()); }}
               className="pl-9 pr-9" autoFocus />
             {query && (
-              <button type="button" onClick={() => setQuery("")} className="absolute right-3 top-1/2 -translate-y-1/2">
+              <button type="button" onClick={() => setQuery("")} aria-label="Clear search" title="Clear search" className="absolute right-3 top-1/2 -translate-y-1/2">
                 <X className="h-4 w-4 text-muted-foreground" />
               </button>
             )}

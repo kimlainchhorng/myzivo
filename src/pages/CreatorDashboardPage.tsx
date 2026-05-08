@@ -242,6 +242,20 @@ export default function CreatorDashboardPage() {
     { icon: Users, title: "Cross-promote on socials", desc: "Share teaser content on Twitter/X, TikTok and Reddit to drive traffic.", accent: "hsl(221 83% 53%)" },
   ];
 
+  const accentClasses: Record<string, { text: string; bg: string; bar: string }> = {
+    "hsl(263 70% 58%)": { text: "text-violet-500", bg: "bg-violet-500/15", bar: "bg-violet-500" },
+    "hsl(142 71% 45%)": { text: "text-emerald-500", bg: "bg-emerald-500/15", bar: "bg-emerald-500" },
+    "hsl(38 92% 50%)": { text: "text-amber-500", bg: "bg-amber-500/15", bar: "bg-amber-500" },
+    "hsl(340 75% 55%)": { text: "text-rose-500", bg: "bg-rose-500/15", bar: "bg-rose-500" },
+    "hsl(199 89% 48%)": { text: "text-sky-500", bg: "bg-sky-500/15", bar: "bg-sky-500" },
+    "hsl(172 66% 50%)": { text: "text-teal-500", bg: "bg-teal-500/15", bar: "bg-teal-500" },
+    "hsl(0 84% 60%)": { text: "text-red-500", bg: "bg-red-500/15", bar: "bg-red-500" },
+    "hsl(25 95% 53%)": { text: "text-orange-500", bg: "bg-orange-500/15", bar: "bg-orange-500" },
+    "hsl(221 83% 53%)": { text: "text-blue-500", bg: "bg-blue-500/15", bar: "bg-blue-500" },
+    "hsl(300 70% 55%)": { text: "text-fuchsia-500", bg: "bg-fuchsia-500/15", bar: "bg-fuchsia-500" },
+  };
+  const getAccentClasses = (accent: string) => accentClasses[accent] ?? { text: "text-primary", bg: "bg-primary/15", bar: "bg-primary" };
+
   return (
     <div className="min-h-dvh bg-background pb-24">
       <SEOHead title="Creator Dashboard – ZIVO" description="Manage your creator earnings, subscribers, and content on ZIVO." noIndex />
@@ -398,7 +412,7 @@ export default function CreatorDashboardPage() {
       {/* Header with ZIVO ribbon */}
       <div className="sticky top-0 safe-area-top z-30 bg-background/80 backdrop-blur-xl border-b border-border/30 zivo-ribbon">
         <div className="flex items-center gap-3 px-4 py-3">
-          <button type="button" onClick={() => navigate("/more")} className="p-2 -ml-2 rounded-full hover:bg-muted/50 touch-manipulation">
+          <button type="button" onClick={() => navigate("/more")} aria-label="Back" title="Back" className="p-2 -ml-2 rounded-full hover:bg-muted/50 touch-manipulation">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <h1 className="text-lg font-extrabold flex-1 tracking-tight">Creator Dashboard</h1>
@@ -417,7 +431,7 @@ export default function CreatorDashboardPage() {
             {creatorType === "of" ? "OF Creator" : creatorType === "content" ? "Content" : "Set Type"}
             <ChevronDown className="w-3 h-3 opacity-60" />
           </button>
-          <button type="button" onClick={() => navigate("/creator-analytics")} className="p-2 rounded-full hover:bg-muted/50 touch-manipulation">
+          <button type="button" onClick={() => navigate("/creator-analytics")} aria-label="Open analytics" title="Open analytics" className="p-2 rounded-full hover:bg-muted/50 touch-manipulation">
             <BarChart3 className="h-5 w-5 text-primary" />
           </button>
         </div>
@@ -501,10 +515,11 @@ export default function CreatorDashboardPage() {
           const completed = setupSteps.filter((s) => s.done).length;
           const pct = Math.round((completed / setupSteps.length) * 100);
           if (completed === setupSteps.length) return null;
-          const accentColor = creatorType === "of" ? "hsl(340 75% 55%)" : "hsl(142 71% 45%)";
-          const gradientColor = creatorType === "of"
-            ? "linear-gradient(90deg, hsl(340 75% 55%), hsl(0 84% 60%))"
-            : "linear-gradient(90deg, hsl(142 71% 45%), hsl(172 66% 50%))";
+          const setupAccentClass = creatorType === "of" ? "text-rose-500 bg-rose-500/20" : "text-emerald-500 bg-emerald-500/20";
+          const setupIconClass = creatorType === "of" ? "text-rose-500" : "text-emerald-500";
+          const setupProgressClass = creatorType === "of"
+            ? "bg-gradient-to-r from-rose-500 to-red-500"
+            : "bg-gradient-to-r from-emerald-500 to-teal-500";
 
           return (
             <motion.div
@@ -514,8 +529,8 @@ export default function CreatorDashboardPage() {
             >
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <div className="zivo-icon-pill w-9 h-9 rounded-xl" style={{ color: accentColor, background: `${accentColor}20` }}>
-                    {creatorType === "of" ? <Flame className="w-4 h-4" style={{ color: accentColor }} /> : <Rocket className="w-4 h-4" style={{ color: accentColor }} />}
+                  <div className={cn("zivo-icon-pill w-9 h-9 rounded-xl", setupAccentClass)}>
+                    {creatorType === "of" ? <Flame className={cn("w-4 h-4", setupIconClass)} /> : <Rocket className={cn("w-4 h-4", setupIconClass)} />}
                   </div>
                   <div>
                     <h3 className="font-extrabold text-[15px] leading-tight">
@@ -524,7 +539,7 @@ export default function CreatorDashboardPage() {
                     <p className="text-[10px] text-muted-foreground">{completed} of {setupSteps.length} complete</p>
                   </div>
                 </div>
-                <span className="text-xs font-extrabold" style={{ color: accentColor }}>{pct}%</span>
+                <span className={cn("text-xs font-extrabold", setupIconClass)}>{pct}%</span>
               </div>
 
               {/* Progress bar */}
@@ -533,8 +548,7 @@ export default function CreatorDashboardPage() {
                   initial={{ width: 0 }}
                   animate={{ width: `${pct}%` }}
                   transition={{ duration: 0.6, ease: "easeOut" }}
-                  className="h-full rounded-full"
-                  style={{ background: gradientColor }}
+                  className={cn("h-full rounded-full", setupProgressClass)}
                 />
               </div>
 
@@ -549,10 +563,10 @@ export default function CreatorDashboardPage() {
                     }`}
                   >
                     {step.done ? (
-                      <CheckCircle2 className="w-5 h-5 shrink-0" style={{ color: accentColor }} />
+                      <CheckCircle2 className={cn("w-5 h-5 shrink-0", setupIconClass)} />
                     ) : (
-                      <div className="zivo-icon-pill w-9 h-9 rounded-xl shrink-0" style={{ color: step.accent, background: `${step.accent}15` }}>
-                        <step.icon className="w-4 h-4" style={{ color: step.accent }} />
+                      <div className={cn("zivo-icon-pill w-9 h-9 rounded-xl shrink-0", getAccentClasses(step.accent).text, getAccentClasses(step.accent).bg)}>
+                        <step.icon className={cn("w-4 h-4", getAccentClasses(step.accent).text)} />
                       </div>
                     )}
                     <div className="flex-1 min-w-0">
@@ -606,8 +620,8 @@ export default function CreatorDashboardPage() {
               transition={{ delay: i * 0.04, type: "spring", stiffness: 300, damping: 25 }}
               className="zivo-card-organic p-3 text-center"
             >
-              <div className="zivo-icon-pill mx-auto mb-1.5 w-9 h-9 rounded-xl" style={{ color: card.accent, background: `${card.accent}15` }}>
-                <card.icon className="w-4 h-4" style={{ color: card.accent }} />
+              <div className={cn("zivo-icon-pill mx-auto mb-1.5 w-9 h-9 rounded-xl", getAccentClasses(card.accent).text, getAccentClasses(card.accent).bg)}>
+                <card.icon className={cn("w-4 h-4", getAccentClasses(card.accent).text)} />
               </div>
               <p className="text-sm font-bold">{card.value}</p>
               <p className="text-[9px] text-muted-foreground">{card.label}</p>
@@ -630,8 +644,8 @@ export default function CreatorDashboardPage() {
                   transition={{ delay: 0.15 + i * 0.03 }}
                   className="zivo-card-organic p-3 flex flex-col items-center gap-1.5 touch-manipulation"
                 >
-                  <div className="zivo-icon-pill w-9 h-9 rounded-xl" style={{ color: action.accent, background: `${action.accent}15` }}>
-                    <action.icon className="w-4 h-4" style={{ color: action.accent }} />
+                  <div className={cn("zivo-icon-pill w-9 h-9 rounded-xl", getAccentClasses(action.accent).text, getAccentClasses(action.accent).bg)}>
+                    <action.icon className={cn("w-4 h-4", getAccentClasses(action.accent).text)} />
                   </div>
                   <span className="text-[9px] font-bold text-center leading-tight">{action.label}</span>
                 </motion.div>
@@ -660,11 +674,16 @@ export default function CreatorDashboardPage() {
                   className="zivo-card-organic p-3"
                 >
                   <div className="flex items-center gap-2 mb-2">
-                    <m.icon className="w-4 h-4" style={{ color: m.accent }} />
+                    <m.icon className={cn("w-4 h-4", getAccentClasses(m.accent).text)} />
                     <span className="text-[11px] font-bold">{m.label}</span>
                   </div>
                   <div className="w-full h-1.5 bg-muted/50 rounded-full overflow-hidden mb-1">
-                    <div className="h-full rounded-full transition-all" style={{ width: `${pct}%`, background: m.accent }} />
+                    <motion.div
+                      initial={false}
+                      animate={{ scaleX: pct / 100 }}
+                      transition={{ duration: 0.4, ease: "easeOut" }}
+                      className={cn("h-full rounded-full origin-left", getAccentClasses(m.accent).bar)}
+                    />
                   </div>
                   <p className="text-[9px] text-muted-foreground">{m.current} / {m.target}</p>
                 </motion.div>
@@ -710,8 +729,8 @@ export default function CreatorDashboardPage() {
           <div className="space-y-1.5">
             {tips.length > 0 ? tips.slice(0, 5).map((tip: any) => (
               <div key={tip.id} className="zivo-card-organic flex items-center gap-3 p-3">
-                <div className="zivo-icon-pill w-8 h-8 rounded-lg" style={{ color: "hsl(340 75% 55%)", background: "hsl(340 75% 55% / 0.15)" }}>
-                  <Heart className="w-3.5 h-3.5" style={{ color: "hsl(340 75% 55%)" }} />
+                <div className="zivo-icon-pill w-8 h-8 rounded-lg text-rose-500 bg-rose-500/15">
+                  <Heart className="w-3.5 h-3.5 text-rose-500" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="text-xs font-semibold">Tip received</p>
@@ -736,7 +755,7 @@ export default function CreatorDashboardPage() {
                     transition={{ delay: 0.35 + i * 0.04 }}
                     className="zivo-card-organic flex items-center gap-3 p-3"
                   >
-                    <act.icon className="w-4 h-4 shrink-0" style={{ color: act.accent }} />
+                    <act.icon className={cn("w-4 h-4 shrink-0", getAccentClasses(act.accent).text)} />
                     <p className="text-[11px] text-muted-foreground flex-1">{act.text}</p>
                   </motion.div>
                 ))}
@@ -769,8 +788,8 @@ export default function CreatorDashboardPage() {
                 const tierAccent = creatorType === "of" ? "hsl(340 75% 55%)" : "hsl(38 92% 50%)";
                 return (
                   <div key={tier.id} className="zivo-card-organic flex items-center gap-3 p-3">
-                    <div className="zivo-icon-pill w-9 h-9 rounded-xl" style={{ color: tierAccent, background: `${tierAccent}20` }}>
-                      {creatorType === "of" ? <Flame className="w-4 h-4" style={{ color: tierAccent }} /> : <Crown className="w-4 h-4" style={{ color: tierAccent }} />}
+                    <div className={cn("zivo-icon-pill w-9 h-9 rounded-xl", creatorType === "of" ? "text-rose-500 bg-rose-500/20" : "text-amber-500 bg-amber-500/20")}>
+                      {creatorType === "of" ? <Flame className={cn("w-4 h-4", creatorType === "of" ? "text-rose-500" : "text-amber-500")} /> : <Crown className={cn("w-4 h-4", creatorType === "of" ? "text-rose-500" : "text-amber-500")} />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap">
@@ -822,8 +841,8 @@ export default function CreatorDashboardPage() {
                 transition={{ delay: 0.45 + i * 0.04 }}
                 className="zivo-card-organic flex items-start gap-3 p-3"
               >
-                <div className="zivo-icon-pill w-8 h-8 rounded-lg shrink-0" style={{ color: tip.accent, background: `${tip.accent}15` }}>
-                  <tip.icon className="w-3.5 h-3.5" style={{ color: tip.accent }} />
+                <div className={cn("zivo-icon-pill w-8 h-8 rounded-lg shrink-0", getAccentClasses(tip.accent).text, getAccentClasses(tip.accent).bg)}>
+                  <tip.icon className={cn("w-3.5 h-3.5", getAccentClasses(tip.accent).text)} />
                 </div>
                 <div>
                   <p className="font-bold text-[12px]">{tip.title}</p>

@@ -146,7 +146,7 @@ export default function ExplorePage() {
   ];
 
   return (
-    <div className="min-h-screen bg-background pb-20">
+    <div className="zivo-shell-mobile bg-background pb-20">
       <SEOHead
         title="Explore – ZIVO | Discover People, Places & Trending Content"
         description="Explore trending posts, discover new people, browse hashtags, and find places near you on ZIVO."
@@ -160,8 +160,8 @@ export default function ExplorePage() {
         }}
       />
       {/* Header */}
-      <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border/50 safe-area-top">
-        <div className="px-4 pt-3 pb-2">
+      <div className="zivo-sticky-mobile-header safe-area-top">
+        <div className="zivo-mobile-header-row">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
@@ -171,7 +171,7 @@ export default function ExplorePage() {
               className="w-full pl-10 pr-10 py-2.5 rounded-xl bg-muted/50 border border-border/40 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
             {search && (
-              <button type="button" onClick={() => setSearch("")} className="absolute right-3 top-1/2 -translate-y-1/2">
+              <button type="button" onClick={() => setSearch("")} aria-label="Clear search" title="Clear search" className="absolute right-3 top-1/2 -translate-y-1/2">
                 <X className="h-4 w-4 text-muted-foreground" />
               </button>
             )}

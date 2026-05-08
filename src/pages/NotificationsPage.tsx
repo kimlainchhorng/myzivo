@@ -356,7 +356,7 @@ const NotificationsPage = () => {
   ];
 
   return (
-    <PullToRefresh onRefresh={handlePullRefresh} className="min-h-screen bg-background relative overflow-hidden safe-area-bottom">
+    <PullToRefresh onRefresh={handlePullRefresh} className="zivo-shell-mobile bg-background relative overflow-hidden safe-area-bottom">
       <SEOHead title="Notifications – ZIVO" description="View your travel alerts, order updates, and promotional offers." noIndex={true} />
 
       {/* ── 3D Background with parallax depth ── */}
@@ -382,7 +382,7 @@ const NotificationsPage = () => {
       </div>
 
       {/* ── Scrollable Content ── */}
-      <div className="relative z-10 h-screen overflow-y-auto pb-24 scroll-smooth" style={{ scrollbarWidth: 'none' }}>
+      <div className="relative z-10 h-screen overflow-y-auto pb-24 scroll-smooth no-scrollbar">
 
         {/* ── Sticky 3D Header ── */}
         <div className="sticky top-0 safe-area-top z-40">

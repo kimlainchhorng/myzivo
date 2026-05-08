@@ -379,8 +379,7 @@ export default function MessageRequestsPage() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <header
-        className="flex items-center gap-3 px-4 h-14 border-b border-border/30 sticky top-0 bg-background/95 backdrop-blur z-10"
-        style={{ paddingTop: "var(--zivo-safe-top-sticky)" }}
+        className="zivo-pt-safe-sticky flex items-center gap-3 px-4 h-14 border-b border-border/30 sticky top-0 bg-background/95 backdrop-blur z-10"
       >
         {selectMode ? (
           <>
@@ -497,8 +496,8 @@ export default function MessageRequestsPage() {
             </p>
           </div>
           <button type="button"
-            role="switch"
-            aria-checked={allowMessageRequests}
+            aria-label="Allow message requests"
+            title="Allow message requests"
             onClick={() => {
               const next = !allowMessageRequests;
               void setAllowMessageRequests(next);
@@ -538,7 +537,6 @@ export default function MessageRequestsPage() {
           return (
             <div
               key={r.otherUserId}
-              role={selectMode ? "button" : undefined}
               tabIndex={selectMode ? 0 : undefined}
               onPointerDown={() => startLongPress(r.otherUserId)}
               onPointerUp={cancelLongPress}
@@ -655,8 +653,7 @@ export default function MessageRequestsPage() {
           the buttons clear the iOS home indicator. */}
       {selectMode && selectedIds.size > 0 && (
         <div
-          className="fixed inset-x-0 bottom-0 z-20 bg-background/95 backdrop-blur border-t border-border/40 px-4 py-3 flex items-center gap-2"
-          style={{ paddingBottom: "max(0.75rem, env(safe-area-inset-bottom, 0px))" }}
+          className="zivo-pb-safe-action fixed inset-x-0 bottom-0 z-20 bg-background/95 backdrop-blur border-t border-border/40 px-4 py-3 flex items-center gap-2"
         >
           <button type="button"
             onClick={handleBulkDismiss}

@@ -215,6 +215,142 @@
   }
 }
 
+@layer utilities {
+  .zivo-shell-mobile {
+    min-height: 100dvh;
+    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+  }
+
+  .zivo-sticky-mobile-header {
+    position: sticky;
+    top: 0;
+    z-index: 40;
+    background: hsl(var(--background) / 0.95);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid hsl(var(--border) / 0.3);
+  }
+
+  .zivo-mobile-header-row {
+    padding-left: 1rem;
+    padding-right: 1rem;
+    padding-top: 0.625rem;
+    padding-bottom: 0.625rem;
+  }
+
+  .zivo-pt-safe-sticky {
+    padding-top: var(--zivo-safe-top-sticky);
+  }
+
+  .zivo-pt-safe-overlay {
+    padding-top: var(--zivo-safe-top-overlay);
+  }
+
+  .zivo-pb-safe-inset {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .zivo-reels-bottom-spacer {
+    height: max(calc(env(safe-area-inset-bottom, 0px) + 6rem), 6rem);
+  }
+
+  .zivo-reel-close-offset {
+    top: var(--zivo-safe-top-overlay);
+    left: max(env(safe-area-inset-left, 0px), 16px);
+  }
+
+  .zivo-reel-actions-offset {
+    bottom: max(calc(env(safe-area-inset-bottom, 0px) + 1.5rem), 2.5rem);
+  }
+
+  .zivo-reel-product-offset {
+    bottom: max(calc(env(safe-area-inset-bottom, 0px) + 5.5rem), 7rem);
+  }
+
+  .zivo-reel-caption-offset {
+    padding-bottom: max(calc(env(safe-area-inset-bottom, 0px) + 1rem), 2rem);
+  }
+
+  .zivo-touch-no-callout {
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .zivo-live-topbar-safe {
+    padding-top: calc(env(safe-area-inset-top, 0px) + 8px);
+  }
+
+  .zivo-live-viewers-offset {
+    top: calc(env(safe-area-inset-top, 0px) + 80px);
+  }
+
+  .zivo-live-actions-offset {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 160px);
+  }
+
+  .zivo-live-chat-offset {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 60px);
+  }
+
+  .zivo-live-input-offset {
+    bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .zivo-live-gift-panel {
+    max-height: 55vh;
+    padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
+  }
+
+  .zivo-live-gifts-scroll-compact {
+    max-height: calc(55vh - 210px);
+  }
+
+  .zivo-live-gifts-scroll-default {
+    max-height: calc(55vh - 140px);
+  }
+
+  .zivo-live-fab-offset {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 88px);
+  }
+
+  .zivo-pb-safe-action {
+    padding-bottom: max(0.75rem, env(safe-area-inset-bottom, 0px));
+  }
+
+  .zivo-profile-cover-height {
+    height: calc(10rem + var(--zivo-safe-top, 0px));
+  }
+
+  .zivo-profile-cover-scrim {
+    height: calc(var(--zivo-safe-top, 0px) + 24px);
+  }
+
+  .zivo-typing-dot-1 {
+    animation-delay: 0s;
+    animation-duration: 0.8s;
+  }
+
+  .zivo-typing-dot-2 {
+    animation-delay: 0.15s;
+    animation-duration: 0.8s;
+  }
+
+  .zivo-typing-dot-3 {
+    animation-delay: 0.3s;
+    animation-duration: 0.8s;
+  }
+
+  .zivo-anim-delay-0 {
+    animation-delay: 0s;
+  }
+
+  .zivo-anim-delay-100 {
+    animation-delay: 0.1s;
+  }
+}
+
 @layer base {
   * {
     @apply border-border;
@@ -429,12 +565,10 @@
   /* Native-like scroll snap for carousels */
   .snap-x-mandatory {
     scroll-snap-type: x mandatory;
-    -webkit-overflow-scrolling: touch;
   }
 
   .snap-y-mandatory {
     scroll-snap-type: y mandatory;
-    -webkit-overflow-scrolling: touch;
   }
 
   .snap-start {
@@ -460,7 +594,6 @@
     user-select: none !important;
     -webkit-touch-callout: none !important;
     -webkit-tap-highlight-color: transparent !important;
-    -webkit-user-drag: none !important;
   }
   .chat-no-callout img,
   .chat-no-callout video {
@@ -469,7 +602,6 @@
 
   /* iOS-style momentum scrolling */
   .scroll-momentum {
-    -webkit-overflow-scrolling: touch;
     overflow-y: auto;
   }
 
@@ -640,8 +772,8 @@
      ============================================= */
   .glass-card {
     background: hsl(var(--card) / 0.6);
-    backdrop-filter: blur(24px);
     -webkit-backdrop-filter: blur(24px);
+    backdrop-filter: blur(24px);
     border: 1px solid hsl(var(--border) / 0.3);
   }
 
@@ -656,8 +788,8 @@
      ============================================= */
   .card-glass {
     background: hsl(var(--card) / 0.5);
-    backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
     border: 1px solid hsl(var(--border) / 0.3);
   }
 
@@ -728,7 +860,6 @@
   /* Hide scrollbar */
   .scrollbar-hide {
     -ms-overflow-style: none;
-    scrollbar-width: none;
   }
   .scrollbar-hide::-webkit-scrollbar {
     display: none;
@@ -968,6 +1099,7 @@
  /* 2026 Spatial UI - Glass Effects */
  .glass-dark {
    background: hsl(var(--card) / 0.6);
+   -webkit-backdrop-filter: blur(24px);
    backdrop-filter: blur(24px);
    border: 1px solid hsl(var(--border) / 0.5);
  }
@@ -1010,8 +1142,8 @@
 
   .glass-chip {
     background: hsl(0 0% 100% / 0.08);
-    backdrop-filter: blur(12px);
     -webkit-backdrop-filter: blur(12px);
+    backdrop-filter: blur(12px);
     border: 1px solid hsl(0 0% 100% / 0.1);
   }
 
@@ -1514,8 +1646,8 @@
 /* Dark frosted glass panel */
 .rides-glass-panel {
   background: hsl(240 10% 8% / 0.6);
-  backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
+  backdrop-filter: blur(24px);
   border: 1px solid hsl(0 0% 100% / 0.08);
   transform: translateZ(0);
 }
@@ -1940,8 +2072,8 @@ html[lang="km"] textarea {
 
 .glass-3d {
   background: hsl(var(--card) / 0.7);
-  backdrop-filter: blur(24px) saturate(180%);
   -webkit-backdrop-filter: blur(24px) saturate(180%);
+  backdrop-filter: blur(24px) saturate(180%);
   border: 1px solid hsl(var(--border) / 0.3);
   box-shadow:
     0 8px 32px hsl(0 0% 0% / 0.06),

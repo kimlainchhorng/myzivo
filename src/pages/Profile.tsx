@@ -344,6 +344,23 @@ const Profile = () => {
   const [coverUploading, setCoverUploading] = useState(false);
   const [coverRepositioning, setCoverRepositioning] = useState(false);
   const [coverPosition, setCoverPosition] = useState<number>(profile?.cover_position ?? 50);
+  const coverPositionClass = useMemo(() => {
+    const snapped = Math.round(Math.min(100, Math.max(0, coverPosition)) / 10) * 10;
+    const map: Record<number, string> = {
+      0: "object-[center_0%]",
+      10: "object-[center_10%]",
+      20: "object-[center_20%]",
+      30: "object-[center_30%]",
+      40: "object-[center_40%]",
+      50: "object-[center_50%]",
+      60: "object-[center_60%]",
+      70: "object-[center_70%]",
+      80: "object-[center_80%]",
+      90: "object-[center_90%]",
+      100: "object-[center_100%]",
+    };
+    return map[snapped] ?? "object-[center_50%]";
+  }, [coverPosition]);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const [bioDraft, setBioDraft] = useState("");
   const [bioEditing, setBioEditing] = useState(false);
@@ -911,7 +928,7 @@ const Profile = () => {
 
 
       {/* ── Scrollable content ── */}
-      <div className="relative z-10 min-h-screen pb-24 scroll-smooth bg-background" style={{ scrollbarWidth: 'none' }}>
+      <div className="relative z-10 min-h-screen pb-24 scroll-smooth bg-background no-scrollbar">
         {/* Mobile: edge-to-edge full-screen (Facebook-style). Desktop: centered card. */}
         <div className="px-0 lg:px-4 pt-0 lg:pt-20 max-w-none lg:max-w-3xl mx-auto">
 
@@ -950,7 +967,7 @@ const Profile = () => {
                         floating action buttons inside respect the safe area. */}
                     <div
                       data-disable-pull-to-refresh="true"
-                      className="relative w-full overflow-hidden select-none"
+                      className={cn("zivo-profile-cover-height relative w-full overflow-hidden select-none", coverRepositioning ? "cursor-ns-resize" : "cursor-default")}
                       onMouseDown={coverRepositioning ? (e) => { e.preventDefault(); handleCoverDragStart(e.clientY); } : undefined}
                       onMouseMove={coverRepositioning ? (e) => handleCoverDragMove(e.clientY) : undefined}
                       onMouseUp={coverRepositioning ? handleCoverDragEnd : undefined}
@@ -959,19 +976,11 @@ const Profile = () => {
                       onTouchMove={coverRepositioning ? (e) => handleCoverDragMove(e.touches[0].clientY) : undefined}
                       onTouchEnd={coverRepositioning ? handleCoverDragEnd : undefined}
                       onDoubleClick={coverRepositioning ? () => { impact("medium"); setCoverPosition(50); } : undefined}
-                      style={{
-                        cursor: coverRepositioning ? "ns-resize" : "default",
-                        // Full-bleed: cover photo crosses behind the status bar.
-                        // Mobile target: 10rem of visible cover + safe-area inset.
-                        // Desktop keeps a fixed 13rem (lg:h-52) cover.
-                        height: "calc(10rem + var(--zivo-safe-top, 0px))",
-                      }}
                     >
                       {/* Status-bar legibility scrim (mobile only). pointer-events disabled. */}
                       <div
                         aria-hidden="true"
-                        className="lg:hidden pointer-events-none absolute inset-x-0 top-0 z-10 bg-gradient-to-b from-black/45 via-black/15 to-transparent"
-                        style={{ height: "calc(var(--zivo-safe-top, 0px) + 24px)" }}
+                        className="zivo-profile-cover-scrim lg:hidden pointer-events-none absolute inset-x-0 top-0 z-10 bg-gradient-to-b from-black/45 via-black/15 to-transparent"
                       />
                       <motion.div
                         className="pointer-events-none absolute inset-0 lg:!translate-y-0 lg:!scale-100"
@@ -981,8 +990,7 @@ const Profile = () => {
                         <img
                           src={profile.cover_url}
                           alt="Cover"
-                          className="absolute inset-0 w-full h-full object-cover transition-[object-position] duration-100"
-                          style={{ objectPosition: `center ${coverPosition}%` }}
+                          className={cn("absolute inset-0 w-full h-full object-cover transition-[object-position] duration-100", coverPositionClass)}
                           draggable={false}
                         />
                       ) : (

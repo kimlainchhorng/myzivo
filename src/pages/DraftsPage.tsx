@@ -60,8 +60,8 @@ export default function DraftsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-background pb-20">
-      <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border/50 safe-area-top">
+    <div className="zivo-shell-mobile bg-background pb-20">
+      <div className="zivo-sticky-mobile-header safe-area-top">
         <div className="flex items-center gap-3 px-4 py-3">
           <Button aria-label="Back" variant="ghost" size="icon" className="h-10 w-10 rounded-full" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-5 w-5" />
@@ -109,10 +109,10 @@ export default function DraftsPage() {
                   {d.publish_at ? `Scheduled: ${new Date(d.publish_at).toLocaleDateString()}` : `Updated ${formatDistanceToNow(new Date(d.updated_at), { addSuffix: true })}`}
                 </p>
                 <div className="flex items-center gap-2">
-                  <button type="button" onClick={() => publishDraft(d)} className="p-2 rounded-full hover:bg-primary/10">
+                  <button type="button" onClick={() => publishDraft(d)} aria-label="Publish draft" title="Publish draft" className="p-2 rounded-full hover:bg-primary/10">
                     <Send className="h-4 w-4 text-primary" />
                   </button>
-                  <button type="button" onClick={() => deleteDraft(d.id)} className="p-2 rounded-full hover:bg-destructive/10">
+                  <button type="button" onClick={() => deleteDraft(d.id)} aria-label="Delete draft" title="Delete draft" className="p-2 rounded-full hover:bg-destructive/10">
                     <Trash2 className="h-4 w-4 text-muted-foreground" />
                   </button>
                 </div>
