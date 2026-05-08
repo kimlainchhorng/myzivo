@@ -566,9 +566,9 @@ export default function EatsLanding() {
               </div>
             </div>
 
-            {/* Quick actions: Reserve · Ride · Save */}
+            {/* Quick actions: Reserve · Ride */}
             <div className="px-4 pt-4 max-w-lg mx-auto">
-              <div className="grid grid-cols-3 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <button type="button"
                   onClick={() =>
                     navigate(
@@ -590,22 +590,6 @@ export default function EatsLanding() {
                 >
                   <span className="text-base">🚗</span>
                   <span className="text-[11px] font-bold text-foreground">Ride here</span>
-                </button>
-                <button type="button"
-                  onClick={() => toggleFavorite(currentRestaurant.id)}
-                  className="flex flex-col items-center gap-1 rounded-2xl border border-border/50 bg-card hover:bg-muted/40 active:scale-[0.98] transition-all py-3 touch-manipulation"
-                >
-                  <Heart
-                    className={cn(
-                      "w-4 h-4 transition-all",
-                      favorites.has(currentRestaurant.id)
-                        ? "fill-red-500 text-red-500"
-                        : "text-foreground",
-                    )}
-                  />
-                  <span className="text-[11px] font-bold text-foreground">
-                    {favorites.has(currentRestaurant.id) ? "Saved" : "Save"}
-                  </span>
                 </button>
               </div>
             </div>

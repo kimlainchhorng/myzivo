@@ -369,7 +369,7 @@ export default function VoiceMessagePlayer({
           isFailed
             ? "bg-orange-500/15 text-orange-500"
             : isMe
-              ? "bg-primary-foreground/20 hover:bg-primary-foreground/30 text-primary-foreground"
+              ? "bg-primary-foreground/35 hover:bg-primary-foreground/50 text-primary-foreground"
               : "bg-primary/15 hover:bg-primary/25 text-primary"
         } ${interactionDisabled ? "cursor-not-allowed opacity-90" : ""}`}
         aria-label={isUploading ? "Uploading voice note" : isFailed ? "Voice note failed to send" : playing ? "Pause" : "Play"}

@@ -80,7 +80,6 @@ import ChatPollCreator, { type PollDraft } from "./ChatPollCreator";
 import ChatQuickReplies from "./ChatQuickReplies";
 import ChatContactPicker, { type SharedContact } from "./ChatContactPicker";
 import ChatSocialShareSheet from "./ChatSocialShareSheet";
-import SmartReplyBar from "./SmartReplyBar";
 const ChatGiftPanel = lazy(() => import("./ChatGiftPanel"));
 const ChatWalletSheet = lazy(() => import("./ChatWalletSheet"));
 const CoinTransferBubble = lazy(() => import("./CoinTransferBubble"));
@@ -913,6 +912,20 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 next[optIdx] = msg;
                 return next;
               }
+              // Extra dedup: if a real row with identical content was created
+              // by the same sender within the last 5 seconds, treat the echo
+              // as a duplicate (handles outbox retries / double realtime echoes).
+              const incomingTs = new Date(msg.created_at).getTime();
+              const dupIdx = prev.findIndex((m) =>
+                !m.id.startsWith("opt-") &&
+                m.id !== msg.id &&
+                m.sender_id === msg.sender_id &&
+                m.receiver_id === msg.receiver_id &&
+                (m.message || "") === (msg.message || "") &&
+                (m.message_type || "text") === (msg.message_type || "text") &&
+                Math.abs(incomingTs - new Date(m.created_at).getTime()) < 5000
+              );
+              if (dupIdx >= 0) return prev;
             }
             // Genuinely new partner message arriving while scrolled up —
             // bump the unread badge on the jump-to-latest button.
@@ -963,10 +976,32 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       if (rows.length === 0) return;
 
       setMessages((prev) => {
-        const existing = new Set(prev.map((m) => m.id));
-        const incoming = rows.filter((m) => !existing.has(m.id));
-        if (incoming.length === 0) return prev;
-        return [...prev, ...incoming];
+        // Reconcile by client_send_id so a server row coming back via this
+        // polling refresh REPLACES its optimistic placeholder instead of
+        // being appended next to it. (direct_messages is not in the
+        // supabase_realtime publication, so the realtime INSERT handler
+        // above never fires for this table — this merge is the only
+        // reconciliation point for optimistic sends.)
+        const next = [...prev];
+        let mutated = false;
+        for (const r of rows) {
+          if (next.some((m) => m.id === r.id)) continue;
+          const csid = (r.file_payload as { client_send_id?: string } | null)?.client_send_id;
+          if (csid) {
+            const optIdx = next.findIndex((m) =>
+              m.id.startsWith("opt-") &&
+              (m.file_payload as { client_send_id?: string } | null)?.client_send_id === csid
+            );
+            if (optIdx >= 0) {
+              next[optIdx] = r;
+              mutated = true;
+              continue;
+            }
+          }
+          next.push(r);
+          mutated = true;
+        }
+        return mutated ? next : prev;
       });
 
       const unreadIds = rows
@@ -1089,6 +1124,16 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     if (isComplexSend) setSending(true);
 
     const optimisticId = `opt-${Date.now()}`;
+    // Stable client-side id stamped into file_payload so the realtime INSERT
+    // echo can reconcile the optimistic bubble with the server row regardless
+    // of message type. Without this, text echoes fall back to fragile
+    // content-matching and can leave a duplicate "sending" bubble behind.
+    const existingClientSendId = (filePayload as { client_send_id?: string } | null)?.client_send_id;
+    const clientSendId = existingClientSendId
+      || (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+        ? crypto.randomUUID()
+        : `cs-${Date.now()}-${Math.random().toString(36).slice(2)}`);
+    const mergedFilePayload = { ...(filePayload || {}), client_send_id: clientSendId };
     const optimisticMsg: Message = {
       id: optimisticId,
       sender_id: user.id,
@@ -1103,7 +1148,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       location_lng: locationLng || null,
       location_label: locationLabel || null,
       is_pinned: false,
-      file_payload: filePayload || null,
+      file_payload: mergedFilePayload,
       expires_at: selfDestructSec
         ? new Date(Date.now() + selfDestructSec * 1000).toISOString()
         : disappearingSec != null
@@ -1132,7 +1177,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       if (imageUrl) insertData.image_url = imageUrl;
       if (videoUrl) insertData.video_url = videoUrl;
       if (voiceUrl) insertData.voice_url = voiceUrl;
-      if (filePayload) insertData.file_payload = filePayload;
+      // Always send file_payload so the server row carries client_send_id
+      // for realtime reconciliation (see merge above).
+      insertData.file_payload = mergedFilePayload;
       if (currentReply) insertData.reply_to_id = currentReply.id;
       if (locationLat != null) {
         insertData.location_lat = locationLat;
@@ -2021,7 +2068,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       transition={inline ? { duration: 0.12 } : { type: "tween", duration: 0.22, ease: [0.25, 0.46, 0.45, 0.94] }}
     >
       {/* Header */}
-      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-2xl border-b border-border/5 safe-area-top">
+      <div className="sticky top-0 z-10 bg-background/80 backdrop-blur-2xl border-b border-border/20 safe-area-top">
         <div className="px-2 py-2.5 flex items-center gap-3">
           <button type="button" onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center active:scale-90 transition-transform rounded-full hover:bg-muted/50" aria-label="Back" title="Back">
             <ArrowLeft className="h-5 w-5 text-foreground" />
@@ -2042,9 +2089,6 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 <AvatarImage src={recipientAvatar || undefined} />
                 <AvatarFallback className="text-xs font-bold bg-primary/8 text-primary">{initials}</AvatarFallback>
               </Avatar>
-            )}
-            {!isSelfChat && recipientOnline && (
-              <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-500 border-2 border-background" />
             )}
           </button>
           <div className="min-w-0 flex-1 cursor-pointer" onClick={() => { if (!isSelfChat) setShowContactInfo(true); }}>
@@ -2222,11 +2266,9 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               <p className="text-[14px] font-bold text-foreground leading-tight tracking-tight">
                 {latestMissedCall.call_type === "video" ? "Missed video call" : "Missed voice call"}
               </p>
-              <p className="text-[12px] text-muted-foreground mt-0.5">
-                {latestMissedCall.status === "declined"
-                  ? "Call was declined. Tap to call back."
-                  : "Tap below to call back."}
-              </p>
+              {latestMissedCall.status === "declined" && (
+                <p className="text-[12px] text-muted-foreground mt-0.5">Declined</p>
+              )}
             </div>
             <button type="button"
               onClick={() => { void handleStartCall(latestMissedCall.call_type as "voice" | "video"); }}
@@ -2817,28 +2859,6 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       </AnimatePresence>
 
       {/* Smart reply suggestions — chips above the composer */}
-      <SmartReplyBar
-        lastIncomingMessage={(() => {
-          // Only suggest replies when the LAST timeline item is from the partner —
-          // if the user has already responded, the bar should hide. Includes call
-          // events so a missed call surfaces "call back" suggestions.
-          const last = timeline[timeline.length - 1];
-          if (!last) return null;
-          if (isCallEvent(last)) {
-            if (last.caller_id === user?.id) return null;
-            const isMissed = last.status === "missed" || last.status === "no_answer" || last.status === "declined";
-            return isMissed ? "Missed call" : null;
-          }
-          if (last.sender_id === user?.id) return null;
-          return last.message || null;
-        })()}
-        userTyping={input.trim().length > 0 || !!editingId || !!replyTo}
-        onPick={(text) => {
-          setInput((prev) => (prev.trim() ? `${prev.trim()} ${text}` : text));
-          setTimeout(() => inputRef.current?.focus(), 0);
-        }}
-      />
-
       <div className="bg-background/80 backdrop-blur-2xl border-t border-border/5 px-2.5 py-2 relative" style={{ paddingBottom: "max(env(safe-area-inset-bottom, 0px), 0.5rem)" }}>
           {/* AI smart-reply chips — appears when latest visible message is from
               the other side and the composer is empty. Tap a chip to seed the
@@ -3016,7 +3036,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                   }
                   if (e.key === "Enter" && !e.shiftKey) (editingId ? handleSaveEdit() : handleSend());
                 }}
-                placeholder={disappearingMode ? "Disappearing message..." : "Message..."}
+                placeholder={disappearingMode ? "Disappearing message…" : "Message…"}
                 className={`w-full h-12 pl-4 pr-24 rounded-full text-[15px] text-foreground placeholder:text-muted-foreground/40 focus:outline-none transition-all ${
                   disappearingMode
                     ? "bg-amber-500/5 border border-amber-500/15 focus:ring-2 focus:ring-amber-500/10"

@@ -954,6 +954,10 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onQuickA
     if (musicSubtab === "originals") {
       return ZIVO_ORIGINALS;
     }
+    // If the iTunes chart fetch failed or returned nothing, fall back to the
+    // bundled Zivo Originals so the music tab is never empty (especially on
+    // iOS WebView where some chart endpoints can be flaky).
+    if (chartTracks.length === 0) return ZIVO_ORIGINALS;
     return chartTracks;
   }, [search, searchTracks, chartTracks, musicSubtab]);
 

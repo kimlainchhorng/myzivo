@@ -7,7 +7,6 @@ import { useState, useEffect, useRef, useCallback, useMemo, memo, lazy, Suspense
 import { motion, AnimatePresence, PanInfo } from "framer-motion";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
 import Music2 from "lucide-react/dist/esm/icons/music-2";
-import Check from "lucide-react/dist/esm/icons/check";
 import Reply from "lucide-react/dist/esm/icons/reply";
 import ReadReceipt, { type ReadReceiptStatus } from "@/components/chat/ReadReceipt";
 import Copy from "lucide-react/dist/esm/icons/copy";
@@ -278,7 +277,7 @@ function MiniAppCard({ type, message, isMe, time, onAction }: { type: string; me
   );
 }
 
-function MusicCard({ message, isMe, time }: { message: string; isMe: boolean; time: string }) {
+function MusicCard({ message, isMe }: { message: string; isMe: boolean; time: string }) {
   const lines = message.split("\n");
   const titleLine = lines[0].replace("🎵 ", "").split(" — ");
   const title = titleLine[0] || "Unknown Track";
@@ -411,6 +410,7 @@ function MusicCard({ message, isMe, time }: { message: string; isMe: boolean; ti
               ? isPlaying ? "Pause music preview" : "Play music preview"
               : "Open music link"
           }
+          onPointerDown={(e) => e.stopPropagation()}
           onClick={(e) => void handlePrimaryAction(e)}
           className="h-11 w-11 rounded-full bg-white/10 backdrop-blur-md flex items-center justify-center hover:bg-white/20 transition-all active:scale-90 shrink-0 shadow-lg border border-white/10"
         >
@@ -424,37 +424,8 @@ function MusicCard({ message, isMe, time }: { message: string; isMe: boolean; ti
         </button>
       </div>
 
-      <button
-        type="button"
-        onClick={(e) => void handlePrimaryAction(e)}
-        className={`mt-4 h-16 w-full rounded-2xl border flex items-center justify-center relative overflow-hidden transition-opacity ${previewFailed ? "opacity-50 bg-white/5 border-white/10" : "bg-white/5 border-white/10"}`}
-      >
-        <div className="absolute inset-0 bg-white/5" />
-        <div className="text-[15px] font-bold relative z-10 flex items-center gap-2">
-          <span>{previewFailed ? (listenUrl ? "Open in app" : title) : title}</span>
-          <span className="h-8 w-8 rounded-full bg-white text-black flex items-center justify-center shadow-sm">
-            {isPlaying ? (
-              <Pause className="w-4 h-4 fill-current" />
-            ) : previewFailed ? (
-              <ExternalLink className="w-3.5 h-3.5" />
-            ) : (
-              <Play className="w-4 h-4 fill-current ml-0.5" />
-            )}
-          </span>
-        </div>
-        <div className="absolute top-2 right-2 px-1.5 py-0.5 rounded-md bg-black/40 text-[9px] font-black uppercase tracking-widest text-white/40">Zivo</div>
-      </button>
-
-      <div className="mt-3 flex items-center justify-between">
-        <span className="text-[10px] font-bold opacity-40 uppercase tracking-widest">{time}</span>
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded-sm border border-white/20 flex items-center justify-center">
-            <Check className="w-2 h-2 text-white/40" />
-          </div>
-          <div className="w-3 h-3 rounded-sm border border-white/20 -ml-1.5 flex items-center justify-center bg-black">
-            <Check className="w-2 h-2 text-white/40" />
-          </div>
-        </div>
+      <div className="mt-3">
+        <span className={`px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-widest ${isMe ? "bg-white/10 text-white/50" : "bg-foreground/5 text-foreground/40"}`}>Zivo</span>
       </div>
     </div>
   );
