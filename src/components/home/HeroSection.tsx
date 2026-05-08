@@ -53,6 +53,8 @@ export default function HeroSection() {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [progress, setProgress] = useState(0);
   const containerRef = useRef<HTMLDivElement>(null);
+  const isCambodia = (typeof localStorage !== "undefined" && localStorage.getItem("zivo_country") === "KH");
+  const visibleFloatingServices = isCambodia ? floatingServices : floatingServices.filter((s) => s.label !== "Rides");
 
   const { scrollYProgress } = useScroll({ target: containerRef, offset: ["start start", "end start"] });
   const bgY = useTransform(scrollYProgress, [0, 1], ["0%", "25%"]);
@@ -193,7 +195,7 @@ export default function HeroSection() {
 
         {/* Floating 3D service cards — reactive to slide changes */}
         <div className="absolute right-12 xl:right-24 top-1/2 -translate-y-1/2 z-20 hidden xl:flex flex-col gap-4" style={{ perspective: "800px" }}>
-          {floatingServices.map((svc, i) => (
+          {visibleFloatingServices.map((svc, i) => (
             <motion.div
               key={svc.label}
               initial={{ opacity: 0, x: 80, rotateY: -25 }}

@@ -2447,7 +2447,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             <Loader2 className="h-5 w-5 animate-spin text-primary" />
           </div>
         ) : messages.length === 0 && callEvents.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-40 text-muted-foreground/50">
+          <div className="flex flex-1 flex-col items-center justify-center min-h-[280px] text-muted-foreground/50">
             {isSelfChat ? (
               <>
                 <Bookmark className="h-7 w-7 mb-2 text-emerald-500/70" />

@@ -4,6 +4,7 @@
  */
 import { useState, useEffect, useCallback } from "react";
 import { CreditCard, Plus, Trash2, Check, Shield, ChevronRight, Smartphone, LogIn, UserPlus, Banknote, QrCode, Building2 } from "lucide-react";
+import AbaPaymentModal from "@/components/rides/AbaPaymentModal";
 import { Button } from "@/components/ui/button";
 import { CardElement, Elements, PaymentElement, useStripe, useElements } from "@stripe/react-stripe-js";
 import { getStripe } from "@/lib/stripe";
@@ -87,6 +88,15 @@ function CambodiaPaymentSelector({
   });
 
   const allMethods = [
+    {
+      id: "aba" as CambodiaPaymentMethod,
+      label: "ABA KHQR",
+      desc: "Scan with ABA / Bakong app",
+      icon: QrCode,
+      iconColor: "text-[#0066b3]",
+      bgColor: "bg-[#0066b3]/10",
+      badge: "Popular",
+    },
     {
       id: "cash" as CambodiaPaymentMethod,
       label: "សាច់ប្រាក់ (Cash)",
@@ -421,6 +431,7 @@ export default function RidePaymentSection({
   const [setupClientSecret, setSetupClientSecret] = useState<string | null>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [addingCard, setAddingCard] = useState(false);
+  const [abaModalOpen, setAbaModalOpen] = useState(false);
 
   // Load saved cards
   const loadCards = useCallback(async () => {
@@ -550,6 +561,22 @@ export default function RidePaymentSection({
     }
 
     return (
+      <>
+        <AbaPaymentModal
+          open={abaModalOpen}
+          onOpenChange={setAbaModalOpen}
+          amountUsd={price}
+          reference={`ZIVO-${user?.id?.slice(0, 6) ?? "ride"}-${Date.now().toString().slice(-5)}`}
+          onConfirmed={() => {
+            setAbaModalOpen(false);
+            if (onAbaConfirm) {
+              onAbaConfirm();
+            } else {
+              toast.success("Ride confirmed! Payment via ABA KHQR.");
+              onPaymentSuccess();
+            }
+          }}
+        />
       <CambodiaPaymentSelector
         price={price}
         vehicleName={vehicleName}
@@ -558,13 +585,7 @@ export default function RidePaymentSection({
         onMethodChange={onPaymentMethodChange}
         onConfirm={async (method) => {
           if (method === "aba") {
-            // Use dedicated ABA handler that creates ride without Stripe
-            if (onAbaConfirm) {
-              onAbaConfirm();
-            } else {
-              toast.success("Ride confirmed! Payment via ABA Payway.");
-              onPaymentSuccess();
-            }
+            setAbaModalOpen(true);
           } else if (method === "cash") {
             // Use dedicated cash handler that creates ride_request + job without Stripe
             if (onCashConfirm) {
@@ -581,6 +602,7 @@ export default function RidePaymentSection({
           }
         }}
       />
+      </>
     );
   }
 

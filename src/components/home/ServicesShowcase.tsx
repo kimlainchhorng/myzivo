@@ -289,6 +289,8 @@ function AdCard3D({ service, index }: { service: typeof services[0]; index: numb
 }
 
 export default function ServicesShowcase() {
+  const isCambodia = (typeof localStorage !== "undefined" && localStorage.getItem("zivo_country") === "KH");
+  const visibleServices = isCambodia ? services : services.filter((s) => s.title !== "Rides");
   return (
     <section id="services-showcase" className="section-padding relative overflow-hidden" aria-label="ZIVO travel services">
       {/* Ambient background glow */}
@@ -334,7 +336,7 @@ export default function ServicesShowcase() {
           className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5 max-w-6xl mx-auto"
           style={{ gridAutoRows: "240px", perspective: "1400px" }}
         >
-          {services.map((service, i) => (
+          {visibleServices.map((service, i) => (
             <AdCard3D key={service.title} service={service} index={i} />
           ))}
         </div>

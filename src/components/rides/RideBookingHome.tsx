@@ -2171,8 +2171,8 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
         quoted_total: currentPrice,
         distance_miles: routeData?.distance_miles ?? null,
         duration_minutes: routeData?.duration_minutes ?? null,
-        status: "pending_payment",
-        payment_status: "aba_pending",
+        status: "searching",
+        payment_status: "aba_paid",
         customer_name: otherName.trim() || user.user_metadata?.full_name || "",
         customer_phone: otherPhone.trim() || user.user_metadata?.phone || "",
         requires_car_seat: currentVehicle.carSeat,
@@ -2180,17 +2180,17 @@ export default function RideBookingHome({ initialSchedule = false, initialDestin
         notes: [
           stopsData.length > 0 ? `Stops: ${stopsData.map(s => s.address).join(" → ")}` : "",
           otherName.trim() ? `Rider: ${otherName.trim()}${otherPhone.trim() ? ` (${otherPhone.trim()})` : ""}` : "",
-          "Payment: ABA Payway",
+          "Payment: ABA KHQR",
         ].filter(Boolean).join(" | ") || null,
       }).select("id").single();
 
       if (rideError) throw rideError;
       setRideRequestId(rideData.id);
 
-      // 2. Show KHQR code for customer to scan
-      sessionStorage.setItem("aba_pending_ride_id", rideData.id);
-      setViewStep("aba-waiting");
-      toast.info("Scan the QR code to pay via ABA");
+      setPaymentStep("idle");
+      setClientSecret(null);
+      setViewStep("searching");
+      toast.success("ABA payment confirmed! Finding your driver...");
     } catch (err: unknown) {
       console.error("[RideBooking] ABA ride error:", err);
       toast.error(err instanceof Error ? err.message : "ABA payment failed");

@@ -49,6 +49,7 @@ import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { PaymentReturnHandler } from "@/components/lodging/PaymentReturnHandler";
 import GuestOrUser from "@/components/auth/GuestOrUser";
 import PhoneRequiredGate from "@/components/auth/PhoneRequiredGate";
+import CambodiaOnlyGate from "@/components/auth/CambodiaOnlyGate";
 import { ErrorBoundary } from "./components/shared/ErrorBoundary";
 import { RouteErrorBoundary } from "./components/shared/RouteErrorBoundary";
 import PreserveQueryRedirect from "./components/routing/PreserveQueryRedirect";
@@ -887,9 +888,9 @@ const App = () => (
                 <Route path="/book-hotel" element={<PreserveQueryRedirect to="/hotels" />} />
                 <Route path="/travel-extras" element={<PreserveQueryRedirect to="/extras" />} />
                 <Route path="/rides" element={<PreserveQueryRedirect to="/rides/hub" />} />
-                <Route path="/rides/track/:tripId" element={<ProtectedRoute><PhoneRequiredGate><RideTrackingPage /></PhoneRequiredGate></ProtectedRoute>} />
-                <Route path="/trip-status/:id" element={<ProtectedRoute><PhoneRequiredGate><TripStatusPage /></PhoneRequiredGate></ProtectedRoute>} />
-                <Route path="/rides/hub" element={<ProtectedRoute><PhoneRequiredGate><RideHubPage /></PhoneRequiredGate></ProtectedRoute>} />
+                <Route path="/rides/track/:tripId" element={<ProtectedRoute><PhoneRequiredGate><CambodiaOnlyGate><RideTrackingPage /></CambodiaOnlyGate></PhoneRequiredGate></ProtectedRoute>} />
+                <Route path="/trip-status/:id" element={<ProtectedRoute><PhoneRequiredGate><CambodiaOnlyGate><TripStatusPage /></CambodiaOnlyGate></PhoneRequiredGate></ProtectedRoute>} />
+                <Route path="/rides/hub" element={<ProtectedRoute><PhoneRequiredGate><CambodiaOnlyGate><RideHubPage /></CambodiaOnlyGate></PhoneRequiredGate></ProtectedRoute>} />
                 <Route path="/ride" element={<PreserveQueryRedirect to="/rides" />} />
                 <Route path="/eats" element={<ProtectedRoute><PhoneRequiredGate><EatsLanding /></PhoneRequiredGate></ProtectedRoute>} />
                 <Route path="/eats/restaurant/:id" element={<ProtectedRoute><EatsLanding /></ProtectedRoute>} />
@@ -1025,7 +1026,7 @@ const App = () => (
                 <Route path="/grocery/returns" element={<GroceryReturns />} />
                 <Route path="/grocery/fees" element={<GroceryFees />} />
                 <Route path="/zivo-plus" element={<ZivoPlusPage />} />
-                <Route path="/drive" element={<DrivePage />} />
+                <Route path="/drive" element={<CambodiaOnlyGate><DrivePage /></CambodiaOnlyGate>} />
                 <Route path="/driver/orders" element={<DriverOrdersPage />} />
                 <Route path="/driver/shopping/:orderId" element={<DriverShoppingList />} />
                 <Route path="/driver/shop/:orderId" element={<DriverShopPage />} />
@@ -1341,7 +1342,7 @@ const App = () => (
                 {/* Grocery + service flows */}
                 <Route path="/grocery" element={<GroceryPage />} />
                 <Route path="/services/new-order" element={<ProtectedRoute><NewServiceOrderPage /></ProtectedRoute>} />
-                <Route path="/app/request-ride" element={<ProtectedRoute><RequestRidePage /></ProtectedRoute>} />
+                <Route path="/app/request-ride" element={<ProtectedRoute><CambodiaOnlyGate><RequestRidePage /></CambodiaOnlyGate></ProtectedRoute>} />
                 <Route path="/press" element={<Press />} />
                 <Route path="/for-customers" element={<ForCustomers />} />
                 <Route path="/promotions" element={<Promotions />} />
@@ -1395,7 +1396,7 @@ const App = () => (
                 <Route path="/favorites/network" element={<PreserveQueryRedirect to="/network/saved" />} />
                 <Route path="/concierge" element={<ConciergePage />} />
                 <Route path="/share/trip/:tripId" element={<PublicTripSharePage />} />
-                <Route path="/rides/multi-stop" element={<ProtectedRoute><PhoneRequiredGate><MultiStopRideBuilder /></PhoneRequiredGate></ProtectedRoute>} />
+                <Route path="/rides/multi-stop" element={<ProtectedRoute><PhoneRequiredGate><CambodiaOnlyGate><MultiStopRideBuilder /></CambodiaOnlyGate></PhoneRequiredGate></ProtectedRoute>} />
                 <Route path="/share/order/:orderId" element={<PublicOrderSharePage />} />
                 <Route path="/share/with-me" element={<ShareWatchlistPage />} />
                 <Route path="/partner-login" element={<PartnerLogin />} />

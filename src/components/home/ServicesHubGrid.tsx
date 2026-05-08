@@ -18,6 +18,7 @@ import CalendarClock from "lucide-react/dist/esm/icons/calendar-clock";
 import type { LucideIcon } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { useCountry } from "@/hooks/useCountry";
 
 type ServiceKey = "rides" | "eats" | "flights" | "hotels";
 
@@ -44,6 +45,8 @@ const TILES: ServiceTile[] = [
 export default function ServicesHubGrid() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isCambodia } = useCountry();
+  const visibleTiles = isCambodia ? TILES : TILES.filter((t) => t.key !== "rides");
   const [state, setState] = useState<Record<ServiceKey, ServiceState>>({
     rides: { status: null, href: "/rides" },
     eats: { status: null, href: "/eats" },
@@ -141,7 +144,7 @@ export default function ServicesHubGrid() {
         </button>
       </div>
       <div className="grid grid-cols-2 gap-2.5">
-        {TILES.map((tile, i) => {
+        {visibleTiles.map((tile, i) => {
           const Icon = tile.icon;
           const s = state[tile.key];
           const live = Boolean(s.status);
