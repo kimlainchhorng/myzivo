@@ -12,6 +12,8 @@
  *   3. Subscription renewal nudge  — 3 days before expires_at
  *   4. Subscription expiring soon  — 1 day before expires_at
  *   5. Subscription expired today  — expires_at passed in the last hour
+ *   6. Birthday greetings          — once per user on their birthday (UTC)
+ *   7. Abandoned marketplace cart  — items sitting in cart >24h, sent once
  *
  * Auth: cron-secret OR service-role; refuses everything else.
  */
@@ -80,6 +82,8 @@ serve(async (req) => {
     subscription_renewal_3d: 0,
     subscription_renewal_1d: 0,
     subscription_expired: 0,
+    birthday_greeting: 0,
+    abandoned_cart: 0,
     errors: [] as string[],
   };
 
@@ -215,6 +219,81 @@ serve(async (req) => {
     }
   } catch (e) {
     results.errors.push(`subscriptions: ${e instanceof Error ? e.message : String(e)}`);
+  }
+
+  // -- 6. Birthday greetings -------------------------------------------------
+  // Fire once per day per user. Use a date-stamped idempotency_key so the
+  // dispatcher's 24h dedupe window blocks the duplicate hourly scans.
+  try {
+    const today = new Date(now);
+    const mm = String(today.getUTCMonth() + 1).padStart(2, "0");
+    const dd = String(today.getUTCDate()).padStart(2, "0");
+    const todayStamp = `${today.getUTCFullYear()}-${mm}-${dd}`;
+    // Pull every profile whose birthday MM-DD matches today. Limit + paginate.
+    const { data: birthdays, error } = await supabase
+      .from("profiles")
+      .select("id, display_name, username, date_of_birth")
+      .not("date_of_birth", "is", null)
+      .filter("date_of_birth", "neq", "")
+      .limit(2000);
+    if (error) throw error;
+    for (const p of birthdays ?? []) {
+      const dob = (p as any).date_of_birth as string;
+      if (!dob) continue;
+      const m = dob.match(/^\d{4}-(\d{2})-(\d{2})$/);
+      if (!m || m[1] !== mm || m[2] !== dd) continue;
+      const name = (p as any).display_name || (p as any).username || "there";
+      const ok = await dispatchOne({
+        user_id: (p as any).id,
+        event_type: "birthday_greeting",
+        title: `🎉 Happy birthday, ${name}!`,
+        body: "Tap to claim a special gift from Zivo.",
+        data: { url: "/account/rewards", source: "birthday" },
+        channels: ["inbox", "push"],
+        category: "marketing",
+        idempotency_key: `birthday:${(p as any).id}:${todayStamp}`,
+      });
+      if (ok) results.birthday_greeting++;
+    }
+  } catch (e) {
+    results.errors.push(`birthday: ${e instanceof Error ? e.message : String(e)}`);
+  }
+
+  // -- 7. Abandoned marketplace cart -----------------------------------------
+  // Item has been sitting in someone's cart for >24h and they haven't checked
+  // out (no marketplace_orders row referencing the same listing in last 24h).
+  // Send once via a per-user-per-day idempotency key.
+  try {
+    const cutoff = new Date(now - 24 * 3600_000).toISOString();
+    const cutoff48 = new Date(now - 48 * 3600_000).toISOString();
+    const { data: stale, error } = await supabase
+      .from("marketplace_cart")
+      .select("user_id, listing_id, created_at")
+      .lt("created_at", cutoff)
+      .gte("created_at", cutoff48)
+      .limit(1000);
+    if (error) throw error;
+    // Group by user — one notification per user even if multiple stale items.
+    const seen = new Set<string>();
+    const today = new Date(now).toISOString().slice(0, 10);
+    for (const row of stale ?? []) {
+      const uid = (row as any).user_id as string;
+      if (seen.has(uid)) continue;
+      seen.add(uid);
+      const ok = await dispatchOne({
+        user_id: uid,
+        event_type: "marketplace_cart_abandoned",
+        title: "You left something in your cart",
+        body: "Pick up where you left off — items may sell out soon.",
+        data: { url: "/marketplace/cart", source: "abandoned_cart" },
+        channels: ["inbox", "push"],
+        category: "marketing",
+        idempotency_key: `abandoned_cart:${uid}:${today}`,
+      });
+      if (ok) results.abandoned_cart++;
+    }
+  } catch (e) {
+    results.errors.push(`cart: ${e instanceof Error ? e.message : String(e)}`);
   }
 
   return j(200, { ok: true, ts: new Date().toISOString(), results });
