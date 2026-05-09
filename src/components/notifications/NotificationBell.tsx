@@ -23,7 +23,18 @@ import {
   Sparkles,
   AtSign,
   Trash2,
+  Clock,
+  MoreHorizontal,
 } from 'lucide-react';
+import {
+  DropdownMenuSub,
+  DropdownMenuSubTrigger,
+  DropdownMenuSubContent,
+  DropdownMenuItem as DropdownItem,
+  DropdownMenu as InnerDropdown,
+  DropdownMenuTrigger as InnerDropdownTrigger,
+  DropdownMenuContent as InnerDropdownContent,
+} from '@/components/ui/dropdown-menu';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -125,6 +136,7 @@ export function NotificationBell() {
     markAllAsRead,
     deleteNotifications,
     clearAll,
+    snoozeNotification,
   } = useNotifications(30);
 
   // Web push enable prompt — only on web (Capacitor handles native).
@@ -304,6 +316,7 @@ export function NotificationBell() {
                   items={today}
                   onClick={handleClick}
                   onDelete={(id) => deleteNotifications([id])}
+                  onSnooze={(id, ms) => snoozeNotification(id, ms)}
                 />
               )}
               {earlier.length > 0 && (
@@ -312,6 +325,7 @@ export function NotificationBell() {
                   items={earlier}
                   onClick={handleClick}
                   onDelete={(id) => deleteNotifications([id])}
+                  onSnooze={(id, ms) => snoozeNotification(id, ms)}
                 />
               )}
             </div>
@@ -356,11 +370,13 @@ function Section({
   items,
   onClick,
   onDelete,
+  onSnooze,
 }: {
   label: string;
   items: Notif[];
   onClick: (n: Notif) => void;
   onDelete: (id: string) => void;
+  onSnooze: (id: string, durationMs: number) => void;
 }) {
   return (
     <div className="mb-2">
@@ -369,22 +385,38 @@ function Section({
       </p>
       <div className="flex flex-col">
         {items.map((n, idx) => (
-          <NotifRow key={n.id} n={n} onClick={onClick} onDelete={onDelete} delay={idx * 0.02} />
+          <NotifRow
+            key={n.id}
+            n={n}
+            onClick={onClick}
+            onDelete={onDelete}
+            onSnooze={onSnooze}
+            delay={idx * 0.02}
+          />
         ))}
       </div>
     </div>
   );
 }
 
+const SNOOZE_OPTIONS: { label: string; ms: number }[] = [
+  { label: '1 hour',     ms: 1 * 60 * 60 * 1000 },
+  { label: '4 hours',    ms: 4 * 60 * 60 * 1000 },
+  { label: 'Tomorrow',   ms: 24 * 60 * 60 * 1000 },
+  { label: 'Next week',  ms: 7 * 24 * 60 * 60 * 1000 },
+];
+
 function NotifRow({
   n,
   onClick,
   onDelete,
+  onSnooze,
   delay,
 }: {
   n: Notif;
   onClick: (n: Notif) => void;
   onDelete: (id: string) => void;
+  onSnooze: (id: string, durationMs: number) => void;
   delay: number;
 }) {
   const { icon: Icon, tone } = pickIcon(n.template);
@@ -428,19 +460,58 @@ function NotifRow({
             {!n.is_read && (
               <span className="h-2 w-2 mt-1.5 rounded-full bg-primary shadow-[0_0_0_3px_hsl(var(--primary)/0.18)]" />
             )}
-            <span
-              role="button"
-              tabIndex={-1}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onDelete(n.id);
-              }}
-              aria-label="Delete notification"
-              className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 -mr-1 rounded-md flex items-center justify-center text-muted-foreground hover:text-destructive hover:bg-destructive/10"
-            >
-              <Trash2 className="h-3.5 w-3.5" />
-            </span>
+            <InnerDropdown>
+              <InnerDropdownTrigger asChild>
+                <span
+                  role="button"
+                  tabIndex={-1}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                  }}
+                  aria-label="More options"
+                  className="opacity-0 group-hover:opacity-100 transition-opacity h-6 w-6 rounded-md flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted"
+                >
+                  <MoreHorizontal className="h-3.5 w-3.5" />
+                </span>
+              </InnerDropdownTrigger>
+              <InnerDropdownContent
+                align="end"
+                onClick={(e) => e.stopPropagation()}
+                className="w-44"
+              >
+                <DropdownMenuSub>
+                  <DropdownMenuSubTrigger className="text-xs">
+                    <Clock className="h-3.5 w-3.5 mr-2" /> Snooze
+                  </DropdownMenuSubTrigger>
+                  <DropdownMenuSubContent className="w-36">
+                    {SNOOZE_OPTIONS.map((o) => (
+                      <DropdownItem
+                        key={o.label}
+                        className="text-xs cursor-pointer"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          onSnooze(n.id, o.ms);
+                        }}
+                      >
+                        {o.label}
+                      </DropdownItem>
+                    ))}
+                  </DropdownMenuSubContent>
+                </DropdownMenuSub>
+                <DropdownItem
+                  className="text-xs text-destructive focus:text-destructive cursor-pointer"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onDelete(n.id);
+                  }}
+                >
+                  <Trash2 className="h-3.5 w-3.5 mr-2" /> Delete
+                </DropdownItem>
+              </InnerDropdownContent>
+            </InnerDropdown>
           </div>
         </div>
         {n.body && (
