@@ -15,6 +15,8 @@
  *   6. Birthday greetings          — once per user on their birthday (UTC)
  *   7. Abandoned marketplace cart  — items sitting in cart >24h, sent once
  *   8. Eats rating request         — 2h after delivery if still unrated
+ *   9. Lodge rating request        — 24h after check-out if no review yet
+ *  10. Marketplace rating request  — 48h after delivery if no review yet
  *
  * Auth: cron-secret OR service-role; refuses everything else.
  */
@@ -86,6 +88,8 @@ serve(async (req) => {
     birthday_greeting: 0,
     abandoned_cart: 0,
     eats_rating_request: 0,
+    lodge_rating_request: 0,
+    marketplace_rating_request: 0,
     errors: [] as string[],
   };
 
@@ -325,6 +329,83 @@ serve(async (req) => {
     }
   } catch (e) {
     results.errors.push(`rating: ${e instanceof Error ? e.message : String(e)}`);
+  }
+
+  // -- 9. Lodge rating request — 24h after check-out, no review yet --------
+  try {
+    const yesterday = new Date(now - 24 * 3600_000).toISOString().slice(0, 10);
+    const { data: stays, error } = await supabase
+      .from("lodge_reservations")
+      .select("id, guest_id, check_out, status")
+      .eq("check_out", yesterday)
+      .eq("status", "checked_out")
+      .not("guest_id", "is", null)
+      .limit(500);
+    if (error) throw error;
+
+    if (stays && stays.length > 0) {
+      const ids = stays.map((s: any) => s.id);
+      const { data: reviewed } = await supabase
+        .from("lodging_reviews")
+        .select("reservation_id")
+        .in("reservation_id", ids);
+      const reviewedSet = new Set((reviewed ?? []).map((r: any) => r.reservation_id));
+
+      for (const s of stays) {
+        if (reviewedSet.has((s as any).id)) continue;
+        const ok = await dispatchOne({
+          user_id: (s as any).guest_id,
+          event_type: "lodge_rating_request",
+          title: "How was your stay?",
+          body: "Tap to leave a quick review.",
+          data: { reservation_id: (s as any).id, url: `/bookings?booking_id=${(s as any).id}&review=1` },
+          channels: ["inbox", "push"],
+          idempotency_key: `lodge_rating:${(s as any).id}`,
+        });
+        if (ok) results.lodge_rating_request++;
+      }
+    }
+  } catch (e) {
+    results.errors.push(`lodge_rating: ${e instanceof Error ? e.message : String(e)}`);
+  }
+
+  // -- 10. Marketplace rating request — 48h after delivered/completed -------
+  try {
+    const start = new Date(now - 49 * 3600_000).toISOString();
+    const end = new Date(now - 48 * 3600_000).toISOString();
+    const { data: orders, error } = await supabase
+      .from("marketplace_orders")
+      .select("id, buyer_id, status, completed_at, updated_at")
+      .in("status", ["delivered", "completed"])
+      .gte("updated_at", start)
+      .lt("updated_at", end)
+      .limit(500);
+    if (error) throw error;
+
+    if (orders && orders.length > 0) {
+      const orderIds = orders.map((o: any) => o.id);
+      const { data: reviewed } = await supabase
+        .from("marketplace_reviews")
+        .select("order_id")
+        .in("order_id", orderIds);
+      const reviewedSet = new Set((reviewed ?? []).map((r: any) => r.order_id));
+
+      for (const o of orders) {
+        if (reviewedSet.has((o as any).id)) continue;
+        const ok = await dispatchOne({
+          user_id: (o as any).buyer_id,
+          event_type: "marketplace_rating_request",
+          title: "How was your purchase?",
+          body: "Help other buyers — leave a quick review.",
+          data: { order_id: (o as any).id, url: `/marketplace?order_id=${(o as any).id}&review=1` },
+          channels: ["inbox", "push"],
+          idempotency_key: `marketplace_rating:${(o as any).id}`,
+        });
+        if (ok) results.marketplace_rating_request++;
+      }
+    }
+  } catch (e) {
+    results.errors.push(`marketplace_rating: ${e instanceof Error ? e.message : String(e)}`);
   }
 
   return j(200, { ok: true, ts: new Date().toISOString(), results });
