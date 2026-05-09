@@ -14,6 +14,7 @@
  *   5. Subscription expired today  — expires_at passed in the last hour
  *   6. Birthday greetings          — once per user on their birthday (UTC)
  *   7. Abandoned marketplace cart  — items sitting in cart >24h, sent once
+ *   8. Eats rating request         — 2h after delivery if still unrated
  *
  * Auth: cron-secret OR service-role; refuses everything else.
  */
@@ -84,6 +85,7 @@ serve(async (req) => {
     subscription_expired: 0,
     birthday_greeting: 0,
     abandoned_cart: 0,
+    eats_rating_request: 0,
     errors: [] as string[],
   };
 
@@ -294,6 +296,35 @@ serve(async (req) => {
     }
   } catch (e) {
     results.errors.push(`cart: ${e instanceof Error ? e.message : String(e)}`);
+  }
+
+  // -- 8. Eats rating request — 2h after delivery, still unrated ------------
+  try {
+    const start = new Date(now - 3 * 3600_000).toISOString();
+    const end = new Date(now - 2 * 3600_000).toISOString();
+    const { data: orders, error } = await supabase
+      .from("food_orders")
+      .select("id, customer_id, delivered_at, rating")
+      .gte("delivered_at", start)
+      .lt("delivered_at", end)
+      .is("rating", null)
+      .eq("status", "delivered")
+      .limit(500);
+    if (error) throw error;
+    for (const o of orders ?? []) {
+      const ok = await dispatchOne({
+        user_id: (o as any).customer_id,
+        event_type: "eats_rating_request",
+        title: "How was your meal?",
+        body: "Tap to rate your order — takes 5 seconds.",
+        data: { order_id: (o as any).id, url: `/eats?order_id=${(o as any).id}&rate=1` },
+        channels: ["inbox", "push"],
+        idempotency_key: `eats_rating:${(o as any).id}`,
+      });
+      if (ok) results.eats_rating_request++;
+    }
+  } catch (e) {
+    results.errors.push(`rating: ${e instanceof Error ? e.message : String(e)}`);
   }
 
   return j(200, { ok: true, ts: new Date().toISOString(), results });
