@@ -21,7 +21,7 @@ import RecordInvoicePaymentDialog from "./invoices/RecordInvoicePaymentDialog";
 import SendDocumentSheet from "./invoices/SendDocumentSheet";
 import DeleteConfirmDialog from "./invoices/DeleteConfirmDialog";
 import { softDeleteDocument, updateDocument, nextDocNumber, type DocType } from "@/lib/admin/invoiceActions";
-import { generateDocumentPdf, downloadPdf, type PdfDoc } from "@/lib/admin/invoicePdf";
+import type { PdfDoc } from "@/lib/admin/invoicePdf";
 
 type LineCategory = "labor" | "part" | "diagnosis";
 type LineItem = {
@@ -969,7 +969,7 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
 
   const findFullDoc = (id: string): Doc | undefined => docs.find((d) => d.id === id);
 
-  const handleDownloadPdf = (id: string) => {
+  const handleDownloadPdf = async (id: string) => {
     const d = findFullDoc(id);
     if (!d) return;
     const pdfDoc: PdfDoc = {
@@ -977,6 +977,7 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
       address: d.address, vehicle: d.vehicle, vin: d.vin, items: d.items as any, status: d.status,
       createdAt: d.createdAt,
     };
+    const { generateDocumentPdf, downloadPdf } = await import("@/lib/admin/invoicePdf");
     const blob = generateDocumentPdf({ doc: pdfDoc, storeName: storeInfo.name, storeAddress: storeInfo.address, storePhone: storeInfo.phone });
     downloadPdf(blob, `${d.type}-${d.number}.pdf`);
   };

@@ -44,6 +44,7 @@ import MapPinned from "lucide-react/dist/esm/icons/map-pinned";
 import Bookmark from "lucide-react/dist/esm/icons/bookmark";
 import MoreVertical from "lucide-react/dist/esm/icons/more-vertical";
 import HardDrive from "lucide-react/dist/esm/icons/hard-drive";
+import BotIcon from "lucide-react/dist/esm/icons/bot";
 import SwipeableRow from "@/components/chat/SwipeableRow";
 import ChatErrorBoundary from "@/components/chat/ChatErrorBoundary";
 import ChatRowActionsSheet, { type ChatRowActionsTarget } from "@/components/chat/ChatRowActionsSheet";
@@ -269,6 +270,7 @@ const personalHubMenu = [
   { label: "People Nearby", icon: Radar, action: "nearby" },
   { label: "Broadcast Lists", icon: Radio, action: "broadcasts" },
   { label: "Folders", icon: Settings, action: "folders" },
+  { label: "Bots", icon: BotIcon, action: "bots" },
   { label: "Privacy & Security", icon: Settings, action: "privacy" },
   { label: "Active Sessions", icon: Bell, action: "sessions" },
   { label: "Storage & Cache", icon: HardDrive, action: "storage" },
@@ -330,7 +332,10 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
 
   const lastScrollYRef = useRef(0);
   useEffect(() => {
-    const onScroll = () => {
+    let rafId = 0;
+    let pending = false;
+    const tick = () => {
+      pending = false;
       const y = window.scrollY || document.documentElement.scrollTop || 0;
       const last = lastScrollYRef.current;
       const delta = y - last;
@@ -343,8 +348,16 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
       }
       lastScrollYRef.current = y;
     };
+    const onScroll = () => {
+      if (pending) return;
+      pending = true;
+      rafId = requestAnimationFrame(tick);
+    };
     window.addEventListener("scroll", onScroll, { passive: true });
-    return () => window.removeEventListener("scroll", onScroll);
+    return () => {
+      window.removeEventListener("scroll", onScroll);
+      if (rafId) cancelAnimationFrame(rafId);
+    };
   }, []);
   const [showArchived, setShowArchived] = useState(false);
   const { user } = useAuth();
@@ -1171,6 +1184,9 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
         break;
       case "folders":
         navigate("/chat/folders");
+        break;
+      case "bots":
+        navigate("/chat/bots");
         break;
       case "privacy":
         navigate("/chat/settings/privacy-hub");

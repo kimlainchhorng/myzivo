@@ -1126,21 +1126,21 @@ export default function ReelsFeedPage() {
             data-testid="feed-sticky-header"
             className="lg:hidden zivo-sticky-mobile-header"
           >
-            <div className="zivo-pt-safe-sticky">
+            <div className="zivo-pt-safe-overlay">
               <div
                 className={cn(
                   "overflow-hidden transition-all duration-300 ease-out",
                   headerHidden ? "max-h-0 opacity-0" : "max-h-[200px] opacity-100"
                 )}
               >
-                <div className="px-3 py-1 flex items-center gap-1.5">
+                <div className="px-3 pt-1.5 pb-1 flex items-center gap-2">
                   {/* Hamburger menu — Facebook-style entry point for secondary
                       items (Complete profile, Saved posts, etc.) so the feed
                       scroll stays focused on actual posts. */}
                   <Sheet>
                     <SheetTrigger asChild>
                       <button type="button"
-                        className="shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition"
+                        className="shrink-0 h-9 w-9 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition"
                         aria-label="Open menu"
                         title="Open menu"
                       >
@@ -1240,7 +1240,7 @@ export default function ReelsFeedPage() {
                       </div>
                     </SheetContent>
                   </Sheet>
-                  <h1 className="text-base font-bold text-foreground shrink-0">Feed</h1>
+                  <h1 className="text-base font-bold text-foreground shrink-0 drop-shadow-sm">Feed</h1>
                   <div className="flex-1 relative">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
                     <input
@@ -1248,7 +1248,7 @@ export default function ReelsFeedPage() {
                       onChange={(e) => handleSearchChange(e.target.value)}
                       onFocus={() => setShowSearch(true)}
                       placeholder="Search…"
-                      className="w-full pl-8 pr-7 py-1 rounded-full bg-muted/40 border border-border/30 text-[13px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"
+                      className="w-full pl-8 pr-7 py-1.5 rounded-full bg-muted/40 border border-border/30 text-[14px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"
                     />
                     {searchQuery && (
                       <button type="button" onClick={() => { setSearchQuery(""); setSearchResults([]); }} aria-label="Clear search" title="Clear search" className="absolute right-2.5 top-1/2 -translate-y-1/2">
@@ -1258,7 +1258,7 @@ export default function ReelsFeedPage() {
                   </div>
                   <button type="button"
                     onClick={() => userId ? setShowCreate(true) : navigate("/auth")}
-                    className="shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition"
+                    className="shrink-0 h-9 w-9 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition"
                     aria-label="Create post"
                     title="Create post"
                   >
@@ -1266,7 +1266,7 @@ export default function ReelsFeedPage() {
                   </button>
                   <button type="button"
                     onClick={() => navigate("/notifications")}
-                    className="shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition relative"
+                    className="shrink-0 h-9 w-9 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition relative"
                     aria-label={notificationUnread > 0 ? `Notifications, ${notificationUnread} unread` : "Notifications"}
                     title={notificationUnread > 0 ? `Notifications, ${notificationUnread} unread` : "Notifications"}
                   >
@@ -1279,7 +1279,7 @@ export default function ReelsFeedPage() {
                   </button>
                   <button type="button"
                     onClick={() => navigate("/chat")}
-                    className="shrink-0 h-8 w-8 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition relative"
+                    className="shrink-0 h-9 w-9 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition relative"
                     aria-label={headerChatUnread > 0 ? `Messages, ${headerChatUnread} unread` : "Messages"}
                     title={headerChatUnread > 0 ? `Messages, ${headerChatUnread} unread` : "Messages"}
                   >
@@ -1293,14 +1293,14 @@ export default function ReelsFeedPage() {
                 </div>
                 {/* Tab strip — For You / Friends / Following (signed-in only) */}
                 {userId && (
-                  <div className="flex justify-center gap-6 px-3 pb-1.5">
+                  <div className="flex justify-center gap-8 px-3 pb-2">
                     {(["For You", "Friends", "Following"] as const).map((label) => (
                       <button type="button"
                         key={label}
                         onClick={() => setFeedTab(label)}
                         className={cn(
-                          "relative py-1 text-[13px] font-semibold transition-colors",
-                          feedTab === label ? "text-foreground" : "text-muted-foreground"
+                          "relative py-1 text-[15px] font-semibold transition-colors",
+                          feedTab === label ? "text-foreground drop-shadow-sm" : "text-muted-foreground/80"
                         )}
                       >
                         {label}

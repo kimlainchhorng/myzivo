@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, memo } from "react";
 import { Play } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -11,7 +11,7 @@ interface ReelThumbnailProps {
   iconClassName?: string;
 }
 
-export default function ReelThumbnail({
+function ReelThumbnailInner({
   url,
   alt = "Reel preview",
   className,
@@ -137,3 +137,6 @@ export default function ReelThumbnail({
     </div>
   );
 }
+
+const ReelThumbnail = memo(ReelThumbnailInner);
+export default ReelThumbnail;

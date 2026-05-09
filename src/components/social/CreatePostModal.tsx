@@ -18,6 +18,7 @@ import VerifiedBadge from "@/components/VerifiedBadge";
 import { isBlueVerified } from "@/lib/verification";
 import { uploadWithProgress } from "@/utils/uploadWithProgress";
 import { stripImageMetadata } from "@/utils/stripImageMetadata";
+import { nativeConfirm } from "@/lib/native/dialog";
 
 interface CreatePostModalProps {
   userId: string;
@@ -47,14 +48,14 @@ interface CreatePostModalProps {
 }
 
 const FILTERS = [
-  { name: "Original", css: "none" },
-  { name: "Vivid", css: "saturate(1.75) contrast(1.08)" },
-  { name: "Warm", css: "sepia(0.3) saturate(1.35) brightness(1.04)" },
-  { name: "Cool", css: "saturate(0.85) hue-rotate(18deg) brightness(1.06)" },
-  { name: "B&W", css: "grayscale(1) contrast(1.2)" },
-  { name: "Vintage", css: "sepia(0.28) saturate(1.08) contrast(0.94) brightness(1.08)" },
-  { name: "Dreamy", css: "brightness(1.15) saturate(0.72) contrast(0.84)" },
-  { name: "Noir", css: "grayscale(0.9) contrast(1.35) brightness(0.88)" },
+  { name: "Original", className: "[filter:none]" },
+  { name: "Vivid", className: "[filter:saturate(1.75)_contrast(1.08)]" },
+  { name: "Warm", className: "[filter:sepia(0.3)_saturate(1.35)_brightness(1.04)]" },
+  { name: "Cool", className: "[filter:saturate(0.85)_hue-rotate(18deg)_brightness(1.06)]" },
+  { name: "B&W", className: "[filter:grayscale(1)_contrast(1.2)]" },
+  { name: "Vintage", className: "[filter:sepia(0.28)_saturate(1.08)_contrast(0.94)_brightness(1.08)]" },
+  { name: "Dreamy", className: "[filter:brightness(1.15)_saturate(0.72)_contrast(0.84)]" },
+  { name: "Noir", className: "[filter:grayscale(0.9)_contrast(1.35)_brightness(0.88)]" },
 ];
 
 const LOCATIONS = [
@@ -346,7 +347,7 @@ export default function CreatePostModal({
             uploadedUrls.push(...inlineUrls);
           } else if (caption.trim()) {
             // Fall back to text-only
-            const proceed = window.confirm(
+            const proceed = await nativeConfirm(
               "Media upload is temporarily unavailable.\n\nPost just your text caption without the attached media?"
             );
             if (proceed) {
@@ -460,13 +461,15 @@ export default function CreatePostModal({
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border/30 sticky top-0 bg-card z-10 rounded-t-3xl">
-          <button type="button" onClick={onClose} className="text-muted-foreground active:scale-90 transition-transform">
+          <button type="button" onClick={onClose} aria-label="Close create post" title="Close create post" className="text-muted-foreground active:scale-90 transition-transform">
             <XIcon className="h-5 w-5" />
           </button>
           <h2 className="text-sm font-bold text-foreground">Create Post</h2>
           <button type="button"
             onClick={handlePost}
             disabled={(files.length === 0 && !hasSharedLink && !caption.trim() && !isPoll) || uploading}
+            aria-label="Share post"
+            title="Share post"
             className={cn(
               "px-4 py-1.5 rounded-full text-xs font-bold transition-all",
               (files.length > 0 || caption.trim() || hasSharedLink) && !uploading
@@ -509,13 +512,107 @@ export default function CreatePostModal({
           </div>
         </div>
 
+        {/* Caption with @mention autocomplete */}
+        <div className="px-4 relative">
+          <textarea
+            ref={captionRef}
+            placeholder="Write a caption... Use @ to tag people"
+            value={caption}
+            onChange={(e) => handleCaptionChange(e.target.value)}
+            maxLength={charLimit}
+            rows={2}
+            className="w-full min-h-[56px] resize-none bg-transparent text-base sm:text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none leading-relaxed"
+          />
+
+          <div className="flex items-center justify-between mt-1 mb-2">
+            <button type="button"
+              onClick={() => setShowEmojis(!showEmojis)}
+              aria-label={showEmojis ? "Hide emoji picker" : "Show emoji picker"}
+              title={showEmojis ? "Hide emoji picker" : "Show emoji picker"}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <Smile className="h-5 w-5" />
+            </button>
+            <span className={cn(
+              "text-[10px] font-medium",
+              charCount > charLimit * 0.9 ? "text-destructive" : "text-muted-foreground/50"
+            )}>
+              {charCount}/{charLimit}
+            </span>
+          </div>
+
+          <AnimatePresence>
+            {showEmojis && (
+              <motion.div
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: "auto", opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                className="overflow-hidden mb-2"
+              >
+                <div className="flex gap-1.5 flex-wrap">
+                  {QUICK_EMOJIS.map((e) => (
+                    <button type="button"
+                      key={e}
+                      onClick={() => insertEmoji(e)}
+                      className="h-9 w-9 flex items-center justify-center rounded-lg hover:bg-muted/50 text-lg transition-colors active:scale-90"
+                    >
+                      {e}
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          <AnimatePresence>
+            {showTagSearch && tagResults.length > 0 && !showAlbumInput && (
+              <motion.div
+                initial={{ opacity: 0, y: -4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                className="absolute left-0 right-0 bottom-full mb-1 bg-card border border-border/40 rounded-xl shadow-lg z-20 max-h-[160px] overflow-y-auto"
+              >
+                {tagResults.map((u: any) => (
+                  <button type="button"
+                    key={u.id}
+                    onClick={() => insertMention(u)}
+                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted/50 transition-colors"
+                  >
+                    <div className="h-7 w-7 rounded-full bg-muted overflow-hidden">
+                      {u.avatar_url ? <img src={u.avatar_url} loading="lazy" decoding="async" className="h-full w-full object-cover" alt="" /> :
+                        <div className="h-full w-full flex items-center justify-center text-[10px] font-bold text-muted-foreground">{(u.full_name || "?")[0]}</div>}
+                    </div>
+                    <span className="text-xs font-medium text-foreground inline-flex items-center gap-1">
+                      <span>{u.full_name}</span>
+                      {isBlueVerified(u.is_verified) && <VerifiedBadge size={11} interactive={false} />}
+                    </span>
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {taggedUsers.length > 0 && (
+          <div className="px-4 pb-2 flex flex-wrap gap-1.5">
+            {taggedUsers.map((t) => (
+              <span key={t.id} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-medium">
+                @{t.name}
+                <button type="button" aria-label={`Remove ${t.name} tag`} title={`Remove ${t.name} tag`} onClick={() => setTaggedUsers((prev) => prev.filter((u) => u.id !== t.id))}>
+                  <XIcon className="h-3 w-3" />
+                </button>
+              </span>
+            ))}
+          </div>
+        )}
+
         {/* Privacy & extras row */}
-        <div className="px-4 pb-2 flex items-center gap-2 flex-wrap">
+        <div className="px-4 pb-2 flex items-center gap-2 flex-nowrap overflow-x-auto scrollbar-hide">
           {/* Visibility dropdown */}
           <div className="relative">
             <button type="button"
               onClick={() => setShowVisibilityMenu(!showVisibilityMenu)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/40 border border-border/30 text-xs font-medium text-foreground min-h-[36px]"
+              className="shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-muted/40 border border-border/30 text-xs font-medium text-foreground min-h-[36px]"
             >
               {visibility === "everyone" && <Globe className="h-3.5 w-3.5 text-primary" />}
               {visibility === "friends" && <Users className="h-3.5 w-3.5 text-primary" />}
@@ -566,7 +663,7 @@ export default function CreatePostModal({
                 }
               }}
               className={cn(
-                "flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium min-h-[36px]",
+                "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium min-h-[36px]",
                 album
                   ? "bg-primary/10 text-primary border-primary/30"
                   : "bg-muted/40 text-muted-foreground border-border/30 hover:bg-muted/50"
@@ -621,7 +718,7 @@ export default function CreatePostModal({
           <button type="button"
             onClick={() => setShowLocationSearch(!showLocationSearch)}
             className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium min-h-[36px]",
+              "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium min-h-[36px]",
               location
                 ? "bg-primary/10 text-primary border-primary/30"
                 : "bg-muted/40 text-muted-foreground border-border/30 hover:bg-muted/50"
@@ -635,7 +732,7 @@ export default function CreatePostModal({
           <button type="button"
             onClick={() => { setShowTagSearch(true); setTagQuery(""); handleTagSearch(""); }}
             className={cn(
-              "flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium min-h-[36px]",
+              "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium min-h-[36px]",
               taggedUsers.length > 0
                 ? "bg-primary/10 text-primary border-primary/30"
                 : "bg-muted/40 text-muted-foreground border-border/30 hover:bg-muted/50"
@@ -752,103 +849,6 @@ export default function CreatePostModal({
           )}
         </AnimatePresence>
 
-        {/* Tagged users */}
-        {taggedUsers.length > 0 && (
-          <div className="px-4 pb-2 flex flex-wrap gap-1.5">
-            {taggedUsers.map((t) => (
-              <span key={t.id} className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 text-primary text-[11px] font-medium">
-                @{t.name}
-                <button type="button" onClick={() => setTaggedUsers((prev) => prev.filter((u) => u.id !== t.id))}>
-                  <XIcon className="h-3 w-3" />
-                </button>
-              </span>
-            ))}
-          </div>
-        )}
-
-        {/* Caption with @mention autocomplete */}
-        <div className="px-4 relative">
-          <textarea
-            ref={captionRef}
-            placeholder="Write a caption... Use @ to tag people"
-            value={caption}
-            onChange={(e) => handleCaptionChange(e.target.value)}
-            maxLength={charLimit}
-            rows={2}
-            className="w-full resize-none bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none leading-relaxed"
-            style={{ minHeight: "48px" }}
-          />
-
-          {/* Character counter & emoji toggle */}
-          <div className="flex items-center justify-between mt-1 mb-2">
-            <button type="button"
-              onClick={() => setShowEmojis(!showEmojis)}
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <Smile className="h-5 w-5" />
-            </button>
-            <span className={cn(
-              "text-[10px] font-medium",
-              charCount > charLimit * 0.9 ? "text-destructive" : "text-muted-foreground/50"
-            )}>
-              {charCount}/{charLimit}
-            </span>
-          </div>
-
-          {/* Quick emoji row */}
-          <AnimatePresence>
-            {showEmojis && (
-              <motion.div
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: "auto", opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                className="overflow-hidden mb-2"
-              >
-                <div className="flex gap-1.5 flex-wrap">
-                  {QUICK_EMOJIS.map((e) => (
-                    <button type="button"
-                      key={e}
-                      onClick={() => insertEmoji(e)}
-                      className="h-9 w-9 flex items-center justify-center rounded-lg hover:bg-muted/50 text-lg transition-colors active:scale-90"
-                    >
-                      {e}
-                    </button>
-                  ))}
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* @mention autocomplete */}
-          <AnimatePresence>
-            {showTagSearch && tagResults.length > 0 && !showAlbumInput && (
-              <motion.div
-                initial={{ opacity: 0, y: -4 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -4 }}
-                className="absolute left-0 right-0 bottom-full mb-1 bg-card border border-border/40 rounded-xl shadow-lg z-20 max-h-[160px] overflow-y-auto"
-              >
-                {tagResults.map((u: any) => (
-                  <button type="button"
-                    key={u.id}
-                    onClick={() => insertMention(u)}
-                    className="w-full flex items-center gap-2 px-3 py-2 hover:bg-muted/50 transition-colors"
-                  >
-                    <div className="h-7 w-7 rounded-full bg-muted overflow-hidden">
-                      {u.avatar_url ? <img src={u.avatar_url} loading="lazy" decoding="async" className="h-full w-full object-cover" alt="" /> :
-                        <div className="h-full w-full flex items-center justify-center text-[10px] font-bold text-muted-foreground">{(u.full_name || "?")[0]}</div>}
-                    </div>
-                    <span className="text-xs font-medium text-foreground inline-flex items-center gap-1">
-                      <span>{u.full_name}</span>
-                      {isBlueVerified(u.is_verified) && <VerifiedBadge size={11} interactive={false} />}
-                    </span>
-                  </button>
-                ))}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
-
         {/* Feeling picker */}
         <AnimatePresence>
           {showFeelingPicker && (
@@ -907,7 +907,7 @@ export default function CreatePostModal({
                       className="flex-1 px-3 py-2 rounded-xl bg-muted/40 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-2 focus:ring-primary/20"
                     />
                     {pollOptions.length > 2 && (
-                      <button type="button" onClick={() => setPollOptions(pollOptions.filter((_, j) => j !== i))} className="text-muted-foreground hover:text-destructive">
+                      <button type="button" aria-label={`Remove option ${i + 1}`} title={`Remove option ${i + 1}`} onClick={() => setPollOptions(pollOptions.filter((_, j) => j !== i))} className="text-muted-foreground hover:text-destructive">
                         <XIcon className="h-4 w-4" />
                       </button>
                     )}
@@ -934,8 +934,7 @@ export default function CreatePostModal({
               {(files[currentPreview]?.type?.startsWith("video") || (currentPreview === 0 && mediaType === "video" && files.length === 0)) ? (
                 <video
                   src={previews[currentPreview]}
-                  className="h-full w-full object-cover"
-                  style={{ filter: FILTERS[activeFilter]?.css || "none" }}
+                  className={cn("h-full w-full object-cover", FILTERS[activeFilter]?.className ?? "[filter:none]")}
                   controls
                   muted
                 />
@@ -943,13 +942,14 @@ export default function CreatePostModal({
                 <img
                   src={previews[currentPreview]}
                   alt=""
-                  className="h-full w-full object-cover"
-                  style={{ filter: FILTERS[activeFilter]?.css || "none" }}
+                  className={cn("h-full w-full object-cover", FILTERS[activeFilter]?.className ?? "[filter:none]")}
                 />
               )}
 
               {files.length > 0 && (
                 <button type="button"
+                  aria-label="Remove current media"
+                  title="Remove current media"
                   onClick={() => removeMedia(currentPreview)}
                   className="absolute top-2 left-2 h-7 w-7 rounded-full bg-black/60 flex items-center justify-center active:scale-90 transition-transform"
                 >
@@ -974,28 +974,34 @@ export default function CreatePostModal({
             {previews.length >= 1 && (
               <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
                 {previews.map((p, i) => (
-                  // Thumbnail is a div role="button" (not a <button type="button">) so the
-                  // remove-X <button type="button"> nested inside is valid DOM.
                   <div
                     key={i}
-                    role="button"
-                    tabIndex={0}
-                    onClick={() => setCurrentPreview(i)}
-                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setCurrentPreview(i); } }}
                     className={cn(
-                      "relative shrink-0 h-14 w-14 rounded-lg overflow-hidden border-2 transition-all cursor-pointer",
-                      i === currentPreview ? "border-primary ring-1 ring-primary/30 scale-105" : "border-border/30 opacity-70 hover:opacity-100"
+                      "relative shrink-0 h-14 w-14",
+                      i === currentPreview ? "scale-105" : ""
                     )}
                   >
-                    {files[i]?.type?.startsWith("video") ? (
-                      <video src={p} className="h-full w-full object-cover" muted />
-                    ) : (
-                      <img src={p} alt="" className="h-full w-full object-cover" />
-                    )}
                     <button
                       type="button"
-                      aria-label="Remove media"
-                      onClick={(e) => { e.stopPropagation(); removeMedia(i); }}
+                      onClick={() => setCurrentPreview(i)}
+                      aria-label={`Preview media ${i + 1}`}
+                      title={`Preview media ${i + 1}`}
+                      className={cn(
+                        "h-14 w-14 rounded-lg overflow-hidden border-2 transition-all",
+                        i === currentPreview ? "border-primary ring-1 ring-primary/30" : "border-border/30 opacity-70 hover:opacity-100"
+                      )}
+                    >
+                      {files[i]?.type?.startsWith("video") ? (
+                        <video src={p} className="h-full w-full object-cover" muted />
+                      ) : (
+                        <img src={p} alt="" className="h-full w-full object-cover" />
+                      )}
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={`Remove media ${i + 1}`}
+                      title={`Remove media ${i + 1}`}
+                      onClick={() => removeMedia(i)}
                       className="absolute -top-0.5 -right-0.5 h-4 w-4 rounded-full bg-destructive flex items-center justify-center"
                     >
                       <XIcon className="h-2.5 w-2.5 text-destructive-foreground" />
@@ -1005,6 +1011,8 @@ export default function CreatePostModal({
                 {/* Add more inline */}
                 {files.length < 10 && (
                   <button type="button"
+                    aria-label="Add more media"
+                    title="Add more media"
                     onClick={() => {
                       if (fileRef.current) {
                         fileRef.current.accept = "image/*,video/*";
@@ -1042,8 +1050,7 @@ export default function CreatePostModal({
                     <img
                       src={previews[0]}
                       alt={f.name}
-                      className="h-full w-full object-cover"
-                      style={{ filter: f.css }}
+                      className={cn("h-full w-full object-cover", f.className)}
                     />
                   </div>
                   <span className={cn(
@@ -1081,7 +1088,7 @@ export default function CreatePostModal({
                   autoFocus
                 />
                 {audioName && (
-                  <button type="button" onClick={() => { setAudioName(""); setShowAudioInput(false); }} className="text-muted-foreground hover:text-foreground">
+                  <button type="button" aria-label="Clear sound" title="Clear sound" onClick={() => { setAudioName(""); setShowAudioInput(false); }} className="text-muted-foreground hover:text-foreground">
                     <XIcon className="w-4 h-4" />
                   </button>
                 )}
@@ -1213,6 +1220,8 @@ export default function CreatePostModal({
         <input
           ref={fileRef}
           type="file"
+          aria-label="Select media files"
+          title="Select media files"
           accept="image/*,video/*"
           multiple
           className="hidden"
@@ -1221,8 +1230,9 @@ export default function CreatePostModal({
         <input
           ref={cameraRef}
           type="file"
+          aria-label="Record or choose a video"
+          title="Record or choose a video"
           accept="video/*"
-          capture="environment"
           className="hidden"
           onChange={handleFiles}
         />

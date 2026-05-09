@@ -113,6 +113,8 @@ export function useLodgeRooms(storeId: string) {
       return (data || []) as unknown as LodgeRoom[];
     },
     enabled: !!storeId,
+    staleTime: 60_000,
+    gcTime: 300_000,
   });
 
   const upsert = useMutation({

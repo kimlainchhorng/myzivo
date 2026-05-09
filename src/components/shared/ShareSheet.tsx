@@ -303,7 +303,7 @@ export default function ShareSheet({
       onClose={onClose}
       title="Share to"
       ariaLabel="Share options"
-      maxHeightVh={75}
+      maxHeightVh={showMoreOptions ? 82 : 60}
       zIndex={zIndex}
       positioning={positioning}
     >
@@ -325,7 +325,7 @@ export default function ShareSheet({
         </div>
 
         {/* External sharing row */}
-        <div className="grid grid-cols-4 gap-3 px-5 py-3 border-t border-border/10">
+        <div className="grid grid-cols-4 gap-3 px-5 py-2.5 border-t border-border/10">
           {shareOptions.map((opt) => (
             <button type="button"
               key={opt.label}
@@ -360,7 +360,7 @@ export default function ShareSheet({
               exit={{ height: 0, opacity: 0 }}
               className="overflow-hidden"
             >
-              <div className="grid grid-cols-4 gap-3 px-5 py-3 border-t border-border/20">
+              <div className="grid grid-cols-4 gap-3 px-5 py-2.5 border-t border-border/20">
                 {moreShareOptions.map((opt) => (
                   <button type="button"
                     key={opt.label}

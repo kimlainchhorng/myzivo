@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 import AppLayout from "@/components/app/AppLayout";
 import { toast } from "sonner";
+import { nativeConfirm } from "@/lib/native/dialog";
 
 type DeliveryStatus =
   | "requested"
@@ -156,7 +157,7 @@ export default function DeliveryTrackingPage() {
 
   const cancelDelivery = async () => {
     if (!delivery) return;
-    const confirmed = window.confirm("Cancel this delivery?");
+    const confirmed = await nativeConfirm("Cancel this delivery?");
     if (!confirmed) return;
     const { error } = await (supabase as any)
       .from("deliveries")

@@ -3,6 +3,7 @@
  * Wired to: business_accounts, business_authorized_drivers, business_account_users, trips
  */
 import { useEffect, useState } from "react";
+import { useVisibleInterval } from "@/hooks/useVisibleInterval";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { Building2, Users, Shield, Car, TrendingUp, Settings, ChevronRight, Plus, Radio, Loader2, Trash2, UserPlus } from "lucide-react";
@@ -117,22 +118,19 @@ export default function RideCorporateFleet() {
     }
   }, [authorizedDrivers, section]);
 
-  useEffect(() => {
+  useVisibleInterval(() => {
     if (section !== "fleet") return;
-    const id = setInterval(() => {
-      setLiveDrivers(prev => prev.map(d => {
-        if (!d.isActive) return d;
-        const move = Math.random() < 0.35;
-        return {
-          ...d,
-          location: move ? locations[Math.floor(Math.random() * locations.length)] : d.location,
-          speedKph: Math.max(0, Math.min(80, d.speedKph + Math.round((Math.random() - 0.5) * 12))),
-        };
-      }));
-      setLastTick(Date.now());
-    }, 3000);
-    return () => clearInterval(id);
-  }, [section]);
+    setLiveDrivers(prev => prev.map(d => {
+      if (!d.isActive) return d;
+      const move = Math.random() < 0.35;
+      return {
+        ...d,
+        location: move ? locations[Math.floor(Math.random() * locations.length)] : d.location,
+        speedKph: Math.max(0, Math.min(80, d.speedKph + Math.round((Math.random() - 0.5) * 12))),
+      };
+    }));
+    setLastTick(Date.now());
+  }, section === "fleet" ? 3000 : null);
 
   const secondsAgo = Math.max(0, Math.floor((Date.now() - lastTick) / 1000));
 

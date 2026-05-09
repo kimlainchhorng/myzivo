@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
+import { nativeConfirm } from "@/lib/native/dialog";
 
 const STATUS_OPTIONS = ["all", "submitted", "reviewed", "shortlisted", "hired", "rejected", "withdrawn"] as const;
 type StatusFilter = typeof STATUS_OPTIONS[number];
@@ -49,7 +50,7 @@ export default function MyApplicationsPage() {
 
   const handleWithdraw = async (id: string, e: React.MouseEvent) => {
     e.stopPropagation();
-    if (!window.confirm("Withdraw this application?")) return;
+    if (!(await nativeConfirm("Withdraw this application?"))) return;
     await (supabase as any).from("career_applications").update({ status: "withdrawn" }).eq("id", id);
     setApps(prev => prev.map(a => a.id === id ? { ...a, status: "withdrawn" } : a));
   };

@@ -1,7 +1,8 @@
 /**
  * Testimonials Section - Premium multi-card carousel with service accents
  */
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
+import { useVisibleInterval } from "@/hooks/useVisibleInterval";
 import { motion, AnimatePresence } from "framer-motion";
 import Star from "lucide-react/dist/esm/icons/star";
 import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left";
@@ -49,12 +50,10 @@ export default function TestimonialsSection() {
     setPage((p) => (p + 1) % totalPages);
   }, [totalPages]);
 
-  useEffect(() => {
-    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (prefersReduced) return;
-    const timer = setInterval(next, 6000);
-    return () => clearInterval(timer);
-  }, [next]);
+  const reduceMotion =
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  useVisibleInterval(next, reduceMotion ? null : 6000);
 
   const currentItems = testimonials.slice(page * itemsPerPage, page * itemsPerPage + itemsPerPage);
 

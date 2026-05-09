@@ -31,7 +31,7 @@ interface ReservationSummary {
   status: string;
   notes: string | null;
   room: { name: string; photos: string[] | null } | null;
-  store: { name: string; address: string | null } | null;
+  store: { name: string; address: string | null; latitude: number | null; longitude: number | null } | null;
 }
 
 export default function HotelBookingConfirmedPage() {
@@ -53,7 +53,7 @@ export default function HotelBookingConfirmedPage() {
             id, number, guest_name, check_in, check_out, nights,
             adults, children, total_cents, payment_status, status, notes,
             room:lodge_rooms(name, photos),
-            store:store_profiles(name, address)
+            store:store_profiles(name, address, latitude, longitude)
           `)
           .eq("id", reservationId)
           .single();
@@ -70,6 +70,67 @@ export default function HotelBookingConfirmedPage() {
     const ref = reservation?.number || reservationId.slice(0, 8).toUpperCase();
     navigator.clipboard.writeText(ref);
     toast.success("Reference copied");
+  };
+
+  const handleAddToCalendar = () => {
+    if (!reservation) return;
+    const fmtIcsDate = (iso: string) => iso.replace(/-/g, "");
+    const dtStart = fmtIcsDate(reservation.check_in);
+    const dtEnd = fmtIcsDate(reservation.check_out);
+    const summary = `Hotel: ${reservation.store?.name || "Stay"} — ${reservation.room?.name || "Room"}`;
+    const desc = [
+      `Reservation: ${reservation.number || reservationId.slice(0, 8).toUpperCase()}`,
+      reservation.adults > 0 ? `Guests: ${reservation.adults} adult${reservation.adults > 1 ? "s" : ""}${reservation.children ? `, ${reservation.children} child${reservation.children > 1 ? "ren" : ""}` : ""}` : "",
+      `Total: ${formatPrice(reservation.total_cents)}`,
+      `Status: ${reservation.payment_status === "pending_cash" ? "Pay at check-in" : "Paid"}`,
+      reservation.notes ? `Notes: ${reservation.notes}` : "",
+    ].filter(Boolean).join("\\n");
+    const escapeIcs = (s: string) => s.replace(/[\\;,]/g, (c) => "\\" + c).replace(/\n/g, "\\n");
+    const dtStamp = new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+    const ics = [
+      "BEGIN:VCALENDAR",
+      "VERSION:2.0",
+      "PRODID:-//ZIVO//Hotel Booking//EN",
+      "CALSCALE:GREGORIAN",
+      "METHOD:PUBLISH",
+      "BEGIN:VEVENT",
+      `UID:zivo-hotel-${reservation.id}@hizivo.com`,
+      `DTSTAMP:${dtStamp}`,
+      `DTSTART;VALUE=DATE:${dtStart}`,
+      `DTEND;VALUE=DATE:${dtEnd}`,
+      `SUMMARY:${escapeIcs(summary)}`,
+      `DESCRIPTION:${escapeIcs(desc)}`,
+      reservation.store?.address ? `LOCATION:${escapeIcs(reservation.store.address)}` : "",
+      typeof reservation.store?.latitude === "number" && typeof reservation.store?.longitude === "number"
+        ? `GEO:${reservation.store.latitude};${reservation.store.longitude}`
+        : "",
+      "END:VEVENT",
+      "END:VCALENDAR",
+    ].filter(Boolean).join("\r\n");
+    const blob = new Blob([ics], { type: "text/calendar;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `zivo-hotel-${reservation.number || reservation.id.slice(0, 8)}.ics`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toast.success("Added to your calendar");
+  };
+
+  const handleGetDirections = () => {
+    if (!reservation) return;
+    const lat = reservation.store?.latitude;
+    const lng = reservation.store?.longitude;
+    const dest = (typeof lat === "number" && typeof lng === "number")
+      ? `${lat},${lng}`
+      : encodeURIComponent(reservation.store?.address || reservation.store?.name || "");
+    if (!dest) {
+      toast.error("Location not available");
+      return;
+    }
+    window.open(`https://www.google.com/maps/dir/?api=1&destination=${dest}`, "_blank", "noopener,noreferrer");
   };
 
   const handleShare = () => {
@@ -246,6 +307,43 @@ export default function HotelBookingConfirmedPage() {
             <p className="text-[8px] text-muted-foreground">Total</p>
           </div>
         </motion.div>
+
+        {/* Quick actions: calendar + directions */}
+        {reservation && (
+          <motion.div
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.65 }}
+            className="grid grid-cols-2 gap-2.5 w-full mb-3"
+          >
+            <button
+              type="button"
+              onClick={handleAddToCalendar}
+              className="rounded-2xl border border-border/40 bg-card hover:bg-muted/40 px-3 py-3 flex items-center gap-2 text-left active:scale-[0.98] transition"
+            >
+              <span className="h-9 w-9 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
+                <CalendarRange className="w-4 h-4" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-[12px] font-bold leading-tight">Add to calendar</p>
+                <p className="text-[10px] text-muted-foreground leading-tight">Save .ics file</p>
+              </div>
+            </button>
+            <button
+              type="button"
+              onClick={handleGetDirections}
+              className="rounded-2xl border border-border/40 bg-card hover:bg-muted/40 px-3 py-3 flex items-center gap-2 text-left active:scale-[0.98] transition"
+            >
+              <span className="h-9 w-9 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                <MapPin className="w-4 h-4" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-[12px] font-bold leading-tight">Get directions</p>
+                <p className="text-[10px] text-muted-foreground leading-tight">Open in Maps</p>
+              </div>
+            </button>
+          </motion.div>
+        )}
 
         {/* Actions */}
         <motion.div

@@ -1268,7 +1268,7 @@ export default function LiveStreamPage() {
  className="shrink-0 w-[180px] rounded-2xl overflow-hidden bg-card border border-border/30 active:scale-[0.97] hover:shadow-md transition-all shadow-sm text-left"
  >
 <div className="relative h-[100px]">
-<img src={k.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
+<img src={k.img} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" decoding="async" />
 <div className="absolute inset-0 bg-gradient-to-tr from-pink-600/85 via-rose-500/60 to-purple-500/40" />
 <span className="absolute top-2 left-2 text-base">{k.lang}</span>
 <Badge className="absolute top-2 right-2 bg-pink-500 text-white border-0 text-[9px] gap-1 animate-pulse">
@@ -1363,7 +1363,7 @@ export default function LiveStreamPage() {
  className="shrink-0 w-[140px] rounded-2xl overflow-hidden bg-card border border-border/30 active:scale-[0.97] hover:shadow-md transition-all shadow-sm text-left"
  >
 <div className="relative aspect-[9/16]">
-<img src={m.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
+<img src={m.img} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" decoding="async" />
 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/30" />
 <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center">
 <Film className="w-4 h-4 text-white" />
@@ -1566,7 +1566,7 @@ export default function LiveStreamPage() {
  className="block w-full text-left active:scale-[0.97] transition-transform"
  >
 <div className="relative aspect-[3/4]">
-<img src={d.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
+<img src={d.img} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" decoding="async" />
 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-transparent" />
  {d.online && (
 <div className="absolute top-2 left-2 flex items-center gap-1 bg-emerald-500 rounded-full px-1.5 py-0.5">
@@ -1655,7 +1655,7 @@ export default function LiveStreamPage() {
  className="shrink-0 w-[160px] rounded-2xl overflow-hidden bg-card border border-rose-500/30 active:scale-[0.97] hover:shadow-md transition-all shadow-sm text-left"
  >
 <div className="relative aspect-square">
-<img src={a.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
+<img src={a.img} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" decoding="async" />
 <Badge className="absolute top-2 left-2 bg-rose-500 text-white border-0 text-[9px] gap-1 animate-pulse">
 <Hammer className="w-2 h-2" />LIVE
 </Badge>
@@ -1863,7 +1863,7 @@ export default function LiveStreamPage() {
  className="shrink-0 w-[140px] rounded-2xl overflow-hidden bg-card border border-border/30 active:scale-[0.97] hover:shadow-md transition-all shadow-sm text-left"
  >
 <div className="relative h-[140px]">
-<img src={g.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
+<img src={g.img} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" decoding="async" />
 <div className={cn("absolute inset-0 bg-gradient-to-tr opacity-80", g.color)} />
 <Badge className="absolute top-2 left-2 bg-red-500 text-white border-0 text-[9px] gap-1 animate-pulse">
 <Radio className="w-2 h-2" />LIVE
@@ -1900,7 +1900,7 @@ export default function LiveStreamPage() {
  className="shrink-0 w-[150px] rounded-2xl overflow-hidden bg-card border border-border/30 active:scale-[0.97] hover:shadow-md transition-all shadow-sm text-left"
  >
 <div className="relative aspect-square">
-<img src={p.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
+<img src={p.img} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" decoding="async" />
 <Badge className="absolute top-2 left-2 bg-red-500 text-white border-0 text-[9px] gap-1 animate-pulse">
 <Radio className="w-2 h-2" />LIVE
 </Badge>
@@ -1942,7 +1942,7 @@ export default function LiveStreamPage() {
  className="shrink-0 w-[180px] rounded-2xl overflow-hidden bg-card border border-border/30 active:scale-[0.97] hover:shadow-md transition-all shadow-sm text-left"
  >
 <div className="relative h-[110px]">
-<img src={t.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
+<img src={t.img} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" decoding="async" />
 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-transparent to-black/30" />
 <Badge className="absolute top-2 left-2 bg-red-500 text-white border-0 text-[9px] gap-1 animate-pulse">
 <Radio className="w-2 h-2" />LIVE
@@ -1986,7 +1986,7 @@ export default function LiveStreamPage() {
  className="w-full flex items-center gap-3 p-2 rounded-2xl bg-card border border-border/30 active:scale-[0.99] transition-transform shadow-sm text-left"
  >
 <div className="relative w-20 h-20 rounded-xl overflow-hidden shrink-0">
-<img src={n.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
+<img src={n.img} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" decoding="async" />
  {n.breaking &&<Badge className="absolute top-1 left-1 bg-red-500 text-white border-0 text-[8px] px-1 animate-pulse">BREAKING</Badge>}
 </div>
 <div className="flex-1 min-w-0">
@@ -2034,7 +2034,7 @@ export default function LiveStreamPage() {
  className="shrink-0 w-[200px] rounded-2xl overflow-hidden bg-card border border-border/30 active:scale-[0.97] hover:shadow-md transition-all shadow-sm text-left"
  >
 <div className="relative h-[110px]">
-<img src={s.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
+<img src={s.img} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" decoding="async" />
 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/30 to-black/40" />
 <Badge className="absolute top-2 left-2 bg-emerald-600 text-white border-0 text-[9px] gap-1 animate-pulse">
 <Radio className="w-2 h-2" />LIVE
@@ -2124,7 +2124,7 @@ export default function LiveStreamPage() {
  className="shrink-0 w-[180px] rounded-2xl overflow-hidden active:scale-[0.97] hover:shadow-xl transition-all shadow-md text-left relative"
  >
 <div className="relative h-[150px]">
-<img src={d.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
+<img src={d.img} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" decoding="async" />
 <div className="absolute inset-0 bg-gradient-to-tr from-fuchsia-700/85 via-purple-600/70 to-pink-500/40" />
 <Badge className="absolute top-2 left-2 bg-fuchsia-500 text-white border-0 text-[9px] gap-1 animate-pulse">
 <Radio className="w-2 h-2" />ON AIR
@@ -2168,7 +2168,7 @@ export default function LiveStreamPage() {
  className="shrink-0 w-[160px] rounded-2xl overflow-hidden bg-card border border-border/30 active:scale-[0.97] hover:shadow-md transition-all shadow-sm text-left"
  >
 <div className="relative h-[90px]">
-<img src={c.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
+<img src={c.img} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" decoding="async" />
 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
 <Badge className="absolute top-2 left-2 bg-yellow-500 text-yellow-950 border-0 text-[9px] gap-1 animate-pulse">
 <Radio className="w-2 h-2" />LIVE
@@ -2248,7 +2248,7 @@ export default function LiveStreamPage() {
  onClick={() => { setSearchQuery("music"); window.scrollTo({ top: 0, behavior: "smooth" }); }}
  className="w-full relative rounded-2xl overflow-hidden h-[150px] active:scale-[0.99] transition-transform shadow-lg shadow-amber-500/20"
  >
-<img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&q=70&auto=format&fit=crop" alt="" className="absolute inset-0 w-full h-full object-cover" />
+<img src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=800&q=70&auto=format&fit=crop" alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" decoding="async" />
 <div className="absolute inset-0 bg-gradient-to-tr from-amber-600/80 via-orange-500/60 to-rose-500/40" />
 <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
 <Badge className="absolute top-3 left-3 bg-white/25 backdrop-blur-md text-white border-0 text-[10px] gap-1 font-bold">
@@ -2364,7 +2364,7 @@ export default function LiveStreamPage() {
  className="shrink-0 w-[150px] rounded-2xl overflow-hidden bg-card border border-border/30 active:scale-[0.97] hover:shadow-md transition-all shadow-sm text-left"
  >
 <div className="relative aspect-[4/5]">
-<img src={c.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
+<img src={c.img} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" decoding="async" />
 <div className="absolute inset-0 bg-gradient-to-tr from-purple-700/85 via-pink-500/40 to-fuchsia-500/30" />
 <Badge className="absolute top-2 left-2 bg-purple-500 text-white border-0 text-[9px] gap-1 animate-pulse">
 <Radio className="w-2 h-2" />LIVE
@@ -2494,7 +2494,7 @@ export default function LiveStreamPage() {
  className="shrink-0 w-[160px] rounded-2xl overflow-hidden bg-card border border-fuchsia-500/30 active:scale-[0.97] hover:shadow-md transition-all shadow-sm text-left"
  >
 <div className="relative aspect-square">
-<img src={m.img} alt="" className="absolute inset-0 w-full h-full object-cover" />
+<img src={m.img} alt="" className="absolute inset-0 w-full h-full object-cover" loading="lazy" decoding="async" />
 <div className="absolute inset-0 bg-gradient-to-tr from-fuchsia-700/85 via-purple-700/60 to-pink-500/30" />
 <Badge className="absolute top-2 left-2 bg-fuchsia-600 text-white border-0 text-[9px] gap-1 animate-pulse">
 <Radio className="w-2 h-2" />LIVE

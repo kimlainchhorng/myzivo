@@ -9,6 +9,7 @@
  */
 import { ShieldCheck, CheckCircle2, Clock, XCircle, RotateCcw, Undo2, Loader2, Lock, User, Users } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
+import { useVisibleInterval } from "@/hooks/useVisibleInterval";
 import { cn } from "@/lib/utils";
 
 type PaymentStatus =
@@ -84,13 +85,10 @@ export function LodgingPaymentBadge({
   const [lockInfo, setLockInfo] = useState<RetryResult | null>(null);
 
   // Re-render every 1s while locked or every 5s for stale-time refresh.
-  useEffect(() => {
-    const needsFastTick = lockedUntil !== null;
-    const needsSlowTick = !!lastEventAt || TRANSITIONAL.has(String(status));
-    if (!needsFastTick && !needsSlowTick) return;
-    const id = setInterval(() => setTick((t) => t + 1), needsFastTick ? 1_000 : 5_000);
-    return () => clearInterval(id);
-  }, [lastEventAt, status, lockedUntil]);
+  const needsFastTick = lockedUntil !== null;
+  const needsSlowTick = !!lastEventAt || TRANSITIONAL.has(String(status));
+  const tickDelay = needsFastTick ? 1_000 : needsSlowTick ? 5_000 : null;
+  useVisibleInterval(() => setTick((t) => t + 1), tickDelay, { tickOnVisible: true });
 
   // Auto-clear lock when its countdown elapses
   useEffect(() => {

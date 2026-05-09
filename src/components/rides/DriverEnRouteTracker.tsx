@@ -134,6 +134,7 @@ export default function DriverEnRouteTracker({
     if (!driverLocation || !target) return;
 
     const interval = setInterval(async () => {
+      if (document.visibilityState !== "visible") return;
       try {
         const { data, error } = await supabase.functions.invoke("maps-route", {
           body: {

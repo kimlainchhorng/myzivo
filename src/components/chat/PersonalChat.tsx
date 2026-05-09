@@ -479,6 +479,10 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [showMiniApps, setShowMiniApps] = useState(false);
   const [showPersonalization, setShowPersonalization] = useState(false);
   const [miniAppView, setMiniAppView] = useState<"menu" | "poll" | "todo" | "split" | "book_table" | "trip_idea">("menu");
+  const handleMiniAppAction = useCallback((type: string) => {
+    setMiniAppView(type as any);
+    setShowMiniApps(true);
+  }, []);
   const [showSecurity, setShowSecurity] = useState(false);
   const [showCallHistory, setShowCallHistory] = useState(false);
   const [showContactInfo, setShowContactInfo] = useState(false);
@@ -1019,13 +1023,22 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     // Run once immediately so newly arrived rows appear without waiting.
     void tick();
 
-    const id = window.setInterval(() => {
-      void tick();
-    }, 2000);
+    let id: number | null = null;
+    const startPoll = () => {
+      if (id != null) return;
+      id = window.setInterval(() => { void tick(); }, 2000);
+    };
+    const stopPoll = () => {
+      if (id != null) { window.clearInterval(id); id = null; }
+    };
+    if (document.visibilityState === "visible") startPoll();
 
     const onVisibility = () => {
       if (document.visibilityState === "visible") {
         void tick();
+        startPoll();
+      } else {
+        stopPoll();
       }
     };
     document.addEventListener("visibilitychange", onVisibility);
@@ -1037,7 +1050,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     });
 
     return () => {
-      window.clearInterval(id);
+      stopPoll();
       document.removeEventListener("visibilitychange", onVisibility);
       appResumeListener.then((l) => l.remove());
     };
@@ -2736,10 +2749,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                         hideSave={isSelfChat}
                         forwardedFromUserId={msg.forwarded_from_user_id ?? null}
                         forwardedFromName={msg.forwarded_from_user_id ? (forwardedNames[msg.forwarded_from_user_id] ?? null) : null}
-                        onMiniAppAction={(type) => {
-                          setMiniAppView(type as any);
-                          setShowMiniApps(true);
-                        }}
+                        onMiniAppAction={handleMiniAppAction}
                         autoTranslate={autoTranslate}
                         />                    )}
 

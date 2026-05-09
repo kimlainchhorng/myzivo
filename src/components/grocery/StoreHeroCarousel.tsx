@@ -3,7 +3,8 @@
  * Features: Embla autoplay, Ken-Burns zoom, gradient overlay, photo counter,
  * progress bar, and tactile dot indicators.
  */
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
+import { useVisibleInterval } from "@/hooks/useVisibleInterval";
 import useEmblaCarousel from "embla-carousel-react";
 import Autoplay from "embla-carousel-autoplay";
 import { ImageIcon, ChevronLeft, ChevronRight } from "lucide-react";
@@ -40,17 +41,15 @@ export default function StoreHeroCarousel({ images, storeName, positions }: Stor
   }, [emblaApi, onSelect]);
 
   // Progress bar animation
+  const progressActive = !!emblaApi && images.length > 1;
+  const progressStartRef = useRef(Date.now());
   useEffect(() => {
-    if (!emblaApi || images.length <= 1) return;
-    const start = Date.now();
-    const interval = setInterval(() => {
-      const elapsed = Date.now() - start;
-      const pct = Math.min(100, (elapsed / AUTOPLAY_MS) * 100);
-      setProgress(pct);
-      if (pct >= 100) clearInterval(interval);
-    }, 50);
-    return () => clearInterval(interval);
-  }, [selectedIndex, emblaApi, images.length]);
+    progressStartRef.current = Date.now();
+  }, [selectedIndex, emblaApi]);
+  useVisibleInterval(() => {
+    const elapsed = Date.now() - progressStartRef.current;
+    setProgress(Math.min(100, (elapsed / AUTOPLAY_MS) * 100));
+  }, progressActive ? 50 : null);
 
   if (images.length === 0) return null;
 

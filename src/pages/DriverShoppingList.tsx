@@ -10,6 +10,7 @@ import {
   MapPin, Phone, Loader2, ShoppingCart,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
@@ -248,10 +249,13 @@ export default function DriverShoppingList() {
 
       {/* Items */}
       {items.length === 0 ? (
-        <div className="flex flex-col items-center justify-center py-20 text-center px-6">
-          <ShoppingCart className="h-12 w-12 text-muted-foreground/30 mb-3" />
-          <p className="text-sm text-muted-foreground">No items in this order.</p>
-        </div>
+        <EmptyState
+          icon={ShoppingCart}
+          tone="muted"
+          compact
+          title="No items in this order"
+          description="The customer hasn't added anything yet — check back once they confirm the cart."
+        />
       ) : (
         <div className="px-4 mt-4 space-y-2">
           <h3 className="text-sm font-semibold mb-2">

@@ -2,7 +2,8 @@
  * ReelSocialProof — Live activity ticker on Reels
  * Shows "X people bought this" and "Y viewing now" from database
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
+import { useVisibleInterval } from "@/hooks/useVisibleInterval";
 import { supabase } from "@/integrations/supabase/client";
 import { Eye, ShoppingBag, TrendingUp } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -22,6 +23,7 @@ interface ActivityData {
 export default function ReelSocialProof({ storeId, postId, compact = false }: Props) {
   const [activity, setActivity] = useState<ActivityData | null>(null);
   const [displayIndex, setDisplayIndex] = useState(0);
+  const loadActivityRef = useRef<(() => Promise<void>) | null>(null);
 
   useEffect(() => {
     if (!storeId) return;
@@ -60,18 +62,19 @@ export default function ReelSocialProof({ storeId, postId, compact = false }: Pr
     };
 
     loadActivity();
-    const interval = setInterval(loadActivity, 30_000); // refresh every 30s
-    return () => clearInterval(interval);
+    loadActivityRef.current = loadActivity;
   }, [storeId, postId]);
 
+  useVisibleInterval(
+    () => loadActivityRef.current?.(),
+    storeId ? 30_000 : null,
+  );
+
   // Cycle between messages
-  useEffect(() => {
-    if (!activity) return;
-    const interval = setInterval(() => {
-      setDisplayIndex((prev) => (prev + 1) % 3);
-    }, 4000);
-    return () => clearInterval(interval);
-  }, [activity]);
+  useVisibleInterval(
+    () => setDisplayIndex((prev) => (prev + 1) % 3),
+    activity ? 4000 : null,
+  );
 
   if (!activity || (activity.recentPurchases === 0 && activity.activeViewers < 2)) return null;
 

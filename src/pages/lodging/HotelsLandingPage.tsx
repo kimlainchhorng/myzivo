@@ -5,7 +5,7 @@
  *
  * Route: /hotels
  */
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Helmet } from "react-helmet-async";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion } from "framer-motion";
@@ -26,7 +26,12 @@ import Users from "lucide-react/dist/esm/icons/users";
 import Waves from "lucide-react/dist/esm/icons/waves";
 import Wifi from "lucide-react/dist/esm/icons/wifi";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+
+const HotelsMapView = lazy(() => import("@/components/lodging/HotelsMapView"));
+const HotelConciergeSheet = lazy(() => import("@/components/lodging/HotelConciergeSheet"));
+const GOOGLE_MAPS_KEY: string =
+  (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_GOOGLE_MAPS_API_KEY || "";
 import { supabase } from "@/integrations/supabase/client";
 import { LODGING_STORE_CATEGORIES, normalizeStoreCategory } from "@/hooks/useOwnerStoreProfile";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -54,6 +59,8 @@ interface DirectoryStore {
   description: string | null;
   setup_complete: boolean | null;
   is_verified?: boolean | null;
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 const FILTERS: Array<{ id: string; label: string; match: (cat: string) => boolean }> = [
@@ -89,7 +96,8 @@ const todayUTC = () => {
 
 export default function HotelsLandingPage() {
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const qc = useQueryClient();
+  const [searchParams, setSearchParams] = useSearchParams();
 
   // Honor share-card / deep-link query params on mount: ?city=&ci=&co=&adults=&children=
   // Matches the params built by ZivoCardPicker's hotel composer.
@@ -110,6 +118,8 @@ export default function HotelsLandingPage() {
       co: parseDate(searchParams.get("co")),
       adults: parseInt10(searchParams.get("adults")),
       children: parseInt10(searchParams.get("children")),
+      filter: searchParams.get("filter") || "all",
+      tags: (searchParams.get("tags") || "").split(",").filter(Boolean),
     };
     // We compute this once at mount; subsequent in-page changes shouldn't
     // re-overwrite the user's edits.
@@ -117,8 +127,12 @@ export default function HotelsLandingPage() {
   }, []);
 
   const [search, setSearch] = useState(initial.city);
-  const [activeFilter, setActiveFilter] = useState<string>("all");
-  const [activeTags, setActiveTags] = useState<string[]>([]);
+  const [activeFilter, setActiveFilter] = useState<string>(initial.filter);
+  const [activeTags, setActiveTags] = useState<string[]>(initial.tags);
+  const [recentSearches, setRecentSearches] = useState<string[]>(() => {
+    try { return JSON.parse(localStorage.getItem("hotel_recent_searches") || "[]") as string[]; }
+    catch { return []; }
+  });
   const [checkIn, setCheckIn] = useState<Date>(() => initial.ci ?? todayUTC());
   const [checkOut, setCheckOut] = useState<Date>(
     () => initial.co ?? addDays(initial.ci ?? todayUTC(), 1)
@@ -128,12 +142,36 @@ export default function HotelsLandingPage() {
   const [rooms, setRooms] = useState<number>(1);
   const [datesOpen, setDatesOpen] = useState(false);
   const [guestsOpen, setGuestsOpen] = useState(false);
-  const [sortBy, setSortBy] = useState<"default" | "price_asc" | "price_desc" | "near_me">("default");
+  const [sortBy, setSortBy] = useState<"default" | "price_asc" | "price_desc" | "rating" | "near_me">("default");
+  const [savedOnly, setSavedOnly] = useState(false);
+  const [showStickyBar, setShowStickyBar] = useState(false);
+  const heroSentinelRef = useRef<HTMLDivElement | null>(null);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [favorites, setFavorites] = useState<Set<string>>(() => {
     try { return new Set(JSON.parse(localStorage.getItem("hotel_faves") || "[]") as string[]); }
     catch { return new Set<string>(); }
   });
+
+  type RecentlyViewed = {
+    id: string;
+    name: string;
+    category: string | null;
+    address: string | null;
+    logo_url: string | null;
+    banner_url: string | null;
+    viewed_at: number;
+  };
+  const [recentlyViewed, setRecentlyViewed] = useState<RecentlyViewed[]>(() => {
+    try { return (JSON.parse(localStorage.getItem("hotel_recently_viewed") || "[]") as RecentlyViewed[]).filter((x) => x?.id && x?.name); }
+    catch { return []; }
+  });
+  const clearRecentlyViewed = () => {
+    try { localStorage.removeItem("hotel_recently_viewed"); } catch {}
+    setRecentlyViewed([]);
+  };
+
+  const [viewMode, setViewMode] = useState<"list" | "map">("list");
+  const [conciergeOpen, setConciergeOpen] = useState(false);
 
   const toggleFavorite = useCallback((id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -149,12 +187,48 @@ export default function HotelsLandingPage() {
     window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
   }, []);
 
+  // Show a sticky compact header once the hero scrolls out of view
+  useEffect(() => {
+    const onScroll = () => {
+      const el = heroSentinelRef.current;
+      if (!el) return;
+      // Sentinel sits right below the hero. When its top is above 0 the hero has scrolled away.
+      setShowStickyBar(el.getBoundingClientRect().top < 0);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
+  // Sync filters back to the URL so refresh / back-button / share preserve state
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    const setOrDelete = (key: string, val: string) => {
+      if (val) next.set(key, val); else next.delete(key);
+    };
+    setOrDelete("city", search.trim());
+    setOrDelete("filter", activeFilter !== "all" ? activeFilter : "");
+    setOrDelete("tags", activeTags.join(","));
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, activeFilter, activeTags]);
+
+  const pushRecentSearch = useCallback((value: string) => {
+    const v = value.trim();
+    if (!v) return;
+    setRecentSearches((prev) => {
+      const next = [v, ...prev.filter((p) => p.toLowerCase() !== v.toLowerCase())].slice(0, 5);
+      try { localStorage.setItem("hotel_recent_searches", JSON.stringify(next)); } catch {}
+      return next;
+    });
+  }, []);
+
   const listQuery = useQuery({
     queryKey: ["hotels-landing"],
     queryFn: async (): Promise<DirectoryStore[]> => {
       const { data, error } = await (supabase as any)
         .from("store_profiles")
-        .select("id, name, category, address, logo_url, banner_url, description, setup_complete, is_verified")
+        .select("id, name, category, address, logo_url, banner_url, description, setup_complete, is_verified, latitude, longitude")
         .in("category", LODGING_STORE_CATEGORIES)
         .order("setup_complete", { ascending: false })
         .order("name", { ascending: true })
@@ -283,9 +357,37 @@ export default function HotelsLandingPage() {
     },
   });
 
+  // Review counts + true avg per store (lodging_reviews)
+  const reviewStatsQuery = useQuery({
+    queryKey: ["lodge-review-stats", storeIds],
+    enabled: storeIds.length > 0,
+    staleTime: 60_000,
+    gcTime: 300_000,
+    queryFn: async (): Promise<Record<string, { avg: number; count: number }>> => {
+      const { data, error } = await (supabase as any)
+        .from("lodging_reviews")
+        .select("store_id, rating")
+        .in("store_id", storeIds)
+        .eq("flagged", false);
+      if (error) return {};
+      const acc: Record<string, { sum: number; count: number }> = {};
+      for (const r of (data || []) as Array<{ store_id: string; rating: number }>) {
+        const a = (acc[r.store_id] ||= { sum: 0, count: 0 });
+        a.sum += Number(r.rating) || 0;
+        a.count += 1;
+      }
+      const out: Record<string, { avg: number; count: number }> = {};
+      for (const [id, v] of Object.entries(acc)) {
+        out[id] = { avg: v.count ? v.sum / v.count : 0, count: v.count };
+      }
+      return out;
+    },
+  });
+
   const minRates = ratesQuery.data || {};
   const promotions = promotionsQuery.data || {};
   const amenitiesMap = amenitiesQuery.data || {};
+  const reviewStats = reviewStatsQuery.data || {};
   const nights = Math.max(1, differenceInCalendarDays(checkOut, checkIn));
 
   const requestNearMe = () => {
@@ -301,7 +403,12 @@ export default function HotelsLandingPage() {
   };
 
   const featured = useMemo(
-    () => all.filter((s) => s.setup_complete).slice(0, 6),
+    () => {
+      const completed = all.filter((s) => s.setup_complete);
+      // Hide the Featured rail when it would just duplicate the All list (e.g. only 1–2 properties total)
+      if (completed.length <= 2 && completed.length >= all.length) return [];
+      return completed.slice(0, 6);
+    },
     [all]
   );
 
@@ -329,9 +436,10 @@ export default function HotelsLandingPage() {
         });
         if (!ok) return false;
       }
+      if (savedOnly && !favorites.has(store.id)) return false;
       return true;
     });
-  }, [all, search, activeFilter, activeTags, amenitiesMap]);
+  }, [all, search, activeFilter, activeTags, amenitiesMap, savedOnly, favorites]);
 
   const sorted = useMemo(() => {
     if (sortBy === "price_asc") {
@@ -339,6 +447,9 @@ export default function HotelsLandingPage() {
     }
     if (sortBy === "price_desc") {
       return [...filtered].sort((a, b) => (minRates[b.id]?.base ?? 0) - (minRates[a.id]?.base ?? 0));
+    }
+    if (sortBy === "rating") {
+      return [...filtered].sort((a, b) => (amenitiesMap[b.id]?.rating ?? -1) - (amenitiesMap[a.id]?.rating ?? -1));
     }
     if (sortBy === "near_me") {
       // Favorites float to top when near-me is active; distance sort requires geocoded store coords
@@ -349,7 +460,7 @@ export default function HotelsLandingPage() {
       });
     }
     return filtered;
-  }, [filtered, sortBy, minRates, favorites]);
+  }, [filtered, sortBy, minRates, favorites, amenitiesMap]);
 
   const toggleTag = (id: string) => {
     setActiveTags((prev) => (prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]));
@@ -422,10 +533,22 @@ export default function HotelsLandingPage() {
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
+              onBlur={(e) => pushRecentSearch(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") pushRecentSearch((e.target as HTMLInputElement).value); }}
               placeholder="Search city, hotel name..."
               aria-label="Search hotels and destinations"
-              className="w-full h-11 pl-10 pr-3 rounded-2xl bg-white text-foreground placeholder:text-muted-foreground shadow-lg outline-none text-sm focus:ring-2 focus:ring-primary/40 transition"
+              className="w-full h-11 pl-10 pr-9 rounded-2xl bg-white text-foreground placeholder:text-muted-foreground shadow-lg outline-none text-sm focus:ring-2 focus:ring-primary/40 transition"
             />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                aria-label="Clear search"
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted active:scale-95 transition"
+              >
+                <span className="text-base leading-none">×</span>
+              </button>
+            )}
           </div>
 
           {/* Dates + Guests */}
@@ -496,6 +619,87 @@ export default function HotelsLandingPage() {
           </div>
         </div>
       </div>
+      <div ref={heroSentinelRef} aria-hidden className="h-px" />
+
+      {/* Sticky compact search bar — appears after hero scrolls past */}
+      <div
+        className={cn(
+          "sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-border transition-all duration-200",
+          showStickyBar ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-2 pointer-events-none h-0 overflow-hidden border-0",
+        )}
+      >
+        <div className="px-3 py-2 flex items-center gap-2 safe-area-top">
+          <button
+            type="button"
+            onClick={() => navigate(-1)}
+            aria-label="Back"
+            className="h-9 w-9 shrink-0 rounded-full flex items-center justify-center bg-muted active:bg-muted/70"
+          >
+            <ArrowLeft className="w-4 h-4 text-foreground" />
+          </button>
+          <div className="relative flex-1 min-w-0">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onBlur={(e) => pushRecentSearch(e.target.value)}
+              onKeyDown={(e) => { if (e.key === "Enter") pushRecentSearch((e.target as HTMLInputElement).value); }}
+              placeholder="Search city, hotel name..."
+              aria-label="Search hotels and destinations (sticky)"
+              className="w-full h-9 pl-9 pr-8 rounded-full bg-muted text-foreground placeholder:text-muted-foreground outline-none text-sm focus:ring-2 focus:ring-primary/40"
+            />
+            {search && (
+              <button
+                type="button"
+                onClick={() => setSearch("")}
+                aria-label="Clear search"
+                className="absolute right-1.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center text-muted-foreground hover:bg-background"
+              >
+                <span className="text-base leading-none">×</span>
+              </button>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={() => setDatesOpen(true)}
+            className="h-9 px-2.5 shrink-0 rounded-full bg-muted text-[11px] font-semibold text-foreground inline-flex items-center gap-1 active:bg-muted/70"
+            aria-label="Edit dates"
+          >
+            <CalendarIcon className="w-3.5 h-3.5 text-primary" />
+            {format(checkIn, "MMM d")}–{format(checkOut, "MMM d")}
+          </button>
+        </div>
+      </div>
+
+      {/* Recent searches */}
+      {!search && recentSearches.length > 0 && (
+        <section className="pt-3">
+          <div className="px-4 flex items-center gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <span className="text-[11px] text-muted-foreground shrink-0 mr-0.5">Recent:</span>
+            {recentSearches.map((q) => (
+              <button
+                key={q}
+                type="button"
+                onClick={() => setSearch(q)}
+                className="shrink-0 rounded-full px-3 py-1 text-[11px] font-medium bg-muted/70 text-foreground active:bg-muted truncate max-w-[140px]"
+              >
+                {q}
+              </button>
+            ))}
+            <button
+              type="button"
+              onClick={() => {
+                setRecentSearches([]);
+                try { localStorage.removeItem("hotel_recent_searches"); } catch {}
+              }}
+              className="shrink-0 text-[11px] text-muted-foreground underline ml-1"
+            >
+              Clear
+            </button>
+          </div>
+        </section>
+      )}
 
       {/* Quick filter chips */}
       <section className="pt-3">
@@ -515,6 +719,22 @@ export default function HotelsLandingPage() {
             <LocateFixed className="w-3 h-3" />
             Near me
           </button>
+          {favorites.size > 0 && (
+            <button
+              type="button"
+              onClick={() => setSavedOnly((v) => !v)}
+              aria-pressed={savedOnly}
+              className={cn(
+                "shrink-0 inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-semibold transition border",
+                savedOnly
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-background text-foreground border-border active:bg-muted",
+              )}
+            >
+              <Heart className={cn("w-3 h-3", savedOnly ? "fill-current" : "fill-rose-500 text-rose-500")} />
+              Saved ({favorites.size})
+            </button>
+          )}
           {QUICK_TAGS.map((tag) => {
             const active = activeTags.includes(tag.id);
             return (
@@ -550,7 +770,9 @@ export default function HotelsLandingPage() {
               <button type="button"
                 key={dest.id}
                 onClick={() => {
-                  setSearch(active ? "" : dest.city);
+                  const next = active ? "" : dest.city;
+                  setSearch(next);
+                  if (next) pushRecentSearch(next);
                   setActiveFilter("all");
                   document.getElementById("hotels-all")?.scrollIntoView({ behavior: "smooth", block: "start" });
                 }}
@@ -596,7 +818,22 @@ export default function HotelsLandingPage() {
           </div>
           <div className="flex gap-3 overflow-x-auto px-4 pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             {featured.map((store) => {
-              const minCents = minRates[store.id];
+              const rate = minRates[store.id];
+              const minCents = rate?.base;
+              const rating = amenitiesMap[store.id]?.rating;
+              const promo = promotions[store.id];
+              let discountedCents: number | null = null;
+              let pctOff = 0;
+              if (typeof minCents === "number" && promo && nights >= promo.minNights && (!promo.maxNights || nights <= promo.maxNights)) {
+                if (promo.type === "percent") {
+                  discountedCents = Math.round(minCents * (1 - promo.value / 100));
+                  pctOff = Math.round(promo.value);
+                } else {
+                  discountedCents = Math.max(0, minCents - Math.round(promo.value * 100));
+                  pctOff = Math.round((1 - discountedCents / minCents) * 100);
+                }
+              }
+              const showCents = discountedCents ?? minCents;
               return (
                 <button type="button"
                   key={store.id}
@@ -622,6 +859,11 @@ export default function HotelsLandingPage() {
                         Verified
                       </Badge>
                     )}
+                    {pctOff > 0 && (
+                      <Badge className="absolute bottom-1.5 left-1.5 bg-red-600 text-white text-[9px] px-1.5 py-0">
+                        -{pctOff}%
+                      </Badge>
+                    )}
                   </div>
                   <div className="p-2.5">
                     <p className="text-[13px] font-bold text-foreground truncate">{store.name}</p>
@@ -634,11 +876,15 @@ export default function HotelsLandingPage() {
                     <div className="mt-1.5 flex items-center justify-between gap-1">
                       <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-amber-600">
                         <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
-                        New
+                        {typeof rating === "number" ? rating.toFixed(1) : "New"}
                       </span>
-                      {typeof minCents === "number" ? (
+                      {typeof showCents === "number" ? (
                         <span className="text-[11px] font-bold text-foreground">
-                          from <span className="text-primary">${(minCents / 100).toFixed(0)}</span>
+                          from{" "}
+                          {discountedCents !== null && typeof minCents === "number" && (
+                            <span className="line-through text-muted-foreground font-normal mr-0.5">${(minCents / 100).toFixed(0)}</span>
+                          )}
+                          <span className={discountedCents !== null ? "text-emerald-600" : "text-primary"}>${(showCents / 100).toFixed(0)}</span>
                           <span className="text-muted-foreground font-normal text-[9px]"> /night</span>
                         </span>
                       ) : null}
@@ -651,11 +897,93 @@ export default function HotelsLandingPage() {
         </section>
       )}
 
+      {/* Recently viewed */}
+      {recentlyViewed.length > 0 && (
+        <section className="pt-5">
+          <div className="px-4 flex items-center justify-between mb-2">
+            <h3 className="text-sm font-bold text-foreground">Recently viewed</h3>
+            <button
+              type="button"
+              onClick={clearRecentlyViewed}
+              className="text-[11px] font-semibold text-muted-foreground hover:text-foreground transition"
+            >
+              Clear
+            </button>
+          </div>
+          <div className="-mx-4 px-4 flex gap-3 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            {recentlyViewed.map((rv) => (
+              <button
+                key={rv.id}
+                type="button"
+                onClick={() => {
+                  qc.prefetchQuery({
+                    queryKey: ["hotel-detail-rpc", rv.id],
+                    queryFn: async () => {
+                      const { data } = await (supabase as any).rpc("get_hotel_detail", {
+                        p_store_id: rv.id, p_check_in: null, p_check_out: null,
+                      });
+                      return data;
+                    },
+                    staleTime: 60_000,
+                  });
+                  navigate(`/hotel/${rv.id}?ci=${format(checkIn, "yyyy-MM-dd")}&co=${format(checkOut, "yyyy-MM-dd")}&adults=${guests}&children=${children}`);
+                }}
+                className="shrink-0 w-44 rounded-2xl border border-border bg-card overflow-hidden text-left active:scale-[0.98] transition"
+                aria-label={`Open ${rv.name}`}
+              >
+                <div className="relative h-24 bg-muted">
+                  {rv.banner_url || rv.logo_url ? (
+                    <img
+                      src={rv.banner_url || rv.logo_url || ""}
+                      alt={rv.name}
+                      className="absolute inset-0 w-full h-full object-cover"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-primary/5" />
+                  )}
+                </div>
+                <div className="p-2.5">
+                  <p className="text-xs font-bold text-foreground truncate">{rv.name}</p>
+                  <p className="mt-0.5 text-[10px] text-muted-foreground capitalize truncate">
+                    {rv.category?.replace(/_/g, " ") || "Hotel"}
+                  </p>
+                </div>
+              </button>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* All Hotels & Resorts */}
       <section id="hotels-all" className="pt-5 scroll-mt-4">
-        <div className="px-4 flex items-center justify-between mb-2">
+        <div className="px-4 flex items-center justify-between mb-2 gap-3">
           <h3 className="text-sm font-bold text-foreground">All Hotels & Resorts</h3>
-          <span className="text-[11px] text-muted-foreground">{filtered.length} found</span>
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-muted-foreground">
+              {filtered.length === all.length
+                ? `${all.length} found`
+                : `${filtered.length} of ${all.length}`}
+            </span>
+            <div className="inline-flex rounded-full border border-border bg-card overflow-hidden text-[11px] font-semibold shrink-0">
+              <button
+                type="button"
+                onClick={() => setViewMode("list")}
+                aria-pressed={viewMode === "list"}
+                className={cn("px-2.5 py-1 transition", viewMode === "list" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground")}
+              >
+                List
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode("map")}
+                aria-pressed={viewMode === "map"}
+                className={cn("px-2.5 py-1 transition", viewMode === "map" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground")}
+              >
+                Map
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Sort chips */}
@@ -663,6 +991,7 @@ export default function HotelsLandingPage() {
           <span className="text-[11px] text-muted-foreground shrink-0">Sort:</span>
           {([
             { id: "default", label: "Best match" },
+            { id: "rating", label: "Top rated" },
             { id: "price_asc", label: "Price ↑" },
             { id: "price_desc", label: "Price ↓" },
           ] as const).map((opt) => (
@@ -702,11 +1031,66 @@ export default function HotelsLandingPage() {
           })}
         </div>
 
+        {viewMode === "map" ? (
+          <div className="px-4">
+            <Suspense fallback={<div className="h-[60vh] rounded-2xl bg-muted/20 animate-pulse" />}>
+              <HotelsMapView
+                apiKey={GOOGLE_MAPS_KEY}
+                hotels={sorted
+                  .filter((s) => typeof s.latitude === "number" && typeof s.longitude === "number")
+                  .map((s) => ({
+                    id: s.id,
+                    name: s.name,
+                    category: s.category,
+                    address: s.address,
+                    banner_url: s.banner_url,
+                    logo_url: s.logo_url,
+                    latitude: s.latitude as number,
+                    longitude: s.longitude as number,
+                    pricePerNightCents: minRates[s.id]?.base ?? null,
+                    rating: reviewStats[s.id]?.count ? reviewStats[s.id].avg : (amenitiesMap[s.id]?.rating ?? null),
+                    reviewCount: reviewStats[s.id]?.count ?? 0,
+                  }))}
+                onSelect={(id) => {
+                  qc.prefetchQuery({
+                    queryKey: ["hotel-detail-rpc", id],
+                    queryFn: async () => {
+                      const { data } = await (supabase as any).rpc("get_hotel_detail", {
+                        p_store_id: id, p_check_in: null, p_check_out: null,
+                      });
+                      return data;
+                    },
+                    staleTime: 60_000,
+                  });
+                  navigate(`/hotel/${id}?ci=${format(checkIn, "yyyy-MM-dd")}&co=${format(checkOut, "yyyy-MM-dd")}&adults=${guests}&children=${children}`);
+                }}
+              />
+            </Suspense>
+          </div>
+        ) : (
         <div className="px-4">
           {listQuery.isLoading ? (
             <div className="grid gap-3">
               {[1, 2, 3].map((i) => (
-                <Skeleton key={i} className="h-32 w-full rounded-2xl" />
+                <div key={i} className="rounded-2xl border border-border bg-card overflow-hidden flex">
+                  <Skeleton className="w-32 h-32 shrink-0 rounded-none" />
+                  <div className="flex-1 p-3 space-y-2">
+                    <div className="flex items-start gap-2">
+                      <Skeleton className="h-3.5 flex-1 max-w-[60%]" />
+                      <Skeleton className="h-4 w-10 rounded-full" />
+                    </div>
+                    <Skeleton className="h-3 w-3/4" />
+                    <div className="flex gap-2 pt-1">
+                      <Skeleton className="h-3 w-3" />
+                      <Skeleton className="h-3 w-3" />
+                      <Skeleton className="h-3 w-3" />
+                    </div>
+                    <div className="flex items-end justify-between pt-2">
+                      <Skeleton className="h-3 w-12" />
+                      <Skeleton className="h-5 w-16" />
+                    </div>
+                  </div>
+                </div>
               ))}
             </div>
           ) : filtered.length === 0 ? (
@@ -714,16 +1098,19 @@ export default function HotelsLandingPage() {
               <HotelIcon className="w-10 h-10 text-muted-foreground" />
               <p className="text-sm font-semibold text-foreground">No properties found</p>
               <p className="text-xs text-muted-foreground max-w-xs">
-                {search || activeTags.length > 0
+                {savedOnly
+                  ? "You haven't saved any properties yet — tap the heart on a card."
+                  : search || activeTags.length > 0 || activeFilter !== "all"
                   ? "Try a different city or remove some filters."
                   : "Be the first — list your property on ZIVO."}
               </p>
-              {(search || activeTags.length > 0) ? (
+              {(search || activeTags.length > 0 || activeFilter !== "all" || savedOnly) ? (
                 <button type="button"
                   onClick={() => {
                     setSearch("");
                     setActiveTags([]);
                     setActiveFilter("all");
+                    setSavedOnly(false);
                   }}
                   className="mt-2 text-xs font-semibold text-primary"
                 >
@@ -748,17 +1135,80 @@ export default function HotelsLandingPage() {
                   rateInfo={minRates[store.id]}
                   promo={promotions[store.id]}
                   amenities={amenitiesMap[store.id]?.amenities || []}
-                  rating={amenitiesMap[store.id]?.rating ?? null}
+                  rating={reviewStats[store.id]?.count ? reviewStats[store.id].avg : (amenitiesMap[store.id]?.rating ?? null)}
+                  reviewCount={reviewStats[store.id]?.count ?? 0}
                   isFavorite={favorites.has(store.id)}
                   onToggleFavorite={(e) => toggleFavorite(store.id, e)}
                   nights={nights}
-                  onOpen={() => navigate(`/hotel/${store.id}?ci=${format(checkIn, "yyyy-MM-dd")}&co=${format(checkOut, "yyyy-MM-dd")}&adults=${guests}&children=${children}`)}
+                  onOpen={() => {
+                    // Phase D: warm the aggregate RPC cache so the detail page
+                    // renders instantly. One round-trip vs the old 5-6.
+                    qc.prefetchQuery({
+                      queryKey: ["hotel-detail-rpc", store.id],
+                      queryFn: async () => {
+                        const { data } = await (supabase as any).rpc("get_hotel_detail", {
+                          p_store_id: store.id,
+                          p_check_in: null,
+                          p_check_out: null,
+                        });
+                        return data;
+                      },
+                      staleTime: 60_000,
+                    });
+                    navigate(`/hotel/${store.id}?ci=${format(checkIn, "yyyy-MM-dd")}&co=${format(checkOut, "yyyy-MM-dd")}&adults=${guests}&children=${children}`);
+                  }}
                 />
               ))}
             </div>
           )}
         </div>
+        )}
       </section>
+
+      {/* Floating "Find with AI" CTA — hidden in Map view so it doesn't
+          obscure the property cards / map markers. */}
+      {viewMode !== "map" && (
+        <button
+          type="button"
+          onClick={() => setConciergeOpen(true)}
+          aria-label="Find a hotel with AI"
+          className="fixed z-30 bottom-[max(env(safe-area-inset-bottom),16px)] right-4 inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white text-sm font-bold px-4 py-3 shadow-xl shadow-violet-500/30 active:scale-95 transition md:right-6 md:bottom-6"
+        >
+          <Sparkles className="w-4 h-4" />
+          Find with AI
+        </button>
+      )}
+
+      {/* AI concierge sheet */}
+      <Suspense fallback={null}>
+        <HotelConciergeSheet
+          isOpen={conciergeOpen}
+          onClose={() => setConciergeOpen(false)}
+          candidates={sorted.map((s) => ({
+            id: s.id,
+            name: s.name,
+            category: s.category,
+            address: s.address,
+            banner_url: s.banner_url,
+            logo_url: s.logo_url,
+            pricePerNightCents: minRates[s.id]?.base ?? null,
+          }))}
+          onSelect={(id) => {
+            qc.prefetchQuery({
+              queryKey: ["hotel-detail-rpc", id],
+              queryFn: async () => {
+                const { data } = await (supabase as any).rpc("get_hotel_detail", {
+                  p_store_id: id, p_check_in: null, p_check_out: null,
+                });
+                return data;
+              },
+              staleTime: 60_000,
+            });
+            setConciergeOpen(false);
+            navigate(`/hotel/${id}?ci=${format(checkIn, "yyyy-MM-dd")}&co=${format(checkOut, "yyyy-MM-dd")}&adults=${guests}&children=${children}`);
+          }}
+        />
+      </Suspense>
     </div>
   );
 }
@@ -831,6 +1281,7 @@ function PropertyCard({
   promo,
   amenities,
   rating,
+  reviewCount,
   nights,
   isFavorite,
   onToggleFavorite,
@@ -842,6 +1293,7 @@ function PropertyCard({
   promo?: PromoInfoProp;
   amenities: string[];
   rating?: number | null;
+  reviewCount?: number;
   nights: number;
   isFavorite?: boolean;
   onToggleFavorite?: (e: React.MouseEvent) => void;
@@ -893,13 +1345,15 @@ function PropertyCard({
   const totalCents = typeof effectiveCents === "number" ? effectiveCents * nights : null;
 
   return (
-    <motion.button
-      type="button"
+    <motion.div
+      role="button"
+      tabIndex={0}
       onClick={onOpen}
+      onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); onOpen(); } }}
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: Math.min(index, 6) * 0.04 }}
-      className="text-left rounded-2xl border border-border bg-card overflow-hidden shadow-sm active:scale-[0.99] transition"
+      className="text-left rounded-2xl border border-border bg-card overflow-hidden shadow-sm active:scale-[0.99] transition cursor-pointer"
       aria-label={`Open ${store.name}`}
     >
       <div className="flex">
@@ -941,6 +1395,9 @@ function PropertyCard({
             <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-amber-600 shrink-0">
               <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
               {typeof rating === "number" ? rating.toFixed(1) : "New"}
+              {reviewCount && reviewCount > 0 ? (
+                <span className="text-amber-600/70 font-normal">({reviewCount})</span>
+              ) : null}
             </span>
           </div>
           {location && (
@@ -1005,6 +1462,6 @@ function PropertyCard({
           </div>
         </div>
       </div>
-    </motion.button>
+    </motion.div>
   );
 }

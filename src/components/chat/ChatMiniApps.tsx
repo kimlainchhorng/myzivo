@@ -377,7 +377,7 @@ export default function ChatMiniApps({ open, onClose, chatPartnerId, chatPartner
               </div>
             )}
 
-            {/* TODO VIEW */}
+            {/* To-Do view */}
             {view === "todo" && (
               <div className="space-y-4">
                 <div className="p-4 rounded-2xl border border-border/40 space-y-3">

@@ -100,6 +100,24 @@ export default function HotelRoomCheckoutPage() {
       const ciStr = format(checkIn, "yyyy-MM-dd");
       const coStr = format(checkOut, "yyyy-MM-dd");
 
+      // Last-mile availability check: re-query active reservations for this room
+      // and abort if the dates overlap (prevents double-booking after the user
+      // sat on the checkout page).
+      if (roomId) {
+        const { data: clashes } = await (supabase as any)
+          .from("lodge_reservations")
+          .select("id, check_in, check_out, status")
+          .eq("room_id", roomId)
+          .gte("check_out", ciStr)
+          .lt("check_in", coStr)
+          .not("status", "in", "(cancelled,no_show)");
+        if ((clashes || []).length > 0) {
+          toast.error("This room is no longer available for the selected dates. Please pick different dates or another room.");
+          setSubmitting(false);
+          return;
+        }
+      }
+
       const payload: any = {
         store_id: storeId,
         room_id: roomId || null,

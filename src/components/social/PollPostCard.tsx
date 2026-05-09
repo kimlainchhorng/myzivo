@@ -1,7 +1,7 @@
 /**
  * PollPostCard — Interactive poll/quiz post for the feed
  */
-import { useState } from "react";
+import { useState, memo } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -30,7 +30,7 @@ interface PollPostCardProps {
   authorAvatar?: string | null;
 }
 
-export default function PollPostCard({
+function PollPostCardInner({
   id, question, options, pollType, correctOptionIndex,
   totalVotes: initialTotal, expiresAt, createdAt, authorName, authorAvatar,
 }: PollPostCardProps) {
@@ -177,3 +177,6 @@ export default function PollPostCard({
     </div>
   );
 }
+
+const PollPostCard = memo(PollPostCardInner);
+export default PollPostCard;

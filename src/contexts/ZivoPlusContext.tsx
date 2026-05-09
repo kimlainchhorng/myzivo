@@ -63,11 +63,34 @@ export function ZivoPlusProvider({ children }: { children: ReactNode }) {
     }
   }, [user, session]);
 
-  // Check on login and periodically
+  // Check on login, then only when tab is visible (every 5 min)
   useEffect(() => {
     checkSubscription();
-    const interval = setInterval(checkSubscription, 60_000);
-    return () => clearInterval(interval);
+    let interval: ReturnType<typeof setInterval> | null = null;
+    const start = () => {
+      if (interval) return;
+      interval = setInterval(checkSubscription, 5 * 60_000);
+    };
+    const stop = () => {
+      if (interval) {
+        clearInterval(interval);
+        interval = null;
+      }
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        checkSubscription();
+        start();
+      } else {
+        stop();
+      }
+    };
+    if (document.visibilityState === "visible") start();
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      stop();
+    };
   }, [checkSubscription]);
 
   return (

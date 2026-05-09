@@ -1,7 +1,8 @@
 /**
  * VideoAdsSection - Promotional carousel with design-token colors
  */
-import { useState, useEffect } from "react";
+import { useState } from "react";
+import { useVisibleInterval } from "@/hooks/useVisibleInterval";
 import { motion, AnimatePresence } from "framer-motion";
 import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
 import Play from "lucide-react/dist/esm/icons/play";
@@ -64,14 +65,13 @@ const promos = [
 export default function VideoAdsSection() {
   const [activeIndex, setActiveIndex] = useState(0);
 
-  useEffect(() => {
-    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    if (prefersReduced) return;
-    const timer = setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % promos.length);
-    }, 5000);
-    return () => clearInterval(timer);
-  }, []);
+  const reduceMotion =
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  useVisibleInterval(
+    () => setActiveIndex((prev) => (prev + 1) % promos.length),
+    reduceMotion ? null : 5000,
+  );
 
   const active = promos[activeIndex];
   const Icon = active.icon;

@@ -18,6 +18,7 @@ import { Switch } from "@/components/ui/switch";
 import { cn } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { nativePrompt } from "@/lib/native/dialog";
 import { toast } from "sonner";
 import { formatDistanceToNow } from "date-fns";
 import PullToRefresh from "@/components/shared/PullToRefresh";
@@ -171,7 +172,7 @@ export default function EatsRestaurantDashboard() {
     // auto-transfer, and release the assigned driver. Route it through the
     // edge function instead of a bare DB update.
     if (newStatus === "cancelled") {
-      const reason = window.prompt("Reason for cancelling? (shown to customer)") ?? undefined;
+      const reason = (await nativePrompt("Reason for cancelling? (shown to customer)")) ?? undefined;
       const { data, error } = await supabase.functions.invoke("restaurant-cancel-order", {
         body: { order_id: orderId, reason },
       });

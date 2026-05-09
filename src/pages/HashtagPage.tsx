@@ -15,6 +15,7 @@ import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
 import Hash from "lucide-react/dist/esm/icons/hash";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import Image from "lucide-react/dist/esm/icons/image";
+import { EmptyState } from "@/components/ui/empty-state";
 import Play from "lucide-react/dist/esm/icons/play";
 import Heart from "lucide-react/dist/esm/icons/heart";
 import MessageCircle from "lucide-react/dist/esm/icons/message-circle";
@@ -194,19 +195,21 @@ export default function HashtagPage() {
           <Loader2 className="h-7 w-7 animate-spin text-primary" />
         </div>
       ) : tiles.length === 0 ? (
-        <div className="flex flex-col items-center justify-center gap-3 px-6 py-20 text-center">
-          <div className="text-5xl">🔍</div>
-          <p className="font-semibold">No posts tagged #{safeTag} yet</p>
-          <p className="text-sm text-muted-foreground max-w-xs">
-            Be the first — create a post and include #{safeTag} in your caption.
-          </p>
-          <button type="button"
-            onClick={() => navigate("/feed")}
-            className="mt-2 rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground active:scale-95 transition-transform"
-          >
-            Browse the feed
-          </button>
-        </div>
+        <EmptyState
+          icon={Hash}
+          tone="brand"
+          title={`No posts tagged #${safeTag} yet`}
+          description={`Be the first — create a post and include #${safeTag} in your caption.`}
+          action={
+            <button
+              type="button"
+              onClick={() => navigate("/feed")}
+              className="rounded-full bg-primary px-5 py-2 text-sm font-semibold text-primary-foreground active:scale-95 transition-transform"
+            >
+              Browse the feed
+            </button>
+          }
+        />
       ) : (
         <div className="grid grid-cols-2 gap-2 p-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 max-w-7xl mx-auto">
           {tiles.map((tile, i) => (

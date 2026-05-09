@@ -3,7 +3,7 @@
  * highest-engaged comment text under a feed post. Tapping opens the full
  * comment sheet.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useState, memo } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface PreviewComment {
@@ -18,7 +18,7 @@ interface Props {
   onOpen: () => void;
 }
 
-export default function CommentPreview({ postId, source, totalCount, onOpen }: Props) {
+function CommentPreviewInner({ postId, source, totalCount, onOpen }: Props) {
   const [top, setTop] = useState<PreviewComment | null>(null);
 
   useEffect(() => {
@@ -79,3 +79,6 @@ export default function CommentPreview({ postId, source, totalCount, onOpen }: P
     </button>
   );
 }
+
+const CommentPreview = memo(CommentPreviewInner);
+export default CommentPreview;

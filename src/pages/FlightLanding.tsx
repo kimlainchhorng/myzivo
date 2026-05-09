@@ -3,11 +3,13 @@
  * Cinematic 3D/4D immersive flight search experience
  */
 
-import { useRef, useCallback, useState, useEffect } from "react";
+import { useRef, useCallback, useMemo, useState, useEffect } from "react";
 import { useNavigate, useParams } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   Plane, Shield, Star, TrendingUp, Sparkles,
-  Globe, Clock, Headphones, Loader2, Zap, ArrowRight, MapPin
+  Globe, Clock, Headphones, Loader2, Zap, ArrowRight, MapPin,
+  Ticket, Radar, ChevronRight, RefreshCw, Heart, Share2, Check
 } from "lucide-react";
 import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import Header from "@/components/Header";
@@ -15,12 +17,12 @@ import Flight3DSkyHeader from "@/components/flight/Flight3DSkyHeader";
 import BundleProgressBanner from "@/components/shared/BundleProgressBanner";
 import NativeBackButton from "@/components/shared/NativeBackButton";
 
-import miamiImg from "@/assets/destinations/miami.jpg";
-import sfImg from "@/assets/destinations/san-francisco.jpg";
-import atlantaImg from "@/assets/destinations/atlanta.jpg";
-import denverImg from "@/assets/destinations/denver.jpg";
-import vegasImg from "@/assets/destinations/las-vegas.jpg";
-import fllImg from "@/assets/destinations/fort-lauderdale.jpg";
+import siemReapImg from "@/assets/destinations/siem-reap.jpg";
+import sihanoukvilleImg from "@/assets/destinations/sihanoukville.jpg";
+import battambangImg from "@/assets/destinations/battambang.jpg";
+import bangkokImg from "@/assets/destinations/tropical-paradise.jpg";
+import singaporeImg from "@/assets/destinations/city-skyline-night.jpg";
+import tokyoImg from "@/assets/destinations/japan-sakura.jpg";
 
 import heroFlights from "@/assets/svc-flights-premium.jpg";
 import heroHotels from "@/assets/svc-hotels-premium.jpg";
@@ -28,6 +30,7 @@ import heroCars from "@/assets/svc-cars-premium.jpg";
 
 import Footer from "@/components/Footer";
 import AppLayout from "@/components/app/AppLayout";
+import InstallAppCard from "@/components/account/InstallAppCard";
 import SEOHead from "@/components/SEOHead";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -84,12 +87,12 @@ const heroSlides = [
 
 /* ─── Fallback routes ─── */
 const fallbackRoutes = [
-  { from: "JFK", to: "MIA", fromCity: "New York", toCity: "Miami", image: miamiImg },
-  { from: "LAX", to: "SFO", fromCity: "Los Angeles", toCity: "San Francisco", image: sfImg },
-  { from: "ORD", to: "ATL", fromCity: "Chicago", toCity: "Atlanta", image: atlantaImg },
-  { from: "DFW", to: "DEN", fromCity: "Dallas", toCity: "Denver", image: denverImg },
-  { from: "SEA", to: "LAS", fromCity: "Seattle", toCity: "Las Vegas", image: vegasImg },
-  { from: "BOS", to: "FLL", fromCity: "Boston", toCity: "Fort Lauderdale", image: fllImg },
+  { from: "PNH", to: "REP", fromCity: "Phnom Penh", toCity: "Siem Reap", image: siemReapImg },
+  { from: "PNH", to: "KOS", fromCity: "Phnom Penh", toCity: "Sihanoukville", image: sihanoukvilleImg },
+  { from: "PNH", to: "BKK", fromCity: "Phnom Penh", toCity: "Bangkok", image: bangkokImg },
+  { from: "PNH", to: "SIN", fromCity: "Phnom Penh", toCity: "Singapore", image: singaporeImg },
+  { from: "REP", to: "BKK", fromCity: "Siem Reap", toCity: "Bangkok", image: bangkokImg },
+  { from: "PNH", to: "NRT", fromCity: "Phnom Penh", toCity: "Tokyo", image: tokyoImg },
 ];
 
 const whyZivo = [
@@ -100,7 +103,7 @@ const whyZivo = [
 ];
 
 /* ─── 3D Route Card ─── */
-function RouteCard3D({ route, index, onRouteClick }: { route: any; index: number; onRouteClick: (from: string, to: string) => void }) {
+function RouteCard3D({ route, index, onRouteClick, isFavorite, onToggleFavorite, onShare, justShared }: { route: any; index: number; onRouteClick: (from: string, to: string) => void; isFavorite?: boolean; onToggleFavorite?: (e: React.MouseEvent) => void; onShare?: (e: React.MouseEvent) => void; justShared?: boolean }) {
   const tilt = use3DTilt(12);
   return (
     <motion.div
@@ -120,7 +123,8 @@ function RouteCard3D({ route, index, onRouteClick }: { route: any; index: number
       >
         <div className="relative h-36 overflow-hidden">
           <motion.img src={route.image} alt={route.toCity} className="w-full h-full object-cover" loading="lazy" whileHover={{ scale: 1.12 }} transition={{ duration: 0.8, ease: ease3D }} />
-          <div className="absolute inset-0 bg-gradient-to-t from-card via-card/40 to-transparent" />
+          {/* Strong bottom gradient so caption text stays readable on any image */}
+          <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/40 to-transparent" />
           {/* Holographic sweep */}
           <div className="absolute inset-0 bg-gradient-to-br from-white/10 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
           {/* 3D lifted route badge */}
@@ -129,24 +133,53 @@ function RouteCard3D({ route, index, onRouteClick }: { route: any; index: number
             <Plane className="w-3 h-3 text-primary rotate-45" />
             <span className="font-bold text-[11px] text-foreground">{route.to}</span>
           </motion.div>
+          <div className="absolute top-2.5 right-2.5 flex gap-1 z-10" style={{ transform: "translateZ(24px)" }}>
+            {onShare && (
+              <button
+                type="button"
+                onClick={onShare}
+                aria-label={justShared ? "Link copied" : "Share this route"}
+                className="w-7 h-7 rounded-full bg-black/40 backdrop-blur flex items-center justify-center active:scale-90 transition"
+              >
+                {justShared ? <Check className="w-3.5 h-3.5 text-emerald-300" /> : <Share2 className="w-3.5 h-3.5 text-white" />}
+              </button>
+            )}
+            {onToggleFavorite && (
+              <button
+                type="button"
+                onClick={onToggleFavorite}
+                aria-label={isFavorite ? "Remove route from saved" : "Save route"}
+                aria-pressed={!!isFavorite}
+                className="w-7 h-7 rounded-full bg-black/40 backdrop-blur flex items-center justify-center active:scale-90 transition"
+              >
+                <Heart className={cn("w-3.5 h-3.5", isFavorite ? "fill-rose-500 text-rose-500" : "text-white")} />
+              </button>
+            )}
+          </div>
         </div>
-        <div className="absolute bottom-0 left-0 right-0 px-3 pb-3" style={{ transform: "translateZ(12px)" }}>
-          <p className="text-[10px] text-muted-foreground truncate">{route.fromCity} → {route.toCity}</p>
-          {route.departureDate && (
-            <p className="text-[9px] text-muted-foreground/70 flex items-center gap-0.5 mt-0.5">
-              <Calendar className="w-2.5 h-2.5" />
-              {format(parseISO(route.departureDate), "MMM d")}
-              {route.returnDate && ` – ${format(parseISO(route.returnDate), "MMM d")}`}
-              {route.transfers !== null && route.transfers !== undefined && (
-                <span className="ml-1">· {route.transfers === 0 ? "Direct" : `${route.transfers} stop${route.transfers > 1 ? "s" : ""}`}</span>
-              )}
-            </p>
-          )}
-          {route.price ? (
-            <p className="text-sm font-bold text-primary mt-0.5 drop-shadow-sm">from {route.price}*</p>
-          ) : (
-            <div className="h-4 w-16 mt-0.5 rounded-lg bg-muted/40 animate-pulse" />
-          )}
+        <div className="absolute bottom-0 left-0 right-0 px-3 pb-3 z-[2]" style={{ transform: "translateZ(12px)" }}>
+          <div className="flex items-end justify-between gap-2">
+            <div className="min-w-0 flex-1">
+              <p className="text-[12px] font-bold text-white truncate drop-shadow-md">{route.fromCity} → {route.toCity}</p>
+              {route.departureDate ? (
+                <p className="text-[10px] text-white/85 flex items-center gap-1 mt-0.5 drop-shadow">
+                  <Calendar className="w-2.5 h-2.5" />
+                  {format(parseISO(route.departureDate), "MMM d")}
+                  {route.returnDate && ` – ${format(parseISO(route.returnDate), "MMM d")}`}
+                  {route.transfers !== null && route.transfers !== undefined && (
+                    <span className="ml-1">· {route.transfers === 0 ? "Direct" : `${route.transfers} stop${route.transfers > 1 ? "s" : ""}`}</span>
+                  )}
+                </p>
+              ) : !route.price ? (
+                <div className="h-3 w-20 mt-1 rounded bg-white/30 animate-pulse" />
+              ) : null}
+            </div>
+            {route.price && (
+              <span className="shrink-0 inline-flex items-baseline gap-0.5 rounded-full bg-primary px-2 py-0.5 text-primary-foreground text-[11px] font-bold shadow-lg drop-shadow-md whitespace-nowrap">
+                {route.price}
+              </span>
+            )}
+          </div>
         </div>
       </div>
     </motion.div>
@@ -156,9 +189,72 @@ function RouteCard3D({ route, index, onRouteClick }: { route: any; index: number
 /* ─── Popular Routes ─── */
 function PopularRoutesSection({ className }: { className?: string }) {
   const navigate = useNavigate();
-  const { data: liveRoutes, isLoading: duffelLoading } = usePopularRoutePrices();
-  const { data: tpRoutes = [], isLoading: tpLoading } = useTravelpayoutsPopularRoutes();
-  const isLoading = duffelLoading && tpLoading;
+  const qc = useQueryClient();
+  const duffelQ = usePopularRoutePrices();
+  const tpQ = useTravelpayoutsPopularRoutes();
+  const liveRoutes = duffelQ.data;
+  const tpRoutes = tpQ.data ?? [];
+  const isLoading = duffelQ.isLoading && tpQ.isLoading;
+  const isFetching = duffelQ.isFetching || tpQ.isFetching;
+  const bothFailed = duffelQ.isError && tpQ.isError;
+  const [originFilter, setOriginFilter] = useState<"all" | "PNH" | "REP" | "saved">("all");
+
+  // "Updated X ago" — recompute every minute so the label stays fresh
+  const [, forceTick] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => forceTick((n) => n + 1), 60_000);
+    return () => clearInterval(id);
+  }, []);
+  const lastUpdated = useMemo(() => {
+    const t = Math.max(duffelQ.dataUpdatedAt || 0, tpQ.dataUpdatedAt || 0);
+    if (!t) return null;
+    const diffMs = Date.now() - t;
+    const mins = Math.floor(diffMs / 60_000);
+    if (mins < 1) return "just now";
+    if (mins < 60) return `${mins} min ago`;
+    const hrs = Math.floor(mins / 60);
+    if (hrs < 24) return `${hrs}h ago`;
+    return `${Math.floor(hrs / 24)}d ago`;
+  }, [duffelQ.dataUpdatedAt, tpQ.dataUpdatedAt]);
+
+  const refreshPrices = useCallback(() => {
+    qc.invalidateQueries({ queryKey: ["popular-route-prices"] });
+    qc.invalidateQueries({ queryKey: ["tp-popular-routes"] });
+  }, [qc]);
+
+  const [favorites, setFavorites] = useState<Set<string>>(() => {
+    try { return new Set(JSON.parse(localStorage.getItem("flight_route_faves") || "[]") as string[]); }
+    catch { return new Set<string>(); }
+  });
+  const toggleFavorite = useCallback((key: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    setFavorites((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      try { localStorage.setItem("flight_route_faves", JSON.stringify([...next])); } catch {}
+      return next;
+    });
+  }, []);
+
+  const [sharedKey, setSharedKey] = useState<string | null>(null);
+  const handleShare = useCallback(async (route: any, e: React.MouseEvent) => {
+    e.stopPropagation();
+    const url = `${window.location.origin}/flights/results?origin=${route.from}&destination=${route.to}&adults=1&cabinClass=economy`;
+    const title = `Flights from ${route.fromCity} to ${route.toCity}`;
+    const text = route.price ? `${route.fromCity} → ${route.toCity} from ${route.price} on ZIVO` : `${route.fromCity} → ${route.toCity} on ZIVO`;
+    const key = `${route.from}-${route.to}`;
+    try {
+      if (typeof navigator.share === "function") {
+        await navigator.share({ title, text, url });
+      } else if (navigator.clipboard?.writeText) {
+        await navigator.clipboard.writeText(url);
+        setSharedKey(key);
+        setTimeout(() => setSharedKey((k) => (k === key ? null : k)), 1800);
+      }
+    } catch {
+      // User cancelled / permission denied — silent
+    }
+  }, []);
 
   const handleRouteClick = (from: string, to: string, depDate?: string, retDate?: string) => {
     const dep = depDate || (() => { const d = new Date(); d.setDate(d.getDate() + 7); return d.toISOString().split("T")[0]; })();
@@ -189,29 +285,153 @@ function PopularRoutesSection({ className }: { className?: string }) {
 
   const hasLivePrices = routes.some((r) => r.price !== null);
   const hasTp = tpRoutes.length > 0;
+  const visibleRoutes = originFilter === "all"
+    ? routes
+    : originFilter === "saved"
+    ? routes.filter((r) => favorites.has(`${r.from}-${r.to}`))
+    : routes.filter((r) => r.from === originFilter);
 
   return (
     <div className={className}>
-      <motion.div initial={{ opacity: 0, x: -12 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="flex items-center gap-3 mb-5">
+      <motion.div initial={{ opacity: 0, x: -12 }} whileInView={{ opacity: 1, x: 0 }} viewport={{ once: true }} className="flex items-center gap-3 mb-3">
         <div className="w-10 h-10 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
           <TrendingUp className="w-5 h-5 text-primary" />
         </div>
         <div>
-          <h2 className="text-lg font-bold">Popular Routes</h2>
-          <p className="text-xs text-muted-foreground">Trending destinations with live pricing</p>
+          <h2 className="text-lg font-bold">Top routes from Cambodia</h2>
+          <p className="text-xs text-muted-foreground">
+            Live fares from Phnom Penh & Siem Reap
+            {lastUpdated ? <> · <span className="text-emerald-600">Updated {lastUpdated}</span></> : null}
+          </p>
         </div>
-        <Badge variant="outline" className={cn("text-[10px] ml-auto", hasLivePrices ? "border-emerald-500/30 text-emerald-600" : "border-primary/30 text-primary")}>
-          {isLoading ? <><Loader2 className="w-2.5 h-2.5 mr-0.5 animate-spin" /> Loading</> : hasLivePrices ? <><Zap className="w-2.5 h-2.5 mr-0.5" /> Live Prices</> : <><Sparkles className="w-2.5 h-2.5 mr-0.5" /> Updating</>}
-        </Badge>
+        <div className="ml-auto flex items-center gap-1.5">
+          <Badge variant="outline" className={cn("text-[10px]", hasLivePrices ? "border-emerald-500/30 text-emerald-600" : "border-primary/30 text-primary")}>
+            {isLoading ? <><Loader2 className="w-2.5 h-2.5 mr-0.5 animate-spin" /> Loading</> : hasLivePrices ? <><Zap className="w-2.5 h-2.5 mr-0.5" /> Live Prices</> : <><Sparkles className="w-2.5 h-2.5 mr-0.5" /> Updating</>}
+          </Badge>
+          <button
+            type="button"
+            onClick={refreshPrices}
+            disabled={isFetching}
+            aria-label="Refresh prices"
+            className="h-7 w-7 rounded-full border border-border/50 bg-card flex items-center justify-center active:scale-90 transition disabled:opacity-50"
+          >
+            <RefreshCw className={cn("w-3.5 h-3.5 text-foreground/70", isFetching && "animate-spin")} />
+          </button>
+        </div>
       </motion.div>
-      <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-        {routes.map((route, i) => (
-          <RouteCard3D key={`${route.from}-${route.to}`} route={route} index={i} onRouteClick={(from, to) => handleRouteClick(from, to, route.departureDate, route.returnDate)} />
-        ))}
+
+      {/* Origin city tabs */}
+      <div role="tablist" aria-label="Filter routes by origin airport" className="flex gap-1.5 mb-4 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+        {([
+          { id: "all", label: "All routes" },
+          ...(favorites.size > 0 ? [{ id: "saved" as const, label: `♥ Saved (${favorites.size})` }] : []),
+          { id: "PNH", label: "From Phnom Penh" },
+          { id: "REP", label: "From Siem Reap" },
+        ] as const).map((opt) => {
+          const active = originFilter === opt.id;
+          return (
+            <button
+              key={opt.id}
+              type="button"
+              role="tab"
+              aria-pressed={active}
+              aria-selected={active}
+              onClick={() => setOriginFilter(opt.id)}
+              className={cn(
+                "shrink-0 rounded-full px-3 py-1.5 text-[11px] font-semibold transition border",
+                active
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-background text-foreground border-border active:bg-muted",
+              )}
+            >
+              {opt.label}
+            </button>
+          );
+        })}
       </div>
+
+      {visibleRoutes.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-border/50 p-6 text-center">
+          <p className="text-sm font-semibold text-foreground">No routes from this airport yet</p>
+          <p className="text-[11px] text-muted-foreground mt-1">
+            Use the search form above to find flights from any city.
+          </p>
+          <button
+            type="button"
+            onClick={() => setOriginFilter("all")}
+            className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-primary"
+          >
+            Show all routes <ArrowRight className="w-3 h-3" />
+          </button>
+        </div>
+      ) : isLoading && !hasLivePrices ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          {[0, 1, 2, 3].map((i) => (
+            <div key={i} className="rounded-2xl border border-border/20 overflow-hidden bg-card">
+              <div className="h-36 bg-muted/40 animate-pulse relative">
+                <div className="absolute top-3 left-3 h-6 w-20 rounded-full bg-background/80" />
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          {visibleRoutes.map((route, i) => (
+            <RouteCard3D
+            key={`${route.from}-${route.to}`}
+            route={route}
+            index={i}
+            onRouteClick={(from, to) => handleRouteClick(from, to, route.departureDate, route.returnDate)}
+            isFavorite={favorites.has(`${route.from}-${route.to}`)}
+            onToggleFavorite={(e) => toggleFavorite(`${route.from}-${route.to}`, e)}
+            onShare={(e) => handleShare(route, e)}
+            justShared={sharedKey === `${route.from}-${route.to}`}
+          />
+          ))}
+        </div>
+      )}
       <p className="text-[9px] text-muted-foreground mt-3 text-center">
-        {hasTp ? "*Live prices from Travelpayouts. Final price confirmed at partner checkout." : hasLivePrices ? "*Live prices from Duffel. Final price confirmed at partner checkout." : "*Prices loading. Final price confirmed at partner checkout."}
+        {hasTp
+          ? "*Live prices in USD from Travelpayouts. No hidden fees — final price confirmed at partner checkout."
+          : hasLivePrices
+          ? "*Live prices in USD from Duffel. No hidden fees — final price confirmed at partner checkout."
+          : bothFailed
+          ? "Live prices unavailable right now. Use the search above for current fares."
+          : "*Prices loading. Final price confirmed at partner checkout."}
       </p>
+
+      {/* Airlines we compare */}
+      <div className="mt-5">
+        <p className="text-[10px] uppercase tracking-wider text-muted-foreground/80 font-semibold mb-2">
+          Top airlines we compare
+        </p>
+        <div className="flex flex-wrap gap-1.5">
+          {[
+            { name: "Cambodia Angkor Air", isMore: false },
+            { name: "Bangkok Airways", isMore: false },
+            { name: "AirAsia", isMore: false },
+            { name: "Vietnam Airlines", isMore: false },
+            { name: "Thai Airways", isMore: false },
+            { name: "Singapore Airlines", isMore: false },
+            { name: "Emirates", isMore: false },
+            { name: "Korean Air", isMore: false },
+            { name: "+ 490 more", isMore: true },
+          ].map((a) => (
+            <span
+              key={a.name}
+              className={cn(
+                "inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[10px] font-medium",
+                a.isMore
+                  ? "bg-primary/8 text-primary border border-primary/20"
+                  : "border border-border/50 bg-card/60 text-foreground/80",
+              )}
+            >
+              {!a.isMore && <Plane className="w-2.5 h-2.5 text-primary/70 rotate-45" />}
+              {a.name}
+            </span>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -238,20 +458,22 @@ function WhyCard3D({ item, index }: { item: typeof whyZivo[0]; index: number }) 
         ref={tilt.ref}
         onMouseMove={tilt.onMouseMove}
         onMouseLeave={tilt.onMouseLeave}
-        className="group bg-card/80 backdrop-blur-lg border border-border/30 rounded-2xl p-5 text-center transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:border-primary/20 relative overflow-hidden"
+        className="group bg-card/80 backdrop-blur-lg border border-border/30 rounded-2xl p-3 sm:p-5 text-left sm:text-center transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:border-primary/20 relative overflow-hidden flex sm:flex-col items-center sm:items-stretch gap-3 sm:gap-0"
         style={{ transformStyle: "preserve-3d", transition: "transform 0.15s ease-out" }}
       >
         {/* Background glow on hover */}
         <div className={cn("absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-100 transition-opacity duration-500", colors.split(" ").slice(0, 2).join(" "))} />
         <motion.div
-          className={cn("w-12 h-12 rounded-xl bg-gradient-to-br border flex items-center justify-center mx-auto mb-3 relative z-10", colors)}
+          className={cn("w-10 h-10 sm:w-12 sm:h-12 shrink-0 rounded-xl bg-gradient-to-br border flex items-center justify-center sm:mx-auto sm:mb-3 relative z-10", colors)}
           style={{ transform: "translateZ(20px)" }}
           whileHover={{ rotateY: 15, scale: 1.1 }}
         >
           <item.icon className="w-5 h-5" />
         </motion.div>
-        <p className="text-sm font-bold relative z-10" style={{ transform: "translateZ(10px)" }}>{item.title}</p>
-        <p className="text-[11px] text-muted-foreground mt-1 leading-relaxed relative z-10" style={{ transform: "translateZ(5px)" }}>{item.desc}</p>
+        <div className="min-w-0 flex-1 sm:flex-none">
+          <p className="text-sm font-bold relative z-10" style={{ transform: "translateZ(10px)" }}>{item.title}</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5 sm:mt-1 leading-snug relative z-10" style={{ transform: "translateZ(5px)" }}>{item.desc}</p>
+        </div>
       </div>
     </motion.div>
   );
@@ -493,12 +715,97 @@ function DesktopCinematicHero() {
   );
 }
 
+/* ─── Time-of-day greeting (mobile) ─── */
+function GreetingHeader() {
+  const greeting = useMemo(() => {
+    const h = new Date().getHours();
+    if (h >= 4 && h < 12) return { line: "Good morning", emoji: "☀️" };
+    if (h >= 12 && h < 17) return { line: "Good afternoon", emoji: "🌤️" };
+    if (h >= 17 && h < 21) return { line: "Good evening", emoji: "🌅" };
+    return { line: "Travelling late?", emoji: "🌙" };
+  }, []);
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -6 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
+      className="-mb-2"
+    >
+      <p className="text-base font-bold text-foreground">
+        {greeting.emoji} {greeting.line}
+      </p>
+      <p className="text-[12px] text-muted-foreground mt-0.5">
+        Where would you like to fly?
+      </p>
+    </motion.div>
+  );
+}
+
+/* ─── Rotating travel-tip bar (mobile) ─── */
+const TRAVEL_TIPS: Array<{ icon: typeof Sparkles; text: string }> = [
+  { icon: TrendingUp, text: "Tuesday & Wednesday flights are usually 10–20% cheaper." },
+  { icon: Clock, text: "Book international flights 6–8 weeks ahead for the best price." },
+  { icon: Zap, text: "Pay with ABA KHQR — no card needed, e-ticket in seconds." },
+  { icon: Shield, text: "Most fares include free cancellation up to 24 hours after booking." },
+];
+
+function TravelTipBar() {
+  const [idx, setIdx] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setIdx((p) => (p + 1) % TRAVEL_TIPS.length), 5000);
+    return () => clearInterval(id);
+  }, []);
+  const tip = TRAVEL_TIPS[idx];
+  const Icon = tip.icon;
+  return (
+    <div
+      role="status"
+      aria-live="polite"
+      className="rounded-2xl border border-amber-500/20 bg-amber-500/5 px-3 py-2.5 flex items-center gap-2.5 overflow-hidden"
+    >
+      <span className="w-7 h-7 shrink-0 rounded-full bg-amber-500/15 border border-amber-500/30 flex items-center justify-center">
+        <Icon className="w-3.5 h-3.5 text-amber-600" />
+      </span>
+      <AnimatePresence mode="wait">
+        <motion.p
+          key={idx}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -6 }}
+          transition={{ duration: 0.3 }}
+          className="text-[11px] font-medium text-foreground/80 leading-snug"
+        >
+          {tip.text}
+        </motion.p>
+      </AnimatePresence>
+    </div>
+  );
+}
+
 /* ─── Mobile Flight Search ─── */
 function MobileFlightSearch() {
   const { fromCity, toCity } = useParams();
+  const navigate = useNavigate();
+  const [showBackToTop, setShowBackToTop] = useState(false);
+  const formRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const onScroll = () => {
+      const el = formRef.current;
+      if (!el) return;
+      // Show once the form bottom has scrolled above the viewport top
+      setShowBackToTop(el.getBoundingClientRect().bottom < -40);
+    };
+    onScroll();
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   return (
-    <div className="flex flex-col gap-6 px-4 pb-10 pt-1" style={{ perspective: "1200px" }}>
+    <div className="flex flex-col gap-5 px-4 pb-10 pt-1" style={{ perspective: "1200px" }}>
+      <GreetingHeader />
       <motion.div
+        ref={formRef}
         initial={{ opacity: 0, y: 40, rotateX: 12 }}
         animate={{ opacity: 1, y: 0, rotateX: 0 }}
         transition={{ duration: 0.65, ease: ease3D }}
@@ -510,16 +817,231 @@ function MobileFlightSearch() {
           className="shadow-xl shadow-primary/10 rounded-2xl border border-border/30"
         />
       </motion.div>
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 }} className="flex items-center justify-center gap-4 text-[11px] text-muted-foreground">
-        {[{ icon: Sparkles, label: "500+ Airlines" }, { icon: Shield, label: "Secure" }, { icon: Star, label: "Best Price" }].map((item, i) => (
-          <span key={item.label} className="flex items-center gap-1">
-            {i > 0 && <span className="w-0.5 h-0.5 rounded-full bg-border mr-3" />}
-            <item.icon className="w-3 h-3" /> {item.label}
+      {/* Rotating travel tip — replaces the previously redundant trust strip */}
+      <TravelTipBar />
+
+      {/* Quick actions */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.35 }}
+        className="grid grid-cols-2 gap-2"
+      >
+        <button
+          type="button"
+          onClick={() => navigate("/flights/bookings")}
+          aria-label="My bookings — manage trips and e-tickets"
+          className="text-left flex items-center gap-2 rounded-2xl border border-border/40 bg-card p-3 active:scale-[0.98] transition shadow-sm"
+        >
+          <span className="w-9 h-9 shrink-0 rounded-xl bg-sky-500/10 border border-sky-500/20 flex items-center justify-center">
+            <Ticket className="w-4 h-4 text-sky-600" />
           </span>
-        ))}
+          <div className="min-w-0 flex-1">
+            <p className="text-[12px] font-bold text-foreground leading-tight">My bookings</p>
+            <p className="text-[10px] text-muted-foreground leading-tight truncate">Manage trips & e-tickets</p>
+          </div>
+        </button>
+        <button
+          type="button"
+          onClick={() => navigate("/flights/live")}
+          aria-label="Flight status — track live departures"
+          className="text-left flex items-center gap-2 rounded-2xl border border-border/40 bg-card p-3 active:scale-[0.98] transition shadow-sm"
+        >
+          <span className="w-9 h-9 shrink-0 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+            <Radar className="w-4 h-4 text-emerald-600" />
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="text-[12px] font-bold text-foreground leading-tight">Flight status</p>
+            <p className="text-[10px] text-muted-foreground leading-tight truncate">Track live departures</p>
+          </div>
+        </button>
       </motion.div>
+
+      {/* Trust badges — conversion confidence row */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="grid grid-cols-2 gap-2"
+      >
+        {[
+          { icon: Shield, title: "Free cancellation", sub: "On most flights", color: "emerald" },
+          { icon: Zap, title: "Instant confirmation", sub: "E-tickets in seconds", color: "amber" },
+          { icon: Star, title: "Transparent pricing", sub: "All fees shown upfront", color: "sky" },
+          { icon: Headphones, title: "24/7 support", sub: "Help anywhere, anytime", color: "purple" },
+        ].map((item) => {
+          const colorMap: Record<string, string> = {
+            emerald: "bg-emerald-500/10 text-emerald-600 border-emerald-500/20",
+            amber: "bg-amber-500/10 text-amber-600 border-amber-500/20",
+            sky: "bg-sky-500/10 text-sky-600 border-sky-500/20",
+            purple: "bg-purple-500/10 text-purple-600 border-purple-500/20",
+          };
+          return (
+            <div
+              key={item.title}
+              className="flex items-center gap-2 rounded-2xl border border-border/40 bg-card/60 backdrop-blur p-2.5"
+            >
+              <span className={cn("w-8 h-8 shrink-0 rounded-xl border flex items-center justify-center", colorMap[item.color])}>
+                <item.icon className="w-4 h-4" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-[12px] font-bold text-foreground leading-tight truncate">{item.title}</p>
+                <p className="text-[10px] text-muted-foreground leading-tight truncate">{item.sub}</p>
+              </div>
+            </div>
+          );
+        })}
+      </motion.div>
+
       <ScrollReveal3D><PopularRoutesSection /></ScrollReveal3D>
-      <ScrollReveal3D><WhyZivoSection /></ScrollReveal3D>
+
+      {/* Bundle cross-promo */}
+      <motion.button
+        type="button"
+        onClick={() => navigate("/hotels")}
+        aria-label="Browse hotels for your trip"
+        initial={{ opacity: 0, y: 12 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.4 }}
+        transition={{ duration: 0.5, ease: ease3D }}
+        className="text-left relative overflow-hidden rounded-2xl p-4 flex items-center gap-3 active:scale-[0.99] transition shadow-md bg-gradient-to-br from-emerald-500/10 via-emerald-500/5 to-transparent border border-emerald-500/30"
+      >
+        <span className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-emerald-500/10 blur-xl" aria-hidden />
+        <span className="relative w-12 h-12 shrink-0 rounded-2xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
+          <Sparkles className="w-5 h-5 text-emerald-600" />
+        </span>
+        <div className="relative min-w-0 flex-1">
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-bold text-foreground">Need a place to stay?</p>
+            <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-500/15 border border-emerald-500/30 rounded px-1 py-0.5 shrink-0">
+              Hotels
+            </span>
+          </div>
+          <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+            Browse hotels, resorts and guesthouses across Cambodia for your trip.
+          </p>
+        </div>
+        <ArrowRight className="relative w-4 h-4 text-emerald-600 shrink-0" />
+      </motion.button>
+
+      {/* FAQ — common questions for Cambodian travelers */}
+      <motion.section
+        initial={{ opacity: 0, y: 12 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.2 }}
+        transition={{ duration: 0.5 }}
+      >
+        <div className="flex items-center gap-3 mb-3">
+          <div className="w-10 h-10 rounded-2xl bg-amber-500/10 border border-amber-500/20 flex items-center justify-center">
+            <Sparkles className="w-5 h-5 text-amber-500" />
+          </div>
+          <div>
+            <h2 className="text-lg font-bold">Frequently asked</h2>
+            <p className="text-xs text-muted-foreground">Quick answers before you book</p>
+          </div>
+        </div>
+        <div className="rounded-2xl border border-border/40 bg-card divide-y divide-border/40 overflow-hidden">
+          {[
+            {
+              q: "Which payment methods are accepted?",
+              a: "Visa, Mastercard, JCB, and ABA KHQR. You'll see the available options at checkout based on the airline and partner.",
+            },
+            {
+              q: "When do I get my e-ticket?",
+              a: "Within seconds of a successful payment. We email it to you and store it in My bookings — show it at check-in by phone.",
+            },
+            {
+              q: "Can I cancel or change a flight?",
+              a: "Yes, on most fares. Refundable and changeable rules differ by airline — they're shown clearly before you confirm.",
+            },
+            {
+              q: "What documents do I need?",
+              a: "A valid passport for international flights and any visa required by your destination. Domestic Cambodia flights accept your national ID.",
+            },
+            {
+              q: "How much baggage is included?",
+              a: "Carry-on is included on most fares. Checked baggage depends on the airline and fare type — the limit is shown on each fare card.",
+            },
+          ].map((item, i) => (
+            <details key={i} className="group [&>summary]:list-none">
+              <summary className="cursor-pointer p-4 flex items-center gap-3 active:bg-muted/40 transition select-none">
+                <span className="text-sm font-semibold text-foreground flex-1">{item.q}</span>
+                <ChevronRight className="w-4 h-4 text-muted-foreground transition-transform group-open:rotate-90 shrink-0" />
+              </summary>
+              <p className="px-4 pb-4 text-[12px] text-muted-foreground leading-relaxed">
+                {item.a}
+              </p>
+            </details>
+          ))}
+        </div>
+      </motion.section>
+
+      {/* Install app prompt — auto-hides inside the installed app */}
+      <InstallAppCard />
+
+      {/* Support / help CTA — Cambodian travelers expect direct human contact */}
+      <motion.button
+        type="button"
+        onClick={() => navigate("/support/travel-bookings")}
+        initial={{ opacity: 0, y: 12 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, amount: 0.4 }}
+        transition={{ duration: 0.5, ease: ease3D }}
+        className="text-left rounded-2xl border border-border/40 bg-gradient-to-br from-primary/5 via-primary/[0.03] to-transparent p-4 flex items-center gap-3 active:scale-[0.99] transition shadow-sm"
+        aria-label="Open travel-bookings support"
+      >
+        <span className="w-12 h-12 shrink-0 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center">
+          <Headphones className="w-5 h-5 text-primary" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <p className="text-sm font-bold text-foreground">Need a hand with a booking?</p>
+          <p className="text-[11px] text-muted-foreground mt-0.5 leading-snug">
+            Talk to our travel team about flights, changes, or refunds — usually under 5 min.
+          </p>
+        </div>
+        <ArrowRight className="w-4 h-4 text-primary shrink-0" />
+      </motion.button>
+
+      {/* Mobile footer — legal & info links */}
+      <footer className="pt-2 -mt-1">
+        <div className="flex flex-wrap gap-x-4 gap-y-1.5 text-[11px] text-muted-foreground">
+          {[
+            { href: "/legal/partner-disclosure", label: "About these prices" },
+            { href: "/legal/refunds", label: "Refund policy" },
+            { href: "/legal/cancellation", label: "Cancellation" },
+            { href: "/legal/privacy", label: "Privacy" },
+            { href: "/legal/terms", label: "Terms" },
+          ].map((link) => (
+            <button
+              key={link.href}
+              type="button"
+              onClick={() => navigate(link.href)}
+              className="text-left underline-offset-2 hover:underline active:underline"
+            >
+              {link.label}
+            </button>
+          ))}
+        </div>
+        <p className="mt-3 text-[10px] text-muted-foreground/70">
+          © {new Date().getFullYear()} ZIVO. Flight prices powered by our partners (Duffel, Travelpayouts). Final price confirmed at checkout.
+        </p>
+      </footer>
+
+      {/* Floating "Back to search" button */}
+      <button
+        type="button"
+        onClick={() => formRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })}
+        aria-label="Back to search"
+        className={cn(
+          "fixed bottom-20 right-4 z-40 h-12 px-4 rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 inline-flex items-center gap-2 text-sm font-semibold transition-all duration-200",
+          showBackToTop
+            ? "opacity-100 translate-y-0"
+            : "opacity-0 translate-y-4 pointer-events-none",
+        )}
+      >
+        <Plane className="w-4 h-4 -rotate-45" />
+        Search
+      </button>
     </div>
   );
 }
@@ -546,8 +1068,8 @@ const FlightLanding = () => {
     return (
       <>
         <SEOHead
-          title="Search Flights – ZIVO | Compare 500+ Airlines"
-          description="Find the best flight deals from 500+ airlines worldwide. Compare prices, book flights, and track price drops — all on ZIVO."
+          title="Search Flights from Cambodia – ZIVO | 500+ Airlines"
+          description="Find the best flight deals from Phnom Penh and Siem Reap. Compare 500+ airlines, book direct, and track price drops — all on ZIVO."
           canonical="/flights"
           ogImage="/og-flights.jpg"
           appLink="zivo://flights"
@@ -568,8 +1090,8 @@ const FlightLanding = () => {
     <div className="min-h-screen bg-background relative overflow-hidden">
       <BundleProgressBanner step="flight" />
       <SEOHead
-        title="Search Flights – ZIVO | Compare 500+ Airlines"
-        description="Find the best flight deals from 500+ airlines worldwide. Compare prices, book flights, and track price drops — all on ZIVO."
+        title="Search Flights from Cambodia – ZIVO | 500+ Airlines"
+        description="Find the best flight deals from Phnom Penh and Siem Reap. Compare 500+ airlines, book direct, and track price drops — all on ZIVO."
         canonical="/flights"
         ogImage="/og-flights.jpg"
         appLink="zivo://flights"
@@ -577,8 +1099,8 @@ const FlightLanding = () => {
           {
             "@context": "https://schema.org",
             "@type": "WebPage",
-            "name": "Search Flights – ZIVO",
-            "description": "Find the best flight deals from 500+ airlines worldwide.",
+            "name": "Search Flights from Cambodia – ZIVO",
+            "description": "Find the best flight deals from Phnom Penh and Siem Reap. Compare 500+ airlines.",
             "url": "https://hizivo.com/flights",
             "isPartOf": { "@type": "WebSite", "url": "https://hizivo.com", "name": "ZIVO" },
             "potentialAction": {
@@ -598,19 +1120,19 @@ const FlightLanding = () => {
           {
             "@context": "https://schema.org",
             "@type": "ItemList",
-            "name": "Popular flight destinations on ZIVO",
+            "name": "Popular flight destinations from Cambodia on ZIVO",
             "itemListOrder": "https://schema.org/ItemListOrderAscending",
             "itemListElement": [
-              { "@type": "ListItem", "position": 1,  "name": "New York",    "url": "https://hizivo.com/flights/to-new-york" },
-              { "@type": "ListItem", "position": 2,  "name": "Los Angeles", "url": "https://hizivo.com/flights/to-los-angeles" },
-              { "@type": "ListItem", "position": 3,  "name": "London",      "url": "https://hizivo.com/flights/to-london" },
-              { "@type": "ListItem", "position": 4,  "name": "Paris",       "url": "https://hizivo.com/flights/to-paris" },
-              { "@type": "ListItem", "position": 5,  "name": "Tokyo",       "url": "https://hizivo.com/flights/to-tokyo" },
-              { "@type": "ListItem", "position": 6,  "name": "Dubai",       "url": "https://hizivo.com/flights/to-dubai" },
-              { "@type": "ListItem", "position": 7,  "name": "Bangkok",     "url": "https://hizivo.com/flights/to-bangkok" },
-              { "@type": "ListItem", "position": 8,  "name": "Singapore",   "url": "https://hizivo.com/flights/to-singapore" },
-              { "@type": "ListItem", "position": 9,  "name": "Bali",        "url": "https://hizivo.com/flights/to-bali" },
-              { "@type": "ListItem", "position": 10, "name": "Sydney",      "url": "https://hizivo.com/flights/to-sydney" }
+              { "@type": "ListItem", "position": 1,  "name": "Siem Reap",     "url": "https://hizivo.com/flights/to-siem-reap" },
+              { "@type": "ListItem", "position": 2,  "name": "Sihanoukville", "url": "https://hizivo.com/flights/to-sihanoukville" },
+              { "@type": "ListItem", "position": 3,  "name": "Bangkok",       "url": "https://hizivo.com/flights/to-bangkok" },
+              { "@type": "ListItem", "position": 4,  "name": "Singapore",     "url": "https://hizivo.com/flights/to-singapore" },
+              { "@type": "ListItem", "position": 5,  "name": "Kuala Lumpur",  "url": "https://hizivo.com/flights/to-kuala-lumpur" },
+              { "@type": "ListItem", "position": 6,  "name": "Hong Kong",     "url": "https://hizivo.com/flights/to-hong-kong" },
+              { "@type": "ListItem", "position": 7,  "name": "Tokyo",         "url": "https://hizivo.com/flights/to-tokyo" },
+              { "@type": "ListItem", "position": 8,  "name": "Seoul",         "url": "https://hizivo.com/flights/to-seoul" },
+              { "@type": "ListItem", "position": 9,  "name": "Ho Chi Minh",   "url": "https://hizivo.com/flights/to-ho-chi-minh" },
+              { "@type": "ListItem", "position": 10, "name": "Hanoi",         "url": "https://hizivo.com/flights/to-hanoi" }
             ]
           }
         ]}

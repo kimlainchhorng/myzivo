@@ -15,6 +15,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import SEOHead from "@/components/SEOHead";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "@/components/ui/empty-state";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Slider } from "@/components/ui/slider";
@@ -493,18 +494,19 @@ export default function CarResultsPage() {
 
                 {/* Empty State - No cars match filters */}
                 {!isLoading && carCards.length === 0 && results.length > 0 && (
-                  <div className="bg-card rounded-2xl border border-border/60 shadow-[var(--shadow-card)] p-8 text-center">
-                    <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
-                      <SlidersHorizontal className="w-8 h-8 text-muted-foreground" />
-                    </div>
-                    <h3 className="text-lg font-semibold mb-2">No cars match your filters</h3>
-                    <p className="text-muted-foreground text-sm mb-4 max-w-md mx-auto">
-                      Try adjusting price or category to see more options.
-                    </p>
-                    <Button onClick={resetFilters} variant="outline" className="gap-2">
-                      <RotateCcw className="w-4 h-4" />
-                      Reset Filters
-                    </Button>
+                  <div className="bg-card rounded-2xl border border-border/60 shadow-[var(--shadow-card)]">
+                    <EmptyState
+                      icon={SlidersHorizontal}
+                      tone="muted"
+                      title="No cars match your filters"
+                      description="Try adjusting price or category to see more options."
+                      action={
+                        <Button onClick={resetFilters} variant="outline" className="gap-2">
+                          <RotateCcw className="w-4 h-4" />
+                          Reset Filters
+                        </Button>
+                      }
+                    />
                   </div>
                 )}
 

@@ -12,6 +12,7 @@ import { motion } from "framer-motion";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import SEOHead from "@/components/SEOHead";
+import { EmptyState as SharedEmptyState } from "@/components/ui/empty-state";
 
 interface UserResult { id: string; name: string; username: string | null; bio: string | null; avatar: string | null; }
 interface PostResult { id: string; author: string; content: string; }
@@ -235,7 +236,15 @@ export default function SmartSearchPage() {
 }
 
 function EmptyState() {
-  return <p className="text-center text-muted-foreground py-8 text-sm">No results found</p>;
+  return (
+    <SharedEmptyState
+      icon={Search}
+      tone="muted"
+      compact
+      title="No results found"
+      description="Try a different keyword or check your spelling."
+    />
+  );
 }
 
 function UserCard({ user }: { user: UserResult }) {

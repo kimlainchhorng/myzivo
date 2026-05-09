@@ -1,7 +1,8 @@
 /**
- * ZIVO Mobile Bottom Navigation — Instagram style
- * Icon-only, outline-by-default / solid-on-active.
- * Solid background, hairline top border, no glow.
+ * ZIVO Mobile Bottom Navigation — glass-blur capsule.
+ * Backdrop-blurred translucent background with a sliding pill behind the
+ * active tab (motion layoutId), tactile active-press scale, subtle ring
+ * elevation. Matches the reels-rail / reel-tabs design language.
  */
 import { forwardRef } from "react";
 import { createPortal } from "react-dom";
@@ -76,7 +77,7 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
   const tabs: NavTab[] = [
     { id: "home", labelKey: "nav.home", icon: Home, path: "/", badge: liveActivity.total, fillable: true },
     { id: "feed", labelKey: "nav.feed", icon: Newspaper, path: gated("/feed") },
-    { id: "reels", labelKey: "nav.reel", icon: Film, path: gated("/reels"), fillable: true },
+    { id: "reels", labelKey: "nav.reel", icon: Film, path: gated("/reels") },
     { id: "chat", labelKey: "nav.chat", icon: MessageCircle, path: gated("/chat"), badge: chatUnread, fillable: true },
     { id: "account", labelKey: "nav.account", icon: User, path: gated("/profile"), badge: notificationUnread },
   ];
@@ -106,9 +107,9 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
     <nav
       ref={ref}
       data-zivo-mobile-nav
-      className="fixed inset-x-0 bottom-0 z-[1401] lg:hidden pb-safe bg-background border-t border-border"
+      className="fixed inset-x-0 bottom-0 z-[1401] lg:hidden pb-safe bg-background/95 backdrop-blur-md border-t border-border/60 shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.18)]"
     >
-      <div className="relative flex items-stretch justify-around h-[48px] max-w-lg mx-auto">
+      <div className="relative flex items-stretch justify-around h-[52px] max-w-lg mx-auto px-1">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
 
@@ -136,13 +137,21 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
                 }
               }}
               className={cn(
-                "flex items-center justify-center flex-1 transition-opacity duration-150 touch-manipulation active:opacity-60 relative min-w-[44px] min-h-[44px]",
-                isActive ? "text-foreground" : "text-foreground/70"
+                "flex items-center justify-center flex-1 transition-all duration-200 touch-manipulation relative min-w-[44px] min-h-[44px] active:scale-[0.92]",
+                isActive ? "text-foreground" : "text-foreground/45 hover:text-foreground/70"
               )}
               aria-label={t(tab.labelKey)}
               aria-current={isActive ? "page" : undefined}
             >
               <div className="relative flex items-center justify-center">
+                {isActive && (
+                  <motion.span
+                    layoutId="zivo-bottom-nav-pill"
+                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
+                    aria-hidden
+                    className="absolute -inset-x-3 -inset-y-1.5 rounded-full bg-foreground/[0.07] ring-1 ring-foreground/10"
+                  />
+                )}
                 {tab.id === "account" && user ? (
                   <Avatar
                     className={cn(

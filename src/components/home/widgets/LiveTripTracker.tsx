@@ -1,7 +1,7 @@
 /**
  * LiveTripTracker - Real-time card showing active ride/delivery with ETA countdown
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import Car from "lucide-react/dist/esm/icons/car";
@@ -46,6 +46,10 @@ export default function LiveTripTracker() {
   const navigate = useNavigate();
   const [activeTrip, setActiveTrip] = useState<ActiveTrip | null>(null);
   const [countdown, setCountdown] = useState(0);
+  const activeTripRef = useRef<ActiveTrip | null>(null);
+  useEffect(() => {
+    activeTripRef.current = activeTrip;
+  }, [activeTrip]);
 
   // Poll for active trips
   useEffect(() => {
@@ -101,9 +105,35 @@ export default function LiveTripTracker() {
       setActiveTrip(null);
     };
 
+    let timeout: ReturnType<typeof setTimeout> | null = null;
+    let cancelled = false;
+
+    const tick = async () => {
+      if (cancelled) return;
+      if (document.visibilityState === "visible") {
+        await fetchActive();
+      }
+      if (cancelled) return;
+      // Poll fast (15s) only when something active is on screen; otherwise back off to 60s.
+      const delay = activeTripRef.current ? 15000 : 60000;
+      timeout = setTimeout(tick, delay);
+    };
+
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") {
+        if (timeout) clearTimeout(timeout);
+        tick();
+      }
+    };
+
     fetchActive();
-    const interval = setInterval(fetchActive, 15000);
-    return () => clearInterval(interval);
+    timeout = setTimeout(tick, 15000);
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      cancelled = true;
+      if (timeout) clearTimeout(timeout);
+      document.removeEventListener("visibilitychange", onVisibility);
+    };
   }, [user?.id]);
 
   // ETA countdown

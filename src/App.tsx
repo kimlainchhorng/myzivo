@@ -35,6 +35,8 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { useVerificationRealtime } from "@/hooks/useVerificationRealtime";
 import { useOTAUpdate } from "@/hooks/useOTAUpdate";
 import OTAUpdateBanner from "@/components/shared/OTAUpdateBanner";
+import NavigationProgressBar from "@/components/app/NavigationProgressBar";
+import ScrollRestoration from "@/components/app/ScrollRestoration";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useSearchParams } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
@@ -206,6 +208,13 @@ const ChatSearchAllPage = lazy(() => import("./pages/chat/ChatSearchAllPage"));
 const CustomFoldersPage = lazy(() => import("./pages/chat/CustomFoldersPage"));
 const BroadcastListsPage = lazy(() => import("./pages/chat/BroadcastListsPage"));
 const NewBroadcastPage = lazy(() => import("./pages/chat/NewBroadcastPage"));
+const BotFatherPage = lazy(() => import("./pages/chat/BotFatherPage"));
+const BotDetailPage = lazy(() => import("./pages/chat/BotDetailPage"));
+const BotDiscoverPage = lazy(() => import("./pages/chat/BotDiscoverPage"));
+const BotAdminPage = lazy(() => import("./pages/chat/BotAdminPage"));
+const BotPublicProfilePage = lazy(() => import("./pages/BotPublicProfilePage"));
+const BotCollectionPage = lazy(() => import("./pages/chat/BotCollectionPage"));
+const BotInboxPage = lazy(() => import("./pages/chat/BotInboxPage"));
 const StorageManagerPage = lazy(() => import("./pages/chat/settings/StorageManagerPage"));
 const AppLockGate = lazy(() => import("./components/chat/settings/AppLockGate"));
 const MfaChallengeDialog = lazy(() => import("./components/auth/MfaChallengeDialog"));
@@ -799,6 +808,8 @@ const App = () => (
                 <DeferredPageViewTracker />
                 <DeferredGeoDetector />
                 <OTAUpdateBootstrap />
+                <NavigationProgressBar />
+                <ScrollRestoration />
                 <Suspense fallback={null}><RoutePrefetcher /></Suspense>
                 <PaymentReturnHandler />
                 <AuthProvider>
@@ -933,6 +944,13 @@ const App = () => (
                 <Route path="/chat/find-contacts" element={<ProtectedRoute><FindContactsPage /></ProtectedRoute>} />
                 <Route path="/chat/find-username" element={<ProtectedRoute><FindByUsernamePage /></ProtectedRoute>} />
                 <Route path="/chat/blocked" element={<ProtectedRoute><BlockedUsersPage /></ProtectedRoute>} />
+                <Route path="/chat/bots" element={<ProtectedRoute><BotFatherPage /></ProtectedRoute>} />
+                <Route path="/chat/bots/discover" element={<ProtectedRoute><BotDiscoverPage /></ProtectedRoute>} />
+                <Route path="/chat/bots/admin" element={<ProtectedRoute><BotAdminPage /></ProtectedRoute>} />
+                <Route path="/chat/bots/collections/:slug" element={<ProtectedRoute><BotCollectionPage /></ProtectedRoute>} />
+                <Route path="/chat/bots/inbox" element={<ProtectedRoute><BotInboxPage /></ProtectedRoute>} />
+                <Route path="/chat/bots/:id" element={<ProtectedRoute><BotDetailPage /></ProtectedRoute>} />
+                <Route path="/b/:username" element={<BotPublicProfilePage />} />
                 <Route path="/chat/join/:code" element={<JoinGroupPage />} />
                 <Route path="/chat/secret/:partnerId" element={<ProtectedRoute><SecretChatPage /></ProtectedRoute>} />
                 <Route path="/chat/call/group/:roomName" element={<ProtectedRoute><GroupCallEntryPage /></ProtectedRoute>} />

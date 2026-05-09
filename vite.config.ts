@@ -56,6 +56,7 @@ export default defineConfig(({ mode }) => ({
           "vendor-maps": ["@react-google-maps/api"],
           "vendor-dates": ["date-fns"],
           "vendor-carousel": ["embla-carousel-react", "embla-carousel-autoplay"],
+          "vendor-livekit": ["livekit-client"],
         },
       },
     },
@@ -75,7 +76,20 @@ export default defineConfig(({ mode }) => ({
       srcDir: "public",
       filename: "sw.js",
       injectManifest: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        globPatterns: ["**/*.{js,css,html,ico,svg,woff2}"],
+        // Skip large media bundles from precache — they get runtime-cached on
+        // first use instead of eating the user's data on initial install.
+        globIgnores: [
+          "**/mediapipe/**",
+          "**/stickers/**",
+          "**/gifts/**",
+          "**/vehicles/**",
+          "**/flags/**",
+          "**/videos/**",
+          "**/payments/**",
+          "**/brand-logos/**",
+          "**/destinations/**",
+        ],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
       },
       includeAssets: ["favicon.ico", "robots.txt", "pwa-icons/*.png"],
@@ -139,7 +153,18 @@ export default defineConfig(({ mode }) => ({
         ]
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        globPatterns: ["**/*.{js,css,html,ico,svg,woff2}"],
+        globIgnores: [
+          "**/mediapipe/**",
+          "**/stickers/**",
+          "**/gifts/**",
+          "**/vehicles/**",
+          "**/flags/**",
+          "**/videos/**",
+          "**/payments/**",
+          "**/brand-logos/**",
+          "**/destinations/**",
+        ],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         navigateFallbackDenylist: [/^\/~oauth/],
         runtimeCaching: [

@@ -3,7 +3,8 @@
  * Customer scans the QR with any Bakong-connected app (ABA, Wing, ACLEDA, etc.),
  * pays the exact amount shown, then taps "I've paid" to confirm.
  *
- * TODO: Wire up Bakong API auto-confirmation via Supabase edge function `bakong-verify`.
+ * Auto-confirmation: polls `bakong-verify` and `verify-aba-telegram` every 4s
+ * while the modal is open and the tab is visible.
  */
 import { QRCodeSVG } from "qrcode.react";
 import { Button } from "@/components/ui/button";
@@ -38,6 +39,7 @@ export default function AbaPaymentModal({
     () => buildDynamicKhqr(amountUsd, "USD", reference),
     [amountUsd, reference]
   );
+  const openedAtSec = useMemo(() => Math.floor(Date.now() / 1000), [open, reference]);
 
   useEffect(() => {
     if (!open) {
@@ -50,32 +52,66 @@ export default function AbaPaymentModal({
     return () => clearInterval(id);
   }, [open]);
 
-  // Poll Bakong API every 4s for payment confirmation
+  // Poll Bakong + Telegram bot every 4s for payment confirmation.
+  // Whichever channel reports paid first wins.
   useEffect(() => {
     if (!open) return;
     let cancelled = false;
+    let done = false;
+
+    const finish = (channel: "Bakong" | "Telegram") => {
+      if (done || cancelled) return;
+      done = true;
+      toast.success(`Payment received via ${channel}!`);
+      onConfirmed();
+    };
 
     const poll = async () => {
-      try {
-        const { data, error } = await supabase.functions.invoke("bakong-verify", {
-          body: { qr: qrString },
-        });
-        if (cancelled) return;
-        if (!error && data?.ok && data?.paid) {
-          toast.success("Payment received via Bakong!");
-          onConfirmed();
-        }
-      } catch {
-        // network blip — keep polling
+      if (done) return;
+      const [bakong, telegram] = await Promise.allSettled([
+        supabase.functions.invoke("bakong-verify", { body: { qr: qrString } }),
+        supabase.functions.invoke("verify-aba-telegram", {
+          body: { reference, amount: amountUsd, sinceSec: openedAtSec },
+        }),
+      ]);
+      if (cancelled || done) return;
+
+      if (bakong.status === "fulfilled" && !bakong.value.error && bakong.value.data?.ok && bakong.value.data?.paid) {
+        finish("Bakong");
+        return;
+      }
+      if (telegram.status === "fulfilled" && !telegram.value.error && telegram.value.data?.ok && telegram.value.data?.paid) {
+        finish("Telegram");
       }
     };
 
-    const id = setInterval(poll, 4000);
+    let id: ReturnType<typeof setInterval> | null = null;
+    const startPolling = () => {
+      if (id) return;
+      id = setInterval(() => {
+        if (document.visibilityState === "visible") void poll();
+      }, 4000);
+    };
+    const stopPolling = () => {
+      if (id) { clearInterval(id); id = null; }
+    };
+    const onVis = () => {
+      if (document.visibilityState === "visible") {
+        void poll();
+        startPolling();
+      } else {
+        stopPolling();
+      }
+    };
+    void poll();
+    if (document.visibilityState === "visible") startPolling();
+    document.addEventListener("visibilitychange", onVis);
     return () => {
       cancelled = true;
-      clearInterval(id);
+      stopPolling();
+      document.removeEventListener("visibilitychange", onVis);
     };
-  }, [open, qrString, onConfirmed]);
+  }, [open, qrString, reference, amountUsd, openedAtSec, onConfirmed]);
 
   const khr = Math.round(amountUsd * USD_TO_KHR).toLocaleString();
   const mins = Math.floor(secondsLeft / 60);

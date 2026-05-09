@@ -136,6 +136,8 @@ export function useLodgePropertyProfile(storeId: string) {
       return (data || null) as unknown as LodgePropertyProfile | null;
     },
     enabled: !!storeId,
+    staleTime: 60_000,
+    gcTime: 300_000,
   });
 
   const upsert = useMutation({

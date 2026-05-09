@@ -69,11 +69,28 @@ export default function HeroSection() {
   useEffect(() => {
     const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (prefersReduced) return;
-    const interval = setInterval(nextSlide, SLIDE_DURATION);
-    const progressInterval = setInterval(() => {
-      setProgress((p) => Math.min(p + 100 / (SLIDE_DURATION / 50), 100));
-    }, 50);
-    return () => { clearInterval(interval); clearInterval(progressInterval); };
+    let interval: ReturnType<typeof setInterval> | null = null;
+    let progressInterval: ReturnType<typeof setInterval> | null = null;
+    const start = () => {
+      if (interval || progressInterval) return;
+      interval = setInterval(nextSlide, SLIDE_DURATION);
+      progressInterval = setInterval(() => {
+        setProgress((p) => Math.min(p + 100 / (SLIDE_DURATION / 50), 100));
+      }, 50);
+    };
+    const stop = () => {
+      if (interval) { clearInterval(interval); interval = null; }
+      if (progressInterval) { clearInterval(progressInterval); progressInterval = null; }
+    };
+    const onVisibility = () => {
+      if (document.visibilityState === "visible") start(); else stop();
+    };
+    if (document.visibilityState === "visible") start();
+    document.addEventListener("visibilitychange", onVisibility);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibility);
+      stop();
+    };
   }, [nextSlide, currentSlide]);
 
   const goToSlide = (i: number) => { setCurrentSlide(i); setProgress(0); };

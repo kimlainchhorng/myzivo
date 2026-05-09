@@ -194,7 +194,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
             style={{
               background: "linear-gradient(90deg, hsl(var(--flights)), hsl(var(--hotels)), hsl(var(--cars)), hsl(var(--rides)), hsl(var(--eats)), hsl(var(--flights)))",
               backgroundSize: "200% 100%",
-              animation: "shimmer 4s linear infinite",
+              animation: "navRainbowShift 6s linear infinite",
             }}
           />
           <div className="mx-auto px-2 sm:px-4 max-w-[1400px]">

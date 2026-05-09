@@ -3,6 +3,7 @@
  * Inspired by Uber's surge pricing visualization
  */
 import { useState, useEffect } from "react";
+import { useVisibleInterval } from "@/hooks/useVisibleInterval";
 import { motion, AnimatePresence } from "framer-motion";
 import { Flame, TrendingUp, Zap, Clock, MapPin, Info, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
@@ -50,16 +51,13 @@ export default function SurgePricingMap() {
       });
   }, []);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setZones(prev => prev.map(z => ({
-        ...z,
-        multiplier: Math.max(1, z.multiplier + (Math.random() - 0.5) * 0.1),
-        eta_minutes: Math.max(2, z.eta_minutes + Math.floor(Math.random() * 3) - 1),
-      })));
-    }, 15000);
-    return () => clearInterval(interval);
-  }, []);
+  useVisibleInterval(() => {
+    setZones(prev => prev.map(z => ({
+      ...z,
+      multiplier: Math.max(1, z.multiplier + (Math.random() - 0.5) * 0.1),
+      eta_minutes: Math.max(2, z.eta_minutes + Math.floor(Math.random() * 3) - 1),
+    })));
+  }, 15000);
 
   const avgSurge = zones.reduce((s, z) => s + z.multiplier, 0) / zones.length;
 

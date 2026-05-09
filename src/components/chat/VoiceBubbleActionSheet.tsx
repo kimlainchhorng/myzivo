@@ -2,9 +2,13 @@
  * VoiceBubbleActionSheet — iOS-style bottom sheet that appears on long-press
  * of a voice message bubble. Replaces the iOS native text-selection loupe.
  */
+import { useEffect } from "react";
 import { Drawer, DrawerContent, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Reply, Copy, RefreshCw, Trash2, Bug } from "lucide-react";
 import { toast } from "sonner";
+import { showActionSheet } from "@/lib/native/actionSheet";
+import { isNative } from "@/lib/native/device";
+import { copyText } from "@/lib/native/clipboard";
 
 interface VoiceBubbleActionSheetProps {
   open: boolean;
@@ -61,7 +65,7 @@ export default function VoiceBubbleActionSheet({
       icon: Copy,
       onSelect: async () => {
         try {
-          await navigator.clipboard.writeText(audioUrl);
+          await copyText(audioUrl);
           toast.success("Link copied");
         } catch {
           toast.error("Couldn't copy");
@@ -97,6 +101,28 @@ export default function VoiceBubbleActionSheet({
     onSelect: () => { onToggleDebug(); close(); },
   });
 
+  // On native iOS/Android, show the system action sheet instead of the Drawer.
+  useEffect(() => {
+    if (!open || !isNative()) return;
+    let cancelled = false;
+    (async () => {
+      const idx = await showActionSheet(
+        "Voice message",
+        actions.map(a => ({ title: a.label, destructive: a.destructive }))
+      );
+      if (cancelled) return;
+      if (idx !== null && idx >= 0 && idx < actions.length) {
+        actions[idx].onSelect();
+      } else {
+        close();
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [open]);
+
+  // Web users still get the styled Drawer.
+  if (isNative()) return null;
+
   return (
     <Drawer open={open} onOpenChange={onOpenChange}>
       <DrawerContent className="pb-[max(env(safe-area-inset-bottom),16px)]">
@@ -109,7 +135,7 @@ export default function VoiceBubbleActionSheet({
           {actions.map((a) => {
             const Icon = a.icon;
             return (
-              <button type="button"
+              <button
                 key={a.key}
                 type="button"
                 onClick={a.onSelect}

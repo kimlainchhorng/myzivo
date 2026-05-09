@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Search } from "lucide-react";
 import { toast } from "sonner";
 import { fmtMoney, PAYMENT_METHODS, type PaymentInvoiceLite } from "@/lib/admin/paymentsCalculations";
+import { nativeConfirm } from "@/lib/native/dialog";
 
 interface Props {
   storeId: string;
@@ -69,7 +70,7 @@ export default function RecordPaymentDialog({ storeId, open, onOpenChange, invoi
       if (!invoiceId) throw new Error("Pick an invoice");
       if (cents <= 0) throw new Error("Amount must be greater than zero");
       if (selected && cents > balance) {
-        const ok = window.confirm(`Amount $${(cents / 100).toFixed(2)} exceeds balance ${fmtMoney(balance)}. Record as overpayment?`);
+        const ok = await nativeConfirm(`Amount $${(cents / 100).toFixed(2)} exceeds balance ${fmtMoney(balance)}. Record as overpayment?`);
         if (!ok) throw new Error("Cancelled");
       }
       const { data: { user } } = await supabase.auth.getUser();

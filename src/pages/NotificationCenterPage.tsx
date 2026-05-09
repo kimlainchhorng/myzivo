@@ -444,7 +444,7 @@ export default function NotificationCenterPage() {
                     initial={{ opacity: 0, x: -8 }}
                     animate={{ opacity: 1, x: 0 }}
                     exit={{ opacity: 0, height: 0, overflow: "hidden" }}
-                    transition={{ delay: i * 0.02, duration: 0.2 }}
+                    transition={{ delay: Math.min(i, 6) * 0.02, duration: 0.2 }}
                     className={cn(
                       "group transition-colors",
                       notif.hasUnread && !isReplying && !isMuteOpen && "bg-primary/[0.04]",

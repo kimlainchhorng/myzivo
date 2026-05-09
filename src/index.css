@@ -225,9 +225,9 @@
     position: sticky;
     top: 0;
     z-index: 40;
-    background: hsl(var(--background) / 0.95);
-    -webkit-backdrop-filter: blur(20px);
-    backdrop-filter: blur(20px);
+    background: hsl(var(--background) / 0.97);
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
     border-bottom: 1px solid hsl(var(--border) / 0.3);
   }
 
@@ -356,18 +356,88 @@
     @apply border-border;
   }
 
-  html {
-    scroll-behavior: smooth;
+  /* Smooth-scroll only for fine pointers (desktop). On iOS WKWebView /
+     touch, CSS smooth-scroll fights native momentum and makes route
+     navigations + scrollIntoView feel sticky. */
+  @media (pointer: fine) {
+    html {
+      scroll-behavior: smooth;
+    }
   }
 
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    font-feature-settings: "cv11", "ss01", "ss03";
   }
 
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
     @apply font-bold tracking-tight;
+    letter-spacing: -0.015em;
+  }
+
+  /* Refined text selection — uses brand ink instead of OS default */
+  ::selection {
+    background-color: hsl(var(--primary) / 0.92);
+    color: hsl(var(--primary-foreground));
+  }
+
+  /* Slim, themed scrollbar (desktop only) */
+  @media (pointer: fine) {
+    ::-webkit-scrollbar {
+      width: 10px;
+      height: 10px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background-color: hsl(var(--muted-foreground) / 0.28);
+      border-radius: 9999px;
+      border: 2px solid transparent;
+      background-clip: content-box;
+      transition: background-color 200ms ease;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background-color: hsl(var(--muted-foreground) / 0.55);
+      background-clip: content-box;
+    }
+    * {
+      scrollbar-width: thin;
+      scrollbar-color: hsl(var(--muted-foreground) / 0.3) transparent;
+    }
+  }
+
+  /* Crisper, brand-coloured focus ring everywhere */
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring) / 0.85);
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* Smooth out images so they don't look harsh on hi-DPI */
+  img, video {
+    image-rendering: -webkit-optimize-contrast;
+  }
+
+  /* Buttons / links — slim transition baseline. Excluding `transform` from the
+     global transition so :active scale feels instant on tap (the 180ms
+     transform transition was masking touch responsiveness on iOS). Per-component
+     active styles can still opt in to a transform transition explicitly. */
+  button, a {
+    transition:
+      background-color 150ms ease,
+      color 150ms ease,
+      border-color 150ms ease,
+      opacity 150ms ease;
+  }
+  button:active:not(:disabled), a:active {
+    transform: scale(0.985);
+    transition: transform 80ms ease-out;
   }
 
   /* Typography Scale */
@@ -1003,6 +1073,11 @@
 @keyframes shimmer-text {
   0% { background-position: 100% 50%; }
   100% { background-position: 0% 50%; }
+}
+
+@keyframes navRainbowShift {
+  0% { background-position: 0% 50%; }
+  100% { background-position: 200% 50%; }
 }
 
 /* Marquee Animations for Airline Carousels */

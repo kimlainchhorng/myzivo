@@ -242,6 +242,15 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
   const [groupSearchQ, setGroupSearchQ] = useState("");
   const [showMiniApps, setShowMiniApps] = useState(false);
   const [miniAppView, setMiniAppView] = useState<"menu" | "poll" | "todo" | "split" | "book_table" | "trip_idea">("menu");
+  const handleMiniAppAction = useCallback((type: string) => {
+    setMiniAppView(type as any);
+    setShowMiniApps(true);
+  }, []);
+  const handleNoopPin = useCallback(() => {}, []);
+  const handleForwardCopy = useCallback((_id: string, m: string | null) => {
+    navigator.clipboard?.writeText(m || "");
+    toast.success("Copied to forward");
+  }, []);
   const [isMuted, setIsMuted] = useState(() => {
     try { return localStorage.getItem(`zivo:group-muted:${groupId}`) === "1"; } catch { return false; }
   });
@@ -1273,12 +1282,9 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
                         createdAt={msg.created_at}
                         onReply={(id, m, me) => setReplyTo({ id, message: m || "Media", senderName })}
                         onDelete={handleDeleteMsg}
-                        onPin={() => {}} // Groups don't support pinning yet
-                        onForward={(id, m) => { navigator.clipboard?.writeText(m || ""); toast.success("Copied to forward"); }}
-                        onMiniAppAction={(type) => {
-                          setMiniAppView(type as any);
-                          setShowMiniApps(true);
-                        }}
+                        onPin={handleNoopPin} // Groups don't support pinning yet
+                        onForward={handleForwardCopy}
+                        onMiniAppAction={handleMiniAppAction}
                       />
                     </Suspense>
                   )}

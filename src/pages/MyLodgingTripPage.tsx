@@ -31,6 +31,7 @@ import { useLodgingRefundDisputes } from "@/hooks/lodging/useLodgingRefundDisput
 import LodgingTripNotificationSettings from "@/components/lodging/guest/LodgingTripNotificationSettings";
 import { toast } from "sonner";
 import { ReviewSubmissionSheet } from "@/components/reviews/ReviewSubmissionSheet";
+import { LodgingReviewSheet } from "@/components/reviews/LodgingReviewSheet";
 import { ReviewsList } from "@/components/reviews/ReviewsList";
 import { ReviewsSummary } from "@/components/reviews/ReviewsSummary";
 
@@ -77,6 +78,7 @@ export default function MyLodgingTripPage() {
   const [chatOpen, setChatOpen] = useState(false);
   const [addonStatusRefreshing, setAddonStatusRefreshing] = useState(false);
   const [reviewSheetOpen, setReviewSheetOpen] = useState(false);
+  const [lodgingReviewOpen, setLodgingReviewOpen] = useState(false);
 
   const { data: reservation, isLoading } = useQuery({
     queryKey: ["lodge-reservation-full", reservationId],
@@ -355,6 +357,17 @@ export default function MyLodgingTripPage() {
       />
       <ReviewsList serviceType="hotel" serviceId={reservation.id} />
 
+      {/* Rate this stay (writes to lodging_reviews shown on the hotel detail page) */}
+      <div className="rounded-2xl border border-border bg-card p-4 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-sm font-bold">Rate your stay</p>
+          <p className="text-[11px] text-muted-foreground">Help other travellers — score 5 aspects in 30 seconds.</p>
+        </div>
+        <Button size="sm" onClick={() => setLodgingReviewOpen(true)}>
+          Rate stay
+        </Button>
+      </div>
+
       <RescheduleSheet
         open={rescheduleOpen}
         onOpenChange={setRescheduleOpen}
@@ -407,6 +420,14 @@ export default function MyLodgingTripPage() {
         serviceType="hotel"
         serviceId={reservation.id}
         title={store?.name || "Your stay"}
+      />
+      <LodgingReviewSheet
+        isOpen={lodgingReviewOpen}
+        onClose={() => setLodgingReviewOpen(false)}
+        storeId={reservation.store_id}
+        reservationId={reservation.id}
+        guestName={reservation.guest_name}
+        propertyName={store?.name || "Your stay"}
       />
     </div>
   );

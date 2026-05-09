@@ -13,6 +13,7 @@ import SEOHead from "@/components/SEOHead";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { isBlueVerified } from "@/lib/verification";
 import TrendingHashtags, { postHasHashtag } from "@/components/social/TrendingHashtags";
+import { EmptyState } from "@/components/ui/empty-state";
 import { detectMention, applyMention } from "@/components/social/MentionPicker";
 import { usePostActions, type PostActionTarget } from "@/hooks/usePostActions";
 import { usePostReactions } from "@/hooks/usePostReactions";
@@ -253,20 +254,35 @@ function InfiniteScrollSentinel({
 }
 
 function MusicTicker({ name, onClick }: { name: string; onClick?: () => void }) {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLDivElement>(null);
+  const [shouldMarquee, setShouldMarquee] = useState(false);
+
+  useEffect(() => {
+    if (!containerRef.current || !textRef.current) return;
+    setShouldMarquee(textRef.current.scrollWidth > containerRef.current.clientWidth + 4);
+  }, [name]);
+
   return (
     <button
       type="button"
       onClick={(e) => { e.stopPropagation(); onClick?.(); }}
-      className="flex items-center gap-2 max-w-[65%] overflow-hidden active:opacity-70"
+      className="flex items-center gap-2 max-w-[70%] overflow-hidden active:opacity-70"
     >
       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-white/20 to-white/5 border border-white/20 flex items-center justify-center shrink-0 animate-[spin_3s_linear_infinite]">
         <svg viewBox="0 0 24 24" className="w-4 h-4 fill-white">
           <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
         </svg>
       </div>
-      <div className="overflow-hidden">
-        <div className="whitespace-nowrap animate-[marquee_8s_linear_infinite] text-white text-xs font-medium drop-shadow">
-          {name} &nbsp;&nbsp; • &nbsp;&nbsp; {name}
+      <div ref={containerRef} className="overflow-hidden flex-1 min-w-0">
+        <div
+          ref={textRef}
+          className={cn(
+            "whitespace-nowrap text-white text-xs font-medium drop-shadow",
+            shouldMarquee && "animate-[marquee_12s_linear_infinite]",
+          )}
+        >
+          {shouldMarquee ? <>{name} &nbsp;&nbsp; • &nbsp;&nbsp; {name}</> : name}
         </div>
       </div>
     </button>
@@ -1421,7 +1437,7 @@ function ReelCard({
             <div className="relative flex-shrink-0">
               <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-white/80 bg-black/40">
                 {(post.source === "user" ? post.author_avatar : post.store_logo) ? (
-                  <img src={(post.source === "user" ? post.author_avatar : post.store_logo)!} alt="" className="w-full h-full object-cover" />
+                  <img src={(post.source === "user" ? post.author_avatar : post.store_logo)!} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
                     <Store className="w-5 h-5 text-white" />
@@ -1435,18 +1451,22 @@ function ReelCard({
                 </div>
               )}
             </div>
-            <span className="text-white font-bold text-sm sm:text-[15px] lg:text-base drop-shadow-lg inline-flex items-center gap-1">
-              {post.source === "user" ? post.author_name : post.store_name}
+            <span className="text-white font-bold text-sm sm:text-[15px] lg:text-base drop-shadow-lg inline-flex items-center gap-1 max-w-[40vw] sm:max-w-[180px] truncate">
+              <span className="truncate">{post.source === "user" ? post.author_name : post.store_name}</span>
               {(post.source === "user" ? isBlueVerified(post.author_is_verified) : isBlueVerified(post.store_is_verified)) && (
                 <VerifiedBadge size={16} />
               )}
             </span>
           </button>
 
-          {/* Live social-proof ticker — store posts only, self-hides when quiet */}
+          {/* Live social-proof ticker — store posts only, self-hides when quiet.
+              Hidden on small phones so it never pushes the author name into
+              an awkward 2–3 line wrap; visible from sm+. */}
           {post.source === "store" && post.store_id && (
             <Suspense fallback={null}>
-              <ReelSocialProof storeId={post.store_id} postId={post.id} />
+              <div className="hidden sm:block">
+                <ReelSocialProof storeId={post.store_id} postId={post.id} />
+              </div>
             </Suspense>
           )}
 
@@ -1684,7 +1704,7 @@ function ReelCard({
           >
             <div className="w-6 h-6 rounded-full overflow-hidden bg-white/15 border border-white/20 shrink-0">
               {topComment.author_avatar ? (
-                <img src={topComment.author_avatar} alt="" className="w-full h-full object-cover" />
+                <img src={topComment.author_avatar} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center text-white text-[10px] font-bold">
                   {topComment.author_name[0]?.toUpperCase()}
@@ -1816,18 +1836,20 @@ function ReelCard({
             aria-label={currentReaction ? `Reacted ${currentReaction}` : "Like"}
             title="Like (L)"
           >
-            {currentReaction ? (
-              <span className="text-3xl drop-shadow-lg leading-none transition-transform active:scale-125" aria-hidden>
-                {currentReaction}
-              </span>
-            ) : (
-              <Heart
-                className={cn(
-                  "w-9 h-9 lg:w-10 lg:h-10 drop-shadow-lg transition-transform active:scale-125",
-                  liked ? "text-destructive fill-destructive" : "text-white",
-                )}
-              />
-            )}
+            <div className="w-11 h-11 lg:w-12 lg:h-12 rounded-full bg-black/30 backdrop-blur-sm border border-white/10 flex items-center justify-center shadow-[0_4px_14px_-4px_rgba(0,0,0,0.6)] transition-transform active:scale-90">
+              {currentReaction ? (
+                <span className="text-2xl leading-none" aria-hidden>
+                  {currentReaction}
+                </span>
+              ) : (
+                <Heart
+                  className={cn(
+                    "w-6 h-6 lg:w-7 lg:h-7 transition-transform",
+                    liked ? "text-destructive fill-destructive" : "text-white",
+                  )}
+                />
+              )}
+            </div>
             <motion.span
               key={liveLikesCount}
               initial={{ scale: 1.3, color: "#ef4444" }}
@@ -1848,7 +1870,9 @@ function ReelCard({
           aria-label="Comment"
           title="Comments"
         >
-          <MessageCircle className="w-9 h-9 lg:w-10 lg:h-10 text-white drop-shadow-lg" />
+          <div className="w-11 h-11 lg:w-12 lg:h-12 rounded-full bg-black/30 backdrop-blur-sm border border-white/10 flex items-center justify-center shadow-[0_4px_14px_-4px_rgba(0,0,0,0.6)] transition-transform active:scale-90">
+            <MessageCircle className="w-6 h-6 lg:w-7 lg:h-7 text-white" />
+          </div>
           <motion.span
             key={liveCommentsCount}
             initial={{ scale: 1.3 }}
@@ -1877,14 +1901,16 @@ function ReelCard({
             className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
             aria-label={isReposted ? "Reposted" : "Repost"}
           >
-            <Repeat2 className={cn(
-              "w-9 h-9 drop-shadow-lg",
-              isReposted ? "text-emerald-400 fill-emerald-400/20" : "text-white",
-            )} />
-            <span className="text-white text-xs font-semibold drop-shadow">
+            <div className="w-11 h-11 lg:w-12 lg:h-12 rounded-full bg-black/30 backdrop-blur-sm border border-white/10 flex items-center justify-center shadow-[0_4px_14px_-4px_rgba(0,0,0,0.6)] transition-transform active:scale-90">
+              <Repeat2 className={cn(
+                "w-6 h-6 lg:w-7 lg:h-7",
+                isReposted ? "text-emerald-400 fill-emerald-400/20" : "text-white",
+              )} />
+            </div>
+            <span className="text-white text-[11px] sm:text-xs font-semibold drop-shadow min-h-[14px]">
               {(post.reposts_count || 0) > 0
                 ? (post.reposts_count! > 999 ? `${(post.reposts_count! / 1000).toFixed(1)}k` : post.reposts_count)
-                : isReposted ? "Reposted" : "Repost"}
+                : isReposted ? "Done" : ""}
             </span>
           </button>
         )}
@@ -1897,11 +1923,13 @@ function ReelCard({
           aria-label="Share"
           title="Share"
         >
-          <Send className="w-9 h-9 lg:w-10 lg:h-10 text-white drop-shadow-lg" />
-          <span className="text-white text-xs font-semibold drop-shadow">
+          <div className="w-11 h-11 lg:w-12 lg:h-12 rounded-full bg-black/30 backdrop-blur-sm border border-white/10 flex items-center justify-center shadow-[0_4px_14px_-4px_rgba(0,0,0,0.6)] transition-transform active:scale-90">
+            <Send className="w-6 h-6 lg:w-7 lg:h-7 text-white" />
+          </div>
+          <span className="text-white text-[11px] sm:text-xs font-semibold drop-shadow min-h-[14px]">
             {(post.shares_count || 0) > 0
               ? (post.shares_count! > 999 ? `${(post.shares_count! / 1000).toFixed(1)}k` : post.shares_count)
-              : "Share"}
+              : ""}
           </span>
         </button>
 
@@ -1913,23 +1941,26 @@ function ReelCard({
           aria-label={saved ? "Remove from saved" : "Save reel"}
           title={saved ? "Saved" : "Save"}
         >
-          <Bookmark
-            className={cn(
-              "w-9 h-9 drop-shadow-lg transition-transform active:scale-125",
-              saved ? "text-amber-400 fill-amber-400" : "text-white",
-            )}
-          />
-          <span className="text-white text-xs font-semibold drop-shadow">
-            {saved ? "Saved" : "Save"}
+          <div className="w-11 h-11 lg:w-12 lg:h-12 rounded-full bg-black/30 backdrop-blur-sm border border-white/10 flex items-center justify-center shadow-[0_4px_14px_-4px_rgba(0,0,0,0.6)] transition-transform active:scale-90">
+            <Bookmark
+              className={cn(
+                "w-6 h-6 lg:w-7 lg:h-7 transition-transform",
+                saved ? "text-amber-400 fill-amber-400" : "text-white",
+              )}
+            />
+          </div>
+          <span className="text-white text-[11px] sm:text-xs font-semibold drop-shadow min-h-[14px]">
+            {saved ? "Saved" : ""}
           </span>
         </button>
 
-        {/* CC / Subtitles toggle */}
+        {/* CC / Subtitles toggle — hidden on small phones to keep the rail
+            from running off-screen; reachable via the More menu. */}
         {post.caption && (
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); setShowCaptions((v) => !v); }}
-            className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
+            className="hidden sm:flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
             aria-label={showCaptions ? "Hide captions" : "Show captions"}
             title="Captions"
           >
@@ -1959,7 +1990,7 @@ function ReelCard({
               toast.success("Starting duet…");
               if (onOpenActions) onOpenActions();
             }}
-            className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
+            className="hidden sm:flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
             aria-label="Duet this video"
             title="Duet"
           >
@@ -2031,10 +2062,6 @@ function ReelCard({
               <Music className="w-4 h-4 text-white" />
             )}
           </div>
-          {/* "Use sound" shortcut badge */}
-          <span className="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-white flex items-center justify-center shadow-md border border-black/10">
-            <Plus className="w-3 h-3 text-black" />
-          </span>
         </button>
       </div>
 
@@ -2657,11 +2684,14 @@ function CommentSheet({
 
       {/* Sheet */}
       <div
-        className="relative bg-background rounded-t-2xl max-h-[65vh] flex flex-col animate-in slide-in-from-bottom duration-300"
+        className="relative bg-background rounded-t-3xl max-h-[72vh] flex flex-col animate-in slide-in-from-bottom duration-300 [padding-top:var(--zivo-safe-top-sheet)] [padding-bottom:env(safe-area-inset-bottom,0px)]"
         onClick={(e) => e.stopPropagation()}
       >
+        <div className="flex justify-center pt-2 pb-1" aria-hidden="true">
+          <div className="h-1.5 w-10 rounded-full bg-muted-foreground/30" />
+        </div>
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border">
+        <div className="flex items-center justify-between px-5 pt-1 pb-3 border-b border-border">
           <span className="font-semibold text-foreground">Comments ({comments.length})</span>
           <button
             type="button"
@@ -2712,7 +2742,10 @@ function CommentSheet({
               <Loader2 className="w-5 h-5 animate-spin text-muted-foreground" />
             </div>
           ) : comments.length === 0 ? (
-            <p className="text-center text-muted-foreground text-sm py-8">No comments yet. Be the first!</p>
+            <div className="flex flex-col items-center justify-center py-12 gap-2 text-center">
+              <MessageCircle className="w-8 h-8 text-muted-foreground/30" />
+              <p className="text-sm text-muted-foreground">No comments yet. Start the conversation.</p>
+            </div>
           ) : (() => {
             // Group comments into top-level + replies-by-parent
             const topLevel: any[] = [];
@@ -2749,7 +2782,7 @@ function CommentSheet({
                 <div key={c.id} className={`flex gap-2 ${isReply ? "ml-9" : ""}`}>
                   <div className={`${avatarSize} rounded-full bg-muted flex items-center justify-center flex-shrink-0 mt-0.5 overflow-hidden`}>
                     {prof?.avatar_url ? (
-                      <img src={prof.avatar_url} alt="" className="w-full h-full object-cover" />
+                      <img src={prof.avatar_url} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
                     ) : (
                       <span className="text-xs font-bold text-muted-foreground">{initials}</span>
                     )}
@@ -3015,7 +3048,7 @@ function FeedSearchOverlay({ onClose, onNavigate }: { onClose: () => void; onNav
   return (
     <div className="fixed inset-0 z-[1500] bg-background flex flex-col">
       {/* Search header */}
-      <div className="flex items-center gap-2 px-3 py-2.5 border-b border-border/50">
+      <div className="safe-area-top pt-2 px-3 pb-2.5 flex items-center gap-2 border-b border-border/50">
         <button type="button" onClick={onClose} aria-label="Close search" title="Close search" className="p-2 rounded-full hover:bg-muted/50">
           <ArrowLeft className="w-5 h-5 text-foreground" />
         </button>
@@ -3025,8 +3058,8 @@ function FeedSearchOverlay({ onClose, onNavigate }: { onClose: () => void; onNav
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search shops, people..."
-            className="w-full h-10 pl-9 pr-9 rounded-full bg-muted/40 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
+            placeholder="Search shops, restaurants, or people"
+            className="w-full h-11 pl-9 pr-9 rounded-full bg-muted/40 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
           {query && (
             <button type="button" onClick={() => setQuery("")} aria-label="Clear search" title="Clear search" className="absolute right-3 top-1/2 -translate-y-1/2">
@@ -3039,7 +3072,7 @@ function FeedSearchOverlay({ onClose, onNavigate }: { onClose: () => void; onNav
       {/* Results */}
       <div className="flex-1 overflow-y-auto pb-nav">
         {!hasQuery && (
-          <div className="flex flex-col items-center justify-center h-full text-center px-8 gap-3">
+          <div className="flex min-h-full flex-col items-center text-center px-8 gap-3 pt-[18vh]">
             <Search className="w-12 h-12 text-muted-foreground/30" />
             <p className="text-sm text-muted-foreground">Search for shops, restaurants, or people</p>
           </div>
@@ -3070,7 +3103,7 @@ function FeedSearchOverlay({ onClose, onNavigate }: { onClose: () => void; onNav
               >
                 <div className="w-11 h-11 rounded-full bg-muted/30 border border-border/30 flex items-center justify-center overflow-hidden shrink-0">
                   {store.logo_url ? (
-                    <img src={store.logo_url} alt="" className="w-full h-full object-cover" />
+                    <img src={store.logo_url} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
                   ) : (
                     <Store className="w-5 h-5 text-muted-foreground" />
                   )}
@@ -3096,7 +3129,7 @@ function FeedSearchOverlay({ onClose, onNavigate }: { onClose: () => void; onNav
               >
                 <div className="w-11 h-11 rounded-full bg-muted/30 border border-border/30 flex items-center justify-center overflow-hidden shrink-0">
                   {person.avatar_url ? (
-                    <img src={person.avatar_url} alt="" className="w-full h-full object-cover" />
+                    <img src={person.avatar_url} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
                   ) : (
                     <UserCircle className="w-6 h-6 text-muted-foreground" />
                   )}
@@ -3273,6 +3306,8 @@ function SoundOverlay({
                           <img
                             src={thumb}
                             alt=""
+                            loading="lazy"
+                            decoding="async"
                             className="w-full h-full object-cover"
                             onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                           />
@@ -3384,7 +3419,7 @@ function DiscoverPeopleOverlay({ onClose, onNavigate }: { onClose: () => void; o
                 <div onClick={() => { onClose(); onNavigate(`/user/${profile.id}`); }} className="cursor-pointer">
                   <div className="w-16 h-16 mx-auto mb-2 rounded-full overflow-hidden bg-muted ring-2 ring-primary/10">
                     {profile.avatar_url ? (
-                      <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" />
+                      <img src={profile.avatar_url} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
                     ) : (
                       <div className="w-full h-full flex items-center justify-center text-primary font-bold text-xl bg-primary/10">
                         {profile.full_name?.[0]?.toUpperCase() || "?"}
@@ -4237,15 +4272,22 @@ export default function FeedPage() {
   // Hashtag filter narrowed to zero — let the user clear it without leaving the page.
   if (selectedHashtag && visiblePosts.length === 0) {
     return (
-      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-4 z-50 px-8 text-center">
-        <p className="text-white font-semibold">No reels with #{selectedHashtag} yet</p>
-        <p className="text-white/50 text-sm">Try a different tag, or clear the filter to see all reels.</p>
-        <button type="button"
-          onClick={() => setSelectedHashtag(null)}
-          className="mt-2 px-5 py-2 rounded-full bg-white text-black text-sm font-bold active:scale-95 transition-transform"
-        >
-          Clear filter
-        </button>
+      <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
+        <EmptyState
+          tone="muted"
+          title={`No reels with #${selectedHashtag} yet`}
+          description="Try a different tag, or clear the filter to see all reels."
+          action={
+            <button
+              type="button"
+              onClick={() => setSelectedHashtag(null)}
+              className="px-5 py-2 rounded-full bg-white text-black text-sm font-bold active:scale-95 transition-transform"
+            >
+              Clear filter
+            </button>
+          }
+          className="text-white [&_h3]:text-white [&_p]:text-white/55"
+        />
         <ZivoMobileNav />
       </div>
     );
@@ -4254,22 +4296,32 @@ export default function FeedPage() {
   // Following tab with no matching reels — distinct empty state.
   if (feedMode === "following" && visiblePosts.length === 0 && userId) {
     return (
-      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-4 z-50 px-8 text-center">
-        <UserPlus className="h-14 w-14 text-white/20" />
-        <p className="text-white font-semibold">No reels from people you follow</p>
-        <p className="text-white/50 text-sm">Follow creators to see their reels here, or switch back to For You to discover new ones.</p>
-        <button type="button"
-          onClick={() => setFeedMode("foryou")}
-          className="mt-2 px-5 py-2 rounded-full bg-white text-black text-sm font-bold active:scale-95 transition-transform"
-        >
-          Back to For You
-        </button>
-        <button type="button"
-          onClick={() => setShowDiscover(true)}
-          className="text-white/70 text-sm underline"
-        >
-          Discover creators
-        </button>
+      <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
+        <EmptyState
+          icon={UserPlus}
+          tone="brand"
+          title="No reels from people you follow"
+          description="Follow creators to see their reels here, or jump back to For You to discover new ones."
+          action={
+            <button
+              type="button"
+              onClick={() => setFeedMode("foryou")}
+              className="px-5 py-2 rounded-full bg-white text-black text-sm font-bold active:scale-95 transition-transform"
+            >
+              Back to For You
+            </button>
+          }
+          secondaryAction={
+            <button
+              type="button"
+              onClick={() => setShowDiscover(true)}
+              className="px-5 py-2 rounded-full bg-white/10 text-white text-sm font-semibold ring-1 ring-white/15 backdrop-blur-md active:scale-95 transition-transform"
+            >
+              Discover creators
+            </button>
+          }
+          className="text-white [&_h3]:text-white [&_p]:text-white/55"
+        />
         <ZivoMobileNav />
       </div>
     );
@@ -4310,45 +4362,57 @@ export default function FeedPage() {
           so we max() the safe-area inset with 16px so the tabs sit inside the
           frame instead of floating above it on tablets without a notch. */}
       {userId && (
-        <div className="absolute left-1/2 top-safe-overlay -translate-x-1/2 z-50 flex items-center gap-4 sm:gap-5 lg:gap-7">
-          {(["foryou", "following", "trending"] as const).map((mode) => (
-            <button type="button"
-              key={mode}
-              type="button"
-              onClick={() => {
-                const now = Date.now();
-                // Double-tap the SAME tab within 400ms → refresh + scroll to top
-                if (
-                  feedMode === mode &&
-                  lastTabTapRef.current.mode === mode &&
-                  now - lastTabTapRef.current.at < 400
-                ) {
-                  lastTabTapRef.current = { mode: "", at: 0 };
-                  void queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
-                  cardRefs.current[0]?.scrollIntoView({ behavior: "smooth", block: "start" });
-                  toast.success("Refreshing…");
-                  return;
-                }
-                lastTabTapRef.current = { mode, at: now };
-                setFeedMode(mode);
-                setActiveIndex(0);
-                requestAnimationFrame(() => cardRefs.current[0]?.scrollIntoView({ block: "start" }));
-              }}
-              className={cn(
-                "relative py-2 px-1 min-h-[44px] text-sm sm:text-[15px] lg:text-base font-bold transition-colors drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)] active:scale-95",
-                feedMode === mode ? "text-white" : "text-white/60",
-              )}
-            >
-              {mode === "foryou" ? "For You" : mode === "following" ? "Following" : "🔥 Trending"}
-              {feedMode === mode && (
-                <motion.span
-                  layoutId="reel-tab-underline"
-                  transition={{ type: "spring", damping: 26, stiffness: 380 }}
-                  className="absolute bottom-1 left-1/2 -translate-x-1/2 w-6 lg:w-8 h-0.5 lg:h-1 rounded-full bg-white"
-                />
-              )}
-            </button>
-          ))}
+        <div className="absolute left-1/2 top-safe-overlay -translate-x-1/2 z-50">
+          <div
+            className="relative flex items-center gap-1 rounded-full px-1.5 py-1 backdrop-blur-md bg-black/30 ring-1 ring-white/10 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.5)]"
+            role="tablist"
+            aria-label="Reel feed mode"
+          >
+            {(["foryou", "following", "trending"] as const).map((mode) => (
+              <button
+                key={mode}
+                type="button"
+                role="tab"
+                aria-selected={feedMode === mode}
+                onClick={() => {
+                  const now = Date.now();
+                  // Double-tap the SAME tab within 400ms → refresh + scroll to top
+                  if (
+                    feedMode === mode &&
+                    lastTabTapRef.current.mode === mode &&
+                    now - lastTabTapRef.current.at < 400
+                  ) {
+                    lastTabTapRef.current = { mode: "", at: 0 };
+                    void queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
+                    cardRefs.current[0]?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    toast.success("Refreshing…");
+                    return;
+                  }
+                  lastTabTapRef.current = { mode, at: now };
+                  setFeedMode(mode);
+                  setActiveIndex(0);
+                  requestAnimationFrame(() => cardRefs.current[0]?.scrollIntoView({ block: "start" }));
+                }}
+                className={cn(
+                  "relative isolate min-h-[36px] px-3.5 sm:px-4 lg:px-5 rounded-full text-[13px] sm:text-sm lg:text-[15px] font-semibold tracking-tight whitespace-nowrap transition-colors duration-200 active:scale-[0.97]",
+                  feedMode === mode
+                    ? "text-black"
+                    : "text-white/80 hover:text-white",
+                )}
+              >
+                {feedMode === mode && (
+                  <motion.span
+                    layoutId="reel-tab-pill"
+                    transition={{ type: "spring", damping: 28, stiffness: 380 }}
+                    className="absolute inset-0 -z-10 rounded-full bg-white shadow-[0_2px_10px_rgba(255,255,255,0.35)]"
+                  />
+                )}
+                <span className="relative z-10">
+                  {mode === "foryou" ? "For You" : mode === "following" ? "Following" : "Trending"}
+                </span>
+              </button>
+            ))}
+          </div>
         </div>
       )}
 
@@ -4356,7 +4420,7 @@ export default function FeedPage() {
           Wrapped in a centered container so on iPad (md+), where the reel
           sits in a 420-px-wide phone frame, the buttons hug the right edge
           of the frame instead of floating in the black gutter outside it. */}
-      <div className="absolute inset-x-0 top-safe-overlay z-50 mx-auto md:max-w-[420px] pointer-events-none lg:hidden">
+      <div className="absolute inset-x-0 top-safe-overlay z-50 mx-auto md:max-w-[420px] pointer-events-none lg:hidden mt-12 sm:mt-0">
       <div data-testid="feed-floating-actions" className="flex justify-end gap-2 sm:gap-2.5 px-3 sm:px-4">
         {/* Live entry — also reachable via the bottom nav, so hide on the
             smallest phones (<sm) where the row would collide with center tabs. */}
@@ -4828,24 +4892,16 @@ export default function FeedPage() {
       {/* Share sheet */}
       {sharePostId && (() => {
         const sharePost = posts.find((p) => p.id === sharePostId);
-        const sharePostSource = sharePost?.source ?? "store";
-        const sharePostRawId = sharePostId.startsWith("u-") ? sharePostId.slice(2) : sharePostId;
         return (
-          <UnifiedShareSheet
-            shareUrl={getPostShareUrl(sharePostId)}
-            shareText={sharePost?.caption || "Check out this post!"}
-            onClose={() => {
-              // Log the share so the count actually moves. Channel is "other"
-              // because the unified sheet doesn't tell us which target was used;
-              // we'll segment in a future improvement.
-              (supabase as any).rpc("record_post_share", {
-                _post_id: sharePostRawId,
-                _source: sharePostSource,
-                _channel: "other",
-              }).catch(() => { /* fire-and-forget */ });
-              setSharePostId(null);
-            }}
-          />
+          <Suspense fallback={null}>
+            <UnifiedShareSheet
+              shareUrl={getPostShareUrl(sharePostId)}
+              shareText={sharePost?.caption || "Check out this post!"}
+              sharePostId={sharePostId.startsWith("u-") ? sharePostId.slice(2) : sharePostId}
+              postSource={sharePost?.source ?? "store"}
+              onClose={() => setSharePostId(null)}
+            />
+          </Suspense>
         );
       })()}
 

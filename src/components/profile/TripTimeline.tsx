@@ -2,7 +2,8 @@
  * TripTimeline Component
  * Premium 2026-era visual journey flow from Flight → Hotel
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
+import { useVisibleInterval } from "@/hooks/useVisibleInterval";
 import { Plane, Hotel, CloudRain, Sun, Cloud, ArrowRight, Calendar, type LucideIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useMyTrips } from "@/hooks/useMyTrips";
@@ -22,18 +23,18 @@ function getDepartureLabel(date: Date): string {
 function useCountdown(targetDate: Date) {
   const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0 });
 
-  useEffect(() => {
-    const updateCountdown = () => {
-      const now = new Date();
-      const hours = differenceInHours(targetDate, now);
-      const minutes = differenceInMinutes(targetDate, now) % 60;
-      setTimeLeft({ hours: Math.max(0, hours), minutes: Math.max(0, minutes) });
-    };
-
-    updateCountdown();
-    const interval = setInterval(updateCountdown, 60000);
-    return () => clearInterval(interval);
+  const updateCountdown = useCallback(() => {
+    const now = new Date();
+    const hours = differenceInHours(targetDate, now);
+    const minutes = differenceInMinutes(targetDate, now) % 60;
+    setTimeLeft({ hours: Math.max(0, hours), minutes: Math.max(0, minutes) });
   }, [targetDate]);
+
+  useEffect(() => {
+    updateCountdown();
+  }, [updateCountdown]);
+
+  useVisibleInterval(updateCountdown, 60000, { tickOnVisible: true });
 
   return timeLeft;
 }
