@@ -1,6 +1,12 @@
 project_id = "slirphzzwcogdbkeicff"
 
 [functions]
+  [functions.notify-dispatch]
+    verify_jwt = false
+  [functions.send-sms]
+    verify_jwt = false
+  [functions.send-test-notification]
+    verify_jwt = true
   [functions.supplier-proxy]
     verify_jwt = false
   [functions.scan-invoice]

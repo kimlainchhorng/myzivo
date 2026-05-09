@@ -100,6 +100,25 @@ Deno.serve(async (req) => {
         continue;
       }
       totalNotified += rows.length;
+
+      try {
+        await fetch(`${Deno.env.get("SUPABASE_URL")}/functions/v1/send-push-notification`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            user_ids: recipients,
+            notification_type: "channel_post",
+            title: ch.name,
+            body: (post.body ?? "Posted in channel").slice(0, 140),
+            data: { channel_id: post.channel_id, post_id: post.id, handle: ch.handle, url: actionUrl },
+          }),
+        });
+      } catch (e) {
+        console.warn("[channel-publish-scheduled] push fanout failed", String(e));
+      }
     }
   }
 

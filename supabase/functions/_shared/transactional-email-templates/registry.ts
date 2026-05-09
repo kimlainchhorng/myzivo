@@ -14,6 +14,7 @@ import { template as eatsRefundIssued } from './eats-refund-issued.tsx'
 import { template as groceryOrderConfirmed } from './grocery-order-confirmed.tsx'
 import { template as newDeviceLogin } from './new-device-login.tsx'
 import { template as countryChangeLogin } from './country-change-login.tsx'
+import { template as notificationGeneric } from './notification-generic.tsx'
 
 export type TemplateEntry<Props = Record<string, unknown>> = {
   component: React.ComponentType<Props>
@@ -38,4 +39,54 @@ export const TEMPLATES: Record<string, TemplateEntry<any>> = {
   'grocery-order-confirmed': groceryOrderConfirmed,
   'new-device-login': newDeviceLogin,
   'country-change-login': countryChangeLogin,
+  'notification-generic': notificationGeneric,
 }
+
+/**
+ * Aliases — many event_types from notify-dispatch don't have a bespoke
+ * template (ride status, marketplace updates, creator subscriber events,
+ * social activity, channel posts, etc.). Map them all to the generic
+ * fallback so we never silently drop the email.
+ */
+const GENERIC_FALLBACK_PREFIXES = [
+  'ride_',
+  'eats_order_',          // bespoke template only covers `eats-order-confirmed`
+  'lodge_booking_',       // bespoke covers `lodging-booking-confirmed`
+  'flight_booking_',
+  'marketplace_order_',
+  'wallet_',
+  'creator_',
+  'social_',
+  'channel_',
+  'chat_',
+  'bot_',
+  'group_',
+] as const
+
+for (const prefix of GENERIC_FALLBACK_PREFIXES) {
+  // Register the prefix itself as an alias so any future direct match
+  // hits the generic — bespoke templates registered above keep precedence.
+  TEMPLATES[prefix] = TEMPLATES[prefix] ?? notificationGeneric
+}
+
+// Proxy lookup so any unknown templateName falls back to the generic
+// renderer rather than 404'ing — guarantees notify-dispatch's email path
+// always succeeds for the stock event taxonomy. Bespoke templates above
+// retain their identity and rendering logic.
+export const TEMPLATES_WITH_FALLBACK: Record<string, TemplateEntry<any>> =
+  new Proxy(TEMPLATES, {
+    get(target, prop) {
+      if (typeof prop !== 'string') return Reflect.get(target, prop)
+      if (prop in target) return target[prop]
+      // Match any prefix in the fallback list.
+      for (const pfx of GENERIC_FALLBACK_PREFIXES) {
+        if (prop.startsWith(pfx)) return notificationGeneric
+      }
+      return undefined
+    },
+    has(target, prop) {
+      if (typeof prop !== 'string') return prop in target
+      if (prop in target) return true
+      return GENERIC_FALLBACK_PREFIXES.some((p) => prop.startsWith(p))
+    },
+  })

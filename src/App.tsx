@@ -292,6 +292,7 @@ const DriverShoppingList = lazy(() => import("./pages/DriverShoppingList"));
 const DriverOrdersPage = lazy(() => import("./pages/DriverOrdersPage"));
 const AdminShoppingOrders = lazy(() => import("./pages/admin/AdminShoppingOrders"));
 const AdminAnalyticsDashboard = lazy(() => import("./pages/admin/AdminAnalyticsDashboard"));
+const AdminNotificationAnalyticsPage = lazy(() => import("./pages/admin/AdminNotificationAnalyticsPage"));
 const AdminStoriesFunnelPage = lazy(() => import("./pages/admin/AdminStoriesFunnelPage"));
 const AdminUsersPage = lazy(() => import("./pages/admin/AdminUsersPage"));
 const AdminPricingPage = lazy(() => import("./pages/admin/AdminPricingPage"));
@@ -1059,6 +1060,7 @@ const App = () => (
                 <Route path="/package-delivery" element={<PreserveQueryRedirect to="/delivery" />} />
                 <Route path="/admin/shopping-orders" element={<ProtectedRoute requireAdmin={true}><AdminShoppingOrders /></ProtectedRoute>} />
                 <Route path="/admin/analytics" element={<ProtectedRoute requireAdmin={true}><AdminAnalyticsDashboard /></ProtectedRoute>} />
+                <Route path="/admin/notifications/analytics" element={<ProtectedRoute requireAdmin={true}><AdminNotificationAnalyticsPage /></ProtectedRoute>} />
                 <Route path="/admin/stories-funnel" element={<ProtectedRoute requireAdmin={true}><AdminStoriesFunnelPage /></ProtectedRoute>} />
                 <Route path="/admin/users" element={<ProtectedRoute requireAdmin={true}><AdminUsersPage /></ProtectedRoute>} />
                 <Route path="/admin/pricing" element={<ProtectedRoute requireAdmin={true}><AdminPricingPage /></ProtectedRoute>} />

@@ -30,6 +30,8 @@ interface UseNotificationsResult {
   fetchNotifications: () => Promise<void>;
   markAsRead: (notificationIds: string[]) => Promise<void>;
   markAllAsRead: () => Promise<void>;
+  deleteNotifications: (notificationIds: string[]) => Promise<void>;
+  clearAll: () => Promise<void>;
 }
 
 export function useNotifications(limit = 50): UseNotificationsResult {
@@ -147,6 +149,67 @@ export function useNotifications(limit = 50): UseNotificationsResult {
     }
   }, [toast]);
 
+  const deleteNotifications = useCallback(async (notificationIds: string[]) => {
+    if (notificationIds.length === 0) return;
+    const prevSnapshot = notifications;
+    const removed = prevSnapshot.filter(n => notificationIds.includes(n.id));
+    const removedUnread = removed.filter(n => !n.is_read).length;
+    setNotifications(prev => prev.filter(n => !notificationIds.includes(n.id)));
+    setUnreadCount(prev => Math.max(0, prev - removedUnread));
+
+    try {
+      const { error: delError } = await supabase
+        .from('notifications')
+        .delete()
+        .in('id', notificationIds);
+      if (delError) throw delError;
+    } catch (err: any) {
+      setNotifications(prevSnapshot);
+      setUnreadCount(prev => prev + removedUnread);
+      console.error('Error deleting notifications:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete notification',
+        variant: 'destructive',
+      });
+    }
+  }, [notifications, toast]);
+
+  const clearAll = useCallback(async () => {
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session?.user) return;
+
+      const prevSnapshot = notifications;
+      setNotifications([]);
+      setUnreadCount(0);
+
+      const { error: delError } = await supabase
+        .from('notifications')
+        .delete()
+        .eq('user_id', session.session.user.id)
+        .eq('channel', 'in_app');
+
+      if (delError) {
+        setNotifications(prevSnapshot);
+        setUnreadCount(prevSnapshot.filter(n => !n.is_read).length);
+        throw delError;
+      }
+
+      toast({
+        title: 'Cleared',
+        description: 'All notifications removed',
+      });
+    } catch (err: any) {
+      console.error('Error clearing notifications:', err);
+      toast({
+        title: 'Error',
+        description: 'Failed to clear notifications',
+        variant: 'destructive',
+      });
+    }
+  }, [notifications, toast]);
+
   // Initial fetch
   useEffect(() => {
     fetchNotifications();
@@ -161,30 +224,85 @@ export function useNotifications(limit = 50): UseNotificationsResult {
       const { data: session } = await supabase.auth.getSession();
       if (cancelled || !session?.session?.user) return;
 
+      const userId = session.session.user.id;
       const channel = supabase.channel(
-        `notifications-realtime-${session.session.user.id}-${crypto.randomUUID()}`,
+        `notifications-realtime-${userId}-${crypto.randomUUID()}`,
       );
       activeChannel = channel;
+
+      // INSERT: prepend new notification, bump unread, show toast
       channel.on(
         'postgres_changes' as never,
         {
           event: 'INSERT',
           schema: 'public',
           table: 'notifications',
-          filter: `user_id=eq.${session.session.user.id}`,
+          filter: `user_id=eq.${userId}`,
         },
         (payload: { new: unknown }) => {
           const newNotification = payload.new as Notification;
-          if (newNotification.channel === 'in_app') {
-            setNotifications((prev) => [newNotification, ...prev].slice(0, limit));
+          if (newNotification.channel !== 'in_app') return;
+          setNotifications((prev) => {
+            // De-dupe — if dispatcher fired twice with same id, don't double-insert.
+            if (prev.some((n) => n.id === newNotification.id)) return prev;
+            return [newNotification, ...prev].slice(0, limit);
+          });
+          if (!newNotification.is_read) {
             setUnreadCount((prev) => prev + 1);
-            toast({
-              title: newNotification.title,
-              description: newNotification.body.substring(0, 100),
-            });
           }
+          toast({
+            title: newNotification.title,
+            description: newNotification.body.substring(0, 100),
+          });
         },
       );
+
+      // UPDATE: keep cross-device read-state in sync. If another device
+      // marks an item read, this device should reflect it without manual refresh.
+      channel.on(
+        'postgres_changes' as never,
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload: { new: unknown; old?: unknown }) => {
+          const updated = payload.new as Notification;
+          const previous = payload.old as Notification | undefined;
+          setNotifications((prev) =>
+            prev.map((n) => (n.id === updated.id ? { ...n, ...updated } : n)),
+          );
+          // Adjust unread count delta based on read-state transition.
+          const wasRead = previous?.is_read ?? false;
+          const isRead = updated.is_read;
+          if (wasRead && !isRead) setUnreadCount((c) => c + 1);
+          else if (!wasRead && isRead) setUnreadCount((c) => Math.max(0, c - 1));
+        },
+      );
+
+      // DELETE: drop the row from local state. Decrement unread if the
+      // removed row was unread.
+      channel.on(
+        'postgres_changes' as never,
+        {
+          event: 'DELETE',
+          schema: 'public',
+          table: 'notifications',
+          filter: `user_id=eq.${userId}`,
+        },
+        (payload: { old: unknown }) => {
+          const removed = payload.old as Notification;
+          let wasUnread = false;
+          setNotifications((prev) => {
+            const target = prev.find((n) => n.id === removed.id);
+            wasUnread = !!target && !target.is_read;
+            return prev.filter((n) => n.id !== removed.id);
+          });
+          if (wasUnread) setUnreadCount((c) => Math.max(0, c - 1));
+        },
+      );
+
       channel.subscribe();
     })();
 
@@ -201,6 +319,8 @@ export function useNotifications(limit = 50): UseNotificationsResult {
     error,
     fetchNotifications,
     markAsRead,
-    markAllAsRead
+    markAllAsRead,
+    deleteNotifications,
+    clearAll,
   };
 }

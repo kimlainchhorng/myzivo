@@ -31,6 +31,7 @@ const isGroup = (entry: NavEntry): entry is NavGroup => "children" in entry;
 
 const adminNavEntries: NavEntry[] = [
   { label: "Overview", icon: BarChart3, path: "/admin/analytics" },
+  { label: "Notifications", icon: Bell, path: "/admin/notifications/analytics" },
 
   {
     label: "Users", icon: Users, children: [

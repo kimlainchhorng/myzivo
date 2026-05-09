@@ -23,7 +23,7 @@ import { useSocialNotifications, SocialNotification } from '@/hooks/useSocialNot
 import VerifiedBadge from '@/components/VerifiedBadge';
 import { isBlueVerified } from '@/lib/verification';
 
-type NotificationCategory = 'all' | 'social' | 'orders' | 'promos' | 'support' | 'delays';
+type NotificationCategory = 'all' | 'chat' | 'social' | 'orders' | 'promos' | 'support' | 'delays';
 
 interface FriendRequest {
   id: string;
@@ -270,14 +270,18 @@ const NotificationsPage = () => {
   // Templates produced by the in-DB social triggers
   // (see 20260430010000_social_notifications_and_comment_hearts.sql).
   const isSocialTemplate = (t?: string | null) =>
-    !!t && (t === "social_reaction" || t === "social_repost" || t === "social_comment" || t === "social_mention" || t.startsWith("social_"));
+    !!t && (t === "social_reaction" || t === "social_repost" || t === "social_comment" || t === "social_mention" || t === "channel_post" || t.startsWith("social_"));
+
+  const isChatTemplate = (t?: string | null, c?: string | null) =>
+    c === 'chat' || t === 'chat_message' || t === 'bot_reply';
 
   const filteredNotifications = useMemo(() => {
     if (activeTab === 'all') return notifications;
     return notifications.filter(n => {
       switch (activeTab) {
-        case 'social':  return isSocialTemplate(n.template);
-        case 'orders':  return n.category === 'transactional';
+        case 'chat':    return isChatTemplate(n.template, n.category);
+        case 'social':  return isSocialTemplate(n.template) || n.category === 'social';
+        case 'orders':  return n.category === 'transactional' || n.category === 'order';
         case 'promos':  return n.category === 'marketing';
         case 'support': return n.category === 'operational';
         case 'delays':  return n.template?.toLowerCase().includes('delay') || n.title?.toLowerCase().includes('delay');
@@ -287,16 +291,17 @@ const NotificationsPage = () => {
   }, [notifications, activeTab]);
 
   const categoryCounts = useMemo(() => {
-    const counts = { all: 0, social: friendRequests.length + socialUnread, orders: 0, promos: 0, support: 0, delays: 0 };
+    const counts = { all: 0, chat: 0, social: friendRequests.length + socialUnread, orders: 0, promos: 0, support: 0, delays: 0 };
     notifications.forEach(n => {
       if (!n.is_read) {
         counts.all++;
-        if (n.category === 'transactional') counts.orders++;
+        if (n.category === 'transactional' || n.category === 'order') counts.orders++;
         else if (n.category === 'marketing') counts.promos++;
         else if (n.category === 'operational') counts.support++;
         if (n.template?.toLowerCase().includes('delay') || n.title?.toLowerCase().includes('delay')) counts.delays++;
+        if (isChatTemplate(n.template, n.category)) counts.chat++;
         // Trigger-generated social notifications (reactions/reposts/mentions/comments)
-        if (isSocialTemplate(n.template)) counts.social++;
+        if (isSocialTemplate(n.template) || n.category === 'social') counts.social++;
       }
     });
     counts.all += friendRequests.length + socialUnread;
@@ -320,6 +325,7 @@ const NotificationsPage = () => {
   const getEmptyMessage = (tab: NotificationCategory) => {
     const msgs: Record<NotificationCategory, string> = {
       all: "No notifications yet. You'll see updates here.",
+      chat: "No new messages.",
       social: "No friend requests or social activity.",
       orders: "No order updates yet.",
       promos: "No promotions right now.",
@@ -331,7 +337,7 @@ const NotificationsPage = () => {
 
   const getEmptyIcon = (tab: NotificationCategory) => {
     const icons: Record<NotificationCategory, typeof Bell> = {
-      all: Bell, social: UserPlus, orders: Package, promos: Gift, support: Headphones, delays: Clock,
+      all: Bell, chat: MessageCircleIcon, social: UserPlus, orders: Package, promos: Gift, support: Headphones, delays: Clock,
     };
     const Icon = icons[tab];
     return (
@@ -348,6 +354,7 @@ const NotificationsPage = () => {
 
   const tabs: { value: NotificationCategory; label: string; icon: typeof Bell }[] = [
     { value: 'all', label: t('notif.all'), icon: Bell },
+    { value: 'chat', label: 'Chat', icon: MessageCircleIcon },
     { value: 'social', label: 'Social', icon: UserPlus },
     { value: 'orders', label: t('notif.orders'), icon: Package },
     { value: 'promos', label: t('notif.promos'), icon: Gift },
