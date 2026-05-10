@@ -37,8 +37,8 @@ export default function TrendingNearYou() {
     <div className="px-4 py-3">
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2.5">
-          <div className="relative h-9 w-9 rounded-full bg-muted flex items-center justify-center">
-            <Sparkles className="h-4 w-4 text-ig-gradient" />
+          <div className="relative h-9 w-9 rounded-full bg-ig-gradient flex items-center justify-center shadow-sm">
+            <Sparkles className="h-4 w-4 text-white" />
             <span className="absolute -top-0.5 -right-0.5 h-2 w-2 rounded-full bg-foreground ring-2 ring-background animate-pulse" />
           </div>
           <div>
@@ -63,6 +63,14 @@ export default function TrendingNearYou() {
   );
 }
 
+// Lodging stores have a richer dedicated detail page; everything else falls
+// through to the generic StoreProfilePage at /shop.
+const LODGING_CATEGORIES = new Set(["resort", "hotel", "guesthouse", "hostel"]);
+function targetForStore(store: TrendingStore): string {
+  if (LODGING_CATEGORIES.has(store.category)) return `/hotel/${store.store_id}`;
+  return `/shop/${store.store_id}`;
+}
+
 function TrendingCard({ store, index }: { store: TrendingStore; index: number }) {
   const navigate = useNavigate();
 
@@ -72,7 +80,7 @@ function TrendingCard({ store, index }: { store: TrendingStore; index: number })
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.04, duration: 0.3 }}
       whileTap={{ scale: 0.97 }}
-      onClick={() => navigate(`/shop/${store.store_id}`)}
+      onClick={() => navigate(targetForStore(store))}
       className={cn(
         "shrink-0 w-[170px] rounded-lg border border-border bg-card overflow-hidden text-left snap-start",
         "active:bg-muted/40 transition-colors",

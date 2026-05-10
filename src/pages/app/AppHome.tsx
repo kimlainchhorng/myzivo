@@ -312,45 +312,13 @@ type QuickPick = {
 };
 
 const QUICK_PICKS: QuickPick[] = [
-  { icon: MapPin,          label: "Home",   to: "/rides?destination=home",   iconColor: "text-emerald-500", iconBg: "bg-emerald-500/10" },
-  { icon: Briefcase,       label: "Work",   to: "/rides?destination=work",   iconColor: "text-sky-500",     iconBg: "bg-sky-500/10" },
-  { icon: Coffee,          label: "Coffee", to: "/eats?q=coffee",             iconColor: "text-amber-600",   iconBg: "bg-amber-500/10" },
-  { icon: UtensilsCrossed, label: "Pizza",  to: "/eats?q=pizza",              iconColor: "text-orange-500",  iconBg: "bg-orange-500/10" },
-  { icon: Plane,           label: "Flights",to: "/flights",                   iconColor: "text-indigo-500",  iconBg: "bg-indigo-500/10" },
-  { icon: Hotel,           label: "Hotels", to: "/hotels",                    iconColor: "text-violet-500",  iconBg: "bg-violet-500/10" },
+  { icon: Coffee,          label: "Coffee",     to: "/eats?q=coffee",     iconColor: "text-amber-600",   iconBg: "bg-amber-500/10" },
+  { icon: UtensilsCrossed, label: "Pizza",      to: "/eats?q=pizza",      iconColor: "text-orange-500",  iconBg: "bg-orange-500/10" },
+  { icon: Plane,           label: "Flights",    to: "/flights",            iconColor: "text-indigo-500",  iconBg: "bg-indigo-500/10" },
+  { icon: Hotel,           label: "Hotels",     to: "/hotels",             iconColor: "text-violet-500",  iconBg: "bg-violet-500/10" },
+  { icon: Car,             label: "Ride",       to: "/rides",              iconColor: "text-emerald-500", iconBg: "bg-emerald-500/10" },
+  { icon: Package,         label: "Delivery",   to: "/delivery",           iconColor: "text-sky-500",     iconBg: "bg-sky-500/10" },
 ];
-
-const QuickPicksBar = ({ onNavigate }: { onNavigate: (to: string) => void }) => (
-  <div className="px-4 pb-3">
-    <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1">
-      {QUICK_PICKS.map((p) => {
-        const Icon = p.icon;
-        return (
-          <motion.button
-            key={p.label}
-            whileTap={{ scale: 0.94 }}
-            onClick={() => onNavigate(p.to)}
-            className="shrink-0 flex items-center gap-1.5 bg-card border border-border rounded-full pl-1.5 pr-3 py-1.5 touch-manipulation active:bg-muted/50 transition-colors"
-          >
-            <span className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
-              <Icon className="w-3.5 h-3.5 text-foreground" strokeWidth={1.8} />
-            </span>
-            <span className="text-xs font-semibold text-foreground whitespace-nowrap">{p.label}</span>
-          </motion.button>
-        );
-      })}
-      <motion.button
-        whileTap={{ scale: 0.94 }}
-        onClick={() => onNavigate("/account/addresses")}
-        className="shrink-0 flex items-center gap-1.5 bg-muted/50 border border-dashed border-border/50 rounded-full px-3 py-1.5 touch-manipulation"
-        aria-label="Add a quick pick"
-      >
-        <Plus className="w-3 h-3 text-muted-foreground" />
-        <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Add</span>
-      </motion.button>
-    </div>
-  </div>
-);
 
 type DailyMission = {
   icon: LucideIcon;
@@ -877,38 +845,57 @@ const AppHome = () => {
           {/* ─── SMART NOW (time-aware suggestion) ─── */}
           <SmartNowCard onNavigate={navigate} />
 
-          {/* ─── QUICK PICKS (fast-access shortcut chips) ─── */}
-          <QuickPicksBar onNavigate={navigate} />
-
-          {/* ─── PINNED SAVED PLACES (elevated to top for one-tap access) ─── */}
-          {user && savedLocations && savedLocations.length > 0 && (
-            <div className="pb-3">
-              <div className="flex gap-2 overflow-x-auto scrollbar-hide px-5">
-                {savedLocations.slice(0, 6).map((loc) => {
-                  const Icon = savedPlaceIconMap[loc.icon] || MapPin;
-                  return (
-                    <motion.button
-                      key={loc.id}
-                      whileTap={{ scale: 0.94 }}
-                      onClick={() => navigate(`/rides?destination=${encodeURIComponent(loc.address)}`)}
-                      className="shrink-0 flex items-center gap-1.5 bg-card border border-border/50 rounded-full px-3 py-2 shadow-sm touch-manipulation hover:border-primary/30 transition-colors"
-                    >
-                      <Icon className="w-3.5 h-3.5 text-primary" />
-                      <span className="text-xs font-semibold text-foreground whitespace-nowrap">{loc.label}</span>
-                    </motion.button>
-                  );
-                })}
-                <motion.button
-                  whileTap={{ scale: 0.94 }}
-                  onClick={() => navigate("/account/addresses")}
-                  className="shrink-0 flex items-center gap-1.5 bg-muted/50 border border-dashed border-border/50 rounded-full px-3 py-2 touch-manipulation"
-                >
-                  <Plus className="w-3 h-3 text-muted-foreground" />
-                  <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Add place</span>
-                </motion.button>
-              </div>
+          {/* ─── QUICK PICKS + SAVED PLACES (unified pill rail) ─── */}
+          <div className="px-4 pb-3">
+            <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1">
+              {/* User's saved places first — one-tap to ride home/work/etc */}
+              {user && savedLocations?.slice(0, 4).map((loc) => {
+                const Icon = savedPlaceIconMap[loc.icon] || MapPin;
+                return (
+                  <motion.button
+                    key={loc.id}
+                    whileTap={{ scale: 0.94 }}
+                    onPointerDown={() => prefetch("/rides")}
+                    onClick={() => navigate(`/rides?destination=${encodeURIComponent(loc.address)}`)}
+                    className="shrink-0 flex items-center gap-1.5 bg-card border border-primary/30 rounded-full pl-1.5 pr-3 py-1.5 touch-manipulation active:bg-muted/50 transition-colors shadow-sm"
+                  >
+                    <span className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
+                      <Icon className="w-3.5 h-3.5 text-primary" strokeWidth={1.8} />
+                    </span>
+                    <span className="text-xs font-semibold text-foreground whitespace-nowrap capitalize">{loc.label}</span>
+                  </motion.button>
+                );
+              })}
+              {/* Categorical shortcuts */}
+              {QUICK_PICKS.map((p) => {
+                const Icon = p.icon;
+                return (
+                  <motion.button
+                    key={p.label}
+                    whileTap={{ scale: 0.94 }}
+                    onPointerDown={() => prefetch(p.to.split("?")[0])}
+                    onClick={() => navigate(p.to)}
+                    className="shrink-0 flex items-center gap-1.5 bg-card border border-border rounded-full pl-1.5 pr-3 py-1.5 touch-manipulation active:bg-muted/50 transition-colors"
+                  >
+                    <span className="w-6 h-6 rounded-full bg-muted flex items-center justify-center">
+                      <Icon className="w-3.5 h-3.5 text-foreground" strokeWidth={1.8} />
+                    </span>
+                    <span className="text-xs font-semibold text-foreground whitespace-nowrap">{p.label}</span>
+                  </motion.button>
+                );
+              })}
+              {/* Add place */}
+              <motion.button
+                whileTap={{ scale: 0.94 }}
+                onClick={() => navigate("/account/addresses")}
+                className="shrink-0 flex items-center gap-1.5 bg-muted/50 border border-dashed border-border/50 rounded-full px-3 py-1.5 touch-manipulation"
+                aria-label="Add a saved place"
+              >
+                <Plus className="w-3 h-3 text-muted-foreground" />
+                <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Add place</span>
+              </motion.button>
             </div>
-          )}
+          </div>
 
           {/* ─── DAILY MISSION (rotates by day of week, ties into rewards) ─── */}
           {user && <DailyMissionCard onNavigate={navigate} />}
@@ -1012,36 +999,6 @@ const AppHome = () => {
           <Suspense fallback={null}>
             <SpendTrackerWidget />
           </Suspense>
-
-          {/* ─── SAVED PLACES QUICK ACCESS ─── */}
-          {user && savedLocations && savedLocations.length > 0 && (
-            <div className="pb-3">
-              <div className="flex gap-2 overflow-x-auto scrollbar-hide px-5">
-                {savedLocations.slice(0, 6).map((loc) => {
-                  const Icon = savedPlaceIconMap[loc.icon] || MapPin;
-                  return (
-                    <motion.button
-                      key={loc.id}
-                      whileTap={{ scale: 0.94 }}
-                      onClick={() => navigate(`/rides?destination=${encodeURIComponent(loc.address)}`)}
-                      className="shrink-0 flex items-center gap-1.5 bg-card border border-border/50 rounded-full px-3 py-2 shadow-sm touch-manipulation hover:border-primary/30 transition-colors"
-                    >
-                      <Icon className="w-3.5 h-3.5 text-primary" />
-                      <span className="text-xs font-semibold text-foreground whitespace-nowrap">{loc.label}</span>
-                    </motion.button>
-                  );
-                })}
-                <motion.button
-                  whileTap={{ scale: 0.94 }}
-                  onClick={() => navigate("/account/addresses")}
-                  className="shrink-0 flex items-center gap-1.5 bg-muted/50 border border-dashed border-border/50 rounded-full px-3 py-2 touch-manipulation"
-                >
-                  <Plus className="w-3 h-3 text-muted-foreground" />
-                  <span className="text-xs font-medium text-muted-foreground whitespace-nowrap">Add place</span>
-                </motion.button>
-              </div>
-            </div>
-          )}
 
           {/* "What's New" widget removed — was a hardcoded marketing block
               (4 cards with fake "X NEW" badges and made-up feature lists).
@@ -1379,7 +1336,7 @@ const AppHome = () => {
                   </div>
                   <div>
                     <p className="text-sm font-bold text-foreground">Invite Friends, Earn Rewards</p>
-                    <p className="text-[11px] text-muted-foreground">Get ${REFERRAL_REWARDS.referrer.creditPerReferral} credit per friend who joins</p>
+                    <p className="text-[11px] text-muted-foreground">Earn {REFERRAL_REWARDS.referrer.pointsPerReferral.toLocaleString()} ZIVO points per friend who joins</p>
                   </div>
                 </div>
                 <div className="flex gap-2">

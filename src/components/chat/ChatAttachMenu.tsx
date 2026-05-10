@@ -18,6 +18,7 @@ import UserSquare from "lucide-react/dist/esm/icons/user-square";
 import Share2 from "lucide-react/dist/esm/icons/share-2";
 import Compass from "lucide-react/dist/esm/icons/compass";
 import { useZivoPlus } from "@/contexts/ZivoPlusContext";
+import { useZivoOFMode } from "@/hooks/useZivoOFMode";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { createPortal } from "react-dom";
@@ -67,7 +68,11 @@ export default function ChatAttachMenu({
   onSendGift, onOpenWallet, onScanDocument, onFileSelect, onCreatePoll, onShareContact, onShareSocial, onShareZivoCard, disappearingEnabled, disappearingLabel,
 }: ChatAttachMenuProps) {
   const { isPlus, plan } = useZivoPlus();
+  const { isOFMode: zivoOFMode } = useZivoOFMode();
   const navigate = useNavigate();
+  const visibleItems = zivoOFMode
+    ? menuItems.filter((it) => ["image", "video", "locked", "money", "gift"].includes(it.id))
+    : menuItems;
   const triggerRef = useRef<HTMLDivElement>(null);
   const [pos, setPos] = useState<{ left: number; bottom: number } | null>(null);
 
@@ -145,7 +150,7 @@ export default function ChatAttachMenu({
             style={{ left: pos.left, bottom: pos.bottom }}
           >
             <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 gap-2.5 sm:gap-3">
-              {menuItems.map((item) => {
+              {visibleItems.map((item) => {
                 const isLockedGated = item.id === "locked" && !canUseLocked;
                 return (
                   <button type="button"

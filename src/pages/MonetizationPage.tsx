@@ -12,16 +12,47 @@ import {
   BookOpen, Users, Target, BarChart3, Headphones,
   PenTool, Package, Globe, Award, Mic, Camera,
   Palette, Music, Radio, Calendar, MessageCircle, ArrowRight,
-  CheckCircle, Search, Filter, Eye, Play, Clock,
+  CheckCircle, Search, Filter, Eye, Play, Clock, Save,
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useCustomerWallet } from "@/hooks/useCustomerWallet";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import SEOHead from "@/components/SEOHead";
 import { Switch } from "@/components/ui/switch";
 import { useZivoOFMode } from "@/hooks/useZivoOFMode";
+import { showToast } from "@/lib/native/toast";
+
+const OF_SUB_PRICE_KEY = "zivo:of:sub_monthly_cents";
+const OF_PPV_PRICE_KEY = "zivo:of:ppv_default_cents";
+const OF_TIP_PRESETS_KEY = "zivo:of:tip_presets_cents";
+const OF_WELCOME_MSG_KEY = "zivo:of:welcome_msg";
+
+const readNumberStorage = (key: string, fallback: number): number => {
+  if (typeof window === "undefined") return fallback;
+  const raw = window.localStorage.getItem(key);
+  const n = raw ? parseInt(raw, 10) : NaN;
+  return Number.isFinite(n) && n >= 0 ? n : fallback;
+};
+
+const readPresetsStorage = (fallback: number[]): number[] => {
+  if (typeof window === "undefined") return fallback;
+  const raw = window.localStorage.getItem(OF_TIP_PRESETS_KEY);
+  if (!raw) return fallback;
+  try {
+    const arr = JSON.parse(raw);
+    if (Array.isArray(arr) && arr.every((v) => typeof v === "number" && v >= 0)) return arr;
+  } catch {}
+  return fallback;
+};
+
+const centsToDollars = (cents: number) => (cents / 100).toFixed(2);
+const dollarsToCents = (dollars: string) => {
+  const n = parseFloat(dollars);
+  if (!Number.isFinite(n) || n < 0) return 0;
+  return Math.round(n * 100);
+};
 
 type ProgramStatus = "join" | "explore" | "active" | "coming_soon";
 
@@ -117,11 +148,99 @@ const getAccentClasses = (accent: string) => accentClassMap[accent] ?? { text: "
 export default function MonetizationPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const qc = useQueryClient();
   const [activeResTab, setActiveResTab] = useState(0);
   const [activeFilter, setActiveFilter] = useState<typeof programFilter[number]>("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [searchOpen, setSearchOpen] = useState(false);
   const { isOFMode: zivoOFMode, setOFMode: setZivoOFMode } = useZivoOFMode();
+
+  // OnlyFans-style pricing & settings (persisted in localStorage)
+  const [subPrice, setSubPrice] = useState<string>(() => centsToDollars(readNumberStorage(OF_SUB_PRICE_KEY, 999)));
+  const [ppvPrice, setPpvPrice] = useState<string>(() => centsToDollars(readNumberStorage(OF_PPV_PRICE_KEY, 500)));
+  const [tipPresets, setTipPresets] = useState<string[]>(() =>
+    readPresetsStorage([200, 500, 1000]).map(centsToDollars)
+  );
+  const [welcomeMsg, setWelcomeMsg] = useState<string>(() => {
+    if (typeof window === "undefined") return "";
+    return window.localStorage.getItem(OF_WELCOME_MSG_KEY) ?? "";
+  });
+  const [savingOF, setSavingOF] = useState(false);
+
+  const updateTipPreset = (idx: number, value: string) => {
+    setTipPresets((prev) => prev.map((v, i) => (i === idx ? value : v)));
+  };
+
+  const saveOFSettings = async () => {
+    setSavingOF(true);
+    try {
+      const subCents = dollarsToCents(subPrice);
+      window.localStorage.setItem(OF_SUB_PRICE_KEY, String(subCents));
+      window.localStorage.setItem(OF_PPV_PRICE_KEY, String(dollarsToCents(ppvPrice)));
+      window.localStorage.setItem(
+        OF_TIP_PRESETS_KEY,
+        JSON.stringify(tipPresets.map(dollarsToCents))
+      );
+      window.localStorage.setItem(OF_WELCOME_MSG_KEY, welcomeMsg.trim());
+
+      // Sync monthly price + welcome DM to a 'VIP' subscription tier so the
+      // public/visitor profile shows the actual price (not the default Free tier).
+      if (user && subCents > 0) {
+        const tierPayload = {
+          creator_id: user.id,
+          name: "VIP",
+          description: "Exclusive content, full access.",
+          price_cents: subCents,
+          billing_interval: "month",
+          is_active: true,
+          is_free: false,
+          is_custom_price: false,
+          welcome_message: welcomeMsg.trim() || null,
+          sort_order: 0,
+          badge_emoji: "👑",
+        };
+        const { data: existing, error: selectErr } = await (supabase as any)
+          .from("subscription_tiers")
+          .select("id")
+          .eq("creator_id", user.id)
+          .eq("name", "VIP")
+          .maybeSingle();
+        if (selectErr) throw selectErr;
+        if (existing?.id) {
+          const { error: updErr } = await (supabase as any)
+            .from("subscription_tiers")
+            .update(tierPayload)
+            .eq("id", existing.id);
+          if (updErr) throw updErr;
+        } else {
+          const { error: insErr } = await (supabase as any)
+            .from("subscription_tiers")
+            .insert(tierPayload);
+          if (insErr) throw insErr;
+        }
+
+        // Deactivate the free Supporter tier so visitors only see the paid VIP.
+        // (Reactivate from the Creator Setup page if you want both later.)
+        await (supabase as any)
+          .from("subscription_tiers")
+          .update({ is_active: false })
+          .eq("creator_id", user.id)
+          .eq("is_free", true);
+
+        // Invalidate the public-tier cache so the visitor preview refetches.
+        qc.invalidateQueries({ queryKey: ["public-creator-tiers", user.id] });
+        qc.invalidateQueries({ queryKey: ["setup-tiers", user.id] });
+      }
+
+      await showToast("ZIVO OF settings saved", "success");
+    } catch (err: any) {
+      console.error("[saveOFSettings]", err);
+      const msg = err?.message ? `Save failed: ${err.message}` : "Failed to save settings";
+      await showToast(msg, "error");
+    } finally {
+      setSavingOF(false);
+    }
+  };
 
   // Real customer wallet balance (cents)
   const { balance: walletBalanceCents } = useCustomerWallet();
@@ -137,6 +256,37 @@ export default function MonetizationPage() {
       return (count as number) || 0;
     },
     enabled: !!user,
+  });
+
+  // OF Mode — this-week earnings snapshot
+  const { data: ofWeek } = useQuery({
+    queryKey: ["of-week-earnings", user?.id],
+    enabled: !!user && zivoOFMode,
+    queryFn: async () => {
+      const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+      const [subsRes, tipsRes] = await Promise.all([
+        (supabase as any)
+          .from("creator_subscriptions")
+          .select("id, price_cents, status")
+          .eq("creator_id", user!.id)
+          .eq("status", "active"),
+        (supabase as any)
+          .from("creator_tips")
+          .select("amount_cents, created_at")
+          .eq("creator_id", user!.id)
+          .gte("created_at", sevenDaysAgo),
+      ]);
+      const subs = (subsRes.data as any[]) ?? [];
+      const tips = (tipsRes.data as any[]) ?? [];
+      const tipsCents = tips.reduce((sum, t) => sum + (t.amount_cents || 0), 0);
+      const mrrCents = subs.reduce((sum, s) => sum + (s.price_cents || 0), 0);
+      return {
+        activeSubs: subs.length,
+        mrrCents,
+        tipsCents,
+        tipsCount: tips.length,
+      };
+    },
   });
 
   // Fetch all user enrollments
@@ -242,7 +392,7 @@ export default function MonetizationPage() {
             <div className="flex items-center justify-between gap-3">
               <div>
                 <p className="font-bold text-[13px]">ZIVO OF Mode</p>
-                <p className="text-[11px] text-muted-foreground leading-relaxed">Show an exclusive-content focused monetization setup like OF style.</p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">Turn on the ZIVO OF workflow — exclusive content, paid subscriptions, PPV, and tips.</p>
               </div>
               <Switch
                 checked={zivoOFMode}
@@ -255,6 +405,172 @@ export default function MonetizationPage() {
             )}
           </div>
         </div>
+
+        {/* OF Mode — This Week earnings snapshot */}
+        {zivoOFMode && user && (
+          <div className="zivo-card-organic p-4">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="zivo-icon-pill w-10 h-10 rounded-xl shrink-0 text-emerald-500 bg-emerald-500/10">
+                <TrendingUp className="h-5 w-5 text-emerald-500" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-[13px]">This Week</p>
+                <p className="text-[11px] text-muted-foreground">Subscribers, tips, and recurring revenue at a glance.</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-4 gap-2">
+              {[
+                { label: "Active subs", value: String(ofWeek?.activeSubs ?? 0), accent: "text-[#00AEEF]" },
+                { label: "MRR", value: `$${((ofWeek?.mrrCents ?? 0) / 100).toFixed(0)}`, accent: "text-emerald-500" },
+                { label: "Tips (7d)", value: `$${((ofWeek?.tipsCents ?? 0) / 100).toFixed(0)}`, accent: "text-amber-500" },
+                { label: "Tip count", value: String(ofWeek?.tipsCount ?? 0), accent: "text-rose-500" },
+              ].map((stat) => (
+                <div key={stat.label} className="rounded-xl bg-muted/30 p-2 text-center border border-border/20">
+                  <p className={`text-sm font-extrabold ${stat.accent}`}>{stat.value}</p>
+                  <p className="text-[9px] text-muted-foreground mt-0.5">{stat.label}</p>
+                </div>
+              ))}
+            </div>
+            <div className="mt-3 grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => navigate("/creator/subscribers")}
+                className="rounded-full border border-border/50 bg-muted/30 px-3 py-2 text-[11px] font-semibold text-foreground hover:bg-muted/50 active:scale-[0.97] transition-all"
+              >
+                View subscribers
+              </button>
+              <button
+                type="button"
+                onClick={() => navigate("/wallet")}
+                className="rounded-full border border-border/50 bg-muted/30 px-3 py-2 text-[11px] font-semibold text-foreground hover:bg-muted/50 active:scale-[0.97] transition-all"
+              >
+                Payouts &amp; wallet
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* OnlyFans-style pricing & settings */}
+        {zivoOFMode && (
+          <div className="zivo-card-organic p-4 space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="zivo-icon-pill w-10 h-10 rounded-xl shrink-0 text-[#00AEEF] bg-[#00AEEF]/10">
+                <DollarSign className="h-5 w-5 text-[#00AEEF]" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-bold text-[13px]">ZIVO OF Pricing</p>
+                <p className="text-[11px] text-muted-foreground leading-relaxed">
+                  Set your monthly subscription, default pay-per-view, and tip jar presets.
+                </p>
+              </div>
+            </div>
+
+            <div className="space-y-3">
+              <label className="block">
+                <span className="text-[11px] font-bold text-foreground/80 uppercase tracking-wide">
+                  Monthly subscription (USD)
+                </span>
+                <div className="mt-1 flex items-center gap-2 rounded-xl border border-border/50 bg-muted/20 px-3 py-2 focus-within:ring-2 focus-within:ring-[#00AEEF]/40">
+                  <span className="text-sm font-bold text-muted-foreground">$</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    step="0.01"
+                    value={subPrice}
+                    onChange={(e) => setSubPrice(e.target.value)}
+                    placeholder="9.99"
+                    className="flex-1 bg-transparent text-sm font-semibold outline-none"
+                  />
+                  <span className="text-[10px] text-muted-foreground/70">/ month</span>
+                </div>
+              </label>
+
+              <label className="block">
+                <span className="text-[11px] font-bold text-foreground/80 uppercase tracking-wide">
+                  Default PPV price (USD)
+                </span>
+                <div className="mt-1 flex items-center gap-2 rounded-xl border border-border/50 bg-muted/20 px-3 py-2 focus-within:ring-2 focus-within:ring-[#00AEEF]/40">
+                  <span className="text-sm font-bold text-muted-foreground">$</span>
+                  <input
+                    type="number"
+                    inputMode="decimal"
+                    min="0"
+                    step="0.01"
+                    value={ppvPrice}
+                    onChange={(e) => setPpvPrice(e.target.value)}
+                    placeholder="5.00"
+                    className="flex-1 bg-transparent text-sm font-semibold outline-none"
+                  />
+                  <span className="text-[10px] text-muted-foreground/70">/ unlock</span>
+                </div>
+                <p className="text-[10px] text-muted-foreground/70 mt-1">
+                  Used as the suggested price for locked photos, videos, and DMs.
+                </p>
+              </label>
+
+              <div>
+                <span className="text-[11px] font-bold text-foreground/80 uppercase tracking-wide">
+                  Tip jar presets (USD)
+                </span>
+                <div className="mt-1 grid grid-cols-3 gap-2">
+                  {tipPresets.map((amount, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center gap-1 rounded-xl border border-border/50 bg-muted/20 px-2.5 py-2 focus-within:ring-2 focus-within:ring-[#00AEEF]/40"
+                    >
+                      <span className="text-xs font-bold text-muted-foreground">$</span>
+                      <input
+                        type="number"
+                        inputMode="decimal"
+                        min="0"
+                        step="0.01"
+                        value={amount}
+                        onChange={(e) => updateTipPreset(i, e.target.value)}
+                        className="flex-1 bg-transparent text-sm font-semibold outline-none w-full"
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <label className="block">
+                <span className="text-[11px] font-bold text-foreground/80 uppercase tracking-wide">
+                  Welcome DM for new subscribers
+                </span>
+                <textarea
+                  value={welcomeMsg}
+                  onChange={(e) => setWelcomeMsg(e.target.value.slice(0, 500))}
+                  placeholder="Hey! Thanks for subscribing 💕 Drop me a DM and I'll send you something special."
+                  rows={3}
+                  className="mt-1 w-full rounded-xl border border-border/50 bg-muted/20 px-3 py-2 text-[13px] outline-none focus:ring-2 focus:ring-[#00AEEF]/40 resize-none"
+                />
+                <p className="text-[10px] text-muted-foreground/70 mt-1">
+                  Sent automatically when a fan subscribes. {welcomeMsg.length}/500
+                </p>
+              </label>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => { navigate("/feed?compose=locked"); }}
+              className="w-full flex items-center justify-center gap-2 rounded-full border border-[#00AEEF]/30 bg-[#00AEEF]/5 px-4 py-2.5 text-[12px] font-bold text-[#00AEEF] hover:bg-[#00AEEF]/10 active:scale-[0.97] transition-all"
+            >
+              <Lock className="w-3.5 h-3.5" />
+              Create locked post (PPV)
+            </button>
+
+            <button
+              type="button"
+              onClick={saveOFSettings}
+              disabled={savingOF}
+              className="w-full flex items-center justify-center gap-2 rounded-full px-4 py-2.5 text-[12px] font-bold text-white bg-gradient-to-r from-[#00AEEF] to-[#0099D9] hover:from-[#00B8F5] hover:to-[#00A3E5] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#00AEEF]/60 focus-visible:outline-none transition-all shadow-lg shadow-[#00AEEF]/30 disabled:opacity-60"
+            >
+              <Save className="w-3.5 h-3.5" />
+              {savingOF ? "Saving..." : "Save settings"}
+            </button>
+          </div>
+        )}
 
         {/* Creator workflow + public profile preview */}
         {zivoOFMode && user && (

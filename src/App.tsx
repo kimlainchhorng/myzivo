@@ -37,6 +37,8 @@ import { useOTAUpdate } from "@/hooks/useOTAUpdate";
 import OTAUpdateBanner from "@/components/shared/OTAUpdateBanner";
 import NavigationProgressBar from "@/components/app/NavigationProgressBar";
 import ScrollRestoration from "@/components/app/ScrollRestoration";
+import GlobalDesktopNav from "@/components/app/GlobalDesktopNav";
+import PostShareSheet from "@/components/social/PostShareSheet";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useSearchParams } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
@@ -188,6 +190,7 @@ const DeliveryChatPage = lazy(() => import("./pages/DeliveryChatPage"));
 const GroceryMarketplace = lazy(() => import("./pages/GroceryMarketplace"));
 const FeedPage = lazy(() => import("./pages/FeedPage"));
 const ReelsFeedPage = lazy(() => import("./pages/ReelsFeedPage"));
+const SocialFeedPage = lazy(() => import("./pages/SocialFeedPage"));
 const SoundPage = lazy(() => import("./pages/SoundPage"));
 const ChatHubPage = lazy(() => import("./pages/ChatHubPage"));
 const ContactsPage = lazy(() => import("./pages/chat/ContactsPage"));
@@ -810,9 +813,11 @@ const App = () => (
                 <OTAUpdateBootstrap />
                 <NavigationProgressBar />
                 <ScrollRestoration />
+                <PostShareSheet />
                 <Suspense fallback={null}><RoutePrefetcher /></Suspense>
                 <PaymentReturnHandler />
                 <AuthProvider>
+                  <GlobalDesktopNav />
                   <AuthBackgroundServices />
                   <ShareToChatSheet />
                   <Suspense fallback={null}>
@@ -923,6 +928,7 @@ const App = () => (
                 <Route path="/delivery/track/:id/chat" element={<ProtectedRoute><DeliveryChatPage /></ProtectedRoute>} />
                 <Route path="/grocery" element={<GroceryMarketplace />} />
                 <Route path="/feed" element={<ReelsFeedPage />} />
+                <Route path="/feed-new" element={<SocialFeedPage />} />
                 <Route path="/reels" element={<FeedPage />} />
                 <Route path="/live" element={<LiveStreamPage />} />
                 <Route path="/go-live" element={<GoLivePage />} />
@@ -997,6 +1003,7 @@ const App = () => (
                 <Route path="/shop/cart" element={<ImportCartPage />} />
                 <Route path="/shop/orders" element={<ProtectedRoute><ImportOrdersPage /></ProtectedRoute>} />
                 <Route path="/shop/orders/:id" element={<ProtectedRoute><ImportOrdersPage /></ProtectedRoute>} />
+                <Route path="/admin" element={<Navigate to="/admin/god-view" replace />} />
                 <Route path="/admin/shop" element={<ProtectedRoute requireAdmin={true}><AdminImportShopPage /></ProtectedRoute>} />
                 <Route path="/content-analytics" element={<ProtectedRoute><ContentAnalyticsPage /></ProtectedRoute>} />
                 <Route path="/dating" element={<ProtectedRoute><DatingPage /></ProtectedRoute>} />

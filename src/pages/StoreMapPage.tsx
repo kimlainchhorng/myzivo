@@ -220,6 +220,16 @@ function getCategoryColor(cat: string) { return (CATEGORY_COLORS[cat] || CATEGOR
 function getCategoryBg(cat: string) { return (CATEGORY_COLORS[cat] || CATEGORY_COLORS.default)[1]; }
 function getCategoryLabel(cat: string) { return STORE_CATEGORY_OPTIONS.find((o) => o.value === cat)?.label || cat; }
 
+type CategoryGroup = { id: string; label: string; emoji: string; categories: string[] };
+
+const CATEGORY_GROUPS: CategoryGroup[] = [
+  { id: "stay",   label: "Hotel & Resort",  emoji: "🏨", categories: ["hotel", "resort", "guesthouse"] },
+  { id: "eat",    label: "Eat & Drink",     emoji: "🍽️", categories: ["restaurant", "cafe", "bakery", "drink", "food-market"] },
+  { id: "shop",   label: "Shop",            emoji: "🛍️", categories: ["fashion", "electronics", "mall", "supermarket", "convenience", "jewelry", "toys", "sporting-goods", "furniture", "home-decor", "bookstore", "florist", "hardware", "pet-shop"] },
+  { id: "auto",   label: "Auto",            emoji: "🚗", categories: ["car-rental", "car-dealership", "auto-repair", "tire-shop", "auto-parts", "gas-station"] },
+  { id: "wellness", label: "Wellness",      emoji: "💆", categories: ["spa", "salon", "gym", "pharmacy"] },
+];
+
 function getDistKm(store: StorePin, ref: { lat: number; lng: number } | null): number | null {
   if (!ref) return null;
   return distanceMiles(ref, { lat: store.latitude, lng: store.longitude }) * 1.609344;
@@ -480,6 +490,7 @@ export default function StoreMapPage() {
   const [selectedStore, setSelectedStore] = useState<StorePin | null>(null);
   const [drawerStore, setDrawerStore] = useState<StorePin | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>(urlParams.get("cat") || "all");
+  const [activeGroup, setActiveGroup] = useState<string>(urlParams.get("group") || "");
   const [searchQuery, setSearchQuery] = useState(urlParams.get("q") || "");
   const [searchOpen, setSearchOpen] = useState<boolean>(!!urlParams.get("q"));
   const [openNowOnly, setOpenNowOnly] = useState<boolean>(urlParams.get("open") === "1");
@@ -556,10 +567,11 @@ export default function StoreMapPage() {
   useEffect(() => {
     const next = new URLSearchParams();
     if (activeCategory !== "all") next.set("cat", activeCategory);
+    if (activeGroup) next.set("group", activeGroup);
     if (searchQuery.trim()) next.set("q", searchQuery.trim());
     if (openNowOnly) next.set("open", "1");
     setUrlParams(next, { replace: true });
-  }, [activeCategory, searchQuery, openNowOnly, setUrlParams]);
+  }, [activeCategory, activeGroup, searchQuery, openNowOnly, setUrlParams]);
 
   const { data: allStores = [] } = useQuery({
     queryKey: ["store-map-all"],
@@ -660,6 +672,10 @@ export default function StoreMapPage() {
 
   const filteredStores = useMemo(() => {
     let result = stores;
+    if (activeGroup) {
+      const group = CATEGORY_GROUPS.find((g) => g.id === activeGroup);
+      if (group) result = result.filter((s) => group.categories.includes(s.category));
+    }
     if (activeCategory !== "all") result = result.filter((s) => s.category === activeCategory);
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
@@ -680,7 +696,7 @@ export default function StoreMapPage() {
       });
     }
     return result;
-  }, [stores, activeCategory, searchQuery, openNowOnly, trendingOnly, dealsOnly, smartFilterActive, liveStoreMap, dealStoreIds, radiusKm, effectiveCenter]);
+  }, [stores, activeCategory, activeGroup, searchQuery, openNowOnly, trendingOnly, dealsOnly, smartFilterActive, liveStoreMap, dealStoreIds, radiusKm, effectiveCenter]);
 
   /* Nearby sorted by distance from effectiveCenter */
   const nearbySorted = useMemo(() => {
@@ -918,7 +934,20 @@ export default function StoreMapPage() {
       }, 90);
     }
 
-    if (userLocation) bounds.extend(userLocation);
+    // Only include the user's location in the bounds when the user is
+    // actually near the visible stores. Otherwise (e.g. simulator default
+    // location, or user filtered to a faraway group like "Hotel & Resort"),
+    // including it would zoom the map out to world-view. When a category or
+    // group filter is active, always focus on the filtered pins only.
+    const hasExplicitFilter = activeGroup || activeCategory !== "all";
+    if (userLocation && !hasExplicitFilter) {
+      const nearestKm = Math.min(
+        ...filteredStores.map((s) =>
+          distanceMiles(userLocation, { lat: s.latitude, lng: s.longitude }) * 1.609344,
+        ),
+      );
+      if (nearestKm <= 200) bounds.extend(userLocation);
+    }
     if (filteredStores.length > 1) {
       mapRef.current.fitBounds(bounds, { top: 140, bottom: 260, left: 30, right: 30 });
     } else if (filteredStores.length === 1) {
@@ -927,7 +956,7 @@ export default function StoreMapPage() {
     }
 
     return () => { if (intervalId !== null) window.clearInterval(intervalId); };
-  }, [mapReady, filteredStores, userLocation, liveStoreMap, dealStoreIds]);
+  }, [mapReady, filteredStores, userLocation, liveStoreMap, dealStoreIds, activeGroup, activeCategory]);
 
   /* Trip stop numbered markers + polyline */
   useEffect(() => {
@@ -1006,9 +1035,10 @@ export default function StoreMapPage() {
     }
   }, [mapReady, focusId, trailParam, stopsParam, filteredStores]);
 
-  const activeFiltersCount = (openNowOnly ? 1 : 0) + (trendingOnly ? 1 : 0) + (dealsOnly ? 1 : 0) + (smartFilterActive ? 1 : 0) + (activeCategory !== "all" ? 1 : 0);
+  const activeFiltersCount = (openNowOnly ? 1 : 0) + (trendingOnly ? 1 : 0) + (dealsOnly ? 1 : 0) + (smartFilterActive ? 1 : 0) + (activeCategory !== "all" ? 1 : 0) + (activeGroup ? 1 : 0);
   const clearAllFilters = useCallback(() => {
     setActiveCategory("all");
+    setActiveGroup("");
     setOpenNowOnly(false);
     setTrendingOnly(false);
     setDealsOnly(false);
@@ -1432,15 +1462,37 @@ export default function StoreMapPage() {
                   </motion.button>
                 )}
                 <motion.button whileTap={{ scale: 0.95 }}
-                  onClick={() => { setActiveCategory("all"); setTrendingOnly(false); setSmartFilterActive(false); setSelectedStore(null); }}
+                  onClick={() => { setActiveCategory("all"); setActiveGroup(""); setTrendingOnly(false); setSmartFilterActive(false); setSelectedStore(null); }}
                   className={`px-4 py-2 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap border backdrop-blur-sm ${
-                    activeCategory === "all" && !trendingOnly
+                    activeCategory === "all" && !activeGroup && !trendingOnly
                       ? "bg-primary text-primary-foreground border-primary shadow-md"
                       : "bg-card/90 text-muted-foreground border-border/30 shadow-sm"
                   }`}
                 >
                   All ({allStores.length})
                 </motion.button>
+                {/* Preset category groups — single tap filters multiple related categories */}
+                {CATEGORY_GROUPS.map((g) => {
+                  const count = allStores.filter((s) => g.categories.includes(s.category)).length;
+                  if (count === 0) return null;
+                  const isActive = activeGroup === g.id;
+                  return (
+                    <motion.button whileTap={{ scale: 0.95 }} key={g.id}
+                      onClick={() => {
+                        setActiveGroup(isActive ? "" : g.id);
+                        setActiveCategory("all");
+                        setTrendingOnly(false);
+                        setSmartFilterActive(false);
+                        setSelectedStore(null);
+                      }}
+                      className={`px-4 py-2 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 border backdrop-blur-sm ${
+                        isActive ? "bg-foreground text-background border-foreground shadow-md" : "bg-card/90 text-muted-foreground border-border/30 shadow-sm"
+                      }`}
+                    >
+                      <span className="text-[13px]">{g.emoji}</span> {g.label} ({count})
+                    </motion.button>
+                  );
+                })}
                 <motion.button whileTap={{ scale: 0.95 }}
                   onClick={() => { setOpenNowOnly((v) => !v); setSelectedStore(null); }}
                   className={`px-4 py-2 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 border backdrop-blur-sm ${
@@ -1738,9 +1790,18 @@ export default function StoreMapPage() {
                 className="w-full flex items-center gap-2 px-4 py-2 border-t border-border/10"
               >
                 <p className="text-[12px] font-bold text-foreground flex-1 text-left">
-                  {effectiveCenter
-                    ? `${nearbySorted.length} stores${radiusKm ? ` within ${radiusKm < 1 ? radiusKm * 1000 + " m" : radiusKm + " km"}` : " nearby"}`
-                    : `${nearbySorted.length} stores`}
+                  {(() => {
+                    const groupLabel = activeGroup ? CATEGORY_GROUPS.find((g) => g.id === activeGroup)?.label : null;
+                    const nearestKm = effectiveCenter && nearbySorted.length > 0
+                      ? distanceMiles(effectiveCenter, { lat: nearbySorted[0].latitude, lng: nearbySorted[0].longitude }) * 1.609344
+                      : null;
+                    const isActuallyNearby = nearestKm != null && nearestKm <= 50;
+                    const noun = groupLabel ?? "store";
+                    const plural = nearbySorted.length === 1 ? noun : `${noun}s`;
+                    if (radiusKm) return `${nearbySorted.length} ${plural} within ${radiusKm < 1 ? radiusKm * 1000 + " m" : radiusKm + " km"}`;
+                    if (isActuallyNearby) return `${nearbySorted.length} ${plural} nearby`;
+                    return `${nearbySorted.length} ${plural}`;
+                  })()}
                   {tripMode && tripStops.length > 0
                     ? <span className="ml-1.5 text-foreground font-semibold">· {tripStops.length} stops · {formatTripEta(tripKm)}</span>
                     : tripMode

@@ -676,6 +676,14 @@ export default function EatsLanding() {
       {step === "browse" && !Capacitor.isNativePlatform() && <NavBar />}
       {step === "browse" && <NativeBackButton />}
 
+      {/* Safe-area top backdrop — occludes scrolled content under the
+          dynamic island so partner badges, cards, etc. don't peek under
+          the system clock. Mirrors AppHome's strip. */}
+      <div
+        aria-hidden
+        className="fixed top-0 left-0 right-0 z-40 bg-background/80 backdrop-blur-xl pointer-events-none [height:env(safe-area-inset-top,0px)]"
+      />
+
       <AnimatePresence mode="wait">
         {/* ═══ BROWSE ═══ */}
         {step === "browse" && (

@@ -65,8 +65,12 @@ export const LANGUAGES = [
 
 export function useI18n() {
   const locale = useSyncExternalStore(subscribe, getSnapshot);
+  // Accepts an optional fallback string to render when the key is missing
+  // from both the active locale and English. Without this, `t("foo") || "Bar"`
+  // never falls back because the key string itself is truthy.
   const t = useCallback(
-    (key: string) => _translations?.[locale]?.[key] || _translations?.en?.[key] || key,
+    (key: string, fallback?: string) =>
+      _translations?.[locale]?.[key] ?? _translations?.en?.[key] ?? fallback ?? key,
     [locale]
   );
   return {

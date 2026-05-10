@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ChevronLeft, Hash, ImageIcon, Link as LinkIcon, Users } from "lucide-react";
+import { ChevronLeft, Hash, ImageIcon, Inbox, Link as LinkIcon, Users } from "lucide-react";
 import { useChannel } from "@/hooks/useChannel";
 import { ChannelHeader } from "@/components/channels/ChannelHeader";
 import { ChannelPostCard } from "@/components/channels/ChannelPostCard";
 import { ChannelPostComposer } from "@/components/channels/ChannelPostComposer";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { getPublicOrigin } from "@/lib/getPublicOrigin";
+import { getChannelShareUrl } from "@/lib/getPublicOrigin";
+import { shareContent } from "@/lib/native/share";
+import { copyText } from "@/lib/native/clipboard";
 import { toast } from "sonner";
 
 type ViewTab = "posts" | "media" | "links";
@@ -60,22 +62,21 @@ export default function ChannelPage() {
   const showInlineJoin = !isSubscribed && !canPost && filteredPosts.length === 0;
 
   const shareChannel = async () => {
-    const url = `${getPublicOrigin()}/c/${channel.handle}`;
+    const url = getChannelShareUrl(channel.handle);
     try {
-      if (navigator.share) {
-        await navigator.share({
-          title: `${channel.name} on ZIVO`,
-          text: `Join @${channel.handle} on ZIVO`,
-          url,
-        });
-        return;
-      }
-    } catch (error: any) {
-      if (error?.name === "AbortError") return;
+      const result = await shareContent({
+        title: `${channel.name} on ZIVO`,
+        text: `Join @${channel.handle} on ZIVO`,
+        url,
+        dialogTitle: "Share channel",
+      });
+      if (result.shared || result.cancelled) return;
+    } catch {
+      // fall through to clipboard fallback
     }
 
     try {
-      await navigator.clipboard.writeText(url);
+      await copyText(url);
       toast.success("Channel link copied");
     } catch {
       toast.error("Could not copy channel link");
@@ -96,7 +97,7 @@ export default function ChannelPage() {
           <div className="min-w-0 flex-1">
             <p className="text-sm font-semibold truncate">{channel.name}</p>
             <p className="text-[11px] text-muted-foreground truncate inline-flex items-center gap-1">
-              <Users className="w-3 h-3" /> {channel.subscriber_count} subscribers
+              <Users className="w-3 h-3" /> {channel.subscriber_count.toLocaleString()} subscriber{channel.subscriber_count === 1 ? "" : "s"}
             </p>
           </div>
         </div>
@@ -161,25 +162,40 @@ export default function ChannelPage() {
               onPinChanged={refresh}
             />
           ))}
-        {filteredPosts.length === 0 && (
-          <div className="rounded-lg border border-dashed border-border p-6 sm:p-8 text-center">
-            <p className="text-sm text-muted-foreground">
-              {activeTab === "posts" ? "No posts yet." : activeTab === "media" ? "No media shared yet." : "No links shared yet."}
-            </p>
-            {activeTab === "posts" && (
-              <div className="mt-3 flex flex-wrap items-center justify-center gap-2">
-                <Button type="button" size="sm" variant="outline" onClick={() => void shareChannel()}>
-                  Share Channel
-                </Button>
-                {!isSubscribed && !canPost && !showInlineJoin && (
-                  <Button type="button" size="sm" onClick={subscribe}>
-                    Join Channel
-                  </Button>
-                )}
+        {filteredPosts.length === 0 && (() => {
+          const EmptyIcon = activeTab === "media" ? ImageIcon : activeTab === "links" ? LinkIcon : Inbox;
+          const emptyTitle =
+            activeTab === "posts" ? "No posts yet" : activeTab === "media" ? "No media shared yet" : "No links shared yet";
+          const emptySubtitle =
+            activeTab === "posts"
+              ? canPost
+                ? "Share something with your subscribers to get started."
+                : "New posts from this channel will show up here."
+              : activeTab === "media"
+                ? "Photos and videos posted to this channel will appear here."
+                : "Links shared in posts will appear here.";
+          return (
+            <div className="rounded-2xl border border-dashed border-border/70 bg-muted/20 p-8 text-center">
+              <div className="mx-auto mb-3 inline-flex h-12 w-12 items-center justify-center rounded-full bg-muted/60 text-muted-foreground">
+                <EmptyIcon className="h-5 w-5" />
               </div>
-            )}
-          </div>
-        )}
+              <p className="text-sm font-semibold text-foreground">{emptyTitle}</p>
+              <p className="mt-1 text-[12px] text-muted-foreground">{emptySubtitle}</p>
+              {activeTab === "posts" && (
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
+                  <Button type="button" size="sm" variant="outline" onClick={() => void shareChannel()}>
+                    Share Channel
+                  </Button>
+                  {!isSubscribed && !canPost && !showInlineJoin && (
+                    <Button type="button" size="sm" onClick={subscribe}>
+                      Join Channel
+                    </Button>
+                  )}
+                </div>
+              )}
+            </div>
+          );
+        })()}
 
         {showInlineJoin && (
           <div className="mx-auto max-w-2xl rounded-2xl border border-primary/20 bg-background/95 backdrop-blur p-3 flex items-center justify-between gap-3 shadow-sm">

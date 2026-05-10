@@ -9,6 +9,7 @@ import { useState, useEffect, useMemo, useRef, lazy, Suspense } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import MessageCircleIcon from "lucide-react/dist/esm/icons/message-circle";
 import StoreIcon from "lucide-react/dist/esm/icons/store";
+import DollarSign from "lucide-react/dist/esm/icons/dollar-sign";
 import Headphones from "lucide-react/dist/esm/icons/headphones";
 import Car from "lucide-react/dist/esm/icons/car";
 import Search from "lucide-react/dist/esm/icons/search";
@@ -54,6 +55,7 @@ import MyChannelsStrip from "@/components/chat/MyChannelsStrip";
 import GlobalChatSearch from "@/components/chat/GlobalChatSearch";
 import SuggestedContactsRow from "@/components/chat/SuggestedContactsRow";
 import { useChatPrefs } from "@/hooks/useChatPrefs";
+import { useZivoOFMode } from "@/hooks/useZivoOFMode";
 import { useBulkPresence } from "@/hooks/useBulkPresence";
 import { useTypingBus } from "@/hooks/useTypingBus";
 import { useLocalChatHide } from "@/hooks/useLocalChatHide";
@@ -383,7 +385,8 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
     }
     _setOpenPersonalChat(next);
   };
-  const [openGroupChat, setOpenGroupChat] = useState<{ id: string; name: string; avatar?: string | null } | null>(null);
+  const [openGroupChat, setOpenGroupChat] = useState<{ id: string; name: string; avatar?: string | null; autoStartCall?: "audio" | "video" | null } | null>(null);
+  const [showGroupCallPicker, setShowGroupCallPicker] = useState(false);
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -791,7 +794,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
 
       const { data: profiles } = await supabase
         .from("profiles")
-        .select("user_id, full_name, avatar_url, last_seen, is_verified")
+        .select("user_id, full_name, avatar_url, last_seen, is_verified, role, display_brand_name")
         .in("user_id", otherIds);
 
       const profileMap = new Map<string, any>();
@@ -805,11 +808,17 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
         const lastSeen = profile?.last_seen ? new Date(profile.last_seen) : null;
         const isOnline = lastSeen ? (Date.now() - lastSeen.getTime()) < 2 * 60 * 1000 : false;
         const isSentByMe = entry.lastMsg.sender_id === user!.id;
+        const role = (profile?.role || "").toLowerCase();
+        const isBusiness =
+          !!profile?.display_brand_name ||
+          role === "business" || role === "store" || role === "merchant" ||
+          role === "system" || role === "official" || role === "platform" || role === "support";
         return {
           id: otherId,
           name: profile?.full_name || "User",
           avatar: profile?.avatar_url || null,
           isVerified: profile?.is_verified === true,
+          isBusiness,
           lastMessage: entry.lastMsg.message_type === "voice"
             ? "🎤 Voice message"
             : entry.lastMsg.message_type === "file"
@@ -923,14 +932,29 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
     return map;
   }, [customFolderMembers]);
 
+  const { isOFMode: zivoOFMode } = useZivoOFMode();
+
+  // When OF mode is on, force folder out of hidden categories (groups, shop, support, ride, custom).
+  useEffect(() => {
+    if (!zivoOFMode) return;
+    if (folder === "all" || folder === "unread" || folder === "personal") return;
+    setFolder("personal");
+    // setFolder is a stable closure over setFolderState; folder is intentionally read.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [zivoOFMode, folder]);
+
   const folderTabs = useMemo<FolderTab[]>(() => {
     const customTabs = customFolders.map((f) => ({
       id: `custom:${f.id}`,
       label: `${f.icon || "📁"} ${f.name}`,
       category: "personal" as ChatCategory,
     }));
+    // OF mode: only personal/unread/all — no Groups, Shop, Support, Ride, custom folders.
+    if (zivoOFMode) {
+      return builtInFolders.filter((f) => f.id === "all" || f.id === "unread" || f.id === "personal");
+    }
     return [...builtInFolders, ...customTabs];
-  }, [customFolders]);
+  }, [customFolders, zivoOFMode]);
 
   // Row actions sheet state — declared before actionsFolderMembership useMemo
   const [actionsTarget, setActionsTarget] = useState<ChatRowActionsTarget | null>(null);
@@ -1032,6 +1056,8 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
 
   // Apply folder-level filtering on top of category data
   const folderFiltered = (rawChatList as any[]).filter((c) => {
+    // OF mode: never show groups or business/system chats, regardless of folder.
+    if (zivoOFMode && ((c as any).isGroup || (c as any).isBusiness)) return false;
     if (folder.startsWith("custom:")) {
       const customFolderId = folder.slice("custom:".length);
       const members = customFolderMemberMap.get(customFolderId);
@@ -1542,7 +1568,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                       <SquarePen className="w-5 h-5 text-muted-foreground" />
                     </button>
                   )}
-                  {active === "personal" && !selectionMode && !search && (
+                  {active === "personal" && !selectionMode && !search && !zivoOFMode && (
                     <button type="button"
                       onClick={() => setSelectionMode(true)}
                       className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
@@ -1552,7 +1578,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                       <CheckSquare className="w-5 h-5 text-muted-foreground" />
                     </button>
                   )}
-                  {active === "personal" && (
+                  {active === "personal" && !zivoOFMode && (
                     <button type="button"
                       onClick={() => void handleMarkAllPersonalRead()}
                       className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
@@ -1562,7 +1588,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                       <CheckCheck className="w-5 h-5 text-muted-foreground" />
                     </button>
                   )}
-                  {active === "personal" && (
+                  {active === "personal" && !zivoOFMode && (
                     <button type="button"
                       onClick={() => navigate('/chat/contacts')}
                       className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
@@ -1571,7 +1597,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                       <UserPlus className="w-5 h-5 text-muted-foreground" />
                     </button>
                   )}
-                  {active === "personal" && (
+                  {active === "personal" && !zivoOFMode && (
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <button type="button"
@@ -1606,7 +1632,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                       </DropdownMenuContent>
                     </DropdownMenu>
                   )}
-                  {active === "personal" && (
+                  {active === "personal" && !zivoOFMode && (
                     <button type="button"
                       onClick={() => setShowCreateGroup(true)}
                       className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
@@ -1693,7 +1719,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
             </div>
 
             {/* Active Now strip — online contacts */}
-            {!embedded && !search && active === "personal" && onlineIds.size > 0 && (
+            {!embedded && !search && active === "personal" && onlineIds.size > 0 && !zivoOFMode && (
               <div className="px-4 pb-2">
                 <div className="flex items-center gap-1.5 mb-1.5">
                   <span className="inline-block w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -1771,6 +1797,31 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
             </div>
           </div>
 
+          {/* Start a group call entry — shown only on the Groups folder */}
+          {folder === "groups" && active === "personal" && !zivoOFMode && !selectionMode && (
+            <div className={cn("px-5 pt-3", embedded && "px-3 pt-2")}>
+              <div className="p-3 rounded-2xl bg-primary/8 border border-primary/15 flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0">
+                  <Video className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[13px] font-bold text-foreground leading-tight">Start a group call</p>
+                  <p className="text-[11px] text-muted-foreground truncate mt-0.5">Pick a group to call everyone at once</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowGroupCallPicker(true)}
+                  className="px-3 h-9 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1.5 active:scale-95 transition-transform shrink-0"
+                  aria-label="Start a group call"
+                  title="Start a group call"
+                >
+                  <Phone className="w-3.5 h-3.5" />
+                  Start
+                </button>
+              </div>
+            </div>
+          )}
+
           {sharePayload && (
             <div className={cn("px-5 pt-3", embedded && "px-4 pt-3")}>
               <div className="p-3.5 rounded-2xl bg-primary/8 border border-primary/15 flex items-center gap-3">
@@ -1833,7 +1884,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                       </button>
                     )}
                     {active === "personal" && search.trim().length < 2 && (
-                      <div className="grid grid-cols-3 gap-2.5 w-full max-w-[360px] mt-1">
+                      <div className={cn("grid gap-2.5 w-full max-w-[360px] mt-1", zivoOFMode ? "grid-cols-1" : "grid-cols-3")}>
                         <button type="button"
                           onClick={async () => {
                             const url = `${window.location.origin}/`;
@@ -1850,24 +1901,28 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                           </div>
                           <span className="text-[11px] font-semibold text-foreground leading-tight">Invite friends</span>
                         </button>
-                        <button type="button"
-                          onClick={() => navigate("/chat/nearby")}
-                          className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl bg-card border border-border/40 shadow-sm active:scale-95 transition-transform"
-                        >
-                          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
-                            <MapPinned className="w-4 h-4 text-primary" />
-                          </div>
-                          <span className="text-[11px] font-semibold text-foreground leading-tight">People nearby</span>
-                        </button>
-                        <button type="button"
-                          onClick={() => setShowCreateGroup(true)}
-                          className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl bg-card border border-border/40 shadow-sm active:scale-95 transition-transform"
-                        >
-                          <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
-                            <Users className="w-4 h-4 text-primary" />
-                          </div>
-                          <span className="text-[11px] font-semibold text-foreground leading-tight">New group</span>
-                        </button>
+                        {!zivoOFMode && (
+                          <>
+                            <button type="button"
+                              onClick={() => navigate("/chat/nearby")}
+                              className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl bg-card border border-border/40 shadow-sm active:scale-95 transition-transform"
+                            >
+                              <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+                                <MapPinned className="w-4 h-4 text-primary" />
+                              </div>
+                              <span className="text-[11px] font-semibold text-foreground leading-tight">People nearby</span>
+                            </button>
+                            <button type="button"
+                              onClick={() => setShowCreateGroup(true)}
+                              className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-2xl bg-card border border-border/40 shadow-sm active:scale-95 transition-transform"
+                            >
+                              <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
+                                <Users className="w-4 h-4 text-primary" />
+                              </div>
+                              <span className="text-[11px] font-semibold text-foreground leading-tight">New group</span>
+                            </button>
+                          </>
+                        )}
                       </div>
                     )}
                   </div>
@@ -1922,12 +1977,12 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                     )}
 
                     {/* Channels strip — subscribed channels with quick access */}
-                    {!search && active === "personal" && (folder === "all" || folder === "personal") && (
+                    {!search && active === "personal" && (folder === "all" || folder === "personal") && !zivoOFMode && (
                       <MyChannelsStrip />
                     )}
 
                     {/* Saved Messages — Telegram-style self chat */}
-                    {!search && active === "personal" && user && (
+                    {!search && active === "personal" && user && !zivoOFMode && (
                       <button type="button"
                         onClick={() => setOpenPersonalChat({ id: user.id, name: "Saved Messages", avatar: null, isVerified: false })}
                         className="w-full flex items-center gap-3 px-4 py-3 active:bg-muted/50 transition-colors"
@@ -2107,19 +2162,41 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                       </span>
                                       {isPersonalChat && !chat.isGroup && !selectionMode && (
                                         <>
-                                          <span
-                                            role="button"
-                                            aria-label="Voice call"
-                                            onClick={(e) => {
-                                              e.stopPropagation();
-                                              e.preventDefault();
-                                              setPendingCall("voice");
-                                              setOpenPersonalChat({ id: chat.id, name: chat.name, avatar: chat.avatar, isVerified: (chat as any).isVerified === true });
-                                            }}
-                                            className="ml-0.5 w-6 h-6 rounded-full hover:bg-muted flex items-center justify-center cursor-pointer"
-                                          >
-                                            <Phone className="w-3.5 h-3.5 text-muted-foreground" />
-                                          </span>
+                                          {zivoOFMode && (
+                                            <span
+                                              role="button"
+                                              aria-label="Send a tip request"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                e.preventDefault();
+                                                setOpenPersonalChat({
+                                                  id: chat.id,
+                                                  name: chat.name,
+                                                  avatar: chat.avatar,
+                                                  isVerified: (chat as any).isVerified === true,
+                                                  prefillInput: "💰 Send me a tip — link: /monetization/program/tips-donations",
+                                                });
+                                              }}
+                                              className="ml-0.5 w-6 h-6 rounded-full bg-[#00AEEF]/10 hover:bg-[#00AEEF]/20 flex items-center justify-center cursor-pointer"
+                                            >
+                                              <DollarSign className="w-3.5 h-3.5 text-[#00AEEF]" />
+                                            </span>
+                                          )}
+                                          {!zivoOFMode && (
+                                            <span
+                                              role="button"
+                                              aria-label="Voice call"
+                                              onClick={(e) => {
+                                                e.stopPropagation();
+                                                e.preventDefault();
+                                                setPendingCall("voice");
+                                                setOpenPersonalChat({ id: chat.id, name: chat.name, avatar: chat.avatar, isVerified: (chat as any).isVerified === true });
+                                              }}
+                                              className="ml-0.5 w-6 h-6 rounded-full hover:bg-muted flex items-center justify-center cursor-pointer"
+                                            >
+                                              <Phone className="w-3.5 h-3.5 text-muted-foreground" />
+                                            </span>
+                                          )}
                                           <span
                                             role="button"
                                             aria-label="Chat options"
@@ -2296,7 +2373,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                     )}
 
                     {/* People you may know — Suggested Contacts */}
-                    {!search && active === "personal" && !selectionMode && (
+                    {!search && active === "personal" && !selectionMode && !zivoOFMode && (
                       <div className="pt-2">
                         <SuggestedContactsRow />
                       </div>
@@ -2681,6 +2758,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                 groupId={openGroupChat.id}
                 groupName={openGroupChat.name}
                 groupAvatar={openGroupChat.avatar}
+                autoStartCall={openGroupChat.autoStartCall ?? null}
                 onClose={() => setOpenGroupChat(null)}
               />
             </ChatErrorBoundary>
@@ -2698,6 +2776,104 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
           }}
         />
       </Suspense>
+
+      {/* Group call picker — choose a group + call type */}
+      <AnimatePresence>
+        {showGroupCallPicker && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[9998] flex items-end sm:items-center justify-center px-4"
+            onClick={() => setShowGroupCallPicker(false)}
+          >
+            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+            <motion.div
+              initial={{ y: 24, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 24, opacity: 0 }}
+              className="relative bg-background rounded-2xl w-full max-w-md shadow-2xl overflow-hidden"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="px-5 pt-5 pb-3 flex items-center gap-3 border-b border-border/30">
+                <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center">
+                  <Video className="w-5 h-5 text-primary" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-base font-bold text-foreground">Start a group call</h3>
+                  <p className="text-xs text-muted-foreground">Pick a group and call type</p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setShowGroupCallPicker(false)}
+                  className="w-9 h-9 rounded-full bg-muted flex items-center justify-center active:scale-90 transition-transform"
+                  aria-label="Close"
+                  title="Close"
+                >
+                  <X className="w-4 h-4 text-muted-foreground" />
+                </button>
+              </div>
+              <div className="max-h-[60vh] overflow-y-auto">
+                {(groupChats as any[]).length === 0 ? (
+                  <div className="px-6 py-10 text-center">
+                    <div className="text-4xl mb-2">👥</div>
+                    <p className="text-sm font-semibold text-foreground mb-1">No groups yet</p>
+                    <p className="text-xs text-muted-foreground mb-4">Create a group first to start a group call</p>
+                    <button
+                      type="button"
+                      onClick={() => { setShowGroupCallPicker(false); setShowCreateGroup(true); }}
+                      className="px-5 h-10 rounded-full bg-primary text-primary-foreground text-sm font-bold active:scale-95 transition-transform"
+                    >
+                      New group
+                    </button>
+                  </div>
+                ) : (
+                  <ul className="divide-y divide-border/20">
+                    {(groupChats as any[]).map((g) => (
+                      <li key={g.id} className="flex items-center gap-3 px-4 py-3">
+                        <div className="w-10 h-10 rounded-full bg-primary/10 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                          {g.avatar ? (
+                            <img src={g.avatar} alt={g.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
+                          ) : (
+                            <Users className="w-5 h-5 text-primary" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-semibold text-foreground truncate">{g.name}</p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowGroupCallPicker(false);
+                            setOpenGroupChat({ id: g.id, name: g.name, avatar: g.avatar, autoStartCall: "audio" });
+                          }}
+                          className="w-9 h-9 rounded-full bg-emerald-500/10 flex items-center justify-center active:scale-90 transition-transform"
+                          aria-label={`Voice call ${g.name}`}
+                          title={`Voice call ${g.name}`}
+                        >
+                          <Phone className="w-4 h-4 text-emerald-500" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setShowGroupCallPicker(false);
+                            setOpenGroupChat({ id: g.id, name: g.name, avatar: g.avatar, autoStartCall: "video" });
+                          }}
+                          className="w-9 h-9 rounded-full bg-blue-500/10 flex items-center justify-center active:scale-90 transition-transform"
+                          aria-label={`Video call ${g.name}`}
+                          title={`Video call ${g.name}`}
+                        >
+                          <Video className="w-4 h-4 text-blue-500" />
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       <GlobalChatSearch open={globalSearchOpen} onClose={() => setGlobalSearchOpen(false)} />
     </div>

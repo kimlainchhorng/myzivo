@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { toast } from "sonner";
 import { formatTierPrice, monthlyEquivalent, INTERVAL_LABEL, type BillingInterval } from "@/lib/tierFormat";
+import SubscribeInAppSheet from "./SubscribeInAppSheet";
 
 interface Props {
   creatorId: string;
@@ -30,6 +31,7 @@ export default function CreatorTiersSubscribe({ creatorId, creatorName, isOwnPro
   const [pwywTier, setPwywTier] = useState<any | null>(null);
   const [welcomeFor, setWelcomeFor] = useState<{ name: string; message: string } | null>(null);
   const [pwywAmount, setPwywAmount] = useState("");
+  const [inAppTier, setInAppTier] = useState<any | null>(null);
 
   const { data: tiers = [], isLoading } = useQuery({
     queryKey: ["public-creator-tiers", creatorId],
@@ -77,7 +79,12 @@ export default function CreatorTiersSubscribe({ creatorId, creatorName, isOwnPro
       setPwywTier(tier);
       return;
     }
-    await doSubscribe(tier, tier.price_cents);
+    if (tier.is_free) {
+      await doSubscribe(tier, tier.price_cents);
+      return;
+    }
+    // Paid tier — collect card in-app instead of bouncing to Stripe Checkout.
+    setInAppTier(tier);
   };
 
   const doSubscribe = async (tier: any, cents: number) => {
@@ -403,6 +410,14 @@ export default function CreatorTiersSubscribe({ creatorId, creatorName, isOwnPro
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      <SubscribeInAppSheet
+        open={!!inAppTier}
+        onClose={() => setInAppTier(null)}
+        creatorId={creatorId}
+        creatorName={creatorName || "this creator"}
+        tier={inAppTier}
+      />
     </div>
   );
 }

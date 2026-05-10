@@ -378,9 +378,9 @@ const AISmartDeals = () => {
           <motion.div
             animate={{ rotate: [0, 15, -15, 0] }}
             transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
-            className="w-8 h-8 rounded-full bg-muted flex items-center justify-center"
+            className="w-8 h-8 rounded-full bg-ig-gradient flex items-center justify-center shadow-sm"
           >
-            <Sparkles className="w-4 h-4 text-ig-gradient" />
+            <Sparkles className="w-4 h-4 text-white" />
           </motion.div>
           <span>AI Smart Deals</span>
           <motion.div

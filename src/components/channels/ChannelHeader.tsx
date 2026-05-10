@@ -16,16 +16,23 @@ interface Props {
 }
 
 export function ChannelHeader({ channel, isSubscribed, isOwner, notificationsOn = true, onSubscribe, onUnsubscribe, onSetNotifications }: Props) {
-  const memberLabel = `${channel.subscriber_count} subscriber${channel.subscriber_count === 1 ? "" : "s"}`;
+  const memberLabel = `${channel.subscriber_count.toLocaleString()} subscriber${channel.subscriber_count === 1 ? "" : "s"}`;
   const showInlineSubscribe = isSubscribed || isOwner;
 
   return (
     <div className="border-b border-border/50 bg-card/70">
+      <div
+        className="h-24 sm:h-28 w-full bg-gradient-to-br from-primary/20 via-primary/10 to-muted bg-cover bg-center"
+        style={channel.banner_url ? { backgroundImage: `url(${channel.banner_url})` } : undefined}
+        aria-hidden
+      />
       <div className="px-4 pb-3 sm:pb-4">
-        <div className="pt-3 sm:pt-4">
+        <div className="-mt-10 sm:-mt-12">
           <Avatar className="h-20 w-20 sm:h-24 sm:w-24 border-4 border-background shadow-md">
             <AvatarImage src={channel.avatar_url ?? undefined} />
-            <AvatarFallback>{channel.name.slice(0, 2).toUpperCase()}</AvatarFallback>
+            <AvatarFallback className="bg-gradient-to-br from-primary/30 to-primary/10 text-primary font-bold">
+              {channel.name.slice(0, 2).toUpperCase()}
+            </AvatarFallback>
           </Avatar>
         </div>
 

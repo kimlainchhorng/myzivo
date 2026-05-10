@@ -202,12 +202,18 @@ export default defineConfig(({ mode }) => ({
           },
           {
             urlPattern: /\.(jpg|jpeg|png|webp|avif)$/i,
-            handler: "CacheFirst",
+            handler: "StaleWhileRevalidate",
             options: {
               cacheName: "local-images",
               expiration: {
                 maxEntries: 60,
-                maxAgeSeconds: 60 * 60 * 24 * 365
+                maxAgeSeconds: 60 * 60 * 24 * 30
+              },
+              // Only cache successful responses — without this an early
+              // network blip / 0-byte fetch gets locked into CacheFirst and
+              // the broken image renders forever.
+              cacheableResponse: {
+                statuses: [200]
               }
             }
           }

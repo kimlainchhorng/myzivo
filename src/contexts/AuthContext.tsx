@@ -22,10 +22,27 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
+const AUTH_FALLBACK: AuthContextType = {
+  user: null,
+  session: null,
+  isLoading: true,
+  isAdmin: false,
+  mfaPending: null,
+  signUp: async () => ({ error: new Error("AuthProvider not mounted") }),
+  signIn: async () => ({ error: new Error("AuthProvider not mounted") }),
+  verifyMfa: async () => ({ error: new Error("AuthProvider not mounted") }),
+  signOut: async () => {},
+};
+
 export const useAuth = () => {
   const context = useContext(AuthContext);
   if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
+    if (import.meta.env.DEV) {
+      // Surface the missing-provider warning once without crashing the tree —
+      // HMR can briefly render children before AuthProvider re-mounts.
+      console.warn("[useAuth] called outside <AuthProvider>; returning fallback");
+    }
+    return AUTH_FALLBACK;
   }
   return context;
 };

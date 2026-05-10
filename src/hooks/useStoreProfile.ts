@@ -41,21 +41,27 @@ export interface StoreProductItem {
   sort_order: number;
 }
 
-export function useStoreProfile(slug: string) {
+// Accepts either a slug ("ab-complete-car-care") or a store UUID. Some routes
+// pass the slug (`/store/:slug`) while others pass the id (`/shop/:storeId`).
+// Without dual lookup, UUID routes always render "Store not found".
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+export function useStoreProfile(idOrSlug: string) {
   return useQuery({
-    queryKey: ["store-profile", slug],
+    queryKey: ["store-profile", idOrSlug],
     queryFn: async () => {
+      const filterColumn = UUID_RE.test(idOrSlug) ? "id" : "slug";
       const { data, error } = await supabase
         .from("store_profiles")
         .select("*")
-        .eq("slug", slug)
+        .eq(filterColumn, idOrSlug)
         .eq("is_active", true)
         .maybeSingle();
       if (error) throw error;
       return data as StoreProfile | null;
     },
-    enabled: !!slug,
-    staleTime: 30_000, // refetch after 30s so admin changes appear quickly
+    enabled: !!idOrSlug,
+    staleTime: 30_000,
     refetchOnWindowFocus: true,
   });
 }

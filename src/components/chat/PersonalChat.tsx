@@ -19,6 +19,7 @@ import { App as CapacitorApp } from "@capacitor/app";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useZivoOFMode } from "@/hooks/useZivoOFMode";
 import MediaGalleryLightbox from "./MediaGalleryLightbox";
 import { OPEN_MEDIA_EVENT, type OpenMediaDetail } from "@/lib/chat/openMedia";
 import { openP2PTransfer } from "./P2PTransferSheet";
@@ -28,6 +29,7 @@ import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
 import Send from "lucide-react/dist/esm/icons/send";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import Phone from "lucide-react/dist/esm/icons/phone";
+import Gift from "lucide-react/dist/esm/icons/gift";
 import X from "lucide-react/dist/esm/icons/x";
 import Mic from "lucide-react/dist/esm/icons/mic";
 import Search from "lucide-react/dist/esm/icons/search";
@@ -272,6 +274,7 @@ function formatMsgTime(dateStr: string) {
 
 export default function PersonalChat({ recipientId, recipientName, recipientAvatar, recipientIsVerified, prefillInput, onClose, autoStartCall, onCallStarted, inline = false }: PersonalChatProps) {
   const { user } = useAuth();
+  const { isOFMode: zivoOFMode } = useZivoOFMode();
   const navigate = useNavigate();
   const isSelfChat = !!user?.id && recipientId === user.id;
   const displayName = isSelfChat ? "Saved Messages" : recipientName;
@@ -2131,7 +2134,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
           {/* Action buttons */}
           <div className="flex items-center gap-0.5">
-            {!isSelfChat && (
+            {!isSelfChat && !zivoOFMode && (
               <>
                 <motion.button
                   whileTap={{ scale: 0.85 }}
@@ -2152,6 +2155,17 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                   <Phone className="h-[19px] w-[19px] text-emerald-500" />
                 </motion.button>
               </>
+            )}
+            {!isSelfChat && zivoOFMode && (
+              <motion.button
+                whileTap={{ scale: 0.85 }}
+                onClick={() => setShowGiftPanel(true)}
+                className="h-11 w-11 rounded-full flex items-center justify-center hover:bg-[#00AEEF]/10 active:bg-[#00AEEF]/15 transition-colors"
+                aria-label="Send a tip"
+                title="Send a tip"
+              >
+                <Gift className="h-5 w-5 text-[#00AEEF]" />
+              </motion.button>
             )}
 
             <DropdownMenu>
@@ -2275,7 +2289,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           </button>
         )}
 
-        {latestMissedCall && latestMissedCall.id !== dismissedMissedCallId && !activeCall && (
+        {latestMissedCall && latestMissedCall.id !== dismissedMissedCallId && !activeCall && !zivoOFMode && (
           <div className="w-full px-4 py-3 border-t border-border bg-secondary flex items-center gap-3">
             <div className="h-10 w-10 rounded-full bg-background border border-border flex items-center justify-center shrink-0">
               <Phone className="w-5 h-5 text-amber-500" />
@@ -2948,14 +2962,16 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               </div>
 
               {/* Quick replies — saved canned responses */}
-              <button type="button"
-                onClick={() => setShowQuickReplies(true)}
-                className="h-11 w-11 rounded-full flex items-center justify-center transition-all shrink-0 text-muted-foreground/60 hover:bg-muted/50 hover:text-amber-500"
-                aria-label="Quick replies"
-                title="Quick replies"
-              >
-                <Zap className="h-5 w-5" />
-              </button>
+              {!zivoOFMode && (
+                <button type="button"
+                  onClick={() => setShowQuickReplies(true)}
+                  className="h-11 w-11 rounded-full flex items-center justify-center transition-all shrink-0 text-muted-foreground/60 hover:bg-muted/50 hover:text-amber-500"
+                  aria-label="Quick replies"
+                  title="Quick replies"
+                >
+                  <Zap className="h-5 w-5" />
+                </button>
+              )}
 
               <input ref={fileInputRef} type="file" accept="image/*" className="hidden" onChange={handleImageSelect} title="Choose image" aria-label="Choose image" />
               <input ref={videoInputRef} type="file" accept="video/*,.gif" className="hidden" onChange={handleVideoSelect} title="Choose video" aria-label="Choose video" />
@@ -2973,9 +2989,11 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               )}
 
               {/* Self-destruct picker — always visible so user can toggle timer */}
-              <div className="shrink-0">
-                <SelfDestructPicker value={selfDestructSec} onChange={setSelfDestructSec} />
-              </div>
+              {!zivoOFMode && (
+                <div className="shrink-0">
+                  <SelfDestructPicker value={selfDestructSec} onChange={setSelfDestructSec} />
+                </div>
+              )}
             </div>
 
             {/* Document/file upload — trigger stored in ref, opened via attach menu */}
@@ -3052,6 +3070,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                 }`}
               />
               <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center">
+                {!zivoOFMode && (
                 <div className="relative">
                   <button type="button"
                     onClick={() => setShowEffectPicker((s) => !s)}
@@ -3105,6 +3124,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                     </>
                   )}
                 </div>
+                )}
                 <button type="button"
                   onClick={() => setShowStickerKeyboard(!showStickerKeyboard)}
                   className={`h-9 w-9 rounded-full flex items-center justify-center transition-all active:scale-90 ${

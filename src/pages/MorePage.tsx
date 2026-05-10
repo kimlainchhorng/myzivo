@@ -53,6 +53,7 @@ import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { Badge } from "@/components/ui/badge";
 import { useZivoPlus } from "@/contexts/ZivoPlusContext";
+import { useZivoOFMode } from "@/hooks/useZivoOFMode";
 
 /* ============================================= */
 /*  DAILY CHALLENGES (gamification)               */
@@ -1031,6 +1032,7 @@ export default function MorePage() {
   const { username: claimedUsername } = useUsername();
   const { balance: coinBalance } = useCoinBalance();
   const { isPlus, plan } = useZivoPlus();
+  const { isOFMode: zivoOFMode } = useZivoOFMode();
 
   // Real post count — matches /profile
   const { data: postsCount = 0 } = useQuery({
@@ -1327,36 +1329,38 @@ export default function MorePage() {
         </div>
       </div>
 
-      {/* Mini stats strip */}
-      <div className="flex items-center gap-3 mt-3 text-[11px] text-muted-foreground flex-wrap">
-        <div className="flex items-center gap-1">
-          <Star className="w-3 h-3 text-amber-400" />
-          <span className={cn("font-semibold text-foreground/80", blurClass)}>{formatCount(coinBalance) || "0"}</span>
-          <span>coins</span>
+      {/* Mini stats strip — hidden in OF mode (gamification not relevant) */}
+      {!zivoOFMode && (
+        <div className="flex items-center gap-3 mt-3 text-[11px] text-muted-foreground flex-wrap">
+          <div className="flex items-center gap-1">
+            <Star className="w-3 h-3 text-amber-400" />
+            <span className={cn("font-semibold text-foreground/80", blurClass)}>{formatCount(coinBalance) || "0"}</span>
+            <span>coins</span>
+          </div>
+          <span className="text-muted-foreground/30">•</span>
+          <div className="flex items-center gap-1">
+            <Award className="w-3 h-3 text-primary" />
+            <span className="font-semibold text-foreground/80 capitalize">{(profile as any)?.tier ?? "Explorer"}</span>
+            <span>tier</span>
+          </div>
+          <span className="text-muted-foreground/30">•</span>
+          <div className="flex items-center gap-1">
+            <Flame className="w-3 h-3 text-orange-500" />
+            <span className="font-semibold text-foreground/80">{streak.days}</span>
+            <span>day streak</span>
+          </div>
+          {pinnedHrefs.length > 0 && (
+            <>
+              <span className="text-muted-foreground/30">•</span>
+              <div className="flex items-center gap-1">
+                <Pin className="w-3 h-3 text-foreground" />
+                <span className="font-semibold text-foreground/80">{pinnedHrefs.length}</span>
+                <span>pinned</span>
+              </div>
+            </>
+          )}
         </div>
-        <span className="text-muted-foreground/30">•</span>
-        <div className="flex items-center gap-1">
-          <Award className="w-3 h-3 text-primary" />
-          <span className="font-semibold text-foreground/80 capitalize">{(profile as any)?.tier ?? "Explorer"}</span>
-          <span>tier</span>
-        </div>
-        <span className="text-muted-foreground/30">•</span>
-        <div className="flex items-center gap-1">
-          <Flame className="w-3 h-3 text-orange-500" />
-          <span className="font-semibold text-foreground/80">{streak.days}</span>
-          <span>day streak</span>
-        </div>
-        {pinnedHrefs.length > 0 && (
-          <>
-            <span className="text-muted-foreground/30">•</span>
-            <div className="flex items-center gap-1">
-              <Pin className="w-3 h-3 text-foreground" />
-              <span className="font-semibold text-foreground/80">{pinnedHrefs.length}</span>
-              <span>pinned</span>
-            </div>
-          </>
-        )}
-      </div>
+      )}
 
       {/* Connected providers strip */}
       {connectedProviders.length > 0 && (
@@ -1373,8 +1377,8 @@ export default function MorePage() {
         </div>
       )}
 
-      {/* Profile completion meter + checklist */}
-      {completion < 100 && (
+      {/* Profile completion meter + checklist — hidden in OF mode */}
+      {!zivoOFMode && completion < 100 && (
         <div className="mt-3">
           <div className="flex items-center justify-between mb-1.5">
             <p className="text-[10px] font-semibold text-muted-foreground flex items-center gap-1">
@@ -1460,16 +1464,29 @@ export default function MorePage() {
           <p className="text-[9px] text-muted-foreground truncate">View balance</p>
         </div>
       </Link>
-      <Link
-        to="/rewards"
-        className="zivo-card-organic flex items-center gap-2 px-3 py-2.5 active:scale-[0.97] transition-transform"
-      >
-        <Star className="w-4 h-4 text-amber-400 shrink-0" />
-        <div className="min-w-0">
-          <p className={cn("text-[11px] font-bold leading-tight truncate", blurClass)}>{coinBalance > 0 ? formatCount(coinBalance) : "0"} coins</p>
-          <p className="text-[9px] text-muted-foreground truncate">ZIVO coins</p>
-        </div>
-      </Link>
+      {zivoOFMode ? (
+        <Link
+          to="/monetization"
+          className="zivo-card-organic flex items-center gap-2 px-3 py-2.5 active:scale-[0.97] transition-transform"
+        >
+          <Crown className="w-4 h-4 text-[#00AEEF] shrink-0" />
+          <div className="min-w-0">
+            <p className="text-[11px] font-bold leading-tight truncate">Subscribers</p>
+            <p className="text-[9px] text-muted-foreground truncate">ZIVO OF</p>
+          </div>
+        </Link>
+      ) : (
+        <Link
+          to="/rewards"
+          className="zivo-card-organic flex items-center gap-2 px-3 py-2.5 active:scale-[0.97] transition-transform"
+        >
+          <Star className="w-4 h-4 text-amber-400 shrink-0" />
+          <div className="min-w-0">
+            <p className={cn("text-[11px] font-bold leading-tight truncate", blurClass)}>{coinBalance > 0 ? formatCount(coinBalance) : "0"} coins</p>
+            <p className="text-[9px] text-muted-foreground truncate">ZIVO coins</p>
+          </div>
+        </Link>
+      )}
     </motion.div>
   );
 
@@ -1786,8 +1803,8 @@ export default function MorePage() {
             </motion.div>
           )}
 
-          {/* Suggested next action (logged-in only) */}
-          {user && suggestedAction && (
+          {/* Suggested next action (logged-in only) — hidden in OF mode */}
+          {user && suggestedAction && !zivoOFMode && (
             <Link
               to={suggestedAction.href.startsWith("/") ? suggestedAction.href : "#"}
               className="block mb-4"
@@ -1859,8 +1876,8 @@ export default function MorePage() {
             </motion.div>
           )}
 
-          {/* Daily Challenges */}
-          {user && (
+          {/* Daily Challenges — hidden in OF mode (gamification not relevant) */}
+          {user && !zivoOFMode && (
             <motion.div
               initial={{ opacity: 0, y: 4 }}
               animate={{ opacity: 1, y: 0 }}
@@ -2525,7 +2542,7 @@ export default function MorePage() {
           {/* Admin */}
           {isAdmin && (
             <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="mt-4">
-              <Link to="/admin" className="contents">
+              <Link to="/admin/god-view" className="contents">
                 <div className="w-full py-3 rounded-2xl zivo-ribbon bg-primary/5 border border-primary/15 text-primary font-bold text-sm touch-manipulation active:scale-[0.98] transition-all flex items-center justify-center gap-2">
                   <Shield className="w-4 h-4" />
                   Admin Dashboard

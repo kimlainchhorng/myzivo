@@ -52,7 +52,28 @@ export async function uploadWithProgress(
       }
     };
 
-    xhr.onerror = () => reject(new Error("Network error during upload"));
+    xhr.onerror = async () => {
+      // Capacitor's WKWebView occasionally fails to stream binary File bodies
+      // through XHR (no error response, just `onerror` with no info). Fall back
+      // to the supabase-js client, which uses fetch under the hood and handles
+      // the Capacitor URL scheme reliably. We lose progress reporting but the
+      // upload itself completes — better UX than a hard failure.
+      try {
+        onProgress(50);
+        const { data, error } = await supabase.storage
+          .from(bucket)
+          .upload(filePath, file, { upsert: false, contentType: file.type || "application/octet-stream" });
+        if (error) {
+          reject(new Error(error.message || "Upload failed"));
+          return;
+        }
+        const { data: pub } = supabase.storage.from(bucket).getPublicUrl(data.path);
+        onProgress(100);
+        resolve(pub.publicUrl);
+      } catch (e: any) {
+        reject(new Error(e?.message || "Network error during upload"));
+      }
+    };
     xhr.onabort = () => reject(new Error("Upload aborted"));
 
     xhr.send(file);

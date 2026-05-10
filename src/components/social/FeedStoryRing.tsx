@@ -207,6 +207,23 @@ export default function FeedStoryRing() {
           </span>
         </button>
 
+        {/* Empty hint — when nobody you follow has posted a story today */}
+        {groups.filter((g) => g.userId !== user.id).length === 0 && (
+          <a
+            href="/explore"
+            className="flex flex-col items-center gap-1 shrink-0 w-[80px] active:scale-95 transition-transform"
+          >
+            <div className="h-[64px] w-[64px] rounded-full p-[2.5px] bg-gradient-to-br from-primary/40 to-emerald-400/30 box-border flex items-center justify-center">
+              <div className="h-full w-full rounded-full bg-card flex items-center justify-center text-primary">
+                <Sparkles className="h-5 w-5" strokeWidth={2.25} />
+              </div>
+            </div>
+            <span className="text-[11px] font-semibold text-primary text-center leading-tight">
+              Discover people →
+            </span>
+          </a>
+        )}
+
         {/* Other users' stories */}
         {groups.filter((g) => g.userId !== user.id).map((g) => {
           const hasUnviewed = groupHasUnviewed(g);

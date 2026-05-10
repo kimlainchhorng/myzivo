@@ -1,4 +1,7 @@
+// AdminDriverVerificationPage — wrapped in AdminLayout for proper admin chrome + back nav.
+// (re-saved to nudge Vite HMR after a stale cache)
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -6,6 +9,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { ArrowLeft, RefreshCw } from "lucide-react";
+import AdminLayout from "@/components/admin/AdminLayout";
 
 interface Row {
   id: string;
@@ -19,6 +24,7 @@ interface Row {
 }
 
 export default function AdminDriverVerificationPage() {
+  const navigate = useNavigate();
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [reasonByRow, setReasonByRow] = useState<Record<string, string>>({});
@@ -85,13 +91,32 @@ export default function AdminDriverVerificationPage() {
   const pending = rows.filter((r) => r.status === "pending");
 
   return (
-    <div className="container max-w-6xl py-6 space-y-4">
-      <div>
-        <h1 className="text-2xl font-bold">Driver Verification Queue</h1>
-        <p className="text-sm text-muted-foreground">{pending.length} pending review · {rows.length} total</p>
-      </div>
+    <AdminLayout title="Driver Verification — ZIVO Admin">
+      <div className="container max-w-6xl py-6 space-y-4">
+        {/* Sticky-ish header with back + refresh */}
+        <div className="flex items-center gap-3">
+          <Button
+            variant="ghost"
+            size="icon"
+            aria-label="Back"
+            onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/admin"))}
+            className="h-9 w-9 rounded-full"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </Button>
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl font-bold leading-tight">Driver Verification Queue</h1>
+            <p className="text-sm text-muted-foreground">
+              {pending.length} pending review · {rows.length} total
+            </p>
+          </div>
+          <Button variant="outline" size="sm" onClick={load} disabled={loading} className="gap-2">
+            <RefreshCw className={loading ? "h-4 w-4 animate-spin" : "h-4 w-4"} />
+            Refresh
+          </Button>
+        </div>
 
-      <Card>
+        <Card>
         <CardHeader><CardTitle>Pending Reviews</CardTitle></CardHeader>
         <CardContent>
           <Table>
@@ -134,6 +159,7 @@ export default function AdminDriverVerificationPage() {
           </Table>
         </CardContent>
       </Card>
-    </div>
+      </div>
+    </AdminLayout>
   );
 }

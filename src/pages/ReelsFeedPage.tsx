@@ -382,7 +382,7 @@ export default function ReelsFeedPage() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [feedTab, feedFilter, selectedHashtag]);
   const [sidebarContacts, setSidebarContacts] = useState<Array<{ id: string; name: string; avatar: string | null }>>([]);
-  const [trendingTags, setTrendingTags] = useState<string[]>([]);
+  const [trendingTags, setTrendingTags] = useState<Array<{ tag: string; count: number }>>([]);
   const [friendIds, setFriendIds] = useState<Set<string>>(new Set());
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
   const PAGE_INCREMENT = 25;
@@ -510,7 +510,12 @@ export default function ReelsFeedPage() {
         const tags = (p.caption || "").match(/#[\w一-鿿؀-ۿ]+/g) || [];
         tags.forEach((t: string) => { tagCounts[t] = (tagCounts[t] || 0) + 1; });
       });
-      setTrendingTags(Object.entries(tagCounts).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([t]) => t));
+      setTrendingTags(
+        Object.entries(tagCounts)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 8)
+          .map(([tag, count]) => ({ tag, count }))
+      );
     })();
   }, [userId]);
 
@@ -2147,17 +2152,14 @@ export default function ReelsFeedPage() {
             </div>
           </div>
 
-          {/* Suggested Users */}
+          {/* Suggested Users — carousel renders its own "Suggested for you"
+              header and returns null when there are no suggestions, so the
+              section self-hides on an empty result instead of leaving an
+              orphaned heading in the right rail. */}
           {userId && (
-            <div>
-              <div className="flex items-center justify-between mb-2 px-1">
-                <h3 className="text-sm font-semibold text-foreground">Suggested for you</h3>
-                <button type="button" onClick={() => navigate("/explore")} className="text-[11px] text-primary hover:underline">See all</button>
-              </div>
-              <Suspense fallback={null}>
-                <SuggestedUsersCarousel />
-              </Suspense>
-            </div>
+            <Suspense fallback={null}>
+              <SuggestedUsersCarousel />
+            </Suspense>
           )}
 
           {/* Contacts */}
@@ -2201,21 +2203,28 @@ export default function ReelsFeedPage() {
                 <h3 className="text-sm font-semibold text-foreground">Trending</h3>
               </div>
               <div className="space-y-0.5">
-                {trendingTags.map((tag) => (
-                  <button type="button"
-                    key={tag}
-                    onClick={() => {
-                      setSelectedHashtag(selectedHashtag === tag.replace("#", "") ? null : tag.replace("#", ""));
-                    }}
-                    className={cn(
-                      "w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-muted/50 transition-colors text-left",
-                      selectedHashtag === tag.replace("#", "") && "bg-primary/10"
-                    )}
-                  >
-                    <Hash className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-                    <span className="text-sm text-foreground truncate">{tag.replace("#", "")}</span>
-                  </button>
-                ))}
+                {trendingTags.map(({ tag, count }) => {
+                  const cleanTag = tag.replace("#", "");
+                  const active = selectedHashtag === cleanTag;
+                  return (
+                    <button type="button"
+                      key={tag}
+                      onClick={() => {
+                        setSelectedHashtag(active ? null : cleanTag);
+                      }}
+                      className={cn(
+                        "w-full flex items-center gap-2 px-2 py-1.5 rounded-lg hover:bg-muted/50 transition-colors text-left",
+                        active && "bg-primary/10"
+                      )}
+                    >
+                      <Hash className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                      <span className="text-sm text-foreground truncate flex-1">{cleanTag}</span>
+                      <span className="text-[10px] font-medium text-muted-foreground shrink-0 tabular-nums">
+                        {count >= 1000 ? `${(count / 1000).toFixed(1)}k` : count}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -3862,8 +3871,8 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                     </button>
                   </>
                 ) : item.media_urls.length === 1 ? (
-                  <div className="relative w-full bg-black overflow-hidden">
-                    <img src={mediaUrl} alt={item.caption || "Shared post"} className="block w-full h-auto cursor-pointer" loading="lazy" onClick={() => onOpenFullscreen?.()} />
+                  <div className="relative w-full bg-black overflow-hidden flex items-center justify-center max-h-[80vh] lg:max-h-[700px]">
+                    <img src={mediaUrl} alt={item.caption || "Shared post"} className="block w-full h-auto max-h-[80vh] lg:max-h-[700px] object-contain cursor-pointer" loading="lazy" onClick={() => onOpenFullscreen?.()} />
                   </div>
                 ) : item.media_urls.length === 2 ? (
                   <div className="grid grid-cols-2 gap-0.5 w-full aspect-square md:aspect-[2/1]">
@@ -4144,12 +4153,12 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                   )}
                 </div>
               ) : item.media_urls.length === 1 ? (
-                /* Single image — full width, natural height */
-                <div className="relative w-full bg-black overflow-hidden">
+                /* Single image — full width, capped height (tap to expand) */
+                <div className="relative w-full bg-black overflow-hidden flex items-center justify-center max-h-[80vh] lg:max-h-[700px]">
                   <img
                     src={mediaUrl}
                     alt={item.caption || "Post"}
-                    className="block w-full h-auto cursor-pointer"
+                    className="block w-full h-auto max-h-[80vh] lg:max-h-[700px] object-contain cursor-pointer"
                     loading="lazy"
                     onClick={() => onOpenFullscreen?.()}
                   />

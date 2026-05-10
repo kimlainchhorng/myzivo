@@ -1,6 +1,8 @@
 import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import ProfileFeedCard from "./ProfileFeedCard";
 import UnifiedShareSheet from "@/components/shared/ShareSheet";
+import { openPostShareSheet } from "@/components/social/PostShareSheet";
+import { openShareToChat } from "@/components/chat/ShareToChatSheet";
 import CreatePostModal from "@/components/social/CreatePostModal";
 import CommentsSheet from "@/components/social/CommentsSheet";
 import SafeCaption from "@/components/social/SafeCaption";
@@ -917,7 +919,21 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
               onOpenMenu={(feedItem) => { setSelectedPost(feedItem as any); setShowPostMenu(true); }}
               onShare={(postId) => {
                 track("share_button_tapped", { post_id: postId, author_id: profileOwnerId, surface: "profile_feed" });
-                setSharePostId(postId);
+                const p = feed.find((x) => x.id === postId);
+                openPostShareSheet({
+                  postId,
+                  url: buildPublicPostShareUrl(postId),
+                  title: p?.user?.name ? `${p.user.name} on ZIVO` : "ZIVO post",
+                  text: p?.caption || "Check out this post on ZIVO",
+                  imageUrl: p?.url ?? null,
+                  onSendToFriend: () => openShareToChat({
+                    kind: "post" as never,
+                    title: p?.user?.name ? `${p.user.name} on ZIVO` : "ZIVO post",
+                    subtitle: p?.caption?.slice(0, 80),
+                    image: p?.url ?? null,
+                    deepLink: buildPublicPostShareUrl(postId),
+                  }),
+                });
               }}
               onSelectPost={(feedItem) => setSelectedPost(feedItem as any)}
             />
@@ -1005,7 +1021,8 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-white text-sm font-semibold truncate">{selectedPost.user.name}</p>
-                  <p className="text-white/50 text-[10px]">{selectedPost.time} ago</p>
+                  {/* Timestamp hidden on the feed view — TikTok pattern, keeps
+                      older content from feeling stale. */}
                 </div>
                 {profileOwnerId === user?.id && (
                   <button type="button"
@@ -1103,19 +1120,38 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                     }}
                   >
                     <Heart className={cn("w-6 h-6", likedPosts.has(selectedPost.id) ? "fill-red-500 text-red-500" : "text-white/70 hover:text-white")} />
-                    <span className="text-sm font-medium text-white/90">{selectedPost.likes}</span>
+                    {selectedPost.likes > 0 && (
+                      <span className="text-sm font-medium text-white/90">{selectedPost.likes}</span>
+                    )}
                   </button>
                   <button type="button" onClick={() => openComments(selectedPost)} className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors">
                     <MessageCircle className="w-6 h-6" />
-                    <span className="text-sm font-medium">{selectedPost.comments}</span>
+                    {selectedPost.comments > 0 && (
+                      <span className="text-sm font-medium">{selectedPost.comments}</span>
+                    )}
                   </button>
-                  <span className="flex items-center gap-1.5 text-white/50">
-                    <Eye className="w-5 h-5" />
-                    <span className="text-sm">{(selectedPost.views || 0) > 1000 ? `${((selectedPost.views || 0) / 1000).toFixed(1)}k` : selectedPost.views || 0}</span>
-                  </span>
+                  {(selectedPost.views || 0) > 0 && (
+                    <span className="flex items-center gap-1.5 text-white/50">
+                      <Eye className="w-5 h-5" />
+                      <span className="text-sm">{(selectedPost.views || 0) > 1000 ? `${((selectedPost.views || 0) / 1000).toFixed(1)}k` : selectedPost.views}</span>
+                    </span>
+                  )}
                   <button type="button"
                     className="flex items-center gap-1.5 text-white/70 hover:text-white transition-colors ml-auto"
-                    onClick={() => setSharePostId(selectedPost.id)}
+                    onClick={() => openPostShareSheet({
+                      postId: selectedPost.id,
+                      url: buildPublicPostShareUrl(selectedPost.id),
+                      title: selectedPost.user?.name ? `${selectedPost.user.name} on ZIVO` : "ZIVO post",
+                      text: selectedPost.caption || "Check out this post on ZIVO",
+                      imageUrl: selectedPost.url ?? null,
+                      onSendToFriend: () => openShareToChat({
+                        kind: "post" as never,
+                        title: selectedPost.user?.name ? `${selectedPost.user.name} on ZIVO` : "ZIVO post",
+                        subtitle: selectedPost.caption?.slice(0, 80),
+                        image: selectedPost.url ?? null,
+                        deepLink: buildPublicPostShareUrl(selectedPost.id),
+                      }),
+                    })}
                   >
                     <Share2 className="w-6 h-6" />
                   </button>
@@ -1327,7 +1363,23 @@ export default function ProfileContentTabs({ userId }: { userId?: string }) {
                   <button type="button"
                     role="menuitem"
                     aria-label="Share this post"
-                    onClick={() => { setSharePostId(selectedPost.id); setShowPostMenu(false); }}
+                    onClick={() => {
+                      setShowPostMenu(false);
+                      openPostShareSheet({
+                        postId: selectedPost.id,
+                        url: buildPublicPostShareUrl(selectedPost.id),
+                        title: selectedPost.user?.name ? `${selectedPost.user.name} on ZIVO` : "ZIVO post",
+                        text: selectedPost.caption || "Check out this post on ZIVO",
+                        imageUrl: selectedPost.url ?? null,
+                        onSendToFriend: () => openShareToChat({
+                          kind: "post" as never,
+                          title: selectedPost.user?.name ? `${selectedPost.user.name} on ZIVO` : "ZIVO post",
+                          subtitle: selectedPost.caption?.slice(0, 80),
+                          image: selectedPost.url ?? null,
+                          deepLink: buildPublicPostShareUrl(selectedPost.id),
+                        }),
+                      });
+                    }}
                     className="w-full flex items-center gap-4 px-5 py-3.5 min-h-[48px] text-sm text-foreground hover:bg-muted/50 focus-visible:bg-muted/60 focus-visible:outline-none transition-colors"
                   >
                     <Share2 className="w-5 h-5" aria-hidden="true" />

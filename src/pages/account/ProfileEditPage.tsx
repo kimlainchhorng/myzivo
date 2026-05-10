@@ -278,8 +278,47 @@ export default function ProfileEditPage() {
       const { error } = await supabase.auth.updateUser({ email: newEmail });
       if (error) throw error;
       setEmailOtpSent(true);
-      toast.success("Verification email sent to " + newEmail);
+      setEmailOtp("");
+      toast.success("6-digit code sent to " + newEmail);
     } catch (err: any) { toast.error(err.message || "Failed to send verification"); } finally { setEmailChanging(false); }
+  };
+
+  const [emailVerifying, setEmailVerifying] = useState(false);
+  const handleEmailOtpVerify = async () => {
+    const code = emailOtp.trim();
+    if (code.length !== 6) { toast.error("Enter the 6-digit code"); return; }
+    setEmailVerifying(true);
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email: newEmail,
+        token: code,
+        type: "email_change",
+      });
+      if (error) throw error;
+      toast.success("Email updated to " + newEmail);
+      setEmailEditMode(false);
+      setEmailOtpSent(false);
+      setEmailOtp("");
+      setNewEmail("");
+    } catch (err: any) {
+      toast.error(err.message || "Invalid or expired code");
+    } finally {
+      setEmailVerifying(false);
+    }
+  };
+
+  const handleEmailOtpResend = async () => {
+    setEmailChanging(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ email: newEmail });
+      if (error) throw error;
+      toast.success("Code resent to " + newEmail);
+      setEmailOtp("");
+    } catch (err: any) {
+      toast.error(err.message || "Failed to resend code");
+    } finally {
+      setEmailChanging(false);
+    }
   };
 
   const getInitials = () => {
@@ -371,10 +410,10 @@ export default function ProfileEditPage() {
                           {!emailOtpSent ? (
                             <div className="space-y-2.5">
                               <Input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="Enter new email" autoFocus className="h-12 rounded-2xl bg-muted/15 border-border/30 text-[15px] font-medium" />
-                              <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground/70"><AlertCircle className="w-3 h-3 shrink-0" />A verification link will be sent to your new email</p>
+                              <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground/70"><AlertCircle className="w-3 h-3 shrink-0" />We&apos;ll send a 6-digit code to your new email.</p>
                               <div className="flex gap-2">
                                 <Button type="button" onClick={handleEmailChangeRequest} disabled={emailChanging || !newEmail || newEmail === user?.email} className="flex-1 h-11 rounded-2xl font-bold text-sm">
-                                  {emailChanging ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Mail className="h-4 w-4 mr-2" />}Verify Email
+                                  {emailChanging ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <Mail className="h-4 w-4 mr-2" />}Send Code
                                 </Button>
                                 <Button type="button" variant="ghost" onClick={() => { setEmailEditMode(false); setNewEmail(""); }} className="h-11 rounded-2xl text-muted-foreground px-4">Cancel</Button>
                               </div>
@@ -384,11 +423,46 @@ export default function ProfileEditPage() {
                               <div className="flex items-start gap-2.5">
                                 <CheckCircle2 className="w-5 h-5 text-primary shrink-0 mt-0.5" />
                                 <div>
-                                  <p className="text-sm font-semibold text-foreground">Verification sent!</p>
-                                  <p className="text-xs text-muted-foreground mt-0.5">Check <span className="font-medium text-foreground">{newEmail}</span> and click the link to confirm.</p>
+                                  <p className="text-sm font-semibold text-foreground">Code sent!</p>
+                                  <p className="text-xs text-muted-foreground mt-0.5">Enter the 6-digit code we sent to <span className="font-medium text-foreground">{newEmail}</span>.</p>
                                 </div>
                               </div>
-                              <Button type="button" variant="outline" onClick={() => { setEmailEditMode(false); setEmailOtpSent(false); setNewEmail(""); setEmailOtp(""); }} className="w-full h-10 rounded-2xl border-border/30 text-sm font-semibold">Done</Button>
+                              <Input
+                                inputMode="numeric"
+                                pattern="\d*"
+                                maxLength={6}
+                                value={emailOtp}
+                                onChange={(e) => setEmailOtp(e.target.value.replace(/\D/g, "").slice(0, 6))}
+                                placeholder="123456"
+                                autoFocus
+                                className="h-12 rounded-2xl bg-background border-border/40 text-center text-xl font-bold tracking-[0.4em]"
+                              />
+                              <Button
+                                type="button"
+                                onClick={handleEmailOtpVerify}
+                                disabled={emailVerifying || emailOtp.length !== 6}
+                                className="w-full h-11 rounded-2xl font-bold text-sm"
+                              >
+                                {emailVerifying ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : <CheckCircle2 className="h-4 w-4 mr-2" />}
+                                Verify Email
+                              </Button>
+                              <div className="flex items-center justify-between text-xs">
+                                <button
+                                  type="button"
+                                  onClick={handleEmailOtpResend}
+                                  disabled={emailChanging}
+                                  className="text-primary font-semibold hover:underline disabled:opacity-50"
+                                >
+                                  {emailChanging ? "Sending..." : "Resend code"}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => { setEmailEditMode(false); setEmailOtpSent(false); setNewEmail(""); setEmailOtp(""); }}
+                                  className="text-muted-foreground hover:underline"
+                                >
+                                  Cancel
+                                </button>
+                              </div>
                             </div>
                           )}
                         </motion.div>

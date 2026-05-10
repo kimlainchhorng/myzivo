@@ -17,6 +17,7 @@ import {
   Pencil, RotateCcw, Share2, BarChart3, Link as LinkIcon,
   Repeat, DollarSign, Briefcase, User as UserIcon,
   Heart, Lock, Gift, MessageCircle, Video, TrendingUp, Eye,
+  Settings as SettingsIcon,
 } from "lucide-react";
 import { useHaptics } from "@/hooks/useHaptics";
 import { Button } from "@/components/ui/button";
@@ -381,6 +382,19 @@ const Profile = () => {
     return localStorage.getItem("zivo:active_mode") || "personal";
   });
   const { isOFMode: zivoOFMode, setOFMode: setZivoOFMode } = useZivoOFMode();
+
+  const { data: ofSubscribersCount = 0 } = useQuery({
+    queryKey: ["of-active-subs-count", user?.id],
+    enabled: !!user?.id && zivoOFMode,
+    queryFn: async () => {
+      const { count } = await (supabase as any)
+        .from("creator_subscriptions")
+        .select("id", { count: "exact", head: true })
+        .eq("creator_id", user!.id)
+        .eq("status", "active");
+      return (count as number) || 0;
+    },
+  });
 
   useEffect(() => {
     if (!zivoOFMode) return;
@@ -993,6 +1007,13 @@ const Profile = () => {
                           className={cn("absolute inset-0 w-full h-full object-cover transition-[object-position] duration-100", coverPositionClass)}
                           draggable={false}
                         />
+                      ) : zivoOFMode ? (
+                        <div className="absolute inset-0 bg-gradient-to-br from-[#00AEEF] via-[#0099D9] to-[#0077B6]">
+                          <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,rgba(255,255,255,0.18),transparent_70%)]" />
+                          <div className="absolute bottom-3 right-4 text-white/70 text-[11px] font-medium flex items-center gap-1">
+                            <ImagePlus className="w-3.5 h-3.5" /> Add cover photo
+                          </div>
+                        </div>
                       ) : (
                         <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-primary/15 to-accent/20">
                           <div className="absolute inset-0 bg-[radial-gradient(circle_at_30%_40%,hsl(var(--primary)/0.25),transparent_70%)]" />
@@ -1078,8 +1099,14 @@ const Profile = () => {
                           whileHover={{ scale: 1.05 }}
                           transition={{ type: "spring", stiffness: 300 }}
                         >
-                          {/* IG-style story-ring around the profile avatar */}
-                          <div className="absolute -inset-1 bg-ig-gradient rounded-full pointer-events-none" />
+                          {/* Story-ring around the profile avatar.
+                              OF mode swaps to OnlyFans cyan/blue. */}
+                          <div className={cn(
+                            "absolute -inset-1 rounded-full pointer-events-none",
+                            zivoOFMode
+                              ? "bg-gradient-to-tr from-[#0077B6] via-[#00AEEF] to-[#7CD6FF]"
+                              : "bg-ig-gradient"
+                          )} />
                           <Avatar className="relative h-20 w-20 sm:h-24 sm:w-24 md:h-28 md:w-28 ring-2 ring-background">
                             <AvatarImage src={avatarPreview || profile?.avatar_url || undefined} alt="Profile" />
                             <AvatarFallback className="bg-muted text-foreground text-2xl font-bold">
@@ -1275,64 +1302,116 @@ const Profile = () => {
                         </motion.button>
                       </div>
 
-                      {/* Facebook-style inline stats row */}
-                      <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm">
-                        <button
-                          type="button"
-                          aria-label={`View ${followerCount} followers`}
-                          onClick={() => setSocialModal({ open: true, tab: "followers" })}
-                          className="inline-flex items-baseline gap-1 rounded-md px-1 -mx-1 py-0.5 hover:underline focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
-                        >
-                          <span className="font-bold text-foreground">{formatCount(followerCount) ?? "0"}</span>
-                          <span className="font-medium text-muted-foreground">followers</span>
-                        </button>
-                        <span aria-hidden="true" className="text-muted-foreground/70">·</span>
-                        <button
-                          type="button"
-                          aria-label={`View ${followingCount} following`}
-                          onClick={() => setSocialModal({ open: true, tab: "following" })}
-                          className="inline-flex items-baseline gap-1 rounded-md px-1 -mx-1 py-0.5 hover:underline focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
-                        >
-                          <span className="font-bold text-foreground">{formatCount(followingCount) ?? "0"}</span>
-                          <span className="font-medium text-muted-foreground">following</span>
-                        </button>
-                        <span aria-hidden="true" className="text-muted-foreground/70">·</span>
-                        <span className="inline-flex items-baseline gap-1">
-                          <span className="font-bold text-foreground">{formatCount(postsCount) ?? "0"}</span>
-                          <span className="font-medium text-muted-foreground">posts</span>
-                        </span>
-                        <span aria-hidden="true" className="text-muted-foreground/70">·</span>
-                        <button
-                          type="button"
-                          aria-label={`View ${friendCount} friends`}
-                          onClick={() => setSocialModal({ open: true, tab: "friends" })}
-                          className="inline-flex items-baseline gap-1 rounded-md px-1 -mx-1 py-0.5 hover:underline focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
-                        >
-                          <span className="font-bold text-foreground">{formatCount(friendCount) ?? "0"}</span>
-                          <span className="font-medium text-muted-foreground">friends</span>
-                        </button>
-                      </div>
-
-                      {/* Quick Actions row (mobile-only) — business-focused
-                          shortcuts: Shop, Employees, Mode switch, Monetization. */}
-                      <div className="lg:hidden mt-3 grid grid-cols-4 gap-2">
-                        {[
-                          { label: "Shop", icon: Store, onClick: openShopDashboard },
-                          { label: "Employees", icon: Users, onClick: () => { selectionChanged(); if (!user) { toast.info("Sign in to open Workplace"); navigate("/login?redirect=/personal-dashboard"); return; } navigate("/personal-dashboard"); } },
-                          { label: "Mode", icon: Repeat, onClick: () => { selectionChanged(); setModeOpen(true); } },
-                          { label: "Monetization", icon: DollarSign, onClick: () => { selectionChanged(); navigate("/monetization"); } },
-                        ].map((a) => (
-                          <button type="button"
-                            key={a.label}
+                      {/* Stats row — OF mode shows subscribers + posts only,
+                          default mode shows the full social signals. */}
+                      {zivoOFMode ? (
+                        <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm">
+                          <button
                             type="button"
-                            onClick={a.onClick}
-                            className="flex flex-col items-center gap-1 rounded-2xl border border-border/50 bg-muted/25 px-2 py-2 text-[11px] font-semibold text-foreground hover:bg-muted/50 active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none transition-all"
+                            aria-label={`View ${ofSubscribersCount} subscribers`}
+                            onClick={() => { selectionChanged(); navigate("/creator/subscribers"); }}
+                            className="inline-flex items-baseline gap-1 rounded-md px-1 -mx-1 py-0.5 hover:underline focus-visible:ring-2 focus-visible:ring-[#00AEEF]/60 focus-visible:outline-none"
                           >
-                            <a.icon className="h-4 w-4 text-primary" />
-                            <span className="truncate">{a.label}</span>
+                            <span className="font-bold text-foreground">{formatCount(ofSubscribersCount) ?? "0"}</span>
+                            <span className="font-medium text-muted-foreground">subscribers</span>
                           </button>
-                        ))}
-                      </div>
+                          <span aria-hidden="true" className="text-muted-foreground/70">·</span>
+                          <span className="inline-flex items-baseline gap-1">
+                            <span className="font-bold text-foreground">{formatCount(postsCount) ?? "0"}</span>
+                            <span className="font-medium text-muted-foreground">posts</span>
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="mt-2 flex flex-wrap items-center gap-x-1.5 gap-y-1 text-sm">
+                          <button
+                            type="button"
+                            aria-label={`View ${followerCount} followers`}
+                            onClick={() => setSocialModal({ open: true, tab: "followers" })}
+                            className="inline-flex items-baseline gap-1 rounded-md px-1 -mx-1 py-0.5 hover:underline focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
+                          >
+                            <span className="font-bold text-foreground">{formatCount(followerCount) ?? "0"}</span>
+                            <span className="font-medium text-muted-foreground">followers</span>
+                          </button>
+                          <span aria-hidden="true" className="text-muted-foreground/70">·</span>
+                          <button
+                            type="button"
+                            aria-label={`View ${followingCount} following`}
+                            onClick={() => setSocialModal({ open: true, tab: "following" })}
+                            className="inline-flex items-baseline gap-1 rounded-md px-1 -mx-1 py-0.5 hover:underline focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
+                          >
+                            <span className="font-bold text-foreground">{formatCount(followingCount) ?? "0"}</span>
+                            <span className="font-medium text-muted-foreground">following</span>
+                          </button>
+                          <span aria-hidden="true" className="text-muted-foreground/70">·</span>
+                          <span className="inline-flex items-baseline gap-1">
+                            <span className="font-bold text-foreground">{formatCount(postsCount) ?? "0"}</span>
+                            <span className="font-medium text-muted-foreground">posts</span>
+                          </span>
+                          <span aria-hidden="true" className="text-muted-foreground/70">·</span>
+                          <button
+                            type="button"
+                            aria-label={`View ${friendCount} friends`}
+                            onClick={() => setSocialModal({ open: true, tab: "friends" })}
+                            className="inline-flex items-baseline gap-1 rounded-md px-1 -mx-1 py-0.5 hover:underline focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
+                          >
+                            <span className="font-bold text-foreground">{formatCount(friendCount) ?? "0"}</span>
+                            <span className="font-medium text-muted-foreground">friends</span>
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Quick Actions row (mobile-only).
+                          OF mode: single OnlyFans-style monetization CTA.
+                          Default: business shortcuts (Shop, Employees, Mode, Monetization). */}
+                      {zivoOFMode ? (
+                        <div className="lg:hidden mt-3 space-y-2">
+                          <button
+                            type="button"
+                            onClick={() => { selectionChanged(); navigate("/monetization"); }}
+                            className="w-full flex items-center justify-center gap-2 rounded-full px-4 py-3 text-sm font-bold text-white shadow-lg shadow-[#00AEEF]/30 bg-gradient-to-r from-[#00AEEF] to-[#0099D9] hover:from-[#00B8F5] hover:to-[#00A3E5] active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-[#00AEEF]/60 focus-visible:outline-none transition-all"
+                          >
+                            <Lock className="h-4 w-4" />
+                            <span>{zivoOFMode ? "ZIVO OF · Subscribe & Monetize" : "Subscribe & Monetize"}</span>
+                          </button>
+                          <div className="grid grid-cols-2 gap-2">
+                            <button
+                              type="button"
+                              onClick={() => { selectionChanged(); navigate("/monetization"); }}
+                              className="flex items-center justify-center gap-1.5 rounded-full border border-[#00AEEF]/30 bg-[#00AEEF]/5 px-4 py-2 text-[12px] font-semibold text-[#00AEEF] hover:bg-[#00AEEF]/10 active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-[#00AEEF]/60 focus-visible:outline-none transition-all"
+                            >
+                              <SettingsIcon className="h-3.5 w-3.5" />
+                              <span>ZIVO OF Settings</span>
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => { selectionChanged(); setModeOpen(true); }}
+                              className="flex items-center justify-center gap-1.5 rounded-full border border-border/60 bg-muted/30 px-4 py-2 text-[12px] font-semibold text-foreground hover:bg-muted/50 active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none transition-all"
+                            >
+                              <Repeat className="h-3.5 w-3.5" />
+                              <span>Switch Mode</span>
+                            </button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="lg:hidden mt-3 grid grid-cols-4 gap-2">
+                          {[
+                            { label: "Shop", icon: Store, onClick: openShopDashboard },
+                            { label: "Employees", icon: Users, onClick: () => { selectionChanged(); if (!user) { toast.info("Sign in to open Workplace"); navigate("/login?redirect=/personal-dashboard"); return; } navigate("/personal-dashboard"); } },
+                            { label: "Mode", icon: Repeat, onClick: () => { selectionChanged(); setModeOpen(true); } },
+                            { label: "Monetization", icon: DollarSign, onClick: () => { selectionChanged(); navigate("/monetization"); } },
+                          ].map((a) => (
+                            <button type="button"
+                              key={a.label}
+                              type="button"
+                              onClick={a.onClick}
+                              className="flex flex-col items-center gap-1 rounded-2xl border border-border/50 bg-muted/25 px-2 py-2 text-[11px] font-semibold text-foreground hover:bg-muted/50 active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none transition-all"
+                            >
+                              <a.icon className="h-4 w-4 text-primary" />
+                              <span className="truncate">{a.label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
 
                       {/* Social Links Row */}
                       {profile?.social_links_visible !== false && (() => {

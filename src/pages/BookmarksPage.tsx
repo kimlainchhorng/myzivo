@@ -13,6 +13,7 @@ import { toast } from "sonner";
 import { motion, AnimatePresence } from "framer-motion";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import SEOHead from "@/components/SEOHead";
+import { EmptyState } from "@/components/ui/empty-state";
 
 type BookmarkTab = "all" | "post" | "flight" | "restaurant";
 
@@ -31,7 +32,26 @@ export default function BookmarksPage() {
         .select("*")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
-      return data || [];
+      const rows = (data || []) as any[];
+
+      // Enrich saved posts with caption + first media for a real preview
+      const postIds = rows.filter((b) => b.item_type === "post").map((b) => b.item_id);
+      if (postIds.length > 0) {
+        const { data: posts } = await (supabase as any)
+          .from("user_posts")
+          .select("id, caption, media_url, media_urls")
+          .in("id", postIds);
+        const postMap = new Map<string, any>((posts || []).map((p: any) => [p.id, p]));
+        return rows.map((b) => {
+          if (b.item_type !== "post") return b;
+          const p = postMap.get(b.item_id);
+          if (!p) return b;
+          const firstMedia = (Array.isArray(p.media_urls) && p.media_urls[0]) || p.media_url || null;
+          const title = (p.caption || "").trim().split("\n")[0].slice(0, 140) || null;
+          return { ...b, title, preview_url: firstMedia };
+        });
+      }
+      return rows;
     },
     enabled: !!user,
   });
@@ -81,10 +101,17 @@ export default function BookmarksPage() {
       <div className="p-4 space-y-2">
         {isLoading && <Loader2 className="h-6 w-6 animate-spin mx-auto mt-12 text-muted-foreground" />}
         {!isLoading && filtered.length === 0 && (
-          <div className="text-center py-16">
-            <Bookmark className="h-12 w-12 mx-auto text-muted-foreground/30 mb-3" />
-            <p className="text-sm text-muted-foreground">No saved items yet</p>
-          </div>
+          <EmptyState
+            icon={Bookmark}
+            tone="brand"
+            title={activeTab === "all" ? "Nothing saved yet" : `No ${activeTab}s saved`}
+            description="Tap the bookmark icon on any post, flight, or restaurant to keep it here."
+            action={
+              <Button onClick={() => navigate("/feed")} className="rounded-full">
+                Browse the feed
+              </Button>
+            }
+          />
         )}
         <AnimatePresence>
           {filtered.map((b: any) => {
@@ -111,10 +138,16 @@ export default function BookmarksPage() {
                 disabled={!openHref}
                 className="flex flex-1 items-start gap-3 min-w-0 text-left disabled:cursor-default"
               >
-                <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                  {b.item_type === "post" && <Image className="h-4 w-4 text-primary" />}
-                  {b.item_type === "flight" && <Plane className="h-4 w-4 text-primary" />}
-                  {b.item_type === "restaurant" && <UtensilsCrossed className="h-4 w-4 text-primary" />}
+                <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
+                  {b.item_type === "post" && b.preview_url ? (
+                    <img src={b.preview_url} alt="" loading="lazy" className="h-full w-full object-cover" />
+                  ) : b.item_type === "post" ? (
+                    <Image className="h-4 w-4 text-primary" />
+                  ) : b.item_type === "flight" ? (
+                    <Plane className="h-4 w-4 text-primary" />
+                  ) : b.item_type === "restaurant" ? (
+                    <UtensilsCrossed className="h-4 w-4 text-primary" />
+                  ) : null}
                 </div>
                 <div className="flex-1 min-w-0">
                   {previewTitle ? (

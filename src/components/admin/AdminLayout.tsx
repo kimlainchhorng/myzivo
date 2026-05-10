@@ -14,6 +14,7 @@ import {
   PhoneOff, Megaphone, Globe, BarChart2, Film, Flag, ShieldAlert, MessageCircle,
   ShieldCheck, Lock, UserCog, Sliders, Rocket, Smartphone, Monitor, CheckCircle,
   Package, RotateCcw, Zap, Eye, Radio, TrendingUp, Inbox, History as HistoryIcon, Ban,
+  Compass, BedDouble, KeyRound, CreditCard, Sparkles, Layers, Tag,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -50,11 +51,36 @@ const adminNavEntries: NavEntry[] = [
   },
 
   {
-    label: "Flights", icon: Plane, children: [
+    label: "Travel", icon: Compass, children: [
+      // ---- Flights ----
       { label: "Flight Orders", icon: Plane, path: "/admin/flight-orders" },
-      { label: "Search Analytics", icon: SearchIcon, path: "/admin/flight-searches" },
-      { label: "API Monitoring", icon: Server, path: "/admin/flight-api" },
-      { label: "Price Alerts", icon: Bell, path: "/admin/flight-price-alerts" },
+      { label: "Flight Searches", icon: SearchIcon, path: "/admin/flight-searches" },
+      { label: "Flight API Monitoring", icon: Server, path: "/admin/flight-api" },
+      { label: "Flight Price Alerts", icon: Bell, path: "/admin/flight-price-alerts" },
+      // ---- Hotels / Lodging ----
+      { label: "Hotels — Wiring Check", icon: BedDouble, path: "/admin/lodging/wiring-check" },
+      { label: "Hotels — Webhook Events", icon: Activity, path: "/admin/lodging/webhook-events" },
+      { label: "Hotels — Completion Verify", icon: CheckCircle, path: "/admin/lodging/completion-verification" },
+      { label: "Hotels — QA Checklist", icon: ShieldCheck, path: "/admin/lodging/qa-checklist" },
+      // ---- Rental Cars ----
+      { label: "Rental Cars", icon: KeyRound, path: "/admin/rental-cars" },
+    ],
+  },
+
+  {
+    label: "Subscription", icon: CreditCard, children: [
+      { label: "Plans", icon: Layers, path: "/admin/subscriptions/plans" },
+      { label: "Subscribers", icon: Users, path: "/admin/subscriptions/subscribers" },
+      { label: "Revenue", icon: TrendingUp, path: "/admin/subscriptions/revenue" },
+      { label: "Coupons", icon: Tag, path: "/admin/subscriptions/coupons" },
+    ],
+  },
+
+  {
+    label: "Add-ons", icon: Sparkles, children: [
+      { label: "Catalog", icon: Layers, path: "/admin/add-ons/catalog" },
+      { label: "Purchases", icon: ShoppingBag, path: "/admin/add-ons/purchases" },
+      { label: "Feature Flags", icon: Sliders, path: "/admin/add-ons/feature-flags" },
     ],
   },
 

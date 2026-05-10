@@ -8,6 +8,7 @@ import { createPortal } from "react-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { useZivoOFMode } from "@/hooks/useZivoOFMode";
 import { getPublicOrigin, getProfileShareUrl } from "@/lib/getPublicOrigin";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import SEOHead from "@/components/SEOHead";
@@ -235,6 +236,7 @@ export default function PublicProfilePage() {
   const viewAs = (searchParams.get("as") || "").toLowerCase();
   const navigate = useNavigate();
   const { user } = useAuth();
+  const { isOFMode: zivoOFMode } = useZivoOFMode();
   const queryClient = useQueryClient();
   const [selectedPost, setSelectedPost] = useState<any>(null);
   const [confirmAction, setConfirmAction] = useState<null | { action: "cancel" | "unfriend" | "unfollow"; label: string }>(null);
@@ -647,9 +649,10 @@ export default function PublicProfilePage() {
 
   const handleShare = async () => {
     const url = buildShareUrl();
+    const brand = zivoOFMode ? "ZIVO OF" : "ZIVO";
     try {
       if (navigator.share) {
-        await navigator.share({ title: `${resolvedProfile?.full_name || "User"} on ZIVO`, url });
+        await navigator.share({ title: `${resolvedProfile?.full_name || "User"} on ${brand}`, url });
         return;
       }
     } catch (e: any) {
@@ -715,11 +718,12 @@ export default function PublicProfilePage() {
 
   const handleSharePost = async (post: any) => {
     const url = buildShareUrl(post?.id);
+    const brand = zivoOFMode ? "ZIVO OF" : "ZIVO";
     try {
       if (navigator.share) {
         await navigator.share({
-          title: `${resolvedProfile?.full_name || "User"} on ZIVO`,
-          text: post?.caption || "Check out this post on ZIVO",
+          title: `${resolvedProfile?.full_name || "User"} on ${brand}`,
+          text: post?.caption || `Check out this post on ${brand}`,
           url,
         });
         return;
@@ -931,13 +935,16 @@ export default function PublicProfilePage() {
   };
 
   const profileName = resolvedProfile?.full_name || resolvedProfile?.username || "Profile";
-  const profileBio = resolvedProfile?.bio || `Follow ${profileName} on ZIVO for travel, lifestyle, and more.`;
+  const brand = zivoOFMode ? "ZIVO OF" : "ZIVO";
+  const profileBio = resolvedProfile?.bio || (zivoOFMode
+    ? `Subscribe to ${profileName} on ZIVO OF for exclusive content.`
+    : `Follow ${profileName} on ZIVO for travel, lifestyle, and more.`);
   const profileAvatar = resolvedProfile?.avatar_url || undefined;
 
   return (
     <PullToRefresh onRefresh={handlePullRefresh} className="zivo-shell-mobile bg-background pb-[calc(4.25rem+env(safe-area-inset-bottom,0px))]">
       <SEOHead
-        title={`${profileName} – ZIVO`}
+        title={`${profileName} – ${brand}`}
         description={profileBio}
         ogImage={profileAvatar}
         structuredData={{
@@ -1050,7 +1057,7 @@ export default function PublicProfilePage() {
               </p>
             )}
 
-            {!isLocked ? (
+            {!zivoOFMode && (!isLocked ? (
               <div className="mt-2.5 flex flex-wrap items-center justify-center gap-x-1.5 gap-y-1 text-sm">
                 <span className="inline-flex items-baseline gap-1">
                   <span className="font-bold text-foreground">{formatCount(followerCount) ?? "0"}</span>
@@ -1074,7 +1081,7 @@ export default function PublicProfilePage() {
               </div>
             ) : (
               <div className="mt-3 text-sm text-muted-foreground">— followers · — following · — posts</div>
-            )}
+            ))}
 
             {/* Social proof: mutual followers between visitor and this profile. */}
             <MutualFollowsBadge mutual={mutual} className="mt-1.5 text-center text-[11px]" />
@@ -1082,27 +1089,31 @@ export default function PublicProfilePage() {
             {/* Actions */}
             {!isOwnProfile && user && (
               <div className="flex gap-2 mt-4.5 w-full max-w-sm px-2">
-                <motion.button whileTap={{ scale: 0.95 }} onClick={() => { if (isFollowing) { setConfirmAction({ action: "unfollow", label: `Unfollow ${resolvedProfile?.full_name}?` }); } else { followMutation.mutate(); } }} disabled={followMutation.isPending}
-                  className={`flex-1 h-10 sm:h-11 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 transition-all ${isFollowing ? "bg-muted text-foreground border border-border" : "bg-primary text-primary-foreground"}`}>
-                  {followMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Heart className={`h-4 w-4 ${isFollowing ? "fill-primary text-primary" : ""}`} />}
-                  {followMutation.isPending ? "Updating" : isFollowing ? "Following" : "Follow"}
-                </motion.button>
-                <motion.button whileTap={{ scale: 0.95 }}
-                  onClick={() => {
-                    if (friendBtn.action === "cancel") setConfirmAction({ action: "cancel", label: "Cancel this friend request?" });
-                    else if (friendBtn.action === "unfriend") setConfirmAction({ action: "unfriend", label: `Unfriend ${resolvedProfile?.full_name}?` });
-                    else friendMutation.mutate(friendBtn.action);
-                  }}
-                  disabled={friendMutation.isPending}
-                  className={`flex-1 h-10 sm:h-11 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 transition-all ${
-                    friendshipStatus === "friends" ? "bg-primary/10 text-primary border border-primary/30"
-                      : friendshipStatus === "request_sent" ? "bg-muted text-muted-foreground border border-border"
-                      : friendshipStatus === "request_received" ? "bg-primary text-primary-foreground"
-                      : "bg-muted text-foreground border border-border"
-                  }`}>
-                  {friendMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <friendBtn.icon className="h-4 w-4" />}
-                  {friendMutation.isPending ? "Updating" : friendBtn.label}
-                </motion.button>
+                {!zivoOFMode && (
+                  <motion.button whileTap={{ scale: 0.95 }} onClick={() => { if (isFollowing) { setConfirmAction({ action: "unfollow", label: `Unfollow ${resolvedProfile?.full_name}?` }); } else { followMutation.mutate(); } }} disabled={followMutation.isPending}
+                    className={`flex-1 h-10 sm:h-11 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 transition-all ${isFollowing ? "bg-muted text-foreground border border-border" : "bg-primary text-primary-foreground"}`}>
+                    {followMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Heart className={`h-4 w-4 ${isFollowing ? "fill-primary text-primary" : ""}`} />}
+                    {followMutation.isPending ? "Updating" : isFollowing ? "Following" : "Follow"}
+                  </motion.button>
+                )}
+                {!zivoOFMode && (
+                  <motion.button whileTap={{ scale: 0.95 }}
+                    onClick={() => {
+                      if (friendBtn.action === "cancel") setConfirmAction({ action: "cancel", label: "Cancel this friend request?" });
+                      else if (friendBtn.action === "unfriend") setConfirmAction({ action: "unfriend", label: `Unfriend ${resolvedProfile?.full_name}?` });
+                      else friendMutation.mutate(friendBtn.action);
+                    }}
+                    disabled={friendMutation.isPending}
+                    className={`flex-1 h-10 sm:h-11 rounded-xl text-sm font-semibold flex items-center justify-center gap-1.5 transition-all ${
+                      friendshipStatus === "friends" ? "bg-primary/10 text-primary border border-primary/30"
+                        : friendshipStatus === "request_sent" ? "bg-muted text-muted-foreground border border-border"
+                        : friendshipStatus === "request_received" ? "bg-primary text-primary-foreground"
+                        : "bg-muted text-foreground border border-border"
+                    }`}>
+                    {friendMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <friendBtn.icon className="h-4 w-4" />}
+                    {friendMutation.isPending ? "Updating" : friendBtn.label}
+                  </motion.button>
+                )}
                 <motion.button whileTap={{ scale: 0.95 }}
                   onClick={() => {
                     if (canMessageProfile) {

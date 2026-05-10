@@ -83,7 +83,10 @@ function BokehDot({ delay, size, x, y, color }: { delay: number; size: number; x
 }
 
 export default function StoreProfilePage() {
-  const { slug } = useParams<{ slug: string }>();
+  // Routes use either `:slug` (/store/:slug, /grocery/shop/:slug) or
+  // `:storeId` (/shop/:storeId). Read whichever is present.
+  const params = useParams<{ slug?: string; storeId?: string }>();
+  const slug = params.slug || params.storeId || "";
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const cart = useGroceryCart();
@@ -217,8 +220,8 @@ export default function StoreProfilePage() {
   const stay = {
     checkIn: searchParams.get("ci") || todayISO,
     checkOut: searchParams.get("co") || tomorrowISO,
-    adults: parseInt(searchParams.get("ad") || "2"),
-    children: parseInt(searchParams.get("ch") || "0"),
+    adults: parseInt(searchParams.get("ad") || "2", 10),
+    children: parseInt(searchParams.get("ch") || "0", 10),
   };
   const updateStay = (next: { checkIn: string; checkOut: string; adults: number; children: number }) => {
     const sp = new URLSearchParams(searchParams);
@@ -336,17 +339,23 @@ export default function StoreProfilePage() {
         const coverUrl = store.banner_url;
 
         return (
-          <div className="relative w-full h-60 overflow-hidden">
+          <div className="relative w-full h-60 overflow-hidden bg-gradient-to-br from-primary/30 via-primary/10">
             {coverUrl ? (
               <img
                 src={coverUrl}
-                alt={`${store.name} cover`}
+                alt=""
+                aria-hidden="true"
                 className="w-full h-full object-cover"
                 style={{ objectPosition: `center ${(store as any).banner_position ?? 50}%` }}
+                onError={(e) => {
+                  // If the cover image fails to load (broken URL, SW cache
+                  // corruption, etc.) hide the broken-image icon and let the
+                  // gradient parent show through instead of rendering the
+                  // alt text + question-mark glyph.
+                  (e.currentTarget as HTMLImageElement).style.display = "none";
+                }}
               />
-            ) : (
-              <div className="w-full h-full bg-gradient-to-br from-primary/30 via-primary/10" />
-            )}
+            ) : null}
             {/* Gradient overlay */}
             <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent pointer-events-none z-[1]" />
             <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background to-transparent pointer-events-none z-[1]" />
@@ -483,7 +492,7 @@ export default function StoreProfilePage() {
                 }}
               >
                 <MapPin className="h-4.5 w-4.5" strokeWidth={2.5} />
-                {t("store.ride_there") || "Ride There"}
+                {t("store.ride_there", "Ride There")}
               </motion.button>
             )}
 
@@ -550,7 +559,7 @@ export default function StoreProfilePage() {
                       className="h-14 rounded-2xl flex flex-col items-center justify-center gap-0.5 border border-white/15 bg-white/[0.04] backdrop-blur-sm text-white hover:bg-white/[0.07] transition-colors"
                     >
                       <MessageCircle className="h-4 w-4" strokeWidth={2.2} />
-                      <span className="text-[12px] font-semibold">{t("store.sms") || "SMS"}</span>
+                      <span className="text-[12px] font-semibold">{t("store.sms", "SMS")}</span>
                     </motion.a>
                   );
                 }
@@ -578,7 +587,7 @@ export default function StoreProfilePage() {
                     )}
                   >
                     <Phone className="h-4 w-4" strokeWidth={2.2} />
-                    <span className="text-[12px] font-semibold">{t("store.call") || "Call"}</span>
+                    <span className="text-[12px] font-semibold">{t("store.call", "Call")}</span>
                   </motion.a>
                 );
               })()}
@@ -607,7 +616,7 @@ export default function StoreProfilePage() {
                     )}
                   >
                     <MessageCircle className="h-4 w-4" strokeWidth={2.2} />
-                    <span className="text-[12px] font-semibold">{t("store.chat") || "Chat"}</span>
+                    <span className="text-[12px] font-semibold">{t("store.chat", "Chat")}</span>
                   </motion.button>
                 );
               })()}
@@ -676,7 +685,7 @@ export default function StoreProfilePage() {
                 className="h-14 rounded-2xl flex flex-col items-center justify-center gap-0.5 border border-white/15 bg-white/[0.04] backdrop-blur-sm text-white hover:bg-white/[0.07] transition-colors"
               >
                 <Share2 className="h-4 w-4" strokeWidth={2.2} />
-                <span className="text-[12px] font-semibold">{t("store.share") || "Share"}</span>
+                <span className="text-[12px] font-semibold">{t("store.share", "Share")}</span>
               </motion.button>
             </div>
 
@@ -1025,7 +1034,7 @@ export default function StoreProfilePage() {
             // Add uncategorized
             if (!selectedCategory) {
               const uncategorized = products.filter((p: any) => !p.category || !categories.includes(p.category));
-              if (uncategorized.length > 0) grouped[t("store.other") || "Other"] = uncategorized;
+              if (uncategorized.length > 0) grouped[t("store.other", "Other")] = uncategorized;
             }
 
             return Object.entries(grouped).map(([cat, catProducts]) => {

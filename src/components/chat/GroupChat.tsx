@@ -73,6 +73,7 @@ interface GroupChatProps {
   groupName: string;
   groupAvatar?: string | null;
   onClose: () => void;
+  autoStartCall?: "audio" | "video" | null;
 }
 
 interface GroupMessage {
@@ -197,7 +198,7 @@ function renderMessageWithMentions(
   return out;
 }
 
-export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: GroupChatProps) {
+export default function GroupChat({ groupId, groupName, groupAvatar, onClose, autoStartCall = null }: GroupChatProps) {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [galleryState, setGalleryState] = useState<{ open: boolean; images: { id: string; url: string; type: "image" | "video" }[]; index: number }>({ open: false, images: [], index: 0 });
@@ -223,7 +224,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose }: 
   const [uploadingImage, setUploadingImage] = useState(false);
   const [showMembers, setShowMembers] = useState(false);
   const [showInvites, setShowInvites] = useState(false);
-  const [groupCall, setGroupCall] = useState<"audio" | "video" | null>(null);
+  const [groupCall, setGroupCall] = useState<"audio" | "video" | null>(autoStartCall ?? null);
   const [showAttachMenu, setShowAttachMenu] = useState(false);
   const [showLockedPricePicker, setShowLockedPricePicker] = useState(false);
   const [lockedMediaFile, setLockedMediaFile] = useState<File | null>(null);

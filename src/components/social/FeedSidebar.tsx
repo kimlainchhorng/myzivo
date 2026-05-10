@@ -21,7 +21,7 @@ import { useUserProfile } from "@/hooks/useUserProfile";
 import { useUserAccess } from "@/hooks/useUserAccess";
 import { useUsername } from "@/hooks/useUsername";
 import { useOwnerStores } from "@/hooks/useOwnerStoreProfile";
-import { resolvePublicBusinessPageRoute } from "@/lib/business/dashboardRoute";
+import { resolvePublicBusinessPageRoute, resolveBusinessDashboardRoute } from "@/lib/business/dashboardRoute";
 import { useZivoPlus } from "@/contexts/ZivoPlusContext";
 import {
   Sheet,
@@ -77,6 +77,10 @@ export default function FeedSidebar() {
   const { data: access } = useUserAccess(user?.id);
   const { username } = useUsername();
   const { data: ownerStores = [] } = useOwnerStores();
+  const isPlaceholderStoreName = (name: string | null | undefined) => {
+    const n = (name || "").trim();
+    return !n || n === "Untitled Store" || n === "Untitled page";
+  };
   const { isPlus: isMember } = useZivoPlus();
   const [showSwitch, setShowSwitch] = useState(false);
   const [showChat, setShowChat] = useState(false);
@@ -156,18 +160,11 @@ export default function FeedSidebar() {
                     <BadgeCheck className="h-4 w-4 shrink-0 fill-sky-500 text-white" />
                   )}
                 </div>
-                <p className="text-[11px] text-muted-foreground truncate">
-                  {username ? (
-                    `@${username}`
-                  ) : (
-                    <button type="button"
-                      onClick={() => navigate("/account/profile-edit")}
-                      className="text-primary hover:underline"
-                    >
-                      Set a username
-                    </button>
-                  )}
-                </p>
+                {username && (
+                  <p className="text-[11px] text-muted-foreground truncate">
+                    @{username}
+                  </p>
+                )}
               </div>
 
               <button type="button"
@@ -181,10 +178,11 @@ export default function FeedSidebar() {
               <button type="button"
                 onClick={() => setShowSwitch(true)}
                 className="mt-1.5 flex w-full items-center justify-center gap-1.5 rounded-lg border border-border/50 bg-background/80 px-3 py-1.5 text-[12px] font-medium text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
-                aria-label="Switch account"
+                aria-label="Switch account or open dashboards"
+                title="Switch account or open dashboards"
               >
                 <ArrowLeftRight className="h-3.5 w-3.5" />
-                <span>Switch</span>
+                <span>Switch account</span>
               </button>
             </div>
           </div>
@@ -196,32 +194,47 @@ export default function FeedSidebar() {
             <p className="text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-wider px-3 pt-2 pb-1">
               Your Business Pages
             </p>
-            {ownerStores.length > 0 && ownerStores.map((store) => (
-              <button type="button"
-                key={store.id}
-                onClick={() => {
+            {ownerStores.map((store) => {
+              const placeholder = isPlaceholderStoreName(store.name);
+              const displayName = placeholder ? "Finish setting up" : store.name;
+              const subtitle = placeholder
+                ? "Tap to complete your business"
+                : store.normalizedCategory;
+              const handleClick = () => {
+                if (placeholder) {
+                  navigate(resolveBusinessDashboardRoute(store.category, store.id).path);
+                } else {
                   navigate(resolvePublicBusinessPageRoute(store.category, store.id, (store as any).slug));
-                }}
-                className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors group"
-              >
-                <Avatar className="h-6 w-6 shrink-0">
-                  <AvatarImage src={store.logo_url || undefined} alt={store.name || "Business"} />
-                  <AvatarFallback className="text-[10px] bg-primary/10 text-primary">
-                    {(store.name || "B").charAt(0).toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-                <div className="flex-1 min-w-0 text-left">
-                  <p className="text-sm font-medium text-foreground truncate leading-tight">
-                    {store.name || "Untitled page"}
-                  </p>
-                  {store.normalizedCategory && (
-                    <p className="text-[10px] text-muted-foreground capitalize truncate">
-                      {store.normalizedCategory}
+                }
+              };
+              return (
+                <button type="button"
+                  key={store.id}
+                  onClick={handleClick}
+                  className="flex items-center gap-3 px-3 py-2 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors group"
+                >
+                  <Avatar className="h-6 w-6 shrink-0">
+                    <AvatarImage src={store.logo_url || undefined} alt={store.name || "Business"} />
+                    <AvatarFallback className={cn("text-[10px]", placeholder ? "bg-amber-500/15 text-amber-600" : "bg-primary/10 text-primary")}>
+                      {placeholder ? "!" : (store.name || "B").charAt(0).toUpperCase()}
+                    </AvatarFallback>
+                  </Avatar>
+                  <div className="flex-1 min-w-0 text-left">
+                    <p className={cn(
+                      "text-sm font-medium truncate leading-tight",
+                      placeholder ? "text-amber-600" : "text-foreground"
+                    )}>
+                      {displayName}
                     </p>
-                  )}
-                </div>
-              </button>
-            ))}
+                    {subtitle && (
+                      <p className="text-[10px] text-muted-foreground capitalize truncate">
+                        {subtitle}
+                      </p>
+                    )}
+                  </div>
+                </button>
+              );
+            })}
             <button type="button"
               onClick={() => navigate("/business/new?new=1")}
               className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors"

@@ -232,8 +232,25 @@ export function useSendPhoneOTP() {
         body: { phone_e164: normalizedPhone, user_id: user.id },
       });
 
-      if (error) throw error;
-      if (!data.success) throw new Error(data.error || "Failed to send OTP");
+      // supabase-js wraps non-2xx responses but the actual JSON body is in
+      // error.context. Surface its `error` field so users see the real reason
+      // (e.g. Twilio "Unverified caller ID", "Geo permission denied").
+      if (error) {
+        let real = error.message;
+        try {
+          const ctx = (error as any)?.context;
+          if (ctx && typeof ctx.json === "function") {
+            const body = await ctx.json();
+            if (body?.error) real = body.error;
+          } else if (ctx?.body) {
+            const body = typeof ctx.body === "string" ? JSON.parse(ctx.body) : ctx.body;
+            if (body?.error) real = body.error;
+          }
+        } catch {}
+        console.error("[useSendPhoneOTP] real error:", real, error);
+        throw new Error(real);
+      }
+      if (!data?.success) throw new Error(data?.error || "Failed to send OTP");
 
       return { success: true, message: data.message || "OTP sent successfully" };
     },

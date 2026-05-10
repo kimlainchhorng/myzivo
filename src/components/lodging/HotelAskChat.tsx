@@ -70,24 +70,17 @@ export default function HotelAskChat({ storeId, storeName }: Props) {
 
   return (
     <>
+      {/* Inline trigger — placed by the parent page near the bottom of the
+          content. Replaces the previous floating button, which obscured the
+          sticky booking CTA on mobile. */}
       <button
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Ask AI about this hotel"
-        className="fixed z-30 bottom-[max(env(safe-area-inset-bottom),16px)] right-4 md:hidden inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white text-xs font-bold px-3.5 py-2.5 shadow-xl shadow-violet-500/30 active:scale-95 transition"
-        style={{ marginBottom: 64 /* lift above the booking CTA bar */ }}
+        className="w-full inline-flex items-center justify-center gap-2 rounded-2xl border border-violet-500/30 bg-gradient-to-r from-violet-500/10 via-fuchsia-500/10 to-violet-500/10 hover:from-violet-500/15 hover:via-fuchsia-500/15 hover:to-violet-500/15 text-foreground text-sm font-bold px-4 py-3 active:scale-[0.99] transition"
       >
-        <Sparkles className="w-3.5 h-3.5" />
-        Ask AI
-      </button>
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        aria-label="Ask AI about this hotel"
-        className="fixed z-30 bottom-6 right-6 hidden md:inline-flex items-center gap-2 rounded-full bg-gradient-to-br from-violet-500 to-fuchsia-500 hover:from-violet-600 hover:to-fuchsia-600 text-white text-sm font-bold px-4 py-3 shadow-xl shadow-violet-500/30 active:scale-95 transition"
-      >
-        <Sparkles className="w-4 h-4" />
-        Ask AI about this hotel
+        <Sparkles className="w-4 h-4 text-fuchsia-500" />
+        Ask AI about this property
       </button>
 
       <AnimatePresence>

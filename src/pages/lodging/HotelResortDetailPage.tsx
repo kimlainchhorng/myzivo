@@ -480,13 +480,6 @@ export default function HotelResortDetailPage() {
           >
             <Heart className={cn("w-5 h-5 transition-colors", isFavorite ? "fill-rose-500 text-rose-500" : "text-foreground")} />
           </button>
-          <Button
-            size="sm"
-            className="h-9 rounded-xl px-4 font-semibold bg-emerald-600 hover:bg-emerald-700 text-white shrink-0"
-            onClick={handleCheckAvailability}
-          >
-            Book
-          </Button>
         </div>
       </div>
 
@@ -607,11 +600,6 @@ export default function HotelResortDetailPage() {
                     <Badge variant="secondary" className="text-[10px] capitalize">
                       {store?.category?.replace(/_/g, " ") || "Hotel"}
                     </Badge>
-                    {store?.setup_complete && (
-                      <Badge variant="outline" className="text-[10px] text-primary border-primary/30">
-                        Ready
-                      </Badge>
-                    )}
                   </div>
                   {reviews && reviews.count > 0 && (
                     <button
@@ -650,11 +638,6 @@ export default function HotelResortDetailPage() {
                             -{minDeal.pctOff}%
                           </span>
                         </div>
-                        {promo?.name && (
-                          <p className="mt-0.5 text-[9px] text-emerald-700 font-medium truncate max-w-[110px] md:max-w-none">
-                            {promo.name}
-                          </p>
-                        )}
                       </>
                     ) : (
                       <p className="text-base font-bold text-primary leading-tight">
@@ -758,12 +741,9 @@ export default function HotelResortDetailPage() {
             <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-400 px-2.5 py-1 text-[10px] font-semibold">
               <Zap className="w-3 h-3" /> Instant booking
             </span>
-            <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-amber-500/10 text-amber-700 dark:text-amber-400 px-2.5 py-1 text-[10px] font-semibold">
-              <BadgeCheck className="w-3 h-3" /> Best price
-            </span>
             {profile?.cancellation_policy?.toLowerCase().includes("free") && (
               <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-fuchsia-500/10 text-fuchsia-700 dark:text-fuchsia-400 px-2.5 py-1 text-[10px] font-semibold">
-                <Sparkles className="w-3 h-3" /> Free cancellation
+                <BadgeCheck className="w-3 h-3" /> Free cancellation
               </span>
             )}
           </div>
@@ -1358,11 +1338,14 @@ export default function HotelResortDetailPage() {
         </div>
       </div>
 
-      {/* AI Ask chat */}
+      {/* AI Ask chat — inline trigger near the end of the content, above
+          the sticky booking CTA (no longer a floating overlay). */}
       {storeId && store?.name && (
-        <Suspense fallback={null}>
-          <HotelAskChat storeId={storeId} storeName={store.name} />
-        </Suspense>
+        <div className="mx-auto w-full max-w-3xl lg:max-w-5xl px-3 py-4">
+          <Suspense fallback={null}>
+            <HotelAskChat storeId={storeId} storeName={store.name} />
+          </Suspense>
+        </div>
       )}
 
       {/* Photo lightbox */}

@@ -87,6 +87,8 @@ project_id = "slirphzzwcogdbkeicff"
     verify_jwt = false
   [functions.post-og]
     verify_jwt = false
+  [functions.channel-og]
+    verify_jwt = false
   [functions.preview-transactional-email]
     verify_jwt = false
   [functions.profile-og]

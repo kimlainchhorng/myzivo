@@ -3,7 +3,9 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useChannel } from "@/hooks/useChannel";
 import { useSmartBack } from "@/lib/smartBack";
-import { getPublicOrigin } from "@/lib/getPublicOrigin";
+import { getChannelShareUrl } from "@/lib/getPublicOrigin";
+import { shareContent } from "@/lib/native/share";
+import { copyText } from "@/lib/native/clipboard";
 import { openShareToChat } from "@/components/chat/ShareToChatSheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -337,11 +339,11 @@ export default function ManageChannelPage() {
     isPublic,
   });
 
-  const channelShareUrl = channel ? `${getPublicOrigin()}/c/${channel.handle}` : "";
+  const channelShareUrl = channel ? getChannelShareUrl(channel.handle) : "";
 
   const copyChannelLink = async () => {
     try {
-      await navigator.clipboard.writeText(channelShareUrl);
+      await copyText(channelShareUrl);
       toast.success("Channel link copied");
     } catch {
       toast.error("Could not copy link");
@@ -350,14 +352,13 @@ export default function ManageChannelPage() {
 
   const shareChannelLink = async () => {
     try {
-      if (navigator.share) {
-        await navigator.share({
-          title: name.trim() || channel.name,
-          text: desc.trim() || `Join @${channel.handle} on ZIVO`,
-          url: channelShareUrl,
-        });
-        return;
-      }
+      const result = await shareContent({
+        title: name.trim() || channel.name,
+        text: desc.trim() || `Join @${channel.handle} on ZIVO`,
+        url: channelShareUrl,
+        dialogTitle: "Share channel",
+      });
+      if (result.shared || result.cancelled) return;
       await copyChannelLink();
     } catch {
       // User cancel on share sheet should not show an error.

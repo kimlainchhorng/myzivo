@@ -5,19 +5,58 @@
  * The mini-pill examples cycle the user's eye through the kinds of intents
  * the concierge can resolve — dining, travel, ride, full bundle.
  */
+import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import Sparkles from "lucide-react/dist/esm/icons/sparkles";
 import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
+import { useCustomerCity } from "@/contexts/CustomerCityContext";
 
-const SUGGESTIONS = [
-  "Dinner at 7pm in SoHo",
-  "Weekend in Bali",
-  "Ride to JFK at 5pm",
+// City-specific suggestion sets. Picks the one that matches the user's
+// selectedCity; falls back to generic phrasings that work in any region so
+// the Concierge never feels US-only when the user is sitting in Phnom Penh.
+const CITY_PRESETS: Record<string, string[]> = {
+  "Phnom Penh": [
+    "Dinner at 7pm near BKK1",
+    "Weekend in Siem Reap",
+    "Ride to PNH airport at 5pm",
+  ],
+  "Siem Reap": [
+    "Dinner at Pub Street at 7pm",
+    "Day trip to Angkor Wat",
+    "Ride to REP airport at 5pm",
+  ],
+  "Sihanoukville": [
+    "Sunset dinner on Otres beach",
+    "Weekend on Koh Rong",
+    "Ride to KOS airport at 5pm",
+  ],
+  "Bangkok": [
+    "Dinner at 7pm in Sukhumvit",
+    "Weekend in Phuket",
+    "Ride to BKK airport at 5pm",
+  ],
+  "New York": [
+    "Dinner at 7pm in SoHo",
+    "Weekend in Bali",
+    "Ride to JFK at 5pm",
+  ],
+};
+
+const GENERIC_FALLBACK = [
+  "Dinner at 7pm tonight",
+  "Weekend trip nearby",
+  "Ride to the airport",
 ];
 
 export default function ConciergeLauncher() {
   const navigate = useNavigate();
+  const { selectedCity } = useCustomerCity();
+  const suggestions = useMemo(() => {
+    const cityName = selectedCity?.name?.trim();
+    if (cityName && CITY_PRESETS[cityName]) return CITY_PRESETS[cityName];
+    return GENERIC_FALLBACK;
+  }, [selectedCity?.name]);
   const open = (q?: string) =>
     navigate(`/concierge${q ? `?q=${encodeURIComponent(q)}` : ""}`);
 
@@ -49,7 +88,7 @@ export default function ConciergeLauncher() {
         </button>
 
         <div className="relative px-4 pb-4 flex flex-wrap gap-2">
-          {SUGGESTIONS.map((s) => (
+          {suggestions.map((s) => (
             <motion.button
               key={s}
               whileTap={{ scale: 0.96 }}

@@ -367,6 +367,53 @@ function ReelCard({
   const [captionExpanded, setCaptionExpanded] = useState(false);
   const [translatedCaption, setTranslatedCaption] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
+
+  // Auto-translate: when this card becomes active and the caption is in a
+  // non-Latin script that doesn't match the user's selected app language,
+  // fetch the translation in the background and render it inline below the
+  // original (TikTok / Reels behaviour).
+  const cardI18n = useI18n();
+  const targetLang = (cardI18n.locale || "en").split("-")[0].toLowerCase();
+  useEffect(() => {
+    if (!isActive) return;
+    if (!post.caption || translatedCaption || isTranslating) return;
+    const caption = post.caption;
+    const hasNonLatin = /[؀-ۿ֐-׿ऀ-ॿ฀-๿຀-໿က-႟ក-៿぀-ゟ゠-ヿ一-鿿가-힯Ѐ-ӿ]/.test(caption);
+    // Heuristic: if the caption already looks like the user's language, skip.
+    // Khmer / Thai / Chinese / Korean / Japanese are detected by Unicode block.
+    const looksKhmer = /[ក-៿]/.test(caption);
+    const looksThai = /[฀-๿]/.test(caption);
+    const looksChinese = /[一-鿿]/.test(caption);
+    const looksJapanese = /[぀-ゟ゠-ヿ]/.test(caption);
+    const looksKorean = /[가-힯]/.test(caption);
+    const looksArabic = /[؀-ۿ]/.test(caption);
+    const sourceMatchesTarget =
+      (targetLang === "km" && looksKhmer) ||
+      (targetLang === "th" && looksThai) ||
+      (targetLang === "zh" && looksChinese) ||
+      (targetLang === "ja" && looksJapanese) ||
+      (targetLang === "ko" && looksKorean) ||
+      (targetLang === "ar" && looksArabic);
+    if (!hasNonLatin || sourceMatchesTarget) return;
+
+    let cancelled = false;
+    setIsTranslating(true);
+    (async () => {
+      try {
+        const q = encodeURIComponent(caption);
+        const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=${targetLang}&dt=t&q=${q}`);
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const data = await res.json();
+        const text = (data[0] as [string, string][]).map((s) => s[0]).join("");
+        if (!cancelled) setTranslatedCaption(text);
+      } catch {
+        // Silent failure — original caption stays visible.
+      } finally {
+        if (!cancelled) setIsTranslating(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [isActive, post.caption, translatedCaption, isTranslating, targetLang]);
   const [isScrubbing, setIsScrubbing] = useState(false);
   const [showLikeBurst, setShowLikeBurst] = useState(false);
   const [likedByOpen, setLikedByOpen] = useState(false);
@@ -1513,27 +1560,21 @@ function ReelCard({
             </button>
           )}
         </div>
-        {/* Posted-time + location row */}
-        {(post.location || post.created_at) && (
+        {/* Location row only — TikTok-style: hide the post timestamp on the
+            feed (it makes month-old reels feel stale). Time still shows on
+            profile pages. */}
+        {post.location && (
           <div className="flex items-center gap-2 mb-1.5 text-white/80 text-[11px] drop-shadow">
-            {post.created_at && <RelativeTime date={post.created_at} />}
-            {post.location && post.created_at && <span className="text-white/50">·</span>}
-            {post.location && (
-              <span className="flex items-center gap-1 truncate">
-                <MapPin className="w-3 h-3 shrink-0" />
-                <span className="truncate">{post.location}</span>
-              </span>
-            )}
+            <span className="flex items-center gap-1 truncate">
+              <MapPin className="w-3 h-3 shrink-0" />
+              <span className="truncate">{post.location}</span>
+            </span>
           </div>
         )}
         {post.caption && (() => {
           const isLong = post.caption.length > 90;
-          // Detect non-Latin scripts (Khmer, Thai, Lao, Burmese, Chinese, Japanese,
-          // Korean, Arabic, Hebrew, Cyrillic, Devanagari, etc.). When present and
-          // the user's locale is en-*, offer a translate shortcut.
-          const hasNonLatin = /[؀-ۿ֐-׿ऀ-ॿ฀-๿຀-໿က-႟ក-៿぀-ゟ゠-ヿ一-鿿가-힯Ѐ-ӿ]/.test(post.caption);
-          const userLang = (typeof navigator !== "undefined" ? navigator.language : "en").toLowerCase();
-          const showTranslate = hasNonLatin && userLang.startsWith("en");
+          // The auto-translate useEffect handles whether to fetch — the JSX
+          // below just shows the translated text when it's available.
           return (
             <>
               <button
@@ -1554,47 +1595,18 @@ function ReelCard({
                   </span>
                 )}
               </button>
-              {showTranslate && translatedCaption && (
-                <div className="mb-2 rounded-lg bg-black/40 border border-white/10 backdrop-blur-sm px-2.5 py-1.5">
-                  <p className="text-[10px] font-semibold uppercase tracking-wide text-white/60 mb-0.5">Translated</p>
-                  <p className="text-[12px] text-white leading-snug">{translatedCaption}</p>
-                  <button
-                    type="button"
-                    onClick={(e) => { e.stopPropagation(); setTranslatedCaption(null); }}
-                    className="text-[11px] text-white/80 mt-1 font-semibold underline decoration-white/40 underline-offset-2"
-                  >
-                    Hide translation
-                  </button>
-                </div>
-              )}
-              {showTranslate && !translatedCaption && (
-                <button
-                  type="button"
-                  onClick={async (e) => {
-                    e.stopPropagation();
-                    if (isTranslating) return;
-                    setIsTranslating(true);
-                    try {
-                      const q = encodeURIComponent(post.caption!);
-                      const res = await fetch(`https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=en&dt=t&q=${q}`);
-                      const data = await res.json();
-                      const text = (data[0] as [string, string][]).map((s) => s[0]).join("");
-                      setTranslatedCaption(text);
-                    } catch {
-                      toast.error("Translation unavailable");
-                    } finally {
-                      setIsTranslating(false);
-                    }
-                  }}
-                  disabled={isTranslating}
-                  className="inline-flex items-center gap-1 mb-2 text-white/80 active:scale-95 transition-transform disabled:opacity-50"
-                  title="Translate caption to English"
-                >
-                  <Languages className="w-3 h-3" />
-                  <span className="text-[11px] font-semibold underline decoration-white/40 underline-offset-2">
-                    {isTranslating ? "Translating..." : "See translation"}
+              {/* Auto-translated caption — shown inline below the original
+                  with a tiny "Translated" label, TikTok/Reels-style. The
+                  fetch is triggered automatically by the useEffect above
+                  when the card becomes active. */}
+              {translatedCaption && (
+                <div className="mt-1 mb-2 inline-flex items-start gap-1.5 text-[12px] text-white/85 leading-snug">
+                  <Languages className="w-3 h-3 mt-0.5 shrink-0 text-white/60" />
+                  <span>
+                    <span className="text-[10px] font-semibold uppercase tracking-wide text-white/55 mr-1.5">Translated</span>
+                    {translatedCaption}
                   </span>
-                </button>
+                </div>
               )}
             </>
           );
@@ -1758,38 +1770,10 @@ function ReelCard({
           - tablet (≥sm):  gap-5, all items
           - desktop (≥lg): gap-6, larger icons */}
       <div className="absolute right-2 sm:right-3 lg:right-4 bottom-[calc(env(safe-area-inset-bottom,0px)+88px)] z-30 flex flex-col items-center justify-end gap-3 sm:gap-5 lg:gap-6">
-        {/* Mute/Unmute with sound wave */}
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); handleMuteToggle(); }}
-          className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
-          aria-label={globalMuted ? "Unmute" : "Mute"}
-          title={`${globalMuted ? "Unmute" : "Mute"} (M)`}
-        >
-          <div className="w-11 h-11 lg:w-12 lg:h-12 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center relative overflow-hidden border border-white/10">
-            {globalMuted ? (
-              <VolumeX className="w-5 h-5 text-white/70" />
-            ) : (
-              <>
-                <Volume2 className="w-5 h-5 text-white z-10" />
-                {/* Animated sound bars */}
-                <div className="absolute bottom-1 left-1/2 -translate-x-1/2 flex items-end gap-[2px]">
-                  {[1, 2, 3].map((i) => (
-                    <div
-                      key={i}
-                      className={cn(
-                        "w-[2px] bg-primary rounded-full animate-[soundbar_0.5s_ease-in-out_infinite_alternate]",
-                        i === 1 && "h-[6px] animate-[soundbar_0.5s_ease-in-out_infinite_alternate]",
-                        i === 2 && "h-[8px] animate-[soundbar_0.6s_ease-in-out_infinite_alternate]",
-                        i === 3 && "h-[10px] animate-[soundbar_0.7s_ease-in-out_infinite_alternate]",
-                      )}
-                    />
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
-        </button>
+        {/* Mute moved out of the right rail — TikTok exposes mute via tap-on-
+            video + a transient toast, not a persistent button. The visible
+            "muted" state on the feed is now signaled by the floating pill
+            below (rendered at the top-right of the video). */}
 
         {/* Like / Reaction (long-press for emoji picker) */}
         <div className="relative">
@@ -1850,15 +1834,17 @@ function ReelCard({
                 />
               )}
             </div>
-            <motion.span
-              key={liveLikesCount}
-              initial={{ scale: 1.3, color: "#ef4444" }}
-              animate={{ scale: 1, color: "#ffffff" }}
-              transition={{ duration: 0.3 }}
-              className="text-xs font-semibold drop-shadow tabular-nums"
-            >
-              {liveLikesCount > 999 ? `${(liveLikesCount / 1000).toFixed(1)}k` : liveLikesCount}
-            </motion.span>
+            {liveLikesCount > 0 && (
+              <motion.span
+                key={liveLikesCount}
+                initial={{ scale: 1.3, color: "#ef4444" }}
+                animate={{ scale: 1, color: "#ffffff" }}
+                transition={{ duration: 0.3 }}
+                className="text-xs font-semibold drop-shadow tabular-nums"
+              >
+                {liveLikesCount > 999 ? `${(liveLikesCount / 1000).toFixed(1)}k` : liveLikesCount}
+              </motion.span>
+            )}
           </button>
         </div>
 
@@ -1873,32 +1859,38 @@ function ReelCard({
           <div className="w-11 h-11 lg:w-12 lg:h-12 rounded-full bg-black/30 backdrop-blur-sm border border-white/10 flex items-center justify-center shadow-[0_4px_14px_-4px_rgba(0,0,0,0.6)] transition-transform active:scale-90">
             <MessageCircle className="w-6 h-6 lg:w-7 lg:h-7 text-white" />
           </div>
-          <motion.span
-            key={liveCommentsCount}
-            initial={{ scale: 1.3 }}
-            animate={{ scale: 1 }}
-            transition={{ duration: 0.3 }}
-            className="text-white text-xs font-semibold drop-shadow tabular-nums"
-          >
-            {liveCommentsCount > 999 ? `${(liveCommentsCount / 1000).toFixed(1)}k` : liveCommentsCount}
-          </motion.span>
+          {liveCommentsCount > 0 && (
+            <motion.span
+              key={liveCommentsCount}
+              initial={{ scale: 1.3 }}
+              animate={{ scale: 1 }}
+              transition={{ duration: 0.3 }}
+              className="text-white text-xs font-semibold drop-shadow tabular-nums"
+            >
+              {liveCommentsCount > 999 ? `${(liveCommentsCount / 1000).toFixed(1)}k` : liveCommentsCount}
+            </motion.span>
+          )}
         </button>
 
-        {/* Views — display-only, hidden on smallest phones so the right
-            column fits the 568-px iPhone SE viewport without clipping. */}
-        <div className="hidden sm:flex flex-col items-center gap-1">
-          <Eye className="w-9 h-9 lg:w-10 lg:h-10 text-white drop-shadow-lg" />
-          <span className="text-white text-xs font-semibold drop-shadow">
-            {post.view_count || 0}
-          </span>
-        </div>
+        {/* Views — only render when there's a real count to show. Empty
+            "0" labels make the video feel lifeless and clutter the rail. */}
+        {(post.view_count || 0) > 0 && (
+          <div className="hidden sm:flex flex-col items-center gap-1">
+            <Eye className="w-9 h-9 lg:w-10 lg:h-10 text-white drop-shadow-lg" />
+            <span className="text-white text-xs font-semibold drop-shadow">
+              {post.view_count!}
+            </span>
+          </div>
+        )}
 
-        {/* Repost */}
+        {/* Repost — hidden on small phones to keep the rail TikTok-lean
+            (5 icons max). Still reachable on tablets/desktop and through the
+            More menu / share sheet on mobile. */}
         {onOpenRepost && (
           <button
             type="button"
             onClick={(e) => { e.stopPropagation(); onOpenRepost(); }}
-            className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
+            className="hidden sm:flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
             aria-label={isReposted ? "Reposted" : "Repost"}
           >
             <div className="w-11 h-11 lg:w-12 lg:h-12 rounded-full bg-black/30 backdrop-blur-sm border border-white/10 flex items-center justify-center shadow-[0_4px_14px_-4px_rgba(0,0,0,0.6)] transition-transform active:scale-90">
@@ -2017,7 +2009,10 @@ function ReelCard({
           </button>
         )}
 
-        {/* More options (3-dot) → opens unified PostActionsMenu */}
+        {/* More options (3-dot) → opens unified PostActionsMenu.
+            Hidden on small phones to keep the rail TikTok-lean (5 icons).
+            Most actions (report / block / save / copy link / repost) are
+            also reachable from the Share sheet. */}
         <button
           type="button"
           onClick={(e) => {
@@ -2025,7 +2020,7 @@ function ReelCard({
             if (onOpenActions) onOpenActions();
             else setShowMoreMenu(true);
           }}
-          className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
+          className="hidden sm:flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
           aria-label="More options"
           title="More options"
         >
@@ -3602,6 +3597,10 @@ export default function FeedPage() {
     try { sessionStorage.setItem("zivo_reel_active_index", String(activeIndex)); } catch {}
   }, [activeIndex]);
   const cardRefs = useRef<(HTMLDivElement | null)[]>([]);
+  // Horizontal swipe state — used to detect TikTok-style "swipe left to view
+  // creator profile". Per-card state isn't needed because the user can only
+  // swipe one card at a time.
+  const swipeStartRef = useRef<{ x: number; y: number; t: number; pointerId: number } | null>(null);
   const [commentPostId, setCommentPostId] = useState<string | null>(null);
   const [sharePostId, setSharePostId] = useState<string | null>(null);
   const [soundOverlayName, setSoundOverlayName] = useState<string | null>(null);
@@ -3621,7 +3620,8 @@ export default function FeedPage() {
     try {
       const stored = localStorage.getItem("zivo_reel_mode");
       if (stored === "following") return "following";
-      if (stored === "trending") return "trending";
+      // "trending" tab was removed from the UI to match TikTok's lean two-tab
+      // header. Users who had it persisted fall back to For You.
       return "foryou";
     } catch { return "foryou"; }
   });
@@ -4364,11 +4364,11 @@ export default function FeedPage() {
       {userId && (
         <div className="absolute left-1/2 top-safe-overlay -translate-x-1/2 z-50">
           <div
-            className="relative flex items-center gap-1 rounded-full px-1.5 py-1 backdrop-blur-md bg-black/30 ring-1 ring-white/10 shadow-[0_8px_24px_-8px_rgba(0,0,0,0.5)]"
+            className="relative flex items-center gap-6 px-2"
             role="tablist"
             aria-label="Reel feed mode"
           >
-            {(["foryou", "following", "trending"] as const).map((mode) => (
+            {(["following", "foryou"] as const).map((mode) => (
               <button
                 key={mode}
                 type="button"
@@ -4376,7 +4376,6 @@ export default function FeedPage() {
                 aria-selected={feedMode === mode}
                 onClick={() => {
                   const now = Date.now();
-                  // Double-tap the SAME tab within 400ms → refresh + scroll to top
                   if (
                     feedMode === mode &&
                     lastTabTapRef.current.mode === mode &&
@@ -4394,22 +4393,22 @@ export default function FeedPage() {
                   requestAnimationFrame(() => cardRefs.current[0]?.scrollIntoView({ block: "start" }));
                 }}
                 className={cn(
-                  "relative isolate min-h-[36px] px-3.5 sm:px-4 lg:px-5 rounded-full text-[13px] sm:text-sm lg:text-[15px] font-semibold tracking-tight whitespace-nowrap transition-colors duration-200 active:scale-[0.97]",
+                  "relative py-2 text-[15px] sm:text-base font-semibold tracking-tight whitespace-nowrap transition-colors duration-200 active:scale-[0.97]",
                   feedMode === mode
-                    ? "text-black"
-                    : "text-white/80 hover:text-white",
+                    ? "text-white"
+                    : "text-white/55 hover:text-white/80",
                 )}
               >
+                <span className="relative z-10 drop-shadow-[0_1px_4px_rgba(0,0,0,0.6)]">
+                  {mode === "foryou" ? "For You" : "Following"}
+                </span>
                 {feedMode === mode && (
                   <motion.span
-                    layoutId="reel-tab-pill"
+                    layoutId="reel-tab-underline"
                     transition={{ type: "spring", damping: 28, stiffness: 380 }}
-                    className="absolute inset-0 -z-10 rounded-full bg-white shadow-[0_2px_10px_rgba(255,255,255,0.35)]"
+                    className="absolute left-1/2 -translate-x-1/2 bottom-0 h-[3px] w-6 rounded-full bg-white shadow-[0_2px_8px_rgba(255,255,255,0.5)]"
                   />
                 )}
-                <span className="relative z-10">
-                  {mode === "foryou" ? "For You" : mode === "following" ? "Following" : "Trending"}
-                </span>
               </button>
             ))}
           </div>
@@ -4422,6 +4421,19 @@ export default function FeedPage() {
           of the frame instead of floating in the black gutter outside it. */}
       <div className="absolute inset-x-0 top-safe-overlay z-50 mx-auto md:max-w-[420px] pointer-events-none lg:hidden mt-12 sm:mt-0">
       <div data-testid="feed-floating-actions" className="flex justify-end gap-2 sm:gap-2.5 px-3 sm:px-4">
+        {/* Mute toggle — moved out of the bottom-right action rail so the
+            rail can stay TikTok-lean (5 icons). Tap to flip global mute. */}
+        <button
+          type="button"
+          onClick={() => setGlobalMuted((m) => !m)}
+          aria-label={globalMuted ? "Unmute" : "Mute"}
+          title={globalMuted ? "Tap to unmute" : "Tap to mute"}
+          className="pointer-events-auto w-10 h-10 sm:w-11 sm:h-11 rounded-full bg-black/40 backdrop-blur-sm flex items-center justify-center active:scale-95 transition-transform border border-white/10"
+        >
+          {globalMuted
+            ? <VolumeX className="w-5 h-5 text-white/80" />
+            : <Volume2 className="w-5 h-5 text-white" />}
+        </button>
         {/* Live entry — also reachable via the bottom nav, so hide on the
             smallest phones (<sm) where the row would collide with center tabs. */}
         <button
@@ -4579,6 +4591,36 @@ export default function FeedPage() {
                 <div
                   ref={(el) => { cardRefs.current[index] = el; }}
                   className="w-full h-full snap-start"
+                  onPointerDown={(e) => {
+                    // Ignore swipes that begin on interactive descendants
+                    // (action rail buttons, progress bar, follow button…).
+                    // Without this the swipe gesture would steal taps.
+                    const t = e.target as HTMLElement;
+                    if (t.closest("button, a, [role='button'], input, textarea")) return;
+                    swipeStartRef.current = { x: e.clientX, y: e.clientY, t: Date.now(), pointerId: e.pointerId };
+                  }}
+                  onPointerUp={(e) => {
+                    const start = swipeStartRef.current;
+                    swipeStartRef.current = null;
+                    if (!start || start.pointerId !== e.pointerId) return;
+                    const dx = e.clientX - start.x;
+                    const dy = e.clientY - start.y;
+                    const dt = Date.now() - start.t;
+                    // Swipe left → creator profile (TikTok pattern). Threshold:
+                    // ≥80 px horizontal, ≤60 px vertical drift, and the gesture
+                    // completes within 600 ms so slow scrolls don't trigger.
+                    if (dt < 600 && dx <= -80 && Math.abs(dy) < 60) {
+                      // Match the avatar-tap navigation in the same component
+                      // (line 1477/1479) so swipe-left and avatar-tap land on
+                      // the same destination for each post type.
+                      if (post.source === "user" && post.author_id) {
+                        navigate(`/user/${post.author_id}`);
+                      } else if (post.store_slug) {
+                        navigate(`/grocery/shop/${post.store_slug}`);
+                      }
+                    }
+                  }}
+                  onPointerCancel={() => { swipeStartRef.current = null; }}
                 >
                   <ErrorBoundary
                     fallback={

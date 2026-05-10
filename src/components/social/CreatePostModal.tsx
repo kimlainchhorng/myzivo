@@ -19,6 +19,7 @@ import { isBlueVerified } from "@/lib/verification";
 import { uploadWithProgress } from "@/utils/uploadWithProgress";
 import { stripImageMetadata } from "@/utils/stripImageMetadata";
 import { nativeConfirm } from "@/lib/native/dialog";
+import { useZivoOFMode } from "@/hooks/useZivoOFMode";
 
 interface CreatePostModalProps {
   userId: string;
@@ -154,6 +155,9 @@ export default function CreatePostModal({
   const [showFeelingPicker, setShowFeelingPicker] = useState(false);
   const [isPoll, setIsPoll] = useState(initialMode === "poll");
   const [pollOptions, setPollOptions] = useState(["", ""]);
+  const { isOFMode: zivoOFMode } = useZivoOFMode();
+  const [unlockPrice, setUnlockPrice] = useState<string>("");
+  const [showUnlockInput, setShowUnlockInput] = useState(false);
 
   const fileRef = useRef<HTMLInputElement>(null);
   const cameraRef = useRef<HTMLInputElement>(null);
@@ -305,22 +309,19 @@ export default function CreatePostModal({
             uploadedUrls.push(publicUrl);
           }
         } catch (uploadErr: any) {
-          // Detect the Supabase storage schema-drift error (translated by
-          // uploadWithProgress). When storage is down we try two fallbacks
-          // before giving up:
+          // Two cases trigger the inline-base64 fallback:
+          //   1) Supabase storage schema-drift (translated by uploadWithProgress).
+          //   2) iOS WKWebView network failures during binary upload
+          //      ("Load failed" / "Failed to fetch" / "Network error during upload"
+          //      / "The network connection was lost.") — common on simulator and
+          //      occasionally on real devices.
           //
-          //   1) Inline small images as base64 data URLs in media_url. This
-          //      stores the image bytes directly in Postgres (text column,
-          //      capped to ~2 MB per image to keep rows reasonable) so the
-          //      post still shows the image without going through Storage.
-          //   2) If files are too large or are videos (which wouldn't fit
-          //      inline anyway), offer text-only posting if a caption exists.
-          //
-          // Once Supabase fixes the storage migration the normal upload path
-          // resumes — no UI change for the happy case.
+          // For small images we embed bytes inline as a data URL in media_url so
+          // the post still works. For videos/large files we fall back to text-only.
           const msg = String(uploadErr?.message || "");
           const isStorageDown = /Upload service is temporarily unavailable/i.test(msg);
-          if (!isStorageDown) {
+          const isNetworkFailure = /Load failed|Failed to fetch|NetworkError|connection (was lost|appears to be offline)|Network error during upload/i.test(msg);
+          if (!isStorageDown && !isNetworkFailure) {
             throw uploadErr;
           }
 
@@ -388,6 +389,13 @@ export default function CreatePostModal({
         const optLines = validOptions.map((o, i) => `${["🔵", "🟢", "🔴", "🟡", "🟠", "🟣"][i] || "▪"} ${o}`).join("\n");
         finalCaption = `📊 ${finalCaption}\n\n${optLines}`;
         finalMediaType = "image";
+      }
+      if (zivoOFMode && unlockPrice) {
+        const priceNum = parseFloat(unlockPrice);
+        if (Number.isFinite(priceNum) && priceNum > 0) {
+          const tag = `🔒 Unlock for $${priceNum.toFixed(2)}`;
+          finalCaption = finalCaption ? `${tag}\n\n${finalCaption}` : tag;
+        }
       }
 
       const insertData: any = {
@@ -516,7 +524,7 @@ export default function CreatePostModal({
         <div className="px-4 relative">
           <textarea
             ref={captionRef}
-            placeholder="Write a caption... Use @ to tag people"
+            placeholder={zivoOFMode ? "Compose a new post for your fans..." : "Write a caption... Use @ to tag people"}
             value={caption}
             onChange={(e) => handleCaptionChange(e.target.value)}
             maxLength={charLimit}
@@ -617,7 +625,11 @@ export default function CreatePostModal({
               {visibility === "everyone" && <Globe className="h-3.5 w-3.5 text-primary" />}
               {visibility === "friends" && <Users className="h-3.5 w-3.5 text-primary" />}
               {visibility === "onlyme" && <Lock className="h-3.5 w-3.5 text-primary" />}
-              <span>{visibility === "everyone" ? "Everyone" : visibility === "friends" ? "Friends" : "Only me"}</span>
+              <span>
+                {zivoOFMode
+                  ? visibility === "everyone" ? "All Subscribers" : visibility === "friends" ? "Free Fans" : "Only me"
+                  : visibility === "everyone" ? "Everyone" : visibility === "friends" ? "Friends" : "Only me"}
+              </span>
               <ChevronDown className="h-3 w-3 text-muted-foreground" />
             </button>
             <AnimatePresence>
@@ -628,11 +640,18 @@ export default function CreatePostModal({
                   exit={{ opacity: 0, y: -4 }}
                   className="absolute top-full left-0 mt-1 w-40 bg-card border border-border/40 rounded-xl shadow-lg z-10 overflow-hidden"
                 >
-                  {([
-                    { value: "everyone" as const, label: "Everyone", icon: Globe },
-                    { value: "friends" as const, label: "Friends", icon: Users },
-                    { value: "onlyme" as const, label: "Only me", icon: Lock },
-                  ]).map((opt) => (
+                  {(zivoOFMode
+                    ? [
+                        { value: "everyone" as const, label: "All Subscribers", icon: Globe },
+                        { value: "friends" as const, label: "Free Fans", icon: Users },
+                        { value: "onlyme" as const, label: "Only me", icon: Lock },
+                      ]
+                    : [
+                        { value: "everyone" as const, label: "Everyone", icon: Globe },
+                        { value: "friends" as const, label: "Friends", icon: Users },
+                        { value: "onlyme" as const, label: "Only me", icon: Lock },
+                      ]
+                  ).map((opt) => (
                     <button type="button"
                       key={opt.value}
                       onClick={() => { setVisibility(opt.value); setShowVisibilityMenu(false); }}
@@ -652,6 +671,7 @@ export default function CreatePostModal({
           </div>
 
           {/* Album button — inline input instead of prompt() */}
+          {!zivoOFMode && (
           <div className="relative">
             <button type="button"
               onClick={() => {
@@ -713,8 +733,10 @@ export default function CreatePostModal({
               )}
             </AnimatePresence>
           </div>
+          )}
 
           {/* Location tag */}
+          {!zivoOFMode && (
           <button type="button"
             onClick={() => setShowLocationSearch(!showLocationSearch)}
             className={cn(
@@ -727,8 +749,10 @@ export default function CreatePostModal({
             <MapPin className="h-3.5 w-3.5" />
             {location || "Location"}
           </button>
+          )}
 
           {/* Tag people */}
+          {!zivoOFMode && (
           <button type="button"
             onClick={() => { setShowTagSearch(true); setTagQuery(""); handleTagSearch(""); }}
             className={cn(
@@ -741,6 +765,7 @@ export default function CreatePostModal({
             <Hash className="h-3.5 w-3.5" />
             {taggedUsers.length > 0 ? `${taggedUsers.length} tagged` : "Tag"}
           </button>
+          )}
         </div>
 
         {/* Location search dropdown */}
@@ -875,6 +900,51 @@ export default function CreatePostModal({
                     </button>
                   ))}
                 </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* OF mode: Money Unlock price input */}
+        <AnimatePresence>
+          {zivoOFMode && showUnlockInput && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden border-t border-border/30"
+            >
+              <div className="px-4 py-3 space-y-2">
+                <p className="text-[11px] font-semibold text-[#00AEEF] uppercase tracking-wide flex items-center gap-1.5">
+                  <Lock className="h-3 w-3" /> Lock post — fans pay to unlock
+                </p>
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 flex items-center gap-2 px-3 py-2 rounded-xl bg-[#00AEEF]/5 border border-[#00AEEF]/30 focus-within:ring-2 focus-within:ring-[#00AEEF]/30">
+                    <span className="text-sm font-bold text-[#00AEEF]">$</span>
+                    <input
+                      type="number"
+                      inputMode="decimal"
+                      min={0}
+                      step="0.01"
+                      value={unlockPrice}
+                      onChange={(e) => setUnlockPrice(e.target.value)}
+                      placeholder="Price (e.g. 9.99)"
+                      className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/50 focus:outline-none"
+                    />
+                  </div>
+                  {unlockPrice && (
+                    <button
+                      type="button"
+                      onClick={() => { setUnlockPrice(""); setShowUnlockInput(false); }}
+                      className="px-3 py-2 rounded-xl text-xs font-semibold text-muted-foreground hover:bg-muted/40"
+                    >
+                      Clear
+                    </button>
+                  )}
+                </div>
+                <p className="text-[10px] text-muted-foreground">
+                  Free preview is shown to non-subscribers. They tap to pay and unlock.
+                </p>
               </div>
             </motion.div>
           )}
@@ -1147,19 +1217,28 @@ export default function CreatePostModal({
         <div className="px-4 py-2 border-t border-border/30">
           <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wide mb-2">Add to your post</p>
           <div className="flex gap-1 overflow-x-auto scrollbar-none pb-1">
-            {[
-              { label: "Photo", icon: ImageIcon, color: "text-emerald-500", action: "photo" as const },
-              { label: "Video", icon: Play, color: "text-rose-500", action: "video" as const },
-              { label: "Feeling", icon: Smile, color: "text-amber-500", action: "feeling" as const },
-              { label: "Poll", icon: Hash, color: "text-violet-500", action: "poll" as const },
-              { label: "Reel", icon: Film, color: "text-indigo-500", action: "reel" as const },
-              { label: "Music", icon: Music, color: "text-sky-500", action: "audio" as const },
-              { label: "Live", icon: Radio, color: "text-red-500", action: "live" as const },
-            ].map((opt) => {
+            {(zivoOFMode
+              ? [
+                  { label: "Photo", icon: ImageIcon, color: "text-emerald-500", action: "photo" as const },
+                  { label: "Video", icon: Play, color: "text-rose-500", action: "video" as const },
+                  { label: "Reel", icon: Film, color: "text-indigo-500", action: "reel" as const },
+                  { label: "Unlock", icon: Lock, color: "text-[#00AEEF]", action: "unlock" as const },
+                ]
+              : [
+                  { label: "Photo", icon: ImageIcon, color: "text-emerald-500", action: "photo" as const },
+                  { label: "Video", icon: Play, color: "text-rose-500", action: "video" as const },
+                  { label: "Feeling", icon: Smile, color: "text-amber-500", action: "feeling" as const },
+                  { label: "Poll", icon: Hash, color: "text-violet-500", action: "poll" as const },
+                  { label: "Reel", icon: Film, color: "text-indigo-500", action: "reel" as const },
+                  { label: "Music", icon: Music, color: "text-sky-500", action: "audio" as const },
+                  { label: "Live", icon: Radio, color: "text-red-500", action: "live" as const },
+                ]
+            ).map((opt) => {
               const isActive =
                 (opt.action === "audio" && showAudioInput) ||
                 (opt.action === "feeling" && (showFeelingPicker || !!feeling)) ||
                 (opt.action === "poll" && isPoll) ||
+                (opt.action === "unlock" && (showUnlockInput || !!unlockPrice)) ||
                 (["photo", "video", "reel"].includes(opt.action) && selectedType === (opt.label as any));
               return (
                 <button type="button"
@@ -1173,6 +1252,10 @@ export default function CreatePostModal({
                     }
                     if (opt.action === "poll") {
                       setIsPoll((v) => !v);
+                      return;
+                    }
+                    if (opt.action === "unlock") {
+                      setShowUnlockInput((v) => !v);
                       return;
                     }
                     const accept = opt.action === "video" || opt.action === "reel" ? "video/*" : "image/*";

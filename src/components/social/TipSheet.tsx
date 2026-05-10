@@ -18,7 +18,21 @@ interface TipSheetProps {
   creatorAvatar?: string | null;
 }
 
-const TIP_AMOUNTS = [100, 200, 500, 1000, 2500, 5000];
+const TIP_AMOUNTS_DEFAULT = [100, 200, 500, 1000, 2500, 5000];
+
+function readCreatorTipPresets(): number[] {
+  if (typeof window === "undefined") return TIP_AMOUNTS_DEFAULT;
+  const raw = window.localStorage.getItem("zivo:of:tip_presets_cents");
+  if (!raw) return TIP_AMOUNTS_DEFAULT;
+  try {
+    const arr = JSON.parse(raw);
+    if (Array.isArray(arr) && arr.length > 0 && arr.every((v) => typeof v === "number" && v >= 100)) {
+      const padded = [...arr, ...TIP_AMOUNTS_DEFAULT.filter((d) => !arr.includes(d))].slice(0, 6);
+      return padded;
+    }
+  } catch {}
+  return TIP_AMOUNTS_DEFAULT;
+}
 
 /* ── Inner form (needs Stripe context) ── */
 function TipForm({ creatorId, creatorName, onClose }: { creatorId: string; creatorName: string; onClose: () => void }) {
@@ -26,7 +40,8 @@ function TipForm({ creatorId, creatorName, onClose }: { creatorId: string; creat
   const stripe = useStripe();
   const elements = useElements();
 
-  const [selectedAmount, setSelectedAmount] = useState(200);
+  const tipAmounts = readCreatorTipPresets();
+  const [selectedAmount, setSelectedAmount] = useState(tipAmounts[1] ?? tipAmounts[0] ?? 200);
   const [customAmount, setCustomAmount] = useState("");
   const [message, setMessage] = useState("");
   const [isAnonymous, setIsAnonymous] = useState(false);
@@ -123,7 +138,7 @@ function TipForm({ creatorId, creatorName, onClose }: { creatorId: string; creat
           {/* Amount Grid */}
           {!showCustom ? (
             <div className="grid grid-cols-3 gap-2 mb-4">
-              {TIP_AMOUNTS.map((amt) => (
+              {tipAmounts.map((amt) => (
                 <button type="button"
                   key={amt}
                   onClick={() => setSelectedAmount(amt)}
