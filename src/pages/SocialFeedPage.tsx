@@ -103,12 +103,12 @@ const FILTERS: { id: FeedFilter; label: string }[] = [
 
 type QuickActionId = "photo" | "reels" | "poll" | "checkin" | "live";
 
-const QUICK_ACTIONS: { id: QuickActionId; label: string; icon: typeof ImageIcon; color: string }[] = [
-  { id: "photo", label: "Photo", icon: ImageIcon, color: "text-emerald-600" },
-  { id: "reels", label: "Reels", icon: Film, color: "text-purple-500" },
-  { id: "poll", label: "Poll", icon: BarChart3, color: "text-orange-500" },
-  { id: "checkin", label: "Check In", icon: MapPin, color: "text-rose-500" },
-  { id: "live", label: "Live", icon: Radio, color: "text-red-500" },
+const QUICK_ACTIONS: { id: QuickActionId; label: string; icon: typeof ImageIcon; iconClass: string; tintClass: string }[] = [
+  { id: "photo", label: "Photo", icon: ImageIcon, iconClass: "text-emerald-600", tintClass: "bg-emerald-500/10" },
+  { id: "reels", label: "Reels", icon: Film, iconClass: "text-purple-500", tintClass: "bg-purple-500/10" },
+  { id: "poll", label: "Poll", icon: BarChart3, iconClass: "text-orange-500", tintClass: "bg-orange-500/10" },
+  { id: "checkin", label: "Check In", icon: MapPin, iconClass: "text-rose-500", tintClass: "bg-rose-500/10" },
+  { id: "live", label: "Live", icon: Radio, iconClass: "text-red-500", tintClass: "bg-red-500/10" },
 ];
 
 export default function SocialFeedPage() {
@@ -401,7 +401,7 @@ export default function SocialFeedPage() {
             </span>
           </button>
 
-          <div className="mt-3 grid grid-cols-5 gap-1.5">
+          <div className="mt-2 -mx-1 flex items-stretch gap-0.5 border-t border-border/30 pt-1.5">
             {QUICK_ACTIONS.map((qa) => {
               const Icon = qa.icon;
               return (
@@ -409,10 +409,12 @@ export default function SocialFeedPage() {
                   key={qa.id}
                   type="button"
                   onClick={() => handleQuickAction(qa.id)}
-                  className="flex flex-col items-center justify-center gap-1 py-1 rounded-lg hover:bg-muted/40 active:scale-95 transition-all"
+                  className="flex-1 flex items-center justify-center gap-1.5 py-1.5 rounded-lg hover:bg-muted/40 active:scale-95 transition-all"
                 >
-                  <Icon className={cn("h-5 w-5", qa.color)} />
-                  <span className="text-[11px] font-medium text-foreground/85">{qa.label}</span>
+                  <span className={cn("inline-flex items-center justify-center h-7 w-7 rounded-full", qa.tintClass)}>
+                    <Icon className={cn("h-4 w-4", qa.iconClass)} />
+                  </span>
+                  <span className="text-[12px] font-medium text-foreground/85">{qa.label}</span>
                 </button>
               );
             })}
@@ -568,21 +570,24 @@ function PostCard({ post, highlight = false }: { post: FeedPost; highlight?: boo
       {post.caption && <PostCaption caption={post.caption} />}
 
       {urls.length > 0 && (
-        <div className="bg-black">
+        <div className="bg-gradient-to-br from-zinc-900 via-zinc-800 to-zinc-950">
           {isVideo ? (
             <video
-              src={urls[0]}
+              // #t=0.1 hint nudges the browser past the black intro frame
+              // many phone-recorded clips begin with, so the paused poster
+              // frame is a real image instead of a black rectangle.
+              src={`${urls[0]}#t=0.1`}
               controls
               playsInline
               preload="metadata"
-              className="w-full max-h-[70vh] object-contain bg-black"
+              className="w-full max-h-[70vh] object-contain"
             />
           ) : (
             <img
               src={urls[0]}
               alt={post.caption || "Post"}
               loading="lazy"
-              className="w-full max-h-[70vh] object-contain bg-black"
+              className="w-full max-h-[70vh] object-contain"
             />
           )}
         </div>

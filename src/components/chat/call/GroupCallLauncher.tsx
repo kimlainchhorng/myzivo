@@ -12,10 +12,11 @@ import GroupCallScreenV2 from "./GroupCallScreenV2";
 interface Props {
   roomName: string;
   callType?: "audio" | "video";
+  meetingLabel?: string;
   onEnded?: () => void;
 }
 
-export default function GroupCallLauncher({ roomName, callType = "video", onEnded }: Props) {
+export default function GroupCallLauncher({ roomName, callType = "video", meetingLabel, onEnded }: Props) {
   const [joined, setJoined] = useState<CallLobbyResult | null>(null);
 
   if (!joined) {
@@ -34,6 +35,7 @@ export default function GroupCallLauncher({ roomName, callType = "video", onEnde
     <GroupCallScreenV2
       roomName={roomName}
       callType={callType}
+      meetingLabel={meetingLabel}
       onEnded={onEnded}
       startMicMuted={joined.startMicMuted}
       startCamOff={joined.startCamOff}

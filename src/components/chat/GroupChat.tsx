@@ -1060,7 +1060,12 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose, au
 
   return (
     <motion.div
-      className="fixed inset-0 z-50 bg-background flex flex-col"
+      // On desktop the chat hub pins a conversation-list sidebar to the left
+      // and writes its width into the --chat-sidebar-w CSS variable. We start
+      // from that variable's right edge so the chat sits next to the list
+      // instead of covering it. On mobile the variable falls back to 0px and
+      // the chat covers the viewport as before.
+      className="fixed inset-y-0 right-0 left-0 z-50 bg-background flex flex-col lg:top-[60px] lg:bottom-0 lg:inset-y-auto lg:left-[var(--chat-sidebar-w,0px)] transition-[left] duration-200"
       initial={{ x: "100%" }}
       animate={{ x: 0 }}
       exit={{ x: "100%" }}
@@ -1068,7 +1073,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose, au
     >
       {/* Header */}
       <div className="sticky top-0 z-10 bg-background/95 backdrop-blur-xl border-b border-border/30 safe-area-top">
-        <div className="px-3 py-2 flex items-center gap-3">
+        <div className="px-3 py-2 flex items-center gap-3 lg:max-w-4xl lg:mx-auto lg:w-full">
           <button type="button" onClick={onClose} className="min-h-[44px] min-w-[44px] flex items-center justify-center" aria-label="Back" title="Back">
             <ArrowLeft className="h-5 w-5 text-foreground" />
           </button>
@@ -1173,7 +1178,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose, au
           aria-label="Open pinned message in search"
           title="Open pinned message in search"
         >
-          <div className="flex items-center gap-2 border-l-2 border-sky-500/70 pl-2">
+          <div className="flex items-center gap-2 border-l-2 border-sky-500/70 pl-2 lg:max-w-4xl lg:mx-auto lg:w-full">
             <Pin className="h-3.5 w-3.5 text-sky-500 shrink-0" />
             <span className="text-[11px] font-semibold text-sky-700 dark:text-sky-300">Pinned</span>
             <span className="text-[11px] text-muted-foreground truncate">{pinnedPreview}</span>
@@ -1186,7 +1191,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose, au
       <div
         ref={scrollRef}
         onScroll={handleTimelineScroll}
-        className="flex-1 overflow-y-auto overscroll-contain px-4 py-3 space-y-2 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.07),transparent_35%),linear-gradient(to_bottom,rgba(148,163,184,0.04),transparent_30%)] [-webkit-overflow-scrolling:touch] touch-pan-y [transform:translateZ(0)] [contain:layout_paint]"
+        className="flex-1 overflow-y-auto overscroll-contain px-4 py-3 space-y-2 bg-[radial-gradient(circle_at_top,rgba(56,189,248,0.07),transparent_35%),linear-gradient(to_bottom,rgba(148,163,184,0.04),transparent_30%)] [-webkit-overflow-scrolling:touch] touch-pan-y [transform:translateZ(0)] [contain:layout_paint] lg:[&>*]:max-w-4xl lg:[&>*]:mx-auto lg:[&>*]:w-full"
       >
         {loading ? (
           <div className="flex items-center justify-center h-40">
@@ -1550,7 +1555,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose, au
       </AnimatePresence>
 
       {/* Input */}
-      <div className="bg-background/80 backdrop-blur-2xl border-t border-border/5 px-2.5 py-2 relative [padding-bottom:max(env(safe-area-inset-bottom,0px),0.5rem)]">
+      <div className="bg-background/80 backdrop-blur-2xl border-t border-border/5 px-2.5 py-2 relative [padding-bottom:max(env(safe-area-inset-bottom,0px),0.5rem)] lg:[&>*]:max-w-4xl lg:[&>*]:mx-auto lg:[&>*]:w-full">
         {/* Sticker auto-suggestions (Telegram parity) — shown when the user types an emoji.
             Hidden during slash mode so the popovers don't fight. */}
         {stickerSuggestions.length > 0 && slashQuery == null && (
@@ -1821,6 +1826,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose, au
           <GroupCallLauncher
             roomName={`group-${groupId}`}
             callType={groupCall}
+            meetingLabel={groupName}
             onEnded={() => setGroupCall(null)}
           />
         </div>

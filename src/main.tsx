@@ -4,6 +4,18 @@ import App from "./App.tsx";
 import "./index.css";
 import "./lib/toastErrorFilter";
 
+// Dev mode only: unregister any service worker left over from a previous
+// prod build and wipe its caches, so HMR updates show up on refresh instead
+// of being intercepted by a stale SW. No-op in production where the PWA SW
+// is intentional.
+if (import.meta.env.DEV && typeof navigator !== "undefined" && "serviceWorker" in navigator) {
+  void navigator.serviceWorker.getRegistrations()
+    .then((regs) => Promise.all(regs.map((r) => r.unregister())))
+    .then(() => "caches" in window ? caches.keys() : Promise.resolve([]))
+    .then((keys) => Promise.all((keys as string[]).map((k) => caches.delete(k))))
+    .catch(() => { /* best-effort cleanup */ });
+}
+
 // Surface boot-time crashes on screen instead of failing silently into a white
 // webview — without this, any sync throw in App's import chain is invisible
 // because global error handlers don't load until requestIdleCallback fires.

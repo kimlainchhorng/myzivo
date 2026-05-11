@@ -106,6 +106,10 @@ Deno.serve(async (req) => {
       canPublish: true,
       canSubscribe: true,
       canPublishData: true,
+      // Required so the client can call `localParticipant.setMetadata(...)`
+      // for hand-raise state, reactions, etc. Without this the server returns
+      // "does not have permission to update own metadata" on join.
+      canUpdateOwnMetadata: true,
       roomRecord: isHost,
       roomAdmin: isHost,
     });

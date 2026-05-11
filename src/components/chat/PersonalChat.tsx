@@ -2073,11 +2073,18 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
 
   const content = (
     <motion.div
+      // Desktop chat hub pins a conversation-list sidebar on the left and
+      // writes its width to --chat-sidebar-w. The full-page (non-inline) view
+      // anchors its left edge to that variable so the list stays visible.
+      // Mobile / inline modes are unchanged.
       className={inline
         ? "absolute inset-0 z-50 flex flex-col overflow-hidden h-full w-full bg-background"
-        : "fixed inset-0 z-[1300] bg-background flex flex-col overflow-hidden"
+        // Mobile: top:0 bottom:0 fills the viewport. Desktop (lg+): top:60px
+        // makes room for the NavBar; resetting `inset-y` to auto lets the
+        // top/bottom utilities own the vertical placement. No inline `height`
+        // because that would override `bottom` and overflow past the viewport.
+        : "fixed inset-y-0 right-0 left-0 z-[1300] bg-background flex flex-col overflow-hidden lg:top-[60px] lg:bottom-0 lg:inset-y-auto lg:left-[var(--chat-sidebar-w,0px)] transition-[left] duration-200"
       }
-      style={inline ? undefined : { height: "100dvh", width: "100vw", top: 0, left: 0 }}
       initial={inline ? { opacity: 0 } : { x: "100%" }}
       animate={inline ? { opacity: 1 } : { x: 0 }}
       exit={inline ? { opacity: 0 } : { x: "100%" }}

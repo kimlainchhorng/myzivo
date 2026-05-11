@@ -2128,25 +2128,29 @@ export default function ReelsFeedPage() {
 
           {/* Quick Access — service shortcuts */}
           <div>
-            <h3 className="text-[11px] font-semibold text-muted-foreground/60 uppercase tracking-wider px-1 mb-2">Quick Access</h3>
+            <h3 className="text-[11px] font-bold text-foreground/55 uppercase tracking-[0.08em] px-1 mb-2.5">Quick Access</h3>
             <div className="grid grid-cols-3 gap-1.5">
               {[
-                { label: "Flights", icon: Plane, path: "/flights", color: "bg-sky-500/10 text-sky-600" },
-                { label: "Hotels", icon: Hotel, path: "/hotels", color: "bg-amber-500/10 text-amber-600" },
-                { label: "Rides", icon: Car, path: "/rides", color: "bg-emerald-500/10 text-emerald-600" },
-                { label: "Eats", icon: UtensilsCrossed, path: "/eats", color: "bg-orange-500/10 text-orange-600" },
-                { label: "Delivery", icon: Package, path: "/delivery", color: "bg-violet-500/10 text-violet-600" },
-                { label: "Explore", icon: Globe, path: "/explore", color: "bg-primary/10 text-primary" },
-              ].map(({ label, icon: Icon, path, color }) => (
+                { label: "Flights", icon: Plane, path: "/flights", color: "bg-sky-500/15 text-sky-600", ring: "group-hover:ring-sky-500/30" },
+                { label: "Hotels", icon: Hotel, path: "/hotels", color: "bg-amber-500/15 text-amber-600", ring: "group-hover:ring-amber-500/30" },
+                { label: "Rides", icon: Car, path: "/rides", color: "bg-emerald-500/15 text-emerald-600", ring: "group-hover:ring-emerald-500/30" },
+                { label: "Eats", icon: UtensilsCrossed, path: "/eats", color: "bg-orange-500/15 text-orange-600", ring: "group-hover:ring-orange-500/30" },
+                { label: "Delivery", icon: Package, path: "/delivery", color: "bg-violet-500/15 text-violet-600", ring: "group-hover:ring-violet-500/30" },
+                { label: "Explore", icon: Globe, path: "/explore", color: "bg-primary/15 text-primary", ring: "group-hover:ring-primary/30" },
+              ].map(({ label, icon: Icon, path, color, ring }) => (
                 <button type="button"
                   key={label}
                   onClick={() => navigate(path)}
-                  className="flex flex-col items-center gap-1 p-2 rounded-xl hover:bg-muted/60 transition-colors group"
+                  className="flex flex-col items-center gap-1.5 px-1 py-2.5 rounded-xl hover:bg-muted/50 active:scale-95 transition-all group"
                 >
-                  <div className={cn("h-9 w-9 rounded-xl flex items-center justify-center", color)}>
-                    <Icon className="h-4 w-4" />
+                  <div className={cn(
+                    "h-11 w-11 rounded-2xl flex items-center justify-center ring-2 ring-transparent transition-all",
+                    color,
+                    ring
+                  )}>
+                    <Icon className="h-[18px] w-[18px]" strokeWidth={2.25} />
                   </div>
-                  <span className="text-[10px] font-medium text-muted-foreground group-hover:text-foreground transition-colors">{label}</span>
+                  <span className="text-[11px] font-semibold text-foreground/75 group-hover:text-foreground transition-colors">{label}</span>
                 </button>
               ))}
             </div>
@@ -2247,34 +2251,38 @@ export default function ReelsFeedPage() {
           )}
 
           {/* Birthdays */}
-          <div className="rounded-xl border border-border/30 bg-card/40 p-3">
-            <div className="flex items-center gap-1.5 mb-2">
-              <Gift className="h-4 w-4 text-rose-500" />
+          <button type="button"
+            onClick={() => navigate("/friends")}
+            className="text-left rounded-2xl border border-rose-500/20 bg-gradient-to-br from-rose-500/10 via-card to-pink-500/5 p-3 hover:from-rose-500/15 hover:to-pink-500/10 active:scale-[0.99] transition-all group"
+          >
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="h-7 w-7 rounded-lg bg-rose-500/15 flex items-center justify-center">
+                <Gift className="h-4 w-4 text-rose-500" />
+              </span>
               <h3 className="text-sm font-semibold text-foreground">Birthdays</h3>
             </div>
-            <p className="text-[12px] text-muted-foreground mb-2">See which friends have birthdays today.</p>
-            <button type="button"
-              onClick={() => navigate("/friends")}
-              className="text-[12px] font-semibold text-primary hover:underline"
-            >
+            <p className="text-[12px] text-muted-foreground mb-1.5 leading-snug">See which friends have birthdays today.</p>
+            <span className="text-[12px] font-semibold text-rose-500 group-hover:translate-x-0.5 inline-block transition-transform">
               View birthdays →
-            </button>
-          </div>
+            </span>
+          </button>
 
           {/* Upcoming Events */}
-          <div className="rounded-xl border border-border/30 bg-card/40 p-3">
-            <div className="flex items-center gap-1.5 mb-2">
-              <Calendar className="h-4 w-4 text-blue-500" />
+          <button type="button"
+            onClick={() => navigate("/explore")}
+            className="text-left rounded-2xl border border-blue-500/20 bg-gradient-to-br from-blue-500/10 via-card to-sky-500/5 p-3 hover:from-blue-500/15 hover:to-sky-500/10 active:scale-[0.99] transition-all group"
+          >
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="h-7 w-7 rounded-lg bg-blue-500/15 flex items-center justify-center">
+                <Calendar className="h-4 w-4 text-blue-500" />
+              </span>
               <h3 className="text-sm font-semibold text-foreground">Events</h3>
             </div>
-            <p className="text-[12px] text-muted-foreground mb-2">Discover events happening near you.</p>
-            <button type="button"
-              onClick={() => navigate("/explore")}
-              className="text-[12px] font-semibold text-primary hover:underline"
-            >
+            <p className="text-[12px] text-muted-foreground mb-1.5 leading-snug">Discover events happening near you.</p>
+            <span className="text-[12px] font-semibold text-blue-500 group-hover:translate-x-0.5 inline-block transition-transform">
               Browse events →
-            </button>
-          </div>
+            </span>
+          </button>
 
           <p className="text-[10px] text-muted-foreground/60 mt-auto px-1 pt-2">© ZIVO LLC · hizivo.com</p>
         </aside>

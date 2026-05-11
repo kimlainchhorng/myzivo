@@ -231,31 +231,32 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                       {isChat ? (
                         <button type="button"
                           onClick={() => window.dispatchEvent(new CustomEvent("zivo-toggle-chat"))}
-                          className="flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold tracking-wide transition-all duration-300 whitespace-nowrap"
-                          style={{
-                            border: `1.5px solid hsl(${item.cssVar} / 0.12)`,
-                            color: `hsl(${item.cssVar})`,
-                          }}
+                          className="flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold tracking-wide transition-all duration-300 whitespace-nowrap text-foreground/70 hover:text-foreground border border-border/40 hover:border-border/70 hover:bg-muted/40"
                         >
-                          <item.icon className="w-4 h-4" />
+                          <item.icon className="w-4 h-4" style={{ color: `hsl(${item.cssVar})` }} />
                           {item.label}
                         </button>
                       ) : (
                         <Link
                           to={item.href}
-                          className="flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold tracking-wide transition-all duration-300 whitespace-nowrap"
-                          style={{
-                            background: isActive
-                              ? `linear-gradient(135deg, hsl(${item.cssVar} / 0.15), hsl(${item.cssVar} / 0.08))`
-                              : "transparent",
-                            border: `1.5px solid hsl(${item.cssVar} / ${isActive ? "0.3" : "0.12"})`,
-                            boxShadow: isActive
-                              ? `0 2px 12px -3px hsl(${item.cssVar} / 0.25)`
-                              : "none",
-                            color: `hsl(${item.cssVar})`,
-                          }}
+                          className={cn(
+                            "flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold tracking-wide transition-all duration-300 whitespace-nowrap border",
+                            isActive
+                              ? ""
+                              : "text-foreground/70 hover:text-foreground border-border/40 hover:border-border/70 hover:bg-muted/40"
+                          )}
+                          style={
+                            isActive
+                              ? {
+                                  background: `linear-gradient(135deg, hsl(${item.cssVar} / 0.18), hsl(${item.cssVar} / 0.08))`,
+                                  borderColor: `hsl(${item.cssVar} / 0.35)`,
+                                  boxShadow: `0 2px 12px -3px hsl(${item.cssVar} / 0.3)`,
+                                  color: `hsl(${item.cssVar})`,
+                                }
+                              : undefined
+                          }
                         >
-                          <item.icon className="w-4 h-4" />
+                          <item.icon className="w-4 h-4" style={isActive ? undefined : { color: `hsl(${item.cssVar})` }} />
                           {item.label}
                         </Link>
                       )}

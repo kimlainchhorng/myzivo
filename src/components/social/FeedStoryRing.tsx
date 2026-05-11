@@ -242,7 +242,14 @@ export default function FeedStoryRing() {
                 <div className="h-full w-full rounded-full overflow-hidden border-2 border-card bg-card">
                   <Avatar className="h-full w-full">
                     <AvatarImage src={optimizeAvatar(g.avatarUrl, 64)} loading="lazy" />
-                    <AvatarFallback className="text-sm font-bold">{g.userName[0]}</AvatarFallback>
+                    <AvatarFallback
+                      className="text-sm font-bold text-white"
+                      style={{
+                        background: `linear-gradient(135deg, hsl(${(g.userId.charCodeAt(0) * 47) % 360} 70% 55%), hsl(${(g.userId.charCodeAt(0) * 47 + 60) % 360} 70% 45%))`,
+                      }}
+                    >
+                      {(g.userName[0] || "U").toUpperCase()}
+                    </AvatarFallback>
                   </Avatar>
                 </div>
               </div>

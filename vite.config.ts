@@ -71,6 +71,12 @@ export default defineConfig(({ mode }) => ({
     react(),
     mode === "development" && componentTagger(),
     VitePWA({
+      // Dev mode: skip SW entirely so HMR-fresh JS always runs. With this off,
+      // refreshes during development show the latest code immediately instead
+      // of serving last-build's cached bundle (which masked the recent
+      // chat-layout fixes).
+      disable: mode === "development",
+      devOptions: { enabled: false },
       registerType: "autoUpdate",
       strategies: "injectManifest",
       srcDir: "public",

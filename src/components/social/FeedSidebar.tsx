@@ -12,6 +12,7 @@ import {
   Handshake, CarTaxiFront, ChefHat, Building2,
   Headphones, Eye, Wrench, X as XIcon, BadgeCheck, ChevronRight,
   Crown, LogOut, Gift, Radio, Film, Bell, Star, Mic2, ShoppingCart,
+  Plus,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -515,13 +516,24 @@ export default function FeedSidebar() {
                 <MessageCircle className="h-5 w-5 text-primary" />
                 <h2 className="text-base font-semibold text-foreground">Messages</h2>
               </div>
-              <button type="button"
-                onClick={() => setChatOpen(false)}
-                className="flex items-center justify-center h-8 w-8 rounded-full hover:bg-muted/80 active:scale-90 transition-all"
-                aria-label="Close chat"
-              >
-                <XIcon className="h-4.5 w-4.5 text-muted-foreground" />
-              </button>
+              <div className="flex items-center gap-1">
+                <button type="button"
+                  onClick={() => window.dispatchEvent(new CustomEvent("zivo-chat-new-group"))}
+                  className="relative flex items-center justify-center h-8 w-8 rounded-full hover:bg-muted/80 active:scale-90 transition-all"
+                  aria-label="New group"
+                  title="New group"
+                >
+                  <Users className="h-4 w-4 text-muted-foreground" />
+                  <Plus className="h-2.5 w-2.5 text-primary absolute bottom-0.5 right-0.5" />
+                </button>
+                <button type="button"
+                  onClick={() => setChatOpen(false)}
+                  className="flex items-center justify-center h-8 w-8 rounded-full hover:bg-muted/80 active:scale-90 transition-all"
+                  aria-label="Close chat"
+                >
+                  <XIcon className="h-4.5 w-4.5 text-muted-foreground" />
+                </button>
+              </div>
             </div>
             <div className="flex-1 min-h-0 overflow-hidden">
               <Suspense fallback={

@@ -15,6 +15,8 @@ import Car from "lucide-react/dist/esm/icons/car";
 import Search from "lucide-react/dist/esm/icons/search";
 import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
+import PanelLeftClose from "lucide-react/dist/esm/icons/panel-left-close";
+import PanelLeftOpen from "lucide-react/dist/esm/icons/panel-left-open";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
 import X from "lucide-react/dist/esm/icons/x";
 import Bell from "lucide-react/dist/esm/icons/bell";
@@ -36,6 +38,7 @@ import Mic from "lucide-react/dist/esm/icons/mic";
 import MapPin from "lucide-react/dist/esm/icons/map-pin";
 import Phone from "lucide-react/dist/esm/icons/phone";
 import Video from "lucide-react/dist/esm/icons/video";
+import Keyboard from "lucide-react/dist/esm/icons/keyboard";
 import Pin from "lucide-react/dist/esm/icons/pin";
 import BellOff from "lucide-react/dist/esm/icons/bell-off";
 import Archive from "lucide-react/dist/esm/icons/archive";
@@ -390,6 +393,15 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   const [showCreateGroup, setShowCreateGroup] = useState(false);
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
+
+  // The embedded chat slideout (rendered by FeedSidebar) has no action toolbar
+  // of its own, so it dispatches `zivo-chat-new-group` to ask the hub to open
+  // the create-group modal. Always-on listener (cheap; no-op when unmounted).
+  useEffect(() => {
+    const handler = () => setShowCreateGroup(true);
+    window.addEventListener("zivo-chat-new-group", handler);
+    return () => window.removeEventListener("zivo-chat-new-group", handler);
+  }, []);
 
   // Share mode state
   const [sharePayload, setSharePayload] = useState<{ shareUrl: string; shareText: string } | null>(null);
@@ -1189,6 +1201,33 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   const hasOverlayChatOpen = Boolean(openShopChat || openPersonalChat || openGroupChat);
   const showListShell = !embedded || !hasOverlayChatOpen;
 
+  // Desktop only: when a chat is open we keep the conversation list pinned as
+  // a left sidebar (Telegram / Discord pattern). The list width is exposed
+  // via --chat-sidebar-w so the chat overlay components know where to start
+  // their left edge from. Mobile and embedded slideout are unchanged.
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const desktopTwoColumn = !embedded && hasOverlayChatOpen;
+  const desktopSidebarWidth = desktopTwoColumn ? (sidebarCollapsed ? 72 : 360) : 0;
+  // When the sidebar is collapsed on desktop we render a slim icon-rail
+  // (avatars only). Anything that doesn't fit in 72px gets hidden via the
+  // `lg:hidden` class gated on this boolean.
+  const collapsedRail = desktopTwoColumn && sidebarCollapsed;
+
+  // PersonalChat portals its overlay to document.body, so a CSS var set on
+  // any in-tree ancestor wouldn't reach it. Hoist the var to documentElement
+  // so portaled overlays inherit it. Clean up on unmount / when no chat is
+  // open so the var doesn't leak into other pages.
+  useEffect(() => {
+    if (desktopTwoColumn) {
+      document.documentElement.style.setProperty("--chat-sidebar-w", `${desktopSidebarWidth}px`);
+    } else {
+      document.documentElement.style.removeProperty("--chat-sidebar-w");
+    }
+    return () => {
+      document.documentElement.style.removeProperty("--chat-sidebar-w");
+    };
+  }, [desktopTwoColumn, desktopSidebarWidth]);
+
   const canDelete = active === "personal";
 
   const handlePersonalHubMenuAction = useCallback((action: (typeof personalHubMenu)[number]["action"]) => {
@@ -1512,13 +1551,22 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   }
 
   const shell = (
-    <div className={cn(
-      "flex flex-col mx-auto w-full",
-      embedded ? "h-full min-h-0" : "min-h-screen",
-      // Cap width on tablet+/desktop so the chat list reads as a clean panel,
-      // not a sprawl. Mobile keeps full width.
-      !embedded && "md:max-w-2xl lg:max-w-3xl xl:max-w-4xl",
-    )}>
+    <div
+      data-zivo-chat-shell
+      className={cn(
+        "flex flex-col w-full",
+        embedded ? "h-full min-h-0" : "min-h-screen",
+        // Browse mode (no chat open): center the list with a comfortable max-width.
+        // Two-column mode (chat open on desktop): pin the list to the left as a
+        // fixed sidebar with width set by --chat-sidebar-w (set on the page root).
+        !embedded && !desktopTwoColumn && "mx-auto md:max-w-2xl lg:max-w-3xl xl:max-w-4xl",
+        // Note: no backdrop-blur or filter here — both create a containing
+        // block that would trap the active-chat overlay inside this 360px
+        // sidebar instead of letting it span the rest of the viewport.
+        // Top offset 60px = NavBar height, so the global header stays visible.
+        desktopTwoColumn && "mx-auto md:max-w-2xl lg:fixed lg:top-[60px] lg:bottom-0 lg:left-0 lg:z-40 lg:mx-0 lg:max-w-none lg:w-[var(--chat-sidebar-w,360px)] lg:border-r lg:border-border/30 lg:bg-background lg:overflow-hidden lg:transition-[width] lg:duration-200",
+      )}
+    >
       {showListShell && (
         <>
           <div
@@ -1530,8 +1578,14 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
             )}
           >
             {!embedded ? (
-              <div className="px-5 pt-2 pb-3 flex items-center justify-between">
-                <div className="flex items-center gap-3">
+              <div className={cn(
+                "px-5 pt-2 pb-3 flex items-center justify-between",
+                desktopTwoColumn && sidebarCollapsed && "lg:px-2 lg:flex-col lg:items-stretch lg:gap-1"
+              )}>
+                <div className={cn(
+                  "flex items-center gap-3",
+                  desktopTwoColumn && sidebarCollapsed && "lg:flex-col lg:gap-1"
+                )}>
                   {selectionMode ? (
                     <button type="button"
                       onClick={clearSelectionMode}
@@ -1551,13 +1605,28 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                       <ArrowLeft className="w-5 h-5 text-foreground" />
                     </button>
                   )}
-                  <div>
+                  {/* Desktop-only collapse toggle. Visible only when the
+                      conversation list is sitting next to an active chat,
+                      i.e. when there's something to make room for. */}
+                  {desktopTwoColumn && (
+                    <button type="button"
+                      onClick={() => setSidebarCollapsed((v) => !v)}
+                      className="hidden lg:flex w-9 h-9 items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
+                      aria-label={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                      title={sidebarCollapsed ? "Expand sidebar" : "Collapse sidebar"}
+                    >
+                      {sidebarCollapsed
+                        ? <PanelLeftOpen className="w-5 h-5 text-muted-foreground" />
+                        : <PanelLeftClose className="w-5 h-5 text-muted-foreground" />}
+                    </button>
+                  )}
+                  <div className={cn(desktopTwoColumn && sidebarCollapsed && "lg:hidden")}>
                     <h1 className="text-xl font-bold text-foreground">
                       {selectionMode ? `${selectedChatIds.size} selected` : "Chat"}
                     </h1>
                   </div>
                 </div>
-                <div className="flex items-center gap-1">
+                <div className={cn("flex items-center gap-1", collapsedRail && "lg:hidden")}>
                   {active === "personal" && !selectionMode && !search && (
                     <button type="button"
                       onClick={() => setShowAddContact(true)}
@@ -1652,12 +1721,13 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                 animate={{ height: storiesCollapsed ? 0 : "auto", opacity: storiesCollapsed ? 0 : 1 }}
                 transition={{ duration: 0.22, ease: "easeOut" }}
                 style={{ overflow: "hidden" }}
+                className={cn(collapsedRail && "lg:hidden")}
               >
                 <Suspense fallback={null}><ChatStories /></Suspense>
               </motion.div>
             )}
 
-            <div className={cn("px-5 pb-3", embedded && "px-3 pb-2")}>
+            <div className={cn("px-5 pb-3", embedded && "px-3 pb-2", collapsedRail && "lg:hidden")}>
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                 <input
@@ -1755,7 +1825,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
               </div>
             )}
 
-            <div className={cn("flex px-5 gap-2 pb-3 overflow-x-auto scrollbar-hide", embedded && "px-3 gap-1.5 pb-2")}>
+            <div className={cn("flex px-5 gap-2 pb-3 overflow-x-auto scrollbar-hide", embedded && "px-3 gap-1.5 pb-2", collapsedRail && "lg:hidden")}>
               <button type="button"
                 onClick={() => navigate('/chat/folders')}
                 className={cn(
@@ -1799,7 +1869,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
 
           {/* Start a group call entry — shown only on the Groups folder */}
           {folder === "groups" && active === "personal" && !zivoOFMode && !selectionMode && (
-            <div className={cn("px-5 pt-3", embedded && "px-3 pt-2")}>
+            <div className={cn("px-5 pt-3", embedded && "px-3 pt-2", collapsedRail && "lg:hidden")}>
               <div className="p-3 rounded-2xl bg-primary/8 border border-primary/15 flex items-center gap-3">
                 <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center flex-shrink-0">
                   <Video className="w-5 h-5 text-primary" />
@@ -1978,19 +2048,28 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
 
                     {/* Channels strip — subscribed channels with quick access */}
                     {!search && active === "personal" && (folder === "all" || folder === "personal") && !zivoOFMode && (
-                      <MyChannelsStrip />
+                      <div className={cn(collapsedRail && "lg:hidden")}>
+                        <MyChannelsStrip />
+                      </div>
                     )}
 
                     {/* Saved Messages — Telegram-style self chat */}
                     {!search && active === "personal" && user && !zivoOFMode && (
                       <button type="button"
                         onClick={() => setOpenPersonalChat({ id: user.id, name: "Saved Messages", avatar: null, isVerified: false })}
-                        className="w-full flex items-center gap-3 px-4 py-3 active:bg-muted/50 transition-colors"
+                        className={cn(
+                          "w-full flex items-center gap-3 px-4 py-3 active:bg-muted/50 transition-colors",
+                          collapsedRail && "lg:px-2 lg:justify-center lg:gap-0"
+                        )}
+                        title="Saved Messages"
                       >
-                        <div className="w-[52px] h-[52px] rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+                        <div className={cn(
+                          "rounded-full bg-emerald-500 flex items-center justify-center flex-shrink-0 shadow-sm w-[52px] h-[52px]",
+                          collapsedRail && "lg:w-11 lg:h-11"
+                        )}>
                           <Bookmark className="w-5 h-5 text-white" />
                         </div>
-                        <div className="flex-1 min-w-0 text-left">
+                        <div className={cn("flex-1 min-w-0 text-left", collapsedRail && "lg:hidden")}>
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-[15px] font-semibold text-foreground truncate">Saved Messages</span>
                             {savedMessagesPreview?.created_at && (
@@ -2008,7 +2087,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
 
                     {/* Pinned section header */}
                     {!search && displayList.some((c: any) => isPinned(c.id)) && (
-                      <div className="flex items-center gap-1.5 px-2 pt-1 pb-0.5">
+                      <div className={cn("flex items-center gap-1.5 px-2 pt-1 pb-0.5", collapsedRail && "lg:hidden")}>
                         <Pin className="w-3 h-3 text-muted-foreground" />
                         <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Pinned</span>
                       </div>
@@ -2028,7 +2107,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                       return (
                         <div key={chat.id}>
                           {showChatsHeader && (
-                            <div className="flex items-center gap-1.5 px-2 pt-2 pb-0.5">
+                            <div className={cn("flex items-center gap-1.5 px-2 pt-2 pb-0.5", collapsedRail && "lg:hidden")}>
                               <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">All chats</span>
                             </div>
                           )}
@@ -2077,8 +2156,10 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                   "w-full flex items-center gap-3 text-left transition-all",
                                   embedded ? "px-3 py-2.5" : "px-4 py-3",
                                   "active:bg-muted/60 active:scale-[0.99]",
-                                  chat.unread > 0 && !muted && "bg-primary/[0.02]"
+                                  chat.unread > 0 && !muted && "bg-primary/[0.02]",
+                                  collapsedRail && "lg:px-2 lg:py-1.5 lg:justify-center lg:gap-0"
                                 )}
+                                title={chat.name}
                                 onClick={() => {
                                   if (selectionMode && active === "personal") {
                                     toggleSelectedChat(chat.id);
@@ -2116,6 +2197,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                   <div className={cn(
                                     "flex items-center justify-center overflow-hidden rounded-full",
                                     embedded ? "h-[44px] w-[44px]" : "w-[52px] h-[52px]",
+                                    collapsedRail && "lg:w-11 lg:h-11",
                                     (chat as any).isGroup ? "bg-primary/10" : "bg-muted"
                                   )}>
                                     {chat.avatar ? (
@@ -2137,9 +2219,18 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                                   {liveOnline && (
                                     <span className="absolute -bottom-0.5 -right-0.5 h-3.5 w-3.5 rounded-full bg-emerald-500 border-[2.5px] border-background" />
                                   )}
+                                  {/* Collapsed-rail unread dot — replaces the
+                                      full unread badge that lives in the text
+                                      section. Only renders on lg+ when the
+                                      sidebar is collapsed. */}
+                                  {collapsedRail && chat.unread > 0 && !muted && (
+                                    <span className="hidden lg:flex absolute -top-0.5 -right-0.5 min-w-[18px] h-[18px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold items-center justify-center border-2 border-background">
+                                      {chat.unread > 99 ? "99+" : chat.unread}
+                                    </span>
+                                  )}
                                 </div>
 
-                                <div className="flex-1 min-w-0">
+                                <div className={cn("flex-1 min-w-0", collapsedRail && "lg:hidden")}>
                                   <div className="flex items-center justify-between mb-1">
                                     <span className={cn(
                                       embedded ? "text-sm" : "text-[15px]",
@@ -2374,7 +2465,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
 
                     {/* People you may know — Suggested Contacts */}
                     {!search && active === "personal" && !selectionMode && !zivoOFMode && (
-                      <div className="pt-2">
+                      <div className={cn("pt-2", collapsedRail && "lg:hidden")}>
                         <SuggestedContactsRow />
                       </div>
                     )}
@@ -2777,97 +2868,179 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
         />
       </Suspense>
 
-      {/* Group call picker — choose a group + call type */}
+      {/* Group call picker — Google Meet-style hub. Same flow underneath
+          (pick a group + call type) but the visual treatment leads with a
+          big "New meeting" CTA + disabled join-code input, then lists the
+          user's groups as quick-start cards. */}
       <AnimatePresence>
         {showGroupCallPicker && (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[9998] flex items-end sm:items-center justify-center px-4"
+            className="fixed inset-0 z-[9998] flex items-end sm:items-center justify-center px-4 py-4"
             onClick={() => setShowGroupCallPicker(false)}
           >
-            <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
+            <div className="absolute inset-0 bg-black/55 backdrop-blur-md" />
             <motion.div
               initial={{ y: 24, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 24, opacity: 0 }}
-              className="relative bg-background rounded-2xl w-full max-w-md shadow-2xl overflow-hidden"
+              className="relative bg-background rounded-3xl w-full max-w-2xl shadow-2xl overflow-hidden border border-border/30"
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="px-5 pt-5 pb-3 flex items-center gap-3 border-b border-border/30">
-                <div className="w-11 h-11 rounded-full bg-primary/10 flex items-center justify-center">
-                  <Video className="w-5 h-5 text-primary" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-base font-bold text-foreground">Start a group call</h3>
-                  <p className="text-xs text-muted-foreground">Pick a group and call type</p>
+              {/* Header — minimal, with close affordance */}
+              <div className="flex items-center justify-between px-6 pt-5">
+                <div className="flex items-center gap-2.5">
+                  <span className="inline-flex w-9 h-9 rounded-xl bg-gradient-to-br from-blue-500/15 to-emerald-500/15 items-center justify-center">
+                    <Video className="w-4.5 h-4.5 text-blue-600" />
+                  </span>
+                  <span className="text-[15px] font-semibold text-foreground tracking-tight">ZIVO Meet</span>
                 </div>
                 <button
                   type="button"
                   onClick={() => setShowGroupCallPicker(false)}
-                  className="w-9 h-9 rounded-full bg-muted flex items-center justify-center active:scale-90 transition-transform"
+                  className="w-9 h-9 rounded-full hover:bg-muted/70 flex items-center justify-center active:scale-90 transition-all"
                   aria-label="Close"
                   title="Close"
                 >
                   <X className="w-4 h-4 text-muted-foreground" />
                 </button>
               </div>
-              <div className="max-h-[60vh] overflow-y-auto">
+
+              {/* Hero text */}
+              <div className="px-6 pt-6 text-center">
+                <h2 className="text-[26px] sm:text-[30px] font-bold tracking-tight text-foreground leading-tight">
+                  Secure video calls<br className="hidden sm:block" /> for your groups
+                </h2>
+                <p className="mt-2.5 text-sm text-muted-foreground max-w-md mx-auto">
+                  Start an instant audio or video call with any of your groups — invite link share coming soon.
+                </p>
+              </div>
+
+              {/* CTA row: New meeting (dropdown of groups) + disabled join field */}
+              <div className="px-6 pt-6 pb-1 flex flex-col sm:flex-row items-stretch gap-2.5">
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <button
+                      type="button"
+                      disabled={(groupChats as any[]).length === 0}
+                      className="inline-flex items-center justify-center gap-2 h-12 px-5 rounded-full bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-lg shadow-blue-600/25 active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-not-allowed sm:shrink-0"
+                    >
+                      <Video className="w-4 h-4" />
+                      New meeting
+                    </button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="start" className="w-64">
+                    {(groupChats as any[]).length === 0 ? (
+                      <DropdownMenuItem disabled>No groups yet</DropdownMenuItem>
+                    ) : (
+                      <>
+                        {(groupChats as any[]).slice(0, 8).map((g) => (
+                          <DropdownMenuItem
+                            key={g.id}
+                            onClick={() => {
+                              setShowGroupCallPicker(false);
+                              setOpenGroupChat({ id: g.id, name: g.name, avatar: g.avatar, autoStartCall: "video" });
+                            }}
+                            className="gap-2.5"
+                          >
+                            <span className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center shrink-0 overflow-hidden">
+                              {g.avatar
+                                ? <img src={g.avatar} alt="" className="w-full h-full object-cover" />
+                                : <Users className="w-3.5 h-3.5 text-primary" />}
+                            </span>
+                            <span className="flex-1 truncate text-[13px]">{g.name}</span>
+                            <Video className="w-3.5 h-3.5 text-blue-500" />
+                          </DropdownMenuItem>
+                        ))}
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => { setShowGroupCallPicker(false); setShowCreateGroup(true); }} className="gap-2.5">
+                          <span className="w-7 h-7 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
+                            <Plus className="w-3.5 h-3.5 text-emerald-500" />
+                          </span>
+                          <span className="flex-1 text-[13px] font-medium">New group</span>
+                        </DropdownMenuItem>
+                      </>
+                    )}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                <div className="flex-1 flex items-center gap-2 px-3 h-12 rounded-full border border-border/60 bg-muted/30">
+                  <Keyboard className="w-4 h-4 text-muted-foreground shrink-0" />
+                  <input
+                    type="text"
+                    disabled
+                    placeholder="Enter a code or link"
+                    className="flex-1 bg-transparent text-sm text-foreground placeholder:text-muted-foreground/60 outline-none disabled:cursor-not-allowed"
+                  />
+                  <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-muted text-muted-foreground/80">Soon</span>
+                </div>
+              </div>
+              <p className="px-6 pb-5 pt-2 text-[11px] text-muted-foreground/70">
+                Learn more about <span className="text-blue-600 underline-offset-2 hover:underline cursor-default">ZIVO Meet</span>
+              </p>
+
+              {/* Quick-start grid: user's groups as cards */}
+              <div className="border-t border-border/30 px-6 pt-4 pb-5 max-h-[40vh] overflow-y-auto">
                 {(groupChats as any[]).length === 0 ? (
-                  <div className="px-6 py-10 text-center">
-                    <div className="text-4xl mb-2">👥</div>
+                  <div className="py-8 text-center">
+                    <div className="w-14 h-14 rounded-2xl bg-muted/50 mx-auto mb-3 flex items-center justify-center">
+                      <Users className="w-6 h-6 text-muted-foreground" />
+                    </div>
                     <p className="text-sm font-semibold text-foreground mb-1">No groups yet</p>
-                    <p className="text-xs text-muted-foreground mb-4">Create a group first to start a group call</p>
+                    <p className="text-xs text-muted-foreground mb-4">Create a group to start your first meeting</p>
                     <button
                       type="button"
                       onClick={() => { setShowGroupCallPicker(false); setShowCreateGroup(true); }}
-                      className="px-5 h-10 rounded-full bg-primary text-primary-foreground text-sm font-bold active:scale-95 transition-transform"
+                      className="inline-flex items-center gap-1.5 h-10 px-5 rounded-full bg-blue-600 text-white text-sm font-semibold active:scale-95 transition-transform"
                     >
-                      New group
+                      <Plus className="w-4 h-4" /> New group
                     </button>
                   </div>
                 ) : (
-                  <ul className="divide-y divide-border/20">
-                    {(groupChats as any[]).map((g) => (
-                      <li key={g.id} className="flex items-center gap-3 px-4 py-3">
-                        <div className="w-10 h-10 rounded-full bg-primary/10 overflow-hidden flex-shrink-0 flex items-center justify-center">
-                          {g.avatar ? (
-                            <img src={g.avatar} alt={g.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
-                          ) : (
-                            <Users className="w-5 h-5 text-primary" />
-                          )}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-sm font-semibold text-foreground truncate">{g.name}</p>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowGroupCallPicker(false);
-                            setOpenGroupChat({ id: g.id, name: g.name, avatar: g.avatar, autoStartCall: "audio" });
-                          }}
-                          className="w-9 h-9 rounded-full bg-emerald-500/10 flex items-center justify-center active:scale-90 transition-transform"
-                          aria-label={`Voice call ${g.name}`}
-                          title={`Voice call ${g.name}`}
-                        >
-                          <Phone className="w-4 h-4 text-emerald-500" />
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setShowGroupCallPicker(false);
-                            setOpenGroupChat({ id: g.id, name: g.name, avatar: g.avatar, autoStartCall: "video" });
-                          }}
-                          className="w-9 h-9 rounded-full bg-blue-500/10 flex items-center justify-center active:scale-90 transition-transform"
-                          aria-label={`Video call ${g.name}`}
-                          title={`Video call ${g.name}`}
-                        >
-                          <Video className="w-4 h-4 text-blue-500" />
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
+                  <>
+                    <h3 className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider mb-2.5">Your groups</h3>
+                    <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {(groupChats as any[]).map((g) => (
+                        <li key={g.id} className="flex items-center gap-3 px-3 py-2.5 rounded-2xl border border-border/40 bg-card/60 hover:bg-card hover:border-border/70 transition-colors">
+                          <div className="w-10 h-10 rounded-full bg-primary/10 overflow-hidden flex-shrink-0 flex items-center justify-center">
+                            {g.avatar ? (
+                              <img src={g.avatar} alt={g.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
+                            ) : (
+                              <Users className="w-5 h-5 text-primary" />
+                            )}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[13px] font-semibold text-foreground truncate">{g.name}</p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowGroupCallPicker(false);
+                              setOpenGroupChat({ id: g.id, name: g.name, avatar: g.avatar, autoStartCall: "audio" });
+                            }}
+                            className="w-9 h-9 rounded-full bg-emerald-500/10 hover:bg-emerald-500/20 flex items-center justify-center active:scale-90 transition-all"
+                            aria-label={`Voice call ${g.name}`}
+                            title={`Voice call ${g.name}`}
+                          >
+                            <Phone className="w-4 h-4 text-emerald-600" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setShowGroupCallPicker(false);
+                              setOpenGroupChat({ id: g.id, name: g.name, avatar: g.avatar, autoStartCall: "video" });
+                            }}
+                            className="w-9 h-9 rounded-full bg-blue-500/10 hover:bg-blue-500/20 flex items-center justify-center active:scale-90 transition-all"
+                            aria-label={`Video call ${g.name}`}
+                            title={`Video call ${g.name}`}
+                          >
+                            <Video className="w-4 h-4 text-blue-600" />
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  </>
                 )}
               </div>
             </motion.div>
@@ -2884,14 +3057,24 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
   }
 
   return (
-    <PullToRefresh onRefresh={handlePullRefresh} enabled={!hasOverlayChatOpen} className="zivo-shell-mobile bg-background overscroll-none">
-      <SEOHead
-        title="Messages – ZIVO | Chat with Friends & Businesses"
-        description="Send messages, share photos, video call, and chat with friends and businesses on ZIVO."
-        canonical="/chat"
-        noIndex
-      />
-      {shell}
-    </PullToRefresh>
+    // The CSS var --chat-sidebar-w is the single source of truth for the
+    // desktop two-column layout: the conversation-list shell reads it as its
+    // width, and the GroupChat / PersonalChat overlays read it as their
+    // left offset. PullToRefresh doesn't forward style, so we put it here.
+    <div style={desktopTwoColumn ? ({ ["--chat-sidebar-w" as never]: `${desktopSidebarWidth}px` } as React.CSSProperties) : undefined}>
+      <PullToRefresh
+        onRefresh={handlePullRefresh}
+        enabled={!hasOverlayChatOpen}
+        className="zivo-shell-mobile bg-background overscroll-none"
+      >
+        <SEOHead
+          title="Messages – ZIVO | Chat with Friends & Businesses"
+          description="Send messages, share photos, video call, and chat with friends and businesses on ZIVO."
+          canonical="/chat"
+          noIndex
+        />
+        {shell}
+      </PullToRefresh>
+    </div>
   );
 }
