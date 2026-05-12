@@ -137,7 +137,7 @@ export default function RideTravelIntegration() {
             </div>
           ))}
           <button type="button"
-            onClick={() => navigate("/rides", { state: { planTrip: true } })}
+            onClick={() => navigate("/rides/hub", { state: { planTrip: true } })}
             className="w-full py-2.5 bg-primary/10 rounded-xl text-sm font-bold text-primary flex items-center justify-center gap-2"
           >
             <Plus className="w-4 h-4" /> Plan New Trip Transfers

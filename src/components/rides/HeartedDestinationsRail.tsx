@@ -2,7 +2,7 @@
  * HeartedDestinationsRail — one-tap drop-off chips made of the user's
  * favorite restaurants and hotels in the ZIVO network.
  *
- * Drops a `?dropoff=<name>` into /rides so the existing booking funnel
+ * Drops a `?destination=<name>` into /rides/hub so the current booking funnel
  * picks the destination up. Hidden when the user has no favorites yet —
  * shows a small "Browse the network" hint instead.
  */
@@ -140,7 +140,7 @@ export default function HeartedDestinationsRail() {
             initial={{ opacity: 0, x: 6 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.03 }}
-            onClick={() => navigate(`/rides?dropoff=${encodeURIComponent(p.name)}`)}
+            onClick={() => navigate(`/rides/hub?destination=${encodeURIComponent(p.name)}`)}
             className="shrink-0 w-[180px] rounded-2xl overflow-hidden border border-border/40 bg-card text-left active:scale-[0.99] transition-transform touch-manipulation"
           >
             <div className="relative h-[80px] w-full overflow-hidden">

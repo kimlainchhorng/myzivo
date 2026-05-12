@@ -66,6 +66,9 @@ interface StoreProduct {
 // could add 1–2s of blank screen). The promise itself is cached so concurrent
 // map components share the same in-flight request.
 let _apiKeyPromise: Promise<string> | null = null;
+const ENABLE_STORE_LIVE_PULSE = import.meta.env.VITE_ENABLE_STORE_LIVE_PULSE === "true";
+const ENABLE_STORE_SOCIAL_PROOF = import.meta.env.VITE_ENABLE_STORE_SOCIAL_PROOF === "true";
+const ENABLE_STORE_DEALS = import.meta.env.VITE_ENABLE_STORE_DEALS === "true";
 
 async function getApiKey(): Promise<string> {
   if (_apiKeyPromise) return _apiKeyPromise;
@@ -78,6 +81,8 @@ async function getApiKey(): Promise<string> {
     _apiKeyPromise = Promise.resolve(envKey);
     return _apiKeyPromise;
   }
+  const { data: sessionData } = await supabase.auth.getSession();
+  if (!sessionData.session) return "";
   _apiKeyPromise = (async () => {
     try {
       const { data, error } = await supabase.functions.invoke("maps-api-key");
@@ -109,7 +114,7 @@ async function loadGoogleMaps(apiKey: string): Promise<boolean> {
     }
     return new Promise<boolean>((resolve) => {
       const script = document.createElement("script");
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=marker`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=marker&loading=async`;
       script.async = true;
       script.defer = true;
       script.onload = () => resolve(true);
@@ -590,6 +595,7 @@ export default function StoreMapPage() {
 
   /* Live pulse */
   useEffect(() => {
+    if (!ENABLE_STORE_LIVE_PULSE) return;
     let active = true;
     const loadPulse = async () => {
       const cutoff = new Date(Date.now() - 30 * 60 * 1000).toISOString();
@@ -611,6 +617,7 @@ export default function StoreMapPage() {
 
   /* Recent check-ins (last 2 hours) */
   useEffect(() => {
+    if (!ENABLE_STORE_SOCIAL_PROOF) return;
     let active = true;
     const loadCheckIns = async () => {
       const cutoff = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
@@ -632,6 +639,7 @@ export default function StoreMapPage() {
 
   /* Active deals */
   useEffect(() => {
+    if (!ENABLE_STORE_DEALS) return;
     let active = true;
     (async () => {
       const now = new Date().toISOString();
@@ -1174,9 +1182,17 @@ export default function StoreMapPage() {
     };
 
     return (
-      <motion.button
+      <motion.div
+        role="button"
+        tabIndex={0}
         whileTap={{ scale: 0.98 }}
         onClick={handleTap}
+        onKeyDown={(e) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            handleTap();
+          }
+        }}
         className={`w-full flex items-center gap-3 px-4 py-2.5 border-t border-border/10 text-left transition-colors ${
           isInTrip ? "bg-indigo-50/80" : "hover:bg-muted/30"
         }`}
@@ -1261,7 +1277,7 @@ export default function StoreMapPage() {
           whileTap={{ scale: 0.8 }}
           onClick={(e) => { e.stopPropagation(); handleToggleFavoriteSelected(store); }}
           aria-label={isFavorite(store.id) ? "Remove from favorites" : "Save to favorites"}
-          className="w-8 h-8 rounded-full flex items-center justify-center shrink-0 hover:bg-muted/50 transition-colors"
+          className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 hover:bg-muted/50 transition-colors touch-manipulation"
         >
           <Heart className={`w-4 h-4 transition-colors ${isFavorite(store.id) ? "fill-rose-500 text-rose-500" : "text-muted-foreground/30"}`} />
         </motion.button>
@@ -1279,7 +1295,7 @@ export default function StoreMapPage() {
             <p className="text-[12px] text-muted-foreground/40">—</p>
           )}
         </div>
-      </motion.button>
+      </motion.div>
     );
   };
 
@@ -1456,14 +1472,14 @@ export default function StoreMapPage() {
                 {activeFiltersCount > 0 && (
                   <motion.button whileTap={{ scale: 0.95 }}
                     onClick={clearAllFilters}
-                    className="px-4 py-2 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 border backdrop-blur-sm bg-secondary text-foreground border-border shadow-sm"
+                    className="min-h-[40px] px-4 py-2 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 border backdrop-blur-sm bg-secondary text-foreground border-border shadow-sm touch-manipulation"
                   >
                     <X className="w-3.5 h-3.5" /> Clear ({activeFiltersCount})
                   </motion.button>
                 )}
                 <motion.button whileTap={{ scale: 0.95 }}
                   onClick={() => { setActiveCategory("all"); setActiveGroup(""); setTrendingOnly(false); setSmartFilterActive(false); setSelectedStore(null); }}
-                  className={`px-4 py-2 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap border backdrop-blur-sm ${
+                  className={`min-h-[40px] px-4 py-2 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap border backdrop-blur-sm touch-manipulation ${
                     activeCategory === "all" && !activeGroup && !trendingOnly
                       ? "bg-primary text-primary-foreground border-primary shadow-md"
                       : "bg-card/90 text-muted-foreground border-border/30 shadow-sm"
@@ -1485,7 +1501,7 @@ export default function StoreMapPage() {
                         setSmartFilterActive(false);
                         setSelectedStore(null);
                       }}
-                      className={`px-4 py-2 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 border backdrop-blur-sm ${
+                      className={`min-h-[40px] px-4 py-2 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 border backdrop-blur-sm touch-manipulation ${
                         isActive ? "bg-foreground text-background border-foreground shadow-md" : "bg-card/90 text-muted-foreground border-border/30 shadow-sm"
                       }`}
                     >
@@ -1495,7 +1511,7 @@ export default function StoreMapPage() {
                 })}
                 <motion.button whileTap={{ scale: 0.95 }}
                   onClick={() => { setOpenNowOnly((v) => !v); setSelectedStore(null); }}
-                  className={`px-4 py-2 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 border backdrop-blur-sm ${
+                  className={`min-h-[40px] px-4 py-2 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 border backdrop-blur-sm touch-manipulation ${
                     openNowOnly ? "bg-emerald-600 text-white border-emerald-600 shadow-md" : "bg-card/90 text-muted-foreground border-border/30 shadow-sm"
                   }`}
                 >
@@ -1505,7 +1521,7 @@ export default function StoreMapPage() {
                 {(() => { const { label, emoji } = getBestForNow(); return (
                   <motion.button whileTap={{ scale: 0.95 }}
                     onClick={() => { setSmartFilterActive((v) => !v); setActiveCategory("all"); setTrendingOnly(false); setSelectedStore(null); }}
-                    className={`px-4 py-2 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 border backdrop-blur-sm ${
+                    className={`min-h-[40px] px-4 py-2 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 border backdrop-blur-sm touch-manipulation ${
                       smartFilterActive ? "bg-violet-600 text-white border-violet-600 shadow-md" : "bg-card/90 text-muted-foreground border-border/30 shadow-sm"
                     }`}
                   >
@@ -1515,7 +1531,7 @@ export default function StoreMapPage() {
                 {trendingCount > 0 && (
                   <motion.button whileTap={{ scale: 0.95 }}
                     onClick={() => { setTrendingOnly((v) => !v); setActiveCategory("all"); setSelectedStore(null); }}
-                    className={`px-4 py-2 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 border backdrop-blur-sm ${
+                    className={`min-h-[40px] px-4 py-2 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 border backdrop-blur-sm touch-manipulation ${
                       trendingOnly ? "bg-orange-500 text-white border-orange-500 shadow-md" : "bg-card/90 text-muted-foreground border-border/30 shadow-sm"
                     }`}
                   >
@@ -1538,7 +1554,7 @@ export default function StoreMapPage() {
                   return (
                     <motion.button whileTap={{ scale: 0.95 }} key={cat.value}
                       onClick={() => { setActiveCategory(isActive ? "all" : cat.value); setTrendingOnly(false); setSmartFilterActive(false); setSelectedStore(null); }}
-                      className={`px-4 py-2 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 border backdrop-blur-sm ${
+                      className={`min-h-[40px] px-4 py-2 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 border backdrop-blur-sm touch-manipulation ${
                         isActive ? "bg-primary text-primary-foreground border-primary shadow-md" : "bg-card/90 text-muted-foreground border-border/30 shadow-sm"
                       }`}
                     >
@@ -1728,7 +1744,7 @@ export default function StoreMapPage() {
               <span className="flex-1">Location unavailable — distances won't show</span>
               <button type="button"
                 onClick={() => { handleLocateMe(); }}
-                className="text-[11px] font-bold underline underline-offset-2 hover:no-underline"
+                className="min-h-[40px] min-w-[40px] px-1 text-[11px] font-bold underline underline-offset-2 hover:no-underline touch-manipulation"
               >
                 Retry
               </button>
@@ -1773,7 +1789,7 @@ export default function StoreMapPage() {
                   <button type="button"
                     key={String(opt.value)}
                     onClick={() => setRadiusKm(opt.value)}
-                    className={`px-3 py-1 rounded-full text-[11px] font-bold whitespace-nowrap border transition-all ${
+                    className={`min-h-[40px] px-3 py-2 rounded-full text-[11px] font-bold whitespace-nowrap border transition-all touch-manipulation ${
                       radiusKm === opt.value
                         ? "bg-indigo-600 text-white border-indigo-600"
                         : "bg-muted/50 text-muted-foreground border-border/30"
@@ -1787,7 +1803,7 @@ export default function StoreMapPage() {
               {/* Sheet header */}
               <button type="button"
                 onClick={() => setSheetExpanded((v) => !v)}
-                className="w-full flex items-center gap-2 px-4 py-2 border-t border-border/10"
+                className="w-full min-h-[40px] flex items-center gap-2 px-4 py-2 border-t border-border/10 touch-manipulation"
               >
                 <p className="text-[12px] font-bold text-foreground flex-1 text-left">
                   {(() => {

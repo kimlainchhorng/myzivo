@@ -445,7 +445,7 @@ export default function BookingReturnPage() {
               <CardContent className="p-4 text-center space-y-2">
                 <p className="font-semibold text-sm">Need a ride or food delivery?</p>
                 <div className="flex justify-center gap-3">
-                  <Link to="/rides" className="inline-flex items-center gap-1.5 text-primary hover:underline text-sm font-medium">
+                  <Link to="/rides/hub" className="inline-flex items-center gap-1.5 text-primary hover:underline text-sm font-medium">
                     Book a Ride
                   </Link>
                   <span className="text-muted-foreground">·</span>

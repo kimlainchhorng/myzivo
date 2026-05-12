@@ -17,7 +17,7 @@ const services = [
     id: "rides", 
     label: "Rides", 
     icon: Car, 
-    href: "/rides",
+    href: "/rides/hub",
     color: "from-emerald-500 to-green-500",
     bgColor: "bg-emerald-500/10",
     textColor: "text-emerald-500",

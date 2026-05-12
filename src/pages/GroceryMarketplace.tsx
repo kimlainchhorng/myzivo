@@ -326,7 +326,7 @@ export default function GroceryMarketplace() {
           <motion.button
             whileTap={{ scale: 0.9 }}
             onClick={() => navigate(-1)}
-            className="p-2 rounded-2xl hover:bg-muted/60 transition-colors duration-200"
+            className="min-h-[40px] min-w-[40px] inline-flex items-center justify-center rounded-2xl hover:bg-muted/60 transition-colors duration-200 touch-manipulation"
             aria-label="Go back"
           >
             <ArrowLeft className="h-5 w-5" />

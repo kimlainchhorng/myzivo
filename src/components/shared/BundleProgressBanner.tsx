@@ -29,7 +29,7 @@ interface Props {
 const STEPS: { key: Step; label: string; icon: LucideIcon; to: string }[] = [
   { key: "flight", label: "Flight", icon: Plane, to: "/flights" },
   { key: "hotel", label: "Hotel", icon: BedDouble, to: "/hotels" },
-  { key: "ride", label: "Ride", icon: Car, to: "/rides" },
+  { key: "ride", label: "Ride", icon: Car, to: "/rides/hub" },
 ];
 
 export default function BundleProgressBanner({ step, completed }: Props) {

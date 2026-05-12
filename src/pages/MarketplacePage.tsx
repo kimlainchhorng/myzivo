@@ -764,7 +764,7 @@ export default function MarketplacePage() {
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-30 bg-gradient-to-b from-background via-background/95 to-background/85 backdrop-blur-xl border-b border-border/30 shadow-sm">
         <div className="flex items-center gap-3 px-4 py-3">
-          <button type="button" onClick={() => navigate(-1)} className="p-2 -ml-2 rounded-full hover:bg-muted/50">
+          <button type="button" aria-label="Go back" onClick={() => navigate(-1)} className="min-h-[40px] min-w-[40px] -ml-2 inline-flex items-center justify-center rounded-full hover:bg-muted/50 touch-manipulation">
             <ArrowLeft className="h-5 w-5" />
           </button>
           <div className="flex-1 min-w-0">
@@ -776,14 +776,14 @@ export default function MarketplacePage() {
               </p>
             )}
           </div>
-          <button type="button" onClick={() => refetch()} disabled={isFetching} className="p-2 rounded-full hover:bg-muted/50 disabled:opacity-40" aria-label="Refresh">
+          <button type="button" onClick={() => refetch()} disabled={isFetching} className="min-h-[40px] min-w-[40px] inline-flex items-center justify-center rounded-full hover:bg-muted/50 disabled:opacity-40 touch-manipulation" aria-label="Refresh">
             <RotateCcw className={`h-4 w-4 ${isFetching ? "animate-spin" : ""}`} />
           </button>
-          <button type="button" onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")} className="p-2 rounded-full hover:bg-muted/50">
+          <button type="button" aria-label="Toggle layout" onClick={() => setViewMode(viewMode === "grid" ? "list" : "grid")} className="min-h-[40px] min-w-[40px] inline-flex items-center justify-center rounded-full hover:bg-muted/50 touch-manipulation">
             {viewMode === "grid" ? <LayoutList className="h-4 w-4" /> : <Grid3X3 className="h-4 w-4" />}
           </button>
           {user && (
-            <button type="button" onClick={() => setShowCreate(true)} className="p-2 rounded-full bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-md hover:shadow-lg active:scale-95 transition-all">
+            <button type="button" aria-label="Create listing" onClick={() => setShowCreate(true)} className="min-h-[40px] min-w-[40px] inline-flex items-center justify-center rounded-full bg-gradient-to-br from-primary to-primary/80 text-primary-foreground shadow-md hover:shadow-lg active:scale-95 transition-all touch-manipulation">
               <Plus className="h-4 w-4" />
             </button>
           )}
@@ -1011,7 +1011,7 @@ export default function MarketplacePage() {
             <button type="button"
               key={c.value}
               onClick={() => setConditionFilter(c.value)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-all ${
+              className={`min-h-[40px] rounded-full px-4 py-2 text-xs font-medium whitespace-nowrap transition-all touch-manipulation ${
                 conditionFilter === c.value
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted/50 text-muted-foreground hover:bg-muted"

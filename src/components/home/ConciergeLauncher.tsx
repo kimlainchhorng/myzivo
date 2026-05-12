@@ -93,14 +93,14 @@ export default function ConciergeLauncher() {
               key={s}
               whileTap={{ scale: 0.96 }}
               onClick={() => open(s)}
-              className="rounded-full border border-border px-3 py-1.5 text-[11px] font-semibold text-foreground active:bg-muted transition-colors"
+              className="min-h-[40px] rounded-full border border-border px-3 py-2 text-[11px] font-semibold text-foreground active:bg-muted transition-colors touch-manipulation"
             >
               {s}
             </motion.button>
           ))}
           <button type="button"
             onClick={() => open()}
-            className="ml-auto inline-flex items-center gap-1 rounded-full bg-primary text-primary-foreground px-3 py-1.5 text-[11px] font-bold active:opacity-80 transition-opacity"
+            className="ml-auto inline-flex min-h-[40px] items-center gap-1 rounded-full bg-primary text-primary-foreground px-3 py-2 text-[11px] font-bold active:opacity-80 transition-opacity touch-manipulation"
           >
             Start <ArrowRight className="w-3 h-3" />
           </button>

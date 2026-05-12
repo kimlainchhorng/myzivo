@@ -91,7 +91,7 @@ export default function RideRouteIntelligence() {
               key={route.id}
               whileTap={{ scale: 0.98 }}
               className="bg-card rounded-xl p-4 border border-border/30 space-y-2"
-              onClick={() => navigate("/rides", { state: { initialDestinationAddress: route.to, scheduledTime: route.bestTime } })}
+              onClick={() => navigate("/rides/hub", { state: { initialDestinationAddress: route.to, scheduledTime: route.bestTime } })}
             >
               <div className="flex items-center justify-between">
                 <p className="text-sm font-bold text-foreground">{route.name}</p>

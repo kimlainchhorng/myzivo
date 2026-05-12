@@ -146,9 +146,9 @@ export default function MultiStopRideBuilder() {
     startQueue(populated[0], populated.slice(1));
     const sp = new URLSearchParams();
     sp.set("pickup", pickup.trim());
-    sp.set("dropoff", populated[0]);
+    sp.set("destination", populated[0]);
     if (populated.length > 1) sp.set("multi", populated.slice(1).join(SEPARATOR));
-    navigate(`/rides?${sp.toString()}`);
+    navigate(`/rides/hub?${sp.toString()}`);
   };
 
   return (

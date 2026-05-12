@@ -62,7 +62,7 @@ export default function DrivePage() {
                   <ChevronRight className="w-5 h-5 ml-1" />
                 </Button>
                 <Button size="lg" variant="outline" className="h-14 px-8 text-base font-bold rounded-2xl" asChild>
-                  <Link to="/rides">Book a Ride Instead</Link>
+                  <Link to="/rides/hub">Book a Ride Instead</Link>
                 </Button>
               </div>
             </motion.div>

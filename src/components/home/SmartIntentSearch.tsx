@@ -3,7 +3,7 @@
  * and routes to the right vertical:
  *   "pizza near me", "burger" → /eats?q=
  *   "JFK to LAX", "flights to Tokyo" → /flights?from=&to= (or ?to=)
- *   "ride to airport", "uber home" → /rides?dropoff=
+ *   "ride to airport", "uber home" → /rides/hub?destination=
  *   "hotel in Bali", "stay in Paris" → /hotels?city=
  *   anything else with a place name → /flights?to= (best-effort)
  *
@@ -242,7 +242,7 @@ function buildMatch(intent: Intent, raw: string): Match {
       return {
         intent,
         reason: `Get a ride${dropoff ? ` to ${dropoff}` : ""}`,
-        to: `/rides/hub?dropoff=${encodeURIComponent(dropoff)}`,
+        to: `/rides/hub?destination=${encodeURIComponent(dropoff)}`,
       };
     }
     case "flights": {

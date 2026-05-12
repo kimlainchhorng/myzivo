@@ -156,7 +156,7 @@ export default function RideAIAssistant() {
                 <span className="text-xs">{s.text}</span>
               </div>
               <Button size="sm" variant="ghost" className="h-6 text-[10px] text-primary" onClick={() => {
-                if (s.type === "timing") navigate("/rides");
+                if (s.type === "timing") navigate("/rides/hub");
                 else if (s.type === "price") {
                   try { localStorage.setItem("zivo_surge_alert", JSON.stringify({ set: true, ts: Date.now() })); } catch {}
                   toast.success("Surge alert set — we'll notify you!");
@@ -180,7 +180,7 @@ export default function RideAIAssistant() {
           {predictions.map((p) => (
             <button type="button"
               key={p.id}
-              onClick={() => navigate("/rides", { state: { initialDestinationAddress: p.place.split("—")[0].trim() } })}
+              onClick={() => navigate("/rides/hub", { state: { initialDestinationAddress: p.place.split("—")[0].trim() } })}
               className="w-full flex items-center justify-between p-2 rounded-lg hover:bg-muted/30 transition-colors text-left"
             >
               <div className="flex items-center gap-3">

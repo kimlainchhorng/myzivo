@@ -72,7 +72,7 @@ function ScrollReveal3D({ children, className, delay = 0 }: { children: React.Re
   const scale = useTransform(scrollYProgress, [0, 0.25, 0.75, 1], [0.95, 1, 1, 0.97]);
   const opacity = useTransform(scrollYProgress, [0, 0.15, 0.85, 1], [0, 1, 1, 0.6]);
   return (
-    <motion.div ref={ref} style={{ y, rotateX, scale, opacity, perspective: 1000, transformStyle: "preserve-3d" }} className={className}>
+    <motion.div ref={ref} style={{ y, rotateX, scale, opacity, perspective: 1000, transformStyle: "preserve-3d" }} className={cn("relative", className)}>
       {children}
     </motion.div>
   );

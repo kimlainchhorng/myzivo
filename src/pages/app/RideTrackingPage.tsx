@@ -150,7 +150,7 @@ export default function RideTrackingPage() {
     }
     const sp = new URLSearchParams();
     if (lastDrop) sp.set("pickup", lastDrop);
-    sp.set("dropoff", updated.current);
+    sp.set("destination", updated.current);
     if (updated.upcoming.length > 0) sp.set("multi", updated.upcoming.join("|"));
     navigate(`/rides/hub?${sp.toString()}`);
   };

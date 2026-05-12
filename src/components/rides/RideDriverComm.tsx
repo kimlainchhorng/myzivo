@@ -84,7 +84,7 @@ export default function RideDriverComm() {
               </div>
             </div>
           </div>
-          <Button size="sm" variant="outline" className="gap-1.5" onClick={() => navigate("/rides")}>
+          <Button size="sm" variant="outline" className="gap-1.5" onClick={() => navigate("/rides/hub")}>
             <Phone className="w-3.5 h-3.5" /> Call
           </Button>
         </CardContent>

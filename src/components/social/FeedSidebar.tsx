@@ -38,7 +38,7 @@ const ChatHubPage = lazy(() => import("@/pages/ChatHubPage"));
 const NAV_ITEMS = [
   { label: "Live", icon: Radio, path: "/live", color: "text-red-500" },
   { label: "Reels", icon: Film, path: "/reels", color: "text-foreground" },
-  { label: "Rides", icon: Car, path: "/rides", color: "text-foreground" },
+  { label: "Rides", icon: Car, path: "/rides/hub", color: "text-foreground" },
   { label: "Eats", icon: UtensilsCrossed, path: "/eats", color: "text-foreground" },
   { label: "Map", icon: MapPin, path: "/map", color: "text-foreground" },
 ];

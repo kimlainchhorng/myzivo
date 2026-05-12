@@ -310,9 +310,17 @@ export default function TravelExtras() {
                     return (
                       <Tooltip key={partner.id}>
                         <TooltipTrigger asChild>
-                          <button type="button"
+                          <div
+                            role="button"
+                            tabIndex={0}
                             onClick={(e) => { e.preventDefault(); import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(outboundUrl)); }}
-                            className="block w-full text-left"
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter" || e.key === " ") {
+                                e.preventDefault();
+                                import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(outboundUrl));
+                              }
+                            }}
+                            className="block w-full text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/50 rounded-[var(--radius)]"
                           >
                             <Card
                               className={cn(
@@ -362,7 +370,7 @@ export default function TravelExtras() {
                                 </div>
                               </CardContent>
                             </Card>
-                          </button>
+                          </div>
                         </TooltipTrigger>
                         <TooltipContent>
                           <p>You will be redirected to a partner site.</p>

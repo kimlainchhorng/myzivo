@@ -18,12 +18,16 @@ export function usePostViewTracking(
   postId: string,
   source: "store" | "user",
   isActive: boolean,
+  viewerId?: string | null,
 ) {
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
-    // Only track when the post is the active card
-    if (!isActive) {
+    // Store post view-count RPC is granted to authenticated users in the
+    // current project; user-post views can still count anonymous traffic.
+    const canTrack = source === "user" || Boolean(viewerId);
+
+    if (!isActive || !canTrack) {
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = null;
       return;
@@ -34,13 +38,9 @@ export function usePostViewTracking(
 
     timerRef.current = setTimeout(() => {
       sessionViewed.add(key);
-      // Use the right RPC per source. Both increment_*_view_count RPCs are
-      // SECURITY DEFINER so anonymous viewers can be counted too.
-      const rpcName = source === "user" ? "increment_user_post_views" : "increment_store_post_views";
-      supabase.rpc(rpcName as any, { _post_id: postId }).then(({ error }) => {
+      const rpcName = source === "user" ? "increment_user_post_view_count" : "increment_store_post_view_count";
+      supabase.rpc(rpcName as any, { p_post_id: postId }).then(({ error }) => {
         if (error) {
-          // RPC missing in this environment? Roll back the dedup so the next
-          // dwell can retry, but stay silent — view counts are non-critical.
           sessionViewed.delete(key);
         }
       }, () => {
@@ -52,5 +52,5 @@ export function usePostViewTracking(
       if (timerRef.current) clearTimeout(timerRef.current);
       timerRef.current = null;
     };
-  }, [postId, source, isActive]);
+  }, [postId, source, isActive, viewerId]);
 }

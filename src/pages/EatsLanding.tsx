@@ -1453,7 +1453,7 @@ export default function EatsLanding() {
                 <button type="button"
                   onClick={() =>
                     navigate(
-                      `/rides?dropoff=${encodeURIComponent(currentRestaurant.name)}`,
+                      `/rides/hub?destination=${encodeURIComponent(currentRestaurant.name)}`,
                     )
                   }
                   className="flex flex-col items-center gap-1 rounded-2xl border border-border/50 bg-card hover:bg-muted/40 active:scale-[0.98] transition-all py-3 touch-manipulation"

@@ -382,7 +382,7 @@ export default function ServicesPage() {
             label={t("services.banner.reserve_label")}
             title={t("services.banner.reserve_title")}
             subtitle={t("services.banner.reserve_subtitle")}
-            href="/rides?tab=reserve"
+            href="/rides/hub?tab=reserve"
             delay={0.1}
             navigate={navigate}
             objectPosition="top"

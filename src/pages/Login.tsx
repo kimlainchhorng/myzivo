@@ -83,6 +83,45 @@ function AccountCard({
   );
 }
 
+type LoginAuthError = Error & {
+  code?: string;
+  status?: number;
+  name?: string;
+  _emailExists?: boolean;
+};
+
+const getLoginErrorFacts = (error: Error) => {
+  const authError = error as LoginAuthError;
+  const message = authError.message || "";
+  const msg = message.toLowerCase();
+  const code = (authError.code || "").toLowerCase();
+
+  return {
+    emailExists: typeof authError._emailExists === "boolean" ? authError._emailExists : null,
+    isBadCredentials:
+      code === "invalid_credentials" ||
+      msg.includes("invalid login") ||
+      msg.includes("invalid credentials") ||
+      msg.includes("invalid login credentials") ||
+      msg.includes("user not found"),
+    isEmailNotConfirmed: code === "email_not_confirmed" || msg.includes("email not confirmed"),
+    isRateLimited:
+      authError.status === 429 ||
+      code.includes("rate_limit") ||
+      code.includes("too_many") ||
+      msg.includes("too many") ||
+      msg.includes("rate limit"),
+    isNetwork:
+      authError.name === "AuthRetryableFetchError" ||
+      msg.includes("failed to fetch") ||
+      msg.includes("load failed") ||
+      msg.includes("network") ||
+      msg.includes("timeout") ||
+      msg.includes("transport failure"),
+    message,
+  };
+};
+
 // ── Main login page ──────────────────────────────────────────────────────────
 const Login = () => {
   const navigate = useNavigate();
@@ -251,17 +290,6 @@ const Login = () => {
     }
     setSubmitting(true);
 
-    // Precheck for better error messages. `auth_precheck_login` is a Postgres
-    // RPC (not an edge fn) — calling it via functions.invoke 404'd on every
-    // login attempt so we never got the "account exists" hint.
-    let accountExists: boolean | null = null;
-    try {
-      const { data: precheck } = await (supabase as any).rpc("auth_precheck_login", {
-        p_email: trimmedEmail,
-      });
-      if (precheck && typeof precheck.exists === "boolean") accountExists = precheck.exists;
-    } catch {}
-
     setRememberMePreference(true);
     const { error } = await signIn(trimmedEmail, password);
 
@@ -278,19 +306,28 @@ const Login = () => {
         });
         return;
       }
-      const msg = (error.message || "").toLowerCase();
-      const badCreds = msg.includes("invalid login") || msg.includes("invalid credentials") || msg.includes("user not found");
+      const facts = getLoginErrorFacts(error);
 
-      if (accountExists === false || msg.includes("user not found")) {
+      if (facts.emailExists === false) {
         toast.error("No account found for this email.", {
           action: { label: "Sign Up", onClick: () => navigate(`/signup${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`) },
         });
-      } else if (accountExists === true || badCreds) {
-        toast.error("Wrong password — please try again.", {
+      } else if (facts.isEmailNotConfirmed) {
+        toast.error("Please verify your email before logging in.", {
+          description: "Check your inbox for the confirmation email.",
+        });
+      } else if (facts.isBadCredentials) {
+        toast.error(facts.emailExists === true ? "Wrong password - please try again." : "Email or password is incorrect.", {
           action: { label: "Forgot?", onClick: () => navigate("/forgot-password") },
         });
+      } else if (facts.isRateLimited) {
+        toast.error("Too many login attempts. Please wait a moment and try again.");
+      } else if (facts.isNetwork) {
+        toast.error("Connection issue. Please try again.", {
+          description: "Check your internet connection, then try again.",
+        });
       } else {
-        toast.error(error.message || "Sign in failed. Please try again.");
+        toast.error(facts.message || "Sign in failed. Please try again.");
       }
       return;
     }
@@ -349,7 +386,7 @@ const Login = () => {
               onClick={() => setEditingAccounts((v) => !v)}
               aria-label={editingAccounts ? "Done editing" : "More options"}
               title={editingAccounts ? "Done" : "Edit saved accounts"}
-              className="absolute top-3 right-3 w-9 h-9 rounded-full flex items-center justify-center text-zinc-500 hover:text-zinc-900 dark:hover:text-white hover:bg-zinc-100 dark:hover:bg-zinc-800 active:scale-95 transition"
+              className="absolute top-3 right-3 flex h-11 w-11 items-center justify-center rounded-full text-zinc-500 transition hover:bg-zinc-100 hover:text-zinc-900 active:scale-95 dark:hover:bg-zinc-800 dark:hover:text-white"
             >
               {editingAccounts ? (
                 <span className="text-xs font-semibold text-rose-500">Done</span>
@@ -476,13 +513,12 @@ const Login = () => {
                   {...passwordKeyHandlers}
                   placeholder="Password"
                   disabled={submitting}
-                  className="w-full h-11 px-3 pr-10 rounded-md bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 focus:border-zinc-400 dark:focus:border-zinc-500 outline-none text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 transition"
+                  className="w-full h-11 px-3 pr-12 rounded-md bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 focus:border-zinc-400 dark:focus:border-zinc-500 outline-none text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 transition"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200"
-                  tabIndex={-1}
+                  className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -527,7 +563,7 @@ const Login = () => {
               })()}
 
               <div className="flex items-center justify-between text-xs pt-1">
-                <Link to="/forgot-password" className="font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-white">
+                <Link to="/forgot-password" className="inline-flex min-h-[40px] items-center font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-white">
                   Forgot password?
                 </Link>
                 <button
@@ -596,13 +632,12 @@ const Login = () => {
                   {...passwordKeyHandlers}
                   placeholder="Password"
                   disabled={submitting}
-                  className="w-full h-11 px-3 pr-10 rounded-md bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 focus:border-zinc-400 dark:focus:border-zinc-500 outline-none text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 transition"
+                  className="w-full h-11 px-3 pr-12 rounded-md bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 focus:border-zinc-400 dark:focus:border-zinc-500 outline-none text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 transition"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword((v) => !v)}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200"
-                  tabIndex={-1}
+                  className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -645,7 +680,7 @@ const Login = () => {
               })()}
 
               <div className="text-center pt-2">
-                <Link to="/forgot-password" className="text-xs font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-white">
+                <Link to="/forgot-password" className="inline-flex min-h-[40px] items-center px-1 text-xs font-medium text-zinc-500 hover:text-zinc-800 dark:text-zinc-400 dark:hover:text-white">
                   Forgot password?
                 </Link>
               </div>
@@ -659,7 +694,7 @@ const Login = () => {
             Don't have an account?{" "}
             <Link
               to={`/signup${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`}
-              className="font-semibold text-rose-500 hover:text-rose-600"
+              className="inline-flex min-h-[40px] items-center font-semibold text-rose-500 hover:text-rose-600"
             >
               Sign up
             </Link>

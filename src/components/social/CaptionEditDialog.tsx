@@ -5,14 +5,13 @@
  * past the validator on edit. Mention picker is wired so you can add
  * @-mentions as you type.
  */
-import { useEffect, useRef, useState, Suspense, lazy } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Pencil, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { confirmContentSafe } from "@/lib/security/contentLinkValidation";
-import { detectMention, applyMention } from "@/components/social/MentionPicker";
-const MentionPicker = lazy(() => import("@/components/social/MentionPicker"));
+import MentionPicker, { detectMention, applyMention } from "@/components/social/MentionPicker";
 
 interface Props {
   open: boolean;
@@ -75,25 +74,23 @@ export default function CaptionEditDialog({ open, onClose, initialCaption, onSav
 
             <div className="relative">
               {/* @-mention autocomplete */}
-              <Suspense fallback={null}>
-                <MentionPicker
-                  query={mentionQuery}
-                  onSelect={(r) => {
-                    if (!ref.current) return;
-                    const caret = ref.current.selectionStart ?? text.length;
-                    const handle = r.username || r.fullName || "";
-                    if (!handle) return;
-                    const next = applyMention(text, caret, handle);
-                    setText(next.value);
-                    setMentionQuery(null);
-                    requestAnimationFrame(() => {
-                      ref.current?.focus();
-                      ref.current?.setSelectionRange(next.caret, next.caret);
-                    });
-                  }}
-                  onClose={() => setMentionQuery(null)}
-                />
-              </Suspense>
+              <MentionPicker
+                query={mentionQuery}
+                onSelect={(r) => {
+                  if (!ref.current) return;
+                  const caret = ref.current.selectionStart ?? text.length;
+                  const handle = r.username || r.fullName || "";
+                  if (!handle) return;
+                  const next = applyMention(text, caret, handle);
+                  setText(next.value);
+                  setMentionQuery(null);
+                  requestAnimationFrame(() => {
+                    ref.current?.focus();
+                    ref.current?.setSelectionRange(next.caret, next.caret);
+                  });
+                }}
+                onClose={() => setMentionQuery(null)}
+              />
               <Textarea
                 ref={ref}
                 autoFocus

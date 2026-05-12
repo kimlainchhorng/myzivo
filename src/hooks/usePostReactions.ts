@@ -10,11 +10,14 @@ import { supabase } from "@/integrations/supabase/client";
 import type { ReactionEmoji } from "@/components/social/ReactionPicker";
 import type { PostSource } from "@/hooks/usePostActions";
 
+const POST_REACTIONS_ENABLED = import.meta.env.VITE_ENABLE_POST_REACTIONS === "true";
+
 export function usePostReactions(userId: string | null) {
   const [reactions, setReactions] = useState<Map<string, ReactionEmoji>>(new Map());
 
   // Hydrate the user's existing reactions on mount
   useEffect(() => {
+    if (!POST_REACTIONS_ENABLED) return;
     if (!userId) return;
     let cancelled = false;
     (async () => {
@@ -41,6 +44,7 @@ export function usePostReactions(userId: string | null) {
     source: PostSource,
     emoji: ReactionEmoji,
   ) => {
+    if (!POST_REACTIONS_ENABLED) return;
     if (!userId) return;
     const key = `${source}:${postId}`;
     const current = reactions.get(key) ?? null;

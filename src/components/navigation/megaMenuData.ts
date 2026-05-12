@@ -277,13 +277,13 @@ export const moreServicesData: MegaMenuData = {
   description: "Local services powered by ZIVO",
   mainAction: {
     label: "Explore Services",
-    href: "/rides",
+    href: "/rides/hub",
   },
   sections: [
     {
       title: "Services",
       items: [
-        { icon: Car, label: "ZIVO Rides", description: "Request local rides", href: "/rides", color: "text-rides" },
+        { icon: Car, label: "ZIVO Rides", description: "Request local rides", href: "/rides/hub", color: "text-rides" },
         { icon: UtensilsCrossed, label: "ZIVO Eats", description: "Order food from local restaurants", href: "/eats", color: "text-eats" },
         { icon: Package, label: "ZIVO Delivery", description: "Package and courier delivery", href: "/delivery", color: "text-primary" },
       ],

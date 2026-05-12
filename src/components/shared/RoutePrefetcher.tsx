@@ -12,6 +12,7 @@ export const PREFETCH_ROUTE_MODULES = {
   "/hotels": "@/pages/HotelLanding",
   "/cars": "@/pages/CarRentalLanding",
   "/rides": "@/pages/app/RideHubPage",
+  "/rides/hub": "@/pages/app/RideHubPage",
   "/eats": "@/pages/EatsLanding",
   [SOCIAL_ROUTE_PATHS.feed]: "@/pages/ReelsFeedPage",
   [SOCIAL_ROUTE_PATHS.reels]: "@/pages/FeedPage",
@@ -27,6 +28,7 @@ const PREFETCH_ROUTES: Record<string, () => Promise<unknown>> = {
   "/hotels": () => import("@/pages/HotelLanding"),
   "/cars": () => import("@/pages/CarRentalLanding"),
   "/rides": () => import("@/pages/app/RideHubPage"),
+  "/rides/hub": () => import("@/pages/app/RideHubPage"),
   "/eats": () => import("@/pages/EatsLanding"),
   [SOCIAL_ROUTE_PATHS.feed]: () => import("@/pages/ReelsFeedPage"),
   // Bottom-nav targets — prefetched on touch-down so the chunk is in-memory

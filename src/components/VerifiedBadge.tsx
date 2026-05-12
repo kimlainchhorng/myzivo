@@ -40,7 +40,6 @@ const VerifiedBadge = ({
       style={sizeStyle}
     >
       <svg viewBox="0 0 24 24" className="h-full w-full block" aria-hidden="true" focusable="false">
-        <title>{VERIFIED_LABEL}</title>
         {/* Facebook 12-point scalloped starburst */}
         <path
           d="M12 1.6l2.05 1.86 2.74-.46 1.18 2.52 2.52 1.18-.46 2.74L21.9 12l-1.86 2.05.46 2.74-2.52 1.18-1.18 2.52-2.74-.46L12 21.9l-2.05-1.86-2.74.46-1.18-2.52-2.52-1.18.46-2.74L2.1 12l1.87-2.05-.46-2.74 2.52-1.18 1.18-2.52 2.74.46L12 1.6z"

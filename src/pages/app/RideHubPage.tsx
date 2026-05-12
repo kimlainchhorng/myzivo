@@ -14,6 +14,7 @@ import {
   ChevronLeft,
 } from "lucide-react";
 import AppLayout from "@/components/app/AppLayout";
+import SEOHead from "@/components/SEOHead";
 import BundleProgressBanner from "@/components/shared/BundleProgressBanner";
 import HeartedDestinationsRail from "@/components/rides/HeartedDestinationsRail";
 import LocalSavedPlacesRow from "@/components/rides/LocalSavedPlacesRow";
@@ -438,6 +439,13 @@ export default function RideHubPage() {
   };
 
   return (
+    <>
+    <SEOHead
+      title="ZIVO Ride – Book Rides, Reserve Trips & Track Drivers"
+      description="Book a ride, reserve a trip, track drivers, manage ride passes, and use ZIVO's ride tools from one hub."
+      canonical="/rides/hub"
+      noIndex
+    />
     <AppLayout
       title={t("ride.title")}
       showBack
@@ -684,5 +692,6 @@ export default function RideHubPage() {
         </AnimatePresence>
       </div>
     </AppLayout>
+    </>
   );
 }

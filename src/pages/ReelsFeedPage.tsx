@@ -158,6 +158,114 @@ const SafeCaption = lazy(() => import("@/components/social/SafeCaption"));
 const FeedSidebar = lazy(() => import("@/components/social/FeedSidebar"));
 const CommentPreview = lazy(() => import("@/components/social/CommentPreview"));
 
+type FeedSuperAppTarget = {
+  label: string;
+  description: string;
+  href: string;
+  icon: typeof Search;
+  tone: string;
+  keywords: string[];
+};
+
+const FEED_SUPER_APP_TARGETS: FeedSuperAppTarget[] = [
+  {
+    label: "Social",
+    description: "Facebook-style feed",
+    href: "/feed",
+    icon: MessageCircle,
+    tone: "bg-sky-500/10 text-sky-600 dark:text-sky-300",
+    keywords: ["facebook", "social", "post", "friends", "feed"],
+  },
+  {
+    label: "Reels",
+    description: "TikTok-style videos",
+    href: "/reels",
+    icon: Film,
+    tone: "bg-rose-500/10 text-rose-600 dark:text-rose-300",
+    keywords: ["tiktok", "reels", "video", "shorts"],
+  },
+  {
+    label: "Chat",
+    description: "Telegram-style messages",
+    href: "/chat",
+    icon: Send,
+    tone: "bg-blue-500/10 text-blue-600 dark:text-blue-300",
+    keywords: ["telegram", "chat", "message", "dm", "group"],
+  },
+  {
+    label: "Meet",
+    description: "Video calls and rooms",
+    href: "/chat/contacts",
+    icon: Tv2,
+    tone: "bg-violet-500/10 text-violet-600 dark:text-violet-300",
+    keywords: ["meet", "google meet", "video call", "call", "room"],
+  },
+  {
+    label: "Rides",
+    description: "Uber-style rides",
+    href: "/rides/hub",
+    icon: Car,
+    tone: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-300",
+    keywords: ["uber", "ride", "taxi", "car", "pickup"],
+  },
+  {
+    label: "Eats",
+    description: "Food delivery",
+    href: "/eats",
+    icon: UtensilsCrossed,
+    tone: "bg-orange-500/10 text-orange-600 dark:text-orange-300",
+    keywords: ["uber eat", "ubereats", "food", "restaurant", "eats", "delivery"],
+  },
+  {
+    label: "Hotels",
+    description: "Booking-style stays",
+    href: "/hotels",
+    icon: Building2,
+    tone: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-300",
+    keywords: ["booking", "booking.com", "hotel", "stay", "room"],
+  },
+  {
+    label: "Flights",
+    description: "Search trips",
+    href: "/flights",
+    icon: Plane,
+    tone: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-300",
+    keywords: ["flight", "travel", "trip", "ticket"],
+  },
+  {
+    label: "Delivery",
+    description: "Packages and courier",
+    href: "/delivery",
+    icon: Package,
+    tone: "bg-amber-500/10 text-amber-600 dark:text-amber-300",
+    keywords: ["delivery", "package", "courier", "send"],
+  },
+  {
+    label: "Creators",
+    description: "Subscriptions and fans",
+    href: "/creator-dashboard",
+    icon: Briefcase,
+    tone: "bg-pink-500/10 text-pink-600 dark:text-pink-300",
+    keywords: ["onlyfans", "creator", "subscription", "fans", "tips"],
+  },
+  {
+    label: "Shop",
+    description: "Marketplace",
+    href: "/marketplace",
+    icon: ShoppingBag,
+    tone: "bg-lime-500/10 text-lime-700 dark:text-lime-300",
+    keywords: ["shop", "marketplace", "store", "buy", "sell"],
+  },
+  {
+    label: "Services",
+    description: "All ZIVO apps",
+    href: "/services",
+    icon: Sparkles,
+    tone: "bg-foreground/10 text-foreground",
+    keywords: ["all", "services", "apps", "more", "everything"],
+  },
+];
+
 const trackInitiateCheckout = (input: Record<string, unknown>) =>
   import("@/services/metaConversion").then((m) => m.trackInitiateCheckout(input as any));
 
@@ -298,6 +406,7 @@ const getFeedLikesTable = (item: FeedItem): "post_likes" | "store_post_likes" =>
 // session. Lives at module scope so navigating between feed tabs without a
 // full reload doesn't double-count.
 const recordedFeedViews = new Set<string>();
+const POST_REACTIONS_ENABLED = import.meta.env.VITE_ENABLE_POST_REACTIONS === "true";
 
 // Best-effort wrapper around the record_post_share RPC. The RPC logs the
 // share + bumps shares_count atomically; failures are swallowed so a flaky
@@ -403,6 +512,34 @@ export default function ReelsFeedPage() {
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const location = useLocation();
   const isFeedRoute = location.pathname.startsWith("/feed");
+  const feedSuperAppResults = useMemo(() => {
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return FEED_SUPER_APP_TARGETS;
+    return FEED_SUPER_APP_TARGETS.filter((target) =>
+      [target.label, target.description, ...target.keywords].some((value) => {
+        const normalizedValue = value.toLowerCase();
+        return normalizedValue.includes(q) || q.includes(normalizedValue);
+      }),
+    );
+  }, [searchQuery]);
+  const clearFeedSearch = useCallback(() => {
+    if (searchTimerRef.current) {
+      clearTimeout(searchTimerRef.current);
+      searchTimerRef.current = null;
+    }
+    setSearchQuery("");
+    setSearchResults([]);
+    setStoreSearchResults([]);
+    setSearchLoading(false);
+  }, []);
+  const closeFeedSearch = useCallback(() => {
+    clearFeedSearch();
+    setShowSearch(false);
+  }, [clearFeedSearch]);
+  const openFeedSuperAppTarget = useCallback((href: string) => {
+    closeFeedSearch();
+    navigate(href);
+  }, [closeFeedSearch, navigate]);
 
   useEffect(() => {
     const markReady = () => setSidebarDataReady(true);
@@ -1178,7 +1315,8 @@ export default function ReelsFeedPage() {
               <div
                 className={cn(
                   "overflow-hidden transition-all duration-300 ease-out",
-                  headerHidden ? "max-h-0 opacity-0" : "max-h-[200px] opacity-100"
+                  "max-h-[200px] opacity-100",
+                  headerHidden && "shadow-sm"
                 )}
               >
                 <div className="px-3 pt-1.5 pb-1 flex items-center gap-2">
@@ -1188,11 +1326,11 @@ export default function ReelsFeedPage() {
                   <Sheet>
                     <SheetTrigger asChild>
                       <button type="button"
-                        className="shrink-0 h-9 w-9 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition"
+                        className="shrink-0 h-11 w-11 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition"
                         aria-label="Open menu"
                         title="Open menu"
                       >
-                        <Menu className="h-[18px] w-[18px]" />
+                        <Menu className="h-5 w-5" />
                       </button>
                     </SheetTrigger>
                     <SheetContent side="left" className="w-[88vw] sm:w-[400px] p-0 overflow-y-auto">
@@ -1303,29 +1441,29 @@ export default function ReelsFeedPage() {
                       onChange={(e) => handleSearchChange(e.target.value)}
                       onFocus={() => setShowSearch(true)}
                       placeholder="Search…"
-                      className="w-full pl-8 pr-7 py-1.5 rounded-full bg-muted/40 border border-border/30 text-[14px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"
+                      className="h-11 w-full pl-8 pr-7 rounded-full bg-muted/40 border border-border/30 text-[14px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"
                     />
                     {searchQuery && (
-                      <button type="button" onClick={() => { setSearchQuery(""); setSearchResults([]); }} aria-label="Clear search" title="Clear search" className="absolute right-2.5 top-1/2 -translate-y-1/2">
+                      <button type="button" onClick={() => { setSearchQuery(""); setSearchResults([]); }} aria-label="Clear search" title="Clear search" className="absolute right-1 top-1/2 flex h-8 w-8 -translate-y-1/2 items-center justify-center rounded-full">
                         <XIcon className="h-3.5 w-3.5 text-muted-foreground" />
                       </button>
                     )}
                   </div>
                   <button type="button"
                     onClick={() => userId ? setShowCreate(true) : navigate("/auth")}
-                    className="shrink-0 h-9 w-9 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition"
+                    className="shrink-0 h-11 w-11 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition"
                     aria-label="Create post"
                     title="Create post"
                   >
-                    <Plus className="h-[18px] w-[18px]" />
+                    <Plus className="h-5 w-5" />
                   </button>
                   <button type="button"
                     onClick={() => navigate("/notifications")}
-                    className="shrink-0 h-9 w-9 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition relative"
+                    className="shrink-0 h-11 w-11 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition relative"
                     aria-label={notificationUnread > 0 ? `Notifications, ${notificationUnread} unread` : "Notifications"}
                     title={notificationUnread > 0 ? `Notifications, ${notificationUnread} unread` : "Notifications"}
                   >
-                    <Bell className="h-[18px] w-[18px]" />
+                    <Bell className="h-5 w-5" />
                     {notificationUnread > 0 && (
                       <span className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-1 rounded-full bg-red-500 text-[9px] font-bold text-white flex items-center justify-center leading-none">
                         {notificationUnread > 99 ? "99+" : notificationUnread}
@@ -1334,11 +1472,11 @@ export default function ReelsFeedPage() {
                   </button>
                   <button type="button"
                     onClick={() => navigate("/chat")}
-                    className="shrink-0 h-9 w-9 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition relative"
+                    className="shrink-0 h-11 w-11 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition relative"
                     aria-label={headerChatUnread > 0 ? `Messages, ${headerChatUnread} unread` : "Messages"}
                     title={headerChatUnread > 0 ? `Messages, ${headerChatUnread} unread` : "Messages"}
                   >
-                    <MessageCircle className="h-[18px] w-[18px]" />
+                    <MessageCircle className="h-5 w-5" />
                     {headerChatUnread > 0 && (
                       <span className="absolute -top-0.5 -right-0.5 min-w-[14px] h-[14px] px-1 rounded-full bg-red-500 text-[9px] font-bold text-white flex items-center justify-center leading-none">
                         {headerChatUnread > 99 ? "99+" : headerChatUnread}
@@ -1346,42 +1484,49 @@ export default function ReelsFeedPage() {
                     )}
                   </button>
                 </div>
-                {/* Tab strip — For You / Friends / Following (signed-in only) */}
-                {userId && (
-                  <div className="flex justify-center gap-8 px-3 pb-2">
-                    {(["For You", "Friends", "Following"] as const).map((label) => (
+                <div
+                  className={cn(
+                    "overflow-hidden transition-all duration-300 ease-out",
+                    headerHidden ? "max-h-0 opacity-0" : "max-h-[76px] opacity-100"
+                  )}
+                >
+                  {/* Tab strip — For You / Friends / Following (signed-in only) */}
+                  {userId && (
+                    <div className="flex justify-center gap-8 px-3 pb-2">
+                      {(["For You", "Friends", "Following"] as const).map((label) => (
+                        <button type="button"
+                          key={label}
+                          onClick={() => setFeedTab(label)}
+                          className={cn(
+                            "relative py-1 text-[15px] font-semibold transition-colors",
+                            feedTab === label ? "text-foreground drop-shadow-sm" : "text-muted-foreground/80"
+                          )}
+                        >
+                          {label}
+                          {feedTab === label && (
+                            <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-primary" />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {/* Content type filter chips */}
+                  <div className="flex gap-1.5 px-3 pb-1 overflow-x-auto scrollbar-hide">
+                    {(["all", "photos", "videos", "text"] as const).map((f) => (
                       <button type="button"
-                        key={label}
-                        onClick={() => setFeedTab(label)}
+                        key={f}
+                        onClick={() => setFeedFilter(f)}
                         className={cn(
-                          "relative py-1 text-[15px] font-semibold transition-colors",
-                          feedTab === label ? "text-foreground drop-shadow-sm" : "text-muted-foreground/80"
+                          "shrink-0 min-h-[40px] px-3.5 py-2 rounded-full text-[12px] font-semibold transition-all active:scale-95",
+                          feedFilter === f
+                            ? "bg-foreground text-background"
+                            : "bg-muted/50 text-muted-foreground"
                         )}
                       >
-                        {label}
-                        {feedTab === label && (
-                          <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-6 h-0.5 rounded-full bg-primary" />
-                        )}
+                        {f === "all" ? "All" : f === "photos" ? "Photos" : f === "videos" ? "Videos" : "Text"}
                       </button>
                     ))}
                   </div>
-                )}
-                {/* Content type filter chips */}
-                <div className="flex gap-1.5 px-3 pb-1 overflow-x-auto scrollbar-hide">
-                  {(["all", "photos", "videos", "text"] as const).map((f) => (
-                    <button type="button"
-                      key={f}
-                      onClick={() => setFeedFilter(f)}
-                      className={cn(
-                        "shrink-0 px-3 py-1 rounded-full text-[11px] font-semibold transition-all active:scale-95",
-                        feedFilter === f
-                          ? "bg-foreground text-background"
-                          : "bg-muted/50 text-muted-foreground"
-                      )}
-                    >
-                      {f === "all" ? "All" : f === "photos" ? "Photos" : f === "videos" ? "Videos" : "Text"}
-                    </button>
-                  ))}
                 </div>
               </div>
             </div>
@@ -1399,7 +1544,7 @@ export default function ReelsFeedPage() {
                 transition={{ duration: 0.2 }}
               >
                 <div data-testid="search-overlay-header" className="zivo-pt-safe-sticky flex items-center gap-2 px-3 py-2 border-b border-border/30">
-                  <button type="button" onClick={() => { setShowSearch(false); setSearchQuery(""); setSearchResults([]); }} aria-label="Close search" title="Close search" className="min-h-[44px] min-w-[44px] flex items-center justify-center">
+                  <button type="button" onClick={closeFeedSearch} aria-label="Close search" title="Close search" className="min-h-[44px] min-w-[44px] flex items-center justify-center">
                     <ChevronLeft className="h-5 w-5 text-foreground" />
                   </button>
                   <div className="flex-1 relative">
@@ -1408,28 +1553,68 @@ export default function ReelsFeedPage() {
                       ref={searchInputRef}
                       value={searchQuery}
                       onChange={(e) => handleSearchChange(e.target.value)}
-                      placeholder="Search people..."
+                      placeholder="Search apps, rides, food, hotels, people..."
                       className="w-full pl-9 pr-8 py-2.5 rounded-full bg-muted/50 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
                     />
                     {searchQuery && (
-                      <button type="button" onClick={() => { setSearchQuery(""); setSearchResults([]); }} aria-label="Clear search" title="Clear search" className="absolute right-3 top-1/2 -translate-y-1/2">
+                      <button type="button" onClick={clearFeedSearch} aria-label="Clear search" title="Clear search" className="absolute right-3 top-1/2 -translate-y-1/2">
                         <XIcon className="h-4 w-4 text-muted-foreground" />
                       </button>
                     )}
                   </div>
                 </div>
 
-                <div className="flex-1 overflow-y-auto">
+                <div className="flex-1 overflow-y-auto pb-24">
+                  {feedSuperAppResults.length > 0 && (
+                    <div className="px-4 pt-4">
+                      <div className="mb-2 flex items-center justify-between">
+                        <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                          {searchQuery.trim() ? "ZIVO apps" : "Jump in"}
+                        </p>
+                        {!searchQuery.trim() && (
+                          <button
+                            type="button"
+                            onClick={() => openFeedSuperAppTarget("/services")}
+                            className="text-[11px] font-semibold text-foreground"
+                          >
+                            See all
+                          </button>
+                        )}
+                      </div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {feedSuperAppResults.map((target) => {
+                          const Icon = target.icon;
+                          return (
+                            <button
+                              key={target.href}
+                              type="button"
+                              onClick={() => openFeedSuperAppTarget(target.href)}
+                              className="flex items-center gap-3 rounded-lg border border-border/50 bg-card px-3 py-3 text-left active:scale-[0.98] transition-transform"
+                            >
+                              <span className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-full", target.tone)}>
+                                <Icon className="h-5 w-5" />
+                              </span>
+                              <span className="min-w-0">
+                                <span className="block truncate text-sm font-semibold text-foreground">{target.label}</span>
+                                <span className="block truncate text-[11px] text-muted-foreground">{target.description}</span>
+                              </span>
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   {searchLoading ? (
                     <div className="flex items-center justify-center h-32">
                       <Loader2 className="h-5 w-5 animate-spin text-primary" />
                     </div>
                   ) : !searchQuery.trim() ? (
-                    <div className="flex flex-col items-center justify-center h-32 text-muted-foreground/50">
+                    <div className="flex flex-col items-center justify-center h-32 px-8 text-center text-muted-foreground/50">
                       <Search className="h-8 w-8 mb-2" />
-                      <p className="text-sm">Search for people by name</p>
+                      <p className="text-sm">Search people, shops, restaurants, or any ZIVO app.</p>
                     </div>
-                  ) : (searchResults.length === 0 && storeSearchResults.length === 0) ? (
+                  ) : (feedSuperAppResults.length === 0 && searchResults.length === 0 && storeSearchResults.length === 0) ? (
                     <div className="flex flex-col items-center justify-center h-32 text-muted-foreground/50">
                       <p className="text-sm">No results found</p>
                     </div>
@@ -1483,7 +1668,7 @@ export default function ReelsFeedPage() {
                           ))}
                         </div>
                       )}
-                      {searchResults.length === 0 && storeSearchResults.length === 0 && searchQuery.trim() && !searchLoading && (
+                      {feedSuperAppResults.length === 0 && searchResults.length === 0 && storeSearchResults.length === 0 && searchQuery.trim() && !searchLoading && (
                         <div className="flex flex-col items-center justify-center h-32 text-muted-foreground/50">
                           <p className="text-sm">No results found</p>
                         </div>
@@ -1500,8 +1685,8 @@ export default function ReelsFeedPage() {
           <div ref={feedPageTopRef} data-feed-page-top aria-hidden="true" />
 
           {userId && (
-            <div className="border-b border-border/10 bg-card px-3 pt-3 pb-2">
-              <div className="flex items-center gap-2.5 mb-2.5">
+            <div className="border-b border-border/10 bg-card px-3 pt-2.5 pb-1.5">
+              <div className="flex items-center gap-2.5 mb-2">
                 <div className="h-9 w-9 rounded-full overflow-hidden bg-muted border border-primary/20 shrink-0">
                   {userProfile?.avatar ? (
                     <img src={userProfile.avatar} alt="" className="h-full w-full object-cover" />
@@ -1513,7 +1698,7 @@ export default function ReelsFeedPage() {
                 </div>
                 <button type="button"
                   onClick={() => setShowCreate(true)}
-                  className="flex-1 text-left px-4 py-2 rounded-full bg-muted/40 border border-border/30 text-sm text-muted-foreground hover:bg-muted/60 transition-colors"
+                  className="flex-1 text-left px-4 py-1.5 rounded-full bg-muted/40 border border-border/30 text-[13px] text-muted-foreground hover:bg-muted/60 transition-colors"
                 >
                   {(() => {
                     const first = (userProfile?.name || "").trim().split(/\s+/)[0];
@@ -1521,26 +1706,26 @@ export default function ReelsFeedPage() {
                   })()}
                 </button>
               </div>
-              <div className="border-t border-border/20 pt-1.5 flex overflow-x-auto scrollbar-hide lg:max-w-md lg:mx-auto lg:gap-2" role="toolbar" aria-label="Create post">
-                <button type="button" onClick={() => { setCreateMode("photo"); setShowCreate(true); }} aria-label="Share a photo" title="Share a photo" className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
-                  <ImageIcon className="h-4 w-4 text-emerald-500" />
-                  <span className="text-[10px] font-semibold text-muted-foreground">Photo</span>
+              <div className="border-t border-border/15 pt-1 flex gap-1 overflow-x-auto scrollbar-hide lg:max-w-md lg:mx-auto lg:gap-2" role="toolbar" aria-label="Create post">
+                <button type="button" onClick={() => { setCreateMode("photo"); setShowCreate(true); }} aria-label="Share a photo" title="Share a photo" className="flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1 rounded-lg bg-muted/20 hover:bg-muted/50 transition-colors min-w-[58px]">
+                  <ImageIcon className="h-3.5 w-3.5 text-emerald-500" />
+                  <span className="text-[9px] leading-none font-semibold text-muted-foreground">Photo</span>
                 </button>
-                <button type="button" onClick={() => { setCreateMode("reel"); setShowCreate(true); }} aria-label="Create a Reel" title="Create a Reel" className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
-                  <Film className="h-4 w-4 text-violet-500" />
-                  <span className="text-[10px] font-semibold text-muted-foreground">Reels</span>
+                <button type="button" onClick={() => { setCreateMode("reel"); setShowCreate(true); }} aria-label="Create a Reel" title="Create a Reel" className="flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1 rounded-lg bg-muted/20 hover:bg-muted/50 transition-colors min-w-[58px]">
+                  <Film className="h-3.5 w-3.5 text-violet-500" />
+                  <span className="text-[9px] leading-none font-semibold text-muted-foreground">Reels</span>
                 </button>
-                <button type="button" onClick={() => { setCreateMode("poll"); setShowCreate(true); }} aria-label="Create a poll" title="Create a poll" className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
-                  <TrendingUp className="h-4 w-4 text-amber-500" />
-                  <span className="text-[10px] font-semibold text-muted-foreground">Poll</span>
+                <button type="button" onClick={() => { setCreateMode("poll"); setShowCreate(true); }} aria-label="Create a poll" title="Create a poll" className="flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1 rounded-lg bg-muted/20 hover:bg-muted/50 transition-colors min-w-[58px]">
+                  <TrendingUp className="h-3.5 w-3.5 text-amber-500" />
+                  <span className="text-[9px] leading-none font-semibold text-muted-foreground">Poll</span>
                 </button>
-                <button type="button" onClick={() => navigate("/check-in")} aria-label="Check in to a place" title="Check in to a place" className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
-                  <MapPin className="h-4 w-4 text-red-500" />
-                  <span className="text-[10px] font-semibold text-muted-foreground">Check In</span>
+                <button type="button" onClick={() => navigate("/check-in")} aria-label="Check in to a place" title="Check in to a place" className="flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1 rounded-lg bg-muted/20 hover:bg-muted/50 transition-colors min-w-[58px]">
+                  <MapPin className="h-3.5 w-3.5 text-red-500" />
+                  <span className="text-[9px] leading-none font-semibold text-muted-foreground">Check In</span>
                 </button>
-                <button type="button" onClick={() => navigate("/live")} aria-label="Go live" title="Go live" className="flex-1 shrink-0 flex items-center justify-center gap-1 py-1.5 rounded-xl hover:bg-muted/50 transition-colors min-w-[56px]">
-                  <Radio className="h-4 w-4 text-rose-600" />
-                  <span className="text-[10px] font-semibold text-muted-foreground">Live</span>
+                <button type="button" onClick={() => navigate("/live")} aria-label="Go live" title="Go live" className="flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1 rounded-lg bg-muted/20 hover:bg-muted/50 transition-colors min-w-[58px]">
+                  <Radio className="h-3.5 w-3.5 text-rose-600" />
+                  <span className="text-[9px] leading-none font-semibold text-muted-foreground">Live</span>
                 </button>
               </div>
             </div>
@@ -1685,15 +1870,17 @@ export default function ReelsFeedPage() {
           {isLoading ? (
             <div className="space-y-2 pb-4" aria-label="Loading posts" aria-busy="true">
               {[0, 1, 2].map((i) => (
-                <div key={i} className="bg-card">
+                <div key={i} className="bg-card border-b border-border/20">
                   <div className="flex items-center gap-3 px-3 py-2.5">
-                    <div className="h-9 w-9 rounded-full bg-muted animate-pulse" />
+                    <div className="h-9 w-9 rounded-full bg-muted/80 ring-1 ring-border/40 animate-pulse" />
                     <div className="flex-1 space-y-1.5">
-                      <div className="h-3 w-1/3 bg-muted rounded animate-pulse" />
-                      <div className="h-2.5 w-1/4 bg-muted rounded animate-pulse" />
+                      <div className="h-3 w-1/3 bg-muted/80 rounded animate-pulse" />
+                      <div className="h-2.5 w-1/4 bg-muted/60 rounded animate-pulse" />
                     </div>
                   </div>
-                  <div className="aspect-square w-full bg-muted animate-pulse" />
+                  <div className="aspect-[4/5] w-full bg-muted/70 animate-pulse border-y border-border/20 flex items-center justify-center">
+                    <Film className="h-8 w-8 text-muted-foreground/35" />
+                  </div>
                   <EngagementSkeleton />
                 </div>
               ))}
@@ -2187,7 +2374,7 @@ export default function ReelsFeedPage() {
               {[
                 { label: "Flights", icon: Plane, path: "/flights", color: "bg-sky-500/15 text-sky-600", ring: "group-hover:ring-sky-500/30" },
                 { label: "Hotels", icon: Hotel, path: "/hotels", color: "bg-amber-500/15 text-amber-600", ring: "group-hover:ring-amber-500/30" },
-                { label: "Rides", icon: Car, path: "/rides", color: "bg-emerald-500/15 text-emerald-600", ring: "group-hover:ring-emerald-500/30" },
+                { label: "Rides", icon: Car, path: "/rides/hub", color: "bg-emerald-500/15 text-emerald-600", ring: "group-hover:ring-emerald-500/30" },
                 { label: "Eats", icon: UtensilsCrossed, path: "/eats", color: "bg-orange-500/15 text-orange-600", ring: "group-hover:ring-orange-500/30" },
                 { label: "Delivery", icon: Package, path: "/delivery", color: "bg-violet-500/15 text-violet-600", ring: "group-hover:ring-violet-500/30" },
                 { label: "Explore", icon: Globe, path: "/explore", color: "bg-primary/15 text-primary", ring: "group-hover:ring-primary/30" },
@@ -2477,11 +2664,15 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
         if (entry.isIntersecting) {
           videoRef.current?.play().catch(() => {});
           setIsPlaying(true);
-          if (!viewTracked.current) {
+          if (
+            !viewTracked.current &&
+            item.source !== "poll" &&
+            (item.source === "user" || Boolean(currentUserId))
+          ) {
             viewTracked.current = true;
             const rawId = interactionPostId;
-            const rpc = item.source === "user" ? "increment_user_post_views" : "increment_store_post_views";
-            supabase.rpc(rpc as any, { _post_id: rawId }).then(({ error }: any) => {
+            const rpc = item.source === "user" ? "increment_user_post_view_count" : "increment_store_post_view_count";
+            supabase.rpc(rpc as any, { p_post_id: rawId }).then(({ error }: any) => {
               if (error) viewTracked.current = false;
             });
           }
@@ -2494,7 +2685,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
     );
     observer.observe(containerRef.current);
     return () => observer.disconnect();
-  }, [item.id, item.source]);
+  }, [currentUserId, interactionPostId, item.id, item.source]);
 
   const togglePlay = () => {
     if (!videoRef.current) return;
@@ -3218,6 +3409,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
 
   // Hydrate this user's existing emoji reaction for this post (post_reactions)
   useEffect(() => {
+    if (!POST_REACTIONS_ENABLED) return;
     if (!currentUserId || item.source === "poll") return;
     let alive = true;
     (supabase as any)
@@ -3385,18 +3577,19 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
     if (!isPlaying) return;
     if (item.media_type !== "video") return;
     if (item.source === "poll") return;
+    if (item.source !== "user" && !currentUserId) return;
     if (recordedFeedViews.has(item.id)) return;
 
     const timer = setTimeout(() => {
       recordedFeedViews.add(item.id);
-      const rpc = item.source === "user" ? "increment_user_post_views" : "increment_store_post_views";
-      (supabase as any).rpc(rpc, { _post_id: interactionPostId }).then(({ error }: any) => {
+      const rpc = item.source === "user" ? "increment_user_post_view_count" : "increment_store_post_view_count";
+      (supabase as any).rpc(rpc, { p_post_id: interactionPostId }).then(({ error }: any) => {
         if (error) recordedFeedViews.delete(item.id);
       });
     }, 1500);
 
     return () => clearTimeout(timer);
-  }, [isPlaying, item.id, item.media_type, item.source, interactionPostId]);
+  }, [currentUserId, isPlaying, item.id, item.media_type, item.source, interactionPostId]);
 
   // Load the actual most-recent liker's name so the "Liked by [name]" social
   // proof line shows real data instead of a deterministic fake. Skips when
@@ -3506,6 +3699,10 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
   // Emojis are constrained by the DB CHECK: ❤️ 😂 😮 😢 😡 🔥 (👏 is not allowed).
   const REACTIONS = ["❤️", "😂", "😮", "😢", "😡", "🔥"];
   const handleReaction = async (emoji: string) => {
+    if (!POST_REACTIONS_ENABLED) {
+      toast.error("Reactions are being upgraded");
+      return;
+    }
     if (!currentUserId) {
       toast.error("Please sign in to react");
       return;
@@ -3785,9 +3982,9 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
               <button
                 type="button"
                 onClick={() => item.author_id && navigate(`/user/${item.author_id}`)}
-                className="flex items-center gap-3 px-3 py-2.5 flex-1 min-w-0 active:opacity-70"
+                className="flex items-center gap-2.5 px-3 py-2 flex-1 min-w-0 active:opacity-70"
               >
-                <div className="h-9 w-9 rounded-full overflow-hidden bg-muted border border-border/30 shrink-0">
+                <div className="h-8 w-8 rounded-full overflow-hidden bg-muted border border-border/30 shrink-0">
                   {item.author_avatar ? (
                     <img src={item.author_avatar} alt="" className="h-full w-full object-cover" />
                   ) : (
@@ -3916,7 +4113,13 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
             )}
 
             {/* Original post media */}
-            <div ref={containerRef} className={cn("relative overflow-hidden", hasMedia ? (item.media_type === "video" ? "aspect-[9/16] max-h-[500px] lg:max-h-[680px] xl:max-h-[760px] w-auto mx-auto bg-black rounded-xl" : "") : "")}>
+            <div
+              ref={containerRef}
+              className={cn(
+                "relative overflow-hidden",
+                hasMedia ? (item.media_type === "video" ? cn("max-h-[500px] lg:max-h-[680px] xl:max-h-[760px] w-full mx-auto bg-black rounded-xl", videoAspectClass) : "") : ""
+              )}
+            >
               {hasMedia ? (
                 item.media_type === "video" ? (
                   <>
@@ -3927,8 +4130,14 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                       loop
                       playsInline
                       preload="metadata"
+                      onLoadedMetadata={(e) => {
+                        const v = e.currentTarget;
+                        if (v.videoWidth > 0 && v.videoHeight > 0) {
+                          setVideoAspect(v.videoWidth / v.videoHeight);
+                        }
+                      }}
                       onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()}
-                      className="h-full w-full object-contain cursor-pointer"
+                      className="h-full w-full object-cover cursor-pointer"
                     />
                     {!isPlaying && (
                       <button type="button" onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()} aria-label="Play video" title="Play video" className="absolute inset-0 flex items-center justify-center bg-black/10">
@@ -3937,7 +4146,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                     )}
                     <button type="button"
                       onClick={(e) => { e.stopPropagation(); setMuted(!muted); }}
-                      className="absolute bottom-3 right-3 h-8 w-8 rounded-full bg-black/50 flex items-center justify-center min-h-[44px] min-w-[44px]"
+                      className="absolute bottom-3.5 right-3.5 h-9 w-9 rounded-full bg-black/45 backdrop-blur-md ring-1 ring-white/15 shadow-lg flex items-center justify-center min-h-[40px] min-w-[40px] active:scale-95 transition-transform"
                     >
                       {muted ? <VolumeX className="h-4 w-4 text-white" /> : <Volume2 className="h-4 w-4 text-white" />}
                     </button>
@@ -4046,10 +4255,10 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                   aria-label={isFollowingAuthor ? "Unfollow author" : "Follow author"}
                   title={isFollowingAuthor ? "Unfollow author" : "Follow author"}
                   className={cn(
-                    "text-[12px] font-semibold px-3 py-1 rounded-md transition-all active:scale-95",
+                    "mr-1 text-[12px] font-semibold px-3 py-1 rounded-full transition-all active:scale-95",
                     isFollowingAuthor
-                      ? "text-muted-foreground"
-                      : "text-primary"
+                      ? "text-muted-foreground bg-muted/40"
+                      : "text-primary bg-primary/10"
                   )}
                 >
                   {followLoading ? (
@@ -4061,7 +4270,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                 onClick={(e) => { e.stopPropagation(); setShowPostMenu(true); }}
                 aria-label="Post actions"
                 title="Post actions"
-                className="p-1.5 text-muted-foreground hover:text-foreground min-h-[44px] min-w-[44px] flex items-center justify-center"
+                className="p-1 text-muted-foreground hover:text-foreground min-h-[40px] min-w-[40px] flex items-center justify-center"
               >
                 <MoreHorizontal className="h-5 w-5" />
               </button>
@@ -4070,15 +4279,15 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
 
           {/* Caption before media for normal posts */}
           {item.caption && (
-            <div className="px-3 pb-2">
-              <CollapsibleCaption text={item.caption} lines={3} className="text-[13px]">
+            <div className="px-3 pb-1.5">
+              <CollapsibleCaption text={item.caption} lines={2} className="text-[13px] leading-snug">
                 <Suspense fallback={<span>{item.caption}</span>}>
                   <SafeCaption text={item.caption} />
                 </Suspense>
               </CollapsibleCaption>
               {/* Translation — only shown when caption has non-Latin characters */}
               {/[^ -]/.test(item.caption) && (
-                <div className="mt-1.5">
+                <div className="mt-1">
                   {translatedCaption ? (
                     <div className="bg-muted/40 rounded-lg px-3 py-2 border border-border/20">
                       <p className="text-[11px] text-muted-foreground mb-1 font-semibold uppercase tracking-wide">Translated</p>
@@ -4107,7 +4316,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                         }
                       }}
                       disabled={isTranslating}
-                      className="flex items-center gap-1 text-[12px] text-primary font-semibold mt-0.5 active:opacity-70 disabled:opacity-50"
+                      className="inline-flex min-h-[40px] items-center gap-1.5 rounded-full px-2 -ml-2 text-[12px] text-primary font-semibold active:opacity-70 disabled:opacity-50"
                     >
                       <Languages className="h-3.5 w-3.5" />
                       {isTranslating ? "Translating..." : "See translation"}
@@ -4168,7 +4377,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                     onClick={(e) => { e.stopPropagation(); setMuted(!muted); }}
                     aria-label={muted ? "Unmute video" : "Mute video"}
                     title={muted ? "Unmute video" : "Mute video"}
-                    className="absolute bottom-3 right-3 h-8 w-8 rounded-full bg-black/50 flex items-center justify-center min-h-[44px] min-w-[44px]"
+                    className="absolute bottom-3.5 right-3.5 h-9 w-9 rounded-full bg-black/45 backdrop-blur-md ring-1 ring-white/15 shadow-lg flex items-center justify-center min-h-[40px] min-w-[40px] active:scale-95 transition-transform"
                   >
                     {muted ? <VolumeX className="h-4 w-4 text-white" /> : <Volume2 className="h-4 w-4 text-white" />}
                   </button>
@@ -4326,8 +4535,8 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
       )}
 
       {/* Facebook-style engagement summary row */}
-      {(localLikes > 0 || localComments > 0 || (item.shares_count || 0) > 0) && (
-        <div className="px-3 pb-1 pt-0.5 space-y-0.5">
+      {(localLikes > 0 || localComments > 0) && (
+        <div className="px-3 pb-0.5 pt-1 space-y-0.5">
           {/* "Liked by [name] and X others" social proof line — real data
               from post_likes joined to profiles. We only show the name once
               we've actually resolved a non-self liker; otherwise we render
@@ -4337,7 +4546,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
             const others = Math.max(0, localLikes - (topLikerName ? 1 : 0));
             if (topLikerName) {
               return (
-                <p className="text-[12px] text-foreground">
+                <p className="text-[11px] text-foreground leading-tight">
                   {others > 0 ? (
                     <span>Liked by <span className="font-semibold">{topLikerName}</span> and <span className="font-semibold">{fmt(others)} {others === 1 ? "other" : "others"}</span></span>
                   ) : (
@@ -4350,7 +4559,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
             // back to a count phrase. Hide entirely if it's only the viewer.
             if (liked && localLikes === 1) return null;
             return (
-              <p className="text-[12px] text-foreground">
+              <p className="text-[11px] text-foreground leading-tight">
                 Liked by <span className="font-semibold">{fmt(localLikes)} {localLikes === 1 ? "person" : "people"}</span>
               </p>
             );
@@ -4367,16 +4576,11 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                 </div>
               )}
             </div>
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2.5 leading-tight">
               {localComments > 0 && (
                 <button type="button" onClick={handleComment} className="text-[12px] text-muted-foreground hover:text-foreground hover:underline transition-colors" title="Action">
                   {localComments === 1 ? "1 comment" : `${localComments >= 1000 ? `${(localComments / 1000).toFixed(1)}k` : localComments} comments`}
                 </button>
-              )}
-              {(item.shares_count || 0) > 0 && (
-                <span className="text-[12px] text-muted-foreground">
-                  {item.shares_count} {item.shares_count === 1 ? "share" : "shares"}
-                </span>
               )}
             </div>
           </div>
@@ -4384,8 +4588,8 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
       )}
 
       {/* Action buttons — enhanced with counts */}
-      <div className="flex items-center px-2.5 sm:px-3 py-1.5">
-        <div className="flex items-center gap-1 flex-1">
+      <div className="flex items-center px-2.5 sm:px-3 py-1 border-t border-border/10">
+        <div className="flex items-center gap-0.5 flex-1">
           <div className="relative">
             {/* FB-style reaction popover anchored above the Like button.
                 Opens on long-press (touch) or right-click (desktop). */}
@@ -4443,7 +4647,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
               onContextMenu={(e) => { e.preventDefault(); setShowReactionPicker(!showReactionPicker); }}
               aria-label={liked ? `Unlike post${!item.hide_like_counts && formatCount(localLikes) ? `, ${formatCount(localLikes)} likes` : ""}` : `Like post${!item.hide_like_counts && formatCount(localLikes) ? `, ${formatCount(localLikes)} likes` : ""}`}
               title={liked ? "Unlike post" : "Like post"}
-              className="zivo-touch-no-callout min-h-[44px] min-w-[36px] sm:min-w-[40px] flex items-center justify-center gap-1 group"
+              className="zivo-touch-no-callout min-h-[44px] min-w-[44px] px-2 rounded-full flex items-center justify-center gap-1 group active:bg-muted/50"
             >
               {selectedReaction ? (
                 <span className="text-lg" aria-hidden>{selectedReaction}</span>
@@ -4461,7 +4665,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
             <button type="button"
               onClick={handleComment}
               aria-label={`Open comments${formatCount(localComments) ? `, ${formatCount(localComments)} comments` : ""}`}
-              className="min-h-[44px] min-w-[36px] sm:min-w-[40px] flex items-center justify-center text-foreground gap-1"
+              className="min-h-[44px] min-w-[44px] px-2 rounded-full flex items-center justify-center text-foreground gap-1 active:bg-muted/50"
              title="Action">
               <MessageCircle aria-hidden className="h-[22px] w-[22px]" />
               {formatCount(localComments) && (
@@ -4475,7 +4679,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
             <button type="button"
               onClick={handleShare}
               aria-label={`Share post${formatCount(item.shares_count) ? `, ${formatCount(item.shares_count)} shares` : ""}`}
-              className="min-h-[44px] min-w-[36px] sm:min-w-[40px] flex items-center justify-center text-foreground gap-1"
+              className="min-h-[44px] min-w-[44px] px-2 rounded-full flex items-center justify-center text-foreground gap-1 active:bg-muted/50"
              title="Action">
               <Send aria-hidden className="h-[22px] w-[22px]" />
               {formatCount(item.shares_count) && (
@@ -4490,7 +4694,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
           onClick={handleSave}
           aria-label={saved ? "Remove bookmark" : "Save post"}
           title={saved ? "Remove bookmark" : "Save post"}
-          className="min-h-[44px] min-w-[44px] flex items-center justify-center"
+          className="min-h-[44px] min-w-[44px] rounded-full flex items-center justify-center active:bg-muted/50"
         >
           <Bookmark aria-hidden className={cn("h-[22px] w-[22px] transition-all", saved ? "text-primary fill-primary" : "text-foreground")} />
         </button>

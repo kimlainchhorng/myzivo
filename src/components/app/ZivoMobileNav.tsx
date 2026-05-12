@@ -181,7 +181,7 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
                     initial={{ scale: 0 }}
                     animate={{ scale: 1 }}
                     transition={{ type: "spring", stiffness: 500, damping: 20 }}
-                    className="absolute -top-1 -right-2 min-w-[16px] h-[16px] px-1 bg-destructive text-destructive-foreground text-[9px] font-bold rounded-full flex items-center justify-center z-20"
+                    className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] px-1 bg-destructive text-destructive-foreground text-[9px] font-bold rounded-full flex items-center justify-center z-20 ring-2 ring-background"
                   >
                     {tab.badge > 9 ? "9+" : tab.badge}
                   </motion.span>

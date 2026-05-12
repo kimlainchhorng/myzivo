@@ -128,7 +128,7 @@ function loadGoogleMapsScript(apiKey: string): Promise<void> {
     }
 
     const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=marker,places`;
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=marker,places&loading=async`;
     script.async = true;
     script.defer = true;
     script.onload = () => {
@@ -193,24 +193,27 @@ export default function RideMap({ pickupCoords, dropoffCoords, stopCoords, route
 
     (async () => {
       const envKey = import.meta.env.VITE_GOOGLE_MAPS_API_KEY || "";
-      let key = "";
+      let key = envKey;
 
-      // Prefer existing secure backend key first
-      try {
-        const { data, error } = await supabase.functions.invoke("maps-api-key");
-        if (!cancelled && !error && data?.key) {
-          key = data.key;
+      if (!key) {
+        const { data: sessionData } = await supabase.auth.getSession();
+        if (sessionData.session) {
+          try {
+            const { data, error } = await supabase.functions.invoke("maps-api-key");
+            if (!cancelled && !error && data?.key) {
+              key = data.key;
+            }
+          } catch (err) {
+            console.warn("[RideMap] maps-api-key edge function unavailable.", err);
+          }
         }
-      } catch (err) {
-        console.warn("[RideMap] maps-api-key edge function unavailable, trying fallback key.", err);
-      }
-
-      if (!key && envKey) {
-        key = envKey;
       }
 
       if (!key) {
-        if (!cancelled) handleFailure("Map service unavailable. Please try again or contact support.");
+        if (!cancelled) {
+          setFailedReason("Map service unavailable. Please try again or contact support.");
+          setFailed(true);
+        }
         return;
       }
 

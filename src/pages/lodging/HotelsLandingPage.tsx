@@ -511,7 +511,7 @@ export default function HotelsLandingPage() {
             <button type="button"
               onClick={() => navigate(-1)}
               aria-label="Back"
-              className="h-9 w-9 -ml-1 rounded-full flex items-center justify-center bg-white/15 backdrop-blur active:bg-white/25 transition"
+              className="h-11 w-11 -ml-1 rounded-full flex items-center justify-center bg-white/15 backdrop-blur active:bg-white/25 transition touch-manipulation"
             >
               <ArrowLeft className="w-5 h-5 text-white" />
             </button>
@@ -634,7 +634,7 @@ export default function HotelsLandingPage() {
             type="button"
             onClick={() => navigate(-1)}
             aria-label="Back"
-            className="h-9 w-9 shrink-0 rounded-full flex items-center justify-center bg-muted active:bg-muted/70"
+            className="h-11 w-11 shrink-0 rounded-full flex items-center justify-center bg-muted active:bg-muted/70 touch-manipulation"
           >
             <ArrowLeft className="w-4 h-4 text-foreground" />
           </button>
@@ -711,7 +711,7 @@ export default function HotelsLandingPage() {
               else requestNearMe();
             }}
             className={cn(
-              "shrink-0 inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-semibold transition border",
+              "shrink-0 inline-flex min-h-[40px] items-center gap-1 rounded-full px-3.5 py-2 text-[11px] font-semibold transition border touch-manipulation",
               coords
                 ? "bg-primary text-primary-foreground border-primary"
                 : "bg-background text-foreground border-border active:bg-muted",
@@ -726,7 +726,7 @@ export default function HotelsLandingPage() {
               onClick={() => setSavedOnly((v) => !v)}
               aria-pressed={savedOnly}
               className={cn(
-                "shrink-0 inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-semibold transition border",
+                "shrink-0 inline-flex min-h-[40px] items-center gap-1 rounded-full px-3.5 py-2 text-[11px] font-semibold transition border touch-manipulation",
                 savedOnly
                   ? "bg-primary text-primary-foreground border-primary"
                   : "bg-background text-foreground border-border active:bg-muted",
@@ -743,7 +743,7 @@ export default function HotelsLandingPage() {
                 key={tag.id}
                 onClick={() => toggleTag(tag.id)}
                 className={cn(
-                  "shrink-0 rounded-full px-3 py-1.5 text-[11px] font-semibold transition border",
+                  "shrink-0 min-h-[40px] rounded-full px-3.5 py-2 text-[11px] font-semibold transition border touch-manipulation",
                   active
                     ? "bg-primary text-primary-foreground border-primary"
                     : "bg-background text-foreground border-border active:bg-muted",
@@ -812,7 +812,7 @@ export default function HotelsLandingPage() {
             </h3>
             <button type="button"
               onClick={() => document.getElementById("hotels-all")?.scrollIntoView({ behavior: "smooth", block: "start" })}
-              className="text-[11px] font-semibold text-primary flex items-center gap-0.5"
+              className="min-h-[40px] px-1 text-[11px] font-semibold text-primary flex items-center gap-0.5 touch-manipulation"
             >
               See all <ChevronRight className="w-3 h-3" />
             </button>
@@ -906,7 +906,7 @@ export default function HotelsLandingPage() {
             <button
               type="button"
               onClick={clearRecentlyViewed}
-              className="text-[11px] font-semibold text-muted-foreground hover:text-foreground transition"
+              className="min-h-[40px] px-1 text-[11px] font-semibold text-muted-foreground hover:text-foreground transition touch-manipulation"
             >
               Clear
             </button>
@@ -971,7 +971,7 @@ export default function HotelsLandingPage() {
                 type="button"
                 onClick={() => setViewMode("list")}
                 aria-pressed={viewMode === "list"}
-                className={cn("px-2.5 py-1 transition", viewMode === "list" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground")}
+                className={cn("min-h-[40px] px-3 py-2 transition touch-manipulation", viewMode === "list" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground")}
               >
                 List
               </button>
@@ -979,7 +979,7 @@ export default function HotelsLandingPage() {
                 type="button"
                 onClick={() => setViewMode("map")}
                 aria-pressed={viewMode === "map"}
-                className={cn("px-2.5 py-1 transition", viewMode === "map" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground")}
+                className={cn("min-h-[40px] px-3 py-2 transition touch-manipulation", viewMode === "map" ? "bg-foreground text-background" : "text-muted-foreground hover:text-foreground")}
               >
                 Map
               </button>
@@ -1000,7 +1000,7 @@ export default function HotelsLandingPage() {
               key={opt.id}
               onClick={() => setSortBy(opt.id)}
               className={
-                "shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition " +
+                "shrink-0 min-h-[40px] rounded-full px-3.5 py-2 text-xs font-semibold transition touch-manipulation " +
                 (sortBy === opt.id
                   ? "bg-primary text-primary-foreground"
                   : "bg-muted/70 text-muted-foreground active:bg-muted")
@@ -1020,7 +1020,7 @@ export default function HotelsLandingPage() {
                 key={f.id}
                 onClick={() => setActiveFilter(f.id)}
                 className={
-                  "shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition " +
+                  "shrink-0 min-h-[40px] rounded-full px-3.5 py-2 text-xs font-semibold transition touch-manipulation " +
                   (active
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted/70 text-muted-foreground active:bg-muted")

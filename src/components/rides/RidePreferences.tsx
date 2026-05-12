@@ -162,7 +162,7 @@ export default function RidePreferences() {
                     <Heart className="w-5 h-5 text-red-500 fill-red-500 shrink-0" />
                   </div>
                   <div className="flex gap-2 mt-3">
-                    <Button variant="outline" size="sm" className="flex-1 h-8 text-[10px] rounded-lg font-bold" onClick={() => navigate("/rides", { state: { preferredDriverId: driver.id, preferredDriverName: driver.name } })}>
+                    <Button variant="outline" size="sm" className="flex-1 h-8 text-[10px] rounded-lg font-bold" onClick={() => navigate("/rides/hub", { state: { preferredDriverId: driver.id, preferredDriverName: driver.name } })}>
                       Request Driver
                     </Button>
                     <Button variant="outline" size="sm" className="h-8 text-[10px] rounded-lg font-bold text-red-500 border-red-500/20 hover:bg-red-500/5" onClick={() => { setFavDrivers(prev => prev.filter(d => d.id !== driver.id)); toast.success(`${driver.name} removed`); }}>

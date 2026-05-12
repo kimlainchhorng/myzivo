@@ -42,12 +42,15 @@ export function useImportProducts(category?: string) {
   return useQuery({
     queryKey: ["import-products", category ?? "all"],
     queryFn: async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) return [] as ImportProduct[];
       let q = (supabase as any).from("import_products").select("*").eq("active", true);
       if (category && category !== "All") q = q.eq("category", category);
       const { data, error } = await q.order("featured", { ascending: false }).order("created_at", { ascending: false }).limit(60);
       if (error) throw error;
       return (data ?? []) as ImportProduct[];
     },
+    retry: false,
   });
 }
 
@@ -56,10 +59,13 @@ export function useImportProduct(id: string | undefined) {
     queryKey: ["import-product", id],
     enabled: !!id,
     queryFn: async () => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) return null;
       const { data, error } = await (supabase as any).from("import_products").select("*").eq("id", id).maybeSingle();
       if (error) throw error;
       return data as ImportProduct | null;
     },
+    retry: false,
   });
 }
 

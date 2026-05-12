@@ -508,10 +508,10 @@ export const usePushNotifications = () => {
       case "trip_started":
       case "trip_completed":
       case "driver_status":
-        window.location.href = safeInternalPath('/rides/tracking', mergedData.trip_id, '/rides');
+        window.location.href = safeInternalPath('/rides/track', mergedData.trip_id, '/rides/hub');
         break;
       case "trip_cancelled":
-        window.location.href = `/rides`;
+        window.location.href = `/rides/hub`;
         break;
 
       // Flight notifications

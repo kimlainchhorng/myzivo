@@ -6,9 +6,8 @@
  */
 import { useState, useEffect } from "react";
 import { Link, useNavigate, useSearchParams } from "react-router-dom";
-import { Loader2, Eye, EyeOff, MailCheck } from "lucide-react";
+import { Check, Loader2, Eye, EyeOff, MailCheck } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { Checkbox } from "@/components/ui/checkbox";
 import { toast } from "sonner";
 import SEOHead from "@/components/SEOHead";
 import { LegalPreviewLink } from "@/components/legal/LegalPreviewSheet";
@@ -259,13 +258,12 @@ const Signup = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="Password"
                 disabled={submitting}
-                className="w-full h-11 px-3 pr-10 rounded-md bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 focus:border-zinc-400 dark:focus:border-zinc-500 outline-none text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 transition"
+                className="w-full h-11 px-3 pr-12 rounded-md bg-zinc-50 dark:bg-zinc-800/60 border border-zinc-200 dark:border-zinc-700 focus:border-zinc-400 dark:focus:border-zinc-500 outline-none text-sm text-zinc-900 dark:text-white placeholder:text-zinc-400 transition"
               />
               <button
                 type="button"
                 onClick={() => setShowPassword((v) => !v)}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200"
-                tabIndex={-1}
+                className="absolute right-1 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-200"
                 aria-label={showPassword ? "Hide password" : "Show password"}
               >
                 {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
@@ -325,18 +323,29 @@ const Signup = () => {
 
             <p className="text-[11px] text-zinc-500 dark:text-zinc-400 leading-snug pt-2">
               By signing up, you agree to our{" "}
-              <LegalPreviewLink kind="terms" className="font-medium text-zinc-700 dark:text-zinc-200 hover:underline">Terms</LegalPreviewLink>
+              <LegalPreviewLink kind="terms" className="inline-flex min-h-[40px] min-w-[40px] items-center justify-center -my-2 px-1 font-medium text-zinc-700 dark:text-zinc-200 hover:underline">Terms</LegalPreviewLink>
               {", "}
-              <LegalPreviewLink kind="privacy" className="font-medium text-zinc-700 dark:text-zinc-200 hover:underline">Privacy Policy</LegalPreviewLink>
+              <LegalPreviewLink kind="privacy" className="inline-flex min-h-[40px] items-center -my-2 px-1 font-medium text-zinc-700 dark:text-zinc-200 hover:underline">Privacy Policy</LegalPreviewLink>
               {" and Cookies Policy. ZIVO is for users aged 18 and over."}
             </p>
 
-            <label className="flex items-start gap-2 select-none cursor-pointer pt-1">
-              <Checkbox
+            <label className="relative flex min-h-[44px] items-start gap-2 select-none cursor-pointer pt-1">
+              <input
+                type="checkbox"
                 checked={agree}
-                onCheckedChange={(v) => setAgree(!!v)}
-                className="mt-0.5 data-[state=checked]:bg-foreground data-[state=checked]:border-border"
+                onChange={(event) => setAgree(event.target.checked)}
+                className="absolute left-0 top-0 h-10 w-10 cursor-pointer opacity-0"
               />
+              <span
+                aria-hidden="true"
+                className={`mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-md border transition ${
+                  agree
+                    ? "border-zinc-900 bg-zinc-900 text-white dark:border-white dark:bg-white dark:text-black"
+                    : "border-zinc-300 bg-white dark:border-zinc-700 dark:bg-zinc-900"
+                }`}
+              >
+                {agree && <Check className="h-4 w-4" />}
+              </span>
               <span className="text-xs text-zinc-600 dark:text-zinc-400">
                 I confirm I'm 18 or older and agree to the terms above.
               </span>
@@ -345,7 +354,7 @@ const Signup = () => {
             <button
               type="submit"
               disabled={submitting || !agree || isUnderage}
-              className="w-full h-9 mt-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md shadow-rose-500/20"
+              className="w-full h-11 mt-2 rounded-lg text-sm font-semibold text-white bg-gradient-to-r from-amber-400 via-rose-500 to-fuchsia-600 hover:opacity-95 active:scale-[0.99] disabled:opacity-40 disabled:cursor-not-allowed transition flex items-center justify-center gap-2 shadow-md shadow-rose-500/20"
             >
               {submitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Sign up"}
             </button>
@@ -358,7 +367,7 @@ const Signup = () => {
             Have an account?{" "}
             <Link
               to={`/login${redirect ? `?redirect=${encodeURIComponent(redirect)}` : ""}`}
-              className="font-semibold text-rose-500 hover:text-rose-600"
+              className="inline-flex min-h-[40px] items-center font-semibold text-rose-500 hover:text-rose-600"
             >
               Log in
             </Link>
@@ -371,7 +380,7 @@ const Signup = () => {
             href="https://apps.apple.com/us/app/zivodrivers/id6759507131"
             target="_blank"
             rel="noopener noreferrer"
-            className="font-semibold text-rose-500 hover:text-rose-600"
+            className="inline-flex min-h-[40px] items-center font-semibold text-rose-500 hover:text-rose-600"
           >
             Apply as a Driver
           </a>

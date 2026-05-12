@@ -63,7 +63,7 @@ export default function AutoRepairPage() {
     queryFn: async () => {
       const { data } = await (supabase as any)
         .from("store_profiles")
-        .select("id, name, address, rating, logo_url, banner_url, slug, is_verified, services")
+        .select("id, name, address, rating, logo_url, banner_url, slug, is_verified")
         .eq("category", "auto-repair")
         .eq("is_active", true)
         .order("rating", { ascending: false })
@@ -79,7 +79,7 @@ export default function AutoRepairPage() {
     ? shops.filter((s) => {
         const q = search.toLowerCase();
         const matchSearch = !q || s.name.toLowerCase().includes(q) || (s.address ?? "").toLowerCase().includes(q);
-        const matchFilter = activeFilter === "All" || (Array.isArray((s as any).services) && (s as any).services.some((sv: string) => sv.toLowerCase().includes(activeFilter.toLowerCase())));
+        const matchFilter = activeFilter === "All" || !Array.isArray((s as any).services) || (s as any).services.some((sv: string) => sv.toLowerCase().includes(activeFilter.toLowerCase()));
         return matchSearch && matchFilter;
       })
     : (FALLBACK_SHOPS.filter((s) => {
@@ -105,7 +105,7 @@ export default function AutoRepairPage() {
       {/* Mobile header */}
       <div className="md:hidden sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/20 safe-area-top">
         <div className="flex items-center gap-3 px-4 py-3">
-          <button type="button" onClick={() => navigate(-1)} className="p-1.5 rounded-full hover:bg-muted/60 transition-colors">
+          <button type="button" aria-label="Go back" onClick={() => navigate(-1)} className="min-h-[40px] min-w-[40px] inline-flex items-center justify-center rounded-full hover:bg-muted/60 transition-colors touch-manipulation">
             <ChevronLeft className="h-5 w-5" />
           </button>
           <div className="flex items-center gap-2">
@@ -151,7 +151,7 @@ export default function AutoRepairPage() {
               key={f}
               onClick={() => setActiveFilter(f)}
               className={cn(
-                "shrink-0 px-4 py-1.5 rounded-full text-xs font-semibold transition-all whitespace-nowrap touch-manipulation",
+                "shrink-0 min-h-[40px] px-4 py-2 rounded-full text-xs font-semibold transition-all whitespace-nowrap touch-manipulation",
                 activeFilter === f
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "bg-muted/50 text-muted-foreground hover:bg-muted"

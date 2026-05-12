@@ -593,7 +593,7 @@ export default function DeliveryPage() {
               {/* Previous deliveries */}
               <div className="space-y-2">
                 <button type="button" onClick={() => setShowPreviousDeliveries(!showPreviousDeliveries)}
-                  className="flex items-center gap-2 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation">
+                  className="-ml-1 flex min-h-[44px] items-center gap-2 px-1 text-xs font-bold text-muted-foreground hover:text-foreground transition-all touch-manipulation">
                   <History className="w-3.5 h-3.5" /> Recent Deliveries
                   <ChevronRight className={cn("w-3 h-3 transition-transform", showPreviousDeliveries && "rotate-90")} />
                 </button>
@@ -631,9 +631,9 @@ export default function DeliveryPage() {
 
               {/* Notify recipient toggle */}
               <div className="rounded-2xl bg-card border border-border/40 p-3 flex items-center gap-3">
-                <button type="button" onClick={() => setNotifyRecipient(!notifyRecipient)}
-                  className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", notifyRecipient ? "bg-violet-500" : "bg-muted/60")}>
-                  <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", notifyRecipient ? "left-[18px]" : "left-0.5")} />
+                <button type="button" aria-label="Notify recipient" aria-pressed={notifyRecipient} onClick={() => setNotifyRecipient(!notifyRecipient)}
+                  className={cn("relative h-11 w-14 rounded-full transition-all shrink-0 touch-manipulation", notifyRecipient ? "bg-violet-500" : "bg-muted/60")}>
+                  <span className={cn("absolute top-2.5 h-6 w-6 rounded-full bg-white shadow transition-all", notifyRecipient ? "left-[26px]" : "left-1.5")} />
                 </button>
                 <div className="flex-1">
                   <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Bell className="w-3.5 h-3.5 text-foreground" /> Notify recipient</p>
@@ -1334,9 +1334,9 @@ export default function DeliveryPage() {
               {/* Notify Recipient */}
               <div className="rounded-2xl bg-card border border-border/40 p-4">
                 <div className="flex items-center gap-3 mb-2">
-                  <button type="button" onClick={() => setNotifyRecipient(!notifyRecipient)}
-                    className={cn("w-10 h-6 rounded-full transition-all relative shrink-0", notifyRecipient ? "bg-violet-500" : "bg-muted/60")}>
-                    <span className={cn("absolute top-0.5 w-5 h-5 rounded-full bg-white shadow transition-all", notifyRecipient ? "left-[18px]" : "left-0.5")} />
+                  <button type="button" aria-label="Notify recipient" aria-pressed={notifyRecipient} onClick={() => setNotifyRecipient(!notifyRecipient)}
+                    className={cn("relative h-11 w-14 rounded-full transition-all shrink-0 touch-manipulation", notifyRecipient ? "bg-violet-500" : "bg-muted/60")}>
+                    <span className={cn("absolute top-2.5 h-6 w-6 rounded-full bg-white shadow transition-all", notifyRecipient ? "left-[26px]" : "left-1.5")} />
                   </button>
                   <div className="flex-1">
                     <p className="text-xs font-bold text-foreground flex items-center gap-1.5"><Bell className="w-3.5 h-3.5 text-foreground" /> Notify recipient</p>

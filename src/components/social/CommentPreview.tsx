@@ -30,9 +30,12 @@ function CommentPreviewInner({ postId, source, totalCount, onOpen }: Props) {
     (async () => {
       // Pull the most recent comment for the right table
       const table = source === "user" ? "user_post_comments" : "store_post_comments";
+      const selectColumns = source === "user"
+        ? "user_id, comment, created_at"
+        : "user_id, content, created_at";
       const { data } = await (supabase as any)
         .from(table)
-        .select("user_id, comment, content, text, body, created_at")
+        .select(selectColumns)
         .eq("post_id", postId)
         .order("created_at", { ascending: false })
         .limit(1)

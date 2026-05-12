@@ -233,7 +233,7 @@ const quickLinksCreator: QuickLink[] = [
 const quickLinksTravel: QuickLink[] = [
   { icon: Plane, label: "My Trips", href: "/trips", description: "All journeys", accent: "hsl(199 89% 48%)" },
   { icon: Bookmark, label: "Saved Searches", href: "/saved-searches", description: "Alerts", accent: "hsl(38 92% 50%)" },
-  { icon: Car, label: "Ride History", href: "/rides", description: "Receipts", accent: "hsl(221 83% 53%)" },
+  { icon: Car, label: "Ride History", href: "/rides/hub", description: "Receipts", accent: "hsl(221 83% 53%)" },
   { icon: Coffee, label: "Food Orders", href: "/eats/orders", description: "Past orders", accent: "hsl(25 95% 53%)" },
   { icon: Calendar, label: "Check-in", href: "/check-in", description: "Flight check-in", accent: "hsl(142 71% 45%)" },
   { icon: Compass, label: "Explore Nearby", href: "/nearby", description: "Around you", accent: "hsl(0 84% 60%)" },

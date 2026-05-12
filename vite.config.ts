@@ -32,6 +32,10 @@ const manualChunkGroups = {
   "vendor-dates": ["date-fns"],
   "vendor-carousel": ["embla-carousel-react", "embla-carousel-autoplay"],
   "vendor-livekit": ["livekit-client"],
+  "vendor-pdf": ["jspdf", "jspdf-autotable"],
+  "vendor-canvas": ["html2canvas", "html-to-image"],
+  "vendor-media": ["@ffmpeg/ffmpeg", "@ffmpeg/util", "@ffmpeg/core"],
+  "vendor-scanning": ["@zxing/browser", "jsqr", "qrcode.react"],
 } as const;
 
 const packageSegment = (packageName: string) =>

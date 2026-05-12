@@ -98,14 +98,14 @@ export default function HotelsResortsDirectoryPage() {
           <button type="button"
             onClick={() => navigate(-1)}
             aria-label="Back"
-            className="h-9 w-9 -ml-1 rounded-full flex items-center justify-center active:bg-muted transition"
+            className="min-h-[40px] min-w-[40px] -ml-1 rounded-full flex items-center justify-center active:bg-muted transition touch-manipulation"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="text-base font-bold text-foreground flex-1 truncate">Hotels & Resorts</h1>
           <button type="button"
             aria-label="Filters"
-            className="h-9 w-9 rounded-full flex items-center justify-center active:bg-muted transition"
+            className="min-h-[40px] min-w-[40px] rounded-full flex items-center justify-center active:bg-muted transition touch-manipulation"
           >
             <Filter className="w-4.5 h-4.5 text-muted-foreground" />
           </button>
@@ -135,7 +135,7 @@ export default function HotelsResortsDirectoryPage() {
                 key={f.id}
                 onClick={() => setActiveFilter(f.id)}
                 className={
-                  "shrink-0 rounded-full px-3 py-1.5 text-xs font-semibold transition " +
+                  "shrink-0 min-h-[40px] min-w-[40px] rounded-full px-3 py-2 text-xs font-semibold transition touch-manipulation " +
                   (active
                     ? "bg-primary text-primary-foreground"
                     : "bg-muted/70 text-muted-foreground active:bg-muted")

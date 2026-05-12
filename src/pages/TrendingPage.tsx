@@ -30,12 +30,66 @@ function extractHashtags(caption: string | null): string[] {
   return (caption.match(/#[\w一-鿿؀-ۿ]+/g) || []).map((t) => t.toLowerCase());
 }
 
+const ENABLE_TRENDING_LIVE = import.meta.env.VITE_ENABLE_TRENDING_LIVE === "true";
+
+const TRENDING_POST_FALLBACK = [
+  {
+    id: "curated-post-1",
+    rawId: "curated-post-1",
+    caption: "Creators are using ZIVO to plan trips, share short videos, and turn local finds into bookings.",
+    media_urls: [],
+    media_type: "text",
+    likes_count: 1240,
+    comments_count: 86,
+    views_count: 18800,
+    created_at: new Date(Date.now() - 36 * 60 * 60 * 1000).toISOString(),
+    author_name: "ZIVO Trends",
+    author_avatar: null,
+    author_id: "zivo-trends",
+    is_verified: true,
+    source: "user" as const,
+  },
+  {
+    id: "curated-post-2",
+    rawId: "curated-post-2",
+    caption: "Food, rides, hotels, and creator shops are moving into one daily app flow.",
+    media_urls: [],
+    media_type: "text",
+    likes_count: 980,
+    comments_count: 54,
+    views_count: 12100,
+    created_at: new Date(Date.now() - 58 * 60 * 60 * 1000).toISOString(),
+    author_name: "ZIVO Local",
+    author_avatar: null,
+    author_id: "zivo-local",
+    is_verified: false,
+    source: "user" as const,
+  },
+];
+
+const TRENDING_HASHTAG_FALLBACK = [
+  { tag: "#zivolocal", count: 318, likes: 16400 },
+  { tag: "#travel", count: 244, likes: 14200 },
+  { tag: "#foodfinds", count: 197, likes: 9800 },
+  { tag: "#rides", count: 152, likes: 7100 },
+];
+
+const TRENDING_PEOPLE_FALLBACK = [
+  { id: "zivo-creators", full_name: "ZIVO Creators", avatar_url: null, bio: "Featured voices from travel, food, and local life.", is_verified: true, follower_count: 12800 },
+  { id: "zivo-guides", full_name: "ZIVO Guides", avatar_url: null, bio: "Tips for booking, sharing, and selling on ZIVO.", is_verified: false, follower_count: 8300 },
+];
+
+const TRENDING_COMMUNITIES_FALLBACK = [
+  { id: "local-discoveries", name: "Local Discoveries", description: "Places, food, rides, and events worth saving.", avatar_url: null, member_count: 5600, is_verified: true, category: "Local" },
+  { id: "creator-shops", name: "Creator Shops", description: "Products, lives, and storefront ideas from ZIVO creators.", avatar_url: null, member_count: 4100, is_verified: false, category: "Shopping" },
+];
+
 export default function TrendingPage() {
   const navigate = useNavigate();
   const [tab, setTab] = useState<Tab>("posts");
 
   /* ── Trending Posts (user + store merged) ── */
-  const { data: userPosts = [], isLoading: loadingPosts } = useQuery({
+  const { data: userPosts = TRENDING_POST_FALLBACK, isLoading: loadingPosts } = useQuery({
     queryKey: ["trending-user-posts"],
     queryFn: async () => {
       const { data } = await (supabase as any)
@@ -61,6 +115,8 @@ export default function TrendingPage() {
       }));
     },
     staleTime: 3 * 60_000,
+    enabled: ENABLE_TRENDING_LIVE,
+    retry: false,
   });
 
   const { data: storePosts = [], isLoading: loadingStorePosts } = useQuery({
@@ -89,6 +145,8 @@ export default function TrendingPage() {
       }));
     },
     staleTime: 3 * 60_000,
+    enabled: ENABLE_TRENDING_LIVE,
+    retry: false,
   });
 
   const trendingPosts = useMemo(
@@ -97,7 +155,7 @@ export default function TrendingPage() {
   );
 
   /* ── Trending Hashtags ── */
-  const { data: hashtagCounts = [], isLoading: loadingTags } = useQuery({
+  const { data: hashtagCounts = TRENDING_HASHTAG_FALLBACK, isLoading: loadingTags } = useQuery({
     queryKey: ["trending-hashtags-page"],
     queryFn: async () => {
       const { data } = await (supabase as any)
@@ -119,10 +177,12 @@ export default function TrendingPage() {
         .slice(0, 30);
     },
     staleTime: 5 * 60_000,
+    enabled: ENABLE_TRENDING_LIVE,
+    retry: false,
   });
 
   /* ── Trending People ── */
-  const { data: trendingPeople = [], isLoading: loadingPeople } = useQuery({
+  const { data: trendingPeople = TRENDING_PEOPLE_FALLBACK, isLoading: loadingPeople } = useQuery({
     queryKey: ["trending-people"],
     queryFn: async () => {
       const { data } = await (supabase as any)
@@ -133,10 +193,12 @@ export default function TrendingPage() {
       return data || [];
     },
     staleTime: 5 * 60_000,
+    enabled: ENABLE_TRENDING_LIVE,
+    retry: false,
   });
 
   /* ── Trending Communities ── */
-  const { data: communities = [], isLoading: loadingCommunities } = useQuery({
+  const { data: communities = TRENDING_COMMUNITIES_FALLBACK, isLoading: loadingCommunities } = useQuery({
     queryKey: ["trending-communities"],
     queryFn: async () => {
       const { data } = await (supabase as any)
@@ -147,6 +209,8 @@ export default function TrendingPage() {
       return data || [];
     },
     staleTime: 5 * 60_000,
+    enabled: ENABLE_TRENDING_LIVE,
+    retry: false,
   });
 
   const tabs: { id: Tab; label: string; icon: typeof TrendingUp }[] = [
@@ -170,7 +234,7 @@ export default function TrendingPage() {
         {/* Header */}
         <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-xl border-b border-border/20" style={{ paddingTop: "var(--zivo-safe-top-sticky)" }}>
           <div className="flex items-center gap-3 px-4 py-3 max-w-2xl mx-auto">
-            <button type="button" onClick={() => navigate(-1)} className="p-1.5 rounded-full hover:bg-muted/60 transition-colors">
+            <button type="button" onClick={() => navigate(-1)} aria-label="Go back" className="min-h-[40px] min-w-[40px] inline-flex items-center justify-center rounded-full hover:bg-muted/60 transition-colors touch-manipulation">
               <ChevronLeft className="h-5 w-5 text-foreground" />
             </button>
             <div className="flex items-center gap-2">
@@ -186,7 +250,7 @@ export default function TrendingPage() {
                 key={id}
                 onClick={() => setTab(id)}
                 className={cn(
-                  "relative flex-1 py-2.5 text-[13px] font-semibold transition-colors",
+                  "relative flex-1 min-h-[44px] py-2.5 text-[13px] font-semibold transition-colors touch-manipulation",
                   tab === id ? "text-primary" : "text-muted-foreground hover:text-foreground"
                 )}
               >

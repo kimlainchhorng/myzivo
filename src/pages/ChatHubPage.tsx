@@ -87,6 +87,7 @@ const CreateGroupModal = lazy(() => import("@/components/chat/CreateGroupModal")
 const StoreLiveChat = lazy(() => import("@/components/grocery/StoreLiveChat"));
 const PersonalChat = lazy(() => import("@/components/chat/PersonalChat"));
 const ChatStories = lazy(() => import("@/components/chat/ChatStories"));
+const ZivoMobileNav = lazy(() => import("@/components/app/ZivoMobileNav"));
 
 // Lazy-load sticker packs config (300+ PNG imports)
 let _illustratedPacks: any[] | null = null;
@@ -1683,7 +1684,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                   {active === "personal" && !selectionMode && !search && !zivoOFMode && (
                     <button type="button"
                       onClick={() => setSelectionMode(true)}
-                      className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
+                      className="relative w-9 h-9 hidden sm:flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
                       aria-label="Select chats"
                       title="Select chats"
                     >
@@ -1693,7 +1694,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                   {active === "personal" && !selectionMode && !zivoOFMode && (
                     <button type="button"
                       onClick={() => void handleMarkAllPersonalRead()}
-                      className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
+                      className="relative w-9 h-9 hidden sm:flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
                       aria-label="Mark all as read"
                       title="Mark all as read"
                     >
@@ -1703,7 +1704,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                   {active === "personal" && !selectionMode && !zivoOFMode && (
                     <button type="button"
                       onClick={() => navigate('/chat/contacts')}
-                      className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
+                      className="relative w-9 h-9 hidden sm:flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
                       aria-label="Contacts"
                       title="Contacts"
                     >
@@ -1748,7 +1749,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
                   {active === "personal" && !selectionMode && !zivoOFMode && (
                     <button type="button"
                       onClick={() => setShowCreateGroup(true)}
-                      className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
+                      className="relative w-9 h-9 hidden sm:flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
                       aria-label="New group"
                       title="New group"
                     >
@@ -3129,6 +3130,9 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
           noIndex
         />
         {shell}
+        <Suspense fallback={null}>
+          <ZivoMobileNav />
+        </Suspense>
       </PullToRefresh>
     </div>
   );

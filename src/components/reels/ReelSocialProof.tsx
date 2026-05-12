@@ -112,11 +112,11 @@ export default function ReelSocialProof({ storeId, postId, compact = false }: Pr
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -6 }}
         transition={{ duration: 0.25 }}
-        className="flex items-center gap-2 bg-black/40 backdrop-blur-lg rounded-full px-3 py-1.5"
+        className="inline-flex max-w-full items-center gap-2 bg-black/40 backdrop-blur-lg rounded-full px-3 py-1.5"
       >
         <div className={`w-1.5 h-1.5 rounded-full bg-current animate-pulse ${current.color}`} />
         <Icon className={`h-3.5 w-3.5 ${current.color}`} />
-        <span className="text-[11px] text-white/90 font-medium">{current.text}</span>
+        <span className="truncate text-[11px] text-white/90 font-medium">{current.text}</span>
       </motion.div>
     </AnimatePresence>
   );

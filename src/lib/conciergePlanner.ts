@@ -107,7 +107,7 @@ function planSingleClause(q: string): ConciergePlan {
         kind: "ride",
         title: `Get a ride to ${place}`,
         detail: time ? `Arriving by ${time}` : "We'll time it to your booking",
-        to: `/rides?dropoff=${encodeURIComponent(place)}`,
+        to: `/rides/hub?destination=${encodeURIComponent(place)}`,
       });
     }
     steps.push({
@@ -134,7 +134,7 @@ function planSingleClause(q: string): ConciergePlan {
         kind: "ride",
         title: "Add an airport ride",
         detail: "Pickup timed to your flight",
-        to: `/rides?bundle=1`,
+        to: `/rides/hub?bundle=1`,
       });
     } else {
       steps.push({
@@ -155,7 +155,7 @@ function planSingleClause(q: string): ConciergePlan {
       kind: "ride",
       title: place ? `Get a ride to ${place}` : "Request a ride",
       detail: time ? `Pickup ${time}` : "We'll match a driver in seconds",
-      to: place ? `/rides?dropoff=${encodeURIComponent(place)}` : "/rides",
+      to: place ? `/rides/hub?destination=${encodeURIComponent(place)}` : "/rides/hub",
     });
     if (place) {
       steps.push({

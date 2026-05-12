@@ -43,7 +43,7 @@ export default function LocalSavedPlacesRow() {
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: i * 0.03 }}
             onClick={() =>
-              navigate(`/rides?dropoff=${encodeURIComponent(p.address)}`)
+              navigate(`/rides/hub?destination=${encodeURIComponent(p.address)}`)
             }
             className={`shrink-0 inline-flex items-center gap-2 rounded-full border px-3 py-2 active:scale-[0.97] transition-transform touch-manipulation ${TONE[p.kind]}`}
           >

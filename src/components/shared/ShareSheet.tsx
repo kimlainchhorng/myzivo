@@ -73,7 +73,7 @@ export default function ShareSheet({
   shareText,
   onClose,
   positioning = "fixed",
-  zIndex = 60,
+  zIndex = 2000,
   shareMediaUrl,
   shareMediaType,
   sharePostId,
@@ -107,6 +107,13 @@ export default function ShareSheet({
   useEffect(() => {
     track("share_sheet_opened", { post_id: sharePostId, author_id: sharePostAuthorId });
     // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    document.body.dataset.shareSheetOpen = "true";
+    return () => {
+      delete document.body.dataset.shareSheetOpen;
+    };
   }, []);
 
   const normalizeShareUrl = (url: string) => {

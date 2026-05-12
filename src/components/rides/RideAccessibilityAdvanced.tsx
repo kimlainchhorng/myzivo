@@ -106,7 +106,7 @@ export default function RideAccessibilityAdvanced() {
                   </div>
 
                   {v.available && (
-                    <Button className="w-full h-10 rounded-xl text-xs font-bold" onClick={() => navigate("/rides", { state: { vehicleType: v.type, accessible: true } })}>
+                    <Button className="w-full h-10 rounded-xl text-xs font-bold" onClick={() => navigate("/rides/hub", { state: { vehicleType: v.type, accessible: true } })}>
                       Book {v.type}
                     </Button>
                   )}

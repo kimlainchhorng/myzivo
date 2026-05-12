@@ -85,7 +85,7 @@ const OPTIONS: CategoryOption[] = [
     icon: Car,
     gradient: "from-violet-500 to-fuchsia-500",
     composer: "ride",
-    basePath: "/rides",
+    basePath: "/rides/hub",
     ctaSubtitle: "Tap to open ZIVO Rides with this destination",
   },
   {

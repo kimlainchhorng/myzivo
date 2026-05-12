@@ -64,14 +64,14 @@ export default function OnboardingTour() {
       {open && step && (
         <motion.div
           initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[200] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center"
+          className="fixed inset-0 z-[2000] bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4 pb-[calc(env(safe-area-inset-bottom)+1rem)]"
         >
           <motion.div
             initial={{ y: 80, opacity: 0 }} animate={{ y: 0, opacity: 1 }} exit={{ y: 80, opacity: 0 }}
             transition={{ type: "spring", damping: 26, stiffness: 280 }}
-            className="w-full sm:max-w-md mx-4 mb-4 sm:mb-0 bg-background rounded-2xl shadow-2xl overflow-hidden"
+            className="w-full sm:max-w-md max-h-[min(560px,calc(100dvh-2rem-env(safe-area-inset-bottom)))] bg-background rounded-2xl shadow-2xl overflow-hidden flex flex-col"
           >
-            <div className="relative bg-foreground text-background h-32 flex items-center justify-center text-5xl">
+            <div className="relative shrink-0 bg-foreground text-background h-28 sm:h-32 flex items-center justify-center text-5xl">
               {stepIdx === 0 ? "👋" : stepIdx === 1 ? "💬" : stepIdx === 2 ? "✈️" : stepIdx === 3 ? "💵" : "✨"}
               <button type="button" onClick={() => void finish()} aria-label="Skip tour" className="absolute top-3 right-3 h-8 w-8 flex items-center justify-center rounded-full bg-black/30 text-white hover:bg-black/50">
                 <X className="w-4 h-4" />
@@ -80,7 +80,7 @@ export default function OnboardingTour() {
                 {STEPS.map((_, i) => <span key={i} className={`h-1 w-6 rounded-full ${i === stepIdx ? "bg-white" : "bg-white/30"}`} />)}
               </div>
             </div>
-            <div className="p-5">
+            <div className="p-5 overflow-y-auto">
               <h3 className="text-xl font-bold mb-1">{step.title}</h3>
               <p className="text-sm text-muted-foreground">{step.body}</p>
               <button type="button"

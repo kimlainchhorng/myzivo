@@ -265,7 +265,7 @@ function RestaurantCard({
           size="sm"
           variant="outline"
           className="rounded-lg text-[11px] px-2"
-          onClick={() => navigate(`/rides?dropoff=${encodeURIComponent(r.name)}`)}
+          onClick={() => navigate(`/rides/hub?destination=${encodeURIComponent(r.name)}`)}
         >
           Ride
         </Button>
@@ -338,7 +338,7 @@ function HotelCard({
           size="sm"
           variant="outline"
           className="rounded-lg text-[11px]"
-          onClick={() => navigate(`/rides?dropoff=${encodeURIComponent(h.name)}`)}
+          onClick={() => navigate(`/rides/hub?destination=${encodeURIComponent(h.name)}`)}
         >
           Ride here
         </Button>

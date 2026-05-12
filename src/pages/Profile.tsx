@@ -312,7 +312,7 @@ const Profile = () => {
     if (tpl.includes("comment") || tpl.includes("like") || tpl.includes("reaction") || tpl.includes("mention") || tpl.includes("post")) {
       return md.post_id ? `/post/${md.post_id}` : "/feed";
     }
-    if (tpl.includes("ride") || tpl.includes("trip") || tpl.includes("driver")) return md.job_id ? `/ride/track/${md.job_id}` : "/rides";
+    if (tpl.includes("ride") || tpl.includes("trip") || tpl.includes("driver")) return md.job_id ? `/rides/track/${md.job_id}` : "/rides/hub";
     if (tpl.includes("order") || tpl.includes("delivery")) return md.order_id ? `/orders/${md.order_id}` : "/account/orders";
     if (tpl.includes("wallet") || tpl.includes("payout") || tpl.includes("payment")) return "/wallet";
     if (tpl.includes("verification") || tpl.includes("verify")) return "/account/verification";

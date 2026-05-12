@@ -270,7 +270,7 @@ export default function ZivoPlusPage() {
       {/* Header */}
       <div className="sticky top-0 safe-area-top z-30 bg-background/80 backdrop-blur-2xl border-b border-border/20">
         <div className="flex items-center gap-3 px-4 py-3">
-          <motion.button whileTap={{ scale: 0.9 }} onClick={() => navigate(-1)} className="p-2 rounded-2xl hover:bg-muted/60">
+          <motion.button whileTap={{ scale: 0.9 }} onClick={() => navigate(-1)} aria-label="Go back" className="min-h-[40px] min-w-[40px] inline-flex items-center justify-center rounded-2xl hover:bg-muted/60 touch-manipulation">
             <ArrowLeft className="h-5 w-5" />
           </motion.button>
           <div className="flex items-center gap-2">

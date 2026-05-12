@@ -37,7 +37,7 @@ export default function GroceryCategories({ active, onChange, counts }: Props) {
             key={cat.id}
             whileTap={{ scale: 0.93 }}
             onClick={() => onChange(cat.id)}
-            className={`relative flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold whitespace-nowrap transition-all duration-200 shrink-0 ${
+            className={`relative flex min-h-[40px] items-center gap-1.5 rounded-full px-4 py-2 text-xs font-semibold whitespace-nowrap transition-all duration-200 shrink-0 touch-manipulation ${
               isActive
                 ? "bg-primary text-primary-foreground shadow-md shadow-primary/25"
                 : "bg-muted/40 text-muted-foreground hover:bg-muted/70"

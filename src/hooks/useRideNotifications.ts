@@ -49,17 +49,17 @@ function defaultDeepLink(event: RideEvent, jobId?: string): string {
     case "driver_en_route":
     case "driver_arrived":
     case "trip_started":
-      return jobId ? `/ride/track/${jobId}` : "/rides";
+      return jobId ? `/rides/track/${jobId}` : "/rides/hub";
     case "trip_completed":
-      return jobId ? `/ride/summary/${jobId}` : "/rides/history";
+      return jobId ? `/rides/track/${jobId}` : "/rides/hub?tab=history";
     case "trip_cancelled":
-      return "/rides";
+      return "/rides/hub";
     case "surge_alert":
-      return "/rides";
+      return "/rides/hub";
     case "promo_available":
       return "/wallet/promos";
     default:
-      return "/rides";
+      return "/rides/hub";
   }
 }
 

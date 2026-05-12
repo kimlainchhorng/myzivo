@@ -268,7 +268,7 @@ export default function HistoryPage() {
                 </div>
                 <button type="button"
                   onClick={() => navigate(
-                    tab === "rides" ? "/rides" :
+                    tab === "rides" ? "/rides/hub" :
                     tab === "eats" ? "/eats" :
                     tab === "flights" ? "/flights" :
                     tab === "hotels" ? "/hotels" : "/"
@@ -287,7 +287,7 @@ export default function HistoryPage() {
                     <button type="button"
                       key={item.id}
                       onClick={() => {
-                        if (item.type === "ride") navigate("/rides");
+                        if (item.type === "ride") navigate("/rides/hub");
                         else if (item.type === "eats") navigate("/eats");
                         else if (item.type === "flight") navigate("/flights");
                         else if (item.type === "hotel") navigate("/hotels");

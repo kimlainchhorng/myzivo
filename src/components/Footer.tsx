@@ -44,7 +44,7 @@ const footerSections = [
     links: [
       { name: "Car Rentals", href: "/rent-car" },
       { name: "P2P Rentals", href: "/rent-car" },
-      { name: "ZIVO Rides", href: "/rides" },
+      { name: "ZIVO Rides", href: "/rides/hub" },
       { name: "ZIVO Eats", href: "/eats" },
       { name: "Become a Driver", href: "/drive" },
     ],
@@ -110,7 +110,7 @@ const Footer = ({ className }: { className?: string }) => {
         <div className="py-14 grid grid-cols-1 lg:grid-cols-12 gap-10">
           {/* Brand column */}
           <div className="lg:col-span-4 space-y-5">
-            <Link to="/" className="inline-block">
+            <Link to="/" className="inline-flex min-h-[40px] items-center touch-manipulation">
               <ZivoLogo size="md" />
             </Link>
             <p className="text-sm text-primary-foreground/40 max-w-xs leading-relaxed">
@@ -134,7 +134,7 @@ const Footer = ({ className }: { className?: string }) => {
                 <button type="button"
                   key={social.label}
                   onClick={() => import("@/lib/openExternalUrl").then(({ openExternalUrl }) => openExternalUrl(social.href))}
-                  className="w-9 h-9 min-w-[36px] min-h-[36px] rounded-lg bg-primary-foreground/10 flex items-center justify-center text-primary-foreground/50 hover:text-primary-foreground hover:bg-primary/20 hover:shadow-[0_0_12px_hsl(var(--primary)/0.3)] active:scale-90 transition-all touch-manipulation"
+                  className="w-10 h-10 min-w-[40px] min-h-[40px] rounded-lg bg-primary-foreground/10 flex items-center justify-center text-primary-foreground/50 hover:text-primary-foreground hover:bg-primary/20 hover:shadow-[0_0_12px_hsl(var(--primary)/0.3)] active:scale-90 transition-all touch-manipulation"
                   aria-label={social.label}
                 >
                   {social.icon}
@@ -156,7 +156,7 @@ const Footer = ({ className }: { className?: string }) => {
                     <li key={link.name}>
                       <Link
                         to={link.href}
-                        className="text-sm text-primary-foreground/40 hover:text-primary-foreground hover:translate-x-0.5 transition-all inline-block"
+                        className="inline-flex min-h-[40px] items-center text-sm text-primary-foreground/40 hover:text-primary-foreground hover:translate-x-0.5 transition-all touch-manipulation"
                       >
                         {link.name}
                       </Link>
@@ -175,7 +175,7 @@ const Footer = ({ className }: { className?: string }) => {
               <Link
                 key={link.name}
                 to={link.href}
-                className="text-xs text-primary-foreground/30 hover:text-primary-foreground/60 transition-colors"
+                className="inline-flex min-h-[40px] items-center text-xs text-primary-foreground/30 hover:text-primary-foreground/60 transition-colors touch-manipulation"
               >
                 {link.name}
               </Link>
@@ -193,7 +193,7 @@ const Footer = ({ className }: { className?: string }) => {
 
             <button type="button"
               onClick={scrollToTop}
-              className="group/top inline-flex items-center gap-1.5 text-xs text-primary-foreground/40 hover:text-primary px-3 py-1.5 rounded-full border border-primary-foreground/10 hover:border-primary/30 active:scale-95 transition-all touch-manipulation min-h-[36px]"
+              className="group/top inline-flex items-center gap-1.5 text-xs text-primary-foreground/40 hover:text-primary px-3 py-2 rounded-full border border-primary-foreground/10 hover:border-primary/30 active:scale-95 transition-all touch-manipulation min-h-[40px]"
             >
               <ChevronUp className="w-4 h-4 group-hover/top:-translate-y-0.5 transition-transform" />{" "}
               Back to Top

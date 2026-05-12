@@ -5,7 +5,7 @@
  * /rides/multi-stop?…&multi=B|C|D, we persist the queue in localStorage
  * keyed by the active trip id (or "pending" until a trip id exists).
  * Once a leg completes, RideTrackingPage pops the next stop and offers
- * "Book next leg" → opens /rides?pickup=<lastDrop>&dropoff=<next>&multi=…
+ * "Book next leg" → opens /rides/hub?pickup=<lastDrop>&destination=<next>&multi=…
  * with one fewer stop.
  *
  * Synchronous and offline-safe — no backend coupling required.

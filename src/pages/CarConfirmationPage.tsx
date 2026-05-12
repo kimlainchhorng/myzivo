@@ -105,7 +105,7 @@ export default function CarConfirmationPage() {
                   Book a ride or order food delivery right from ZIVO.
                 </p>
                 <div className="flex gap-3">
-                  <Link to="/rides">
+                  <Link to="/rides/hub">
                     <Button variant="outline" className="gap-2">
                       Book a Ride
                       <ArrowRight className="w-4 h-4" />

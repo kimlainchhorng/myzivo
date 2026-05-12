@@ -14,7 +14,7 @@ import VerifiedBadge from "@/components/VerifiedBadge";
 import { isBlueVerified } from "@/lib/verification";
 import TrendingHashtags, { postHasHashtag } from "@/components/social/TrendingHashtags";
 import { EmptyState } from "@/components/ui/empty-state";
-import { detectMention, applyMention } from "@/components/social/MentionPicker";
+import MentionPicker, { detectMention, applyMention } from "@/components/social/MentionPicker";
 import { usePostActions, type PostActionTarget } from "@/hooks/usePostActions";
 import { usePostReactions } from "@/hooks/usePostReactions";
 import { usePostReposts } from "@/hooks/usePostReposts";
@@ -113,7 +113,6 @@ const ReactionSummary = lazy(() => import("@/components/social/ReactionSummary")
 const RepostDialog = lazy(() => import("@/components/social/RepostDialog"));
 const PostInsights = lazy(() => import("@/components/social/PostInsights"));
 const CaptionEditDialog = lazy(() => import("@/components/social/CaptionEditDialog"));
-const MentionPicker = lazy(() => import("@/components/social/MentionPicker"));
 const CommentHeartButton = lazy(() => import("@/components/social/CommentHeartButton"));
 const CommentRowActions = lazy(() => import("@/components/social/CommentRowActions"));
 const ReelsCoachmarks = lazy(() => import("@/components/social/ReelsCoachmarks"));
@@ -272,7 +271,7 @@ function MusicTicker({ name, onClick }: { name: string; onClick?: () => void }) 
     <button
       type="button"
       onClick={(e) => { e.stopPropagation(); onClick?.(); }}
-      className="flex items-center gap-2 max-w-[70%] overflow-hidden active:opacity-70"
+      className="flex min-h-[40px] w-full min-w-0 items-center gap-2 overflow-hidden active:opacity-70"
     >
       <div className="w-8 h-8 rounded-full bg-gradient-to-br from-white/20 to-white/5 border border-white/20 flex items-center justify-center shrink-0 animate-[spin_3s_linear_infinite]">
         <svg viewBox="0 0 24 24" className="w-4 h-4 fill-white">
@@ -367,7 +366,7 @@ function ReelCard({
 
   // Track view: counts after the post stays active in the viewport for 1.5s
   const rawPostId = post.id.startsWith("u-") ? post.id.slice(2) : post.id;
-  usePostViewTracking(rawPostId, post.source ?? "store", isActive);
+  usePostViewTracking(rawPostId, post.source ?? "store", isActive, userId);
   const [videoProgress, setVideoProgress] = useState(0); // 0..1
   const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [captionExpanded, setCaptionExpanded] = useState(false);
@@ -487,7 +486,6 @@ function ReelCard({
   const [triedBlobFallback, setTriedBlobFallback] = useState(false);
   const [triedFFmpegRepair, setTriedFFmpegRepair] = useState(false);
   const [hasLoadedFrame, setHasLoadedFrame] = useState(false);
-  const viewTracked = useRef(false);
 
   // Follow state
   const authorId = post.source === "user" ? post.author_id : null;
@@ -601,28 +599,6 @@ function ReelCard({
     void video.play().then(() => setIsPlaying(true)).catch(() => {});
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentSrc]);
-
-  // Track view when post becomes active (once per post per session).
-  // User reels are stored in user_posts and need a separate RPC because
-  // the column is named views_count (vs. store_posts.view_count).
-  useEffect(() => {
-    if (!isActive || viewTracked.current) return;
-    viewTracked.current = true;
-    (async () => {
-      try {
-        if (post.source === "user") {
-          const rawId = post.id.startsWith("u-") ? post.id.slice(2) : post.id;
-          const { error } = await supabase.rpc("increment_user_post_view_count" as any, { p_post_id: rawId });
-          if (error) console.warn("[ReelCard] user view-count rpc error", error);
-        } else {
-          const { error } = await supabase.rpc("increment_store_post_view_count" as any, { p_post_id: post.id });
-          if (error) console.warn("[ReelCard] store view-count rpc error", error);
-        }
-      } catch (err) {
-        console.warn("[ReelCard] view-count rpc failed", err);
-      }
-    })();
-  }, [isActive, post.id, post.source]);
 
   // Bridge the top-right Speed/PiP buttons (page-level) to the active reel
   // via window events. Only the active card listens, so multi-reel pages
@@ -937,7 +913,6 @@ function ReelCard({
     setTriedBlobFallback(false);
     setTriedFFmpegRepair(false);
     setHasLoadedFrame(false);
-    viewTracked.current = false;
     if (blobSrc) {
       URL.revokeObjectURL(blobSrc);
       setBlobSrc(null);
@@ -1434,10 +1409,12 @@ function ReelCard({
       )}
 
       {/* Converting overlay */}
-      {(isRepairing || isBlobLoading) && (
-        <div className="absolute inset-0 z-30 flex flex-col items-center justify-center gap-3 bg-black/70">
-          <RefreshCw className="w-10 h-10 text-white animate-spin" />
-          <p className="text-sm text-white font-medium">{isBlobLoading ? "Loading video..." : "Converting video..."}</p>
+      {(isRepairing || isBlobLoading) && !hasLoadedFrame && (
+        <div className="absolute inset-x-0 top-[45%] z-30 flex justify-center pointer-events-none">
+          <div className="flex items-center gap-2 rounded-full bg-black/45 px-3 py-2 backdrop-blur-md border border-white/10">
+            <RefreshCw className="w-4 h-4 text-white animate-spin" />
+            <p className="text-[11px] text-white/90 font-semibold">{isBlobLoading ? "Loading..." : "Preparing..."}</p>
+          </div>
         </div>
       )}
 
@@ -1474,7 +1451,7 @@ function ReelCard({
       </AnimatePresence>
 
       {/* Bottom-left: store info + caption */}
-      <div className="absolute bottom-0 left-0 right-16 z-30 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+88px)]">
+      <div className="absolute bottom-0 left-0 right-[92px] z-30 px-4 pb-[calc(env(safe-area-inset-bottom,0px)+112px)]">
         {/* Owner-only insights pill — small "Your reel · X views" affordance
             that takes the creator to their post analytics on tap. */}
         {userId && post.author_id && userId === post.author_id && (
@@ -1494,7 +1471,7 @@ function ReelCard({
           </button>
         )}
 
-        <div className="flex items-center gap-2.5 mb-2.5">
+        <div className="flex items-center gap-2.5 mb-2.5 min-w-0">
           <button
             type="button"
             onClick={() => {
@@ -1504,7 +1481,7 @@ function ReelCard({
                 onNavigate(post.store_slug);
               }
             }}
-            className="flex items-center gap-2.5 active:opacity-70"
+            className="flex min-w-0 flex-1 items-center gap-2.5 active:opacity-70"
           >
             <div className="relative flex-shrink-0">
               <div className="w-11 h-11 rounded-full overflow-hidden border-2 border-white/80 bg-black/40">
@@ -1523,24 +1500,13 @@ function ReelCard({
                 </div>
               )}
             </div>
-            <span className="text-white font-bold text-sm sm:text-[15px] lg:text-base drop-shadow-lg inline-flex items-center gap-1 max-w-[40vw] sm:max-w-[180px] truncate">
+            <span className="min-w-0 max-w-full text-white font-bold text-sm sm:text-[15px] lg:text-base drop-shadow-lg inline-flex items-center gap-1 truncate">
               <span className="truncate">{post.source === "user" ? post.author_name : post.store_name}</span>
               {(post.source === "user" ? isBlueVerified(post.author_is_verified) : isBlueVerified(post.store_is_verified)) && (
                 <VerifiedBadge size={16} />
               )}
             </span>
           </button>
-
-          {/* Live social-proof ticker — store posts only, self-hides when quiet.
-              Hidden on small phones so it never pushes the author name into
-              an awkward 2–3 line wrap; visible from sm+. */}
-          {post.source === "store" && post.store_id && (
-            <Suspense fallback={null}>
-              <div className="hidden sm:block">
-                <ReelSocialProof storeId={post.store_id} postId={post.id} />
-              </div>
-            </Suspense>
-          )}
 
           {/* Trending badge — engagement signal blended with recency.
               Shown when (likes·1 + comments·2 + shares·3 + views·0.05) is
@@ -1569,7 +1535,7 @@ function ReelCard({
               onClick={handleFollow}
               disabled={followLoading}
               className={cn(
-                "px-3.5 py-1 rounded-md text-xs font-semibold transition-all active:scale-95 border backdrop-blur-sm",
+                "shrink-0 px-3 py-1 rounded-md text-xs font-semibold transition-all active:scale-95 border backdrop-blur-sm",
                 isFollowing
                   ? "bg-white/10 border-white/30 text-white"
                   : "bg-primary border-primary text-primary-foreground"
@@ -1585,6 +1551,14 @@ function ReelCard({
             </button>
           )}
         </div>
+        {/* Live social-proof ticker — its own row so it doesn't crush the creator name. */}
+        {post.source === "store" && post.store_id && (
+          <div className="mb-1.5 max-w-full overflow-hidden">
+            <Suspense fallback={null}>
+              <ReelSocialProof storeId={post.store_id} postId={post.id} />
+            </Suspense>
+          </div>
+        )}
         {/* Location row only — TikTok-style: hide the post timestamp on the
             feed (it makes month-old reels feel stale). Time still shows on
             profile pages. */}
@@ -1606,7 +1580,7 @@ function ReelCard({
                 type="button"
                 onClick={(e) => { e.stopPropagation(); if (isLong) setCaptionExpanded((v) => !v); }}
                 className={cn(
-                  "block w-full text-left text-white text-sm sm:text-[15px] lg:text-base drop-shadow leading-snug mb-1",
+                  "block min-h-[40px] w-full text-left text-white text-sm sm:text-[15px] lg:text-base drop-shadow leading-snug mb-1",
                   !captionExpanded && "line-clamp-2",
                   isLong ? "cursor-pointer" : "cursor-default",
                 )}
@@ -1793,7 +1767,7 @@ function ReelCard({
             without clipping the avatar off the top.
           - tablet (≥sm):  gap-5, all items
           - desktop (≥lg): gap-6, larger icons */}
-      <div className="absolute right-2 sm:right-3 lg:right-4 bottom-[calc(env(safe-area-inset-bottom,0px)+88px)] z-30 flex flex-col items-center justify-end gap-3 sm:gap-5 lg:gap-6">
+      <div className="absolute right-5 sm:right-3 lg:right-4 bottom-[calc(env(safe-area-inset-bottom,0px)+96px)] z-30 flex flex-col items-center justify-end gap-3 sm:gap-5 lg:gap-6">
         {/* Mute moved out of the right rail — TikTok exposes mute via tap-on-
             video + a transient toast, not a persistent button. The visible
             "muted" state on the feed is now signaled by the floating pill
@@ -2024,7 +1998,7 @@ function ReelCard({
               toast.success("Opening tip jar for " + (post.author_name || "this creator") + "…");
               if (onOpenActions) onOpenActions();
             }}
-            className="flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
+            className="hidden sm:flex flex-col items-center gap-1 min-w-[44px] min-h-[44px]"
             aria-label="Send a gift to this creator"
             title="Gift creator"
           >
@@ -3015,6 +2989,144 @@ function CommentSheet({
 
 // ── Feed Search Overlay ──────────────────────────────────────────────────────
 
+type FeedQuickLaunch = {
+  label: string;
+  description: string;
+  href: string;
+  icon: React.ComponentType<{ className?: string }>;
+  tone: string;
+  keywords: string[];
+};
+
+const FEED_QUICK_LAUNCHES: FeedQuickLaunch[] = [
+  {
+    label: "Social",
+    description: "Posts and friends",
+    href: "/feed",
+    icon: MessageCircle,
+    tone: "bg-sky-500/10 text-sky-600 dark:text-sky-300",
+    keywords: ["facebook", "social", "post", "friends", "feed"],
+  },
+  {
+    label: "Reels",
+    description: "Short videos",
+    href: "/reels",
+    icon: Film,
+    tone: "bg-rose-500/10 text-rose-600 dark:text-rose-300",
+    keywords: ["tiktok", "reels", "video", "shorts"],
+  },
+  {
+    label: "Chat",
+    description: "Messages and groups",
+    href: "/chat",
+    icon: Send,
+    tone: "bg-blue-500/10 text-blue-600 dark:text-blue-300",
+    keywords: ["telegram", "chat", "message", "dm", "group"],
+  },
+  {
+    label: "Meet",
+    description: "Calls and rooms",
+    href: "/chat/contacts",
+    icon: Tv2,
+    tone: "bg-violet-500/10 text-violet-600 dark:text-violet-300",
+    keywords: ["meet", "google meet", "video call", "call", "room"],
+  },
+  {
+    label: "Rides",
+    description: "Book a car",
+    href: "/rides/hub",
+    icon: Car,
+    tone: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-300",
+    keywords: ["uber", "ride", "taxi", "car", "pickup"],
+  },
+  {
+    label: "Eats",
+    description: "Food delivery",
+    href: "/eats",
+    icon: UtensilsCrossed,
+    tone: "bg-orange-500/10 text-orange-600 dark:text-orange-300",
+    keywords: ["uber eat", "ubereats", "food", "restaurant", "eats", "delivery"],
+  },
+  {
+    label: "Hotels",
+    description: "Book stays",
+    href: "/hotels",
+    icon: Building2,
+    tone: "bg-indigo-500/10 text-indigo-600 dark:text-indigo-300",
+    keywords: ["booking", "booking.com", "hotel", "stay", "room"],
+  },
+  {
+    label: "Flights",
+    description: "Search trips",
+    href: "/flights",
+    icon: Plane,
+    tone: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-300",
+    keywords: ["flight", "travel", "trip", "ticket"],
+  },
+  {
+    label: "Delivery",
+    description: "Send packages",
+    href: "/delivery",
+    icon: ShoppingBag,
+    tone: "bg-amber-500/10 text-amber-600 dark:text-amber-300",
+    keywords: ["delivery", "package", "courier", "send"],
+  },
+  {
+    label: "Creators",
+    description: "Subscriptions",
+    href: "/creator-dashboard",
+    icon: Briefcase,
+    tone: "bg-pink-500/10 text-pink-600 dark:text-pink-300",
+    keywords: ["onlyfans", "creator", "subscription", "fans", "tips"],
+  },
+  {
+    label: "Shop",
+    description: "Marketplace",
+    href: "/marketplace",
+    icon: Store,
+    tone: "bg-lime-500/10 text-lime-700 dark:text-lime-300",
+    keywords: ["shop", "marketplace", "store", "buy", "sell"],
+  },
+  {
+    label: "Services",
+    description: "Everything",
+    href: "/services",
+    icon: Layers,
+    tone: "bg-foreground/10 text-foreground",
+    keywords: ["all", "services", "apps", "more", "everything"],
+  },
+];
+
+function FeedQuickLaunchButton({
+  launch,
+  onClose,
+  onNavigate,
+}: {
+  launch: FeedQuickLaunch;
+  onClose: () => void;
+  onNavigate: (path: string) => void;
+}) {
+  const Icon = launch.icon;
+  return (
+    <button
+      type="button"
+      onClick={() => {
+        onNavigate(launch.href);
+        onClose();
+      }}
+      className="flex items-center gap-3 rounded-lg border border-border/50 bg-card px-3 py-3 text-left active:scale-[0.98] transition-transform"
+    >
+      <span className={cn("flex h-10 w-10 shrink-0 items-center justify-center rounded-full", launch.tone)}>
+        <Icon className="h-5 w-5" />
+      </span>
+      <span className="min-w-0">
+        <span className="block text-sm font-semibold text-foreground truncate">{launch.label}</span>
+        <span className="block text-[11px] text-muted-foreground truncate">{launch.description}</span>
+      </span>
+    </button>
+  );
+}
+
 function FeedSearchOverlay({ onClose, onNavigate }: { onClose: () => void; onNavigate: (path: string) => void }) {
   const [query, setQuery] = useState("");
   const [debouncedQuery, setDebouncedQuery] = useState("");
@@ -3061,8 +3173,16 @@ function FeedSearchOverlay({ onClose, onNavigate }: { onClose: () => void; onNav
   });
 
   const isLoading = storesLoading || profilesLoading;
-  const hasResults = storeResults.length > 0 || profileResults.length > 0;
   const hasQuery = debouncedQuery.length >= 1;
+  const quickLaunchResults = useMemo(() => {
+    const q = debouncedQuery.toLowerCase();
+    if (!q) return FEED_QUICK_LAUNCHES;
+    return FEED_QUICK_LAUNCHES.filter((launch) =>
+      [launch.label, launch.description, ...launch.keywords]
+        .some((value) => value.toLowerCase().includes(q) || q.includes(value.toLowerCase())),
+    );
+  }, [debouncedQuery]);
+  const hasResults = quickLaunchResults.length > 0 || storeResults.length > 0 || profileResults.length > 0;
 
   return (
     <div className="fixed inset-0 z-[1500] bg-background flex flex-col">
@@ -3077,7 +3197,7 @@ function FeedSearchOverlay({ onClose, onNavigate }: { onClose: () => void; onNav
             ref={inputRef}
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search shops, restaurants, or people"
+            placeholder="Search apps, rides, food, hotels, people..."
             className="w-full h-11 pl-9 pr-9 rounded-full bg-muted/40 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30"
           />
           {query && (
@@ -3090,10 +3210,39 @@ function FeedSearchOverlay({ onClose, onNavigate }: { onClose: () => void; onNav
 
       {/* Results */}
       <div className="flex-1 overflow-y-auto pb-nav">
+        {quickLaunchResults.length > 0 && (
+          <div className="px-4 pt-4">
+            <div className="mb-2 flex items-center justify-between">
+              <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                {hasQuery ? "ZIVO apps" : "Jump in"}
+              </p>
+              {!hasQuery && (
+                <button
+                  type="button"
+                  onClick={() => { onNavigate("/services"); onClose(); }}
+                  className="text-[11px] font-semibold text-foreground"
+                >
+                  See all
+                </button>
+              )}
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {quickLaunchResults.map((launch) => (
+                <FeedQuickLaunchButton
+                  key={launch.href}
+                  launch={launch}
+                  onClose={onClose}
+                  onNavigate={onNavigate}
+                />
+              ))}
+            </div>
+          </div>
+        )}
+
         {!hasQuery && (
-          <div className="flex min-h-full flex-col items-center text-center px-8 gap-3 pt-[18vh]">
-            <Search className="w-12 h-12 text-muted-foreground/30" />
-            <p className="text-sm text-muted-foreground">Search for shops, restaurants, or people</p>
+          <div className="px-8 py-8 text-center">
+            <Search className="mx-auto w-10 h-10 text-muted-foreground/25" />
+            <p className="mt-3 text-sm text-muted-foreground">Search people, shops, restaurants, or any ZIVO app.</p>
           </div>
         )}
 
@@ -4357,6 +4506,11 @@ export default function FeedPage() {
 
   return (
     <MotionConfig reducedMotion="user">
+    <SEOHead
+      title={isReelsRoute ? "ZIVO Reels – Full-Screen Short Videos" : "ZIVO Feed – Short Videos, Reels & Stories"}
+      description={isReelsRoute ? "Watch full-screen creator reels, trending videos, captions, reposts, comments, and shares on ZIVO." : "Watch and share short videos, reels, and stories from creators around the world on ZIVO."}
+      canonical={isReelsRoute ? "/reels" : "/feed"}
+    />
     <Suspense fallback={null}><ReelsCoachmarks /></Suspense>
     <div className="fixed inset-0 bg-black lg:flex lg:flex-col">
       {/* Desktop NavBar */}
@@ -4784,7 +4938,7 @@ export default function FeedPage() {
                 <button type="button" onClick={() => navigate("/flights")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left flex items-center gap-2"><Plane className="w-4 h-4 text-primary shrink-0" /> Flights</button>
                 <button type="button" onClick={() => navigate("/hotels")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left flex items-center gap-2"><Building2 className="w-4 h-4 text-primary shrink-0" /> Hotels</button>
                 <button type="button" onClick={() => navigate("/eats")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left flex items-center gap-2"><UtensilsCrossed className="w-4 h-4 text-primary shrink-0" /> Eats</button>
-                <button type="button" onClick={() => navigate("/rides")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left flex items-center gap-2"><Car className="w-4 h-4 text-primary shrink-0" /> Rides</button>
+                <button type="button" onClick={() => navigate("/rides/hub")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left flex items-center gap-2"><Car className="w-4 h-4 text-primary shrink-0" /> Rides</button>
                 <button type="button" onClick={() => navigate("/jobs")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left flex items-center gap-2"><Briefcase className="w-4 h-4 text-primary shrink-0" /> Jobs</button>
                 <button type="button" onClick={() => navigate("/shop")} className="px-2 py-2 rounded-lg bg-muted/40 hover:bg-muted text-foreground text-left flex items-center gap-2"><ShoppingBag className="w-4 h-4 text-primary shrink-0" /> Shop</button>
               </div>
@@ -4967,6 +5121,7 @@ export default function FeedPage() {
             <UnifiedShareSheet
               shareUrl={getPostShareUrl(sharePostId)}
               shareText={sharePost?.caption || "Check out this post!"}
+              zIndex={9999}
               sharePostId={sharePostId.startsWith("u-") ? sharePostId.slice(2) : sharePostId}
               postSource={sharePost?.source ?? "store"}
               onClose={() => setSharePostId(null)}
@@ -5155,8 +5310,8 @@ export default function FeedPage() {
         )}
       </div>
 
-      {/* Bottom navigation overlaid on top */}
-      <ZivoMobileNav />
+      {/* Bottom navigation overlaid on top. Hidden on /reels for a true fullscreen viewer. */}
+      {!isReelsRoute && <ZivoMobileNav />}
     </div>
     </MotionConfig>
   );

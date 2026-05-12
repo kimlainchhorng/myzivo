@@ -247,7 +247,7 @@ export default function FlightSearchFormPro({
             key={type.id}
             onClick={() => setTripType(type.id)}
             className={cn(
-              "relative px-3.5 sm:px-5 py-2.5 rounded-xl font-medium transition-all duration-200 flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm overflow-hidden",
+              "relative min-h-[44px] px-3.5 sm:px-5 py-2.5 rounded-xl font-medium transition-all duration-200 flex items-center gap-1.5 sm:gap-2 text-xs sm:text-sm overflow-hidden touch-manipulation",
               tripType === type.id
                 ? "text-primary-foreground shadow-[0_4px_16px_hsl(var(--primary)/0.35),inset_0_1px_0_rgba(255,255,255,0.2)] active:scale-[0.96]"
                 : "bg-muted/60 text-muted-foreground hover:bg-muted/80 hover:shadow-md active:scale-[0.97] border border-border/30"
@@ -513,7 +513,7 @@ export default function FlightSearchFormPro({
                     <Button
                       variant="outline"
                       onClick={() => setPassengerSheetOpen(true)}
-                      className="w-full h-13 justify-start text-left font-normal rounded-2xl touch-manipulation shadow-sm border-border/30 hover:shadow-md transition-all active:scale-[0.98]"
+                      className="w-full h-14 justify-start text-left font-normal rounded-2xl touch-manipulation shadow-sm border-border/30 hover:shadow-md transition-all active:scale-[0.98]"
                     >
                       <Users className="w-4 h-4 mr-2 text-foreground" />
                       {passengers} {passengers === 1 ? "Traveler" : "Travelers"} • {cabin.charAt(0).toUpperCase() + cabin.slice(1)}

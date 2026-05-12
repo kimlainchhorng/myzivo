@@ -130,13 +130,13 @@ const CookieConsent = () => {
                       </Button>
                     </div>
                     <div className="flex items-center gap-2">
-                      <Button onClick={handleAcceptAll} className="h-9 rounded-lg text-xs font-semibold bg-gradient-to-r from-primary to-teal-400 text-primary-foreground">
+                      <Button onClick={handleAcceptAll} className="min-h-[40px] rounded-lg text-xs font-semibold bg-gradient-to-r from-primary to-teal-400 text-primary-foreground touch-manipulation">
                         Accept All
                       </Button>
-                      <Button variant="outline" onClick={handleRejectAll} className="h-9 rounded-lg text-xs font-semibold">
+                      <Button variant="outline" onClick={handleRejectAll} className="min-h-[40px] rounded-lg text-xs font-semibold touch-manipulation">
                         Reject
                       </Button>
-                      <Button variant="ghost" onClick={() => setShowDetails(true)} className="h-9 rounded-lg text-xs font-semibold">
+                      <Button variant="ghost" onClick={() => setShowDetails(true)} className="min-h-[40px] rounded-lg text-xs font-semibold touch-manipulation">
                         Customize
                       </Button>
                     </div>
@@ -156,7 +156,7 @@ const CookieConsent = () => {
                           We use cookies to enhance your experience, analyze site traffic, and for marketing purposes. 
                           By clicking "Accept All", you consent to our use of cookies. 
                           Read our{" "}
-                          <Link to="/privacy-policy" className="text-primary font-medium hover:underline">Privacy Policy</Link>.
+                          <Link to="/privacy-policy" className="inline-flex min-h-[40px] items-center px-1 -my-2 text-primary font-medium hover:underline touch-manipulation">Privacy Policy</Link>.
                         </p>
                         <div className="flex flex-wrap gap-3">
                           <motion.div whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}>
@@ -177,7 +177,7 @@ const CookieConsent = () => {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="shrink-0 rounded-xl hover:bg-destructive/10 active:scale-90 transition-all duration-200 touch-manipulation"
+                          className="shrink-0 min-h-[40px] min-w-[40px] rounded-xl hover:bg-destructive/10 active:scale-90 transition-all duration-200 touch-manipulation"
                           onClick={handleRejectAll}
                         >
                           <X className="h-4 w-4" />

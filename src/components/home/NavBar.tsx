@@ -258,7 +258,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
               <div className="hidden lg:flex flex-1 max-w-md ml-auto mr-3 relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground pointer-events-none" />
                 <input
-                  placeholder="Search people..."
+                  placeholder="Search apps, rides, food..."
                   className="w-full pl-9 pr-4 py-2 rounded-full bg-muted/40 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"
                   onFocus={() => navigate("/feed")}
                   readOnly

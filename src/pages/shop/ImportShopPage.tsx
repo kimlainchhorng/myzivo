@@ -33,11 +33,11 @@ export default function ImportShopPage() {
       {/* Header */}
       <header className="sticky top-0 z-30 bg-background/95 backdrop-blur border-b border-border/40" style={{ paddingTop: "var(--zivo-safe-top-sticky)" }}>
         <div className="flex items-center gap-2 px-3 py-2.5">
-          <Button variant="ghost" size="icon" aria-label="Go back" className="h-9 w-9" onClick={() => navigate(-1)}>
+          <Button variant="ghost" size="icon" aria-label="Go back" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
           <h1 className="text-base font-bold flex-1">ZIVO Shop</h1>
-          <Button variant="ghost" size="icon" aria-label="View cart" className="h-9 w-9 relative" onClick={() => navigate("/shop/cart")}>
+          <Button variant="ghost" size="icon" aria-label="View cart" className="relative" onClick={() => navigate("/shop/cart")}>
             <ShoppingCart className="h-5 w-5" />
             {itemCount > 0 && (
               <span className="absolute -top-0.5 -right-0.5 bg-primary text-primary-foreground text-[10px] font-bold rounded-full h-4 min-w-4 px-1 flex items-center justify-center">
@@ -65,7 +65,7 @@ export default function ImportShopPage() {
               <button type="button"
                 key={c}
                 onClick={() => setCategory(c)}
-                className={`px-3 h-7 rounded-full text-[12px] font-semibold whitespace-nowrap transition ${
+                className={`min-h-[40px] rounded-full px-4 py-2 text-[12px] font-semibold whitespace-nowrap transition touch-manipulation ${
                   category === c ? "bg-foreground text-background" : "bg-muted/50 text-muted-foreground"
                 }`}
               >
@@ -94,7 +94,7 @@ export default function ImportShopPage() {
       <div className="px-3 pt-2">
         <Link
           to="/shop/orders"
-          className="flex items-center justify-between rounded-xl bg-muted/30 px-3 py-2.5 text-[13px]"
+          className="flex min-h-[44px] items-center justify-between rounded-xl bg-muted/30 px-3 py-2.5 text-[13px] touch-manipulation"
         >
           <span className="flex items-center gap-2">
             <Package className="h-4 w-4 text-primary" />

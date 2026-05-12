@@ -367,6 +367,10 @@
     @apply border-border;
   }
 
+  html {
+    position: relative;
+  }
+
   /* Smooth-scroll only for fine pointers (desktop). On iOS WKWebView /
      touch, CSS smooth-scroll fights native momentum and makes route
      navigations + scrollIntoView feel sticky. */
@@ -2549,9 +2553,27 @@ body[data-story-open="true"] [data-zivo-mobile-nav] {
   display: none !important;
 }
 
+/* Hide the mobile bottom nav while modal share sheets are open. */
+body[data-share-sheet-open="true"] [data-zivo-mobile-nav] {
+  display: none !important;
+}
+
 /* Utility: hide horizontal scrollbar but keep scrolling */
 .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
+
+@media (max-width: 640px) {
+  html,
+  body {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    display: none;
+  }
+}
 
 /* ── Accessibility preferences (driven by useAccessibilityPrefs) ── */
 :root {

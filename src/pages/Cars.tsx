@@ -233,7 +233,7 @@ export default function Cars() {
                 <button type="button"
                   key={make}
                   onClick={() => updateFilter("make", make.toLowerCase())}
-                  className="shrink-0 px-4 py-2 rounded-full border border-border text-sm font-medium hover:bg-muted transition-all duration-200 whitespace-nowrap touch-manipulation active:scale-[0.95] hover:border-primary/30"
+                  className="shrink-0 min-h-[40px] px-4 py-2 rounded-full border border-border text-sm font-medium hover:bg-muted transition-all duration-200 whitespace-nowrap touch-manipulation active:scale-[0.95] hover:border-primary/30"
                 >
                   {make}
                 </button>

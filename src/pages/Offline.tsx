@@ -53,7 +53,7 @@ const Offline = () => {
             <Home className="w-5 h-5 mb-1" />
             <span className="text-xs">Home</span>
           </Button>
-          <Button variant="ghost" size="sm" className="flex-col h-auto py-3 px-4 rounded-xl" onClick={() => navigate("/rides")}>
+          <Button variant="ghost" size="sm" className="flex-col h-auto py-3 px-4 rounded-xl" onClick={() => navigate("/rides/hub")}>
             <Car className="w-5 h-5 mb-1 text-rides" />
             <span className="text-xs">Rides</span>
           </Button>

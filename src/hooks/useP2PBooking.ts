@@ -68,6 +68,9 @@ export function useP2PVehicleSearch(filters?: P2PSearchFilters) {
   const query = useQuery({
     queryKey: ["p2p-vehicles", filters],
     queryFn: async (): Promise<P2PVehicleWithOwner[]> => {
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (!sessionData.session) return [];
+
       let q = supabase
         .from("p2p_vehicles")
         .select("*")
@@ -110,6 +113,7 @@ export function useP2PVehicleSearch(filters?: P2PSearchFilters) {
       return (data || []) as P2PVehicleWithOwner[];
     },
     staleTime: 30_000,
+    retry: false,
   });
 
   return {

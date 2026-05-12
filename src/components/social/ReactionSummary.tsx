@@ -13,11 +13,14 @@ interface Props {
   source: "store" | "user";
 }
 
+const POST_REACTIONS_ENABLED = import.meta.env.VITE_ENABLE_POST_REACTIONS === "true";
+
 export default function ReactionSummary({ postId, source }: Props) {
   const [top, setTop] = useState<ReactionEmoji[]>([]);
   const [total, setTotal] = useState(0);
 
   useEffect(() => {
+    if (!POST_REACTIONS_ENABLED) return;
     let cancelled = false;
     async function load() {
       const { data, error } = await (supabase as any)
@@ -59,7 +62,7 @@ export default function ReactionSummary({ postId, source }: Props) {
     return () => { cancelled = true; supabase.removeChannel(channel); };
   }, [postId, source]);
 
-  if (total === 0) return null;
+  if (!POST_REACTIONS_ENABLED || total === 0) return null;
 
   return (
     <div className="flex items-center gap-1 text-white/90 drop-shadow shrink-0">

@@ -32,7 +32,7 @@ const fadeIn = {
 const services = [
   { icon: Plane, label: "Search Flights", desc: "Compare fares from 500+ airlines worldwide", link: "/flights" },
   { icon: Hotel, label: "Compare Hotels", desc: "Find the best stay at the best price", link: "/hotels" },
-  { icon: Car, label: "Rides", desc: "Get a ride anywhere, anytime", link: "/rides" },
+  { icon: Car, label: "Rides", desc: "Get a ride anywhere, anytime", link: "/rides/hub" },
   { icon: UtensilsCrossed, label: "Eats", desc: "Order food from local restaurants", link: "/eats" },
   { icon: Package, label: "Travel Extras", desc: "Insurance, transfers & more", link: "/extras" },
   { icon: Search, label: "Car Rentals", desc: "Pick up and drop off anywhere", link: "/rent-car" },

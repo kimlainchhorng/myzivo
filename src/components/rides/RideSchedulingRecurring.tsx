@@ -115,7 +115,7 @@ export default function RideSchedulingRecurring() {
                     { label: "This Weekend", time: "10:00 AM", icon: "📅" },
                     { label: "Custom Time", time: "Pick", icon: "⏰" },
                   ].map(opt => (
-                    <button type="button" key={opt.label} onClick={() => navigate("/rides", { state: { scheduledTime: opt.time, label: opt.label } })} className="flex items-center gap-2.5 p-3 rounded-xl border border-border/40 bg-muted/20 hover:bg-muted/40 transition-colors active:scale-[0.98]">
+                    <button type="button" key={opt.label} onClick={() => navigate("/rides/hub", { state: { scheduledTime: opt.time, label: opt.label } })} className="flex items-center gap-2.5 p-3 rounded-xl border border-border/40 bg-muted/20 hover:bg-muted/40 transition-colors active:scale-[0.98]">
                       <span className="text-lg">{opt.icon}</span>
                       <div className="text-left">
                         <p className="text-xs font-bold text-foreground">{opt.label}</p>
@@ -194,7 +194,7 @@ export default function RideSchedulingRecurring() {
                 </div>
               ))}
 
-              <Button className="w-full h-11 rounded-xl text-sm font-bold gap-2" variant="outline" onClick={() => navigate("/rides", { state: { recurring: true } })}>
+              <Button className="w-full h-11 rounded-xl text-sm font-bold gap-2" variant="outline" onClick={() => navigate("/rides/hub", { state: { recurring: true } })}>
                 <Plus className="w-4 h-4" /> Add Recurring Ride
               </Button>
             </div>
@@ -232,7 +232,7 @@ export default function RideSchedulingRecurring() {
                       {evt.rideLinked ? (
                         <Badge className="text-[8px] font-bold gap-0.5"><CheckCircle className="w-2.5 h-2.5" /> Ride Set</Badge>
                       ) : (
-                        <Button size="sm" variant="outline" className="h-7 text-[10px] font-bold rounded-lg gap-1" onClick={() => navigate("/rides", { state: { scheduledTime: evt.time, label: evt.title } })}>
+                        <Button size="sm" variant="outline" className="h-7 text-[10px] font-bold rounded-lg gap-1" onClick={() => navigate("/rides/hub", { state: { scheduledTime: evt.time, label: evt.title } })}>
                           <Plus className="w-3 h-3" /> Add Ride
                         </Button>
                       )}
@@ -298,7 +298,7 @@ export default function RideSchedulingRecurring() {
                 </div>
               </div>
 
-              <Button className="w-full h-12 rounded-xl text-sm font-bold gap-2" onClick={() => navigate("/rides", { state: { multiStop: multiStops } })}>
+              <Button className="w-full h-12 rounded-xl text-sm font-bold gap-2" onClick={() => navigate("/rides/hub", { state: { multiStop: multiStops } })}>
                 <CheckCircle className="w-4 h-4" /> Book Multi-Stop Ride — $18.50
               </Button>
             </div>

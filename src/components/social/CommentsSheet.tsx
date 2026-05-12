@@ -111,7 +111,7 @@ export default function CommentsSheet({
       ariaLabel="Comments"
       maxHeightVh={70}
       zIndex={1500}
-      safeAreaTop={false}
+      safeAreaTop
       className={cn(dark && "bg-black/95 text-white")}
       headerClassName={cn("border-b", border)}
     >

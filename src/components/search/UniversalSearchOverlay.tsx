@@ -11,7 +11,7 @@ import {
   ChevronRight, Sparkles, MapPin, Trash2, ShoppingBag, HelpCircle,
   RotateCcw, Navigation, History, BookOpen,
   Briefcase, Tv, Activity, Rocket, Heart, Crown, Gem, Hash,
-  Mic, Video, Dumbbell, Stethoscope, Pill, Brain,
+  Mic, Video, Dumbbell, Stethoscope, Pill, Brain, MessageCircle, Film,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -35,10 +35,14 @@ const TABS: { key: TabKey; label: string; icon: typeof Search }[] = [
 ];
 
 const POPULAR_SERVICES = [
+  { label: "Feed", icon: MessageCircle, href: "/feed", color: "bg-sky-500/10 text-sky-500 border-sky-500/20" },
+  { label: "Reels", icon: Film, href: "/reels", color: "bg-rose-500/10 text-rose-500 border-rose-500/20" },
+  { label: "Chat", icon: MessageCircle, href: "/chat", color: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
+  { label: "Meet", icon: Video, href: "/chat/contacts", color: "bg-violet-500/10 text-violet-500 border-violet-500/20" },
   { label: "Flights", icon: Plane, href: "/flights", color: "bg-sky-500/10 text-sky-500 border-sky-500/20" },
   { label: "Hotels", icon: BedDouble, href: "/hotels", color: "bg-amber-500/10 text-amber-500 border-amber-500/20" },
   { label: "Rentals", icon: Car, href: "/rent-car", color: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" },
-  { label: "Rides", icon: Car, href: "/rides", color: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" },
+  { label: "Rides", icon: Car, href: "/rides/hub", color: "bg-emerald-500/10 text-emerald-500 border-emerald-500/20" },
   { label: "Eats", icon: Package, href: "/eats", color: "bg-orange-500/10 text-orange-500 border-orange-500/20" },
   { label: "Delivery", icon: Package, href: "/delivery", color: "bg-violet-500/10 text-violet-500 border-violet-500/20" },
   { label: "Workplace", icon: Briefcase, href: "/personal-dashboard", color: "bg-blue-500/10 text-blue-500 border-blue-500/20" },
@@ -51,6 +55,15 @@ const POPULAR_SERVICES = [
 
 // Quick-jump shortcuts that match by keyword (renders in flat results when query matches)
 const FEATURE_SHORTCUTS: { keywords: string[]; label: string; sub: string; icon: any; href: string; accent: string }[] = [
+  { keywords: ["facebook", "social", "feed", "post", "friends"], label: "Social Feed", sub: "Posts, stories, friends, and creators", icon: MessageCircle, href: "/feed", accent: "text-sky-500" },
+  { keywords: ["tiktok", "reel", "reels", "shorts", "video"], label: "Reels", sub: "Full-screen short videos", icon: Film, href: "/reels", accent: "text-rose-500" },
+  { keywords: ["telegram", "chat", "message", "dm", "group"], label: "Chat", sub: "Messages, groups, stickers, and calls", icon: MessageCircle, href: "/chat", accent: "text-blue-500" },
+  { keywords: ["meet", "google meet", "video call", "call", "room"], label: "Meet", sub: "Start a video call or room", icon: Video, href: "/chat/contacts", accent: "text-violet-500" },
+  { keywords: ["uber", "ride", "taxi", "cab", "pickup"], label: "ZIVO Ride", sub: "Book, reserve, and track a ride", icon: Car, href: "/rides/hub", accent: "text-emerald-500" },
+  { keywords: ["uber eat", "ubereats", "food", "restaurant", "delivery", "eat"], label: "ZIVO Eats", sub: "Order food and track delivery", icon: Utensils, href: "/eats", accent: "text-orange-500" },
+  { keywords: ["booking", "booking.com", "hotel", "stay", "room"], label: "Hotels", sub: "Search places to stay", icon: BedDouble, href: "/hotels", accent: "text-amber-500" },
+  { keywords: ["package", "courier", "delivery", "send"], label: "Delivery", sub: "Send packages and manage courier runs", icon: Package, href: "/delivery", accent: "text-violet-500" },
+  { keywords: ["onlyfans", "fans", "subscription", "subscriber"], label: "Creator Hub", sub: "Subscriptions, tips, and creator earnings", icon: Rocket, href: "/creator-dashboard", accent: "text-violet-500" },
   { keywords: ["job", "career", "work", "hire", "apply", "workplace", "clock", "employee"], label: "Workplace", sub: "Clock in, jobs & schedule", icon: Briefcase, href: "/personal-dashboard", accent: "text-blue-500" },
   { keywords: ["resume", "cv"], label: "Build CV", sub: "Create your resume", icon: Briefcase, href: "/personal/create-cv", accent: "text-blue-500" },
   { keywords: ["live", "stream", "broadcast"], label: "Live Streams", sub: "Watch creators broadcasting now", icon: Tv, href: "/live", accent: "text-rose-500" },
@@ -349,7 +362,7 @@ export default function UniversalSearchOverlay({ isOpen, onClose }: UniversalSea
         iconBg: "bg-emerald-500/10",
         title: t.dropoff_address || "Trip",
         subtitle: `From ${t.pickup_address || "Unknown"} · ${t.status}`,
-        action: () => handleNavigate(`/rides`),
+        action: () => handleNavigate(`/rides/hub?tab=history`),
         badge: "Rebook",
       });
     });
@@ -363,7 +376,7 @@ export default function UniversalSearchOverlay({ isOpen, onClose }: UniversalSea
       iconBg: "bg-emerald-500/10",
       title: `Book a ride to "${debouncedQuery}"`,
       subtitle: "ZIVO Ride",
-      action: () => handleNavigate(`/rides?dropoff=${encodeURIComponent(debouncedQuery)}`),
+      action: () => handleNavigate(`/rides/hub?destination=${encodeURIComponent(debouncedQuery)}`),
     });
 
     cards.push({
@@ -445,7 +458,7 @@ export default function UniversalSearchOverlay({ isOpen, onClose }: UniversalSea
                 ref={inputRef}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Search food, rides, hotels, orders..."
+                placeholder="Search apps, rides, food, hotels, creators..."
                 className="w-full bg-muted border border-border rounded-xl pl-10 pr-4 py-2.5 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/50 transition-all"
               />
               {query && (

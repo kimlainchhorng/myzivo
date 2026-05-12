@@ -98,7 +98,7 @@ export default function RideMarketplace() {
           {selectedBid && (
             <Button className="w-full" onClick={() => {
               const driver = driverBids.find(d => d.id === selectedBid);
-              navigate("/rides", { state: { preferredDriverId: driver?.id, preferredDriverName: driver?.name, bidAmount: driver?.bid } });
+              navigate("/rides/hub", { state: { preferredDriverId: driver?.id, preferredDriverName: driver?.name, bidAmount: driver?.bid } });
             }}>
               Accept Bid — ${driverBids.find(d => d.id === selectedBid)?.bid.toFixed(2)}
             </Button>
@@ -117,7 +117,7 @@ export default function RideMarketplace() {
                     <div className="text-xs text-muted-foreground">{driver.vehicle} · {driver.rating} ★</div>
                   </div>
                 </div>
-                <Button size="sm" variant="outline" onClick={() => navigate("/rides", { state: { preferredDriverId: driver.id, preferredDriverName: driver.name } })}>
+                <Button size="sm" variant="outline" onClick={() => navigate("/rides/hub", { state: { preferredDriverId: driver.id, preferredDriverName: driver.name } })}>
                   Request
                 </Button>
               </CardContent>
