@@ -15,6 +15,7 @@ import { motion, useAnimation, type PanInfo } from "framer-motion";
 interface CallPiPProps {
   remoteStream: MediaStream | null;
   recipientName: string;
+  recipientAvatar?: string | null;
   isMuted: boolean;
   duration: number;
   callType?: "voice" | "video";
@@ -40,6 +41,7 @@ function readInset(name: string): number {
 export default function CallPiP({
   remoteStream,
   recipientName,
+  recipientAvatar,
   isMuted,
   duration,
   callType,
@@ -51,10 +53,10 @@ export default function CallPiP({
 }: CallPiPProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const controls = useAnimation();
-  const hasVideo = Boolean(remoteStream && callType === "video");
+  const [hasVideo, setHasVideo] = useState(false);
 
   const W = 168;
-  const H = hasVideo ? 230 : 88;
+  const H = callType === "video" ? 230 : 88;
 
   // Compute the safe drag area in viewport coordinates.
   const getBounds = useCallback(() => {
@@ -128,6 +130,51 @@ export default function CallPiP({
     }
   }, [remoteStream]);
 
+  useEffect(() => {
+    if (callType !== "video" || !remoteStream) {
+      const resetTimer = window.setTimeout(() => setHasVideo(false), 0);
+      return () => window.clearTimeout(resetTimer);
+    }
+
+    const syncVideoState = () => {
+      setHasVideo(
+        remoteStream.getVideoTracks().some((track) => track.readyState === "live" && track.enabled && !track.muted),
+      );
+    };
+    const watchedTracks = new Set<MediaStreamTrack>();
+    const watchTrack = (track: MediaStreamTrack) => {
+      if (track.kind !== "video" || watchedTracks.has(track)) return;
+      watchedTracks.add(track);
+      track.addEventListener("mute", syncVideoState);
+      track.addEventListener("unmute", syncVideoState);
+      track.addEventListener("ended", syncVideoState);
+    };
+    const unwatchTracks = () => {
+      watchedTracks.forEach((track) => {
+        track.removeEventListener("mute", syncVideoState);
+        track.removeEventListener("unmute", syncVideoState);
+        track.removeEventListener("ended", syncVideoState);
+      });
+      watchedTracks.clear();
+    };
+    const handleTrackChange = (event: MediaStreamTrackEvent) => {
+      watchTrack(event.track);
+      syncVideoState();
+    };
+
+    const syncTimer = window.setTimeout(syncVideoState, 0);
+    remoteStream.addEventListener("addtrack", handleTrackChange);
+    remoteStream.addEventListener("removetrack", syncVideoState);
+    remoteStream.getVideoTracks().forEach(watchTrack);
+
+    return () => {
+      window.clearTimeout(syncTimer);
+      remoteStream.removeEventListener("addtrack", handleTrackChange);
+      remoteStream.removeEventListener("removetrack", syncVideoState);
+      unwatchTracks();
+    };
+  }, [callType, remoteStream]);
+
   // Animate to the initial position once mounted.
   useEffect(() => {
     controls.start({ x: pos.x, y: pos.y, transition: { duration: 0 } });
@@ -136,6 +183,7 @@ export default function CallPiP({
 
   const formatDur = (s: number) =>
     `${Math.floor(s / 60).toString().padStart(2, "0")}:${(s % 60).toString().padStart(2, "0")}`;
+  const initials = (recipientName || "U").split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
 
   return (
     <motion.div
@@ -155,7 +203,7 @@ export default function CallPiP({
       initial={{ opacity: 0, scale: 0.5 }}
       transition={{ type: "spring", damping: 20 }}
     >
-      {hasVideo && (
+      {hasVideo ? (
         <video
           ref={videoRef}
           autoPlay
@@ -163,7 +211,25 @@ export default function CallPiP({
           muted
           className="w-full h-[142px] object-cover bg-muted"
         />
-      )}
+      ) : callType === "video" ? (
+        <div className="relative grid h-[142px] place-items-center overflow-hidden bg-zinc-950">
+          {recipientAvatar && (
+            <img
+              src={recipientAvatar}
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 h-full w-full scale-110 object-cover opacity-35 blur-xl"
+            />
+          )}
+          <div className="relative grid h-16 w-16 place-items-center overflow-hidden rounded-full bg-white/10 text-xl font-bold text-white ring-1 ring-white/15">
+            {recipientAvatar ? (
+              <img src={recipientAvatar} alt="" className="h-full w-full object-cover" />
+            ) : (
+              initials
+            )}
+          </div>
+        </div>
+      ) : null}
 
       <div className="p-2.5 flex flex-col gap-1.5">
         <div className="flex items-center justify-between">

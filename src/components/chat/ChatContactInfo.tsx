@@ -41,12 +41,11 @@ import StarOff from "lucide-react/dist/esm/icons/star-off";
 import Users from "lucide-react/dist/esm/icons/users";
 import Copy from "lucide-react/dist/esm/icons/copy";
 import ExternalLink from "lucide-react/dist/esm/icons/external-link";
-import Facebook from "lucide-react/dist/esm/icons/facebook";
-import Instagram from "lucide-react/dist/esm/icons/instagram";
-import Twitter from "lucide-react/dist/esm/icons/twitter";
-import Linkedin from "lucide-react/dist/esm/icons/linkedin";
+import AtSign from "lucide-react/dist/esm/icons/at-sign";
+import BriefcaseBusiness from "lucide-react/dist/esm/icons/briefcase-business";
+import Camera from "lucide-react/dist/esm/icons/camera";
+import Hash from "lucide-react/dist/esm/icons/hash";
 import Music2 from "lucide-react/dist/esm/icons/music-2";
-import Ghost from "lucide-react/dist/esm/icons/ghost";
 import Send from "lucide-react/dist/esm/icons/send";
 import Heart from "lucide-react/dist/esm/icons/heart";
 import { toast } from "sonner";
@@ -57,6 +56,7 @@ import Archive from "lucide-react/dist/esm/icons/archive";
 import Mail from "lucide-react/dist/esm/icons/mail";
 import { useThreadSettings, buildThreadId } from "@/hooks/useThreadSettings";
 import { useChatPrefs } from "@/hooks/useChatPrefs";
+import type { Database } from "@/integrations/supabase/types";
 
 type SharedMediaRow = {
   id: string;
@@ -101,7 +101,8 @@ type RecipientProfileRow = {
   social_telegram: string | null;
 };
 
-const dbFrom = (table: string): any => (supabase as any).from(table);
+type PublicTableName = keyof Database["public"]["Tables"];
+const dbFrom = (table: PublicTableName) => supabase.from(table);
 
 interface ChatContactInfoProps {
   recipientId: string;
@@ -810,13 +811,13 @@ export default function ChatContactInfo({
 /* ─── Helpers ─── */
 
 const SOCIAL_META: Record<string, { icon: React.ComponentType<{ className?: string }>; color: string; brandImage?: string }> = {
-  facebook:  { icon: Facebook,  color: "bg-[#1877F2]" },
+  facebook:  { icon: MessageCircle, color: "bg-[#1877F2]" },
   onlyfans:  { icon: Heart,     color: "bg-white", brandImage: onlyfansLogo },
-  instagram: { icon: Instagram, color: "bg-gradient-to-br from-[#F58529] via-[#DD2A7B] to-[#8134AF]" },
-  x:         { icon: Twitter,   color: "bg-black" },
+  instagram: { icon: Camera,    color: "bg-gradient-to-br from-[#F58529] via-[#DD2A7B] to-[#8134AF]" },
+  x:         { icon: AtSign,    color: "bg-black" },
   tiktok:    { icon: Music2,    color: "bg-black" },
-  snapchat:  { icon: Ghost,     color: "bg-[#FFFC00]" },
-  linkedin:  { icon: Linkedin,  color: "bg-[#0A66C2]" },
+  snapchat:  { icon: Hash,      color: "bg-[#FFFC00]" },
+  linkedin:  { icon: BriefcaseBusiness, color: "bg-[#0A66C2]" },
   telegram:  { icon: Send,      color: "bg-[#229ED9]" },
 };
 

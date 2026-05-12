@@ -540,7 +540,6 @@ export default function BusinessPageWizard() {
           return (
             <button type="button"
               key={label}
-              type="button"
               onClick={() => done && setStep(stepNum)}
               disabled={!done && !active}
               className={`flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
@@ -647,7 +646,6 @@ export default function BusinessPageWizard() {
                           return (
                             <button type="button"
                               key={opt.value}
-                              type="button"
                               onClick={() => setCategory(opt.value)}
                               className={`rounded-full border px-3.5 py-2 text-sm font-medium transition-all active:scale-95 ${
                                 active

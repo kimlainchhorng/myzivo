@@ -242,7 +242,7 @@ function buildMatch(intent: Intent, raw: string): Match {
       return {
         intent,
         reason: `Get a ride${dropoff ? ` to ${dropoff}` : ""}`,
-        to: `/rides?dropoff=${encodeURIComponent(dropoff)}`,
+        to: `/rides/hub?dropoff=${encodeURIComponent(dropoff)}`,
       };
     }
     case "flights": {
@@ -281,7 +281,7 @@ function buildMatch(intent: Intent, raw: string): Match {
 function defaultMatch(intent: Intent): Match {
   switch (intent) {
     case "rides":
-      return { intent, reason: "Open Rides", to: "/rides" };
+      return { intent, reason: "Open Rides", to: "/rides/hub" };
     case "eats":
       return { intent, reason: "Open Eats", to: "/eats" };
     case "flights":

@@ -647,7 +647,6 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
                       return (
                         <button type="button"
                           key={wd}
-                          type="button"
                           onClick={() => {
                             const cur = editing.no_arrival_weekdays || [];
                             setEditing({ ...editing, no_arrival_weekdays: on ? cur.filter(x => x !== i) : [...cur, i] });
@@ -694,7 +693,7 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
                           const on = (editing.amenities || []).includes(a);
                           const Icon = getAmenityIcon(a);
                           return (
-                            <button type="button" key={a} type="button" onClick={() => toggleAmenity(a)}
+                            <button type="button" key={a} onClick={() => toggleAmenity(a)}
                               className={`px-2.5 py-1 rounded-full text-xs border transition inline-flex items-center gap-1.5 ${on ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border text-muted-foreground hover:border-primary/40"}`}>
                               <Icon className="h-3 w-3" />
                               {a}
@@ -726,7 +725,7 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
                     const on = (editing.badges || []).includes(b.v);
                     return (
                       <button type="button"
-                        key={b.v} type="button"
+                        key={b.v}
                         onClick={() => {
                           const cur = editing.badges || [];
                           setEditing({ ...editing, badges: on ? cur.filter((x: string) => x !== b.v) : [...cur, b.v] });
@@ -776,7 +775,6 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
                             return (
                               <button type="button"
                                 key={preset.name}
-                                type="button"
                                 disabled={already}
                                 onClick={() => setEditing({
                                   ...editing,
@@ -861,7 +859,7 @@ export default function LodgingRoomsSection({ storeId }: { storeId: string }) {
                         <div className="col-span-12 flex flex-wrap gap-1">
                           {ADDON_STATUS_OPTIONS.map(s => {
                             const on = (a.requires_status || []).includes(s);
-                            return <button type="button" key={s} type="button" onClick={() => updateAddon(i, { requires_status: on ? (a.requires_status || []).filter(x => x !== s) : [...(a.requires_status || []), s] })} className={`px-2 py-1 rounded-full text-[10px] border ${on ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border text-muted-foreground"}`}>{s.replace(/_/g, " ")}</button>;
+                            return <button type="button" key={s} onClick={() => updateAddon(i, { requires_status: on ? (a.requires_status || []).filter(x => x !== s) : [...(a.requires_status || []), s] })} className={`px-2 py-1 rounded-full text-[10px] border ${on ? "bg-primary text-primary-foreground border-primary" : "bg-background border-border text-muted-foreground"}`}>{s.replace(/_/g, " ")}</button>;
                           })}
                         </div>
                       </div>

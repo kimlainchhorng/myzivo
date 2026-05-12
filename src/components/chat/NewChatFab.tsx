@@ -54,6 +54,7 @@ export default function NewChatFab({ onNewChat, onNewGroup, onNewContact, onBroa
             const Icon = it.icon;
             return (
               <motion.button
+                type="button"
                 key={it.key}
                 initial={{ opacity: 0, y: 10, scale: 0.9 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -61,6 +62,8 @@ export default function NewChatFab({ onNewChat, onNewGroup, onNewContact, onBroa
                 transition={{ delay: i * 0.03 }}
                 onClick={() => { setOpen(false); it.onClick(); }}
                 className="flex items-center gap-3 pl-4 pr-3 py-2.5 rounded-full bg-card border border-border/40 shadow-lg active:scale-95 transition-transform"
+                aria-label={it.label}
+                title={it.label}
               >
                 <span className="text-sm font-semibold text-foreground">{it.label}</span>
                 <span className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center">
@@ -72,6 +75,7 @@ export default function NewChatFab({ onNewChat, onNewGroup, onNewContact, onBroa
         </AnimatePresence>
 
         <motion.button
+          type="button"
           initial={{ scale: 0 }}
           animate={{ scale: 1 }}
           transition={{ type: "spring", delay: 0.2 }}
@@ -83,6 +87,7 @@ export default function NewChatFab({ onNewChat, onNewGroup, onNewContact, onBroa
               : "bg-primary text-primary-foreground shadow-primary/30"
           )}
           aria-label={open ? "Close" : "New"}
+          title={open ? "Close" : "New"}
         >
           <AnimatePresence mode="wait">
             {open ? (

@@ -1,7 +1,7 @@
 /**
  * RideHubPage - Central hub for all ride features
  */
-import { useEffect, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -17,68 +17,76 @@ import AppLayout from "@/components/app/AppLayout";
 import BundleProgressBanner from "@/components/shared/BundleProgressBanner";
 import HeartedDestinationsRail from "@/components/rides/HeartedDestinationsRail";
 import LocalSavedPlacesRow from "@/components/rides/LocalSavedPlacesRow";
-import RideHistoryInsights from "@/components/rides/RideHistoryInsights";
-import RidePassPlans from "@/components/rides/RidePassPlans";
-import LostItemReport from "@/components/rides/LostItemReport";
-import RideReceiptCard from "@/components/rides/RideReceiptCard";
-import RateAndTipFlow from "@/components/rides/RateAndTipFlow";
-import SurgePricingMap from "@/components/rides/SurgePricingMap";
-import ScheduleRideSheet from "@/components/rides/ScheduleRideSheet";
-import MultiStopRoute from "@/components/rides/MultiStopRoute";
-import InRideChat from "@/components/rides/InRideChat";
-import SafetyModePanel from "@/components/rides/SafetyModePanel";
-import SmartSavedPlaces from "@/components/rides/SmartSavedPlaces";
-import GroupRidePlanner from "@/components/rides/GroupRidePlanner";
-import FareComparisonTool from "@/components/rides/FareComparisonTool";
-import AccessibilityHub from "@/components/rides/AccessibilityHub";
-import RideBookingConfirmation from "@/components/rides/RideBookingConfirmation";
-import LiveTripTracker from "@/components/rides/LiveTripTracker";
-import RideWallet from "@/components/rides/RideWallet";
-import DriverProfileCard from "@/components/rides/DriverProfileCard";
-import RideSocialHub from "@/components/rides/RideSocialHub";
-import RideLoyaltyCard from "@/components/rides/RideLoyaltyCard";
-import RideSpendingAnalytics from "@/components/rides/RideSpendingAnalytics";
-import RideQuickSearch from "@/components/rides/RideQuickSearch";
-import RideTripHistory from "@/components/rides/RideTripHistory";
-import RideScheduleCalendar from "@/components/rides/RideScheduleCalendar";
-import RideDriverMatch from "@/components/rides/RideDriverMatch";
-import RideSafetyCenter from "@/components/rides/RideSafetyCenter";
-import RideNotificationCenter from "@/components/rides/RideNotificationCenter";
-import RidePreferences from "@/components/rides/RidePreferences";
-import RideEcoTracker from "@/components/rides/RideEcoTracker";
-import RideBusinessManager from "@/components/rides/RideBusinessManager";
-import RideFeedbackCenter from "@/components/rides/RideFeedbackCenter";
-import RideSpecialtyModes from "@/components/rides/RideSpecialtyModes";
-import RideSmartAnalytics from "@/components/rides/RideSmartAnalytics";
-import RideEntertainment from "@/components/rides/RideEntertainment";
-import RideGifting from "@/components/rides/RideGifting";
-import RideRewardsGamification from "@/components/rides/RideRewardsGamification";
-import RideCorporateFleet from "@/components/rides/RideCorporateFleet";
-import RideAccessibilityPlus from "@/components/rides/RideAccessibilityPlus";
-import RideRouteIntelligence from "@/components/rides/RideRouteIntelligence";
-import RideAdvancedSafety from "@/components/rides/RideAdvancedSafety";
-import RideTravelIntegration from "@/components/rides/RideTravelIntegration";
-import RideFamilyAccounts from "@/components/rides/RideFamilyAccounts";
-import RideSubscriptionHub from "@/components/rides/RideSubscriptionHub";
-import RideSmartPricing from "@/components/rides/RideSmartPricing";
-import RideDriverComm from "@/components/rides/RideDriverComm";
-import RideSocialFeatures from "@/components/rides/RideSocialFeatures";
-import RideAnalyticsDashboard from "@/components/rides/RideAnalyticsDashboard";
-import RideMarketplace from "@/components/rides/RideMarketplace";
-import RideWellnessComfort from "@/components/rides/RideWellnessComfort";
-import RidePaymentsAdvanced from "@/components/rides/RidePaymentsAdvanced";
-import RideAIAssistant from "@/components/rides/RideAIAssistant";
-import RideSchedulingRecurring from "@/components/rides/RideSchedulingRecurring";
-import RideSafetyAdvanced from "@/components/rides/RideSafetyAdvanced";
-import RideLoyaltyRewards from "@/components/rides/RideLoyaltyRewards";
-import RideAccessibilityAdvanced from "@/components/rides/RideAccessibilityAdvanced";
 import RideBookingHome from "@/components/rides/RideBookingHome";
-import ZivoReserve from "@/components/rides/ZivoReserve";
+import React from "react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useI18n } from "@/hooks/useI18n";
+
+const RideHistoryInsights = React.lazy(() => import("@/components/rides/RideHistoryInsights"));
+const RidePassPlans = React.lazy(() => import("@/components/rides/RidePassPlans"));
+const LostItemReport = React.lazy(() => import("@/components/rides/LostItemReport"));
+const RideReceiptCard = React.lazy(() => import("@/components/rides/RideReceiptCard"));
+const RateAndTipFlow = React.lazy(() => import("@/components/rides/RateAndTipFlow"));
+const SurgePricingMap = React.lazy(() => import("@/components/rides/SurgePricingMap"));
+const ScheduleRideSheet = React.lazy(() => import("@/components/rides/ScheduleRideSheet"));
+const MultiStopRoute = React.lazy(() => import("@/components/rides/MultiStopRoute"));
+const InRideChat = React.lazy(() => import("@/components/rides/InRideChat"));
+const SmartSavedPlaces = React.lazy(() => import("@/components/rides/SmartSavedPlaces"));
+const GroupRidePlanner = React.lazy(() => import("@/components/rides/GroupRidePlanner"));
+const FareComparisonTool = React.lazy(() => import("@/components/rides/FareComparisonTool"));
+const AccessibilityHub = React.lazy(() => import("@/components/rides/AccessibilityHub"));
+const RideBookingConfirmation = React.lazy(() => import("@/components/rides/RideBookingConfirmation"));
+const LiveTripTracker = React.lazy(() => import("@/components/rides/LiveTripTracker"));
+const RideWallet = React.lazy(() => import("@/components/rides/RideWallet"));
+const DriverProfileCard = React.lazy(() => import("@/components/rides/DriverProfileCard"));
+const RideSocialHub = React.lazy(() => import("@/components/rides/RideSocialHub"));
+const RideLoyaltyCard = React.lazy(() => import("@/components/rides/RideLoyaltyCard"));
+const RideSpendingAnalytics = React.lazy(() => import("@/components/rides/RideSpendingAnalytics"));
+const RideTripHistory = React.lazy(() => import("@/components/rides/RideTripHistory"));
+const RideScheduleCalendar = React.lazy(() => import("@/components/rides/RideScheduleCalendar"));
+const RideDriverMatch = React.lazy(() => import("@/components/rides/RideDriverMatch"));
+const RideSafetyCenter = React.lazy(() => import("@/components/rides/RideSafetyCenter"));
+const RideNotificationCenter = React.lazy(() => import("@/components/rides/RideNotificationCenter"));
+const RidePreferences = React.lazy(() => import("@/components/rides/RidePreferences"));
+const RideEcoTracker = React.lazy(() => import("@/components/rides/RideEcoTracker"));
+const RideBusinessManager = React.lazy(() => import("@/components/rides/RideBusinessManager"));
+const RideFeedbackCenter = React.lazy(() => import("@/components/rides/RideFeedbackCenter"));
+const RideSpecialtyModes = React.lazy(() => import("@/components/rides/RideSpecialtyModes"));
+const RideSmartAnalytics = React.lazy(() => import("@/components/rides/RideSmartAnalytics"));
+const RideEntertainment = React.lazy(() => import("@/components/rides/RideEntertainment"));
+const RideGifting = React.lazy(() => import("@/components/rides/RideGifting"));
+const RideRewardsGamification = React.lazy(() => import("@/components/rides/RideRewardsGamification"));
+const RideCorporateFleet = React.lazy(() => import("@/components/rides/RideCorporateFleet"));
+const RideAccessibilityPlus = React.lazy(() => import("@/components/rides/RideAccessibilityPlus"));
+const RideRouteIntelligence = React.lazy(() => import("@/components/rides/RideRouteIntelligence"));
+const RideAdvancedSafety = React.lazy(() => import("@/components/rides/RideAdvancedSafety"));
+const RideTravelIntegration = React.lazy(() => import("@/components/rides/RideTravelIntegration"));
+const RideFamilyAccounts = React.lazy(() => import("@/components/rides/RideFamilyAccounts"));
+const RideSubscriptionHub = React.lazy(() => import("@/components/rides/RideSubscriptionHub"));
+const RideSmartPricing = React.lazy(() => import("@/components/rides/RideSmartPricing"));
+const RideDriverComm = React.lazy(() => import("@/components/rides/RideDriverComm"));
+const RideSocialFeatures = React.lazy(() => import("@/components/rides/RideSocialFeatures"));
+const RideAnalyticsDashboard = React.lazy(() => import("@/components/rides/RideAnalyticsDashboard"));
+const RideMarketplace = React.lazy(() => import("@/components/rides/RideMarketplace"));
+const RideWellnessComfort = React.lazy(() => import("@/components/rides/RideWellnessComfort"));
+const RidePaymentsAdvanced = React.lazy(() => import("@/components/rides/RidePaymentsAdvanced"));
+const RideAIAssistant = React.lazy(() => import("@/components/rides/RideAIAssistant"));
+const RideSchedulingRecurring = React.lazy(() => import("@/components/rides/RideSchedulingRecurring"));
+const RideSafetyAdvanced = React.lazy(() => import("@/components/rides/RideSafetyAdvanced"));
+const RideLoyaltyRewards = React.lazy(() => import("@/components/rides/RideLoyaltyRewards"));
+const RideAccessibilityAdvanced = React.lazy(() => import("@/components/rides/RideAccessibilityAdvanced"));
+const ZivoReserve = React.lazy(() => import("@/components/rides/ZivoReserve"));
+
+function RideFeatureFallback() {
+  return (
+    <div className="flex min-h-[220px] items-center justify-center p-4">
+      <div className="h-5 w-5 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+    </div>
+  );
+}
 
 /* ─── Primary tabs always visible in nav bar ─── */
 const PRIMARY_TAB_IDS = ["book", "reserve", "tracking", "history", "wallet", "safety", "pass", "features"];
@@ -528,6 +536,7 @@ export default function RideHubPage() {
             transition={{ duration: 0.2 }}
             className={cn(isFullScreen && "h-full min-h-0 flex flex-col flex-1")}
           >
+            <Suspense fallback={<RideFeatureFallback />}>
             {/* ── Book ── */}
             {activeTab === "book" && (
               <RideBookingHome
@@ -670,6 +679,7 @@ export default function RideHubPage() {
             {activeTab === "safety-adv2"   && <div className="p-4"><RideSafetyAdvanced /></div>}
             {activeTab === "loyalty-rwd"   && <div className="p-4"><RideLoyaltyRewards /></div>}
             {activeTab === "a11y-adv"      && <div className="p-4"><RideAccessibilityAdvanced /></div>}
+            </Suspense>
           </motion.div>
         </AnimatePresence>
       </div>

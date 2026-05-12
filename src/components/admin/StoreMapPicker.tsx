@@ -309,7 +309,6 @@ export default function StoreMapPicker({ open, onOpenChange, currentAddress, cur
               {suggestions.map((s) => (
                 <button type="button"
                   key={s.place_id}
-                  type="button"
                   className="w-full text-left px-3 py-2.5 text-sm hover:bg-muted transition-colors flex items-start gap-2 border-b border-border/50 last:border-0"
                   onClick={() => selectPlace(s.place_id, s.description)}
                 >

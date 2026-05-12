@@ -72,18 +72,22 @@ describe("Auth Context", () => {
     expect(useAuth).toBeDefined();
   });
 
-  it("should throw when useAuth is used outside provider", async () => {
+  it("should return a safe fallback when useAuth is used outside provider", async () => {
     const { useAuth } = await import("@/contexts/AuthContext");
     const TestComponent = () => {
-      try {
-        useAuth();
-        return <div>no error</div>;
-      } catch {
-        return <div>error thrown</div>;
-      }
+      const { user, isLoading, isAdmin } = useAuth();
+      return (
+        <div>
+          <span data-testid="fallback-user">{user ? "logged-in" : "anonymous"}</span>
+          <span data-testid="fallback-loading">{String(isLoading)}</span>
+          <span data-testid="fallback-admin">{String(isAdmin)}</span>
+        </div>
+      );
     };
     render(<TestComponent />);
-    expect(screen.getByText("error thrown")).toBeInTheDocument();
+    expect(screen.getByTestId("fallback-user").textContent).toBe("anonymous");
+    expect(screen.getByTestId("fallback-loading").textContent).toBe("true");
+    expect(screen.getByTestId("fallback-admin").textContent).toBe("false");
   });
 
   it("should render children and start with loading state", async () => {

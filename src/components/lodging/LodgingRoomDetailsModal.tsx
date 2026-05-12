@@ -347,7 +347,6 @@ export function LodgingRoomDetailsModal({
                 {orderedPhotos.map((_, i) => (
                   <button type="button"
                     key={i}
-                    type="button"
                     aria-label={`Go to photo ${i + 1}`}
                     onClick={() => api?.scrollTo(i)}
                     className={`h-1.5 rounded-full transition-all ${i === idx ? "w-5 bg-white" : "w-1.5 bg-white/60 hover:bg-white/80"}`}

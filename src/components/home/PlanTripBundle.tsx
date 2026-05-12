@@ -15,15 +15,31 @@ import Sparkles from "lucide-react/dist/esm/icons/sparkles";
 import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
 import Share2 from "lucide-react/dist/esm/icons/share-2";
 import { openShareToChat } from "@/components/chat/ShareToChatSheet";
+import { useAuth } from "@/contexts/AuthContext";
 
 const STEPS = [
   { icon: Plane, label: "Flight", to: "/flights?bundle=1" },
   { icon: BedDouble, label: "Hotel", to: "/hotels?bundle=1" },
-  { icon: Car, label: "Airport ride", to: "/rides?bundle=1" },
+  { icon: Car, label: "Airport ride", to: "/rides/hub?bundle=1" },
 ] as const;
 
 export default function PlanTripBundle() {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const shareTripBundle = () => {
+    if (!user) {
+      navigate("/login?redirect=%2Fchat");
+      return;
+    }
+    openShareToChat({
+      kind: "trip",
+      title: "Weekend getaway",
+      subtitle: "Flight + hotel + airport ride",
+      meta: "Plan it together on ZIVO",
+      deepLink: "/flights?bundle=1",
+    });
+  };
+
   return (
     <div className="px-4 pb-3">
       <motion.div
@@ -74,13 +90,7 @@ export default function PlanTripBundle() {
           </motion.button>
           <motion.button
             whileTap={{ scale: 0.95 }}
-            onClick={() => openShareToChat({
-              kind: "trip",
-              title: "Weekend getaway",
-              subtitle: "Flight + hotel + airport ride",
-              meta: "Plan it together on ZIVO",
-              deepLink: "/flights?bundle=1",
-            })}
+            onClick={shareTripBundle}
             aria-label="Share trip bundle to chat"
             className="h-11 w-11 shrink-0 inline-flex items-center justify-center rounded-lg border border-border/40 bg-background text-foreground active:opacity-70 transition-opacity touch-manipulation"
           >

@@ -5,6 +5,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+const ENABLE_TRAVELPAYOUTS =
+  (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_ENABLE_TRAVELPAYOUTS === "true";
+
 export interface TravelpayoutsRoutePrice {
   origin: string;
   destination: string;
@@ -16,6 +19,18 @@ export interface TravelpayoutsRoutePrice {
   duration: number; // minutes
   link: string;
 }
+
+type TravelpayoutsPriceRow = {
+  origin?: string;
+  destination?: string;
+  price: number;
+  airline?: string;
+  departureAt?: string;
+  returnAt?: string | null;
+  transfers?: number;
+  duration?: number;
+  link?: string;
+};
 
 const POPULAR_ROUTES = [
   { origin: "JFK", destination: "MIA" },
@@ -49,9 +64,10 @@ export function useTravelpayoutsPopularRoutes() {
           }
 
           // Return the cheapest option
-          const cheapest = data.data.reduce(
-            (best: any, p: any) => (p.price < best.price ? p : best),
-            data.data[0]
+          const prices = data.data as TravelpayoutsPriceRow[];
+          const cheapest = prices.reduce(
+            (best, p) => (p.price < best.price ? p : best),
+            prices[0]
           );
 
           return {
@@ -76,6 +92,7 @@ export function useTravelpayoutsPopularRoutes() {
         .map((r) => r.value)
         .filter((v): v is TravelpayoutsRoutePrice => v !== null);
     },
+    enabled: ENABLE_TRAVELPAYOUTS,
     staleTime: 15 * 60 * 1000, // 15 min cache
     gcTime: 60 * 60 * 1000,
     retry: 1,

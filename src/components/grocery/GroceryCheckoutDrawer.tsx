@@ -834,7 +834,6 @@ export function GroceryCheckoutDrawer({ items, total, onClose, onOrderPlaced, on
                             return (
                               <button type="button"
                                 key={label}
-                                type="button"
                                 onClick={() => setSaveLabel(label)}
                                 className={`flex-1 flex items-center justify-center gap-1.5 px-2 py-2 rounded-lg border text-[11px] font-semibold capitalize transition-all ${
                                   saveLabel === label

@@ -1,7 +1,7 @@
 /**
  * App Home Screen - 2026 Travel Super-App Layout
  * Premium scrollable design with saved places, quick estimate, popular services,
- * quick actions, promos, rewards, and personalized content.
+ * quick actions, service navigation, and personalized content.
  * @module AppHome
  */
 import { useState, useEffect, useMemo, lazy, Suspense } from "react";
@@ -203,7 +203,7 @@ const getSmartNow = (hour: number): SmartNowConfig => {
     greeting: "Good morning",
     primary: { label: "Order coffee nearby", to: "/eats?q=coffee" },
     chips: [
-      { label: "Ride to work", to: "/rides" },
+      { label: "Ride to work", to: "/rides/hub" },
       { label: "Breakfast", to: "/eats?q=breakfast" },
     ],
     gradient: "from-amber-500/15 via-orange-500/8 to-transparent",
@@ -239,7 +239,7 @@ const getSmartNow = (hour: number): SmartNowConfig => {
     greeting: "Evening",
     primary: { label: "Order dinner", to: "/eats?q=dinner" },
     chips: [
-      { label: "Ride home", to: "/rides" },
+      { label: "Ride home", to: "/rides/hub" },
       { label: "Reserve a table", to: "/eats" },
     ],
     gradient: "from-foreground to-foreground/80",
@@ -316,14 +316,13 @@ const QUICK_PICKS: QuickPick[] = [
   { icon: UtensilsCrossed, label: "Pizza",      to: "/eats?q=pizza",      iconColor: "text-orange-500",  iconBg: "bg-orange-500/10" },
   { icon: Plane,           label: "Flights",    to: "/flights",            iconColor: "text-indigo-500",  iconBg: "bg-indigo-500/10" },
   { icon: Hotel,           label: "Hotels",     to: "/hotels",             iconColor: "text-violet-500",  iconBg: "bg-violet-500/10" },
-  { icon: Car,             label: "Ride",       to: "/rides",              iconColor: "text-emerald-500", iconBg: "bg-emerald-500/10" },
+  { icon: Car,             label: "Ride",       to: "/rides/hub",          iconColor: "text-emerald-500", iconBg: "bg-emerald-500/10" },
   { icon: Package,         label: "Delivery",   to: "/delivery",           iconColor: "text-sky-500",     iconBg: "bg-sky-500/10" },
 ];
 
 type DailyMission = {
   icon: LucideIcon;
   title: string;
-  reward: string;
   cta: string;
   to: string;
   accent: string;
@@ -331,19 +330,19 @@ type DailyMission = {
 
 const DAILY_MISSIONS: DailyMission[] = [
   // Sunday → adventurous start
-  { icon: Plane, title: "Browse a new flight destination", reward: "+30 miles", cta: "Explore", to: "/flights", accent: "sky" },
+  { icon: Plane, title: "Browse a new flight destination", cta: "Explore", to: "/flights", accent: "sky" },
   // Monday → commute / ride
-  { icon: Target, title: "Take a ride this week", reward: "+50 miles", cta: "Book a ride", to: "/rides", accent: "emerald" },
+  { icon: Target, title: "Take a ride this week", cta: "Book a ride", to: "/rides/hub", accent: "emerald" },
   // Tuesday → eats
-  { icon: UtensilsCrossed, title: "Try a new restaurant on Eats", reward: "+30 miles + free delivery", cta: "Order now", to: "/eats", accent: "orange" },
+  { icon: UtensilsCrossed, title: "Try a new restaurant on Eats", cta: "Order now", to: "/eats", accent: "orange" },
   // Wednesday → social
-  { icon: Gift, title: "Refer a friend today", reward: "+200 miles", cta: "Share invite", to: "/refer", accent: "violet" },
+  { icon: Gift, title: "Refer a friend today", cta: "Share invite", to: "/refer", accent: "violet" },
   // Thursday → reservations
-  { icon: Calendar, title: "Reserve a table for the weekend", reward: "+40 miles", cta: "Find a spot", to: "/eats", accent: "rose" },
+  { icon: Calendar, title: "Reserve a table for the weekend", cta: "Find a spot", to: "/eats", accent: "rose" },
   // Friday → hotels / stays
-  { icon: Hotel, title: "Plan a weekend stay", reward: "+80 miles", cta: "Browse hotels", to: "/hotels", accent: "indigo" },
+  { icon: Hotel, title: "Plan a weekend stay", cta: "Browse hotels", to: "/hotels", accent: "indigo" },
   // Saturday → bundle
-  { icon: Trophy, title: "Bundle a flight + hotel", reward: "Up to $50 off", cta: "See bundles", to: "/flights?bundle=1", accent: "amber" },
+  { icon: Trophy, title: "Bundle a flight + hotel", cta: "See bundles", to: "/flights?bundle=1", accent: "amber" },
 ];
 
 const ACCENT_STYLES: Record<string, { iconBg: string; iconColor: string; gradient: string; ringColor: string; ctaBg: string }> = {
@@ -377,7 +376,6 @@ const DailyMissionCard = ({ onNavigate }: { onNavigate: (to: string) => void }) 
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-1.5">
               <p className="text-[9px] font-bold uppercase tracking-[0.2em] text-ig-gradient">{dayLabel} MISSION</p>
-              <span className="text-[9px] font-bold px-1.5 py-0.5 rounded-full border border-border text-foreground">{mission.reward}</span>
             </div>
             <p className="mt-0.5 text-sm font-semibold text-foreground truncate">{mission.title}</p>
           </div>
@@ -400,6 +398,31 @@ const STREAK_MILESTONES = [3, 7, 14, 30, 60, 100];
 const DAY_LABELS = ["S", "M", "T", "W", "T", "F", "S"]; // Sun → Sat to match getDay()
 
 type StreakState = { count: number; lastVisitISO: string };
+type LodgingRoomWithAddons = { addons?: unknown[] };
+type ScheduledBookingCard = {
+  id: string;
+  status?: string | null;
+  type?: string | null;
+  service?: string | null;
+  scheduledDate?: string | null;
+  scheduled_date?: string | null;
+  scheduledTime?: string | null;
+  scheduled_time?: string | null;
+  pickupAddress?: string | null;
+  pickup_address?: string | null;
+  dropoffAddress?: string | null;
+  dropoff_address?: string | null;
+};
+type RecentItemCard = {
+  id: string;
+  item_id: string;
+  item_type: "restaurant" | "hotel" | "flight" | "ride" | string;
+  title?: string | null;
+  subtitle?: string | null;
+  image_url?: string | null;
+  thumbnail_url?: string | null;
+};
+type LoyaltySummary = { tier?: string | null; points_balance?: number | null };
 
 const readStreak = (): StreakState => {
   try {
@@ -412,21 +435,19 @@ const readStreak = (): StreakState => {
 const startOfDay = (d: Date) => new Date(d.getFullYear(), d.getMonth(), d.getDate()).getTime();
 
 const StreakCard = ({ onNavigate }: { onNavigate: (to: string) => void }) => {
-  const [state, setState] = useState<StreakState>(() => readStreak());
-
-  useEffect(() => {
+  const [state] = useState<StreakState>(() => {
+    const current = readStreak();
     const todayKey = startOfDay(new Date());
-    const last = state.lastVisitISO ? startOfDay(new Date(state.lastVisitISO)) : 0;
-    if (todayKey === last) return; // already counted today
+    const last = current.lastVisitISO ? startOfDay(new Date(current.lastVisitISO)) : 0;
+    if (todayKey === last) return current;
     const diffDays = last ? Math.round((todayKey - last) / 86_400_000) : Infinity;
     const next: StreakState = {
-      count: diffDays === 1 ? state.count + 1 : 1, // continue or reset
+      count: diffDays === 1 ? current.count + 1 : 1,
       lastVisitISO: new Date().toISOString(),
     };
-    setState(next);
     try { window.localStorage.setItem(STREAK_KEY, JSON.stringify(next)); } catch { /* ignore */ }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    return next;
+  });
 
   const todayDow = new Date().getDay(); // 0..6, Sun..Sat
   const completedThisWeek = Math.min(state.count, todayDow + 1);
@@ -552,13 +573,13 @@ const AppHome = () => {
   const { isCambodia: isKH } = useCountry();
   useDeviceIntegrityCheck();
 
-  const promos = [
-    { title: t("home.promo_first_ride"), subtitle: t("home.promo_first_ride_sub"), gradient: "from-emerald-500 to-teal-600", icon: Car, cta: t("home.promo_claim") },
-    { title: t("home.promo_free_delivery"), subtitle: t("home.promo_free_delivery_sub"), gradient: "from-orange-500 to-amber-600", icon: Package, cta: t("home.promo_order_now") },
-    { title: t("home.promo_flights_deal"), subtitle: t("home.promo_flights_deal_sub"), gradient: "from-foreground to-foreground/80", icon: Plane, cta: t("home.promo_explore") },
-    { title: t("home.promo_hotel_sale"), subtitle: t("home.promo_hotel_sale_sub"), gradient: "from-foreground to-foreground/80", icon: BedDouble, cta: t("home.promo_book_now") },
+  const serviceHighlights = [
+    { title: t("home.ride"), subtitle: t("home.book_ride"), gradient: "from-emerald-500 to-teal-600", icon: Car, cta: "Open", href: "/rides/hub" },
+    { title: t("home.eats"), subtitle: t("home.dinner"), gradient: "from-orange-500 to-amber-600", icon: Package, cta: "Open", href: "/eats" },
+    { title: t("home.flights"), subtitle: t("home.search_flights"), gradient: "from-foreground to-foreground/80", icon: Plane, cta: "Open", href: "/flights" },
+    { title: t("home.hotels"), subtitle: t("home.search_hotels"), gradient: "from-foreground to-foreground/80", icon: BedDouble, cta: "Open", href: "/hotels" },
     // Driver recruitment — US only
-    ...(!isKH ? [{ title: "Become a ZIVO Driver", subtitle: "", gradient: "from-foreground to-foreground/80", icon: Car, cta: "Join ZIVO Today", isDriverPromo: true as const }] : []),
+    ...(!isKH ? [{ title: "Become a ZIVO Driver", subtitle: "", gradient: "from-foreground to-foreground/80", icon: Car, cta: "Join ZIVO Today", href: "/driver-signup", isDriverPromo: true as const }] : []),
   ];
 
   const [isSearchOpen, setIsSearchOpen] = useState(false);
@@ -568,7 +589,7 @@ const AppHome = () => {
   // on mobile).
   const { prefetch } = useRoutePrefetch();
   const tabRoutes: Record<"rides" | "eats" | "flights" | "hotels", string> = {
-    rides: "/rides",
+    rides: "/rides/hub",
     eats: "/eats",
     flights: "/flights",
     hotels: "/hotels",
@@ -582,10 +603,10 @@ const AppHome = () => {
   ] as const;
 
   const suggestions = [
-    { label: t("home.ride"), icon: null, image: zivoRideIcon, href: "/rides", badge: "Hot Deal", badgeVariant: "promo" as const },
-    { label: t("home.flights"), icon: null, image: zivoFlightsIcon, href: "/flights", badge: "Discount", badgeVariant: "discount" as const },
-    { label: t("home.rental_cars"), icon: null, image: zivoRentalCarIcon, href: "/rent-car", badge: "Promo", badgeVariant: "promo" as const },
-    ...(isKH ? [{ label: t("home.shopping"), icon: null, image: zivoShoppingIcon, href: "/grocery", badge: "Promo", badgeVariant: "promo" as const }] : []),
+    { label: t("home.ride"), icon: null, image: zivoRideIcon, href: "/rides/hub", badge: null, badgeVariant: "promo" as const },
+    { label: t("home.flights"), icon: null, image: zivoFlightsIcon, href: "/flights", badge: null, badgeVariant: "discount" as const },
+    { label: t("home.rental_cars"), icon: null, image: zivoRentalCarIcon, href: "/rent-car", badge: null, badgeVariant: "promo" as const },
+    ...(isKH ? [{ label: t("home.shopping"), icon: null, image: zivoShoppingIcon, href: "/grocery", badge: null, badgeVariant: "promo" as const }] : []),
   ];
 
   function getSearchPlaceholder(tab: string): string {
@@ -611,7 +632,7 @@ const AppHome = () => {
   const lodgingCompletion = ownerStore?.isLodging ? getLodgingCompletion({
     rooms: lodgingRooms.data || [],
     profile: lodgingProfile.data,
-    addons: (lodgingRooms.data || []).flatMap((room: any) => room.addons || []),
+    addons: ((lodgingRooms.data || []) as LodgingRoomWithAddons[]).flatMap((room) => room.addons || []),
     housekeepingCount: lodgingPhase5.housekeepingCount,
     maintenanceReady: true,
     reportsReady: Boolean((lodgingRooms.data || []).length) || (lodgingReservations.data?.length ?? 0) > 0,
@@ -627,19 +648,20 @@ const AppHome = () => {
   const { items: recentItems } = useRecentlyViewed();
   const { data: savedLocations } = useSavedLocations(user?.id);
   const { points, getNextTierProgress } = useLoyaltyPoints();
+  const loyaltySummary = points as LoyaltySummary | null;
   const { active: activeRewards } = useUserRewards();
   const { referralCode, shareReferral } = useReferrals();
   const destKeys = isKH ? [...cambodiaDestKeysKH] : [...popularDestKeysUS];
   const { data: destPrices = {}, isLoading: destPricesLoading } = useDestinationPrices(destKeys, isKH);
   const { data: allBookings = [] } = useScheduledBookingsQuery();
-  const upcomingBookings = allBookings.filter((b: any) => {
+  const upcomingBookings = (allBookings as ScheduledBookingCard[]).filter((b) => {
     if (b.status !== "scheduled" && b.status !== "confirmed" && b.status !== "pending") return false;
     const sd = b.scheduledDate || b.scheduled_date;
     const st = b.scheduledTime || b.scheduled_time;
     if (!sd || !st) return false;
     const bookingDate = new Date(`${sd}T${st}`);
     return bookingDate > new Date();
-  }).sort((a: any, b: any) => {
+  }).sort((a, b) => {
     const ad = a.scheduledDate || a.scheduled_date;
     const at2 = a.scheduledTime || a.scheduled_time;
     const bd = b.scheduledDate || b.scheduled_date;
@@ -669,7 +691,7 @@ const AppHome = () => {
     };
   })();
 
-  // Promo carousel
+  // Service highlight carousel
   const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
   const [activePromo, setActivePromo] = useState(0);
 
@@ -767,9 +789,9 @@ const AppHome = () => {
             {/* Row 1 */}
             <div className="grid grid-cols-4 gap-3 px-5 pb-3 preserve-3d">
               {([
-                { label: t("home.ride"), image: zivoRideIcon, href: "/rides", badge: "Hot Deal", badgeVariant: "promo" as const },
+                { label: t("home.ride"), image: zivoRideIcon, href: "/rides/hub", badge: null, badgeVariant: "promo" as const },
                 { label: t("home.eats"), image: zivoEatsIcon, href: "/eats", badge: null, badgeVariant: "promo" as const },
-                { label: t("home.flights"), image: zivoFlightsIcon, href: "/flights", badge: "Deals", badgeVariant: "discount" as const },
+                { label: t("home.flights"), image: zivoFlightsIcon, href: "/flights", badge: null, badgeVariant: "discount" as const },
                 { label: t("home.hotels"), image: zivoHotelsIcon, href: "/hotels", badge: null, badgeVariant: "promo" as const },
               ].filter(Boolean) as Array<{ label: string; image: string; href: string; badge: string | null; badgeVariant: "promo" | "discount" }>).map((s) => (
                 <motion.button
@@ -799,7 +821,7 @@ const AppHome = () => {
             {/* Row 2 */}
             <div className="grid grid-cols-4 gap-3 px-5 pb-2 preserve-3d">
               {(([
-                { label: t("home.rental_cars"), image: zivoRentalCarIcon, icon: null, href: "/rent-car", badge: "Promo" },
+                { label: t("home.rental_cars"), image: zivoRentalCarIcon, icon: null, href: "/rent-car", badge: null },
                 { label: "Reserve", image: zivoReserveIcon, icon: null, href: "/rides/hub?tab=reserve", badge: null },
                 { label: t("home.shopping"), image: zivoShoppingIcon, icon: null, href: "/grocery", badge: null },
                 { label: "Delivery", image: null, icon: Package, href: "/delivery", badge: null },
@@ -855,8 +877,8 @@ const AppHome = () => {
                   <motion.button
                     key={loc.id}
                     whileTap={{ scale: 0.94 }}
-                    onPointerDown={() => prefetch("/rides")}
-                    onClick={() => navigate(`/rides?destination=${encodeURIComponent(loc.address)}`)}
+                    onPointerDown={() => prefetch("/rides/hub")}
+                    onClick={() => navigate(`/rides/hub?destination=${encodeURIComponent(loc.address)}`)}
                     className="shrink-0 flex items-center gap-1.5 bg-card border border-primary/30 rounded-full pl-1.5 pr-3 py-1.5 touch-manipulation active:bg-muted/50 transition-colors shadow-sm"
                   >
                     <span className="w-6 h-6 rounded-full bg-primary/10 flex items-center justify-center">
@@ -897,7 +919,7 @@ const AppHome = () => {
             </div>
           </div>
 
-          {/* ─── DAILY MISSION (rotates by day of week, ties into rewards) ─── */}
+          {/* ─── DAILY MISSION (rotates by day of week) ─── */}
           {user && <DailyMissionCard onNavigate={navigate} />}
 
           {/* ─── DAILY STREAK (engagement loop, persists in localStorage) ─── */}
@@ -913,7 +935,7 @@ const AppHome = () => {
             <div className="px-5 pb-3">
               <SectionHeader icon={Calendar} iconColor="text-sky-500" title="Upcoming Trips" badge={String(upcomingBookings.length)} actionLabel="See all" onSeeAll={() => navigate("/trips")} />
               <div className="space-y-2">
-                {upcomingBookings.slice(0, 2).map((booking: any) => {
+                {upcomingBookings.slice(0, 2).map((booking) => {
                   const sd = booking.scheduledDate || booking.scheduled_date;
                   const st = booking.scheduledTime || booking.scheduled_time;
                   const bookingDate = new Date(`${sd}T${st}`);
@@ -954,7 +976,7 @@ const AppHome = () => {
             <div className="px-5 pb-3">
               <SectionHeader icon={Clock} iconColor="text-muted-foreground" title="Recently Viewed" actionLabel="Clear" onSeeAll={() => navigate("/more")} />
               <div className="flex gap-3 overflow-x-auto pb-2 scrollbar-hide -mx-5 px-5">
-                {recentItems.slice(0, 8).map((item: any) => (
+                {(recentItems as RecentItemCard[]).slice(0, 8).map((item) => (
                   <motion.button
                     key={item.id}
                     whileTap={{ scale: 0.96 }}
@@ -1007,18 +1029,16 @@ const AppHome = () => {
               ~250px of home-screen real estate. Wire to a real release-notes
               table later if a fresh-features rail is desired. */}
 
-          {/* ─── PROMO BANNER CAROUSEL ─── */}
+          {/* ─── SERVICE HIGHLIGHT CAROUSEL ─── */}
           <div className="pb-4">
             <div className="overflow-hidden" ref={emblaRef}>
               <div className="flex gap-3 pl-5">
-                {promos.map((promo, i) => (
+                {serviceHighlights.map((promo, i) => (
                   <motion.button
                     key={`${promo.title}-${i}`}
                     whileTap={{ scale: 0.97 }}
                     onClick={() => {
-                      if ((promo as any).isDriverPromo) { navigate("/driver-signup"); return; }
-                      const promoRoutes = ["/rides", "/eats", "/flights", "/hotels"];
-                      navigate(promoRoutes[i] || "/rides");
+                      navigate(promo.href);
                     }}
                     className={cn(
                       "shrink-0 w-[calc(82vw)] max-w-[310px] rounded-2xl p-5 text-left shadow-lg touch-manipulation relative overflow-hidden bg-gradient-to-br",
@@ -1041,7 +1061,7 @@ const AppHome = () => {
               </div>
             </div>
             <div className="flex justify-center gap-1.5 mt-3">
-              {promos.map((_, i) => (
+              {serviceHighlights.map((_, i) => (
                 <button
                   type="button"
                   key={i}
@@ -1298,23 +1318,23 @@ const AppHome = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2 mb-0.5">
                     <p className="text-sm font-bold text-foreground">ZIVO Miles</p>
-                    {(points as any).tier && (
+                    {loyaltySummary?.tier && (
                       <Badge variant="secondary" className="text-[9px] font-bold bg-amber-500/15 text-amber-600 border-0 px-1.5">
-                        {(points as any).tier}
+                        {loyaltySummary.tier}
                       </Badge>
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground">
-                    <span className="font-bold text-foreground">{((points as any).points_balance || 0).toLocaleString()}</span> pts · Earn more with every trip
+                    <span className="font-bold text-foreground">{(loyaltySummary?.points_balance || 0).toLocaleString()}</span> pts · Earn more with every trip
                   </p>
                 </div>
                 <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
               </div>
-              {((points as any).points_balance || 0) > 0 && (
+              {(loyaltySummary?.points_balance || 0) > 0 && (
                 <div className="mt-3 relative z-10">
-                  <Progress value={Math.min((((points as any).points_balance || 0) / 5000) * 100, 100)} className="h-1.5 bg-amber-500/20" />
+                  <Progress value={Math.min(((loyaltySummary?.points_balance || 0) / 5000) * 100, 100)} className="h-1.5 bg-amber-500/20" />
                   <p className="text-[10px] text-muted-foreground mt-1">
-                    {Math.max(0, 5000 - ((points as any).points_balance || 0)).toLocaleString()} pts to next tier
+                    {Math.max(0, 5000 - (loyaltySummary?.points_balance || 0)).toLocaleString()} pts to next tier
                   </p>
                 </div>
               )}

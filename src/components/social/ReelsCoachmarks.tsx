@@ -9,6 +9,7 @@ import ChevronUp from "lucide-react/dist/esm/icons/chevron-up";
 import Heart from "lucide-react/dist/esm/icons/heart";
 import Smile from "lucide-react/dist/esm/icons/smile";
 import VolumeX from "lucide-react/dist/esm/icons/volume-x";
+import X from "lucide-react/dist/esm/icons/x";
 
 const STORAGE_KEY = "zivo:reels-coachmarks-seen-v1";
 
@@ -42,13 +43,22 @@ export default function ReelsCoachmarks() {
           onClick={dismiss}
         >
           <motion.div
-            className="w-full max-w-sm rounded-3xl bg-zinc-900/95 border border-white/10 p-6 text-white shadow-2xl"
+            className="relative w-full max-w-sm rounded-3xl bg-zinc-900/95 border border-white/10 p-6 text-white shadow-2xl"
             initial={{ y: 24, scale: 0.96, opacity: 0 }}
             animate={{ y: 0, scale: 1, opacity: 1 }}
             exit={{ y: 24, scale: 0.96, opacity: 0 }}
             transition={{ type: "spring", damping: 24, stiffness: 320 }}
             onClick={(e) => e.stopPropagation()}
           >
+            <button
+              type="button"
+              onClick={dismiss}
+              aria-label="Close Reels tips"
+              className="absolute right-3 top-3 grid h-9 w-9 place-items-center rounded-full bg-white/10 text-white/80 transition-colors hover:bg-white/20"
+            >
+              <X className="h-4 w-4" />
+            </button>
+
             <div className="text-center mb-5">
               <h2 className="text-xl font-bold">Welcome to Reels</h2>
               <p className="text-sm text-white/60 mt-1">A few quick gestures to play with</p>

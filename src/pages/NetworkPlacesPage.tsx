@@ -16,6 +16,8 @@ import Star from "lucide-react/dist/esm/icons/star";
 import MapPin from "lucide-react/dist/esm/icons/map-pin";
 import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
+import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
+import Store from "lucide-react/dist/esm/icons/store";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
@@ -46,6 +48,9 @@ const FALLBACK_RESTAURANT =
   "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?auto=format&fit=crop&q=80&w=800";
 const FALLBACK_HOTEL =
   "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&q=80&w=800";
+const ENABLE_PUBLIC_NETWORK_PLACES =
+  (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_ENABLE_PUBLIC_NETWORK_PLACES ===
+  "true";
 
 export default function NetworkPlacesPage() {
   const navigate = useNavigate();
@@ -61,6 +66,12 @@ export default function NetworkPlacesPage() {
     let cancelled = false;
     (async () => {
       setLoading(true);
+      if (!ENABLE_PUBLIC_NETWORK_PLACES) {
+        setRestaurants([]);
+        setHotels([]);
+        setLoading(false);
+        return;
+      }
       const [r, h] = await Promise.all([
         supabase
           .from("restaurants")
@@ -74,8 +85,8 @@ export default function NetworkPlacesPage() {
           .limit(40),
       ]);
       if (cancelled) return;
-      if (r.data) setRestaurants(r.data as any);
-      if (h.data) setHotels(h.data as any);
+      if (r.data) setRestaurants(r.data as RestaurantRow[]);
+      if (h.data) setHotels(h.data as HotelRow[]);
       setLoading(false);
     })().catch(() => {
       if (!cancelled) setLoading(false);
@@ -111,6 +122,14 @@ export default function NetworkPlacesPage() {
   }, [tab, query, restaurants, hotels]);
 
   const totalCount = filtered.r.length + filtered.h.length;
+  const hasQuery = query.trim().length > 0;
+  const countLabel = loading
+    ? "Loading..."
+    : totalCount > 0
+      ? `${totalCount} partner${totalCount === 1 ? "" : "s"}`
+      : hasQuery
+        ? "0 matches"
+        : "Opening soon";
 
   return (
     <div className="min-h-[100dvh] bg-background pb-16">
@@ -158,7 +177,7 @@ export default function NetworkPlacesPage() {
               </button>
             ))}
             <span className="ml-auto self-center text-[11px] text-muted-foreground">
-              {loading ? "Loading…" : `${totalCount} partner${totalCount === 1 ? "" : "s"}`}
+              {countLabel}
             </span>
           </div>
         </div>
@@ -206,17 +225,99 @@ export default function NetworkPlacesPage() {
             )}
 
             {totalCount === 0 && (
-              <div className="rounded-2xl border border-dashed border-border/50 p-12 text-center">
-                <p className="text-sm font-bold text-foreground">No matches</p>
-                <p className="text-xs text-muted-foreground mt-1">
-                  Try a different search term or category.
-                </p>
-              </div>
+              <NetworkEmptyState
+                hasQuery={hasQuery}
+                tab={tab}
+                onClearSearch={() => setQuery("")}
+                onBrowseEats={() => navigate("/eats")}
+                onBrowseHotels={() => navigate("/hotels")}
+                onAddBusiness={() => navigate("/become-partner")}
+              />
             )}
           </>
         )}
       </main>
     </div>
+  );
+}
+
+function NetworkEmptyState({
+  hasQuery,
+  tab,
+  onClearSearch,
+  onBrowseEats,
+  onBrowseHotels,
+  onAddBusiness,
+}: {
+  hasQuery: boolean;
+  tab: Tab;
+  onClearSearch: () => void;
+  onBrowseEats: () => void;
+  onBrowseHotels: () => void;
+  onAddBusiness: () => void;
+}) {
+  const title = hasQuery
+    ? "No matching partners"
+    : "Partner network is opening soon in your area";
+  const body = hasQuery
+    ? "Try a different search term or switch categories to find restaurants and stays."
+    : "As local restaurants, hotels, and shops join ZIVO, they will appear here with direct booking actions.";
+  const showEats = tab !== "hotels";
+  const showHotels = tab !== "restaurants";
+
+  return (
+    <section className="py-10 text-center">
+      <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+        {hasQuery ? <Search className="h-5 w-5" /> : <Store className="h-5 w-5" />}
+      </div>
+      <h2 className="text-base font-extrabold text-foreground">{title}</h2>
+      <p className="mx-auto mt-2 max-w-sm text-sm leading-6 text-muted-foreground">{body}</p>
+
+      {!hasQuery && (
+        <div className="mx-auto mt-6 grid max-w-md grid-cols-3 gap-2 text-left">
+          <div className="rounded-xl border border-border/50 bg-card p-3">
+            <UtensilsCrossed className="mb-2 h-4 w-4 text-orange-500" />
+            <p className="text-[11px] font-bold text-foreground">Restaurants</p>
+            <p className="mt-0.5 text-[10px] leading-4 text-muted-foreground">Order and reserve</p>
+          </div>
+          <div className="rounded-xl border border-border/50 bg-card p-3">
+            <BedDouble className="mb-2 h-4 w-4 text-foreground" />
+            <p className="text-[11px] font-bold text-foreground">Hotels</p>
+            <p className="mt-0.5 text-[10px] leading-4 text-muted-foreground">Rooms and rates</p>
+          </div>
+          <div className="rounded-xl border border-border/50 bg-card p-3">
+            <Store className="mb-2 h-4 w-4 text-emerald-600" />
+            <p className="text-[11px] font-bold text-foreground">Local shops</p>
+            <p className="mt-0.5 text-[10px] leading-4 text-muted-foreground">Pickup and service</p>
+          </div>
+        </div>
+      )}
+
+      <div className="mt-6 flex flex-wrap justify-center gap-2">
+        {hasQuery ? (
+          <Button type="button" variant="outline" className="rounded-xl" onClick={onClearSearch}>
+            Clear search
+          </Button>
+        ) : (
+          <>
+            {showEats && (
+              <Button type="button" className="rounded-xl" onClick={onBrowseEats}>
+                Browse Eats
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            )}
+            {showHotels && (
+              <Button type="button" variant="outline" className="rounded-xl" onClick={onBrowseHotels}>
+                Browse Hotels
+              </Button>
+            )}
+          </>
+        )}
+        <Button type="button" variant="ghost" className="rounded-xl" onClick={onAddBusiness}>
+          Add your business
+        </Button>
+      </div>
+    </section>
   );
 }
 

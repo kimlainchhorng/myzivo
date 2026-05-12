@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Helmet } from "react-helmet-async";
 import {
@@ -47,17 +47,21 @@ const ConnectWebsitePage = () => {
   const [niche, setNiche] = useState<Niche>(prefs.niche ?? "flights");
   const [dofollow, setDofollow] = useState<boolean>(prefs.dofollow ?? true);
 
-  const siteId = useMemo(
-    () => (user?.id ? user.id.replace(/-/g, "").slice(0, 24) : "zivo-demo-site-0001"),
-    [user?.id]
-  );
+  const userId = user?.id ?? null;
+  const siteId = userId ? userId.replace(/-/g, "").slice(0, 24) : null;
 
-  const snippet = `<!-- ZIVO Travel Widget — SEO optimized -->
+  const snippet = siteId
+    ? `<!-- ZIVO Travel Widget — SEO optimized -->
 <div id="zivo-widget" data-niche="${niche}" data-rel="${dofollow ? "dofollow" : "nofollow"}"></div>
 <script src="https://hizivo.com/api/embed/${siteId}.js" defer></script>
-<noscript><a href="https://hizivo.com/?ref=${siteId}" rel="${dofollow ? "" : "nofollow "}noopener">Travel deals by ZIVO</a></noscript>`;
+<noscript><a href="https://hizivo.com/?ref=${siteId}" rel="${dofollow ? "" : "nofollow "}noopener">Travel deals by ZIVO</a></noscript>`
+    : "";
 
   const handleCopy = async () => {
+    if (!snippet) {
+      toast.error("Sign in to generate your real widget snippet");
+      return;
+    }
     await navigator.clipboard.writeText(snippet);
     setCopied(true);
     toast.success("Snippet copied to clipboard");
@@ -242,12 +246,15 @@ const ConnectWebsitePage = () => {
                 <span className="text-[10px] uppercase tracking-wider text-muted-foreground">HTML</span>
               </div>
               <pre className="p-4 text-xs sm:text-sm font-mono leading-relaxed overflow-x-auto bg-background">
-                <code className="text-foreground">{snippet}</code>
+                <code className="text-foreground">
+                  {snippet || "Sign in to generate your real ZIVO widget snippet."}
+                </code>
               </pre>
               <div className="p-3 border-t border-border">
                 <Button
                   onClick={handleCopy}
                   variant="outline"
+                  disabled={!snippet}
                   className="w-full justify-center gap-2 h-11"
                 >
                   {copied ? <Check className="w-4 h-4 text-emerald-500" /> : <Copy className="w-4 h-4" />}
@@ -339,9 +346,8 @@ const ConnectWebsitePage = () => {
               ))}
             </div>
 
-            {/* Browser mockup */}
+            {/* Widget preview */}
             <Card className="overflow-hidden shadow-xl">
-              {/* Browser chrome */}
               <div className="bg-muted px-3 py-2 flex items-center gap-2 border-b border-border">
                 <div className="flex gap-1.5">
                   <span className="w-2.5 h-2.5 rounded-full bg-destructive/70" />
@@ -353,59 +359,50 @@ const ConnectWebsitePage = () => {
                 </div>
               </div>
 
-              {/* Preview content */}
               <div
                 className={cn(
                   "p-4 space-y-3 transition-colors",
                   theme === "dark" ? "bg-foreground" : "bg-background"
                 )}
               >
-                {[
-                  {
-                    icon: Plane,
-                    title: "Cheap flights to Tokyo",
-                    sub: connected ? "From $589 · Live deal" : "Draft — publish to make visible",
-                  },
-                  {
-                    icon: Hotel,
-                    title: "Top-rated hotels in Bali",
-                    sub: connected ? "From $42/night · 4.8★" : "Draft — publish to make visible",
-                  },
-                ].map((item, i) => (
-                  <div
-                    key={i}
-                    className={cn(
-                      "flex gap-3 p-3 rounded-xl",
-                      theme === "dark" ? "bg-background/10" : "bg-muted/40"
+                <div
+                  className={cn(
+                    "flex gap-3 p-3 rounded-xl",
+                    theme === "dark" ? "bg-background/10" : "bg-muted/40"
+                  )}
+                >
+                  <div className="w-12 h-12 rounded-lg flex items-center justify-center shrink-0 bg-primary/15">
+                    {niche === "hotels" ? (
+                      <Hotel className="w-5 h-5 text-primary" />
+                    ) : (
+                      <Plane className="w-5 h-5 text-primary" />
                     )}
-                  >
-                    <div className="w-12 h-12 rounded-lg flex items-center justify-center shrink-0 bg-primary/15">
-                      <item.icon className="w-5 h-5 text-primary" />
+                  </div>
+                  <div className="min-w-0">
+                    <div
+                      className={cn(
+                        "font-semibold text-sm",
+                        theme === "dark" ? "text-background" : "text-foreground"
+                      )}
+                    >
+                      Live widget content
                     </div>
-                    <div className="min-w-0">
-                      <div
-                        className={cn(
-                          "font-semibold text-sm truncate",
-                          theme === "dark" ? "text-background" : "text-foreground"
-                        )}
-                      >
-                        {item.title}
-                      </div>
-                      <div
-                        className={cn(
-                          "text-xs mt-0.5",
-                          !connected
-                            ? "text-primary"
-                            : theme === "dark"
-                            ? "text-background/60"
-                            : "text-muted-foreground"
-                        )}
-                      >
-                        {item.sub}
-                      </div>
+                    <div
+                      className={cn(
+                        "text-xs mt-0.5 leading-5",
+                        !connected
+                          ? "text-primary"
+                          : theme === "dark"
+                          ? "text-background/60"
+                          : "text-muted-foreground"
+                      )}
+                    >
+                      {connected
+                        ? "Your site will render real ZIVO inventory and affiliate offers from the live widget feed."
+                        : "Draft mode keeps the widget hidden until you publish it."}
                     </div>
                   </div>
-                ))}
+                </div>
 
                 <div
                   className={cn(

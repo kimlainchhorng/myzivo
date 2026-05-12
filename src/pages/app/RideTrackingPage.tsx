@@ -145,18 +145,18 @@ export default function RideTrackingPage() {
     const updated = advance();
     if (!updated) {
       clear();
-      navigate("/rides");
+      navigate("/rides/hub");
       return;
     }
     const sp = new URLSearchParams();
     if (lastDrop) sp.set("pickup", lastDrop);
     sp.set("dropoff", updated.current);
     if (updated.upcoming.length > 0) sp.set("multi", updated.upcoming.join("|"));
-    navigate(`/rides?${sp.toString()}`);
+    navigate(`/rides/hub?${sp.toString()}`);
   };
 
   return (
-    <AppLayout title="Live Tracking" showBack onBack={() => navigate("/rides")} hideNav>
+    <AppLayout title="Live Tracking" showBack onBack={() => navigate("/rides/hub")} hideNav>
       <div className="p-4 space-y-4">
         {tripData?.status === "completed" && queue && queue.upcoming.length > 0 && (
           <button type="button"

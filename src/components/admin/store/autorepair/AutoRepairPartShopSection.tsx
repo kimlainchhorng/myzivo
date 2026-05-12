@@ -21,7 +21,6 @@ import Plus from "lucide-react/dist/esm/icons/plus";
 import Wrench from "lucide-react/dist/esm/icons/wrench";
 import Pencil from "lucide-react/dist/esm/icons/pencil";
 import Trash2 from "lucide-react/dist/esm/icons/trash-2";
-import Sparkles from "lucide-react/dist/esm/icons/sparkles";
 import Store from "lucide-react/dist/esm/icons/store";
 import ExternalLink from "lucide-react/dist/esm/icons/external-link";
 import KeyRound from "lucide-react/dist/esm/icons/key-round";
@@ -104,21 +103,6 @@ const JOBS: { label: string; cats: string[] }[] = [
 ];
 
 const CONDITIONS = ["New", "OEM", "Remanufactured", "Aftermarket", "Used"];
-
-const SEED: Array<Omit<Part, "id" | "store_id" | "active" | "image_url">> = [
-  { sku: "BP-2231", name: "Ceramic Brake Pads (Front)", brand: "Akebono", category: "Brakes", price_cents: 8999, cost_cents: 5500, stock: 24, condition: "New", warranty_months: 24, oem_number: "D1275", fitment_notes: "Fits most 2015-2023 domestic vehicles" },
-  { sku: "BR-1102", name: "Brake Rotor 320mm", brand: "Brembo", category: "Brakes", price_cents: 14500, cost_cents: 9200, stock: 12, condition: "New", warranty_months: 12 },
-  { sku: "OF-001", name: "Oil Filter (Universal)", brand: "Mobil 1", category: "Engine", price_cents: 1249, cost_cents: 680, stock: 80, oem_number: "M1-113A" },
-  { sku: "OL-5W30", name: "5W-30 Full Synthetic 5qt", brand: "Castrol", category: "Fluids", price_cents: 3299, cost_cents: 2100, stock: 60 },
-  { sku: "SP-4101", name: "Iridium Spark Plug (set of 4)", brand: "NGK", category: "Engine", price_cents: 4800, cost_cents: 2900, stock: 35, oem_number: "BKR6EIX-11", warranty_months: 24 },
-  { sku: "BAT-H7", name: "AGM Battery H7", brand: "Bosch", category: "Electrical", price_cents: 21900, cost_cents: 14800, stock: 8, core_charge_cents: 2200, warranty_months: 36 },
-  { sku: "TIRE-225", name: "All-Season Tire 225/65R17", brand: "Michelin", category: "Tires", price_cents: 18900, cost_cents: 13000, stock: 16, warranty_months: 60 },
-  { sku: "CAB-AF", name: "Cabin Air Filter", brand: "K&N", category: "HVAC", price_cents: 2499, cost_cents: 1400, stock: 42, oem_number: "33-2300" },
-  { sku: "WB-22", name: 'Wiper Blade 22"', brand: "Bosch", category: "Exterior", price_cents: 1849, cost_cents: 950, stock: 50 },
-  { sku: "ALT-130", name: "Alternator 130A Reman", brand: "Denso", category: "Electrical", price_cents: 28900, cost_cents: 19000, stock: 5, condition: "Remanufactured", core_charge_cents: 3500, warranty_months: 18 },
-  { sku: "SHK-FR", name: "Front Strut Assembly", brand: "Monroe", category: "Suspension", price_cents: 15600, cost_cents: 10200, stock: 10, warranty_months: 12 },
-  { sku: "COOL-50", name: "Universal Coolant 1gal", brand: "Prestone", category: "Cooling", price_cents: 1899, cost_cents: 1000, stock: 45 },
-];
 
 const YEARS = Array.from({ length: 35 }, (_, i) => String(2024 - i));
 const MAKES = ["Acura","BMW","Buick","Cadillac","Chevrolet","Chrysler","Dodge","Ford","GMC","Honda","Hyundai","Infiniti","Jeep","Kia","Lexus","Lincoln","Mazda","Mercedes-Benz","Mitsubishi","Nissan","Ram","Subaru","Tesla","Toyota","Volkswagen","Volvo"];
@@ -248,16 +232,6 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
     if (sort === key) setSortDir(d => d === "asc" ? "desc" : "asc");
     else { setSort(key); setSortDir("asc"); }
   };
-
-  const seedCatalog = useMutation({
-    mutationFn: async () => {
-      const rows = SEED.map(s => ({ ...s, store_id: storeId, active: true }));
-      const { error } = await supabase.from("ar_parts").insert(rows);
-      if (error) throw error;
-    },
-    onSuccess: () => { toast.success("12 starter parts added"); qc.invalidateQueries({ queryKey: ["ar-parts", storeId] }); },
-    onError: (e: any) => toast.error(e.message ?? "Could not seed catalog"),
-  });
 
   const upsert = useMutation({
     mutationFn: async () => {
@@ -678,11 +652,11 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
         <Card><CardContent className="py-12 text-center space-y-3">
           <Package className="w-10 h-10 mx-auto text-muted-foreground/40" />
           <p className="font-semibold">Your parts catalog is empty</p>
-          <p className="text-sm text-muted-foreground">Add parts manually or seed starter inventory to get going.</p>
+          <p className="text-sm text-muted-foreground">Add parts manually or import a real CSV catalog to get going.</p>
           <div className="flex gap-2 justify-center flex-wrap">
             <Button size="sm" onClick={startNew} className="gap-1.5"><Plus className="w-3.5 h-3.5" /> Add a part</Button>
-            <Button size="sm" variant="outline" onClick={() => seedCatalog.mutate()} disabled={seedCatalog.isPending} className="gap-1.5">
-              <Sparkles className="w-3.5 h-3.5" /> {seedCatalog.isPending ? "Adding..." : "Seed 12 starter parts"}
+            <Button size="sm" variant="outline" onClick={() => csvRef.current?.click()} disabled={importCsv.isPending} className="gap-1.5">
+              <Upload className="w-3.5 h-3.5" /> {importCsv.isPending ? "Importing..." : "Import CSV"}
             </Button>
           </div>
         </CardContent></Card>
@@ -733,7 +707,7 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
           <div className="space-y-3">
             {/* Row 1: SKU + Brand */}
             <div className="grid grid-cols-2 gap-2">
-              <div><Label className="text-xs">SKU *</Label><Input className="mt-1" placeholder="BP-2231" value={form.sku} onChange={e => setForm({ ...form, sku: e.target.value })} /></div>
+              <div><Label className="text-xs">SKU *</Label><Input className="mt-1" placeholder="SKU" value={form.sku} onChange={e => setForm({ ...form, sku: e.target.value })} /></div>
               <div><Label className="text-xs">Brand</Label><Input className="mt-1" placeholder="Akebono" value={form.brand ?? ""} onChange={e => setForm({ ...form, brand: e.target.value })} /></div>
             </div>
             {/* Row 2: Name */}

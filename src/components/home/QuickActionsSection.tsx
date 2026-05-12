@@ -12,7 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
 const quickActions = [
-  { id: "ride", icon: Car, label: "Book a Ride", description: "Go anywhere", href: "/rides", color: "rides" as const },
+  { id: "ride", icon: Car, label: "Book a Ride", description: "Go anywhere", href: "/rides/hub", color: "rides" as const },
   { id: "eats", icon: UtensilsCrossed, label: "Order Food", description: "Delivered fast", href: "/eats", color: "eats" as const },
   { id: "flight", icon: Plane, label: "Book Flight", description: "500+ destinations", href: "/flights", color: "sky" as const },
   { id: "hotel", icon: Hotel, label: "Find Hotel", description: "Best rates guaranteed", href: "/hotels", color: "amber" as const },

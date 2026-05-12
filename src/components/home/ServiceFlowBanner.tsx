@@ -15,7 +15,7 @@ const flowSteps = [
   { icon: Plane, label: "Flights", href: "/flights", colorVar: "--flights" },
   { icon: Hotel, label: "Hotels", href: "/hotels", colorVar: "--hotels" },
   { icon: CarFront, label: "Rentals", href: "/rent-car", colorVar: "--cars" },
-  { icon: Car, label: "Rides", href: "/rides", colorVar: "--rides" },
+  { icon: Car, label: "Rides", href: "/rides/hub", colorVar: "--rides" },
   { icon: UtensilsCrossed, label: "Eats", href: "/eats", colorVar: "--eats" },
 ];
 

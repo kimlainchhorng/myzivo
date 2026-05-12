@@ -82,7 +82,6 @@ export default function LiveNowStrip() {
           return (
             <button type="button"
               key={s.id}
-              type="button"
               onClick={() => navigate(targetUser ? `/user/${targetUser}` : "/live")}
               aria-label={`Watch ${name} live, ${compactCount(viewers)} watching`}
               className="shrink-0 flex flex-col items-center gap-1.5 w-[80px] active:opacity-70 transition-opacity"

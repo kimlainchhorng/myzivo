@@ -7,13 +7,13 @@
 importScripts('https://storage.googleapis.com/workbox-cdn/releases/7.0.0/workbox-sw.js');
 
 // Precache manifest (injected by vite-plugin-pwa)
-self.__WB_MANIFEST;
+const precacheManifest = self.__WB_MANIFEST;
 
 // Configure Workbox
 if (workbox) {
   console.log('[SW] Workbox loaded successfully');
 
-  workbox.precaching.precacheAndRoute(self.__WB_MANIFEST || []);
+  workbox.precaching.precacheAndRoute(precacheManifest || []);
 
   // Cache Google Fonts stylesheets
   workbox.routing.registerRoute(

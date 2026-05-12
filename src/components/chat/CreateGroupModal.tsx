@@ -2,6 +2,7 @@
  * CreateGroupModal — Select friends to create a group chat
  */
 import { useState, useEffect, useRef, useMemo } from "react";
+import { createPortal } from "react-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import X from "lucide-react/dist/esm/icons/x";
@@ -348,13 +349,13 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
 
   if (!open) return null;
 
-  return (
+  return createPortal(
     <AnimatePresence>
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
-        className="fixed inset-x-0 top-0 z-[60] flex items-end sm:items-center justify-center w-full"
+        className="fixed inset-0 z-[10000] flex items-end justify-center px-0 sm:items-center sm:px-4"
         style={{ height: "100dvh" }}
         onClick={onClose}
       >
@@ -363,14 +364,17 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
-          className="relative bg-background rounded-t-2xl sm:rounded-2xl w-full max-w-md max-h-[85dvh] flex flex-col overflow-hidden"
+          className="relative bg-background rounded-t-2xl sm:rounded-2xl w-full sm:max-w-md max-h-[85dvh] flex flex-col overflow-hidden shadow-2xl"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="create-group-title"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
           <div className="flex items-center justify-between p-4 border-b border-border/30">
             <div className="flex items-center gap-2">
               <Users className="w-5 h-5 text-primary" />
-              <h3 className="text-base font-bold text-foreground">New Group</h3>
+              <h3 id="create-group-title" className="text-base font-bold text-foreground">New Group</h3>
             </div>
             <button type="button"
               onClick={onClose}
@@ -544,6 +548,7 @@ export default function CreateGroupModal({ open, onClose, onCreated }: CreateGro
           </div>
         </motion.div>
       </motion.div>
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

@@ -125,7 +125,6 @@ export default function LodgingRequestPayoutSheet({ storeId, storeCountry, avail
                   return (
                     <button type="button"
                       key={m.id}
-                      type="button"
                       onClick={() => setMethodId(m.id)}
                       className={`w-full text-left rounded-md border p-2.5 transition ${isSelected ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"}`}
                     >

@@ -37,7 +37,6 @@ import Volume2 from "lucide-react/dist/esm/icons/volume-2";
 import VolumeX from "lucide-react/dist/esm/icons/volume-x";
 import Music from "lucide-react/dist/esm/icons/music";
 import BarChart2 from "lucide-react/dist/esm/icons/bar-chart-2";
-import Facebook from "lucide-react/dist/esm/icons/facebook";
 import AtSign from "lucide-react/dist/esm/icons/at-sign";
 import MoreHorizontal from "lucide-react/dist/esm/icons/more-horizontal";
 import Download from "lucide-react/dist/esm/icons/download";
@@ -67,6 +66,87 @@ export interface StoryGroup {
 }
 
 const STORY_DURATION = 5000;
+
+type StoryTableName =
+  | "story_views"
+  | "story_reactions"
+  | "story_comments"
+  | "stories"
+  | "public_profiles"
+  | "direct_messages";
+
+type LooseDbError = { message?: string };
+type LooseDbResult = { data: unknown; error: LooseDbError | null };
+
+type LooseDbQuery = PromiseLike<LooseDbResult> & {
+  select: (columns?: string) => LooseDbQuery;
+  eq: (column: string, value: unknown) => LooseDbQuery;
+  in: (column: string, values: readonly unknown[]) => LooseDbQuery;
+  order: (column: string, options?: unknown) => LooseDbQuery;
+  maybeSingle: () => Promise<LooseDbResult>;
+  delete: () => LooseDbQuery;
+  update: (values: unknown) => LooseDbQuery;
+  insert: (values: unknown) => LooseDbQuery;
+  upsert: (values: unknown, options?: unknown) => LooseDbQuery;
+};
+
+const storyDb = supabase as unknown as {
+  from: (table: StoryTableName) => LooseDbQuery;
+};
+
+type StoryViewRow = {
+  viewer_id: string;
+  viewed_at: string;
+};
+
+type PublicProfileRow = {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+};
+
+type StoryReactionRow = {
+  id: string;
+  user_id: string;
+  emoji: string;
+  created_at: string;
+};
+
+type StoryCommentRow = {
+  id: string;
+  user_id: string;
+  content: string;
+  created_at: string;
+};
+
+type StoryDbRow = {
+  id: string;
+  user_id: string | null;
+  media_url: string | null;
+  audio_url: string | null;
+};
+
+type ViewerListItem = StoryViewRow & {
+  name: string;
+  avatar: string | null;
+};
+
+type ReactionListItem = StoryReactionRow & {
+  name: string;
+  avatar: string | null;
+};
+
+type CommentListItem = StoryCommentRow & {
+  name: string;
+  avatar: string | null;
+};
+
+const asRows = <T,>(value: unknown): T[] => (Array.isArray(value) ? (value as T[]) : []);
+const asRow = <T,>(value: unknown): T | null => (value && typeof value === "object" ? (value as T) : null);
+const errorMessage = (error: unknown, fallback: string) =>
+  error && typeof error === "object" && "message" in error && typeof error.message === "string"
+    ? error.message
+    : fallback;
 
 export interface StoryCloseMeta {
   story_id: string;
@@ -150,6 +230,8 @@ export default function StoryViewer({
 
   const viewingGroup = groups[groupIdx] ?? null;
   const currentStory = viewingGroup?.stories[viewIdx] ?? null;
+  const currentStoryId = currentStory?.id ?? null;
+  const userId = user?.id ?? null;
   const isOwner = viewingGroup?.userId === user?.id;
 
   // Live updates: subscribe to reactions / comments / views for the active story
@@ -161,28 +243,28 @@ export default function StoryViewer({
     enabled: !!currentStory && isOwner,
     queryFn: async () => {
       const { data } = await supabase
-        .from("story_views" as any)
+        .from("story_views")
         .select("viewer_id, viewed_at")
         .eq("story_id", currentStory!.id)
         .order("viewed_at", { ascending: false });
       if (!data || data.length === 0) return [];
       // Dedupe by viewer_id so React list keys stay unique
       const seen = new Set<string>();
-      const uniqueViews = (data as any[]).filter((v: any) => {
+      const uniqueViews = asRows<StoryViewRow>(data).filter((v) => {
         if (seen.has(v.viewer_id)) return false;
         seen.add(v.viewer_id);
         return true;
       });
-      const viewerIds = uniqueViews.map((v: any) => v.viewer_id);
-      const { data: profiles } = await supabase
-        .from("public_profiles" as any)
+      const viewerIds = uniqueViews.map((v) => v.viewer_id);
+      const { data: profiles } = await storyDb
+        .from("public_profiles")
         .select("id, full_name, avatar_url")
         .in("id", viewerIds);
-      const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
-      return uniqueViews.map((v: any) => ({
+      const profileMap = new Map(asRows<PublicProfileRow>(profiles).map((p) => [p.id, p]));
+      return uniqueViews.map((v): ViewerListItem => ({
         ...v,
         name: profileMap.get(v.viewer_id)?.full_name || "User",
-        avatar: profileMap.get(v.viewer_id)?.avatar_url,
+        avatar: profileMap.get(v.viewer_id)?.avatar_url || null,
       }));
     },
   });
@@ -193,21 +275,22 @@ export default function StoryViewer({
     enabled: !!currentStory && isOwner,
     queryFn: async () => {
       const { data } = await supabase
-        .from("story_reactions" as any)
+        .from("story_reactions")
         .select("id, user_id, emoji, created_at")
         .eq("story_id", currentStory!.id)
         .order("created_at", { ascending: false });
       if (!data || data.length === 0) return [];
-      const reactorIds = [...new Set((data as any[]).map((r: any) => r.user_id))];
-      const { data: profiles } = await supabase
-        .from("public_profiles" as any)
+      const reactions = asRows<StoryReactionRow>(data);
+      const reactorIds = [...new Set(reactions.map((r) => r.user_id))];
+      const { data: profiles } = await storyDb
+        .from("public_profiles")
         .select("id, full_name, avatar_url")
         .in("id", reactorIds);
-      const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
-      return (data as any[]).map((r: any) => ({
+      const profileMap = new Map(asRows<PublicProfileRow>(profiles).map((p) => [p.id, p]));
+      return reactions.map((r): ReactionListItem => ({
         ...r,
         name: profileMap.get(r.user_id)?.full_name || "User",
-        avatar: profileMap.get(r.user_id)?.avatar_url,
+        avatar: profileMap.get(r.user_id)?.avatar_url || null,
       }));
     },
   });
@@ -216,28 +299,28 @@ export default function StoryViewer({
     enabled: !!currentStory,
     queryFn: async () => {
       const { data } = await supabase
-        .from("story_comments" as any)
+        .from("story_comments")
         .select("id, user_id, content, created_at")
         .eq("story_id", currentStory!.id)
         .order("created_at", { ascending: true });
       if (!data || data.length === 0) return [];
       // Dedupe comments by id (defensive — duplicates would crash React lists)
       const seenC = new Set<string>();
-      const uniqueComments = (data as any[]).filter((c: any) => {
+      const uniqueComments = asRows<StoryCommentRow>(data).filter((c) => {
         if (seenC.has(c.id)) return false;
         seenC.add(c.id);
         return true;
       });
-      const userIds = [...new Set(uniqueComments.map((c: any) => c.user_id))];
-      const { data: profiles } = await supabase
-        .from("public_profiles" as any)
+      const userIds = [...new Set(uniqueComments.map((c) => c.user_id))];
+      const { data: profiles } = await storyDb
+        .from("public_profiles")
         .select("id, full_name, avatar_url")
         .in("id", userIds);
-      const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
-      return uniqueComments.map((c: any) => ({
+      const profileMap = new Map(asRows<PublicProfileRow>(profiles).map((p) => [p.id, p]));
+      return uniqueComments.map((c): CommentListItem => ({
         ...c,
         name: profileMap.get(c.user_id)?.full_name || "User",
-        avatar: profileMap.get(c.user_id)?.avatar_url,
+        avatar: profileMap.get(c.user_id)?.avatar_url || null,
       }));
     },
   });
@@ -246,9 +329,9 @@ export default function StoryViewer({
   // Convention: content starting with "[react:<uuid>] body" belongs to that
   // reaction's thread. Plain comments (no prefix) go into the legacy bucket.
   const REACT_PREFIX = /^\[react:([0-9a-f-]{36})\]\s*/i;
-  const commentsByReaction = new Map<string, any[]>();
-  const flatComments: any[] = [];
-  for (const c of comments as any[]) {
+  const commentsByReaction = new Map<string, CommentListItem[]>();
+  const flatComments: CommentListItem[] = [];
+  for (const c of comments) {
     const m = REACT_PREFIX.exec(c.content || "");
     if (m) {
       const reactionId = m[1];
@@ -266,12 +349,12 @@ export default function StoryViewer({
     enabled: !!currentStory && !!user,
     queryFn: async () => {
       const { data } = await supabase
-        .from("story_reactions" as any)
+        .from("story_reactions")
         .select("emoji")
         .eq("story_id", currentStory!.id)
         .eq("user_id", user!.id)
         .maybeSingle();
-      return (data as any)?.emoji ?? null;
+      return asRow<Pick<StoryReactionRow, "emoji">>(data)?.emoji ?? null;
     },
   });
 
@@ -280,7 +363,7 @@ export default function StoryViewer({
       if (!currentStory || !user) return;
       if (emoji === null) {
         const { error } = await supabase
-          .from("story_reactions" as any)
+          .from("story_reactions")
           .delete()
           .eq("story_id", currentStory.id)
           .eq("user_id", user.id);
@@ -288,20 +371,21 @@ export default function StoryViewer({
         return;
       }
       const { data: existing } = await supabase
-        .from("story_reactions" as any)
+        .from("story_reactions")
         .select("id")
         .eq("story_id", currentStory.id)
         .eq("user_id", user.id)
         .maybeSingle();
-      if (existing) {
+      const existingReaction = asRow<Pick<StoryReactionRow, "id">>(existing);
+      if (existingReaction) {
         const { error } = await supabase
-          .from("story_reactions" as any)
+          .from("story_reactions")
           .update({ emoji })
-          .eq("id", (existing as any).id);
+          .eq("id", existingReaction?.id);
         if (error) throw error;
       } else {
         const { error } = await supabase
-          .from("story_reactions" as any)
+          .from("story_reactions")
           .insert({ story_id: currentStory.id, user_id: user.id, emoji });
         if (error) throw error;
       }
@@ -318,7 +402,7 @@ export default function StoryViewer({
         window.setTimeout(() => setReactionBurst(null), 800);
       }
     },
-    onError: (err: any) => toast.error(err?.message || "Could not save reaction"),
+    onError: (err: unknown) => toast.error(errorMessage(err, "Could not save reaction")),
   });
 
   const toggleLike = useCallback(() => {
@@ -331,23 +415,23 @@ export default function StoryViewer({
 
 
   useEffect(() => {
-    if (!currentStory || !user || isOwner) return;
-    void supabase
-      .from("story_views" as any)
-      .upsert({ story_id: currentStory.id, viewer_id: user.id }, { onConflict: "story_id,viewer_id" })
+      if (!currentStoryId || !userId || isOwner) return;
+      void supabase
+      .from("story_views")
+      .upsert({ story_id: currentStoryId, viewer_id: userId }, { onConflict: "story_id,viewer_id" })
       .then(({ error }) => {
         if (!error) {
-          queryClient.invalidateQueries({ queryKey: ["my-story-views", user.id], exact: true });
-          queryClient.invalidateQueries({ queryKey: ["profile-story-rings", user.id], exact: true });
+          queryClient.invalidateQueries({ queryKey: ["my-story-views", userId], exact: true });
+          queryClient.invalidateQueries({ queryKey: ["profile-story-rings", userId], exact: true });
           queryClient.invalidateQueries({ queryKey: ["feed-story-users"], exact: true });
         }
       });
-  }, [currentStory?.id, user?.id, isOwner, queryClient]);
+  }, [currentStoryId, userId, isOwner, queryClient]);
 
   // ---- Sync URL deep-link with currently visible story ----
   useEffect(() => {
-    if (currentStory && onStoryChange) onStoryChange(currentStory.id);
-  }, [currentStory?.id, onStoryChange]);
+    if (currentStoryId && onStoryChange) onStoryChange(currentStoryId);
+  }, [currentStoryId, onStoryChange]);
 
   // ---- Share story (opens Instagram-style "Send to" sheet) ----
   const handleShare = useCallback(() => {
@@ -359,7 +443,7 @@ export default function StoryViewer({
   // ---- Post comment (used for threaded replies under reactions) ----
   const postComment = useMutation({
     mutationFn: async (content: string) => {
-      const { error } = await supabase.from("story_comments" as any).insert({
+      const { error } = await supabase.from("story_comments").insert({
         story_id: currentStory!.id,
         user_id: user!.id,
         content,
@@ -371,8 +455,9 @@ export default function StoryViewer({
       setCommentText("");
       setThreadDraft("");
     },
-    onError: (err: any) => {
-      if (err?.message?.includes("violates row-level security")) {
+    onError: (err: unknown) => {
+      const message = errorMessage(err, "");
+      if (message.includes("violates row-level security")) {
         toast.error("Only the story owner or original reactor can reply here");
       } else {
         toast.error("Failed to post reply");
@@ -388,7 +473,7 @@ export default function StoryViewer({
       if (ownerId === user.id) throw new Error("Cannot reply to your own story");
       const deepLink = `${getPublicOrigin()}/stories/${currentStory.id}`;
       const body = `💬 Replied to your story\n${text}\n${deepLink}`;
-      const { error } = await (supabase as any).from("direct_messages").insert({
+      const { error } = await supabase.from("direct_messages").insert({
         sender_id: user.id,
         receiver_id: ownerId,
         message: body,
@@ -409,7 +494,7 @@ export default function StoryViewer({
         },
       });
     },
-    onError: (err: any) => toast.error(err?.message || "Could not send reply"),
+    onError: (err: unknown) => toast.error(errorMessage(err, "Could not send reply")),
   });
 
   // ---- Delete (owner) — also removes media + audio from storage ----
@@ -417,24 +502,25 @@ export default function StoryViewer({
     mutationFn: async (storyId: string) => {
       // 1) Re-fetch the row to get the latest URLs (and confirm ownership exists).
       const { data: latest } = await supabase
-        .from("stories" as any)
+        .from("stories")
         .select("id, user_id, media_url, audio_url")
         .eq("id", storyId)
         .maybeSingle();
 
+      const latestStory = asRow<StoryDbRow>(latest);
       const cached = viewingGroup?.stories.find((s) => s.id === storyId);
-      const ownerId = (latest as any)?.user_id ?? viewingGroup?.userId ?? user?.id;
+      const ownerId = latestStory?.user_id ?? viewingGroup?.userId ?? user?.id;
 
       // 2) Collect every known storage key from cache + fresh row.
       const keys = Array.from(
         new Set([
           ...collectStoryStorageKeys(cached),
-          ...collectStoryStorageKeys(latest as any),
+          ...collectStoryStorageKeys(latestStory),
         ])
       );
 
       // 3) Delete the DB row first so RLS-protected files become deletable.
-      const { error } = await supabase.from("stories" as any).delete().eq("id", storyId);
+      const { error } = await supabase.from("stories").delete().eq("id", storyId);
       if (error) throw error;
 
       // 4) Best-effort URL-key removal.
@@ -451,7 +537,7 @@ export default function StoryViewer({
       invalidateAllStoryCaches(queryClient, user?.id);
       toast.success("Story deleted");
     },
-    onError: (err: any) => toast.error(err?.message || "Could not delete story"),
+    onError: (err: unknown) => toast.error(errorMessage(err, "Could not delete story")),
   });
 
   // ---- Auto-progress ----
@@ -538,14 +624,21 @@ export default function StoryViewer({
   }, [viewIdx, groupIdx, groups]);
 
   useEffect(() => {
-    if (progress >= 1 && viewingGroup) goNext();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [progress >= 1]);
+    if (progress < 1 || !viewingGroup) return;
+    const id = window.setTimeout(() => goNext(), 0);
+    return () => window.clearTimeout(id);
+  }, [progress, viewingGroup, goNext]);
 
   useEffect(() => {
-    if (viewingGroup && !paused) resetAndStart();
-    else stopTimer();
-    return () => stopTimer();
+    if (!viewingGroup || paused) {
+      stopTimer();
+      return () => stopTimer();
+    }
+    const id = window.setTimeout(() => resetAndStart(), 0);
+    return () => {
+      window.clearTimeout(id);
+      stopTimer();
+    };
   }, [viewingGroup, viewIdx, groupIdx, paused, resetAndStart, stopTimer]);
 
   // Keyboard
@@ -560,7 +653,7 @@ export default function StoryViewer({
   }, [closeWithMeta, goNext, goPrev]);
 
   // Swipe-down to close
-  const handleDragEnd = (_: any, info: PanInfo) => {
+  const handleDragEnd = (_: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
     if (info.offset.y > 120 || info.velocity.y > 600) closeWithMeta();
   };
 
@@ -979,7 +1072,7 @@ export default function StoryViewer({
                   viewers.length === 0 ? (
                     <p className="text-sm text-muted-foreground text-center py-8">No viewers yet</p>
                   ) : (
-                    viewers.map((v: any) => (
+                    viewers.map((v) => (
                       <div key={v.viewer_id} className="flex items-center gap-3">
                         <div className="w-9 h-9 rounded-full bg-muted overflow-hidden flex-shrink-0">
                           {v.avatar ? (
@@ -1002,7 +1095,7 @@ export default function StoryViewer({
                 ) : reactionList.length === 0 ? (
                   <p className="text-sm text-muted-foreground text-center py-8">No reactions yet</p>
                 ) : (
-                  reactionList.map((r: any, i: number) => {
+                  reactionList.map((r, i) => {
                     const thread = commentsByReaction.get(r.id) || [];
                     const isOpen = openThreadId === r.id;
                     const canReplyHere = isOwner || user?.id === r.user_id;
@@ -1056,7 +1149,7 @@ export default function StoryViewer({
                                 No replies yet{canReplyHere ? " — start the thread" : ""}.
                               </p>
                             )}
-                            {thread.map((tc: any) => (
+                            {thread.map((tc) => (
                               <div key={tc.id} className="flex gap-2 items-start">
                                 <CornerDownRight className="w-3 h-3 text-muted-foreground/60 mt-1.5 shrink-0" />
                                 <div className="w-6 h-6 rounded-full bg-muted overflow-hidden flex-shrink-0">
@@ -1143,7 +1236,7 @@ export default function StoryViewer({
                     No comments yet. Only friends can comment.
                   </p>
                 ) : (
-                  comments.map((c: any) => (
+                  comments.map((c) => (
                     <div key={c.id} className="flex gap-2">
                       <div className="w-8 h-8 rounded-full bg-muted overflow-hidden flex-shrink-0">
                         {c.avatar ? (

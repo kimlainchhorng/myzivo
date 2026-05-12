@@ -219,7 +219,6 @@ export default function ChatSearchPage() {
         {(["all", "dm", "group", "channel"] as const).map((f) => (
           <button type="button"
             key={f}
-            type="button"
             onClick={() => setFilter(f)}
             className={`shrink-0 px-3 py-1.5 rounded-full text-xs font-semibold transition ${
               filter === f

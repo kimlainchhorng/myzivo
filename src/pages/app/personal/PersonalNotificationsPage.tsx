@@ -278,7 +278,6 @@ function NotifGroup({
                         return (
                           <button type="button"
                             key={action.label}
-                            type="button"
                             onClick={() => onNavigate(action.to)}
                             className="flex items-center gap-1 text-[10px] font-semibold text-primary bg-primary/8 border border-primary/20 rounded-full px-2.5 py-1 touch-manipulation active:scale-95 transition-all"
                           >

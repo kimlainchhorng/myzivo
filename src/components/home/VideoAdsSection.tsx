@@ -1,11 +1,10 @@
 /**
- * VideoAdsSection - Promotional carousel with design-token colors
+ * VideoAdsSection - Service highlight carousel with design-token colors
  */
 import { useState } from "react";
 import { useVisibleInterval } from "@/hooks/useVisibleInterval";
 import { motion, AnimatePresence } from "framer-motion";
 import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
-import Play from "lucide-react/dist/esm/icons/play";
 import Plane from "lucide-react/dist/esm/icons/plane";
 import Hotel from "lucide-react/dist/esm/icons/hotel";
 import CarFront from "lucide-react/dist/esm/icons/car-front";
@@ -14,11 +13,11 @@ import Car from "lucide-react/dist/esm/icons/car";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 
-const promos = [
+const serviceHighlights = [
   {
     id: "flights",
-    title: "Fly for Less",
-    subtitle: "Compare 500+ airlines instantly",
+    title: "Search Flights",
+    subtitle: "Compare available flight options from travel partners",
     cta: "Search Flights",
     href: "/flights",
     icon: Plane,
@@ -26,8 +25,8 @@ const promos = [
   },
   {
     id: "hotels",
-    title: "Stay in Style",
-    subtitle: "Premium hotels at unbeatable rates",
+    title: "Find Hotels",
+    subtitle: "Compare available stays from lodging partners",
     cta: "Find Hotels",
     href: "/hotels",
     icon: Hotel,
@@ -35,17 +34,17 @@ const promos = [
   },
   {
     id: "rides",
-    title: "Ride Anywhere",
-    subtitle: "Fast pickups with upfront pricing",
+    title: "Request Rides",
+    subtitle: "Book rides with route details and live availability",
     cta: "Book a Ride",
-    href: "/rides",
+    href: "/rides/hub",
     icon: Car,
     colorVar: "--rides",
   },
   {
     id: "eats",
-    title: "Order & Enjoy",
-    subtitle: "Food from your favorite restaurants",
+    title: "Order Eats",
+    subtitle: "Browse restaurants, menus, and delivery options",
     cta: "Order Now",
     href: "/eats",
     icon: UtensilsCrossed,
@@ -53,8 +52,8 @@ const promos = [
   },
   {
     id: "cars",
-    title: "Drive Your Way",
-    subtitle: "Flexible car rentals worldwide",
+    title: "Rent Cars",
+    subtitle: "Browse available rental options for your trip",
     cta: "Rent a Car",
     href: "/rent-car",
     icon: CarFront,
@@ -69,15 +68,15 @@ export default function VideoAdsSection() {
     typeof window !== "undefined" &&
     window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   useVisibleInterval(
-    () => setActiveIndex((prev) => (prev + 1) % promos.length),
+    () => setActiveIndex((prev) => (prev + 1) % serviceHighlights.length),
     reduceMotion ? null : 5000,
   );
 
-  const active = promos[activeIndex];
+  const active = serviceHighlights[activeIndex];
   const Icon = active.icon;
 
   return (
-    <section className="section-padding" aria-label="Featured promotions">
+    <section className="section-padding" aria-label="Featured services">
       <div className="container mx-auto px-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -85,16 +84,16 @@ export default function VideoAdsSection() {
           viewport={{ once: true }}
           className="text-center mb-8"
         >
-          <span className="inline-block text-xs font-semibold uppercase tracking-widest text-primary mb-3">Don't miss out</span>
+          <span className="inline-block text-xs font-semibold uppercase tracking-widest text-primary mb-3">Explore ZIVO</span>
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-2">
-            Featured <span className="text-primary">Promotions</span>
+            Featured <span className="text-primary">Services</span>
           </h2>
           <p className="text-muted-foreground max-w-lg mx-auto">
-            Exclusive deals across all our services — don't miss out.
+            Open the service you need and compare current options from ZIVO partners.
           </p>
         </motion.div>
 
-        {/* Main promo card */}
+        {/* Main service card */}
         <div className="max-w-4xl mx-auto">
           <div className="relative rounded-2xl overflow-hidden h-[280px] sm:h-[340px] border border-border/30">
             <AnimatePresence mode="wait">
@@ -148,19 +147,13 @@ export default function VideoAdsSection() {
                     </div>
                   </div>
                 </div>
-
-                {/* Play button overlay (decorative) */}
-                <div className="absolute bottom-4 right-4 flex items-center gap-2 px-3 py-1.5 rounded-full bg-background/30 backdrop-blur-sm">
-                  <Play className="w-3 h-3 text-primary-foreground fill-primary-foreground" />
-                  <span className="text-[11px] text-primary-foreground/80 font-medium">Watch Promo</span>
-                </div>
               </motion.div>
             </AnimatePresence>
           </div>
 
           {/* Dots navigation */}
           <div className="flex items-center justify-center gap-2 mt-5">
-            {promos.map((promo, i) => (
+            {serviceHighlights.map((promo, i) => (
               <button type="button"
                 key={promo.id}
                 onClick={() => setActiveIndex(i)}
@@ -178,7 +171,7 @@ export default function VideoAdsSection() {
 
           {/* Mini service cards row */}
           <div className="flex gap-3 mt-6 overflow-x-auto pb-2 scrollbar-hide">
-            {promos.map((promo, i) => {
+            {serviceHighlights.map((promo, i) => {
               const PIcon = promo.icon;
               return (
                 <button type="button"

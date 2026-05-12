@@ -19,7 +19,9 @@ function isMobileBrowser(): boolean {
 }
 
 function isNativeWebView(): boolean {
-  const maybeCapacitor = (window as any)?.Capacitor;
+  const maybeCapacitor = (window as Window & {
+    Capacitor?: { isNativePlatform?: () => boolean };
+  }).Capacitor;
   if (!maybeCapacitor) return false;
   if (typeof maybeCapacitor.isNativePlatform === "function") {
     try {
@@ -43,7 +45,7 @@ export default function UsernameRedirectPage() {
     const openAppThenFallback = (targetUserId: string) => {
       const webPath = `/user/${targetUserId}`;
       if (isMobileBrowser() && !isNativeWebView()) {
-        const nativeUrl = `com.hizovo.app://user/${encodeURIComponent(targetUserId)}`;
+        const nativeUrl = `com.myzivo.app://user/${encodeURIComponent(targetUserId)}`;
         timers.push(window.setTimeout(() => {
           window.location.assign(nativeUrl);
         }, 120));

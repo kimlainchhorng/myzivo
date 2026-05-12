@@ -593,6 +593,7 @@ export default function IncomingCallListener() {
         <CallPiP
           remoteStream={pipData?.remoteStream || null}
           recipientName={answeredCall.caller_name}
+          recipientAvatar={answeredCall.caller_avatar}
           isMuted={pipData?.isMuted || false}
           duration={pipData?.duration || 0}
           callType={pipData?.callType || answeredCall.call_type}

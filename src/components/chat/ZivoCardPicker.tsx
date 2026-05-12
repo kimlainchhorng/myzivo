@@ -442,7 +442,6 @@ export default function ZivoCardPicker({ open, onClose, onPick }: Props) {
                   {(["roundtrip", "oneway"] as const).map((t) => (
                     <button type="button"
                       key={t}
-                      type="button"
                       onClick={() => setTripType(t)}
                       className={`flex-1 py-1.5 rounded-lg text-[12px] font-semibold transition ${
                         tripType === t ? "bg-background text-foreground shadow-sm" : "text-muted-foreground"
@@ -764,7 +763,6 @@ export default function ZivoCardPicker({ open, onClose, onPick }: Props) {
                     {active.examples.map((ex) => (
                       <button type="button"
                         key={ex}
-                        type="button"
                         onClick={() => setText(ex)}
                         className="px-2.5 py-1 rounded-full text-[11px] font-medium bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground transition"
                       >

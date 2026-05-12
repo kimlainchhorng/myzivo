@@ -53,7 +53,6 @@ export function BedConfigBuilder({ value, onChange }: Props) {
         {BED_TYPES.map(t => (
           <button type="button"
             key={t}
-            type="button"
             onClick={() => add(t)}
             className="px-2 py-1 rounded-full text-[11px] border border-border bg-background hover:border-primary/40 hover:bg-primary/5 inline-flex items-center gap-1"
           >

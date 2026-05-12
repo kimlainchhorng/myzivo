@@ -1,6 +1,6 @@
 /**
- * ServicesShowcase — Premium 3D/4D Ad-Style Marketing Cards
- * Cinematic bento grid with auto-scrolling ticker, holographic depth, and floating animations
+ * ServicesShowcase - Premium service navigation cards
+ * Cinematic bento grid with auto-scrolling service ticker, holographic depth, and floating animations
  */
 import Plane from "lucide-react/dist/esm/icons/plane";
 import Hotel from "lucide-react/dist/esm/icons/hotel";
@@ -9,7 +9,6 @@ import Car from "lucide-react/dist/esm/icons/car";
 import UtensilsCrossed from "lucide-react/dist/esm/icons/utensils-crossed";
 import ArrowRight from "lucide-react/dist/esm/icons/arrow-right";
 import Sparkles from "lucide-react/dist/esm/icons/sparkles";
-import Star from "lucide-react/dist/esm/icons/star";
 import { motion } from "framer-motion";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -24,43 +23,38 @@ import svcEats from "@/assets/svc-eats-premium.jpg";
 
 const services = [
   {
-    icon: Plane, title: "Flights", subtitle: "500+ Airlines", description: "Compare & book the cheapest flights worldwide",
-    href: "/flights", image: svcFlights, accentVar: "--flights", badge: "🔥 Most Popular",
+    icon: Plane, title: "Flights", subtitle: "Search airlines", description: "Compare available flight options from travel partners",
+    href: "/flights", image: svcFlights, accentVar: "--flights",
     span: "sm:col-span-2 lg:col-span-2 lg:row-span-2", tall: true,
-    promo: "From $49", rating: "4.9",
   },
   {
-    icon: Hotel, title: "Hotels", subtitle: "Best Rates", description: "Luxury stays up to 60% off",
-    href: "/hotels", image: svcHotels, accentVar: "--hotels", badge: "⭐ Top Rated",
-    promo: "60% Off", rating: "4.8",
+    icon: Hotel, title: "Hotels", subtitle: "Search stays", description: "Compare available hotel options from lodging partners",
+    href: "/hotels", image: svcHotels, accentVar: "--hotels",
   },
   {
-    icon: CarFront, title: "Car Rentals", subtitle: "Premium Fleet", description: "Drive your adventure",
-    href: "/rent-car", image: svcCars, accentVar: "--cars", badge: "🚀 New",
-    promo: "$19/day", rating: "4.7",
+    icon: CarFront, title: "Car Rentals", subtitle: "Find a car", description: "Browse available rental options for your trip",
+    href: "/rent-car", image: svcCars, accentVar: "--cars",
   },
   {
-    icon: Car, title: "Rides", subtitle: "3 Min Pickup", description: "Fast rides, upfront pricing",
-    href: "/rides", image: svcRides, accentVar: "--rides",
-    promo: "In 3 min", rating: "4.9",
+    icon: Car, title: "Rides", subtitle: "Request a ride", description: "Book rides with route details and live availability",
+    href: "/rides/hub", image: svcRides, accentVar: "--rides",
   },
   {
-    icon: UtensilsCrossed, title: "Food", subtitle: "25 Min Delivery", description: "Restaurant-quality, delivered",
+    icon: UtensilsCrossed, title: "Food", subtitle: "Order Eats", description: "Browse restaurants, menus, and delivery options",
     href: "/eats", image: svcEats, accentVar: "--eats",
-    promo: "Free delivery", rating: "4.8",
   },
 ];
 
-/* ─── Auto-scrolling Ad Ticker ─── */
+/* Auto-scrolling service ticker */
 const tickerItems = [
-  { text: "✈️ Flights from $49", color: "--flights" },
-  { text: "🏨 Hotels up to 60% off", color: "--hotels" },
-  { text: "🚗 Car Rentals from $19/day", color: "--cars" },
-  { text: "🚕 Rides in 3 minutes", color: "--rides" },
-  { text: "🍔 Free delivery on food", color: "--eats" },
-  { text: "⚡ Book in 30 seconds", color: "--primary" },
-  { text: "🌍 190+ Countries", color: "--flights" },
-  { text: "💎 Best price guarantee", color: "--hotels" },
+  { text: "Flights search", color: "--flights" },
+  { text: "Hotel search", color: "--hotels" },
+  { text: "Rental cars", color: "--cars" },
+  { text: "Ride requests", color: "--rides" },
+  { text: "Restaurant ordering", color: "--eats" },
+  { text: "Travel planning", color: "--primary" },
+  { text: "Partner pricing", color: "--flights" },
+  { text: "Secure checkout", color: "--hotels" },
 ];
 
 function AdTicker() {
@@ -113,7 +107,7 @@ function AdTicker() {
   );
 }
 
-/* ─── Premium 3D Ad Card ─── */
+/* Premium 3D service card */
 function AdCard3D({ service, index }: { service: typeof services[0]; index: number }) {
   const { ref, style, glareStyle, handleMouseMove, handleMouseLeave } = use3DTilt(12, 1.05);
   const [isVisible, setIsVisible] = useState(false);
@@ -178,59 +172,6 @@ function AdCard3D({ service, index }: { service: typeof services[0]; index: numb
               boxShadow: `inset 0 0 30px -10px hsl(var(${service.accentVar}) / 0.15)`,
             }}
           />
-
-          {/* Top: Badge + Rating */}
-          <div className="absolute top-0 left-0 right-0 flex items-start justify-between p-4 z-20">
-            {service.badge && (
-              <motion.span
-                initial={{ scale: 0, rotate: -12 }}
-                whileInView={{ scale: 1, rotate: 0 }}
-                viewport={{ once: true }}
-                transition={{ type: "spring", stiffness: 500, damping: 18, delay: 0.4 + index * 0.1 }}
-                className="text-[10px] font-extrabold uppercase tracking-wider px-3 py-1.5 rounded-xl backdrop-blur-md"
-                style={{
-                  background: `hsl(var(${service.accentVar}) / 0.85)`,
-                  color: "white",
-                  boxShadow: `0 6px 20px -4px hsl(var(${service.accentVar}) / 0.5)`,
-                }}
-              >
-                {service.badge}
-              </motion.span>
-            )}
-            {service.rating && (
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                whileInView={{ opacity: 1, x: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: 0.6 + index * 0.1 }}
-                className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold text-white backdrop-blur-md"
-                style={{ background: "rgba(0,0,0,0.4)" }}
-              >
-                <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                {service.rating}
-              </motion.div>
-            )}
-          </div>
-
-          {/* Promo price tag — floating 3D */}
-          {service.promo && (
-            <motion.div
-              animate={{ y: [0, -4, 0], rotateZ: [0, 1, 0] }}
-              transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
-              className="absolute top-14 right-4 z-20"
-              style={{ transform: "translateZ(40px)" }}
-            >
-              <div
-                className="px-3 py-1.5 rounded-xl text-xs font-black text-white backdrop-blur-sm"
-                style={{
-                  background: `linear-gradient(135deg, hsl(var(${service.accentVar})), hsl(var(${service.accentVar}) / 0.7))`,
-                  boxShadow: `0 8px 24px -6px hsl(var(${service.accentVar}) / 0.5)`,
-                }}
-              >
-                {service.promo}
-              </div>
-            </motion.div>
-          )}
 
           {/* Bottom content — 3D lifted */}
           <div className="absolute inset-0 flex flex-col justify-end p-5 sm:p-6 z-10" style={{ transform: "translateZ(35px)" }}>

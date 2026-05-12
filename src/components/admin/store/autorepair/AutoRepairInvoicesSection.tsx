@@ -72,7 +72,7 @@ const emptyDraft = (): Doc => ({
   status: "draft", createdAt: new Date().toISOString(),
 });
 
-// True if the id looks like a real Postgres uuid (vs a seed/local id like "1").
+// True if the id looks like a real Postgres uuid.
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // Compute the dollar amount for a single line item
@@ -89,16 +89,10 @@ const lineAmount = (i: LineItem): number => {
   return gross * (1 - pct / 100);
 };
 
-const seed: Doc[] = [
-  { id: "1", type: "estimate", number: "EST-1042", customer: "Maria Lopez", firstName: "Maria", lastName: "Lopez", phone: "(225) 555-0142", email: "maria.lopez@example.com", address: "1420 Highland Rd, Baton Rouge, LA", vin: "4T1B11HK5JU123456", year: "2018", make: "Toyota", model: "Camry", trim: "LE", engine: "2.5L L4 DOHC", transmission: "8-Speed Automatic", driveType: "FWD", bodyClass: "Sedan/Saloon", doors: "4", fuel: "Gasoline", plant: "Georgetown, KY, USA", vehicle: "2018 Toyota Camry", items: [{ id: "a", category: "labor", description: "Brake Pad Replacement (Front)", qty: 1, price: 120, hours: 1.5, discount: 0 }, { id: "b", category: "part", description: "Front Brake Pads (set)", qty: 1, price: 80, discount: 0 }], status: "sent", createdAt: new Date().toISOString() },
-  { id: "2", type: "invoice", number: "INV-2031", customer: "James Carter", firstName: "James", lastName: "Carter", phone: "(225) 555-0188", email: "james.carter@example.com", address: "88 Government St, Baton Rouge, LA", vin: "1FTEW1EP5LFA12345", year: "2020", make: "Ford", model: "F-150", trim: "XLT", engine: "3.5L V6 EcoBoost", transmission: "10-Speed Automatic", driveType: "4WD", bodyClass: "Pickup", doors: "4", fuel: "Gasoline", plant: "Dearborn, MI, USA", vehicle: "2020 Ford F-150", items: [{ id: "c", category: "labor", description: "Full Synthetic Oil Change", qty: 1, price: 90, hours: 1, discount: 0 }], status: "paid", createdAt: new Date(Date.now() - 86400000).toISOString() },
-  { id: "3", type: "invoice", number: "INV-2032", customer: "Linda Park", firstName: "Linda", lastName: "Park", phone: "(225) 555-0210", email: "linda.park@example.com", address: "305 Perkins Rd, Baton Rouge, LA", vin: "2HGFC2F59KH512345", year: "2019", make: "Honda", model: "Civic", trim: "LX", engine: "2.0L L4", transmission: "CVT", driveType: "FWD", bodyClass: "Sedan/Saloon", doors: "4", fuel: "Gasoline", plant: "Greensburg, IN, USA", vehicle: "2019 Honda Civic", items: [{ id: "d", category: "diagnosis", description: "AC System Diagnostic", qty: 1, price: 89, discount: 0 }, { id: "e", category: "part", description: "Cabin Air Filter", qty: 1, price: 35, discount: 0 }], status: "sent", createdAt: new Date(Date.now() - 2 * 86400000).toISOString() },
-];
-
 interface Props { storeId: string }
 
 export default function AutoRepairInvoicesSection({ storeId }: Props) {
-  const [docs, setDocs] = useState<Doc[]>(seed);
+  const [docs, setDocs] = useState<Doc[]>([]);
   // Authoritative DB rows for invoices and estimates (drives KPIs + status badges).
   const [dbInvoices, setDbInvoices] = useState<any[]>([]);
   const [dbEstimates, setDbEstimates] = useState<any[]>([]);
@@ -193,22 +187,13 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
         });
       }
     }
-    setDocs((prev) => {
-      // Replace any rows that are now persisted, keep seed entries that aren't
-      const persistedIds = new Set(persisted.map((p) => p.id));
-      const kept = prev.filter((d) => !persistedIds.has(d.id) && !["1","2","3"].includes(d.id) ? true : ["1","2","3"].includes(d.id) ? !persisted.length : false);
-      // Always keep the demo seed rows when nothing persisted yet so the UI isn't empty on first load
-      const keepSeed = persisted.length === 0 ? prev.filter((d) => ["1","2","3"].includes(d.id)) : [];
-      return [...persisted, ...kept, ...keepSeed];
-    });
+    setDocs(persisted);
   };
 
   useEffect(() => { reloadAll();   }, [storeId]);
   const draftKey = useMemo(() => `autorepair:invoice-draft:${storeId}`, [storeId]);
   const saveTimer = useRef<number | null>(null);
   const skipNextSave = useRef(true);
-
-  const filtered = useMemo(() => docs.filter(d => d.type === tab), [docs, tab]);
 
   const total = (items: LineItem[]) => items.reduce((s, i) => s + lineAmount(i), 0);
   const subtotalByCat = (items: LineItem[], cat: LineCategory) => items.filter(i => i.category === cat).reduce((s, i) => s + lineAmount(i), 0);
@@ -361,7 +346,7 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
         status: draft.status === "paid" ? "paid" : draft.status === "sent" ? "sent" : "draft",
       };
 
-      // Only treat as update if we have a real DB uuid (seed rows use ids like "1").
+      // Only treat as update if we have a real DB uuid.
       const isRealId = !!editingId && UUID_RE.test(editingId);
       if (isRealId) {
         const { error } = await supabase.from(tableName as any).update(payload).eq("id", editingId);
@@ -411,7 +396,7 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
         total_cents: subtotalCents,
       };
 
-      // 1. Persist the estimate (insert if new/seed, update if editing a real DB row).
+      // 1. Persist the estimate (insert if new, update if editing a real DB row).
       let estimateId = editingId;
       const isRealEstimateId = !!estimateId && UUID_RE.test(estimateId);
       if (isRealEstimateId) {
@@ -502,12 +487,8 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
   };
 
   // ---- Hooks that must run on EVERY render (before any early return) ----
-  // Build display rows from authoritative DB data + seed for the active tab.
+  // Build display rows from authoritative DB data for the active tab.
   const dbRowsForTab = tab === "invoice" ? dbInvoices : dbEstimates;
-  const seedForTab = useMemo(
-    () => docs.filter((d) => d.type === tab && ["1","2","3"].includes(d.id) && dbRowsForTab.length === 0),
-    [docs, tab, dbRowsForTab.length]
-  );
 
   const rows: RowDoc[] = useMemo(() => {
     const fromDb: RowDoc[] = dbRowsForTab.map((r: any) => {
@@ -525,11 +506,7 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
         isOverdue,
       };
     });
-    const fromSeed: RowDoc[] = seedForTab.map((d) => ({
-      id: d.id, type: tab, number: d.number, customer: d.customer, vehicle: d.vehicle,
-      totalCents: Math.round(total(d.items) * 100), amountPaidCents: 0, status: d.status,
-    }));
-    let all = [...fromDb, ...fromSeed];
+    let all = [...fromDb];
 
     // Dedupe by id (defensive) AND by number+customer to avoid visual duplicates
     const seenIds = new Set<string>();
@@ -565,7 +542,7 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
     });
     return all;
      
-  }, [dbRowsForTab, seedForTab, tab, query, statusFilter, sortKey]);
+  }, [dbRowsForTab, tab, query, statusFilter, sortKey]);
 
   // Read persisted draft (if any) to surface a "Continue editing" banner
   let savedDraftPreview: Doc | null = null;
@@ -730,7 +707,6 @@ export default function AutoRepairInvoicesSection({ storeId }: Props) {
                 return (
                   <button type="button"
                     key={opt.id}
-                    type="button"
                     onClick={() => setDraft(d => ({ ...d, intakeMethod: opt.id } as any))}
                     className={`flex flex-col items-center justify-center gap-1 rounded-lg border px-2 py-2 text-center transition-all hover:border-primary/60 hover:bg-primary/5 ${
                       active ? "border-primary bg-primary/10" : "border-border bg-card"

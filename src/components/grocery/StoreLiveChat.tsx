@@ -3,6 +3,7 @@
  * Supports admin mode: shows customer info, lists all chats, allows deletion
  */
 import { useState, useEffect, useRef, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { X, Send, MessageCircle, Loader2, Trash2, ChevronLeft, User, MapPin, QrCode, Truck } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -539,14 +540,14 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
     ? "Customer Chat"
     : "Live Chat";
 
-  return (
+  const content = (
     <AnimatePresence>
       {open && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[200] bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 z-[1300] bg-black/50 backdrop-blur-sm lg:top-[60px] lg:left-[var(--chat-sidebar-w,0px)] lg:bg-background lg:backdrop-blur-none"
           onClick={onClose}
         >
           <motion.div
@@ -555,7 +556,7 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
             exit={{ y: "100%" }}
             transition={{ type: "spring", stiffness: 300, damping: 30 }}
             onClick={(e) => e.stopPropagation()}
-            className="absolute bottom-0 left-0 right-0 h-[85vh] bg-background rounded-t-3xl border-t border-border/30 flex flex-col overflow-hidden"
+            className="absolute bottom-0 left-0 right-0 h-[85vh] bg-background rounded-t-3xl border-t border-border/30 flex flex-col overflow-hidden lg:inset-0 lg:h-auto lg:rounded-none lg:border-t-0"
           >
             {showChatList ? (
               <AdminChatList
@@ -781,4 +782,7 @@ export default function StoreLiveChat({ storeId, storeName, storeLogo, open, onC
       )}
     </AnimatePresence>
   );
+
+  if (typeof document === "undefined") return content;
+  return createPortal(content, document.body);
 }

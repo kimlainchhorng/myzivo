@@ -4,7 +4,6 @@
  */
 import { createElement, useState, useEffect, useCallback, useRef } from "react";
 import { Capacitor } from "@capacitor/core";
-import { App as CapacitorApp } from "@capacitor/app";
 import { PushNotifications, Token, PushNotificationSchema, ActionPerformed } from "@capacitor/push-notifications";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -392,12 +391,12 @@ export const usePushNotifications = () => {
       }
     );
 
-    const appResumeListener = CapacitorApp.addListener("appStateChange", ({ isActive }) => {
+    const appResumeListener = import("@capacitor/app").then(({ App: CapacitorApp }) => CapacitorApp.addListener("appStateChange", ({ isActive }) => {
       if (!isActive || !user?.id) return;
       // iOS can rotate APNs tokens and background lifecycle can drop listeners.
       // Re-register on resume to keep device_tokens fresh.
       void register();
-    });
+    }));
 
     // Auto-register if user is logged in
     if (user?.id) {

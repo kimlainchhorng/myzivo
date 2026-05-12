@@ -363,7 +363,6 @@ export default function AdsCampaignDetailDrawer({
                 {(["1:1", "9:16", "1.91:1"] as AspectRatio[]).map((r) => (
                   <button type="button"
                     key={r}
-                    type="button"
                     onClick={() => setRatio(r)}
                     aria-pressed={ratio === r}
                     className={cn(

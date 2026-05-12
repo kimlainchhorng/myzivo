@@ -23,7 +23,7 @@ import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 
 const services = [
-  { id: "ride", name: "Ride", icon: Car, gradient: "from-emerald-500 to-green-600", link: "/rides", enabled: true },
+  { id: "ride", name: "Ride", icon: Car, gradient: "from-emerald-500 to-green-600", link: "/rides/hub", enabled: true },
   { id: "eats", name: "Eats", icon: UtensilsCrossed, gradient: "from-orange-500 to-red-500", link: "/eats", enabled: true },
   { id: "delivery", name: "Delivery", icon: Package, gradient: "from-muted to-muted", link: "/delivery", enabled: false },
   { id: "flights", name: "Flights", icon: Plane, gradient: "from-muted to-muted", link: "/flights", enabled: false },

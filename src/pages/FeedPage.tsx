@@ -86,7 +86,12 @@ import RelativeTime from "@/components/social/RelativeTime";
 import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
 import { useLodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile";
 import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
+import { perfLog, perfMeasure, perfNow } from "@/lib/perfTrace";
 // videoRepair is heavy (FFmpeg WASM) — dynamic import only when needed
+
+const FEED_STORE_PAGE_SIZE = 18;
+const FEED_USER_PAGE_SIZE = 12;
+let fullscreenFeedFirstMediaLogged = false;
 
 // ── Lazy components ──────────────────────────────────────────────────────────
 // All lazy() calls are grouped AFTER imports. Interleaving them with imports
@@ -346,6 +351,7 @@ function ReelCard({
   const navigate = useNavigate();
   const haptic = useHaptic();
   const videoRef = useRef<HTMLVideoElement>(null);
+  const mediaPerfLogged = useRef(false);
   const [isPlaying, setIsPlaying] = useState(false);
   const [posterUrl, setPosterUrl] = useState<string | null>(null);
   const [hasPlaybackError, setHasPlaybackError] = useState(false);
@@ -1150,6 +1156,15 @@ function ReelCard({
           muted={globalMuted}
           preload={isActive ? "auto" : shouldPreload ? "metadata" : "none"}
           onLoadedData={(e) => {
+            if (!mediaPerfLogged.current && !fullscreenFeedFirstMediaLogged) {
+              mediaPerfLogged.current = true;
+              fullscreenFeedFirstMediaLogged = true;
+              perfLog("fullscreen feed first media loaded", {
+                postId: post.id,
+                source: post.source ?? "store",
+                isActive,
+              });
+            }
             setHasLoadedFrame(true);
             setHasPlaybackError(false);
             capturePoster(e.currentTarget);
@@ -1226,6 +1241,16 @@ function ReelCard({
           alt=""
           className="absolute inset-0 w-full h-full object-cover"
           loading={isActive ? "eager" : "lazy"}
+          onLoad={() => {
+            if (mediaPerfLogged.current || fullscreenFeedFirstMediaLogged) return;
+            mediaPerfLogged.current = true;
+            fullscreenFeedFirstMediaLogged = true;
+            perfLog("fullscreen feed first media loaded", {
+              postId: post.id,
+              source: post.source ?? "store",
+              isActive,
+            });
+          }}
           onError={() => setHasImageError(true)}
         />
       ) : (
@@ -1632,7 +1657,6 @@ function ReelCard({
                 {tags.map((tag) => (
                   <button type="button"
                     key={tag}
-                    type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       navigate(`/explore?tag=${encodeURIComponent(tag.slice(1))}`);
@@ -3092,7 +3116,6 @@ function FeedSearchOverlay({ onClose, onNavigate }: { onClose: () => void; onNav
             {storeResults.map((store: any) => (
               <button type="button"
                 key={store.id}
-                type="button"
                 onClick={() => { onNavigate(`/grocery/shop/${store.slug}`); onClose(); }}
                 className="w-full flex items-center gap-3 py-3 px-2 rounded-xl hover:bg-muted/40 transition-colors"
               >
@@ -3118,7 +3141,6 @@ function FeedSearchOverlay({ onClose, onNavigate }: { onClose: () => void; onNav
             {profileResults.map((person: any) => (
               <button type="button"
                 key={person.id}
-                type="button"
                 onClick={() => { onNavigate(`/user/${person.id}`); onClose(); }}
                 className="w-full flex items-center gap-3 py-3 px-2 rounded-xl hover:bg-muted/40 transition-colors"
               >
@@ -3529,7 +3551,6 @@ function ReelReportDialog({
           {REPORT_REASONS.map((r) => (
             <button type="button"
               key={r}
-              type="button"
               onClick={() => setReason(r)}
               className={cn(
                 "w-full text-left px-3 py-3 rounded-xl text-sm transition-colors",
@@ -3759,6 +3780,7 @@ export default function FeedPage() {
   const { data: posts = [], isLoading, isFetching } = useQuery({
     queryKey: ["customer-feed", userId, pageMultiplier],
     queryFn: async () => {
+      const feedStartedAt = perfNow();
       // Pull the muted/blocked author list first so we can filter the feed
       // server-side. Defence-in-depth: client also filters in case RLS isn't
       // wired for these tables yet (the migration is included in this branch).
@@ -3773,8 +3795,8 @@ export default function FeedPage() {
 
       // Fetch store posts and user video posts in parallel.
       // Page size grows with `pageMultiplier` so "load more" reveals additional content.
-      const STORE_PAGE = 50;
-      const USER_PAGE  = 30;
+      const STORE_PAGE = FEED_STORE_PAGE_SIZE;
+      const USER_PAGE  = FEED_USER_PAGE_SIZE;
       const [{ data: postsData, error }, { data: userVideos }] = await Promise.all([
         supabase
           .from("store_posts")
@@ -3884,6 +3906,12 @@ export default function FeedPage() {
       });
 
       allPosts.sort((a: any, b: any) => (b._feedScore || 0) - (a._feedScore || 0));
+      perfMeasure("fullscreen feed query", feedStartedAt, {
+        pageMultiplier,
+        storeLimit: STORE_PAGE * pageMultiplier,
+        userLimit: USER_PAGE * pageMultiplier,
+        itemCount: allPosts.length,
+      });
       return allPosts;
     },
   });

@@ -66,7 +66,6 @@ export default function TemplatePicker({ storeId, channel, onPick, onCreateNew, 
           {filtered.map((t) => (
             <button type="button"
               key={t.id}
-              type="button"
               onClick={() => onPick(t)}
               className="w-full flex items-start gap-2 p-2.5 rounded-lg border border-border bg-card hover:border-primary/50 hover:bg-accent/30 text-left transition"
             >

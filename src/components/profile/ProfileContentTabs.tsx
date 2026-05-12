@@ -1845,7 +1845,6 @@ function ComposerForm({
             {COMPOSER_FILTERS.map((filter, index) => (
               <button type="button"
                 key={filter.name}
-                type="button"
                 onClick={() => setActiveFilter(index)}
                 className={cn(
                   "shrink-0 rounded-lg border px-3 py-1.5 text-xs font-medium transition-all",
@@ -4037,17 +4036,6 @@ function drawFaceFilter(
       });
       break;
     }
-    case "butterfly": {
-      const wings = [
-        { x: cx - fw * 0.32, y: eyeY - fh * 0.12, c: "rgba(255,120,200,0.5)" },
-        { x: cx + fw * 0.32, y: eyeY - fh * 0.12, c: "rgba(120,200,255,0.5)" },
-      ];
-      wings.forEach(w => {
-        ctx.beginPath(); ctx.ellipse(w.x, w.y, fw * 0.16, fh * 0.16, 0.6, 0, Math.PI * 2);
-        ctx.fillStyle = w.c; ctx.fill();
-      });
-      break;
-    }
     case "snowglobe": {
       for (let s = 0; s < 28; s++) {
         const x = cx - fw * 0.48 + ((s * 37 + t * 0.06) % (fw * 0.96));
@@ -4055,18 +4043,6 @@ function drawFaceFilter(
         ctx.beginPath(); ctx.arc(x, y, fw * 0.012, 0, Math.PI * 2);
         ctx.fillStyle = "rgba(235,245,255,0.75)"; ctx.fill();
       }
-      break;
-    }
-    case "lightning": {
-      [cx - fw * 0.2, cx + fw * 0.2].forEach(x0 => {
-        ctx.beginPath();
-        ctx.moveTo(x0, eyeY - fh * 0.45);
-        ctx.lineTo(x0 - fw * 0.06, eyeY - fh * 0.2);
-        ctx.lineTo(x0 + fw * 0.02, eyeY - fh * 0.2);
-        ctx.lineTo(x0 - fw * 0.08, eyeY + fh * 0.1);
-        ctx.strokeStyle = "rgba(255,240,120,0.85)";
-        ctx.lineWidth = 4; ctx.stroke();
-      });
       break;
     }
     case "glittertears": {

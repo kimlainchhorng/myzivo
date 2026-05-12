@@ -9,13 +9,12 @@ import { useEffect, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import X from "lucide-react/dist/esm/icons/x";
-import Facebook from "lucide-react/dist/esm/icons/facebook";
-import Instagram from "lucide-react/dist/esm/icons/instagram";
-import Twitter from "lucide-react/dist/esm/icons/twitter";
-import Youtube from "lucide-react/dist/esm/icons/youtube";
-import Linkedin from "lucide-react/dist/esm/icons/linkedin";
+import AtSign from "lucide-react/dist/esm/icons/at-sign";
+import BriefcaseBusiness from "lucide-react/dist/esm/icons/briefcase-business";
+import Camera from "lucide-react/dist/esm/icons/camera";
+import CirclePlay from "lucide-react/dist/esm/icons/circle-play";
 import Music2 from "lucide-react/dist/esm/icons/music-2";
-import Ghost from "lucide-react/dist/esm/icons/ghost";
+import Hash from "lucide-react/dist/esm/icons/hash";
 import Send from "lucide-react/dist/esm/icons/send";
 import Heart from "lucide-react/dist/esm/icons/heart";
 import LinkIcon from "lucide-react/dist/esm/icons/link";
@@ -54,15 +53,15 @@ const PLATFORMS: {
   prefix: string;
   placeholder: string;
 }[] = [
-  { id: "facebook",  label: "Facebook",  icon: Facebook,  color: "bg-[#1877F2]",                                    prefix: "https://facebook.com/",   placeholder: "yourname" },
+  { id: "facebook",  label: "Facebook",  icon: LinkIcon,  color: "bg-[#1877F2]",                                    prefix: "https://facebook.com/",   placeholder: "yourname" },
   { id: "onlyfans",  label: "OnlyFans",  icon: Heart,     brandImage: onlyfansLogo, color: "bg-white",                prefix: "https://onlyfans.com/",   placeholder: "yourname" },
-  { id: "instagram", label: "Instagram", icon: Instagram, color: "bg-gradient-to-br from-[#F58529] via-[#DD2A7B] to-[#8134AF]", prefix: "https://instagram.com/", placeholder: "yourname" },
-  { id: "x",         label: "X",         icon: Twitter,   color: "bg-black",                                        prefix: "https://x.com/",          placeholder: "yourname" },
+  { id: "instagram", label: "Instagram", icon: Camera,    color: "bg-gradient-to-br from-[#F58529] via-[#DD2A7B] to-[#8134AF]", prefix: "https://instagram.com/", placeholder: "yourname" },
+  { id: "x",         label: "X",         icon: AtSign,    color: "bg-black",                                        prefix: "https://x.com/",          placeholder: "yourname" },
   { id: "tiktok",    label: "TikTok",    icon: Music2,    color: "bg-black",                                        prefix: "https://tiktok.com/@",    placeholder: "yourname" },
-  { id: "youtube",   label: "YouTube",   icon: Youtube,   color: "bg-[#FF0000]",                                    prefix: "https://youtube.com/@",   placeholder: "yourchannel" },
-  { id: "snapchat",  label: "Snapchat",  icon: Ghost,     color: "bg-[#FFFC00] text-black",                         prefix: "https://snapchat.com/add/", placeholder: "yourname" },
+  { id: "youtube",   label: "YouTube",   icon: CirclePlay, color: "bg-[#FF0000]",                                   prefix: "https://youtube.com/@",   placeholder: "yourchannel" },
+  { id: "snapchat",  label: "Snapchat",  icon: Hash,      color: "bg-[#FFFC00] text-black",                         prefix: "https://snapchat.com/add/", placeholder: "yourname" },
   { id: "telegram",  label: "Telegram",  icon: Send,      color: "bg-[#229ED9]",                                    prefix: "https://t.me/",           placeholder: "yourname" },
-  { id: "linkedin",  label: "LinkedIn",  icon: Linkedin,  color: "bg-[#0A66C2]",                                    prefix: "https://linkedin.com/in/", placeholder: "yourname" },
+  { id: "linkedin",  label: "LinkedIn",  icon: BriefcaseBusiness, color: "bg-[#0A66C2]",                            prefix: "https://linkedin.com/in/", placeholder: "yourname" },
   { id: "spotify",    label: "Spotify",     icon: Disc,        color: "bg-[#1DB954]", prefix: "https://open.spotify.com/user/",  placeholder: "your-spotify-id or paste track URL" },
   { id: "applemusic", label: "Apple Music", icon: Headphones,  color: "bg-[#FA243C]", prefix: "https://music.apple.com/profile/", placeholder: "your-apple-id or paste song URL" },
   { id: "soundcloud", label: "SoundCloud",  icon: Music,       color: "bg-[#FF5500]", prefix: "https://soundcloud.com/",          placeholder: "yourname or paste track URL" },
@@ -113,7 +112,11 @@ export default function ChatSocialShareSheet({ open, onClose, onShareLink, onSha
   const [handle, setHandle] = useState("");
   const [recent, setRecent] = useState<Platform[]>([]);
 
-  useEffect(() => { if (open) setRecent(loadRecent()); }, [open]);
+  useEffect(() => {
+    if (!open) return;
+    const id = window.setTimeout(() => setRecent(loadRecent()), 0);
+    return () => window.clearTimeout(id);
+  }, [open]);
 
   const pickPlatform = (id: Platform) => {
     setSelected(id);
@@ -149,13 +152,21 @@ export default function ChatSocialShareSheet({ open, onClose, onShareLink, onSha
   }, [selected, profile]);
 
   useEffect(() => {
-    if (!open) { setSelected(null); setHandle(""); }
+    if (open) return;
+    const id = window.setTimeout(() => {
+      setSelected(null);
+      setHandle("");
+    }, 0);
+    return () => window.clearTimeout(id);
   }, [open]);
 
   useEffect(() => {
     if (!selected) return;
-    if (savedHandle) setHandle(stripPrefix(savedHandle, PLATFORMS.find(p => p.id === selected)!.prefix));
-    else setHandle("");
+    const id = window.setTimeout(() => {
+      if (savedHandle) setHandle(stripPrefix(savedHandle, PLATFORMS.find(p => p.id === selected)!.prefix));
+      else setHandle("");
+    }, 0);
+    return () => window.clearTimeout(id);
   }, [selected, savedHandle]);
 
   const platform = PLATFORMS.find(p => p.id === selected);

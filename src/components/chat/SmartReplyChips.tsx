@@ -80,7 +80,6 @@ export default function SmartReplyChips({ recent, composerHasText, onPick }: Pro
         chips.map((c, i) => (
           <button type="button"
             key={`${i}-${c}`}
-            type="button"
             onClick={() => onPick(c)}
             className="shrink-0 rounded-full border border-primary/30 bg-primary/5 px-3 py-1 text-[12px] font-medium text-foreground hover:bg-primary/10 active:scale-95 transition"
           >

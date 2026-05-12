@@ -5,18 +5,17 @@
  * handle, and an "Open" button that launches the URL in the system browser
  * (Capacitor Browser plugin on native, falls back to window.open in web).
  */
-import Facebook from "lucide-react/dist/esm/icons/facebook";
-import Instagram from "lucide-react/dist/esm/icons/instagram";
-import Twitter from "lucide-react/dist/esm/icons/twitter";
+import AtSign from "lucide-react/dist/esm/icons/at-sign";
+import BriefcaseBusiness from "lucide-react/dist/esm/icons/briefcase-business";
+import Camera from "lucide-react/dist/esm/icons/camera";
+import CirclePlay from "lucide-react/dist/esm/icons/circle-play";
 import Music2 from "lucide-react/dist/esm/icons/music-2";
 import Music from "lucide-react/dist/esm/icons/music";
 import Disc from "lucide-react/dist/esm/icons/disc";
 import Headphones from "lucide-react/dist/esm/icons/headphones";
 import Send from "lucide-react/dist/esm/icons/send";
-import Linkedin from "lucide-react/dist/esm/icons/linkedin";
-import Youtube from "lucide-react/dist/esm/icons/youtube";
 import Heart from "lucide-react/dist/esm/icons/heart";
-import Ghost from "lucide-react/dist/esm/icons/ghost";
+import Hash from "lucide-react/dist/esm/icons/hash";
 import LinkIcon from "lucide-react/dist/esm/icons/link";
 import ExternalLink from "lucide-react/dist/esm/icons/external-link";
 import type { ComponentType, SVGProps } from "react";
@@ -39,14 +38,14 @@ interface Brand {
 }
 
 const BRANDS: Record<string, Brand> = {
-  facebook:   { icon: Facebook,   bg: "bg-[#1877F2]", iconClass: "text-white" },
-  instagram:  { icon: Instagram,  bg: "bg-gradient-to-br from-[#F58529] via-[#DD2A7B] to-[#8134AF]", iconClass: "text-white" },
-  x:          { icon: Twitter,    bg: "bg-black", iconClass: "text-white" },
+  facebook:   { icon: LinkIcon,   bg: "bg-[#1877F2]", iconClass: "text-white" },
+  instagram:  { icon: Camera,     bg: "bg-gradient-to-br from-[#F58529] via-[#DD2A7B] to-[#8134AF]", iconClass: "text-white" },
+  x:          { icon: AtSign,     bg: "bg-black", iconClass: "text-white" },
   tiktok:     { icon: Music2,     bg: "bg-black", iconClass: "text-white" },
-  youtube:    { icon: Youtube,    bg: "bg-[#FF0000]", iconClass: "text-white" },
-  snapchat:   { icon: Ghost,      bg: "bg-[#FFFC00]", iconClass: "text-black" },
+  youtube:    { icon: CirclePlay, bg: "bg-[#FF0000]", iconClass: "text-white" },
+  snapchat:   { icon: Hash,       bg: "bg-[#FFFC00]", iconClass: "text-black" },
   telegram:   { icon: Send,       bg: "bg-[#229ED9]", iconClass: "text-white" },
-  linkedin:   { icon: Linkedin,   bg: "bg-[#0A66C2]", iconClass: "text-white" },
+  linkedin:   { icon: BriefcaseBusiness, bg: "bg-[#0A66C2]", iconClass: "text-white" },
   spotify:    { icon: Disc,       bg: "bg-[#1DB954]", iconClass: "text-white" },
   applemusic: { icon: Headphones, bg: "bg-[#FA243C]", iconClass: "text-white" },
   soundcloud: { icon: Music,      bg: "bg-[#FF5500]", iconClass: "text-white" },

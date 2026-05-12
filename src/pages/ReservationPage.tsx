@@ -7,8 +7,8 @@
  *   3. Add guest details + special request
  *   4. Confirm — show confirmation card with cross-service CTAs
  *
- * Persists to the existing `restaurant_reservations` table when present;
- * falls back to a local toast confirmation for guests / offline.
+ * Persists to the existing `restaurant_reservations` table. If the insert
+ * fails, the user stays in the flow and sees a real error.
  */
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -31,6 +31,20 @@ import { downloadICS } from "@/lib/buildICS";
 import CalendarPlus from "lucide-react/dist/esm/icons/calendar-plus";
 
 type Step = "details" | "confirm" | "done";
+type ReservationInsertResult = { id: string | null };
+type ReservationError = { message?: string };
+type ReservationMutationResult = {
+  data: ReservationInsertResult | null;
+  error: ReservationError | null;
+};
+type ReservationMutation = PromiseLike<ReservationMutationResult> & {
+  insert: (payload: unknown) => ReservationMutation;
+  select: (columns: string) => ReservationMutation;
+  maybeSingle: () => Promise<ReservationMutationResult>;
+};
+type ReservationClient = {
+  from: (table: "restaurant_reservations") => ReservationMutation;
+};
 
 interface RestaurantLite {
   id: string;
@@ -71,6 +85,7 @@ export default function ReservationPage() {
   const [note, setNote] = useState<string>("");
   const [submitting, setSubmitting] = useState(false);
   const [confirmedId, setConfirmedId] = useState<string | null>(null);
+  const [submitError, setSubmitError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!restaurantId || restaurant?.cuisine_type) return;
@@ -95,6 +110,7 @@ export default function ReservationPage() {
   async function submit() {
     if (!isValid || !restaurant) return;
     setSubmitting(true);
+    setSubmitError(null);
     try {
       const payload = {
         restaurant_id: restaurant.id,
@@ -107,23 +123,26 @@ export default function ReservationPage() {
         special_request: note.trim() || null,
         status: "confirmed" as const,
       };
-      const { data, error } = await (supabase as any)
+      const reservationClient = supabase as unknown as ReservationClient;
+      const { data, error } = await reservationClient
         .from("restaurant_reservations")
         .insert(payload)
         .select("id")
         .maybeSingle();
       if (error) throw error;
-      setConfirmedId((data as any)?.id ?? `local-${Date.now()}`);
+      if (!data?.id) throw new Error("Reservation was not confirmed by the server.");
+      setConfirmedId(data.id);
       setStep("done");
-    } catch (err: any) {
-      // Graceful fallback: still show a confirmation locally so the demo flow works
-      // even when the table or RLS isn't set up yet.
-      console.warn("[reservation] insert failed, showing local confirmation", err?.message);
-      setConfirmedId(`local-${Date.now()}`);
-      setStep("done");
+    } catch (err: unknown) {
+      const message =
+        err && typeof err === "object" && "message" in err && typeof err.message === "string"
+          ? err.message
+          : "We could not confirm this reservation. Please try again.";
+      setSubmitError(message);
       toast({
-        title: "Reservation noted",
-        description: "We saved your reservation locally. Restaurant will confirm shortly.",
+        title: "Reservation not confirmed",
+        description: message,
+        variant: "destructive",
       });
     } finally {
       setSubmitting(false);
@@ -265,6 +284,11 @@ export default function ReservationPage() {
                   className="h-12 text-base"
                 />
               </div>
+              {submitError ? (
+                <div className="rounded-2xl border border-destructive/30 bg-destructive/10 p-3 text-sm text-destructive">
+                  {submitError}
+                </div>
+              ) : null}
             </section>
           </>
         ) : (

@@ -15,7 +15,6 @@ type SendMessageOptions = {
  */
 import { useState, useEffect, useRef, useCallback, useMemo, lazy, Suspense } from "react";
 import { createPortal } from "react-dom";
-import { App as CapacitorApp } from "@capacitor/app";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -501,6 +500,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
   const [showContactPicker, setShowContactPicker] = useState(false);
   const [showSocialShare, setShowSocialShare] = useState(false);
   const [isDragOver, setIsDragOver] = useState(false);
+  const dragDepthRef = useRef(0);
 
   // Desktop keyboard shortcuts:
   //   ⌘/Ctrl+K → Quick Replies
@@ -519,6 +519,19 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
+  }, []);
+
+  useEffect(() => {
+    const resetDragState = () => {
+      dragDepthRef.current = 0;
+      setIsDragOver(false);
+    };
+    window.addEventListener("drop", resetDragState);
+    window.addEventListener("dragend", resetDragState);
+    return () => {
+      window.removeEventListener("drop", resetDragState);
+      window.removeEventListener("dragend", resetDragState);
+    };
   }, []);
   const [pendingLockedFile, setPendingLockedFile] = useState<File | null>(null);
   const [chatStyle, setChatStyle] = useState({ wallpaper: "default", themeColor: "default", fontSize: "medium" });
@@ -1046,11 +1059,11 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
     };
     document.addEventListener("visibilitychange", onVisibility);
 
-    const appResumeListener = CapacitorApp.addListener("appStateChange", ({ isActive }) => {
+    const appResumeListener = import("@capacitor/app").then(({ App: CapacitorApp }) => CapacitorApp.addListener("appStateChange", ({ isActive }) => {
       if (isActive) {
         void tick();
       }
-    });
+    }));
 
     return () => {
       stopPoll();
@@ -2393,6 +2406,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
             <CallPiP
               remoteStream={pipData?.remoteStream || null}
               recipientName={recipientName}
+              recipientAvatar={recipientAvatar}
               isMuted={pipData?.isMuted || false}
               duration={pipData?.duration || 0}
               callType={pipData?.callType}
@@ -2438,6 +2452,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
         onDragEnter={(e) => {
           if (!e.dataTransfer.types.includes("Files")) return;
           e.preventDefault();
+          dragDepthRef.current += 1;
           setIsDragOver(true);
         }}
         onDragOver={(e) => {
@@ -2446,10 +2461,15 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
           e.dataTransfer.dropEffect = "copy";
         }}
         onDragLeave={(e) => {
-          if (e.target === e.currentTarget) setIsDragOver(false);
+          if (!e.dataTransfer.types.includes("Files")) return;
+          const nextTarget = e.relatedTarget as Node | null;
+          if (nextTarget && e.currentTarget.contains(nextTarget)) return;
+          dragDepthRef.current = Math.max(0, dragDepthRef.current - 1);
+          if (dragDepthRef.current === 0) setIsDragOver(false);
         }}
         onDrop={(e) => {
           e.preventDefault();
+          dragDepthRef.current = 0;
           setIsDragOver(false);
           const file = e.dataTransfer.files?.[0];
           if (!file || !user?.id) return;
@@ -2907,7 +2927,6 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
               {stickerSuggestions.map((s) => (
                 <button type="button"
                   key={s.id}
-                  type="button"
                   onClick={() => {
                     void handleQuickPanelSend({ text: `[sticker:${s.id}]`, messageType: "sticker" });
                     setInput("");
@@ -3040,7 +3059,6 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                     {slashCandidates.map((cmd, i) => (
                       <button type="button"
                         key={cmd.id}
-                        type="button"
                         onMouseDown={(e) => { e.preventDefault(); runSlashCommand(cmd); }}
                         onMouseEnter={() => setSlashIndex(i)}
                         className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors ${i === slashIndex ? "bg-muted/60" : "hover:bg-muted/40"}`}
@@ -3110,7 +3128,6 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
                         ] as const).map((opt) => (
                           <button type="button"
                             key={opt.id}
-                            type="button"
                             onClick={() => { setPendingEffect(opt.id); setShowEffectPicker(false); }}
                             className={`w-full flex items-center gap-2.5 px-3 py-2 text-left text-[14px] transition-colors ${pendingEffect === opt.id ? "bg-amber-500/10 text-amber-700 font-medium" : "hover:bg-muted/50 text-foreground"}`}
                           >

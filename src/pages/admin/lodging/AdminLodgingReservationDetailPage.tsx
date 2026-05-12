@@ -482,7 +482,6 @@ export default function AdminLodgingReservationDetailPage() {
                       {NOTE_TEMPLATES[pendingStatus].map((tpl) => (
                         <button type="button"
                           key={tpl}
-                          type="button"
                           onClick={() => appendTemplate(tpl)}
                           className="shrink-0 px-2.5 py-1 rounded-full text-[11px] font-medium border border-border bg-background hover:bg-muted hover:border-primary/40 transition whitespace-nowrap"
                         >

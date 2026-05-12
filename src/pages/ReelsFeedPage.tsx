@@ -84,6 +84,7 @@ import Package from "lucide-react/dist/esm/icons/package";
 import {
   Sheet,
   SheetContent,
+  SheetDescription,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
@@ -112,6 +113,12 @@ import SwipeableSheet from "@/components/social/SwipeableSheet";
 import { optimizeAvatar } from "@/utils/optimizeAvatar";
 import { useSwipeDownClose } from "@/components/social/useSwipeDownClose";
 import { SwipeGrabHandle } from "@/components/social/SwipeGrabHandle";
+import { perfLog, perfMeasure, perfNow } from "@/lib/perfTrace";
+
+const INITIAL_REELS_PAGE_SIZE = 18;
+const REELS_PAGE_INCREMENT = 12;
+const REELS_PAGE_MAX = 180;
+let reelsFirstMediaMetadataLogged = false;
 
 // ── Lazy components ──────────────────────────────────────────────────────────
 // All lazy() calls are grouped AFTER imports. Interleaving them with imports
@@ -385,14 +392,27 @@ export default function ReelsFeedPage() {
   const [trendingTags, setTrendingTags] = useState<Array<{ tag: string; count: number }>>([]);
   const [friendIds, setFriendIds] = useState<Set<string>>(new Set());
   const [followingIds, setFollowingIds] = useState<Set<string>>(new Set());
-  const PAGE_INCREMENT = 25;
-  const PAGE_MAX = 500;
-  const [pageSize, setPageSize] = useState(50);
+  const PAGE_INCREMENT = REELS_PAGE_INCREMENT;
+  const PAGE_MAX = REELS_PAGE_MAX;
+  const [pageSize, setPageSize] = useState(INITIAL_REELS_PAGE_SIZE);
+  const [sidebarDataReady, setSidebarDataReady] = useState(false);
   const loadMoreRef = useRef<HTMLDivElement>(null);
+  const feedPageTopRef = useRef<HTMLDivElement>(null);
   const feedTopRef = useRef<HTMLDivElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const location = useLocation();
+  const isFeedRoute = location.pathname.startsWith("/feed");
+
+  useEffect(() => {
+    const markReady = () => setSidebarDataReady(true);
+    if (window.requestIdleCallback) {
+      const handle = window.requestIdleCallback(markReady, { timeout: 2600 });
+      return () => window.cancelIdleCallback?.(handle);
+    }
+    const timer = window.setTimeout(markReady, 1800);
+    return () => window.clearTimeout(timer);
+  }, []);
 
   // Handle share-to-profile deep link
   useEffect(() => {
@@ -431,7 +451,7 @@ export default function ReelsFeedPage() {
 
   useEffect(() => {
     const refreshFeed = () => {
-      setPageSize(50);
+      setPageSize(INITIAL_REELS_PAGE_SIZE);
       setNewPostsCount(0);
       queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
     };
@@ -473,7 +493,7 @@ export default function ReelsFeedPage() {
 
   // Sidebar contacts + trending tags
   useEffect(() => {
-    if (!userId) return;
+    if (!userId || !sidebarDataReady) return;
     (async () => {
       const { data: fships } = await (supabase as any)
         .from("friendships")
@@ -517,7 +537,7 @@ export default function ReelsFeedPage() {
           .map(([tag, count]) => ({ tag, count }))
       );
     })();
-  }, [userId]);
+  }, [userId, sidebarDataReady]);
 
   // Realtime: count new posts that arrive while the user is mid-feed.
   useEffect(() => {
@@ -556,6 +576,7 @@ export default function ReelsFeedPage() {
     },
     refetchInterval: 30_000,
     refetchOnWindowFocus: false,
+    enabled: sidebarDataReady,
   });
 
   // User search with debounce
@@ -587,6 +608,7 @@ export default function ReelsFeedPage() {
   const { data: items = [], isLoading, isFetching } = useQuery({
     queryKey: ["reels-feed-grid", pageSize],
     queryFn: async () => {
+      const feedStartedAt = perfNow();
       const allItems: FeedItem[] = [];
 
       // Fetch store posts
@@ -1005,6 +1027,10 @@ export default function ReelsFeedPage() {
       });
 
       allItems.sort((a: any, b: any) => (b._feedScore || 0) - (a._feedScore || 0));
+      perfMeasure("reels feed query", feedStartedAt, {
+        pageSize,
+        itemCount: allItems.length,
+      });
       return allItems;
     },
     staleTime: 2 * 60_000, // 2 min — avoid refetching on every mount
@@ -1044,17 +1070,34 @@ export default function ReelsFeedPage() {
   }, [reelsStartIndex]);
 
   const handlePullRefresh = useCallback(async () => {
-    setPageSize(50);
+    setPageSize(INITIAL_REELS_PAGE_SIZE);
     setNewPostsCount(0);
     await queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
   }, [queryClient]);
 
   const handleNewPostsTap = useCallback(() => {
     setNewPostsCount(0);
-    setPageSize(50);
+    setPageSize(INITIAL_REELS_PAGE_SIZE);
     queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
     feedTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
   }, [queryClient]);
+
+  useEffect(() => {
+    const handleFeedScrollTop = () => {
+      feedPageTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+      window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+      document.scrollingElement?.scrollTo?.({ top: 0, left: 0, behavior: "smooth" });
+
+      requestAnimationFrame(() => {
+        if ((window.scrollY || document.scrollingElement?.scrollTop || 0) < 4) return;
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+        document.scrollingElement?.scrollTo?.({ top: 0, left: 0, behavior: "auto" });
+      });
+    };
+
+    window.addEventListener("zivo-feed-scroll-top", handleFeedScrollTop);
+    return () => window.removeEventListener("zivo-feed-scroll-top", handleFeedScrollTop);
+  }, []);
 
   // Infinite scroll — observe the sentinel and bump pageSize when reached.
   // Skips while a fetch is in flight to avoid flooding the server.
@@ -1108,9 +1151,9 @@ export default function ReelsFeedPage() {
   return (
     <>
       <SEOHead
-        title="ZIVO Reels – Trending Short Videos & Creator Posts"
-        description="Discover trending reels, follow your favorite creators, support them with tips, and shop products straight from videos on ZIVO."
-        canonical="/reels"
+        title={isFeedRoute ? "ZIVO Feed – Social Posts, Reels & Creator Updates" : "ZIVO Reels – Trending Short Videos & Creator Posts"}
+        description={isFeedRoute ? "Catch up on posts, reels, creators, stories, and community updates on ZIVO." : "Discover trending reels, follow your favorite creators, support them with tips, and shop products straight from videos on ZIVO."}
+        canonical={isFeedRoute ? "/feed" : "/reels"}
       />
       {/* Desktop NavBar */}
       <div className="hidden lg:block relative z-[1200]">
@@ -1155,14 +1198,21 @@ export default function ReelsFeedPage() {
                     <SheetContent side="left" className="w-[88vw] sm:w-[400px] p-0 overflow-y-auto">
                       <SheetHeader className="px-4 py-3 border-b border-border/30">
                         <SheetTitle className="text-base font-bold">Menu</SheetTitle>
+                        <SheetDescription className="sr-only">
+                          Shortcuts for creating posts, navigating ZIVO, and opening saved or notification tools.
+                        </SheetDescription>
                       </SheetHeader>
                       <div className="p-3 space-y-3">
-                        <Suspense fallback={null}>
-                          <ProfileCompletionNudge />
-                        </Suspense>
-                        <Suspense fallback={null}>
-                          <SavedPostsLink />
-                        </Suspense>
+                        {sidebarDataReady && (
+                          <>
+                            <Suspense fallback={null}>
+                              <ProfileCompletionNudge />
+                            </Suspense>
+                            <Suspense fallback={null}>
+                              <SavedPostsLink />
+                            </Suspense>
+                          </>
+                        )}
 
                         {/* Facebook-style Create section */}
                         {userId && (
@@ -1447,6 +1497,8 @@ export default function ReelsFeedPage() {
 
 
           {/* Create post — Facebook-style card composer */}
+          <div ref={feedPageTopRef} data-feed-page-top aria-hidden="true" />
+
           {userId && (
             <div className="border-b border-border/10 bg-card px-3 pt-3 pb-2">
               <div className="flex items-center gap-2.5 mb-2.5">
@@ -1585,7 +1637,7 @@ export default function ReelsFeedPage() {
               Open the ≡ menu to access them. */}
 
           {/* On this day — Facebook-style memories */}
-          <Suspense fallback={null}><OnThisDay /></Suspense>
+          {sidebarDataReady && <Suspense fallback={null}><OnThisDay /></Suspense>}
 
           {/* Scroll-to-top FAB (renders portal-ish via fixed positioning) */}
           <Suspense fallback={null}><ScrollToTopFab /></Suspense>
@@ -1603,9 +1655,9 @@ export default function ReelsFeedPage() {
            {/* Suggested Users — hidden on xl+ since the right sidebar already shows
                "Suggested for you" there. lg (1024–1279px) and mobile keep the
                in-feed carousel since the right rail is xl:flex only. */}
-           <div className="xl:hidden">
+           {sidebarDataReady && <div className="xl:hidden">
              <Suspense fallback={null}><SuggestedUsersCarousel /></Suspense>
-           </div>
+           </div>}
 
           {/* Feed mode tabs — desktop only (mobile uses the sticky header tabs) */}
           {userId && (
@@ -1710,9 +1762,11 @@ export default function ReelsFeedPage() {
                         Back to For You
                       </button>
                     </div>
-                    <Suspense fallback={null}>
-                      <FollowSuggestions />
-                    </Suspense>
+                    {sidebarDataReady && (
+                      <Suspense fallback={null}>
+                        <FollowSuggestions />
+                      </Suspense>
+                    )}
                   </div>
                 ) : (
                   <p className="text-sm text-muted-foreground/70">No {feedFilter} posts found</p>
@@ -1753,13 +1807,13 @@ export default function ReelsFeedPage() {
                   )}
                   {/* Inject suggested users after 3rd post — hidden on xl+ where
                       the right sidebar shows the same content. */}
-                  {idx === 2 && (
+                  {sidebarDataReady && idx === 2 && (
                     <div className="xl:hidden">
                       <Suspense fallback={null}><SuggestedUsersCarousel variant="inline" /></Suspense>
                     </div>
                   )}
                   {/* Trending this week — real DB-backed leaderboard, self-hides if no signal. */}
-                  {idx === 3 && <Suspense fallback={null}><TrendingCreators /></Suspense>}
+                  {sidebarDataReady && idx === 3 && <Suspense fallback={null}><TrendingCreators /></Suspense>}
                   {/* Inject Communities card after 5th post */}
                   {idx === 4 && (
                     <div className="bg-card border-b border-border/10 px-3 py-3">
@@ -1797,13 +1851,13 @@ export default function ReelsFeedPage() {
                     </div>
                   )}
                   {/* Live Now strip — real DB-backed creators, self-hides if nobody is live. */}
-                  {idx === 6 && <Suspense fallback={null}><LiveNowStrip /></Suspense>}
+                  {sidebarDataReady && idx === 6 && <Suspense fallback={null}><LiveNowStrip /></Suspense>}
                   {/* Interactive community poll after 9th post */}
                   {idx === 8 && <FeedPollCard />}
                   {/* Trending reels strip — TikTok cross-promotion within feed */}
-                  {idx === 5 && <Suspense fallback={null}><ReelsPreviewRow /></Suspense>}
+                  {sidebarDataReady && idx === 5 && <Suspense fallback={null}><ReelsPreviewRow /></Suspense>}
                   {/* Featured creators row — Facebook-style discovery */}
-                  {idx === 10 && <Suspense fallback={null}><FeaturedCreatorsRow /></Suspense>}
+                  {sidebarDataReady && idx === 10 && <Suspense fallback={null}><FeaturedCreatorsRow /></Suspense>}
                   {/* Inject Marketplace banner after 8th post */}
                   {idx === 7 && (
                     <button type="button"
@@ -1824,7 +1878,7 @@ export default function ReelsFeedPage() {
                   )}
                   {/* People you may know — real DB-backed component, self-hides if empty.
                       Hidden on xl+ since the right sidebar shows "Suggested for you" there. */}
-                  {idx === 9 && (
+                  {sidebarDataReady && idx === 9 && (
                     <div className="xl:hidden">
                       <Suspense fallback={null}><FollowSuggestions /></Suspense>
                     </div>
@@ -1867,7 +1921,7 @@ export default function ReelsFeedPage() {
                   )}
                   {/* Friend Activity — real DB-backed. Self-hides when followed users
                       have no recent activity. "See all" links to /activity. */}
-                  {idx === 17 && <Suspense fallback={null}><FriendActivity /></Suspense>}
+                  {sidebarDataReady && idx === 17 && <Suspense fallback={null}><FriendActivity /></Suspense>}
                   {/* Inject On This Day memory card after 16th post */}
                   {idx === 15 && (
                     <button type="button"
@@ -1970,7 +2024,7 @@ export default function ReelsFeedPage() {
                   setShareForPost(null);
                   setCommerceDraft(null);
                   setCreateMode(undefined);
-                  setPageSize(50);
+                  setPageSize(INITIAL_REELS_PAGE_SIZE);
                   setNewPostsCount(0);
                   queryClient.invalidateQueries({ queryKey: ["reels-feed-grid"] });
                   // Land the user at the top of the feed so they see the post
@@ -2160,7 +2214,7 @@ export default function ReelsFeedPage() {
               header and returns null when there are no suggestions, so the
               section self-hides on an empty result instead of leaving an
               orphaned heading in the right rail. */}
-          {userId && (
+          {userId && sidebarDataReady && (
             <Suspense fallback={null}>
               <SuggestedUsersCarousel />
             </Suspense>
@@ -2377,6 +2431,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
   };
 
   const [showComments, setShowComments] = useState(false);
+  const mediaPerfLogged = useRef(false);
 
   useEffect(() => {
     setLocalLikes(item.likes_count);
@@ -2582,6 +2637,15 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
         loop
         playsInline
         preload="metadata"
+        onLoadedMetadata={() => {
+          if (mediaPerfLogged.current || reelsFirstMediaMetadataLogged) return;
+          mediaPerfLogged.current = true;
+          reelsFirstMediaMetadataLogged = true;
+          perfLog("reels first media metadata", {
+            postId: item.id,
+            source: item.source,
+          });
+        }}
         onClick={togglePlay}
         className="h-full w-full object-cover bg-black"
       />

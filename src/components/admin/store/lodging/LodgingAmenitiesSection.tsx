@@ -253,7 +253,6 @@ export default function LodgingAmenitiesSection({ storeId }: { storeId: string }
             return (
               <button type="button"
                 key={item.key}
-                type="button"
                 onClick={() => toggleAmenity(cat.key, item.key)}
                 className={cn(
                   "text-[11px] h-7 px-2.5 rounded-full border transition-colors",

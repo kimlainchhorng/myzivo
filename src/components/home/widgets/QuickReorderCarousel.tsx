@@ -68,7 +68,7 @@ export default function QuickReorderCarousel() {
           price: `$${r.fare_amount?.toFixed(2) || "0"}`,
           timeAgo: formatDistanceToNow(new Date(r.created_at), { addSuffix: true }),
           rating: r.rating || undefined,
-          rebookUrl: "/rides",
+          rebookUrl: "/rides/hub",
         });
       });
 

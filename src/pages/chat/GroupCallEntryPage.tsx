@@ -4,7 +4,7 @@
  *   /chat/call/group/:roomName        (video by default)
  *   /chat/call/group/:roomName?audio=1 (audio-only)
  */
-import { useNavigate, useParams, useSearchParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import GroupCallLauncher from "@/components/chat/call/GroupCallLauncher";
 import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left";
 import { useSmartBack } from "@/lib/smartBack";
@@ -12,8 +12,7 @@ import { useSmartBack } from "@/lib/smartBack";
 export default function GroupCallEntryPage() {
   const { roomName = "" } = useParams<{ roomName: string }>();
   const [params] = useSearchParams();
-  const navigate = useNavigate();
-  const goBack = useSmartBack("/chat");
+  const goBack = useSmartBack("/app/home");
   const callType = params.get("audio") === "1" ? "audio" : "video";
 
   if (!roomName) {
@@ -37,7 +36,7 @@ export default function GroupCallEntryPage() {
     <GroupCallLauncher
       roomName={roomName}
       callType={callType}
-      onEnded={() => navigate(-1)}
+      onEnded={goBack}
     />
   );
 }

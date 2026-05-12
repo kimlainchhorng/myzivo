@@ -25,7 +25,7 @@ export default function HostReservationOpsSummary({ reservations, requests = [],
       {items.map((item) => {
         const Icon = item.icon;
         return (
-          <button type="button" key={item.label} type="button" onClick={() => onFilter?.(item.filter)} className="rounded-lg border bg-card p-3 text-left hover:bg-muted/40 transition">
+          <button type="button" key={item.label} onClick={() => onFilter?.(item.filter)} className="rounded-lg border bg-card p-3 text-left hover:bg-muted/40 transition">
             <div className="flex items-center justify-between gap-2">
               <Icon className={item.tone === "destructive" ? "h-4 w-4 text-destructive" : "h-4 w-4 text-primary"} />
               <Badge variant={item.tone === "destructive" ? "destructive" : "secondary"}>{item.value}</Badge>

@@ -7,12 +7,10 @@
  *   <GroupCallScreenV2 roomName="group-<id>" callType="video" onEnded={...} />
  */
 import { useEffect } from "react";
-import { Loader2, Lock, Radio, Users } from "lucide-react";
+import { AlertTriangle, Loader2, Lock, Radio, Users } from "lucide-react";
 import { useLiveKitCall } from "@/hooks/useLiveKitCall";
 import GroupCallGrid from "./GroupCallGrid";
 import GroupCallControls from "./GroupCallControls";
-import CallReactionsOverlay from "./CallReactionsOverlay";
-import CallReactionStrip from "./CallReactionStrip";
 
 interface Props {
   roomName: string;
@@ -102,13 +100,39 @@ export default function GroupCallScreenV2({
         )}
 
         {call.state === "error" && (
-          <div className="grid h-full place-items-center px-6 text-center text-sm text-foreground">
-            {call.error ?? "Could not join the call."}
+          <div className="grid h-full place-items-center px-6 text-center">
+            <div className="max-w-md rounded-3xl border border-white/10 bg-white/[0.06] p-6 shadow-2xl">
+              <div className="mx-auto mb-3 grid h-12 w-12 place-items-center rounded-full bg-rose-500/15 text-rose-300">
+                <AlertTriangle className="h-6 w-6" />
+              </div>
+              <p className="text-base font-semibold text-white">Could not join the call</p>
+              <p className="mt-2 text-sm leading-relaxed text-white/65">
+                {call.error ?? "Something went wrong while connecting."}
+              </p>
+              <button
+                type="button"
+                onClick={onEnded}
+                className="mt-4 rounded-full bg-white px-5 py-2 text-sm font-semibold text-zinc-950 hover:bg-white/90"
+              >
+                Back to chat
+              </button>
+            </div>
           </div>
         )}
 
         {(call.state === "connected" || call.participants.length > 0) && (
           <>
+            {call.mediaError && (
+              <div className="absolute left-1/2 top-[calc(env(safe-area-inset-top,0px)+4rem)] z-20 w-[min(92vw,520px)] -translate-x-1/2 rounded-2xl border border-amber-300/20 bg-zinc-950/90 px-4 py-3 text-sm text-white shadow-2xl backdrop-blur">
+                <div className="flex gap-3">
+                  <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" />
+                  <div>
+                    <p className="font-semibold">Permission is blocked</p>
+                    <p className="mt-0.5 text-xs leading-relaxed text-white/65">{call.mediaError}</p>
+                  </div>
+                </div>
+              </div>
+            )}
             <GroupCallGrid
               participants={call.participants}
               screenShareSource={call.screenShareSource}
@@ -116,8 +140,6 @@ export default function GroupCallScreenV2({
               viewerIsHost={call.isHost}
               roomName={roomName}
             />
-            <CallReactionsOverlay reactions={call.reactions} />
-            <CallReactionStrip onReaction={call.sendReaction} />
           </>
         )}
       </div>
@@ -135,7 +157,6 @@ export default function GroupCallScreenV2({
         onToggleCam={call.toggleCam}
         onToggleScreen={call.toggleScreenShare}
         onToggleHand={call.toggleHandRaise}
-        onReaction={call.sendReaction}
         onStartRecording={call.startRecording}
         onStopRecording={call.stopRecording}
         onLeave={call.leave}

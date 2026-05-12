@@ -650,7 +650,7 @@ const Profile = () => {
             className={cn(
               "absolute inset-0 -z-10 transition-all duration-300",
               overCover
-                ? "bg-gradient-to-b from-black/45 via-black/20 to-transparent"
+                ? "bg-background/92 backdrop-blur-xl border-b border-border/40 shadow-sm shadow-background/20"
                 : "bg-background/90 backdrop-blur-xl border-b border-border/40 shadow-sm shadow-background/20"
             )}
           />
@@ -662,13 +662,13 @@ const Profile = () => {
             transition={{ type: "spring", stiffness: 400, damping: 22 }}
             className={cn(
               "h-9 w-9 -ml-1 flex items-center justify-center rounded-full transition focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:outline-none focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-              overCover ? "hover:bg-white/15 active:bg-white/20" : "hover:bg-muted/60 active:bg-muted/70"
+              "hover:bg-muted/60 active:bg-muted/70"
             )}
           >
-            <ArrowLeft className={cn("h-5 w-5", overCover ? "text-white drop-shadow-md" : "text-foreground")} />
+            <ArrowLeft className="h-5 w-5 text-foreground" />
           </motion.button>
           <span aria-hidden="true">
-            <Avatar className={cn("h-8 w-8 ring-1", overCover ? "ring-white/60" : "ring-border/60")}>
+            <Avatar className="h-8 w-8 ring-1 ring-border/60">
               <AvatarImage src={profile?.avatar_url || undefined} alt="" />
               <AvatarFallback className="text-xs">{getInitials()}</AvatarFallback>
             </Avatar>
@@ -676,7 +676,7 @@ const Profile = () => {
           <div className="flex items-center gap-1 min-w-0 flex-1" aria-live="polite">
             <span className={cn(
               "font-semibold text-sm truncate",
-              overCover ? "text-white drop-shadow-md" : "text-foreground"
+              "text-foreground"
             )}>
               {headerName || "Profile"}
             </span>
@@ -695,7 +695,7 @@ const Profile = () => {
             transition={{ type: "spring", stiffness: 400, damping: 22 }}
             className={cn(
               "h-9 w-9 flex items-center justify-center rounded-full transition focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:outline-none",
-              overCover ? "hover:bg-white/15 text-white drop-shadow-md" : "hover:bg-muted/60 text-foreground"
+              "hover:bg-muted/60 text-foreground"
             )}
           >
             <Share2 className="h-5 w-5" />
@@ -715,7 +715,7 @@ const Profile = () => {
               showNotifPanel
                 ? "bg-primary text-primary-foreground"
                 : overCover
-                  ? "hover:bg-white/15 text-white drop-shadow-md"
+                  ? "hover:bg-muted/60 text-foreground"
                   : "hover:bg-muted/60 text-foreground"
             )}
           >
@@ -931,7 +931,7 @@ const Profile = () => {
             transition={{ type: "spring", stiffness: 400, damping: 22 }}
             className={cn(
               "h-9 w-9 -mr-1 flex items-center justify-center rounded-full transition focus-visible:ring-2 focus-visible:ring-primary/70 focus-visible:outline-none focus-visible:ring-offset-2 focus-visible:ring-offset-background",
-              overCover ? "hover:bg-white/15 text-white drop-shadow-md" : "hover:bg-muted/60 text-foreground"
+              "hover:bg-muted/60 text-foreground"
             )}
           >
             <MoreHorizontal className="h-5 w-5" />
@@ -944,7 +944,7 @@ const Profile = () => {
       {/* ── Scrollable content ── */}
       <div className="relative z-10 min-h-screen pb-24 scroll-smooth bg-background no-scrollbar">
         {/* Mobile: edge-to-edge full-screen (Facebook-style). Desktop: centered card. */}
-        <div className="px-0 lg:px-4 pt-0 lg:pt-20 max-w-none lg:max-w-3xl mx-auto">
+        <div className="px-0 lg:px-4 pt-[calc(var(--zivo-safe-top-sticky)+3rem)] lg:pt-20 max-w-none lg:max-w-3xl mx-auto">
 
           {profileLoading ? (
             <div className="flex items-center justify-center py-20">
@@ -973,12 +973,7 @@ const Profile = () => {
                     <div className="hidden lg:block absolute inset-0 bg-gradient-to-br from-primary/[0.04] via-transparent to-primary/[0.02] rounded-3xl" />
                     <div className="hidden lg:block pointer-events-none absolute inset-0 rounded-3xl ring-1 ring-inset ring-white/[0.08] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.06)]" />
                     <div className="relative z-10">
-                    {/* Cover Photo — TRUE full-bleed on mobile.
-                        The image extends edge-to-edge AND behind the iOS/Android
-                        status bar / notch. We grow the container height by the
-                        safe-area inset (instead of padding it down) so the photo
-                        itself reaches the very top of the webview. Only the
-                        floating action buttons inside respect the safe area. */}
+                    {/* Cover photo sits below the fixed mobile header so content never collides with the notch. */}
                     <div
                       data-disable-pull-to-refresh="true"
                       className={cn("zivo-profile-cover-height relative w-full overflow-hidden select-none", coverRepositioning ? "cursor-ns-resize" : "cursor-default")}
@@ -1092,7 +1087,7 @@ const Profile = () => {
 
 
                     {/* Avatar overlapping cover */}
-                    <div className="relative z-10 -mt-11 px-6">
+                    <div className="relative z-10 -mt-9 px-5 sm:-mt-11 sm:px-6">
                       <div className="flex justify-start">
                         <motion.div
                           className="relative group/avatar"
@@ -1107,7 +1102,7 @@ const Profile = () => {
                               ? "bg-gradient-to-tr from-[#0077B6] via-[#00AEEF] to-[#7CD6FF]"
                               : "bg-ig-gradient"
                           )} />
-                          <Avatar className="relative h-20 w-20 sm:h-24 sm:w-24 md:h-28 md:w-28 ring-2 ring-background">
+                          <Avatar className="relative h-16 w-16 sm:h-24 sm:w-24 md:h-28 md:w-28 ring-2 ring-background">
                             <AvatarImage src={avatarPreview || profile?.avatar_url || undefined} alt="Profile" />
                             <AvatarFallback className="bg-muted text-foreground text-2xl font-bold">
                               {getInitials()}
@@ -1119,24 +1114,24 @@ const Profile = () => {
                             disabled={uploadAvatar.isPending}
                             aria-label="Change profile photo"
                             className={cn(
-                              "absolute bottom-0 right-0 p-2 bg-primary text-primary-foreground rounded-full shadow-xl shadow-primary/40 ring-2 ring-card cursor-pointer active:scale-90 transition focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none",
+                              "absolute bottom-0 right-0 p-1.5 sm:p-2 bg-primary text-primary-foreground rounded-full shadow-xl shadow-primary/40 ring-2 ring-card cursor-pointer active:scale-90 transition focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none",
                               uploadAvatar.isPending && "opacity-50 pointer-events-none"
                             )}
                           >
-                            {uploadAvatar.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Camera className="h-3.5 w-3.5" />}
+                            {uploadAvatar.isPending ? <Loader2 className="h-3 w-3 sm:h-3.5 sm:w-3.5 animate-spin" /> : <Camera className="h-3 w-3 sm:h-3.5 sm:w-3.5" />}
                           </button>
                         </motion.div>
                       </div>
                     </div>
 
                     {/* Name & status */}
-                    <div className="px-6 pb-1.5 pt-2 text-left">
-                      <CardTitle className="flex items-center justify-start gap-2 text-2xl font-bold tracking-tight">
+                    <div className="px-5 sm:px-6 pb-1 pt-1.5 sm:pt-2 text-left">
+                      <CardTitle className="flex items-center justify-start gap-2 text-xl sm:text-2xl font-bold tracking-tight">
                         <span>{headerName || t("profile.set_name")}</span>
                         {profile?.is_verified && <VerifiedBadge size={28} />}
                       </CardTitle>
                       {/* @username line — link or "set" CTA. Email never shown publicly. */}
-                      <div className="mt-1 text-sm text-muted-foreground">
+                      <div className="mt-0.5 text-sm text-muted-foreground">
                         {claimedUsername ? (
                           <span>@{claimedUsername}</span>
                         ) : (
@@ -1150,7 +1145,7 @@ const Profile = () => {
                         )}
                       </div>
                       {/* Email hidden — only visible to account owner in settings */}
-                      <div className="flex flex-wrap items-center justify-start gap-2 mt-3">
+                      <div className="flex flex-wrap items-center justify-start gap-2 mt-2 sm:mt-3">
                         {isPlus && (
                           <Badge className="bg-ig-gradient text-white border-0 font-semibold rounded-full px-3 py-1">
                             <Crown className="w-3 h-3 mr-1" /> ZIVO+ {plan === "annual" ? "Annual" : "Monthly"}
@@ -1262,16 +1257,14 @@ const Profile = () => {
 
                       {/* ── Edit Profile / Share / Analytics row ── */}
                       <div className="mt-3 flex items-center gap-2">
-                        <Button
+                        <button
                           type="button"
-                          variant="outline"
-                          size="sm"
                           onClick={() => { selectionChanged(); navigate("/account/profile-edit"); }}
-                          className="flex-1 rounded-full font-semibold border-border/60 h-9 text-sm"
+                          className="flex h-9 flex-1 items-center justify-center gap-1.5 rounded-full border border-border/60 bg-background text-sm font-semibold text-foreground transition-colors hover:bg-muted/50 active:scale-[0.98] focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
                         >
-                          <Pencil className="h-3.5 w-3.5 mr-1.5" />
-                          Edit profile
-                        </Button>
+                          <Pencil className="h-3.5 w-3.5 text-foreground" />
+                          <span>Edit profile</span>
+                        </button>
                         <motion.button
                           type="button"
                           whileTap={{ scale: 0.93 }}
@@ -1402,7 +1395,6 @@ const Profile = () => {
                           ].map((a) => (
                             <button type="button"
                               key={a.label}
-                              type="button"
                               onClick={a.onClick}
                               className="flex flex-col items-center gap-1 rounded-2xl border border-border/50 bg-muted/25 px-2 py-2 text-[11px] font-semibold text-foreground hover:bg-muted/50 active:scale-[0.97] focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none transition-all"
                             >
@@ -1642,7 +1634,6 @@ const Profile = () => {
               return (
                 <button type="button"
                   key={m.id}
-                  type="button"
                   onClick={() => {
                     if (zivoOFMode && m.id !== "creator") {
                       toast.info("Disable ZIVO OF Mode in Monetization to switch modes");
@@ -1700,7 +1691,6 @@ const Profile = () => {
                   return (
                     <button type="button"
                       key={a.label}
-                      type="button"
                       onClick={() => {
                         setModeOpen(false);
                         if (a.label === "Share profile") setShareOpen(true);
@@ -1753,7 +1743,6 @@ const Profile = () => {
                   return (
                     <button type="button"
                       key={a.label}
-                      type="button"
                       onClick={() => { setModeOpen(false); navigate(a.route); }}
                       className="flex flex-col items-center gap-1.5 rounded-2xl border border-border/40 bg-muted/30 p-3 active:scale-[0.97] transition-transform"
                     >
@@ -1784,7 +1773,6 @@ const Profile = () => {
                   return (
                     <button type="button"
                       key={a.label}
-                      type="button"
                       onClick={() => { setModeOpen(false); navigate(a.route); }}
                       className="flex flex-col items-center gap-1.5 rounded-2xl border border-border/40 bg-muted/30 p-3 active:scale-[0.97] transition-transform"
                     >

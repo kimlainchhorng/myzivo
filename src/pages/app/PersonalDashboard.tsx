@@ -2,7 +2,7 @@
  * PersonalDashboard — Employee + Career hub (Facebook-style compact layout).
  * Clock In/Out requires QR code scanning.
  */
-import { useState, useEffect, useMemo } from "react";
+import { lazy, Suspense, useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -22,7 +22,8 @@ import { QRScannerModal } from "@/components/clock/QRScannerModal";
 import { EmployeeQRDisplay } from "@/components/clock/EmployeeQRDisplay";
 import { toast } from "sonner";
 import { format, startOfWeek, startOfMonth, addDays, isAfter, isEqual, subWeeks } from "date-fns";
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, ReferenceLine } from "recharts";
+
+const WeeklyHoursChart = lazy(() => import("@/components/app/WeeklyHoursChart"));
 
 const DAILY_HOURS_TARGET = 8;
 
@@ -1226,47 +1227,9 @@ const PersonalDashboard = () => {
                 Full history
               </button>
             </div>
-            <ResponsiveContainer width="100%" height={110}>
-              <BarChart data={weeklyHours} barSize={18} margin={{ top: 4, right: 0, left: -28, bottom: 0 }}>
-                <XAxis
-                  dataKey="label"
-                  tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <YAxis
-                  tick={{ fontSize: 9, fill: "hsl(var(--muted-foreground))" }}
-                  axisLine={false}
-                  tickLine={false}
-                />
-                <Tooltip
-                  cursor={{ fill: "hsl(var(--muted)/0.4)" }}
-                  contentStyle={{
-                    fontSize: 11,
-                    borderRadius: 8,
-                    border: "1px solid hsl(var(--border))",
-                    background: "hsl(var(--card))",
-                    color: "hsl(var(--foreground))",
-                  }}
-                  formatter={(value: number) => [`${value}h`, "Hours"]}
-                />
-                <ReferenceLine
-                  y={DAILY_HOURS_TARGET * 5}
-                  stroke="hsl(var(--muted-foreground))"
-                  strokeDasharray="3 3"
-                  strokeOpacity={0.4}
-                />
-                <Bar
-                  dataKey="hours"
-                  radius={[4, 4, 0, 0]}
-                  fill="hsl(var(--primary))"
-                  opacity={0.85}
-                />
-              </BarChart>
-            </ResponsiveContainer>
-            <p className="text-[10px] text-muted-foreground text-center mt-1">
-              Dashed line = {DAILY_HOURS_TARGET * 5}h weekly target
-            </p>
+            <Suspense fallback={<div className="h-[128px] rounded-lg bg-muted/30" />}>
+              <WeeklyHoursChart data={weeklyHours} weeklyTarget={DAILY_HOURS_TARGET * 5} />
+            </Suspense>
           </motion.div>
         )}
 

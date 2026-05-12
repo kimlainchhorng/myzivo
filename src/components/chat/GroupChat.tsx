@@ -178,7 +178,6 @@ function renderMessageWithMentions(
       out.push(
         <button type="button"
           key={`m-${key++}`}
-          type="button"
           onClick={onClick}
           className={`font-semibold underline-offset-2 hover:underline ${
             isSelf
@@ -1065,7 +1064,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose, au
       // from that variable's right edge so the chat sits next to the list
       // instead of covering it. On mobile the variable falls back to 0px and
       // the chat covers the viewport as before.
-      className="fixed inset-y-0 right-0 left-0 z-50 bg-background flex flex-col lg:top-[60px] lg:bottom-0 lg:inset-y-auto lg:left-[var(--chat-sidebar-w,0px)] transition-[left] duration-200"
+      className="fixed inset-y-0 right-0 left-0 z-[1300] bg-background flex flex-col lg:top-[60px] lg:bottom-0 lg:inset-y-auto lg:left-[var(--chat-sidebar-w,0px)] transition-[left] duration-200"
       initial={{ x: "100%" }}
       animate={{ x: 0 }}
       exit={{ x: "100%" }}
@@ -1563,7 +1562,6 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose, au
             {stickerSuggestions.map((s) => (
               <button type="button"
                 key={s.id}
-                type="button"
                 onClick={() => {
                   void handleStickerSend({ text: `[sticker:${s.id}]`, messageType: "sticker" });
                   setInput("");
@@ -1632,7 +1630,6 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose, au
                 {mentionCandidates.map((m, i) => (
                   <button type="button"
                     key={m.user_id}
-                    type="button"
                     onMouseDown={(e) => { e.preventDefault(); applyMention(m.name); }}
                     onMouseEnter={() => setMentionIndex(i)}
                     className={`w-full flex items-center gap-2 px-3 py-2 text-left transition-colors ${i === mentionIndex ? "bg-muted/60" : "hover:bg-muted/40"}`}
@@ -1660,7 +1657,6 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose, au
                   {slashCandidates.map((cmd, i) => (
                     <button type="button"
                       key={cmd.id}
-                      type="button"
                       onMouseDown={(e) => { e.preventDefault(); runSlashCommand(cmd); }}
                       onMouseEnter={() => setSlashIndex(i)}
                       className={`w-full flex items-center gap-3 px-3 py-2 text-left transition-colors ${i === slashIndex ? "bg-muted/60" : "hover:bg-muted/40"}`}

@@ -85,15 +85,35 @@ const heroSlides = [
   { src: heroCars, accent: "210 80% 55%", label: "Fly Smarter with ZIVO", sub: "Trusted licensed partners" },
 ];
 
-/* ─── Fallback routes ─── */
-const fallbackRoutes = [
-  { from: "PNH", to: "REP", fromCity: "Phnom Penh", toCity: "Siem Reap", image: siemReapImg },
-  { from: "PNH", to: "KOS", fromCity: "Phnom Penh", toCity: "Sihanoukville", image: sihanoukvilleImg },
-  { from: "PNH", to: "BKK", fromCity: "Phnom Penh", toCity: "Bangkok", image: bangkokImg },
-  { from: "PNH", to: "SIN", fromCity: "Phnom Penh", toCity: "Singapore", image: singaporeImg },
-  { from: "REP", to: "BKK", fromCity: "Siem Reap", toCity: "Bangkok", image: bangkokImg },
-  { from: "PNH", to: "NRT", fromCity: "Phnom Penh", toCity: "Tokyo", image: tokyoImg },
-];
+const routeImages: Record<string, string> = {
+  "PNH-REP": siemReapImg,
+  "PNH-KOS": sihanoukvilleImg,
+  "PNH-BKK": bangkokImg,
+  "PNH-SIN": singaporeImg,
+  "REP-BKK": bangkokImg,
+  "PNH-NRT": tokyoImg,
+};
+
+const destinationImages: Record<string, string> = {
+  REP: siemReapImg,
+  KOS: sihanoukvilleImg,
+  BKK: bangkokImg,
+  SIN: singaporeImg,
+  NRT: tokyoImg,
+};
+
+type LiveRouteCard = {
+  from: string;
+  to: string;
+  fromCity: string;
+  toCity: string;
+  image: string;
+  price: string;
+  airline: string | null;
+  departureDate?: string;
+  returnDate?: string;
+  transfers?: number | null;
+};
 
 const whyZivo = [
   { icon: Globe, title: "500+ Airlines", desc: "Compare all major & low-cost carriers", color: "sky" },
@@ -103,8 +123,8 @@ const whyZivo = [
 ];
 
 /* ─── 3D Route Card ─── */
-function RouteCard3D({ route, index, onRouteClick, isFavorite, onToggleFavorite, onShare, justShared }: { route: any; index: number; onRouteClick: (from: string, to: string) => void; isFavorite?: boolean; onToggleFavorite?: (e: React.MouseEvent) => void; onShare?: (e: React.MouseEvent) => void; justShared?: boolean }) {
-  const tilt = use3DTilt(12);
+function RouteCard3D({ route, index, onRouteClick, isFavorite, onToggleFavorite, onShare, justShared }: { route: LiveRouteCard; index: number; onRouteClick: (from: string, to: string) => void; isFavorite?: boolean; onToggleFavorite?: (e: React.MouseEvent) => void; onShare?: (e: React.MouseEvent) => void; justShared?: boolean }) {
+  const { ref: tiltRef, onMouseMove, onMouseLeave } = use3DTilt(12);
   return (
     <motion.div
       initial={{ opacity: 0, y: 30, rotateX: 18 }}
@@ -114,9 +134,9 @@ function RouteCard3D({ route, index, onRouteClick, isFavorite, onToggleFavorite,
       style={{ perspective: 800 }}
     >
       <div
-        ref={tilt.ref}
-        onMouseMove={tilt.onMouseMove}
-        onMouseLeave={tilt.onMouseLeave}
+        ref={tiltRef}
+        onMouseMove={onMouseMove}
+        onMouseLeave={onMouseLeave}
         onClick={() => onRouteClick(route.from, route.to)}
         className="group relative rounded-2xl overflow-hidden border border-border/20 cursor-pointer active:scale-[0.96] touch-manipulation transition-[border-color,box-shadow] duration-300 hover:shadow-2xl hover:shadow-primary/15 hover:border-primary/30 bg-card"
         style={{ transformStyle: "preserve-3d", transition: "transform 0.15s ease-out, box-shadow 0.3s ease" }}
@@ -170,15 +190,11 @@ function RouteCard3D({ route, index, onRouteClick, isFavorite, onToggleFavorite,
                     <span className="ml-1">· {route.transfers === 0 ? "Direct" : `${route.transfers} stop${route.transfers > 1 ? "s" : ""}`}</span>
                   )}
                 </p>
-              ) : !route.price ? (
-                <div className="h-3 w-20 mt-1 rounded bg-white/30 animate-pulse" />
               ) : null}
             </div>
-            {route.price && (
-              <span className="shrink-0 inline-flex items-baseline gap-0.5 rounded-full bg-primary px-2 py-0.5 text-primary-foreground text-[11px] font-bold shadow-lg drop-shadow-md whitespace-nowrap">
-                {route.price}
-              </span>
-            )}
+            <span className="shrink-0 inline-flex items-baseline gap-0.5 rounded-full bg-primary px-2 py-0.5 text-primary-foreground text-[11px] font-bold shadow-lg drop-shadow-md whitespace-nowrap">
+              {route.price}
+            </span>
           </div>
         </div>
       </div>
@@ -193,29 +209,31 @@ function PopularRoutesSection({ className }: { className?: string }) {
   const duffelQ = usePopularRoutePrices();
   const tpQ = useTravelpayoutsPopularRoutes();
   const liveRoutes = duffelQ.data;
-  const tpRoutes = tpQ.data ?? [];
+  const tpRoutes = useMemo(() => tpQ.data ?? [], [tpQ.data]);
   const isLoading = duffelQ.isLoading && tpQ.isLoading;
   const isFetching = duffelQ.isFetching || tpQ.isFetching;
   const bothFailed = duffelQ.isError && tpQ.isError;
   const [originFilter, setOriginFilter] = useState<"all" | "PNH" | "REP" | "saved">("all");
 
   // "Updated X ago" — recompute every minute so the label stays fresh
-  const [, forceTick] = useState(0);
+  const [nowMs, setNowMs] = useState(0);
   useEffect(() => {
-    const id = setInterval(() => forceTick((n) => n + 1), 60_000);
+    const update = () => setNowMs(Date.now());
+    update();
+    const id = setInterval(update, 60_000);
     return () => clearInterval(id);
   }, []);
   const lastUpdated = useMemo(() => {
     const t = Math.max(duffelQ.dataUpdatedAt || 0, tpQ.dataUpdatedAt || 0);
-    if (!t) return null;
-    const diffMs = Date.now() - t;
+    if (!t || !nowMs) return null;
+    const diffMs = nowMs - t;
     const mins = Math.floor(diffMs / 60_000);
     if (mins < 1) return "just now";
     if (mins < 60) return `${mins} min ago`;
     const hrs = Math.floor(mins / 60);
     if (hrs < 24) return `${hrs}h ago`;
     return `${Math.floor(hrs / 24)}d ago`;
-  }, [duffelQ.dataUpdatedAt, tpQ.dataUpdatedAt]);
+  }, [duffelQ.dataUpdatedAt, nowMs, tpQ.dataUpdatedAt]);
 
   const refreshPrices = useCallback(() => {
     qc.invalidateQueries({ queryKey: ["popular-route-prices"] });
@@ -231,17 +249,17 @@ function PopularRoutesSection({ className }: { className?: string }) {
     setFavorites((prev) => {
       const next = new Set(prev);
       if (next.has(key)) next.delete(key); else next.add(key);
-      try { localStorage.setItem("flight_route_faves", JSON.stringify([...next])); } catch {}
+      try { localStorage.setItem("flight_route_faves", JSON.stringify([...next])); } catch { /* ignore storage errors */ }
       return next;
     });
   }, []);
 
   const [sharedKey, setSharedKey] = useState<string | null>(null);
-  const handleShare = useCallback(async (route: any, e: React.MouseEvent) => {
+  const handleShare = useCallback(async (route: LiveRouteCard, e: React.MouseEvent) => {
     e.stopPropagation();
     const url = `${window.location.origin}/flights/results?origin=${route.from}&destination=${route.to}&adults=1&cabinClass=economy`;
     const title = `Flights from ${route.fromCity} to ${route.toCity}`;
-    const text = route.price ? `${route.fromCity} → ${route.toCity} from ${route.price} on ZIVO` : `${route.fromCity} → ${route.toCity} on ZIVO`;
+    const text = `${route.fromCity} → ${route.toCity} from ${route.price} on ZIVO`;
     const key = `${route.from}-${route.to}`;
     try {
       if (typeof navigator.share === "function") {
@@ -262,28 +280,46 @@ function PopularRoutesSection({ className }: { className?: string }) {
     navigate(`/flights/results?origin=${from}&destination=${to}&departureDate=${dep}&returnDate=${ret}&adults=1&cabinClass=economy`);
   };
 
-  const routes = fallbackRoutes.map((fr) => {
-    // Prefer Travelpayouts
-    const tp = tpRoutes.find((t) => t.origin === fr.from && t.destination === fr.to);
-    const duffel = liveRoutes?.find((lr) => lr.origin_code === fr.from && lr.destination_code === fr.to);
+  const routes = useMemo(() => {
+    const byKey = new Map<string, LiveRouteCard>();
 
-    if (tp) {
-      return {
-        ...fr,
+    for (const tp of tpRoutes) {
+      const key = `${tp.origin}-${tp.destination}`;
+      byKey.set(key, {
+        from: tp.origin,
+        to: tp.destination,
+        fromCity: tp.origin,
+        toCity: tp.destination,
+        image: routeImages[key] || destinationImages[tp.destination] || heroFlights,
         price: `$${tp.price}`,
         airline: tp.airline || null,
         departureDate: tp.departureAt?.split("T")[0],
         returnDate: tp.returnAt?.split("T")[0] || undefined,
         transfers: tp.transfers,
-      };
+      });
     }
-    if (duffel) {
-      return { ...fr, price: `$${Math.round(duffel.lowest_price)}`, airline: duffel.airline_name || null, departureDate: undefined, returnDate: undefined, transfers: undefined };
-    }
-    return { ...fr, price: null, airline: null, departureDate: undefined, returnDate: undefined, transfers: undefined };
-  });
 
-  const hasLivePrices = routes.some((r) => r.price !== null);
+    for (const duffel of liveRoutes || []) {
+      const key = `${duffel.origin_code}-${duffel.destination_code}`;
+      if (byKey.has(key)) continue;
+      byKey.set(key, {
+        from: duffel.origin_code,
+        to: duffel.destination_code,
+        fromCity: duffel.origin_city || duffel.origin_code,
+        toCity: duffel.destination_city || duffel.destination_code,
+        image: routeImages[key] || destinationImages[duffel.destination_code] || heroFlights,
+        price: `$${Math.round(duffel.lowest_price)}`,
+        airline: duffel.airline_name || null,
+        departureDate: undefined,
+        returnDate: undefined,
+        transfers: undefined,
+      });
+    }
+
+    return [...byKey.values()];
+  }, [liveRoutes, tpRoutes]);
+
+  const hasLivePrices = routes.length > 0;
   const hasTp = tpRoutes.length > 0;
   const visibleRoutes = originFilter === "all"
     ? routes
@@ -306,7 +342,7 @@ function PopularRoutesSection({ className }: { className?: string }) {
         </div>
         <div className="ml-auto flex items-center gap-1.5">
           <Badge variant="outline" className={cn("text-[10px]", hasLivePrices ? "border-emerald-500/30 text-emerald-600" : "border-primary/30 text-primary")}>
-            {isLoading ? <><Loader2 className="w-2.5 h-2.5 mr-0.5 animate-spin" /> Loading</> : hasLivePrices ? <><Zap className="w-2.5 h-2.5 mr-0.5" /> Live Prices</> : <><Sparkles className="w-2.5 h-2.5 mr-0.5" /> Updating</>}
+            {isLoading ? <><Loader2 className="w-2.5 h-2.5 mr-0.5 animate-spin" /> Loading</> : hasLivePrices ? <><Zap className="w-2.5 h-2.5 mr-0.5" /> Live Prices</> : <><Sparkles className="w-2.5 h-2.5 mr-0.5" /> Unavailable</>}
           </Badge>
           <button
             type="button"
@@ -350,21 +386,7 @@ function PopularRoutesSection({ className }: { className?: string }) {
         })}
       </div>
 
-      {visibleRoutes.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-border/50 p-6 text-center">
-          <p className="text-sm font-semibold text-foreground">No routes from this airport yet</p>
-          <p className="text-[11px] text-muted-foreground mt-1">
-            Use the search form above to find flights from any city.
-          </p>
-          <button
-            type="button"
-            onClick={() => setOriginFilter("all")}
-            className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-primary"
-          >
-            Show all routes <ArrowRight className="w-3 h-3" />
-          </button>
-        </div>
-      ) : isLoading && !hasLivePrices ? (
+      {isLoading && !hasLivePrices ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
           {[0, 1, 2, 3].map((i) => (
             <div key={i} className="rounded-2xl border border-border/20 overflow-hidden bg-card">
@@ -373,6 +395,20 @@ function PopularRoutesSection({ className }: { className?: string }) {
               </div>
             </div>
           ))}
+        </div>
+      ) : visibleRoutes.length === 0 ? (
+        <div className="rounded-2xl border border-dashed border-border/50 p-6 text-center">
+          <p className="text-sm font-semibold text-foreground">Live route prices unavailable right now</p>
+          <p className="text-[11px] text-muted-foreground mt-1">
+            Use the search form above to request current fares from travel partners.
+          </p>
+          <button
+            type="button"
+            onClick={() => setOriginFilter("all")}
+            className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-primary"
+          >
+            Search flights <ArrowRight className="w-3 h-3" />
+          </button>
         </div>
       ) : (
         <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -438,7 +474,7 @@ function PopularRoutesSection({ className }: { className?: string }) {
 
 /* ─── 3D Why ZIVO Card ─── */
 function WhyCard3D({ item, index }: { item: typeof whyZivo[0]; index: number }) {
-  const tilt = use3DTilt(14);
+  const { ref: tiltRef, onMouseMove, onMouseLeave } = use3DTilt(14);
   const colorMap: Record<string, string> = {
     sky: "from-sky-500/20 to-blue-500/20 border-sky-500/30 text-sky-500",
     emerald: "from-emerald-500/20 to-green-500/20 border-emerald-500/30 text-emerald-500",
@@ -455,9 +491,9 @@ function WhyCard3D({ item, index }: { item: typeof whyZivo[0]; index: number }) 
       style={{ perspective: 600 }}
     >
       <div
-        ref={tilt.ref}
-        onMouseMove={tilt.onMouseMove}
-        onMouseLeave={tilt.onMouseLeave}
+        ref={tiltRef}
+        onMouseMove={onMouseMove}
+        onMouseLeave={onMouseLeave}
         className="group bg-card/80 backdrop-blur-lg border border-border/30 rounded-2xl p-3 sm:p-5 text-left sm:text-center transition-all duration-300 hover:shadow-xl hover:shadow-primary/10 hover:border-primary/20 relative overflow-hidden flex sm:flex-col items-center sm:items-stretch gap-3 sm:gap-0"
         style={{ transformStyle: "preserve-3d", transition: "transform 0.15s ease-out" }}
       >

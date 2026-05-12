@@ -156,7 +156,6 @@ export default function MobilePassengerCabinSheet({
                   return (
                     <button type="button"
                       key={option.value}
-                      type="button"
                       className="relative rounded-[18px] p-4 pb-3.5 text-left transition-all duration-200 active:scale-[0.94] touch-manipulation overflow-hidden min-h-[120px] flex flex-col justify-between"
                       style={isSelected ? {
                         background: "linear-gradient(150deg, hsl(160 84% 42%), hsl(160 70% 38%))",

@@ -421,7 +421,6 @@ export default function AccountExportPage() {
               return (
                 <button type="button"
                   key={c.id}
-                  type="button"
                   onClick={() => setSelected((s) => ({ ...s, [c.id]: !s[c.id] }))}
                   className={`w-full flex items-center gap-3 p-3 rounded-xl border transition-all text-left active:scale-[0.99] ${
                     checked ? "bg-card border-border/40" : "bg-muted/20 border-border/30 opacity-70"

@@ -208,7 +208,6 @@ export default function AirportAutocomplete({
             {suggestions.map((airport, index) => (
               <button type="button"
                 key={airport.code}
-                type="button"
                 onClick={() => handleSelectAirport(airport)}
                 className={cn(
                   "w-full px-3 py-2.5 flex items-center gap-3 text-left hover:bg-accent transition-colors",

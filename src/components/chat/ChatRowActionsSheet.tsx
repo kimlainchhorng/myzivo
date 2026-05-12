@@ -80,8 +80,18 @@ export default function ChatRowActionsSheet({
 
   return (
     <Sheet open={!!target} onOpenChange={(o) => { if (!o) onClose(); }}>
-      <SheetContent side="bottom" className="rounded-t-3xl pb-8">
-        <SheetHeader className="text-left">
+      <SheetContent
+        side="bottom"
+        className={cn(
+          "z-[10000] max-h-[86dvh] overflow-y-auto rounded-t-3xl pb-8",
+          "sm:inset-auto sm:left-1/2 sm:right-auto sm:top-1/2 sm:bottom-auto sm:w-[min(420px,calc(100vw-32px))]",
+          "sm:max-h-[min(620px,calc(100dvh-64px))] sm:-translate-x-1/2 sm:-translate-y-1/2",
+          "sm:rounded-2xl sm:border sm:p-5 sm:pb-5",
+          "sm:data-[state=closed]:slide-out-to-bottom-0 sm:data-[state=open]:slide-in-from-bottom-0",
+          "sm:data-[state=closed]:zoom-out-95 sm:data-[state=open]:zoom-in-95"
+        )}
+      >
+        <SheetHeader className="text-left pr-10">
           <SheetTitle className="text-base truncate">{target.name}</SheetTitle>
         </SheetHeader>
 
@@ -136,7 +146,7 @@ export default function ChatRowActionsSheet({
           </div>
         )}
 
-        <div className="mt-3 flex flex-col">
+        <div className="mt-3 flex flex-col gap-0.5">
           {items.map((it) => {
             const Icon = it.icon;
             const disabled = (it as { disabled?: boolean }).disabled;

@@ -57,7 +57,7 @@ const quickLinks = [
   { icon: Store, label: "Shop", href: "/store-map", description: "Browse nearby stores", iconColor: "text-emerald-600", iconBg: "bg-emerald-500/10" },
   { icon: Wrench, label: "Auto Repair", href: "/auto-repair", description: "Book trusted mechanics", iconColor: "text-slate-600", iconBg: "bg-slate-500/10" },
   { icon: UtensilsCrossed, label: "Eats", href: "/eats", description: "Food delivery & dining", iconColor: "text-orange-500", iconBg: "bg-orange-500/10" },
-  { icon: Car, label: "Rides", href: "/rides", description: "Book a ride anywhere", iconColor: "text-blue-600", iconBg: "bg-blue-500/10" },
+  { icon: Car, label: "Rides", href: "/rides/hub", description: "Book a ride anywhere", iconColor: "text-blue-600", iconBg: "bg-blue-500/10" },
   { icon: Plane, label: "Flights", href: "/flights", description: "Search & book flights", iconColor: "text-sky-500", iconBg: "bg-sky-500/10" },
   { icon: Hotel, label: "Hotels", href: "/hotels", description: "Find a place to stay", iconColor: "text-purple-500", iconBg: "bg-purple-500/10" },
   { icon: Car, label: "Car Rental", href: "/car-rental", description: "Rent a car for your trip", iconColor: "text-teal-500", iconBg: "bg-teal-500/10" },
@@ -307,7 +307,6 @@ const AppMore = () => {
                 <button type="button"
                   key={opt.label}
                   onClick={() => navigate(opt.href)}
-                  type="button"
                   className="flex-shrink-0 flex flex-col items-center gap-1.5 px-3 py-2.5 rounded-2xl border border-border/40 bg-card shadow-sm min-w-[80px] touch-manipulation active:scale-[0.96] transition-all"
                 >
                   <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${opt.color} flex items-center justify-center shadow-md`}>

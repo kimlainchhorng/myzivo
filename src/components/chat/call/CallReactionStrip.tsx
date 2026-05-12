@@ -19,7 +19,6 @@ export default function CallReactionStrip({ onReaction }: Props) {
         {QUICK_REACTIONS.map((emo) => (
           <button type="button"
             key={emo}
-            type="button"
             aria-label={`Send ${emo} reaction`}
             onClick={() => onReaction(emo)}
             className="grid h-9 w-9 place-items-center rounded-full text-xl transition hover:scale-110 hover:bg-white/15 active:scale-95"

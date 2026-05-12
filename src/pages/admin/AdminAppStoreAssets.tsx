@@ -12,8 +12,8 @@ import { toast } from "sonner";
 const APP_META = {
   name: "ZIVO — Travel, Shop & Explore",
   subtitle: "Flights, Local Shops & Food Delivery",
-  bundleId: "com.hizovo.app",
-  packageName: "com.hizovo.app",
+  bundleId: "com.myzivo.app",
+  packageName: "com.myzivo.app",
   category: "Travel",
   secondaryCategory: "Shopping",
   contentRating: "4+",

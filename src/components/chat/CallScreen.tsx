@@ -102,12 +102,14 @@ export default function CallScreen({
   const [duration, setDuration] = useState(0);
   const [remoteAccepted, setRemoteAccepted] = useState(false);
   const [isSpeaker, setIsSpeaker] = useState(false);
+  const [hasRemoteVideo, setHasRemoteVideo] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval>>(undefined);
   const endReasonRef = useRef<"declined" | "no_answer" | null>(null);
   const remoteVideoRef = useRef<HTMLVideoElement>(null);
   const localVideoRef = useRef<HTMLVideoElement>(null);
   const remoteAudioRef = useRef<HTMLAudioElement>(null);
   const remoteStreamRef = useRef<MediaStream | null>(null);
+  const remoteVideoCleanupRef = useRef<(() => void) | null>(null);
   const reminderPushSentRef = useRef(false);
   const createCallFiredRef = useRef(false);
   const pipControlsChangeRef = useRef(onPipControlsChange);
@@ -126,6 +128,13 @@ export default function CallScreen({
 
   const role: CallRole = existingCallId ? "callee" : "caller";
   const initials = (recipientName || "U").split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2);
+
+  const syncRemoteVideoState = useCallback((stream: MediaStream | null) => {
+    const hasLiveVideo = Boolean(
+      stream?.getVideoTracks().some((track) => track.readyState === "live" && track.enabled && !track.muted),
+    );
+    setHasRemoteVideo(hasLiveVideo);
+  }, []);
 
   const sendIncomingCallPush = useCallback(async (newCallId: string, mode: "initial" | "reminder" = "initial") => {
     if (!user?.id || !recipientId || recipientId === user.id) return;
@@ -186,8 +195,42 @@ export default function CallScreen({
 
   const handleRemoteStream = useCallback((stream: MediaStream) => {
     remoteStreamRef.current = stream;
+    remoteVideoCleanupRef.current?.();
+    remoteVideoCleanupRef.current = null;
 
     if (callType === "video") {
+      syncRemoteVideoState(stream);
+      const sync = () => syncRemoteVideoState(stream);
+      const watchedTracks = new Set<MediaStreamTrack>();
+      const watchTrack = (track: MediaStreamTrack) => {
+        if (track.kind !== "video" || watchedTracks.has(track)) return;
+        watchedTracks.add(track);
+        track.addEventListener("mute", sync);
+        track.addEventListener("unmute", sync);
+        track.addEventListener("ended", sync);
+      };
+      const unwatchTracks = () => {
+        watchedTracks.forEach((track) => {
+          track.removeEventListener("mute", sync);
+          track.removeEventListener("unmute", sync);
+          track.removeEventListener("ended", sync);
+        });
+        watchedTracks.clear();
+      };
+      const handleTrackChange = (event: MediaStreamTrackEvent) => {
+        watchTrack(event.track);
+        sync();
+      };
+
+      stream.addEventListener("addtrack", handleTrackChange);
+      stream.addEventListener("removetrack", sync);
+      stream.getVideoTracks().forEach(watchTrack);
+      remoteVideoCleanupRef.current = () => {
+        stream.removeEventListener("addtrack", handleTrackChange);
+        stream.removeEventListener("removetrack", sync);
+        unwatchTracks();
+      };
+
       if (remoteVideoRef.current) {
         remoteVideoRef.current.srcObject = stream;
         void remoteVideoRef.current.play().catch(() => {});
@@ -199,11 +242,21 @@ export default function CallScreen({
       remoteAudioRef.current.muted = false;
       void remoteAudioRef.current.play().catch(() => {});
     }
-  }, [callType]);
+  }, [callType, syncRemoteVideoState]);
+
+  useEffect(() => {
+    return () => {
+      remoteVideoCleanupRef.current?.();
+      remoteVideoCleanupRef.current = null;
+    };
+  }, []);
 
   const handleEnded = useCallback(() => {
     if (timerRef.current) clearInterval(timerRef.current);
     setRemoteAccepted(false);
+    setHasRemoteVideo(false);
+    remoteVideoCleanupRef.current?.();
+    remoteVideoCleanupRef.current = null;
 
     const resolvedStatus =
       endReasonRef.current === "declined"
@@ -749,12 +802,34 @@ export default function CallScreen({
         exit={{ opacity: 0 }}
         transition={{ duration: 0.25 }}
       >
+        {/* Contact image backdrop while ringing or while the remote camera is off */}
+        <div className="absolute inset-0 grid place-items-center bg-zinc-950">
+          {recipientAvatar ? (
+            <>
+              <img
+                src={recipientAvatar}
+                alt=""
+                aria-hidden="true"
+                className="absolute inset-0 h-full w-full scale-110 object-cover opacity-35 blur-2xl"
+              />
+              <Avatar className="relative z-[1] h-36 w-36 border-4 border-white/15 shadow-2xl">
+                <AvatarImage src={recipientAvatar} />
+                <AvatarFallback className="bg-white/10 text-5xl font-bold text-white">{initials}</AvatarFallback>
+              </Avatar>
+            </>
+          ) : (
+            <div className="grid h-36 w-36 place-items-center rounded-full border-4 border-white/15 bg-white/10 text-5xl font-bold text-white shadow-2xl">
+              {initials}
+            </div>
+          )}
+        </div>
+
         {/* Remote video — full screen background */}
         <video
           ref={remoteVideoRef}
           autoPlay
           playsInline
-          className="absolute inset-0 w-full h-full object-cover"
+          className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-300 ${hasRemoteVideo ? "opacity-100" : "opacity-0"}`}
         />
 
         {/* Dark overlay for readability */}

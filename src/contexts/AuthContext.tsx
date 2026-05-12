@@ -5,6 +5,7 @@ import { setupActivityTracking, clearSessionArtifacts } from "@/lib/security/ses
 import { getDeviceFingerprint } from "@/lib/security/deviceFingerprint";
 import { getMfaChallenge, verifyMfaChallenge, type MfaState } from "@/lib/security/mfa";
 import { clearSignedUrlCache } from "@/lib/security/signedMedia";
+import { perfMeasure, perfNow } from "@/lib/perfTrace";
 
 type AuthContextType = {
   user: User | null;
@@ -75,6 +76,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
+    const authStartedAt = perfNow();
     // 1. Restore session from storage FIRST — this prevents the race condition
     supabase.auth.getSession().then(async ({ data: { session } }) => {
       setSession(session);
@@ -88,6 +90,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Only mark as ready AFTER getSession completes
       initializedRef.current = true;
       setIsLoading(false);
+      perfMeasure("auth ready", authStartedAt, {
+        hasSession: Boolean(session),
+      });
     });
 
     // 2. Listen for subsequent auth changes (sign in, sign out, token refresh)

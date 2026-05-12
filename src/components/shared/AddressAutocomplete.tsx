@@ -261,7 +261,6 @@ export function AddressAutocomplete({
           {suggestions.map((suggestion, index) => (
             <button type="button"
               key={suggestion.place_id}
-              type="button"
               onClick={() => handleSelectSuggestion(suggestion)}
               className={cn(
                 "w-full px-3 py-2 text-left text-sm hover:bg-accent transition-colors",

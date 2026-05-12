@@ -1327,7 +1327,6 @@ export default function WalletPage() {
                 {TOPUP_QUICK.map((amt) => (
                   <button type="button"
                     key={amt}
-                    type="button"
                     onClick={() => setTopupAmount(String(amt))}
                     className={`py-2 rounded-lg text-sm font-bold border transition-colors ${
                       topupAmount === String(amt)

@@ -1013,7 +1013,14 @@ export default function StickerKeyboard({ open, onClose, onSendSticker, onQuickA
                 </button>
               ))}
             </div>
-            <button type="button" onClick={onClose} className="text-primary text-xs font-semibold px-2 py-1 rounded-lg hover:bg-primary/10 shrink-0">Done</button>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Close stickers"
+              className="text-primary text-xs font-semibold px-2 py-1 rounded-lg hover:bg-primary/10 shrink-0"
+            >
+              Done
+            </button>
           </div>
 
           {/* Search — only show for non-sticker tabs or when there's a search query */}

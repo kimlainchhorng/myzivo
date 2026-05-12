@@ -1,11 +1,55 @@
 import { defineConfig } from "vite";
-import react from "@vitejs/plugin-react-swc";
+import react from "@vitejs/plugin-react";
 import path from "path";
 import { componentTagger } from "lovable-tagger";
 import { VitePWA } from "vite-plugin-pwa";
 import { createRequire } from "module";
 const _require = createRequire(import.meta.url);
 const pkg = _require("./package.json") as { version: string };
+
+const manualChunkGroups = {
+  "vendor-react": ["react", "react-dom", "react-router-dom"],
+  "vendor-charts": ["recharts"],
+  "vendor-motion": ["framer-motion"],
+  "vendor-stripe": ["@stripe/stripe-js", "@stripe/react-stripe-js"],
+  "vendor-supabase": ["@supabase/supabase-js"],
+  "vendor-query": ["@tanstack/react-query"],
+  "vendor-icons": ["lucide-react"],
+  // Keep all Radix in ONE chunk because splitting can evaluate shared internals
+  // out of order across chunks.
+  "vendor-radix": [
+    "@radix-ui/react-dialog",
+    "@radix-ui/react-popover",
+    "@radix-ui/react-dropdown-menu",
+    "@radix-ui/react-toast",
+    "@radix-ui/react-tabs",
+    "@radix-ui/react-select",
+    "@radix-ui/react-accordion",
+    "@radix-ui/react-tooltip",
+  ],
+  "vendor-forms": ["react-hook-form", "@hookform/resolvers", "zod"],
+  "vendor-maps": ["@react-google-maps/api"],
+  "vendor-dates": ["date-fns"],
+  "vendor-carousel": ["embla-carousel-react", "embla-carousel-autoplay"],
+  "vendor-livekit": ["livekit-client"],
+} as const;
+
+const packageSegment = (packageName: string) =>
+  `/node_modules/${packageName}/`;
+
+const manualChunks = (id: string) => {
+  const normalizedId = id.replaceAll(path.sep, "/");
+
+  for (const [chunkName, packageNames] of Object.entries(manualChunkGroups)) {
+    if (
+      packageNames.some((packageName) =>
+        normalizedId.includes(packageSegment(packageName)),
+      )
+    ) {
+      return chunkName;
+    }
+  }
+};
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -15,6 +59,14 @@ export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
     port: 8081,
+    watch: {
+      ignored: [
+        "**/android/**",
+        "**/ios/App/App/public/**",
+        "**/ios/DerivedData/**",
+        "**/ios/build/**",
+      ],
+    },
     hmr: {
       overlay: false,
     },
@@ -31,41 +83,11 @@ export default defineConfig(({ mode }) => ({
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
-        manualChunks: {
-          "vendor-react": ["react", "react-dom", "react-router-dom"],
-          "vendor-charts": ["recharts"],
-          "vendor-motion": ["framer-motion"],
-          "vendor-stripe": ["@stripe/stripe-js", "@stripe/react-stripe-js"],
-          "vendor-supabase": ["@supabase/supabase-js"],
-          "vendor-query": ["@tanstack/react-query"],
-          "vendor-icons": ["lucide-react"],
-          // Keep all Radix in ONE chunk — splitting causes shared internals
-          // (react-primitive, use-callback-ref, etc.) to be evaluated out of
-          // order across chunks, producing runtime "on is not a function".
-          "vendor-radix": [
-            "@radix-ui/react-dialog",
-            "@radix-ui/react-popover",
-            "@radix-ui/react-dropdown-menu",
-            "@radix-ui/react-toast",
-            "@radix-ui/react-tabs",
-            "@radix-ui/react-select",
-            "@radix-ui/react-accordion",
-            "@radix-ui/react-tooltip",
-          ],
-          "vendor-forms": ["react-hook-form", "@hookform/resolvers", "zod"],
-          "vendor-maps": ["@react-google-maps/api"],
-          "vendor-dates": ["date-fns"],
-          "vendor-carousel": ["embla-carousel-react", "embla-carousel-autoplay"],
-          "vendor-livekit": ["livekit-client"],
-        },
+        manualChunks,
       },
     },
     cssCodeSplit: true,
     sourcemap: mode === 'production' ? false : 'hidden',
-  },
-  esbuild: {
-    drop: mode === "production" ? ["console", "debugger"] : [],
-    legalComments: "none",
   },
   plugins: [
     react(),
@@ -82,6 +104,7 @@ export default defineConfig(({ mode }) => ({
       srcDir: "public",
       filename: "sw.js",
       injectManifest: {
+        rollupFormat: "iife",
         globPatterns: ["**/*.{js,css,html,ico,svg,woff2}"],
         // Skip large media bundles from precache — they get runtime-cached on
         // first use instead of eating the user's data on initial install.
@@ -228,14 +251,47 @@ export default defineConfig(({ mode }) => ({
     })
   ].filter(Boolean),
   resolve: {
-    alias: {
-      "@": path.resolve(__dirname, "./src"),
-      "@radix-ui/react-slot": path.resolve(__dirname, "./node_modules/@radix-ui/react-slot"),
+    alias: [
+      {
+        find: "lucide-react/dist/esm/icons/facebook",
+        replacement: path.resolve(__dirname, "./src/lib/icons/facebook.tsx"),
+      },
+      {
+        find: "lucide-react/dist/esm/icons/instagram",
+        replacement: path.resolve(__dirname, "./src/lib/icons/instagram.tsx"),
+      },
+      {
+        find: "lucide-react/dist/esm/icons/linkedin",
+        replacement: path.resolve(__dirname, "./src/lib/icons/linkedin.tsx"),
+      },
+      {
+        find: "lucide-react/dist/esm/icons/twitter",
+        replacement: path.resolve(__dirname, "./src/lib/icons/twitter.tsx"),
+      },
+      {
+        find: "lucide-react/dist/esm/icons/youtube",
+        replacement: path.resolve(__dirname, "./src/lib/icons/youtube.tsx"),
+      },
+      {
+        find: /^lucide-react$/,
+        replacement: path.resolve(__dirname, "./src/lib/lucide-react.ts"),
+      },
+      {
+        find: "@",
+        replacement: path.resolve(__dirname, "./src"),
+      },
+      {
+        find: "@radix-ui/react-slot",
+        replacement: path.resolve(__dirname, "./node_modules/@radix-ui/react-slot"),
+      },
       // React 19 hoists <title>/<meta>/<link> natively. react-helmet-async
       // collides with that hoisting, causing NotFoundError on commit/unmount
       // (App failed to start crash on iOS WKWebView in particular).
-      "react-helmet-async": path.resolve(__dirname, "./src/lib/react-helmet-shim.tsx"),
-    },
+      {
+        find: "react-helmet-async",
+        replacement: path.resolve(__dirname, "./src/lib/react-helmet-shim.tsx"),
+      },
+    ],
     // Prevent duplicate React copies (fixes "Cannot read properties of null (reading 'useEffect')")
     dedupe: ["react", "react-dom", "@radix-ui/react-slot"],
   },

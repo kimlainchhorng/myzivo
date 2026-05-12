@@ -655,7 +655,7 @@ export function LodgingBookingDrawer({
                 const active = payMethod === m.id;
                 return (
                   <button type="button"
-                    key={m.id} type="button" onClick={() => setPayMethod(m.id)}
+                    key={m.id} onClick={() => setPayMethod(m.id)}
                     className={cn(
                       "w-full flex items-start gap-3 p-3.5 rounded-2xl border-2 text-left transition-all",
                       active

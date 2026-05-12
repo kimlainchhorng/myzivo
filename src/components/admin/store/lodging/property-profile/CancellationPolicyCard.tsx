@@ -45,7 +45,6 @@ export default function CancellationPolicyCard({ policy, windowHours, onChange }
             return (
               <button type="button"
                 key={p.key}
-                type="button"
                 onClick={() => onChange({ cancellation_policy: p.description, cancellation_window_hours: p.windowHours })}
                 className={cn(
                   "rounded-xl border p-2 text-left transition",

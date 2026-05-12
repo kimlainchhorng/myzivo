@@ -354,7 +354,7 @@ export default function LodgingNotificationsSection({ storeId }: { storeId: stri
                 />
                 <div className="flex flex-wrap gap-1 mt-1.5">
                   {VARIABLES.map(v => (
-                    <button type="button" key={v} type="button"
+                    <button type="button" key={v}
                       onClick={() => setForm({ ...form, body: (form.body || "") + v })}
                       className="text-[10px] px-1.5 py-0.5 rounded border border-border bg-muted/30 hover:bg-muted text-muted-foreground font-mono">
                       {v}

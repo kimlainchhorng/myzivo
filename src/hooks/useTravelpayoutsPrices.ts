@@ -5,6 +5,9 @@
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 
+const ENABLE_TRAVELPAYOUTS =
+  (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_ENABLE_TRAVELPAYOUTS === "true";
+
 export interface TravelpayoutsPrice {
   origin: string;
   destination: string;
@@ -62,7 +65,7 @@ export function useTravelpayoutsPrices({
 
       return data.data || [];
     },
-    enabled: enabled && !!origin && !!destination,
+    enabled: ENABLE_TRAVELPAYOUTS && enabled && !!origin && !!destination,
     staleTime: 10 * 60 * 1000, // 10 min cache
     retry: 1,
     // Don't block the UI — this is supplementary data

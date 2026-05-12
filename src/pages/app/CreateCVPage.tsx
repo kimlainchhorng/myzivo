@@ -5,8 +5,6 @@
 import { useState, useEffect, useCallback, useRef, forwardRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
-import html2canvas from "html2canvas";
-import { jsPDF } from "jspdf";
 /**
  * Robust download that works inside Lovable's sandboxed preview iframe.
  * Falls back to opening the blob URL in a new top-level tab if the
@@ -1431,8 +1429,9 @@ const CreateCVPage = () => {
 
   const previewData = { photo, firstName, lastName, fullName, dateOfBirth, jobTitle, email, phone, location, nationality, website, linkedin, portfolio, summary, experiences, educations, skills, languages, certifications, references, hobbies, coverLetter };
 
-  const handleDownloadCoverLetter = () => {
+  const handleDownloadCoverLetter = async () => {
     if (!coverLetter.trim()) return;
+    const { jsPDF } = await import("jspdf");
     const pdf = new jsPDF("p", "mm", "a4");
     const margin = 20;
     const contentWidth = 210 - 2 * margin;
@@ -1494,6 +1493,10 @@ const CreateCVPage = () => {
       setDownloading(true);
       await new Promise<void>((resolve) => requestAnimationFrame(() => resolve()));
       await waitForExportAssets(el);
+      const [{ default: html2canvas }, { jsPDF }] = await Promise.all([
+        import("html2canvas"),
+        import("jspdf"),
+      ]);
 
       // A4 dimensions in px at 96dpi (1mm ≈ 3.7795px)
       const PX_PER_MM = 3.7795275591;
@@ -1747,7 +1750,7 @@ const CreateCVPage = () => {
               <Plus className="w-3 h-3" />New
             </button>
             {cvList.map(cv => (
-              <button type="button" key={cv.id} type="button" onClick={() => switchCv(cv.id)}
+              <button type="button" key={cv.id} onClick={() => switchCv(cv.id)}
                 className={cn("shrink-0 h-7 px-3 rounded-full border text-[11px] font-semibold touch-manipulation active:scale-95 transition-all truncate max-w-[120px]",
                   cv.id === cvId ? "border-primary bg-primary/10 text-primary" : "border-border/40 text-foreground/70 bg-card")}>
                 {cv.full_name || "Untitled CV"}
@@ -1999,7 +2002,7 @@ const CreateCVPage = () => {
                     return (
                       <div className="absolute left-0 right-0 top-full mt-1 bg-card border border-border/40 rounded-xl shadow-lg z-20 overflow-hidden">
                         {matches.map(t => (
-                          <button type="button" key={t} type="button" onMouseDown={() => { setJobTitle(t); setJobTitleFocus(false); }}
+                          <button type="button" key={t} onMouseDown={() => { setJobTitle(t); setJobTitleFocus(false); }}
                             className="w-full text-left px-3 py-2 text-xs hover:bg-muted/60 transition-colors first:rounded-t-xl last:rounded-b-xl">
                             {t}
                           </button>
@@ -2129,7 +2132,6 @@ const CreateCVPage = () => {
                       return (
                         <button type="button"
                           key={p.slug}
-                          type="button"
                           disabled={already}
                           onClick={() => setSkills(prev => {
                             const empty = prev.find(s => !s.name.trim());
@@ -2160,7 +2162,7 @@ const CreateCVPage = () => {
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0" title={sk.level}>
                         {SKILL_LEVELS.map((l, i) => (
-                          <button type="button" key={l} type="button" aria-label={l} title={l}
+                          <button type="button" key={l} aria-label={l} title={l}
                             onClick={() => updateSkill(sk.id, "level", l)}
                             className={cn("w-3.5 h-3.5 rounded-full border-2 transition-all touch-manipulation active:scale-90",
                               sk.level === l

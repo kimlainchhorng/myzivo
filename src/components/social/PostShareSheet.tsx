@@ -7,7 +7,7 @@
  * fallback Copy link.
  */
 import { useEffect, useState } from "react";
-import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { toast } from "sonner";
 import Send from "lucide-react/dist/esm/icons/send";
 import BookOpen from "lucide-react/dist/esm/icons/book-open";
@@ -76,13 +76,7 @@ export default function PostShareSheet() {
 
   useEffect(() => { setSheetTarget = _setTarget; return () => { setSheetTarget = null; }; }, []);
 
-  if (!target) {
-    return (
-      <Sheet open={false}>
-        <SheetContent />
-      </Sheet>
-    );
-  }
+  if (!target) return null;
 
   const { url, title = "ZIVO post", text = title, onSendToFriend, onShared } = target;
   const close = () => _setTarget(null);
@@ -175,6 +169,9 @@ export default function PostShareSheet() {
       <SheetContent side="bottom" className="rounded-t-2xl px-4 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
         <SheetHeader className="text-left">
           <SheetTitle className="text-[15px] font-semibold">Share this post</SheetTitle>
+          <SheetDescription className="sr-only">
+            Choose where to share this post or copy its link.
+          </SheetDescription>
         </SheetHeader>
 
         {/* Primary actions */}

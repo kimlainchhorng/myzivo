@@ -11,7 +11,6 @@ import OfflineBanner from "@/components/chat/OfflineBanner";
 import OutboxFlusher from "@/components/chat/OutboxFlusher";
 import FloatingReactionsOverlay from "@/components/chat/FloatingReactionsOverlay";
 import ReactedByHost from "@/components/chat/ReactedByHost";
-import ShareToChatSheet from "@/components/chat/ShareToChatSheet";
 const P2PTransferSheet = lazy(() => import("@/components/chat/P2PTransferSheet"));
 const PartnerSignupSheet = lazy(() => import("@/components/partner/PartnerSignupSheet"));
 const AffiliateRedirectPage = lazy(() => import("@/pages/AffiliateRedirectPage"));
@@ -38,9 +37,8 @@ import OTAUpdateBanner from "@/components/shared/OTAUpdateBanner";
 import NavigationProgressBar from "@/components/app/NavigationProgressBar";
 import ScrollRestoration from "@/components/app/ScrollRestoration";
 import GlobalDesktopNav from "@/components/app/GlobalDesktopNav";
-import PostShareSheet from "@/components/social/PostShareSheet";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate, useLocation, useSearchParams } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 import { RemoteConfigProvider } from "@/contexts/RemoteConfigContext";
@@ -50,7 +48,6 @@ import { CurrencyProvider } from "@/contexts/CurrencyContext";
 import { CustomerCityProvider } from "@/contexts/CustomerCityContext";
 import { BrandProvider } from "@/contexts/BrandContext";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import { PaymentReturnHandler } from "@/components/lodging/PaymentReturnHandler";
 import GuestOrUser from "@/components/auth/GuestOrUser";
 import PhoneRequiredGate from "@/components/auth/PhoneRequiredGate";
 import CambodiaOnlyGate from "@/components/auth/CambodiaOnlyGate";
@@ -64,13 +61,26 @@ const CookieConsent = lazyWithRetry(() => import("./components/common/CookieCons
 const PWAUpdatePrompt = lazyWithRetry(() => import("./components/shared/PWAUpdatePrompt").then(m => ({ default: m.PWAUpdatePrompt })));
 const PWAInstallBanner = lazyWithRetry(() => import("./components/shared/PWAInstallBanner").then(m => ({ default: m.PWAInstallBanner })));
 const InAppBrowserInterstitial = lazyWithRetry(() => import("./components/shared/InAppBrowserInterstitial"));
+const PaymentReturnHandler = lazyWithRetry(() => import("@/components/lodging/PaymentReturnHandler").then(m => ({ default: m.PaymentReturnHandler })));
 const IncomingCallListener = lazyWithRetry(() => import("@/components/chat/IncomingCallListener"));
 const ChatNotificationListener = lazyWithRetry(() => import("@/components/chat/ChatNotificationListener"));
 const RuntimeSecurityGuard = lazyWithRetry(() => import("@/components/security/RuntimeSecurityGuard"));
 const SpatialCursor = lazyWithRetry(() => import("./components/ui/SpatialCursor").then(m => ({ default: m.SpatialCursor })));
 const StoryDebugPanel = lazyWithRetry(() => import("@/components/stories/StoryDebugPanel"));
-const PostMenuRegressionPage = lazy(() => import("./pages/dev/PostMenuRegressionPage"));
-const SafeAreaQAPage = lazy(() => import("./pages/dev/SafeAreaQAPage"));
+const PostShareSheet = lazyWithRetry(() => import("@/components/social/PostShareSheet"));
+const ShareToChatSheet = lazyWithRetry(() => import("@/components/chat/ShareToChatSheet"));
+const ENABLE_DEV_ROUTES = import.meta.env.DEV;
+let PostMenuRegressionPage: ReturnType<typeof lazy> | null = null;
+let SafeAreaQAPage: ReturnType<typeof lazy> | null = null;
+let ChatCallPreviewPage: ReturnType<typeof lazy> | null = null;
+let SecurityTestPage: ReturnType<typeof lazy> | null = null;
+
+if (ENABLE_DEV_ROUTES) {
+  PostMenuRegressionPage = lazy(() => import("./pages/dev/PostMenuRegressionPage"));
+  SafeAreaQAPage = lazy(() => import("./pages/dev/SafeAreaQAPage"));
+  ChatCallPreviewPage = lazy(() => import("./pages/dev/ChatCallPreviewPage"));
+  SecurityTestPage = lazy(() => import("./pages/SecurityTestPage"));
+}
 
 import { SkipToContent } from "./components/shared/SkipToContent";
 const RoutePrefetcher = lazy(() => import("./components/shared/RoutePrefetcher"));
@@ -80,6 +90,9 @@ import { useBrand } from "@/hooks/useBrand";
 import { applyBrandTheme, resetBrandTheme } from "@/lib/brandTheme";
 import { lazyRetry } from "@/lib/lazyRetry";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { perfLog } from "@/lib/perfTrace";
+import { pathFromNativeOpenUrl } from "@/lib/nativeDeepLinks";
+import { SOCIAL_ROUTE_PATHS } from "@/lib/socialRoutes";
 
 // Auth pages — lazy loaded (not always the entry point)
 const Login = lazy(() => import("./pages/Login"));
@@ -188,6 +201,8 @@ const DeliveryPage = lazy(() => import("./pages/DeliveryPage"));
 const DeliveryTrackingPage = lazy(() => import("./pages/DeliveryTrackingPage"));
 const DeliveryChatPage = lazy(() => import("./pages/DeliveryChatPage"));
 const GroceryMarketplace = lazy(() => import("./pages/GroceryMarketplace"));
+// Historical names are inverted: ReelsFeedPage renders the main social feed,
+// while FeedPage renders the fullscreen reels experience on /reels.
 const FeedPage = lazy(() => import("./pages/FeedPage"));
 const ReelsFeedPage = lazy(() => import("./pages/ReelsFeedPage"));
 const SocialFeedPage = lazy(() => import("./pages/SocialFeedPage"));
@@ -584,7 +599,6 @@ const ScamPrevention = lazy(() => import("./pages/security/ScamPrevention"));
 const SecurityOperations = lazy(() => import("./pages/security/SecurityOperations"));
 const DisasterRecovery = lazy(() => import("./pages/security/DisasterRecovery"));
 const VulnerabilityDisclosure = lazy(() => import("./pages/security/VulnerabilityDisclosure"));
-const SecurityTestPage = lazy(() => import("./pages/SecurityTestPage"));
 const EnterpriseTrust = lazy(() => import("./pages/security/EnterpriseTrust"));
 
 // Business pages
@@ -735,10 +749,74 @@ function DeferredGeoDetector() {
   return ready ? <GeoDetector /> : null;
 }
 
+function RoutePerfTracker() {
+  const location = useLocation();
+  useEffect(() => {
+    const route = `${location.pathname}${location.search ?? ""}`;
+    const logRouteReady = () => perfLog("route visible", { route });
+    if (window.requestAnimationFrame) {
+      const frame = window.requestAnimationFrame(logRouteReady);
+      return () => window.cancelAnimationFrame(frame);
+    }
+    const timer = window.setTimeout(logRouteReady, 0);
+    return () => window.clearTimeout(timer);
+  }, [location.pathname, location.search]);
+  return null;
+}
+
+function NativeDeepLinkHandler() {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    let cancelled = false;
+    let listener: { remove: () => Promise<void> | void } | null = null;
+
+    const openUrl = (rawUrl?: string | null) => {
+      const path = pathFromNativeOpenUrl(rawUrl ?? "");
+      if (path) navigate(path);
+    };
+
+    void import("@capacitor/core")
+      .then(({ Capacitor }) => {
+        if (!Capacitor.isNativePlatform() || cancelled) return;
+
+        return import("@capacitor/app").then(({ App: CapacitorApp }) => {
+          void CapacitorApp.getLaunchUrl()
+            .then((launchUrl) => {
+              if (!cancelled) openUrl(launchUrl?.url);
+            })
+            .catch(() => {});
+
+          void Promise.resolve(
+            CapacitorApp.addListener("appUrlOpen", (event) => {
+              if (!cancelled) openUrl(event.url);
+            }),
+          )
+            .then((handle) => {
+              if (cancelled) {
+                void handle.remove();
+              } else {
+                listener = handle;
+              }
+            })
+            .catch(() => {});
+        });
+      })
+      .catch(() => {});
+
+    return () => {
+      cancelled = true;
+      if (listener) void listener.remove();
+    };
+  }, [navigate]);
+
+  return null;
+}
+
 function RouteAwareGlobalUI() {
   const location = useLocation();
   const { user } = useAuth();
-  const ready = useAfterFirstPaint(2600);
+  const ready = useAfterFirstPaint(4200);
   const blockedRoutes = ["/login", "/signup", "/setup", "/forgot-password", "/reset-password", "/verify-email", "/verify-otp", "/verify-new-device"];
   const hideGlobalUI = blockedRoutes.some((route) => location.pathname.startsWith(route));
 
@@ -766,14 +844,19 @@ const VerificationRealtimeBridge = () => {
   return null;
 };
 
-function OTAUpdateBootstrap() {
+function OTAUpdateBannerBridge() {
   const ota = useOTAUpdate();
   return <OTAUpdateBanner {...ota} />;
 }
 
+function OTAUpdateBootstrap() {
+  const ready = useAfterFirstPaint(5000);
+  return ready ? <OTAUpdateBannerBridge /> : null;
+}
+
 function AuthBackgroundServices() {
   const { user } = useAuth();
-  const ready = useAfterFirstPaint(2200);
+  const ready = useAfterFirstPaint(5000);
   if (!user || !ready) return null;
   return (
     <Suspense fallback={null}>
@@ -810,16 +893,18 @@ const App = () => (
 
                 <DeferredPageViewTracker />
                 <DeferredGeoDetector />
+                <RoutePerfTracker />
+                <NativeDeepLinkHandler />
                 <OTAUpdateBootstrap />
                 <NavigationProgressBar />
                 <ScrollRestoration />
-                <PostShareSheet />
+                <Suspense fallback={null}><PostShareSheet /></Suspense>
                 <Suspense fallback={null}><RoutePrefetcher /></Suspense>
-                <PaymentReturnHandler />
+                <Suspense fallback={null}><PaymentReturnHandler /></Suspense>
                 <AuthProvider>
                   <GlobalDesktopNav />
                   <AuthBackgroundServices />
-                  <ShareToChatSheet />
+                  <Suspense fallback={null}><ShareToChatSheet /></Suspense>
                   <Suspense fallback={null}>
                     <P2PTransferSheet />
                     <PartnerSignupSheet />
@@ -908,7 +993,7 @@ const App = () => (
                 <Route path="/rides/track/:tripId" element={<ProtectedRoute><PhoneRequiredGate><CambodiaOnlyGate><RideTrackingPage /></CambodiaOnlyGate></PhoneRequiredGate></ProtectedRoute>} />
                 <Route path="/trip-status/:id" element={<ProtectedRoute><PhoneRequiredGate><CambodiaOnlyGate><TripStatusPage /></CambodiaOnlyGate></PhoneRequiredGate></ProtectedRoute>} />
                 <Route path="/rides/hub" element={<ProtectedRoute><PhoneRequiredGate><CambodiaOnlyGate><RideHubPage /></CambodiaOnlyGate></PhoneRequiredGate></ProtectedRoute>} />
-                <Route path="/ride" element={<PreserveQueryRedirect to="/rides" />} />
+                <Route path="/ride" element={<PreserveQueryRedirect to="/rides/hub" />} />
                 <Route path="/eats" element={<ProtectedRoute><PhoneRequiredGate><EatsLanding /></PhoneRequiredGate></ProtectedRoute>} />
                 <Route path="/eats/restaurant/:id" element={<ProtectedRoute><EatsLanding /></ProtectedRoute>} />
                 <Route path="/eats/reserve" element={<ProtectedRoute><PhoneRequiredGate><ReservationPage /></PhoneRequiredGate></ProtectedRoute>} />
@@ -918,7 +1003,7 @@ const App = () => (
                 <Route path="/eats/restaurant-dashboard" element={<AdminShellRoute vertical="restaurant" nav={restaurantNav} title="Restaurant Dashboard | ZIVO Admin"><EatsRestaurantDashboard /></AdminShellRoute>} />
                 <Route path="/eats/driver-deliveries" element={<ProtectedRoute><EatsDriverDeliveryPage /></ProtectedRoute>} />
                 <Route path="/food" element={<PreserveQueryRedirect to="/eats" />} />
-                <Route path="/move" element={<PreserveQueryRedirect to="/rides" />} />
+                <Route path="/move" element={<PreserveQueryRedirect to="/rides/hub" />} />
                 <Route path="/search" element={<PreserveQueryRedirect to="/flights" />} />
                 <Route path="/my-trips-legacy" element={<PreserveQueryRedirect to="/trips" />} />
                 <Route path="/account" element={<PreserveQueryRedirect to="/profile" />} />
@@ -927,21 +1012,21 @@ const App = () => (
                 <Route path="/delivery/track/:id" element={<ProtectedRoute><DeliveryTrackingPage /></ProtectedRoute>} />
                 <Route path="/delivery/track/:id/chat" element={<ProtectedRoute><DeliveryChatPage /></ProtectedRoute>} />
                 <Route path="/grocery" element={<GroceryMarketplace />} />
-                <Route path="/feed" element={<ReelsFeedPage />} />
+                <Route path={SOCIAL_ROUTE_PATHS.feed} element={<ReelsFeedPage />} />
                 <Route path="/feed-new" element={<SocialFeedPage />} />
-                <Route path="/reels" element={<FeedPage />} />
+                <Route path={SOCIAL_ROUTE_PATHS.reels} element={<FeedPage />} />
                 <Route path="/live" element={<LiveStreamPage />} />
                 <Route path="/go-live" element={<GoLivePage />} />
                 <Route path="/pair/:token" element={<PairPage />} />
                 <Route path="/estimate/:token" element={<EstimateApprovalPage />} />
                 <Route path="/repair/:token" element={<RepairStatusPage />} />
-                <Route path="/reels/:postId" element={<FeedPage />} />
+                <Route path={SOCIAL_ROUTE_PATHS.reelDetail} element={<FeedPage />} />
                 <Route path="/sound/:soundName" element={<SoundPage />} />
                 <Route path="/dl/:kind/:id" element={<DeepLinkLandingPage />} />
                 <Route path="/stories/:storyId" element={<StoryDeepLinkPage />} />
                 <Route path="/shop/:storeId" element={<StoreProfilePage />} />
                 <Route path="/refer" element={<ProtectedRoute><ReferAFriendPage /></ProtectedRoute>} />
-                <Route path="/chat" element={<ChatHubPage />} />
+                <Route path={SOCIAL_ROUTE_PATHS.chat} element={<ProtectedRoute><ChatHubPage /></ProtectedRoute>} />
                 <Route path="/chat/saved" element={<ProtectedRoute><ChatHubPage /></ProtectedRoute>} />
                 <Route path="/chat/contacts" element={<ProtectedRoute><ContactsPage /></ProtectedRoute>} />
                 <Route path="/chat/contacts/requests" element={<ProtectedRoute><ContactRequestsPage /></ProtectedRoute>} />
@@ -1207,7 +1292,7 @@ const App = () => (
                 <Route path="/verify-new-device" element={<VerifyNewDevice />} />
                 <Route path="/setup" element={<Setup />} />
                 
-                <Route path="/profile" element={<GuestOrUser guestPreview={<GuestProfilePreview />}><Profile /></GuestOrUser>} />
+                <Route path={SOCIAL_ROUTE_PATHS.profile} element={<GuestOrUser guestPreview={<GuestProfilePreview />}><Profile /></GuestOrUser>} />
                 <Route path="/more" element={<ProtectedRoute><MorePage /></ProtectedRoute>} />
                 <Route path="/profile/delete-account" element={<ProtectedRoute><DeleteAccountPage /></ProtectedRoute>} />
                 <Route path="/user/:userId" element={<PublicProfilePage />} />
@@ -1411,7 +1496,9 @@ const App = () => (
                 <Route path="/security/operations" element={<SecurityOperations />} />
                 <Route path="/security/disaster-recovery" element={<DisasterRecovery />} />
                 <Route path="/security/vulnerability-disclosure" element={<VulnerabilityDisclosure />} />
-                <Route path="/security-test" element={<SecurityTestPage />} />
+                {ENABLE_DEV_ROUTES && SecurityTestPage && (
+                  <Route path="/security-test" element={<SecurityTestPage />} />
+                )}
 
                 {/* Business */}
                 <Route path="/partner-with-zivo" element={<PartnerOnboardingDispatcher />} />
@@ -1463,9 +1550,14 @@ const App = () => (
                 <Route path="/:countrySlug" element={<CountryHubPage />} />
                 <Route path="/:countrySlug/flights/:routeSlug" element={<LocalizedFlightRoutePage />} />
 
-                {/* Dev-only QA — page itself 404s in production */}
-                <Route path="/dev/post-menu-check" element={<PostMenuRegressionPage />} />
-                <Route path="/dev/qa/safe-area" element={<SafeAreaQAPage />} />
+                {/* Dev-only QA. Do not expose demo/test routes in production. */}
+                {ENABLE_DEV_ROUTES && PostMenuRegressionPage && SafeAreaQAPage && ChatCallPreviewPage && (
+                  <>
+                    <Route path="/dev/post-menu-check" element={<PostMenuRegressionPage />} />
+                    <Route path="/dev/qa/safe-area" element={<SafeAreaQAPage />} />
+                    <Route path="/dev/chat-call-preview" element={<ChatCallPreviewPage />} />
+                  </>
+                )}
 
                 {/* Catch-all */}
                 <Route path="*" element={<NotFound />} />

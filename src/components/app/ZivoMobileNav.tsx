@@ -21,6 +21,7 @@ import { useChatPrefs } from "@/hooks/useChatPrefs";
 import { supabase } from "@/integrations/supabase/client";
 import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import { useRoutePrefetch } from "@/components/shared/RoutePrefetcher";
+import { SOCIAL_ROUTE_PATHS } from "@/lib/socialRoutes";
 
 interface NavTab {
   id: string;
@@ -76,21 +77,21 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
 
   const tabs: NavTab[] = [
     { id: "home", labelKey: "nav.home", icon: Home, path: "/", badge: liveActivity.total, fillable: true },
-    { id: "feed", labelKey: "nav.feed", icon: Newspaper, path: gated("/feed") },
-    { id: "reels", labelKey: "nav.reel", icon: Film, path: gated("/reels") },
-    { id: "chat", labelKey: "nav.chat", icon: MessageCircle, path: gated("/chat"), badge: chatUnread, fillable: true },
-    { id: "account", labelKey: "nav.account", icon: User, path: gated("/profile"), badge: notificationUnread },
+    { id: "feed", labelKey: "nav.feed", icon: Newspaper, path: SOCIAL_ROUTE_PATHS.feed },
+    { id: "reels", labelKey: "nav.reel", icon: Film, path: SOCIAL_ROUTE_PATHS.reels },
+    { id: "chat", labelKey: "nav.chat", icon: MessageCircle, path: gated(SOCIAL_ROUTE_PATHS.chat), badge: chatUnread, fillable: true },
+    { id: "account", labelKey: "nav.account", icon: User, path: gated(SOCIAL_ROUTE_PATHS.profile), badge: notificationUnread },
   ];
 
   const getActiveTab = () => {
     const path = location.pathname;
     if (path === "/" || path === "") return "home";
-    if (path.startsWith("/reels")) return "reels";
-    if (path.startsWith("/feed")) return "feed";
-    if (path.startsWith("/chat")) return "chat";
+    if (path.startsWith(SOCIAL_ROUTE_PATHS.reels)) return "reels";
+    if (path.startsWith(SOCIAL_ROUTE_PATHS.feed)) return "feed";
+    if (path.startsWith(SOCIAL_ROUTE_PATHS.chat)) return "chat";
     if (
       path.startsWith("/account") ||
-      path.startsWith("/profile") ||
+      path.startsWith(SOCIAL_ROUTE_PATHS.profile) ||
       path.startsWith("/user/") ||
       path.startsWith("/more") ||
       path.startsWith("/personal-dashboard") ||

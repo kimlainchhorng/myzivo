@@ -1288,7 +1288,6 @@ function ProfileCard({
                     {availablePlatforms.map((platform) => (
                       <button type="button"
                         key={platform.key}
-                        type="button"
                         onClick={() => {
                           onSocialLinkChange(index, platform.key, "");
                           setShowLinkForm(false);
@@ -1636,7 +1635,6 @@ function ProfileCard({
                      {newPostPreviews.map((preview, previewIndex) => (
                        <button type="button"
                          key={`${preview}-${previewIndex}`}
-                         type="button"
                          onClick={() => setActivePreviewIndex(previewIndex)}
                          className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-lg border-2 transition-all ${previewIndex === activePreviewIndex ? "border-primary ring-1 ring-primary/30" : "border-border/30 opacity-70 hover:opacity-100"}`}
                        >
@@ -1791,7 +1789,6 @@ function ProfileCard({
                   return (
                    <button type="button"
                      key={post.id}
-                     type="button"
                      onClick={() => setSelectedPost(post)}
                      className={`relative overflow-hidden bg-muted/60 text-left cursor-pointer border-0 p-0 group ${isVideo ? "aspect-[9/14]" : "aspect-square"}`}
                      aria-label={`Open post preview for ${acc.username}`}

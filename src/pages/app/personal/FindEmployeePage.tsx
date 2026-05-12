@@ -139,7 +139,7 @@ export default function FindEmployeePage() {
         {/* Filter chips */}
         <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
           {(["all", "remote", "full_time", "part_time", "contract"] as const).map(f => (
-            <button type="button" key={f} type="button" onClick={() => setFilterType(f)}
+            <button type="button" key={f} onClick={() => setFilterType(f)}
               className={cn("shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition-colors",
                 filterType === f ? "bg-foreground text-background" : "bg-muted text-muted-foreground hover:bg-muted/80")}>
               {f === "all" ? "All" : f === "remote" ? "Remote" : f === "full_time" ? "Full-time" : f === "part_time" ? "Part-time" : "Contract"}

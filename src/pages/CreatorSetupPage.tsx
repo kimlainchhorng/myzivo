@@ -377,7 +377,6 @@ function CategoryPicker({ value, onChange }: { value: string; onChange: (v: stri
               return (
                 <button type="button"
                   key={c}
-                  type="button"
                   onClick={() => { onChange(c); setOpen(false); }}
                   className={`text-[11px] font-bold px-2.5 py-1.5 rounded-full border transition ${
                     active

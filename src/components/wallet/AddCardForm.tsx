@@ -65,10 +65,11 @@ function CardForm({ onClose }: { onClose: () => void }) {
       if (setupIntent?.status === "succeeded") {
         toast.success("Card added successfully!");
         queryClient.invalidateQueries({ queryKey: ["stripe-payment-methods"] });
+        queryClient.invalidateQueries({ queryKey: ["zivo-payment-methods"] });
         onClose();
       }
-    } catch (err: any) {
-      toast.error(err.message || "Failed to add card");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error ? err.message : "Failed to add card");
     } finally {
       setLoading(false);
     }

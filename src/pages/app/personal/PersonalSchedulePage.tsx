@@ -524,7 +524,7 @@ export default function PersonalSchedulePage() {
               {/* Request type toggle */}
               <div className="flex gap-2">
                 {(["time_off", "swap"] as const).map((t) => (
-                  <button type="button" key={t} type="button" onClick={() => setReqType(t)}
+                  <button type="button" key={t} onClick={() => setReqType(t)}
                     className={`flex-1 py-2 rounded-xl text-xs font-bold transition-all ${
                       reqType === t ? "bg-primary text-primary-foreground" : "bg-muted/40 text-muted-foreground"
                     }`}>

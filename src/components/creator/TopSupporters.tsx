@@ -100,7 +100,6 @@ export default function TopSupporters({ creatorId }: Props) {
           return (
             <button type="button"
               key={s.user_id}
-              type="button"
               onClick={() => navigate(`/user/${s.user_id}`)}
               className="flex flex-col items-center gap-1 shrink-0 w-16 active:scale-95 transition-transform"
             >

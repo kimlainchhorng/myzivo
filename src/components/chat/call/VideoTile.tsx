@@ -81,9 +81,23 @@ export default function VideoTile({ participant, emphasized = false, isRecording
           className="h-full w-full object-cover"
         />
       ) : (
-        <div className="grid h-20 w-20 place-items-center rounded-full bg-zinc-700 text-2xl font-semibold text-white">
-          {initials}
-        </div>
+        <>
+          {participant.avatarUrl && (
+            <img
+              src={participant.avatarUrl}
+              alt=""
+              aria-hidden="true"
+              className="absolute inset-0 h-full w-full scale-110 object-cover opacity-25 blur-2xl"
+            />
+          )}
+          <div className="relative grid h-20 w-20 place-items-center overflow-hidden rounded-full bg-zinc-700 text-2xl font-semibold text-white ring-1 ring-white/10">
+            {participant.avatarUrl ? (
+              <img src={participant.avatarUrl} alt="" className="h-full w-full object-cover" />
+            ) : (
+              initials
+            )}
+          </div>
+        </>
       )}
 
       {/* Top-left: REC privacy indicator */}

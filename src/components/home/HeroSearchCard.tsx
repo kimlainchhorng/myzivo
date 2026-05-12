@@ -41,7 +41,7 @@ export default function HeroSearchCard() {
 
   const handleSearch = () => {
     if (activeTab === "flights") { navigate("/flights"); return; }
-    const routes: Record<string, string> = { hotels: "/hotels", cars: "/rent-car", rides: "/rides", eats: "/eats" };
+    const routes: Record<string, string> = { hotels: "/hotels", cars: "/rent-car", rides: "/rides/hub", eats: "/eats" };
     toast.success(`Searching ${activeTab}...`, { duration: 1500 });
     navigate(routes[activeTab] || "/");
   };

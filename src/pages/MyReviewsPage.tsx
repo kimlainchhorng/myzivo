@@ -162,7 +162,6 @@ export default function MyReviewsPage() {
             {serviceTypes.map(type => (
               <button type="button"
                 key={type}
-                type="button"
                 onClick={() => setFilterType(type)}
                 className={cn(
                   "px-3 py-1.5 rounded-full border text-[12px] font-semibold whitespace-nowrap transition-all",
@@ -266,7 +265,6 @@ export default function MyReviewsPage() {
                       {Array.from({ length: 5 }).map((_, i) => (
                         <button type="button"
                           key={i}
-                          type="button"
                           aria-label={`Rate ${i + 1} star${i !== 0 ? "s" : ""}`}
                           onClick={() => setEditRating(i + 1)}
                           className="touch-manipulation active:scale-90 transition-transform"

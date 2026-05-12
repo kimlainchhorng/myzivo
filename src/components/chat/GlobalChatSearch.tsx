@@ -13,7 +13,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import SearchIcon from "lucide-react/dist/esm/icons/search";
 import X from "lucide-react/dist/esm/icons/x";
 import MessageCircle from "lucide-react/dist/esm/icons/message-circle";
@@ -169,6 +169,12 @@ export default function GlobalChatSearch({ open, onClose }: Props) {
   return (
     <Sheet open={open} onOpenChange={(o) => { if (!o) onClose(); }}>
       <SheetContent side="bottom" className="h-[88vh] rounded-t-3xl p-0 flex flex-col">
+        <SheetHeader className="sr-only">
+          <SheetTitle>Search chats</SheetTitle>
+          <SheetDescription>
+            Search across chats, contacts, channels, and messages.
+          </SheetDescription>
+        </SheetHeader>
         <div className="flex items-center gap-2 px-3 pt-3 pb-2 border-b border-border/40">
           <SearchIcon className="w-4 h-4 text-muted-foreground" />
           <input

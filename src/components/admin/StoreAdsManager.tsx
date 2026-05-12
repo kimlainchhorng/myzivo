@@ -506,7 +506,6 @@ export default function StoreAdsManager({ storeId }: Props) {
                 return (
                   <button type="button"
                     key={f.id}
-                    type="button"
                     onClick={() => setFilter(f.id)}
                     aria-pressed={active}
                     className={cn(

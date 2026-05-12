@@ -270,7 +270,6 @@ export default function LocationAutocomplete({
             {suggestions.map((option, index) => (
               <button type="button"
                 key={`${option.value}-${index}`}
-                type="button"
                 onClick={() => handleSelect(option)}
                 className={cn(
                   "w-full px-3 py-2.5 sm:py-3 flex items-center gap-3 text-left transition-colors border-b border-border/30 last:border-0",

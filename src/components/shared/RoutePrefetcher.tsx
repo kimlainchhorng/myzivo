@@ -1,23 +1,39 @@
 import { useEffect, useCallback } from "react";
 import { useLocation } from "react-router-dom";
+import { SOCIAL_ROUTE_PATHS } from "@/lib/socialRoutes";
 
 /**
  * Maps routes to their lazy-loaded chunk files.
  * Prefetch happens only on user intent (hover/focus) — no eager
  * homepage auto-prefetch that competes with hero LCP bandwidth.
  */
+export const PREFETCH_ROUTE_MODULES = {
+  "/flights": "@/pages/FlightLanding",
+  "/hotels": "@/pages/HotelLanding",
+  "/cars": "@/pages/CarRentalLanding",
+  "/rides": "@/pages/app/RideHubPage",
+  "/eats": "@/pages/EatsLanding",
+  [SOCIAL_ROUTE_PATHS.feed]: "@/pages/ReelsFeedPage",
+  [SOCIAL_ROUTE_PATHS.reels]: "@/pages/FeedPage",
+  [SOCIAL_ROUTE_PATHS.chat]: "@/pages/ChatHubPage",
+  [SOCIAL_ROUTE_PATHS.profile]: "@/pages/Profile",
+  "/rent-car": "@/pages/CarRentalBooking",
+  "/grocery": "@/pages/GroceryMarketplace",
+  "/delivery": "@/pages/DeliveryPage",
+} as const;
+
 const PREFETCH_ROUTES: Record<string, () => Promise<unknown>> = {
   "/flights": () => import("@/pages/FlightLanding"),
   "/hotels": () => import("@/pages/HotelLanding"),
   "/cars": () => import("@/pages/CarRentalLanding"),
   "/rides": () => import("@/pages/app/RideHubPage"),
   "/eats": () => import("@/pages/EatsLanding"),
-  "/feed": () => import("@/pages/FeedPage"),
+  [SOCIAL_ROUTE_PATHS.feed]: () => import("@/pages/ReelsFeedPage"),
   // Bottom-nav targets — prefetched on touch-down so the chunk is in-memory
   // by the time the user's finger lifts and the click fires.
-  "/reels": () => import("@/pages/ReelsFeedPage"),
-  "/chat": () => import("@/pages/ChatHubPage"),
-  "/profile": () => import("@/pages/Profile"),
+  [SOCIAL_ROUTE_PATHS.reels]: () => import("@/pages/FeedPage"),
+  [SOCIAL_ROUTE_PATHS.chat]: () => import("@/pages/ChatHubPage"),
+  [SOCIAL_ROUTE_PATHS.profile]: () => import("@/pages/Profile"),
   // Home "More Services" tiles — same touch-down prefetch pattern.
   "/rent-car": () => import("@/pages/CarRentalBooking"),
   "/grocery": () => import("@/pages/GroceryMarketplace"),
@@ -51,7 +67,7 @@ export function useRoutePrefetch() {
   useEffect(() => {
     if (location.pathname !== "/") return;
     const schedule = window.requestIdleCallback || ((cb: () => void) => setTimeout(cb, 200));
-    const handle = schedule(() => prefetchRoute("/feed"));
+    const handle = schedule(() => prefetchRoute(SOCIAL_ROUTE_PATHS.feed));
     return () => {
       if (typeof handle === "number" && window.cancelIdleCallback) {
         window.cancelIdleCallback(handle);

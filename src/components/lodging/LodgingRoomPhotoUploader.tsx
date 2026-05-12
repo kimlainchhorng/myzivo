@@ -149,7 +149,6 @@ export function LodgingRoomPhotoUploader({
               return (
                 <button type="button"
                   key={url + i}
-                  type="button"
                   onClick={() => { setCover(i); setCoverPickerOpen(false); }}
                   className={`relative aspect-square rounded-md overflow-hidden border-2 transition ${
                     isCover ? "border-primary ring-2 ring-primary/30" : "border-border hover:border-primary/50"

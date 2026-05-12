@@ -1,8 +1,7 @@
 /* Fonts loaded via <link> in index.html to avoid render-blocking @import */
 
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+@config "../tailwind.config.ts";
 
 @layer base {
   :root {
@@ -320,7 +319,19 @@
   }
 
   .zivo-profile-cover-height {
-    height: calc(10rem + var(--zivo-safe-top, 0px));
+    height: 9.25rem;
+  }
+
+  @media (min-width: 640px) {
+    .zivo-profile-cover-height {
+      height: 10rem;
+    }
+  }
+
+  @media (min-width: 1024px) {
+    .zivo-profile-cover-height {
+      height: calc(10rem + var(--zivo-safe-top, 0px));
+    }
   }
 
   .zivo-profile-cover-scrim {

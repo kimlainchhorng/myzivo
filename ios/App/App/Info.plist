@@ -7,7 +7,7 @@
 	<key>CFBundleDevelopmentRegion</key>
 	<string>en</string>
 	<key>CFBundleDisplayName</key>
-	<string>myzivo</string>
+	<string>ZIVO</string>
 	<key>CFBundleExecutable</key>
 	<string>$(EXECUTABLE_NAME)</string>
 	<key>CFBundleIdentifier</key>
@@ -28,11 +28,11 @@
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>CFBundleURLName</key>
-			<string>com.hizovo.app</string>
+			<string>com.myzivo.app</string>
 			<key>CFBundleURLSchemes</key>
 			<array>
-				<string>com.hizovo.app</string>
 				<string>com.myzivo.app</string>
+				<string>com.hizovo.app</string>
 			</array>
 		</dict>
 	</array>

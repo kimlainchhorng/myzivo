@@ -32,6 +32,8 @@ const HotelsMapView = lazy(() => import("@/components/lodging/HotelsMapView"));
 const HotelConciergeSheet = lazy(() => import("@/components/lodging/HotelConciergeSheet"));
 const GOOGLE_MAPS_KEY: string =
   (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_GOOGLE_MAPS_API_KEY || "";
+const ENABLE_PUBLIC_LODGING_REVIEWS =
+  (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_ENABLE_PUBLIC_LODGING_REVIEWS === "true";
 import { supabase } from "@/integrations/supabase/client";
 import { LODGING_STORE_CATEGORIES, normalizeStoreCategory } from "@/hooks/useOwnerStoreProfile";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -335,7 +337,7 @@ export default function HotelsLandingPage() {
     queryFn: async (): Promise<Record<string, PropertyProfile>> => {
       const { data, error } = await (supabase as any)
         .from("lodge_property_profile")
-        .select("store_id, popular_amenities, facilities, avg_guest_rating")
+        .select("store_id, popular_amenities, facilities")
         .in("store_id", storeIds);
       if (error) throw error;
       const map: Record<string, PropertyProfile> = {};
@@ -343,14 +345,13 @@ export default function HotelsLandingPage() {
         store_id: string;
         popular_amenities: string[] | null;
         facilities: string[] | null;
-        avg_guest_rating?: number | null;
       }>) {
         const list = [...(r.popular_amenities || []), ...(r.facilities || [])]
           .filter(Boolean)
           .map((s) => String(s).toLowerCase());
         map[r.store_id] = {
           amenities: Array.from(new Set(list)),
-          rating: typeof r.avg_guest_rating === "number" ? r.avg_guest_rating : null,
+          rating: null,
         };
       }
       return map;
@@ -360,7 +361,7 @@ export default function HotelsLandingPage() {
   // Review counts + true avg per store (lodging_reviews)
   const reviewStatsQuery = useQuery({
     queryKey: ["lodge-review-stats", storeIds],
-    enabled: storeIds.length > 0,
+    enabled: ENABLE_PUBLIC_LODGING_REVIEWS && storeIds.length > 0,
     staleTime: 60_000,
     gcTime: 300_000,
     queryFn: async (): Promise<Record<string, { avg: number; count: number }>> => {

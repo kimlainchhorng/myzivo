@@ -69,8 +69,8 @@ const serviceNavItems = [
 
 const directNavItems = [
   { label: "Feed", href: "/feed", icon: Newspaper, cssVar: "var(--flights)" },
-  { label: "Reel", href: "/reels", icon: Film, cssVar: "var(--eats)" },
-  { label: "Chat", href: "__chat__", icon: MessageCircle, cssVar: "var(--rides)" },
+  { label: "Reels", href: "/reels", icon: Film, cssVar: "var(--eats)" },
+  { label: "Chat", href: "/chat", icon: MessageCircle, cssVar: "var(--rides)" },
 ];
 
 const communityNavItems = [
@@ -217,10 +217,9 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                 aria-label="Navigation"
               >
 
-                {/* Direct nav pills: Feed, Reel */}
+                {/* Direct nav pills: Feed, Reels */}
                 {directNavItems.map((item) => {
-                  const isChat = item.href === "__chat__";
-                  const isActive = !isChat && location.pathname.startsWith(item.href);
+                  const isActive = location.pathname.startsWith(item.href);
                   return (
                     <motion.div
                       key={item.href}
@@ -228,38 +227,28 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                       whileTap={{ scale: 0.95 }}
                       transition={{ type: "spring", stiffness: 400, damping: 22 }}
                     >
-                      {isChat ? (
-                        <button type="button"
-                          onClick={() => window.dispatchEvent(new CustomEvent("zivo-toggle-chat"))}
-                          className="flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold tracking-wide transition-all duration-300 whitespace-nowrap text-foreground/70 hover:text-foreground border border-border/40 hover:border-border/70 hover:bg-muted/40"
-                        >
-                          <item.icon className="w-4 h-4" style={{ color: `hsl(${item.cssVar})` }} />
-                          {item.label}
-                        </button>
-                      ) : (
-                        <Link
-                          to={item.href}
-                          className={cn(
-                            "flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold tracking-wide transition-all duration-300 whitespace-nowrap border",
-                            isActive
-                              ? ""
-                              : "text-foreground/70 hover:text-foreground border-border/40 hover:border-border/70 hover:bg-muted/40"
-                          )}
-                          style={
-                            isActive
-                              ? {
-                                  background: `linear-gradient(135deg, hsl(${item.cssVar} / 0.18), hsl(${item.cssVar} / 0.08))`,
-                                  borderColor: `hsl(${item.cssVar} / 0.35)`,
-                                  boxShadow: `0 2px 12px -3px hsl(${item.cssVar} / 0.3)`,
-                                  color: `hsl(${item.cssVar})`,
-                                }
-                              : undefined
-                          }
-                        >
-                          <item.icon className="w-4 h-4" style={isActive ? undefined : { color: `hsl(${item.cssVar})` }} />
-                          {item.label}
-                        </Link>
-                      )}
+                      <Link
+                        to={item.href}
+                        className={cn(
+                          "flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold tracking-wide transition-all duration-300 whitespace-nowrap border",
+                          isActive
+                            ? ""
+                            : "text-foreground/70 hover:text-foreground border-border/40 hover:border-border/70 hover:bg-muted/40"
+                        )}
+                        style={
+                          isActive
+                            ? {
+                                background: `linear-gradient(135deg, hsl(${item.cssVar} / 0.18), hsl(${item.cssVar} / 0.08))`,
+                                borderColor: `hsl(${item.cssVar} / 0.35)`,
+                                boxShadow: `0 2px 12px -3px hsl(${item.cssVar} / 0.3)`,
+                                color: `hsl(${item.cssVar})`,
+                              }
+                            : undefined
+                        }
+                      >
+                        <item.icon className="w-4 h-4" style={isActive ? undefined : { color: `hsl(${item.cssVar})` }} />
+                        {item.label}
+                      </Link>
                     </motion.div>
                   );
                 })}

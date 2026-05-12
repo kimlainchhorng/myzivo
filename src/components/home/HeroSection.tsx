@@ -37,7 +37,7 @@ const floatingServices = [
   { icon: Plane, label: "Flights", image: svcFlights, href: "/flights", cssVar: "var(--flights)", cta: "Search Flights" },
   { icon: Hotel, label: "Hotels", image: svcHotels, href: "/hotels", cssVar: "var(--hotels)", cta: "Find Hotels" },
   { icon: CarFront, label: "Rental", image: svcCars, href: "/rent-car", cssVar: "var(--cars)", cta: "Rent a Car" },
-  { icon: Car, label: "Rides", image: svcRides, href: "/rides", cssVar: "var(--rides)", cta: "Book Ride" },
+  { icon: Car, label: "Rides", image: svcRides, href: "/rides/hub", cssVar: "var(--rides)", cta: "Book Ride" },
   { icon: UtensilsCrossed, label: "Food", image: svcEats, href: "/eats", cssVar: "var(--eats)", cta: "Order Food" },
 ];
 

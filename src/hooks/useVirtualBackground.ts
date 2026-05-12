@@ -3,7 +3,7 @@
  * Hard binary mask, raw face pixels, no beauty filter, no halo.
  */
 import { useEffect, useRef, useState } from "react";
-import { FilesetResolver, ImageSegmenter } from "@mediapipe/tasks-vision";
+import type { ImageSegmenter } from "@mediapipe/tasks-vision";
 
 export type VirtualBgKind = "off" | "blur" | "image";
 export interface VirtualBgConfig {
@@ -91,6 +91,7 @@ export function useVirtualBackground(
 
         // Init segmenter with timeout
         const initPromise = (async () => {
+          const { FilesetResolver, ImageSegmenter } = await import("@mediapipe/tasks-vision");
           const fileset = await FilesetResolver.forVisionTasks("/mediapipe");
           try {
             segmenter = await ImageSegmenter.createFromOptions(fileset, {

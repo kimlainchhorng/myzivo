@@ -59,12 +59,12 @@ const getServiceCategories = (t: (key: string) => string, isCambodia = false): S
     title: t("services.category.ride"),
     subtitle: t("services.category.ride_sub"),
     services: [
-      { label: t("services.ride"), href: "/rides", image: zivoRideIcon, badge: t("services.badge.off_10"), badgeVariant: "discount", animClass: "animate-car-run" },
+      { label: t("services.ride"), href: "/rides/hub", image: zivoRideIcon, badge: t("services.badge.off_10"), badgeVariant: "discount", animClass: "animate-car-run" },
       { label: t("services.package"), href: "/delivery", image: zivoPackageIcon, badge: "Live", badgeVariant: "new", animClass: "animate-pkg-bounce" },
       { label: t("services.travel"), href: "/flights", image: zivoFlightsIcon, badge: "Hot", badgeVariant: "promo", animClass: "animate-plane-fly" },
-      { label: t("services.reserve"), href: "/rides?tab=reserve", image: zivoReserveIcon, badge: t("services.badge.promo"), badgeVariant: "promo", animClass: "animate-car-run" },
+      { label: t("services.reserve"), href: "/rides/hub?tab=reserve", image: zivoReserveIcon, badge: t("services.badge.promo"), badgeVariant: "promo", animClass: "animate-car-run" },
       { label: t("services.rental_cars"), href: "/rent-car", image: zivoRentalCarIcon, badge: "Book", badgeVariant: "promo", animClass: "animate-car-run" },
-      { label: t("services.group_ride"), href: "/rides", image: zivoGroupRideIcon, animClass: "animate-car-run" },
+      { label: t("services.group_ride"), href: "/rides/hub", image: zivoGroupRideIcon, animClass: "animate-car-run" },
     ],
   },
   {
@@ -314,12 +314,12 @@ export default function ServicesPage() {
           <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider mb-3">Popular</p>
           <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-none -mx-1 px-1">
             {[
-              { label: t("services.ride"), href: "/rides", image: zivoRideIcon, color: "from-blue-500 to-blue-600" },
+              { label: t("services.ride"), href: "/rides/hub", image: zivoRideIcon, color: "from-blue-500 to-blue-600" },
               { label: t("services.food"), href: "/eats", image: zivoEatsIcon, color: "from-orange-500 to-amber-500" },
               { label: t("services.flights"), href: "/flights", image: zivoFlightsIcon, color: "from-sky-500 to-cyan-500" },
               { label: t("services.hotels"), href: "/hotels", image: zivoHotelsIcon, color: "from-purple-500 to-violet-600" },
               { label: t("services.grocery"), href: "/grocery", image: zivoShoppingIcon, color: "from-emerald-500 to-green-600" },
-              { label: t("services.reserve"), href: "/rides?tab=reserve", image: zivoReserveIcon, color: "from-rose-500 to-pink-600" },
+              { label: t("services.reserve"), href: "/rides/hub?tab=reserve", image: zivoReserveIcon, color: "from-rose-500 to-pink-600" },
             ].map((s) => (
               <motion.button
                 key={s.label}

@@ -123,7 +123,6 @@ export default function EatsRequestPayoutSheet({ restaurantId, restaurantCountry
                   return (
                     <button type="button"
                       key={m.id}
-                      type="button"
                       onClick={() => setMethodId(m.id)}
                       className={`w-full text-left rounded-lg border p-2.5 text-xs transition-colors ${sel ? "border-primary bg-primary/5" : "border-border hover:bg-muted/50"}`}
                     >

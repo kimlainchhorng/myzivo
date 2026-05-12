@@ -780,7 +780,7 @@ export default function RequestRidePage() {
         ? `${vehicle.name} · ${vehicle.eta}`
         : `${activeCategory.charAt(0).toUpperCase() + activeCategory.slice(1)} ride`,
       meta: vehicle ? vehicle.price : undefined,
-      deepLink: "/rides",
+      deepLink: "/rides/hub",
       image: null,
     });
   };
@@ -914,7 +914,7 @@ export default function RequestRidePage() {
                     <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground mb-2">Quick Book</p>
                     <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-1 px-1">
                       {recentRides.slice(0, 2).map(ride => (
-                        <button type="button" key={ride.id} type="button"
+                        <button type="button" key={ride.id}
                           onClick={() => { setPickupAddress(ride.from); setDropoffAddress(ride.to); setStep("pricing"); }}
                           className="shrink-0 flex-1 min-w-[140px] rounded-2xl border border-primary/30 bg-primary/5 p-3 text-left touch-manipulation active:scale-[0.97] transition-all">
                           <div className="flex items-center gap-1.5 mb-1.5">
@@ -2181,7 +2181,7 @@ export default function RequestRidePage() {
                       <p className="text-xs font-bold text-foreground">{d.name}</p>
                       <p className="text-[10px] text-muted-foreground">{d.vehicle} · ★ {d.rating} · {d.rides} rides</p>
                     </div>
-                    <button type="button" onClick={() => navigate("/rides", { state: { preferredDriverId: d.name, preferredDriverName: d.name } })} className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-full">Request</button>
+                    <button type="button" onClick={() => navigate("/rides/hub", { state: { preferredDriverId: d.name, preferredDriverName: d.name } })} className="text-[10px] font-bold text-primary bg-primary/10 px-2 py-1 rounded-full">Request</button>
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {d.preferences.map(p => <span key={p} className="px-2 py-0.5 rounded-full bg-muted/50 text-[8px] text-muted-foreground">{p}</span>)}

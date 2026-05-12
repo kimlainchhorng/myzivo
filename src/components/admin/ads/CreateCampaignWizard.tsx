@@ -236,7 +236,6 @@ export default function CreateCampaignWizard({
               return (
                 <button type="button"
                   key={o.id}
-                  type="button"
                   onClick={() => setForm({ ...form, objective: o.id })}
                   aria-pressed={selected}
                   className={cn(
@@ -271,7 +270,6 @@ export default function CreateCampaignWizard({
                 return (
                   <button type="button"
                     key={p.id}
-                    type="button"
                     onClick={() => connected ? togglePlatform(p.id) : onConnectPlatform?.(p.id)}
                     aria-pressed={selected}
                     title={connected ? p.label : `Connect ${p.label}`}
@@ -304,7 +302,6 @@ export default function CreateCampaignWizard({
                 return (
                   <button type="button"
                     key={a.id}
-                    type="button"
                     onClick={() => setAudience(a.id)}
                     aria-pressed={selected}
                     className={cn(

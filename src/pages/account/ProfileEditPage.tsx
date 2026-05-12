@@ -327,6 +327,11 @@ export default function ProfileEditPage() {
     return "U";
   };
 
+  const profileInputClass =
+    "h-12 rounded-2xl border-border/40 bg-background text-[15px] font-semibold text-foreground placeholder:text-muted-foreground/55";
+  const profileLabelClass =
+    "flex items-center gap-1.5 text-[12px] font-semibold text-foreground";
+
   return (
     <div className="min-h-screen bg-background">
       {/* Desktop: full NavBar */}
@@ -335,8 +340,8 @@ export default function ProfileEditPage() {
       </div>
 
       {/* Mobile: simple back header */}
-      <div className="lg:hidden sticky top-0 safe-area-top z-40 bg-background/80 backdrop-blur-md border-b border-border/50">
-        <div className="flex items-center gap-3 px-4 py-3 max-w-5xl mx-auto">
+      <div className="lg:hidden sticky top-0 pt-safe z-40 bg-background/95 text-foreground backdrop-blur-md border-b border-border/50">
+        <div className="flex h-12 items-center gap-3 px-4 max-w-5xl mx-auto">
           <Button variant="ghost" size="icon" aria-label="Back" className="h-10 w-10 rounded-full" onClick={() => navigate(-1)}>
             <ArrowLeft className="h-5 w-5" />
           </Button>
@@ -349,7 +354,7 @@ export default function ProfileEditPage() {
           <Loader2 className="h-8 w-8 text-primary animate-spin" />
         </div>
       ) : (
-        <div className="max-w-5xl mx-auto px-4 py-6 lg:pt-24 flex gap-8">
+        <div className="max-w-5xl mx-auto px-4 py-4 lg:pt-24 flex gap-8">
           {/* Sidebar — desktop only */}
           <DesktopSidebar activeSection={activeSection} onSectionClick={(id) => {
             setActiveSection(id);
@@ -357,9 +362,9 @@ export default function ProfileEditPage() {
           }} />
 
           {/* Main content */}
-          <div className="flex-1 max-w-lg mx-auto lg:mx-0 space-y-6">
+          <div className="flex-1 max-w-lg mx-auto lg:mx-0 space-y-5">
             {/* Profile Info Section */}
-            <div id="profile-info" className="scroll-mt-20 space-y-6">
+            <div id="profile-info" className="scroll-mt-20 space-y-5">
               {/* Avatar */}
               <div className="flex justify-center">
                 <div className="relative group">
@@ -382,15 +387,15 @@ export default function ProfileEditPage() {
                   <div className="grid grid-cols-2 gap-3">
                     <FormField control={form.control} name="first_name" render={({ field }) => (
                       <FormItem className="space-y-1.5">
-                        <FormLabel className="flex items-center gap-1.5 font-semibold text-[13px]"><User className="h-3.5 w-3.5 text-primary" />First Name</FormLabel>
-                        <FormControl><Input placeholder="First name" className="h-12 rounded-2xl bg-muted/15 border-border/30 text-[15px] font-medium" {...field} /></FormControl>
+                        <FormLabel className={profileLabelClass}><User className="h-3.5 w-3.5 text-foreground" />First Name</FormLabel>
+                        <FormControl><Input placeholder="First name" className={profileInputClass} {...field} /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
                     <FormField control={form.control} name="last_name" render={({ field }) => (
                       <FormItem className="space-y-1.5">
-                        <FormLabel className="flex items-center gap-1.5 font-semibold text-[13px]"><User className="h-3.5 w-3.5 text-primary" />Last Name</FormLabel>
-                        <FormControl><Input placeholder="Last name" className="h-12 rounded-2xl bg-muted/15 border-border/30 text-[15px] font-medium" {...field} /></FormControl>
+                        <FormLabel className={profileLabelClass}><User className="h-3.5 w-3.5 text-foreground" />Last Name</FormLabel>
+                        <FormControl><Input placeholder="Last name" className={profileInputClass} {...field} /></FormControl>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -398,10 +403,10 @@ export default function ProfileEditPage() {
 
                   {/* Email */}
                   <div className="space-y-1.5">
-                    <label className="flex items-center gap-2 text-[13px] font-semibold"><Mail className="h-3.5 w-3.5 text-primary" />{t("profile.email")}</label>
+                    <label className={profileLabelClass}><Mail className="h-3.5 w-3.5 text-foreground" />{t("profile.email")}</label>
                     {!emailEditMode ? (
                       <div className="relative">
-                        <Input value={user?.email || ""} disabled className="h-12 rounded-2xl bg-muted/10 border-border/20 text-muted-foreground pr-24 text-[15px]" />
+                        <Input value={user?.email || ""} readOnly className="h-12 rounded-2xl border-border/30 bg-background text-[15px] font-medium text-muted-foreground pr-24 opacity-100" />
                         <motion.button type="button" whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92 }} onClick={() => { setEmailEditMode(true); setNewEmail(user?.email || ""); }} className="absolute right-1.5 top-1/2 -translate-y-1/2 px-4 py-2 rounded-xl text-xs font-bold text-primary bg-primary/8 hover:bg-primary/15 border border-primary/15 transition-all duration-200">Change</motion.button>
                       </div>
                     ) : (
@@ -409,7 +414,7 @@ export default function ProfileEditPage() {
                         <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} exit={{ opacity: 0, height: 0 }} className="space-y-3 overflow-hidden">
                           {!emailOtpSent ? (
                             <div className="space-y-2.5">
-                              <Input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="Enter new email" autoFocus className="h-12 rounded-2xl bg-muted/15 border-border/30 text-[15px] font-medium" />
+                              <Input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="Enter new email" autoFocus className={profileInputClass} />
                               <p className="flex items-center gap-1.5 text-[11px] text-muted-foreground/70"><AlertCircle className="w-3 h-3 shrink-0" />We&apos;ll send a 6-digit code to your new email.</p>
                               <div className="flex gap-2">
                                 <Button type="button" onClick={handleEmailChangeRequest} disabled={emailChanging || !newEmail || newEmail === user?.email} className="flex-1 h-11 rounded-2xl font-bold text-sm">
@@ -484,7 +489,7 @@ export default function ProfileEditPage() {
                   {/* Phone */}
                   <FormField control={form.control} name="phone" render={({ field }) => (
                     <FormItem className="space-y-1.5">
-                      <FormLabel className="flex items-center gap-2 font-semibold text-[13px]"><Phone className="h-3.5 w-3.5 text-primary" />{t("profile.phone")}</FormLabel>
+                      <FormLabel className={profileLabelClass}><Phone className="h-3.5 w-3.5 text-foreground" />{t("profile.phone")}</FormLabel>
                       <FormControl><CountryPhoneInput value={field.value || ""} onChange={field.onChange} onBlur={field.onBlur} name={field.name} /></FormControl>
                       <FormMessage />
                     </FormItem>
@@ -511,7 +516,7 @@ export default function ProfileEditPage() {
                   const isActive = current === opt.value;
                   const Icon = opt.icon;
                   return (
-                    <button type="button" key={opt.value} type="button" disabled={updateProfile.isPending} onClick={async () => {
+                    <button type="button" key={opt.value} disabled={updateProfile.isPending} onClick={async () => {
                       if (isActive) return;
                       try { await updateProfile.mutateAsync({ profile_visibility: opt.value }); }
                       catch (e: any) { toast.error(e?.message || "Failed to update visibility"); }
@@ -574,7 +579,7 @@ export default function ProfileEditPage() {
                     const isActive = current === opt.value;
                     const Icon = opt.icon;
                     return (
-                      <button type="button" key={opt.value} type="button" disabled={updateProfile.isPending} onClick={async () => {
+                      <button type="button" key={opt.value} disabled={updateProfile.isPending} onClick={async () => {
                         if (isActive) return;
                         try { await updateProfile.mutateAsync({ comment_control: opt.value }); }
                         catch (e: any) { toast.error(e?.message || "Failed to update setting"); }

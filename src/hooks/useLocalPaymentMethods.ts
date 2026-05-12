@@ -1,10 +1,8 @@
-import { useState, useEffect, useCallback } from "react";
+import { useCallback, useMemo } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-
-const STORAGE_KEY = "zivo_local_payment_methods";
 
 export interface LocalPaymentMethod {
   id: string;
@@ -89,8 +87,8 @@ export function validateCVV(cvv: string): boolean {
 }
 
 /**
- * Payment methods hook — reads from zivo_payment_methods table (Supabase)
- * Falls back to localStorage for offline/unauthenticated use
+ * Payment methods hook — reads real saved cards from zivo_payment_methods.
+ * New cards must be saved through the Stripe SetupIntent flow.
  */
 export function useLocalPaymentMethods() {
   const { user } = useAuth();
@@ -128,24 +126,7 @@ export function useLocalPaymentMethods() {
     staleTime: 60_000,
   });
 
-  // Fallback to localStorage for unauthenticated users
-  const [localMethods, setLocalMethods] = useState<LocalPaymentMethod[]>(() => {
-    if (user) return [];
-    try {
-      const stored = localStorage.getItem(STORAGE_KEY);
-      return stored ? JSON.parse(stored) : [];
-    } catch {
-      return [];
-    }
-  });
-
-  useEffect(() => {
-    if (!user) {
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(localMethods)); } catch {}
-    }
-  }, [localMethods, user]);
-
-  const methods = user ? dbMethods : localMethods;
+  const methods = useMemo(() => user ? dbMethods : [], [user, dbMethods]);
 
   const deleteCard = useCallback(async (id: string) => {
     if (user) {
@@ -157,11 +138,7 @@ export function useLocalPaymentMethods() {
       queryClient.invalidateQueries({ queryKey: ["zivo-payment-methods"] });
       toast.success("Card removed");
     } else {
-      setLocalMethods(prev => {
-        const updated = prev.filter(m => m.id !== id);
-        if (!updated.some(m => m.isDefault) && updated.length > 0) updated[0].isDefault = true;
-        return updated;
-      });
+      toast.error("Sign in to manage payment methods");
     }
   }, [user, queryClient]);
 
@@ -172,22 +149,14 @@ export function useLocalPaymentMethods() {
       await supabase.from("zivo_payment_methods").update({ is_default: true }).eq("id", id);
       queryClient.invalidateQueries({ queryKey: ["zivo-payment-methods"] });
     } else {
-      setLocalMethods(prev => prev.map(m => ({ ...m, isDefault: m.id === id })));
+      toast.error("Sign in to manage payment methods");
     }
   }, [user, queryClient]);
 
-  const addCard = useCallback((card: CardInput) => {
-    // For DB-backed cards, they're added via Stripe SetupIntent flow, not here
-    // This is for local/demo cards only
-    const newCard: LocalPaymentMethod = {
-      ...card,
-      id: `pm_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`,
-      createdAt: Date.now(),
-      isDefault: localMethods.length === 0,
-    };
-    setLocalMethods(prev => [...prev, newCard]);
-    return newCard;
-  }, [localMethods]);
+  const addCard = useCallback((_card: CardInput) => {
+    toast.error("Use secure card setup to save a payment method");
+    return null;
+  }, []);
 
   const getDefault = useCallback(() => {
     return methods.find(m => m.isDefault) || methods[0] || null;

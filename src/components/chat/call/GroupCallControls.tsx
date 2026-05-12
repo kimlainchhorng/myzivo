@@ -8,15 +8,10 @@
  */
 import {
   Mic, MicOff, Video, VideoOff, MonitorUp, MonitorOff,
-  Hand, Smile, Circle, Square, PhoneOff,
+  Hand, Circle, Square, PhoneOff,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import {
-  Popover, PopoverContent, PopoverTrigger,
-} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
-
-const REACTIONS = ["👍", "❤️", "😂", "🎉", "👏", "🔥", "😮", "🙏"];
 
 interface Props {
   micEnabled: boolean;
@@ -30,7 +25,6 @@ interface Props {
   onToggleCam: () => void;
   onToggleScreen: () => void;
   onToggleHand: () => void;
-  onReaction: (emoji: string) => void;
   onStartRecording: () => void;
   onStopRecording: () => void;
   onLeave: () => void;
@@ -82,7 +76,6 @@ function CtrlBtn({ onClick, active, muted, children, label }: BtnProps) {
 }
 
 export default function GroupCallControls(props: Props) {
-  const [reactOpen, setReactOpen] = useState(false);
   const clock = useClockHHMM();
 
   return (
@@ -112,35 +105,6 @@ export default function GroupCallControls(props: Props) {
         <CtrlBtn onClick={props.onToggleScreen} active={props.isScreenSharing} label="Share screen">
           {props.isScreenSharing ? <MonitorOff className="h-5 w-5" /> : <MonitorUp className="h-5 w-5" />}
         </CtrlBtn>
-
-        <Popover open={reactOpen} onOpenChange={setReactOpen}>
-          <PopoverTrigger asChild>
-            <button
-              type="button"
-              aria-label="Reactions"
-              title="Send a reaction"
-              className="grid h-11 w-11 sm:h-12 sm:w-12 place-items-center rounded-full bg-white/10 text-white transition hover:bg-white/20 active:scale-95"
-            >
-              <Smile className="h-5 w-5" />
-            </button>
-          </PopoverTrigger>
-          <PopoverContent side="top" className="w-auto p-2">
-            <div className="flex gap-1">
-              {REACTIONS.map((emo) => (
-                <button type="button"
-                  key={emo}
-                  onClick={() => {
-                    props.onReaction(emo);
-                    setReactOpen(false);
-                  }}
-                  className="grid h-9 w-9 place-items-center rounded-full text-xl transition hover:bg-foreground/10"
-                >
-                  {emo}
-                </button>
-              ))}
-            </div>
-          </PopoverContent>
-        </Popover>
 
         <CtrlBtn onClick={props.onToggleHand} active={props.handRaised} label="Raise hand">
           <Hand className="h-5 w-5" />

@@ -36,7 +36,7 @@ interface ServiceTile {
 }
 
 const TILES: ServiceTile[] = [
-  { key: "rides", label: "Rides", tagline: "Get a car in minutes", icon: Car, href: "/rides" },
+  { key: "rides", label: "Rides", tagline: "Get a car in minutes", icon: Car, href: "/rides/hub" },
   { key: "eats", label: "Eats", tagline: "Order or reserve a table", icon: UtensilsCrossed, href: "/eats" },
   { key: "flights", label: "Flights", tagline: "Search & book worldwide", icon: Plane, href: "/flights" },
   { key: "hotels", label: "Hotels", tagline: "Stays in our network", icon: BedDouble, href: "/hotels" },
@@ -48,7 +48,7 @@ export default function ServicesHubGrid() {
   const { isCambodia } = useCountry();
   const visibleTiles = isCambodia ? TILES : TILES.filter((t) => t.key !== "rides");
   const [state, setState] = useState<Record<ServiceKey, ServiceState>>({
-    rides: { status: null, href: "/rides" },
+    rides: { status: null, href: "/rides/hub" },
     eats: { status: null, href: "/eats" },
     flights: { status: null, href: "/flights" },
     hotels: { status: null, href: "/hotels" },
@@ -60,7 +60,7 @@ export default function ServicesHubGrid() {
 
     const load = async () => {
       const next: Record<ServiceKey, ServiceState> = {
-        rides: { status: null, href: "/rides" },
+        rides: { status: null, href: "/rides/hub" },
         eats: { status: null, href: "/eats" },
         flights: { status: null, href: "/flights" },
         hotels: { status: null, href: "/hotels" },

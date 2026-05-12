@@ -162,7 +162,7 @@ export default function TodayPlanWidget() {
             initial={{ opacity: 0, y: 6 }}
             animate={{ opacity: 1, y: 0 }}
             onClick={() =>
-              navigate(`/rides?dropoff=${encodeURIComponent(urgentReservation.venue ?? "")}`)
+              navigate(`/rides/hub?dropoff=${encodeURIComponent(urgentReservation.venue ?? "")}`)
             }
             className="w-full mb-3 flex items-center gap-3 rounded-2xl border border-amber-500/30 bg-amber-500/10 p-3 text-left active:scale-[0.99] transition-transform touch-manipulation"
           >

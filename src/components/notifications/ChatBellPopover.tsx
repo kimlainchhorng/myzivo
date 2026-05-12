@@ -4,6 +4,7 @@
  * and a footer link to the full notifications page.
  */
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import { useNavigate } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import Bell from "lucide-react/dist/esm/icons/bell";
@@ -35,14 +36,22 @@ function chatThreadIdFromUrl(url: string | null | undefined): string | null {
 
 interface ChatBellPopoverProps {
   className?: string;
+  buttonLabel?: string;
+  dialogLabel?: string;
 }
 
-export function ChatBellPopover({ className }: ChatBellPopoverProps) {
+export function ChatBellPopover({
+  className,
+  buttonLabel = "Notifications",
+  dialogLabel = "Notifications",
+}: ChatBellPopoverProps) {
   const [open, setOpen] = useState(false);
   const [tab, setTab] = useState<"all" | "unread">("all");
   const navigate = useNavigate();
   const { user } = useAuth();
   const wrapRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const [panelPos, setPanelPos] = useState({ top: 72, right: 16 });
 
   // Inline-reply state. `replyOpenFor` is the group's chat-thread id (the
   // recipient's user_id) — null when no reply panel is open. Only one reply
@@ -154,7 +163,9 @@ export function ChatBellPopover({ className }: ChatBellPopoverProps) {
   useEffect(() => {
     if (!open) return;
     const onDown = (e: MouseEvent) => {
-      if (!wrapRef.current?.contains(e.target as Node)) setOpen(false);
+      const target = e.target as Node;
+      if (wrapRef.current?.contains(target) || panelRef.current?.contains(target)) return;
+      setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "Escape") setOpen(false);
@@ -164,6 +175,25 @@ export function ChatBellPopover({ className }: ChatBellPopoverProps) {
     return () => {
       document.removeEventListener("mousedown", onDown);
       document.removeEventListener("keydown", onKey);
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const updatePosition = () => {
+      const rect = wrapRef.current?.getBoundingClientRect();
+      if (!rect) return;
+      setPanelPos({
+        top: Math.max(8, rect.bottom + 8),
+        right: Math.max(12, window.innerWidth - rect.right),
+      });
+    };
+    updatePosition();
+    window.addEventListener("resize", updatePosition);
+    window.addEventListener("scroll", updatePosition, true);
+    return () => {
+      window.removeEventListener("resize", updatePosition);
+      window.removeEventListener("scroll", updatePosition, true);
     };
   }, [open]);
 
@@ -234,7 +264,7 @@ export function ChatBellPopover({ className }: ChatBellPopoverProps) {
       <button type="button"
         onClick={() => setOpen((v) => !v)}
         className="relative w-9 h-9 flex items-center justify-center rounded-full hover:bg-muted active:scale-90 transition-all"
-        aria-label="Notifications"
+        aria-label={buttonLabel}
         aria-expanded={open}
       >
         <Bell className="w-5 h-5 text-muted-foreground" />
@@ -245,19 +275,22 @@ export function ChatBellPopover({ className }: ChatBellPopoverProps) {
         )}
       </button>
 
+      {createPortal(
       <AnimatePresence>
         {open && (
           <motion.div
+            ref={panelRef}
             initial={{ opacity: 0, y: -6, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -6, scale: 0.98 }}
             transition={{ duration: 0.15, ease: "easeOut" }}
-            className="absolute right-0 top-[calc(100%+8px)] z-[1300] w-[340px] max-w-[calc(100vw-24px)] rounded-2xl border border-border bg-card shadow-2xl overflow-hidden"
+            className="fixed z-[10000] flex w-[min(380px,calc(100vw-24px))] max-h-[min(620px,calc(100dvh-148px))] flex-col rounded-2xl border border-border bg-card shadow-2xl overflow-hidden"
+            style={{ top: panelPos.top, right: panelPos.right }}
             role="dialog"
-            aria-label="Notifications"
+            aria-label={dialogLabel}
           >
             {/* Header */}
-            <div className="px-4 pt-3 pb-2 flex items-center justify-between">
+            <div className="shrink-0 px-4 pt-3 pb-2 flex items-center justify-between bg-card">
               <h3 className="text-base font-bold text-foreground">Notifications</h3>
               {unreadCount > 0 && (
                 <button type="button"
@@ -271,7 +304,7 @@ export function ChatBellPopover({ className }: ChatBellPopoverProps) {
             </div>
 
             {/* Tabs */}
-            <div className="px-4 pb-2 flex items-center gap-2">
+            <div className="shrink-0 px-4 pb-2 flex items-center gap-2 bg-card">
               {(["all", "unread"] as const).map((t) => (
                 <button type="button"
                   key={t}
@@ -289,7 +322,7 @@ export function ChatBellPopover({ className }: ChatBellPopoverProps) {
             </div>
 
             {/* List */}
-            <div className="max-h-[360px] overflow-y-auto">
+            <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
               {isLoading ? (
                 <div className="flex items-center justify-center py-10">
                   <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary" />
@@ -497,7 +530,7 @@ export function ChatBellPopover({ className }: ChatBellPopoverProps) {
             </div>
 
             {/* Footer */}
-            <div className="border-t border-border">
+            <div className="shrink-0 border-t border-border bg-card">
               <button type="button"
                 onClick={() => {
                   setOpen(false);
@@ -510,7 +543,9 @@ export function ChatBellPopover({ className }: ChatBellPopoverProps) {
             </div>
           </motion.div>
         )}
-      </AnimatePresence>
+      </AnimatePresence>,
+      document.body
+      )}
 
       {/* Profile preview bottom sheet — opened by the UserCircle action on
           chat-type rows. Lives outside <AnimatePresence> so it stays mounted

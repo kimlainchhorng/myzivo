@@ -267,7 +267,7 @@ const quickLinksTravel: QuickLink[] = [
 const quickLinksSocial: QuickLink[] = [
   { icon: Users, label: "Communities", href: "/communities", description: "Groups", accent: "hsl(263 70% 58%)" },
   { icon: Radio, label: "Audio Spaces", href: "/spaces", description: "Live rooms", accent: "hsl(300 70% 55%)" },
-  { icon: Camera, label: "Reels Feed", href: "/reels", description: "Short videos", accent: "hsl(340 75% 55%)" },
+  { icon: Camera, label: "Reels", href: "/reels", description: "Short videos", accent: "hsl(340 75% 55%)" },
   { icon: MessageCircle, label: "Chat Hub", href: "/chat", description: "Messages", accent: "hsl(221 83% 53%)" },
   { icon: Share2, label: "Share Profile", href: "/qr-profile", description: "QR & link", accent: "hsl(142 71% 45%)" },
   { icon: Megaphone, label: "Events", href: "/events", description: "Upcoming", accent: "hsl(38 92% 50%)" },
@@ -402,7 +402,7 @@ const quickLinksLive: QuickLink[] = [
   { icon: Radio, label: "Audio Spaces", href: "/spaces", description: "Voice rooms", accent: "hsl(300 70% 55%)" },
   { icon: Clapperboard, label: "Watch Party", href: "/watch-party", description: "Watch with friends", accent: "hsl(199 89% 48%)" },
   { icon: Camera, label: "Reels", href: "/reels", description: "Short videos", accent: "hsl(340 75% 55%)" },
-  { icon: Film, label: "Feed", href: "/feed", description: "Endless reels", accent: "hsl(263 70% 58%)" },
+  { icon: Film, label: "Feed", href: "/feed", description: "Posts & updates", accent: "hsl(263 70% 58%)" },
   { icon: Mic, label: "Podcasts", href: "/podcasts", description: "Listen on the go", accent: "hsl(45 93% 58%)" },
   { icon: Megaphone, label: "Events", href: "/events", description: "Upcoming streams", accent: "hsl(38 92% 50%)" },
   { icon: Hash, label: "Channels Directory", href: "/channels", description: "Discover channels", accent: "hsl(221 83% 53%)" },

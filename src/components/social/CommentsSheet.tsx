@@ -193,7 +193,6 @@ export default function CommentsSheet({
             {["😂", "❤️", "🔥", "👏", "😮", "😢"].map((e) => (
               <button type="button"
                 key={e}
-                type="button"
                 onClick={() => {
                   setText((prev) => prev + e);
                   inputRef.current?.focus();

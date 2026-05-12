@@ -69,7 +69,7 @@ export default function MyApplicationsPage() {
         {/* Status filter chips */}
         <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
           {STATUS_OPTIONS.map(s => (
-            <button type="button" key={s} type="button" onClick={() => setFilterStatus(s)}
+            <button type="button" key={s} onClick={() => setFilterStatus(s)}
               className={cn("shrink-0 rounded-full px-3 py-1 text-xs font-semibold transition-colors",
                 filterStatus === s ? "bg-foreground text-background" : "bg-muted text-muted-foreground hover:bg-muted/80")}>
               {s === "all" ? "All" : s.charAt(0).toUpperCase() + s.slice(1)}

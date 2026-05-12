@@ -26,6 +26,7 @@ import { toast } from "sonner";
 export interface LKParticipant {
   identity: string;
   name: string;
+  avatarUrl: string | null;
   isLocal: boolean;
   isHost: boolean;
   micEnabled: boolean;
@@ -49,6 +50,11 @@ interface DataMsg {
   emoji?: string;
   raised?: boolean;
 }
+
+type ParticipantProfile = {
+  full_name: string | null;
+  avatar_url: string | null;
+};
 
 interface UseLiveKitCallOptions {
   roomName: string;
@@ -75,6 +81,7 @@ export function useLiveKitCall({
   const roomRef = useRef<Room | null>(null);
   const [state, setState] = useState<"connecting" | "connected" | "ended" | "error">("connecting");
   const [error, setError] = useState<string | null>(null);
+  const [mediaError, setMediaError] = useState<string | null>(null);
   const [participants, setParticipants] = useState<LKParticipant[]>([]);
   const [reactions, setReactions] = useState<ReactionEvent[]>([]);
   const [isHost, setIsHost] = useState(false);
@@ -84,6 +91,14 @@ export function useLiveKitCall({
   const [micEnabled, setMicEnabled] = useState(!startMicMuted);
   const [camEnabled, setCamEnabled] = useState(callType === "video" && !startCamOff);
   const [handRaised, setHandRaised] = useState(false);
+  const profileMapRef = useRef<Record<string, ParticipantProfile>>({});
+
+  const formatDevicePermissionMessage = useCallback((device: "microphone" | "camera" | "screen") => {
+    if (device === "screen") {
+      return "Screen sharing is blocked by browser or system permission. Allow screen sharing or Screen Recording permission for this browser, then try again.";
+    }
+    return `${device[0].toUpperCase()}${device.slice(1)} permission is blocked. Allow browser permission, then try again.`;
+  }, []);
 
   /* ----------------- Refresh participant list ----------------- */
   const refreshParticipants = useCallback(() => {
@@ -94,9 +109,11 @@ export function useLiveKitCall({
       const camPub = p.getTrackPublication(Track.Source.Camera);
       const micPub = p.getTrackPublication(Track.Source.Microphone);
       const screenPub = p.getTrackPublication(Track.Source.ScreenShare);
+      const profile = profileMapRef.current[p.identity];
       list.push({
         identity: p.identity,
-        name: p.name || p.identity,
+        name: profile?.full_name || p.name || p.identity,
+        avatarUrl: profile?.avatar_url ?? null,
         isLocal,
         isHost: p.metadata === "host",
         micEnabled: !(micPub?.isMuted ?? true),
@@ -112,6 +129,40 @@ export function useLiveKitCall({
     room.remoteParticipants.forEach((rp) => buildOne(rp, false));
     setParticipants(list);
   }, []);
+
+  useEffect(() => {
+    const ids = participants.map((p) => p.identity).filter(Boolean);
+    const missingIds = ids.filter((id) => !profileMapRef.current[id]);
+    if (missingIds.length === 0) return;
+
+    let cancelled = false;
+    (async () => {
+      const quotedIds = missingIds.map((id) => `"${id.replace(/"/g, '\\"')}"`).join(",");
+      const { data, error } = await supabase
+        .from("profiles")
+        .select("id, user_id, full_name, avatar_url")
+        .or(`id.in.(${quotedIds}),user_id.in.(${quotedIds})`);
+
+      if (cancelled || error || !data) return;
+
+      const next = { ...profileMapRef.current };
+      for (const id of missingIds) {
+        next[id] = { full_name: null, avatar_url: null };
+      }
+      for (const row of data as Array<ParticipantProfile & { id?: string | null; user_id?: string | null }>) {
+        const profile = { full_name: row.full_name, avatar_url: row.avatar_url };
+        if (row.id) next[row.id] = profile;
+        if (row.user_id) next[row.user_id] = profile;
+      }
+
+      profileMapRef.current = next;
+      refreshParticipants();
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [participants, refreshParticipants]);
 
   /* ----------------- Connect / disconnect ----------------- */
   useEffect(() => {
@@ -181,13 +232,35 @@ export function useLiveKitCall({
           return;
         }
 
-        // Publish defaults (respect pre-join intent)
-        await room.localParticipant.setMicrophoneEnabled(!startMicMuted);
-        if (callType === "video") {
-          await room.localParticipant.setCameraEnabled(!startCamOff);
+        // Publish defaults (respect pre-join intent). Media permission
+        // failures should not kick the user out of the room: they can still
+        // listen, chat with reactions, and retry enabling devices later.
+        if (!startMicMuted) {
+          try {
+            await room.localParticipant.setMicrophoneEnabled(true);
+            setMicEnabled(true);
+          } catch (mediaErr) {
+            setMicEnabled(false);
+            setMediaError(formatDevicePermissionMessage("microphone"));
+            toast.error("Microphone blocked. You joined muted.");
+          }
+        }
+        if (callType === "video" && !startCamOff) {
+          try {
+            await room.localParticipant.setCameraEnabled(true);
+            setCamEnabled(true);
+          } catch (mediaErr) {
+            setCamEnabled(false);
+            setMediaError(formatDevicePermissionMessage("camera"));
+            toast.error("Camera blocked. You joined with camera off.");
+          }
         }
         if (data.isHost) {
-          await room.localParticipant.setMetadata("host");
+          try {
+            await room.localParticipant.setMetadata("host");
+          } catch (metadataErr) {
+            console.warn("[livekit] Could not update local metadata", metadataErr);
+          }
         }
         refreshParticipants();
 
@@ -221,7 +294,7 @@ export function useLiveKitCall({
       roomRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [enabled, roomName]);
+  }, [enabled, roomName, formatDevicePermissionMessage]);
 
   /* ----------------- Auto-prune old reactions ----------------- */
   useEffect(() => {
@@ -238,17 +311,31 @@ export function useLiveKitCall({
     const room = roomRef.current;
     if (!room) return;
     const next = !micEnabled;
-    await room.localParticipant.setMicrophoneEnabled(next);
-    setMicEnabled(next);
-  }, [micEnabled]);
+    try {
+      await room.localParticipant.setMicrophoneEnabled(next);
+      setMicEnabled(next);
+      setMediaError(null);
+    } catch (e) {
+      setMicEnabled(false);
+      setMediaError(formatDevicePermissionMessage("microphone"));
+      toast.error("Microphone permission is blocked.");
+    }
+  }, [formatDevicePermissionMessage, micEnabled]);
 
   const toggleCam = useCallback(async () => {
     const room = roomRef.current;
     if (!room) return;
     const next = !camEnabled;
-    await room.localParticipant.setCameraEnabled(next);
-    setCamEnabled(next);
-  }, [camEnabled]);
+    try {
+      await room.localParticipant.setCameraEnabled(next);
+      setCamEnabled(next);
+      setMediaError(null);
+    } catch (e) {
+      setCamEnabled(false);
+      setMediaError(formatDevicePermissionMessage("camera"));
+      toast.error("Camera permission is blocked.");
+    }
+  }, [camEnabled, formatDevicePermissionMessage]);
 
   const toggleScreenShare = useCallback(async () => {
     const room = roomRef.current;
@@ -257,11 +344,13 @@ export function useLiveKitCall({
       const next = !isScreenSharing;
       await room.localParticipant.setScreenShareEnabled(next);
       setIsScreenSharing(next);
+      setMediaError(null);
     } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
-      toast.error(`Screen share failed: ${msg}`);
+      setIsScreenSharing(false);
+      setMediaError(formatDevicePermissionMessage("screen"));
+      toast.error("Screen sharing permission is blocked.");
     }
-  }, [isScreenSharing]);
+  }, [formatDevicePermissionMessage, isScreenSharing]);
 
   const sendReaction = useCallback(
     async (emoji: string) => {
@@ -328,6 +417,7 @@ export function useLiveKitCall({
   return {
     state,
     error,
+    mediaError,
     participants,
     screenShareSource,
     reactions,

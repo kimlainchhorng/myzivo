@@ -5,9 +5,10 @@
  * Usage:
  *   <GroupCallLauncher roomName="group-<id>" callType="video" onEnded={...} />
  */
-import { useState } from "react";
+import { lazy, Suspense, useState } from "react";
 import CallLobby, { type CallLobbyResult } from "./CallLobby";
-import GroupCallScreenV2 from "./GroupCallScreenV2";
+
+const GroupCallScreenV2 = lazy(() => import("./GroupCallScreenV2"));
 
 interface Props {
   roomName: string;
@@ -23,6 +24,7 @@ export default function GroupCallLauncher({ roomName, callType = "video", meetin
     return (
       <CallLobby
         roomName={roomName}
+        displayName={meetingLabel}
         callType={callType}
         canRecord
         onCancel={() => onEnded?.()}
@@ -32,6 +34,13 @@ export default function GroupCallLauncher({ roomName, callType = "video", meetin
   }
 
   return (
+    <Suspense
+      fallback={
+        <div className="fixed inset-0 z-50 grid place-items-center bg-zinc-950 text-sm text-white/70">
+          Connecting…
+        </div>
+      }
+    >
     <GroupCallScreenV2
       roomName={roomName}
       callType={callType}
@@ -41,5 +50,6 @@ export default function GroupCallLauncher({ roomName, callType = "video", meetin
       startCamOff={joined.startCamOff}
       autoRecord={joined.autoRecord}
     />
+    </Suspense>
   );
 }

@@ -50,91 +50,6 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ArrowLeft, Save, Store, Image, Package, Plus, Edit, Trash2, Loader2, Eye, Upload, Camera, MapPin, ExternalLink, Globe, Check, Percent, DollarSign, CalendarIcon, Tag, Gift, Video, ImagePlus, RefreshCw, Replace, CheckCircle2, XCircle, MinusCircle, AlertTriangle, Move, X, Ruler, MessageCircle, CreditCard, Banknote, QrCode, Building2, Smartphone, Wallet, Car, Heart, Clock, Send, Users, Shield, Bell, Info, Copy, GripVertical, Hotel, BedDouble, CalendarRange, KeyRound, PackagePlus, MessageSquareText, BarChart3, ListChecks, LayoutDashboard, BookOpen } from "lucide-react";
 import StoreLiveChat from "@/components/grocery/StoreLiveChat";
-import StorePaymentSection from "@/components/admin/StorePaymentSection";
-import StoreCustomersSection from "@/components/admin/StoreCustomersSection";
-import StoreMarketingSection from "@/components/admin/StoreMarketingSection";
-import StoreLiveStreamSection from "@/components/admin/StoreLiveStreamSection";
-import StoreEmployeesSection from "@/components/admin/store/StoreEmployeesSection";
-import StorePayrollSection from "@/components/admin/store/StorePayrollSection";
-import StoreScheduleSection from "@/components/admin/store/StoreScheduleSection";
-import StoreTimeClockSection from "@/components/admin/store/StoreTimeClockSection";
-import StoreAttendanceSection from "@/components/admin/store/StoreAttendanceSection";
-import StoreTrainingSection from "@/components/admin/store/StoreTrainingSection";
-import StorePerformanceSection from "@/components/admin/store/StorePerformanceSection";
-import StoreDocumentsSection from "@/components/admin/store/StoreDocumentsSection";
-import StoreEmployeeRulesSection from "@/components/admin/store/StoreEmployeeRulesSection";
-import StoreOrdersSection from "@/components/admin/StoreOrdersSection";
-import AutoRepairInvoicesSection from "@/components/admin/store/autorepair/AutoRepairInvoicesSection";
-import AutoRepairAutoCheckSection from "@/components/admin/store/autorepair/AutoRepairAutoCheckSection";
-import AutoRepairPartShopSection from "@/components/admin/store/autorepair/AutoRepairPartShopSection";
-import AutoRepairInspectionsSection from "@/components/admin/store/autorepair/AutoRepairInspectionsSection";
-import AutoRepairVehiclesSection from "@/components/admin/store/autorepair/AutoRepairVehiclesSection";
-import AutoRepairEstimatesSection from "@/components/admin/store/autorepair/AutoRepairEstimatesSection";
-import AutoRepairWorkOrdersSection from "@/components/admin/store/autorepair/AutoRepairWorkOrdersSection";
-import AutoRepairTechniciansSection from "@/components/admin/store/autorepair/AutoRepairTechniciansSection";
-import AutoRepairRemindersSection from "@/components/admin/store/autorepair/AutoRepairRemindersSection";
-import AutoRepairTiresSection from "@/components/admin/store/autorepair/AutoRepairTiresSection";
-import AutoRepairWarrantySection from "@/components/admin/store/autorepair/AutoRepairWarrantySection";
-import AutoRepairFleetSection from "@/components/admin/store/autorepair/AutoRepairFleetSection";
-import AutoRepairReportsSection from "@/components/admin/store/autorepair/AutoRepairReportsSection";
-import AutoRepairPartSuppliersSection from "@/components/admin/store/autorepair/AutoRepairPartSuppliersSection";
-import AutoRepairDashboardSection from "@/components/admin/store/autorepair/AutoRepairDashboardSection";
-import AutoRepairServiceCatalogSection from "@/components/admin/store/autorepair/AutoRepairServiceCatalogSection";
-import AutoRepairReviewsSection from "@/components/admin/store/autorepair/AutoRepairReviewsSection";
-import AutoRepairInboxSection from "@/components/admin/store/autorepair/AutoRepairInboxSection";
-import AutoRepairPromosSection from "@/components/admin/store/autorepair/AutoRepairPromosSection";
-import AutoRepairLoanersSection from "@/components/admin/store/autorepair/AutoRepairLoanersSection";
-import AutoRepairPhotosSection from "@/components/admin/store/autorepair/AutoRepairPhotosSection";
-import AutoRepairBookingLinkSection from "@/components/admin/store/autorepair/AutoRepairBookingLinkSection";
-import AutoRepairLaborTimeSection from "@/components/admin/store/autorepair/AutoRepairLaborTimeSection";
-import FinanceIncomeSection from "@/components/admin/store/autorepair/finance/FinanceIncomeSection";
-import FinanceExpensesSection from "@/components/admin/store/autorepair/finance/FinanceExpensesSection";
-import FinancePaymentsSection from "@/components/admin/store/autorepair/finance/FinancePaymentsSection";
-import FinanceProfitLossSection from "@/components/admin/store/autorepair/finance/FinanceProfitLossSection";
-import FinanceTaxPayoutsSection from "@/components/admin/store/autorepair/finance/FinanceTaxPayoutsSection";
-import LodgingRoomsSection from "@/components/admin/store/lodging/LodgingRoomsSection";
-import LodgingPropertyProfileSection from "@/components/admin/store/lodging/LodgingPropertyProfileSection";
-import LodgingReservationsSection from "@/components/admin/store/lodging/LodgingReservationsSection";
-import LodgingCalendarSection from "@/components/admin/store/lodging/LodgingCalendarSection";
-import LodgingGuestsSection from "@/components/admin/store/lodging/LodgingGuestsSection";
-import LodgingFrontDeskSection from "@/components/admin/store/lodging/LodgingFrontDeskSection";
-import LodgingHousekeepingSection from "@/components/admin/store/lodging/LodgingHousekeepingSection";
-import LodgingMaintenanceSection from "@/components/admin/store/lodging/LodgingMaintenanceSection";
-import LodgingAmenitiesSection from "@/components/admin/store/lodging/LodgingAmenitiesSection";
-import LodgingReportsSection from "@/components/admin/store/lodging/LodgingReportsSection";
-import LodgingOverviewSection from "@/components/admin/store/lodging/LodgingOverviewSection";
-import LodgingAddOnsSection from "@/components/admin/store/lodging/LodgingAddOnsSection";
-import LodgingDiningSection from "@/components/admin/store/lodging/LodgingDiningSection";
-import LodgingExperiencesSection from "@/components/admin/store/lodging/LodgingExperiencesSection";
-import LodgingTransportSection from "@/components/admin/store/lodging/LodgingTransportSection";
-import LodgingWellnessSection from "@/components/admin/store/lodging/LodgingWellnessSection";
-import LodgingPoliciesSection from "@/components/admin/store/lodging/LodgingPoliciesSection";
-import LodgingReviewsSection from "@/components/admin/store/lodging/LodgingReviewsSection";
-import LodgingRatePlansSection from "@/components/admin/store/lodging/LodgingRatePlansSection";
-import LodgingGuestRequestsSection from "@/components/admin/store/lodging/LodgingGuestRequestsSection";
-import LodgingPromotionsSection from "@/components/admin/store/lodging/LodgingPromotionsSection";
-import LodgingChannelManagerSection from "@/components/admin/store/lodging/LodgingChannelManagerSection";
-import LodgingPayoutsSection from "@/components/admin/store/lodging/LodgingPayoutsSection";
-import LodgingInboxSection from "@/components/admin/store/lodging/LodgingInboxSection";
-import LodgingStaffSection from "@/components/admin/store/lodging/LodgingStaffSection";
-import LodgingConciergeTasksSection from "@/components/admin/store/lodging/LodgingConciergeTasksSection";
-import LodgingLostFoundSection from "@/components/admin/store/lodging/LodgingLostFoundSection";
-import LodgingGallerySection from "@/components/admin/store/lodging/LodgingGallerySection";
-import LodgingNightAuditSection from "@/components/admin/store/lodging/LodgingNightAuditSection";
-import LodgingShiftHandoverSection from "@/components/admin/store/lodging/LodgingShiftHandoverSection";
-import LodgingFolioSection from "@/components/admin/store/lodging/LodgingFolioSection";
-import LodgingGroupBookingSection from "@/components/admin/store/lodging/LodgingGroupBookingSection";
-import LodgingRevenueSection from "@/components/admin/store/lodging/LodgingRevenueSection";
-import LodgingNotificationsSection from "@/components/admin/store/lodging/LodgingNotificationsSection";
-import LodgingYieldRulesSection from "@/components/admin/store/lodging/LodgingYieldRulesSection";
-import LodgingInventorySection from "@/components/admin/store/lodging/LodgingInventorySection";
-import LodgingRoomServiceSection from "@/components/admin/store/lodging/LodgingRoomServiceSection";
-import LodgingGiftVouchersSection from "@/components/admin/store/lodging/LodgingGiftVouchersSection";
-import LodgingParkingSection from "@/components/admin/store/lodging/LodgingParkingSection";
-import LodgingWakeupCallsSection from "@/components/admin/store/lodging/LodgingWakeupCallsSection";
-import LodgingLaundrySection from "@/components/admin/store/lodging/LodgingLaundrySection";
-import LodgingComplaintsSection from "@/components/admin/store/lodging/LodgingComplaintsSection";
-import SoftwareDownloadsSection from "@/components/admin/store/SoftwareDownloadsSection";
 import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
 import { LODGING_TAB_IDS, resolveStoreTab, resolveStoreTabFromSearch } from "@/lib/admin/storeTabRouting";
 import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
@@ -145,8 +60,102 @@ import ManagedTagDropdown from "@/components/admin/ManagedTagDropdown";
 import { cn } from "@/lib/utils";
 import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
 import StoreMapPicker from "@/components/admin/StoreMapPicker";
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { Suspense, useState, useEffect, useRef, useCallback } from "react";
 import { toast } from "sonner";
+
+const StorePaymentSection = React.lazy(() => import("@/components/admin/StorePaymentSection"));
+const StoreCustomersSection = React.lazy(() => import("@/components/admin/StoreCustomersSection"));
+const StoreMarketingSection = React.lazy(() => import("@/components/admin/StoreMarketingSection"));
+const StoreLiveStreamSection = React.lazy(() => import("@/components/admin/StoreLiveStreamSection"));
+const StoreEmployeesSection = React.lazy(() => import("@/components/admin/store/StoreEmployeesSection"));
+const StorePayrollSection = React.lazy(() => import("@/components/admin/store/StorePayrollSection"));
+const StoreScheduleSection = React.lazy(() => import("@/components/admin/store/StoreScheduleSection"));
+const StoreTimeClockSection = React.lazy(() => import("@/components/admin/store/StoreTimeClockSection"));
+const StoreAttendanceSection = React.lazy(() => import("@/components/admin/store/StoreAttendanceSection"));
+const StoreTrainingSection = React.lazy(() => import("@/components/admin/store/StoreTrainingSection"));
+const StorePerformanceSection = React.lazy(() => import("@/components/admin/store/StorePerformanceSection"));
+const StoreDocumentsSection = React.lazy(() => import("@/components/admin/store/StoreDocumentsSection"));
+const StoreEmployeeRulesSection = React.lazy(() => import("@/components/admin/store/StoreEmployeeRulesSection"));
+const StoreOrdersSection = React.lazy(() => import("@/components/admin/StoreOrdersSection"));
+const AutoRepairInvoicesSection = React.lazy(() => import("@/components/admin/store/autorepair/AutoRepairInvoicesSection"));
+const AutoRepairAutoCheckSection = React.lazy(() => import("@/components/admin/store/autorepair/AutoRepairAutoCheckSection"));
+const AutoRepairPartShopSection = React.lazy(() => import("@/components/admin/store/autorepair/AutoRepairPartShopSection"));
+const AutoRepairInspectionsSection = React.lazy(() => import("@/components/admin/store/autorepair/AutoRepairInspectionsSection"));
+const AutoRepairVehiclesSection = React.lazy(() => import("@/components/admin/store/autorepair/AutoRepairVehiclesSection"));
+const AutoRepairEstimatesSection = React.lazy(() => import("@/components/admin/store/autorepair/AutoRepairEstimatesSection"));
+const AutoRepairWorkOrdersSection = React.lazy(() => import("@/components/admin/store/autorepair/AutoRepairWorkOrdersSection"));
+const AutoRepairTechniciansSection = React.lazy(() => import("@/components/admin/store/autorepair/AutoRepairTechniciansSection"));
+const AutoRepairRemindersSection = React.lazy(() => import("@/components/admin/store/autorepair/AutoRepairRemindersSection"));
+const AutoRepairTiresSection = React.lazy(() => import("@/components/admin/store/autorepair/AutoRepairTiresSection"));
+const AutoRepairWarrantySection = React.lazy(() => import("@/components/admin/store/autorepair/AutoRepairWarrantySection"));
+const AutoRepairFleetSection = React.lazy(() => import("@/components/admin/store/autorepair/AutoRepairFleetSection"));
+const AutoRepairReportsSection = React.lazy(() => import("@/components/admin/store/autorepair/AutoRepairReportsSection"));
+const AutoRepairPartSuppliersSection = React.lazy(() => import("@/components/admin/store/autorepair/AutoRepairPartSuppliersSection"));
+const AutoRepairDashboardSection = React.lazy(() => import("@/components/admin/store/autorepair/AutoRepairDashboardSection"));
+const AutoRepairServiceCatalogSection = React.lazy(() => import("@/components/admin/store/autorepair/AutoRepairServiceCatalogSection"));
+const AutoRepairReviewsSection = React.lazy(() => import("@/components/admin/store/autorepair/AutoRepairReviewsSection"));
+const AutoRepairInboxSection = React.lazy(() => import("@/components/admin/store/autorepair/AutoRepairInboxSection"));
+const AutoRepairPromosSection = React.lazy(() => import("@/components/admin/store/autorepair/AutoRepairPromosSection"));
+const AutoRepairLoanersSection = React.lazy(() => import("@/components/admin/store/autorepair/AutoRepairLoanersSection"));
+const AutoRepairPhotosSection = React.lazy(() => import("@/components/admin/store/autorepair/AutoRepairPhotosSection"));
+const AutoRepairBookingLinkSection = React.lazy(() => import("@/components/admin/store/autorepair/AutoRepairBookingLinkSection"));
+const AutoRepairLaborTimeSection = React.lazy(() => import("@/components/admin/store/autorepair/AutoRepairLaborTimeSection"));
+const FinanceIncomeSection = React.lazy(() => import("@/components/admin/store/autorepair/finance/FinanceIncomeSection"));
+const FinanceExpensesSection = React.lazy(() => import("@/components/admin/store/autorepair/finance/FinanceExpensesSection"));
+const FinancePaymentsSection = React.lazy(() => import("@/components/admin/store/autorepair/finance/FinancePaymentsSection"));
+const FinanceProfitLossSection = React.lazy(() => import("@/components/admin/store/autorepair/finance/FinanceProfitLossSection"));
+const FinanceTaxPayoutsSection = React.lazy(() => import("@/components/admin/store/autorepair/finance/FinanceTaxPayoutsSection"));
+const LodgingRoomsSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingRoomsSection"));
+const LodgingPropertyProfileSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingPropertyProfileSection"));
+const LodgingReservationsSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingReservationsSection"));
+const LodgingCalendarSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingCalendarSection"));
+const LodgingGuestsSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingGuestsSection"));
+const LodgingFrontDeskSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingFrontDeskSection"));
+const LodgingHousekeepingSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingHousekeepingSection"));
+const LodgingMaintenanceSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingMaintenanceSection"));
+const LodgingAmenitiesSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingAmenitiesSection"));
+const LodgingReportsSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingReportsSection"));
+const LodgingOverviewSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingOverviewSection"));
+const LodgingAddOnsSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingAddOnsSection"));
+const LodgingDiningSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingDiningSection"));
+const LodgingExperiencesSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingExperiencesSection"));
+const LodgingTransportSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingTransportSection"));
+const LodgingWellnessSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingWellnessSection"));
+const LodgingPoliciesSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingPoliciesSection"));
+const LodgingReviewsSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingReviewsSection"));
+const LodgingRatePlansSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingRatePlansSection"));
+const LodgingGuestRequestsSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingGuestRequestsSection"));
+const LodgingPromotionsSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingPromotionsSection"));
+const LodgingChannelManagerSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingChannelManagerSection"));
+const LodgingPayoutsSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingPayoutsSection"));
+const LodgingInboxSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingInboxSection"));
+const LodgingStaffSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingStaffSection"));
+const LodgingConciergeTasksSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingConciergeTasksSection"));
+const LodgingLostFoundSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingLostFoundSection"));
+const LodgingGallerySection = React.lazy(() => import("@/components/admin/store/lodging/LodgingGallerySection"));
+const LodgingNightAuditSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingNightAuditSection"));
+const LodgingShiftHandoverSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingShiftHandoverSection"));
+const LodgingFolioSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingFolioSection"));
+const LodgingGroupBookingSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingGroupBookingSection"));
+const LodgingRevenueSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingRevenueSection"));
+const LodgingNotificationsSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingNotificationsSection"));
+const LodgingYieldRulesSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingYieldRulesSection"));
+const LodgingInventorySection = React.lazy(() => import("@/components/admin/store/lodging/LodgingInventorySection"));
+const LodgingRoomServiceSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingRoomServiceSection"));
+const LodgingGiftVouchersSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingGiftVouchersSection"));
+const LodgingParkingSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingParkingSection"));
+const LodgingWakeupCallsSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingWakeupCallsSection"));
+const LodgingLaundrySection = React.lazy(() => import("@/components/admin/store/lodging/LodgingLaundrySection"));
+const LodgingComplaintsSection = React.lazy(() => import("@/components/admin/store/lodging/LodgingComplaintsSection"));
+const SoftwareDownloadsSection = React.lazy(() => import("@/components/admin/store/SoftwareDownloadsSection"));
+
+function LazyAdminSectionFallback() {
+  return (
+    <div className="flex min-h-[220px] items-center justify-center rounded-2xl border border-border/40 bg-card/60">
+      <Loader2 className="h-5 w-5 animate-spin text-primary" />
+    </div>
+  );
+}
 
 function normalizeLocalizedNumberInput(value: string): string {
   const khmerToLatin: Record<string, string> = {
@@ -2733,6 +2742,7 @@ export default function AdminStoreEditPage() {
           )}
 
 
+          <Suspense fallback={<LazyAdminSectionFallback />}>
           <TabsContent value="profile" className="space-y-4">
             {/* ── Auto Repair Live Overview ── */}
             {isAutoRepair && arStats && (
@@ -3821,7 +3831,6 @@ export default function AdminStoreEditPage() {
                           return (
                             <button type="button"
                               key={dayEn}
-                              type="button"
                               onClick={() => {
                                 const days = form.booking_days || [];
                                 const updated = days.includes(dayEn) ? days.filter((d: string) => d !== dayEn) : [...days, dayEn];
@@ -4064,6 +4073,7 @@ export default function AdminStoreEditPage() {
           <TabsContent value="software" data-testid="store-tab-software">
             <SoftwareDownloadsSection storeCategory={form.category} />
           </TabsContent>
+          </Suspense>
 
         </Tabs>
       </div>
@@ -4859,7 +4869,6 @@ export default function AdminStoreEditPage() {
                     {["ចំនួន", "គីឡូ", "កញ្ចប់", "ដប", "កំប៉ុង", "ប្រអប់", "ដុំ", "ចាន", "កែវ", "ថង់", "kg", "g", "pcs", "pack", "bottle", "box", "liter", "dozen"].map(u => (
                       <button type="button"
                         key={u}
-                        type="button"
                         onClick={() => updateProductField("unit", productForm.unit === u ? "" : u)}
                         className={cn(
                           "px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors",
@@ -4997,7 +5006,6 @@ export default function AdminStoreEditPage() {
                     ].map(b => (
                       <button type="button"
                         key={b.value}
-                        type="button"
                         onClick={() => updateProductField("badge", productForm.badge === b.value ? "" : b.value)}
                         className={cn(
                           "px-2.5 py-1 rounded-lg text-xs font-medium border transition-colors",
