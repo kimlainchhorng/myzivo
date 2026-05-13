@@ -4,6 +4,7 @@
  * cloud recording before the call begins.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
+import { createPortal } from "react-dom";
 import {
   Mic, MicOff, Video, VideoOff, Radio, X, ArrowRight,
   CheckCircle2, AlertTriangle, Loader2,
@@ -141,8 +142,8 @@ export default function CallLobby({
     onCancel();
   };
 
-  return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-zinc-950 text-white">
+  const lobby = (
+    <div className="fixed inset-0 z-[1500] flex flex-col bg-zinc-950 text-white">
       <header
         className="flex shrink-0 items-center justify-between px-4"
         style={{ paddingTop: "calc(env(safe-area-inset-top, 0px) + 12px)", paddingBottom: 12 }}
@@ -346,4 +347,6 @@ export default function CallLobby({
       </div>
     </div>
   );
+
+  return typeof document !== "undefined" ? createPortal(lobby, document.body) : lobby;
 }

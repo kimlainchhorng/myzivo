@@ -130,7 +130,7 @@ export default function VoiceMessageBubble({
       <div
         ref={wrapRef}
         className={`chat-no-callout relative max-w-[80%] min-w-[220px] px-3 py-2.5 rounded-2xl shadow-sm ${
-          isMe ? "bg-primary text-primary-foreground rounded-br-md" : "bg-muted text-foreground rounded-bl-md"
+          isMe ? "bg-gradient-to-br from-zinc-800 to-zinc-900 text-white rounded-br-md dark:from-zinc-100 dark:to-white dark:text-zinc-900" : "bg-muted text-foreground rounded-bl-md"
         }`}
         onContextMenu={onContextMenu}
         onPointerDown={onPointerDown}
@@ -162,7 +162,7 @@ export default function VoiceMessageBubble({
           />
         </Suspense>
         <div className="flex items-center justify-end gap-1 mt-1">
-          <span className={`text-[9px] ${isMe ? "text-primary-foreground/50" : "text-muted-foreground/70"}`}>
+          <span className={`text-[9px] ${isMe ? "text-white/60 dark:text-zinc-900/60" : "text-muted-foreground/70"}`}>
             {time}
           </span>
         </div>

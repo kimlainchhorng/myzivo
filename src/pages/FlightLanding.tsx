@@ -3,7 +3,7 @@
  * Cinematic 3D/4D immersive flight search experience
  */
 
-import { useRef, useCallback, useMemo, useState, useEffect } from "react";
+import { useRef, useCallback, useMemo, useState, useEffect, lazy, Suspense } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useQueryClient } from "@tanstack/react-query";
 import {
@@ -37,8 +37,10 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { FlightSearchFormPro } from "@/components/search";
+const AISmartDeals = lazy(() => import("@/components/home/AISmartDeals"));
 import { usePopularRoutePrices } from "@/hooks/usePopularRoutePrices";
 import { useTravelpayoutsPopularRoutes } from "@/hooks/useTravelpayoutsPopularRoutes";
+import { useFlightAppTrackingTransparencyPrompt } from "@/hooks/useFlightAppTrackingTransparencyPrompt";
 import { format, parseISO } from "date-fns";
 import { Calendar } from "lucide-react";
 
@@ -742,6 +744,11 @@ function DesktopCinematicHero() {
               <PopularRoutesSection />
             </ScrollReveal3D>
             <ScrollReveal3D>
+              <Suspense fallback={<div className="h-40 rounded-2xl bg-muted/30 animate-pulse" />}>
+                <AISmartDeals />
+              </Suspense>
+            </ScrollReveal3D>
+            <ScrollReveal3D>
               <WhyZivoSection />
             </ScrollReveal3D>
           </div>
@@ -931,6 +938,12 @@ function MobileFlightSearch() {
 
       <ScrollReveal3D><PopularRoutesSection /></ScrollReveal3D>
 
+      <ScrollReveal3D>
+        <Suspense fallback={<div className="h-40 rounded-2xl bg-muted/30 animate-pulse" />}>
+          <AISmartDeals />
+        </Suspense>
+      </ScrollReveal3D>
+
       {/* Bundle cross-promo */}
       <motion.button
         type="button"
@@ -1098,6 +1111,7 @@ function Animated3DBackground() {
 
 /* ─── Main Component ─── */
 const FlightLanding = () => {
+  useFlightAppTrackingTransparencyPrompt(true);
   const isMobile = useIsMobile();
 
   if (isMobile) {

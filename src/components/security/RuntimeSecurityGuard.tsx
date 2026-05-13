@@ -35,8 +35,18 @@ export default function RuntimeSecurityGuard() {
         return;
       }
 
-      if (canNotify()) {
-        toast.error("Unexpected runtime error detected. Please retry your action.");
+      // Suppress noisy transient rejections (network blips, AbortError from
+      // unmounted queries, third-party SDK quirks). Log to console for devs,
+      // but don't surface a generic toast that the user can't act on.
+      const transient =
+        msg.includes("aborterror") ||
+        msg.includes("abort") ||
+        msg.includes("networkerror") ||
+        msg.includes("failed to fetch") ||
+        msg.includes("load failed") ||
+        msg.includes("the operation was aborted");
+      if (!transient && canNotify()) {
+        toast.error("Something went wrong. Please retry your action.");
       }
       console.error("[RuntimeSecurityGuard] Unhandled rejection:", event.reason);
     };

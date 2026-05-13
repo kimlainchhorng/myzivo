@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { useLoyaltyPoints } from "@/hooks/useLoyaltyPoints";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
+import { TIER_LABELS } from "./index";
 
 interface PointsBalanceCardProps {
   className?: string;
@@ -22,7 +23,7 @@ const PointsBalanceCard = ({ className }: PointsBalanceCardProps) => {
             <Coins className="w-5 h-5 text-amber-400" />
             <span className="text-sm font-medium">ZIVO Miles</span>
           </div>
-          <span className="text-xs text-muted-foreground capitalize">{points.tier} tier</span>
+          <span className="text-xs text-muted-foreground">{TIER_LABELS[points.tier] ?? points.tier} Tier</span>
         </div>
         <p className="text-3xl font-display font-bold">
           {isLoading ? "—" : points.points_balance.toLocaleString()}

@@ -3130,9 +3130,11 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
           noIndex
         />
         {shell}
-        <Suspense fallback={null}>
-          <ZivoMobileNav />
-        </Suspense>
+        {!openPersonalChat && !openGroupChat && (
+          <Suspense fallback={null}>
+            <ZivoMobileNav />
+          </Suspense>
+        )}
       </PullToRefresh>
     </div>
   );

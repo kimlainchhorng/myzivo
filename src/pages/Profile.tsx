@@ -1311,7 +1311,7 @@ const Profile = () => {
                           <span aria-hidden="true" className="text-muted-foreground/70">·</span>
                           <span className="inline-flex items-baseline gap-1">
                             <span className="font-bold text-foreground">{formatCount(postsCount) ?? "0"}</span>
-                            <span className="font-medium text-muted-foreground">posts</span>
+                            <span className="font-medium text-muted-foreground">{postsCount === 1 ? "post" : "posts"}</span>
                           </span>
                         </div>
                       ) : (
@@ -1323,7 +1323,7 @@ const Profile = () => {
                             className="inline-flex items-baseline gap-1 rounded-md px-1 -mx-1 py-0.5 hover:underline focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
                           >
                             <span className="font-bold text-foreground">{formatCount(followerCount) ?? "0"}</span>
-                            <span className="font-medium text-muted-foreground">followers</span>
+                            <span className="font-medium text-muted-foreground">{followerCount === 1 ? "follower" : "followers"}</span>
                           </button>
                           <span aria-hidden="true" className="text-muted-foreground/70">·</span>
                           <button
@@ -1338,7 +1338,7 @@ const Profile = () => {
                           <span aria-hidden="true" className="text-muted-foreground/70">·</span>
                           <span className="inline-flex items-baseline gap-1">
                             <span className="font-bold text-foreground">{formatCount(postsCount) ?? "0"}</span>
-                            <span className="font-medium text-muted-foreground">posts</span>
+                            <span className="font-medium text-muted-foreground">{postsCount === 1 ? "post" : "posts"}</span>
                           </span>
                           <span aria-hidden="true" className="text-muted-foreground/70">·</span>
                           <button
@@ -1348,7 +1348,7 @@ const Profile = () => {
                             className="inline-flex items-baseline gap-1 rounded-md px-1 -mx-1 py-0.5 hover:underline focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
                           >
                             <span className="font-bold text-foreground">{formatCount(friendCount) ?? "0"}</span>
-                            <span className="font-medium text-muted-foreground">friends</span>
+                            <span className="font-medium text-muted-foreground">{friendCount === 1 ? "friend" : "friends"}</span>
                           </button>
                         </div>
                       )}
@@ -1390,7 +1390,7 @@ const Profile = () => {
                           {[
                             { label: "Shop", icon: Store, onClick: openShopDashboard },
                             { label: "Employees", icon: Users, onClick: () => { selectionChanged(); if (!user) { toast.info("Sign in to open Workplace"); navigate("/login?redirect=/personal-dashboard"); return; } navigate("/personal-dashboard"); } },
-                            { label: "Mode", icon: Repeat, onClick: () => { selectionChanged(); setModeOpen(true); } },
+                            { label: "Switch Mode", icon: Repeat, onClick: () => { selectionChanged(); setModeOpen(true); } },
                             { label: "Monetization", icon: DollarSign, onClick: () => { selectionChanged(); navigate("/monetization"); } },
                           ].map((a) => (
                             <button type="button"
@@ -1679,7 +1679,7 @@ const Profile = () => {
                 {[
                   { label: "Edit profile", icon: Pencil, route: "/profile/edit" },
                   { label: "Privacy", icon: Shield, route: "/settings/privacy" },
-                  { label: "Notifications", icon: Bell, route: "/settings/notifications" },
+                  { label: "Notifications", icon: Bell, route: "/account/notifications" },
                   { label: "Wallet", icon: Wallet, route: "/wallet" },
                   { label: "Saved places", icon: MapPin, route: "/saved-places" },
                   { label: "Security", icon: Lock, route: "/settings/security" },

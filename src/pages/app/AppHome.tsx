@@ -43,7 +43,6 @@ const LiveTripTracker = lazy(() => import("@/components/home/widgets/LiveTripTra
 const TrendingNearYou = lazy(() => import("@/components/home/TrendingNearYou"));
 const QuickReorderCarousel = lazy(() => import("@/components/home/widgets/QuickReorderCarousel"));
 const PriceAlertsWidget = lazy(() => import("@/components/home/widgets/PriceAlertsWidget"));
-const AISmartDeals = lazy(() => import("@/components/home/AISmartDeals"));
 const ZivoMobileNav = lazy(() => import("@/components/app/ZivoMobileNav"));
 const UniversalSearchOverlay = lazy(() => import("@/components/search/UniversalSearchOverlay"));
 const PlanTripBundle = lazy(() => import("@/components/home/PlanTripBundle"));
@@ -576,7 +575,6 @@ const AppHome = () => {
   const serviceHighlights = [
     { title: t("home.ride"), subtitle: t("home.book_ride"), gradient: "from-emerald-500 to-teal-600", icon: Car, cta: "Open", href: "/rides/hub" },
     { title: t("home.eats"), subtitle: t("home.dinner"), gradient: "from-orange-500 to-amber-600", icon: Package, cta: "Open", href: "/eats" },
-    { title: t("home.flights"), subtitle: t("home.search_flights"), gradient: "from-foreground to-foreground/80", icon: Plane, cta: "Open", href: "/flights" },
     { title: t("home.hotels"), subtitle: t("home.search_hotels"), gradient: "from-foreground to-foreground/80", icon: BedDouble, cta: "Open", href: "/hotels" },
     // Driver recruitment — US only
     ...(!isKH ? [{ title: "Become a ZIVO Driver", subtitle: "", gradient: "from-foreground to-foreground/80", icon: Car, cta: "Join ZIVO Today", href: "/driver-signup", isDriverPromo: true as const }] : []),
@@ -1219,87 +1217,6 @@ const AppHome = () => {
 
           {/* ─── PRICE ALERTS WIDGET ─── */}
           <Suspense fallback={null}><PriceAlertsWidget /></Suspense>
-
-          {/* ─── POPULAR NEAR YOU ─── */}
-          <div>
-            <SectionHeader icon={TrendingUp} iconColor="text-emerald-500" title={t("home.popular_near")} badge="Hot" actionLabel={t("home.see_all")} onSeeAll={() => navigate("/flights")} />
-
-
-            {/* Popular Destinations — Top 4 Grid + Scroll for more */}
-            <div className="mb-6">
-              <p className="text-[10px] uppercase font-bold text-muted-foreground/60 tracking-[0.2em] mb-3">{t("home.destinations")}</p>
-              
-              {/* Top 4 in 2x2 grid */}
-              <div className="grid grid-cols-2 gap-3 mb-3">
-                {(isKH ? cambodiaDestKeysKH : popularDestKeysUS).slice(0, 4).map((key, i) => {
-                  const dest = destinationPhotos[key as keyof typeof destinationPhotos];
-                  if (!dest) return null;
-                  return (
-                    <motion.button
-                      key={key}
-                      whileTap={{ scale: 0.96 }}
-                      onClick={() => navigate(`/search?tab=flights&to=${dest.city}`)}
-                      className="rounded-2xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300 touch-manipulation text-left group relative"
-                    >
-                      <div className="relative h-[120px] overflow-hidden">
-                        <img src={dest.src} alt={dest.alt} width={340} height={120} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700" loading="lazy" />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
-                        {i < 2 && (
-                          <div className="absolute top-2 left-2 bg-amber-500/90 backdrop-blur-sm rounded-full px-2 py-0.5 shadow-sm">
-                            <span className="text-[8px] font-bold text-primary-foreground uppercase tracking-wider">{t("home.trending")}</span>
-                          </div>
-                        )}
-                        <div className="absolute bottom-3 left-3 right-3">
-                          <div className="text-xs font-bold text-primary-foreground">{dest.city}</div>
-                          <div className="text-[10px] text-primary-foreground/80 font-semibold flex items-center gap-1">
-                            <Plane className="w-2.5 h-2.5" />
-                            {destPrices[key] != null
-                              ? `${t("home.from")} $${Math.round(destPrices[key]!)}`
-                              : destPricesLoading
-                                ? "..."
-                                : t("home.search_flights")}
-                          </div>
-                        </div>
-                      </div>
-                    </motion.button>
-                  );
-                })}
-              </div>
-
-              {/* More destinations label + horizontal scroll */}
-              <p className="text-[9px] uppercase font-bold text-muted-foreground/40 tracking-[0.15em] mb-2">More to explore</p>
-              <div className="flex gap-2.5 overflow-x-auto pb-2 scrollbar-hide -mx-5 px-5">
-                {(isKH ? cambodiaDestKeysKH : popularDestKeysUS).slice(4).map((key) => {
-                  const dest = destinationPhotos[key as keyof typeof destinationPhotos];
-                  if (!dest) return null;
-                  return (
-                    <motion.button
-                      key={key}
-                      whileTap={{ scale: 0.96 }}
-                      onClick={() => navigate(`/search?tab=flights&to=${dest.city}`)}
-                      className="shrink-0 flex flex-col items-center gap-1.5 touch-manipulation group"
-                    >
-                      <div className="relative w-[72px] h-[72px] rounded-full overflow-hidden ring-2 ring-border/30 group-hover:ring-primary/40 transition-all">
-                        <img src={dest.src} alt={dest.alt} width={72} height={72} className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500" loading="lazy" />
-                      </div>
-                      <div className="text-center">
-                        <div className="text-[10px] font-semibold text-foreground leading-tight truncate max-w-[76px]">{dest.city}</div>
-                        <div className="text-[8px] text-muted-foreground font-medium">
-                          {destPrices[key] != null
-                            ? `$${Math.round(destPrices[key]!)}`
-                            : destPricesLoading ? "..." : ""}
-                        </div>
-                      </div>
-                    </motion.button>
-                  );
-                })}
-              </div>
-            </div>
-
-          </div>
-
-          {/* ─── AI SMART DEALS ─── */}
-          <Suspense fallback={<div className="h-40 rounded-2xl bg-muted/30 animate-pulse" />}><AISmartDeals /></Suspense>
 
           {/* ─── LOYALTY & REWARDS CARD ─── */}
           {user && points && (

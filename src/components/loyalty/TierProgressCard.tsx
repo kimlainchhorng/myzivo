@@ -4,13 +4,7 @@ import { Progress } from "@/components/ui/progress";
 import { useLoyaltyPoints } from "@/hooks/useLoyaltyPoints";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
-
-const TIER_LABELS: Record<string, string> = {
-  standard: "Explorer",
-  bronze: "Traveler",
-  silver: "Voyager",
-  gold: "Elite",
-};
+import { TIER_LABELS } from "./index";
 
 interface TierProgressCardProps {
   className?: string;

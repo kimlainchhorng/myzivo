@@ -1082,9 +1082,9 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose, au
             aria-label={`View ${groupName} group photo`}
             className="rounded-full focus:outline-none focus:ring-2 focus:ring-primary/40"
           >
-            <Avatar className="h-9 w-9 border-2 border-border/30">
+            <Avatar className="h-9 w-9 ring-1 ring-border/40 shadow-sm">
               <AvatarImage src={groupAvatar || undefined} />
-              <AvatarFallback className="text-xs font-bold bg-primary/10 text-primary">{initials}</AvatarFallback>
+              <AvatarFallback className="text-[11px] font-bold bg-gradient-to-br from-violet-500 via-fuchsia-500 to-rose-500 text-white">{initials}</AvatarFallback>
             </Avatar>
           </button>
           <div className="min-w-0 flex-1">
@@ -1096,33 +1096,33 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose, au
           <div className="flex items-center gap-0.5">
             <button type="button"
               onClick={() => { void primeCallAudio(); setGroupCall("video"); }}
-              className="h-11 w-11 flex items-center justify-center rounded-full hover:bg-blue-500/10"
+              className="h-11 w-11 flex items-center justify-center rounded-full hover:bg-muted/60 active:bg-muted transition-colors"
               aria-label="Video call"
               title="Video call"
             >
-              <Video className="h-5 w-5 text-blue-500" />
+              <Video className="h-5 w-5 text-foreground" />
             </button>
             <button type="button"
               onClick={() => { void primeCallAudio(); setGroupCall("audio"); }}
-              className="h-11 w-11 flex items-center justify-center rounded-full hover:bg-emerald-500/10"
+              className="h-11 w-11 flex items-center justify-center rounded-full hover:bg-muted/60 active:bg-muted transition-colors"
               aria-label="Voice call"
               title="Voice call"
             >
-              <Phone className="h-[19px] w-[19px] text-emerald-500" />
+              <Phone className="h-[19px] w-[19px] text-foreground" />
             </button>
             <button type="button"
               onClick={() => setShowMembers(true)}
-              className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full hover:bg-muted/50"
+              className="h-11 px-2 flex items-center justify-center gap-1 rounded-full hover:bg-muted/60 active:bg-muted transition-colors"
               aria-label="Members"
               title="Members"
             >
-              <Users className="h-4 w-4 text-muted-foreground" />
+              <Users className="h-4 w-4 text-foreground" />
+              <span className="text-xs font-medium text-foreground">{members.length}</span>
             </button>
-            <span className="text-xs text-muted-foreground">{members.length}</span>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <button type="button" className="min-h-[40px] min-w-[40px] flex items-center justify-center rounded-full hover:bg-muted/50" aria-label="More options" title="More options">
-                  <MoreVertical className="h-4 w-4 text-muted-foreground" />
+                <button type="button" className="h-11 w-11 flex items-center justify-center rounded-full hover:bg-muted/60 active:bg-muted transition-colors" aria-label="More options" title="More options">
+                  <MoreVertical className="h-4 w-4 text-foreground" />
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
@@ -1554,7 +1554,7 @@ export default function GroupChat({ groupId, groupName, groupAvatar, onClose, au
       </AnimatePresence>
 
       {/* Input */}
-      <div className="bg-background/80 backdrop-blur-2xl border-t border-border/5 px-2.5 py-2 relative [padding-bottom:max(env(safe-area-inset-bottom,0px),0.5rem)] lg:[&>*]:max-w-4xl lg:[&>*]:mx-auto lg:[&>*]:w-full">
+      <div className="bg-background/80 backdrop-blur-2xl border-t border-border/5 px-2.5 py-2 relative [padding-bottom:max(env(safe-area-inset-bottom,0px),0.875rem)] lg:[&>*]:max-w-4xl lg:[&>*]:mx-auto lg:[&>*]:w-full">
         {/* Sticker auto-suggestions (Telegram parity) — shown when the user types an emoji.
             Hidden during slash mode so the popovers don't fight. */}
         {stickerSuggestions.length > 0 && slashQuery == null && (

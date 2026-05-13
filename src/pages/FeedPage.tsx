@@ -116,7 +116,6 @@ const CaptionEditDialog = lazy(() => import("@/components/social/CaptionEditDial
 const CommentHeartButton = lazy(() => import("@/components/social/CommentHeartButton"));
 const CommentRowActions = lazy(() => import("@/components/social/CommentRowActions"));
 const ReelsCoachmarks = lazy(() => import("@/components/social/ReelsCoachmarks"));
-const ReelSocialProof = lazy(() => import("@/components/reels/ReelSocialProof"));
 const LikedByModal = lazy(() => import("@/components/social/LikedByModal"));
 
 interface FeedPost {
@@ -257,7 +256,7 @@ function InfiniteScrollSentinel({
   );
 }
 
-function MusicTicker({ name, onClick }: { name: string; onClick?: () => void }) {
+function MusicTicker({ name, avatarUrl, isPlaying, onClick }: { name: string; avatarUrl?: string | null; isPlaying?: boolean; onClick?: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const textRef = useRef<HTMLDivElement>(null);
   const [shouldMarquee, setShouldMarquee] = useState(false);
@@ -271,12 +270,21 @@ function MusicTicker({ name, onClick }: { name: string; onClick?: () => void }) 
     <button
       type="button"
       onClick={(e) => { e.stopPropagation(); onClick?.(); }}
-      className="flex min-h-[40px] w-full min-w-0 items-center gap-2 overflow-hidden active:opacity-70"
+      className="inline-flex min-h-[28px] max-w-[80%] min-w-0 items-center gap-2 overflow-hidden active:opacity-70"
     >
-      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-white/20 to-white/5 border border-white/20 flex items-center justify-center shrink-0 animate-[spin_3s_linear_infinite]">
-        <svg viewBox="0 0 24 24" className="w-4 h-4 fill-white">
-          <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
-        </svg>
+      <div
+        className={cn(
+          "w-7 h-7 rounded-full overflow-hidden border-2 border-black bg-gradient-to-br from-zinc-700 via-zinc-900 to-black flex items-center justify-center shrink-0",
+          isPlaying && "animate-[spin_5s_linear_infinite]",
+        )}
+      >
+        {avatarUrl ? (
+          <img src={avatarUrl} alt="" className="w-5 h-5 rounded-full object-cover" />
+        ) : (
+          <svg viewBox="0 0 24 24" className="w-3.5 h-3.5 fill-white">
+            <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z" />
+          </svg>
+        )}
       </div>
       <div ref={containerRef} className="overflow-hidden flex-1 min-w-0">
         <div
@@ -1528,7 +1536,7 @@ function ReelCard({
             );
           })()}
 
-          {/* Follow / Following button */}
+          {/* Follow / Following button (user posts) */}
           {authorId && !isSelf && (
             <button
               type="button"
@@ -1550,15 +1558,18 @@ function ReelCard({
               )}
             </button>
           )}
+          {/* Visit shop CTA (store posts) — tap to open the merchant page */}
+          {post.source === "store" && post.store_slug && (
+            <button
+              type="button"
+              onClick={(e) => { e.stopPropagation(); onNavigate(post.store_slug!); }}
+              className="shrink-0 px-3 py-1 rounded-md text-xs font-semibold transition-all active:scale-95 border backdrop-blur-sm bg-primary border-primary text-primary-foreground inline-flex items-center gap-1"
+            >
+              <Store className="w-3.5 h-3.5" />
+              Visit shop
+            </button>
+          )}
         </div>
-        {/* Live social-proof ticker — its own row so it doesn't crush the creator name. */}
-        {post.source === "store" && post.store_id && (
-          <div className="mb-1.5 max-w-full overflow-hidden">
-            <Suspense fallback={null}>
-              <ReelSocialProof storeId={post.store_id} postId={post.id} />
-            </Suspense>
-          </div>
-        )}
         {/* Location row only — TikTok-style: hide the post timestamp on the
             feed (it makes month-old reels feel stale). Time still shows on
             profile pages. */}
@@ -1754,6 +1765,8 @@ function ReelCard({
         {/* Music ticker */}
         <MusicTicker
           name={post.audio_name || `Original Sound - ${post.source === "user" ? post.author_name || "ZIVO" : post.store_name || "ZIVO"}`}
+          avatarUrl={post.source === "user" ? post.author_avatar : post.store_logo}
+          isPlaying={isActive && isPlaying}
           onClick={() => {
             const soundLabel = post.audio_name || `Original Sound - ${post.source === "user" ? post.author_name || "ZIVO" : post.store_name || "ZIVO"}`;
             onOpenSound(soundLabel);
@@ -1767,7 +1780,7 @@ function ReelCard({
             without clipping the avatar off the top.
           - tablet (≥sm):  gap-5, all items
           - desktop (≥lg): gap-6, larger icons */}
-      <div className="absolute right-5 sm:right-3 lg:right-4 bottom-[calc(env(safe-area-inset-bottom,0px)+96px)] z-30 flex flex-col items-center justify-end gap-3 sm:gap-5 lg:gap-6">
+      <div className="absolute right-5 sm:right-3 lg:right-4 bottom-[calc(env(safe-area-inset-bottom,0px)+128px)] z-30 flex flex-col items-center justify-end gap-3 sm:gap-5 lg:gap-6">
         {/* Mute moved out of the right rail — TikTok exposes mute via tap-on-
             video + a transient toast, not a persistent button. The visible
             "muted" state on the feed is now signaled by the floating pill
@@ -2027,35 +2040,9 @@ function ReelCard({
           </div>
         </button>
 
-        {/* Rotating sound disk — TikTok-signature album art. Spins only while
-            the video is playing; tap to open the sound's reels feed. */}
-        <button
-          type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            const soundLabel = post.audio_name || `Original Sound - ${post.source === "user" ? post.author_name || "ZIVO" : post.store_name || "ZIVO"}`;
-            onOpenSound(soundLabel);
-          }}
-          className="mt-1 relative"
-          aria-label="Sound details"
-        >
-          <div
-            className={cn(
-              "w-11 h-11 rounded-full overflow-hidden border-2 border-black bg-gradient-to-br from-zinc-700 via-zinc-900 to-black flex items-center justify-center",
-              isActive && isPlaying && "animate-[spin_5s_linear_infinite]",
-            )}
-          >
-            {(post.source === "user" ? post.author_avatar : post.store_logo) ? (
-              <img
-                src={(post.source === "user" ? post.author_avatar : post.store_logo)!}
-                alt=""
-                className="w-7 h-7 rounded-full object-cover"
-              />
-            ) : (
-              <Music className="w-4 h-4 text-white" />
-            )}
-          </div>
-        </button>
+        {/* Sound disk moved inline into the MusicTicker (TikTok-style next to
+            the caption) — keeps the right rail lean and avoids overlap with
+            the music bar. */}
       </div>
 
       {/* Scrub timecode — appears in the center of the screen while dragging
@@ -4601,7 +4588,7 @@ export default function FeedPage() {
           Wrapped in a centered container so on iPad (md+), where the reel
           sits in a 420-px-wide phone frame, the buttons hug the right edge
           of the frame instead of floating in the black gutter outside it. */}
-      <div className="absolute inset-x-0 top-safe-overlay z-50 mx-auto md:max-w-[420px] pointer-events-none lg:hidden mt-12 sm:mt-0">
+      <div className="absolute inset-x-0 top-safe-overlay z-50 mx-auto md:max-w-[420px] pointer-events-none lg:hidden">
       <div data-testid="feed-floating-actions" className="flex justify-end gap-2 sm:gap-2.5 px-3 sm:px-4">
         {/* Mute toggle — moved out of the bottom-right action rail so the
             rail can stay TikTok-lean (5 icons). Tap to flip global mute. */}
@@ -5310,8 +5297,8 @@ export default function FeedPage() {
         )}
       </div>
 
-      {/* Bottom navigation overlaid on top. Hidden on /reels for a true fullscreen viewer. */}
-      {!isReelsRoute && <ZivoMobileNav />}
+      {/* Bottom navigation overlaid on top — shown on both /feed and /reels so users always have a way back to other tabs. */}
+      <ZivoMobileNav />
     </div>
     </MotionConfig>
   );

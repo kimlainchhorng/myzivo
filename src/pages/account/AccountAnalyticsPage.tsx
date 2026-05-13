@@ -179,12 +179,17 @@ export default function AccountAnalyticsPage() {
   return (
     <div className="min-h-screen bg-background pb-20">
       <SEOHead title="Analytics – ZIVO" description="View your profile visits, engagement statistics, follower growth trends, and top performing posts by likes, comments, shares, and saves." />
-      <div className="sticky top-0 z-40 bg-background/80 backdrop-blur-md border-b border-border/50 safe-area-top">
+      <div className="sticky top-0 z-40 bg-background/95 backdrop-blur-md border-b border-border/50 safe-area-top">
         <div className="flex items-center gap-3 px-4 py-3">
-          <Button variant="ghost" size="icon" aria-label="Back" className="h-10 w-10 rounded-full" onClick={() => navigate(-1)}>
+          <button
+            type="button"
+            aria-label="Back"
+            onClick={() => { if (window.history.length > 1) navigate(-1); else navigate("/profile"); }}
+            className="h-10 w-10 flex items-center justify-center rounded-full border border-border/60 bg-muted/40 hover:bg-muted text-foreground active:scale-95 transition focus-visible:ring-2 focus-visible:ring-primary/60 focus-visible:outline-none"
+          >
             <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <h1 className="text-lg font-semibold">Analytics</h1>
+          </button>
+          <h1 className="text-lg font-semibold text-foreground">Analytics</h1>
         </div>
         <div className="flex gap-1 px-4 pb-2">
           {(["7d", "30d", "90d"] as Period[]).map((p) => (

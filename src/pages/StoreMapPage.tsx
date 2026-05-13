@@ -85,9 +85,17 @@ async function getApiKey(): Promise<string> {
   if (!sessionData.session) return "";
   _apiKeyPromise = (async () => {
     try {
-      const { data, error } = await supabase.functions.invoke("maps-api-key");
+      // 6s timeout — the edge function call can hang on cold-start or
+      // network issues. Failing fast lets the map show its error state.
+      const invoke = supabase.functions.invoke("maps-api-key");
+      const timeout = new Promise<{ data: null; error: Error }>((resolve) =>
+        setTimeout(() => resolve({ data: null, error: new Error("maps-api-key timeout") }), 6000),
+      );
+      const { data, error } = await Promise.race([invoke, timeout]);
       if (!error && data?.key) return data.key as string;
     } catch { /* fallback */ }
+    // Reset cache on failure so a retry attempts a fresh fetch.
+    _apiKeyPromise = null;
     return "";
   })();
   return _apiKeyPromise;
@@ -108,22 +116,30 @@ async function loadGoogleMaps(apiKey: string): Promise<boolean> {
       await new Promise<void>((res) => {
         if ((window as any).google?.maps) return res();
         existing.addEventListener("load", () => res());
-        setTimeout(() => res(), 3000);
+        setTimeout(() => res(), 8000);
       });
-      return !!(window as any).google?.maps;
+      const ok = !!(window as any).google?.maps;
+      if (!ok) _mapsLoadPromise = null;
+      return ok;
     }
     return new Promise<boolean>((resolve) => {
       const script = document.createElement("script");
       script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=marker&loading=async`;
       script.async = true;
       script.defer = true;
-      script.onload = () => resolve(true);
-      script.onerror = () => {
-        // Reset cache so a retry can attempt a fresh load instead of
-        // permanently returning a failed promise.
-        _mapsLoadPromise = null;
-        resolve(false);
+      let settled = false;
+      const finish = (ok: boolean) => {
+        if (settled) return;
+        settled = true;
+        if (!ok) _mapsLoadPromise = null;
+        resolve(ok);
       };
+      script.onload = () => finish(true);
+      script.onerror = () => finish(false);
+      // Hard timeout — if Google Maps can't load in 15s (blocked, offline,
+      // proxy issues), surface a Map-unavailable state instead of leaving
+      // the user stuck on "Loading map…" forever.
+      setTimeout(() => finish(false), 15000);
       document.head.appendChild(script);
     });
   })();
@@ -715,6 +731,19 @@ export default function StoreMapPage() {
       return da - db;
     });
   }, [filteredStores, effectiveCenter]);
+
+  // Detects the "you're in the wrong region" case: user has a real GPS fix
+  // but every store is hundreds of kilometres away. Without this signal, the
+  // list shows misleading "12,000 km" distances and looks broken.
+  const farFromAllStores = useMemo(() => {
+    if (!userLocation || filteredStores.length === 0) return false;
+    const nearestKm = Math.min(
+      ...filteredStores.map((s) =>
+        distanceMiles(userLocation, { lat: s.latitude, lng: s.longitude }) * 1.609344,
+      ),
+    );
+    return nearestKm > 200;
+  }, [userLocation, filteredStores]);
 
   const trendingCount = useMemo(() => stores.filter((s) => !!liveStoreMap[s.id]).length, [stores, liveStoreMap]);
   const openNowCount = useMemo(() => stores.filter((s) => isOpenNow(s.hours) === true).length, [stores]);
@@ -1748,6 +1777,21 @@ export default function StoreMapPage() {
               >
                 Retry
               </button>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* ── "You're far from these stores" banner ── */}
+        <AnimatePresence>
+          {farFromAllStores && !locationDenied && (
+            <motion.div
+              initial={{ y: -20, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: -20, opacity: 0 }}
+              className="absolute top-[72px] left-3 right-3 z-[1600] flex items-center gap-2 rounded-2xl bg-sky-500/95 backdrop-blur-xl shadow-lg px-4 py-2.5 text-white text-[12px] font-semibold"
+            >
+              <MapPin className="w-4 h-4 shrink-0" />
+              <span className="flex-1">No stores near you — showing distant results</span>
             </motion.div>
           )}
         </AnimatePresence>

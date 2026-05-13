@@ -509,10 +509,10 @@
     /* Derived variables chain through --zivo-safe-top so E2E tests can inject
        a simulated inset by overriding only the root variable. */
     /* Fullscreen overlays (post-detail header, ReelSlide close button,
-       For You / Following tabs over reels). Adds 0.625rem of breathing
+       For You / Following tabs over reels). Adds 1.25rem of breathing
        room above the safe-area inset so floating buttons don't sit
        flush against the Dynamic Island / notch. */
-    --zivo-safe-top-overlay: max(calc(var(--zivo-safe-top, 0px) + 0.625rem), 64px);
+    --zivo-safe-top-overlay: max(calc(var(--zivo-safe-top, 0px) + 1.25rem), 80px);
     /* Bottom-sheet headers (Comments, Share, post menu, etc.) */
     --zivo-safe-top-sheet: max(var(--zivo-safe-top, 0px), 44px);
     /* Sticky sub-headers (feed, search) */

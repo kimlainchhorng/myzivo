@@ -379,11 +379,11 @@ export default function RewardsPage() {
           <h2 className="text-sm font-bold mb-3 flex items-center gap-2"><Crown className="w-4 h-4 text-amber-500" /> Milestone Rewards</h2>
           <div className="grid grid-cols-2 gap-2">
             {[
-              { pts: "1,000", reward: "$10 credit", reached: true },
-              { pts: "2,500", reward: "Free upgrade", reached: false },
-              { pts: "5,000", reward: "Lounge pass", reached: false },
-              { pts: "10,000", reward: "Free flight", reached: false },
-            ].map(m => (
+              { ptsNum: 1000, pts: "1,000", reward: "$10 credit" },
+              { ptsNum: 2500, pts: "2,500", reward: "Free upgrade" },
+              { ptsNum: 5000, pts: "5,000", reward: "Lounge pass" },
+              { ptsNum: 10000, pts: "10,000", reward: "Free flight" },
+            ].map(({ ptsNum, ...m }) => ({ ...m, reached: points.points_balance >= ptsNum })).map(m => (
               <Card key={m.pts} className={cn("border-border/40", m.reached && "border-emerald-500/20 bg-emerald-500/5")}>
                 <CardContent className="p-3 text-center">
                   <p className="text-sm font-bold text-foreground">{m.pts}</p>
