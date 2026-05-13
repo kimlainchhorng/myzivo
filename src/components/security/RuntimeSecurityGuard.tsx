@@ -53,9 +53,9 @@ export default function RuntimeSecurityGuard() {
         msg.includes("billingnotenabled") ||
         msg.includes("invalidkeymaperror") ||
         msg.includes("referernotallowedmaperror");
-      if (!transient && canNotify()) {
-        toast.error("Something went wrong. Please retry your action.");
-      }
+      // Keep unexpected background promise failures visible to developers
+      // without showing a generic, non-actionable toast on normal page loads.
+      if (!transient) canNotify();
       console.error("[RuntimeSecurityGuard] Unhandled rejection:", event.reason);
     };
 

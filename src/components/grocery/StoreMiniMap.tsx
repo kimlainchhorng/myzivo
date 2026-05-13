@@ -4,16 +4,18 @@
  * dot, zoom/recenter controls, and distance label.
  */
 import { useEffect, useRef, useState } from "react";
-import { MapPin, ExternalLink, Plus, Minus, Locate, Timer } from "lucide-react";
+import { MapPin, ExternalLink, Plus, Minus, Locate, Timer, Navigation } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { distanceMiles } from "@/hooks/useStorePins";
+import { openDirections } from "@/lib/maps/openDirections";
 
 interface StoreMiniMapProps {
   latitude?: number | null;
   longitude?: number | null;
   storeName: string;
   slug: string;
+  address?: string | null;
   userLoc?: { lat: number; lng: number } | null;
 }
 
@@ -53,14 +55,15 @@ async function loadGoogleMaps(apiKey: string): Promise<boolean> {
 }
 
 const LIGHT_STYLES = [
-  { elementType: "geometry", stylers: [{ color: "#f5f5f5" }] },
+  { elementType: "geometry", stylers: [{ color: "#eef5f2" }] },
   { elementType: "labels.icon", stylers: [{ visibility: "off" }] },
   { elementType: "labels.text.fill", stylers: [{ color: "#616161" }] },
   { elementType: "labels.text.stroke", stylers: [{ color: "#f5f5f5" }] },
   { featureType: "administrative", elementType: "geometry", stylers: [{ visibility: "off" }] },
   { featureType: "poi", stylers: [{ visibility: "off" }] },
-  { featureType: "road", elementType: "geometry", stylers: [{ color: "#ffffff" }] },
-  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#e8e8e8" }] },
+  { featureType: "road", elementType: "geometry", stylers: [{ color: "#dfe7e3" }] },
+  { featureType: "road", elementType: "geometry.stroke", stylers: [{ color: "#cfd8d3" }] },
+  { featureType: "road.highway", elementType: "geometry", stylers: [{ color: "#cfdad5" }] },
   { featureType: "transit", stylers: [{ visibility: "off" }] },
   { featureType: "water", elementType: "geometry", stylers: [{ color: "#c9e8fc" }] },
 ];
@@ -86,30 +89,52 @@ function fmtWalk(mi: number): string {
   return `${mins} min walk`;
 }
 
-export default function StoreMiniMap({ latitude, longitude, storeName, slug, userLoc }: StoreMiniMapProps) {
+export default function StoreMiniMap({ latitude, longitude, storeName, slug, address, userLoc }: StoreMiniMapProps) {
   const hasCoords = typeof latitude === "number" && typeof longitude === "number";
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
   const userDotRef = useRef<any>(null);
+  const tilesLoadedRef = useRef(false);
   const [ready, setReady] = useState(false);
   const [failed, setFailed] = useState(false);
+  const [tilesLoaded, setTilesLoaded] = useState(false);
+  const [mapsKey, setMapsKey] = useState("");
 
   useEffect(() => {
     if (!hasCoords) return;
     let cancelled = false;
+    let tileTimer: ReturnType<typeof setTimeout> | undefined;
+    tilesLoadedRef.current = false;
+    setTilesLoaded(false);
+    setFailed(false);
+    setReady(false);
+    const previousAuthFailure = (window as any).gm_authFailure;
+    (window as any).gm_authFailure = () => {
+      previousAuthFailure?.();
+      if (!cancelled) setFailed(true);
+    };
 
     (async () => {
       const key = await getMapsKey();
       if (!key) { setFailed(true); return; }
+      if (!cancelled) setMapsKey(key);
       const ok = await loadGoogleMaps(key);
       if (!ok || cancelled || !containerRef.current) { setFailed(true); return; }
 
       const google = (window as any).google;
+      const mapsLibrary = google?.maps?.importLibrary
+        ? await google.maps.importLibrary("maps")
+        : google?.maps;
+      const MapCtor = mapsLibrary?.Map || google?.maps?.Map;
+      if (!MapCtor || cancelled || !containerRef.current) {
+        setFailed(true);
+        return;
+      }
       const center = { lat: latitude as number, lng: longitude as number };
-      const map = new google.maps.Map(containerRef.current, {
+      const map = new MapCtor(containerRef.current, {
         center,
-        zoom: 15,
+        zoom: 17,
         disableDefaultUI: true,
         zoomControl: false,
         gestureHandling: "greedy",
@@ -131,23 +156,40 @@ export default function StoreMiniMap({ latitude, longitude, storeName, slug, use
           </g>
         </svg>`;
 
-      const marker = new google.maps.Marker({
-        position: center,
-        map,
-        title: storeName,
-        icon: {
-          url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(pinSvg),
-          scaledSize: new google.maps.Size(32, 40),
-          anchor: new google.maps.Point(16, 38),
-        },
-        animation: google.maps.Animation.DROP,
-      });
+      const markerLibrary = google?.maps?.importLibrary
+        ? await google.maps.importLibrary("marker")
+        : google?.maps;
+      const MarkerCtor = google?.maps?.Marker || markerLibrary?.Marker;
+      if (MarkerCtor) {
+        const marker = new MarkerCtor({
+          position: center,
+          map,
+          title: storeName,
+          icon: {
+            url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(pinSvg),
+            scaledSize: new google.maps.Size(32, 40),
+            anchor: new google.maps.Point(16, 38),
+          },
+          animation: google.maps.Animation?.DROP,
+        });
 
-      marker.addListener("click", () => navigate(`/store-map?focus=${encodeURIComponent(slug)}`));
+        marker.addListener?.("click", () => navigate(`/store-map?focus=${encodeURIComponent(slug)}`));
+      }
+      google.maps.event.addListenerOnce(map, "tilesloaded", () => {
+        tilesLoadedRef.current = true;
+        if (!cancelled) setTilesLoaded(true);
+      });
+      tileTimer = setTimeout(() => {
+        if (!cancelled && !tilesLoadedRef.current) setFailed(true);
+      }, 7000);
       setReady(true);
     })();
 
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+      if (tileTimer) clearTimeout(tileTimer);
+      (window as any).gm_authFailure = previousAuthFailure;
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [hasCoords, latitude, longitude]);
 
@@ -161,7 +203,10 @@ export default function StoreMiniMap({ latitude, longitude, storeName, slug, use
     if (userDotRef.current) { userDotRef.current.setMap(null); userDotRef.current = null; }
     if (!userLoc) return;
 
-    userDotRef.current = new google.maps.Marker({
+    const MarkerCtor = google.maps.Marker;
+    if (!MarkerCtor) return;
+
+    userDotRef.current = new MarkerCtor({
       position: userLoc,
       map,
       icon: {
@@ -178,16 +223,36 @@ export default function StoreMiniMap({ latitude, longitude, storeName, slug, use
   const zoomOut = () => { const m = mapRef.current; if (m) m.setZoom((m.getZoom() ?? 15) - 1); };
   const recenter = () => {
     const m = mapRef.current;
-    if (m && hasCoords) { m.panTo({ lat: latitude as number, lng: longitude as number }); m.setZoom(15); }
+    if (m && hasCoords) { m.panTo({ lat: latitude as number, lng: longitude as number }); m.setZoom(17); }
+  };
+  const openFullMap = () => navigate(`/store-map?focus=${encodeURIComponent(slug)}`);
+  const openStoreDirections = () => {
+    if (hasCoords) {
+      void openDirections({
+        lat: latitude as number,
+        lng: longitude as number,
+        label: storeName,
+        address,
+      });
+      return;
+    }
+    window.open(
+      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address || storeName)}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
   };
 
   const showFallback = !hasCoords || failed;
+  const staticMapUrl = hasCoords && mapsKey
+    ? `https://maps.googleapis.com/maps/api/staticmap?center=${latitude},${longitude}&zoom=16&size=760x448&scale=2&maptype=roadmap&markers=color:green%7Clabel:%7C${latitude},${longitude}&key=${encodeURIComponent(mapsKey)}`
+    : "";
   const dist = userLoc && hasCoords
     ? distanceMiles(userLoc, { lat: latitude as number, lng: longitude as number })
     : null;
 
   return (
-    <div className="group relative block h-72 w-full overflow-hidden rounded-3xl border border-white/10 bg-card/70 backdrop-blur-2xl shadow-xl shadow-black/10 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20">
+    <div className="group relative block h-56 w-full overflow-hidden rounded-3xl border border-border bg-card/95 backdrop-blur-2xl shadow-xl shadow-black/10 transition-all duration-500 hover:shadow-2xl hover:shadow-primary/20">
       {!showFallback && (
         <div
           ref={containerRef}
@@ -206,14 +271,27 @@ export default function StoreMiniMap({ latitude, longitude, storeName, slug, use
       {showFallback && (
         <>
           <div className="absolute inset-0">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/25 via-emerald-500/15" />
-            <div
-              className="absolute inset-0 opacity-40"
-              style={{
-                backgroundImage: `radial-gradient(circle at 1px 1px, hsl(var(--foreground) / 0.15) 0.5px, transparent 0)`,
-                backgroundSize: "18px 18px",
-              }}
-            />
+            {staticMapUrl ? (
+              <img
+                src={staticMapUrl}
+                alt={`Map location for ${storeName}`}
+                className="h-full w-full object-cover"
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
+            ) : (
+              <>
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/25 via-emerald-500/15" />
+                <div
+                  className="absolute inset-0 opacity-40"
+                  style={{
+                    backgroundImage: `radial-gradient(circle at 1px 1px, hsl(var(--foreground) / 0.15) 0.5px, transparent 0)`,
+                    backgroundSize: "18px 18px",
+                  }}
+                />
+              </>
+            )}
+            <div className="absolute inset-0 bg-gradient-to-t from-background/20 via-transparent to-background/10" />
           </div>
           <div className="pointer-events-none absolute inset-0 flex items-center justify-center">
             <div className="relative flex h-12 w-12 items-center justify-center">
@@ -226,21 +304,37 @@ export default function StoreMiniMap({ latitude, longitude, storeName, slug, use
         </>
       )}
 
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-white/25 to-transparent z-10" />
+      {!showFallback && (
+        <>
+          <div className="pointer-events-none absolute left-3 top-3 z-20 rounded-full bg-background/90 px-3 py-1.5 text-[11px] font-bold text-foreground shadow-lg ring-1 ring-border backdrop-blur-xl">
+            {storeName}
+          </div>
+          <div className="pointer-events-none absolute left-1/2 top-1/2 z-20 -translate-x-1/2 -translate-y-full">
+            <div className="relative flex h-12 w-12 items-center justify-center">
+              <div className="absolute inset-1 animate-ping rounded-full bg-emerald-500/25" />
+              <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500 text-white shadow-lg shadow-emerald-500/35 ring-4 ring-background/80">
+                <MapPin className="h-5 w-5" />
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-border to-transparent z-10" />
 
       {/* Zoom controls */}
       {!showFallback && (
         <div className="absolute top-3 right-3 z-20 flex flex-col gap-1.5">
           <button type="button" onClick={zoomIn} aria-label="Zoom in"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-background/90 backdrop-blur-xl text-foreground shadow-lg ring-1 ring-white/15 transition-all hover:bg-background hover:scale-105 active:scale-95">
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-background/90 backdrop-blur-xl text-foreground shadow-lg ring-1 ring-border transition-all hover:bg-background hover:scale-105 active:scale-95">
             <Plus className="h-4 w-4" />
           </button>
           <button type="button" onClick={zoomOut} aria-label="Zoom out"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-background/90 backdrop-blur-xl text-foreground shadow-lg ring-1 ring-white/15 transition-all hover:bg-background hover:scale-105 active:scale-95">
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-background/90 backdrop-blur-xl text-foreground shadow-lg ring-1 ring-border transition-all hover:bg-background hover:scale-105 active:scale-95">
             <Minus className="h-4 w-4" />
           </button>
           <button type="button" onClick={recenter} aria-label="Recenter on store"
-            className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 ring-1 ring-white/20 transition-all hover:scale-105 active:scale-95">
+            className="flex h-9 w-9 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 ring-1 ring-border transition-all hover:scale-105 active:scale-95">
             <Locate className="h-4 w-4" />
           </button>
         </div>
@@ -248,7 +342,7 @@ export default function StoreMiniMap({ latitude, longitude, storeName, slug, use
 
       {/* Bottom action row */}
       <div className="absolute bottom-3 left-3 right-3 z-20 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5 rounded-full bg-background/85 backdrop-blur-xl px-3 py-1.5 shadow-lg ring-1 ring-white/10">
+        <div className="flex items-center gap-1.5 rounded-full bg-background/90 backdrop-blur-xl px-3 py-1.5 shadow-lg ring-1 ring-border">
           {dist !== null ? (
             <>
               <Timer className="h-3 w-3 text-primary" />
@@ -260,16 +354,25 @@ export default function StoreMiniMap({ latitude, longitude, storeName, slug, use
             <>
               <MapPin className="h-3.5 w-3.5 text-primary" />
               <span className="text-[11px] font-bold text-foreground tracking-tight">
-                {showFallback ? "View location" : "Drag • pinch to zoom"}
+                {showFallback ? "Open location" : tilesLoaded ? "Drag • pinch to zoom" : "Loading map"}
               </span>
             </>
           )}
         </div>
         <button
           type="button"
-          onClick={() => navigate(`/store-map?focus=${encodeURIComponent(slug)}`)}
+          onClick={openStoreDirections}
+          aria-label={`Get directions to ${storeName}`}
+          className="ml-auto flex h-8 items-center gap-1.5 rounded-full bg-background/90 px-3 text-[11px] font-bold text-foreground shadow-lg ring-1 ring-border backdrop-blur-xl transition-transform duration-300 hover:scale-105"
+        >
+          <Navigation className="h-3.5 w-3.5 text-primary" />
+          Directions
+        </button>
+        <button
+          type="button"
+          onClick={openFullMap}
           aria-label={`Open full map for ${storeName}`}
-          className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 ring-1 ring-white/20 transition-transform duration-300 hover:scale-110 hover:rotate-12"
+          className="flex h-8 w-8 items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg shadow-primary/30 ring-1 ring-border transition-transform duration-300 hover:scale-110 hover:rotate-12"
         >
           <ExternalLink className="h-3.5 w-3.5" />
         </button>

@@ -162,6 +162,13 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
   }, []);
 
   const isHomePage = location.pathname === "/";
+  const openFeedSearch = () => {
+    if (location.pathname.startsWith("/feed")) {
+      window.dispatchEvent(new CustomEvent("zivo-open-feed-search"));
+      return;
+    }
+    navigate("/feed?search=1");
+  };
 
   return (
     <>
@@ -228,7 +235,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                       transition={{ type: "spring", stiffness: 400, damping: 22 }}
                     >
                       <Link
-                        to={item.href}
+                        to={item.label === "Chat" && !user ? withRedirectParam("/login", "/chat") : item.href}
                         className={cn(
                           "flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold tracking-wide transition-all duration-300 whitespace-nowrap border",
                           isActive
@@ -260,8 +267,17 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                 <input
                   placeholder="Search apps, rides, food..."
                   className="w-full pl-9 pr-4 py-2 rounded-full bg-muted/40 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"
-                  onFocus={() => navigate("/feed")}
+                  onClick={openFeedSearch}
+                  onFocus={openFeedSearch}
+                  onKeyDown={(event) => {
+                    if (event.key === "Enter" || event.key === " ") {
+                      event.preventDefault();
+                      openFeedSearch();
+                    }
+                  }}
                   readOnly
+                  role="button"
+                  aria-label="Open search"
                 />
               </div>
 

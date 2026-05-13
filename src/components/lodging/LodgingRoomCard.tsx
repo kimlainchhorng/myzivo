@@ -38,6 +38,7 @@ interface Props {
   breakfastRateCents?: number;
   originalRateCents?: number;
   badges?: string[];
+  expandableFeatures?: string[];
   onReserve: (plan: { rateCents: number; label: string; breakfastIncluded: boolean }) => void;
 }
 
@@ -60,7 +61,7 @@ export function LodgingRoomCard({
   weekendRateCents, weeklyDiscountPct = 0, monthlyDiscountPct = 0,
   amenities = [], breakfastIncluded, imageUrl,
   description, addonsCount = 0, photos, coverIndex, sizeSqm, addons, cancellationPolicy,
-  checkInTime, checkOutTime, breakfastRateCents, originalRateCents, badges = [],
+  checkInTime, checkOutTime, breakfastRateCents, originalRateCents, badges = [], expandableFeatures = [],
   onReserve,
 }: Props) {
   // Derive bed label: prefer old text field, fall back to structured bed_config
@@ -83,6 +84,10 @@ export function LodgingRoomCard({
     allPhotos[8],
   ];
   const totalAddons = addons?.length ?? addonsCount;
+  const hasNoPrepayment = badges.some((badge) => /no\s+prepayment|no\s+credit\s+card/i.test(badge));
+  const includedPerks = expandableFeatures.length > 0
+    ? expandableFeatures.slice(0, 4).join(" + ")
+    : "Parking + late check-out + early check-in + high-speed internet";
 
   // Quick chip amenities (icons + labels) — show first 4
   const quickChips = amenities.slice(0, 4);
@@ -129,13 +134,13 @@ export function LodgingRoomCard({
                 <div className="space-y-2.5">
                   {type && (
                     <div>
-                      <p className="text-[8px] uppercase tracking-[0.14em] font-bold text-white/65 leading-none">Type of {type.toLowerCase()}</p>
-                      <p className="text-[12px] font-extrabold leading-tight mt-1 line-clamp-2 drop-shadow-md tracking-wide uppercase">{name}</p>
+                      <p className="text-[8px] uppercase tracking-[0.14em] font-bold text-white/65 leading-none">Room type</p>
+                      <p className="text-[12px] font-extrabold leading-tight mt-1 line-clamp-2 drop-shadow-md">{name}</p>
                     </div>
                   )}
                   {bedLabel && (
                     <div>
-                      <p className="text-[8px] uppercase tracking-[0.14em] font-bold text-white/65 leading-none">Size of bed</p>
+                      <p className="text-[8px] uppercase tracking-[0.14em] font-bold text-white/65 leading-none">Beds</p>
                       <p className="text-[11px] font-bold leading-tight mt-1 drop-shadow-md">{bedLabel}</p>
                     </div>
                   )}
@@ -220,7 +225,7 @@ export function LodgingRoomCard({
                   return (
                     <span
                       key={a}
-                      className="text-[10px] px-2 py-0.5 rounded-full bg-foreground text-foreground border border-border inline-flex items-center gap-1 font-medium dark:bg-secondary dark:text-foreground dark:border-border"
+                      className="text-[10px] px-2 py-0.5 rounded-full bg-muted text-foreground border border-border inline-flex items-center gap-1 font-medium"
                     >
                       <Icon className="h-2.5 w-2.5" />
                       {a.replace(/[_-]+/g, " ").replace(/\b\w/g, (c) => c.toUpperCase())}
@@ -271,7 +276,7 @@ export function LodgingRoomCard({
                     <p className="text-[11px] font-bold text-foreground">Room Only</p>
                     <p className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1">
                       <CheckCircle2 className="h-2.5 w-2.5 text-emerald-500 shrink-0" />
-                      Free cancellation · Pay in advance
+                      Free cancellation · {hasNoPrepayment ? "No prepayment" : "Pay in advance"}
                     </p>
                   </div>
                   <div className="text-right shrink-0">
@@ -316,7 +321,7 @@ export function LodgingRoomCard({
                     </p>
                     <p className="text-[10px] text-muted-foreground mt-0.5 flex items-center gap-1">
                       <CheckCircle2 className="h-2.5 w-2.5 text-emerald-500 shrink-0" />
-                      Includes 15% off food &amp; drinks
+                      {includedPerks}
                     </p>
                     <p className="text-[10px] text-muted-foreground flex items-center gap-1">
                       <CheckCircle2 className="h-2.5 w-2.5 text-emerald-500 shrink-0" />

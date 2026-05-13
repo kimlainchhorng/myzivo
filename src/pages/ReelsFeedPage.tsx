@@ -422,6 +422,51 @@ const recordShareForFeedItem = (item: FeedItem, channel: ShareChannel) => {
   });
 };
 
+const loginWithReturnTo = (path: string) => `/login?redirect=${encodeURIComponent(path)}`;
+
+const showGuestActionPrompt = (message: string, returnTo = "/feed") => {
+  toast(message, {
+    description: "Create a free ZIVO account to like, comment, save, follow, and personalize your feed.",
+    action: {
+      label: "Log in",
+      onClick: () => {
+        window.location.assign(loginWithReturnTo(returnTo));
+      },
+    },
+  });
+};
+
+function GuestFeedCta({ onLogin, onSignup }: { onLogin: () => void; onSignup: () => void }) {
+  return (
+    <div className="mx-3 my-3 rounded-2xl border border-primary/20 bg-card px-4 py-4 shadow-sm">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <p className="text-sm font-bold text-foreground">Join ZIVO to make this feed yours</p>
+          <p className="mt-1 text-[12px] leading-snug text-muted-foreground">
+            Log in to like, comment, save posts, follow creators, and see friends-only updates.
+          </p>
+        </div>
+        <div className="flex shrink-0 gap-2">
+          <button
+            type="button"
+            onClick={onLogin}
+            className="h-9 rounded-full border border-border bg-background px-4 text-[12px] font-semibold text-foreground active:scale-95"
+          >
+            Log in
+          </button>
+          <button
+            type="button"
+            onClick={onSignup}
+            className="h-9 rounded-full bg-primary px-4 text-[12px] font-semibold text-primary-foreground active:scale-95"
+          >
+            Sign up
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function ReelsFeedPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -540,6 +585,29 @@ export default function ReelsFeedPage() {
     closeFeedSearch();
     navigate(href);
   }, [closeFeedSearch, navigate]);
+
+  const goLogin = useCallback((returnTo = "/feed") => {
+    navigate(loginWithReturnTo(returnTo));
+  }, [navigate]);
+
+  const goSignup = useCallback(() => {
+    navigate("/signup");
+  }, [navigate]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get("search") === "1") {
+      setShowSearch(true);
+      params.delete("search");
+      navigate({ pathname: location.pathname, search: params.toString() }, { replace: true });
+    }
+  }, [location.pathname, location.search, navigate]);
+
+  useEffect(() => {
+    const openSearch = () => setShowSearch(true);
+    window.addEventListener("zivo-open-feed-search", openSearch);
+    return () => window.removeEventListener("zivo-open-feed-search", openSearch);
+  }, []);
 
   useEffect(() => {
     const markReady = () => setSidebarDataReady(true);
@@ -1298,14 +1366,14 @@ export default function ReelsFeedPage() {
       </div>
 
       <div className={cn(
-        "lg:flex lg:pt-[60px] transition-all duration-300",
+        "bg-background lg:flex lg:pt-[60px] transition-all duration-300",
         chatOpen && "lg:pr-[400px] xl:pr-[420px] 2xl:pr-[440px]"
       )}>
         {/* Desktop Sidebar */}
         <Suspense fallback={null}><FeedSidebar /></Suspense>
 
         {/* Main Feed Content */}
-        <PullToRefresh onRefresh={handlePullRefresh} className="zivo-shell-mobile bg-background lg:pb-0 flex-1 lg:max-w-2xl xl:max-w-3xl lg:mx-auto">
+        <PullToRefresh onRefresh={handlePullRefresh} className="zivo-shell-mobile bg-background lg:pb-0 flex-1 lg:max-w-[640px] xl:max-w-[680px] lg:mx-auto">
           {/* Header — hidden on desktop since the global NavBar already provides search */}
           <div
             data-testid="feed-sticky-header"
@@ -1450,7 +1518,7 @@ export default function ReelsFeedPage() {
                     )}
                   </div>
                   <button type="button"
-                    onClick={() => userId ? setShowCreate(true) : navigate("/auth")}
+                    onClick={() => userId ? setShowCreate(true) : goLogin("/feed?compose=post")}
                     className="shrink-0 h-11 w-11 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition"
                     aria-label="Create post"
                     title="Create post"
@@ -1458,7 +1526,7 @@ export default function ReelsFeedPage() {
                     <Plus className="h-5 w-5" />
                   </button>
                   <button type="button"
-                    onClick={() => navigate("/notifications")}
+                    onClick={() => userId ? navigate("/notifications") : goLogin("/notifications")}
                     className="shrink-0 h-11 w-11 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition relative"
                     aria-label={notificationUnread > 0 ? `Notifications, ${notificationUnread} unread` : "Notifications"}
                     title={notificationUnread > 0 ? `Notifications, ${notificationUnread} unread` : "Notifications"}
@@ -1471,7 +1539,7 @@ export default function ReelsFeedPage() {
                     )}
                   </button>
                   <button type="button"
-                    onClick={() => navigate("/chat")}
+                    onClick={() => userId ? navigate("/chat") : goLogin("/chat")}
                     className="shrink-0 h-11 w-11 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition relative"
                     aria-label={headerChatUnread > 0 ? `Messages, ${headerChatUnread} unread` : "Messages"}
                     title={headerChatUnread > 0 ? `Messages, ${headerChatUnread} unread` : "Messages"}
@@ -1685,8 +1753,8 @@ export default function ReelsFeedPage() {
           <div ref={feedPageTopRef} data-feed-page-top aria-hidden="true" />
 
           {userId && (
-            <div className="border-b border-border/10 bg-card px-3 pt-2.5 pb-1.5">
-              <div className="flex items-center gap-2.5 mb-2">
+            <div className="border-b border-border/10 bg-card px-3 pt-2 pb-1 lg:pt-1.5 lg:pb-0.5">
+              <div className="flex items-center gap-2.5 mb-1.5 lg:mb-1">
                 <div className="h-9 w-9 rounded-full overflow-hidden bg-muted border border-primary/20 shrink-0">
                   {userProfile?.avatar ? (
                     <img src={userProfile.avatar} alt="" className="h-full w-full object-cover" />
@@ -1706,7 +1774,7 @@ export default function ReelsFeedPage() {
                   })()}
                 </button>
               </div>
-              <div className="border-t border-border/15 pt-1 flex gap-1 overflow-x-auto scrollbar-hide lg:max-w-md lg:mx-auto lg:gap-2" role="toolbar" aria-label="Create post">
+              <div className="border-t border-border/15 pt-1 flex gap-1 overflow-x-auto scrollbar-hide lg:max-w-sm lg:mx-auto lg:gap-1.5" role="toolbar" aria-label="Create post">
                 <button type="button" onClick={() => { setCreateMode("photo"); setShowCreate(true); }} aria-label="Share a photo" title="Share a photo" className="flex-1 shrink-0 flex items-center justify-center gap-1.5 py-1 rounded-lg bg-muted/20 hover:bg-muted/50 transition-colors min-w-[58px]">
                   <ImageIcon className="h-3.5 w-3.5 text-emerald-500" />
                   <span className="text-[9px] leading-none font-semibold text-muted-foreground">Photo</span>
@@ -1733,6 +1801,10 @@ export default function ReelsFeedPage() {
 
           {/* Anchor for scroll-to-top after tapping the new-posts banner */}
           <div ref={feedTopRef} aria-hidden="true" />
+
+          {!userId && (
+            <GuestFeedCta onLogin={() => goLogin("/feed")} onSignup={goSignup} />
+          )}
 
           {/* Realtime new-posts banner */}
           <AnimatePresence>
@@ -2363,12 +2435,12 @@ export default function ReelsFeedPage() {
 
         {/* Desktop RIGHT rail — hidden when chat panel is open to avoid overflow */}
         <aside className={cn(
-          "hidden xl:flex flex-col w-[280px] shrink-0 sticky top-[4.5rem] h-[calc(100vh-4.5rem)] overflow-y-auto py-4 px-3 gap-4 border-l border-border/20 bg-background/40 backdrop-blur-sm",
+          "hidden xl:flex flex-col w-[280px] shrink-0 sticky top-[4.5rem] h-[calc(100vh-4.5rem)] overflow-y-auto py-4 px-3 gap-4 border-l border-border/20 bg-background/95",
           chatOpen && "!hidden"
         )}>
 
           {/* Quick Access — service shortcuts */}
-          <div>
+          <div className="shrink-0">
             <h3 className="text-[11px] font-bold text-foreground/55 uppercase tracking-[0.08em] px-1 mb-2.5">Quick Access</h3>
             <div className="grid grid-cols-3 gap-1.5">
               {[
@@ -2409,7 +2481,7 @@ export default function ReelsFeedPage() {
 
           {/* Contacts */}
           {sidebarContacts.length > 0 && (
-            <div>
+            <div className="shrink-0">
               <div className="flex items-center justify-between mb-2 px-1">
                 <h3 className="text-sm font-semibold text-foreground">Contacts</h3>
                 <button type="button" onClick={() => navigate("/chat/contacts")} className="text-[11px] text-primary hover:underline">See all</button>
@@ -2442,7 +2514,7 @@ export default function ReelsFeedPage() {
 
           {/* Trending */}
           {trendingTags.length > 0 && (
-            <div>
+            <div className="shrink-0">
               <div className="flex items-center gap-1.5 mb-2 px-1">
                 <TrendingUp className="h-4 w-4 text-primary" />
                 <h3 className="text-sm font-semibold text-foreground">Trending</h3>
@@ -2476,7 +2548,7 @@ export default function ReelsFeedPage() {
 
           {/* ZIVO+ upgrade card */}
           {userId && (
-            <div className="rounded-2xl overflow-hidden border border-amber-500/20 bg-gradient-to-br from-amber-500/10 via-card to-primary/5 p-3">
+            <div className="shrink-0 rounded-2xl overflow-hidden border border-amber-500/20 bg-gradient-to-br from-amber-500/10 via-card to-primary/5 p-3">
               <div className="flex items-center gap-1.5 mb-1">
                 <Crown className="h-4 w-4 text-amber-500" />
                 <h3 className="text-sm font-semibold text-foreground">ZIVO+</h3>
@@ -2493,8 +2565,8 @@ export default function ReelsFeedPage() {
 
           {/* Birthdays */}
           <button type="button"
-            onClick={() => navigate("/friends")}
-            className="text-left rounded-2xl border border-rose-500/20 bg-gradient-to-br from-rose-500/10 via-card to-pink-500/5 p-3 hover:from-rose-500/15 hover:to-pink-500/10 active:scale-[0.99] transition-all group"
+            onClick={() => userId ? navigate("/friends") : goLogin("/friends")}
+            className="shrink-0 text-left rounded-2xl border border-rose-500/20 bg-gradient-to-br from-rose-500/10 via-card to-pink-500/5 p-3 hover:from-rose-500/15 hover:to-pink-500/10 active:scale-[0.99] transition-all group"
           >
             <div className="flex items-center gap-2 mb-1.5">
               <span className="h-7 w-7 rounded-lg bg-rose-500/15 flex items-center justify-center">
@@ -2511,7 +2583,7 @@ export default function ReelsFeedPage() {
           {/* Upcoming Events */}
           <button type="button"
             onClick={() => navigate("/explore")}
-            className="text-left rounded-2xl border border-blue-500/20 bg-gradient-to-br from-blue-500/10 via-card to-sky-500/5 p-3 hover:from-blue-500/15 hover:to-sky-500/10 active:scale-[0.99] transition-all group"
+            className="shrink-0 text-left rounded-2xl border border-blue-500/20 bg-gradient-to-br from-blue-500/10 via-card to-sky-500/5 p-3 hover:from-blue-500/15 hover:to-sky-500/10 active:scale-[0.99] transition-all group"
           >
             <div className="flex items-center gap-2 mb-1.5">
               <span className="h-7 w-7 rounded-lg bg-blue-500/15 flex items-center justify-center">
@@ -2579,7 +2651,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
   const handleReelFollow = async () => {
     if (!followTargetUserId || followLoading) return;
     if (!currentUserId) {
-      toast.error("Please sign in to follow");
+      showGuestActionPrompt("Log in to follow creators", "/feed");
       return;
     }
     if (followTargetUserId === currentUserId) return;
@@ -2700,7 +2772,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
 
   const handleLike = async () => {
     if (!currentUserId) {
-      toast.error("Please sign in to like posts");
+      showGuestActionPrompt("Log in to like posts", "/feed");
       return;
     }
 
@@ -2892,7 +2964,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
         {/* Comment */}
         <button type="button"
           onClick={() => {
-            if (!currentUserId) { toast.error("Please sign in to comment"); return; }
+            if (!currentUserId) { showGuestActionPrompt("Log in to comment", "/feed"); return; }
             setShowComments(true);
           }}
           aria-label="Open comments"
@@ -3467,7 +3539,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
     e.stopPropagation();
     if (!item.author_id || followLoading) return;
     if (!currentUserId) {
-      toast.error("Please sign in to follow");
+      showGuestActionPrompt("Log in to follow creators", "/feed");
       return;
     }
     if (isFollowingAuthor) {
@@ -3494,7 +3566,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
     e.stopPropagation();
     if (!sharedAuthorId || followLoading) return;
     if (!currentUserId) {
-      toast.error("Please sign in to follow");
+      showGuestActionPrompt("Log in to follow creators", "/feed");
       return;
     }
     if (sharedAuthorId === currentUserId) return;
@@ -3642,7 +3714,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
 
   const handleLike = async () => {
     if (!currentUserId) {
-      toast.error("Please sign in to like posts");
+      showGuestActionPrompt("Log in to like posts", "/feed");
       return;
     }
 
@@ -3704,7 +3776,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
       return;
     }
     if (!currentUserId) {
-      toast.error("Please sign in to react");
+      showGuestActionPrompt("Log in to react to posts", "/feed");
       return;
     }
     const previous = selectedReaction;
@@ -3827,7 +3899,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
   const savingBookmark = useRef(false);
   const handleSave = async () => {
     if (!currentUserId) {
-      toast.error("Please sign in to bookmark posts");
+      showGuestActionPrompt("Log in to save posts", "/feed");
       return;
     }
     if (item.source === "poll") {
@@ -3949,7 +4021,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
     }
     haptic("selection");
     if (!currentUserId) {
-      toast.error("Please sign in to comment");
+      showGuestActionPrompt("Log in to comment", "/feed");
       return;
     }
     if (showComments) {
@@ -3966,7 +4038,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
   const mediaUrl = item.media_urls[currentMedia] || item.media_urls[0];
   const hasMedia = Boolean(mediaUrl);
   const videoAspectClass = videoAspect
-    ? (videoAspect >= 1.2 ? "aspect-video" : videoAspect >= 0.95 ? "aspect-square" : videoAspect >= 0.75 ? "aspect-[4/5]" : "aspect-[9/16]")
+    ? (videoAspect >= 1.2 ? "aspect-video" : videoAspect >= 0.95 ? "aspect-square" : "aspect-[4/5]")
     : "aspect-[4/5]";
 
   const isSharedPost = Boolean(item.shared_from_post_id || item.shared_from_user_id);
@@ -4117,7 +4189,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
               ref={containerRef}
               className={cn(
                 "relative overflow-hidden",
-                hasMedia ? (item.media_type === "video" ? cn("max-h-[500px] lg:max-h-[680px] xl:max-h-[760px] w-full mx-auto bg-black rounded-xl", videoAspectClass) : "") : ""
+                hasMedia ? (item.media_type === "video" ? cn("max-h-[500px] lg:max-h-[500px] xl:max-h-[520px] w-full mx-auto bg-black rounded-xl", videoAspectClass) : "") : ""
               )}
             >
               {hasMedia ? (
@@ -4137,7 +4209,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                         }
                       }}
                       onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()}
-                      className="h-full w-full object-cover cursor-pointer"
+                      className="h-full w-full object-contain cursor-pointer"
                     />
                     {!isPlaying && (
                       <button type="button" onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()} aria-label="Play video" title="Play video" className="absolute inset-0 flex items-center justify-center bg-black/10">
@@ -4346,7 +4418,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
             onTouchEnd={item.media_urls.length > 1 && item.media_type !== "video" ? undefined : (item.media_urls.length > 1 ? handleTouchEnd : undefined)}
             className={cn(
               "relative overflow-hidden",
-              hasMedia ? (item.media_type === "video" ? cn("max-h-[500px] lg:max-h-[680px] xl:max-h-[760px] w-full mx-auto bg-black rounded-xl", videoAspectClass) : "") : ""
+              hasMedia ? (item.media_type === "video" ? cn("max-h-[500px] lg:max-h-[500px] xl:max-h-[520px] w-full mx-auto bg-black rounded-xl", videoAspectClass) : "") : ""
             )}
           >
             {hasMedia ? (
@@ -4366,7 +4438,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                       }
                     }}
                     onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()}
-                    className="h-full w-full object-cover cursor-pointer"
+                    className="h-full w-full object-contain cursor-pointer"
                   />
                   {!isPlaying && (
                     <button type="button" onClick={() => onOpenFullscreen ? onOpenFullscreen() : togglePlay()} aria-label="Play video" title="Play video" className="absolute inset-0 flex items-center justify-center bg-black/10">
@@ -5148,14 +5220,13 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                 <button type="button"
                   key={sub.label}
                   onClick={async () => {
-                    // Step to the success screen first so the UI feels instant.
-                    // The DB write is best-effort — failures only toast,
-                    // they never strand the user on the sub screen.
-                    setReportStep("submitted");
                     if (!currentUserId) {
-                      toast.error("Please sign in to submit reports");
+                      showGuestActionPrompt("Log in to report posts", "/feed");
                       return;
                     }
+                    // Step to the success screen first so the UI feels instant.
+                    // The DB write is best-effort; failures only toast.
+                    setReportStep("submitted");
                     if (item.source === "poll") {
                       // post_reports.post_source CHECK only allows store/user
                       return;

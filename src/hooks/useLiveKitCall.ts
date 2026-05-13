@@ -88,6 +88,7 @@ export function useLiveKitCall({
   const [isRecording, setIsRecording] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isScreenSharing, setIsScreenSharing] = useState(false);
+  const [screenShareBlocked, setScreenShareBlocked] = useState(false);
   const [micEnabled, setMicEnabled] = useState(!startMicMuted);
   const [camEnabled, setCamEnabled] = useState(callType === "video" && !startCamOff);
   const [handRaised, setHandRaised] = useState(false);
@@ -315,6 +316,7 @@ export function useLiveKitCall({
       await room.localParticipant.setMicrophoneEnabled(next);
       setMicEnabled(next);
       setMediaError(null);
+      setScreenShareBlocked(false);
     } catch (e) {
       setMicEnabled(false);
       setMediaError(formatDevicePermissionMessage("microphone"));
@@ -330,6 +332,7 @@ export function useLiveKitCall({
       await room.localParticipant.setCameraEnabled(next);
       setCamEnabled(next);
       setMediaError(null);
+      setScreenShareBlocked(false);
     } catch (e) {
       setCamEnabled(false);
       setMediaError(formatDevicePermissionMessage("camera"));
@@ -345,10 +348,11 @@ export function useLiveKitCall({
       await room.localParticipant.setScreenShareEnabled(next);
       setIsScreenSharing(next);
       setMediaError(null);
+      setScreenShareBlocked(false);
     } catch (e) {
       setIsScreenSharing(false);
       setMediaError(formatDevicePermissionMessage("screen"));
-      toast.error("Screen sharing permission is blocked.");
+      setScreenShareBlocked(true);
     }
   }, [formatDevicePermissionMessage, isScreenSharing]);
 
@@ -375,6 +379,10 @@ export function useLiveKitCall({
     const data = new TextEncoder().encode(JSON.stringify({ type: "hand", raised: next } satisfies DataMsg));
     await room.localParticipant.publishData(data, { reliable: true });
   }, [handRaised]);
+
+  const clearMediaError = useCallback(() => {
+    setMediaError(null);
+  }, []);
 
   const startRecording = useCallback(async () => {
     if (!sessionId || !isHost) return;
@@ -424,6 +432,7 @@ export function useLiveKitCall({
     isHost,
     isRecording,
     isScreenSharing,
+    screenShareBlocked,
     micEnabled,
     camEnabled,
     handRaised,
@@ -433,6 +442,7 @@ export function useLiveKitCall({
     toggleScreenShare,
     sendReaction,
     toggleHandRaise,
+    clearMediaError,
     startRecording,
     stopRecording,
     leave,

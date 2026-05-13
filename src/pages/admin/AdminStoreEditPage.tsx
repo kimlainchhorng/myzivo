@@ -25,6 +25,12 @@ import ffmpegWorkerUrl from "@ffmpeg/ffmpeg/worker?url";
 const FFMPEG_CDN_BASE = "https://unpkg.com/@ffmpeg/core@0.12.10/dist/esm";
 const ffmpegCoreUrl = `${FFMPEG_CDN_BASE}/ffmpeg-core.js`;
 const ffmpegWasmUrl = `${FFMPEG_CDN_BASE}/ffmpeg-core.wasm`;
+const LODGING_NAME_PATTERN = /\b(hotel|resort|villa|guest\s*house|guesthouse|lodge|inn|sanctuary)\b/i;
+
+const isLikelyLodgingStore = (store: any, category?: string | null) => {
+  if (isLodgingStoreCategory(category)) return true;
+  return LODGING_NAME_PATTERN.test([store?.name, store?.slug, store?.description].filter(Boolean).join(" "));
+};
 
 // Module-level holders populated by the first call to ensureFFmpegLoaded().
 // They cache the dynamically-imported runtime values so subsequent calls don't
@@ -667,8 +673,9 @@ export default function AdminStoreEditPage() {
   }, [store]);
 
   useEffect(() => {
+    if (!store) return;
     const normalizedStoreCategory = (store?.category || "").toLowerCase().trim();
-    const isStoreLodging = isLodgingStoreCategory(normalizedStoreCategory);
+    const isStoreLodging = isLikelyLodgingStore(store, normalizedStoreCategory);
     const isStoreAutoRepair = normalizedStoreCategory === "auto-repair";
     const requestedTab = searchParams.get("tab");
     const resolvedTab = resolveStoreTabFromSearch(searchParams, isStoreLodging, isStoreAutoRepair);
@@ -680,7 +687,7 @@ export default function AdminStoreEditPage() {
       appliedLodgingDefaultTabRef.current = true;
       handleTabChange(resolvedTab);
     }
-  }, [store?.category, activeTab, searchParams, handleTabChange]);
+  }, [store, activeTab, searchParams, handleTabChange]);
 
   const saveProfile = useMutation({
     mutationFn: async () => {
@@ -2078,7 +2085,7 @@ export default function AdminStoreEditPage() {
   const employeeTitles: Record<string, string> = { employees: "Employees", payroll: "Payroll", "employee-schedule": "Employee Schedule", "time-clock": "Time Clock", "employee-rules": "Employee Rules", attendance: "Attendance & Leave", training: "Training & Onboarding", documents: "Documents & Files" };
   const normalizedCategory = (form.category || "").toLowerCase().trim();
   const isAutoRepair = normalizedCategory === "auto-repair";
-  const isLodging = isLodgingStoreCategory(normalizedCategory);
+  const isLodging = isLikelyLodgingStore(store, normalizedCategory);
   const autoRepairTitles: Record<string, string> = {
     "customer-bookings": "Customer Bookings",
     "ar-invoices": "Invoices & Estimates",
@@ -2912,34 +2919,151 @@ export default function AdminStoreEditPage() {
                 </CardTitle>
                 <p className="text-xs text-muted-foreground">Create posts like Facebook & TikTok — photos, videos, and reels for your store</p>
               </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => { setPostMediaMode("image"); setPostDialog(true); }}
-                    className="group relative flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border bg-muted/30 p-6 transition-all duration-200 hover:border-primary/50 hover:bg-primary/5 hover:shadow-md active:scale-[0.98]"
-                  >
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-emerald-500/10 text-emerald-600 transition-colors group-hover:bg-emerald-500/20">
-                      <ImagePlus className="h-6 w-6" />
+              <CardContent className="space-y-4">
+                {posts.length > 0 && (
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Recent Posts</p>
+                      <span className="text-[10px] text-muted-foreground">{posts.length} total</span>
                     </div>
-                    <div className="text-center">
-                      <span className="block text-sm font-semibold text-foreground">📷 Photo Post</span>
-                      <span className="block text-[11px] text-muted-foreground mt-0.5">JPG, PNG, WebP</span>
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
+                      {posts.slice(0, 6).map((post: any) => {
+                        const firstUrl = (post.media_urls || [])[0];
+                        const mediaCount = (post.media_urls || []).length;
+                        const isVideo = firstUrl && isVideoUrl(normalizeStorePostMediaUrl(firstUrl));
+                        const postDate = post.created_at ? format(new Date(post.created_at), "MMM d") : "";
+                        return (
+                          <div key={post.id} className="group overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md">
+                            <div className="grid gap-0 sm:grid-cols-[220px_minmax(0,1fr)]">
+                              <div className="relative aspect-[4/3] cursor-pointer sm:aspect-auto sm:min-h-[180px]" onClick={() => setViewPostId(post.id)}>
+                                {isVideo && firstUrl ? (
+                                  <AdminVideoPreview
+                                    src={normalizeStorePostMediaUrl(firstUrl)}
+                                    className="h-full w-full"
+                                    videoClassName="h-full w-full object-cover"
+                                    controls={false}
+                                    muted
+                                    loop
+                                    autoPlay={false}
+                                    canRepair
+                                    onRepair={repairVideoPreviewSource}
+                                  />
+                                ) : firstUrl ? (
+                                  <img src={normalizeStorePostMediaUrl(firstUrl)} alt="" className="h-full w-full object-cover" />
+                                ) : (
+                                  <div className="flex h-full w-full items-center justify-center bg-muted">
+                                    <ImagePlus className="h-5 w-5 text-muted-foreground" />
+                                  </div>
+                                )}
+                                {isVideo && reprocessingPostId === post.id && (
+                                  <div className="absolute inset-0 z-20 flex flex-col items-center justify-center gap-2 bg-black/70">
+                                    <RefreshCw className="h-8 w-8 animate-spin text-white" />
+                                    <span className="px-2 text-center text-[11px] font-medium text-white">Converting video...</span>
+                                  </div>
+                                )}
+                                <div className="absolute left-2 top-2 z-10 flex items-center gap-1">
+                                  {isVideo && (
+                                    <div className="flex items-center gap-0.5 rounded-md bg-background/80 px-1.5 py-0.5 backdrop-blur-sm">
+                                      <Video className="h-2.5 w-2.5 text-foreground" />
+                                    </div>
+                                  )}
+                                  {mediaCount > 1 && (
+                                    <div className="rounded-md bg-background/80 px-1.5 py-0.5 backdrop-blur-sm">
+                                      <span className="text-[9px] font-medium text-foreground">{mediaCount} files</span>
+                                    </div>
+                                  )}
+                                </div>
+                                {post.scheduled_at && new Date(post.scheduled_at) > new Date() && (
+                                  <div className="absolute right-2 top-2 z-10 flex items-center gap-0.5 rounded-md bg-accent/90 px-1.5 py-0.5 backdrop-blur-sm">
+                                    <Clock className="h-2.5 w-2.5 text-accent-foreground" />
+                                    <span className="text-[9px] font-medium text-accent-foreground">Scheduled</span>
+                                  </div>
+                                )}
+                              </div>
+                              <div className="flex min-h-[180px] flex-col p-3">
+                                {isVideo && (
+                                  <button
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); void reprocessPostVideo(post); }}
+                                    disabled={reprocessingPostId === post.id}
+                                    className="mb-2 flex w-fit items-center justify-center gap-1.5 rounded-md bg-blue-500/10 px-2 py-1 text-[11px] font-semibold text-blue-600 transition-colors hover:bg-blue-500/20 disabled:opacity-60"
+                                  >
+                                    <RefreshCw className={`h-3.5 w-3.5 ${reprocessingPostId === post.id ? "animate-spin" : ""}`} />
+                                    {reprocessingPostId === post.id ? "Converting..." : "Fix Video"}
+                                  </button>
+                                )}
+                                {post.caption && (
+                                  <p className="text-xs leading-relaxed text-foreground line-clamp-4">{post.caption}</p>
+                                )}
+                                {post.hashtags && post.hashtags.length > 0 && (
+                                  <div className="mt-2 flex flex-wrap gap-1">
+                                    {post.hashtags.slice(0, 4).map((tag: string) => (
+                                      <span key={tag} className="text-[10px] font-medium text-primary">{tag}</span>
+                                    ))}
+                                    {post.hashtags.length > 4 && <span className="text-[10px] text-muted-foreground">+{post.hashtags.length - 4}</span>}
+                                  </div>
+                                )}
+                                <div className="mt-auto space-y-2 pt-3">
+                                  <div className="flex items-center gap-3 text-[10px] text-muted-foreground">
+                                    <span className="flex items-center gap-0.5"><Heart className="h-3 w-3" /> {post.likes_count || 0}</span>
+                                    <span className="flex items-center gap-0.5"><MessageCircle className="h-3 w-3" /> {post.comments_count || 0}</span>
+                                    <span className="flex items-center gap-0.5"><Eye className="h-3 w-3" /> {post.view_count || 0}</span>
+                                  </div>
+                                  <div className="flex items-center justify-between gap-2">
+                                    <div className="flex min-w-0 items-center gap-1.5">
+                                      {post.location && (
+                                        <span className="flex min-w-0 items-center gap-0.5 text-[10px] text-muted-foreground"><MapPin className="h-2.5 w-2.5 shrink-0" /><span className="truncate">{post.location}</span></span>
+                                      )}
+                                      <span className="shrink-0 text-[10px] text-muted-foreground">{postDate}</span>
+                                    </div>
+                                    <div className="flex shrink-0 items-center gap-1">
+                                      <button type="button" onClick={(e) => { e.stopPropagation(); openEditPost(post); }} className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-muted" title="Edit">
+                                        <Edit className="h-3.5 w-3.5 text-muted-foreground" />
+                                      </button>
+                                      <button type="button" onClick={(e) => { e.stopPropagation(); setDeletePostId(post.id); }} className="flex h-7 w-7 items-center justify-center rounded-full hover:bg-destructive/10" title="Delete">
+                                        <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setPostMediaMode("video"); setPostDialog(true); }}
-                    className="group relative flex flex-col items-center justify-center gap-3 rounded-2xl border-2 border-dashed border-border bg-muted/30 p-6 transition-all duration-200 hover:border-primary/50 hover:bg-primary/5 hover:shadow-md active:scale-[0.98]"
-                  >
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 transition-colors group-hover:bg-blue-500/20">
-                      <Video className="h-6 w-6" />
-                    </div>
-                    <div className="text-center">
-                      <span className="block text-sm font-semibold text-foreground">🎬 Video Post</span>
-                      <span className="block text-[11px] text-muted-foreground mt-0.5">MP4, MOV, WebM</span>
-                    </div>
-                  </button>
+                  </div>
+                )}
+
+                <div className={posts.length > 0 ? "border-t border-border pt-4" : ""}>
+                  <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                    <button
+                      type="button"
+                      onClick={() => { setPostMediaMode("image"); setPostDialog(true); }}
+                      className="group flex items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-muted/20 px-4 py-3 transition-colors hover:border-primary/50 hover:bg-primary/5 active:scale-[0.99]"
+                    >
+                      <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-600 group-hover:bg-emerald-500/20">
+                        <ImagePlus className="h-4.5 w-4.5" />
+                      </span>
+                      <span className="text-left">
+                        <span className="block text-sm font-semibold text-foreground">Photo Post</span>
+                        <span className="block text-[11px] text-muted-foreground">JPG, PNG, WebP</span>
+                      </span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setPostMediaMode("video"); setPostDialog(true); }}
+                      className="group flex items-center justify-center gap-2 rounded-xl border border-dashed border-border bg-muted/20 px-4 py-3 transition-colors hover:border-primary/50 hover:bg-primary/5 active:scale-[0.99]"
+                    >
+                      <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-500/10 text-blue-600 group-hover:bg-blue-500/20">
+                        <Video className="h-4.5 w-4.5" />
+                      </span>
+                      <span className="text-left">
+                        <span className="block text-sm font-semibold text-foreground">Video Post</span>
+                        <span className="block text-[11px] text-muted-foreground">MP4, MOV, WebM</span>
+                      </span>
+                    </button>
+                  </div>
                 </div>
               </CardContent>
             </Card>

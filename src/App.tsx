@@ -660,6 +660,70 @@ const queryClient = new QueryClient({
 });
 
 const PageLoader = forwardRef<HTMLDivElement>(function PageLoader(_, ref) {
+  const isFeedLikeRoute = typeof window !== "undefined" && (
+    window.location.pathname.startsWith("/feed") ||
+    window.location.pathname.startsWith("/reels")
+  );
+
+  if (isFeedLikeRoute) {
+    return (
+      <div ref={ref} className="min-h-[100dvh] bg-background">
+        <div className="hidden lg:block fixed inset-x-0 top-0 z-50 border-b border-border/20 bg-background/90 backdrop-blur-2xl">
+          <div className="mx-auto flex h-[60px] max-w-[1400px] items-center gap-3 px-4">
+            <div className="h-8 w-20 rounded-full bg-muted/70 animate-pulse" />
+            <div className="h-9 w-24 rounded-full bg-muted/60 animate-pulse" />
+            <div className="h-9 w-24 rounded-full bg-muted/50 animate-pulse" />
+            <div className="ml-auto h-10 w-full max-w-md rounded-full bg-muted/50 animate-pulse" />
+            <div className="h-9 w-20 rounded-full bg-muted/50 animate-pulse" />
+          </div>
+        </div>
+        <div className="lg:flex lg:pt-[60px]">
+          <aside className="hidden lg:block h-[calc(100dvh-60px)] w-60 shrink-0 border-r border-border/20 p-3">
+            <div className="flex flex-col gap-3">
+              {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => (
+                <div key={i} className="h-9 rounded-xl bg-muted/50 animate-pulse" />
+              ))}
+            </div>
+          </aside>
+          <main className="mx-auto w-full max-w-2xl">
+            <div className="lg:hidden border-b border-border/20 px-3 py-3">
+              <div className="flex items-center gap-2">
+                <div className="h-10 w-10 rounded-full bg-muted/60 animate-pulse" />
+                <div className="h-10 flex-1 rounded-full bg-muted/50 animate-pulse" />
+                <div className="h-10 w-10 rounded-full bg-muted/60 animate-pulse" />
+              </div>
+            </div>
+            {[0, 1, 2].map((i) => (
+              <div key={i} className="border-b border-border/20 bg-card">
+                <div className="flex items-center gap-3 px-3 py-3">
+                  <div className="h-10 w-10 rounded-full bg-muted/70 animate-pulse" />
+                  <div className="flex-1">
+                    <div className="h-3 w-36 rounded bg-muted/70 animate-pulse" />
+                    <div className="mt-2 h-2.5 w-24 rounded bg-muted/50 animate-pulse" />
+                  </div>
+                </div>
+                <div className="aspect-[4/5] bg-muted/60 animate-pulse" />
+                <div className="flex items-center justify-between px-4 py-3">
+                  <div className="h-8 w-36 rounded-full bg-muted/50 animate-pulse" />
+                  <div className="h-8 w-10 rounded-full bg-muted/50 animate-pulse" />
+                </div>
+              </div>
+            ))}
+          </main>
+          <aside className="hidden xl:block h-[calc(100dvh-60px)] w-[280px] shrink-0 border-l border-border/20 p-4">
+            <div className="grid grid-cols-3 gap-2">
+              {[0, 1, 2, 3, 4, 5].map((i) => (
+                <div key={i} className="h-16 rounded-xl bg-muted/50 animate-pulse" />
+              ))}
+            </div>
+            <div className="mt-5 h-28 rounded-2xl bg-muted/40 animate-pulse" />
+            <div className="mt-4 h-28 rounded-2xl bg-muted/40 animate-pulse" />
+          </aside>
+        </div>
+      </div>
+    );
+  }
+
   return (
   // min-h-[100dvh] (dynamic viewport height) instead of min-h-screen so the
   // loader fills the visible viewport correctly on iOS Safari — the older

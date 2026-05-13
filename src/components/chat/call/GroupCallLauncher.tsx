@@ -6,6 +6,7 @@
  *   <GroupCallLauncher roomName="group-<id>" callType="video" onEnded={...} />
  */
 import { lazy, Suspense, useState } from "react";
+import { createPortal } from "react-dom";
 import CallLobby, { type CallLobbyResult } from "./CallLobby";
 
 const GroupCallScreenV2 = lazy(() => import("./GroupCallScreenV2"));
@@ -21,7 +22,7 @@ export default function GroupCallLauncher({ roomName, callType = "video", meetin
   const [joined, setJoined] = useState<CallLobbyResult | null>(null);
 
   if (!joined) {
-    return (
+    const lobby = (
       <CallLobby
         roomName={roomName}
         displayName={meetingLabel}
@@ -31,12 +32,13 @@ export default function GroupCallLauncher({ roomName, callType = "video", meetin
         onJoin={setJoined}
       />
     );
+    return typeof document === "undefined" ? lobby : createPortal(lobby, document.body);
   }
 
-  return (
+  const callScreen = (
     <Suspense
       fallback={
-        <div className="fixed inset-0 z-50 grid place-items-center bg-zinc-950 text-sm text-white/70">
+        <div className="fixed inset-0 z-[1000] grid place-items-center bg-zinc-950 text-sm text-white/70">
           Connecting…
         </div>
       }
@@ -52,4 +54,5 @@ export default function GroupCallLauncher({ roomName, callType = "video", meetin
     />
     </Suspense>
   );
+  return typeof document === "undefined" ? callScreen : createPortal(callScreen, document.body);
 }

@@ -24,6 +24,7 @@ import { toast } from "sonner";
 import { useI18n } from "@/hooks/useI18n";
 import storeRideBg from "@/assets/store-ride-bg.jpg";
 import storeCallBg from "@/assets/store-call-bg.jpg";
+import hotelResortFallback from "@/assets/hotel-resort.jpg";
 import StoreLiveChat from "@/components/grocery/StoreLiveChat";
 import { isAllowedSocialUrl } from "@/lib/urlSafety";
 import { getStoreStatus } from "@/utils/storeStatus";
@@ -214,6 +215,16 @@ export default function StoreProfilePage() {
   };
 
   const rooms = useMemo(() => (allRooms || []).filter(r => r.is_active), [allRooms]);
+  const hasPublishedRooms = rooms.length > 0;
+  const roomRates = rooms.map(r => r.base_rate_cents).filter(n => n > 0);
+  const minRoomPriceCents = roomRates.length ? Math.min(...roomRates) : undefined;
+  const galleryImages = useMemo(() => {
+    const images = store?.gallery_images || [];
+    if (!isLodging || images.length < 2 || !store?.banner_url) return images;
+    const different = images.filter((url) => url !== store.banner_url);
+    return different.length ? [...different, ...images.filter((url) => url === store.banner_url)] : images;
+  }, [isLodging, store?.banner_url, store?.gallery_images]);
+  const heroCoverUrl = store?.banner_url || (isLodging ? hotelResortFallback : "");
 
   const todayISO = useMemo(() => new Date().toISOString().slice(0, 10), []);
   const tomorrowISO = useMemo(() => new Date(Date.now() + 86400000).toISOString().slice(0, 10), []);
@@ -276,7 +287,7 @@ export default function StoreProfilePage() {
   }
 
   return (
-    <div className="min-h-screen pb-24 relative overflow-hidden">
+    <div className="min-h-screen bg-background pb-24 relative overflow-hidden">
       <SEOHead
         title={store ? `${store.name} – ZIVO` : "Store – ZIVO"}
         description={store?.description || `Shop at ${store?.name || "this store"} on ZIVO. Browse products and order for delivery or pickup.`}
@@ -293,58 +304,28 @@ export default function StoreProfilePage() {
           "address": store.address ? { "@type": "PostalAddress", "streetAddress": store.address } : undefined,
         } : undefined}
       />
-      {/* ── Immersive Animated Background ── */}
+      {/* ── Stable page background ── */}
       <div className="fixed inset-0 -z-10">
-        <div className="absolute inset-0 bg-gradient-to-b from-background via-background to-background" />
-        {/* Large floating orbs */}
-        <motion.div
-          animate={{ y: [-30, 30, -30], x: [-15, 15, -15], scale: [1, 1.2, 1] }}
-          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-16 -right-16 w-80 h-80 rounded-full bg-primary/[0.06] blur-[80px]"
-        />
-        <motion.div
-          animate={{ y: [25, -25, 25], x: [12, -12, 12], scale: [1.1, 0.9, 1.1] }}
-          transition={{ duration: 11, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-1/3 -left-24 w-72 h-72 rounded-full bg-foreground/[0.05] blur-[80px]"
-        />
-        <motion.div
-          animate={{ y: [15, -20, 15], scale: [1, 1.2, 1] }}
-          transition={{ duration: 13, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute bottom-32 right-8 w-56 h-56 rounded-full bg-emerald-400/[0.04] blur-[60px]"
-        />
-        <motion.div
-          animate={{ y: [-10, 20, -10], x: [8, -8, 8] }}
-          transition={{ duration: 9, repeat: Infinity, ease: "easeInOut" }}
-          className="absolute top-2/3 left-1/3 w-40 h-40 rounded-full bg-foreground/[0.03] blur-[50px]"
-        />
-        {/* Bokeh particles */}
-        <BokehDot delay={0} size={6} x="15%" y="25%" color="hsl(var(--primary) / 0.3)" />
-        <BokehDot delay={1} size={4} x="75%" y="40%" color="hsl(var(--primary) / 0.2)" />
-        <BokehDot delay={2} size={8} x="60%" y="70%" color="hsl(142 76% 36% / 0.2)" />
-        <BokehDot delay={0.5} size={5} x="30%" y="55%" color="hsl(200 90% 60% / 0.2)" />
-        <BokehDot delay={1.5} size={3} x="85%" y="20%" color="hsl(var(--primary) / 0.25)" />
-        <BokehDot delay={3} size={7} x="10%" y="80%" color="hsl(280 60% 60% / 0.15)" />
-        {/* Dot grid */}
+        <div className="absolute inset-0 bg-gradient-to-b from-background via-muted/20 to-background" />
         <div
-          className="absolute inset-0 opacity-[0.02]"
+          className="absolute inset-0 opacity-[0.035]"
           style={{
             backgroundImage: `radial-gradient(circle at 1px 1px, currentColor 0.5px, transparent 0)`,
-            backgroundSize: "24px 24px",
+            backgroundSize: "28px 28px",
           }}
         />
       </div>
 
       {/* ── Banner with 3D parallax ── */}
       {(() => {
-        const coverUrl = store.banner_url;
+        const coverUrl = heroCoverUrl;
 
         return (
-          <div className="relative w-full h-60 overflow-hidden bg-gradient-to-br from-primary/30 via-primary/10">
+          <div className="relative w-full h-56 sm:h-60 overflow-hidden bg-muted">
             {coverUrl ? (
               <img
                 src={coverUrl}
-                alt=""
-                aria-hidden="true"
+                alt={`${store.name} cover`}
                 className="w-full h-full object-cover"
                 style={{ objectPosition: `center ${(store as any).banner_position ?? 50}%` }}
                 onError={(e) => {
@@ -357,15 +338,15 @@ export default function StoreProfilePage() {
               />
             ) : null}
             {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/40 to-transparent pointer-events-none z-[1]" />
-            <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-background to-transparent pointer-events-none z-[1]" />
+            <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/20 to-black/5 pointer-events-none z-[1]" />
+            <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-background to-transparent pointer-events-none z-[1]" />
 
             {/* Nav buttons */}
             <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 z-10" style={{ paddingTop: "max(calc(env(safe-area-inset-top, 0px) + 0.75rem), 52px)" }}>
               <motion.button
                 whileTap={{ scale: 0.85 }}
                 onClick={() => window.history.length > 1 ? navigate(-1) : navigate("/grocery")}
-                className="h-10 w-10 rounded-2xl bg-background/50 backdrop-blur-2xl flex items-center justify-center shadow-xl border border-white/10"
+                className="h-10 w-10 rounded-2xl bg-background/90 backdrop-blur-2xl flex items-center justify-center shadow-xl border border-border"
               >
                 <ArrowLeft className="h-4 w-4 text-foreground" />
               </motion.button>
@@ -373,14 +354,14 @@ export default function StoreProfilePage() {
                 <motion.button
                   whileTap={{ scale: 0.85 }}
                   onClick={() => setChatOpen(true)}
-                  className="h-10 w-10 rounded-2xl bg-background/50 backdrop-blur-2xl flex items-center justify-center shadow-xl border border-white/10"
+                  className="h-10 w-10 rounded-2xl bg-background/90 backdrop-blur-2xl flex items-center justify-center shadow-xl border border-border"
                 >
                   <MessageCircle className="h-4 w-4 text-foreground" />
                 </motion.button>
                 <motion.button
                   whileTap={{ scale: 0.85 }}
                   onClick={() => setShowCart(true)}
-                  className="relative h-10 w-10 rounded-2xl bg-background/50 backdrop-blur-2xl flex items-center justify-center shadow-xl border border-white/10"
+                  className="relative h-10 w-10 rounded-2xl bg-background/90 backdrop-blur-2xl flex items-center justify-center shadow-xl border border-border"
                 >
                   <ShoppingCart className="h-4 w-4 text-foreground" />
                   {cart.itemCount > 0 && (
@@ -400,32 +381,38 @@ export default function StoreProfilePage() {
       })()}
 
       {/* ── Desktop split layout: left content + sticky right rail ── */}
-      <div className="max-w-7xl mx-auto lg:px-6 lg:grid lg:grid-cols-12 lg:gap-6 lg:pt-4">
+      <div className="max-w-7xl mx-auto lg:px-6 lg:grid lg:grid-cols-12 lg:gap-6">
       <div className="lg:col-span-8 min-w-0">
 
       {/* ── Store Info Card - 3D glassmorphic ── */}
-      <div className="relative px-4 -mt-16 lg:mt-0 z-10" style={{ perspective: "1000px" }}>
+      <div className="relative px-4 -mt-14 lg:-mt-10 z-10" style={{ perspective: "1000px" }}>
         <motion.div
           initial={{ y: 50, opacity: 0, rotateX: 10 }}
           animate={{ y: 0, opacity: 1, rotateX: 0 }}
           transition={{ duration: 0.7, ease: "easeOut", delay: 0.1 }}
-          className="bg-card/70 backdrop-blur-2xl rounded-3xl border border-white/[0.08] shadow-2xl shadow-black/10 p-4 relative overflow-hidden"
+          className="bg-card/95 backdrop-blur-2xl rounded-3xl border border-border shadow-2xl shadow-black/10 p-4 relative overflow-hidden"
         >
           {/* Holographic shine */}
-          <div className="absolute inset-0 bg-gradient-to-br from-white/[0.06] via-transparent to-primary/[0.02] rounded-3xl pointer-events-none" />
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+          <div className="absolute inset-0 bg-gradient-to-br from-background/40 via-transparent to-primary/[0.02] rounded-3xl pointer-events-none" />
+          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
           
           <div className="flex items-start gap-3 relative">
             <motion.div
               initial={{ scale: 0.7, opacity: 0, rotateY: -20 }}
               animate={{ scale: 1, opacity: 1, rotateY: 0 }}
               transition={{ delay: 0.3, type: "spring", stiffness: 300 }}
-              className="h-16 w-16 rounded-2xl bg-background/80 backdrop-blur-sm border border-white/10 overflow-hidden flex items-center justify-center shrink-0 shadow-xl shadow-black/5"
+              className="h-16 w-16 rounded-2xl bg-background backdrop-blur-sm border border-border overflow-hidden flex items-center justify-center shrink-0 shadow-xl shadow-black/5"
             >
               {store.logo_url ? (
                 <img src={store.logo_url} alt={store.name} className="h-full w-full object-contain p-1" />
+              ) : isLodging ? (
+                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-emerald-500/15 via-sky-500/10 to-primary/10">
+                  <BedDouble className="h-8 w-8 text-emerald-600 dark:text-emerald-300" />
+                </div>
               ) : (
-                <Store className="h-8 w-8 text-muted-foreground/30" />
+                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-primary/15 via-amber-500/10 to-fuchsia-500/10">
+                  <Store className="h-8 w-8 text-primary" />
+                </div>
               )}
             </motion.div>
             <div className="flex-1 min-w-0">
@@ -439,9 +426,9 @@ export default function StoreProfilePage() {
                   />
                   <span className="font-semibold text-foreground">{store.rating || "4.5"}</span>
                 </span>
-                {store.hours && (() => {
+                {(store.hours || isLodging) && (() => {
                   const market = (store as any).market || (store as any).country;
-                  const status = getStoreStatus(store.hours as string, market);
+                  const status = getStoreStatus(isLodging ? "Open 24 hours" : store.hours as string, market);
                   const cls = status.status === "open"
                     ? "text-emerald-500 font-semibold"
                     : status.status === "closing-soon"
@@ -520,7 +507,7 @@ export default function StoreProfilePage() {
               }
               return (
                 <button type="button"
-                  onClick={() => navigate("/trips")}
+                  onClick={() => isLodging && !hasPublishedRooms ? toast.info("Rooms are not published yet. Check back soon.") : navigate("/trips")}
                   onContextMenu={(e) => {
                     e.preventDefault();
                     handleRefreshBooking();
@@ -528,7 +515,7 @@ export default function StoreProfilePage() {
                   className="w-full inline-flex items-center justify-center gap-2 px-4 h-11 rounded-full bg-emerald-500/[0.06] border border-emerald-400/40 text-emerald-600 dark:text-emerald-300 text-[14px] font-semibold hover:bg-emerald-500/[0.10] transition-colors whitespace-nowrap"
                 >
                   <Lock className="h-4 w-4 shrink-0" />
-                  {t("store.booking_status.locked")}
+                  {isLodging && !hasPublishedRooms ? "Rooms not published yet" : t("store.booking_status.locked")}
                 </button>
               );
             })()}
@@ -735,7 +722,7 @@ export default function StoreProfilePage() {
                 adults={stay.adults}
                 children={stay.children}
                 onChange={updateStay}
-                fromPriceCents={rooms.length > 0 ? Math.min(...rooms.map(r => r.base_rate_cents).filter(n => n > 0)) : undefined}
+                fromPriceCents={minRoomPriceCents}
               />
             </div>
           )}
@@ -761,16 +748,16 @@ export default function StoreProfilePage() {
       </div>
 
       {/* ── Promo Banner Carousel ── */}
-      {(store.gallery_images?.length ?? 0) > 0 && (
+      {galleryImages.length > 0 && (
         <div className="px-4 pt-4">
           <motion.div
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, type: "spring", stiffness: 300, damping: 25 }}
-            className="relative rounded-3xl overflow-hidden border border-white/[0.08] shadow-2xl shadow-black/20 ring-1 ring-white/5 h-56 sm:h-64 md:h-72 bg-muted"
+            className="relative rounded-3xl overflow-hidden border border-border shadow-2xl shadow-black/20 h-44 sm:h-48 md:h-52 bg-muted"
           >
             <StoreHeroCarousel
-              images={store.gallery_images!}
+              images={galleryImages}
               storeName={store.name}
               positions={(store as any).gallery_positions}
             />
@@ -846,9 +833,47 @@ export default function StoreProfilePage() {
               <Loader2 className="h-6 w-6 animate-spin text-primary" />
             </div>
           ) : rooms.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 gap-3">
-              <BedDouble className="h-12 w-12 text-muted-foreground/20" />
-              <p className="text-sm text-muted-foreground">No rooms listed yet</p>
+            <div className="rounded-3xl border border-border bg-card/95 p-4 shadow-sm">
+              <div className="grid gap-3 md:grid-cols-[auto_minmax(0,1fr)_auto] md:items-center">
+                <div className="mx-auto flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary md:mx-0">
+                  <BedDouble className="h-6 w-6" />
+                </div>
+                <div className="min-w-0 text-center md:text-left">
+                  <p className="text-base font-bold text-foreground">Rooms are being prepared</p>
+                  <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                    This hotel is live, but room types, nightly prices, and booking availability are not published yet.
+                  </p>
+                  <div className="mt-2 grid w-full gap-1.5 text-left sm:grid-cols-3">
+                    {[
+                      ["Room types", "Pending"],
+                      ["Public rates", "Pending"],
+                      ["Availability", "Pending"],
+                    ].map(([label, value]) => (
+                      <div key={label} className="rounded-xl border border-border bg-background px-2.5 py-1.5">
+                        <p className="text-[9px] font-bold uppercase tracking-wider text-muted-foreground">{label}</p>
+                        <p className="mt-0.5 text-[11px] font-semibold text-amber-600">{value}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                <div className="flex flex-col gap-2 sm:flex-row md:flex-col">
+                  <Button
+                    className="h-9 whitespace-nowrap gap-2 text-xs"
+                    onClick={() => toast.info("Rooms are not published yet. We will show rates here when the hotel is ready.")}
+                  >
+                    <RefreshCcw className="h-4 w-4" />
+                    Check room status
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-9 whitespace-nowrap gap-2 border-border bg-background text-xs text-foreground hover:bg-muted"
+                    onClick={() => navigate(`/rides/hub?${new URLSearchParams({ destination: store.address ?? store.name }).toString()}`)}
+                  >
+                    <MapPin className="h-4 w-4" />
+                    Get directions
+                  </Button>
+                </div>
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2 gap-3">
@@ -877,6 +902,7 @@ export default function StoreProfilePage() {
                   breakfastRateCents={r.breakfast_rate_cents ?? undefined}
                   originalRateCents={r.original_rate_cents ?? undefined}
                   badges={r.badges || []}
+                  expandableFeatures={r.expandable_features || []}
                   onReserve={(plan) => { setBookingRoom(r); setBookingPlan(plan); }}
                 />
               ))}
@@ -1280,7 +1306,8 @@ export default function StoreProfilePage() {
           isLodging={isLodging}
           stay={isLodging ? stay : undefined}
           onStayChange={isLodging ? updateStay : undefined}
-          roomsMinPriceCents={isLodging && rooms.length > 0 ? Math.min(...rooms.map(r => r.base_rate_cents).filter(n => n > 0)) : undefined}
+          roomsMinPriceCents={isLodging ? minRoomPriceCents : undefined}
+          hasPublishedRooms={!isLodging || hasPublishedRooms}
           showBookService={store.category === "auto-repair"}
           onBookService={() => navigate(`/book/${slug}`)}
           userLoc={userLoc}

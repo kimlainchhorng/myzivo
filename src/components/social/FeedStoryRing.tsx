@@ -148,15 +148,15 @@ export default function FeedStoryRing() {
 
   return (
     <>
-      <div className="flex gap-3 px-3 py-2.5 overflow-x-auto scrollbar-none border-b border-border/20">
+      <div className="flex gap-3 px-3 py-2 overflow-x-auto scrollbar-none border-b border-border/20 lg:gap-2 lg:py-1.5">
         {/* Your story (Instagram-style) */}
         <button type="button"
           onClick={handleOwnRingClick}
-          className="flex flex-col items-center gap-1 shrink-0 w-[72px]"
+          className="flex flex-col items-center gap-1 shrink-0 w-[72px] lg:w-[64px]"
         >
           <div className="relative">
             <div className={cn(
-              "h-[64px] w-[64px] rounded-full p-[2.5px] box-border",
+              "h-[64px] w-[64px] rounded-full p-[2.5px] box-border lg:h-14 lg:w-14",
               hasMyStory
                 ? "bg-[conic-gradient(from_140deg,hsl(160_84%_45%),hsl(174_72%_45%),hsl(190_85%_55%),hsl(160_84%_45%))] shadow-[0_0_14px_-3px_hsl(160_84%_45%/0.6)]"
                 : "bg-muted-foreground/20"
@@ -190,7 +190,7 @@ export default function FeedStoryRing() {
               </div>
             </div>
             <div className={cn(
-              "absolute -bottom-0.5 -right-0.5 h-[22px] w-[22px] rounded-full flex items-center justify-center border-[2.5px] border-card shadow-[0_2px_6px_-1px_hsl(160_84%_45%/0.6)]",
+              "absolute -bottom-0.5 -right-0.5 h-[22px] w-[22px] rounded-full flex items-center justify-center border-[2.5px] border-card shadow-[0_2px_6px_-1px_hsl(160_84%_45%/0.6)] lg:h-5 lg:w-5",
               hasMyStory
                 ? "bg-gradient-to-br from-[hsl(160_84%_45%)] to-[hsl(174_72%_40%)]"
                 : "bg-gradient-to-br from-[hsl(160_84%_45%)] to-[hsl(174_72%_40%)]"
@@ -202,7 +202,7 @@ export default function FeedStoryRing() {
               )}
             </div>
           </div>
-          <span className="text-[11px] font-medium text-foreground max-w-[68px] truncate">
+          <span className="text-[11px] font-medium text-foreground max-w-[68px] truncate lg:max-w-[60px] lg:text-[10px]">
             Your story
           </span>
         </button>
@@ -211,14 +211,14 @@ export default function FeedStoryRing() {
         {groups.filter((g) => g.userId !== user.id).length === 0 && (
           <a
             href="/explore"
-            className="flex flex-col items-center gap-1 shrink-0 w-[80px] active:scale-95 transition-transform"
+            className="flex flex-col items-center gap-1 shrink-0 w-[80px] active:scale-95 transition-transform lg:w-[68px]"
           >
-            <div className="h-[64px] w-[64px] rounded-full p-[2.5px] bg-gradient-to-br from-primary/40 to-emerald-400/30 box-border flex items-center justify-center">
+            <div className="h-[64px] w-[64px] rounded-full p-[2.5px] bg-gradient-to-br from-primary/40 to-emerald-400/30 box-border flex items-center justify-center lg:h-14 lg:w-14">
               <div className="h-full w-full rounded-full bg-card flex items-center justify-center text-primary">
                 <Sparkles className="h-5 w-5" strokeWidth={2.25} />
               </div>
             </div>
-            <span className="text-[11px] font-semibold text-primary text-center leading-tight">
+            <span className="text-[11px] font-semibold text-primary text-center leading-tight lg:text-[10px]">
               Discover people →
             </span>
           </a>
@@ -230,11 +230,11 @@ export default function FeedStoryRing() {
           return (
             <button type="button"
               key={g.userId}
-              className="flex flex-col items-center gap-1 shrink-0 w-[72px]"
+              className="flex flex-col items-center gap-1 shrink-0 w-[72px] lg:w-[64px]"
               onClick={() => handleRingClick(g)}
             >
               <div className={cn(
-                "h-[64px] w-[64px] rounded-full p-[2.5px]",
+                "h-[64px] w-[64px] rounded-full p-[2.5px] lg:h-14 lg:w-14",
                 hasUnviewed
                   ? "bg-[conic-gradient(from_140deg,hsl(160_84%_45%),hsl(174_72%_45%),hsl(190_85%_55%),hsl(160_84%_45%))] shadow-[0_0_12px_-3px_hsl(160_84%_45%/0.55)]"
                   : "bg-muted-foreground/20"
@@ -254,7 +254,7 @@ export default function FeedStoryRing() {
                 </div>
               </div>
               <span className={cn(
-                "text-[11px] max-w-[68px] truncate",
+                "text-[11px] max-w-[68px] truncate lg:max-w-[60px] lg:text-[10px]",
                 hasUnviewed ? "font-semibold text-foreground" : "font-medium text-muted-foreground"
               )}>
                 {g.userName.split(" ")[0]}

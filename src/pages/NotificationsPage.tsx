@@ -1,10 +1,7 @@
-/**
- * Notifications Page — 3D/4D Spatial UI
- */
 import { useState, useMemo, useCallback, useEffect } from 'react';
 import SEOHead from '@/components/SEOHead';
 import { useNavigate } from 'react-router-dom';
-import { CheckCheck, Bell, Package, Gift, Headphones, Clock, ArrowLeft, UserPlus, Check, X, Heart, MessageCircle as MessageCircleIcon, Share2, AtSign, Flame } from 'lucide-react';
+import { CheckCheck, Bell, Package, Gift, Headphones, Clock, ArrowLeft, UserPlus, Check, X, Heart, MessageCircle as MessageCircleIcon, Share2, AtSign, Flame, Settings2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -36,22 +33,9 @@ interface FriendRequest {
   };
 }
 
-/* ── Bokeh Particle ── */
-const BokehParticle = ({ delay, size, x, y, color }: { delay: number; size: number; x: string; y: string; color: string }) => (
-  <motion.div
-    className="absolute rounded-full pointer-events-none"
-    style={{ width: size, height: size, left: x, top: y, background: color, filter: `blur(${size * 0.4}px)` }}
-    animate={{ opacity: [0.12, 0.35, 0.12], scale: [0.8, 1.2, 0.8], y: [0, -15, 0] }}
-    transition={{ duration: 5 + delay, repeat: Infinity, ease: "easeInOut", delay }}
-  />
-);
-
-/* ── Glass Card ── */
+/* ── Soft Card ── */
 const GlassCard3D = ({ children, className = "", glow = false }: { children: React.ReactNode; className?: string; glow?: boolean }) => (
-  <div className={`relative rounded-2xl overflow-hidden ${className}`}>
-    <div className="absolute inset-0 bg-card/65 backdrop-blur-2xl" />
-    <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] via-transparent to-primary/[0.015]" />
-    <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/[0.06] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]" />
+  <div className={`relative overflow-hidden rounded-2xl border border-border/50 bg-card shadow-sm ${className}`}>
     {glow && <div className="pointer-events-none absolute -inset-px rounded-2xl bg-gradient-to-br from-primary/15 via-transparent to-primary/8 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />}
     <div className="relative z-10">{children}</div>
   </div>
@@ -361,95 +345,88 @@ const NotificationsPage = () => {
     { value: 'support', label: t('notif.support'), icon: Headphones },
     { value: 'delays', label: t('notif.delays'), icon: Clock },
   ];
+  const notificationTitle = t('notif.title') || 'Notifications';
 
   return (
     <PullToRefresh onRefresh={handlePullRefresh} className="zivo-shell-mobile bg-background relative overflow-hidden safe-area-bottom">
       <SEOHead title="Notifications – ZIVO" description="View your travel alerts, order updates, and promotional offers." noIndex={true} />
 
-      {/* ── 3D Background with parallax depth ── */}
-      <div className="pointer-events-none fixed inset-0 z-0">
-        {/* Photo background */}
-        <img
-          src="/images/notif-bg-3d.jpg"
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover opacity-[0.12]"
-        />
-        {/* Gradient overlays */}
-        <div className="absolute inset-0 bg-gradient-to-b from-background/80 via-background/60 to-background/90" />
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/[0.04] via-transparent to-primary/[0.03]" />
-        {/* Radial glows */}
-        <div className="absolute top-[-20%] right-[-10%] w-[60vw] h-[60vw] rounded-full bg-primary/[0.06] blur-[100px]" />
-        <div className="absolute bottom-[10%] left-[-15%] w-[50vw] h-[50vw] rounded-full bg-primary/[0.04] blur-[80px]" />
-        {/* Bokeh */}
-        <BokehParticle delay={0} size={50} x="8%" y="12%" color="hsl(var(--primary) / 0.07)" />
-        <BokehParticle delay={1.8} size={35} x="78%" y="20%" color="hsl(var(--primary) / 0.05)" />
-        <BokehParticle delay={2.5} size={60} x="85%" y="55%" color="hsl(var(--primary) / 0.04)" />
-        <BokehParticle delay={0.6} size={40} x="15%" y="65%" color="hsl(var(--primary) / 0.06)" />
-        <BokehParticle delay={3.2} size={30} x="50%" y="80%" color="hsl(var(--primary) / 0.05)" />
+      {/* ── Background ── */}
+      <div className="pointer-events-none fixed inset-0 z-0 bg-background">
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,hsl(var(--muted)/0.45),transparent_260px)]" />
+        <div className="absolute inset-x-0 top-0 h-40 bg-gradient-to-b from-primary/[0.04] to-transparent" />
       </div>
 
       {/* ── Scrollable Content ── */}
-      <div className="relative z-10 h-screen overflow-y-auto pb-24 scroll-smooth no-scrollbar">
-
-        {/* ── Sticky 3D Header ── */}
-        <div className="sticky top-0 safe-area-top z-40">
-          <div className="relative">
-            <div className="absolute inset-0 bg-background/70 backdrop-blur-2xl" />
-            <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-border/30 to-transparent" />
-            <div className="relative z-10 px-4 py-3">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <motion.div whileHover={{ scale: 1.1, rotateY: 10 }} whileTap={{ scale: 0.88 }}>
-                    <button type="button"
-                      onClick={() => navigate(-1)}
-                      className="w-10 h-10 min-w-[44px] min-h-[44px] rounded-2xl bg-card/60 backdrop-blur-xl border border-border/30 flex items-center justify-center touch-manipulation shadow-lg shadow-primary/[0.05] hover:bg-card/80 transition-all"
-                      aria-label="Go back"
+      <div className="relative z-10 min-h-screen overflow-y-auto pb-24 scroll-smooth no-scrollbar">
+        <div className="mx-auto max-w-2xl space-y-3.5 px-4 pt-[76px] lg:pt-[78px]">
+          {/* ── Page Header ── */}
+          <div className="rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-sm">
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => navigate(-1)}
+                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-border/60 bg-background text-foreground transition-colors hover:bg-muted"
+                  aria-label="Go back"
+                >
+                  <ArrowLeft className="h-5 w-5" />
+                </button>
+                <div className="min-w-0 flex-1">
+                  <div className="flex min-w-0 items-center gap-2">
+                    <div
+                      role="heading"
+                      aria-level={1}
+                      className="block min-w-[8rem] text-xl font-bold tracking-normal text-foreground sm:text-2xl"
+                      style={{ color: 'hsl(var(--foreground))' }}
                     >
-                      <ArrowLeft className="w-5 h-5" />
-                    </button>
-                  </motion.div>
-                  <div>
-                    <h1 className="text-lg font-bold flex items-center gap-2">
-                      {t('notif.title')}
-                      {unreadCount > 0 && (
-                        <motion.div initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ type: "spring", stiffness: 400 }}>
-                          <Badge className="bg-destructive text-destructive-foreground text-[10px] font-bold h-5 min-w-[20px] px-1.5 shadow-md shadow-destructive/30">
-                            {unreadCount > 99 ? '99+' : unreadCount}
-                          </Badge>
-                        </motion.div>
-                      )}
-                    </h1>
-                    <p className="text-[10px] text-muted-foreground">{t('notif.subtitle')}</p>
+                      {notificationTitle}
+                    </div>
+                    {categoryCounts.all > 0 && (
+                      <Badge className="h-5 min-w-[22px] rounded-full bg-destructive px-1.5 text-[10px] font-bold text-destructive-foreground">
+                        {categoryCounts.all > 99 ? '99+' : categoryCounts.all}
+                      </Badge>
+                    )}
                   </div>
+                  <p className="mt-0.5 block text-xs font-medium text-muted-foreground">
+                    {categoryCounts.all > 0 ? `${categoryCounts.all} unread updates` : 'All caught up'}
+                  </p>
                 </div>
-                {unreadCount > 0 && (
-                  <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.92 }}>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="h-9 text-xs font-bold rounded-2xl text-primary hover:bg-primary/8"
-                      onClick={() => { markAllAsRead(); markAllSocialRead(); }}
-                    >
-                      <CheckCheck className="h-4 w-4 mr-1" />
-                      {t('notif.read_all')}
-                    </Button>
-                  </motion.div>
+              </div>
+              <div className="flex shrink-0 items-center gap-1.5">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 rounded-xl"
+                  onClick={() => navigate("/account/notifications")}
+                  aria-label="Notification settings"
+                >
+                  <Settings2 className="h-4 w-4" />
+                </Button>
+                {categoryCounts.all > 0 && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="h-9 rounded-xl px-2.5 text-xs font-bold text-primary hover:bg-primary/8 sm:px-3"
+                    onClick={() => { markAllAsRead(); markAllSocialRead(); }}
+                  >
+                    <CheckCheck className="h-4 w-4 sm:mr-1" />
+                    <span className="hidden sm:inline">{t('notif.read_all')}</span>
+                  </Button>
                 )}
               </div>
             </div>
           </div>
-        </div>
-        
-        <div className="px-4 pt-4 space-y-4 max-w-lg mx-auto">
-          {/* ── 3D Category Tab Bar ── */}
+
+          {/* ── Category Tab Bar ── */}
           <motion.div
             initial={{ opacity: 0, y: 20, rotateX: 8 }}
             animate={{ opacity: 1, y: 0, rotateX: 0 }}
             transition={{ duration: 0.5, ease: [0.22, 1, 0.36, 1] }}
             style={{ perspective: '1000px' }}
           >
-            <GlassCard3D className="shadow-xl shadow-primary/[0.06]">
-              <div className="flex gap-0.5 p-1.5">
+            <GlassCard3D className="sticky top-[66px] z-30 lg:top-[66px]">
+              <div className="grid grid-cols-7 gap-1 p-1.5">
                 {tabs.map(tab => {
                   const isActive = activeTab === tab.value;
                   return (
@@ -459,14 +436,14 @@ const NotificationsPage = () => {
                       whileTap={{ scale: 0.92 }}
                       onClick={() => setActiveTab(tab.value)}
                       className={cn(
-                        "flex-1 flex flex-col items-center gap-1 py-2.5 rounded-xl text-[10px] font-bold transition-all duration-300 touch-manipulation relative",
+                        "relative flex min-w-0 flex-col items-center gap-1 rounded-lg px-1 py-1.5 text-[10px] font-bold transition-colors touch-manipulation",
                         isActive 
-                          ? "bg-primary text-primary-foreground shadow-lg shadow-primary/25" 
-                          : "text-muted-foreground hover:text-foreground hover:bg-card/50"
+                          ? "bg-primary/10 text-primary ring-1 ring-primary/20" 
+                          : "text-muted-foreground hover:text-foreground hover:bg-muted/50"
                       )}
                     >
                       <tab.icon className="w-4 h-4" />
-                      <span className="hidden sm:block">{tab.label}</span>
+                      <span className="hidden truncate sm:block">{tab.label}</span>
                       {categoryCounts[tab.value] > 0 && (
                         <motion.div
                           initial={{ scale: 0 }}
@@ -475,11 +452,11 @@ const NotificationsPage = () => {
                         >
                           <Badge 
                             className={cn(
-                              "absolute -top-1.5 -right-0.5 h-4 min-w-[16px] px-1 text-[9px] flex items-center justify-center border-0 shadow-sm",
+                              "absolute -right-0.5 -top-1.5 flex h-4 min-w-[16px] items-center justify-center rounded-full border-0 px-1 text-[9px] shadow-sm",
                               tab.value === 'delays' 
                                 ? "bg-destructive text-destructive-foreground shadow-destructive/30" 
                                 : isActive
-                                  ? "bg-primary-foreground text-primary"
+                                  ? "bg-primary text-primary-foreground"
                                   : "bg-primary text-primary-foreground shadow-primary/30"
                             )}
                           >
@@ -524,7 +501,7 @@ const NotificationsPage = () => {
           )}
 
           {/* ── Notification List ── */}
-          {activeTab !== 'social' && (
+          {(activeTab !== 'social' || filteredNotifications.length > 0) && (
             <>
               {isLoading ? (
                 <div className="space-y-3">
@@ -542,7 +519,7 @@ const NotificationsPage = () => {
                     </motion.div>
                   ))}
                 </div>
-              ) : filteredNotifications.length === 0 && friendRequests.length === 0 ? (
+              ) : activeTab !== 'social' && filteredNotifications.length === 0 && friendRequests.length === 0 ? (
                 <motion.div
                   initial={{ opacity: 0, y: 30, rotateX: 8 }}
                   animate={{ opacity: 1, y: 0, rotateX: 0 }}
@@ -652,21 +629,24 @@ const NotificationsPage = () => {
                     weekAgo.setDate(weekAgo.getDate() - 7);
                     const thisWeek = notifications.filter(n => new Date(n.created_at) >= weekAgo);
                     return [
-                      { label: "This week", value: String(thisWeek.length), icon: "📬" },
-                      { label: "Unread", value: String(unreadCount), icon: "🔴" },
-                      { label: "Actions", value: String(thisWeek.filter(n => n.action_url).length), icon: "⚡" },
+                      { label: "This week", value: String(thisWeek.length), icon: Bell },
+                      { label: "Unread", value: String(unreadCount), icon: CheckCheck },
+                      { label: "Actions", value: String(thisWeek.filter(n => n.action_url).length), icon: ArrowLeft },
                     ];
-                  })().map(s => (
-                    <motion.div
-                      key={s.label}
-                      whileHover={{ scale: 1.06, y: -2 }}
-                      className="text-center p-3 rounded-2xl bg-card/40 backdrop-blur-xl border border-border/20 shadow-inner"
-                    >
-                      <p className="text-sm mb-0.5">{s.icon}</p>
-                      <p className="text-base font-bold text-foreground">{s.value}</p>
-                      <p className="text-[9px] text-muted-foreground font-medium">{s.label}</p>
-                    </motion.div>
-                  ))}
+                  })().map(s => {
+                    const SummaryIcon = s.icon;
+                    return (
+                      <motion.div
+                        key={s.label}
+                        whileHover={{ scale: 1.03, y: -1 }}
+                        className="rounded-xl border border-border/40 bg-muted/25 p-3 text-center"
+                      >
+                        <SummaryIcon className={cn("mx-auto mb-1 h-4 w-4 text-primary", s.label === "Actions" && "rotate-180")} />
+                        <p className="text-base font-bold text-foreground">{s.value}</p>
+                        <p className="text-[10px] text-muted-foreground font-medium">{s.label}</p>
+                      </motion.div>
+                    );
+                  })}
                 </div>
               </div>
             </GlassCard3D>

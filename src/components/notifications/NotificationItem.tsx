@@ -1,18 +1,14 @@
-/**
- * Notification Item — 3D/4D Spatial UI
- */
 import { Package, Gift, Headphones, Clock, User, ChevronRight, Heart, Repeat2, MessageCircle, AtSign } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
 
 interface Notification {
   id: string;
   user_id: string | null;
   order_id: string | null;
   channel: 'email' | 'in_app' | 'sms';
-  category: 'transactional' | 'account' | 'operational' | 'marketing';
+  category: 'transactional' | 'account' | 'operational' | 'marketing' | 'order' | 'social';
   template: string;
   title: string;
   body: string;
@@ -82,12 +78,21 @@ const NotificationItem = ({ notification, onMarkAsRead, onClick }: NotificationI
     }
     switch (notification.category) {
       case 'transactional':
+      case 'order':
         return {
           icon: Package,
           label: 'Order',
           badgeClass: 'bg-primary/12 text-primary border-primary/20',
           iconBg: 'from-primary/20 to-primary/10',
           iconColor: 'text-primary',
+        };
+      case 'social':
+        return {
+          icon: MessageCircle,
+          label: 'Social',
+          badgeClass: 'bg-blue-500/12 text-blue-600 border-blue-500/20',
+          iconBg: 'from-blue-500/20 to-blue-500/10',
+          iconColor: 'text-blue-500',
         };
       case 'marketing':
         return {
@@ -126,78 +131,70 @@ const NotificationItem = ({ notification, onMarkAsRead, onClick }: NotificationI
 
   const config = getCategoryConfig();
   const Icon = config.icon;
+  const rawTitle = notification.title?.trim() || "";
+  const rawBody = notification.body?.trim() || "";
+  const looksLikePersonOnly = /^[\p{L}\s'.-]{2,40}$/u.test(rawTitle) && !/\b(commented|liked|driver|order|request|accepted|follow|mention|delay|promo|support)\b/i.test(rawTitle);
+  const title = !rawTitle || (config.label === 'Order' && looksLikePersonOnly)
+    ? `${config.label} activity`
+    : rawTitle;
+  const body = !rawBody || /^hi[!.]?$/i.test(rawBody) || rawBody.length < 3
+    ? `Open to view the latest ${config.label.toLowerCase()} details.`
+    : rawBody;
 
   return (
-    <motion.div
-      whileHover={{ scale: 1.02, y: -2, rotateX: 1 }}
-      whileTap={{ scale: 0.97 }}
-      style={{ perspective: '800px', transformStyle: 'preserve-3d' }}
+    <button
+      type="button"
+      className={cn(
+        "group w-full rounded-xl border bg-card px-3 py-2.5 text-left transition-colors hover:bg-muted/30",
+        notification.is_read
+          ? "border-border/50"
+          : "border-primary/15 bg-primary/[0.02] shadow-[inset_2px_0_0_hsl(var(--primary)/0.35)]"
+      )}
+      onClick={onClick}
     >
-      <div
-        className={cn(
-          "relative rounded-2xl overflow-hidden cursor-pointer touch-manipulation transition-shadow duration-300",
-          !notification.is_read
-            ? "shadow-lg shadow-primary/[0.08] ring-1 ring-primary/20"
-            : "shadow-md shadow-foreground/[0.03] ring-1 ring-border/20"
-        )}
-        onClick={onClick}
-      >
-        {/* Glass layers */}
-        <div className="absolute inset-0 bg-card/70 backdrop-blur-2xl" />
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/[0.03] via-transparent to-primary/[0.01]" />
-        <div className="pointer-events-none absolute inset-0 rounded-2xl ring-1 ring-inset ring-white/[0.06] shadow-[inset_0_1px_0_0_rgba(255,255,255,0.05)]" />
+      <div className="flex items-start gap-2.5">
+        <div className={cn(
+          "mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br",
+          config.iconBg
+        )}>
+          <Icon className={cn("h-[18px] w-[18px]", config.iconColor)} />
+        </div>
 
-        {/* Unread glow accent */}
-        {!notification.is_read && (
-          <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-primary via-primary/80 to-primary/40 rounded-l-2xl" />
-        )}
-
-        <div className="relative z-10 p-4 flex items-start gap-3">
-          {/* 3D Icon */}
-          <div className={cn(
-            "flex-shrink-0 w-11 h-11 rounded-2xl bg-gradient-to-br flex items-center justify-center shadow-inner border border-white/[0.08]",
-            config.iconBg
-          )}>
-            <Icon className={cn("h-5 w-5", config.iconColor)} />
-          </div>
-
-          {/* Content */}
-          <div className="flex-1 min-w-0">
-            <div className="flex items-center gap-2 mb-1">
-              <Badge
-                variant="secondary"
-                className={cn("text-[10px] px-2 py-0.5 rounded-full font-bold border", config.badgeClass)}
-              >
-                {config.label}
-              </Badge>
-              {!notification.is_read && (
-                <span className="h-2 w-2 rounded-full bg-primary shadow-md shadow-primary/40 flex-shrink-0 animate-pulse" />
-              )}
-            </div>
-
-            <h4 className={cn(
-              "text-sm line-clamp-1 mb-0.5",
-              !notification.is_read ? "font-bold text-foreground" : "font-medium text-foreground/80"
-            )}>
-              {notification.title}
-            </h4>
-
-            <p className="text-xs text-muted-foreground line-clamp-2 leading-relaxed">
-              {notification.body}
-            </p>
-
-            <p className="text-[10px] text-muted-foreground/60 mt-1.5 font-medium">
+        <div className="min-w-0 flex-1">
+          <div className="mb-1 flex min-w-0 items-center gap-2">
+            <Badge
+              variant="secondary"
+              className={cn("h-5 rounded-full border px-2 text-[10px] font-semibold", config.badgeClass)}
+            >
+              {config.label}
+            </Badge>
+            <span className="ml-auto shrink-0 text-[11px] font-medium text-muted-foreground">
               {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true })}
-            </p>
+            </span>
           </div>
 
-          {/* Arrow */}
-          {notification.action_url && (
-            <ChevronRight className="h-5 w-5 text-muted-foreground/40 flex-shrink-0 mt-1" />
+          <h4 className={cn(
+            "line-clamp-1 text-[14px] leading-snug",
+            notification.is_read ? "font-semibold text-foreground/80" : "font-bold text-foreground"
+          )}>
+            {title}
+          </h4>
+
+          <p className="mt-0.5 line-clamp-2 text-[12px] leading-snug text-muted-foreground">
+            {body}
+          </p>
+        </div>
+
+        <div className="mt-3 flex h-5 w-5 shrink-0 items-center justify-center">
+          {!notification.is_read && (
+            <span className="h-1.5 w-1.5 rounded-full bg-primary/70" />
+          )}
+          {notification.is_read && notification.action_url && (
+            <ChevronRight className="h-4 w-4 text-muted-foreground/45 transition-transform group-hover:translate-x-0.5" />
           )}
         </div>
       </div>
-    </motion.div>
+    </button>
   );
 };
 

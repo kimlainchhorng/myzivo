@@ -64,7 +64,19 @@ function PollPostCardInner({
   });
 
   const handleVote = async (index: number) => {
-    if (!user || voted || isExpired) return;
+    if (!user) {
+      toast("Log in to vote", {
+        description: "Create a free ZIVO account to vote in polls and personalize your feed.",
+        action: {
+          label: "Log in",
+          onClick: () => {
+            window.location.assign(`/login?redirect=${encodeURIComponent("/feed")}`);
+          },
+        },
+      });
+      return;
+    }
+    if (voted || isExpired) return;
     setVoted(true);
     setSelectedIndex(index);
     setTotalVotes((p) => p + 1);

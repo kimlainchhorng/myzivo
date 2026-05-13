@@ -75,7 +75,7 @@ export default function StoreHeroCarousel({ images, storeName, positions }: Stor
                 loading={i === 0 ? "eager" : "lazy"}
               />
               {/* Cinematic gradient overlay for legibility */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-black/20 pointer-events-none" />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/42 via-black/5 to-black/10 pointer-events-none" />
             </div>
           ))}
         </div>

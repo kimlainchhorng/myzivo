@@ -5,12 +5,14 @@ import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 
+const NOTIFICATIONS_MARK_ALL_READ_EVENT = 'zivo:notifications:mark-all-read';
+
 interface Notification {
   id: string;
   user_id: string | null;
   order_id: string | null;
   channel: 'email' | 'in_app' | 'sms';
-  category: 'transactional' | 'account' | 'operational' | 'marketing';
+  category: 'transactional' | 'account' | 'operational' | 'marketing' | 'order' | 'social';
   template: string;
   title: string;
   body: string;
@@ -141,6 +143,12 @@ export function useNotifications(limit = 50): UseNotificationsResult {
       );
       setUnreadCount(0);
 
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent(NOTIFICATIONS_MARK_ALL_READ_EVENT, {
+          detail: { userId: session.session.user.id },
+        }));
+      }
+
       toast({
         title: 'All caught up!',
         description: 'All notifications marked as read'
@@ -181,6 +189,19 @@ export function useNotifications(limit = 50): UseNotificationsResult {
       });
     }
   }, [notifications, toast]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleMarkAllRead = () => {
+      const nowIso = new Date().toISOString();
+      setNotifications(prev => prev.map(n => ({ ...n, is_read: true, read_at: n.read_at || nowIso })));
+      setUnreadCount(0);
+    };
+
+    window.addEventListener(NOTIFICATIONS_MARK_ALL_READ_EVENT, handleMarkAllRead);
+    return () => window.removeEventListener(NOTIFICATIONS_MARK_ALL_READ_EVENT, handleMarkAllRead);
+  }, []);
 
   const clearAll = useCallback(async () => {
     try {

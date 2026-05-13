@@ -7,7 +7,7 @@
  *   <GroupCallScreenV2 roomName="group-<id>" callType="video" onEnded={...} />
  */
 import { useEffect } from "react";
-import { AlertTriangle, Loader2, Lock, Radio, Users } from "lucide-react";
+import { AlertTriangle, Loader2, Lock, Radio, Users, X } from "lucide-react";
 import { useLiveKitCall } from "@/hooks/useLiveKitCall";
 import GroupCallGrid from "./GroupCallGrid";
 import GroupCallControls from "./GroupCallControls";
@@ -52,7 +52,7 @@ export default function GroupCallScreenV2({
   }, [call.state, onEnded]);
 
   return (
-    <div className="fixed inset-0 z-50 flex flex-col bg-zinc-950 text-white">
+    <div className="fixed inset-0 z-[1000] flex flex-col bg-zinc-950 text-white">
       {/* Top bar — Google Meet style: minimal chrome, info chips on the right */}
       <header
         className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between px-4 sm:px-6 pointer-events-none"
@@ -123,14 +123,25 @@ export default function GroupCallScreenV2({
         {(call.state === "connected" || call.participants.length > 0) && (
           <>
             {call.mediaError && (
-              <div className="absolute left-1/2 top-[calc(env(safe-area-inset-top,0px)+4rem)] z-20 w-[min(92vw,520px)] -translate-x-1/2 rounded-2xl border border-amber-300/20 bg-zinc-950/90 px-4 py-3 text-sm text-white shadow-2xl backdrop-blur">
-                <div className="flex gap-3">
+              <div className="absolute left-4 top-[calc(env(safe-area-inset-top,0px)+4rem)] z-20 w-[min(calc(100vw-2rem),460px)] rounded-2xl border border-amber-300/25 bg-zinc-950/85 px-4 py-3 text-sm text-white shadow-2xl backdrop-blur sm:left-6">
+                <div className="flex gap-3 pr-7">
                   <AlertTriangle className="mt-0.5 h-5 w-5 shrink-0 text-amber-300" />
                   <div>
-                    <p className="font-semibold">Permission is blocked</p>
+                    <p className="font-semibold">
+                      {call.screenShareBlocked ? "Screen sharing is blocked" : "Permission is blocked"}
+                    </p>
                     <p className="mt-0.5 text-xs leading-relaxed text-white/65">{call.mediaError}</p>
                   </div>
                 </div>
+                <button
+                  type="button"
+                  onClick={call.clearMediaError}
+                  className="absolute right-3 top-3 grid h-7 w-7 place-items-center rounded-full text-white/55 transition hover:bg-white/10 hover:text-white"
+                  aria-label="Dismiss permission warning"
+                  title="Dismiss"
+                >
+                  <X className="h-4 w-4" />
+                </button>
               </div>
             )}
             <GroupCallGrid
@@ -149,6 +160,7 @@ export default function GroupCallScreenV2({
         micEnabled={call.micEnabled}
         camEnabled={call.camEnabled}
         isScreenSharing={call.isScreenSharing}
+        screenShareBlocked={call.screenShareBlocked}
         handRaised={call.handRaised}
         isHost={call.isHost}
         isRecording={call.isRecording}

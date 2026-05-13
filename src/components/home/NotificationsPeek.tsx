@@ -185,8 +185,8 @@ export default function NotificationsPeek() {
       .channel(`peek:${user.id}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "trips", filter: `rider_id=eq.${user.id}` }, trigger)
       .on("postgres_changes", { event: "*", schema: "public", table: "food_orders", filter: `customer_id=eq.${user.id}` }, trigger)
-      .on("postgres_changes", { event: "*", schema: "public", table: "flight_bookings", filter: `user_id=eq.${user.id}` }, trigger)
-      .on("postgres_changes", { event: "*", schema: "public", table: "hotel_bookings", filter: `user_id=eq.${user.id}` }, trigger)
+      .on("postgres_changes", { event: "*", schema: "public", table: "flight_bookings", filter: `customer_id=eq.${user.id}` }, trigger)
+      .on("postgres_changes", { event: "*", schema: "public", table: "hotel_bookings", filter: `customer_id=eq.${user.id}` }, trigger)
       .on("postgres_changes", { event: "*", schema: "public", table: "restaurant_reservations", filter: `user_id=eq.${user.id}` }, trigger)
       .subscribe();
 

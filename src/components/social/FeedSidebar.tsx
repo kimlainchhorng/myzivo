@@ -52,23 +52,23 @@ const SERVICE_ITEMS = [
 ];
 
 const SOCIAL_ITEMS = [
-  { label: "Friends", icon: Users, path: "/friends" },
+  { label: "Friends", icon: Users, path: "/friends", authRequired: true },
   { label: "Groups", icon: Users, path: "/communities" },
   { label: "Events", icon: Calendar, path: "/explore" },
   { label: "Marketplace", icon: ShoppingBag, path: "/marketplace" },
-  { label: "Spaces", icon: Mic2, path: "/spaces" },
-  { label: "Dating", icon: Heart, path: "/dating" },
+  { label: "Spaces", icon: Mic2, path: "/spaces", authRequired: true },
+  { label: "Dating", icon: Heart, path: "/dating", authRequired: true },
 ];
 
 const MORE_ITEMS = [
   { label: "Explore", icon: Compass, path: "/explore" },
-  { label: "Saved", icon: Bookmark, path: "/saved" },
-  { label: "Notifications", icon: Bell, path: "/notifications" },
+  { label: "Saved", icon: Bookmark, path: "/saved", authRequired: true },
+  { label: "Notifications", icon: Bell, path: "/notifications", authRequired: true },
   { label: "Creators", icon: Star, path: "/creators" },
   { label: "Rewards", icon: Gift, path: "/rewards" },
   { label: "Trending", icon: TrendingUp, path: "/trending" },
-  { label: "History", icon: Clock, path: "/history" },
-  { label: "Settings", icon: Settings, path: "/settings" },
+  { label: "History", icon: Clock, path: "/history", authRequired: true },
+  { label: "Settings", icon: Settings, path: "/settings", authRequired: true },
 ];
 
 export default function FeedSidebar() {
@@ -85,6 +85,13 @@ export default function FeedSidebar() {
   const { isPlus: isMember } = useZivoPlus();
   const [showSwitch, setShowSwitch] = useState(false);
   const [showChat, setShowChat] = useState(false);
+  const goToItem = (path: string, authRequired?: boolean) => {
+    if (authRequired && !user) {
+      navigate(`/login?redirect=${encodeURIComponent(path)}`);
+      return;
+    }
+    navigate(path);
+  };
 
   // Manage chat panel state without dispatching events during render/state calculation
   const setChatOpen = useCallback((open: boolean) => {
@@ -133,39 +140,36 @@ export default function FeedSidebar() {
 
   return (
     <>
-    <aside className="hidden lg:flex flex-col w-60 shrink-0 sticky top-[4.5rem] h-[calc(100vh-4.5rem)] overflow-y-auto border-r border-border/30 bg-card/30 backdrop-blur-sm">
+    <aside className="hidden lg:flex flex-col w-60 shrink-0 sticky top-[4.5rem] h-[calc(100vh-4.5rem)] overflow-y-auto border-r border-border/30 bg-background/95">
       <div className="flex flex-col gap-0.5 p-3">
         {/* Profile card — premium identity block */}
         {user && (
-          <div className="relative mb-3 overflow-hidden rounded-2xl border border-border/40 bg-gradient-to-br from-primary/5 via-card to-card shadow-sm">
-            {/* Decorative cover band */}
-            <div
-              className="h-12 w-full bg-gradient-to-r from-primary/30 via-primary/10 to-emerald-400/20"
-              style={profile?.cover_url ? { backgroundImage: `url(${profile.cover_url})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
-            />
-            <div className="px-3 pb-3 -mt-7">
-              <div className="relative">
-                <Avatar className="h-14 w-14 border-[3px] border-card shadow-md">
-                  <AvatarImage src={avatarUrl || undefined} />
-                  <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">
-                    {displayName[0]?.toUpperCase() || "U"}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="absolute bottom-0.5 left-12 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-card" aria-label="Online" />
-              </div>
+          <div className="relative mb-3 overflow-hidden rounded-2xl border border-border/40 bg-card shadow-sm">
+            <div className="px-3 py-3">
+              <div className="flex min-w-0 items-center gap-3">
+                <div className="relative shrink-0">
+                  <Avatar className="h-12 w-12 border-[3px] border-card shadow-md">
+                    <AvatarImage src={avatarUrl || undefined} />
+                    <AvatarFallback className="bg-primary/10 text-primary font-bold text-lg">
+                      {displayName[0]?.toUpperCase() || "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="absolute bottom-0 right-0 h-3 w-3 rounded-full bg-emerald-500 ring-2 ring-card" aria-label="Online" />
+                </div>
 
-              <div className="mt-2 min-w-0">
-                <div className="flex items-center gap-1">
-                  <p className="text-sm font-semibold text-foreground truncate">{displayName}</p>
-                  {profile?.is_verified && (
-                    <BadgeCheck className="h-4 w-4 shrink-0 fill-sky-500 text-white" />
+                <div className="min-w-0 flex-1">
+                  <div className="flex min-w-0 items-center gap-1">
+                    <p className="min-w-0 truncate text-sm font-semibold text-foreground">{displayName}</p>
+                    {profile?.is_verified && (
+                      <BadgeCheck className="h-4 w-4 shrink-0 fill-sky-500 text-white" />
+                    )}
+                  </div>
+                  {username && (
+                    <p className="truncate text-[11px] text-muted-foreground">
+                      @{username}
+                    </p>
                   )}
                 </div>
-                {username && (
-                  <p className="text-[11px] text-muted-foreground truncate">
-                    @{username}
-                  </p>
-                )}
               </div>
 
               <button type="button"
@@ -260,7 +264,7 @@ export default function FeedSidebar() {
         ))}
         {/* Chat button — opens slide panel */}
         <button type="button"
-          onClick={() => setShowChat(true)}
+          onClick={() => user ? setShowChat(true) : navigate(`/login?redirect=${encodeURIComponent("/chat")}`)}
           className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors group"
         >
           <MessageCircle className="h-5 w-5 text-foreground" />
@@ -272,7 +276,7 @@ export default function FeedSidebar() {
         {SOCIAL_ITEMS.map((item) => (
           <button type="button"
             key={item.label}
-            onClick={() => navigate(item.path)}
+            onClick={() => goToItem(item.path, item.authRequired)}
             className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors group"
           >
             <item.icon className="h-5 w-5 text-foreground" />
@@ -285,7 +289,7 @@ export default function FeedSidebar() {
         {SERVICE_ITEMS.map((item) => (
           <button type="button"
             key={item.label}
-            onClick={() => navigate(item.path)}
+            onClick={() => goToItem(item.path, item.authRequired)}
             className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-foreground hover:bg-muted/50 transition-colors group"
           >
             <item.icon className={cn("h-5 w-5", item.color)} />

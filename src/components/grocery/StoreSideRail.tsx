@@ -44,6 +44,7 @@ interface StoreSideRailProps {
   stay?: { checkIn: string; checkOut: string; adults: number; children: number };
   onStayChange?: (next: { checkIn: string; checkOut: string; adults: number; children: number }) => void;
   roomsMinPriceCents?: number;
+  hasPublishedRooms?: boolean;
   // Auto-repair Book CTA
   showBookService?: boolean;
   onBookService?: () => void;
@@ -63,6 +64,7 @@ export default function StoreSideRail({
   stay,
   onStayChange,
   roomsMinPriceCents,
+  hasPublishedRooms = true,
   showBookService,
   onBookService,
   userLoc,
@@ -71,7 +73,9 @@ export default function StoreSideRail({
   const [copied, setCopied] = useState(false);
 
   const market = (store as any).market || (store as any).country;
-  const status = store.hours ? getStoreStatus(store.hours as string, market) : null;
+  const status = store.hours || isLodging
+    ? getStoreStatus(isLodging ? "Open 24 hours" : store.hours as string, market)
+    : null;
 
   const formattedPhone = phoneNumber
     ? phoneNumber.startsWith("+")
@@ -143,7 +147,7 @@ export default function StoreSideRail({
   ].filter((s) => s.url && isAllowedSocialUrl(s.url));
 
   return (
-    <div className="space-y-3 max-h-[calc(100vh-6rem)] overflow-y-auto pr-1 scrollbar-hide">
+    <div className="space-y-2.5 max-h-[calc(100vh-4.25rem)] overflow-y-auto pr-1 pb-12 scrollbar-hide">
       {/* Mini Map */}
       {(store.latitude || store.longitude || store.address) && (
         <StoreMiniMap
@@ -151,13 +155,14 @@ export default function StoreSideRail({
           longitude={store.longitude}
           storeName={store.name}
           slug={store.slug}
+          address={store.address}
           userLoc={userLoc}
         />
       )}
 
       {/* Address card */}
       {store.address && (
-        <div className="rounded-3xl border border-white/[0.08] bg-card/70 backdrop-blur-2xl p-4 shadow-sm">
+        <div className="rounded-3xl border border-border bg-card/95 backdrop-blur-2xl p-3 shadow-sm">
           <div className="flex items-start gap-3">
             <div className="h-9 w-9 shrink-0 rounded-xl bg-primary/10 flex items-center justify-center">
               <MapPin className="h-4 w-4 text-primary" />
@@ -168,7 +173,7 @@ export default function StoreSideRail({
             </div>
             <button type="button"
               onClick={handleCopyAddress}
-              className="h-8 w-8 rounded-lg border border-border/40 bg-background/50 flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-background/80 transition-colors"
+              className="h-8 w-8 rounded-lg border border-border bg-background flex items-center justify-center text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
               aria-label="Copy address"
             >
               {copied ? <Check className="h-3.5 w-3.5 text-emerald-500" /> : <Copy className="h-3.5 w-3.5" />}
@@ -176,7 +181,7 @@ export default function StoreSideRail({
           </div>
 
           {status && (
-            <div className="mt-3 pt-3 border-t border-white/[0.06] flex items-center gap-2">
+            <div className="mt-3 pt-3 border-t border-border flex items-center gap-2">
               <Clock className="h-3.5 w-3.5 text-muted-foreground" />
               <span
                 className={cn(
@@ -201,7 +206,7 @@ export default function StoreSideRail({
       <motion.button
         whileTap={{ scale: 0.98 }}
         onClick={handleRideThere}
-        className="w-full h-12 rounded-2xl bg-primary text-primary-foreground font-bold text-sm shadow-lg shadow-primary/25 flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors"
+        className="w-full h-11 rounded-2xl bg-primary text-primary-foreground font-bold text-sm shadow-lg shadow-primary/25 flex items-center justify-center gap-2 hover:bg-primary/90 transition-colors"
       >
         <MapPin className="h-4 w-4" />
         Ride There
@@ -227,7 +232,7 @@ export default function StoreSideRail({
             whileTap={{ scale: 0.95 }}
             href={telHref}
             onClick={() => track("store_contact_action", { store_id: store.id, channel: "call", surface: "side_rail" })}
-            className="flex flex-col items-center justify-center gap-1 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-300 hover:bg-emerald-500/15 transition-colors"
+            className="flex flex-col items-center justify-center gap-1 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-300 hover:bg-emerald-500/15 transition-colors"
           >
             <Phone className="h-4 w-4" />
             <span className="text-[10px] font-bold">Call</span>
@@ -244,7 +249,7 @@ export default function StoreSideRail({
               track("store_contact_action", { store_id: store.id, channel: "chat", surface: "side_rail" });
               onOpenChat();
             }}
-            className="flex flex-col items-center justify-center gap-1 h-16 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-300 hover:bg-blue-500/15 transition-colors"
+            className="flex flex-col items-center justify-center gap-1 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/20 text-blue-600 dark:text-blue-300 hover:bg-blue-500/15 transition-colors"
           >
             <MessageCircle className="h-4 w-4" />
             <span className="text-[10px] font-bold">Chat</span>
@@ -257,7 +262,7 @@ export default function StoreSideRail({
         <motion.button
           whileTap={{ scale: 0.95 }}
           onClick={handleShare}
-          className="flex flex-col items-center justify-center gap-1 h-16 rounded-2xl bg-card/60 border border-border/40 text-foreground hover:bg-card transition-colors"
+          className="flex flex-col items-center justify-center gap-1 h-14 rounded-2xl bg-card/60 border border-border/40 text-foreground hover:bg-card transition-colors"
         >
           <Share2 className="h-4 w-4" />
           <span className="text-[10px] font-bold">Share</span>
@@ -266,30 +271,34 @@ export default function StoreSideRail({
 
       {/* Unlock hint */}
       {!loadingBooking && !hasBooking && (
-        <TooltipProvider delayDuration={150}>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button
-                variant="outline"
-                onClick={() => navigate("/account/bookings")}
-                className="w-full h-10 rounded-xl gap-2 border-emerald-500/40 text-emerald-600 dark:text-emerald-300 hover:bg-emerald-500/10 text-[12px] font-semibold"
-              >
-                <Lock className="h-3.5 w-3.5" />
-                Complete a booking to unlock
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent side="left" className="max-w-[260px] text-[11px] leading-snug">
-              {isLodging
-                ? "Confirmed reservation required to unlock Live Chat & Call Store."
-                : "Completed order required to unlock Live Chat & Call Store."}
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <div className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-2.5">
+          <div className="flex items-start gap-2">
+            <Lock className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-300" />
+            <div className="min-w-0">
+              <p className="text-sm font-bold text-foreground">Contact unlocks after booking</p>
+              <p className="mt-0.5 text-xs leading-snug text-muted-foreground">
+                {isLodging
+                  ? hasPublishedRooms
+                    ? "Reserve a room to unlock direct call and chat with this hotel."
+                    : "Direct call and chat will unlock after this hotel publishes rooms for booking."
+                  : "Complete an order to unlock direct call and chat with this store."}
+              </p>
+            </div>
+          </div>
+          <Button
+            variant="outline"
+            onClick={() => isLodging && !hasPublishedRooms ? toast.info("Rooms are not published yet. Check back soon.") : navigate("/account/bookings")}
+            className="mt-2.5 w-full h-9 rounded-xl gap-2 border-emerald-500/40 bg-background text-emerald-700 hover:bg-emerald-500/10 dark:text-emerald-300 text-[12px] font-semibold"
+          >
+            <Lock className="h-3.5 w-3.5" />
+            {isLodging && !hasPublishedRooms ? "Rooms not published yet" : "View booking status"}
+          </Button>
+        </div>
       )}
 
       {/* Stay selector — lodging only */}
       {isLodging && stay && onStayChange && (
-        <div className="rounded-3xl border border-white/[0.08] bg-card/70 backdrop-blur-2xl p-3 shadow-sm">
+        <div className="rounded-3xl border border-border bg-card/95 backdrop-blur-2xl p-3 shadow-sm">
           <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-1 pb-2">Your stay</p>
           <LodgingStaySelector
             checkIn={stay.checkIn}
@@ -304,7 +313,7 @@ export default function StoreSideRail({
 
       {/* Socials */}
       {socials.length > 0 && (
-        <div className="rounded-3xl border border-white/[0.08] bg-card/70 backdrop-blur-2xl p-3 shadow-sm">
+        <div className="rounded-3xl border border-border bg-card/95 backdrop-blur-2xl p-3 shadow-sm">
           <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground px-1 pb-2">Follow</p>
           <div className="flex items-center gap-2">
             {socials.map((s) => (
@@ -363,13 +372,14 @@ function LockedPill({
           <button
             type="button"
             disabled
-            className="flex flex-col items-center justify-center gap-1 h-16 rounded-2xl bg-muted/30 border border-border/40 text-muted-foreground/50 cursor-not-allowed"
+            className="flex flex-col items-center justify-center gap-0.5 h-14 rounded-2xl bg-muted/70 border border-border text-muted-foreground cursor-not-allowed"
           >
             <div className="relative">
               {icon}
               <Lock className="h-2.5 w-2.5 absolute -bottom-1 -right-1.5" />
             </div>
             <span className="text-[10px] font-bold">{label}</span>
+            <span className="text-[9px] font-semibold leading-none text-muted-foreground/80">Locked</span>
           </button>
         </TooltipTrigger>
         <TooltipContent side="top" className="text-[11px]">

@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { BedDouble, CheckCircle2, Hotel, KeyRound, ListChecks, PackagePlus } from "lucide-react";
+import { BedDouble, Camera, CheckCircle2, DollarSign, Globe, Hotel, KeyRound, ListChecks, MapPin, PackagePlus, ShieldCheck, Sparkles } from "lucide-react";
 import { AddonList, LoadingPanel, NextActions, OpsSnapshot, SectionShell, StatCard, useLodgingOpsData } from "./LodgingOperationsShared";
 import LodgingSetupChecklist from "./LodgingSetupChecklist";
 import LodgingQuickJump from "./LodgingQuickJump";
@@ -12,6 +12,51 @@ import { useLodgingPhase5Counts } from "@/hooks/lodging/useLodgingPhase5Counts";
 import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
 
 const goTab = (tab: string) => window.dispatchEvent(new CustomEvent("lodge-set-tab", { detail: { tab } }));
+
+const listingBuildoutSteps = [
+  {
+    title: "Photos & cover",
+    body: "Add approved property photos, room photos, and one strong cover image.",
+    tab: "lodge-gallery",
+    action: "Open gallery",
+    icon: Camera,
+  },
+  {
+    title: "Rooms & prices",
+    body: "Create room types with units, nightly price, capacity, bed setup, and room photos.",
+    tab: "lodge-rooms",
+    action: "Add rooms",
+    icon: BedDouble,
+  },
+  {
+    title: "Rate plans",
+    body: "Set public plans such as refundable, non-refundable, breakfast included, or promos.",
+    tab: "lodge-rate-plans",
+    action: "Set rates",
+    icon: DollarSign,
+  },
+  {
+    title: "Amenities",
+    body: "Publish facilities guests compare first: pool, Wi-Fi, parking, spa, shuttle, dining.",
+    tab: "lodge-amenities",
+    action: "Add amenities",
+    icon: Sparkles,
+  },
+  {
+    title: "Policies",
+    body: "Fill check-in, checkout, cancellation, deposits, child policy, and house rules.",
+    tab: "lodge-policies",
+    action: "Edit policies",
+    icon: ShieldCheck,
+  },
+  {
+    title: "Location & contacts",
+    body: "Confirm address, map position, phone, chat unlock, and guest arrival details.",
+    tab: "lodge-property",
+    action: "Edit property",
+    icon: MapPin,
+  },
+];
 
 export default function LodgingOverviewSection({ storeId }: { storeId: string }) {
   const navigate = useNavigate();
@@ -82,6 +127,47 @@ export default function LodgingOverviewSection({ storeId }: { storeId: string })
         <div className="grid gap-3 lg:grid-cols-3">
           <div className="lg:col-span-2"><RevenuePulseCard storeId={storeId} /></div>
           <LodgingReviewsSummaryCard storeId={storeId} />
+        </div>
+        <div className="rounded-lg border border-border bg-card p-4">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+            <div className="flex items-start gap-3">
+              <span className="rounded-lg bg-primary/10 p-2 text-primary"><Globe className="h-5 w-5" /></span>
+              <div>
+                <p className="text-sm font-bold text-foreground">Booking-style listing buildout</p>
+                <p className="mt-1 max-w-2xl text-xs text-muted-foreground">
+                  Use this as the safe setup checklist for a hotel listing: add your own approved photos, room prices, policies, amenities, and guest-ready information in ZIVO.
+                </p>
+              </div>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <Button size="sm" onClick={() => goTab("lodge-rooms")}><BedDouble className="mr-1.5 h-3.5 w-3.5" /> Start with rooms</Button>
+              <Button size="sm" variant="outline" onClick={() => goTab("lodge-channels")}><Globe className="mr-1.5 h-3.5 w-3.5" /> Channel links</Button>
+            </div>
+          </div>
+          <div className="mt-4 grid gap-2 md:grid-cols-2 xl:grid-cols-3">
+            {listingBuildoutSteps.map((step) => (
+              <button
+                type="button"
+                key={step.title}
+                onClick={() => goTab(step.tab)}
+                className="group rounded-lg border border-border bg-background p-3 text-left transition hover:border-primary/45 hover:bg-primary/5"
+              >
+                <div className="flex items-start gap-2.5">
+                  <span className="rounded-md bg-muted p-2 text-foreground/70 transition group-hover:bg-primary/10 group-hover:text-primary">
+                    <step.icon className="h-4 w-4" />
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-foreground">{step.title}</p>
+                    <p className="mt-1 text-xs leading-5 text-muted-foreground">{step.body}</p>
+                    <p className="mt-2 text-xs font-semibold text-primary">{step.action}</p>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+          <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs leading-5 text-amber-900">
+            Add listing details from content you own or have permission to use. Keep Booking.com as a reference for structure, not a source to copy.
+          </div>
         </div>
         <StorefrontPreviewCard profile={profile} />
         <LodgingSetupChecklist items={setupItems} wizard />

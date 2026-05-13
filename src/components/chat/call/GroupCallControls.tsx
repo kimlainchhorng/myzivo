@@ -17,6 +17,7 @@ interface Props {
   micEnabled: boolean;
   camEnabled: boolean;
   isScreenSharing: boolean;
+  screenShareBlocked?: boolean;
   handRaised: boolean;
   isHost: boolean;
   isRecording: boolean;
@@ -51,27 +52,36 @@ interface BtnProps {
   onClick: () => void;
   active?: boolean;       // "feature ON" — filled white pill (e.g. screen-share, hand-raise)
   muted?: boolean;        // mic / camera is off — red filled
+  warning?: boolean;      // permission blocked / needs attention
   children: React.ReactNode;
   label: string;
+  shortLabel?: string;
 }
-function CtrlBtn({ onClick, active, muted, children, label }: BtnProps) {
+function CtrlBtn({ onClick, active, muted, warning, children, label, shortLabel }: BtnProps) {
   return (
-    <button
-      type="button"
-      aria-label={label}
-      title={label}
-      onClick={onClick}
-      className={cn(
-        "grid h-11 w-11 sm:h-12 sm:w-12 place-items-center rounded-full transition active:scale-95",
-        muted
-          ? "bg-rose-500 text-white hover:bg-rose-600"
-          : active
-          ? "bg-white text-zinc-900 hover:bg-white/90"
-          : "bg-white/10 text-white hover:bg-white/20"
-      )}
-    >
-      {children}
-    </button>
+    <div className="flex min-w-12 flex-col items-center gap-1">
+      <button
+        type="button"
+        aria-label={label}
+        title={label}
+        onClick={onClick}
+        className={cn(
+          "grid h-11 w-11 sm:h-12 sm:w-12 place-items-center rounded-full transition active:scale-95",
+          muted
+            ? "bg-rose-500 text-white hover:bg-rose-600"
+            : warning
+            ? "bg-amber-400/15 text-amber-200 ring-1 ring-amber-300/40 hover:bg-amber-400/25"
+            : active
+            ? "bg-white text-zinc-900 hover:bg-white/90"
+            : "bg-white/10 text-white hover:bg-white/20"
+        )}
+      >
+        {children}
+      </button>
+      <span className="hidden text-[10px] font-medium leading-none text-white/60 md:block">
+        {shortLabel ?? label}
+      </span>
+    </div>
   );
 }
 
@@ -80,7 +90,7 @@ export default function GroupCallControls(props: Props) {
 
   return (
     <div
-      className="grid shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-3 bg-black/70 px-3 sm:px-6 backdrop-blur-xl"
+      className="grid shrink-0 grid-cols-[1fr_auto_1fr] items-end gap-3 bg-black/75 px-3 sm:px-6 backdrop-blur-xl"
       style={{ paddingTop: 14, paddingBottom: "calc(env(safe-area-inset-bottom, 0px) + 18px)" }}
     >
       {/* Left: time + meeting label */}
@@ -95,18 +105,28 @@ export default function GroupCallControls(props: Props) {
       </div>
 
       {/* Center: primary controls */}
-      <div className="flex items-center gap-1.5 sm:gap-2">
-        <CtrlBtn onClick={props.onToggleMic} muted={!props.micEnabled} label="Toggle microphone">
+      <div className="flex items-start gap-1.5 sm:gap-2">
+        <CtrlBtn onClick={props.onToggleMic} muted={!props.micEnabled} label="Toggle microphone" shortLabel="Mic">
           {props.micEnabled ? <Mic className="h-5 w-5" /> : <MicOff className="h-5 w-5" />}
         </CtrlBtn>
-        <CtrlBtn onClick={props.onToggleCam} muted={!props.camEnabled} label="Toggle camera">
+        <CtrlBtn onClick={props.onToggleCam} muted={!props.camEnabled} label="Toggle camera" shortLabel="Camera">
           {props.camEnabled ? <Video className="h-5 w-5" /> : <VideoOff className="h-5 w-5" />}
         </CtrlBtn>
-        <CtrlBtn onClick={props.onToggleScreen} active={props.isScreenSharing} label="Share screen">
+        <CtrlBtn
+          onClick={props.onToggleScreen}
+          active={props.isScreenSharing}
+          warning={props.screenShareBlocked}
+          label={
+            props.screenShareBlocked
+              ? "Screen sharing is blocked. Allow screen sharing permission, then try again."
+              : "Share screen"
+          }
+          shortLabel={props.screenShareBlocked ? "Retry" : "Share"}
+        >
           {props.isScreenSharing ? <MonitorOff className="h-5 w-5" /> : <MonitorUp className="h-5 w-5" />}
         </CtrlBtn>
 
-        <CtrlBtn onClick={props.onToggleHand} active={props.handRaised} label="Raise hand">
+        <CtrlBtn onClick={props.onToggleHand} active={props.handRaised} label="Raise hand" shortLabel="Hand">
           <Hand className="h-5 w-5" />
         </CtrlBtn>
 
@@ -115,6 +135,7 @@ export default function GroupCallControls(props: Props) {
             onClick={props.isRecording ? props.onStopRecording : props.onStartRecording}
             active={props.isRecording}
             label={props.isRecording ? "Stop recording" : "Start recording"}
+            shortLabel={props.isRecording ? "Stop" : "Record"}
           >
             {props.isRecording ? (
               <Square className="h-4 w-4 fill-rose-500 text-foreground" />
@@ -132,7 +153,7 @@ export default function GroupCallControls(props: Props) {
           aria-label="Leave call"
           title="Leave call"
           onClick={props.onLeave}
-          className="flex items-center gap-2 h-11 sm:h-12 px-5 sm:px-7 rounded-full bg-rose-500 text-white font-medium text-sm shadow-lg shadow-rose-500/30 hover:bg-rose-600 active:scale-95 transition"
+          className="flex h-11 items-center gap-2 rounded-full bg-rose-500 px-4 text-sm font-semibold text-white shadow-lg shadow-rose-500/25 transition hover:bg-rose-600 active:scale-95 sm:h-12 sm:px-6"
         >
           <PhoneOff className="h-5 w-5" />
           <span className="hidden sm:inline">Leave</span>

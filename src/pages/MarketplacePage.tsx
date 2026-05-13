@@ -2213,7 +2213,7 @@ function ListingDetail({
   const handleMessage = () => {
     if (!currentUserId) { toast.error("Login to message seller"); return; }
     if (isOwn) return;
-    navigate(`/messages?to=${listing.seller_id}&listing=${listing.id}`);
+    navigate(`/chat?with=${listing.seller_id}&listing=${listing.id}`);
   };
 
   const queryClient = useQueryClient();

@@ -90,7 +90,7 @@ export default function VideoTile({ participant, emphasized = false, isRecording
               className="absolute inset-0 h-full w-full scale-110 object-cover opacity-25 blur-2xl"
             />
           )}
-          <div className="relative grid h-20 w-20 place-items-center overflow-hidden rounded-full bg-zinc-700 text-2xl font-semibold text-white ring-1 ring-white/10">
+          <div className="relative grid h-20 w-20 place-items-center overflow-hidden rounded-full bg-zinc-700 text-2xl font-semibold text-white shadow-2xl ring-2 ring-white/20 sm:h-24 sm:w-24 sm:text-3xl">
             {participant.avatarUrl ? (
               <img src={participant.avatarUrl} alt="" className="h-full w-full object-cover" />
             ) : (
@@ -181,7 +181,7 @@ export default function VideoTile({ participant, emphasized = false, isRecording
       </div>
 
       {/* Bottom-left: name + mic */}
-      <div className="absolute bottom-2 left-2 flex max-w-[80%] items-center gap-1.5 rounded-full bg-black/60 px-2 py-1 text-[11px] font-medium text-white backdrop-blur">
+      <div className="absolute bottom-3 left-3 flex max-w-[80%] items-center gap-1.5 rounded-full bg-black/70 px-3 py-1.5 text-xs font-semibold text-white shadow-lg backdrop-blur">
         {participant.micEnabled ? (
           <Mic className="h-3 w-3" />
         ) : (
