@@ -103,7 +103,6 @@ import PartnerBadge from "@/components/shared/PartnerBadge";
 import { useDestinationPrices } from "@/hooks/useDestinationPrices";
 import { getRestaurantPhoto } from "@/config/restaurantPhotos";
 import { formatDistanceToNow, format } from "date-fns";
-import useEmblaCarousel from "embla-carousel-react";
 import { useDeviceIntegrityCheck } from "@/hooks/useDeviceIntegrityCheck";
 import { useOwnerStoreProfile } from "@/hooks/useOwnerStoreProfile";
 import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
@@ -572,14 +571,6 @@ const AppHome = () => {
   const { isCambodia: isKH } = useCountry();
   useDeviceIntegrityCheck();
 
-  const serviceHighlights = [
-    { title: t("home.ride"), subtitle: t("home.book_ride"), gradient: "from-emerald-500 to-teal-600", icon: Car, cta: "Open", href: "/rides/hub" },
-    { title: t("home.eats"), subtitle: t("home.dinner"), gradient: "from-orange-500 to-amber-600", icon: Package, cta: "Open", href: "/eats" },
-    { title: t("home.hotels"), subtitle: t("home.search_hotels"), gradient: "from-foreground to-foreground/80", icon: BedDouble, cta: "Open", href: "/hotels" },
-    // Driver recruitment — US only
-    ...(!isKH ? [{ title: "Become a ZIVO Driver", subtitle: "", gradient: "from-foreground to-foreground/80", icon: Car, cta: "Join ZIVO Today", href: "/driver-signup", isDriverPromo: true as const }] : []),
-  ];
-
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [activeHomeTab, setActiveHomeTab] = useState<"rides" | "eats" | "flights" | "hotels">("rides");
   // Prefetch the route a tab/search-button leads to on touch-down so the
@@ -688,18 +679,6 @@ const AppHome = () => {
       surge: isPeak,
     };
   })();
-
-  // Service highlight carousel
-  const [emblaRef, emblaApi] = useEmblaCarousel({ loop: true });
-  const [activePromo, setActivePromo] = useState(0);
-
-  useEffect(() => {
-    if (!emblaApi) return;
-    const onSelect = () => setActivePromo(emblaApi.selectedScrollSnap());
-    emblaApi.on("select", onSelect);
-    const autoplay = setInterval(() => emblaApi.scrollNext(), 4000);
-    return () => { clearInterval(autoplay); emblaApi.off("select", onSelect); };
-  }, [emblaApi]);
 
   const greeting = () => {
     const hour = new Date().getHours();
@@ -852,18 +831,10 @@ const AppHome = () => {
             </div>
           </div>
 
-          {/* ─── SMART INTENT SEARCH ─── */}
-          <Suspense fallback={<div className="h-[68px] mx-4 my-2 rounded-xl bg-muted/40 animate-pulse" />}>
-            <SmartIntentSearch />
-          </Suspense>
-
           {/* ─── TODAY'S PLAN ─── */}
           <Suspense fallback={null}>
             <TodayPlanWidget />
           </Suspense>
-
-          {/* ─── SMART NOW (time-aware suggestion) ─── */}
-          <SmartNowCard onNavigate={navigate} />
 
           {/* ─── QUICK PICKS + SAVED PLACES (unified pill rail) ─── */}
           <div className="px-4 pb-3">
@@ -916,12 +887,6 @@ const AppHome = () => {
               </motion.button>
             </div>
           </div>
-
-          {/* ─── DAILY MISSION (rotates by day of week) ─── */}
-          {user && <DailyMissionCard onNavigate={navigate} />}
-
-          {/* ─── DAILY STREAK (engagement loop, persists in localStorage) ─── */}
-          {user && <StreakCard onNavigate={navigate} />}
 
           {/* ─── LIVE TRIP TRACKER (moved up — surface active trip ASAP) ─── */}
           <div className="px-5 pb-3">
@@ -1026,53 +991,6 @@ const AppHome = () => {
               same "new" features would stay marked NEW indefinitely. Reclaims
               ~250px of home-screen real estate. Wire to a real release-notes
               table later if a fresh-features rail is desired. */}
-
-          {/* ─── SERVICE HIGHLIGHT CAROUSEL ─── */}
-          <div className="pb-4">
-            <div className="overflow-hidden" ref={emblaRef}>
-              <div className="flex gap-3 pl-5">
-                {serviceHighlights.map((promo, i) => (
-                  <motion.button
-                    key={`${promo.title}-${i}`}
-                    whileTap={{ scale: 0.97 }}
-                    onClick={() => {
-                      navigate(promo.href);
-                    }}
-                    className={cn(
-                      "shrink-0 w-[calc(82vw)] max-w-[310px] rounded-2xl p-5 text-left shadow-lg touch-manipulation relative overflow-hidden bg-gradient-to-br",
-                      promo.gradient
-                    )}
-                  >
-                    <div className="absolute -top-8 -right-8 w-28 h-28 bg-white/10 rounded-full blur-2xl pointer-events-none" />
-                    <div className="relative z-10">
-                      <promo.icon className="w-6 h-6 text-white/90 mb-2.5" />
-                      <p className="text-white font-bold text-[15px] leading-tight">{promo.title}</p>
-                      {promo.subtitle && <p className="text-white/75 text-xs mt-1 leading-relaxed">{promo.subtitle}</p>}
-                      <div className="mt-3.5 inline-flex items-center gap-1.5 bg-white/25 backdrop-blur-sm rounded-full px-3.5 py-1.5">
-                        <span className="text-white font-bold text-[11px]">{promo.cta}</span>
-                        <ChevronRight className="w-3 h-3 text-white" />
-                      </div>
-                    </div>
-                  </motion.button>
-                ))}
-                <div className="shrink-0 w-5" />
-              </div>
-            </div>
-            <div className="flex justify-center gap-1.5 mt-3">
-              {serviceHighlights.map((_, i) => (
-                <button
-                  type="button"
-                  key={i}
-                  aria-label={`Go to slide ${i + 1}`}
-                  onClick={() => emblaApi?.scrollTo(i)}
-                  className={cn(
-                    "rounded-full transition-all duration-200",
-                    activePromo === i ? "w-4 h-1.5 bg-primary" : "w-1.5 h-1.5 bg-muted-foreground/30"
-                  )}
-                />
-              ))}
-            </div>
-          </div>
 
           <div className="px-5 pb-4">
             {ownerStoreLoading ? (

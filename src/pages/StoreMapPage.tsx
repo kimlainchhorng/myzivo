@@ -13,8 +13,8 @@ import SEOHead from "@/components/SEOHead";
 import {
   MapPin, Clock, Star, Navigation, Store, ChevronRight, Search, X,
   Locate, Car, Phone, Wrench, List, Heart, Share2, MoreHorizontal,
-  Route, Plus, Minus, Flame, Timer, CheckCircle2, ChevronUp, ChevronDown,
-  Users, SlidersHorizontal, Layers, Tag, Sparkles, RefreshCw,
+  Route, Minus, Flame, Timer, CheckCircle2, ChevronUp, ChevronDown,
+  Users, SlidersHorizontal, Layers, Tag, Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -849,7 +849,10 @@ export default function StoreMapPage() {
       });
       if (!cancelled) setMapReady(true);
     })();
-    return () => { cancelled = true; };
+    const stuckTimeout = setTimeout(() => {
+      if (!cancelled) setMapError((prev) => prev || !mapRef.current);
+    }, 20000);
+    return () => { cancelled = true; clearTimeout(stuckTimeout); };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -1250,13 +1253,13 @@ export default function StoreMapPage() {
             {isInTrip && <CheckCircle2 className="w-3.5 h-3.5 text-foreground shrink-0" />}
           </div>
           <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-            <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
-              isOpen === true ? "bg-emerald-100 text-emerald-700" :
-              isOpen === false ? "bg-red-100 text-red-600" :
-              "bg-muted text-muted-foreground"
-            }`}>
-              {isOpen === true ? "Open" : isOpen === false ? "Closed" : "—"}
-            </span>
+            {isOpen !== null && (
+              <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                isOpen ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-600"
+              }`}>
+                {isOpen ? "Open" : "Closed"}
+              </span>
+            )}
             {typeof store.rating === "number" && store.rating > 0 && (
               <span className="flex items-center gap-0.5 text-[10px] font-bold text-amber-500">
                 <Star className="w-2.5 h-2.5 fill-current" />{store.rating.toFixed(1)}
@@ -1311,19 +1314,16 @@ export default function StoreMapPage() {
           <Heart className={`w-4 h-4 transition-colors ${isFavorite(store.id) ? "fill-rose-500 text-rose-500" : "text-muted-foreground/30"}`} />
         </motion.button>
 
-        {/* Distance */}
-        <div className="text-right shrink-0 min-w-[44px]">
-          {km !== null ? (
-            <>
-              <p className="text-[12px] font-bold" style={{ color: getCategoryColor(store.category) }}>
-                {formatDistLabel(km)}
-              </p>
-              <p className="text-[10px] text-muted-foreground">{formatWalkMin(km)}</p>
-            </>
-          ) : (
-            <p className="text-[12px] text-muted-foreground/40">—</p>
-          )}
-        </div>
+        {/* Distance — hidden when location unknown or store is >200 km away
+            (showing "12,644 km / 506 h" makes the app look broken) */}
+        {km !== null && km <= 200 && (
+          <div className="text-right shrink-0 min-w-[44px]">
+            <p className="text-[12px] font-bold" style={{ color: getCategoryColor(store.category) }}>
+              {formatDistLabel(km)}
+            </p>
+            <p className="text-[10px] text-muted-foreground">{formatWalkMin(km)}</p>
+          </div>
+        )}
       </motion.div>
     );
   };
@@ -1597,36 +1597,11 @@ export default function StoreMapPage() {
           )}
         </div>
 
-        {/* ── FABs ── */}
+        {/* ── FABs (essentials only — pinch-zoom and pull-to-refresh cover
+            the removed Refresh / Zoom+ / Zoom- buttons) ── */}
         {!drawerStore && (
           <div className="absolute right-4 z-[1500] flex flex-col gap-2.5 transition-all duration-300"
             style={{ bottom: `${fabBottom}px` }}>
-            {/* Refresh */}
-            <motion.div whileTap={{ scale: 0.9 }}>
-              <Button variant="secondary" size="icon"
-                onClick={() => { queryClient.invalidateQueries({ queryKey: ["store-map-all"] }); toast.success("Stores refreshed"); }}
-                className="w-12 h-12 rounded-full shadow-lg border border-border/20 bg-card/95 backdrop-blur-xl text-foreground hover:bg-muted"
-                aria-label="Refresh stores">
-                <RefreshCw className="w-5 h-5" />
-              </Button>
-            </motion.div>
-            {/* Zoom controls */}
-            <motion.div whileTap={{ scale: 0.9 }}>
-              <Button variant="secondary" size="icon"
-                onClick={() => { const m = mapRef.current; if (m) m.setZoom((m.getZoom() ?? 14) + 1); }}
-                className="w-12 h-12 rounded-full shadow-lg border border-border/20 bg-card/95 backdrop-blur-xl text-foreground hover:bg-muted"
-                aria-label="Zoom in">
-                <Plus className="w-5 h-5" />
-              </Button>
-            </motion.div>
-            <motion.div whileTap={{ scale: 0.9 }}>
-              <Button variant="secondary" size="icon"
-                onClick={() => { const m = mapRef.current; if (m) m.setZoom((m.getZoom() ?? 14) - 1); }}
-                className="w-12 h-12 rounded-full shadow-lg border border-border/20 bg-card/95 backdrop-blur-xl text-foreground hover:bg-muted"
-                aria-label="Zoom out">
-                <Minus className="w-5 h-5" />
-              </Button>
-            </motion.div>
             <motion.div whileTap={{ scale: 0.9 }}>
               <Button
                 onClick={() => {

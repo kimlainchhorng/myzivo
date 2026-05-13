@@ -44,7 +44,15 @@ export default function RuntimeSecurityGuard() {
         msg.includes("networkerror") ||
         msg.includes("failed to fetch") ||
         msg.includes("load failed") ||
-        msg.includes("the operation was aborted");
+        msg.includes("the operation was aborted") ||
+        // Google Maps SDK auth/billing errors — not actionable for the user,
+        // and the StoreMap page already shows its own "Map unavailable" state.
+        msg.includes("google maps") ||
+        msg.includes("maps api") ||
+        msg.includes("apinotactivatedmaperror") ||
+        msg.includes("billingnotenabled") ||
+        msg.includes("invalidkeymaperror") ||
+        msg.includes("referernotallowedmaperror");
       if (!transient && canNotify()) {
         toast.error("Something went wrong. Please retry your action.");
       }
