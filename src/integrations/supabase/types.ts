@@ -6184,6 +6184,501 @@ export type Database = {
         }
         Relationships: []
       }
+      bbq_bookings: {
+        Row: {
+          booking_at: string
+          created_at: string
+          guest_email: string | null
+          guest_name: string
+          guest_phone: string
+          id: string
+          party_size: number
+          special_requests: string | null
+          status: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          booking_at: string
+          created_at?: string
+          guest_email?: string | null
+          guest_name: string
+          guest_phone: string
+          id?: string
+          party_size: number
+          special_requests?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          booking_at?: string
+          created_at?: string
+          guest_email?: string | null
+          guest_name?: string
+          guest_phone?: string
+          id?: string
+          party_size?: number
+          special_requests?: string | null
+          status?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      bbq_menu_categories: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_active: boolean
+          name: string
+          slug: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name: string
+          slug: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_active?: boolean
+          name?: string
+          slug?: string
+          sort_order?: number
+        }
+        Relationships: []
+      }
+      bbq_menu_items: {
+        Row: {
+          category_id: string
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          image_url: string | null
+          is_available: boolean
+          is_featured: boolean
+          name: string
+          prep_time_minutes: number
+          price_cents: number
+          slug: string
+          sort_order: number
+          spicy_level: number
+          updated_at: string
+        }
+        Insert: {
+          category_id: string
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_available?: boolean
+          is_featured?: boolean
+          name: string
+          prep_time_minutes?: number
+          price_cents: number
+          slug: string
+          sort_order?: number
+          spicy_level?: number
+          updated_at?: string
+        }
+        Update: {
+          category_id?: string
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          image_url?: string | null
+          is_available?: boolean
+          is_featured?: boolean
+          name?: string
+          prep_time_minutes?: number
+          price_cents?: number
+          slug?: string
+          sort_order?: number
+          spicy_level?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bbq_menu_items_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "bbq_menu_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bbq_order_items: {
+        Row: {
+          created_at: string
+          id: string
+          item_image_url: string | null
+          item_name: string
+          menu_item_id: string | null
+          order_id: string
+          quantity: number
+          special_instructions: string | null
+          total_cents: number
+          unit_price_cents: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          item_image_url?: string | null
+          item_name: string
+          menu_item_id?: string | null
+          order_id: string
+          quantity: number
+          special_instructions?: string | null
+          total_cents: number
+          unit_price_cents: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          item_image_url?: string | null
+          item_name?: string
+          menu_item_id?: string | null
+          order_id?: string
+          quantity?: number
+          special_instructions?: string | null
+          total_cents?: number
+          unit_price_cents?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bbq_order_items_menu_item_id_fkey"
+            columns: ["menu_item_id"]
+            isOneToOne: false
+            referencedRelation: "bbq_menu_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bbq_order_items_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "bbq_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bbq_orders: {
+        Row: {
+          created_at: string
+          currency: string
+          customer_email: string | null
+          customer_name: string
+          customer_phone: string
+          delivery_address: string | null
+          delivery_fee_cents: number
+          delivery_notes: string | null
+          discount_cents: number
+          fulfillment_type: string
+          id: string
+          loyalty_points_earned: number
+          loyalty_points_used: number
+          notes: string | null
+          order_number: string
+          payment_method: string | null
+          payment_reference: string | null
+          payment_status: string
+          promo_code_id: string | null
+          scheduled_at: string | null
+          status: string
+          subtotal_cents: number
+          table_number: string | null
+          tax_cents: number
+          total_cents: number
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          customer_name: string
+          customer_phone: string
+          delivery_address?: string | null
+          delivery_fee_cents?: number
+          delivery_notes?: string | null
+          discount_cents?: number
+          fulfillment_type: string
+          id?: string
+          loyalty_points_earned?: number
+          loyalty_points_used?: number
+          notes?: string | null
+          order_number: string
+          payment_method?: string | null
+          payment_reference?: string | null
+          payment_status?: string
+          promo_code_id?: string | null
+          scheduled_at?: string | null
+          status?: string
+          subtotal_cents?: number
+          table_number?: string | null
+          tax_cents?: number
+          total_cents?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          currency?: string
+          customer_email?: string | null
+          customer_name?: string
+          customer_phone?: string
+          delivery_address?: string | null
+          delivery_fee_cents?: number
+          delivery_notes?: string | null
+          discount_cents?: number
+          fulfillment_type?: string
+          id?: string
+          loyalty_points_earned?: number
+          loyalty_points_used?: number
+          notes?: string | null
+          order_number?: string
+          payment_method?: string | null
+          payment_reference?: string | null
+          payment_status?: string
+          promo_code_id?: string | null
+          scheduled_at?: string | null
+          status?: string
+          subtotal_cents?: number
+          table_number?: string | null
+          tax_cents?: number
+          total_cents?: number
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bbq_orders_promo_code_id_fkey"
+            columns: ["promo_code_id"]
+            isOneToOne: false
+            referencedRelation: "bbq_promo_codes"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bbq_payments: {
+        Row: {
+          amount_cents: number
+          created_at: string
+          currency: string
+          deeplink: string | null
+          expires_at: string | null
+          id: string
+          md5: string | null
+          option: string | null
+          order_id: string
+          paid_at: string | null
+          payment_url: string | null
+          provider: string
+          provider_reference: string | null
+          qr_string: string | null
+          raw_payload: Json | null
+          status: string
+        }
+        Insert: {
+          amount_cents: number
+          created_at?: string
+          currency?: string
+          deeplink?: string | null
+          expires_at?: string | null
+          id?: string
+          md5?: string | null
+          option?: string | null
+          order_id: string
+          paid_at?: string | null
+          payment_url?: string | null
+          provider?: string
+          provider_reference?: string | null
+          qr_string?: string | null
+          raw_payload?: Json | null
+          status?: string
+        }
+        Update: {
+          amount_cents?: number
+          created_at?: string
+          currency?: string
+          deeplink?: string | null
+          expires_at?: string | null
+          id?: string
+          md5?: string | null
+          option?: string | null
+          order_id?: string
+          paid_at?: string | null
+          payment_url?: string | null
+          provider?: string
+          provider_reference?: string | null
+          qr_string?: string | null
+          raw_payload?: Json | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bbq_payments_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "bbq_orders"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bbq_profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          loyalty_points: number
+          phone: string | null
+          role: string
+          telegram_chat_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          loyalty_points?: number
+          phone?: string | null
+          role?: string
+          telegram_chat_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          loyalty_points?: number
+          phone?: string | null
+          role?: string
+          telegram_chat_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      bbq_promo_codes: {
+        Row: {
+          code: string
+          created_at: string
+          description: string | null
+          discount_type: string
+          discount_value: number
+          id: string
+          is_active: boolean
+          max_uses: number | null
+          min_subtotal_cents: number
+          uses_count: number
+          valid_from: string
+          valid_until: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          description?: string | null
+          discount_type: string
+          discount_value: number
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          min_subtotal_cents?: number
+          uses_count?: number
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          description?: string | null
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          is_active?: boolean
+          max_uses?: number | null
+          min_subtotal_cents?: number
+          uses_count?: number
+          valid_from?: string
+          valid_until?: string | null
+        }
+        Relationships: []
+      }
+      bbq_settings: {
+        Row: {
+          aba_merchant_id: string | null
+          address: string | null
+          delivery_fee_cents: number
+          delivery_min_order_cents: number
+          delivery_radius_km: number
+          email: string | null
+          hero_image_url: string | null
+          id: boolean
+          loyalty_points_per_dollar: number
+          loyalty_redeem_rate_cents: number
+          open_hours: Json | null
+          phone: string | null
+          restaurant_name: string
+          tagline: string | null
+          tax_rate: number
+          telegram_owner_chat_id: string | null
+          updated_at: string
+        }
+        Insert: {
+          aba_merchant_id?: string | null
+          address?: string | null
+          delivery_fee_cents?: number
+          delivery_min_order_cents?: number
+          delivery_radius_km?: number
+          email?: string | null
+          hero_image_url?: string | null
+          id?: boolean
+          loyalty_points_per_dollar?: number
+          loyalty_redeem_rate_cents?: number
+          open_hours?: Json | null
+          phone?: string | null
+          restaurant_name?: string
+          tagline?: string | null
+          tax_rate?: number
+          telegram_owner_chat_id?: string | null
+          updated_at?: string
+        }
+        Update: {
+          aba_merchant_id?: string | null
+          address?: string | null
+          delivery_fee_cents?: number
+          delivery_min_order_cents?: number
+          delivery_radius_km?: number
+          email?: string | null
+          hero_image_url?: string | null
+          id?: boolean
+          loyalty_points_per_dollar?: number
+          loyalty_redeem_rate_cents?: number
+          open_hours?: Json | null
+          phone?: string | null
+          restaurant_name?: string
+          tagline?: string | null
+          tax_rate?: number
+          telegram_owner_chat_id?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       behavior_anomalies: {
         Row: {
           anomaly_type: string
@@ -6785,6 +7280,823 @@ export type Database = {
           item_id?: string
           item_type?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      bot_activity: {
+        Row: {
+          bot_id: string
+          created_at: string
+          detail: string | null
+          id: number
+          kind: string
+          status: string | null
+        }
+        Insert: {
+          bot_id: string
+          created_at?: string
+          detail?: string | null
+          id?: number
+          kind: string
+          status?: string | null
+        }
+        Update: {
+          bot_id?: string
+          created_at?: string
+          detail?: string | null
+          id?: number
+          kind?: string
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bot_activity_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bot_activity_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots_directory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bot_apps: {
+        Row: {
+          app_url: string
+          bot_id: string
+          created_at: string
+          description: string | null
+          icon_emoji: string | null
+          id: string
+          is_active: boolean
+          open_in_chat: boolean
+          slug: string
+          sort_order: number
+          title: string
+        }
+        Insert: {
+          app_url: string
+          bot_id: string
+          created_at?: string
+          description?: string | null
+          icon_emoji?: string | null
+          id?: string
+          is_active?: boolean
+          open_in_chat?: boolean
+          slug: string
+          sort_order?: number
+          title: string
+        }
+        Update: {
+          app_url?: string
+          bot_id?: string
+          created_at?: string
+          description?: string | null
+          icon_emoji?: string | null
+          id?: string
+          is_active?: boolean
+          open_in_chat?: boolean
+          slug?: string
+          sort_order?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bot_apps_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bot_apps_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots_directory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bot_blocks: {
+        Row: {
+          bot_id: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          bot_id: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          bot_id?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bot_blocks_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bot_blocks_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots_directory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bot_collection_items: {
+        Row: {
+          bot_id: string
+          collection_id: string
+          sort_order: number
+        }
+        Insert: {
+          bot_id: string
+          collection_id: string
+          sort_order?: number
+        }
+        Update: {
+          bot_id?: string
+          collection_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bot_collection_items_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bot_collection_items_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots_directory"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bot_collection_items_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "bot_collections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bot_collections: {
+        Row: {
+          cover_emoji: string | null
+          created_at: string
+          description: string | null
+          id: string
+          is_active: boolean
+          slug: string
+          sort_order: number
+          title: string
+        }
+        Insert: {
+          cover_emoji?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          slug: string
+          sort_order?: number
+          title: string
+        }
+        Update: {
+          cover_emoji?: string | null
+          created_at?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          slug?: string
+          sort_order?: number
+          title?: string
+        }
+        Relationships: []
+      }
+      bot_commands: {
+        Row: {
+          bot_id: string
+          command: string
+          created_at: string
+          description: string
+          id: string
+          sort_order: number
+        }
+        Insert: {
+          bot_id: string
+          command: string
+          created_at?: string
+          description?: string
+          id?: string
+          sort_order?: number
+        }
+        Update: {
+          bot_id?: string
+          command?: string
+          created_at?: string
+          description?: string
+          id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bot_commands_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bot_commands_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots_directory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bot_payment_links: {
+        Row: {
+          amount_cents: number
+          bot_id: string
+          checkout_url: string
+          created_at: string
+          currency: string
+          description: string | null
+          id: string
+          is_active: boolean
+          slug: string
+          sort_order: number
+          title: string
+        }
+        Insert: {
+          amount_cents: number
+          bot_id: string
+          checkout_url: string
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          slug: string
+          sort_order?: number
+          title: string
+        }
+        Update: {
+          amount_cents?: number
+          bot_id?: string
+          checkout_url?: string
+          created_at?: string
+          currency?: string
+          description?: string | null
+          id?: string
+          is_active?: boolean
+          slug?: string
+          sort_order?: number
+          title?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bot_payment_links_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bot_payment_links_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots_directory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bot_ratings: {
+        Row: {
+          bot_id: string
+          created_at: string
+          id: string
+          review: string | null
+          stars: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bot_id: string
+          created_at?: string
+          id?: string
+          review?: string | null
+          stars: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bot_id?: string
+          created_at?: string
+          id?: string
+          review?: string | null
+          stars?: number
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bot_ratings_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bot_ratings_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots_directory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bot_reports: {
+        Row: {
+          bot_id: string
+          created_at: string
+          details: string | null
+          id: string
+          reason: string
+          reporter_id: string
+          status: string
+        }
+        Insert: {
+          bot_id: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason: string
+          reporter_id: string
+          status?: string
+        }
+        Update: {
+          bot_id?: string
+          created_at?: string
+          details?: string | null
+          id?: string
+          reason?: string
+          reporter_id?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bot_reports_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bot_reports_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots_directory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bot_scheduled_messages: {
+        Row: {
+          audience: string
+          bot_id: string
+          created_at: string
+          id: string
+          image_url: string | null
+          interval_minutes: number | null
+          is_active: boolean
+          last_run_at: string | null
+          last_sent_count: number | null
+          next_run_at: string
+          target_user_id: string | null
+          text: string | null
+        }
+        Insert: {
+          audience?: string
+          bot_id: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          interval_minutes?: number | null
+          is_active?: boolean
+          last_run_at?: string | null
+          last_sent_count?: number | null
+          next_run_at: string
+          target_user_id?: string | null
+          text?: string | null
+        }
+        Update: {
+          audience?: string
+          bot_id?: string
+          created_at?: string
+          id?: string
+          image_url?: string | null
+          interval_minutes?: number | null
+          is_active?: boolean
+          last_run_at?: string | null
+          last_sent_count?: number | null
+          next_run_at?: string
+          target_user_id?: string | null
+          text?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bot_scheduled_messages_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bot_scheduled_messages_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots_directory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bot_tools: {
+        Row: {
+          bot_id: string
+          created_at: string
+          description: string
+          headers: Json
+          http_method: string
+          id: string
+          input_schema: Json
+          is_active: boolean
+          name: string
+          sort_order: number
+          url: string
+        }
+        Insert: {
+          bot_id: string
+          created_at?: string
+          description?: string
+          headers?: Json
+          http_method?: string
+          id?: string
+          input_schema?: Json
+          is_active?: boolean
+          name: string
+          sort_order?: number
+          url: string
+        }
+        Update: {
+          bot_id?: string
+          created_at?: string
+          description?: string
+          headers?: Json
+          http_method?: string
+          id?: string
+          input_schema?: Json
+          is_active?: boolean
+          name?: string
+          sort_order?: number
+          url?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bot_tools_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bot_tools_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots_directory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bot_unsubscribes: {
+        Row: {
+          bot_id: string
+          created_at: string
+          user_id: string
+        }
+        Insert: {
+          bot_id: string
+          created_at?: string
+          user_id: string
+        }
+        Update: {
+          bot_id?: string
+          created_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bot_unsubscribes_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bot_unsubscribes_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots_directory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bot_updates: {
+        Row: {
+          bot_id: string
+          created_at: string
+          delivered_at: string | null
+          id: number
+          message_id: string
+          payload: Json
+        }
+        Insert: {
+          bot_id: string
+          created_at?: string
+          delivered_at?: string | null
+          id?: number
+          message_id: string
+          payload: Json
+        }
+        Update: {
+          bot_id?: string
+          created_at?: string
+          delivered_at?: string | null
+          id?: number
+          message_id?: string
+          payload?: Json
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bot_updates_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bot_updates_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots_directory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bot_user_state: {
+        Row: {
+          bot_id: string
+          state: Json
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          bot_id: string
+          state?: Json
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          bot_id?: string
+          state?: Json
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bot_user_state_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bot_user_state_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots_directory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bot_webhook_calls: {
+        Row: {
+          attempt: number
+          bot_id: string
+          created_at: string
+          duration_ms: number | null
+          error: string | null
+          id: number
+          message_id: string | null
+          request_body: Json | null
+          response_body: string | null
+          response_status: number | null
+          url: string | null
+        }
+        Insert: {
+          attempt?: number
+          bot_id: string
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          id?: number
+          message_id?: string | null
+          request_body?: Json | null
+          response_body?: string | null
+          response_status?: number | null
+          url?: string | null
+        }
+        Update: {
+          attempt?: number
+          bot_id?: string
+          created_at?: string
+          duration_ms?: number | null
+          error?: string | null
+          id?: number
+          message_id?: string | null
+          request_body?: Json | null
+          response_body?: string | null
+          response_status?: number | null
+          url?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bot_webhook_calls_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bot_webhook_calls_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots_directory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bot_workflows: {
+        Row: {
+          bot_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          next_webhook: boolean
+          reply_image_url: string | null
+          reply_text: string | null
+          sort_order: number
+          trigger_type: string
+          trigger_value: string
+        }
+        Insert: {
+          bot_id: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          next_webhook?: boolean
+          reply_image_url?: string | null
+          reply_text?: string | null
+          sort_order?: number
+          trigger_type: string
+          trigger_value?: string
+        }
+        Update: {
+          bot_id?: string
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+          next_webhook?: boolean
+          reply_image_url?: string | null
+          reply_text?: string | null
+          sort_order?: number
+          trigger_type?: string
+          trigger_value?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bot_workflows_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "bot_workflows_bot_id_fkey"
+            columns: ["bot_id"]
+            isOneToOne: false
+            referencedRelation: "bots_directory"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      bots: {
+        Row: {
+          ai_knowledge: string | null
+          ai_model: string | null
+          ai_system_prompt: string | null
+          ai_temperature: number | null
+          avatar_url: string | null
+          bot_user_id: string
+          category: string | null
+          created_at: string
+          description: string | null
+          display_name: string
+          featured: boolean
+          id: string
+          is_active: boolean
+          last_webhook_at: string | null
+          last_webhook_error: string | null
+          last_webhook_status: number | null
+          owner_id: string
+          rating_avg: number | null
+          rating_count: number
+          token_hash: string
+          updated_at: string
+          username: string
+          webhook_secret: string | null
+          webhook_url: string | null
+        }
+        Insert: {
+          ai_knowledge?: string | null
+          ai_model?: string | null
+          ai_system_prompt?: string | null
+          ai_temperature?: number | null
+          avatar_url?: string | null
+          bot_user_id: string
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          display_name: string
+          featured?: boolean
+          id?: string
+          is_active?: boolean
+          last_webhook_at?: string | null
+          last_webhook_error?: string | null
+          last_webhook_status?: number | null
+          owner_id: string
+          rating_avg?: number | null
+          rating_count?: number
+          token_hash: string
+          updated_at?: string
+          username: string
+          webhook_secret?: string | null
+          webhook_url?: string | null
+        }
+        Update: {
+          ai_knowledge?: string | null
+          ai_model?: string | null
+          ai_system_prompt?: string | null
+          ai_temperature?: number | null
+          avatar_url?: string | null
+          bot_user_id?: string
+          category?: string | null
+          created_at?: string
+          description?: string | null
+          display_name?: string
+          featured?: boolean
+          id?: string
+          is_active?: boolean
+          last_webhook_at?: string | null
+          last_webhook_error?: string | null
+          last_webhook_status?: number | null
+          owner_id?: string
+          rating_avg?: number | null
+          rating_count?: number
+          token_hash?: string
+          updated_at?: string
+          username?: string
+          webhook_secret?: string | null
+          webhook_url?: string | null
         }
         Relationships: []
       }
@@ -14552,37 +15864,67 @@ export type Database = {
       }
       deliveries: {
         Row: {
+          accepted_at: string | null
+          cancelled_at: string | null
           city_id: string | null
           created_at: string | null
           customer_user_id: string
+          delivered_at: string | null
           delivery_fee: number | null
+          delivery_proof_url: string | null
           driver_user_id: string | null
           dropoff_location: Json | null
           id: string
+          notes: string | null
+          notify_recipient: boolean
+          package_size: string | null
+          picked_up_at: string | null
           pickup_location: Json | null
+          pickup_proof_url: string | null
           status: string | null
+          updated_at: string
         }
         Insert: {
+          accepted_at?: string | null
+          cancelled_at?: string | null
           city_id?: string | null
           created_at?: string | null
           customer_user_id: string
+          delivered_at?: string | null
           delivery_fee?: number | null
+          delivery_proof_url?: string | null
           driver_user_id?: string | null
           dropoff_location?: Json | null
           id?: string
+          notes?: string | null
+          notify_recipient?: boolean
+          package_size?: string | null
+          picked_up_at?: string | null
           pickup_location?: Json | null
+          pickup_proof_url?: string | null
           status?: string | null
+          updated_at?: string
         }
         Update: {
+          accepted_at?: string | null
+          cancelled_at?: string | null
           city_id?: string | null
           created_at?: string | null
           customer_user_id?: string
+          delivered_at?: string | null
           delivery_fee?: number | null
+          delivery_proof_url?: string | null
           driver_user_id?: string | null
           dropoff_location?: Json | null
           id?: string
+          notes?: string | null
+          notify_recipient?: boolean
+          package_size?: string | null
+          picked_up_at?: string | null
           pickup_location?: Json | null
+          pickup_proof_url?: string | null
           status?: string | null
+          updated_at?: string
         }
         Relationships: [
           {
@@ -14718,6 +16060,41 @@ export type Database = {
             columns: ["region_id"]
             isOneToOne: false
             referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      delivery_messages: {
+        Row: {
+          body: string
+          created_at: string
+          delivery_id: string
+          id: string
+          read_at: string | null
+          sender_id: string
+        }
+        Insert: {
+          body: string
+          created_at?: string
+          delivery_id: string
+          id?: string
+          read_at?: string | null
+          sender_id: string
+        }
+        Update: {
+          body?: string
+          created_at?: string
+          delivery_id?: string
+          id?: string
+          read_at?: string | null
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "delivery_messages_delivery_id_fkey"
+            columns: ["delivery_id"]
+            isOneToOne: false
+            referencedRelation: "deliveries"
             referencedColumns: ["id"]
           },
         ]
@@ -20597,6 +21974,140 @@ export type Database = {
             columns: ["zone_id"]
             isOneToOne: false
             referencedRelation: "regions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_rule_acknowledgements: {
+        Row: {
+          acknowledged_at: string
+          employee_id: string
+          id: string
+          rule_id: string
+        }
+        Insert: {
+          acknowledged_at?: string
+          employee_id: string
+          id?: string
+          rule_id: string
+        }
+        Update: {
+          acknowledged_at?: string
+          employee_id?: string
+          id?: string
+          rule_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_rule_acknowledgements_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "store_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_rule_acknowledgements_rule_id_fkey"
+            columns: ["rule_id"]
+            isOneToOne: false
+            referencedRelation: "employee_rules"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_rules: {
+        Row: {
+          active: boolean
+          category: string
+          created_at: string
+          description: string | null
+          id: string
+          position: number
+          store_id: string
+          title: string
+          updated_at: string
+        }
+        Insert: {
+          active?: boolean
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          position?: number
+          store_id: string
+          title: string
+          updated_at?: string
+        }
+        Update: {
+          active?: boolean
+          category?: string
+          created_at?: string
+          description?: string | null
+          id?: string
+          position?: number
+          store_id?: string
+          title?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_rules_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      employee_shifts: {
+        Row: {
+          created_at: string
+          day_index: number
+          employee_id: string
+          end_time: string
+          id: string
+          role: string | null
+          start_time: string
+          store_id: string
+          updated_at: string
+          week_offset: number
+        }
+        Insert: {
+          created_at?: string
+          day_index: number
+          employee_id: string
+          end_time: string
+          id?: string
+          role?: string | null
+          start_time: string
+          store_id: string
+          updated_at?: string
+          week_offset?: number
+        }
+        Update: {
+          created_at?: string
+          day_index?: number
+          employee_id?: string
+          end_time?: string
+          id?: string
+          role?: string | null
+          start_time?: string
+          store_id?: string
+          updated_at?: string
+          week_offset?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employee_shifts_employee_id_fkey"
+            columns: ["employee_id"]
+            isOneToOne: false
+            referencedRelation: "store_employees"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "employee_shifts_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_profiles"
             referencedColumns: ["id"]
           },
         ]
@@ -33773,6 +35284,7 @@ export type Database = {
         Row: {
           amount_cents: number
           buyer_id: string
+          counter_amount_cents: number | null
           created_at: string | null
           id: string
           listing_id: string
@@ -33783,6 +35295,7 @@ export type Database = {
         Insert: {
           amount_cents: number
           buyer_id: string
+          counter_amount_cents?: number | null
           created_at?: string | null
           id?: string
           listing_id: string
@@ -33793,6 +35306,7 @@ export type Database = {
         Update: {
           amount_cents?: number
           buyer_id?: string
+          counter_amount_cents?: number | null
           created_at?: string | null
           id?: string
           listing_id?: string
@@ -34026,6 +35540,47 @@ export type Database = {
         }
         Relationships: []
       }
+      marketplace_questions: {
+        Row: {
+          answer: string | null
+          answered_at: string | null
+          asker_id: string
+          created_at: string
+          id: string
+          listing_id: string
+          question: string
+          seller_id: string
+        }
+        Insert: {
+          answer?: string | null
+          answered_at?: string | null
+          asker_id: string
+          created_at?: string
+          id?: string
+          listing_id: string
+          question: string
+          seller_id: string
+        }
+        Update: {
+          answer?: string | null
+          answered_at?: string | null
+          asker_id?: string
+          created_at?: string
+          id?: string
+          listing_id?: string
+          question?: string
+          seller_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketplace_questions_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "marketplace_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketplace_reviews: {
         Row: {
           content: string | null
@@ -34078,6 +35633,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      marketplace_saved_searches: {
+        Row: {
+          alerts_enabled: boolean
+          created_at: string
+          filters: Json | null
+          id: string
+          label: string
+          last_alerted_at: string | null
+          query: string | null
+          user_id: string
+        }
+        Insert: {
+          alerts_enabled?: boolean
+          created_at?: string
+          filters?: Json | null
+          id?: string
+          label: string
+          last_alerted_at?: string | null
+          query?: string | null
+          user_id: string
+        }
+        Update: {
+          alerts_enabled?: boolean
+          created_at?: string
+          filters?: Json | null
+          id?: string
+          label?: string
+          last_alerted_at?: string | null
+          query?: string | null
+          user_id?: string
+        }
+        Relationships: []
       }
       marketplace_seller_profiles: {
         Row: {
@@ -34182,6 +35770,27 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      marketplace_user_blocks: {
+        Row: {
+          blocked_id: string
+          blocker_id: string
+          created_at: string
+          reason: string | null
+        }
+        Insert: {
+          blocked_id: string
+          blocker_id: string
+          created_at?: string
+          reason?: string | null
+        }
+        Update: {
+          blocked_id?: string
+          blocker_id?: string
+          created_at?: string
+          reason?: string | null
+        }
+        Relationships: []
       }
       media_unlocks: {
         Row: {
@@ -41374,6 +42983,89 @@ export type Database = {
         }
         Relationships: []
       }
+      post_album_items: {
+        Row: {
+          added_at: string
+          album_id: string
+          post_id: string
+        }
+        Insert: {
+          added_at?: string
+          album_id: string
+          post_id: string
+        }
+        Update: {
+          added_at?: string
+          album_id?: string
+          post_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_album_items_album_id_fkey"
+            columns: ["album_id"]
+            isOneToOne: false
+            referencedRelation: "post_albums"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      post_albums: {
+        Row: {
+          cover_url: string | null
+          created_at: string
+          id: string
+          name: string
+          user_id: string
+        }
+        Insert: {
+          cover_url?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          user_id: string
+        }
+        Update: {
+          cover_url?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      post_boosts: {
+        Row: {
+          budget_cents: number
+          created_at: string
+          ends_at: string | null
+          id: string
+          post_id: string
+          starts_at: string | null
+          status: string
+          user_id: string
+        }
+        Insert: {
+          budget_cents?: number
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          post_id: string
+          starts_at?: string | null
+          status?: string
+          user_id: string
+        }
+        Update: {
+          budget_cents?: number
+          created_at?: string
+          ends_at?: string | null
+          id?: string
+          post_id?: string
+          starts_at?: string | null
+          status?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       post_collaborators: {
         Row: {
           created_at: string
@@ -41594,6 +43286,36 @@ export type Database = {
           id?: string
           mentioned_user_id?: string
           post_id?: string
+        }
+        Relationships: []
+      }
+      post_product_links: {
+        Row: {
+          created_at: string
+          id: string
+          label: string | null
+          position: number
+          post_id: string
+          product_id: string | null
+          url: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          label?: string | null
+          position?: number
+          post_id: string
+          product_id?: string | null
+          url?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          label?: string | null
+          position?: number
+          post_id?: string
+          product_id?: string | null
+          url?: string | null
         }
         Relationships: []
       }
@@ -42389,6 +44111,7 @@ export type Database = {
           hide_from_drivers: boolean
           hide_like_counts: boolean
           id: string
+          is_bot: boolean
           is_private: boolean
           is_verified: boolean
           kyc_rejection_reason: string | null
@@ -42454,6 +44177,7 @@ export type Database = {
           hide_from_drivers?: boolean
           hide_like_counts?: boolean
           id?: string
+          is_bot?: boolean
           is_private?: boolean
           is_verified?: boolean
           kyc_rejection_reason?: string | null
@@ -42519,6 +44243,7 @@ export type Database = {
           hide_from_drivers?: boolean
           hide_like_counts?: boolean
           id?: string
+          is_bot?: boolean
           is_private?: boolean
           is_verified?: boolean
           kyc_rejection_reason?: string | null
@@ -52410,6 +54135,7 @@ export type Database = {
       }
       store_employees: {
         Row: {
+          assigned_truck_label: string | null
           created_at: string
           email: string | null
           employee_number: number
@@ -52428,6 +54154,7 @@ export type Database = {
           user_id: string | null
         }
         Insert: {
+          assigned_truck_label?: string | null
           created_at?: string
           email?: string | null
           employee_number?: number
@@ -52446,6 +54173,7 @@ export type Database = {
           user_id?: string | null
         }
         Update: {
+          assigned_truck_label?: string | null
           created_at?: string
           email?: string | null
           employee_number?: number
@@ -59324,6 +61052,7 @@ export type Database = {
           audio_name: string | null
           caption: string | null
           comments_count: number | null
+          comments_enabled: boolean
           created_at: string | null
           filter_css: string | null
           hidden_at: string | null
@@ -59337,18 +61066,23 @@ export type Database = {
           media_type: string
           media_url: string | null
           media_urls: string[] | null
+          owner_notifications_enabled: boolean
           shared_from_post_id: string | null
           shared_from_user_id: string | null
           shares_count: number
+          sharing_enabled: boolean
+          tips_enabled: boolean
           updated_at: string | null
           user_id: string
           views_count: number | null
           visibility: string
+          visibility_hidden_from: string[]
         }
         Insert: {
           audio_name?: string | null
           caption?: string | null
           comments_count?: number | null
+          comments_enabled?: boolean
           created_at?: string | null
           filter_css?: string | null
           hidden_at?: string | null
@@ -59362,18 +61096,23 @@ export type Database = {
           media_type?: string
           media_url?: string | null
           media_urls?: string[] | null
+          owner_notifications_enabled?: boolean
           shared_from_post_id?: string | null
           shared_from_user_id?: string | null
           shares_count?: number
+          sharing_enabled?: boolean
+          tips_enabled?: boolean
           updated_at?: string | null
           user_id: string
           views_count?: number | null
           visibility?: string
+          visibility_hidden_from?: string[]
         }
         Update: {
           audio_name?: string | null
           caption?: string | null
           comments_count?: number | null
+          comments_enabled?: boolean
           created_at?: string | null
           filter_css?: string | null
           hidden_at?: string | null
@@ -59387,13 +61126,17 @@ export type Database = {
           media_type?: string
           media_url?: string | null
           media_urls?: string[] | null
+          owner_notifications_enabled?: boolean
           shared_from_post_id?: string | null
           shared_from_user_id?: string | null
           shares_count?: number
+          sharing_enabled?: boolean
+          tips_enabled?: boolean
           updated_at?: string | null
           user_id?: string
           views_count?: number | null
           visibility?: string
+          visibility_hidden_from?: string[]
         }
         Relationships: []
       }
@@ -64243,6 +65986,48 @@ export type Database = {
           },
         ]
       }
+      bots_directory: {
+        Row: {
+          avatar_url: string | null
+          bot_user_id: string | null
+          category: string | null
+          created_at: string | null
+          description: string | null
+          display_name: string | null
+          featured: boolean | null
+          id: string | null
+          rating_avg: number | null
+          rating_count: number | null
+          username: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bot_user_id?: string | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_name?: string | null
+          featured?: boolean | null
+          id?: string | null
+          rating_avg?: number | null
+          rating_count?: number | null
+          username?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bot_user_id?: string | null
+          category?: string | null
+          created_at?: string | null
+          description?: string | null
+          display_name?: string | null
+          featured?: boolean | null
+          id?: string | null
+          rating_avg?: number | null
+          rating_count?: number | null
+          username?: string | null
+        }
+        Relationships: []
+      }
       call_sessions_safe: {
         Row: {
           created_at: string | null
@@ -66238,9 +68023,39 @@ export type Database = {
         Args: { p_driver_id: string; p_order_id: string; p_tenant_id: string }
         Returns: Json
       }
+      admin_bot_reports: {
+        Args: { p_status?: string }
+        Returns: {
+          bot_display_name: string
+          bot_id: string
+          bot_is_active: boolean
+          bot_username: string
+          created_at: string
+          details: string
+          reason: string
+          report_id: string
+          reporter_id: string
+          status: string
+        }[]
+      }
+      admin_bots_summary: {
+        Args: never
+        Returns: {
+          active_bots: number
+          featured_bots: number
+          open_reports: number
+          total_bots: number
+          total_ratings: number
+          total_reports: number
+        }[]
+      }
       admin_clear_customer_phone: {
         Args: { p_customer_id: string }
         Returns: Json
+      }
+      admin_feature_bot: {
+        Args: { p_bot_id: string; p_featured: boolean }
+        Returns: undefined
       }
       admin_get_profile: {
         Args: { _user_id: string }
@@ -66269,6 +68084,7 @@ export type Database = {
           hide_from_drivers: boolean
           hide_like_counts: boolean
           id: string
+          is_bot: boolean
           is_private: boolean
           is_verified: boolean
           kyc_rejection_reason: string | null
@@ -66342,6 +68158,18 @@ export type Database = {
         }
         Returns: Json
       }
+      admin_review_report: {
+        Args: {
+          p_deactivate_bot?: boolean
+          p_report_id: string
+          p_status: string
+        }
+        Returns: undefined
+      }
+      admin_set_bot_active: {
+        Args: { p_active: boolean; p_bot_id: string }
+        Returns: undefined
+      }
       admin_update_member_role: {
         Args: {
           p_membership_id: string
@@ -66409,12 +68237,125 @@ export type Database = {
         Returns: number
       }
       award_order_points: { Args: { p_order_id: string }; Returns: Json }
+      bbq_add_loyalty_points: {
+        Args: { n: number; uid: string }
+        Returns: undefined
+      }
+      bbq_bump_promo: { Args: { promo_id: string }; Returns: undefined }
+      bbq_is_admin: { Args: never; Returns: boolean }
+      block_bot: { Args: { p_bot_id: string }; Returns: undefined }
       block_driver_for_multi_account: {
         Args: { p_driver_id: string; p_hours?: number }
         Returns: undefined
       }
+      bot_audience: {
+        Args: { p_bot_id: string }
+        Returns: {
+          last_msg_at: string
+          user_id: string
+        }[]
+      }
+      bot_export_conversation: {
+        Args: { p_bot_id: string; p_user_id: string }
+        Returns: {
+          created_at: string
+          id: string
+          image_url: string
+          message: string
+          sender_id: string
+        }[]
+      }
+      bot_messages_daily: {
+        Args: { p_bot_id: string; p_days?: number }
+        Returns: {
+          day: string
+          received: number
+          sent: number
+        }[]
+      }
+      bot_public_apps: {
+        Args: { p_username: string }
+        Returns: {
+          app_url: string
+          description: string
+          icon_emoji: string
+          open_in_chat: boolean
+          slug: string
+          title: string
+        }[]
+      }
+      bot_public_payments: {
+        Args: { p_username: string }
+        Returns: {
+          amount_cents: number
+          checkout_url: string
+          currency: string
+          description: string
+          slug: string
+          title: string
+        }[]
+      }
+      bot_public_profile: {
+        Args: { p_username: string }
+        Returns: {
+          avatar_url: string
+          bot_user_id: string
+          category: string
+          commands: Json
+          description: string
+          display_name: string
+          id: string
+          rating_avg: number
+          rating_count: number
+          username: string
+        }[]
+      }
+      bot_report_summary: {
+        Args: { p_bot_id: string }
+        Returns: {
+          last_at: string
+          last_reason: string
+          open_count: number
+          total_count: number
+        }[]
+      }
+      bot_stats: {
+        Args: { p_bot_id: string }
+        Returns: {
+          last_msg_at: string
+          received: number
+          sent: number
+          unique_users: number
+        }[]
+      }
+      bots_by_category: {
+        Args: { p_category?: string }
+        Returns: {
+          avatar_url: string | null
+          bot_user_id: string | null
+          category: string | null
+          created_at: string | null
+          description: string | null
+          display_name: string | null
+          featured: boolean | null
+          id: string | null
+          rating_avg: number | null
+          rating_count: number | null
+          username: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "bots_directory"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       build_realtime_topic: {
         Args: { _id: string; _schema: string; _table: string }
+        Returns: string
+      }
+      bump_marketplace_listing: {
+        Args: { listing_id: string }
         Returns: string
       }
       calculate_clv_tier: { Args: { p_clv_score: number }; Returns: string }
@@ -66555,6 +68496,28 @@ export type Database = {
       cleanup_old_location_history: { Args: never; Returns: undefined }
       cleanup_old_login_sessions: { Args: never; Returns: undefined }
       cleanup_old_security_events: { Args: never; Returns: undefined }
+      collection_bots: {
+        Args: { p_slug: string }
+        Returns: {
+          avatar_url: string | null
+          bot_user_id: string | null
+          category: string | null
+          created_at: string | null
+          description: string | null
+          display_name: string | null
+          featured: boolean | null
+          id: string | null
+          rating_avg: number | null
+          rating_count: number | null
+          username: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "bots_directory"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       complete_trip_finalize: {
         Args: {
           p_final_miles: number
@@ -66578,6 +68541,31 @@ export type Database = {
       create_batch_from_orders: {
         Args: { p_notes?: string; p_order_ids: string[]; p_region_id?: string }
         Returns: string
+      }
+      create_bot: {
+        Args: {
+          p_description?: string
+          p_display_name: string
+          p_username: string
+        }
+        Returns: {
+          bot_id: string
+          bot_user_id: string
+          token: string
+        }[]
+      }
+      create_bot_row: {
+        Args: {
+          p_bot_user_id: string
+          p_description: string
+          p_display_name: string
+          p_owner: string
+          p_username: string
+        }
+        Returns: {
+          bot_id: string
+          token: string
+        }[]
       }
       create_driver_on_signup:
         | {
@@ -66877,6 +68865,7 @@ export type Database = {
         Args: { p_user_id: string }
         Returns: number
       }
+      expire_stale_marketplace_offers: { Args: never; Returns: number }
       finalize_job_and_receipt: {
         Args: {
           p_final_miles: number
@@ -67011,6 +69000,52 @@ export type Database = {
       }
       get_admin_role: { Args: { _user_id: string }; Returns: string }
       get_batch_details: { Args: { p_batch_id: string }; Returns: Json }
+      get_bot_ai_config: {
+        Args: { p_bot_user_id: string }
+        Returns: {
+          ai_knowledge: string
+          ai_model: string
+          ai_system_prompt: string
+          ai_temperature: number
+          bot_id: string
+          bot_user_id: string
+          display_name: string
+        }[]
+      }
+      get_bot_by_user_id: {
+        Args: { p_user_id: string }
+        Returns: {
+          avatar_url: string | null
+          bot_user_id: string | null
+          category: string | null
+          created_at: string | null
+          description: string | null
+          display_name: string | null
+          featured: boolean | null
+          id: string | null
+          rating_avg: number | null
+          rating_count: number | null
+          username: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "bots_directory"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      get_bot_tools: {
+        Args: { p_bot_user_id: string }
+        Returns: {
+          description: string
+          headers: Json
+          http_method: string
+          id: string
+          input_schema: Json
+          name: string
+          url: string
+        }[]
+      }
       get_country_services: {
         Args: { p_country_code: string }
         Returns: {
@@ -67142,6 +69177,10 @@ export type Database = {
         Args: { target_user_id: string }
         Returns: string
       }
+      get_hotel_detail: {
+        Args: { p_check_in?: string; p_check_out?: string; p_store_id: string }
+        Returns: Json
+      }
       get_job_otp_plain: {
         Args: { p_enc_key: string; p_job_id: string }
         Returns: {
@@ -67219,6 +69258,7 @@ export type Database = {
           hide_from_drivers: boolean
           hide_like_counts: boolean
           id: string
+          is_bot: boolean
           is_private: boolean
           is_verified: boolean
           kyc_rejection_reason: string | null
@@ -67582,11 +69622,20 @@ export type Database = {
         Args: { post_id_input: string }
         Returns: undefined
       }
+      increment_listing_views: {
+        Args: { listing_id: string }
+        Returns: undefined
+      }
       increment_merchant_coupon_usage: {
         Args: { p_coupon_id: string }
         Returns: undefined
       }
+      increment_post_shares: { Args: { p_post_id: string }; Returns: undefined }
       increment_promo_uses: { Args: { promo_id: string }; Returns: undefined }
+      increment_review_helpful: {
+        Args: { review_id: string }
+        Returns: undefined
+      }
       increment_sms_count: {
         Args: { p_date: string; p_user_id: string }
         Returns: undefined
@@ -67602,6 +69651,7 @@ export type Database = {
       is_admin_manager_plus: { Args: { _user_id: string }; Returns: boolean }
       is_admin_user: { Args: { _user_id: string }; Returns: boolean }
       is_any_admin: { Args: { _user_id: string }; Returns: boolean }
+      is_bot_admin: { Args: never; Returns: boolean }
       is_business_admin: {
         Args: { _business_id: string; _user_id: string }
         Returns: boolean
@@ -67634,6 +69684,10 @@ export type Database = {
         Returns: boolean
       }
       is_driver: { Args: { p_user_id?: string }; Returns: boolean }
+      is_first_user_msg: {
+        Args: { p_bot_user_id: string; p_message_id: string; p_user_id: string }
+        Returns: boolean
+      }
       is_following: { Args: { target_user_id: string }; Returns: boolean }
       is_group_admin: {
         Args: { _group_id: string; _uid: string }
@@ -67764,9 +69818,66 @@ export type Database = {
           is_locked: boolean
         }[]
       }
+      match_bot_workflow: {
+        Args: { p_bot_id: string; p_text: string }
+        Returns: {
+          bot_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          next_webhook: boolean
+          reply_image_url: string | null
+          reply_text: string | null
+          sort_order: number
+          trigger_type: string
+          trigger_value: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "bot_workflows"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      match_bot_workflow_v2: {
+        Args: { p_bot_id: string; p_is_first: boolean; p_text: string }
+        Returns: {
+          bot_id: string
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+          next_webhook: boolean
+          reply_image_url: string | null
+          reply_text: string | null
+          sort_order: number
+          trigger_type: string
+          trigger_value: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "bot_workflows"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       merchant_fee_percent: {
         Args: { p_restaurant_id: string }
         Returns: number
+      }
+      my_bot_conversations: {
+        Args: never
+        Returns: {
+          avatar_url: string
+          bot_id: string
+          bot_user_id: string
+          display_name: string
+          last_at: string
+          last_message: string
+          unread_count: number
+          username: string
+        }[]
       }
       notify_mentions_in_text: {
         Args: {
@@ -67785,6 +69896,10 @@ export type Database = {
       process_referral_signup: {
         Args: { p_referee_id: string; p_referral_code: string }
         Returns: Json
+      }
+      rate_bot: {
+        Args: { p_bot_id: string; p_review?: string; p_stars: number }
+        Returns: undefined
       }
       recharge_coins: { Args: { amount: number }; Returns: number }
       recommend_driver_positions: {
@@ -67870,10 +69985,12 @@ export type Database = {
       }
       redeem_company_invite_code: { Args: { _code: string }; Returns: Json }
       redeem_group_invite: { Args: { _code: string }; Returns: string }
+      refresh_bot_rating: { Args: { p_bot_id: string }; Returns: undefined }
       refresh_wallet_balance: {
         Args: { p_driver_id: string }
         Returns: undefined
       }
+      regenerate_bot_token: { Args: { p_bot_id: string }; Returns: string }
       register_device: {
         Args: {
           p_app_version?: string
@@ -67897,6 +70014,10 @@ export type Database = {
         Args: { _device_fingerprint: string; _user_id: string }
         Returns: undefined
       }
+      report_bot: {
+        Args: { p_bot_id: string; p_details?: string; p_reason: string }
+        Returns: undefined
+      }
       request_live_earnings_payout: {
         Args: {
           p_amount_cents: number
@@ -67913,6 +70034,7 @@ export type Database = {
         Args: { p_token: string }
         Returns: undefined
       }
+      rotate_webhook_secret: { Args: { p_bot_id: string }; Returns: string }
       run_ad_boost_auction: { Args: never; Returns: Json }
       safe_parse_timestamptz: { Args: { input: string }; Returns: string }
       safe_uuid: { Args: { _text: string }; Returns: string }
@@ -67923,6 +70045,28 @@ export type Database = {
           p_pickup_lng: number
         }
         Returns: number
+      }
+      search_bots: {
+        Args: { p_q: string }
+        Returns: {
+          avatar_url: string | null
+          bot_user_id: string | null
+          category: string | null
+          created_at: string | null
+          description: string | null
+          display_name: string | null
+          featured: boolean | null
+          id: string | null
+          rating_avg: number | null
+          rating_count: number | null
+          username: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "bots_directory"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       seed_demand_zones: {
         Args: { p_center_lat: number; p_center_lng: number }
@@ -68012,6 +70156,7 @@ export type Database = {
             }
             Returns: Json
           }
+      subscribe_bot: { Args: { p_bot_id: string }; Returns: undefined }
       sync_customer_phone_verified: { Args: never; Returns: Json }
       sync_driver_phone_verified: { Args: never; Returns: Json }
       toggle_channel_post_pin: { Args: { p_post_id: string }; Returns: boolean }
@@ -68034,6 +70179,30 @@ export type Database = {
         }
         Returns: undefined
       }
+      trending_bots: {
+        Args: { p_days?: number; p_limit?: number }
+        Returns: {
+          avatar_url: string | null
+          bot_user_id: string | null
+          category: string | null
+          created_at: string | null
+          description: string | null
+          display_name: string | null
+          featured: boolean | null
+          id: string | null
+          rating_avg: number | null
+          rating_count: number | null
+          username: string | null
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "bots_directory"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      unblock_bot: { Args: { p_bot_id: string }; Returns: undefined }
+      unsubscribe_bot: { Args: { p_bot_id: string }; Returns: undefined }
       update_all_driver_performance: { Args: never; Returns: number }
       update_batch_stop_status: {
         Args: { p_driver_id: string; p_status: string; p_stop_id: string }
@@ -68116,6 +70285,15 @@ export type Database = {
       validate_withdrawal: {
         Args: { p_amount: number; p_driver_id: string }
         Returns: Json
+      }
+      verify_bot_token: {
+        Args: { p_token: string }
+        Returns: {
+          bot_id: string
+          bot_user_id: string
+          is_active: boolean
+          owner_id: string
+        }[]
       }
       verify_delivery_pin: {
         Args: { p_driver_id: string; p_order_id: string; p_pin: string }
@@ -68625,6 +70803,7 @@ export type Database = {
         | "account"
         | "operational"
         | "marketing"
+        | "social"
       notification_channel: "email" | "in_app" | "sms"
       notification_status: "queued" | "sent" | "failed" | "read"
       offer_status: "sent" | "accepted" | "rejected" | "expired"
@@ -69057,6 +71236,7 @@ export const Constants = {
         "account",
         "operational",
         "marketing",
+        "social",
       ],
       notification_channel: ["email", "in_app", "sms"],
       notification_status: ["queued", "sent", "failed", "read"],
@@ -69194,4 +71374,3 @@ export const Constants = {
     },
   },
 } as const
-
