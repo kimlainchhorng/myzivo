@@ -6,7 +6,7 @@
  * `showReasonLegend` renders a richer per-reason legend (used in booking drawer).
  */
 import { useState } from "react";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { CalendarIcon, Users, Minus, Plus, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
@@ -44,8 +44,8 @@ export function LodgingStaySelector({
   fromPriceCents, currency = "USD",
 }: Props) {
   const [openGuests, setOpenGuests] = useState(false);
-  const ciDate = checkIn ? new Date(checkIn) : new Date();
-  const coDate = checkOut ? new Date(checkOut) : new Date(Date.now() + 86400000);
+  const ciDate = checkIn ? parseISO(checkIn) : new Date();
+  const coDate = checkOut ? parseISO(checkOut) : new Date(Date.now() + 86400000);
   const nights = Math.max(1, Math.round((coDate.getTime() - ciDate.getTime()) / 86400000));
 
   const isDisabled = (d: Date, mode: "in" | "out") => {
