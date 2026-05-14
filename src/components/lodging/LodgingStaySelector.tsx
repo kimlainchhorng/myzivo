@@ -44,8 +44,8 @@ export function LodgingStaySelector({
   fromPriceCents, currency = "USD",
 }: Props) {
   const [openGuests, setOpenGuests] = useState(false);
-  const ciDate = checkIn ? new Date(checkIn) : new Date();
-  const coDate = checkOut ? new Date(checkOut) : new Date(Date.now() + 86400000);
+  const ciDate = checkIn ? parseISO(checkIn) : new Date();
+  const coDate = checkOut ? parseISO(checkOut) : new Date(Date.now() + 86400000);
   const nights = Math.max(1, Math.round((coDate.getTime() - ciDate.getTime()) / 86400000));
 
   const isDisabled = (d: Date, mode: "in" | "out") => {
