@@ -17,6 +17,7 @@ interface StoreMiniMapProps {
   slug: string;
   address?: string | null;
   userLoc?: { lat: number; lng: number } | null;
+  isLodging?: boolean;
 }
 
 let cachedKey: string | null = null;
@@ -89,7 +90,7 @@ function fmtWalk(mi: number): string {
   return `${mins} min walk`;
 }
 
-export default function StoreMiniMap({ latitude, longitude, storeName, slug, address, userLoc }: StoreMiniMapProps) {
+export default function StoreMiniMap({ latitude, longitude, storeName, slug, address, userLoc, isLodging }: StoreMiniMapProps) {
   const hasCoords = typeof latitude === "number" && typeof longitude === "number";
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
@@ -140,7 +141,9 @@ export default function StoreMiniMap({ latitude, longitude, storeName, slug, add
         gestureHandling: "greedy",
         clickableIcons: false,
         backgroundColor: "#f5f5f5",
-        styles: LIGHT_STYLES,
+        ...(isLodging
+          ? { mapTypeId: "hybrid", tilt: 0 }
+          : { styles: LIGHT_STYLES }),
       });
       mapRef.current = map;
 
@@ -245,7 +248,7 @@ export default function StoreMiniMap({ latitude, longitude, storeName, slug, add
 
   const showFallback = !hasCoords || failed;
   const staticMapUrl = hasCoords && mapsKey
-    ? `https://maps.googleapis.com/maps/api/staticmap?center=${latitude},${longitude}&zoom=16&size=760x448&scale=2&maptype=roadmap&markers=color:green%7Clabel:%7C${latitude},${longitude}&key=${encodeURIComponent(mapsKey)}`
+    ? `https://maps.googleapis.com/maps/api/staticmap?center=${latitude},${longitude}&zoom=16&size=760x448&scale=2&maptype=${isLodging ? "hybrid" : "roadmap"}&markers=color:green%7Clabel:%7C${latitude},${longitude}&key=${encodeURIComponent(mapsKey)}`
     : "";
   const dist = userLoc && hasCoords
     ? distanceMiles(userLoc, { lat: latitude as number, lng: longitude as number })

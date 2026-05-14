@@ -9,7 +9,16 @@
       "Bash(claude auth *)",
       "Bash(npx tsc *)",
       "Bash(claude config *)",
-      "WebFetch(domain:127.0.0.1)"
+      "WebFetch(domain:127.0.0.1)",
+      "Bash(open https://hizivo.com)",
+      "Bash(open https://www.booking.com)",
+      "WebFetch(domain:hizivo.com)",
+      "mcp__claude_ai_Booking_com__accommodations_search",
+      "Bash(lsof -iTCP:5173 -sTCP:LISTEN)",
+      "Bash(lsof -iTCP:8080 -sTCP:LISTEN)",
+      "Bash(lsof -iTCP:3000 -sTCP:LISTEN)",
+      "Bash(bun run *)",
+      "Bash(npm run *)"
     ]
   }
 }

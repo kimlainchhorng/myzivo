@@ -137,9 +137,6 @@ export default function StoreHeroCarousel({ images, storeName, positions }: Stor
               )}
             />
           ))}
-          {images.length > 8 && (
-            <span className="ml-1 text-white/70 text-[9px] font-bold tabular-nums">+{images.length - 8}</span>
-          )}
         </div>
       )}
 

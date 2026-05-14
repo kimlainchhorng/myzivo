@@ -99,26 +99,21 @@ export function LodgingRoomCard({
         animate={{ opacity: 1, y: 0 }}
         className="rounded-3xl overflow-hidden border border-border/60 bg-card shadow-[0_8px_28px_-12px_hsl(220_40%_20%/0.18)]"
       >
-        {/* ── Top: stylized type chip + ornament ── */}
-        {type && (
-          <div className="relative pt-3">
-            <span className="absolute top-3 left-3 z-10 inline-flex items-center rounded-xl bg-background/95 backdrop-blur px-2.5 py-1 text-[11px] font-bold text-foreground border border-border/60 shadow-sm">
-              {type}
-            </span>
-            <OrnamentDivider />
-          </div>
-        )}
-
         {/* ── Hero: 2-col photo grid with overlaid info on the left tile ── */}
         <button
           type="button"
           onClick={() => setDetailsOpen(true)}
           aria-label={`View details for ${name}`}
-          className="block w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring px-3"
+          className="block w-full text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring p-3"
         >
           <div className="grid grid-cols-[1.05fr_1fr] gap-1.5 rounded-2xl overflow-hidden">
             {/* Left big tile w/ info overlay */}
             <div className="relative aspect-[4/5] overflow-hidden rounded-l-2xl bg-secondary">
+              {type && (
+                <span className="absolute top-2.5 left-2.5 z-10 inline-flex items-center rounded-lg bg-background/95 backdrop-blur px-2 py-0.5 text-[10px] font-bold text-foreground border border-border/60 shadow-sm">
+                  {type}
+                </span>
+              )}
               {gridPhotos[0] ? (
                 <img src={gridPhotos[0]} alt={name} className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
               ) : (

@@ -452,7 +452,7 @@ export default function StoreProfilePage() {
                 )}
               </div>
               {store.description && (
-                <p className="text-xs text-muted-foreground mt-1 line-clamp-2"><SafeCaption text={store.description} /></p>
+                <p className="text-xs text-muted-foreground mt-1 line-clamp-3"><SafeCaption text={store.description} /></p>
               )}
             </div>
           </div>

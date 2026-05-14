@@ -157,6 +157,7 @@ export default function StoreSideRail({
           slug={store.slug}
           address={store.address}
           userLoc={userLoc}
+          isLodging={isLodging}
         />
       )}
 
