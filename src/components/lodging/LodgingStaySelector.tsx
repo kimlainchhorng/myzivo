@@ -6,7 +6,7 @@
  * `showReasonLegend` renders a richer per-reason legend (used in booking drawer).
  */
 import { useState } from "react";
-import { format } from "date-fns";
+import { format, parseISO } from "date-fns";
 import { CalendarIcon, Users, Minus, Plus, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
