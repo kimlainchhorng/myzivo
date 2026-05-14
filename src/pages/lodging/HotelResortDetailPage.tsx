@@ -1001,6 +1001,7 @@ export default function HotelResortDetailPage() {
           </button>
         )}
       </Section>
+      </div>
 
       {/* Reviews */}
       <div id="reviews-section">
