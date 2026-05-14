@@ -411,10 +411,15 @@ export default function HotelResortDetailPage() {
   };
 
   const handleCheckAvailability = () => {
-    const ciStr = format(checkIn, "yyyy-MM-dd");
-    const coStr = format(checkOut, "yyyy-MM-dd");
-    const dest = store?.slug || storeId;
-    navigate(`/store/${dest}?ci=${ciStr}&co=${coStr}&adults=${adults}&children=${children}`);
+    const el = document.getElementById("rooms-section");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    } else {
+      const ciStr = format(checkIn, "yyyy-MM-dd");
+      const coStr = format(checkOut, "yyyy-MM-dd");
+      const dest = store?.slug || storeId;
+      navigate(`/store/${dest}?ci=${ciStr}&co=${coStr}&adults=${adults}&children=${children}`);
+    }
   };
 
   const isLoading = storeQuery.isLoading || profileQuery.isLoading;
