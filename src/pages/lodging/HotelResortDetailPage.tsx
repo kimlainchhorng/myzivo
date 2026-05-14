@@ -878,6 +878,7 @@ export default function HotelResortDetailPage() {
       )}
 
       {/* Rooms */}
+      <div id="rooms-section" className="scroll-mt-20">
       <Section title={`Rooms${activeRooms.length ? ` · ${activeRooms.length}` : ""}`}>
         {roomsQuery.isLoading ? (
           <div className="flex gap-3 overflow-hidden">
