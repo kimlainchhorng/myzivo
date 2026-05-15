@@ -231,7 +231,7 @@ export default function HotelsMapView({ hotels, onSelect, apiKey }: Props) {
   return (
     <div className="rounded-2xl overflow-hidden border border-border bg-card">
       {/* Interactive map */}
-      <div className="relative aspect-[16/9] w-full bg-muted overflow-hidden" style={{ touchAction: "none" }}>
+      <div className="relative aspect-[16/9] w-full bg-muted overflow-hidden">
         <div ref={mapContainerRef} className="absolute inset-0 w-full h-full" />
         {!mapReady && (
           <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
