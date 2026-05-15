@@ -80,6 +80,7 @@ import("@capacitor/core").then(({ Capacitor }) => {
 const idle = window.requestIdleCallback || ((cb: () => void) => setTimeout(cb, 200));
 idle(() => {
   import("@/lib/security/errorReporting").then(m => m.setupGlobalErrorHandlers());
+  import("@/lib/perf/webVitals").then(m => m.startWebVitals());
   
   import("@capacitor/core").then(({ Capacitor }) => {
     if (!Capacitor.isNativePlatform()) return;
