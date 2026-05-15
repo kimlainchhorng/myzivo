@@ -65,6 +65,7 @@ export default function SmartSearchPage() {
 
     const term = `%${q}%`;
 
+    const sb = supabase as any;
     const [usersRes, postsRes, commRes, mktRes] = await Promise.all([
       supabase.from("profiles")
         .select("id, full_name, username, bio, avatar_url")
