@@ -1182,7 +1182,7 @@ export default function ChatHubPage({ embedded = false }: { embedded?: boolean }
       setSearchingProfiles(true);
       try {
         const term = `%${search.trim()}%`;
-        const { data } = await supabase
+        const { data } = await (supabase as any)
           .from("profiles")
           .select("user_id, full_name, avatar_url, email, is_verified")
           .or(`full_name.ilike.${term},email.ilike.${term}`)
