@@ -76,14 +76,14 @@ export default function ExplorePage() {
   const { data: suggestedUsers = [], isLoading: loadingSuggested } = useQuery({
     queryKey: ["explore-suggested-users", user?.id],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("profiles")
         .select("id, full_name, avatar_url, is_verified, bio")
         .not("id", "eq", user?.id ?? "")
         .eq("is_of_creator", false)
         .order("created_at", { ascending: false })
         .limit(20);
-      return data || [];
+      return (data as any[]) || [];
     },
     enabled: activeTab === "users" && !search,
     staleTime: 5 * 60 * 1000,
