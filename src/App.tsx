@@ -936,7 +936,7 @@ function AuthBackgroundServices() {
 const App = () => (
   <ErrorBoundary>
     <HelmetProvider>
-      <ThemeProvider attribute="class" defaultTheme="system" storageKey="hizovo-theme">
+      <ThemeProvider attribute="class" defaultTheme="dark" forcedTheme="dark" enableSystem={false} storageKey="hizovo-theme">
         <QueryClientProvider client={queryClient}>
           <BrandProvider>
             <TooltipProvider>
