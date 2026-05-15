@@ -19,7 +19,7 @@ import { useMutation } from "@tanstack/react-query";
 import {
   Facebook, Instagram, Search as Google, Music2 as TikTok, Twitter as X,
   Plus, Megaphone, AlertCircle, Plug, Search as SearchIcon,
-} from "lucide-react";
+} from "@/lib/lucide-react";
 import {
   AdsStatStripSkeleton,
   OnboardingChecklistSkeleton,
