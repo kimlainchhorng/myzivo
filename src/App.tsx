@@ -1,6 +1,6 @@
 import { Suspense, lazy, useEffect, useState, forwardRef } from "react";
-import { restaurantNav } from "@/components/admin/shell/nav/restaurant";
-import { businessNav } from "@/components/admin/shell/nav/business";
+// Admin nav configs are resolved inside AdminShellRoute (a lazy chunk) so
+// their lucide icons aren't pulled into the root bundle.
 import { usePageViewTracker } from "@/hooks/usePageViewTracker";
 import { useGeoDetect } from "@/hooks/useGeoDetect";
 import { HelmetProvider } from "react-helmet-async";
@@ -1068,7 +1068,7 @@ const App = () => (
                 <Route path="/eats/reserve/:restaurantId" element={<ProtectedRoute><PhoneRequiredGate><ReservationPage /></PhoneRequiredGate></ProtectedRoute>} />
                 <Route path="/eats/track/:orderId" element={<ProtectedRoute><EatsTrackingPage /></ProtectedRoute>} />
                 <Route path="/eats/orders" element={<ProtectedRoute><EatsOrdersPage /></ProtectedRoute>} />
-                <Route path="/eats/restaurant-dashboard" element={<AdminShellRoute vertical="restaurant" nav={restaurantNav} title="Restaurant Dashboard | ZIVO Admin"><EatsRestaurantDashboard /></AdminShellRoute>} />
+                <Route path="/eats/restaurant-dashboard" element={<AdminShellRoute vertical="restaurant" title="Restaurant Dashboard | ZIVO Admin"><EatsRestaurantDashboard /></AdminShellRoute>} />
                 <Route path="/eats/driver-deliveries" element={<ProtectedRoute><EatsDriverDeliveryPage /></ProtectedRoute>} />
                 <Route path="/food" element={<PreserveQueryRedirect to="/eats" />} />
                 <Route path="/move" element={<PreserveQueryRedirect to="/rides/hub" />} />
@@ -1586,7 +1586,7 @@ const App = () => (
                 <Route path="/business" element={<BusinessLandingPage />} />
                 <Route path="/api-partners" element={<APIPartners />} />
                 <Route path="/developers" element={<APIPartners />} />
-                <Route path="/business/dashboard" element={<AdminShellRoute vertical="business" nav={businessNav} title="Business Dashboard | ZIVO Admin"><BusinessDashboard /></AdminShellRoute>} />
+                <Route path="/business/dashboard" element={<AdminShellRoute vertical="business" title="Business Dashboard | ZIVO Admin"><BusinessDashboard /></AdminShellRoute>} />
                 <Route path="/business/account" element={<BusinessAccountPage />} />
                 <Route path="/business/insights" element={<DataInsights />} />
                 <Route path="/data-insights" element={<DataInsights />} />
