@@ -97,10 +97,10 @@ export function ChannelPostComposer({ channelId, onPosted }: Props) {
         {
           url: pub.publicUrl,
           path,
-          type: "voice",
+          type: "voice" as const,
           duration_ms: rec.durationMs,
           waveform: rec.waveform,
-        },
+        } satisfies MediaItem,
       ].slice(0, 6));
       setVoicePanelOpen(false);
     } finally {

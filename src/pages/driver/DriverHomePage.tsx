@@ -42,12 +42,12 @@ export default function DriverHomePage() {
   // Sync initial online status from DB
   useEffect(() => {
     if (!driverId) return;
-    supabase
+    (supabase as any)
       .from("driver_profiles")
       .select("is_online")
       .eq("id", driverId)
       .maybeSingle()
-      .then(({ data }) => {
+      .then(({ data }: { data: { is_online?: boolean } | null }) => {
         if (data?.is_online != null) setIsOnline(data.is_online);
       });
   }, [driverId]);

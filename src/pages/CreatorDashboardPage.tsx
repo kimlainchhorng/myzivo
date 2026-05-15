@@ -789,7 +789,7 @@ export default function CreatorDashboardPage() {
                 return (
                   <div key={tier.id} className="zivo-card-organic flex items-center gap-3 p-3">
                     <div className={cn("zivo-icon-pill w-9 h-9 rounded-xl", creatorType === "of" ? "text-rose-500 bg-rose-500/20" : "text-amber-500 bg-amber-500/20")}>
-                      {creatorType === "of" ? <Flame className={cn("w-4 h-4", creatorType === "of" ? "text-rose-500" : "text-amber-500")} /> : <Crown className={cn("w-4 h-4", creatorType === "of" ? "text-rose-500" : "text-amber-500")} />}
+                      {(creatorType as string) === "of" ? <Flame className={cn("w-4 h-4", (creatorType as string) === "of" ? "text-rose-500" : "text-amber-500")} /> : <Crown className={cn("w-4 h-4", (creatorType as string) === "of" ? "text-rose-500" : "text-amber-500")} />}
                     </div>
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-1.5 flex-wrap">

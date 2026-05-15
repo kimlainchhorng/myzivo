@@ -102,7 +102,7 @@ type RecipientProfileRow = {
 };
 
 type PublicTableName = keyof Database["public"]["Tables"];
-const dbFrom = (table: PublicTableName) => supabase.from(table);
+const dbFrom = (table: PublicTableName) => (supabase as any).from(table);
 
 interface ChatContactInfoProps {
   recipientId: string;

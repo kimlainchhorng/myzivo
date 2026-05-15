@@ -59,7 +59,7 @@ export default function ExplorePage() {
     queryKey: ["explore-users", search],
     queryFn: async () => {
       if (!search.trim()) return [];
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("profiles")
         .select("id, full_name, avatar_url, is_verified")
         .ilike("full_name", `%${search}%`)
@@ -74,7 +74,7 @@ export default function ExplorePage() {
   const { data: suggestedUsers = [], isLoading: loadingSuggested } = useQuery({
     queryKey: ["explore-suggested-users", user?.id],
     queryFn: async () => {
-      const { data } = await supabase
+      const { data } = await (supabase as any)
         .from("profiles")
         .select("id, full_name, avatar_url, is_verified, bio")
         .not("id", "eq", user?.id ?? "")

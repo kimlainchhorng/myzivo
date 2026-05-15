@@ -404,7 +404,7 @@ export default function CreatePostModal({
         media_url: mediaUrl,
         media_urls: allMediaUrls,
         caption: finalCaption,
-        filter_css: FILTERS[activeFilter]?.css || null,
+        filter_css: (FILTERS[activeFilter] as any)?.css || null,
         is_published: true,
         visibility,
       };
