@@ -67,17 +67,17 @@ export default function SmartSearchPage() {
 
     const sb = supabase as any;
     const [usersRes, postsRes, commRes, mktRes] = await Promise.all([
-      supabase.from("profiles")
+      sb.from("profiles")
         .select("id, full_name, username, bio, avatar_url")
         .or(`full_name.ilike.${term},username.ilike.${term}`)
         .eq("is_of_creator", false)
         .limit(10),
-      supabase.from("store_posts")
+      sb.from("store_posts")
         .select("id, caption, store_profiles!inner(name)")
         .ilike("caption", term)
         .eq("is_published", true)
         .limit(10),
-      supabase.from("communities")
+      sb.from("communities")
         .select("id, name, member_count, description")
         .ilike("name", term)
         .limit(8),
