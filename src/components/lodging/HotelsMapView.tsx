@@ -9,6 +9,7 @@
 import { useMemo, useRef, useState, useEffect } from "react";
 import Star from "lucide-react/dist/esm/icons/star";
 import MapPin from "lucide-react/dist/esm/icons/map-pin";
+import Hotel from "lucide-react/dist/esm/icons/hotel";
 import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left";
 import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
 import { resolveMapsKey } from "@/lib/mapsKey";
