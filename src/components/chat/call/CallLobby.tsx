@@ -308,7 +308,7 @@ export default function CallLobby({
                     </span>
                   </>
                 )}
-                {bucketStatus === "unavailable" && (
+                {(bucketStatus as string) === "unavailable" && (
                   <>
                     <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-300" />
                     <span className="break-words leading-relaxed text-white/65">

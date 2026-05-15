@@ -1249,7 +1249,7 @@ const CreateCVPage = () => {
   useEffect(() => {
     if (!user) return;
     const load = async () => {
-      const { data: allCvs } = await supabase
+      const { data: allCvs } = await (supabase as any)
         .from("user_cvs")
         .select("id, full_name, is_primary, job_title, date_of_birth, email, phone, location, website, linkedin, portfolio, nationality, summary, experiences, educations, skills, languages, certifications, references_list, hobbies, share_code, photo_url, template, updated_at")
         .eq("user_id", user.id)

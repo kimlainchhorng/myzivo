@@ -249,7 +249,7 @@ export function useNotifications(limit = 50): UseNotificationsResult {
     if (wasUnread) setUnreadCount(prev => Math.max(0, prev - 1));
 
     try {
-      const { error: updErr } = await supabase
+      const { error: updErr } = await (supabase as any)
         .from('notifications')
         .update({ snoozed_until: until })
         .eq('id', notificationId);

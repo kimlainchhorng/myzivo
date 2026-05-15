@@ -2118,9 +2118,8 @@ function ReelCard({
           >
             {/* Buffered range — sits beneath the playhead fill so the user
                 can see how much is ready ahead of where they're watching. */}
-            <div
+            <motion.div
               className="absolute inset-y-0 left-0 bg-white/30 transition-[width] duration-200 ease-out"
-              as={motion.div as any}
               animate={{ width: `${bufferedProgress * 100}%` }}
               transition={{ duration: 0.2, ease: "easeOut" }}
             />
@@ -4893,7 +4892,7 @@ export default function FeedPage() {
                   setFeedMode((m) => (m === "foryou" ? "following" : "foryou"));
                   requestAnimationFrame(() => cardRefs.current[0]?.scrollIntoView({ block: "start" }));
                 } : undefined}
-                feedMode={feedMode}
+                feedMode={feedMode === "trending" ? "foryou" : feedMode}
               />
             )}
           </motion.div>

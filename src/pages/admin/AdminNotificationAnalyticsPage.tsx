@@ -129,7 +129,7 @@ export default function AdminNotificationAnalyticsPage() {
   const smsQ = useQuery({
     queryKey: ["notif-analytics-sms", range],
     queryFn: async () => {
-      const { data, error } = await supabase
+      const { data, error } = await (supabase as any)
         .from("sms_send_log")
         .select("id, status, event_type, created_at")
         .gte("created_at", since)
@@ -154,7 +154,7 @@ export default function AdminNotificationAnalyticsPage() {
   const sms = smsQ.data ?? [];
 
   return (
-    <AdminLayout>
+    <AdminLayout title="Notification Analytics">
       <div className="p-6 space-y-6 max-w-7xl mx-auto">
         <div className="flex items-end justify-between gap-4">
           <div>

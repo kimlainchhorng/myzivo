@@ -85,8 +85,8 @@ export default function NetworkPlacesPage() {
           .limit(40),
       ]);
       if (cancelled) return;
-      if (r.data) setRestaurants(r.data as RestaurantRow[]);
-      if (h.data) setHotels(h.data as HotelRow[]);
+      if (r.data) setRestaurants(r.data as unknown as RestaurantRow[]);
+      if (h.data) setHotels(h.data as unknown as HotelRow[]);
       setLoading(false);
     })().catch(() => {
       if (!cancelled) setLoading(false);

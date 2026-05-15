@@ -37,11 +37,11 @@ const ChatHubPage = lazy(() => import("@/pages/ChatHubPage"));
 
 const NAV_ITEMS = [
   { label: "Live", icon: Radio, path: "/live", color: "text-red-500" },
-  { label: "Reels", icon: Film, path: "/reels", color: "text-foreground" },
-  { label: "Rides", icon: Car, path: "/rides/hub", color: "text-foreground" },
-  { label: "Eats", icon: UtensilsCrossed, path: "/eats", color: "text-foreground" },
-  { label: "Map", icon: MapPin, path: "/map", color: "text-foreground" },
-];
+   { label: "Reels", icon: Film, path: "/reels", color: "text-foreground", authRequired: false },
+   { label: "Rides", icon: Car, path: "/rides/hub", color: "text-foreground", authRequired: false },
+   { label: "Eats", icon: UtensilsCrossed, path: "/eats", color: "text-foreground", authRequired: false },
+   { label: "Map", icon: MapPin, path: "/map", color: "text-foreground", authRequired: false },
+] as Array<{ label: string; icon: any; path: string; color: string; authRequired?: boolean }>;
 
 const SERVICE_ITEMS = [
   { label: "Flights", icon: Plane, path: "/flights", color: "text-foreground" },

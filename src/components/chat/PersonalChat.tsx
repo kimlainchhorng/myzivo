@@ -1162,7 +1162,7 @@ export default function PersonalChat({ recipientId, recipientName, recipientAvat
       || (typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
         ? crypto.randomUUID()
         : `cs-${Date.now()}-${Math.random().toString(36).slice(2)}`);
-    const mergedFilePayload = { ...(filePayload || {}), client_send_id: clientSendId };
+    const mergedFilePayload = { ...(filePayload || {}), client_send_id: clientSendId } as unknown as FileBubbleData;
     const optimisticMsg: Message = {
       id: optimisticId,
       sender_id: user.id,
