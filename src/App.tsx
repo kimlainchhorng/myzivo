@@ -970,7 +970,7 @@ const App = () => (
                 <Suspense fallback={null}><RoutePrefetcher /></Suspense>
                 <Suspense fallback={null}><PaymentReturnHandler /></Suspense>
                 <AuthProvider>
-                  <GlobalDesktopNav />
+                  <Suspense fallback={null}><GlobalDesktopNav /></Suspense>
                   <AuthBackgroundServices />
                   <Suspense fallback={null}><ShareToChatSheet /></Suspense>
                   <Suspense fallback={null}>
