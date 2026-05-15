@@ -1,15 +1,14 @@
 /**
- * HotelsMapView — Booking-style map preview for the hotels listing.
+ * HotelsMapView — Interactive Google Map with price-pill overlays.
  *
- * Renders a static-map base image (no JS SDK billing required) and overlays
- * HTML price pills positioned with Web Mercator math. Tapping a pill or a
- * card in the carousel highlights the property; tapping the active pill or
- * card opens the detail page.
+ * Users can pinch-zoom, drag, and tap the +/- controls. Each property is
+ * rendered as a custom HTML pill (price or hotel icon) using an OverlayView
+ * so styling stays consistent with the rest of the UI.
  */
-import { useMemo, useRef, useState, useEffect } from "react";
+/// <reference types="google.maps" />
+import { useEffect, useMemo, useRef, useState } from "react";
 import Star from "lucide-react/dist/esm/icons/star";
 import MapPin from "lucide-react/dist/esm/icons/map-pin";
-import Hotel from "lucide-react/dist/esm/icons/hotel";
 import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left";
 import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
 import { resolveMapsKey } from "@/lib/mapsKey";
@@ -37,73 +36,35 @@ interface Props {
   apiKey: string;
 }
 
-const MAP_W = 640;
-const MAP_H = 360;
-const TILE = 256;
-
-// Web Mercator projection (Google Static Maps' projection).
-function project(lat: number, lng: number) {
-  const siny = Math.max(-0.9999, Math.min(0.9999, Math.sin((lat * Math.PI) / 180)));
-  return {
-    x: TILE * (0.5 + lng / 360),
-    y: TILE * (0.5 - Math.log((1 + siny) / (1 - siny)) / (4 * Math.PI)),
-  };
-}
-
-function pickCenterAndZoom(hotels: MapHotel[]): { center: { lat: number; lng: number }; zoom: number } {
-  if (hotels.length === 0) return { center: { lat: 12.5657, lng: 104.991 }, zoom: 6 };
-  if (hotels.length === 1) return { center: { lat: hotels[0].latitude, lng: hotels[0].longitude }, zoom: 13 };
-
-  let minLat = Infinity, maxLat = -Infinity, minLng = Infinity, maxLng = -Infinity;
-  for (const h of hotels) {
-    if (h.latitude < minLat) minLat = h.latitude;
-    if (h.latitude > maxLat) maxLat = h.latitude;
-    if (h.longitude < minLng) minLng = h.longitude;
-    if (h.longitude > maxLng) maxLng = h.longitude;
-  }
-  const center = { lat: (minLat + maxLat) / 2, lng: (minLng + maxLng) / 2 };
-
-  // Pick the largest zoom where all markers still fit in view (with padding).
-  const PAD_FRAC = 0.85;
-  let zoom = 13;
-  for (let z = 14; z >= 3; z--) {
-    const scale = Math.pow(2, z);
-    const c = project(center.lat, center.lng);
-    let ok = true;
-    for (const h of hotels) {
-      const p = project(h.latitude, h.longitude);
-      const dx = (p.x - c.x) * scale;
-      const dy = (p.y - c.y) * scale;
-      if (Math.abs(dx) > (MAP_W / 2) * PAD_FRAC || Math.abs(dy) > (MAP_H / 2) * PAD_FRAC) {
-        ok = false;
-        break;
-      }
+// ---- Shared script loader (module-scoped so we only load once) -------------
+let mapsScriptPromise: Promise<void> | null = null;
+function loadMapsScript(apiKey: string): Promise<void> {
+  if (typeof window === "undefined") return Promise.reject(new Error("no window"));
+  const w = window as unknown as { google?: { maps?: unknown } };
+  if (w.google?.maps) return Promise.resolve();
+  if (mapsScriptPromise) return mapsScriptPromise;
+  if (!apiKey) return Promise.reject(new Error("no maps key"));
+  mapsScriptPromise = new Promise<void>((resolve, reject) => {
+    const existing = document.querySelector<HTMLScriptElement>('script[data-zivo-maps="1"]');
+    if (existing) {
+      existing.addEventListener("load", () => resolve());
+      existing.addEventListener("error", () => reject(new Error("maps script failed")));
+      return;
     }
-    if (ok) { zoom = z; break; }
-  }
-  return { center, zoom };
+    const s = document.createElement("script");
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&loading=async`;
+    s.async = true;
+    s.defer = true;
+    s.dataset.zivoMaps = "1";
+    s.onload = () => resolve();
+    s.onerror = () => { mapsScriptPromise = null; reject(new Error("maps script failed")); };
+    document.head.appendChild(s);
+  });
+  return mapsScriptPromise;
 }
 
-function buildStaticMapUrl(apiKey: string, center: { lat: number; lng: number }, zoom: number): string | null {
-  if (!apiKey) return null;
-  const params = new URLSearchParams();
-  params.set("center", `${center.lat},${center.lng}`);
-  params.set("zoom", String(zoom));
-  params.set("size", `${MAP_W}x${MAP_H}`);
-  params.set("scale", "2");
-  params.set("maptype", "roadmap");
-  // Hide POIs / transit / road labels so price pills are the focal point.
-  params.append("style", "feature:poi|visibility:off");
-  params.append("style", "feature:transit|visibility:off");
-  params.append("style", "feature:road|element:labels|visibility:off");
-  params.append("style", "feature:administrative|element:labels.text|visibility:simplified");
-  params.set("key", apiKey);
-  return `https://maps.googleapis.com/maps/api/staticmap?${params.toString()}`;
-}
-
+// ---- Component -------------------------------------------------------------
 export default function HotelsMapView({ hotels, onSelect, apiKey }: Props) {
-  // Fall back to the shared resolver (env var → maps-api-key edge function)
-  // when the parent didn't supply a key.
   const [resolvedKey, setResolvedKey] = useState<string>(apiKey || "");
   useEffect(() => {
     if (apiKey) { setResolvedKey(apiKey); return; }
@@ -126,17 +87,18 @@ export default function HotelsMapView({ hotels, onSelect, apiKey }: Props) {
 
   const [activeId, setActiveId] = useState<string | null>(valid[0]?.id ?? null);
   useEffect(() => {
-    if (!valid.find((h) => h.id === activeId)) {
-      setActiveId(valid[0]?.id ?? null);
-    }
+    if (!valid.find((h) => h.id === activeId)) setActiveId(valid[0]?.id ?? null);
   }, [valid, activeId]);
 
   const scrollerRef = useRef<HTMLDivElement | null>(null);
   const cardRefs = useRef<Record<string, HTMLButtonElement | null>>({});
+  const mapContainerRef = useRef<HTMLDivElement | null>(null);
+  const mapRef = useRef<google.maps.Map | null>(null);
+  const overlaysRef = useRef<Map<string, google.maps.OverlayView>>(new Map());
+  const [mapReady, setMapReady] = useState(false);
 
   const focusCard = (id: string) => {
-    const node = cardRefs.current[id];
-    node?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+    cardRefs.current[id]?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
   };
 
   const scrollBy = (dir: 1 | -1) => {
@@ -144,6 +106,115 @@ export default function HotelsMapView({ hotels, onSelect, apiKey }: Props) {
     if (!el) return;
     el.scrollBy({ left: dir * Math.round(el.clientWidth * 0.85), behavior: "smooth" });
   };
+
+  // Initialize the interactive map once the script is loaded
+  useEffect(() => {
+    if (!resolvedKey || !mapContainerRef.current || valid.length === 0) return;
+    let cancelled = false;
+    loadMapsScript(resolvedKey)
+      .then(() => {
+        if (cancelled || !mapContainerRef.current) return;
+        if (!mapRef.current) {
+          mapRef.current = new google.maps.Map(mapContainerRef.current, {
+            center: { lat: valid[0].latitude, lng: valid[0].longitude },
+            zoom: 12,
+            disableDefaultUI: true,
+            zoomControl: true,
+            gestureHandling: "greedy",
+            clickableIcons: false,
+            styles: [
+              { featureType: "poi", stylers: [{ visibility: "off" }] },
+              { featureType: "transit", stylers: [{ visibility: "off" }] },
+              { featureType: "road", elementType: "labels", stylers: [{ visibility: "off" }] },
+            ],
+          });
+        }
+        setMapReady(true);
+      })
+      .catch(() => { /* noop — fallback UI shown below */ });
+    return () => { cancelled = true; };
+  }, [resolvedKey, valid.length]);
+
+  // Fit bounds to all hotels when the set changes
+  useEffect(() => {
+    if (!mapReady || !mapRef.current || valid.length === 0) return;
+    if (valid.length === 1) {
+      mapRef.current.setCenter({ lat: valid[0].latitude, lng: valid[0].longitude });
+      mapRef.current.setZoom(13);
+      return;
+    }
+    const bounds = new google.maps.LatLngBounds();
+    valid.forEach((h) => bounds.extend({ lat: h.latitude, lng: h.longitude }));
+    mapRef.current.fitBounds(bounds, 48);
+  }, [mapReady, valid]);
+
+  // Render price-pill overlays
+  useEffect(() => {
+    if (!mapReady || !mapRef.current) return;
+    const map = mapRef.current;
+
+    // Custom overlay class — created lazily after google.maps is loaded
+    class PillOverlay extends google.maps.OverlayView {
+      private pos: google.maps.LatLng;
+      private el: HTMLDivElement;
+      constructor(pos: google.maps.LatLng, el: HTMLDivElement) {
+        super();
+        this.pos = pos;
+        this.el = el;
+      }
+      onAdd() {
+        const panes = this.getPanes();
+        if (panes) panes.floatPane.appendChild(this.el);
+      }
+      draw() {
+        const proj = this.getProjection();
+        if (!proj) return;
+        const p = proj.fromLatLngToDivPixel(this.pos);
+        if (!p) return;
+        this.el.style.position = "absolute";
+        this.el.style.left = `${p.x}px`;
+        this.el.style.top = `${p.y}px`;
+        this.el.style.transform = "translate(-50%, -100%)";
+      }
+      onRemove() {
+        if (this.el.parentNode) this.el.parentNode.removeChild(this.el);
+      }
+    }
+
+    // Clear previous overlays
+    overlaysRef.current.forEach((o) => o.setMap(null));
+    overlaysRef.current.clear();
+
+    valid.forEach((h) => {
+      const isActive = h.id === activeId;
+      const priceLabel = formatPrice(h.pricePerNightCents);
+      const el = document.createElement("button");
+      el.type = "button";
+      el.className =
+        "pointer-events-auto rounded-full font-bold text-[11px] px-2.5 py-1 shadow-md whitespace-nowrap border transition-transform " +
+        (isActive
+          ? "bg-foreground text-background border-foreground scale-110 z-20"
+          : "bg-white text-black border-black/10 hover:scale-105 z-10");
+      el.style.cursor = "pointer";
+      el.innerHTML = priceLabel
+        ? priceLabel
+        : '<svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10 22v-6.57"/><path d="M12 11h.01"/><path d="M12 7h.01"/><path d="M14 15.43V22"/><path d="M15 16a5 5 0 0 0-6 0"/><path d="M16 11h.01"/><path d="M16 7h.01"/><path d="M8 11h.01"/><path d="M8 7h.01"/><rect x="4" y="2" width="16" height="20" rx="2"/></svg>';
+      el.setAttribute("aria-label", `${h.name}${priceLabel ? ` from ${priceLabel} per night` : ""}`);
+      el.addEventListener("click", (e) => {
+        e.stopPropagation();
+        if (h.id === activeId) onSelect(h.id);
+        else { setActiveId(h.id); focusCard(h.id); }
+      });
+      const overlay = new PillOverlay(new google.maps.LatLng(h.latitude, h.longitude), el);
+      overlay.setMap(map);
+      overlaysRef.current.set(h.id, overlay);
+    });
+
+    return () => {
+      overlaysRef.current.forEach((o) => o.setMap(null));
+      overlaysRef.current.clear();
+    };
+  }, [mapReady, valid, activeId, onSelect]);
 
   if (valid.length === 0) {
     return (
@@ -157,75 +228,18 @@ export default function HotelsMapView({ hotels, onSelect, apiKey }: Props) {
     );
   }
 
-  const { center, zoom } = pickCenterAndZoom(valid);
-  const staticMapUrl = buildStaticMapUrl(resolvedKey, center, zoom);
-
-  // Convert lat/lng to pixel coordinates within the rendered image.
-  const scale = Math.pow(2, zoom);
-  const centerPx = project(center.lat, center.lng);
-
   return (
     <div className="rounded-2xl overflow-hidden border border-border bg-card">
-      {/* Map preview header with price-pill overlays */}
-      <div className="relative aspect-[16/9] w-full bg-muted overflow-hidden">
-        {staticMapUrl ? (
-          <img
-            src={staticMapUrl}
-            alt="Map of properties"
-            className="absolute inset-0 w-full h-full object-cover"
-            loading="lazy"
-            draggable={false}
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <MapPin className="w-10 h-10 text-muted-foreground/40" />
+      {/* Interactive map */}
+      <div className="relative aspect-[16/9] w-full bg-muted overflow-hidden" style={{ touchAction: "none" }}>
+        <div ref={mapContainerRef} className="absolute inset-0 w-full h-full" />
+        {!mapReady && (
+          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+            <MapPin className="w-10 h-10 text-muted-foreground/40 animate-pulse" />
           </div>
         )}
-
-        {/* Price pills as percentage-positioned overlays so they scale with
-            the rendered image regardless of device width. */}
-        <div className="absolute inset-0 pointer-events-none">
-          {valid.map((h) => {
-            const p = project(h.latitude, h.longitude);
-            const xPx = MAP_W / 2 + (p.x - centerPx.x) * scale;
-            const yPx = MAP_H / 2 + (p.y - centerPx.y) * scale;
-            // Reject pills that would render outside the visible viewport.
-            if (xPx < 0 || xPx > MAP_W || yPx < 0 || yPx > MAP_H) return null;
-            const leftPct = (xPx / MAP_W) * 100;
-            const topPct = (yPx / MAP_H) * 100;
-            const isActive = h.id === activeId;
-            const priceLabel = formatPrice(h.pricePerNightCents);
-            const hasPrice = !!priceLabel;
-            return (
-              <button
-                key={`pill-${h.id}`}
-                type="button"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (isActive) {
-                    onSelect(h.id);
-                  } else {
-                    setActiveId(h.id);
-                    focusCard(h.id);
-                  }
-                }}
-                aria-label={`${h.name}${priceLabel ? ` from ${priceLabel} per night` : ""}`}
-                className={
-                  "pointer-events-auto absolute -translate-x-1/2 -translate-y-full rounded-full font-bold text-[11px] px-2.5 py-1 shadow-md whitespace-nowrap transition transform-gpu border " +
-                  (isActive
-                    ? "bg-foreground text-background border-foreground scale-110 z-20"
-                    : "bg-white text-black border-black/10 hover:scale-105 z-10")
-                }
-                style={{ left: `${leftPct}%`, top: `${topPct}%` }}
-              >
-                {hasPrice ? priceLabel : <Hotel className="w-3 h-3" />}
-              </button>
-            );
-          })}
-        </div>
-
         {/* Top-right counter pill */}
-        <div className="absolute top-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-background/95 backdrop-blur-md px-3 py-1.5 text-[11px] font-bold shadow-md">
+        <div className="absolute top-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-background/95 backdrop-blur-md px-3 py-1.5 text-[11px] font-bold shadow-md pointer-events-none">
           <MapPin className="w-3 h-3 text-emerald-600" />
           {valid.length} {valid.length === 1 ? "property" : "properties"}
         </div>
