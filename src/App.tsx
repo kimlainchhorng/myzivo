@@ -946,10 +946,12 @@ const App = () => (
               <SkipToContent />
               <Toaster />
               <Sonner />
-              <OfflineBanner />
-              <OutboxFlusher />
-              <FloatingReactionsOverlay />
-              <ReactedByHost />
+              <Suspense fallback={null}>
+                <OfflineBanner />
+                <OutboxFlusher />
+                <FloatingReactionsOverlay />
+                <ReactedByHost />
+              </Suspense>
               <BrowserRouter
                 future={{
                   v7_startTransition: true,
