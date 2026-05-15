@@ -9,6 +9,7 @@
 import { useMemo, useRef, useState, useEffect } from "react";
 import Star from "lucide-react/dist/esm/icons/star";
 import MapPin from "lucide-react/dist/esm/icons/map-pin";
+import Hotel from "lucide-react/dist/esm/icons/hotel";
 import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left";
 import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
 import { resolveMapsKey } from "@/lib/mapsKey";
@@ -194,6 +195,7 @@ export default function HotelsMapView({ hotels, onSelect, apiKey }: Props) {
             const topPct = (yPx / MAP_H) * 100;
             const isActive = h.id === activeId;
             const priceLabel = formatPrice(h.pricePerNightCents);
+            const hasPrice = !!priceLabel;
             return (
               <button
                 key={`pill-${h.id}`}
@@ -212,11 +214,11 @@ export default function HotelsMapView({ hotels, onSelect, apiKey }: Props) {
                   "pointer-events-auto absolute -translate-x-1/2 -translate-y-full rounded-full font-bold text-[11px] px-2.5 py-1 shadow-md whitespace-nowrap transition transform-gpu border " +
                   (isActive
                     ? "bg-foreground text-background border-foreground scale-110 z-20"
-                    : "bg-white text-foreground border-black/10 hover:scale-105 z-10")
+                    : "bg-white text-black border-black/10 hover:scale-105 z-10")
                 }
                 style={{ left: `${leftPct}%`, top: `${topPct}%` }}
               >
-                {priceLabel ?? "View"}
+                {hasPrice ? priceLabel : <Hotel className="w-3 h-3" />}
               </button>
             );
           })}
