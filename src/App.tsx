@@ -1,5 +1,4 @@
 import { Suspense, lazy, useEffect, useState, forwardRef } from "react";
-import { AdminShellRoute } from "@/components/admin/shell/AdminShellRoute";
 import { restaurantNav } from "@/components/admin/shell/nav/restaurant";
 import { businessNav } from "@/components/admin/shell/nav/business";
 import { usePageViewTracker } from "@/hooks/usePageViewTracker";
@@ -7,10 +6,6 @@ import { useGeoDetect } from "@/hooks/useGeoDetect";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
-import OfflineBanner from "@/components/chat/OfflineBanner";
-import OutboxFlusher from "@/components/chat/OutboxFlusher";
-import FloatingReactionsOverlay from "@/components/chat/FloatingReactionsOverlay";
-import ReactedByHost from "@/components/chat/ReactedByHost";
 const P2PTransferSheet = lazy(() => import("@/components/chat/P2PTransferSheet"));
 const PartnerSignupSheet = lazy(() => import("@/components/partner/PartnerSignupSheet"));
 const AffiliateRedirectPage = lazy(() => import("@/pages/AffiliateRedirectPage"));
@@ -36,7 +31,7 @@ import { useOTAUpdate } from "@/hooks/useOTAUpdate";
 import OTAUpdateBanner from "@/components/shared/OTAUpdateBanner";
 import NavigationProgressBar from "@/components/app/NavigationProgressBar";
 import ScrollRestoration from "@/components/app/ScrollRestoration";
-import GlobalDesktopNav from "@/components/app/GlobalDesktopNav";
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
@@ -69,6 +64,13 @@ const SpatialCursor = lazyWithRetry(() => import("./components/ui/SpatialCursor"
 const StoryDebugPanel = lazyWithRetry(() => import("@/components/stories/StoryDebugPanel"));
 const PostShareSheet = lazyWithRetry(() => import("@/components/social/PostShareSheet"));
 const ShareToChatSheet = lazyWithRetry(() => import("@/components/chat/ShareToChatSheet"));
+// Chrome / passive overlays — deferred so they don't block first paint.
+const OfflineBanner = lazyWithRetry(() => import("@/components/chat/OfflineBanner"));
+const OutboxFlusher = lazyWithRetry(() => import("@/components/chat/OutboxFlusher"));
+const FloatingReactionsOverlay = lazyWithRetry(() => import("@/components/chat/FloatingReactionsOverlay"));
+const ReactedByHost = lazyWithRetry(() => import("@/components/chat/ReactedByHost"));
+const GlobalDesktopNav = lazyWithRetry(() => import("@/components/app/GlobalDesktopNav"));
+const AdminShellRoute = lazyWithRetry(() => import("@/components/admin/shell/AdminShellRoute").then(m => ({ default: m.AdminShellRoute })));
 const ENABLE_DEV_ROUTES = import.meta.env.DEV;
 let PostMenuRegressionPage: ReturnType<typeof lazy> | null = null;
 let SafeAreaQAPage: ReturnType<typeof lazy> | null = null;
@@ -944,10 +946,12 @@ const App = () => (
               <SkipToContent />
               <Toaster />
               <Sonner />
-              <OfflineBanner />
-              <OutboxFlusher />
-              <FloatingReactionsOverlay />
-              <ReactedByHost />
+              <Suspense fallback={null}>
+                <OfflineBanner />
+                <OutboxFlusher />
+                <FloatingReactionsOverlay />
+                <ReactedByHost />
+              </Suspense>
               <BrowserRouter
                 future={{
                   v7_startTransition: true,
@@ -966,7 +970,7 @@ const App = () => (
                 <Suspense fallback={null}><RoutePrefetcher /></Suspense>
                 <Suspense fallback={null}><PaymentReturnHandler /></Suspense>
                 <AuthProvider>
-                  <GlobalDesktopNav />
+                  <Suspense fallback={null}><GlobalDesktopNav /></Suspense>
                   <AuthBackgroundServices />
                   <Suspense fallback={null}><ShareToChatSheet /></Suspense>
                   <Suspense fallback={null}>
