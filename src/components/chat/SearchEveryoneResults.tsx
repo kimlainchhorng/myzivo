@@ -35,7 +35,7 @@ export default function SearchEveryoneResults({ query }: { query: string }) {
     const t = setTimeout(async () => {
       try {
         const clean = q.replace(/^@/, "");
-        const { data } = await supabase
+        const { data } = await (supabase as any)
           .from("profiles")
           .select("user_id, full_name, username, avatar_url")
           .or(`username.ilike.%${clean}%,full_name.ilike.%${clean}%`)

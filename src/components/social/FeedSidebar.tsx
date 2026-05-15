@@ -49,7 +49,7 @@ const SERVICE_ITEMS = [
   { label: "Cars", icon: CarFront, path: "/cars", color: "text-foreground" },
   { label: "Delivery", icon: Package, path: "/delivery", color: "text-foreground" },
   { label: "Shopping", icon: ShoppingCart, path: "/grocery", color: "text-foreground" },
-];
+] as Array<{ label: string; icon: any; path: string; color: string; authRequired?: boolean }>;
 
 const SOCIAL_ITEMS = [
   { label: "Friends", icon: Users, path: "/friends", authRequired: true },

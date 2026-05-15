@@ -15,7 +15,8 @@ const PUSH_DISMISS_KEY = "zivo_push_dismissed";
 const PUSH_DISMISS_MAX = 3;
 
 function PushOptInBanner() {
-  const { permission: state, subscribe } = useWebPush();
+  const state = useWebPush() as any;
+  const subscribe = state.subscribe;
   const [dismissed, setDismissed] = useState<boolean>(() => {
     const count = parseInt(localStorage.getItem(PUSH_DISMISS_KEY) ?? "0", 10);
     return count >= PUSH_DISMISS_MAX;
