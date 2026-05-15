@@ -2104,9 +2104,8 @@ function ReelCard({
           >
             {/* Buffered range — sits beneath the playhead fill so the user
                 can see how much is ready ahead of where they're watching. */}
-            <div
-              className="absolute inset-y-0 left-0 bg-white/30 transition-[width] duration-200 ease-out"
-              as={motion.div as any}
+            <motion.div
+              className="absolute inset-y-0 left-0 bg-white/30"
               animate={{ width: `${bufferedProgress * 100}%` }}
               transition={{ duration: 0.2, ease: "easeOut" }}
             />
@@ -3970,12 +3969,12 @@ export default function FeedPage() {
       // Store posts — Reels is a vertical media scroller, so drop text-only
       // store announcements (no media_urls). They have a home in /feed where
       // text cards render correctly; here they'd just produce empty slides.
-      for (const post of postsData || []) {
+      for (const post of ((postsData as any[]) || [])) {
         const hasMedia = Array.isArray(post.media_urls) && post.media_urls.length > 0;
         if (!hasMedia) continue;
         const store = storeMap.get(post.store_id);
         allPosts.push({
-          ...post,
+          ...(post as any),
           source: "store",
           store_name: store?.name || "Store",
           store_logo: store?.logo_url,
@@ -4912,7 +4911,7 @@ export default function FeedPage() {
                   setFeedMode((m) => (m === "foryou" ? "following" : "foryou"));
                   requestAnimationFrame(() => cardRefs.current[0]?.scrollIntoView({ block: "start" }));
                 } : undefined}
-                feedMode={feedMode}
+                feedMode={feedMode === "trending" ? "foryou" : feedMode}
               />
             )}
           </motion.div>
