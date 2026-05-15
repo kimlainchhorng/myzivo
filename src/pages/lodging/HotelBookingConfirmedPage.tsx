@@ -37,8 +37,8 @@ export default function HotelBookingConfirmedPage() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const reservationId = params.get("reservation_id") || "";
-  const { format } = useCurrency();
-  const formatPrice = (cents: number) => cents > 0 ? format(cents / 100, "USD") : "—";
+  const { format: formatCurrency } = useCurrency();
+  const formatPrice = (cents: number) => cents > 0 ? formatCurrency(cents / 100, "USD") : "—";
 
   const [reservation, setReservation] = useState<ReservationSummary | null>(null);
   const [loading, setLoading] = useState(true);
