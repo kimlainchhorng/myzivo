@@ -156,8 +156,8 @@ export default function HotelsMapView({ hotels, onSelect, apiKey }: Props) {
     // Custom overlay class — created lazily after google.maps is loaded
     class PillOverlay extends google.maps.OverlayView {
       private pos: google.maps.LatLng;
-      private el: HTMLDivElement;
-      constructor(pos: google.maps.LatLng, el: HTMLDivElement) {
+      private el: HTMLElement;
+      constructor(pos: google.maps.LatLng, el: HTMLElement) {
         super();
         this.pos = pos;
         this.el = el;
