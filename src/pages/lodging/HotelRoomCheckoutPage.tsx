@@ -40,8 +40,8 @@ export default function HotelRoomCheckoutPage() {
   const { storeId = "" } = useParams<{ storeId: string }>();
   const navigate = useNavigate();
   const [params] = useSearchParams();
-  const { format } = useCurrency();
-  const formatPrice = (cents: number) => cents > 0 ? format(cents / 100, "USD") : "—";
+  const { format: formatCurrency } = useCurrency();
+  const formatPrice = (cents: number) => cents > 0 ? formatCurrency(cents / 100, "USD") : "—";
 
   const roomId = params.get("room") || "";
   const checkIn = parseParamDate(params.get("ci")) ?? today();

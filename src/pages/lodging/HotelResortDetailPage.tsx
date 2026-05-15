@@ -153,8 +153,8 @@ export default function HotelResortDetailPage() {
   const navigate = useNavigate();
   const { data: ownerStore } = useOwnerStoreProfile();
   const isOwner = ownerStore?.id === storeId;
-  const { format } = useCurrency();
-  const formatPrice = (cents: number) => { if (!cents || cents <= 0) return "—"; return format(cents / 100, "USD"); };
+  const { format: formatCurrency } = useCurrency();
+  const formatPrice = (cents: number) => { if (!cents || cents <= 0) return "—"; return formatCurrency(cents / 100, "USD"); };
 
   // Phase D: one aggregate RPC call replaces store + profile + rooms + promo +
   // reviews + reservations queries. The page reads everything from this single

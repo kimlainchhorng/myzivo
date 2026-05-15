@@ -1302,6 +1302,7 @@ function PropertyCard({
   onToggleFavorite?: (e: React.MouseEvent) => void;
   onOpen: () => void;
 }) {
+  const { format: fmtPrice } = useCurrency();
   const location = store.address || "";
   const haystack = amenities.join(" ");
   const matchedAmenities = AMENITY_ICONS.filter((a) =>
