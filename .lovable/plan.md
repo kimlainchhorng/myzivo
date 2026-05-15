@@ -1,47 +1,31 @@
-# Restore the Auto Repair shop dashboard
+## Goal
+Make hizivo.com and the Zivo app measurably faster — focused on real-user metrics (LCP, INP, CLS, TTFB), not guesses.
 
-## What's wrong
+## Phase 1 — Measure (no code yet)
+1. Run a Lighthouse pass on the published URL (mobile + desktop) and capture LCP, INP, CLS, TBT, total JS, total image weight.
+2. Add `web-vitals` reporting (tiny, ~2KB) sending p75 LCP/INP/CLS to console + an analytics endpoint so we see *real* user numbers, not lab.
+3. Identify the top 3 bottlenecks from the report (likely candidates: hero image weight, third-party scripts, initial JS chunk, font loading).
 
-Your store `AB Complete Car C…` is categorized as **auto repair**. The full auto‑repair admin you remember (Profile, Orders, Services, Bookings, Estimates, Invoices, Customer Vehicles, Auto Check VIN, Work Orders, Inspections, Technicians & Bays, Reminders & Recalls, Part Shop, Tire Inventory, Warranty, Fleet, Settings — image 1) is rendered by `StoreOwnerLayout` at:
+## Phase 2 — High-impact wins (apply only what the report flags)
+- **Images**: Convert hero/LCP image to AVIF + WebP via `vite-imagetools`; add `<link rel="preload" as="image" fetchpriority="high">` for the LCP image; ensure explicit width/height on all `<img>` to kill CLS.
+- **Fonts**: `font-display: swap`, preload only the one weight used above the fold, subset if custom.
+- **Third-party**: Defer/async all analytics + pixel scripts; load Meta/GA only after first interaction or `requestIdleCallback`.
+- **Route splitting**: Verify heavy routes (FeedPage, ExplorePage, admin shell) are still lazy; preload only the landing chunk.
+- **Supabase**: Add indexes for any query >200ms surfaced by `supabase--linter` or query analytics; batch parallel fetches on first paint.
 
-```
-/admin/stores/:storeId
-```
+## Phase 3 — Mobile/native (Capacitor)
+- Enable WebView caching headers via `public/_headers` (already partially configured — extend `Cache-Control: public, max-age=31536000, immutable` on hashed assets).
+- Preconnect to Supabase + image CDN in `index.html`.
+- Confirm splash screen hides only after first meaningful paint, not after full hydration.
 
-But the **"Switch to Shop"** button on your Profile is hard‑coded in `src/pages/Profile.tsx` to send every store owner to `/shop-dashboard`, which is the generic e‑commerce skeleton in image 2. That's why your auto‑repair UI looks "missing."
+## Phase 4 — Validate
+Re-run Lighthouse + check web-vitals dashboard after each change. Roll back any change that doesn't move the needle.
 
-A category‑aware router (`resolveBusinessDashboardRoute` in `src/lib/business/dashboardRoute.ts`) already exists and returns `/admin/stores/:id` for non‑restaurant / non‑lodging stores — Profile just isn't calling it.
+## Technical notes
+- Skip premature micro-optimizations (already done: lucide-react no-barrel, IntersectionObserver, lazy admin, idle analytics).
+- No new dependencies beyond `web-vitals` and `vite-imagetools` unless data justifies it.
+- Each phase ships independently and gets published before the next.
 
-On top of that, the Part Shop tab inside the real auto‑repair dashboard is throwing the red "A runtime issue occurred" banner (visible at the top of image 1).
-
-## Fix
-
-### 1. Profile → use the category-aware resolver
-`src/pages/Profile.tsx`, `getShopDashboardPath()`:
-- Read the owner's store via the `useOwnerStoreProfile` hook already on the page.
-- Return `resolveBusinessDashboardRoute(store.category, store.id)` when a store exists.
-- Fall back to `/shop-dashboard` only when the user has no store yet.
-
-Result: tapping "Switch to Shop" opens `/admin/stores/<your-store-id>` and your full Auto Repair sidebar is back.
-
-### 2. `/shop-dashboard` itself → redirect, don't replace
-`src/pages/app/ShopDashboard.tsx`:
-- If the signed‑in user owns a store whose category is not "generic shop", `<Navigate>` to the resolved route.
-- Only render the generic shop UI when the owner has a generic shop (or no store).
-
-This protects every other entry point still linking to `/shop-dashboard` (MorePage, CreatorDashboardPage, MonetizationPage, DigitalProductsPage…) so they all land on the right dashboard automatically.
-
-### 3. Fix the Part Shop runtime crash
-Open `/admin/stores/<id>` with the Part Shop tab active in the preview, capture the actual stack from the runtime‑errors snapshot, and patch the offending line in `AutoRepairPartShopSection.tsx` / `AutoRepairPartSuppliersSection.tsx` (most likely an undefined‑access in the supplier render loop or a missing column on `parts`). Verify the tab renders without the red banner.
-
-## Files touched
-
-- `src/pages/Profile.tsx` — replace hard‑coded `/shop-dashboard` with the category resolver
-- `src/pages/app/ShopDashboard.tsx` — add owner‑store redirect at the top
-- `src/components/admin/store/autorepair/AutoRepairPartShopSection.tsx` (and/or its Suppliers sibling) — fix runtime crash, exact line confirmed once I read the live error
-
-## Out of scope
-
-- Renaming the `/shop-dashboard` URL itself (kept for backward compatibility).
-- Moving the Lazada/Taobao Import Shop into the auto‑repair sidebar — it stays at `/admin/shop`.
-- Any visual redesign of the auto‑repair dashboard — purely a routing + crash fix.
+## Deliverables
+- Phase 1: a numbers report you can read.
+- Phases 2–4: only the fixes the data demands.
