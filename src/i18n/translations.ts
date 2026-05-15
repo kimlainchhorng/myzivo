@@ -5011,5 +5011,6 @@ const TRANSLATIONS: Record<string, Record<string, string>> = {
     "services.flights": "Авіаквитки",
     "services.hotels": "Готелі",
   },
+};
 
 export default TRANSLATIONS;
