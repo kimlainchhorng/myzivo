@@ -1,5 +1,4 @@
 import { Suspense, lazy, useEffect, useState, forwardRef } from "react";
-import { AdminShellRoute } from "@/components/admin/shell/AdminShellRoute";
 import { restaurantNav } from "@/components/admin/shell/nav/restaurant";
 import { businessNav } from "@/components/admin/shell/nav/business";
 import { usePageViewTracker } from "@/hooks/usePageViewTracker";
@@ -7,10 +6,6 @@ import { useGeoDetect } from "@/hooks/useGeoDetect";
 import { HelmetProvider } from "react-helmet-async";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
-import OfflineBanner from "@/components/chat/OfflineBanner";
-import OutboxFlusher from "@/components/chat/OutboxFlusher";
-import FloatingReactionsOverlay from "@/components/chat/FloatingReactionsOverlay";
-import ReactedByHost from "@/components/chat/ReactedByHost";
 const P2PTransferSheet = lazy(() => import("@/components/chat/P2PTransferSheet"));
 const PartnerSignupSheet = lazy(() => import("@/components/partner/PartnerSignupSheet"));
 const AffiliateRedirectPage = lazy(() => import("@/pages/AffiliateRedirectPage"));
