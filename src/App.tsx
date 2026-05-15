@@ -31,7 +31,7 @@ import { useOTAUpdate } from "@/hooks/useOTAUpdate";
 import OTAUpdateBanner from "@/components/shared/OTAUpdateBanner";
 import NavigationProgressBar from "@/components/app/NavigationProgressBar";
 import ScrollRestoration from "@/components/app/ScrollRestoration";
-import GlobalDesktopNav from "@/components/app/GlobalDesktopNav";
+
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { ThemeProvider } from "next-themes";
