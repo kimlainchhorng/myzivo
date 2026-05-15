@@ -251,11 +251,16 @@ export default function IncomingCallListener() {
     };
   }, [hydratePendingIncomingCall]);
 
+  // Realtime is the primary delivery channel; this poll is just a safety
+  // fallback for missed websocket events. 30s + skip-when-hidden cuts ~720
+  // requests/hour per logged-in user (was 4s = ~900/hr) and stops draining
+  // mobile battery / Postgres CPU during idle tabs.
   useEffect(() => {
     if (!user?.id) return;
     const timer = window.setInterval(() => {
+      if (typeof document !== "undefined" && document.hidden) return;
       void hydratePendingIncomingCall();
-    }, 4000);
+    }, 30_000);
 
     return () => window.clearInterval(timer);
   }, [hydratePendingIncomingCall, user?.id]);
