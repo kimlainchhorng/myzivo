@@ -15,7 +15,6 @@ import Hotel from "lucide-react/dist/esm/icons/hotel";
 import MapPin from "lucide-react/dist/esm/icons/map-pin";
 import Search from "lucide-react/dist/esm/icons/search";
 import Star from "lucide-react/dist/esm/icons/star";
-import Filter from "lucide-react/dist/esm/icons/filter";
 
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,6 +31,7 @@ interface DirectoryStore {
   banner_url: string | null;
   description: string | null;
   setup_complete: boolean | null;
+  rating: number | null;
 }
 
 const FILTERS: Array<{ id: string; label: string; match: (cat: string) => boolean }> = [
@@ -47,7 +47,7 @@ export default function HotelsResortsDirectoryPage() {
   const [activeFilter, setActiveFilter] = useState<string>("all");
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+    window.scrollTo({ top: 0, behavior: "auto" });
   }, []);
 
   const listQuery = useQuery({
@@ -55,7 +55,7 @@ export default function HotelsResortsDirectoryPage() {
     queryFn: async (): Promise<DirectoryStore[]> => {
       const { data, error } = await (supabase as any)
         .from("store_profiles")
-        .select("id, name, category, address, logo_url, banner_url, description, setup_complete")
+        .select("id, name, category, address, logo_url, banner_url, description, setup_complete, rating")
         .in("category", LODGING_STORE_CATEGORIES)
         .order("setup_complete", { ascending: false })
         .order("name", { ascending: true })
@@ -103,12 +103,6 @@ export default function HotelsResortsDirectoryPage() {
             <ArrowLeft className="w-5 h-5" />
           </button>
           <h1 className="text-base font-bold text-foreground flex-1 truncate">Hotels & Resorts</h1>
-          <button type="button"
-            aria-label="Filters"
-            className="min-h-[40px] min-w-[40px] rounded-full flex items-center justify-center active:bg-muted transition touch-manipulation"
-          >
-            <Filter className="w-4.5 h-4.5 text-muted-foreground" />
-          </button>
         </div>
 
         {/* Search */}
@@ -150,6 +144,9 @@ export default function HotelsResortsDirectoryPage() {
 
       {/* List */}
       <div className="px-4 pt-4">
+        {!listQuery.isLoading && filtered.length > 0 && (
+          <p className="text-xs text-muted-foreground mb-3">{filtered.length} properties</p>
+        )}
         {listQuery.isLoading ? (
           <div className="grid gap-3">
             {[1, 2, 3].map((i) => (
@@ -234,10 +231,16 @@ function PropertyCard({
             </p>
           )}
           <div className="mt-2 flex items-center gap-2">
-            <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600">
-              <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
-              New
-            </span>
+            {store.rating && store.rating > 0 ? (
+              <span className="inline-flex items-center gap-1 rounded-full bg-amber-500/10 px-2 py-0.5 text-[10px] font-semibold text-amber-600">
+                <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                {store.rating.toFixed(1)}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-[10px] font-semibold text-muted-foreground">
+                New
+              </span>
+            )}
             <span className="text-[10px] font-medium text-muted-foreground capitalize truncate">
               {store.category?.replace(/_/g, " ") || "Hotel"}
             </span>

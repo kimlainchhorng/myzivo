@@ -26,7 +26,7 @@ export default function StoryHighlights({ userId, isOwnProfile }: StoryHighlight
     queryFn: async () => {
       const { data } = await (supabase as any)
         .from("story_highlights")
-        .select("*")
+        .select("id, title, cover_url, sort_order")
         .eq("user_id", userId)
         .order("sort_order", { ascending: true });
       return data || [];

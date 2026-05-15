@@ -428,33 +428,15 @@ const Profile = () => {
   // user follows/unfollows / accepts a friend request from another screen.
   const loadSocialCounts = useCallback(async () => {
     if (!user?.id) return;
-    // Friend count (accepted friendships)
-    const { count: fc } = await supabase
-      .from("friendships" as any)
-      .select("*", { count: "exact", head: true })
-      .eq("status", "accepted")
-      .or(`user_id.eq.${user.id},friend_id.eq.${user.id}`);
+    const [{ count: fc }, { count: flc }, { count: fgc }, { count: pc }] = await Promise.all([
+      supabase.from("friendships" as any).select("id", { count: "exact", head: true }).eq("status", "accepted").or(`user_id.eq.${user.id},friend_id.eq.${user.id}`),
+      supabase.from("followers" as any).select("id", { count: "exact", head: true }).eq("following_id", user.id),
+      supabase.from("followers" as any).select("id", { count: "exact", head: true }).eq("follower_id", user.id),
+      (supabase as any).from("user_posts").select("id", { count: "exact", head: true }).eq("user_id", user.id),
+    ]);
     setFriendCount(fc || 0);
-
-    // Follower count (people following this user)
-    const { count: flc } = await supabase
-      .from("followers" as any)
-      .select("*", { count: "exact", head: true })
-      .eq("following_id", user.id);
     setFollowerCount(flc || 0);
-
-    // Following count (people this user follows)
-    const { count: fgc } = await supabase
-      .from("followers" as any)
-      .select("*", { count: "exact", head: true })
-      .eq("follower_id", user.id);
     setFollowingCount(fgc || 0);
-
-    // Posts count
-    const { count: pc } = await (supabase as any)
-      .from("user_posts")
-      .select("*", { count: "exact", head: true })
-      .eq("user_id", user.id);
     setPostsCount(pc || 0);
   }, [user?.id]);
 

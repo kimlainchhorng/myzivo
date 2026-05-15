@@ -1040,11 +1040,12 @@ export default function MorePage() {
     queryFn: async () => {
       const { count } = await (supabase as any)
         .from("user_posts")
-        .select("*", { count: "exact", head: true })
+        .select("id", { count: "exact", head: true })
         .eq("user_id", user!.id);
       return count || 0;
     },
     enabled: !!user,
+    staleTime: 60_000,
   });
 
   // Real friend count (accepted friendships) — matches /profile
@@ -1053,12 +1054,13 @@ export default function MorePage() {
     queryFn: async () => {
       const { count } = await (supabase as any)
         .from("friendships")
-        .select("*", { count: "exact", head: true })
+        .select("id", { count: "exact", head: true })
         .eq("status", "accepted")
         .or(`user_id.eq.${user!.id},friend_id.eq.${user!.id}`);
       return count || 0;
     },
     enabled: !!user,
+    staleTime: 60_000,
   });
 
   // Unread notification count (lightweight count query)
@@ -1067,7 +1069,7 @@ export default function MorePage() {
     queryFn: async () => {
       const { count } = await (supabase as any)
         .from("notifications")
-        .select("*", { count: "exact", head: true })
+        .select("id", { count: "exact", head: true })
         .eq("user_id", user!.id)
         .eq("is_read", false);
       return count || 0;
@@ -1082,7 +1084,7 @@ export default function MorePage() {
     queryFn: async () => {
       const { count } = await (supabase as any)
         .from("flight_bookings")
-        .select("*", { count: "exact", head: true })
+        .select("id", { count: "exact", head: true })
         .eq("user_id", user!.id)
         .gte("departure_at", new Date().toISOString());
       return count || 0;
@@ -1097,7 +1099,7 @@ export default function MorePage() {
     queryFn: async () => {
       const { count } = await (supabase as any)
         .from("orders")
-        .select("*", { count: "exact", head: true })
+        .select("id", { count: "exact", head: true })
         .eq("user_id", user!.id)
         .in("status", ["pending", "confirmed", "preparing", "in_transit", "out_for_delivery"]);
       return count || 0;
@@ -1129,7 +1131,7 @@ export default function MorePage() {
     queryFn: async () => {
       const { count } = await (supabase as any)
         .from("friendships")
-        .select("*", { count: "exact", head: true })
+        .select("id", { count: "exact", head: true })
         .eq("status", "pending")
         .eq("friend_id", user!.id);
       return count || 0;
@@ -1161,11 +1163,12 @@ export default function MorePage() {
     queryFn: async () => {
       const { count } = await (supabase as any)
         .from("followers")
-        .select("*", { count: "exact", head: true })
+        .select("id", { count: "exact", head: true })
         .eq("following_id", user!.id);
       return count || 0;
     },
     enabled: !!user,
+    staleTime: 60_000,
   });
 
   // Real following count (people this user follows)
@@ -1174,11 +1177,12 @@ export default function MorePage() {
     queryFn: async () => {
       const { count } = await (supabase as any)
         .from("followers")
-        .select("*", { count: "exact", head: true })
+        .select("id", { count: "exact", head: true })
         .eq("follower_id", user!.id);
       return count || 0;
     },
     enabled: !!user,
+    staleTime: 60_000,
   });
 
   const displayName =

@@ -16,20 +16,23 @@ interface Props {
   userId: string | null;
   /** Initial like count from the API; component re-syncs on mount */
   initialCount?: number;
+  /** Pre-fetched liked state from parent batch query — skips per-comment DB calls. */
+  initialLiked?: boolean;
   /** Light variant for use on light backgrounds; default = dark */
   variant?: "light" | "dark";
 }
 
 export default function CommentHeartButton({
-  commentId, targetTable, userId, initialCount = 0, variant = "dark",
+  commentId, targetTable, userId, initialCount = 0, initialLiked, variant = "dark",
 }: Props) {
-  const [liked, setLiked] = useState(false);
+  const [liked, setLiked] = useState(initialLiked ?? false);
   const [count, setCount] = useState(initialCount);
   const [loading, setLoading] = useState(false);
   const haptic = useHaptic();
 
-  // Hydrate "did this user like it" + true count on mount
+  // Skip per-comment DB calls when the parent has already batch-fetched state.
   useEffect(() => {
+    if (initialLiked !== undefined) return;
     let cancelled = false;
     (async () => {
       const [{ count: total }, { data: own }] = await Promise.all([
@@ -53,7 +56,7 @@ export default function CommentHeartButton({
       setLiked(!!own?.id);
     })();
     return () => { cancelled = true; };
-  }, [commentId, targetTable, userId]);
+  }, [commentId, targetTable, userId, initialLiked]);
 
   async function handleToggle() {
     if (!userId || loading) return;

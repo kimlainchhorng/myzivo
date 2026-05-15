@@ -32,11 +32,9 @@ const HotelsMapView = lazy(() => import("@/components/lodging/HotelsMapView"));
 const HotelConciergeSheet = lazy(() => import("@/components/lodging/HotelConciergeSheet"));
 const GOOGLE_MAPS_KEY: string =
   (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_GOOGLE_MAPS_API_KEY || "";
-const ENABLE_PUBLIC_LODGING_REVIEWS =
-  (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_ENABLE_PUBLIC_LODGING_REVIEWS === "true";
 import { supabase } from "@/integrations/supabase/client";
-import { LODGING_STORE_CATEGORIES, normalizeStoreCategory } from "@/hooks/useOwnerStoreProfile";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { LODGING_STORE_CATEGORIES, normalizeStoreCategory } from "@/hooks/useOwnerStoreProfile";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -97,11 +95,20 @@ const todayUTC = () => {
   return d;
 };
 
+function haversineDist(lat1: number, lon1: number, lat2: number, lon2: number): number {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2
+    + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
 export default function HotelsLandingPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
-  const { format: fmtPrice } = useCurrency();
   const [searchParams, setSearchParams] = useSearchParams();
+  const { format: fmtPrice } = useCurrency();
 
   // Honor share-card / deep-link query params on mount: ?city=&ci=&co=&adults=&children=
   // Matches the params built by ZivoCardPicker's hotel composer.
@@ -147,6 +154,7 @@ export default function HotelsLandingPage() {
   const [datesOpen, setDatesOpen] = useState(false);
   const [guestsOpen, setGuestsOpen] = useState(false);
   const [sortBy, setSortBy] = useState<"default" | "price_asc" | "price_desc" | "rating" | "near_me">("default");
+  const [maxBudget, setMaxBudget] = useState<number | null>(null); // USD per night, null = no limit
   const [savedOnly, setSavedOnly] = useState(false);
   const [showStickyBar, setShowStickyBar] = useState(false);
   const heroSentinelRef = useRef<HTMLDivElement | null>(null);
@@ -188,7 +196,7 @@ export default function HotelsLandingPage() {
   }, []);
 
   useEffect(() => {
-    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+    window.scrollTo({ top: 0, behavior: "auto" });
   }, []);
 
   // Show a sticky compact header once the hero scrolls out of view
@@ -229,6 +237,8 @@ export default function HotelsLandingPage() {
 
   const listQuery = useQuery({
     queryKey: ["hotels-landing"],
+    staleTime: 300_000,
+    gcTime: 600_000,
     queryFn: async (): Promise<DirectoryStore[]> => {
       const { data, error } = await (supabase as any)
         .from("store_profiles")
@@ -254,6 +264,7 @@ export default function HotelsLandingPage() {
   const ratesQuery = useQuery({
     queryKey: ["lodge-min-rates", storeIds],
     enabled: storeIds.length > 0,
+    staleTime: 300_000,
     queryFn: async (): Promise<Record<string, RateInfo>> => {
       const { data, error } = await (supabase as any)
         .from("lodge_rooms")
@@ -293,6 +304,7 @@ export default function HotelsLandingPage() {
   const promotionsQuery = useQuery({
     queryKey: ["lodge-promotions", storeIds],
     enabled: storeIds.length > 0,
+    staleTime: 300_000,
     queryFn: async (): Promise<Record<string, PromoInfo>> => {
       const nowIso = new Date().toISOString();
       const { data, error } = await (supabase as any)
@@ -336,6 +348,7 @@ export default function HotelsLandingPage() {
   const amenitiesQuery = useQuery({
     queryKey: ["lodge-amenities", storeIds],
     enabled: storeIds.length > 0,
+    staleTime: 300_000,
     queryFn: async (): Promise<Record<string, PropertyProfile>> => {
       const { data, error } = await (supabase as any)
         .from("lodge_property_profile")
@@ -363,9 +376,9 @@ export default function HotelsLandingPage() {
   // Review counts + true avg per store (lodging_reviews)
   const reviewStatsQuery = useQuery({
     queryKey: ["lodge-review-stats", storeIds],
-    enabled: ENABLE_PUBLIC_LODGING_REVIEWS && storeIds.length > 0,
-    staleTime: 60_000,
-    gcTime: 300_000,
+    enabled: storeIds.length > 0,
+    staleTime: 300_000,
+    gcTime: 600_000,
     queryFn: async (): Promise<Record<string, { avg: number; count: number }>> => {
       const { data, error } = await (supabase as any)
         .from("lodging_reviews")
@@ -408,11 +421,16 @@ export default function HotelsLandingPage() {
   const featured = useMemo(
     () => {
       const completed = all.filter((s) => s.setup_complete);
-      // Hide the Featured rail when it would just duplicate the All list (e.g. only 1–2 properties total)
-      if (completed.length <= 2 && completed.length >= all.length) return [];
-      return completed.slice(0, 6);
+      if (completed.length === 0) return [];
+      // Sort featured by review rating so best-reviewed properties surface first
+      const withRating = [...completed].sort((a, b) => {
+        const ra = reviewStats[a.id]?.count ? reviewStats[a.id].avg : -1;
+        const rb = reviewStats[b.id]?.count ? reviewStats[b.id].avg : -1;
+        return rb - ra;
+      });
+      return withRating.slice(0, 6);
     },
-    [all]
+    [all, reviewStats]
   );
 
 
@@ -440,9 +458,13 @@ export default function HotelsLandingPage() {
         if (!ok) return false;
       }
       if (savedOnly && !favorites.has(store.id)) return false;
+      if (maxBudget !== null) {
+        const cents = minRates[store.id]?.base;
+        if (typeof cents === "number" && cents / 100 > maxBudget) return false;
+      }
       return true;
     });
-  }, [all, search, activeFilter, activeTags, amenitiesMap, savedOnly, favorites]);
+  }, [all, search, activeFilter, activeTags, amenitiesMap, savedOnly, favorites, maxBudget, minRates]);
 
   const sorted = useMemo(() => {
     if (sortBy === "price_asc") {
@@ -452,18 +474,26 @@ export default function HotelsLandingPage() {
       return [...filtered].sort((a, b) => (minRates[b.id]?.base ?? 0) - (minRates[a.id]?.base ?? 0));
     }
     if (sortBy === "rating") {
-      return [...filtered].sort((a, b) => (amenitiesMap[b.id]?.rating ?? -1) - (amenitiesMap[a.id]?.rating ?? -1));
-    }
-    if (sortBy === "near_me") {
-      // Favorites float to top when near-me is active; distance sort requires geocoded store coords
       return [...filtered].sort((a, b) => {
-        const fa = favorites.has(a.id) ? 0 : 1;
-        const fb = favorites.has(b.id) ? 0 : 1;
-        return fa - fb;
+        const ra = reviewStats[a.id]?.count ? reviewStats[a.id].avg : -1;
+        const rb = reviewStats[b.id]?.count ? reviewStats[b.id].avg : -1;
+        return rb - ra;
       });
     }
+    if (sortBy === "near_me") {
+      if (coords) {
+        return [...filtered].sort((a, b) => {
+          const da = (typeof a.latitude === "number" && typeof a.longitude === "number")
+            ? haversineDist(coords.lat, coords.lng, a.latitude, a.longitude) : Infinity;
+          const db = (typeof b.latitude === "number" && typeof b.longitude === "number")
+            ? haversineDist(coords.lat, coords.lng, b.latitude, b.longitude) : Infinity;
+          return da - db;
+        });
+      }
+      return [...filtered].sort((a, b) => (favorites.has(a.id) ? 0 : 1) - (favorites.has(b.id) ? 0 : 1));
+    }
     return filtered;
-  }, [filtered, sortBy, minRates, favorites, amenitiesMap]);
+  }, [filtered, sortBy, minRates, favorites, reviewStats, coords]);
 
   const toggleTag = (id: string) => {
     setActiveTags((prev) => (prev.includes(id) ? prev.filter((t) => t !== id) : [...prev, id]));
@@ -823,7 +853,8 @@ export default function HotelsLandingPage() {
             {featured.map((store) => {
               const rate = minRates[store.id];
               const minCents = rate?.base;
-              const rating = amenitiesMap[store.id]?.rating;
+              const rs = reviewStats[store.id];
+              const rating = rs?.count ? rs.avg : null;
               const promo = promotions[store.id];
               let discountedCents: number | null = null;
               let pctOff = 0;
@@ -1013,6 +1044,31 @@ export default function HotelsLandingPage() {
           ))}
         </div>
 
+        {/* Budget filter chips */}
+        <div className="px-4 pb-2 flex items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+          <span className="text-[11px] text-muted-foreground shrink-0">Budget:</span>
+          {([
+            { id: null,  label: "Any",        key: "any" },
+            { id: 25,    label: "Under $25",   key: "25" },
+            { id: 50,    label: "Under $50",   key: "50" },
+            { id: 100,   label: "Under $100",  key: "100" },
+            { id: 200,   label: "Under $200",  key: "200" },
+          ] as const).map((opt) => (
+            <button type="button"
+              key={opt.key}
+              onClick={() => setMaxBudget(opt.id)}
+              className={
+                "shrink-0 min-h-[40px] rounded-full px-3.5 py-2 text-xs font-semibold transition touch-manipulation " +
+                (maxBudget === opt.id
+                  ? "bg-primary text-primary-foreground"
+                  : "bg-muted/70 text-muted-foreground active:bg-muted")
+              }
+            >
+              {opt.label}
+            </button>
+          ))}
+        </div>
+
         {/* Type filter chips */}
         <div className="px-4 pb-3 flex gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
           {FILTERS.map((f) => {
@@ -1051,7 +1107,7 @@ export default function HotelsLandingPage() {
                     latitude: s.latitude as number,
                     longitude: s.longitude as number,
                     pricePerNightCents: minRates[s.id]?.base ?? null,
-                    rating: reviewStats[s.id]?.count ? reviewStats[s.id].avg : (amenitiesMap[s.id]?.rating ?? null),
+                    rating: reviewStats[s.id]?.count ? reviewStats[s.id].avg : null,
                     reviewCount: reviewStats[s.id]?.count ?? 0,
                   }))}
                 onSelect={(id) => {
@@ -1138,7 +1194,7 @@ export default function HotelsLandingPage() {
                   rateInfo={minRates[store.id]}
                   promo={promotions[store.id]}
                   amenities={amenitiesMap[store.id]?.amenities || []}
-                  rating={reviewStats[store.id]?.count ? reviewStats[store.id].avg : (amenitiesMap[store.id]?.rating ?? null)}
+                  rating={reviewStats[store.id]?.count ? reviewStats[store.id].avg : null}
                   reviewCount={reviewStats[store.id]?.count ?? 0}
                   isFavorite={favorites.has(store.id)}
                   onToggleFavorite={(e) => toggleFavorite(store.id, e)}

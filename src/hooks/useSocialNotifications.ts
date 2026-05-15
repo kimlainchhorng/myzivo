@@ -32,7 +32,7 @@ export function useSocialNotifications(limit = 30) {
 
     const { data } = await (supabase as any)
       .from("user_notifications")
-      .select("*")
+      .select("id, user_id, actor_id, type, entity_id, entity_type, message, is_read, created_at")
       .eq("user_id", session.session.user.id)
       .order("created_at", { ascending: false })
       .limit(limit);

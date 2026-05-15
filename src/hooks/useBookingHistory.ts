@@ -28,7 +28,7 @@ export function useBookingHistory() {
     queryFn: async () => {
       const { data, error } = await supabase
         .from("travel_bookings")
-        .select("*")
+        .select("id, user_id, email, service_type, status, partner_booking_ref, partner_redirect_url, traveler_info, created_at, updated_at")
         .eq("user_id", user!.id)
         .order("created_at", { ascending: false })
         .limit(20);

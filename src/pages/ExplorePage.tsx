@@ -52,6 +52,7 @@ export default function ExplorePage() {
         media_urls: Array.isArray(p.media_urls) ? p.media_urls : typeof p.media_urls === "string" ? [p.media_urls] : [],
       }));
     },
+    staleTime: 2 * 60 * 1000,
   });
 
   // User search
@@ -59,7 +60,7 @@ export default function ExplorePage() {
     queryKey: ["explore-users", search],
     queryFn: async () => {
       if (!search.trim()) return [];
-      const { data } = await (supabase as any)
+      const { data } = await supabase
         .from("profiles")
         .select("id, full_name, avatar_url, is_verified")
         .ilike("full_name", `%${search}%`)
@@ -68,13 +69,14 @@ export default function ExplorePage() {
       return data || [];
     },
     enabled: search.length > 1,
+    staleTime: 60_000,
   });
 
   // Suggested users for People tab
   const { data: suggestedUsers = [], isLoading: loadingSuggested } = useQuery({
     queryKey: ["explore-suggested-users", user?.id],
     queryFn: async () => {
-      const { data } = await (supabase as any)
+      const { data } = await supabase
         .from("profiles")
         .select("id, full_name, avatar_url, is_verified, bio")
         .not("id", "eq", user?.id ?? "")
@@ -84,6 +86,7 @@ export default function ExplorePage() {
       return data || [];
     },
     enabled: activeTab === "users" && !search,
+    staleTime: 5 * 60 * 1000,
   });
 
   // Posts filtered by selected hashtag
@@ -104,6 +107,7 @@ export default function ExplorePage() {
       }));
     },
     enabled: !!selectedTag,
+    staleTime: 2 * 60 * 1000,
   });
 
   // Hashtags — extracted from post captions via Supabase

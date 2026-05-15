@@ -91,7 +91,10 @@ import { perfLog, perfMeasure, perfNow } from "@/lib/perfTrace";
 
 const FEED_STORE_PAGE_SIZE = 18;
 const FEED_USER_PAGE_SIZE = 12;
-let fullscreenFeedFirstMediaLogged = false;
+const firstMediaLogged = { value: false };
+// Shared translation cache — keyed by `${targetLang}:${caption}` so the same
+// text in the same target language is never fetched twice across all cards.
+const translationCache = new Map<string, string>();
 
 // ── Lazy components ──────────────────────────────────────────────────────────
 // All lazy() calls are grouped AFTER imports. Interleaving them with imports
@@ -330,6 +333,9 @@ function ReelCard({
   isReposted,
   shouldPreload = false,
   onAutoSkip,
+  initialSaved = false,
+  initialIsFollowing = false,
+  initialAuthorIsLive = false,
 }: {
   post: FeedPost;
   isActive: boolean;
@@ -354,6 +360,12 @@ function ReelCard({
    *  the user hasn't tapped to retry — used by the parent to auto-scroll
    *  to the next reel rather than strand the user on a broken video. */
   onAutoSkip?: () => void;
+  /** Pre-fetched bookmark state — avoids a per-card Supabase query on mount. */
+  initialSaved?: boolean;
+  /** Pre-fetched follow state — avoids a per-card RPC call on mount. */
+  initialIsFollowing?: boolean;
+  /** Pre-fetched live status — avoids a per-card live_streams query on activation. */
+  initialAuthorIsLive?: boolean;
 }) {
   const navigate = useNavigate();
   const haptic = useHaptic();
@@ -366,7 +378,7 @@ function ReelCard({
   const [showCaptions, setShowCaptions] = useState(false);
   const [isRepairing, setIsRepairing] = useState(false);
   const [isBlobLoading, setIsBlobLoading] = useState(false);
-  const [saved, setSaved] = useState(false);
+  const [saved, setSaved] = useState(initialSaved);
   const [showDoubleTapHeart, setShowDoubleTapHeart] = useState(false);
   // Long-press → open reaction picker instead of plain like
   const [showReactionPicker, setShowReactionPicker] = useState(false);
@@ -409,6 +421,10 @@ function ReelCard({
       (targetLang === "ar" && looksArabic);
     if (!hasNonLatin || sourceMatchesTarget) return;
 
+    const cacheKey = `${targetLang}:${caption}`;
+    const cached = translationCache.get(cacheKey);
+    if (cached) { setTranslatedCaption(cached); return; }
+
     let cancelled = false;
     setIsTranslating(true);
     (async () => {
@@ -418,6 +434,7 @@ function ReelCard({
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
         const data = await res.json();
         const text = (data[0] as [string, string][]).map((s) => s[0]).join("");
+        translationCache.set(cacheKey, text);
         if (!cancelled) setTranslatedCaption(text);
       } catch {
         // Silent failure — original caption stays visible.
@@ -458,7 +475,7 @@ function ReelCard({
     if (!v || !v.paused) return;
     void v.play().then(() => setIsPlaying(true)).catch(() => {});
   }, [cardIsOnline, isActive]);
-  const [authorIsLive, setAuthorIsLive] = useState(false);
+  const [authorIsLive, setAuthorIsLive] = useState(initialAuthorIsLive);
   const [liveAlertDismissed, setLiveAlertDismissed] = useState(false);
   const [topComment, setTopComment] = useState<{ author_name: string; author_avatar: string | null; content: string; likes_count: number } | null>(null);
   const [isHoldingFastForward, setIsHoldingFastForward] = useState(false);
@@ -495,18 +512,11 @@ function ReelCard({
   const [triedFFmpegRepair, setTriedFFmpegRepair] = useState(false);
   const [hasLoadedFrame, setHasLoadedFrame] = useState(false);
 
-  // Follow state
+  // Follow state — seeded from parent's batch-fetched followingIds set
   const authorId = post.source === "user" ? post.author_id : null;
   const isSelf = !!userId && userId === authorId;
-  const [isFollowing, setIsFollowing] = useState(false);
+  const [isFollowing, setIsFollowing] = useState(initialIsFollowing);
   const [followLoading, setFollowLoading] = useState(false);
-
-  // Check follow status on mount
-  useEffect(() => {
-    if (!userId || !authorId || isSelf) return;
-    supabase.rpc("is_following" as any, { target_user_id: authorId })
-      .then(({ data }: any) => { if (typeof data === "boolean") setIsFollowing(data); });
-  }, [userId, authorId, isSelf]);
 
   const handleFollow = async (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -708,22 +718,7 @@ function ReelCard({
     };
   }, [isActive, post.id, post.caption, post.author_name, post.store_name, post.author_avatar, post.store_logo, post.source]);
 
-  // Live ring: check if the author has an active live stream when this reel
-  // becomes active. Only fires for active reels to avoid spamming the DB
-  // with N queries per feed page.
-  useEffect(() => {
-    if (!isActive || !post.author_id) { setAuthorIsLive(false); return; }
-    let alive = true;
-    (supabase as any)
-      .from("live_streams")
-      .select("id", { count: "exact", head: true })
-      .eq("user_id", post.author_id)
-      .eq("status", "live")
-      .then(({ count }: any) => {
-        if (alive) setAuthorIsLive((count || 0) > 0);
-      });
-    return () => { alive = false; };
-  }, [isActive, post.author_id]);
+  // Live status is seeded from parent's batch query — no per-card DB call needed.
 
   // Top comment preview — fetch the most-liked comment for this reel
   // when it becomes active OR is queued up next (shouldPreload). Pre-fetching
@@ -748,11 +743,14 @@ function ReelCard({
           .limit(1);
         if (!alive || !cmts || cmts.length === 0) { setTopComment(null); return; }
         const top = cmts[0];
-        const { data: profile } = await (supabase as any)
-          .from("public_profiles")
-          .select("full_name, avatar_url")
-          .eq("id", top.user_id)
-          .maybeSingle();
+        // Fetch profile in parallel with any other work rather than sequentially
+        const [{ data: profile }] = await Promise.all([
+          (supabase as any)
+            .from("public_profiles")
+            .select("full_name, avatar_url")
+            .eq("id", top.user_id)
+            .maybeSingle(),
+        ]);
         if (!alive) return;
         setTopComment({
           author_name: profile?.full_name || "User",
@@ -806,19 +804,7 @@ function ReelCard({
     return () => { void supabase.removeChannel(channel); };
   }, [isActive, post.id, post.source]);
 
-  // Load existing bookmark state for this post
-  useEffect(() => {
-    if (!userId) { setSaved(false); return; }
-    let alive = true;
-    (supabase as any)
-      .from("bookmarks")
-      .select("id")
-      .eq("user_id", userId)
-      .eq("item_id", post.id)
-      .maybeSingle()
-      .then(({ data }: any) => { if (alive && data) setSaved(true); });
-    return () => { alive = false; };
-  }, [userId, post.id]);
+  // Bookmark state is seeded from parent's batch query (no per-card Supabase call needed)
 
   const handleSaveToggle = async () => {
     if (!userId) {
@@ -1139,9 +1125,9 @@ function ReelCard({
           muted={globalMuted}
           preload={isActive ? "auto" : shouldPreload ? "metadata" : "none"}
           onLoadedData={(e) => {
-            if (!mediaPerfLogged.current && !fullscreenFeedFirstMediaLogged) {
+            if (!mediaPerfLogged.current && !firstMediaLogged.value) {
               mediaPerfLogged.current = true;
-              fullscreenFeedFirstMediaLogged = true;
+              firstMediaLogged.value = true;
               perfLog("fullscreen feed first media loaded", {
                 postId: post.id,
                 source: post.source ?? "store",
@@ -1225,9 +1211,9 @@ function ReelCard({
           className="absolute inset-0 w-full h-full object-cover"
           loading={isActive ? "eager" : "lazy"}
           onLoad={() => {
-            if (mediaPerfLogged.current || fullscreenFeedFirstMediaLogged) return;
+            if (mediaPerfLogged.current || firstMediaLogged.value) return;
             mediaPerfLogged.current = true;
-            fullscreenFeedFirstMediaLogged = true;
+            firstMediaLogged.value = true;
             perfLog("fullscreen feed first media loaded", {
               postId: post.id,
               source: post.source ?? "store",
@@ -2118,8 +2104,9 @@ function ReelCard({
           >
             {/* Buffered range — sits beneath the playhead fill so the user
                 can see how much is ready ahead of where they're watching. */}
-            <motion.div
+            <div
               className="absolute inset-y-0 left-0 bg-white/30 transition-[width] duration-200 ease-out"
+              as={motion.div as any}
               animate={{ width: `${bufferedProgress * 100}%` }}
               transition={{ duration: 0.2, ease: "easeOut" }}
             />
@@ -2421,6 +2408,9 @@ const MemoReelCard = memo(ReelCard, (prev, next) => {
   if (prev.shouldPreload !== next.shouldPreload) return false;
   if (prev.globalMuted !== next.globalMuted) return false;
   if (prev.userId !== next.userId) return false;
+  if (prev.initialSaved !== next.initialSaved) return false;
+  if (prev.initialIsFollowing !== next.initialIsFollowing) return false;
+  if (prev.initialAuthorIsLive !== next.initialAuthorIsLive) return false;
   // Only re-render when our own like state changes, not when any user's does.
   const prevLiked = prev.userLikedPostIds.has(prev.post.id);
   const nextLiked = next.userLikedPostIds.has(next.post.id);
@@ -2480,40 +2470,37 @@ function CommentSheet({
   });
 
   const { data: comments = [], isLoading } = useQuery({
-    queryKey: ["post-comments", targetTable, rawPostId],
+    queryKey: ["post-comments", targetTable, rawPostId, userId],
     queryFn: async () => {
       const { data: rawComments, error } = await (supabase as any)
         .from(targetTable)
-        .select("*")
+        .select("id, post_id, user_id, content, comment, created_at, parent_id, is_pinned, likes_count")
         .eq("post_id", rawPostId)
-        .order("created_at", { ascending: true });
+        .order("created_at", { ascending: true })
+        .limit(300);
       if (error) throw error;
       if (!rawComments || rawComments.length === 0) return [];
 
-      // Fetch profiles from public_profiles view (no RLS restriction)
       const userIds = [...new Set(rawComments.map((c: any) => c.user_id).filter(Boolean))];
-      const { data: profiles } = await supabase
-        .from("public_profiles")
-        .select("id, full_name, avatar_url")
-        .in("id", userIds as string[]);
+      const commentIds = rawComments.map((c: any) => c.id);
+
+      // Fetch profiles, all-comment like counts, and current-user likes in parallel.
+      const [{ data: profiles }, { data: likeRows }, { data: userLikeRows }] = await Promise.all([
+        supabase.from("public_profiles").select("id, full_name, avatar_url").in("id", userIds as string[]),
+        commentIds.length > 0
+          ? (supabase as any).from("comment_likes").select("comment_id").eq("target_table", targetTable).in("comment_id", commentIds)
+          : Promise.resolve({ data: [] }),
+        userId && commentIds.length > 0
+          ? (supabase as any).from("comment_likes").select("comment_id").eq("user_id", userId).eq("target_table", targetTable).in("comment_id", commentIds)
+          : Promise.resolve({ data: [] }),
+      ]);
 
       const profileMap = new Map((profiles || []).map((p: any) => [p.id, p]));
-
-      // Aggregate comment_likes counts so the "Top" sort actually works.
-      // The comment tables don't have a denormalized likes_count, so we count
-      // here and attach to each row as `like_count`.
-      const commentIds = rawComments.map((c: any) => c.id);
       const likeCounts = new Map<string, number>();
-      if (commentIds.length > 0) {
-        const { data: likeRows } = await (supabase as any)
-          .from("comment_likes")
-          .select("comment_id")
-          .eq("target_table", targetTable)
-          .in("comment_id", commentIds);
-        for (const r of likeRows ?? []) {
-          likeCounts.set(r.comment_id, (likeCounts.get(r.comment_id) ?? 0) + 1);
-        }
+      for (const r of likeRows ?? []) {
+        likeCounts.set(r.comment_id, (likeCounts.get(r.comment_id) ?? 0) + 1);
       }
+      const likedByUser = new Set((userLikeRows ?? []).map((r: any) => r.comment_id));
 
       // Normalize text column — store_post_comments uses `content`, user_post_comments may use `comment`
       return rawComments.map((c: any) => ({
@@ -2521,6 +2508,7 @@ function CommentSheet({
         content: c.content ?? c.comment ?? c.text ?? c.body ?? "",
         profiles: profileMap.get(c.user_id) || null,
         like_count: likeCounts.get(c.id) ?? 0,
+        liked_by_user: likedByUser.has(c.id),
       }));
     },
   });
@@ -2836,6 +2824,8 @@ function CommentSheet({
                         targetTable={targetTable}
                         userId={userId}
                         variant="light"
+                        initialCount={c.like_count ?? 0}
+                        initialLiked={c.liked_by_user ?? false}
                       />
                     </Suspense>
                     <Suspense fallback={null}>
@@ -3768,6 +3758,8 @@ export default function FeedPage() {
   const [userId, setUserId] = useState<string | null>(null);
   const [userProfile, setUserProfile] = useState<{ name: string; avatar: string | null } | null>(null);
   const [userLikedPostIds, setUserLikedPostIds] = useState<Set<string>>(new Set());
+  const [savedPostIds, setSavedPostIds] = useState<Set<string>>(new Set());
+  const [liveAuthorIds, setLiveAuthorIds] = useState<Set<string>>(new Set());
   const [feedMode, setFeedMode] = useState<"foryou" | "following" | "trending">(() => {
     // Persist tab preference — TikTok remembers For You vs Following, so
     // users who actively curate their following feed don't have to re-pick
@@ -3935,7 +3927,7 @@ export default function FeedPage() {
       const [{ data: postsData, error }, { data: userVideos }] = await Promise.all([
         supabase
           .from("store_posts")
-          .select("*")
+          .select("id, store_id, caption, media_urls, media_type, is_published, created_at, likes_count, comments_count, shares_count, reposts_count, view_count, audio_name, location")
           .eq("is_published", true)
           .order("created_at", { ascending: false })
           .limit(STORE_PAGE * pageMultiplier),
@@ -4080,10 +4072,11 @@ export default function FeedPage() {
     return list;
   }, [posts, feedMode, userId, followingIds, hiddenAuthorIds, deletedPostIds, hiddenPosts, selectedHashtag]);
 
-  // Fetch user's liked post IDs
+  // Batch-fetch liked + saved post IDs for all visible posts in one round-trip each
   useEffect(() => {
     if (!userId || posts.length === 0) return;
     const postIds = posts.map((p) => p.id);
+    // Likes
     supabase
       .from("store_post_likes")
       .select("post_id")
@@ -4092,7 +4085,31 @@ export default function FeedPage() {
       .then(({ data }) => {
         setUserLikedPostIds(new Set((data || []).map((d: any) => d.post_id)));
       });
+    // Bookmarks — single query replaces one-per-card queries inside ReelCard
+    (supabase as any)
+      .from("bookmarks")
+      .select("item_id")
+      .eq("user_id", userId)
+      .in("item_id", postIds)
+      .then(({ data }: any) => {
+        setSavedPostIds(new Set((data || []).map((d: any) => d.item_id)));
+      });
   }, [userId, posts]);
+
+  // Batch live-stream check — one query for all unique author IDs in the feed
+  useEffect(() => {
+    if (posts.length === 0) return;
+    const authorIds = [...new Set(posts.map((p) => p.author_id).filter(Boolean))] as string[];
+    if (!authorIds.length) return;
+    (supabase as any)
+      .from("live_streams")
+      .select("user_id")
+      .in("user_id", authorIds)
+      .eq("status", "live")
+      .then(({ data }: any) => {
+        setLiveAuthorIds(new Set((data || []).map((r: any) => r.user_id)));
+      });
+  }, [posts]);
 
   // ── Realtime: count new posts that arrive while user is mid-feed ────────────
   // Channel name is opaque (per security guidance) — uses topicForUserSync so
@@ -4541,7 +4558,7 @@ export default function FeedPage() {
                 key={mode}
                 type="button"
                 role="tab"
-                aria-selected={feedMode === mode}
+                aria-selected={feedMode === mode ? "true" : "false"}
                 onClick={() => {
                   const now = Date.now();
                   if (
@@ -4816,6 +4833,9 @@ export default function FeedPage() {
                       post={post}
                       isActive={activeIndex === index}
                       shouldPreload={index === activeIndex + 1 || index === activeIndex - 1}
+                      initialSaved={savedPostIds.has(post.id)}
+                      initialIsFollowing={post.author_id ? followingIds.has(post.author_id) : false}
+                      initialAuthorIsLive={post.author_id ? liveAuthorIds.has(post.author_id) : false}
                     globalMuted={globalMuted}
                     onToggleMute={() => setGlobalMuted((m) => !m)}
                     onNavigate={(slug) => slug.startsWith("__user__") ? navigate(`/user/${slug.replace("__user__", "")}`) : navigate(`/grocery/shop/${slug}`)}
@@ -4892,7 +4912,7 @@ export default function FeedPage() {
                   setFeedMode((m) => (m === "foryou" ? "following" : "foryou"));
                   requestAnimationFrame(() => cardRefs.current[0]?.scrollIntoView({ block: "start" }));
                 } : undefined}
-                feedMode={feedMode === "trending" ? "foryou" : feedMode}
+                feedMode={feedMode}
               />
             )}
           </motion.div>

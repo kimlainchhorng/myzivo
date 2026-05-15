@@ -52,9 +52,9 @@ const DRY_RUN    = args.includes("--dry-run");
 const ROOMS_ONLY = args.includes("--rooms-only");
 const LOG_PATH   = getStr("log") ?? `booking-bulk-${new Date().toISOString().slice(0, 10)}.json`;
 
-// Booking.com search dates (tomorrow / day-after for price display)
-const CHECKIN  = "2026-05-15";
-const CHECKOUT = "2026-05-16";
+// Booking.com search dates (a week from now for price display)
+const CHECKIN  = "2026-05-22";
+const CHECKOUT = "2026-05-23";
 
 const LODGING_CATS = ["hotel","resort","guesthouse","hostel","villa","lodge","motel","inn","boutique"];
 
@@ -186,9 +186,9 @@ async function findBookingUrl(page: Page, store: Store): Promise<string | null> 
     // Find best match
     for (const r of results) {
       if (r.href && namesMatch(store.name, r.name)) {
-        // Strip to clean hotel URL (no search params except currency/lang)
+        // Strip to clean hotel URL with dates so the room table loads
         const u = new URL(r.href);
-        return `${u.origin}${u.pathname}?selected_currency=USD&lang=en-us`;
+        return `${u.origin}${u.pathname}?selected_currency=USD&lang=en-us&checkin=${CHECKIN}&checkout=${CHECKOUT}&group_adults=2&no_rooms=1`;
       }
     }
   } catch {}
@@ -198,7 +198,7 @@ async function findBookingUrl(page: Page, store: Store): Promise<string | null> 
 
 // ─── Scrape hotel detail page ─────────────────────────────────────────────────
 async function scrapeHotelPage(page: Page, hotelUrl: string): Promise<ScrapedHotel> {
-  await page.goto(hotelUrl, { waitUntil: "domcontentloaded", timeout: 35_000 });
+  await page.goto(hotelUrl, { waitUntil: "networkidle", timeout: 45_000 });
   await sleep(PAGE_DELAY);
   await dismissOverlays(page);
 
@@ -272,14 +272,23 @@ async function scrapeHotelPage(page: Page, hotelUrl: string): Promise<ScrapedHot
 
   photos = dedupe(photos.map(maxRes)).filter(isBstatic);
 
-  // ── Scroll to rooms ─────────────────────────────────────────────────────────
-  await page.evaluate(() => {
-    (document.getElementById("hprt-table")
-      ?? document.querySelector("[data-testid='availability']")
-      ?? document.querySelector(".hprt-table"))
-      ?.scrollIntoView({ behavior: "smooth", block: "center" });
-  });
-  await sleep(PAGE_DELAY);
+  // ── Submit availability form to load the room table ───────────────────────
+  // The room table (hprt-table) only appears after "Check availability" is submitted
+  let hprtLoaded = !!await page.$("#hprt-table");
+  if (!hprtLoaded) {
+    try {
+      // Scroll to and click "Check availability" button
+      const checkBtn = page.locator('button:has-text("Check availability"), input[value="Check availability"], .availability-search__search--button, #availability_search_submit').first();
+      await checkBtn.scrollIntoViewIfNeeded({ timeout: 3_000 });
+      await checkBtn.click({ timeout: 3_000 });
+      // Wait up to 12s for the room table to appear
+      await page.waitForSelector("#hprt-table, .hprt-table", { timeout: 12_000 });
+      hprtLoaded = true;
+    } catch {
+      // Some hotels have no availability table (fully booked or different layout)
+    }
+  }
+  await sleep(1_000);
 
   // ── Parse rooms table ───────────────────────────────────────────────────────
   const rawRooms: RawRoom[] = await page.evaluate(() => {

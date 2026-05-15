@@ -418,7 +418,7 @@ export function LodgingBookingDrawer({
   const openChatWithHost = async () => {
     try {
       const { data: store } = await supabase
-        .from("restaurants" as any)
+        .from("store_profiles" as any)
         .select("owner_id")
         .eq("id", storeId)
         .maybeSingle();

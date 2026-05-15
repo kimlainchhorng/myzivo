@@ -102,7 +102,7 @@ export default function MyLodgingTripPage() {
     queryKey: ["lodge-store-name", reservation?.store_id],
     queryFn: async () => {
       const { data } = await supabase
-        .from("restaurants" as any)
+        .from("store_profiles" as any)
         .select("name, logo_url")
         .eq("id", reservation!.store_id)
         .maybeSingle();

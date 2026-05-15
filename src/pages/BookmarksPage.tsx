@@ -29,7 +29,7 @@ export default function BookmarksPage() {
       if (!user) return [];
       const { data } = await (supabase as any)
         .from("bookmarks")
-        .select("*")
+        .select("id, user_id, item_id, item_type, collection_name, created_at")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
       const rows = (data || []) as any[];
@@ -54,6 +54,7 @@ export default function BookmarksPage() {
       return rows;
     },
     enabled: !!user,
+    staleTime: 60_000,
   });
 
   const filtered = activeTab === "all" ? bookmarks : bookmarks.filter((b: any) => b.item_type === activeTab);

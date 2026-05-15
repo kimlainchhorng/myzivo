@@ -8,6 +8,7 @@
  * shortcut on each row.
  */
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import SEOHead from "@/components/SEOHead";
@@ -59,7 +60,6 @@ const CATEGORY_ICONS: Record<string, string> = {
 };
 
 const FILTER_PREFS = "zivo:stores:filters";
-const ENABLE_STORE_LIVE_PULSE = import.meta.env.VITE_ENABLE_STORE_LIVE_PULSE === "true";
 
 type SortMode = "distance" | "rating" | "name" | "open";
 
@@ -161,6 +161,23 @@ export default function StoresListPage() {
   const [recentering, setRecentering] = useState(false);
   const [drawerStore, setDrawerStore] = useState<StorePin | null>(null);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
+
+  const { data: drawerGallery = [] } = useQuery<string[]>({
+    queryKey: ["store-list-gallery", drawerStore?.id],
+    queryFn: async (): Promise<string[]> => {
+      if (!drawerStore?.id) return [];
+      const { data } = await supabase
+        .from("store_profiles")
+        .select("gallery_images")
+        .eq("id", drawerStore.id)
+        .single();
+      const raw = (data as any)?.gallery_images;
+      if (!Array.isArray(raw)) return [];
+      return (raw as unknown[]).filter((v): v is string => typeof v === "string" && v.startsWith("http"));
+    },
+    enabled: !!drawerStore?.id,
+    staleTime: 60_000,
+  });
   const searchInputRef = useRef<HTMLInputElement>(null);
 
   // Manage mode state
@@ -175,7 +192,6 @@ export default function StoresListPage() {
 
   /* Live pulse for trending badge */
   useEffect(() => {
-    if (!ENABLE_STORE_LIVE_PULSE) return;
     let active = true;
     const load = async () => {
       const cutoff = new Date(Date.now() - 30 * 60 * 1000).toISOString();
@@ -908,6 +924,7 @@ export default function StoresListPage() {
           isFavorite={isFavorite(drawerStore.id)}
           isAuthed={isAuthed}
           isLive={!!liveStoreMap[drawerStore.id]}
+          gallery={drawerGallery}
           onClose={() => setDrawerStore(null)}
           onView={(s, promo) => handleViewStore(s, promo)}
           onRide={(s, promo) => handleRide(s, promo)}

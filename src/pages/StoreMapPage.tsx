@@ -71,9 +71,6 @@ interface StoreProduct {
 // could add 1–2s of blank screen). The promise itself is cached so concurrent
 // map components share the same in-flight request.
 let _apiKeyPromise: Promise<string> | null = null;
-const ENABLE_STORE_LIVE_PULSE = import.meta.env.VITE_ENABLE_STORE_LIVE_PULSE === "true";
-const ENABLE_STORE_SOCIAL_PROOF = import.meta.env.VITE_ENABLE_STORE_SOCIAL_PROOF === "true";
-const ENABLE_STORE_DEALS = import.meta.env.VITE_ENABLE_STORE_DEALS === "true";
 
 async function getApiKey(): Promise<string> {
   if (_apiKeyPromise) return _apiKeyPromise;
@@ -275,7 +272,7 @@ function formatDistLabel(km: number): string {
 }
 
 function formatWalkMin(km: number): string {
-  const mins = Math.ceil((km / 25) * 60);
+  const mins = Math.ceil((km / 5) * 60);
   if (mins < 2) return "< 1 min";
   if (mins >= 60) return `~${Math.round(mins / 60)} h`;
   return `~${mins} min`;
@@ -748,7 +745,6 @@ export default function StoreMapPage() {
 
   /* Live pulse */
   useEffect(() => {
-    if (!ENABLE_STORE_LIVE_PULSE) return;
     let active = true;
     const loadPulse = async () => {
       const cutoff = new Date(Date.now() - 30 * 60 * 1000).toISOString();
@@ -770,7 +766,6 @@ export default function StoreMapPage() {
 
   /* Recent check-ins (last 2 hours) */
   useEffect(() => {
-    if (!ENABLE_STORE_SOCIAL_PROOF) return;
     let active = true;
     const loadCheckIns = async () => {
       const cutoff = new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString();
@@ -792,7 +787,6 @@ export default function StoreMapPage() {
 
   /* Active deals */
   useEffect(() => {
-    if (!ENABLE_STORE_DEALS) return;
     let active = true;
     (async () => {
       const now = new Date().toISOString();
@@ -1006,6 +1000,7 @@ export default function StoreMapPage() {
       if (!loaded || cancelled || !hasGoogleMapsConstructor()) { setMapError(true); return; }
       if (!mapContainerRef.current) { setMapError(true); return; }
 
+      const initStyle = (localStorage.getItem("zivo:mapStyle") || "light") as "light" | "dark" | "satellite";
       const map = new google.maps.Map(mapContainerRef.current, {
         center: userLocation || DEFAULT_CENTER,
         zoom: 13,
@@ -1013,7 +1008,8 @@ export default function StoreMapPage() {
         zoomControl: false,
         gestureHandling: "greedy",
         backgroundColor: "#f5f5f5",
-        styles: LIGHT_MAP_STYLES,
+        mapTypeId: initStyle === "satellite" ? "satellite" : "roadmap",
+        styles: initStyle === "dark" ? DARK_MAP_STYLES : initStyle === "satellite" ? [] : LIGHT_MAP_STYLES,
       });
       mapRef.current = map;
       map.addListener("click", () => {
@@ -2271,21 +2267,21 @@ export default function StoreMapPage() {
                     { id: "newest", label: "New", icon: <Sparkles className="w-3 h-3" /> },
                   ] as Array<{ id: StoreSortMode; label: string; icon: React.ReactNode }>).map((opt) => {
                     const isActive = sortBy === opt.id;
-                    const disabled = opt.id === "distance" && !effectiveCenter;
                     return (
                       <button
                         key={opt.id}
                         type="button"
                         role="radio"
-                        aria-checked={isActive}
+                        aria-checked={isActive ? "true" : "false"}
                         aria-label={opt.id === "distance" ? "Sort by distance" : opt.id === "rating" ? "Sort by top rated" : "Sort by newest"}
-                        disabled={disabled}
-                        onClick={() => { setSortBy(opt.id); setVisibleCount(STORE_LIST_PAGE); }}
+                        onClick={() => {
+                          if (opt.id === "distance" && !effectiveCenter) { handleLocateMe(); return; }
+                          setSortBy(opt.id);
+                          setVisibleCount(STORE_LIST_PAGE);
+                        }}
                         className={`min-h-[34px] px-3 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap border transition-all touch-manipulation flex items-center gap-1 ${
                           isActive
                             ? "bg-foreground text-background border-foreground"
-                            : disabled
-                            ? "bg-muted/30 text-muted-foreground/50 border-border/20 cursor-not-allowed"
                             : "bg-muted/50 text-muted-foreground border-border/30"
                         }`}
                       >
@@ -2778,6 +2774,7 @@ export default function StoreMapPage() {
             isFavorite={isFavorite(drawerStore.id)}
             isAuthed={isAuthed}
             isLive={!!liveStoreMap[drawerStore.id]}
+            gallery={drawerStore.id === selectedStore?.id ? selectedStoreGallery : undefined}
             onClose={() => setDrawerStore(null)}
             onView={(s) => navigate(`/grocery/shop/${s.slug}`)}
             onRide={(s, promo) => handleRideSelected(s, promo)}

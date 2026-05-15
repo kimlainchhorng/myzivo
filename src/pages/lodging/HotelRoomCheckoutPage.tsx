@@ -40,8 +40,13 @@ export default function HotelRoomCheckoutPage() {
   const { storeId = "" } = useParams<{ storeId: string }>();
   const navigate = useNavigate();
   const [params] = useSearchParams();
+<<<<<<< Updated upstream
   const { format: formatCurrency } = useCurrency();
   const formatPrice = (cents: number) => cents > 0 ? formatCurrency(cents / 100, "USD") : "—";
+=======
+  const { format: fmtPrice } = useCurrency();
+  const formatPrice = (cents: number) => cents > 0 ? fmtPrice(cents / 100, "USD") : "—";
+>>>>>>> Stashed changes
 
   const roomId = params.get("room") || "";
   const checkIn = parseParamDate(params.get("ci")) ?? today();
@@ -108,7 +113,7 @@ export default function HotelRoomCheckoutPage() {
           .from("lodge_reservations")
           .select("id, check_in, check_out, status")
           .eq("room_id", roomId)
-          .gte("check_out", ciStr)
+          .gt("check_out", ciStr)
           .lt("check_in", coStr)
           .not("status", "in", "(cancelled,no_show)");
         if ((clashes || []).length > 0) {
@@ -350,7 +355,7 @@ export default function HotelRoomCheckoutPage() {
               {(room.fees?.cleaning_fee_cents ?? 0) > 0 && (
                 <div className="flex justify-between text-muted-foreground">
                   <span>Cleaning fee</span>
-                  <span>{formatPrice(room.fees!.cleaning_fee_cents!)}</span>
+                  <span>{formatPrice(room.fees?.cleaning_fee_cents ?? 0)}</span>
                 </div>
               )}
               <Separator className="my-1 bg-border/30" />

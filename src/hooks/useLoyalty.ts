@@ -15,7 +15,7 @@ export function usePointsHistory() {
       if (!user) return [];
       const { data, error } = await supabase
         .from("loyalty_points")
-        .select("*")
+        .select("id, user_id, points_balance, tier, lifetime_points, created_at")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
       if (error) throw error;
@@ -39,7 +39,7 @@ export function useLoyaltySettings() {
     queryFn: async () => {
       const { data } = await (supabase as any)
         .from("loyalty_settings")
-        .select("*")
+        .select("id, points_per_dollar, min_redeem_points, expiry_days, is_active")
         .limit(1)
         .maybeSingle();
       return (data || {}) as any;
@@ -53,7 +53,7 @@ export function useAvailableRewards() {
     queryFn: async (): Promise<any[]> => {
       const { data, error } = await supabase
         .from("loyalty_rewards")
-        .select("*")
+        .select("id, name, description, points_required, reward_type, reward_value, is_active")
         .eq("is_active", true)
         .order("points_required");
       if (error) throw error;
@@ -76,7 +76,7 @@ export function useUserRedemptions() {
       if (!user) return [];
       const { data } = await (supabase as any)
         .from("loyalty_redemptions")
-        .select("*")
+        .select("id, user_id, reward_id, points_spent, status, created_at")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false });
       return (data || []) as any[];

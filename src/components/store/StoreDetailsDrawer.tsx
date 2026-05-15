@@ -56,6 +56,7 @@ export interface StoreDetailsDrawerProps {
   isFavorite: boolean;
   isAuthed: boolean;
   isLive?: boolean;
+  gallery?: string[];
   onClose: () => void;
   onView: (store: StorePin, promo: string | null) => void;
   onRide: (store: StorePin, promo: string | null) => void;
@@ -74,6 +75,7 @@ export default function StoreDetailsDrawer({
   isFavorite,
   isAuthed,
   isLive,
+  gallery,
   onClose,
   onView,
   onRide,
@@ -202,10 +204,7 @@ export default function StoreDetailsDrawer({
 
           {/* Photo carousel */}
           {(() => {
-            const raw = (store as any).gallery_images;
-            const imgs: string[] = Array.isArray(raw)
-              ? (raw as unknown[]).filter((v): v is string => typeof v === "string" && v.startsWith("http"))
-              : [];
+            const imgs = gallery ?? [];
             if (!imgs.length) return null;
             return (
               <div className="mt-4 -mx-4">
