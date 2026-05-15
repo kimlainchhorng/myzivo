@@ -61,6 +61,7 @@ export const LANGUAGES = [
   { code: "he", label: "עברית", flag: "🇮🇱" },
   { code: "sw", label: "Kiswahili", flag: "🇰🇪" },
   { code: "am", label: "አማርኛ", flag: "🇪🇹" },
+  { code: "km", label: "ភាសាខ្មែរ", flag: "🇰🇭" },
 ];
 
 export function useI18n() {

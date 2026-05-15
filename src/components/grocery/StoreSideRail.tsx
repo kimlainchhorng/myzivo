@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { track } from "@/lib/analytics";
@@ -51,6 +52,27 @@ interface StoreSideRailProps {
   userLoc?: { lat: number; lng: number } | null;
 }
 
+async function copyText(value: string): Promise<void> {
+  if (!value) throw new Error("Nothing to copy");
+  try {
+    if (!navigator.clipboard?.writeText) throw new Error("Clipboard API unavailable");
+    await navigator.clipboard.writeText(value);
+    return;
+  } catch {
+    const textarea = document.createElement("textarea");
+    textarea.value = value;
+    textarea.setAttribute("readonly", "");
+    textarea.style.position = "fixed";
+    textarea.style.left = "-9999px";
+    textarea.style.top = "0";
+    document.body.appendChild(textarea);
+    textarea.select();
+    const copied = document.execCommand("copy");
+    document.body.removeChild(textarea);
+    if (!copied) throw new Error("Copy command failed");
+  }
+}
+
 export default function StoreSideRail({
   store,
   hasBooking,
@@ -71,6 +93,8 @@ export default function StoreSideRail({
 }: StoreSideRailProps) {
   const navigate = useNavigate();
   const [copied, setCopied] = useState(false);
+  const [shareOpen, setShareOpen] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
 
   const market = (store as any).market || (store as any).country;
   const status = store.hours || isLodging
@@ -85,11 +109,14 @@ export default function StoreSideRail({
   const telHref = phoneNumber
     ? `tel:${phoneNumber.startsWith("+") ? phoneNumber.replace(/\s+/g, "") : `+855${phoneNumber.replace(/\s+/g, "")}`}`
     : "";
+  const shareUrl = typeof window !== "undefined"
+    ? `${window.location.origin}/grocery/shop/${store.slug}`
+    : "";
 
   const handleCopyAddress = async () => {
     if (!store.address) return;
     try {
-      await navigator.clipboard.writeText(store.address);
+      await copyText(store.address);
       setCopied(true);
       toast.success("Address copied");
       setTimeout(() => setCopied(false), 1800);
@@ -98,19 +125,35 @@ export default function StoreSideRail({
     }
   };
 
-  const handleShare = async () => {
-    const shareUrl = typeof window !== "undefined" ? window.location.href : "";
+  const copyShareUrl = async () => {
+    try {
+      await copyText(shareUrl);
+      setShareCopied(true);
+      toast.success("Hotel link copied");
+      setTimeout(() => setShareCopied(false), 1800);
+    } catch {
+      try {
+        window.prompt("Copy this hotel link", shareUrl);
+      } catch {
+        toast.error("Couldn't copy hotel link");
+      }
+    }
+  };
+
+  const handleNativeShare = async () => {
     const shareData = { title: store.name, text: store.description ?? store.name, url: shareUrl };
     try {
       if (navigator.share) {
         await navigator.share(shareData);
-      } else {
-        await navigator.clipboard.writeText(shareUrl);
-        toast.success("Link copied to clipboard");
+        toast.success("Share sheet opened");
+        return;
       }
-    } catch {
-      /* user cancelled */
+    } catch (error) {
+      const name = error instanceof DOMException ? error.name : "";
+      if (name === "AbortError") return;
     }
+
+    await copyShareUrl();
   };
 
   const handleRideThere = () => {
@@ -153,6 +196,7 @@ export default function StoreSideRail({
         <StoreMiniMap
           latitude={store.latitude}
           longitude={store.longitude}
+          storeId={store.id}
           storeName={store.name}
           slug={store.slug}
           address={store.address}
@@ -262,7 +306,7 @@ export default function StoreSideRail({
         {/* Share (always available) */}
         <motion.button
           whileTap={{ scale: 0.95 }}
-          onClick={handleShare}
+          onClick={() => setShareOpen(true)}
           className="flex flex-col items-center justify-center gap-1 h-14 rounded-2xl bg-card/60 border border-border/40 text-foreground hover:bg-card transition-colors"
         >
           <Share2 className="h-4 w-4" />
@@ -342,6 +386,33 @@ export default function StoreSideRail({
           View my bookings
         </Link>
       </p>
+
+      <Dialog open={shareOpen} onOpenChange={setShareOpen}>
+        <DialogContent className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Share {store.name}</DialogTitle>
+            <DialogDescription>
+              Send this hotel page to someone or copy the public link.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <div className="rounded-2xl border border-border bg-muted/40 p-3">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Hotel link</p>
+              <p className="mt-1 break-all text-xs font-medium text-foreground">{shareUrl}</p>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <Button type="button" onClick={copyShareUrl} className="h-10 gap-2 rounded-xl">
+                {shareCopied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+                {shareCopied ? "Copied" : "Copy link"}
+              </Button>
+              <Button type="button" variant="outline" onClick={handleNativeShare} className="h-10 gap-2 rounded-xl">
+                <Share2 className="h-4 w-4" />
+                Share
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { cn } from "@/lib/utils";
@@ -26,9 +27,6 @@ const parseParamDate = (s: string | null) => {
   const d = parseISO(s);
   return isValid(d) ? d : null;
 };
-
-const formatPrice = (cents: number) =>
-  cents > 0 ? `$${(cents / 100).toFixed(0)}` : "—";
 
 const today = () => {
   const d = new Date();
@@ -42,6 +40,8 @@ export default function HotelRoomCheckoutPage() {
   const { storeId = "" } = useParams<{ storeId: string }>();
   const navigate = useNavigate();
   const [params] = useSearchParams();
+  const { format } = useCurrency();
+  const formatPrice = (cents: number) => cents > 0 ? format(cents / 100, "USD") : "—";
 
   const roomId = params.get("room") || "";
   const checkIn = parseParamDate(params.get("ci")) ?? today();

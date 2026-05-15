@@ -28,6 +28,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { supabase } from "@/integrations/supabase/client";
 import { getStripe } from "@/lib/stripe";
 import { cn } from "@/lib/utils";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 export type PaymentMethodChoice = "card" | "wallet" | "cash" | "paypal" | "square";
 
@@ -64,8 +65,6 @@ const SESSION_TTL_MS = 23 * 60 * 60 * 1000;
 // If onComplete fires but realtime hasn't flipped yet, wait this long before nudging user.
 const PROCESSING_WATCHDOG_MS = 30_000;
 
-const fmt = (c: number) => `$${(c / 100).toFixed(2)}`;
-
 export function LodgingEmbeddedCheckout({
   reservationId,
   storeId,
@@ -82,6 +81,8 @@ export function LodgingEmbeddedCheckout({
   hideMethodToggle = false,
 }: Props) {
   const [internalMethod, setInternalMethod] = useState<PaymentMethodChoice>("card");
+  const { format } = useCurrency();
+  const fmt = (c: number) => format(c / 100, "USD");
   const method = methodProp ?? internalMethod;
   const setMethod = (m: PaymentMethodChoice) => {
     if (onMethodChange) onMethodChange(m);

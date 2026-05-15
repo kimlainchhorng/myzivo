@@ -2313,36 +2313,41 @@ export default function AdminStoreEditPage() {
         </>)}
 
         {(isAdmin || activeTab === "profile") && (
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div className="flex items-center gap-3 min-w-0">
-            <Button aria-label="Back" variant="outline" size="icon" className="h-9 w-9 shrink-0" onClick={() => navigate(isAdmin ? "/admin/stores" : "/")}>
+        <div className="rounded-2xl border border-border bg-card/90 p-3 shadow-sm">
+          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+          <div className="flex min-w-0 items-start gap-3">
+            <Button aria-label="Back to stores" variant="outline" size="icon" className="h-10 w-10 shrink-0 rounded-xl" onClick={() => navigate(isAdmin ? "/admin/stores" : "/")}>
               <ArrowLeft className="h-4 w-4" />
             </Button>
             <div className="min-w-0 flex-1">
-              <h2 className="text-lg sm:text-xl font-bold text-foreground truncate">{store.name}</h2>
-              <p className="text-xs sm:text-sm text-muted-foreground truncate">
-                /{store.slug} · {store.market} ·{" "}
+              <h2 className="text-lg font-bold leading-tight text-foreground sm:text-xl">{store.name}</h2>
+              <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs sm:text-sm">
+                <span className="max-w-full truncate text-muted-foreground">/{store.slug}</span>
+                <span className="text-muted-foreground/60">·</span>
+                <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
+                  {store.market || "Market"}
+                </span>
                 <button
                   type="button"
                   onClick={() => navigate(`/admin/stores/${storeId}/upload-check`)}
-                  className="underline hover:text-foreground"
+                  className="rounded-full bg-primary/10 px-2.5 py-0.5 text-[11px] font-semibold text-primary transition hover:bg-primary/15"
                 >
                   Run upload check
                 </button>
-              </p>
+              </div>
             </div>
           </div>
-          <div className="flex items-center gap-2 overflow-x-auto -mx-1 px-1 scrollbar-hide">
+          <div className="grid gap-2 sm:grid-cols-3 lg:flex lg:shrink-0 lg:items-center">
             {/* Language Switcher */}
             <Popover open={isLangOpen} onOpenChange={setIsLangOpen}>
               <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="gap-2 h-9 shrink-0">
+                <Button variant="outline" size="sm" className="h-10 justify-start gap-2 rounded-xl px-3 lg:min-w-[132px]">
                   {currentLangData?.flag_svg ? (
                     <img src={currentLangData.flag_svg} alt="" className="w-5 h-3.5 rounded-[2px] object-cover shadow-sm border border-foreground/10" />
                   ) : (
                     <Globe className="h-4 w-4" />
                   )}
-                  <span className="text-xs font-medium">{currentLangData?.native_name || "English"}</span>
+                  <span className="truncate text-xs font-semibold text-foreground">{currentLangData?.native_name || "English"}</span>
                 </Button>
               </PopoverTrigger>
               <PopoverContent className="w-72 p-0 bg-card/95 backdrop-blur-2xl border-border/50 shadow-2xl rounded-2xl overflow-hidden" align="end" sideOffset={8}>
@@ -2387,12 +2392,13 @@ export default function AdminStoreEditPage() {
               </PopoverContent>
             </Popover>
 
-            <Button onClick={() => setChatOpen(true)} variant="outline" size="sm" className="gap-2 h-9 shrink-0">
+            <Button onClick={() => setChatOpen(true)} variant="outline" size="sm" className="h-10 justify-start gap-2 rounded-xl px-3 lg:min-w-[132px]">
               <MessageCircle className="h-4 w-4" /> Live Chat
             </Button>
-            <Button onClick={() => navigate(`/grocery/shop/${store.slug}`)} variant="outline" size="sm" className="gap-2 h-9 shrink-0">
-              <Eye className="h-4 w-4" /> {t("admin.store.preview")}
+            <Button onClick={() => navigate(`/grocery/shop/${store.slug}`)} variant="outline" size="sm" className="h-10 justify-start gap-2 rounded-xl px-3 lg:min-w-[132px]">
+              <Eye className="h-4 w-4" /> Preview store
             </Button>
+          </div>
           </div>
         </div>
         )}

@@ -41,6 +41,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { buildPhoneE164, normalizePhoneE164 } from "@/lib/phone";
 import StoreSideRail from "@/components/grocery/StoreSideRail";
+import StorePhotoLightbox from "@/components/grocery/StorePhotoLightbox";
 
 /**
  * Extract the correct language part from dual-format text like "Khmer/English".
@@ -56,6 +57,26 @@ function localizedName(text: string, lang: string): string {
   if (!enPart) return kmPart;
   if (!kmPart) return enPart;
   return lang === "km" ? kmPart : enPart;
+}
+
+function toLocalYmd(date: Date): string {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+function sanitizeStoreImageUrl(url?: unknown, fallback = ""): string {
+  const raw = typeof url === "string"
+    ? url
+    : (url && typeof url === "object" && ("url" in (url as any) || "src" in (url as any)))
+      ? String((url as any).url || (url as any).src || "")
+      : "";
+  const value = raw.trim();
+  if (!value) return fallback;
+  // Some third-party WordPress media endpoints are blocked by ORB in Chromium.
+  if (value.includes("goodtimerelaxresort.com/wp-content/")) return fallback;
+  return value;
 }
 
 const container = {
@@ -97,6 +118,7 @@ export default function StoreProfilePage() {
   const [chatOpen, setChatOpen] = useState(searchParams.get("chat") === "open");
   const [selectedSizes, setSelectedSizes] = useState<Record<string, number>>({});
   const [userLoc, setUserLoc] = useState<{ lat: number; lng: number } | null>(null);
+  const [photoLightbox, setPhotoLightbox] = useState<{ open: boolean; index: number }>({ open: false, index: 0 });
 
   useEffect(() => {
     if (!navigator.geolocation) return;
@@ -218,19 +240,50 @@ export default function StoreProfilePage() {
   const hasPublishedRooms = rooms.length > 0;
   const roomRates = rooms.map(r => r.base_rate_cents).filter(n => n > 0);
   const minRoomPriceCents = roomRates.length ? Math.min(...roomRates) : undefined;
+  const safeBannerUrl = useMemo(
+    () => sanitizeStoreImageUrl(store?.banner_url, isLodging ? hotelResortFallback : ""),
+    [store?.banner_url, isLodging],
+  );
+  const safeLogoUrl = useMemo(
+    () => sanitizeStoreImageUrl(store?.logo_url, isLodging ? hotelResortFallback : ""),
+    [store?.logo_url, isLodging],
+  );
   const galleryImages = useMemo(() => {
-    const images = store?.gallery_images || [];
-    if (!isLodging || images.length < 2 || !store?.banner_url) return images;
-    const different = images.filter((url) => url !== store.banner_url);
-    return different.length ? [...different, ...images.filter((url) => url === store.banner_url)] : images;
-  }, [isLodging, store?.banner_url, store?.gallery_images]);
-  const heroCoverUrl = store?.banner_url || (isLodging ? hotelResortFallback : "");
+    const rawImages = (store?.gallery_images || []) as string[];
+    const normalized = rawImages
+      .map((url) => sanitizeStoreImageUrl(url, isLodging ? hotelResortFallback : ""))
+      .filter(Boolean);
+    const deduped = Array.from(new Set(normalized));
+    if (!isLodging || deduped.length < 2 || !safeBannerUrl) return deduped;
+    const different = deduped.filter((url) => url !== safeBannerUrl);
+    return different.length ? [...different, ...deduped.filter((url) => url === safeBannerUrl)] : deduped;
+  }, [isLodging, safeBannerUrl, store?.gallery_images]);
+  const allPhotoImages = useMemo(
+    () => Array.from(new Set([safeLogoUrl, ...galleryImages].filter(Boolean))),
+    [galleryImages, safeLogoUrl],
+  );
+  const openPhotoLightboxForSrc = (src?: string, fallbackIndex = 0) => {
+    if (!allPhotoImages.length) return;
+    const index = src ? allPhotoImages.indexOf(src) : -1;
+    setPhotoLightbox({ open: true, index: index >= 0 ? index : fallbackIndex });
+  };
+  const heroCoverUrl = safeBannerUrl || galleryImages[0] || (isLodging ? hotelResortFallback : "");
 
-  const todayISO = useMemo(() => new Date().toISOString().slice(0, 10), []);
-  const tomorrowISO = useMemo(() => new Date(Date.now() + 86400000).toISOString().slice(0, 10), []);
+  const tomorrowISO = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + 1);
+    return toLocalYmd(d);
+  }, []);
+  const dayAfterTomorrowISO = useMemo(() => {
+    const d = new Date();
+    d.setHours(0, 0, 0, 0);
+    d.setDate(d.getDate() + 2);
+    return toLocalYmd(d);
+  }, []);
   const stay = {
-    checkIn: searchParams.get("ci") || todayISO,
-    checkOut: searchParams.get("co") || tomorrowISO,
+    checkIn: searchParams.get("ci") || tomorrowISO,
+    checkOut: searchParams.get("co") || dayAfterTomorrowISO,
     adults: parseInt(searchParams.get("ad") || "2", 10),
     children: parseInt(searchParams.get("ch") || "0", 10),
   };
@@ -291,14 +344,14 @@ export default function StoreProfilePage() {
       <SEOHead
         title={store ? `${store.name} – ZIVO` : "Store – ZIVO"}
         description={store?.description || `Shop at ${store?.name || "this store"} on ZIVO. Browse products and order for delivery or pickup.`}
-        ogImage={store?.banner_url || store?.logo_url || undefined}
+        ogImage={heroCoverUrl || safeLogoUrl || undefined}
         canonical={store ? `/s/${store.slug}` : undefined}
         structuredData={store ? {
           "@context": "https://schema.org",
           "@type": "Store",
           "name": store.name,
           "description": store.description || undefined,
-          "image": store.logo_url || undefined,
+          "image": safeLogoUrl || undefined,
           "url": `https://zivo.app/s/${store.slug}`,
           "telephone": (store as any).phone || undefined,
           "address": store.address ? { "@type": "PostalAddress", "streetAddress": store.address } : undefined,
@@ -319,15 +372,21 @@ export default function StoreProfilePage() {
       {/* ── Banner with 3D parallax ── */}
       {(() => {
         const coverUrl = heroCoverUrl;
+        const storedBannerPosition = Number((store as any).banner_position);
+        const bannerPosition = Number.isFinite(storedBannerPosition)
+          ? storedBannerPosition
+          : isLodging
+            ? 44
+            : 50;
 
         return (
-          <div className="relative w-full h-56 sm:h-60 overflow-hidden bg-muted">
+          <div className="relative w-full h-[270px] sm:h-[300px] lg:h-[320px] overflow-hidden bg-muted">
             {coverUrl ? (
               <img
                 src={coverUrl}
                 alt={`${store.name} cover`}
                 className="w-full h-full object-cover"
-                style={{ objectPosition: `center ${(store as any).banner_position ?? 50}%` }}
+                style={{ objectPosition: `center ${bannerPosition}%` }}
                 onError={(e) => {
                   // If the cover image fails to load (broken URL, SW cache
                   // corruption, etc.) hide the broken-image icon and let the
@@ -337,15 +396,15 @@ export default function StoreProfilePage() {
                 }}
               />
             ) : null}
-            {/* Gradient overlay */}
-            <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-background/20 to-black/5 pointer-events-none z-[1]" />
-            <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-background to-transparent pointer-events-none z-[1]" />
+            <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black/25 via-black/5 to-transparent pointer-events-none z-[1]" />
+            <div className="absolute inset-x-0 bottom-0 h-36 bg-gradient-to-t from-background via-background/45 to-transparent pointer-events-none z-[1]" />
 
             {/* Nav buttons */}
-            <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 z-10" style={{ paddingTop: "max(calc(env(safe-area-inset-top, 0px) + 0.75rem), 52px)" }}>
+            <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-4 z-10" style={{ paddingTop: "max(calc(env(safe-area-inset-top, 0px) + 4.75rem), 76px)" }}>
               <motion.button
                 whileTap={{ scale: 0.85 }}
                 onClick={() => window.history.length > 1 ? navigate(-1) : navigate("/grocery")}
+                aria-label="Go back"
                 className="h-10 w-10 rounded-2xl bg-background/90 backdrop-blur-2xl flex items-center justify-center shadow-xl border border-border"
               >
                 <ArrowLeft className="h-4 w-4 text-foreground" />
@@ -354,26 +413,29 @@ export default function StoreProfilePage() {
                 <motion.button
                   whileTap={{ scale: 0.85 }}
                   onClick={() => setChatOpen(true)}
+                  aria-label={`Open chat with ${store.name}`}
                   className="h-10 w-10 rounded-2xl bg-background/90 backdrop-blur-2xl flex items-center justify-center shadow-xl border border-border"
                 >
                   <MessageCircle className="h-4 w-4 text-foreground" />
                 </motion.button>
-                <motion.button
-                  whileTap={{ scale: 0.85 }}
-                  onClick={() => setShowCart(true)}
-                  className="relative h-10 w-10 rounded-2xl bg-background/90 backdrop-blur-2xl flex items-center justify-center shadow-xl border border-border"
-                >
-                  <ShoppingCart className="h-4 w-4 text-foreground" />
-                  {cart.itemCount > 0 && (
-                    <motion.span
-                      initial={{ scale: 0 }}
-                      animate={{ scale: 1 }}
-                      className="absolute -top-1.5 -right-1.5 h-5 min-w-[20px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center ring-2 ring-background shadow-lg shadow-primary/30"
-                    >
-                      {cart.itemCount}
-                    </motion.span>
-                  )}
-                </motion.button>
+                {!isLodging && (
+                  <motion.button
+                    whileTap={{ scale: 0.85 }}
+                    onClick={() => setShowCart(true)}
+                    className="relative h-10 w-10 rounded-2xl bg-background/90 backdrop-blur-2xl flex items-center justify-center shadow-xl border border-border"
+                  >
+                    <ShoppingCart className="h-4 w-4 text-foreground" />
+                    {cart.itemCount > 0 && (
+                      <motion.span
+                        initial={{ scale: 0 }}
+                        animate={{ scale: 1 }}
+                        className="absolute -top-1.5 -right-1.5 h-5 min-w-[20px] px-1 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center ring-2 ring-background shadow-lg shadow-primary/30"
+                      >
+                        {cart.itemCount}
+                      </motion.span>
+                    )}
+                  </motion.button>
+                )}
               </div>
             </div>
           </div>
@@ -403,8 +465,29 @@ export default function StoreProfilePage() {
               transition={{ delay: 0.3, type: "spring", stiffness: 300 }}
               className="h-16 w-16 rounded-2xl bg-background backdrop-blur-sm border border-border overflow-hidden flex items-center justify-center shrink-0 shadow-xl shadow-black/5"
             >
-              {store.logo_url ? (
-                <img src={store.logo_url} alt={store.name} className="h-full w-full object-contain p-1" />
+              {safeLogoUrl ? (
+                <button
+                  type="button"
+                  onClick={() => openPhotoLightboxForSrc(safeLogoUrl)}
+                  className="group h-full w-full cursor-zoom-in"
+                  aria-label={`View ${store.name} photo full screen`}
+                >
+                  <img
+                    src={safeLogoUrl}
+                    alt={store.name}
+                    className={cn(
+                      "h-full w-full transition-transform duration-500 group-hover:scale-105",
+                      isLodging ? "object-cover" : "object-contain p-1"
+                    )}
+                    onError={(e) => {
+                      if (!isLodging) {
+                        (e.currentTarget as HTMLImageElement).style.display = "none";
+                      } else {
+                        (e.currentTarget as HTMLImageElement).src = hotelResortFallback;
+                      }
+                    }}
+                  />
+                </button>
               ) : isLodging ? (
                 <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-emerald-500/15 via-sky-500/10 to-primary/10">
                   <BedDouble className="h-8 w-8 text-emerald-600 dark:text-emerald-300" />
@@ -452,7 +535,9 @@ export default function StoreProfilePage() {
                 )}
               </div>
               {store.description && (
-                <p className="text-xs text-muted-foreground mt-1 line-clamp-3"><SafeCaption text={store.description} /></p>
+                <p className="mt-1 max-w-2xl text-xs leading-relaxed text-muted-foreground line-clamp-2">
+                  <SafeCaption text={store.description} />
+                </p>
               )}
             </div>
           </div>
@@ -754,12 +839,13 @@ export default function StoreProfilePage() {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3, type: "spring", stiffness: 300, damping: 25 }}
-            className="relative rounded-3xl overflow-hidden border border-border shadow-2xl shadow-black/20 h-44 sm:h-48 md:h-52 bg-muted"
+            className="relative h-[360px] overflow-hidden rounded-3xl border border-border bg-muted shadow-2xl shadow-black/20 sm:h-[400px] md:h-[430px] xl:h-[460px]"
           >
             <StoreHeroCarousel
               images={galleryImages}
               storeName={store.name}
               positions={(store as any).gallery_positions}
+              onOpenGallery={(index) => openPhotoLightboxForSrc(galleryImages[index], index)}
             />
           </motion.div>
         </div>
@@ -1371,7 +1457,7 @@ export default function StoreProfilePage() {
         <StoreLiveChat
           storeId={store.id}
           storeName={store.name}
-          storeLogo={store.logo_url}
+          storeLogo={safeLogoUrl || null}
           open={chatOpen}
           onClose={() => setChatOpen(false)}
         />
@@ -1403,6 +1489,14 @@ export default function StoreProfilePage() {
           children={stay.children}
         />
       )}
+      <StorePhotoLightbox
+        open={photoLightbox.open}
+        images={allPhotoImages}
+        storeName={store.name}
+        initialIndex={photoLightbox.index}
+        positions={(store as any).gallery_positions}
+        onClose={() => setPhotoLightbox((current) => ({ ...current, open: false }))}
+      />
       <ZivoMobileNav />
     </div>
   );

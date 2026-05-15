@@ -102,9 +102,9 @@ export function useHasStoreBooking(storeId: string | undefined) {
     staleTime: 60_000,
     initialData,
     queryFn: async () => {
-      const { data: auth } = await supabase.auth.getUser();
-      const user = auth.user;
-      if (!user || !storeId) return { hasBooking: false, source: null };
+      const { data: { session } } = await supabase.auth.getSession();
+      const user = session?.user;
+      if (!session?.access_token || !user || !storeId) return { hasBooking: false, source: null };
       const email = (user.email || "").toLowerCase();
 
       const sb: any = supabase;

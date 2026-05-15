@@ -50,6 +50,7 @@ import Users from "lucide-react/dist/esm/icons/users";
 
 import { supabase } from "@/integrations/supabase/client";
 import { useQuery } from "@tanstack/react-query";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { useOwnerStoreProfile } from "@/hooks/useOwnerStoreProfile";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -92,11 +93,6 @@ const AMENITY_ICON_MAP: Record<string, React.ComponentType<{ className?: string 
   "air conditioning": Wind,
   tv: Tv,
   spa: Sparkles,
-};
-
-const formatPrice = (cents: number) => {
-  if (!cents || cents <= 0) return "—";
-  return `$${(cents / 100).toFixed(0)}`;
 };
 
 // Format a phone number nicely. KH local numbers (7–9 digits, no leading +)
@@ -157,6 +153,8 @@ export default function HotelResortDetailPage() {
   const navigate = useNavigate();
   const { data: ownerStore } = useOwnerStoreProfile();
   const isOwner = ownerStore?.id === storeId;
+  const { format } = useCurrency();
+  const formatPrice = (cents: number) => { if (!cents || cents <= 0) return "—"; return format(cents / 100, "USD"); };
 
   // Phase D: one aggregate RPC call replaces store + profile + rooms + promo +
   // reviews + reservations queries. The page reads everything from this single

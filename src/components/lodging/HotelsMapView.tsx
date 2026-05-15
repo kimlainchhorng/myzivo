@@ -12,6 +12,7 @@ import MapPin from "lucide-react/dist/esm/icons/map-pin";
 import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left";
 import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
 import { resolveMapsKey } from "@/lib/mapsKey";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 export interface MapHotel {
   id: string;
@@ -26,9 +27,6 @@ export interface MapHotel {
   rating?: number | null;
   reviewCount?: number;
 }
-
-const formatPrice = (cents?: number | null) =>
-  typeof cents === "number" && cents > 0 ? `$${Math.round(cents / 100)}` : null;
 
 interface Props {
   hotels: MapHotel[];
@@ -65,6 +63,8 @@ function loadMapsScript(apiKey: string): Promise<void> {
 
 // ---- Component -------------------------------------------------------------
 export default function HotelsMapView({ hotels, onSelect, apiKey }: Props) {
+  const { format } = useCurrency();
+  const formatPrice = (cents?: number | null) => typeof cents === "number" && cents > 0 ? format(Math.round(cents / 100), "USD") : null;
   const [resolvedKey, setResolvedKey] = useState<string>(apiKey || "");
   useEffect(() => {
     if (apiKey) { setResolvedKey(apiKey); return; }

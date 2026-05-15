@@ -36,6 +36,7 @@ const ENABLE_PUBLIC_LODGING_REVIEWS =
   (import.meta as ImportMeta & { env?: Record<string, string> }).env?.VITE_ENABLE_PUBLIC_LODGING_REVIEWS === "true";
 import { supabase } from "@/integrations/supabase/client";
 import { LODGING_STORE_CATEGORIES, normalizeStoreCategory } from "@/hooks/useOwnerStoreProfile";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -99,6 +100,7 @@ const todayUTC = () => {
 export default function HotelsLandingPage() {
   const navigate = useNavigate();
   const qc = useQueryClient();
+  const { format: fmtPrice } = useCurrency();
   const [searchParams, setSearchParams] = useSearchParams();
 
   // Honor share-card / deep-link query params on mount: ?city=&ci=&co=&adults=&children=
@@ -883,9 +885,9 @@ export default function HotelsLandingPage() {
                         <span className="text-[11px] font-bold text-foreground">
                           from{" "}
                           {discountedCents !== null && typeof minCents === "number" && (
-                            <span className="line-through text-muted-foreground font-normal mr-0.5">${(minCents / 100).toFixed(0)}</span>
+                            <span className="line-through text-muted-foreground font-normal mr-0.5">{fmtPrice(minCents / 100, "USD")}</span>
                           )}
-                          <span className={discountedCents !== null ? "text-emerald-600" : "text-primary"}>${(showCents / 100).toFixed(0)}</span>
+                          <span className={discountedCents !== null ? "text-emerald-600" : "text-primary"}>{fmtPrice(showCents / 100, "USD")}</span>
                           <span className="text-muted-foreground font-normal text-[9px]"> /night</span>
                         </span>
                       ) : null}
@@ -1435,22 +1437,22 @@ function PropertyCard({
                 {hasDiscount && typeof baseCents === "number" ? (
                   <>
                     <p className="text-[10px] line-through text-muted-foreground leading-none">
-                      ${(baseCents / 100).toFixed(0)}
+                      {fmtPrice(baseCents / 100, "USD")}
                     </p>
                     <p className="text-[14px] font-extrabold text-emerald-600 leading-tight">
-                      ${(effectiveCents / 100).toFixed(0)}
+                      {fmtPrice(effectiveCents / 100, "USD")}
                       <span className="text-[10px] font-medium text-emerald-600/80"> /night</span>
                     </p>
                   </>
                 ) : (
                   <p className="text-[14px] font-extrabold text-foreground leading-tight">
-                    ${(effectiveCents / 100).toFixed(0)}
+                    {fmtPrice(effectiveCents / 100, "USD")}
                     <span className="text-[10px] font-medium text-muted-foreground"> /night</span>
                   </p>
                 )}
                 {totalCents && nights > 1 && (
                   <p className="text-[9px] text-muted-foreground leading-none">
-                    ${(totalCents / 100).toFixed(0)} for {nights}n
+                    {fmtPrice(totalCents / 100, "USD")} for {nights}n
                   </p>
                 )}
                 {hasDiscount && promoLabel && (

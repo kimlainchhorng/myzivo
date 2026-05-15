@@ -30,6 +30,13 @@ export function useLiveActivityCount(): LiveActivity {
   const [state, setState] = useState<LiveActivity>(ZERO);
 
   useEffect(() => {
+    const pathname = typeof window !== "undefined" ? window.location.pathname : "";
+    const isPublicStoreSurface = /^\/(grocery\/shop|store)\//.test(pathname);
+    if (isPublicStoreSurface) {
+      setState(ZERO);
+      return;
+    }
+
     if (!user?.id) {
       setState(ZERO);
       return;
@@ -38,39 +45,47 @@ export function useLiveActivityCount(): LiveActivity {
     let heartbeat: ReturnType<typeof setInterval> | null = null;
 
     const refetch = async () => {
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      if (authError || !authData?.user?.id) {
+        if (!cancelled) setState(ZERO);
+        return;
+      }
       const today = new Date().toISOString().slice(0, 10);
-      const sb = supabase as unknown as {
-        from: (t: string) => {
-          select: (c: string, o: { count: "exact"; head: true }) => {
-            eq: (col: string, v: string) => {
-              in: (col: string, v: string[]) => Promise<{ count: number | null }>;
-              gte: (col: string, v: string) => Promise<{ count: number | null }>;
-            };
-          };
-        };
+      const fetchCount = async (request: Promise<{ count: number | null; error?: unknown }>) => {
+        try {
+          const { count, error } = await request;
+          if (error) return 0;
+          return count ?? 0;
+        } catch {
+          return 0;
+        }
       };
       const [rides, orders, flights, hotels] = await Promise.all([
-        sb.from("trips").select("id", { count: "exact", head: true })
+        fetchCount((supabase as any)
+          .from("trips")
+          .select("id", { count: "exact", head: false })
           .eq("rider_id", user.id)
-          .in("status", ["accepted", "en_route", "arriving", "in_progress"]),
-        sb.from("food_orders").select("id", { count: "exact", head: true })
+          .in("status", ["accepted", "en_route", "arriving", "in_progress"])),
+        fetchCount((supabase as any)
+          .from("food_orders")
+          .select("id", { count: "exact", head: false })
           .eq("customer_id", user.id)
-          .in("status", ["confirmed", "preparing", "ready", "out_for_delivery"]),
-        sb.from("flight_bookings").select("id", { count: "exact", head: true })
+          .in("status", ["confirmed", "preparing", "ready", "out_for_delivery"])),
+        fetchCount((supabase as any)
+          .from("flight_bookings")
+          .select("id", { count: "exact", head: false })
           .eq("customer_id", user.id)
-          .gte("departure_date", today),
-        sb.from("hotel_bookings").select("id", { count: "exact", head: true })
+          .gte("departure_date", today)),
+        fetchCount((supabase as any)
+          .from("hotel_bookings")
+          .select("id", { count: "exact", head: false })
           .eq("customer_id", user.id)
-          .gte("check_in_date", today),
+          .gte("check_in_date", today)),
       ]);
 
       if (cancelled) return;
-      const r = rides.count ?? 0;
-      const o = orders.count ?? 0;
-      const f = flights.count ?? 0;
-      const h = hotels.count ?? 0;
-      const upcoming = f + h;
-      setState({ rides: r, orders: o, upcoming, total: r + o + upcoming });
+      const upcoming = flights + hotels;
+      setState({ rides, orders, upcoming, total: rides + orders + upcoming });
     };
 
     refetch().catch(() => {});

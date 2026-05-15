@@ -14,7 +14,7 @@ import {
   MapPin, Clock, Star, Navigation, Store, ChevronRight, Search, X,
   Locate, Car, Phone, Wrench, List, Heart, Share2, MoreHorizontal,
   Route, Minus, Flame, Timer, CheckCircle2, ChevronUp, ChevronDown,
-  Users, SlidersHorizontal, Layers, Tag, Sparkles,
+  Users, SlidersHorizontal, Layers, Tag, Sparkles, Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence } from "framer-motion";
@@ -25,11 +25,16 @@ import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
 import { trackInitiateCheckout } from "@/services/metaConversion";
 import { buildShopDeepLink } from "@/lib/deepLinks";
 import { isOpenNow } from "@/lib/store/storeHours";
+import { resolveMapsKey } from "@/lib/mapsKey";
 import { openDirections } from "@/lib/maps/openDirections";
 import { shareStoreWithCard } from "@/lib/social/storeShareCard";
 import { useStoreFavorites } from "@/hooks/useStoreFavorites";
-import { distanceMiles } from "@/hooks/useStorePins";
+import { distanceMiles, fetchActiveStorePins } from "@/hooks/useStorePins";
 import StoreDetailsDrawer from "@/components/store/StoreDetailsDrawer";
+import { MarkerClusterer, type Cluster } from "@googlemaps/markerclusterer";
+
+type StoreSortMode = "distance" | "rating" | "newest";
+const STORE_LIST_PAGE = 12;
 
 const DEFAULT_CENTER = { lat: 11.5564, lng: 104.9282 };
 const RADIUS_OPTIONS: Array<{ label: string; value: number | null }> = [
@@ -81,23 +86,10 @@ async function getApiKey(): Promise<string> {
     _apiKeyPromise = Promise.resolve(envKey);
     return _apiKeyPromise;
   }
-  const { data: sessionData } = await supabase.auth.getSession();
-  if (!sessionData.session) return "";
-  _apiKeyPromise = (async () => {
-    try {
-      // 6s timeout — the edge function call can hang on cold-start or
-      // network issues. Failing fast lets the map show its error state.
-      const invoke = supabase.functions.invoke("maps-api-key");
-      const timeout = new Promise<{ data: null; error: Error }>((resolve) =>
-        setTimeout(() => resolve({ data: null, error: new Error("maps-api-key timeout") }), 6000),
-      );
-      const { data, error } = await Promise.race([invoke, timeout]);
-      if (!error && data?.key) return data.key as string;
-    } catch { /* fallback */ }
-    // Reset cache on failure so a retry attempts a fresh fetch.
-    _apiKeyPromise = null;
-    return "";
-  })();
+  _apiKeyPromise = resolveMapsKey().then((key) => {
+    if (!key) _apiKeyPromise = null;
+    return key;
+  });
   return _apiKeyPromise;
 }
 
@@ -106,25 +98,46 @@ async function getApiKey(): Promise<string> {
 // navigation re-runs the existing-script-wait branch every time.
 let _mapsLoadPromise: Promise<boolean> | null = null;
 
+function hasGoogleMapsConstructor(): boolean {
+  return typeof (window as any).google?.maps?.Map === "function";
+}
+
+async function ensureGoogleMapsReady(): Promise<boolean> {
+  const maps = (window as any).google?.maps;
+  if (!maps) return false;
+
+  if (typeof maps.importLibrary === "function") {
+    try {
+      await maps.importLibrary("maps");
+      await maps.importLibrary("marker");
+    } catch {
+      return false;
+    }
+  }
+
+  return hasGoogleMapsConstructor();
+}
+
 async function loadGoogleMaps(apiKey: string): Promise<boolean> {
-  if ((window as any).google?.maps) return true;
+  if (hasGoogleMapsConstructor()) return true;
   if (_mapsLoadPromise) return _mapsLoadPromise;
 
   _mapsLoadPromise = (async () => {
     const existing = document.querySelector('script[src*="maps.googleapis.com/maps/api/js"]');
     if (existing) {
       await new Promise<void>((res) => {
-        if ((window as any).google?.maps) return res();
+        if (hasGoogleMapsConstructor()) return res();
         existing.addEventListener("load", () => res());
         setTimeout(() => res(), 8000);
       });
-      const ok = !!(window as any).google?.maps;
+      const ok = await ensureGoogleMapsReady();
       if (!ok) _mapsLoadPromise = null;
       return ok;
     }
     return new Promise<boolean>((resolve) => {
+      const callbackName = `__zivoStoreMapReady_${Date.now()}`;
       const script = document.createElement("script");
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=marker&loading=async`;
+      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=marker&loading=async&callback=${callbackName}`;
       script.async = true;
       script.defer = true;
       let settled = false;
@@ -132,9 +145,10 @@ async function loadGoogleMaps(apiKey: string): Promise<boolean> {
         if (settled) return;
         settled = true;
         if (!ok) _mapsLoadPromise = null;
+        delete (window as any)[callbackName];
         resolve(ok);
       };
-      script.onload = () => finish(true);
+      (window as any)[callbackName] = async () => finish(await ensureGoogleMapsReady());
       script.onerror = () => finish(false);
       // Hard timeout — if Google Maps can't load in 15s (blocked, offline,
       // proxy issues), surface a Map-unavailable state instead of leaving
@@ -493,13 +507,98 @@ function makeUserDotIcon(): string {
   return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
 }
 
+function hashStorePosition(input: string, axis: "x" | "y"): number {
+  let hash = axis === "x" ? 17 : 29;
+  for (let i = 0; i < input.length; i += 1) {
+    hash = (hash * 31 + input.charCodeAt(i)) % 9973;
+  }
+  if (axis === "y") return 20 + (hash % 34);
+  return 12 + (hash % 74);
+}
+
+function MapFallbackCanvas({
+  stores,
+  selectedStoreId,
+  loading,
+  zoom,
+  onSelect,
+}: {
+  stores: StorePin[];
+  selectedStoreId?: string | null;
+  loading?: boolean;
+  zoom: number;
+  onSelect: (store: StorePin) => void;
+}) {
+  const pins = stores.slice(0, 24);
+
+  return (
+    <div className="absolute inset-0 overflow-hidden bg-[#f4f6f5]">
+      <div
+        className="absolute inset-0 opacity-70 transition-transform duration-300 ease-out"
+        style={{
+          backgroundImage:
+            "linear-gradient(28deg, transparent 0 46%, rgba(0,0,0,0.07) 47% 49%, transparent 50% 100%), linear-gradient(112deg, transparent 0 48%, rgba(0,0,0,0.06) 49% 51%, transparent 52% 100%), linear-gradient(0deg, transparent 0 48%, rgba(0,0,0,0.035) 49% 51%, transparent 52% 100%)",
+          backgroundSize: "180px 160px, 220px 190px, 130px 130px",
+          backgroundPosition: "20px 40px, -30px 10px, 0 0",
+          transform: `scale(${zoom})`,
+          transformOrigin: "50% 45%",
+        }}
+      />
+      <div
+        className="absolute inset-0 transition-transform duration-300 ease-out"
+        style={{ transform: `scale(${zoom})`, transformOrigin: "50% 45%" }}
+      >
+        <div className="absolute left-[8%] top-[24%] h-24 w-[78%] rotate-[-12deg] rounded-full bg-white/70 blur-[1px]" />
+        <div className="absolute right-[4%] top-[38%] h-32 w-[58%] rotate-[18deg] rounded-full bg-emerald-100/55 blur-[1px]" />
+        <div className="absolute bottom-[20%] left-[10%] h-28 w-[70%] rotate-[8deg] rounded-full bg-sky-100/60 blur-[1px]" />
+
+        {pins.map((store) => {
+          const selected = selectedStoreId === store.id;
+          return (
+            <button
+              key={store.id}
+              type="button"
+              aria-label={`Select ${store.name}`}
+              onClick={() => onSelect(store)}
+              className={`absolute z-10 flex h-10 w-10 -translate-x-1/2 -translate-y-full items-center justify-center rounded-full border-2 border-white text-base shadow-lg transition ${
+                selected ? "scale-110 bg-foreground text-background" : "bg-card text-foreground hover:scale-105"
+              }`}
+              style={{
+                left: `${hashStorePosition(store.id, "x")}%`,
+                top: `${hashStorePosition(store.slug || store.name, "y")}%`,
+              }}
+            >
+              <span aria-hidden>{getCategoryIcon(store.category)}</span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="absolute left-4 top-[46%] z-20 max-w-[260px] rounded-2xl border border-border bg-card/95 p-3 shadow-lg backdrop-blur-xl">
+        <p className="text-sm font-bold text-foreground">{loading ? "Preparing live map" : "Map preview mode"}</p>
+        <p className="mt-1 text-[12px] leading-snug text-muted-foreground">
+          {loading
+            ? "Stores are ready while the live map loads."
+            : "Browse stores below. Live map tiles are unavailable right now."}
+        </p>
+        <p className="mt-2 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Zoom {Math.round(zoom * 100)}%</p>
+      </div>
+    </div>
+  );
+}
+
 export default function StoreMapPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [urlParams, setUrlParams] = useSearchParams();
+  const focusId = urlParams.get("focus");
+  const trailParam = urlParams.get("trail");
+  const stopsParam = urlParams.get("stops");
+  const searchParam = urlParams.get("search");
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
   const markersRef = useRef<google.maps.Marker[]>([]);
+  const clustererRef = useRef<MarkerClusterer | null>(null);
   const pulseCirclesRef = useRef<google.maps.Circle[]>([]);
   const userDotRef = useRef<google.maps.Marker | null>(null);
   const tripMarkersRef = useRef<google.maps.Marker[]>([]);
@@ -508,12 +607,14 @@ export default function StoreMapPage() {
 
   const [mapReady, setMapReady] = useState(false);
   const [mapError, setMapError] = useState(false);
+  const [mapPreviewSettled, setMapPreviewSettled] = useState(false);
+  const [fallbackZoom, setFallbackZoom] = useState(1);
   const [selectedStore, setSelectedStore] = useState<StorePin | null>(null);
   const [drawerStore, setDrawerStore] = useState<StorePin | null>(null);
   const [activeCategory, setActiveCategory] = useState<string>(urlParams.get("cat") || "all");
   const [activeGroup, setActiveGroup] = useState<string>(urlParams.get("group") || "");
   const [searchQuery, setSearchQuery] = useState(urlParams.get("q") || "");
-  const [searchOpen, setSearchOpen] = useState<boolean>(!!urlParams.get("q"));
+  const [searchOpen, setSearchOpen] = useState<boolean>(!!urlParams.get("q") || searchParam === "1");
   const [openNowOnly, setOpenNowOnly] = useState<boolean>(urlParams.get("open") === "1");
   const [trendingOnly, setTrendingOnly] = useState(() => localStorage.getItem("zivo:map:trending") === "1");
   const [dealsOnly, setDealsOnly] = useState(false);
@@ -523,6 +624,7 @@ export default function StoreMapPage() {
   const [recentSearches, setRecentSearches] = useState<string[]>(() => getRecentSearches());
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationDenied, setLocationDenied] = useState(false);
+  const [locationNoticeDismissed, setLocationNoticeDismissed] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [liveStoreMap, setLiveStoreMap] = useState<Record<string, string>>({});
@@ -540,6 +642,12 @@ export default function StoreMapPage() {
   const [searchCenter, setSearchCenter] = useState<{ lat: number; lng: number } | null>(null);
   const [mapIdleCenter, setMapIdleCenter] = useState<{ lat: number; lng: number } | null>(null);
   const [sheetExpanded, setSheetExpanded] = useState(false);
+  const [sortBy, setSortBy] = useState<StoreSortMode>("distance");
+  const [visibleCount, setVisibleCount] = useState(STORE_LIST_PAGE);
+  const [trailSeen, setTrailSeen] = useState<boolean>(() => {
+    try { return localStorage.getItem("zivo:map:trail-seen") === "1"; }
+    catch { return false; }
+  });
 
   /* ── Shopping Trail ── */
   const [tripMode, setTripMode] = useState(false);
@@ -548,10 +656,31 @@ export default function StoreMapPage() {
   const tripStopsRef = useRef<StorePin[]>([]);
 
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchOpenGuardRef = useRef(0);
+  const listScrollRef = useRef<HTMLDivElement>(null);
+  const handleListScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    const el = e.currentTarget;
+    if (el.scrollTop + el.clientHeight >= el.scrollHeight - 120) {
+      setVisibleCount((n) => Math.min(n + STORE_LIST_PAGE, Number.MAX_SAFE_INTEGER));
+    }
+  }, []);
   const { isFavorite, toggleFavorite, isAuthed } = useStoreFavorites();
+  const searchPanelOpen = searchOpen || searchParam === "1";
 
   useEffect(() => { tripModeRef.current = tripMode; }, [tripMode]);
   useEffect(() => { tripStopsRef.current = tripStops; }, [tripStops]);
+  // Reset the infinite-scroll window when the filtered list changes,
+  // so a tighter filter doesn't leave us showing a stale page count.
+  useEffect(() => {
+    setVisibleCount(STORE_LIST_PAGE);
+    if (listScrollRef.current) listScrollRef.current.scrollTop = 0;
+  }, [activeCategory, activeGroup, searchQuery, openNowOnly, trendingOnly, dealsOnly, smartFilterActive, radiusKm, sortBy]);
+
+  useEffect(() => {
+    if (searchParam !== "1") return;
+    setSearchOpen(true);
+    window.setTimeout(() => searchInputRef.current?.focus(), 80);
+  }, [searchParam]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => setCurrentUserId(data.user?.id || null));
@@ -587,27 +716,35 @@ export default function StoreMapPage() {
 
   useEffect(() => {
     const next = new URLSearchParams();
+    if (focusId) next.set("focus", focusId);
+    if (trailParam) next.set("trail", trailParam);
+    if (stopsParam) next.set("stops", stopsParam);
     if (activeCategory !== "all") next.set("cat", activeCategory);
     if (activeGroup) next.set("group", activeGroup);
     if (searchQuery.trim()) next.set("q", searchQuery.trim());
+    else if (searchOpen) next.set("search", "1");
     if (openNowOnly) next.set("open", "1");
     setUrlParams(next, { replace: true });
-  }, [activeCategory, activeGroup, searchQuery, openNowOnly, setUrlParams]);
+  }, [activeCategory, activeGroup, focusId, openNowOnly, searchOpen, searchQuery, setUrlParams, stopsParam, trailParam]);
 
   const { data: allStores = [] } = useQuery({
     queryKey: ["store-map-all"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("store_profiles")
-        .select("id, name, slug, category, address, phone, hours, rating, logo_url, latitude, longitude, created_at")
-        .eq("is_active", true);
-      if (error) throw error;
-      return (data || []) as StorePin[];
+      return fetchActiveStorePins() as Promise<StorePin[]>;
     },
     staleTime: 60_000,
   });
 
-  const stores = useMemo(() => allStores.filter((s) => s.latitude != null && s.longitude != null), [allStores]);
+  // Cambodia's bounding box (lat 9.5–14.7°N, lng 102–108°E) with a generous
+  // buffer for cross-border destinations. Stores outside this box are bad
+  // data (default 0,0 placeholders or admin typos) and have been seen to
+  // drag the map to North America when they end up as the only filter result.
+  const stores = useMemo(() => allStores.filter((s) => {
+    if (s.latitude == null || s.longitude == null) return false;
+    if (s.latitude < 9 || s.latitude > 16) return false;
+    if (s.longitude < 100 || s.longitude > 110) return false;
+    return true;
+  }), [allStores]);
 
   /* Live pulse */
   useEffect(() => {
@@ -687,9 +824,21 @@ export default function StoreMapPage() {
   }, [mapReady, mapStyle]);
 
   const usedCategories = useMemo(() => {
-    const cats = new Set(allStores.map((s) => s.category));
-    return STORE_CATEGORY_OPTIONS.filter((o) => cats.has(o.value));
-  }, [allStores]);
+    const cats = new Set(stores.map((s) => s.category));
+    const all = STORE_CATEGORY_OPTIONS.filter((o) => cats.has(o.value));
+    // When a parent group is active, only show sub-categories that belong to it.
+    // This stops "Hotel & Resort (663)" + "Hotel (521)" + "Resort (142)" from
+    // visually triple-counting the same set of stores.
+    if (activeGroup) {
+      const group = CATEGORY_GROUPS.find((g) => g.id === activeGroup);
+      if (group) return all.filter((o) => group.categories.includes(o.value));
+    }
+    // Without a group filter, fall back to the un-grouped categories
+    // (e.g. things that aren't covered by any group) plus the currently
+    // active sub-category so the user can always toggle it off.
+    const grouped = new Set(CATEGORY_GROUPS.flatMap((g) => g.categories));
+    return all.filter((o) => !grouped.has(o.value) || o.value === activeCategory);
+  }, [stores, activeGroup, activeCategory]);
 
   /* Effective search center for distance calculations */
   const effectiveCenter = searchCenter || userLocation;
@@ -722,15 +871,28 @@ export default function StoreMapPage() {
     return result;
   }, [stores, activeCategory, activeGroup, searchQuery, openNowOnly, trendingOnly, dealsOnly, smartFilterActive, liveStoreMap, dealStoreIds, radiusKm, effectiveCenter]);
 
-  /* Nearby sorted by distance from effectiveCenter */
+  /* Nearby sorted — driven by the sort chip row in the bottom sheet.
+     "distance" falls back to insertion order when no GPS / map center yet,
+     so the list still renders something useful before the user grants GPS. */
   const nearbySorted = useMemo(() => {
-    if (!effectiveCenter) return filteredStores;
-    return [...filteredStores].sort((a, b) => {
+    const arr = [...filteredStores];
+    if (sortBy === "rating") {
+      return arr.sort((a, b) => (b.rating ?? -1) - (a.rating ?? -1));
+    }
+    if (sortBy === "newest") {
+      return arr.sort((a, b) => {
+        const ta = a.created_at ? new Date(a.created_at).getTime() : 0;
+        const tb = b.created_at ? new Date(b.created_at).getTime() : 0;
+        return tb - ta;
+      });
+    }
+    if (!effectiveCenter) return arr;
+    return arr.sort((a, b) => {
       const da = distanceMiles(effectiveCenter, { lat: a.latitude, lng: a.longitude });
       const db = distanceMiles(effectiveCenter, { lat: b.latitude, lng: b.longitude });
       return da - db;
     });
-  }, [filteredStores, effectiveCenter]);
+  }, [filteredStores, effectiveCenter, sortBy]);
 
   // Detects the "you're in the wrong region" case: user has a real GPS fix
   // but every store is hundreds of kilometres away. Without this signal, the
@@ -750,8 +912,8 @@ export default function StoreMapPage() {
 
   /* Recently viewed stores (resolved from IDs) */
   const recentStores = useMemo(() =>
-    recentIds.map((id) => allStores.find((s) => s.id === id)).filter(Boolean) as StorePin[],
-    [recentIds, allStores]
+    recentIds.map((id) => stores.find((s) => s.id === id)).filter(Boolean) as StorePin[],
+    [recentIds, stores]
   );
   const showRecentRow = recentStores.length > 0 && !searchQuery.trim() && activeCategory === "all"
     && !trendingOnly && !smartFilterActive && !selectedStore && !drawerStore;
@@ -760,10 +922,10 @@ export default function StoreMapPage() {
   const autoSuggestions = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q || q.length < 1) return [] as StorePin[];
-    return allStores
+    return stores
       .filter((s) => s.name.toLowerCase().includes(q) || s.address?.toLowerCase().includes(q))
       .slice(0, 5);
-  }, [allStores, searchQuery]);
+  }, [stores, searchQuery]);
 
   /* "Search this area" — visible when map is panned > 300 m from effectiveCenter */
   const showSearchArea = useMemo(() => {
@@ -816,8 +978,15 @@ export default function StoreMapPage() {
   useEffect(() => {
     if (!("geolocation" in navigator)) { setLocationDenied(true); return; }
     navigator.geolocation.getCurrentPosition(
-      (pos) => { setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }); setLocationDenied(false); },
-      () => setLocationDenied(true),
+      (pos) => {
+        setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setLocationDenied(false);
+        setLocationNoticeDismissed(false);
+      },
+      () => {
+        setLocationDenied(true);
+        setLocationNoticeDismissed(false);
+      },
       { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
     );
   }, []);
@@ -825,12 +994,17 @@ export default function StoreMapPage() {
   /* Init map */
   useEffect(() => {
     let cancelled = false;
+    const previousAuthFailure = (window as any).gm_authFailure;
+    (window as any).gm_authFailure = () => {
+      previousAuthFailure?.();
+      if (!cancelled) setMapError(true);
+    };
     (async () => {
       const key = await getApiKey();
       if (!key || cancelled) { setMapError(true); return; }
       const loaded = await loadGoogleMaps(key);
-      if (!loaded || cancelled) { setMapError(true); return; }
-      if (!mapContainerRef.current) return;
+      if (!loaded || cancelled || !hasGoogleMapsConstructor()) { setMapError(true); return; }
+      if (!mapContainerRef.current) { setMapError(true); return; }
 
       const map = new google.maps.Map(mapContainerRef.current, {
         center: userLocation || DEFAULT_CENTER,
@@ -842,7 +1016,12 @@ export default function StoreMapPage() {
         styles: LIGHT_MAP_STYLES,
       });
       mapRef.current = map;
-      map.addListener("click", () => { setSelectedStore(null); setSearchOpen(false); setSearchQuery(""); });
+      map.addListener("click", () => {
+        if (Date.now() < searchOpenGuardRef.current) return;
+        setSelectedStore(null);
+        setSearchOpen(false);
+        setSearchQuery("");
+      });
       map.addListener("idle", () => {
         const c = map.getCenter();
         if (c) setMapIdleCenter({ lat: c.lat(), lng: c.lng() });
@@ -852,9 +1031,22 @@ export default function StoreMapPage() {
     const stuckTimeout = setTimeout(() => {
       if (!cancelled) setMapError((prev) => prev || !mapRef.current);
     }, 20000);
-    return () => { cancelled = true; clearTimeout(stuckTimeout); };
+    return () => {
+      cancelled = true;
+      clearTimeout(stuckTimeout);
+      (window as any).gm_authFailure = previousAuthFailure;
+    };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (mapReady || mapError) {
+      setMapPreviewSettled(true);
+      return;
+    }
+    const timeout = window.setTimeout(() => setMapPreviewSettled(true), 3500);
+    return () => window.clearTimeout(timeout);
+  }, [mapError, mapReady]);
 
   /* User dot */
   useEffect(() => {
@@ -890,6 +1082,11 @@ export default function StoreMapPage() {
   /* Store markers */
   useEffect(() => {
     if (!mapReady || !mapRef.current) return;
+    if (clustererRef.current) {
+      clustererRef.current.clearMarkers();
+      clustererRef.current.setMap(null);
+      clustererRef.current = null;
+    }
     markersRef.current.forEach((m) => m.setMap(null));
     markersRef.current = [];
     pulseCirclesRef.current.forEach((c) => c.setMap(null));
@@ -905,8 +1102,9 @@ export default function StoreMapPage() {
       const storeIsNew = isNewStore(store);
       const storeHasDeal = dealStoreIds.has(store.id);
 
+      // Map is set by the clusterer when zoomed in; leaving it null here
+      // keeps individual pins hidden until the clusterer expands their cell.
       const marker = new google.maps.Marker({
-        map: mapRef.current!,
         position: pos,
         icon: {
           url: makeMarkerIcon(getCategoryIcon(store.category), color, bg, storeIsNew, storeHasDeal),
@@ -961,6 +1159,35 @@ export default function StoreMapPage() {
       }
     });
 
+    // Group nearby pins into clusters so 600+ markers don't overlap into a wall
+    // of pins. The renderer reuses our brand palette so clusters feel native.
+    clustererRef.current = new MarkerClusterer({
+      map: mapRef.current,
+      markers: markersRef.current,
+      renderer: {
+        render: ({ count, position }: Cluster) => {
+          const tone = count >= 100 ? "#0ea5e9" : count >= 25 ? "#10b981" : "#6366f1";
+          const size = count >= 100 ? 56 : count >= 25 ? 48 : 42;
+          const svg = `
+            <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
+              <circle cx="${size / 2}" cy="${size / 2}" r="${size / 2}" fill="${tone}" fill-opacity="0.22"/>
+              <circle cx="${size / 2}" cy="${size / 2}" r="${size / 2 - 6}" fill="${tone}"/>
+              <text x="${size / 2}" y="${size / 2 + 5}" text-anchor="middle" font-size="14" font-weight="700" fill="#fff" font-family="system-ui">${count}</text>
+            </svg>`;
+          return new google.maps.Marker({
+            position,
+            icon: {
+              url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg),
+              scaledSize: new google.maps.Size(size, size),
+              anchor: new google.maps.Point(size / 2, size / 2),
+            },
+            zIndex: 200,
+            title: `${count} stores in this area`,
+          });
+        },
+      },
+    });
+
     let intervalId: any = null;
     if (pulseCirclesRef.current.length) {
       let tick = 0;
@@ -989,7 +1216,25 @@ export default function StoreMapPage() {
       if (nearestKm <= 200) bounds.extend(userLocation);
     }
     if (filteredStores.length > 1) {
-      mapRef.current.fitBounds(bounds, { top: 140, bottom: 260, left: 30, right: 30 });
+      // Cap how far out the camera goes. With 600+ stores nationwide a raw
+      // fitBounds would zoom to see all of Southeast Asia and (worse) drag
+      // the center toward any outlier coordinate. So we only auto-fit when
+      // the user has expressed a focus (filtered, searched, or located).
+      // Otherwise we keep a steady country-level view on Cambodia so the
+      // map opens looking deliberate, not chaotic.
+      const hasUserFocus = !!searchCenter || !!userLocation || !!activeGroup || activeCategory !== "all";
+      if (hasUserFocus) {
+        mapRef.current.fitBounds(bounds, { top: 140, bottom: 260, left: 30, right: 30 });
+        const desiredMax = activeGroup || activeCategory !== "all" ? 13 : 11;
+        google.maps.event.addListenerOnce(mapRef.current, "idle", () => {
+          const z = mapRef.current?.getZoom() ?? 0;
+          if (z > desiredMax) mapRef.current?.setZoom(desiredMax);
+          else if (z < 7) mapRef.current?.setZoom(7);
+        });
+      } else {
+        mapRef.current.setCenter(DEFAULT_CENTER);
+        mapRef.current.setZoom(11);
+      }
     } else if (filteredStores.length === 1) {
       mapRef.current.setCenter({ lat: filteredStores[0].latitude, lng: filteredStores[0].longitude });
       mapRef.current.setZoom(15);
@@ -1040,29 +1285,37 @@ export default function StoreMapPage() {
   }, [mapReady, tripStops, userLocation]);
 
   /* Auto-focus / auto-trail / shared-trail via deep link */
-  const focusId = urlParams.get("focus");
-  const trailParam = urlParams.get("trail");
-  const stopsParam = urlParams.get("stops");
   useEffect(() => {
-    if (!mapReady || !mapRef.current || !filteredStores.length) return;
+    const lookupStores = stores.length ? stores : filteredStores;
+    if (!lookupStores.length) return;
+    const map = mapRef.current;
+    const canMoveMap = !!(mapReady && map && (window as any).google?.maps);
+
+    if (trailParam === "1" && !tripModeRef.current) {
+      setTripMode(true);
+    }
+
     /* ?stops=id1,id2,id3 — load a shared shopping trail */
     if (stopsParam) {
       const ids = stopsParam.split(",");
-      const stops = ids.map((id) => filteredStores.find((s) => s.id === id)).filter(Boolean) as StorePin[];
+      const stops = ids.map((id) => lookupStores.find((s) => s.id === id)).filter(Boolean) as StorePin[];
       if (stops.length > 0) {
         setTripMode(true);
         setTripStops((prev) => {
           const existing = new Set(prev.map((s) => s.id));
-          return [...prev, ...stops.filter((s) => !existing.has(s.id))].slice(0, 8);
+          const missing = stops.filter((s) => !existing.has(s.id));
+          return missing.length ? [...prev, ...missing].slice(0, 8) : prev;
         });
-        const bounds = new google.maps.LatLngBounds();
-        stops.forEach((s) => bounds.extend({ lat: s.latitude, lng: s.longitude }));
-        mapRef.current.fitBounds(bounds, { top: 140, bottom: 220, left: 30, right: 30 });
+        if (canMoveMap) {
+          const bounds = new google.maps.LatLngBounds();
+          stops.forEach((s) => bounds.extend({ lat: s.latitude, lng: s.longitude }));
+          map.fitBounds(bounds, { top: 140, bottom: 220, left: 30, right: 30 });
+        }
       }
     }
     /* ?focus=id — select or add to trail */
     if (focusId) {
-      const target = filteredStores.find((s) => s.id === focusId);
+      const target = lookupStores.find((s) => s.id === focusId || s.slug === focusId);
       if (!target) return;
       if (trailParam === "1") {
         setTripMode(true);
@@ -1070,12 +1323,14 @@ export default function StoreMapPage() {
       } else {
         setSelectedStore(target);
       }
-      mapRef.current.panTo({ lat: target.latitude, lng: target.longitude });
-      mapRef.current.setZoom(15);
+      if (canMoveMap) {
+        map.panTo({ lat: target.latitude, lng: target.longitude });
+        map.setZoom(15);
+      }
     }
-  }, [mapReady, focusId, trailParam, stopsParam, filteredStores]);
+  }, [mapReady, focusId, trailParam, stopsParam, filteredStores, stores]);
 
-  const activeFiltersCount = (openNowOnly ? 1 : 0) + (trendingOnly ? 1 : 0) + (dealsOnly ? 1 : 0) + (smartFilterActive ? 1 : 0) + (activeCategory !== "all" ? 1 : 0) + (activeGroup ? 1 : 0);
+  const activeFiltersCount = (openNowOnly ? 1 : 0) + (trendingOnly ? 1 : 0) + (dealsOnly ? 1 : 0) + (smartFilterActive ? 1 : 0) + (activeCategory !== "all" ? 1 : 0) + (activeGroup ? 1 : 0) + (radiusKm ? 1 : 0);
   const clearAllFilters = useCallback(() => {
     setActiveCategory("all");
     setActiveGroup("");
@@ -1083,11 +1338,86 @@ export default function StoreMapPage() {
     setTrendingOnly(false);
     setDealsOnly(false);
     setSmartFilterActive(false);
+    setRadiusKm(null);
+    setSearchCenter(null);
     setSelectedStore(null);
   }, []);
 
+  const handleZoom = useCallback((direction: 1 | -1) => {
+    const map = mapRef.current;
+    if (mapReady && map) {
+      const currentZoom = map.getZoom() ?? 13;
+      map.setZoom(Math.max(3, Math.min(20, currentZoom + direction)));
+      return;
+    }
+
+    setFallbackZoom((current) => {
+      const next = current + direction * 0.2;
+      return Math.max(0.8, Math.min(1.8, Number(next.toFixed(2))));
+    });
+  }, [mapReady]);
+
+  const handleFallbackStoreSelect = useCallback((store: StorePin) => {
+    if (tripModeRef.current) {
+      setTripStops((prev) => {
+        const exists = prev.find((s) => s.id === store.id);
+        if (exists) return prev.filter((s) => s.id !== store.id);
+        if (prev.length >= 8) {
+          toast.error("Max 8 stops in one trail");
+          return prev;
+        }
+        toast.success(`Added: ${store.name}`, { duration: 1500 });
+        return [...prev, store];
+      });
+      return;
+    }
+
+    setSelectedStore(store);
+    setSheetExpanded(false);
+  }, []);
+
+  const openSearchPanel = useCallback((event?: { preventDefault?: () => void; stopPropagation?: () => void }) => {
+    event?.stopPropagation?.();
+    searchOpenGuardRef.current = Date.now() + 1000;
+    setSelectedStore(null);
+    setDrawerStore(null);
+    setSearchOpen(true);
+    const next = new URLSearchParams(urlParams);
+    next.set("search", "1");
+    if (searchQuery.trim()) next.set("q", searchQuery.trim());
+    setUrlParams(next, { replace: true });
+    window.setTimeout(() => {
+      setSearchOpen(true);
+      searchInputRef.current?.focus();
+    }, 180);
+  }, [searchQuery, setUrlParams, urlParams]);
+
+  const closeSearchPanel = useCallback(() => {
+    const next = new URLSearchParams(urlParams);
+    next.delete("search");
+    next.delete("q");
+    searchOpenGuardRef.current = 0;
+    setSearchOpen(false);
+    setSearchQuery("");
+    setUrlParams(next, { replace: true });
+  }, [setUrlParams, urlParams]);
+
+  const goToStoreList = useCallback((event?: { preventDefault?: () => void; stopPropagation?: () => void }) => {
+    event?.preventDefault?.();
+    event?.stopPropagation?.();
+    const p = new URLSearchParams();
+    if (activeCategory !== "all") p.set("cat", activeCategory);
+    if (searchQuery.trim()) p.set("q", searchQuery.trim());
+    if (openNowOnly) p.set("open", "1");
+    navigate(`/store-map/list${p.toString() ? `?${p.toString()}` : ""}`);
+  }, [activeCategory, navigate, openNowOnly, searchQuery]);
+
   const handleRecenter = useCallback(() => {
-    if (!mapRef.current) return;
+    if (!mapRef.current) {
+      setFallbackZoom(1);
+      setSelectedStore(null);
+      return;
+    }
     const center = userLocation || effectiveCenter;
     if (center) { mapRef.current.panTo(center); mapRef.current.setZoom(14); }
     else if (filteredStores.length) {
@@ -1105,11 +1435,16 @@ export default function StoreMapPage() {
         const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setUserLocation(loc);
         setLocationDenied(false);
+        setLocationNoticeDismissed(false);
         setSearchCenter(null);
         mapRef.current?.panTo(loc);
         mapRef.current?.setZoom(15);
       },
-      () => { setLocationDenied(true); toast.error("Location access denied — enable it in your browser settings"); },
+      () => {
+        setLocationDenied(true);
+        setLocationNoticeDismissed(false);
+        toast.error("Location access denied — enable it in your browser settings");
+      },
       { enableHighAccuracy: true, timeout: 5000 }
     );
   }, []);
@@ -1240,7 +1575,7 @@ export default function StoreMapPage() {
           style={{ background: getCategoryColor(store.category) + "18" }}
         >
           {store.logo_url
-            ? <img src={store.logo_url} alt="" className="w-full h-full object-cover" />
+            ? <img src={store.logo_url} alt={`${store.name} logo`} loading="lazy" className="w-full h-full object-cover" />
             : <span className="text-base">{getCategoryIcon(store.category)}</span>
           }
           {isLive && <span className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border border-white animate-pulse" />}
@@ -1261,8 +1596,13 @@ export default function StoreMapPage() {
               </span>
             )}
             {typeof store.rating === "number" && store.rating > 0 && (
-              <span className="flex items-center gap-0.5 text-[10px] font-bold text-amber-500">
-                <Star className="w-2.5 h-2.5 fill-current" />{store.rating.toFixed(1)}
+              <span
+                className="flex items-center gap-0.5 text-[10px] font-bold text-amber-500"
+                aria-label={`Rated ${store.rating.toFixed(1)} out of 10`}
+              >
+                <Star className="w-2.5 h-2.5 fill-current" aria-hidden="true" />
+                {store.rating.toFixed(1)}
+                <span className="text-muted-foreground font-medium">/10</span>
               </span>
             )}
             {isOpen === true && todayHours && (
@@ -1330,9 +1670,20 @@ export default function StoreMapPage() {
 
   const tripKm = totalTripKm(tripStops, userLocation);
   const showSheet = !selectedStore && !drawerStore && nearbySorted.length > 0 && !(tripMode && tripStops.length > 0);
-  const sheetRows = sheetExpanded ? Math.min(nearbySorted.length, 8) : 3;
-  /* Sheet height approx: header 44px + each row 56px */
-  const sheetHeight = 44 + sheetRows * 56;
+  // On mobile the bottom sheet was eating ~47% of the viewport. Showing 2
+  // peek rows by default (instead of 3) buys back ~56px of map breathing
+  // room while still hinting at "tap Expand for more". On large screens
+  // we still surface 3 rows since real estate is plentiful.
+  const sheetRows = sheetExpanded ? Math.min(nearbySorted.length, 8) : 2;
+  /* Sheet height estimate. Components stacked vertically:
+       - Recently viewed strip   ~50px (only when visible)
+       - Combined filter+sort row ~46px
+       - Sheet header            ~44px
+       - Store rows              rows * 56px
+     The previous formula only counted header + rows and the FAB column
+     ended up tucked behind the sheet on mobile, hiding Locate/Layers. */
+  const sheetChromeHeight = (showRecentRow ? 50 : 0) + 46 + 44;
+  const sheetHeight = sheetChromeHeight + sheetRows * 56;
 
   /* FAB bottom offset adapts to what's visible */
   const fabBottom = drawerStore ? 140 : showSheet ? sheetHeight + 88 + 8 : tripStops.length > 0 ? 220 : 140;
@@ -1369,11 +1720,12 @@ export default function StoreMapPage() {
                     </p>
                   </div>
                   <button type="button" onClick={handleExitTripMode}
+                    aria-label="Exit shopping trail"
                     className="w-9 h-9 rounded-full bg-white/20 flex items-center justify-center text-white">
                     <X className="w-4 h-4" />
                   </button>
                 </motion.div>
-              ) : searchOpen ? (
+              ) : searchPanelOpen ? (
                 <motion.div key="search"
                   initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
                   className="rounded-2xl overflow-hidden bg-card/95 backdrop-blur-xl shadow-lg border border-border/20"
@@ -1389,7 +1741,7 @@ export default function StoreMapPage() {
                       autoFocus
                       className="flex-1 bg-transparent text-sm outline-none text-foreground placeholder:text-muted-foreground/60"
                     />
-                    <button type="button" onClick={() => { setSearchOpen(false); setSearchQuery(""); }}
+                    <button type="button" onClick={closeSearchPanel}
                       className="p-1.5 rounded-full bg-muted/60 text-muted-foreground">
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -1452,7 +1804,16 @@ export default function StoreMapPage() {
                 <motion.div key="title"
                   initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
                 >
-                  <div className="flex items-center gap-2.5 rounded-2xl px-3 py-2.5 bg-card/95 backdrop-blur-xl shadow-lg border border-border/20">
+                  <div
+                    className="flex items-center gap-2.5 rounded-2xl px-3 py-2.5 bg-card/95 backdrop-blur-xl shadow-lg border border-border/20 cursor-pointer"
+                    role="button"
+                    tabIndex={0}
+                    aria-label="Search stores and browse all stores"
+                    onClick={openSearchPanel}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") openSearchPanel(e);
+                    }}
+                  >
                     <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
                       <Store className="w-5 h-5 text-primary" />
                     </div>
@@ -1465,28 +1826,23 @@ export default function StoreMapPage() {
                         {radiusKm && ` within ${radiusKm < 1 ? radiusKm * 1000 + " m" : radiusKm + " km"}`}
                         {trendingCount > 0 && <span className="ml-1 text-emerald-600 font-semibold">· {trendingCount} live</span>}
                         {searchCenter && (
-                          <button type="button" onClick={() => setSearchCenter(null)} className="ml-1.5 text-primary font-semibold underline">reset</button>
+                          <button type="button" onClick={(e) => { e.stopPropagation(); setSearchCenter(null); }} className="ml-1.5 text-primary font-semibold underline">reset</button>
                         )}
                       </p>
                     </div>
                     <motion.button whileTap={{ scale: 0.94 }}
-                      onClick={() => {
-                        const p = new URLSearchParams();
-                        if (activeCategory !== "all") p.set("cat", activeCategory);
-                        if (searchQuery.trim()) p.set("q", searchQuery.trim());
-                        if (openNowOnly) p.set("open", "1");
-                        navigate(`/store-map/list${p.toString() ? `?${p.toString()}` : ""}`);
-                      }}
+                      onPointerDown={goToStoreList}
+                      onClick={goToStoreList}
                       className="h-10 px-3 inline-flex items-center gap-1 rounded-xl bg-primary text-primary-foreground text-[12px] font-bold shadow-sm"
                     >
                       <List className="w-4 h-4" /> See all
                     </motion.button>
-                    <button type="button"
-                      onClick={() => { setSearchOpen(true); setTimeout(() => searchInputRef.current?.focus(), 100); }}
+                    <span
+                      aria-hidden="true"
                       className="w-10 h-10 rounded-xl flex items-center justify-center bg-muted/60 hover:bg-muted"
                     >
                       <Search className="w-[18px] h-[18px] text-muted-foreground" />
-                    </button>
+                    </span>
                   </div>
                 </motion.div>
               )}
@@ -1494,7 +1850,7 @@ export default function StoreMapPage() {
           </div>
 
           {/* Category chips */}
-          {!tripMode && usedCategories.length > 0 && (
+          {!tripMode && (
             <div className="px-4 pt-2.5 pb-1 overflow-x-auto scrollbar-hide">
               <div className="flex gap-2 w-max">
                 {/* Clear all active filters */}
@@ -1507,6 +1863,8 @@ export default function StoreMapPage() {
                   </motion.button>
                 )}
                 <motion.button whileTap={{ scale: 0.95 }}
+                  type="button"
+                  aria-pressed={activeCategory === "all" && !activeGroup && !trendingOnly}
                   onClick={() => { setActiveCategory("all"); setActiveGroup(""); setTrendingOnly(false); setSmartFilterActive(false); setSelectedStore(null); }}
                   className={`min-h-[40px] px-4 py-2 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap border backdrop-blur-sm touch-manipulation ${
                     activeCategory === "all" && !activeGroup && !trendingOnly
@@ -1514,15 +1872,18 @@ export default function StoreMapPage() {
                       : "bg-card/90 text-muted-foreground border-border/30 shadow-sm"
                   }`}
                 >
-                  All ({allStores.length})
+                  All ({stores.length})
                 </motion.button>
                 {/* Preset category groups — single tap filters multiple related categories */}
                 {CATEGORY_GROUPS.map((g) => {
-                  const count = allStores.filter((s) => g.categories.includes(s.category)).length;
+                  const count = stores.filter((s) => g.categories.includes(s.category)).length;
                   if (count === 0) return null;
                   const isActive = activeGroup === g.id;
                   return (
                     <motion.button whileTap={{ scale: 0.95 }} key={g.id}
+                      type="button"
+                      aria-pressed={isActive}
+                      aria-label={`${g.label} category group — ${count} stores`}
                       onClick={() => {
                         setActiveGroup(isActive ? "" : g.id);
                         setActiveCategory("all");
@@ -1539,6 +1900,9 @@ export default function StoreMapPage() {
                   );
                 })}
                 <motion.button whileTap={{ scale: 0.95 }}
+                  type="button"
+                  aria-pressed={openNowOnly}
+                  aria-label={openNowOnly ? "Showing open stores only — tap to clear" : `Filter to ${openNowCount} stores open now`}
                   onClick={() => { setOpenNowOnly((v) => !v); setSelectedStore(null); }}
                   className={`min-h-[40px] px-4 py-2 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 border backdrop-blur-sm touch-manipulation ${
                     openNowOnly ? "bg-emerald-600 text-white border-emerald-600 shadow-md" : "bg-card/90 text-muted-foreground border-border/30 shadow-sm"
@@ -1549,6 +1913,8 @@ export default function StoreMapPage() {
                 {/* Best for now — time-aware smart filter */}
                 {(() => { const { label, emoji } = getBestForNow(); return (
                   <motion.button whileTap={{ scale: 0.95 }}
+                    type="button"
+                    aria-pressed={smartFilterActive}
                     onClick={() => { setSmartFilterActive((v) => !v); setActiveCategory("all"); setTrendingOnly(false); setSelectedStore(null); }}
                     className={`min-h-[40px] px-4 py-2 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 border backdrop-blur-sm touch-manipulation ${
                       smartFilterActive ? "bg-violet-600 text-white border-violet-600 shadow-md" : "bg-card/90 text-muted-foreground border-border/30 shadow-sm"
@@ -1559,6 +1925,8 @@ export default function StoreMapPage() {
                 ); })()}
                 {trendingCount > 0 && (
                   <motion.button whileTap={{ scale: 0.95 }}
+                    type="button"
+                    aria-pressed={trendingOnly}
                     onClick={() => { setTrendingOnly((v) => !v); setActiveCategory("all"); setSelectedStore(null); }}
                     className={`min-h-[40px] px-4 py-2 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 border backdrop-blur-sm touch-manipulation ${
                       trendingOnly ? "bg-orange-500 text-white border-orange-500 shadow-md" : "bg-card/90 text-muted-foreground border-border/30 shadow-sm"
@@ -1569,6 +1937,8 @@ export default function StoreMapPage() {
                 )}
                 {dealStoreIds.size > 0 && (
                   <motion.button whileTap={{ scale: 0.95 }}
+                    type="button"
+                    aria-pressed={dealsOnly}
                     onClick={() => { setDealsOnly((v) => !v); setActiveCategory("all"); setSelectedStore(null); }}
                     className={`px-4 py-2 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 border backdrop-blur-sm ${
                       dealsOnly ? "bg-rose-500 text-white border-rose-500 shadow-md" : "bg-card/90 text-muted-foreground border-border/30 shadow-sm"
@@ -1578,10 +1948,13 @@ export default function StoreMapPage() {
                   </motion.button>
                 )}
                 {usedCategories.map((cat) => {
-                  const count = allStores.filter((s) => s.category === cat.value).length;
+                  const count = stores.filter((s) => s.category === cat.value).length;
                   const isActive = activeCategory === cat.value;
                   return (
                     <motion.button whileTap={{ scale: 0.95 }} key={cat.value}
+                      type="button"
+                      aria-pressed={isActive}
+                      aria-label={`${cat.label} category — ${count} stores`}
                       onClick={() => { setActiveCategory(isActive ? "all" : cat.value); setTrendingOnly(false); setSmartFilterActive(false); setSelectedStore(null); }}
                       className={`min-h-[40px] px-4 py-2 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 border backdrop-blur-sm touch-manipulation ${
                         isActive ? "bg-primary text-primary-foreground border-primary shadow-md" : "bg-card/90 text-muted-foreground border-border/30 shadow-sm"
@@ -1597,16 +1970,43 @@ export default function StoreMapPage() {
           )}
         </div>
 
-        {/* ── FABs (essentials only — pinch-zoom and pull-to-refresh cover
-            the removed Refresh / Zoom+ / Zoom- buttons) ── */}
+        {/* ── Map controls ── */}
         {!drawerStore && (
           <div className="absolute right-4 z-[1500] flex flex-col gap-2.5 transition-all duration-300"
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => e.stopPropagation()}
             style={{ bottom: `${fabBottom}px` }}>
+            <div className="overflow-hidden rounded-full border border-border/20 bg-card/95 shadow-lg backdrop-blur-xl">
+              <motion.button
+                whileTap={{ scale: 0.92 }}
+                type="button"
+                onClick={() => handleZoom(1)}
+                aria-label="Zoom in"
+                className="flex h-12 w-12 items-center justify-center text-foreground hover:bg-muted"
+              >
+                <Plus className="h-5 w-5" />
+              </motion.button>
+              <div className="mx-2 h-px bg-border/60" />
+              <motion.button
+                whileTap={{ scale: 0.92 }}
+                type="button"
+                onClick={() => handleZoom(-1)}
+                aria-label="Zoom out"
+                className="flex h-12 w-12 items-center justify-center text-foreground hover:bg-muted"
+              >
+                <Minus className="h-5 w-5" />
+              </motion.button>
+            </div>
             <motion.div whileTap={{ scale: 0.9 }}>
               <Button
                 onClick={() => {
+                  // Mark the trail feature as discovered the first time the
+                  // user actually taps the FAB — the pulse hint then disappears
+                  // permanently for this device.
+                  try { localStorage.setItem("zivo:map:trail-seen", "1"); } catch { /* noop */ }
+                  setTrailSeen(true);
                   if (tripMode) { handleExitTripMode(); }
-                  else { setTripMode(true); setSelectedStore(null); toast("Tap stores to build your shopping trail", { duration: 3000 }); }
+                  else { setTripMode(true); setSelectedStore(null); toast("Tap stores on the map to build a route. Up to 8 stops.", { duration: 3500 }); }
                 }}
                 className={`w-12 h-12 rounded-full shadow-lg border relative ${
                   tripMode
@@ -1614,7 +2014,9 @@ export default function StoreMapPage() {
                     : "border-border/20 bg-card/95 backdrop-blur-xl text-foreground hover:bg-muted"
                 }`}
                 size="icon" variant="secondary"
-                aria-label="Shopping trail"
+                aria-pressed={tripMode}
+                aria-label={tripMode ? "Exit shopping trail" : "Plan a multi-stop shopping trail"}
+                title={tripMode ? "Exit trail mode" : "Plan a trail — tap stores to chain stops"}
               >
                 <Route className="w-5 h-5" />
                 {tripStops.length > 0 && (
@@ -1622,21 +2024,27 @@ export default function StoreMapPage() {
                     {tripStops.length}
                   </span>
                 )}
+                {!tripMode && tripStops.length === 0 && !trailSeen && (
+                  <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-indigo-500 ring-2 ring-card animate-pulse" aria-hidden="true" />
+                )}
               </Button>
             </motion.div>
             <motion.div whileTap={{ scale: 0.9 }}>
-              <Button variant="secondary" size="icon" onClick={handleLocateMe}
+              <Button
+                variant="secondary"
+                size="icon"
+                onClick={() => {
+                  // Smart locate: jump to GPS when available, otherwise re-fit
+                  // the current filtered set so a panned map snaps back into view.
+                  if (userLocation) handleRecenter();
+                  else handleLocateMe();
+                }}
                 className="w-12 h-12 rounded-full shadow-lg border border-border/20 bg-card/95 backdrop-blur-xl hover:bg-muted"
                 style={{ color: userLocation ? "#4285F4" : undefined }}
-                aria-label="My location">
+                aria-label={userLocation ? "Re-center on me" : "Find my location"}
+                title={userLocation ? "Re-center on me" : "Find my location"}
+              >
                 <Locate className="w-5 h-5" />
-              </Button>
-            </motion.div>
-            <motion.div whileTap={{ scale: 0.9 }}>
-              <Button variant="secondary" size="icon" onClick={handleRecenter}
-                className="w-12 h-12 rounded-full shadow-lg border border-border/20 bg-card/95 backdrop-blur-xl text-foreground hover:bg-muted"
-                aria-label="Recenter">
-                <Navigation className="w-5 h-5" />
               </Button>
             </motion.div>
             <motion.div whileTap={{ scale: 0.9 }}>
@@ -1646,23 +2054,39 @@ export default function StoreMapPage() {
                 className={`w-12 h-12 rounded-full shadow-lg border border-border/20 bg-card/95 backdrop-blur-xl hover:bg-muted relative ${
                   mapStyle !== "light" ? "text-primary border-primary/40" : "text-foreground"
                 }`}
-                aria-label="Toggle map style"
+                aria-label={`Map style: ${mapStyle}. Tap to change.`}
+                title={`Map style: ${mapStyle === "light" ? "Light" : mapStyle === "dark" ? "Dark" : "Satellite"}`}
               >
                 <Layers className="w-5 h-5" />
-                <span className="absolute -bottom-0.5 -right-0.5 text-[8px] font-bold px-1 py-px rounded-full bg-primary text-primary-foreground leading-tight">
-                  {mapStyle === "light" ? "L" : mapStyle === "dark" ? "D" : "S"}
-                </span>
+                <span
+                  aria-hidden="true"
+                  className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full ring-2 ring-card ${
+                    mapStyle === "light" ? "bg-amber-400" : mapStyle === "dark" ? "bg-slate-700" : "bg-emerald-500"
+                  }`}
+                />
               </Button>
             </motion.div>
           </div>
         )}
 
         {/* ── Map ── */}
-        <div ref={mapContainerRef} className="absolute inset-0" style={{ touchAction: "none" }} />
+        <div ref={mapContainerRef} className={`absolute inset-0 ${mapError ? "opacity-0" : ""}`} style={{ touchAction: "none" }} />
+
+        {(mapError || (!mapReady && filteredStores.length > 0)) && (
+          <div className="absolute inset-0 z-[400]">
+            <MapFallbackCanvas
+              stores={nearbySorted.length > 0 ? nearbySorted : stores}
+              selectedStoreId={selectedStore?.id}
+              loading={!mapReady && !mapError && !mapPreviewSettled}
+              zoom={fallbackZoom}
+              onSelect={handleFallbackStoreSelect}
+            />
+          </div>
+        )}
 
         {/* Map loading overlay — visible from first paint so the user
             never sees a blank white screen while the SDK + key resolve. */}
-        {!mapReady && !mapError && (
+        {!mapReady && !mapError && filteredStores.length === 0 && (
           <div className="absolute inset-0 z-[500] flex flex-col items-center justify-center bg-[#f5f5f5]">
             <div className="w-16 h-16 rounded-2xl bg-primary/15 flex items-center justify-center mb-4 animate-pulse">
               <MapPin className="w-8 h-8 text-primary" />
@@ -1674,17 +2098,6 @@ export default function StoreMapPage() {
                 animates the inner half-width bar across the track. */}
             <div className="mt-4 w-40 h-1.5 rounded-full bg-muted overflow-hidden">
               <div className="h-full w-1/2 bg-primary rounded-full animate-shimmer" />
-            </div>
-          </div>
-        )}
-
-        {mapError && (
-          <div className="absolute inset-0 flex items-center justify-center bg-background/90 backdrop-blur-sm">
-            <div className="text-center p-6">
-              <div className="w-16 h-16 rounded-2xl bg-muted/60 flex items-center justify-center mx-auto mb-4">
-                <MapPin className="w-8 h-8 text-muted-foreground" />
-              </div>
-              <p className="text-muted-foreground font-medium">Map unavailable</p>
             </div>
           </div>
         )}
@@ -1735,23 +2148,63 @@ export default function StoreMapPage() {
           )}
         </AnimatePresence>
 
-        {/* ── GPS denied banner ── */}
+        {/* ── GPS denied banner with city quick-jump ── */}
         <AnimatePresence>
-          {locationDenied && !userLocation && (
+          {locationDenied && !userLocation && !locationNoticeDismissed && !tripMode && (
             <motion.div
               initial={{ y: -20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -20, opacity: 0 }}
-              className="absolute top-[72px] left-3 right-3 z-[1600] flex items-center gap-2 rounded-2xl bg-amber-500/95 backdrop-blur-xl shadow-lg px-4 py-2.5 text-white text-[12px] font-semibold"
+              className="absolute top-[128px] left-3 right-3 z-[1600] rounded-2xl border border-amber-200 bg-card/95 px-3 py-2.5 text-[12px] font-semibold text-foreground shadow-lg backdrop-blur-xl"
             >
-              <Locate className="w-4 h-4 shrink-0" />
-              <span className="flex-1">Location unavailable — distances won't show</span>
-              <button type="button"
-                onClick={() => { handleLocateMe(); }}
-                className="min-h-[40px] min-w-[40px] px-1 text-[11px] font-bold underline underline-offset-2 hover:no-underline touch-manipulation"
-              >
-                Retry
-              </button>
+              <div className="flex items-center gap-2">
+                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+                  <Locate className="w-4 h-4" />
+                </span>
+                <span className="min-w-0 flex-1 leading-snug">
+                  Location is off. Pick a city or retry to see distance-sorted results.
+                </span>
+                <button type="button"
+                  onClick={() => { handleLocateMe(); }}
+                  className="min-h-[36px] rounded-full bg-foreground px-3 text-[11px] font-bold text-background touch-manipulation"
+                >
+                  Retry
+                </button>
+                <button
+                  type="button"
+                  aria-label="Dismiss location notice"
+                  onClick={() => setLocationNoticeDismissed(true)}
+                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+              </div>
+              <div className="mt-2 flex items-center gap-1.5 overflow-x-auto scrollbar-hide -mx-1 px-1">
+                {([
+                  { name: "Phnom Penh", lat: 11.5564, lng: 104.9282 },
+                  { name: "Siem Reap", lat: 13.3633, lng: 103.8564 },
+                  { name: "Sihanoukville", lat: 10.6271, lng: 103.5224 },
+                  { name: "Kampot", lat: 10.6101, lng: 104.1810 },
+                  { name: "Battambang", lat: 13.0957, lng: 103.2022 },
+                  { name: "Kep", lat: 10.4830, lng: 104.3160 },
+                ] as Array<{ name: string; lat: number; lng: number }>).map((city) => (
+                  <button
+                    key={city.name}
+                    type="button"
+                    onClick={() => {
+                      setSearchCenter({ lat: city.lat, lng: city.lng });
+                      if (mapRef.current) {
+                        mapRef.current.panTo({ lat: city.lat, lng: city.lng });
+                        mapRef.current.setZoom(12);
+                      }
+                      setLocationNoticeDismissed(true);
+                    }}
+                    className="shrink-0 rounded-full border border-border/30 bg-muted/40 px-3 py-1 text-[11px] font-bold text-foreground hover:bg-muted touch-manipulation"
+                  >
+                    {city.name}
+                  </button>
+                ))}
+              </div>
             </motion.div>
           )}
         </AnimatePresence>
@@ -1763,7 +2216,7 @@ export default function StoreMapPage() {
               initial={{ y: -20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -20, opacity: 0 }}
-              className="absolute top-[72px] left-3 right-3 z-[1600] flex items-center gap-2 rounded-2xl bg-sky-500/95 backdrop-blur-xl shadow-lg px-4 py-2.5 text-white text-[12px] font-semibold"
+              className="absolute top-[128px] left-3 right-3 z-[1600] flex items-center gap-2 rounded-2xl bg-sky-500/95 backdrop-blur-xl shadow-lg px-4 py-2.5 text-white text-[12px] font-semibold"
             >
               <MapPin className="w-4 h-4 shrink-0" />
               <span className="flex-1">No stores near you — showing distant results</span>
@@ -1801,22 +2254,67 @@ export default function StoreMapPage() {
                 </div>
               )}
 
-              {/* Radius chips row */}
-              <div className="px-3 pt-2.5 pb-1 flex items-center gap-2 overflow-x-auto scrollbar-hide">
-                <SlidersHorizontal className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
-                {RADIUS_OPTIONS.map((opt) => (
-                  <button type="button"
-                    key={String(opt.value)}
-                    onClick={() => setRadiusKm(opt.value)}
-                    className={`min-h-[40px] px-3 py-2 rounded-full text-[11px] font-bold whitespace-nowrap border transition-all touch-manipulation ${
-                      radiusKm === opt.value
-                        ? "bg-indigo-600 text-white border-indigo-600"
-                        : "bg-muted/50 text-muted-foreground border-border/30"
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
+              {/* Combined sort + radius row. Sort chips lead because
+                  they're always meaningful; radius chips trail (and are
+                  hidden when no GPS / city is selected, since "5km from
+                  what?" makes no sense without an anchor). On mobile the
+                  whole strip stays in one row to free up map real estate. */}
+              <div
+                role="group"
+                aria-label="Sort and filter stores"
+                className="px-3 pt-2 pb-1.5 flex items-center gap-2 overflow-x-auto scrollbar-hide"
+              >
+                <div role="radiogroup" aria-label="Sort stores" className="flex items-center gap-2 shrink-0">
+                  {([
+                    { id: "distance", label: "Near", icon: <Navigation className="w-3 h-3" /> },
+                    { id: "rating", label: "Top", icon: <Star className="w-3 h-3" /> },
+                    { id: "newest", label: "New", icon: <Sparkles className="w-3 h-3" /> },
+                  ] as Array<{ id: StoreSortMode; label: string; icon: React.ReactNode }>).map((opt) => {
+                    const isActive = sortBy === opt.id;
+                    const disabled = opt.id === "distance" && !effectiveCenter;
+                    return (
+                      <button
+                        key={opt.id}
+                        type="button"
+                        role="radio"
+                        aria-checked={isActive}
+                        aria-label={opt.id === "distance" ? "Sort by distance" : opt.id === "rating" ? "Sort by top rated" : "Sort by newest"}
+                        disabled={disabled}
+                        onClick={() => { setSortBy(opt.id); setVisibleCount(STORE_LIST_PAGE); }}
+                        className={`min-h-[34px] px-3 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap border transition-all touch-manipulation flex items-center gap-1 ${
+                          isActive
+                            ? "bg-foreground text-background border-foreground"
+                            : disabled
+                            ? "bg-muted/30 text-muted-foreground/50 border-border/20 cursor-not-allowed"
+                            : "bg-muted/50 text-muted-foreground border-border/30"
+                        }`}
+                      >
+                        {opt.icon}
+                        {opt.label}
+                      </button>
+                    );
+                  })}
+                </div>
+                {effectiveCenter && (
+                  <>
+                    <span aria-hidden="true" className="h-5 w-px bg-border/40 mx-1 shrink-0" />
+                    <SlidersHorizontal className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+                    {RADIUS_OPTIONS.map((opt) => (
+                      <button type="button"
+                        key={String(opt.value)}
+                        onClick={() => setRadiusKm(opt.value)}
+                        aria-pressed={radiusKm === opt.value}
+                        className={`min-h-[34px] px-3 py-1.5 rounded-full text-[11px] font-bold whitespace-nowrap border transition-all touch-manipulation ${
+                          radiusKm === opt.value
+                            ? "bg-indigo-600 text-white border-indigo-600"
+                            : "bg-muted/50 text-muted-foreground border-border/30"
+                        }`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </>
+                )}
               </div>
 
               {/* Sheet header */}
@@ -1843,21 +2341,38 @@ export default function StoreMapPage() {
                     ? <span className="ml-1.5 text-foreground font-semibold">· tap to add to trail</span>
                     : null}
                 </p>
-                {nearbySorted.length > 3 && (
+                {nearbySorted.length > 2 && (
                   <span className="flex items-center gap-0.5 text-[11px] font-semibold text-primary">
-                    {sheetExpanded ? <><ChevronDown className="w-3.5 h-3.5" /> Less</> : <><ChevronUp className="w-3.5 h-3.5" /> {nearbySorted.length - 3} more</>}
+                    {sheetExpanded ? <><ChevronDown className="w-3.5 h-3.5" /> Collapse</> : <><ChevronUp className="w-3.5 h-3.5" /> Expand</>}
                   </span>
                 )}
               </button>
 
-              {/* Store rows */}
+              {/* Store rows — infinite scroll. Collapsed shows top 3,
+                  expanded reveals a scrollable list with auto-load on scroll. */}
               <div
+                ref={listScrollRef}
                 className="overflow-y-auto transition-all duration-300"
-                style={{ maxHeight: sheetExpanded ? "320px" : "168px" }}
+                style={{ maxHeight: sheetExpanded ? "55vh" : "168px" }}
+                onScroll={handleListScroll}
               >
-                {nearbySorted.slice(0, sheetExpanded ? 10 : 3).map((store, idx) => (
+                {(sheetExpanded ? nearbySorted.slice(0, visibleCount) : nearbySorted.slice(0, 2)).map((store, idx) => (
                   <NearbyRow key={store.id} store={store} rank={idx + 1} />
                 ))}
+                {sheetExpanded && visibleCount < nearbySorted.length && (
+                  <button
+                    type="button"
+                    onClick={() => setVisibleCount((n) => Math.min(n + STORE_LIST_PAGE, nearbySorted.length))}
+                    className="w-full py-3 text-[12px] font-semibold text-primary hover:bg-muted/40 border-t border-border/10"
+                  >
+                    Show {Math.min(STORE_LIST_PAGE, nearbySorted.length - visibleCount)} more
+                  </button>
+                )}
+                {sheetExpanded && nearbySorted.length > 0 && visibleCount >= nearbySorted.length && (
+                  <div className="py-3 text-center text-[11px] text-muted-foreground border-t border-border/10">
+                    End of list · {nearbySorted.length} {nearbySorted.length === 1 ? "store" : "stores"}
+                  </div>
+                )}
               </div>
             </motion.div>
           )}
@@ -1962,7 +2477,8 @@ export default function StoreMapPage() {
                   <div className="relative h-32 w-full overflow-hidden">
                     <img
                       src={selectedStoreGallery[0]}
-                      alt={selectedStore.name}
+                      alt={`${selectedStore.name} — photo`}
+                      loading="lazy"
                       className="w-full h-full object-cover"
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-card/60 to-transparent" />
@@ -1977,7 +2493,7 @@ export default function StoreMapPage() {
                   <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden shadow-sm"
                     style={{ background: getCategoryColor(selectedStore.category) + "12" }}>
                     {selectedStore.logo_url
-                      ? <img src={selectedStore.logo_url} alt="" className="w-full h-full object-cover" />
+                      ? <img src={selectedStore.logo_url} alt={`${selectedStore.name} logo`} loading="lazy" className="w-full h-full object-cover" />
                       : <span className="text-2xl">{getCategoryIcon(selectedStore.category)}</span>}
                   </div>
                   <div className="flex-1 min-w-0">
@@ -1988,8 +2504,13 @@ export default function StoreMapPage() {
                         {getCategoryLabel(selectedStore.category)}
                       </span>
                       {typeof selectedStore.rating === "number" && selectedStore.rating > 0 && (
-                        <span className="flex items-center gap-0.5 text-[11px] font-bold text-amber-500">
-                          <Star className="w-3 h-3 fill-current" /> {selectedStore.rating.toFixed(1)}
+                        <span
+                          className="flex items-center gap-0.5 text-[11px] font-bold text-amber-500"
+                          aria-label={`Rated ${selectedStore.rating.toFixed(1)} out of 10`}
+                        >
+                          <Star className="w-3 h-3 fill-current" aria-hidden="true" />
+                          {selectedStore.rating.toFixed(1)}
+                          <span className="text-muted-foreground font-medium">/10</span>
                         </span>
                       )}
                       {(() => {

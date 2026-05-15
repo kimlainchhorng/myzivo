@@ -11,11 +11,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { openShareToChat } from "@/components/chat/ShareToChatSheet";
 import SEOHead from "@/components/SEOHead";
-
-const formatPrice = (cents: number) =>
-  cents > 0 ? `$${(cents / 100).toFixed(0)}` : "—";
 
 interface ReservationSummary {
   id: string;
@@ -39,6 +37,8 @@ export default function HotelBookingConfirmedPage() {
   const navigate = useNavigate();
   const [params] = useSearchParams();
   const reservationId = params.get("reservation_id") || "";
+  const { format } = useCurrency();
+  const formatPrice = (cents: number) => cents > 0 ? format(cents / 100, "USD") : "—";
 
   const [reservation, setReservation] = useState<ReservationSummary | null>(null);
   const [loading, setLoading] = useState(true);

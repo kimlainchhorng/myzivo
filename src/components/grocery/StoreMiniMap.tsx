@@ -8,11 +8,11 @@ import { MapPin, ExternalLink, Plus, Minus, Locate, Timer, Navigation } from "lu
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { distanceMiles } from "@/hooks/useStorePins";
-import { openDirections } from "@/lib/maps/openDirections";
 
 interface StoreMiniMapProps {
   latitude?: number | null;
   longitude?: number | null;
+  storeId?: string;
   storeName: string;
   slug: string;
   address?: string | null;
@@ -90,8 +90,9 @@ function fmtWalk(mi: number): string {
   return `${mins} min walk`;
 }
 
-export default function StoreMiniMap({ latitude, longitude, storeName, slug, address, userLoc, isLodging }: StoreMiniMapProps) {
+export default function StoreMiniMap({ latitude, longitude, storeId, storeName, slug, address, userLoc, isLodging }: StoreMiniMapProps) {
   const hasCoords = typeof latitude === "number" && typeof longitude === "number";
+  const focusTarget = storeId || slug;
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<any>(null);
@@ -141,9 +142,7 @@ export default function StoreMiniMap({ latitude, longitude, storeName, slug, add
         gestureHandling: "greedy",
         clickableIcons: false,
         backgroundColor: "#f5f5f5",
-        ...(isLodging
-          ? { mapTypeId: "hybrid", tilt: 0 }
-          : { styles: LIGHT_STYLES }),
+        styles: LIGHT_STYLES,
       });
       mapRef.current = map;
 
@@ -176,7 +175,7 @@ export default function StoreMiniMap({ latitude, longitude, storeName, slug, add
           animation: google.maps.Animation?.DROP,
         });
 
-        marker.addListener?.("click", () => navigate(`/store-map?focus=${encodeURIComponent(slug)}`));
+        marker.addListener?.("click", () => navigate(`/store-map?focus=${encodeURIComponent(focusTarget)}`));
       }
       google.maps.event.addListenerOnce(map, "tilesloaded", () => {
         tilesLoadedRef.current = true;
@@ -228,27 +227,14 @@ export default function StoreMiniMap({ latitude, longitude, storeName, slug, add
     const m = mapRef.current;
     if (m && hasCoords) { m.panTo({ lat: latitude as number, lng: longitude as number }); m.setZoom(17); }
   };
-  const openFullMap = () => navigate(`/store-map?focus=${encodeURIComponent(slug)}`);
-  const openStoreDirections = () => {
-    if (hasCoords) {
-      void openDirections({
-        lat: latitude as number,
-        lng: longitude as number,
-        label: storeName,
-        address,
-      });
-      return;
-    }
-    window.open(
-      `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address || storeName)}`,
-      "_blank",
-      "noopener,noreferrer"
-    );
-  };
+  const openFullMap = () => navigate(`/store-map?focus=${encodeURIComponent(focusTarget)}`);
+  const directionsUrl = hasCoords
+    ? `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`
+    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address || storeName)}`;
 
   const showFallback = !hasCoords || failed;
   const staticMapUrl = hasCoords && mapsKey
-    ? `https://maps.googleapis.com/maps/api/staticmap?center=${latitude},${longitude}&zoom=16&size=760x448&scale=2&maptype=${isLodging ? "hybrid" : "roadmap"}&markers=color:green%7Clabel:%7C${latitude},${longitude}&key=${encodeURIComponent(mapsKey)}`
+    ? `https://maps.googleapis.com/maps/api/staticmap?center=${latitude},${longitude}&zoom=16&size=760x448&scale=2&maptype=roadmap&markers=color:green%7Clabel:%7C${latitude},${longitude}&key=${encodeURIComponent(mapsKey)}`
     : "";
   const dist = userLoc && hasCoords
     ? distanceMiles(userLoc, { lat: latitude as number, lng: longitude as number })
@@ -345,7 +331,12 @@ export default function StoreMiniMap({ latitude, longitude, storeName, slug, add
 
       {/* Bottom action row */}
       <div className="absolute bottom-3 left-3 right-3 z-20 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-1.5 rounded-full bg-background/90 backdrop-blur-xl px-3 py-1.5 shadow-lg ring-1 ring-border">
+        <button
+          type="button"
+          onClick={openFullMap}
+          aria-label={`Open ${storeName} location on map`}
+          className="flex min-w-0 items-center gap-1.5 rounded-full bg-background/90 px-3 py-1.5 text-left shadow-lg ring-1 ring-border backdrop-blur-xl transition-transform hover:scale-105"
+        >
           {dist !== null ? (
             <>
               <Timer className="h-3 w-3 text-primary" />
@@ -357,20 +348,21 @@ export default function StoreMiniMap({ latitude, longitude, storeName, slug, add
             <>
               <MapPin className="h-3.5 w-3.5 text-primary" />
               <span className="text-[11px] font-bold text-foreground tracking-tight">
-                {showFallback ? "Open location" : tilesLoaded ? "Drag • pinch to zoom" : "Loading map"}
+                {showFallback ? "Location" : tilesLoaded ? "Map ready" : "Loading map"}
               </span>
             </>
           )}
-        </div>
-        <button
-          type="button"
-          onClick={openStoreDirections}
+        </button>
+        <a
+          href={directionsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
           aria-label={`Get directions to ${storeName}`}
           className="ml-auto flex h-8 items-center gap-1.5 rounded-full bg-background/90 px-3 text-[11px] font-bold text-foreground shadow-lg ring-1 ring-border backdrop-blur-xl transition-transform duration-300 hover:scale-105"
         >
           <Navigation className="h-3.5 w-3.5 text-primary" />
           Directions
-        </button>
+        </a>
         <button
           type="button"
           onClick={openFullMap}

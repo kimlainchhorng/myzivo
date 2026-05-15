@@ -8,7 +8,7 @@ import {
   Wallet, CreditCard, Building2, Copy, CalendarPlus, MessageCircle, ShieldCheck,
   ArrowDown, Share2, BookOpen, FileText,
   BedDouble, Sun, BadgePercent, UserPlus, Baby, Sparkles, Building,
-  Receipt, ConciergeBell, Landmark, Coins,
+  Receipt, ConciergeBell, Landmark, Coins, QrCode,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -21,6 +21,8 @@ import { LodgingStaySelector } from "@/components/lodging/LodgingStaySelector";
 import { ReservationStatusTimeline } from "@/components/lodging/ReservationStatusTimeline";
 import { LodgingPaymentBadge } from "@/components/lodging/LodgingPaymentBadge";
 import { LodgingEmbeddedCheckout } from "@/components/lodging/LodgingEmbeddedCheckout";
+import KHQRPaymentModal from "@/components/shop/KHQRPaymentModal";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { AddonIcon } from "@/components/lodging/addonIcons";
 import { IcsPreviewPanel } from "@/components/lodging/IcsPreviewPanel";
 import { PolicySourceSheet } from "@/components/lodging/PolicySourceSheet";
@@ -64,7 +66,7 @@ interface Props {
 }
 
 type Step = "stay" | "addons" | "guest" | "review" | "success";
-type PayMethod = "pay_at_property" | "card_on_arrival" | "bank_transfer";
+type PayMethod = "pay_at_property" | "card_on_arrival" | "bank_transfer" | "khqr";
 
 interface SelectedAddon extends LodgeAddon {
   qty: number;
@@ -78,6 +80,7 @@ const PAY_METHODS: { id: PayMethod; label: string; sub: string; icon: typeof Wal
   { id: "pay_at_property", label: "Pay at the property", sub: "Cash or card on arrival — no charge now", icon: Wallet },
   { id: "card_on_arrival", label: "Card on file (charged on arrival)", sub: "We'll collect card details at check-in", icon: CreditCard },
   { id: "bank_transfer",  label: "Bank transfer / deposit", sub: "Host will share details by message", icon: Building2 },
+  { id: "khqr", label: "KHQR / ABA Pay", sub: "Scan with ABA Mobile or any KHQR app", icon: QrCode },
 ];
 
 export function LodgingBookingDrawer({
@@ -88,6 +91,7 @@ export function LodgingBookingDrawer({
   checkIn: initialCi, checkOut: initialCo, adults: initialAdults, children: initialChildren,
   onBooked,
 }: Props) {
+  const { format: fmtCurrency } = useCurrency();
   const [step, setStep] = useState<Step>("stay");
   const [checkIn, setCheckIn] = useState(initialCi);
   const [checkOut, setCheckOut] = useState(initialCo);
@@ -108,6 +112,7 @@ export function LodgingBookingDrawer({
   const [submitting, setSubmitting] = useState(false);
   const [reference, setReference] = useState<string | null>(null);
   const [reservationId, setReservationId] = useState<string | null>(null);
+  const [khqrOpen, setKhqrOpen] = useState(false);
   const [reservationStatus] = useState<"hold" | "confirmed" | "checked_in" | "checked_out" | "cancelled" | "no_show">("hold");
   const [guestTouched, setGuestTouched] = useState<Record<string, boolean>>({});
   const [policyScrolled, setPolicyScrolled] = useState(false);
@@ -334,9 +339,16 @@ export function LodgingBookingDrawer({
       }).select("id").maybeSingle();
       if (error) throw error;
       setReference(ref);
-      setReservationId((inserted as any)?.id || null);
+      const newId = (inserted as any)?.id || null;
+      setReservationId(newId);
       setStep("success");
       onBooked?.();
+      if (payMethod === "khqr" && newId) setKhqrOpen(true);
+      if (payMethod !== "card_on_arrival" && newId) {
+        supabase.functions.invoke("notify-lodging-booking-confirmed", {
+          body: { reservationId: newId, paymentMethod: payMethod },
+        }).catch(() => {});
+      }
 
       // For "card_on_arrival" we no longer auto-open Stripe in a new tab —
       // the inline LodgingEmbeddedCheckout shown on the success step now
@@ -349,7 +361,7 @@ export function LodgingBookingDrawer({
     }
   };
 
-  const fmtMoney = (c: number) => `$${(c / 100).toFixed(2)}`;
+  const fmtMoney = (c: number) => fmtCurrency(c / 100, "USD");
   const blocked = rangeIssue.invalid || stayIssue.invalid;
 
   const stepLabel =
@@ -376,7 +388,7 @@ export function LodgingBookingDrawer({
       setAgreeRules(false); setAgreeCancel(false); setPayMethod("pay_at_property");
       setGuestTouched({}); setPolicyScrolled(false); setPolicyOverflows(false);
       setViewedRulesSource(false); setViewedCancelSource(false);
-      setRulesViewedAt(null); setCancelViewedAt(null);
+      setRulesViewedAt(null); setCancelViewedAt(null); setKhqrOpen(false);
     }
     onClose();
   };
@@ -884,6 +896,24 @@ export function LodgingBookingDrawer({
                 cardLast4={(liveReservation as any)?.card_last4 || null}
                 reservationRef={reference}
                 onComplete={() => toast.success("Card authorised — your booking is locked in.")}
+              />
+            )}
+
+            {payMethod === "khqr" && reservationId && (
+              <KHQRPaymentModal
+                open={khqrOpen}
+                onOpenChange={setKhqrOpen}
+                amount={breakdown.total / 100}
+                currency="USD"
+                description={`Booking ${reference} · ${storeName}`}
+                reference={reference || undefined}
+                sourceTable="lodge_reservations"
+                sourceId={reservationId}
+                onSuccess={async () => {
+                  await (supabase as any).from("lodge_reservations")
+                    .update({ payment_status: "paid" })
+                    .eq("id", reservationId);
+                }}
               />
             )}
 

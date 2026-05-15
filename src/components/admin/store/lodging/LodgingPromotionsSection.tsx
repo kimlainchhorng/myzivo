@@ -74,7 +74,7 @@ export default function LodgingPromotionsSection({ storeId }: { storeId: string 
 
   return (
     <SectionShell title="Promotions & Discounts" subtitle="Promo codes, early-bird, last-minute, length-of-stay, and member-only rates." icon={Tag}>
-      <LodgingQuickJump active="lodge-promotions" />
+      <LodgingQuickJump active="lodge-promos" />
       <LodgingSectionStatusBanner title="Promotions & Discounts" icon={Tag} countLabel="Active promos" countValue={stats.activeCount} fixLabel="Open rate plans" fixTab="lodge-rate-plans" />
       {list.isLoading ? <LoadingPanel /> : <>
         <div className="grid gap-3 sm:grid-cols-4">

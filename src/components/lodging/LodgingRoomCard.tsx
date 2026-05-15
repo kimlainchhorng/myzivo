@@ -7,6 +7,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { BedDouble, ChevronRight, Coffee, Plus, CheckCircle2, Tag } from "lucide-react";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { Button } from "@/components/ui/button";
 import { LodgingRoomDetailsModal } from "@/components/lodging/LodgingRoomDetailsModal";
 import { getAmenityIcon } from "@/components/lodging/amenityIcons";
@@ -64,6 +65,7 @@ export function LodgingRoomCard({
   checkInTime, checkOutTime, breakfastRateCents, originalRateCents, badges = [], expandableFeatures = [],
   onReserve,
 }: Props) {
+  const { format } = useCurrency();
   // Derive bed label: prefer old text field, fall back to structured bed_config
   const bedLabel = beds || (bedConfig && bedConfig.length > 0 ? bedConfigSummary(bedConfig) : null);
   // Strip Postgres seconds suffix from time strings e.g. "14:00:00" → "14:00"
@@ -147,12 +149,12 @@ export function LodgingRoomCard({
                 <div className="pt-2 border-t border-white/15 space-y-1.5">
                   <div>
                     <p className="text-[8px] uppercase tracking-[0.14em] font-bold text-white/65 leading-none">Weekday</p>
-                    <p className="text-[15px] font-black leading-tight mt-0.5 drop-shadow-md tracking-tight">US${(baseRateCents / 100).toFixed(0)}</p>
+                    <p className="text-[15px] font-black leading-tight mt-0.5 drop-shadow-md tracking-tight">{format(baseRateCents / 100, "USD")}</p>
                   </div>
                   {weekendRateCents && weekendRateCents !== baseRateCents && (
                     <div>
                       <p className="text-[8px] uppercase tracking-[0.14em] font-bold text-white/65 leading-none">Weekend</p>
-                      <p className="text-[13px] font-extrabold leading-tight mt-0.5 drop-shadow-md tracking-tight">US${(weekendRateCents / 100).toFixed(0)}</p>
+                      <p className="text-[13px] font-extrabold leading-tight mt-0.5 drop-shadow-md tracking-tight">{format(weekendRateCents / 100, "USD")}</p>
                     </div>
                   )}
                 </div>
@@ -276,9 +278,9 @@ export function LodgingRoomCard({
                   </div>
                   <div className="text-right shrink-0">
                     {hasGetaway && original && (
-                      <p className="text-[10px] text-red-500 line-through leading-none">${original.toFixed(0)}</p>
+                      <p className="text-[10px] text-red-500 line-through leading-none">{format(original, "USD")}</p>
                     )}
-                    <p className="text-[15px] font-extrabold text-foreground leading-tight">${price.toFixed(0)}</p>
+                    <p className="text-[15px] font-extrabold text-foreground leading-tight">{format(price, "USD")}</p>
                     <p className="text-[9px] text-muted-foreground">/night</p>
                   </div>
                 </div>
@@ -295,7 +297,7 @@ export function LodgingRoomCard({
                   className="w-full h-8 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-[12px]"
                   onClick={() => onReserve({ rateCents: baseRateCents, label: "Room Only", breakfastIncluded: false })}
                 >
-                  Reserve · ${price.toFixed(0)}/night
+                  Reserve · {format(price, "USD")}/night
                 </Button>
               </div>
             );
@@ -325,9 +327,9 @@ export function LodgingRoomCard({
                   </div>
                   <div className="text-right shrink-0">
                     {bfOriginal && (
-                      <p className="text-[10px] text-red-500 line-through leading-none">${bfOriginal}</p>
+                      <p className="text-[10px] text-red-500 line-through leading-none">{format(bfOriginal, "USD")}</p>
                     )}
-                    <p className="text-[15px] font-extrabold text-foreground leading-tight">${bfPrice.toFixed(0)}</p>
+                    <p className="text-[15px] font-extrabold text-foreground leading-tight">{format(bfPrice, "USD")}</p>
                     <p className="text-[9px] text-muted-foreground">/night</p>
                   </div>
                 </div>
@@ -344,7 +346,7 @@ export function LodgingRoomCard({
                   className="w-full h-8 rounded-full bg-amber-500 hover:bg-amber-600 text-white font-bold text-[12px]"
                   onClick={() => onReserve({ rateCents: breakfastRateCents, label: "Breakfast Included", breakfastIncluded: true })}
                 >
-                  Reserve · ${bfPrice.toFixed(0)}/night
+                  Reserve · {format(bfPrice, "USD")}/night
                 </Button>
               </div>
             );

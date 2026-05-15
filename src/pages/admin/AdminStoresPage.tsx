@@ -39,6 +39,7 @@ const ISSUE_FILTERS = [
 
 type IssueFilter = typeof ISSUE_FILTERS[number]["key"];
 type SortMode = "newest" | "name" | "missing-owner" | "category";
+const STORE_FETCH_PAGE_SIZE = 1000;
 
 function parseSchedule(hours: string): WeeklySchedule {
   try {
@@ -57,6 +58,39 @@ const emptyStore = {
   market: "KH", category: "grocery", address: "", phone: "", hours: JSON.stringify(DEFAULT_SCHEDULE),
   rating: 0, delivery_min: 30, is_active: true,
 };
+
+async function fetchAllAdminStores() {
+  const countQuery = supabase
+    .from("store_profiles")
+    .select("id", { count: "exact", head: true });
+  const firstPageQuery = supabase
+    .from("store_profiles")
+    .select("*")
+    .order("created_at", { ascending: false })
+    .range(0, STORE_FETCH_PAGE_SIZE - 1);
+
+  const [countResult, firstPageResult] = await Promise.all([countQuery, firstPageQuery]);
+  if (countResult.error) throw countResult.error;
+  if (firstPageResult.error) throw firstPageResult.error;
+
+  const totalCount = countResult.count ?? firstPageResult.data?.length ?? 0;
+  const stores = [...(firstPageResult.data || [])];
+
+  for (let offset = STORE_FETCH_PAGE_SIZE; stores.length < totalCount; offset += STORE_FETCH_PAGE_SIZE) {
+    const { data, error } = await supabase
+      .from("store_profiles")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .range(offset, offset + STORE_FETCH_PAGE_SIZE - 1);
+
+    if (error) throw error;
+    if (!data?.length) break;
+    stores.push(...data);
+    if (data.length < STORE_FETCH_PAGE_SIZE) break;
+  }
+
+  return stores;
+}
 
 function slugifyStoreName(value: string) {
   if (/https?:\/\//i.test(value) || /localhost|127\.0\.0\.1/i.test(value)) return "";
@@ -121,14 +155,7 @@ export default function AdminStoresPage() {
 
   const { data: stores = [], isLoading } = useQuery({
     queryKey: ["admin-stores"],
-    queryFn: async () => {
-      const { data, error } = await supabase
-        .from("store_profiles")
-        .select("*")
-        .order("created_at", { ascending: false });
-      if (error) throw error;
-      return data;
-    },
+    queryFn: fetchAllAdminStores,
   });
 
   const getStoreAccountId = (id: string) => `CBD${id.replace(/-/g, '').slice(0, 8).toUpperCase()}`;
@@ -258,6 +285,14 @@ export default function AdminStoresPage() {
     }
     if (!form.name.trim() || !cleanSlug) {
       toast.error("Name and slug are required");
+      return;
+    }
+    const trimmedName = form.name.trim().toLowerCase();
+    const duplicate = stores.find(
+      (s: any) => s.name?.trim().toLowerCase() === trimmedName && s.id !== editingStore?.id
+    );
+    if (duplicate) {
+      toast.error(`A store named "${duplicate.name}" already exists. Please use a unique name.`);
       return;
     }
     saveMutation.mutate(editingStore ? { ...form, slug: cleanSlug, id: editingStore.id } : { ...form, slug: cleanSlug });

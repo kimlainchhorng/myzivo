@@ -20,6 +20,7 @@ export interface StorePin {
   logo_url: string | null;
   latitude: number;
   longitude: number;
+  created_at?: string;
 }
 
 const CACHE_KEY = "zivo:stores:cache";
@@ -50,6 +51,33 @@ function writeCache(data: StorePin[]) {
   }
 }
 
+const STORE_PIN_SELECT = "id, name, slug, category, address, phone, hours, rating, logo_url, latitude, longitude, created_at";
+const STORE_PIN_PAGE_SIZE = 1000;
+
+export async function fetchActiveStorePins(): Promise<StorePin[]> {
+  const rows: StorePin[] = [];
+  let from = 0;
+
+  while (true) {
+    const to = from + STORE_PIN_PAGE_SIZE - 1;
+    const { data, error } = await supabase
+      .from("store_profiles")
+      .select(STORE_PIN_SELECT)
+      .eq("is_active", true)
+      .order("name", { ascending: true })
+      .range(from, to);
+
+    if (error) throw error;
+
+    const page = (data || []) as StorePin[];
+    rows.push(...page);
+    if (page.length < STORE_PIN_PAGE_SIZE) break;
+    from += STORE_PIN_PAGE_SIZE;
+  }
+
+  return rows;
+}
+
 function useOnline() {
   const [online, setOnline] = useState(
     typeof navigator !== "undefined" ? navigator.onLine : true
@@ -75,14 +103,7 @@ export function useStorePins() {
   const query = useQuery({
     queryKey: ["store-map-all"],
     queryFn: async () => {
-      const { data, error } = await supabase
-        .from("store_profiles")
-        .select(
-          "id, name, slug, category, address, phone, hours, rating, logo_url, latitude, longitude"
-        )
-        .eq("is_active", true);
-      if (error) throw error;
-      const rows = (data || []) as StorePin[];
+      const rows = await fetchActiveStorePins();
       writeCache(rows);
       return rows;
     },

@@ -1303,12 +1303,12 @@ const App = () => (
                 {/* /checkout removed — partners block iframe; redirect model used instead */}
 
                 {/* Hotels */}
-                <Route path="/hotels/:city" element={<RouteErrorBoundary section="Hotels"><HotelCityLandingPage /></RouteErrorBoundary>} />
-                <Route path="/hotel/:storeId" element={<RouteErrorBoundary section="HotelDetail"><HotelResortDetailPage /></RouteErrorBoundary>} />
-                <Route path="/hotel/:storeId/book" element={<ProtectedRoute><RouteErrorBoundary section="HotelCheckout"><HotelRoomCheckoutPage /></RouteErrorBoundary></ProtectedRoute>} />
-                <Route path="/hotel/:storeId/booking-confirmed" element={<ProtectedRoute><RouteErrorBoundary section="HotelBookingConfirmed"><HotelBookingConfirmedPage /></RouteErrorBoundary></ProtectedRoute>} />
-                <Route path="/hotels" element={<RouteErrorBoundary section="HotelsLanding"><HotelsLandingPage /></RouteErrorBoundary>} />
-                <Route path="/hotels-list" element={<RouteErrorBoundary section="HotelsDirectory"><HotelsResortsDirectoryPage /></RouteErrorBoundary>} />
+                <Route path="/hotels/:city" element={<RouteErrorBoundary section="Hotels"><CambodiaOnlyGate><HotelCityLandingPage /></CambodiaOnlyGate></RouteErrorBoundary>} />
+                <Route path="/hotel/:storeId" element={<RouteErrorBoundary section="HotelDetail"><CambodiaOnlyGate><HotelResortDetailPage /></CambodiaOnlyGate></RouteErrorBoundary>} />
+                <Route path="/hotel/:storeId/book" element={<ProtectedRoute><RouteErrorBoundary section="HotelCheckout"><CambodiaOnlyGate><HotelRoomCheckoutPage /></CambodiaOnlyGate></RouteErrorBoundary></ProtectedRoute>} />
+                <Route path="/hotel/:storeId/booking-confirmed" element={<ProtectedRoute><RouteErrorBoundary section="HotelBookingConfirmed"><CambodiaOnlyGate><HotelBookingConfirmedPage /></CambodiaOnlyGate></RouteErrorBoundary></ProtectedRoute>} />
+                <Route path="/hotels" element={<RouteErrorBoundary section="HotelsLanding"><CambodiaOnlyGate><HotelsLandingPage /></CambodiaOnlyGate></RouteErrorBoundary>} />
+                <Route path="/hotels-list" element={<RouteErrorBoundary section="HotelsDirectory"><CambodiaOnlyGate><HotelsResortsDirectoryPage /></CambodiaOnlyGate></RouteErrorBoundary>} />
                 {/* /hotels and /hotels/in-:city removed */}
 
                 {/* Car Rental */}

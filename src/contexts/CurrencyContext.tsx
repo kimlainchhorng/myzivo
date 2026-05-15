@@ -93,6 +93,7 @@ function detectBrowserCurrency(): string {
       SG: "SGD",
       TH: "THB",
       KH: "KHR",
+      KM: "KHR",
     };
     
     const detected = regionCurrencyMap[region];
