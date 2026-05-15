@@ -64,6 +64,13 @@ const SpatialCursor = lazyWithRetry(() => import("./components/ui/SpatialCursor"
 const StoryDebugPanel = lazyWithRetry(() => import("@/components/stories/StoryDebugPanel"));
 const PostShareSheet = lazyWithRetry(() => import("@/components/social/PostShareSheet"));
 const ShareToChatSheet = lazyWithRetry(() => import("@/components/chat/ShareToChatSheet"));
+// Chrome / passive overlays — deferred so they don't block first paint.
+const OfflineBanner = lazyWithRetry(() => import("@/components/chat/OfflineBanner"));
+const OutboxFlusher = lazyWithRetry(() => import("@/components/chat/OutboxFlusher"));
+const FloatingReactionsOverlay = lazyWithRetry(() => import("@/components/chat/FloatingReactionsOverlay"));
+const ReactedByHost = lazyWithRetry(() => import("@/components/chat/ReactedByHost"));
+const GlobalDesktopNav = lazyWithRetry(() => import("@/components/app/GlobalDesktopNav"));
+const AdminShellRoute = lazyWithRetry(() => import("@/components/admin/shell/AdminShellRoute").then(m => ({ default: m.AdminShellRoute })));
 const ENABLE_DEV_ROUTES = import.meta.env.DEV;
 let PostMenuRegressionPage: ReturnType<typeof lazy> | null = null;
 let SafeAreaQAPage: ReturnType<typeof lazy> | null = null;
