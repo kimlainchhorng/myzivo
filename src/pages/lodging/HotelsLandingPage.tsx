@@ -536,7 +536,8 @@ export default function HotelsLandingPage() {
           className="absolute inset-0 w-full h-full object-cover"
           aria-hidden
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/75 via-primary/45 to-background" />
+        <div className="absolute inset-0 bg-black/20" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-background" />
 
         <div className="relative px-4 pt-3 pb-4 safe-area-top">
           <div className="flex items-center gap-2">
@@ -547,14 +548,14 @@ export default function HotelsLandingPage() {
             >
               <ArrowLeft className="w-5 h-5 text-white" />
             </button>
-            <h1 className="text-base font-bold text-white flex-1 truncate drop-shadow">Hotels & Resorts</h1>
+            <h1 className="text-base font-bold text-white flex-1 truncate drop-shadow-lg">Hotels & Resorts</h1>
           </div>
 
           <div className="mt-3 mb-3">
-            <h2 className="text-[20px] font-extrabold text-white leading-tight drop-shadow-md">
+            <h2 className="text-[22px] sm:text-[26px] font-extrabold text-white leading-tight drop-shadow-lg">
               Find your perfect stay
             </h2>
-            <p className="mt-0.5 text-[12px] text-white/85 drop-shadow">
+            <p className="mt-1 text-[13px] text-white/90 drop-shadow-md">
               Hotels, resorts and guesthouses across Cambodia.
             </p>
           </div>
