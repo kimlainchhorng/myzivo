@@ -14,7 +14,7 @@ import { InternalLinkGrid, BreadcrumbSchema } from "@/components/seo";
 import HotelExperienceGallery from "@/components/hotel/HotelExperienceGallery";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
-import { motion } from "framer-motion";
+
 import { HOTEL_DISCLAIMERS, HOTEL_TRUST_BADGES } from "@/config/hotelCompliance";
 import { heroPhotos, serviceOverlays, destinationPhotos } from "@/config/photos";
 
