@@ -543,7 +543,10 @@ export default function HotelsLandingPage() {
         <div className="relative px-4 pt-3 pb-4 safe-area-top">
           <div className="flex items-center gap-2">
             <button type="button"
-              onClick={() => navigate(-1)}
+              onClick={() => {
+                if (window.history.length > 1) navigate(-1);
+                else navigate("/");
+              }}
               aria-label="Back"
               className="h-11 w-11 -ml-1 rounded-full flex items-center justify-center bg-white/15 backdrop-blur active:bg-white/25 transition touch-manipulation"
             >
