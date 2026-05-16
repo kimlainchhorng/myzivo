@@ -1,31 +1,45 @@
-## Goal
-Make hizivo.com and the Zivo app measurably faster — focused on real-user metrics (LCP, INP, CLS, TTFB), not guesses.
+# Make hizivo.com + Zivo app measurably faster
 
-## Phase 1 — Measure (no code yet)
-1. Run a Lighthouse pass on the published URL (mobile + desktop) and capture LCP, INP, CLS, TBT, total JS, total image weight.
-2. Add `web-vitals` reporting (tiny, ~2KB) sending p75 LCP/INP/CLS to console + an analytics endpoint so we see *real* user numbers, not lab.
-3. Identify the top 3 bottlenecks from the report (likely candidates: hero image weight, third-party scripts, initial JS chunk, font loading).
+Web-vitals reporter is live. Rather than wait for field data, attack the three highest-leverage targets that already show up in the build output and HTML.
 
-## Phase 2 — High-impact wins (apply only what the report flags)
-- **Images**: Convert hero/LCP image to AVIF + WebP via `vite-imagetools`; add `<link rel="preload" as="image" fetchpriority="high">` for the LCP image; ensure explicit width/height on all `<img>` to kill CLS.
-- **Fonts**: `font-display: swap`, preload only the one weight used above the fold, subset if custom.
-- **Third-party**: Defer/async all analytics + pixel scripts; load Meta/GA only after first interaction or `requestIdleCallback`.
-- **Route splitting**: Verify heavy routes (FeedPage, ExplorePage, admin shell) are still lazy; preload only the landing chunk.
-- **Supabase**: Add indexes for any query >200ms surfaced by `supabase--linter` or query analytics; batch parallel fetches on first paint.
+## 1. Shrink the initial JS bundle (~100 KB gzipped today)
 
-## Phase 3 — Mobile/native (Capacitor)
-- Enable WebView caching headers via `public/_headers` (already partially configured — extend `Cache-Control: public, max-age=31536000, immutable` on hashed assets).
-- Preconnect to Supabase + image CDN in `index.html`.
-- Confirm splash screen hides only after first meaningful paint, not after full hydration.
+- Audit `src/main.tsx` and the root `App.tsx`: anything not needed for first paint (analytics SDKs, Capacitor plugins on web, PostHog, Meta Pixel, remote config) moves behind `requestIdleCallback` or a route-level dynamic import.
+- Move `BrandContext`, `RemoteConfigContext`, `UTMContext`, `TravelCartContext`, `ZivoPlusContext` providers so only what the landing page needs hydrates immediately; the rest mount on first navigation or idle.
+- Verify every heavy route (Feed, Explore, Admin, FlightSearch, DuffelCheckout, WhiteboardPage, LiveKit screens) is `lazy()` and not pulled by an eager import chain. Run `rg "from \"@/pages/" src/App.tsx` style checks.
 
-## Phase 4 — Validate
-Re-run Lighthouse + check web-vitals dashboard after each change. Roll back any change that doesn't move the needle.
+Expected: 30–50 KB gzip off the entry chunk → faster TTI on 4G.
+
+## 2. Fix LCP on the landing page (`/index`)
+
+- Identify the LCP element on `/index` (likely the hero image or headline).
+- If image: add `<link rel="preload" as="image" fetchpriority="high">` in `index.html` for the exact file, set `loading="eager"` + `fetchpriority="high"` on the `<img>`, and ensure explicit `width`/`height` to kill CLS.
+- Convert that single hero to AVIF + WebP (via `vite-imagetools` or one-time `sharp` conversion committed alongside the original).
+- Confirm preconnects for Supabase + image CDN already exist in `index.html`; add if missing.
+
+Expected: 0.5–1.5s LCP improvement on mobile.
+
+## 3. Defer all third-party scripts until idle/interaction
+
+- Audit `index.html` and `src/main.tsx` for GA, Meta Pixel, PostHog, Sentry, any tag manager. Each one should load via `requestIdleCallback` (already the pattern for web-vitals) or on first user interaction, never in the critical path.
+- Keep the `<noscript>` pixel fallback in `<body>`, not `<head>` (HTML5 rule already in your stack notes).
+
+Expected: removes 100–300 ms of main-thread blocking on first load.
+
+## 4. Validate
+
+- Re-publish, then run PageSpeed Insights on `https://hizivo.com` (mobile profile) and capture LCP/INP/CLS/TBT.
+- Cross-check with the live `[vitals]` console lines on a real phone session.
+- Roll back any change in steps 1–3 that doesn't move a metric.
+
+## What this plan does NOT touch
+
+- The 93 KB gzipped CSS — already audited, splitting it risks visual regressions for ~3–4 KB savings.
+- Supabase queries — wait for real slow-query data from the Supabase linter before optimizing.
+- Native Capacitor shell — perf wins there need physical device profiling, not blind edits.
 
 ## Technical notes
-- Skip premature micro-optimizations (already done: lucide-react no-barrel, IntersectionObserver, lazy admin, idle analytics).
-- No new dependencies beyond `web-vitals` and `vite-imagetools` unless data justifies it.
-- Each phase ships independently and gets published before the next.
 
-## Deliverables
-- Phase 1: a numbers report you can read.
-- Phases 2–4: only the fixes the data demands.
+- No new runtime deps unless step 2 picks `vite-imagetools` (build-time only, zero runtime cost).
+- Each step ships independently and gets published before the next, so wins are attributable.
+- All edits stay in `src/main.tsx`, `src/App.tsx`, `index.html`, the LCP image's source path, and at most one new `vite.config.ts` plugin entry.

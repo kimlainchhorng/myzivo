@@ -28,9 +28,11 @@ const CreatorSubscribeSheet = lazy(() => import("@/components/creator/CreatorSub
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useVerificationRealtime } from "@/hooks/useVerificationRealtime";
 import { useOTAUpdate } from "@/hooks/useOTAUpdate";
-import OTAUpdateBanner from "@/components/shared/OTAUpdateBanner";
-import NavigationProgressBar from "@/components/app/NavigationProgressBar";
-import ScrollRestoration from "@/components/app/ScrollRestoration";
+// OTA banner pulls framer-motion — keep it out of the root chunk; it only
+// renders on native when an update is queued.
+const OTAUpdateBanner = lazy(() => import("@/components/shared/OTAUpdateBanner"));
+const NavigationProgressBar = lazy(() => import("@/components/app/NavigationProgressBar"));
+const ScrollRestoration = lazy(() => import("@/components/app/ScrollRestoration"));
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate, useSearchParams } from "react-router-dom";
@@ -912,7 +914,7 @@ const VerificationRealtimeBridge = () => {
 
 function OTAUpdateBannerBridge() {
   const ota = useOTAUpdate();
-  return <OTAUpdateBanner {...ota} />;
+  return <Suspense fallback={null}><OTAUpdateBanner {...ota} /></Suspense>;
 }
 
 function OTAUpdateBootstrap() {
@@ -964,8 +966,8 @@ const App = () => (
                 <RoutePerfTracker />
                 <NativeDeepLinkHandler />
                 <OTAUpdateBootstrap />
-                <NavigationProgressBar />
-                <ScrollRestoration />
+                <Suspense fallback={null}><NavigationProgressBar /></Suspense>
+                <Suspense fallback={null}><ScrollRestoration /></Suspense>
                 <Suspense fallback={null}><PostShareSheet /></Suspense>
                 <Suspense fallback={null}><RoutePrefetcher /></Suspense>
                 <Suspense fallback={null}><PaymentReturnHandler /></Suspense>
