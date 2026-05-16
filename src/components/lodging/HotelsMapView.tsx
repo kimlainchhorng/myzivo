@@ -36,32 +36,8 @@ interface Props {
   apiKey: string;
 }
 
-// ---- Shared script loader (module-scoped so we only load once) -------------
-let mapsScriptPromise: Promise<void> | null = null;
-function loadMapsScript(apiKey: string): Promise<void> {
-  if (typeof window === "undefined") return Promise.reject(new Error("no window"));
-  const w = window as unknown as { google?: { maps?: unknown } };
-  if (w.google?.maps) return Promise.resolve();
-  if (mapsScriptPromise) return mapsScriptPromise;
-  if (!apiKey) return Promise.reject(new Error("no maps key"));
-  mapsScriptPromise = new Promise<void>((resolve, reject) => {
-    const existing = document.querySelector<HTMLScriptElement>('script[data-zivo-maps="1"]');
-    if (existing) {
-      existing.addEventListener("load", () => resolve());
-      existing.addEventListener("error", () => reject(new Error("maps script failed")));
-      return;
-    }
-    const s = document.createElement("script");
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&loading=async`;
-    s.async = true;
-    s.defer = true;
-    s.dataset.zivoMaps = "1";
-    s.onload = () => resolve();
-    s.onerror = () => { mapsScriptPromise = null; reject(new Error("maps script failed")); };
-    document.head.appendChild(s);
-  });
-  return mapsScriptPromise;
-}
+// ---- Shared script loader (delegates to unified loader) -------------------
+const loadMapsScript = (apiKey: string) => loadGoogleMaps(apiKey);
 
 // Pill CSS classes — kept in JS so we can toggle without rebuilding the DOM
 const PILL_BASE =
