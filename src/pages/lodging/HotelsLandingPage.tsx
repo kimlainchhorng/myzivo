@@ -907,10 +907,14 @@ export default function HotelsLandingPage() {
                       </p>
                     )}
                     <div className="mt-1.5 flex items-center justify-between gap-1">
-                      <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-amber-600">
-                        <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
-                        {typeof rating === "number" ? rating.toFixed(1) : "New"}
-                      </span>
+                      {typeof rating === "number" ? (
+                        <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-amber-600">
+                          <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                          {rating.toFixed(1)}
+                        </span>
+                      ) : (store as any).created_at && (Date.now() - new Date((store as any).created_at).getTime()) < 30 * 24 * 60 * 60 * 1000 ? (
+                        <span className="text-[10px] font-semibold text-emerald-600">New</span>
+                      ) : <span />}
                       {typeof showCents === "number" ? (
                         <span className="text-[11px] font-bold text-foreground">
                           from{" "}
