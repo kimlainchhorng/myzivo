@@ -1417,18 +1417,15 @@ function PropertyCard({
     >
       <div className="flex">
         <div className="relative w-32 shrink-0 bg-muted">
-          {(store.banner_url || store.logo_url) ? (
-            <img
-              src={store.banner_url || store.logo_url || ""}
-              alt={`${store.name} cover`}
-              className="absolute inset-0 w-full h-full object-cover"
-              loading="lazy"
-            />
-          ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-primary/10 to-transparent flex items-center justify-center">
-              <HotelIcon className="w-6 h-6 text-primary/60" />
-            </div>
-          )}
+          <SmartImage
+            src={store.banner_url || store.logo_url}
+            alt={`${store.name} cover`}
+            fallback={
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-primary/10 to-transparent flex items-center justify-center">
+                <HotelIcon className="w-6 h-6 text-primary/60" />
+              </div>
+            }
+          />
           {store.is_verified && (
             <Badge className="absolute top-1.5 left-1.5 bg-emerald-600 text-white text-[9px] px-1.5 py-0">
               Verified
