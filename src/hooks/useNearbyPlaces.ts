@@ -70,34 +70,16 @@ async function getApiKey(): Promise<string> {
   return envKey;
 }
 
-// Ensure Google Maps JS with places library is loaded
+// Ensure Google Maps JS with places library is loaded (uses unified loader)
 async function ensureGooglePlaces(apiKey: string): Promise<boolean> {
   if (window.google?.maps?.places) return true;
-
-  // Check if a script is already loading
-  const existing = document.querySelector('script[src*="maps.googleapis.com/maps/api/js"]');
-  if (existing) {
-    // Wait for it to finish loading (up to 10s)
-    for (let i = 0; i < 20; i++) {
-      await new Promise((r) => setTimeout(r, 500));
-      if (window.google?.maps?.places) return true;
-    }
+  try {
+    const { loadGoogleMaps } = await import("@/lib/maps/loadGoogleMaps");
+    await loadGoogleMaps(apiKey);
+    return !!window.google?.maps?.places;
+  } catch {
     return false;
   }
-
-  // Load the script ourselves
-  return new Promise((resolve) => {
-    const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=places,marker&loading=async`;
-    script.async = true;
-    script.defer = true;
-    script.onload = () => {
-      // Give it a moment to initialize
-      setTimeout(() => resolve(!!window.google?.maps?.places), 200);
-    };
-    script.onerror = () => resolve(false);
-    document.head.appendChild(script);
-  });
 }
 
 async function fetchNearbyForType(
