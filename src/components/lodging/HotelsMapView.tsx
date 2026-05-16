@@ -13,6 +13,7 @@ import Hotel from "lucide-react/dist/esm/icons/hotel";
 import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left";
 import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
 import { resolveMapsKey } from "@/lib/mapsKey";
+import { loadGoogleMaps } from "@/lib/maps/loadGoogleMaps";
 import { useCurrency } from "@/contexts/CurrencyContext";
 
 export interface MapHotel {
