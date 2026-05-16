@@ -41,6 +41,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { SmartImage } from "@/components/shared/SmartImage";
 
 import tabHotelsBg from "@/assets/tab-hotels-bg.jpg";
 import destPhnomPenh from "@/assets/destinations/phnom-penh.jpg";
