@@ -1036,7 +1036,7 @@ export default function HotelsLandingPage() {
               className={
                 "shrink-0 min-h-[40px] rounded-full px-3.5 py-2 text-xs font-semibold transition touch-manipulation " +
                 (sortBy === opt.id
-                  ? "bg-primary text-primary-foreground"
+                  ? "bg-foreground text-background"
                   : "bg-muted/70 text-muted-foreground active:bg-muted")
               }
             >
