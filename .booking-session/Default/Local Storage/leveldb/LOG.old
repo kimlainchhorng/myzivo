@@ -1,0 +1,11 @@
+2026/05/16-12:15:20.205 132a8a Reusing MANIFEST /Users/viyitta/Documents/GitHub/myzivo/.booking-session/Default/Local Storage/leveldb/MANIFEST-000001
+2026/05/16-12:15:20.292 132a8a Recovering log #3
+2026/05/16-12:15:20.299 132a8a Level-0 table #3: started
+2026/05/16-12:15:20.315 132a8a Level-0 table #3: 44917 bytes OK
+2026/05/16-12:15:20.316 132a8a Recovering log #4
+2026/05/16-12:15:20.316 132a8a Reusing old log /Users/viyitta/Documents/GitHub/myzivo/.booking-session/Default/Local Storage/leveldb/000004.log 
+2026/05/16-12:15:20.320 132a8a Delete type=0 #3
+2026/05/16-12:15:20.320 132a8a Delete type=2 #5
+2026/05/16-12:16:08.981 132a8c Level-0 table #6: started
+2026/05/16-12:16:09.135 132a8c Level-0 table #6: 42131 bytes OK
+2026/05/16-12:16:09.144 132a8c Delete type=0 #4

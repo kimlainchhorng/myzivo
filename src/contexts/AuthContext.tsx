@@ -57,6 +57,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const initializedRef = useRef(false);
   const loginGraceUntilRef = useRef(0);
   const explicitSignOutRef = useRef(false);
+  // Cache the last user id whose admin role we resolved. TOKEN_REFRESHED fires
+  // every ~hour (and bursts on iOS WKWebView during network churn) — without
+  // this, we'd re-run the RPC and cascade re-renders through every consumer
+  // of useAuth on every refresh.
+  const checkedAdminForRef = useRef<string | null>(null);
 
   const checkAdminRole = async (userId: string) => {
     try {
@@ -85,6 +90,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       if (session?.user) {
         const adminStatus = await checkAdminRole(session.user.id);
         setIsAdmin(adminStatus);
+        checkedAdminForRef.current = session.user.id;
       }
 
       // Only mark as ready AFTER getSession completes
@@ -119,11 +125,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
                 setSession(recoveredSession);
                 setUser(recoveredSession.user);
 
-                try {
-                  const adminStatus = await checkAdminRole(recoveredSession.user.id);
-                  setIsAdmin(adminStatus);
-                } catch {
-                  setIsAdmin(false);
+                if (checkedAdminForRef.current !== recoveredSession.user.id) {
+                  try {
+                    const adminStatus = await checkAdminRole(recoveredSession.user.id);
+                    setIsAdmin(adminStatus);
+                    checkedAdminForRef.current = recoveredSession.user.id;
+                  } catch {
+                    setIsAdmin(false);
+                  }
                 }
                 return;
               }
@@ -136,6 +145,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             setSession(null);
             setUser(null);
             setIsAdmin(false);
+            checkedAdminForRef.current = null;
           })();
           return;
         }
@@ -151,14 +161,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         setUser(session?.user ?? null);
 
         if (session?.user) {
-          checkAdminRole(session.user.id).then((adminStatus) => {
-            setIsAdmin(adminStatus);
-          }).catch(() => {
-            setIsAdmin(false);
-          });
+          // Only re-resolve admin role when the user actually changed (sign-in
+          // / account switch). Skipping this on TOKEN_REFRESHED avoids a
+          // bursty RPC + re-render cascade for every consumer of useAuth.
+          if (checkedAdminForRef.current !== session.user.id) {
+            checkAdminRole(session.user.id).then((adminStatus) => {
+              setIsAdmin(adminStatus);
+              checkedAdminForRef.current = session.user.id;
+            }).catch(() => {
+              setIsAdmin(false);
+            });
+          }
         } else {
           clearSessionArtifacts();
           setIsAdmin(false);
+          checkedAdminForRef.current = null;
         }
       }
     );
@@ -337,6 +354,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setUser(null);
     setSession(null);
     setIsAdmin(false);
+    checkedAdminForRef.current = null;
     // Keep a short guard window; next sign-in resets this naturally.
     setTimeout(() => {
       explicitSignOutRef.current = false;

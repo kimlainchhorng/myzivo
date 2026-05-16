@@ -9,6 +9,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { StarRating } from "@/components/shared/StarRating";
 import SafeCaption from "@/components/social/SafeCaption";
 import { track } from "@/lib/analytics";
+import { optimizeImage } from "@/lib/optimizeImage";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -136,6 +137,17 @@ export default function StoreProfilePage() {
 
   // Lodging support
   const isLodging = !!store && ["hotel", "resort", "guesthouse"].includes(store.category);
+
+  // Smart redirect: hotels/resorts/etc. have a dedicated page at /hotel/:storeId.
+  // Legacy or hardcoded /grocery/shop/:slug links would otherwise render this
+  // grocery-style page for a lodging — redirect them once the store is loaded.
+  useEffect(() => {
+    if (!store) return;
+    const LODGING_CATS = ["hotel","resort","guesthouse","hostel","villa","lodge","motel","inn","boutique"];
+    if (LODGING_CATS.includes(store.category)) {
+      navigate(`/hotel/${store.id}`, { replace: true });
+    }
+  }, [store?.id, store?.category, navigate]);
   const { data: allRooms = [], isLoading: loadingRooms } = useLodgeRooms(isLodging ? store!.id : "");
   const { data: propertyProfile } = useLodgePropertyProfile(isLodging ? store!.id : "");
   const { data: bookingCheck, isLoading: loadingBooking } = useHasStoreBooking(store?.id);
@@ -383,9 +395,12 @@ export default function StoreProfilePage() {
           <div className="relative w-full h-[270px] sm:h-[300px] lg:h-[320px] overflow-hidden bg-muted">
             {coverUrl ? (
               <img
-                src={coverUrl}
+                src={optimizeImage(coverUrl, 1024)}
                 alt={`${store.name} cover`}
                 className="w-full h-full object-cover"
+                loading="eager"
+                decoding="async"
+                fetchPriority="high"
                 style={{ objectPosition: `center ${bannerPosition}%` }}
                 onError={(e) => {
                   // If the cover image fails to load (broken URL, SW cache
@@ -473,8 +488,10 @@ export default function StoreProfilePage() {
                   aria-label={`View ${store.name} photo full screen`}
                 >
                   <img
-                    src={safeLogoUrl}
+                    src={optimizeImage(safeLogoUrl, 160, "square")}
                     alt={store.name}
+                    loading="eager"
+                    decoding="async"
                     className={cn(
                       "h-full w-full transition-transform duration-500 group-hover:scale-105",
                       isLodging ? "object-cover" : "object-contain p-1"

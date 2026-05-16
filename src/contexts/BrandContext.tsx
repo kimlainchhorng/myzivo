@@ -30,20 +30,21 @@ export const DEFAULT_BRAND: BrandConfig = {
 
 export const BrandContext = createContext<BrandContextValue | null>(null);
 
-// Get cached brand from sessionStorage for instant load
+// Persisted across tabs/relaunches so the brand renders instantly on cold start.
+const BRAND_CACHE_KEY = "zivo_brand_config";
+
 function getCachedBrand(): BrandConfig | null {
   try {
-    const cached = sessionStorage.getItem("zivo_brand_config");
+    const cached = localStorage.getItem(BRAND_CACHE_KEY);
     return cached ? JSON.parse(cached) : null;
   } catch {
     return null;
   }
 }
 
-// Cache brand to sessionStorage
 function setCachedBrand(brand: BrandConfig) {
   try {
-    sessionStorage.setItem("zivo_brand_config", JSON.stringify(brand));
+    localStorage.setItem(BRAND_CACHE_KEY, JSON.stringify(brand));
   } catch {
     // Ignore storage errors
   }
@@ -94,9 +95,12 @@ export function BrandProvider({ children }: BrandProviderProps) {
         domain: data.domain,
       };
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    gcTime: 30 * 60 * 1000, // 30 minutes
+    // Brand config changes are rare — 24h stale window keeps the network call
+    // off the critical path on cold boots without going stale in practice.
+    staleTime: 24 * 60 * 60 * 1000,
+    gcTime: 7 * 24 * 60 * 60 * 1000,
     refetchOnWindowFocus: false,
+    placeholderData: cachedBrand ?? undefined,
   });
 
   // Use cached brand while loading, then fetched brand

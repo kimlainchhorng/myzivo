@@ -5,6 +5,7 @@ import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import serviceBrakePads from "@/assets/service-brake-pads.jpg";
 import serviceOilChange from "@/assets/service-oil-change.jpg";
 import { getServiceImage } from "@/config/autoRepairServiceImages";
+import { getStorePublicPath } from "@/lib/storeLink";
 import AdminBookingsTab from "@/components/admin/store/AdminBookingsTab";
 import { useAuth } from "@/contexts/AuthContext";
 import { format } from "date-fns";
@@ -2395,7 +2396,7 @@ export default function AdminStoreEditPage() {
             <Button onClick={() => setChatOpen(true)} variant="outline" size="sm" className="h-10 justify-start gap-2 rounded-xl px-3 lg:min-w-[132px]">
               <MessageCircle className="h-4 w-4" /> Live Chat
             </Button>
-            <Button onClick={() => navigate(`/grocery/shop/${store.slug}`)} variant="outline" size="sm" className="h-10 justify-start gap-2 rounded-xl px-3 lg:min-w-[132px]">
+            <Button onClick={() => navigate(getStorePublicPath(store))} variant="outline" size="sm" className="h-10 justify-start gap-2 rounded-xl px-3 lg:min-w-[132px]">
               <Eye className="h-4 w-4" /> Preview store
             </Button>
           </div>

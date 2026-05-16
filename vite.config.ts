@@ -279,15 +279,6 @@ export default defineConfig(({ mode }) => ({
       {
         find: /^lucide-react$/,
         replacement: path.resolve(__dirname, "./src/lib/lucide-react.ts"),
-        // Skip alias when the importer is the shim itself, otherwise
-        // `export * from "lucide-react"` resolves back to this file and the
-        // build collapses with thousands of MISSING_EXPORT errors.
-        customResolver(source, importer) {
-          if (importer && importer.replace(/\\/g, "/").endsWith("src/lib/lucide-react.ts")) {
-            return null;
-          }
-          return path.resolve(__dirname, "./src/lib/lucide-react.ts");
-        },
       },
       {
         find: "@",

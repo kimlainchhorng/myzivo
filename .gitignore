@@ -41,3 +41,4 @@ Usersabiga*/
 
 # Broken git metadata backup (do not track — contains large pack files)
 .git.broken-backup/
+.scrape-session.local

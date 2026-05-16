@@ -1,0 +1,482 @@
+/**
+ * rescue-booking-images.ts
+ *
+ * Definitive approach: navigate Playwright to each hotel's actual booking.com
+ * page. While the page loads, the browser legitimately fetches all hotel
+ * images from cf.bstatic.com. We listen to network responses and capture the
+ * image bytes (Booking can't block its own browser session). Then we upload
+ * to Supabase Storage and rewrite DB URLs.
+ *
+ * Usage:
+ *   set -a && . ./.scrape-session.local && set +a
+ *   node --experimental-strip-types --no-warnings \
+ *     scripts/rescue-booking-images.ts [--store-id=UUID] [--limit=N]
+ */
+
+import { chromium, type BrowserContext, type Page } from "playwright";
+import { createClient } from "@supabase/supabase-js";
+import { createHash } from "crypto";
+import path from "path";
+import fs from "fs";
+
+// ─── Config ───────────────────────────────────────────────────────────────────
+const SUPABASE_URL = process.env.SUPABASE_URL!;
+const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
+  console.error("Missing SUPABASE_URL or SUPABASE_SERVICE_ROLE_KEY.");
+  process.exit(1);
+}
+const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
+const BUCKET = "store-assets";
+
+const args = process.argv.slice(2);
+const STORE_ID = args.find((a) => a.startsWith("--store-id="))?.split("=")[1] || null;
+const LIMIT_ARG = args.find((a) => a.startsWith("--limit="))?.split("=")[1];
+const LIMIT = LIMIT_ARG ? parseInt(LIMIT_ARG, 10) : null;
+const DRY_RUN = args.includes("--dry-run");
+
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+function extractUrl(item: any): string | null {
+  if (!item) return null;
+  if (typeof item === "string") return item;
+  if (typeof item === "object") return item.url || item.src || null;
+  return null;
+}
+
+function isBookingImageUrl(url: string): boolean {
+  return /bstatic\.com\/xdata\/images\/hotel/.test(url);
+}
+
+/** Extract the unique image identifier from a Booking CDN URL.
+ *  Example: https://cf.bstatic.com/xdata/images/hotel/max1280x900/558574196.jpg
+ *  → "558574196"
+ */
+function imageIdFromUrl(url: string): string | null {
+  const m = url.match(/\/hotel\/[^/]+\/(\d+)\.(?:jpg|jpeg|png|webp)/i);
+  return m ? m[1] : null;
+}
+
+function hashUrl(url: string): string {
+  return createHash("md5").update(url).digest("hex").substring(0, 12);
+}
+
+function fileExtFromUrl(url: string): string {
+  const m = url.match(/\.(jpg|jpeg|png|webp|gif)(?:\?|$)/i);
+  return m ? m[1].toLowerCase() : "jpg";
+}
+
+async function uploadBuffer(
+  buffer: Buffer,
+  storagePath: string,
+  contentType: string,
+): Promise<string | null> {
+  const { error } = await supabase.storage
+    .from(BUCKET)
+    .upload(storagePath, buffer, {
+      contentType,
+      upsert: true,
+      cacheControl: "31536000",
+    });
+  if (error) {
+    console.warn(`  ✗ upload: ${error.message}`);
+    return null;
+  }
+  const { data } = supabase.storage.from(BUCKET).getPublicUrl(storagePath);
+  return data.publicUrl;
+}
+
+// ─── Build storeId → bookingUrl map from log files ────────────────────────────
+function loadBookingUrlMap(): Map<string, string> {
+  const map = new Map<string, string>();
+  const candidates = fs
+    .readdirSync(".")
+    .filter((f) => f.startsWith("booking-") && f.endsWith(".json"));
+
+  for (const f of candidates) {
+    try {
+      const raw = JSON.parse(fs.readFileSync(f, "utf8"));
+      const visit = (obj: any) => {
+        if (!obj || typeof obj !== "object") return;
+        if (Array.isArray(obj)) {
+          for (const item of obj) visit(item);
+          return;
+        }
+        const id = obj.storeId || obj.store_id || obj.id;
+        const url =
+          obj.bookingUrl ||
+          obj.booking_url ||
+          obj.cleanUrl ||
+          obj.url ||
+          obj.source_url;
+        if (
+          id &&
+          typeof id === "string" &&
+          id.length > 30 &&
+          url &&
+          typeof url === "string" &&
+          url.includes("booking.com")
+        ) {
+          if (!map.has(id)) map.set(id, url);
+        }
+        for (const v of Object.values(obj)) visit(v);
+      };
+      visit(raw);
+    } catch {
+      // skip invalid
+    }
+  }
+  return map;
+}
+
+// ─── Core: capture images for a single hotel ──────────────────────────────────
+async function captureHotelImages(
+  context: BrowserContext,
+  bookingUrl: string,
+): Promise<Map<string, { buffer: Buffer; url: string; contentType: string }>> {
+  // Key = image id (e.g. "558574196"), Value = best-quality buffer we captured
+  const captured = new Map<
+    string,
+    { buffer: Buffer; url: string; contentType: string; size: number }
+  >();
+
+  const page = await context.newPage();
+
+  const onResponse = async (resp: any) => {
+    try {
+      const url = resp.url();
+      if (!isBookingImageUrl(url)) return;
+      if (!resp.ok()) return;
+      const ct = resp.headers()["content-type"] || "";
+      if (!ct.startsWith("image/")) return;
+      const id = imageIdFromUrl(url);
+      if (!id) return;
+
+      const buf = await resp.body();
+      const size = buf.length;
+      // Prefer larger versions (max1280 > max500 > max300)
+      const prev = captured.get(id);
+      if (!prev || size > prev.size) {
+        captured.set(id, { buffer: buf, url, contentType: ct, size });
+      }
+    } catch {
+      // ignore body-already-consumed etc
+    }
+  };
+
+  page.on("response", onResponse);
+
+  try {
+    await page.goto(bookingUrl, {
+      waitUntil: "domcontentloaded",
+      timeout: 45000,
+    });
+    await sleep(3500);
+
+    // Scroll the property page first to trigger lazy-loaded room images
+    for (let i = 0; i < 12; i++) {
+      await page.mouse.wheel(0, 1200).catch(() => {});
+      await sleep(400);
+    }
+    await sleep(1500);
+
+    // Try to open the photo gallery — multiple selector variants
+    const gallerySelectors = [
+      "[data-testid='property-gallery-trigger']",
+      "[data-testid='gallery-trigger']",
+      "[data-component='hotel/new-rooms-table/HotelGalleryDesktop']",
+      "button:has-text('Show all photos')",
+      "button:has-text('See all photos')",
+      "button:has-text('See all')",
+      "a[data-testid='gallery-trigger']",
+      "div.bh-photo-grid-thumb-more",
+      "div.bh-photo-grid-photo",
+      "img[data-headerimage]",
+    ];
+    let opened = false;
+    for (const sel of gallerySelectors) {
+      try {
+        const el = page.locator(sel).first();
+        if ((await el.count()) > 0) {
+          await el.click({ timeout: 3000 }).catch(() => {});
+          await sleep(2000);
+          opened = true;
+          break;
+        }
+      } catch {}
+    }
+    if (opened) {
+      // Walk through many photos in the gallery modal
+      for (let i = 0; i < 60; i++) {
+        await page.keyboard.press("ArrowRight").catch(() => {});
+        await sleep(250);
+      }
+      await sleep(1500);
+      // Close gallery
+      await page.keyboard.press("Escape").catch(() => {});
+      await sleep(800);
+    }
+
+    // Click on room rows to expand room galleries
+    try {
+      const roomTriggers = await page
+        .locator(
+          "[data-testid='room-block-photo'], button[aria-label*='photo'], img[data-room-photo]",
+        )
+        .all();
+      for (let i = 0; i < Math.min(roomTriggers.length, 8); i++) {
+        await roomTriggers[i].click({ timeout: 2000 }).catch(() => {});
+        await sleep(800);
+        for (let k = 0; k < 12; k++) {
+          await page.keyboard.press("ArrowRight").catch(() => {});
+          await sleep(200);
+        }
+        await page.keyboard.press("Escape").catch(() => {});
+        await sleep(500);
+      }
+    } catch {}
+
+    // Final wait for any trailing network
+    await sleep(2000);
+  } catch (err) {
+    console.warn(`  ✗ navigation: ${(err as Error).message}`);
+  } finally {
+    page.off("response", onResponse);
+    await page.close().catch(() => {});
+  }
+
+  // Convert Map type
+  const result = new Map<
+    string,
+    { buffer: Buffer; url: string; contentType: string }
+  >();
+  for (const [k, v] of captured)
+    result.set(k, { buffer: v.buffer, url: v.url, contentType: v.contentType });
+  return result;
+}
+
+// ─── Process one store ────────────────────────────────────────────────────────
+async function processStore(
+  context: BrowserContext,
+  store: { id: string; name: string },
+  bookingUrl: string,
+) {
+  console.log(`\n→ ${store.name} (${store.id})`);
+  console.log(`  URL: ${bookingUrl.slice(0, 80)}`);
+
+  const captured = await captureHotelImages(context, bookingUrl);
+  console.log(`  Captured ${captured.size} unique images`);
+
+  if (captured.size === 0) {
+    console.warn(`  ⚠ No images captured — skipping.`);
+    return { gallery: 0, rooms: 0, total: 0 };
+  }
+
+  // Upload all captured images to Supabase + build id→publicUrl map
+  const idToPublicUrl = new Map<string, string>();
+  let uploaded = 0;
+  for (const [id, info] of captured) {
+    const ext = fileExtFromUrl(info.url);
+    const storagePath = `booking-import/${store.id}/${id}.${ext}`;
+    const publicUrl = await uploadBuffer(
+      info.buffer,
+      storagePath,
+      info.contentType || "image/jpeg",
+    );
+    if (publicUrl) {
+      idToPublicUrl.set(id, publicUrl);
+      uploaded++;
+    }
+  }
+  console.log(`  Uploaded ${uploaded}/${captured.size} to storage`);
+
+  // ── Update store_profiles (banner, logo, gallery_images) ───────────────────
+  const { data: profile } = await supabase
+    .from("store_profiles")
+    .select("banner_url, logo_url, gallery_images")
+    .eq("id", store.id)
+    .single();
+
+  const rewrite = (origUrl: string | null): string | null => {
+    if (!origUrl) return origUrl;
+    if (!isBookingImageUrl(origUrl)) return origUrl;
+    const id = imageIdFromUrl(origUrl);
+    if (!id) return origUrl;
+    return idToPublicUrl.get(id) || origUrl;
+  };
+
+  const newBanner = rewrite(profile?.banner_url || null);
+  const newLogo = rewrite(profile?.logo_url || null);
+
+  const origGallery: any[] = Array.isArray(profile?.gallery_images)
+    ? profile!.gallery_images
+    : [];
+  let galleryMigrated = 0;
+  const newGallery = origGallery.map((item) => {
+    const origUrl = extractUrl(item);
+    if (!origUrl || !isBookingImageUrl(origUrl)) return item;
+    const newUrl = rewrite(origUrl);
+    if (newUrl && newUrl !== origUrl) galleryMigrated++;
+    if (typeof item === "object" && item !== null) {
+      return { ...item, url: newUrl };
+    }
+    return newUrl;
+  });
+
+  // If gallery was empty/missing but we have captured images, populate from
+  // captured (excluding banner/logo dupes)
+  if (newGallery.length === 0 && idToPublicUrl.size > 0) {
+    for (const url of idToPublicUrl.values()) {
+      if (url !== newBanner && url !== newLogo) {
+        newGallery.push({ url });
+      }
+    }
+    galleryMigrated = newGallery.length;
+  }
+
+  console.log(`  Gallery: ${galleryMigrated} URLs rewritten`);
+
+  if (!DRY_RUN) {
+    const { error } = await supabase
+      .from("store_profiles")
+      .update({
+        banner_url: newBanner,
+        logo_url: newLogo,
+        gallery_images: newGallery,
+      })
+      .eq("id", store.id);
+    if (error) console.error(`  ✗ store_profiles update: ${error.message}`);
+  }
+
+  // ── Update lodge_rooms.photos ──────────────────────────────────────────────
+  const { data: rooms } = await supabase
+    .from("lodge_rooms")
+    .select("id, name, photos")
+    .eq("store_id", store.id);
+
+  let roomsTotal = 0;
+  for (const room of rooms || []) {
+    const photos: any[] = Array.isArray(room.photos) ? (room.photos as any[]) : [];
+    if (photos.length === 0) continue;
+    let migrated = 0;
+    const newPhotos = photos.map((p) => {
+      const origUrl = extractUrl(p);
+      if (!origUrl || !isBookingImageUrl(origUrl)) return p;
+      const newUrl = rewrite(origUrl);
+      if (newUrl && newUrl !== origUrl) migrated++;
+      if (typeof p === "object" && p !== null) return { ...p, url: newUrl };
+      return newUrl;
+    });
+    roomsTotal += migrated;
+    console.log(`  Room "${room.name}": ${migrated}/${photos.length} rewritten`);
+    if (!DRY_RUN && migrated > 0) {
+      const { error } = await supabase
+        .from("lodge_rooms")
+        .update({ photos: newPhotos })
+        .eq("id", room.id);
+      if (error) console.error(`  ✗ lodge_rooms update: ${error.message}`);
+    }
+  }
+
+  return { gallery: galleryMigrated, rooms: roomsTotal, total: uploaded };
+}
+
+// ─── Main ─────────────────────────────────────────────────────────────────────
+async function main() {
+  console.log("ZIVO Image Rescue: Booking page → Supabase Storage");
+  console.log("==================================================");
+  if (DRY_RUN) console.log("** DRY RUN — no DB writes **\n");
+
+  const urlMap = loadBookingUrlMap();
+  console.log(`Loaded ${urlMap.size} storeId→bookingUrl entries from logs.\n`);
+
+  let query = supabase
+    .from("store_profiles")
+    .select("id, name, gallery_images, banner_url")
+    .in("category", ["lodging", "resort", "hotel"]);
+  if (STORE_ID) query = query.eq("id", STORE_ID);
+
+  const { data: stores, error } = await query;
+  if (error) {
+    console.error("Fetch stores failed:", error.message);
+    process.exit(1);
+  }
+
+  // Stores that need migration: any banner/gallery still on bstatic.com
+  const needs = (stores || []).filter((s) => {
+    if (s.banner_url && isBookingImageUrl(s.banner_url)) return true;
+    const gallery = Array.isArray(s.gallery_images) ? s.gallery_images : [];
+    return gallery.some((it: any) => {
+      const u = extractUrl(it);
+      return u && isBookingImageUrl(u);
+    });
+  });
+
+  // Filter to those we have a booking URL for
+  const withUrls = needs.filter((s) => urlMap.has(s.id));
+  const missing = needs.filter((s) => !urlMap.has(s.id));
+  console.log(
+    `${needs.length} stores need migration. ${withUrls.length} have booking URL, ${missing.length} missing.`,
+  );
+
+  const toProcess = LIMIT ? withUrls.slice(0, LIMIT) : withUrls;
+  if (toProcess.length === 0) {
+    console.log("Nothing to process.");
+    return;
+  }
+
+  const sessionDir = path.resolve(".booking-session");
+  const context = await chromium.launchPersistentContext(sessionDir, {
+    headless: true,
+    userAgent:
+      "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    viewport: { width: 1440, height: 900 },
+  });
+
+  // Optional warm-up
+  try {
+    const wp = await context.newPage();
+    await wp.goto("https://www.booking.com/", {
+      waitUntil: "domcontentloaded",
+      timeout: 30000,
+    });
+    await sleep(1500);
+    await wp.close();
+  } catch {}
+
+  let totalUploaded = 0;
+  let totalGallery = 0;
+  let totalRooms = 0;
+  let processed = 0;
+
+  for (const store of toProcess) {
+    const url = urlMap.get(store.id)!;
+    try {
+      const r = await processStore(context, store, url);
+      totalUploaded += r.total;
+      totalGallery += r.gallery;
+      totalRooms += r.rooms;
+    } catch (err) {
+      console.error(`✗ ${store.name}: ${(err as Error).message}`);
+    }
+    processed++;
+    console.log(`Progress: ${processed}/${toProcess.length}`);
+  }
+
+  await context.close();
+  console.log(
+    `\n✓ Done. Uploaded ${totalUploaded} images. Gallery: ${totalGallery}, Rooms: ${totalRooms}.`,
+  );
+  if (missing.length > 0) {
+    console.log(
+      `\n⚠ ${missing.length} stores skipped (no source URL in logs). First 5 ids:`,
+    );
+    missing.slice(0, 5).forEach((s) => console.log(`  ${s.id} — ${s.name}`));
+  }
+}
+
+main().catch((err) => {
+  console.error("Fatal:", err);
+  process.exit(1);
+});

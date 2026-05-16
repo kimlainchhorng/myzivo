@@ -18,7 +18,20 @@
       "Bash(lsof -iTCP:8080 -sTCP:LISTEN)",
       "Bash(lsof -iTCP:3000 -sTCP:LISTEN)",
       "Bash(bun run *)",
-      "Bash(npm run *)"
+      "Bash(npm run *)",
+      "Bash(sed 's/=.*$/=<redacted>/')",
+      "mcp__claude_ai_Supabase__execute_sql",
+      "Bash(ps -p 17930 -o pid,etime,command)",
+      "Bash(node --experimental-strip-types --no-warnings --check scripts/scrape-booking-discover-cities.ts)",
+      "Bash(echo \"exit=$?\")",
+      "Bash(pkill -f \"scrape-booking-discover-cities\")",
+      "Bash(ps -p 17930 -o pid,etime)",
+      "Bash(ps -p 17930 -o pid,stat,etime,command)",
+      "Bash(ps -p 25202 -o pid,etime,command)",
+      "Bash(ps -p 30160 -o pid,etime,command)",
+      "Bash(grep -rnE \"/grocery/shop/|grocery/shop\\\\$\" src --include=\"*.tsx\" --include=\"*.ts\")",
+      "Bash(node --experimental-strip-types --no-warnings --check scripts/scrape-booking-bulk.ts)",
+      "Bash(break)"
     ]
   }
 }

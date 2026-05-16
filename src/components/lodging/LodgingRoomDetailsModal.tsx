@@ -18,6 +18,7 @@ import { getAmenityIcon } from "@/components/lodging/amenityIcons";
 import { ZoomableImage } from "@/components/lodging/ZoomableImage";
 import { LodgingPhotoLightbox } from "@/components/lodging/LodgingPhotoLightbox";
 import { getLqipUrl, inferCaptionFromUrl } from "@/lib/lqip";
+import { optimizeImage } from "@/lib/optimizeImage";
 import type { LodgeAddon } from "@/hooks/lodging/useLodgeRooms";
 
 interface Props {
@@ -29,6 +30,7 @@ interface Props {
   maxGuests: number;
   sizeSqm?: number | null;
   baseRateCents: number;
+  originalRateCents?: number | null;
   description?: string | null;
   amenities?: string[];
   breakfastIncluded?: boolean;
@@ -103,7 +105,7 @@ const HINTS_KEY = "lodging.gallery.hintsSeen";
 
 export function LodgingRoomDetailsModal({
   open, onOpenChange, name, type, beds, maxGuests, sizeSqm, baseRateCents,
-  description, amenities = [], breakfastIncluded, photos = [], coverIndex = 0,
+  originalRateCents, description, amenities = [], breakfastIncluded, photos = [], coverIndex = 0,
   addons = [], cancellationPolicy, checkInTime, checkOutTime, onReserve,
 }: Props) {
   const { format } = useCurrency();
@@ -206,6 +208,10 @@ export function LodgingRoomDetailsModal({
   }, [api, lightboxIdx]);
 
   const currentCaption = inferCaptionFromUrl(orderedPhotos[idx]);
+  const hasOriginalRate = !!originalRateCents && originalRateCents > baseRateCents;
+  const originalRate = hasOriginalRate ? originalRateCents / 100 : null;
+  const baseRate = baseRateCents / 100;
+  const discountPct = originalRate ? Math.round(((originalRate - baseRate) / originalRate) * 100) : 0;
 
   return (
     <ResponsiveModal
@@ -218,12 +224,32 @@ export function LodgingRoomDetailsModal({
         <div className="flex items-end justify-between gap-3 sm:gap-4">
           <div className="min-w-0">
             <p className="text-[10px] sm:text-xs uppercase tracking-wider text-muted-foreground font-semibold">From</p>
-            <p className="text-2xl sm:text-3xl font-extrabold text-foreground leading-none mt-0.5">
-              {format(baseRateCents / 100, "USD")}
-              <span className="text-xs sm:text-sm font-medium text-muted-foreground"> /night</span>
-            </p>
-            <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">Taxes calculated at booking</p>
+            {originalRate ? (
+              <div className="mt-0.5 space-y-0.5">
+                <p className="text-[10px] sm:text-xs text-muted-foreground line-through">
+                  {format(originalRate, "USD")}
+                </p>
+                <p className="text-2xl sm:text-3xl font-extrabold text-emerald-600 leading-none">
+                  {format(baseRate, "USD")}
+                  <span className="text-xs sm:text-sm font-medium text-muted-foreground"> /night</span>
+                </p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground">
+                  Save {discountPct}% · Taxes calculated at booking
+                </p>
+              </div>
+            ) : (
+              <>
+                <p className="text-2xl sm:text-3xl font-extrabold text-foreground leading-none mt-0.5">
+                  {format(baseRate, "USD")}
+                  <span className="text-xs sm:text-sm font-medium text-muted-foreground"> /night</span>
+                </p>
+                <p className="text-[10px] sm:text-xs text-muted-foreground mt-0.5">Taxes calculated at booking</p>
+              </>
+            )}
           </div>
+            {originalRate && discountPct > 0 && (
+              <span className="rounded-full bg-rose-500 text-white text-[11px] font-extrabold px-2.5 py-1 shrink-0">-{discountPct}%</span>
+            )}
           <Button
             onClick={handleReserve}
             size="lg"
@@ -242,6 +268,7 @@ export function LodgingRoomDetailsModal({
         <div
           className="relative -mx-1 focus-visible:outline-none"
           tabIndex={0}
+          role="region"
           aria-roledescription="carousel"
           aria-label={`${name} photos`}
         >
@@ -262,8 +289,7 @@ export function LodgingRoomDetailsModal({
                               src={lqip}
                               alt=""
                               aria-hidden
-                              className="absolute inset-0 w-full h-full object-contain transition-opacity duration-400"
-                              style={{ filter: "blur(20px)", transform: "scale(1.05)" }}
+                              className="absolute inset-0 w-full h-full object-contain transition-opacity duration-400 blur-[20px] scale-[1.05]"
                             />
                           ) : (
                             <Skeleton className="absolute inset-0 rounded-2xl" />
@@ -282,14 +308,14 @@ export function LodgingRoomDetailsModal({
                             className="absolute inset-0"
                           >
                             <img
-                              src={src}
+                              src={optimizeImage(src, 1024)}
                               alt={`${name} photo ${i + 1} of ${total}`}
                               loading="lazy"
+                              decoding="async"
                               draggable={false}
                               onLoad={() => setLoaded((p) => ({ ...p, [i]: true }))}
                               onError={() => setErrored((p) => ({ ...p, [i]: true }))}
-                              className={`max-h-full max-w-full w-auto h-auto object-contain transition-opacity duration-400 ${isLoaded ? "opacity-100" : "opacity-0"}`}
-                              style={{ userSelect: "none" }}
+                              className={`${isLoaded ? "opacity-100" : "opacity-0"} select-none max-h-full max-w-full w-auto h-auto object-contain transition-opacity duration-400`}
                             />
                           </ZoomableImage>
                         )}

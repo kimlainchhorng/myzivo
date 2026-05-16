@@ -11,6 +11,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { Button } from "@/components/ui/button";
 import { LodgingRoomDetailsModal } from "@/components/lodging/LodgingRoomDetailsModal";
 import { getAmenityIcon } from "@/components/lodging/amenityIcons";
+import { optimizeImage } from "@/lib/optimizeImage";
 import type { LodgeAddon, BedSlot } from "@/hooks/lodging/useLodgeRooms";
 import { bedConfigSummary } from "@/components/lodging/BedConfigBuilder";
 
@@ -90,6 +91,7 @@ export function LodgingRoomCard({
   const includedPerks = expandableFeatures.length > 0
     ? expandableFeatures.slice(0, 4).join(" + ")
     : "Parking + late check-out + early check-in + high-speed internet";
+  const hasDirectDiscount = !!originalRateCents && originalRateCents > baseRateCents;
 
   // Quick chip amenities (icons + labels) — show first 4
   const quickChips = amenities.slice(0, 4);
@@ -117,7 +119,7 @@ export function LodgingRoomCard({
                 </span>
               )}
               {gridPhotos[0] ? (
-                <img src={gridPhotos[0]} alt={name} className="absolute inset-0 h-full w-full object-cover" loading="lazy" />
+                <img src={optimizeImage(gridPhotos[0], 600)} alt={name} className="absolute inset-0 h-full w-full object-cover" loading="lazy" decoding="async" />
               ) : (
                 <div className="absolute inset-0 flex items-center justify-center">
                   <BedDouble className="h-10 w-10 text-muted-foreground/40" />
@@ -174,9 +176,9 @@ export function LodgingRoomCard({
                         className={`relative bg-gradient-to-br from-muted to-muted/50 overflow-hidden ${row === 1 && i === 1 ? "rounded-tr-2xl" : ""} ${row === 2 && i === 1 ? "rounded-br-2xl" : ""}`}
                       >
                         {src ? (
-                          <img src={src} alt="" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" />
+                          <img src={optimizeImage(src, 300)} alt="" className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" loading="lazy" decoding="async" />
                         ) : cover ? (
-                          <img src={cover} alt="" className="absolute inset-0 h-full w-full object-cover opacity-60" loading="lazy" />
+                          <img src={optimizeImage(cover, 300)} alt="" className="absolute inset-0 h-full w-full object-cover opacity-60" loading="lazy" decoding="async" />
                         ) : (
                           <div className="absolute inset-0 flex items-center justify-center">
                             <BedDouble className="h-5 w-5 text-muted-foreground/30" />
@@ -263,9 +265,8 @@ export function LodgingRoomCard({
           {/* Option 1: Room Only */}
           {(() => {
             const price = baseRateCents / 100;
-            const hasGetaway = badges.includes("Getaway Deal") && originalRateCents;
-            const original = originalRateCents ? originalRateCents / 100 : null;
-            const discountPct = hasGetaway && original ? Math.round(((original - price) / original) * 100) : 0;
+            const original = hasDirectDiscount ? (originalRateCents ?? 0) / 100 : null;
+            const discountPct = original ? Math.round(((original - price) / original) * 100) : 0;
             return (
               <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
                 <div className="flex items-start justify-between gap-2 mb-2">
@@ -284,7 +285,7 @@ export function LodgingRoomCard({
                     <p className="text-[9px] text-muted-foreground">/night</p>
                   </div>
                 </div>
-                {hasGetaway && (
+                {original && discountPct > 0 && (
                   <div className="flex gap-1 mb-2">
                     <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-600 text-white font-bold">{discountPct}% off</span>
                     <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-600 text-white font-bold flex items-center gap-0.5">
@@ -373,6 +374,7 @@ export function LodgingRoomCard({
         maxGuests={maxGuests}
         sizeSqm={sizeSqm}
         baseRateCents={baseRateCents}
+        originalRateCents={originalRateCents}
         description={description}
         amenities={amenities}
         breakfastIncluded={breakfastIncluded}

@@ -40,6 +40,8 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useStorePins, distanceMiles, type StorePin } from "@/hooks/useStorePins";
+import { getStorePublicPath } from "@/lib/storeLink";
+import { optimizeImage } from "@/lib/optimizeImage";
 import { useStoreFavorites } from "@/hooks/useStoreFavorites";
 import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
 import { buildShopDeepLink } from "@/lib/deepLinks";
@@ -351,7 +353,8 @@ export default function StoresListPage() {
   };
 
   const handleViewStore = (s: StorePin, promo?: string | null) => {
-    const path = `/grocery/shop/${s.slug}${promo ? `?promo=${encodeURIComponent(promo)}` : ""}`;
+    const base = getStorePublicPath(s);
+    const path = `${base}${promo ? `?promo=${encodeURIComponent(promo)}` : ""}`;
     navigate(path);
   };
 
@@ -441,7 +444,7 @@ export default function StoresListPage() {
         >
           <div className="relative w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden bg-muted/40">
             {s.logo_url ? (
-              <img src={s.logo_url} alt={s.name} className="w-full h-full object-cover" loading="lazy" />
+              <img src={optimizeImage(s.logo_url, 120, "square")} alt={s.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
             ) : (
               <span className="text-2xl">{getIcon(s.category)}</span>
             )}

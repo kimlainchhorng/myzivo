@@ -50,7 +50,11 @@ const config: CapacitorConfig = {
       // after first paint. As a safety net if that never fires, the splash
       // auto-hides at launchShowDuration so users never get a permanent splash.
       launchAutoHide: false,
-      launchShowDuration: 5000,
+      // main.tsx hides the splash after first paint (usually ~800-1500 ms).
+      // This is the safety-net cap — at 5 s the user stares at the splash if
+      // the JS bundle stalls. 2.5 s is still safe but feels much snappier on
+      // mid-tier devices where boot does complete in time.
+      launchShowDuration: 2500,
       launchFadeOutDuration: 200,
       backgroundColor: '#0D0D0F',
       androidScaleType: 'CENTER_CROP',

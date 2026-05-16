@@ -3,6 +3,8 @@
  * Shows only stores within 15mi of customer's delivery address
  */
 import { useNavigate } from "react-router-dom";
+import { getStorePublicPath } from "@/lib/storeLink";
+import { optimizeImage } from "@/lib/optimizeImage";
 import { motion, AnimatePresence, useScroll, useTransform } from "framer-motion";
 import { ArrowLeft, ShoppingCart, Sparkles, Clock, Zap, ChevronRight, TrendingUp, Star, Store, MapPin, Truck, Shield, Loader2, AlertCircle, ClipboardList } from "lucide-react";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
@@ -443,13 +445,13 @@ export default function GroceryMarketplace() {
                   <motion.button
                     key={ds.id}
                     variants={cardVariant}
-                    onClick={() => navigate(`/grocery/shop/${ds.slug}`)}
+                    onClick={() => navigate(getStorePublicPath(ds))}
                     className="w-full rounded-2xl bg-card border border-border/30 hover:border-primary/20 hover:shadow-lg transition-all text-left group overflow-hidden"
                   >
                     {/* Cover / Banner */}
                     {ds.banner_url ? (
                       <div className="h-24 w-full relative">
-                        <img src={ds.banner_url} alt="" className="h-full w-full object-cover" loading="lazy" />
+                        <img src={optimizeImage(ds.banner_url, 500)} alt="" className="h-full w-full object-cover" loading="lazy" decoding="async" />
                         <div className="absolute inset-0 bg-gradient-to-t from-card/80 to-transparent" />
                       </div>
                     ) : (
@@ -460,7 +462,7 @@ export default function GroceryMarketplace() {
                     <div className="flex items-center gap-3 px-3 pb-3 -mt-5 relative">
                       <div className="h-14 w-14 rounded-xl bg-background border-2 border-card shadow-md overflow-hidden flex items-center justify-center shrink-0">
                         {ds.logo_url ? (
-                          <img src={ds.logo_url} alt={ds.name} className="h-full w-full object-contain p-1" loading="lazy" />
+                          <img src={optimizeImage(ds.logo_url, 120, "square")} alt={ds.name} className="h-full w-full object-contain p-1" loading="lazy" decoding="async" />
                         ) : (
                           <Store className="h-6 w-6 text-muted-foreground/30" />
                         )}

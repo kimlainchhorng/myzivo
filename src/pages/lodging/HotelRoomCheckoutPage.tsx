@@ -74,6 +74,9 @@ export default function HotelRoomCheckoutPage() {
 
   // Price calc
   const basePerNight = room?.base_rate_cents ?? 0;
+  const originalPerNight = room?.original_rate_cents ?? null;
+  const hasDiscount = !!originalPerNight && originalPerNight > basePerNight;
+  const discountPct = hasDiscount && originalPerNight ? Math.round(((originalPerNight - basePerNight) / originalPerNight) * 100) : 0;
   const subtotalCents = basePerNight * nights;
   const taxPct = (room?.fees?.vat_pct ?? 10);
   const taxCents = Math.round(subtotalCents * taxPct / 100);
@@ -235,6 +238,18 @@ export default function HotelRoomCheckoutPage() {
               <p className="text-[11px] text-muted-foreground mt-0.5">
                 {room.beds || room.room_type || "Room"} · {room.max_guests} guests
               </p>
+              {(hasDiscount || room.original_rate_cents) && (
+                <div className="mt-1 flex items-center gap-2 text-[10px]">
+                  {hasDiscount && originalPerNight ? (
+                    <>
+                      <span className="text-muted-foreground line-through">{formatPrice(originalPerNight)}</span>
+                      <span className="rounded-full bg-rose-500/10 text-rose-600 dark:text-rose-400 px-1.5 py-0.5 font-semibold">-{discountPct}%</span>
+                    </>
+                  ) : (
+                    <span className="text-muted-foreground">Original rate available</span>
+                  )}
+                </div>
+              )}
               <div className="mt-2 flex items-center gap-3 text-[11px] text-muted-foreground">
                 <span className="flex items-center gap-1">
                   <CalendarRange className="w-3 h-3" />

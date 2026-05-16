@@ -1,4 +1,5 @@
 import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
+import { getStorePublicPath } from "@/lib/storeLink";
 import AdminLayout from "@/components/admin/AdminLayout";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
@@ -613,7 +614,7 @@ export default function AdminStoresPage() {
                           <Hotel className="h-4 w-4" /> Operations
                         </Button>
                       )}
-                      <Button size="sm" variant="outline" title="View Public Store" aria-label={`View public page for ${store.name}`} onClick={() => navigate(`/grocery/shop/${store.slug}`)} className="gap-1.5">
+                      <Button size="sm" variant="outline" title="View Public Store" aria-label={`View public page for ${store.name}`} onClick={() => navigate(getStorePublicPath(store))} className="gap-1.5">
                         <Eye className="h-4 w-4" />
                         <span className="hidden xl:inline">View</span>
                       </Button>

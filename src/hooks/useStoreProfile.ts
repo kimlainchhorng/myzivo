@@ -112,15 +112,22 @@ export function useMarketStores(market: string) {
   return useQuery({
     queryKey: ["market-stores", market],
     queryFn: async () => {
+      // Only the columns the marketplace tiles actually render. The wide
+      // gallery_images / description JSON blobs are excluded — they balloon
+      // the response by 10-50× and the marketplace doesn't use them.
       const { data, error } = await supabase
         .from("store_profiles")
-        .select("*")
+        .select("id,name,slug,banner_url,logo_url,category,market,hours,rating,delivery_min")
         .eq("market", market)
         .eq("is_active", true)
         .order("name");
       if (error) throw error;
-      return (data || []) as StoreProfile[];
+      return (data || []) as Pick<StoreProfile,
+        "id" | "name" | "slug" | "banner_url" | "logo_url" | "category" | "market" | "hours" | "rating" | "delivery_min"
+      >[];
     },
     enabled: !!market,
+    // Marketplace store list rarely changes within a session.
+    staleTime: 60_000,
   });
 }

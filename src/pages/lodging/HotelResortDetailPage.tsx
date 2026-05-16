@@ -24,6 +24,7 @@ import Phone from "lucide-react/dist/esm/icons/phone";
 import MessageCircle from "lucide-react/dist/esm/icons/message-circle";
 import { openShareToChat } from "@/components/chat/ShareToChatSheet";
 import { resolveMapsKey } from "@/lib/mapsKey";
+import { optimizeImage } from "@/lib/optimizeImage";
 import Globe from "lucide-react/dist/esm/icons/globe";
 import Wifi from "lucide-react/dist/esm/icons/wifi";
 import Coffee from "lucide-react/dist/esm/icons/coffee";
@@ -203,6 +204,11 @@ export default function HotelResortDetailPage() {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIdx, setLightboxIdx] = useState(0);
   const [showStickyHeader, setShowStickyHeader] = useState(false);
+  const [coverFailed, setCoverFailed] = useState(false);
+  const [logoFailed, setLogoFailed] = useState(false);
+  // Reset failure flags whenever the underlying urls change
+  useEffect(() => { setCoverFailed(false); }, [cover]);
+  useEffect(() => { setLogoFailed(false); }, [store?.logo_url]);
   const heroSentinelRef = useRef<HTMLDivElement | null>(null);
   const [isFavorite, setIsFavorite] = useState<boolean>(() => {
     if (!storeId) return false;
@@ -311,10 +317,28 @@ export default function HotelResortDetailPage() {
   const [allRoomsOpen, setAllRoomsOpen] = useState(false);
   const [mapsKey, setMapsKey] = useState<string>("");
   useEffect(() => {
+    // Only resolve the Maps API key when this hotel actually has coordinates
+    // (otherwise the map section never renders), and defer to idle time so
+    // it stays off the critical path on first paint.
+    if (typeof store?.latitude !== "number" || typeof store?.longitude !== "number") return;
     let cancelled = false;
-    void resolveMapsKey().then((k) => { if (!cancelled) setMapsKey(k); });
-    return () => { cancelled = true; };
-  }, []);
+    const run = () => {
+      if (cancelled) return;
+      void resolveMapsKey().then((k) => { if (!cancelled) setMapsKey(k); });
+    };
+    const w = window as Window & {
+      requestIdleCallback?: (cb: () => void, opts?: { timeout: number }) => number;
+      cancelIdleCallback?: (handle: number) => void;
+    };
+    const handle = typeof w.requestIdleCallback === "function"
+      ? w.requestIdleCallback(run, { timeout: 2000 })
+      : window.setTimeout(run, 1500);
+    return () => {
+      cancelled = true;
+      if (typeof w.cancelIdleCallback === "function") w.cancelIdleCallback(handle as number);
+      else window.clearTimeout(handle as number);
+    };
+  }, [store?.latitude, store?.longitude]);
   const nights = Math.max(1, differenceInCalendarDays(checkOut, checkIn));
 
   // Per-room availability for the user's selected dates
@@ -507,12 +531,15 @@ export default function HotelResortDetailPage() {
           aria-label={galleryImages.length ? `View all ${galleryImages.length} photos` : "Hotel cover"}
           className="relative h-56 md:h-80 lg:h-[420px] w-full overflow-hidden bg-muted block group"
         >
-          {cover ? (
+          {cover && !coverFailed ? (
             <img
-              src={cover}
+              src={optimizeImage(cover, 1024)}
               alt={store?.name ? `${store.name} cover` : "Hotel cover"}
               className="absolute inset-0 w-full h-full object-cover transition-transform group-active:scale-[1.02]"
               loading="eager"
+              decoding="async"
+              fetchPriority="high"
+              onError={() => setCoverFailed(true)}
             />
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-primary/10 to-transparent" />
@@ -579,13 +606,15 @@ export default function HotelResortDetailPage() {
           className="relative rounded-2xl border border-border bg-card shadow-sm p-4 pt-8"
         >
           {/* Logo avatar floating over the cover */}
-          {store?.logo_url && (
+          {store?.logo_url && !logoFailed && (
             <div className="absolute -top-7 left-4 h-14 w-14 rounded-2xl overflow-hidden border-2 border-background bg-muted shadow-md ring-1 ring-border">
               <img
-                src={store.logo_url}
+                src={optimizeImage(store.logo_url, 120, "square")}
                 alt={`${store.name} logo`}
                 className="w-full h-full object-cover"
                 loading="eager"
+                decoding="async"
+                onError={() => setLogoFailed(true)}
               />
             </div>
           )}
@@ -906,7 +935,7 @@ export default function HotelResortDetailPage() {
                   >
                     <div className="h-28 bg-muted relative">
                       {photo ? (
-                        <img src={photo} alt={room.name} className="w-full h-full object-cover" loading="lazy" />
+                        <img src={optimizeImage(photo, 320)} alt={room.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <Hotel className="w-6 h-6 text-muted-foreground" />
@@ -1430,7 +1459,7 @@ export default function HotelResortDetailPage() {
                   <div key={room.id} className={cn("rounded-xl border border-border bg-card overflow-hidden", soldOut && "opacity-80")}>
                     <div className="h-28 bg-muted relative">
                       {photo ? (
-                        <img src={photo} alt={room.name} className="w-full h-full object-cover" loading="lazy" />
+                        <img src={optimizeImage(photo, 320)} alt={room.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
                       ) : (
                         <div className="w-full h-full flex items-center justify-center">
                           <Hotel className="w-6 h-6 text-muted-foreground" />

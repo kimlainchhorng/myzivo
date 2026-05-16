@@ -9,6 +9,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
+import { getStorePublicPath } from "@/lib/storeLink";
 import SEOHead from "@/components/SEOHead";
 import {
   MapPin, Clock, Star, Navigation, Store, ChevronRight, Search, X,
@@ -2466,7 +2467,7 @@ export default function StoreMapPage() {
             >
               <div
                 className="rounded-[20px] overflow-hidden shadow-2xl border border-border/20 bg-card/95 backdrop-blur-xl cursor-pointer active:scale-[0.98] transition-transform"
-                onClick={() => navigate(`/grocery/shop/${selectedStore.slug}`)}
+                onClick={() => navigate(getStorePublicPath(selectedStore))}
               >
                 {/* Gallery banner — first photo when available */}
                 {selectedStoreGallery.length > 0 && (
@@ -2615,7 +2616,7 @@ export default function StoreMapPage() {
                       <div className="w-px bg-border/20" />
                       <button type="button"
                         className="flex-1 min-w-[33%] py-3 text-[12px] font-bold text-center text-primary hover:bg-primary/5 flex items-center justify-center gap-1.5"
-                        onClick={(e) => { e.stopPropagation(); navigate(`/grocery/shop/${selectedStore.slug}`); }}
+                        onClick={(e) => { e.stopPropagation(); navigate(getStorePublicPath(selectedStore)); }}
                       >
                         <Store className="w-3.5 h-3.5" /> View Store
                       </button>
@@ -2731,7 +2732,7 @@ export default function StoreMapPage() {
                                 commerceLinkDraft: {
                                   linkType: "store_product",
                                   storeId: selectedStore.id, storeProductId: selectedProductId,
-                                  checkoutPath: `/grocery/shop/${selectedStore.slug}?buy=${selectedProductId}`,
+                                  checkoutPath: `${getStorePublicPath(selectedStore)}?buy=${selectedProductId}`,
                                   mapLat: selectedStore.latitude, mapLng: selectedStore.longitude, mapLabel: selectedStore.name,
                                 },
                               },
@@ -2750,7 +2751,7 @@ export default function StoreMapPage() {
                               sourceType: "store_product", sourceTable: "store_products", sourceId: selectedProductId,
                               payload: { store_id: selectedStore.id },
                             });
-                            navigate(`/grocery/shop/${selectedStore.slug}?buy=${selectedProductId}`);
+                            navigate(`${getStorePublicPath(selectedStore)}?buy=${selectedProductId}`);
                           }}
                         >
                           Buy Now
@@ -2776,7 +2777,7 @@ export default function StoreMapPage() {
             isLive={!!liveStoreMap[drawerStore.id]}
             gallery={drawerStore.id === selectedStore?.id ? selectedStoreGallery : undefined}
             onClose={() => setDrawerStore(null)}
-            onView={(s) => navigate(`/grocery/shop/${s.slug}`)}
+            onView={(s) => navigate(getStorePublicPath(s))}
             onRide={(s, promo) => handleRideSelected(s, promo)}
             onDirections={(s) => openDirections({ lat: s.latitude, lng: s.longitude, label: s.name, address: s.address })}
             onShare={(s) => handleShareSelected(s)}
