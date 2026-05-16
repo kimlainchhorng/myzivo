@@ -303,7 +303,7 @@ export default function HotelLanding() {
             </p>
           </div>
         </section>
-      </motion.main>
+      </main>
       
       <Footer />
     </div>
