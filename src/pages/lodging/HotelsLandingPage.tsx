@@ -744,10 +744,10 @@ export default function HotelsLandingPage() {
               else requestNearMe();
             }}
             className={cn(
-              "shrink-0 inline-flex min-h-[40px] items-center gap-1 rounded-full px-3.5 py-2 text-[11px] font-semibold transition border touch-manipulation",
+              "shrink-0 inline-flex min-h-[40px] items-center gap-1 rounded-full px-3.5 py-2 text-[11px] font-semibold transition border shadow-sm touch-manipulation",
               coords
                 ? "bg-primary text-primary-foreground border-primary"
-                : "bg-background text-foreground border-border active:bg-muted",
+                : "bg-card text-foreground border-border/80 hover:bg-muted active:bg-muted",
             )}
           >
             <LocateFixed className="w-3 h-3" />
@@ -759,10 +759,10 @@ export default function HotelsLandingPage() {
               onClick={() => setSavedOnly((v) => !v)}
               aria-pressed={savedOnly}
               className={cn(
-                "shrink-0 inline-flex min-h-[40px] items-center gap-1 rounded-full px-3.5 py-2 text-[11px] font-semibold transition border touch-manipulation",
+                "shrink-0 inline-flex min-h-[40px] items-center gap-1 rounded-full px-3.5 py-2 text-[11px] font-semibold transition border shadow-sm touch-manipulation",
                 savedOnly
                   ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-background text-foreground border-border active:bg-muted",
+                  : "bg-card text-foreground border-border/80 hover:bg-muted active:bg-muted",
               )}
             >
               <Heart className={cn("w-3 h-3", savedOnly ? "fill-current" : "fill-rose-500 text-rose-500")} />
@@ -776,10 +776,10 @@ export default function HotelsLandingPage() {
                 key={tag.id}
                 onClick={() => toggleTag(tag.id)}
                 className={cn(
-                  "shrink-0 min-h-[40px] rounded-full px-3.5 py-2 text-[11px] font-semibold transition border touch-manipulation",
+                  "shrink-0 min-h-[40px] rounded-full px-3.5 py-2 text-[11px] font-semibold transition border shadow-sm touch-manipulation",
                   active
                     ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-background text-foreground border-border active:bg-muted",
+                    : "bg-card text-foreground border-border/80 hover:bg-muted active:bg-muted",
                 )}
               >
                 {tag.label}
