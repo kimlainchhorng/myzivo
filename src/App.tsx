@@ -914,7 +914,7 @@ const VerificationRealtimeBridge = () => {
 
 function OTAUpdateBannerBridge() {
   const ota = useOTAUpdate();
-  return <OTAUpdateBanner {...ota} />;
+  return <Suspense fallback={null}><OTAUpdateBanner {...ota} /></Suspense>;
 }
 
 function OTAUpdateBootstrap() {
