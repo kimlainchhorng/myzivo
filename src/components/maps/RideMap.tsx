@@ -93,63 +93,11 @@ interface RideMapProps {
   mapInteractive?: boolean;
 }
 
-// Singleton script loader
-let googleMapsPromise: Promise<void> | null = null;
-let googleMapsLoaded = false;
+// Delegate to unified loader (handles gm_authFailure, single SDK fetch site-wide)
+import { loadGoogleMaps as loadGoogleMapsScript } from "@/lib/maps/loadGoogleMaps";
 let googleMapsAuthFailed = false;
-let authFailRetryTimer: ReturnType<typeof setTimeout> | null = null;
-
-(window as any).gm_authFailure = () => {
-  googleMapsAuthFailed = true;
-  console.error("[RideMap] Google Maps auth failure. Check API key restrictions, Maps JavaScript API enablement, and billing.");
-  window.dispatchEvent(new CustomEvent("gmaps-auth-failure"));
-
-  if (!authFailRetryTimer) {
-    authFailRetryTimer = setTimeout(() => {
-      googleMapsAuthFailed = false;
-      googleMapsPromise = null;
-      googleMapsLoaded = false;
-      authFailRetryTimer = null;
-      window.dispatchEvent(new CustomEvent("gmaps-auth-retry"));
-    }, 10_000);
-  }
-};
-
-function loadGoogleMapsScript(apiKey: string): Promise<void> {
-  if (googleMapsAuthFailed) return Promise.reject(new Error("Google Maps auth failed"));
-  if (googleMapsLoaded && (window as any).google?.maps) return Promise.resolve();
-  if (googleMapsPromise) return googleMapsPromise;
-
-  googleMapsPromise = new Promise<void>((resolve, reject) => {
-    if ((window as any).google?.maps) {
-      googleMapsLoaded = true;
-      resolve();
-      return;
-    }
-
-    const script = document.createElement("script");
-    script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=marker,places&loading=async`;
-    script.async = true;
-    script.defer = true;
-    script.onload = () => {
-      googleMapsLoaded = true;
-      setTimeout(() => {
-        if (googleMapsAuthFailed) {
-          reject(new Error("Google Maps auth failed"));
-        } else {
-          resolve();
-        }
-      }, 350);
-    };
-    script.onerror = () => {
-      googleMapsPromise = null;
-      reject(new Error("Failed to load Google Maps script"));
-    };
-    document.head.appendChild(script);
-  });
-
-  return googleMapsPromise;
-}
+window.addEventListener("gmaps-auth-failure", () => { googleMapsAuthFailed = true; });
+window.addEventListener("gmaps-auth-retry", () => { googleMapsAuthFailed = false; });
 
 export default function RideMap({ pickupCoords, dropoffCoords, stopCoords, routePolyline, trafficSegments, driverCoords, driverNavigationTarget, userLocation, nearbyDrivers, showUserLocationDot = true, className, onMapReady, onCenterChanged, suppressAutoViewport = false, mapInteractive = true }: RideMapProps) {
   const [isReady, setIsReady] = useState(false);

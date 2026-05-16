@@ -14,7 +14,7 @@ import { InternalLinkGrid, BreadcrumbSchema } from "@/components/seo";
 import HotelExperienceGallery from "@/components/hotel/HotelExperienceGallery";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
-import { motion } from "framer-motion";
+
 import { HOTEL_DISCLAIMERS, HOTEL_TRUST_BADGES } from "@/config/hotelCompliance";
 import { heroPhotos, serviceOverlays, destinationPhotos } from "@/config/photos";
 
@@ -109,12 +109,8 @@ export default function HotelLanding() {
       />
       <Header />
       
-      <motion.main
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ duration: 0.4 }}
-        className="pt-16"
-      >
+      <main className="pt-16 animate-in fade-in duration-500">
+
         {/* Hero Section with Photo Background */}
         <section className="relative py-16 sm:py-24 overflow-hidden">
           {/* Background Image - REAL hotel imagery */}
@@ -307,7 +303,7 @@ export default function HotelLanding() {
             </p>
           </div>
         </section>
-      </motion.main>
+      </main>
       
       <Footer />
     </div>
