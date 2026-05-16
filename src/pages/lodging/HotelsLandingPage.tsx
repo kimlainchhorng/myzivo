@@ -1448,13 +1448,19 @@ function PropertyCard({
         <div className="flex-1 min-w-0 p-3">
           <div className="flex items-start gap-2">
             <h3 className="text-sm font-bold text-foreground truncate flex-1">{store.name}</h3>
-            <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-amber-600 shrink-0">
-              <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
-              {typeof rating === "number" ? rating.toFixed(1) : "New"}
-              {reviewCount && reviewCount > 0 ? (
-                <span className="text-amber-600/70 font-normal">({reviewCount})</span>
-              ) : null}
-            </span>
+            {typeof rating === "number" ? (
+              <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-amber-600 shrink-0">
+                <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                {rating.toFixed(1)}
+                {reviewCount && reviewCount > 0 ? (
+                  <span className="text-amber-600/70 font-normal">({reviewCount})</span>
+                ) : null}
+              </span>
+            ) : (store as any).created_at && (Date.now() - new Date((store as any).created_at).getTime()) < 30 * 24 * 60 * 60 * 1000 ? (
+              <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-600 shrink-0">
+                New
+              </span>
+            ) : null}
           </div>
           {location && (
             <p className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground truncate">
