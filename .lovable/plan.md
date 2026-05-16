@@ -1,44 +1,57 @@
-# Speed up Hotel pages + Map
 
-Three concrete wins found in the code. Each ships independently and gets republished so we can measure.
+## Goal
+Fix the visible issues on `/hotels` (HotelsLandingPage.tsx) in light theme and finish the deferred Step 3 of the Maps performance plan. Pure frontend/presentation work plus one shared component.
 
-## 1. Unify the Google Maps loader (biggest win)
+---
 
-Today the SDK is loaded from three separate files with different parameters:
+## A. Hotel page visual polish
 
-- `src/components/lodging/HotelsMapView.tsx` → `?key=…&loading=async`
-- `src/components/maps/RideMap.tsx` → `?key=…&libraries=marker,places&loading=async`
-- `src/hooks/useNearbyPlaces.ts` → `?key=…&libraries=places,marker&loading=async`
+**File:** `src/pages/lodging/HotelsLandingPage.tsx`
 
-If a user hits the Hotels map first and then a ride screen, the second request has a different URL so the browser refetches the SDK (~400 KB). Worse, two scripts can race and clobber `window.google`.
+1. **Hero scrim & legibility** — the current `from-primary/75 via-primary/45 to-background` washes the sunset photo emerald in light mode and still leaves the title low-contrast. Replace with a true dark scrim that works in both themes:
+   - `bg-gradient-to-b from-black/55 via-black/30 to-background`
+   - Add `bg-black/15` base layer behind everything so title/subtitle always read.
+   - Bump title to `text-[22px] sm:text-[26px]` and subtitle to `text-[13px]` with `text-white/90`.
 
-Fix: create `src/lib/maps/loadGoogleMaps.ts` — one promise-cached loader that always requests `libraries=marker,places` and `loading=async`. Replace all three call sites. Result: one network request site-wide, ~400 KB saved on the second map view, no race.
+2. **Quick filter chips contrast** — `bg-background` + `border-border` chips disappear on the white page. Change inactive state to `bg-card border-border/80 shadow-sm` and ensure the row sits on a faint divider (`border-t border-border/60`) so it reads as its own band. Same treatment for the Sort / Budget / Type chip rows for consistency.
 
-## 2. Defer the Hotels map until the user opens the Map tab
+3. **Featured / Popular horizontal rows — scroll affordance on desktop** — at ≥`md` add a right-edge fade (`after:` pseudo overlay) and small chevron button that scrolls the row by ~320px. Mobile unchanged.
 
-`HotelsMapView` is currently in the results bundle. On mobile most users scroll the list and never open Map. Move it behind a `React.lazy(() => import("@/components/lodging/HotelsMapView"))` in `HotelResultsPage.tsx`, wrapped in `<Suspense fallback={<MapSkeleton />}>`. Also drop `framer-motion` from `HotelLanding.tsx` — it's used for one fade-in that CSS handles in 6 lines.
+4. **Sort row consistency** — already uses `bg-primary` vs `bg-muted/70`; leave behavior but switch active to `bg-foreground text-background` so it matches the existing List/Map toggle and doesn't read as "emerald button" next to neutral chips.
 
-Expected: ~30–50 KB off the Hotel route's first chunk, faster TTI on `/hotels` and `/hotels/results`.
+5. **"New" badge spam** — only render the `New` badge for stores `created_at` within last 30 days (data already on store). Otherwise render rating-or-price (already computed) where the badge sat.
 
-## 3. Marker rendering: cap + cluster
+**New shared component:** `src/components/shared/SmartImage.tsx`
 
-`HotelsMapView` creates one `OverlayView` per hotel. With 50+ results on a city search this is the slowest paint on mobile. Two cheap fixes:
+- Wraps `<img>` with: skeleton (`bg-muted animate-pulse`) until `onLoad`, fallback to a branded placeholder (HotelIcon + gradient like the existing empty state) on `onError`, `loading="lazy"` and `decoding="async"` by default. Accepts `aspect` and `rounded` props.
+- Replace raw `<img>` in featured/all-hotels cards and Popular destinations tiles. Removes the `?` placeholder seen on broken images and gives a consistent skeleton instead.
 
-- Cap visible overlays to the 40 in the current map viewport (recompute on `idle` event, throttled 200ms).
-- Replace HTML pill overlays with `google.maps.marker.AdvancedMarkerElement` (already part of the `marker` library we'll now always load). Native markers are GPU-composited and ~3× faster on iOS Safari.
+---
 
-## What this plan does NOT touch
+## B. Finish Maps Performance — Step 3
 
-- The hotel search API itself (waiting for real slow-query data).
-- Map gestures / map-tile providers (already hardened per the maps memory).
-- RideMap visual behavior — only its loader call site changes.
+**File:** `src/components/lodging/HotelsMapView.tsx`
 
-## Validation
+1. **Viewport-cap markers to 40** — listen to `map.addListener('idle', …)` (throttled 200ms via `requestAnimationFrame`), compute `map.getBounds()`, filter hotels in-bounds, slice top 40 by price/rating, and render only those overlays. Off-screen overlays are removed from the DOM (huge win on mid-range Android).
 
-After each step: publish → open `/hotels` then `/hotels/results?city=new-york` on a phone → paste back the `[vitals]` lines + the Network tab's "maps/api/js" request count. Roll back any step that doesn't move a metric.
+2. **AdvancedMarkerElement when available** — if `google.maps.marker?.AdvancedMarkerElement` exists AND `import.meta.env.VITE_GOOGLE_MAPS_MAP_ID` is set, render price pills via `AdvancedMarkerElement` with a custom DOM element. Otherwise fall back to current `OverlayView` (no regression).
 
-## Technical notes
+3. **Map `mapId` prop** — pass `mapId={import.meta.env.VITE_GOOGLE_MAPS_MAP_ID}` to the GoogleMap so Advanced markers actually mount.
 
-- No new runtime deps.
-- The shared loader keys its cache on the script URL it injects, so concurrent callers from different components share one promise.
-- AdvancedMarkerElement requires a Map ID; we'll add a Vite env var `VITE_GOOGLE_MAPS_MAP_ID` and fall back to classic markers if missing so prod doesn't break before the env is set.
+No new dependencies. No backend / RLS / data changes.
+
+---
+
+## C. Validation
+
+1. Visually verify `/hotels` in light theme at 1034px (desktop) and 390px (iPhone) — hero readable, chips visible, no `?` images.
+2. Toggle to Map view → confirm price pills render and panning re-caps to ≤40 visible markers.
+3. Build passes (auto). No console errors beyond the pre-existing `has_role` permission warning (unrelated to this scope).
+
+---
+
+## Out of scope (explicitly not touching)
+
+- `RoutePrefetcher`, `HotelLanding.tsx`, search forms.
+- The `Error fetching brand config: permission denied for function has_role` console warning (separate RLS issue — flag for a follow-up).
+- Any backend/data changes to `food_orders`, `stores`, or RLS.

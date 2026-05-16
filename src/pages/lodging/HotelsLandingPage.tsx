@@ -41,6 +41,7 @@ import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { SmartImage } from "@/components/shared/SmartImage";
 
 import tabHotelsBg from "@/assets/tab-hotels-bg.jpg";
 import destPhnomPenh from "@/assets/destinations/phnom-penh.jpg";
@@ -536,7 +537,8 @@ export default function HotelsLandingPage() {
           className="absolute inset-0 w-full h-full object-cover"
           aria-hidden
         />
-        <div className="absolute inset-0 bg-gradient-to-b from-primary/75 via-primary/45 to-background" />
+        <div className="absolute inset-0 bg-black/20" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-background" />
 
         <div className="relative px-4 pt-3 pb-4 safe-area-top">
           <div className="flex items-center gap-2">
@@ -547,14 +549,14 @@ export default function HotelsLandingPage() {
             >
               <ArrowLeft className="w-5 h-5 text-white" />
             </button>
-            <h1 className="text-base font-bold text-white flex-1 truncate drop-shadow">Hotels & Resorts</h1>
+            <h1 className="text-base font-bold text-white flex-1 truncate drop-shadow-lg">Hotels & Resorts</h1>
           </div>
 
           <div className="mt-3 mb-3">
-            <h2 className="text-[20px] font-extrabold text-white leading-tight drop-shadow-md">
+            <h2 className="text-[22px] sm:text-[26px] font-extrabold text-white leading-tight drop-shadow-lg">
               Find your perfect stay
             </h2>
-            <p className="mt-0.5 text-[12px] text-white/85 drop-shadow">
+            <p className="mt-1 text-[13px] text-white/90 drop-shadow-md">
               Hotels, resorts and guesthouses across Cambodia.
             </p>
           </div>
@@ -743,10 +745,10 @@ export default function HotelsLandingPage() {
               else requestNearMe();
             }}
             className={cn(
-              "shrink-0 inline-flex min-h-[40px] items-center gap-1 rounded-full px-3.5 py-2 text-[11px] font-semibold transition border touch-manipulation",
+              "shrink-0 inline-flex min-h-[40px] items-center gap-1 rounded-full px-3.5 py-2 text-[11px] font-semibold transition border shadow-sm touch-manipulation",
               coords
                 ? "bg-primary text-primary-foreground border-primary"
-                : "bg-background text-foreground border-border active:bg-muted",
+                : "bg-card text-foreground border-border/80 hover:bg-muted active:bg-muted",
             )}
           >
             <LocateFixed className="w-3 h-3" />
@@ -758,10 +760,10 @@ export default function HotelsLandingPage() {
               onClick={() => setSavedOnly((v) => !v)}
               aria-pressed={savedOnly}
               className={cn(
-                "shrink-0 inline-flex min-h-[40px] items-center gap-1 rounded-full px-3.5 py-2 text-[11px] font-semibold transition border touch-manipulation",
+                "shrink-0 inline-flex min-h-[40px] items-center gap-1 rounded-full px-3.5 py-2 text-[11px] font-semibold transition border shadow-sm touch-manipulation",
                 savedOnly
                   ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-background text-foreground border-border active:bg-muted",
+                  : "bg-card text-foreground border-border/80 hover:bg-muted active:bg-muted",
               )}
             >
               <Heart className={cn("w-3 h-3", savedOnly ? "fill-current" : "fill-rose-500 text-rose-500")} />
@@ -775,10 +777,10 @@ export default function HotelsLandingPage() {
                 key={tag.id}
                 onClick={() => toggleTag(tag.id)}
                 className={cn(
-                  "shrink-0 min-h-[40px] rounded-full px-3.5 py-2 text-[11px] font-semibold transition border touch-manipulation",
+                  "shrink-0 min-h-[40px] rounded-full px-3.5 py-2 text-[11px] font-semibold transition border shadow-sm touch-manipulation",
                   active
                     ? "bg-primary text-primary-foreground border-primary"
-                    : "bg-background text-foreground border-border active:bg-muted",
+                    : "bg-card text-foreground border-border/80 hover:bg-muted active:bg-muted",
                 )}
               >
                 {tag.label}
@@ -876,18 +878,15 @@ export default function HotelsLandingPage() {
                   aria-label={`Open ${store.name}`}
                 >
                   <div className="relative w-full h-28 bg-muted">
-                    {(store.banner_url || store.logo_url) ? (
-                      <img
-                        src={store.banner_url || store.logo_url || ""}
-                        alt={store.name}
-                        loading="lazy"
-                        className="absolute inset-0 w-full h-full object-cover"
-                      />
-                    ) : (
-                      <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-primary/10 to-transparent flex items-center justify-center">
-                        <HotelIcon className="w-7 h-7 text-primary/60" />
-                      </div>
-                    )}
+                    <SmartImage
+                      src={store.banner_url || store.logo_url}
+                      alt={store.name}
+                      fallback={
+                        <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-primary/10 to-transparent flex items-center justify-center">
+                          <HotelIcon className="w-7 h-7 text-primary/60" />
+                        </div>
+                      }
+                    />
                     {store.is_verified && (
                       <Badge className="absolute top-1.5 left-1.5 bg-emerald-600 text-white text-[9px] px-1.5 py-0">
                         Verified
@@ -908,10 +907,14 @@ export default function HotelsLandingPage() {
                       </p>
                     )}
                     <div className="mt-1.5 flex items-center justify-between gap-1">
-                      <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-amber-600">
-                        <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
-                        {typeof rating === "number" ? rating.toFixed(1) : "New"}
-                      </span>
+                      {typeof rating === "number" ? (
+                        <span className="inline-flex items-center gap-0.5 text-[10px] font-semibold text-amber-600">
+                          <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                          {rating.toFixed(1)}
+                        </span>
+                      ) : (store as any).created_at && (Date.now() - new Date((store as any).created_at).getTime()) < 30 * 24 * 60 * 60 * 1000 ? (
+                        <span className="text-[10px] font-semibold text-emerald-600">New</span>
+                      ) : <span />}
                       {typeof showCents === "number" ? (
                         <span className="text-[11px] font-bold text-foreground">
                           from{" "}
@@ -1035,7 +1038,7 @@ export default function HotelsLandingPage() {
               className={
                 "shrink-0 min-h-[40px] rounded-full px-3.5 py-2 text-xs font-semibold transition touch-manipulation " +
                 (sortBy === opt.id
-                  ? "bg-primary text-primary-foreground"
+                  ? "bg-foreground text-background"
                   : "bg-muted/70 text-muted-foreground active:bg-muted")
               }
             >
@@ -1418,18 +1421,15 @@ function PropertyCard({
     >
       <div className="flex">
         <div className="relative w-32 shrink-0 bg-muted">
-          {(store.banner_url || store.logo_url) ? (
-            <img
-              src={store.banner_url || store.logo_url || ""}
-              alt={`${store.name} cover`}
-              className="absolute inset-0 w-full h-full object-cover"
-              loading="lazy"
-            />
-          ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-primary/10 to-transparent flex items-center justify-center">
-              <HotelIcon className="w-6 h-6 text-primary/60" />
-            </div>
-          )}
+          <SmartImage
+            src={store.banner_url || store.logo_url}
+            alt={`${store.name} cover`}
+            fallback={
+              <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-primary/10 to-transparent flex items-center justify-center">
+                <HotelIcon className="w-6 h-6 text-primary/60" />
+              </div>
+            }
+          />
           {store.is_verified && (
             <Badge className="absolute top-1.5 left-1.5 bg-emerald-600 text-white text-[9px] px-1.5 py-0">
               Verified
@@ -1452,13 +1452,19 @@ function PropertyCard({
         <div className="flex-1 min-w-0 p-3">
           <div className="flex items-start gap-2">
             <h3 className="text-sm font-bold text-foreground truncate flex-1">{store.name}</h3>
-            <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-amber-600 shrink-0">
-              <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
-              {typeof rating === "number" ? rating.toFixed(1) : "New"}
-              {reviewCount && reviewCount > 0 ? (
-                <span className="text-amber-600/70 font-normal">({reviewCount})</span>
-              ) : null}
-            </span>
+            {typeof rating === "number" ? (
+              <span className="inline-flex items-center gap-0.5 rounded-full bg-amber-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-amber-600 shrink-0">
+                <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
+                {rating.toFixed(1)}
+                {reviewCount && reviewCount > 0 ? (
+                  <span className="text-amber-600/70 font-normal">({reviewCount})</span>
+                ) : null}
+              </span>
+            ) : (store as any).created_at && (Date.now() - new Date((store as any).created_at).getTime()) < 30 * 24 * 60 * 60 * 1000 ? (
+              <span className="inline-flex items-center rounded-full bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-semibold text-emerald-600 shrink-0">
+                New
+              </span>
+            ) : null}
           </div>
           {location && (
             <p className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground truncate">
