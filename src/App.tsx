@@ -966,8 +966,8 @@ const App = () => (
                 <RoutePerfTracker />
                 <NativeDeepLinkHandler />
                 <OTAUpdateBootstrap />
-                <NavigationProgressBar />
-                <ScrollRestoration />
+                <Suspense fallback={null}><NavigationProgressBar /></Suspense>
+                <Suspense fallback={null}><ScrollRestoration /></Suspense>
                 <Suspense fallback={null}><PostShareSheet /></Suspense>
                 <Suspense fallback={null}><RoutePrefetcher /></Suspense>
                 <Suspense fallback={null}><PaymentReturnHandler /></Suspense>
