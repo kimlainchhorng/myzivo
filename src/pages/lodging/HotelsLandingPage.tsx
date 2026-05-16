@@ -669,7 +669,10 @@ export default function HotelsLandingPage() {
         <div className="px-3 py-2 flex items-center gap-2 safe-area-top">
           <button
             type="button"
-            onClick={() => navigate(-1)}
+            onClick={() => {
+              if (window.history.length > 1) navigate(-1);
+              else navigate("/");
+            }}
             aria-label="Back"
             className="h-11 w-11 shrink-0 rounded-full flex items-center justify-center bg-muted active:bg-muted/70 touch-manipulation"
           >
