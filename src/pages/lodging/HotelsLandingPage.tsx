@@ -337,6 +337,35 @@ export default function HotelsLandingPage() {
     scrollToResults();
   }, [search, pushRecentSearch, scrollToResults]);
 
+  // Smart back — Booking/Airbnb-style. If the user has narrowed the view
+  // (search, filter, saved, budget, sort, or map mode), the first back tap
+  // unwinds those choices instead of leaving the page. A second tap (now on
+  // a clean view) actually navigates away.
+  const smartBack = useCallback(() => {
+    const narrowed =
+      !!search.trim() ||
+      activeTags.length > 0 ||
+      activeFilter !== "all" ||
+      savedOnly ||
+      maxBudget !== null ||
+      sortBy !== "default" ||
+      viewMode === "map";
+    if (narrowed) {
+      setSearch("");
+      setActiveTags([]);
+      setActiveFilter("all");
+      setSavedOnly(false);
+      setMaxBudget(null);
+      setSortBy("default");
+      setViewMode("list");
+      setSearchFocused(false);
+      window.scrollTo({ top: 0, behavior: "smooth" });
+      return;
+    }
+    if (window.history.length > 1) navigate(-1);
+    else navigate("/");
+  }, [search, activeTags, activeFilter, savedOnly, maxBudget, sortBy, viewMode, navigate]);
+
   // "See all in <destination>" — used by Popular-destination cards and recent
   // search chips. Clears narrow filters (tags, saved, budget, sort) so the
   // user lands on a clean city-wide list, then scrolls to results.
@@ -678,10 +707,7 @@ export default function HotelsLandingPage() {
         <div className="relative px-4 pt-3 pb-4 safe-area-top">
           <div className="flex items-center gap-2">
             <button type="button"
-              onClick={() => {
-                if (window.history.length > 1) navigate(-1);
-                else navigate("/");
-              }}
+              onClick={smartBack}
               aria-label="Back"
               className="h-11 w-11 -ml-1 rounded-full flex items-center justify-center bg-white/15 backdrop-blur active:bg-white/25 transition touch-manipulation"
             >
@@ -889,10 +915,7 @@ export default function HotelsLandingPage() {
         <div className="px-3 py-2 flex items-center gap-2 safe-area-top">
           <button
             type="button"
-            onClick={() => {
-              if (window.history.length > 1) navigate(-1);
-              else navigate("/");
-            }}
+            onClick={smartBack}
             aria-label="Back"
             className="h-11 w-11 shrink-0 rounded-full flex items-center justify-center bg-muted active:bg-muted/70 touch-manipulation"
           >
