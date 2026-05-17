@@ -37,6 +37,15 @@ const START = START_ARG ? parseInt(START_ARG, 10) : 0;
 const LIMIT_ARG = args.find((a) => a.startsWith("--limit="))?.split("=")[1];
 const LIMIT = LIMIT_ARG ? parseInt(LIMIT_ARG, 10) : null;
 const DRY_RUN = args.includes("--dry-run");
+const DEBUG_PROGRESS = args.includes("--debug-progress");
+
+function debugProgress(message: string) {
+  if (!DEBUG_PROGRESS) return;
+  fs.appendFileSync(
+    "booking-rescue-debug.log",
+    `${new Date().toISOString()} ${message}\n`,
+  );
+}
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -200,6 +209,7 @@ async function captureHotelImages(
   context: BrowserContext,
   bookingUrl: string,
   wantedIds?: Set<string>,
+  debugLabel?: string,
 ): Promise<Map<string, { buffer: Buffer; url: string; contentType: string }>> {
   // Key = image id (e.g. "558574196"), Value = best-quality buffer we captured
   const captured = new Map<
@@ -208,6 +218,15 @@ async function captureHotelImages(
   >();
 
   const page = await context.newPage();
+  const hasAllWantedImages = () =>
+    Boolean(wantedIds?.size && captured.size >= wantedIds.size);
+  const debugIfComplete = (stage: string) => {
+    if (debugLabel && hasAllWantedImages()) {
+      debugProgress(
+        `${debugLabel} capture:complete-after-${stage} captured=${captured.size}/${wantedIds?.size}`,
+      );
+    }
+  };
 
   const onResponse = async (resp: any) => {
     try {
@@ -235,34 +254,49 @@ async function captureHotelImages(
   page.on("response", onResponse);
 
   try {
+    if (debugLabel) debugProgress(`${debugLabel} capture:goto:start`);
     await page.goto(bookingUrl, {
       waitUntil: "domcontentloaded",
       timeout: 45000,
     });
+    if (debugLabel) debugProgress(`${debugLabel} capture:goto:done captured=${captured.size}`);
     await sleep(3500);
+    if (debugLabel) debugProgress(`${debugLabel} capture:after-initial-wait captured=${captured.size}`);
+    debugIfComplete("initial-wait");
 
     // Scroll the property page first to trigger lazy-loaded room images
-    for (let i = 0; i < 12; i++) {
-      await page.mouse.wheel(0, 1200).catch(() => {});
-      await sleep(400);
+    if (!hasAllWantedImages()) {
+      for (let i = 0; i < 12; i++) {
+        await page.mouse.wheel(0, 1200).catch(() => {});
+        await sleep(400);
+        if (hasAllWantedImages()) break;
+      }
     }
+    if (debugLabel) debugProgress(`${debugLabel} capture:after-scroll captured=${captured.size}`);
+    debugIfComplete("scroll");
     await sleep(1500);
 
     // Dedicated photo tab exposes more thumbnails and causes the browser to
     // fetch additional signed cf.bstatic.com image URLs.
     const mainUrl = page.url();
-    try {
-      const galUrl = mainUrl.split("#")[0] + (mainUrl.includes("?") ? "&" : "?") + "activeTab=photosGallery";
-      await page.goto(galUrl, { waitUntil: "domcontentloaded", timeout: 30000 });
-      await sleep(1200);
-      for (let i = 0; i < 12; i++) {
-        await page.mouse.wheel(0, 1200).catch(() => {});
-        await sleep(250);
-      }
-      await sleep(1000);
-      await page.goto(mainUrl, { waitUntil: "domcontentloaded", timeout: 30000 });
-      await sleep(1000);
-    } catch {}
+    if (!hasAllWantedImages()) {
+      try {
+        if (debugLabel) debugProgress(`${debugLabel} capture:photo-tab:start`);
+        const galUrl = mainUrl.split("#")[0] + (mainUrl.includes("?") ? "&" : "?") + "activeTab=photosGallery";
+        await page.goto(galUrl, { waitUntil: "domcontentloaded", timeout: 30000 });
+        await sleep(1200);
+        for (let i = 0; i < 12; i++) {
+          await page.mouse.wheel(0, 1200).catch(() => {});
+          await sleep(250);
+          if (hasAllWantedImages()) break;
+        }
+        await sleep(1000);
+        await page.goto(mainUrl, { waitUntil: "domcontentloaded", timeout: 30000 });
+        await sleep(1000);
+        if (debugLabel) debugProgress(`${debugLabel} capture:photo-tab:done captured=${captured.size}`);
+      } catch {}
+      debugIfComplete("photo-tab");
+    }
 
     // Try to open the photo gallery — multiple selector variants
     const gallerySelectors = [
@@ -278,67 +312,92 @@ async function captureHotelImages(
       "img[data-headerimage]",
     ];
     let opened = false;
-    for (const sel of gallerySelectors) {
-      try {
-        const el = page.locator(sel).first();
-        if ((await el.count()) > 0) {
-          await el.click({ timeout: 3000 }).catch(() => {});
-          await sleep(2000);
-          opened = true;
-          break;
-        }
-      } catch {}
-    }
-    if (opened) {
-      // Walk through many photos in the gallery modal
-      for (let i = 0; i < 60; i++) {
-        await page.keyboard.press("ArrowRight").catch(() => {});
-        await sleep(250);
+    if (!hasAllWantedImages()) {
+      if (debugLabel) debugProgress(`${debugLabel} capture:modal:start`);
+      for (const sel of gallerySelectors) {
+        try {
+          const el = page.locator(sel).first();
+          if ((await el.count()) > 0) {
+            await el.click({ timeout: 3000 }).catch(() => {});
+            await sleep(2000);
+            opened = true;
+            break;
+          }
+        } catch {}
       }
-      await sleep(1500);
-      // Close gallery
-      await page.keyboard.press("Escape").catch(() => {});
-      await sleep(800);
+      if (opened) {
+        // Walk through many photos in the gallery modal
+        for (let i = 0; i < 60; i++) {
+          await page.keyboard.press("ArrowRight").catch(() => {});
+          await sleep(250);
+          if (hasAllWantedImages()) break;
+        }
+        await sleep(1500);
+        // Close gallery
+        await page.keyboard.press("Escape").catch(() => {});
+        await sleep(800);
+      }
+      if (debugLabel) debugProgress(`${debugLabel} capture:modal:done opened=${opened} captured=${captured.size}`);
+      debugIfComplete("modal");
     }
 
     // Make sure the classic Booking rooms table is present before trying room
     // photo modals.
-    try {
-      const loaded = await page.$("#hprt-table, .hprt-table");
-      if (!loaded) {
-        const checkBtn = page.locator(
-          'button:has-text("Check availability"), input[value="Check availability"], .availability-search__search--button, #availability_search_submit',
-        ).first();
-        await checkBtn.scrollIntoViewIfNeeded({ timeout: 3000 });
-        await checkBtn.click({ timeout: 3000 });
-        await page.waitForSelector("#hprt-table, .hprt-table", { timeout: 12000 });
-      }
-      await sleep(1000);
-    } catch {}
-
-    // Click on room rows to expand room galleries. Booking has both modern
-    // data-testid triggers and older .hprt-roomtype-icon-link anchors.
-    try {
-      const roomTriggers = await page
-        .locator(
-          ".hprt-roomtype-icon-link, [data-testid='room-block-photo'], button[aria-label*='photo'], img[data-room-photo], [data-testid='room-name'], .room-link",
-        )
-        .all();
-      for (let i = 0; i < Math.min(roomTriggers.length, 12); i++) {
-        await roomTriggers[i].scrollIntoViewIfNeeded({ timeout: 2000 }).catch(() => {});
-        await roomTriggers[i].click({ timeout: 2000 }).catch(() => {});
-        await sleep(800);
-        for (let k = 0; k < 18; k++) {
-          await page.keyboard.press("ArrowRight").catch(() => {});
-          await sleep(200);
+    if (!hasAllWantedImages()) {
+      try {
+        if (debugLabel) debugProgress(`${debugLabel} capture:availability:start`);
+        const loaded = await page.$("#hprt-table, .hprt-table");
+        if (!loaded) {
+          const checkBtn = page.locator(
+            'button:has-text("Check availability"), input[value="Check availability"], .availability-search__search--button, #availability_search_submit',
+          ).first();
+          await checkBtn.scrollIntoViewIfNeeded({ timeout: 3000 });
+          await checkBtn.click({ timeout: 3000 });
+          await page.waitForSelector("#hprt-table, .hprt-table", { timeout: 12000 });
         }
-        await page.keyboard.press("Escape").catch(() => {});
-        await sleep(500);
-      }
-    } catch {}
+        await sleep(1000);
+        if (debugLabel) debugProgress(`${debugLabel} capture:availability:done captured=${captured.size}`);
+      } catch {}
+      debugIfComplete("availability");
+    }
 
-    // Final wait for any trailing network
-    await sleep(2000);
+    if (!hasAllWantedImages()) {
+      // Click on room rows to expand room galleries. Booking has both modern
+      // data-testid triggers and older .hprt-roomtype-icon-link anchors.
+      try {
+        if (debugLabel) debugProgress(`${debugLabel} capture:rooms:start`);
+        const roomTriggers = await page
+          .locator(
+            ".hprt-roomtype-icon-link, [data-testid='room-block-photo'], button[aria-label*='photo'], img[data-room-photo], [data-testid='room-name'], .room-link",
+          )
+          .all();
+        for (let i = 0; i < Math.min(roomTriggers.length, 12); i++) {
+          if (debugLabel) debugProgress(`${debugLabel} capture:room-trigger:${i}:start captured=${captured.size}`);
+          await roomTriggers[i].scrollIntoViewIfNeeded({ timeout: 2000 }).catch(() => {});
+          await roomTriggers[i].click({ timeout: 2000 }).catch(() => {});
+          await sleep(800);
+          for (let k = 0; k < 18; k++) {
+            await page.keyboard.press("ArrowRight").catch(() => {});
+            await sleep(200);
+            if (hasAllWantedImages()) break;
+          }
+          await page.keyboard.press("Escape").catch(() => {});
+          await sleep(500);
+          if (debugLabel) debugProgress(`${debugLabel} capture:room-trigger:${i}:done captured=${captured.size}`);
+          if (hasAllWantedImages()) break;
+        }
+        if (debugLabel) debugProgress(`${debugLabel} capture:rooms:done captured=${captured.size}`);
+      } catch {}
+      debugIfComplete("rooms");
+    }
+
+    if (!hasAllWantedImages()) {
+      // Final wait for any trailing network
+      await sleep(2000);
+      if (debugLabel) debugProgress(`${debugLabel} capture:final-wait:done captured=${captured.size}`);
+    } else if (debugLabel) {
+      debugProgress(`${debugLabel} capture:final-wait:skipped captured=${captured.size}`);
+    }
   } catch (err) {
     console.warn(`  ✗ navigation: ${(err as Error).message}`);
   } finally {
@@ -364,17 +423,22 @@ async function processStore(
 ) {
   console.log(`\n→ ${store.name} (${store.id})`);
   console.log(`  URL: ${bookingUrl.slice(0, 80)}`);
+  debugProgress(`${store.id} start`);
 
+  debugProgress(`${store.id} profile:read:start`);
   const { data: profile } = await supabase
     .from("store_profiles")
     .select("banner_url, logo_url, gallery_images")
     .eq("id", store.id)
     .single();
+  debugProgress(`${store.id} profile:read:done`);
 
+  debugProgress(`${store.id} rooms:read:start`);
   const { data: rooms } = await supabase
     .from("lodge_rooms")
     .select("id, name, photos")
     .eq("store_id", store.id);
+  debugProgress(`${store.id} rooms:read:done ${rooms?.length ?? 0}`);
 
   const wantedIds = new Set<string>();
   const addWantedId = (url: string | null) => {
@@ -393,7 +457,9 @@ async function processStore(
     photos.forEach((photo) => addWantedId(extractUrl(photo)));
   }
 
-  const captured = await captureHotelImages(context, bookingUrl, wantedIds);
+  debugProgress(`${store.id} capture:start wanted=${wantedIds.size}`);
+  const captured = await captureHotelImages(context, bookingUrl, wantedIds, store.id);
+  debugProgress(`${store.id} capture:done ${captured.size}`);
   console.log(`  Captured ${captured.size} unique images`);
 
   if (captured.size === 0) {
@@ -406,6 +472,7 @@ async function processStore(
   let uploaded = 0;
   for (const [id, info] of captured) {
     if (wantedIds.size > 0 && !wantedIds.has(id)) continue;
+    debugProgress(`${store.id} upload:start ${id}`);
     const ext = fileExtFromUrl(info.url);
     const storagePath = `booking-import/${store.id}/${id}.${ext}`;
     const publicUrl = DRY_RUN
@@ -418,8 +485,10 @@ async function processStore(
     if (publicUrl) {
       idToPublicUrl.set(id, publicUrl);
       uploaded++;
+      debugProgress(`${store.id} upload:done ${id}`);
     }
   }
+  debugProgress(`${store.id} uploads:done ${uploaded}`);
   console.log(`  ${DRY_RUN ? "Would upload" : "Uploaded"} ${uploaded}/${captured.size} to storage`);
 
   // ── Update store_profiles (banner, logo, gallery_images) ───────────────────
@@ -461,6 +530,7 @@ async function processStore(
   console.log(`  Gallery: ${galleryMigrated} URLs rewritten`);
 
   if (!DRY_RUN) {
+    debugProgress(`${store.id} profile:update:start`);
     const { error } = await supabase
       .from("store_profiles")
       .update({
@@ -470,6 +540,7 @@ async function processStore(
       })
       .eq("id", store.id);
     if (error) console.error(`  ✗ store_profiles update: ${error.message}`);
+    debugProgress(`${store.id} profile:update:done`);
   }
 
   // ── Update lodge_rooms.photos ──────────────────────────────────────────────
@@ -489,14 +560,17 @@ async function processStore(
     roomsTotal += migrated;
     console.log(`  Room "${room.name}": ${migrated}/${photos.length} rewritten`);
     if (!DRY_RUN && migrated > 0) {
+      debugProgress(`${store.id} room:update:start ${room.id}`);
       const { error } = await supabase
         .from("lodge_rooms")
         .update({ photos: newPhotos })
         .eq("id", room.id);
       if (error) console.error(`  ✗ lodge_rooms update: ${error.message}`);
+      debugProgress(`${store.id} room:update:done ${room.id}`);
     }
   }
 
+  debugProgress(`${store.id} done`);
   return { gallery: galleryMigrated, rooms: roomsTotal, total: uploaded };
 }
 

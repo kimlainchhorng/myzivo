@@ -36,6 +36,12 @@ const CATEGORIES =
     ?.split(",")
     .map((value) => value.trim())
     .filter(Boolean) || ["hotel", "resort"];
+const SKIP_IDS = new Set(
+  (args.find((arg) => arg.startsWith("--skip-id="))?.split("=")[1] || "")
+    .split(",")
+    .map((value) => value.trim())
+    .filter(Boolean),
+);
 const LIMIT = (() => {
   const value = args.find((arg) => arg.startsWith("--limit="))?.split("=")[1];
   return value ? Number.parseInt(value, 10) : null;
@@ -189,11 +195,22 @@ async function loadBookingPageImageUrls(page: Page, bookingUrl: string) {
   const imageUrls = new Map<string, string>();
   await page.goto(bookingUrl, { waitUntil: "domcontentloaded", timeout: 15_000 });
   await sleep(1_000);
-  const urls = await page.evaluate(() =>
-    Array.from(document.images)
-      .map((img) => img.currentSrc || img.src)
-      .filter((src) => src.includes("/xdata/images/hotel/")),
-  );
+  let urls: string[] = [];
+  for (let attempt = 0; attempt < 3; attempt++) {
+    try {
+      urls = await page.evaluate(() =>
+        Array.from(document.images)
+          .map((img) => img.currentSrc || img.src)
+          .filter((src) => src.includes("/xdata/images/hotel/")),
+      );
+      break;
+    } catch (error) {
+      if (!/Execution context was destroyed/i.test(String((error as Error).message || error))) {
+        throw error;
+      }
+      await sleep(1_000);
+    }
+  }
 
   for (const url of urls) {
     const id = bookingImageId(url);
@@ -358,6 +375,7 @@ async function main() {
   let missing = allStores.filter(hasAdminMissingMedia);
   if (SIGNED_ONLY) missing = missing.filter(hasSignedMediaCandidate);
   if (UNSIGNED_ONLY) missing = missing.filter((store) => !hasSignedMediaCandidate(store));
+  if (SKIP_IDS.size) missing = missing.filter((store) => !SKIP_IDS.has(store.id));
   const toProcess = LIMIT ? missing.slice(0, LIMIT) : missing;
   console.log(`Found ${missing.length} admin-missing media stores. Processing ${toProcess.length}.`);
 

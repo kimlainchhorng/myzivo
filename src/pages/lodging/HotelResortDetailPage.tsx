@@ -146,6 +146,27 @@ const parseParamDate = (s: string | null) => {
   return isValid(d) ? d : null;
 };
 
+const compactTime = (value?: string | null) => value?.slice(0, 5) || "";
+
+const checkInLabel = (from?: string | null, until?: string | null) => {
+  const fromTime = compactTime(from);
+  if (fromTime) return fromTime;
+  const untilTime = compactTime(until);
+  return untilTime ? `Until ${untilTime}` : "Ask property";
+};
+
+const checkOutLabel = (until?: string | null, from?: string | null) => {
+  const untilTime = compactTime(until);
+  if (untilTime) return untilTime;
+  const fromTime = compactTime(from);
+  return fromTime ? `From ${fromTime}` : "Ask property";
+};
+
+const stayWindowLabel = (profile: any) => (
+  `Check-in ${checkInLabel(profile?.check_in_from, profile?.check_in_until)} / ` +
+  `Check-out ${checkOutLabel(profile?.check_out_until, profile?.check_out_from)}`
+);
+
 function collectImageUrls(input: unknown): string[] {
   if (!input) return [];
   if (typeof input === "string") {
@@ -837,11 +858,11 @@ export default function HotelResortDetailPage() {
                 <Stat label="Rooms" value={activeRooms.length || "—"} />
                 <Stat
                   label="Check-in"
-                  value={profile?.check_in_from?.slice(0, 5) || "—"}
+                  value={checkInLabel(profile?.check_in_from, profile?.check_in_until)}
                 />
                 <Stat
                   label="Check-out"
-                  value={profile?.check_out_until?.slice(0, 5) || "—"}
+                  value={checkOutLabel(profile?.check_out_until, profile?.check_out_from)}
                 />
               </div>
             </>
@@ -971,11 +992,11 @@ export default function HotelResortDetailPage() {
             <div className="mt-3 grid grid-cols-3 gap-2 text-center">
               <div className="rounded-xl bg-muted/45 px-2 py-2">
                 <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Check-in</p>
-                <p className="mt-0.5 text-xs font-extrabold text-foreground">{profile?.check_in_from?.slice(0, 5) || "—"}</p>
+                <p className="mt-0.5 text-xs font-extrabold text-foreground">{checkInLabel(profile?.check_in_from, profile?.check_in_until)}</p>
               </div>
               <div className="rounded-xl bg-muted/45 px-2 py-2">
                 <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Check-out</p>
-                <p className="mt-0.5 text-xs font-extrabold text-foreground">{profile?.check_out_until?.slice(0, 5) || "—"}</p>
+                <p className="mt-0.5 text-xs font-extrabold text-foreground">{checkOutLabel(profile?.check_out_until, profile?.check_out_from)}</p>
               </div>
               <div className="rounded-xl bg-muted/45 px-2 py-2">
                 <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Photos</p>
@@ -1428,7 +1449,7 @@ export default function HotelResortDetailPage() {
       {/* Policies */}
       {profile && (
         profile.cancellation_policy ||
-        profile.check_in_from || profile.check_out_until ||
+        profile.check_in_from || profile.check_in_until || profile.check_out_from || profile.check_out_until ||
         profile.house_rules?.min_age ||
         profile.house_rules?.smoking_zones ||
         profile.house_rules?.parties_allowed !== undefined ||
@@ -1439,11 +1460,11 @@ export default function HotelResortDetailPage() {
       ) && (
         <Section title="Policies & house rules">
           <div className="rounded-2xl border border-border bg-card divide-y divide-border/60">
-            {(profile.check_in_from || profile.check_out_until) && (
+            {(profile.check_in_from || profile.check_in_until || profile.check_out_from || profile.check_out_until) && (
               <PolicyRow
                 icon={CalendarRange}
                 label="Check-in / Check-out"
-                value={`${profile.check_in_from?.slice(0, 5) || "—"} → ${profile.check_out_until?.slice(0, 5) || "—"}`}
+                value={stayWindowLabel(profile)}
               />
             )}
             {profile.cancellation_policy && (

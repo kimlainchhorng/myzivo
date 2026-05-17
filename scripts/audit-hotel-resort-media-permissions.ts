@@ -307,7 +307,9 @@ async function main() {
       missing_amenities: 0,
     };
 
-    for (const room of storeRooms) {
+    const activeStoreRooms = storeRooms.filter((room) => room.is_active !== false);
+
+    for (const room of activeStoreRooms) {
       const photos = Array.isArray(room.photos) ? room.photos : [];
       const amenities = Array.isArray(room.amenities) ? room.amenities : [];
       const hasDiscount =
