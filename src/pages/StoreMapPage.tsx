@@ -10,6 +10,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { getStorePublicPath } from "@/lib/storeLink";
+import { useSmartBack } from "@/lib/smartBack";
 import SEOHead from "@/components/SEOHead";
 import {
   MapPin, Clock, Star, Navigation, Store, ChevronRight, Search, X,
@@ -38,6 +39,7 @@ import { MarkerClusterer, type Cluster, type Marker as ClusterMarker } from "@go
 type StoreSortMode = "distance" | "rating" | "newest";
 const STORE_LIST_PAGE = 12;
 const LOGO_MARKER_MAX_STORE_COUNT = 1200;
+const FOCUSED_PHOTO_MARKER_LIMIT = 180;
 
 const DEFAULT_CENTER = { lat: 11.5564, lng: 104.9282 };
 
@@ -140,6 +142,20 @@ interface StoreProduct {
   id: string;
   name: string;
   price: number;
+}
+
+interface LodgingRoomPreview {
+  id: string;
+  name: string;
+  base_rate_cents: number | null;
+  original_rate_cents: number | null;
+  weekly_discount_pct: number | null;
+  monthly_discount_pct: number | null;
+  max_guests: number | null;
+  beds: string | null;
+  room_type: string | null;
+  photos?: unknown;
+  cover_photo_index?: number | null;
 }
 
 // Cache the resolved API key for the lifetime of the page so navigating away
@@ -388,6 +404,7 @@ function shouldShowSelectedStoreCommerceSection(
 }
 
 type CityAnchor = { name: string; lat: number; lng: number };
+type MapViewportBounds = { north: number; south: number; east: number; west: number };
 
 const CHOSEN_CITY_KEY = "zivo:map:city";
 
@@ -425,6 +442,15 @@ function isCambodiaMapCenter(center: { lat: number; lng: number } | null): cente
   return center.lat >= 9 && center.lat <= 16 && center.lng >= 100 && center.lng <= 110;
 }
 
+function isStoreInsideBounds(store: StorePin, bounds: MapViewportBounds | null): boolean {
+  if (!bounds) return true;
+  const inLat = store.latitude >= bounds.south && store.latitude <= bounds.north;
+  const inLng = bounds.west <= bounds.east
+    ? store.longitude >= bounds.west && store.longitude <= bounds.east
+    : store.longitude >= bounds.west || store.longitude <= bounds.east;
+  return inLat && inLng;
+}
+
 function getDistKm(store: StorePin, ref: { lat: number; lng: number } | null): number | null {
   if (!ref) return null;
   return distanceMiles(ref, { lat: store.latitude, lng: store.longitude }) * 1.609344;
@@ -439,6 +465,35 @@ function formatWalkMin(km: number): string {
   if (mins < 2) return "< 1 min";
   if (mins >= 60) return `~${Math.round(mins / 60)} h`;
   return `~${mins} min`;
+}
+
+function formatUsdCents(cents: number | null | undefined): string | null {
+  if (typeof cents !== "number" || !Number.isFinite(cents) || cents <= 0) return null;
+  const dollars = cents / 100;
+  return `$${dollars % 1 === 0 ? dollars.toFixed(0) : dollars.toFixed(2)}`;
+}
+
+function getBestRoomPreview(rooms: LodgingRoomPreview[]): LodgingRoomPreview | null {
+  if (!rooms.length) return null;
+  const priced = rooms.filter((room) => typeof room.base_rate_cents === "number" && room.base_rate_cents > 0);
+  return [...(priced.length ? priced : rooms)].sort((a, b) => (a.base_rate_cents || Infinity) - (b.base_rate_cents || Infinity))[0] || null;
+}
+
+function getRoomDiscountLabel(room: LodgingRoomPreview | null): string | null {
+  if (!room) return null;
+  if (
+    typeof room.original_rate_cents === "number" &&
+    typeof room.base_rate_cents === "number" &&
+    room.original_rate_cents > room.base_rate_cents
+  ) {
+    const pct = Math.round(((room.original_rate_cents - room.base_rate_cents) / room.original_rate_cents) * 100);
+    if (pct > 0) return `Save ${pct}%`;
+  }
+  const weekly = Number(room.weekly_discount_pct || 0);
+  const monthly = Number(room.monthly_discount_pct || 0);
+  if (monthly > 0) return `${monthly}% monthly`;
+  if (weekly > 0) return `${weekly}% weekly`;
+  return null;
 }
 
 function collectStoreImageUrls(input: unknown): string[] {
@@ -656,7 +711,7 @@ function isNewStore(store: StorePin): boolean {
 }
 
 /* ── SVG marker factories ── */
-function makeMarkerIcon(emoji: string, color: string, bgColor: string, isNew = false, hasDeal = false): string {
+function makeMarkerIcon(_emoji: string, color: string, bgColor: string, isNew = false, hasDeal = false): string {
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="42" height="50" viewBox="0 0 42 50">
       <defs><filter id="ds" x="-30%" y="-20%" width="160%" height="150%">
@@ -665,7 +720,12 @@ function makeMarkerIcon(emoji: string, color: string, bgColor: string, isNew = f
       <polygon points="21,48 16,36 26,36" fill="${color}"/>
       <circle cx="21" cy="20" r="19" fill="${color}" filter="url(#ds)"/>
       <circle cx="21" cy="20" r="16" fill="${bgColor}"/>
-      <text x="21" y="25.5" text-anchor="middle" font-size="14">${emoji}</text>
+      <g fill="none" stroke="#0f172a" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12.5 18.5h17l-1.1-6.3H13.6l-1.1 6.3Z" fill="#fff"/>
+        <path d="M14.5 18.5v10.3h13V18.5" fill="#fff"/>
+        <path d="M18.8 28.8v-5.6h4.4v5.6"/>
+        <path d="M12.5 18.5c.8 2.1 3.7 2.1 4.5 0 .8 2.1 3.7 2.1 4.5 0 .8 2.1 3.7 2.1 4.5 0 .8 2.1 3.7 2.1 4.5 0"/>
+      </g>
       ${isNew ? `<circle cx="7" cy="7" r="7" fill="#ef4444" stroke="#fff" stroke-width="1.5"/>
       <text x="7" y="11" text-anchor="middle" font-size="6" fill="#fff" font-weight="bold" font-family="system-ui">NEW</text>` : ""}
       ${hasDeal ? `<circle cx="35" cy="7" r="7" fill="#16a34a" stroke="#fff" stroke-width="1.5"/>
@@ -701,24 +761,35 @@ function createPhotoMarkerElement(
   imageUrls: string[],
   color: string,
   bgColor: string,
-  fallbackEmoji: string,
+  _fallbackEmoji: string,
   isNew: boolean,
   hasDeal: boolean,
   title: string,
+  selected = false,
 ): HTMLElement {
   const root = document.createElement("div");
-  root.style.cssText = "position:relative;width:42px;height:50px;pointer-events:auto;";
+  const rootWidth = selected ? 52 : 42;
+  const rootHeight = selected ? 60 : 50;
+  const shellSize = selected ? 48 : 38;
+  const mediaSize = selected ? 38 : 30;
+  root.style.cssText = [
+    "position:relative",
+    `width:${rootWidth}px`,
+    `height:${rootHeight}px`,
+    "pointer-events:auto",
+    selected ? "transform:translate(-5px,-9px)" : "",
+  ].filter(Boolean).join(";");
 
   const tail = document.createElement("div");
   tail.style.cssText = [
     "position:absolute",
-    "left:16px",
-    "top:34px",
+    `left:${selected ? 20 : 16}px`,
+    `top:${selected ? 42 : 34}px`,
     "width:0",
     "height:0",
-    "border-left:5px solid transparent",
-    "border-right:5px solid transparent",
-    `border-top:14px solid ${color}`,
+    `border-left:${selected ? 6 : 5}px solid transparent`,
+    `border-right:${selected ? 6 : 5}px solid transparent`,
+    `border-top:${selected ? 16 : 14}px solid ${color}`,
     "filter:drop-shadow(0 2px 2px rgba(15,23,42,.18))",
   ].join(";");
   root.appendChild(tail);
@@ -728,21 +799,23 @@ function createPhotoMarkerElement(
     "position:absolute",
     "left:2px",
     "top:1px",
-    "width:38px",
-    "height:38px",
+    `width:${shellSize}px`,
+    `height:${shellSize}px`,
     "border-radius:999px",
     `background:${color}`,
-    `box-shadow:0 2px 8px ${color}55`,
+    selected
+      ? `box-shadow:0 0 0 3px #fff,0 0 0 6px ${color}55,0 14px 28px rgba(15,23,42,.26)`
+      : `box-shadow:0 2px 8px ${color}55`,
   ].join(";");
   root.appendChild(shell);
 
   const media = document.createElement("div");
   media.style.cssText = [
     "position:absolute",
-    "left:6px",
+    "left:5px",
     "top:5px",
-    "width:30px",
-    "height:30px",
+    `width:${mediaSize}px`,
+    `height:${mediaSize}px`,
     "border-radius:999px",
     "overflow:hidden",
     `background:${bgColor}`,
@@ -755,8 +828,14 @@ function createPhotoMarkerElement(
   shell.appendChild(media);
 
   const fallback = document.createElement("span");
-  fallback.textContent = fallbackEmoji;
   fallback.setAttribute("aria-hidden", "true");
+  fallback.innerHTML = `
+    <svg width="${selected ? 20 : 16}" height="${selected ? 20 : 16}" viewBox="0 0 24 24" fill="none" stroke="#0f172a" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M3 10h18l-1.5-6h-15L3 10Z" fill="#fff"/>
+      <path d="M5 10v10h14V10" fill="#fff"/>
+      <path d="M9 20v-6h6v6"/>
+      <path d="M3 10c1 2 4 2 5 0 1 2 4 2 5 0 1 2 4 2 5 0 1 2 4 2 5 0"/>
+    </svg>`;
   media.appendChild(fallback);
 
   const img = document.createElement("img");
@@ -849,13 +928,15 @@ function setLegacyMarkerPhotoIcon(marker: google.maps.Marker, imageUrls: string[
 
 function getEmptyReason(
   openNowOnly: boolean, trendingOnly: boolean, smartFilterActive: boolean,
-  searchQuery: string, activeCategory: string, radiusKm: number | null
+  searchQuery: string, activeCategory: string, activeGroup: string, radiusKm: number | null
 ): { title: string; hint: string } {
+  const groupLabel = activeGroup ? CATEGORY_GROUPS.find((g) => g.id === activeGroup)?.label : null;
   if (searchQuery.trim()) return { title: `No results for "${searchQuery.trim()}"`, hint: "Try a different search term or clear search" };
-  if (openNowOnly) return { title: "No stores open right now", hint: "Turn off 'Open now' to see all stores" };
+  if (openNowOnly) return { title: groupLabel ? `No open ${groupLabel}` : "No stores open right now", hint: "Turn off Open now to see more places" };
   if (trendingOnly) return { title: "No trending stores nearby", hint: "Trending updates every 60 seconds" };
   if (smartFilterActive) return { title: `No ${getBestForNow().label} spots nearby`, hint: "Try a different area or disable this filter" };
   if (radiusKm) return { title: `No stores within ${radiusKm < 1 ? radiusKm * 1000 + " m" : radiusKm + " km"}`, hint: "Try a larger radius or move the map" };
+  if (groupLabel) return { title: `No ${groupLabel} stores here`, hint: "Try All or search another area" };
   if (activeCategory !== "all") return { title: "No stores in this category", hint: "Try All or a different area" };
   return { title: "No stores found", hint: "Try searching a different area" };
 }
@@ -1016,6 +1097,7 @@ function StoreLogo({ store, size = "md", className = "" }: { store: StorePin; si
 
 export default function StoreMapPage() {
   const navigate = useNavigate();
+  const smartBack = useSmartBack("/");
   const queryClient = useQueryClient();
   const [urlParams, setUrlParams] = useSearchParams();
   const focusId = urlParams.get("focus");
@@ -1037,6 +1119,8 @@ export default function StoreMapPage() {
   const [mapReady, setMapReady] = useState(false);
   const [mapError, setMapError] = useState(false);
   const [mapPreviewSettled, setMapPreviewSettled] = useState(false);
+  const [mapZoom, setMapZoom] = useState(11);
+  const [mapViewportBounds, setMapViewportBounds] = useState<MapViewportBounds | null>(null);
   const [fallbackZoom, setFallbackZoom] = useState(1);
   const [selectedStore, setSelectedStore] = useState<StorePin | null>(null);
   const [drawerStore, setDrawerStore] = useState<StorePin | null>(null);
@@ -1066,6 +1150,7 @@ export default function StoreMapPage() {
     () => (localStorage.getItem("zivo:mapStyle") as "light" | "dark" | "satellite") || "light"
   );
   const [dealStoreIds, setDealStoreIds] = useState<Set<string>>(new Set());
+  const [markerImageFallbackMap, setMarkerImageFallbackMap] = useState<Record<string, string[]>>({});
 
   const showFallbackMap = useCallback(() => {
     googleMapUnavailableRef.current = true;
@@ -1302,7 +1387,7 @@ export default function StoreMapPage() {
   /* Effective search center for distance calculations */
   const effectiveCenter = searchCenter || userLocation;
 
-  const filteredStores = useMemo(() => {
+  const storesBeforeOpenNowFilter = useMemo(() => {
     let result = stores;
     if (activeGroup) {
       const group = CATEGORY_GROUPS.find((g) => g.id === activeGroup);
@@ -1313,7 +1398,6 @@ export default function StoreMapPage() {
       const q = filterSearchQuery.toLowerCase();
       result = result.filter((s) => s.name.toLowerCase().includes(q) || s.address?.toLowerCase().includes(q));
     }
-    if (openNowOnly) result = result.filter((s) => isOpenNow(s.hours) === true);
     if (trendingOnly) result = result.filter((s) => !!liveStoreMap[s.id]);
     if (dealsOnly) result = result.filter((s) => dealStoreIds.has(s.id));
     if (smartFilterActive) {
@@ -1328,7 +1412,17 @@ export default function StoreMapPage() {
       });
     }
     return result;
-  }, [stores, activeCategory, activeGroup, filterSearchQuery, openNowOnly, trendingOnly, dealsOnly, smartFilterActive, liveStoreMap, dealStoreIds, radiusKm, effectiveCenter]);
+  }, [stores, activeCategory, activeGroup, filterSearchQuery, trendingOnly, dealsOnly, smartFilterActive, liveStoreMap, dealStoreIds, radiusKm, effectiveCenter]);
+
+  const openNowCount = useMemo(
+    () => storesBeforeOpenNowFilter.filter((s) => isOpenNow(s.hours) === true).length,
+    [storesBeforeOpenNowFilter],
+  );
+
+  const filteredStores = useMemo(() => {
+    if (!openNowOnly) return storesBeforeOpenNowFilter;
+    return storesBeforeOpenNowFilter.filter((s) => isOpenNow(s.hours) === true);
+  }, [openNowOnly, storesBeforeOpenNowFilter]);
 
   const markerCameraKey = useMemo(() => {
     const centerKey = effectiveCenter
@@ -1385,24 +1479,91 @@ export default function StoreMapPage() {
   }, [userLocation, filteredStores]);
 
   const trendingCount = useMemo(() => stores.filter((s) => !!liveStoreMap[s.id]).length, [stores, liveStoreMap]);
-  const openNowCount = useMemo(() => stores.filter((s) => isOpenNow(s.hours) === true).length, [stores]);
 
   /* Recently viewed stores (resolved from IDs) */
   const recentStores = useMemo(() =>
     recentIds.map((id) => stores.find((s) => s.id === id)).filter(Boolean) as StorePin[],
     [recentIds, stores]
   );
-  const showRecentRow = recentStores.length > 0 && !searchQuery.trim() && activeCategory === "all"
+  const showRecentRow = recentStores.length > 0 && !searchQuery.trim() && activeCategory === "all" && !activeGroup
     && !trendingOnly && !smartFilterActive && !selectedStore && !drawerStore;
 
-  /* Search autocomplete — top 5 matches from already-loaded store list */
+  /* Search autocomplete — top 5 matches from the current filter context */
   const autoSuggestions = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
     if (!q || q.length < 1) return [] as StorePin[];
-    return stores
-      .filter((s) => s.name.toLowerCase().includes(q) || s.address?.toLowerCase().includes(q))
-      .slice(0, 5);
-  }, [stores, searchQuery]);
+    return filteredStores.slice(0, 5);
+  }, [filteredStores, searchQuery]);
+
+  const markerPhotoScopeStores = useMemo(() => {
+    const scoped = filteredStores.filter((store) => isStoreInsideBounds(store, mapViewportBounds));
+    const source = scoped.length ? scoped : nearbySorted;
+    return source.slice(0, 90);
+  }, [filteredStores, mapViewportBounds, nearbySorted]);
+
+  useEffect(() => {
+    const focusedMap =
+      mapZoom >= 12 ||
+      !!activeGroup ||
+      activeCategory !== "all" ||
+      !!searchCenter ||
+      !!filterSearchQuery ||
+      filteredStores.length <= FOCUSED_PHOTO_MARKER_LIMIT;
+    if (!focusedMap) return;
+
+    const storesNeedingMarkerPhotos = markerPhotoScopeStores
+      .filter((store) =>
+        isLodgingCategory(store.category) &&
+        getStoreImageCandidates(store).length === 0 &&
+        !markerImageFallbackMap[store.id],
+      );
+
+    if (!storesNeedingMarkerPhotos.length) return;
+
+    let cancelled = false;
+    (async () => {
+      const storeIds = storesNeedingMarkerPhotos.map((store) => store.id);
+      const storeById = new Map(storesNeedingMarkerPhotos.map((store) => [store.id, store]));
+      const [profileResult, roomResult] = await Promise.all([
+        (supabase as any)
+          .from("store_profiles")
+          .select("id, logo_url, banner_url, gallery_images")
+          .in("id", storeIds),
+        (supabase as any)
+          .from("lodge_rooms")
+          .select("store_id, photos, cover_photo_index")
+          .in("store_id", storeIds)
+          .eq("is_active", true)
+          .order("sort_order", { ascending: true }),
+      ]);
+      if (cancelled) return;
+      const photosByStore = new Map<string, string[]>();
+      if (!profileResult.error) {
+        ((profileResult.data || []) as Array<Partial<StorePin> & { id?: string | null }>).forEach((profile) => {
+          if (!profile.id) return;
+          const baseStore = storeById.get(profile.id);
+          if (!baseStore) return;
+          photosByStore.set(profile.id, getStoreImageCandidates({ ...baseStore, ...profile }).slice(0, 4));
+        });
+      }
+      if (!roomResult.error) {
+        ((roomResult.data || []) as Array<{ store_id?: string | null; photos?: unknown; cover_photo_index?: number | null }>).forEach((room) => {
+          if (!room.store_id) return;
+          const photos = collectStoreImageUrls(room.photos);
+          const cover = typeof room.cover_photo_index === "number" ? photos[room.cover_photo_index] : undefined;
+          const current = photosByStore.get(room.store_id) || [];
+          photosByStore.set(room.store_id, uniqueStoreImageUrls([...current, ...(cover ? [cover] : []), ...photos]).slice(0, 4));
+        });
+      }
+      setMarkerImageFallbackMap((prev) => {
+        const next = { ...prev };
+        storeIds.forEach((id) => { next[id] = photosByStore.get(id) || []; });
+        return next;
+      });
+    })();
+
+    return () => { cancelled = true; };
+  }, [activeCategory, activeGroup, filterSearchQuery, filteredStores.length, mapZoom, markerImageFallbackMap, markerPhotoScopeStores, searchCenter]);
 
   const { data: selectedStoreGallery = [] } = useQuery<string[]>({
     queryKey: ["store-map-gallery", selectedStore?.id],
@@ -1431,6 +1592,36 @@ export default function StoreMapPage() {
     enabled: !!selectedStore?.id,
     staleTime: 30_000,
   });
+
+  const { data: selectedLodgingRooms = [] } = useQuery<LodgingRoomPreview[]>({
+    queryKey: ["store-map-lodging-rooms", selectedStore?.id],
+    queryFn: async () => {
+      if (!selectedStore?.id || !isLodgingCategory(selectedStore.category)) return [] as LodgingRoomPreview[];
+      const { data, error } = await (supabase as any)
+        .from("lodge_rooms")
+        .select("id, name, base_rate_cents, original_rate_cents, weekly_discount_pct, monthly_discount_pct, max_guests, beds, room_type, photos, cover_photo_index")
+        .eq("store_id", selectedStore.id)
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true })
+        .limit(3);
+      if (error) return [] as LodgingRoomPreview[];
+      return (data || []) as LodgingRoomPreview[];
+    },
+    enabled: !!selectedStore?.id && isLodgingCategory(selectedStore?.category),
+    staleTime: 60_000,
+  });
+
+  const selectedBestRoom = useMemo(() => getBestRoomPreview(selectedLodgingRooms), [selectedLodgingRooms]);
+  const selectedRoomPrice = useMemo(
+    () => formatUsdCents(selectedBestRoom?.base_rate_cents),
+    [selectedBestRoom],
+  );
+  const selectedRoomOriginalPrice = useMemo(() => {
+    if (!selectedBestRoom?.original_rate_cents || !selectedBestRoom?.base_rate_cents) return null;
+    if (selectedBestRoom.original_rate_cents <= selectedBestRoom.base_rate_cents) return null;
+    return formatUsdCents(selectedBestRoom.original_rate_cents);
+  }, [selectedBestRoom]);
+  const selectedRoomDiscountLabel = useMemo(() => getRoomDiscountLabel(selectedBestRoom), [selectedBestRoom]);
 
   useEffect(() => {
     if (selectedStoreProducts.length > 0) setSelectedProductId(selectedStoreProducts[0].id);
@@ -1474,7 +1665,8 @@ export default function StoreMapPage() {
     };
     (window as any).gm_authFailure = () => {
       previousAuthFailure?.();
-      failMap();
+      dismissGoogleMapsErrorUi(mapContainerRef.current);
+      if (!cancelled) setMapPreviewSettled(true);
     };
     (async () => {
       const key = await getApiKey();
@@ -1495,6 +1687,38 @@ export default function StoreMapPage() {
         styles: initStyle === "dark" ? DARK_MAP_STYLES : initStyle === "satellite" ? [] : LIGHT_MAP_STYLES,
       });
       mapRef.current = map;
+      const syncMapZoom = () => {
+        if (!cancelled) setMapZoom(map.getZoom() ?? 13);
+      };
+      const syncMapViewport = () => {
+        if (cancelled) return;
+        syncMapZoom();
+        const bounds = map.getBounds();
+        if (!bounds) return;
+        const northEast = bounds.getNorthEast();
+        const southWest = bounds.getSouthWest();
+        const nextBounds = {
+          north: northEast.lat(),
+          east: northEast.lng(),
+          south: southWest.lat(),
+          west: southWest.lng(),
+        };
+        setMapViewportBounds((prev) => {
+          if (
+            prev &&
+            Math.abs(prev.north - nextBounds.north) < 0.0005 &&
+            Math.abs(prev.south - nextBounds.south) < 0.0005 &&
+            Math.abs(prev.east - nextBounds.east) < 0.0005 &&
+            Math.abs(prev.west - nextBounds.west) < 0.0005
+          ) {
+            return prev;
+          }
+          return nextBounds;
+        });
+      };
+      syncMapZoom();
+      map.addListener("zoom_changed", syncMapZoom);
+      map.addListener("idle", syncMapViewport);
       map.addListener("click", () => {
         if (Date.now() < searchOpenGuardRef.current) return;
         setSelectedStore(null);
@@ -1519,7 +1743,7 @@ export default function StoreMapPage() {
 
     const checkGoogleMapsErrorUi = () => {
       if (dismissGoogleMapsErrorUi(mapContainerRef.current)) {
-        showFallbackMap();
+        setMapPreviewSettled(true);
       }
     };
 
@@ -1589,7 +1813,15 @@ export default function StoreMapPage() {
     if (!filteredStores.length) return;
 
     const shouldAnimateMarkers = filteredStores.length <= 80;
-    const shouldRenderLogoMarkers = filteredStores.length <= LOGO_MARKER_MAX_STORE_COUNT;
+    const focusedMap =
+      mapZoom >= 12 ||
+      !!activeGroup ||
+      activeCategory !== "all" ||
+      !!searchCenter ||
+      !!filterSearchQuery ||
+      filteredStores.length <= FOCUSED_PHOTO_MARKER_LIMIT;
+    const shouldRenderLogoMarkers = filteredStores.length <= LOGO_MARKER_MAX_STORE_COUNT && focusedMap;
+    const scopedPhotoStoreIds = new Set(markerPhotoScopeStores.map((store) => store.id));
     const shouldAdjustCamera = markerCameraKeyRef.current !== markerCameraKey;
     markerCameraKeyRef.current = markerCameraKey;
     const bounds = new google.maps.LatLngBounds();
@@ -1600,10 +1832,12 @@ export default function StoreMapPage() {
       const bg = getCategoryBg(store.category);
       const storeIsNew = isNewStore(store);
       const storeHasDeal = dealStoreIds.has(store.id);
+      const isSelectedMarker = selectedStoreId === store.id;
+      const shouldUsePhotoMarker = isSelectedMarker || shouldRenderLogoMarkers || scopedPhotoStoreIds.has(store.id);
 
-      const logoMarkerUrls = shouldRenderLogoMarkers
+      const logoMarkerUrls = shouldUsePhotoMarker
         ? uniqueStoreImageUrls(
-            getStoreImageCandidates(store)
+            [...(markerImageFallbackMap[store.id] || []), ...getStoreImageCandidates(store)]
               .map((url) => optimizeImage(url, 96, "square"))
               .filter((url): url is string => Boolean(url)),
           )
@@ -1625,20 +1859,21 @@ export default function StoreMapPage() {
             storeIsNew,
             storeHasDeal,
             store.name,
+            isSelectedMarker,
           ),
-          zIndex: 100,
+          zIndex: isSelectedMarker ? 260 : 100,
         });
       } else {
         const legacyMarker = new google.maps.Marker({
           position: pos,
           icon: {
             url: makeMarkerIcon(getCategoryIcon(store.category), color, bg, storeIsNew, storeHasDeal),
-            scaledSize: new google.maps.Size(36, 43),
-            anchor: new google.maps.Point(18, 43),
+            scaledSize: new google.maps.Size(isSelectedMarker ? 44 : 36, isSelectedMarker ? 52 : 43),
+            anchor: new google.maps.Point(isSelectedMarker ? 22 : 18, isSelectedMarker ? 52 : 43),
           },
           title: store.name,
           animation: shouldAnimateMarkers ? google.maps.Animation.DROP : undefined,
-          zIndex: 100,
+          zIndex: isSelectedMarker ? 260 : 100,
         });
         marker = legacyMarker;
         if (logoMarkerUrls.length) setLegacyMarkerPhotoIcon(legacyMarker, logoMarkerUrls);
@@ -1656,6 +1891,7 @@ export default function StoreMapPage() {
           return;
         }
         setSelectedStore(store);
+        setSheetDismissed(false);
         setSheetExpanded(false);
         mapRef.current?.panTo(pos);
         const z = mapRef.current?.getZoom() || 14;
@@ -1763,7 +1999,7 @@ export default function StoreMapPage() {
     }
 
     return () => { if (intervalId !== null) window.clearInterval(intervalId); };
-  }, [mapReady, filteredStores, userLocation, liveStoreMap, dealStoreIds, activeGroup, activeCategory, searchCenter, markerCameraKey]);
+  }, [mapReady, filteredStores, userLocation, liveStoreMap, dealStoreIds, activeGroup, activeCategory, searchCenter, markerCameraKey, mapZoom, selectedStoreId, filterSearchQuery, markerImageFallbackMap, markerPhotoScopeStores]);
 
   /* Trip stop numbered markers + polyline */
   useEffect(() => {
@@ -2116,6 +2352,7 @@ export default function StoreMapPage() {
     const storeIsNew = isNewStore(store);
     const storeHasDeal = dealStoreIds.has(store.id);
     const isVisited = visitedStoreIds.has(store.id);
+    const isSelectedRow = selectedStoreId === store.id;
     const closingSoon = isOpen === true ? getClosingSoonMinutes(store.hours) : null;
 
     const handleTap = () => {
@@ -2140,6 +2377,7 @@ export default function StoreMapPage() {
       <motion.div
         role="button"
         tabIndex={0}
+        aria-label={`Select ${store.name}`}
         whileTap={{ scale: 0.98 }}
         onClick={handleTap}
         onKeyDown={(e) => {
@@ -2149,7 +2387,11 @@ export default function StoreMapPage() {
           }
         }}
         className={`group grid w-full grid-cols-[28px_48px_minmax(0,1fr)_auto] items-center gap-3 border-t border-border/10 px-4 py-3 text-left transition-colors ${
-          isInTrip ? "bg-indigo-50/85" : "hover:bg-muted/40"
+          isSelectedRow
+            ? "bg-primary/[0.08] ring-2 ring-inset ring-primary/20"
+            : isInTrip
+            ? "bg-indigo-50/85"
+            : "hover:bg-muted/40"
         }`}
       >
         {/* Rank badge */}
@@ -2333,11 +2575,13 @@ export default function StoreMapPage() {
                       type="text"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
+                      aria-label="Search stores"
                       placeholder="Search stores..."
                       autoFocus
                       className="flex-1 bg-transparent text-sm outline-none text-foreground placeholder:text-muted-foreground/60"
                     />
                     <button type="button" onClick={closeSearchPanel}
+                      aria-label="Close search"
                       className="p-1.5 rounded-full bg-muted/60 text-muted-foreground">
                       <X className="w-3.5 h-3.5" />
                     </button>
@@ -2395,6 +2639,20 @@ export default function StoreMapPage() {
                       ))}
                     </div>
                   )}
+                  {searchQuery.trim() && activeFiltersCount > 0 && (
+                    <div className="border-t border-border/15 px-4 py-2.5">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          clearAllFilters();
+                          searchInputRef.current?.focus();
+                        }}
+                        className="inline-flex min-h-[34px] items-center gap-1.5 rounded-full border border-primary/25 bg-primary/10 px-3 text-[12px] font-bold text-primary"
+                      >
+                        <Search className="h-3.5 w-3.5" /> Search all stores
+                      </button>
+                    </div>
+                  )}
                 </motion.div>
               ) : (
                 <motion.div key="title"
@@ -2410,17 +2668,15 @@ export default function StoreMapPage() {
                       if (e.key === "Enter" || e.key === " ") openSearchPanel(e);
                     }}
                   >
-                    {window.history.length > 1 && (
-                      <motion.button
-                        whileTap={{ scale: 0.92 }}
-                        type="button"
-                        onClick={(e) => { e.stopPropagation(); navigate(-1); }}
-                        aria-label="Go back"
-                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[18px] bg-muted/70 transition hover:bg-muted sm:h-[52px] sm:w-[52px] sm:rounded-[22px]"
-                      >
-                        <ArrowLeft className="h-5 w-5 text-foreground" />
-                      </motion.button>
-                    )}
+                    <motion.button
+                      whileTap={{ scale: 0.92 }}
+                      type="button"
+                      onClick={(e) => { e.stopPropagation(); smartBack(); }}
+                      aria-label="Go back"
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[18px] bg-muted/70 transition hover:bg-muted sm:h-[52px] sm:w-[52px] sm:rounded-[22px]"
+                    >
+                      <ArrowLeft className="h-5 w-5 text-foreground" />
+                    </motion.button>
                     <div className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-[18px] bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/10 min-[420px]:flex sm:h-[52px] sm:w-[52px] sm:rounded-[22px]">
                       <Store className="h-6 w-6 text-primary" />
                     </div>
@@ -2431,7 +2687,7 @@ export default function StoreMapPage() {
                       <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] font-semibold text-muted-foreground">
                         <span>{baseHeaderCountText}</span>
                         {hiddenStoreCount > 0 && !searchCenter && activeFiltersCount === 0 && !searchQuery.trim() && (
-                          <span className="text-amber-600">{hiddenStoreCount} need pins</span>
+                          <span className="text-amber-600">{hiddenStoreCount} missing map pins</span>
                         )}
                         {mapScopeLabel && <span className="text-primary">{mapScopeLabel}</span>}
                         {radiusKm && <span>within {radiusKm < 1 ? radiusKm * 1000 + " m" : radiusKm + " km"}</span>}
@@ -2443,7 +2699,6 @@ export default function StoreMapPage() {
                       </p>
                     </div>
                     <motion.button whileTap={{ scale: 0.94 }}
-                      onPointerDown={goToStoreList}
                       onClick={goToStoreList}
                       className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-2xl bg-foreground px-3 text-[12px] font-black text-background shadow-sm sm:h-12 sm:px-4 sm:text-[13px]"
                       aria-label="See all map stores"
@@ -2512,13 +2767,24 @@ export default function StoreMapPage() {
                     </motion.button>
                   );
                 })}
-                <motion.button whileTap={{ scale: 0.95 }}
+                <motion.button whileTap={{ scale: openNowCount === 0 && !openNowOnly ? 1 : 0.95 }}
                   type="button"
                   aria-pressed={openNowOnly}
-                  aria-label={openNowOnly ? "Showing open stores only — tap to clear" : `Filter to ${openNowCount} stores open now`}
+                  aria-label={
+                    openNowOnly
+                      ? "Showing open stores only — tap to clear"
+                      : openNowCount === 0
+                      ? "No open stores for the current filters"
+                      : `Filter to ${openNowCount} stores open now`
+                  }
+                  disabled={openNowCount === 0 && !openNowOnly}
                   onClick={() => { setOpenNowOnly((v) => !v); setSelectedStore(null); }}
                   className={`min-h-[40px] px-4 py-2 rounded-full text-[12px] font-semibold transition-all whitespace-nowrap flex items-center gap-1.5 border backdrop-blur-sm touch-manipulation ${
-                    openNowOnly ? "bg-emerald-600 text-white border-emerald-600 shadow-md" : "bg-card/90 text-muted-foreground border-border/30 shadow-sm"
+                    openNowOnly
+                      ? "bg-emerald-600 text-white border-emerald-600 shadow-md"
+                      : openNowCount === 0
+                      ? "bg-muted/65 text-muted-foreground/60 border-border/20 shadow-sm"
+                      : "bg-card/90 text-muted-foreground border-border/30 shadow-sm"
                   }`}
                 >
                   <Clock className="w-3.5 h-3.5" /> Open now ({openNowCount})
@@ -2715,20 +2981,46 @@ export default function StoreMapPage() {
               className="absolute bottom-[160px] left-1/2 -translate-x-1/2 z-[1400] w-[270px]"
             >
               {(() => {
-                const { title, hint } = getEmptyReason(openNowOnly, trendingOnly, smartFilterActive, searchQuery, activeCategory, radiusKm);
+                const { title, hint } = getEmptyReason(openNowOnly, trendingOnly, smartFilterActive, searchQuery, activeCategory, activeGroup, radiusKm);
+                const actions: Array<{ label: string; run: () => void; primary?: boolean }> = [];
+                if (searchQuery.trim()) actions.push({ label: "Clear search", run: () => setSearchQuery(""), primary: true });
+                if (openNowOnly) actions.push({ label: "Show closed too", run: () => setOpenNowOnly(false), primary: !actions.length });
+                if (activeGroup) {
+                  const groupLabel = CATEGORY_GROUPS.find((g) => g.id === activeGroup)?.label || "group";
+                  actions.push({ label: `Clear ${groupLabel}`, run: () => setActiveGroup(""), primary: !actions.length });
+                } else if (activeCategory !== "all") {
+                  actions.push({ label: "Clear category", run: () => setActiveCategory("all"), primary: !actions.length });
+                }
+                if (radiusKm) actions.push({ label: "Expand radius", run: () => setRadiusKm(null), primary: !actions.length });
+                if (actions.length || activeFiltersCount > 0) {
+                  actions.push({
+                    label: "Reset all",
+                    run: () => {
+                      clearAllFilters();
+                      setSearchQuery("");
+                    },
+                  });
+                }
                 return (
                   <div className="bg-card/96 backdrop-blur-xl rounded-2xl px-5 py-4 shadow-xl border border-border/20 text-center">
                     <p className="text-[15px] font-bold text-foreground">{title}</p>
                     <p className="text-[12px] text-muted-foreground mt-1 leading-snug">{hint}</p>
-                    <button type="button"
-                      onClick={() => {
-                        clearAllFilters();
-                        setSearchQuery("");
-                      }}
-                      className="mt-3 px-5 py-2 rounded-full bg-primary text-primary-foreground text-[12px] font-bold shadow-sm"
-                    >
-                      Clear all filters
-                    </button>
+                    <div className="mt-3 flex flex-wrap justify-center gap-1.5">
+                      {actions.map((action) => (
+                        <button
+                          key={action.label}
+                          type="button"
+                          onClick={action.run}
+                          className={`min-h-[34px] rounded-full px-3.5 text-[12px] font-bold shadow-sm ${
+                            action.primary
+                              ? "bg-primary text-primary-foreground"
+                              : "border border-border/40 bg-muted/50 text-foreground"
+                          }`}
+                        >
+                          {action.label}
+                        </button>
+                      ))}
+                    </div>
                   </div>
                 );
               })()}
@@ -2738,7 +3030,7 @@ export default function StoreMapPage() {
 
         {/* ── GPS denied banner with city quick-jump ── */}
         <AnimatePresence>
-          {locationDenied && !userLocation && !locationNoticeDismissed && !tripMode && !searchCenter && (
+          {locationDenied && !userLocation && !locationNoticeDismissed && !tripMode && !searchPanelOpen && !searchCenter && (
             <motion.div
               initial={{ y: -20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -2752,20 +3044,20 @@ export default function StoreMapPage() {
                 <div className="min-w-0 flex-1">
                   <p className="text-[14px] font-black leading-tight text-foreground">
                     {locationErrorCode === "denied"
-                      ? "Location blocked"
+                      ? "Pick a city to start"
                       : locationErrorCode === "unsupported"
-                      ? "Location not supported"
+                      ? "Pick a city to start"
                       : locationErrorCode === "timeout"
-                      ? "Could not find your location"
+                      ? "Pick a city or retry"
                       : "Choose your map area"}
                   </p>
                   <p className="mt-0.5 text-[12px] font-semibold leading-snug text-muted-foreground">
                     {locationErrorCode === "denied"
-                      ? `${locationHelpGuide.browser} is blocking location for this site. Tap "How to enable" to fix, or pick a city below.`
+                      ? `GPS is blocked in ${locationHelpGuide.browser}. Choose a city now, or enable location later.`
                       : locationErrorCode === "unsupported"
-                      ? "This browser does not support GPS. Pick a city below."
+                      ? "This browser does not support GPS. Choose a city to browse nearby stores."
                       : locationErrorCode === "timeout"
-                      ? "GPS took too long to respond. Retry, or pick a city below."
+                      ? "GPS took too long to respond. Retry, or choose a city below."
                       : "Location is off. Pick a city or retry to unlock distance-sorted results."}
                   </p>
                 </div>
@@ -2844,7 +3136,7 @@ export default function StoreMapPage() {
 
         {/* ── "You're far from these stores" banner ── */}
         <AnimatePresence>
-          {farFromAllStores && !locationDenied && (
+          {farFromAllStores && !locationDenied && !searchPanelOpen && (
             <motion.div
               initial={{ y: -20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -3310,6 +3602,51 @@ export default function StoreMapPage() {
                           <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-foreground text-background">
                             ✓ Visited
                           </span>
+                        )}
+                      </div>
+                    )}
+                    {isLodgingCategory(selectedStore.category) && (
+                      <div className="mt-2 rounded-2xl border border-sky-100 bg-sky-50/70 px-3 py-2 text-left">
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="text-[10px] font-black uppercase tracking-wide text-sky-700">
+                              {selectedLodgingRooms.length > 0
+                                ? `${selectedLodgingRooms.length} room preview${selectedLodgingRooms.length === 1 ? "" : "s"}`
+                                : "Room details"}
+                            </p>
+                            <p className="mt-0.5 text-[12px] font-black text-foreground">
+                              {selectedRoomPrice ? (
+                                <>
+                                  Rooms from {selectedRoomPrice}
+                                  <span className="font-semibold text-muted-foreground"> / night</span>
+                                  {selectedRoomOriginalPrice && (
+                                    <span className="ml-1.5 text-[11px] font-semibold text-muted-foreground line-through">
+                                      {selectedRoomOriginalPrice}
+                                    </span>
+                                  )}
+                                </>
+                              ) : (
+                                "Room rates coming soon"
+                              )}
+                            </p>
+                          </div>
+                          {selectedRoomDiscountLabel && (
+                            <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-black text-emerald-700">
+                              {selectedRoomDiscountLabel}
+                            </span>
+                          )}
+                        </div>
+                        {selectedBestRoom && (
+                          <div className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10.5px] font-semibold text-muted-foreground">
+                            <span className="truncate">{selectedBestRoom.name}</span>
+                            {selectedBestRoom.max_guests && (
+                              <span className="inline-flex items-center gap-0.5">
+                                <Users className="h-3 w-3" /> {selectedBestRoom.max_guests}
+                              </span>
+                            )}
+                            {selectedBestRoom.beds && <span className="truncate">{selectedBestRoom.beds}</span>}
+                            {selectedBestRoom.room_type && <span className="truncate">{selectedBestRoom.room_type}</span>}
+                          </div>
                         )}
                       </div>
                     )}
