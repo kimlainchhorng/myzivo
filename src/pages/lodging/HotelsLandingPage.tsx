@@ -12,6 +12,8 @@ import { motion } from "framer-motion";
 import { format, addDays, differenceInCalendarDays } from "date-fns";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";
 import Heart from "lucide-react/dist/esm/icons/heart";
+import Clock from "lucide-react/dist/esm/icons/clock";
+import X from "lucide-react/dist/esm/icons/x";
 import CalendarIcon from "lucide-react/dist/esm/icons/calendar";
 import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
 import Coffee from "lucide-react/dist/esm/icons/coffee";
@@ -72,13 +74,13 @@ const FILTERS: Array<{ id: string; label: string; match: (cat: string) => boolea
   { id: "guesthouse", label: "Guesthouses", match: (c) => c.includes("guest") || c.includes("bed and breakfast") },
 ];
 
-const QUICK_TAGS: Array<{ id: string; label: string; keywords: string[] }> = [
-  { id: "beach", label: "Beachfront", keywords: ["beach", "beachfront", "sea"] },
-  { id: "pool", label: "Pool", keywords: ["pool", "swimming"] },
-  { id: "breakfast", label: "Breakfast", keywords: ["breakfast"] },
-  { id: "wifi", label: "Free Wi-Fi", keywords: ["wifi", "wi-fi"] },
-  { id: "family", label: "Family", keywords: ["family", "kids", "children"] },
-  { id: "pet", label: "Pet-friendly", keywords: ["pet"] },
+const QUICK_TAGS: Array<{ id: string; label: string; keywords: string[]; icon: typeof Coffee }> = [
+  { id: "beach", label: "Beachfront", keywords: ["beach", "beachfront", "sea"], icon: Waves },
+  { id: "pool", label: "Pool", keywords: ["pool", "swimming"], icon: Waves },
+  { id: "breakfast", label: "Breakfast", keywords: ["breakfast"], icon: Coffee },
+  { id: "wifi", label: "Free Wi-Fi", keywords: ["wifi", "wi-fi"], icon: Wifi },
+  { id: "family", label: "Family", keywords: ["family", "kids", "children"], icon: Users },
+  { id: "pet", label: "Pet-friendly", keywords: ["pet"], icon: Dog },
 ];
 
 const POPULAR_DESTINATIONS: Array<{ id: string; label: string; city: string; img: string }> = [
@@ -124,14 +126,23 @@ export default function HotelsLandingPage() {
       const n = parseInt(raw, 10);
       return Number.isFinite(n) && n >= 0 ? n : null;
     };
+    const sortRaw = searchParams.get("sort");
+    const validSorts = ["default", "price_asc", "price_desc", "rating", "near_me"] as const;
+    type SortKey = typeof validSorts[number];
+    const viewRaw = searchParams.get("view");
     return {
       city: searchParams.get("city") || "",
       ci: parseDate(searchParams.get("ci")),
       co: parseDate(searchParams.get("co")),
       adults: parseInt10(searchParams.get("adults")),
       children: parseInt10(searchParams.get("children")),
+      rooms: parseInt10(searchParams.get("rooms")),
       filter: searchParams.get("filter") || "all",
       tags: (searchParams.get("tags") || "").split(",").filter(Boolean),
+      saved: searchParams.get("saved") === "1",
+      budget: parseInt10(searchParams.get("budget")),
+      sort: (validSorts.includes(sortRaw as SortKey) ? (sortRaw as SortKey) : "default") as SortKey,
+      view: viewRaw === "map" ? "map" : "list",
     };
     // We compute this once at mount; subsequent in-page changes shouldn't
     // re-overwrite the user's edits.
@@ -142,21 +153,30 @@ export default function HotelsLandingPage() {
   const [activeFilter, setActiveFilter] = useState<string>(initial.filter);
   const [activeTags, setActiveTags] = useState<string[]>(initial.tags);
   const [recentSearches, setRecentSearches] = useState<string[]>(() => {
-    try { return JSON.parse(localStorage.getItem("hotel_recent_searches") || "[]") as string[]; }
-    catch { return []; }
+    try {
+      const raw = JSON.parse(localStorage.getItem("hotel_recent_searches") || "[]") as string[];
+      // Strip junk (single-letter / 2-letter typos) that previously slipped in
+      // via onBlur of half-typed queries.
+      const cleaned = Array.from(new Set(raw.map((s) => s.trim()).filter((s) => s.length >= 3)));
+      if (cleaned.length !== raw.length) {
+        try { localStorage.setItem("hotel_recent_searches", JSON.stringify(cleaned)); } catch {}
+      }
+      return cleaned;
+    } catch { return []; }
   });
+  const [searchFocused, setSearchFocused] = useState(false);
   const [checkIn, setCheckIn] = useState<Date>(() => initial.ci ?? todayUTC());
   const [checkOut, setCheckOut] = useState<Date>(
     () => initial.co ?? addDays(initial.ci ?? todayUTC(), 1)
   );
   const [guests, setGuests] = useState<number>(initial.adults ?? 2);
   const [children, setChildren] = useState<number>(initial.children ?? 0);
-  const [rooms, setRooms] = useState<number>(1);
+  const [rooms, setRooms] = useState<number>(initial.rooms ?? 1);
   const [datesOpen, setDatesOpen] = useState(false);
   const [guestsOpen, setGuestsOpen] = useState(false);
-  const [sortBy, setSortBy] = useState<"default" | "price_asc" | "price_desc" | "rating" | "near_me">("default");
-  const [maxBudget, setMaxBudget] = useState<number | null>(null); // USD per night, null = no limit
-  const [savedOnly, setSavedOnly] = useState(false);
+  const [sortBy, setSortBy] = useState<"default" | "price_asc" | "price_desc" | "rating" | "near_me">(initial.sort);
+  const [maxBudget, setMaxBudget] = useState<number | null>(initial.budget); // USD per night, null = no limit
+  const [savedOnly, setSavedOnly] = useState(initial.saved);
   const [showStickyBar, setShowStickyBar] = useState(false);
   const heroSentinelRef = useRef<HTMLDivElement | null>(null);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
@@ -183,8 +203,14 @@ export default function HotelsLandingPage() {
     setRecentlyViewed([]);
   };
 
-  const [viewMode, setViewMode] = useState<"list" | "map">("list");
+  const [viewMode, setViewMode] = useState<"list" | "map">(initial.view);
   const [conciergeOpen, setConciergeOpen] = useState(false);
+  // Infinite scroll: render the first PAGE_SIZE rows, then add another page
+  // each time the sentinel enters the viewport. Resets on filter/search
+  // change via the effect below.
+  const PAGE_SIZE = 20;
+  const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
+  const loadMoreRef = useRef<HTMLDivElement | null>(null);
 
   const toggleFavorite = useCallback((id: string, e: React.MouseEvent) => {
     e.stopPropagation();
@@ -213,7 +239,34 @@ export default function HotelsLandingPage() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // Sync filters back to the URL so refresh / back-button / share preserve state
+  // Reset infinite-scroll page back to the first chunk whenever the user
+  // changes any filter — they should see the new top of the list, not the
+  // tail of the previous one.
+  useEffect(() => {
+    setVisibleCount(PAGE_SIZE);
+  }, [search, activeFilter, activeTags, savedOnly, maxBudget, sortBy]);
+
+  // Auto-load the next page when the sentinel scrolls into view. We arm a
+  // 200px rootMargin so the next batch starts rendering before the user
+  // actually hits the bottom — keeps scrolling smooth.
+  useEffect(() => {
+    const el = loadMoreRef.current;
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setVisibleCount((c) => c + PAGE_SIZE);
+        }
+      },
+      { rootMargin: "200px 0px 200px 0px" },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [visibleCount]);
+
+  // Sync filters + dates + guests back to the URL so refresh / back-button /
+  // share preserve the full search criteria. The Booking/Airbnb-style flow
+  // expects every input on this page to round-trip through the URL.
   useEffect(() => {
     const next = new URLSearchParams(searchParams);
     const setOrDelete = (key: string, val: string) => {
@@ -222,19 +275,82 @@ export default function HotelsLandingPage() {
     setOrDelete("city", search.trim());
     setOrDelete("filter", activeFilter !== "all" ? activeFilter : "");
     setOrDelete("tags", activeTags.join(","));
+    setOrDelete("ci", format(checkIn, "yyyy-MM-dd"));
+    setOrDelete("co", format(checkOut, "yyyy-MM-dd"));
+    setOrDelete("adults", guests !== 2 ? String(guests) : "");
+    setOrDelete("children", children > 0 ? String(children) : "");
+    setOrDelete("rooms", rooms > 1 ? String(rooms) : "");
+    setOrDelete("saved", savedOnly ? "1" : "");
+    setOrDelete("budget", maxBudget !== null ? String(maxBudget) : "");
+    setOrDelete("sort", sortBy !== "default" ? sortBy : "");
+    setOrDelete("view", viewMode !== "list" ? viewMode : "");
     setSearchParams(next, { replace: true });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [search, activeFilter, activeTags]);
+  }, [search, activeFilter, activeTags, checkIn, checkOut, guests, children, rooms, savedOnly, maxBudget, sortBy, viewMode]);
 
   const pushRecentSearch = useCallback((value: string) => {
     const v = value.trim();
-    if (!v) return;
+    // Skip half-typed queries — only save things the user is likely to want
+    // to search for again.
+    if (v.length < 3) return;
     setRecentSearches((prev) => {
       const next = [v, ...prev.filter((p) => p.toLowerCase() !== v.toLowerCase())].slice(0, 5);
       try { localStorage.setItem("hotel_recent_searches", JSON.stringify(next)); } catch {}
       return next;
     });
   }, []);
+
+  const removeRecentSearch = useCallback((value: string) => {
+    setRecentSearches((prev) => {
+      const next = prev.filter((p) => p.toLowerCase() !== value.toLowerCase());
+      try { localStorage.setItem("hotel_recent_searches", JSON.stringify(next)); } catch {}
+      return next;
+    });
+  }, []);
+
+  // Scroll the results section to the top of the viewport. Uses an explicit
+  // window.scrollTo (not scrollIntoView) and a short timeout so that React
+  // re-renders triggered by upstream state changes (`setSearch`, filter
+  // resets) settle their layout heights before we measure. Without this the
+  // filtered list shrinks mid-scroll and the destination point moves out
+  // from under us — the page ends up parked at scrollY ~270 instead of at
+  // the results header.
+  const scrollToResults = useCallback(() => {
+    setTimeout(() => {
+      const el = document.getElementById("hotels-all");
+      if (!el) return;
+      const top = el.getBoundingClientRect().top + window.scrollY - 8;
+      window.scrollTo({ top, behavior: "smooth" });
+    }, 80);
+  }, []);
+
+  // Unified "submit search" — used by the Search button, Enter key on the
+  // search input, and the sticky bar. Records the query, closes the dropdown,
+  // dismisses the keyboard, and scrolls to the results section. The URL
+  // already carries the full state via the sync effect above, so there's
+  // nothing else to wire up.
+  const submitSearch = useCallback(() => {
+    const v = search.trim();
+    if (v) pushRecentSearch(v);
+    setSearchFocused(false);
+    (document.activeElement as HTMLElement | null)?.blur?.();
+    scrollToResults();
+  }, [search, pushRecentSearch, scrollToResults]);
+
+  // "See all in <destination>" — used by Popular-destination cards and recent
+  // search chips. Clears narrow filters (tags, saved, budget, sort) so the
+  // user lands on a clean city-wide list, then scrolls to results.
+  const jumpToDestination = useCallback((city: string) => {
+    const v = city.trim();
+    setSearch(v);
+    setActiveFilter("all");
+    setActiveTags([]);
+    setSavedOnly(false);
+    setMaxBudget(null);
+    setSortBy("default");
+    if (v) pushRecentSearch(v);
+    scrollToResults();
+  }, [pushRecentSearch, scrollToResults]);
 
   const listQuery = useQuery({
     queryKey: ["hotels-landing"],
@@ -255,6 +371,21 @@ export default function HotelsLandingPage() {
 
   const all = listQuery.data || [];
   const storeIds = useMemo(() => all.map((s) => s.id), [all]);
+
+  // Autocomplete suggestions — top 6 hotels matching the current query.
+  // Stay light: only run once the user has typed 2+ chars to avoid showing
+  // the whole list when the input is just focused.
+  const searchSuggestions = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (q.length < 2) return [] as DirectoryStore[];
+    return all
+      .filter((s) => {
+        if (s.name.toLowerCase().includes(q)) return true;
+        if ((s.address || "").toLowerCase().includes(q)) return true;
+        return false;
+      })
+      .slice(0, 6);
+  }, [search, all]);
 
   // Min rates per store (with stay-length discount info)
   type RateInfo = {
@@ -529,16 +660,20 @@ export default function HotelsLandingPage() {
         })}</script>
       </Helmet>
 
-      {/* Hero — tightened */}
-      <div className="relative overflow-hidden">
-        <img
-          src={tabHotelsBg}
-          alt=""
-          className="absolute inset-0 w-full h-full object-cover"
-          aria-hidden
-        />
-        <div className="absolute inset-0 bg-black/20" />
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-background" />
+      {/* Hero — tightened. Background layers live in their own `overflow-hidden`
+          wrapper so the search-autocomplete dropdown can spill out below the
+          hero without being clipped. */}
+      <div className="relative">
+        <div className="absolute inset-0 overflow-hidden">
+          <img
+            src={tabHotelsBg}
+            alt=""
+            className="absolute inset-0 w-full h-full object-cover"
+            aria-hidden
+          />
+          <div className="absolute inset-0 bg-black/20" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/30 to-background" />
+        </div>
 
         <div className="relative px-4 pt-3 pb-4 safe-area-top">
           <div className="flex items-center gap-2">
@@ -566,26 +701,101 @@ export default function HotelsLandingPage() {
 
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground z-10" />
             <input
-              type="text"
+              type="search"
+              inputMode="search"
+              enterKeyHint="search"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              onBlur={(e) => pushRecentSearch(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") pushRecentSearch((e.target as HTMLInputElement).value); }}
+              onFocus={() => setSearchFocused(true)}
+              onBlur={(e) => {
+                pushRecentSearch(e.target.value);
+                // Delay so taps on dropdown items register before we hide it.
+                setTimeout(() => setSearchFocused(false), 150);
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  submitSearch();
+                } else if (e.key === "Escape") {
+                  setSearchFocused(false);
+                  (e.target as HTMLInputElement).blur();
+                }
+              }}
               placeholder="Search city, hotel name..."
               aria-label="Search hotels and destinations"
-              className="w-full h-11 pl-10 pr-9 rounded-2xl bg-white text-foreground placeholder:text-muted-foreground shadow-lg outline-none text-sm focus:ring-2 focus:ring-primary/40 transition"
+              className="w-full h-11 pl-10 pr-9 rounded-2xl bg-white text-foreground placeholder:text-muted-foreground shadow-lg outline-none text-sm focus:ring-2 focus:ring-primary/40 transition [&::-webkit-search-cancel-button]:appearance-none"
             />
             {search && (
               <button
                 type="button"
+                onMouseDown={(e) => e.preventDefault()}
                 onClick={() => setSearch("")}
                 aria-label="Clear search"
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted active:scale-95 transition"
+                className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full flex items-center justify-center text-muted-foreground hover:bg-muted active:scale-95 transition z-10"
               >
                 <span className="text-base leading-none">×</span>
               </button>
+            )}
+
+            {/* Autocomplete dropdown */}
+            {searchFocused && searchSuggestions.length > 0 && (
+              <div
+                role="listbox"
+                className="absolute top-full left-0 right-0 mt-1.5 bg-card rounded-2xl shadow-xl border border-border z-40 overflow-hidden max-h-[60vh] overflow-y-auto"
+              >
+                {searchSuggestions.map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    role="option"
+                    onMouseDown={(e) => e.preventDefault()}
+                    onClick={() => {
+                      pushRecentSearch(s.name);
+                      setSearchFocused(false);
+                      qc.prefetchQuery({
+                        queryKey: ["hotel-detail-rpc", s.id],
+                        queryFn: async () => {
+                          const { data } = await (supabase as any).rpc("get_hotel_detail", {
+                            p_store_id: s.id, p_check_in: null, p_check_out: null,
+                          });
+                          return data;
+                        },
+                        staleTime: 60_000,
+                      });
+                      navigate(`/hotel/${s.id}?ci=${format(checkIn, "yyyy-MM-dd")}&co=${format(checkOut, "yyyy-MM-dd")}&adults=${guests}&children=${children}`);
+                    }}
+                    className="w-full px-3 py-2.5 flex items-center gap-3 text-left hover:bg-muted/60 active:bg-muted border-b border-border last:border-b-0 touch-manipulation"
+                  >
+                    <div className="w-10 h-10 shrink-0 rounded-lg bg-muted overflow-hidden flex items-center justify-center">
+                      {(s.banner_url || s.logo_url) ? (
+                        <img
+                          src={s.banner_url || s.logo_url || ""}
+                          alt=""
+                          loading="lazy"
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <HotelIcon className="w-4 h-4 text-muted-foreground" />
+                      )}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="text-sm font-semibold text-foreground truncate">{s.name}</p>
+                      {s.address && (
+                        <p className="text-[11px] text-muted-foreground truncate mt-0.5 flex items-center gap-1">
+                          <MapPin className="w-3 h-3 shrink-0" />
+                          {s.address}
+                        </p>
+                      )}
+                    </div>
+                  </button>
+                ))}
+              </div>
             )}
           </div>
 
@@ -655,6 +865,16 @@ export default function HotelsLandingPage() {
               </PopoverContent>
             </Popover>
           </div>
+
+          {/* Search action button — confirms criteria and scrolls to results. */}
+          <button
+            type="button"
+            onClick={submitSearch}
+            className="mt-2 w-full h-11 rounded-2xl bg-primary text-primary-foreground font-bold text-sm shadow-lg active:scale-[0.98] transition inline-flex items-center justify-center gap-2"
+          >
+            <Search className="w-4 h-4" />
+            Search
+          </button>
         </div>
       </div>
       <div ref={heroSentinelRef} aria-hidden className="h-px" />
@@ -681,14 +901,25 @@ export default function HotelsLandingPage() {
           <div className="relative flex-1 min-w-0">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <input
-              type="text"
+              type="search"
+              inputMode="search"
+              enterKeyHint="search"
+              autoComplete="off"
+              autoCorrect="off"
+              autoCapitalize="off"
+              spellCheck={false}
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               onBlur={(e) => pushRecentSearch(e.target.value)}
-              onKeyDown={(e) => { if (e.key === "Enter") pushRecentSearch((e.target as HTMLInputElement).value); }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  submitSearch();
+                }
+              }}
               placeholder="Search city, hotel name..."
               aria-label="Search hotels and destinations (sticky)"
-              className="w-full h-9 pl-9 pr-8 rounded-full bg-muted text-foreground placeholder:text-muted-foreground outline-none text-sm focus:ring-2 focus:ring-primary/40"
+              className="w-full h-9 pl-9 pr-8 rounded-full bg-muted text-foreground placeholder:text-muted-foreground outline-none text-sm focus:ring-2 focus:ring-primary/40 [&::-webkit-search-cancel-button]:appearance-none"
             />
             {search && (
               <button
@@ -717,16 +948,32 @@ export default function HotelsLandingPage() {
       {!search && recentSearches.length > 0 && (
         <section className="pt-3">
           <div className="px-4 flex items-center gap-1.5 overflow-x-auto pb-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-            <span className="text-[11px] text-muted-foreground shrink-0 mr-0.5">Recent:</span>
+            <span className="text-[11px] text-muted-foreground shrink-0 mr-0.5 inline-flex items-center gap-1">
+              <Clock className="w-3 h-3" />
+              Recent
+            </span>
             {recentSearches.map((q) => (
-              <button
+              <div
                 key={q}
-                type="button"
-                onClick={() => setSearch(q)}
-                className="shrink-0 rounded-full px-3 py-1 text-[11px] font-medium bg-muted/70 text-foreground active:bg-muted truncate max-w-[140px]"
+                className="shrink-0 inline-flex items-center rounded-full bg-muted/70 text-foreground active:bg-muted overflow-hidden"
               >
-                {q}
-              </button>
+                <button
+                  type="button"
+                  onClick={() => jumpToDestination(q)}
+                  className="pl-3 pr-1.5 py-1 text-[11px] font-medium truncate max-w-[140px]"
+                  aria-label={`Search ${q}`}
+                >
+                  {q}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => removeRecentSearch(q)}
+                  className="pr-2 pl-0.5 py-1 text-muted-foreground hover:text-foreground"
+                  aria-label={`Remove ${q} from recent searches`}
+                >
+                  <X className="w-3 h-3" />
+                </button>
+              </div>
             ))}
             <button
               type="button"
@@ -736,7 +983,7 @@ export default function HotelsLandingPage() {
               }}
               className="shrink-0 text-[11px] text-muted-foreground underline ml-1"
             >
-              Clear
+              Clear all
             </button>
           </div>
         </section>
@@ -778,17 +1025,20 @@ export default function HotelsLandingPage() {
           )}
           {QUICK_TAGS.map((tag) => {
             const active = activeTags.includes(tag.id);
+            const TagIcon = tag.icon;
             return (
               <button type="button"
                 key={tag.id}
                 onClick={() => toggleTag(tag.id)}
+                aria-pressed={active}
                 className={cn(
-                  "shrink-0 min-h-[40px] rounded-full px-3.5 py-2 text-[11px] font-semibold transition border shadow-sm touch-manipulation",
+                  "shrink-0 inline-flex min-h-[40px] items-center gap-1 rounded-full px-3.5 py-2 text-[11px] font-semibold transition border shadow-sm touch-manipulation",
                   active
                     ? "bg-primary text-primary-foreground border-primary"
                     : "bg-card text-foreground border-border/80 hover:bg-muted active:bg-muted",
                 )}
               >
+                <TagIcon className="w-3 h-3" />
                 {tag.label}
               </button>
             );
@@ -811,11 +1061,12 @@ export default function HotelsLandingPage() {
               <button type="button"
                 key={dest.id}
                 onClick={() => {
-                  const next = active ? "" : dest.city;
-                  setSearch(next);
-                  if (next) pushRecentSearch(next);
-                  setActiveFilter("all");
-                  document.getElementById("hotels-all")?.scrollIntoView({ behavior: "smooth", block: "start" });
+                  if (active) {
+                    // Tapping the active destination again clears it.
+                    setSearch("");
+                    return;
+                  }
+                  jumpToDestination(dest.city);
                 }}
                 className={
                   "shrink-0 relative w-[140px] h-[88px] rounded-2xl overflow-hidden border transition active:scale-95 " +
@@ -1001,7 +1252,31 @@ export default function HotelsLandingPage() {
       {/* All Hotels & Resorts */}
       <section id="hotels-all" className="pt-5 scroll-mt-4">
         <div className="px-4 flex items-center justify-between mb-2 gap-3">
-          <h3 className="text-sm font-bold text-foreground">All Hotels & Resorts</h3>
+          {(() => {
+            const dest = POPULAR_DESTINATIONS.find(
+              (d) => d.city === search.trim().toLowerCase(),
+            );
+            return (
+              <h3 className="text-sm font-bold text-foreground inline-flex items-center gap-1.5 min-w-0">
+                {dest ? (
+                  <>
+                    <MapPin className="w-4 h-4 text-primary shrink-0" />
+                    <span className="truncate">Hotels in {dest.label}</span>
+                    <button
+                      type="button"
+                      onClick={() => setSearch("")}
+                      aria-label={`Clear ${dest.label} filter`}
+                      className="ml-1 inline-flex items-center justify-center w-5 h-5 rounded-full bg-muted text-muted-foreground hover:bg-muted/80 shrink-0"
+                    >
+                      <X className="w-3 h-3" />
+                    </button>
+                  </>
+                ) : (
+                  <span>All Hotels & Resorts</span>
+                )}
+              </h3>
+            );
+          })()}
           <div className="flex items-center gap-2">
             <span className="text-[11px] text-muted-foreground">
               {filtered.length === all.length
@@ -1172,13 +1447,15 @@ export default function HotelsLandingPage() {
                   ? "Try a different city or remove some filters."
                   : "Be the first — list your property on ZIVO."}
               </p>
-              {(search || activeTags.length > 0 || activeFilter !== "all" || savedOnly) ? (
+              {(search || activeTags.length > 0 || activeFilter !== "all" || savedOnly || maxBudget !== null || sortBy !== "default") ? (
                 <button type="button"
                   onClick={() => {
                     setSearch("");
                     setActiveTags([]);
                     setActiveFilter("all");
                     setSavedOnly(false);
+                    setMaxBudget(null);
+                    setSortBy("default");
                   }}
                   className="mt-2 text-xs font-semibold text-primary"
                 >
@@ -1194,40 +1471,66 @@ export default function HotelsLandingPage() {
               )}
             </div>
           ) : (
-            <div className="grid gap-3">
-              {sorted.map((store, idx) => (
-                <PropertyCard
-                  key={store.id}
-                  store={store}
-                  index={idx}
-                  rateInfo={minRates[store.id]}
-                  promo={promotions[store.id]}
-                  amenities={amenitiesMap[store.id]?.amenities || []}
-                  rating={reviewStats[store.id]?.count ? reviewStats[store.id].avg : null}
-                  reviewCount={reviewStats[store.id]?.count ?? 0}
-                  isFavorite={favorites.has(store.id)}
-                  onToggleFavorite={(e) => toggleFavorite(store.id, e)}
-                  nights={nights}
-                  onOpen={() => {
-                    // Phase D: warm the aggregate RPC cache so the detail page
-                    // renders instantly. One round-trip vs the old 5-6.
-                    qc.prefetchQuery({
-                      queryKey: ["hotel-detail-rpc", store.id],
-                      queryFn: async () => {
-                        const { data } = await (supabase as any).rpc("get_hotel_detail", {
-                          p_store_id: store.id,
-                          p_check_in: null,
-                          p_check_out: null,
-                        });
-                        return data;
-                      },
-                      staleTime: 60_000,
-                    });
-                    navigate(`/hotel/${store.id}?ci=${format(checkIn, "yyyy-MM-dd")}&co=${format(checkOut, "yyyy-MM-dd")}&adults=${guests}&children=${children}`);
-                  }}
-                />
-              ))}
-            </div>
+            <>
+              <div className="grid gap-3">
+                {sorted.slice(0, visibleCount).map((store, idx) => (
+                  <PropertyCard
+                    key={store.id}
+                    store={store}
+                    index={idx}
+                    rateInfo={minRates[store.id]}
+                    promo={promotions[store.id]}
+                    amenities={amenitiesMap[store.id]?.amenities || []}
+                    rating={reviewStats[store.id]?.count ? reviewStats[store.id].avg : null}
+                    reviewCount={reviewStats[store.id]?.count ?? 0}
+                    isFavorite={favorites.has(store.id)}
+                    onToggleFavorite={(e) => toggleFavorite(store.id, e)}
+                    nights={nights}
+                    onOpen={() => {
+                      // Phase D: warm the aggregate RPC cache so the detail page
+                      // renders instantly. One round-trip vs the old 5-6.
+                      qc.prefetchQuery({
+                        queryKey: ["hotel-detail-rpc", store.id],
+                        queryFn: async () => {
+                          const { data } = await (supabase as any).rpc("get_hotel_detail", {
+                            p_store_id: store.id,
+                            p_check_in: null,
+                            p_check_out: null,
+                          });
+                          return data;
+                        },
+                        staleTime: 60_000,
+                      });
+                      navigate(`/hotel/${store.id}?ci=${format(checkIn, "yyyy-MM-dd")}&co=${format(checkOut, "yyyy-MM-dd")}&adults=${guests}&children=${children}`);
+                    }}
+                  />
+                ))}
+              </div>
+
+              {/* Load-more sentinel + "Show more" fallback */}
+              {visibleCount < sorted.length ? (
+                <div
+                  ref={loadMoreRef}
+                  className="pt-5 pb-2 flex flex-col items-center gap-2"
+                >
+                  <button
+                    type="button"
+                    onClick={() => setVisibleCount((c) => Math.min(c + PAGE_SIZE, sorted.length))}
+                    className="inline-flex items-center gap-2 h-10 px-5 rounded-full bg-muted text-foreground font-semibold text-xs active:bg-muted/70 transition touch-manipulation"
+                  >
+                    <div className="h-3 w-3 rounded-full border-2 border-muted-foreground/30 border-t-primary animate-spin" />
+                    Show more
+                  </button>
+                  <p className="text-[11px] text-muted-foreground">
+                    Showing {visibleCount} of {sorted.length}
+                  </p>
+                </div>
+              ) : sorted.length > PAGE_SIZE ? (
+                <p className="pt-5 pb-2 text-center text-[11px] text-muted-foreground">
+                  Showing all {sorted.length} properties
+                </p>
+              ) : null}
+            </>
           )}
         </div>
         )}

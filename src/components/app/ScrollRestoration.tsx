@@ -34,6 +34,7 @@ export default function ScrollRestoration() {
   const { pathname, search } = useLocation();
   const navType = useNavigationType();
   const lastKey = useRef<string | null>(null);
+  const lastPathname = useRef<string>(pathname);
 
   // Save the previous page's scroll position right before navigating away.
   useEffect(() => {
@@ -49,6 +50,13 @@ export default function ScrollRestoration() {
   // Apply scroll behavior for the destination page.
   useEffect(() => {
     const key = pathname + search;
+    const pathChanged = lastPathname.current !== pathname;
+    lastPathname.current = pathname;
+
+    // Same pathname, only URL search params changed (e.g. a filter toggle on
+    // the hotels listing). Don't touch scroll — pages drive their own scroll
+    // for in-page state changes.
+    if (!pathChanged && navType !== "POP") return;
 
     if (navType === "POP") {
       const saved = readPositions()[key];
@@ -59,7 +67,7 @@ export default function ScrollRestoration() {
         });
       });
     } else {
-      // PUSH or REPLACE — fresh navigation, start at the top.
+      // PUSH or REPLACE to a new pathname — fresh navigation, start at the top.
       requestAnimationFrame(() => {
         window.scrollTo({ top: 0, left: 0, behavior: "auto" });
       });
