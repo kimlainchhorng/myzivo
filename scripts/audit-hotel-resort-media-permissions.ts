@@ -110,17 +110,35 @@ function loadAuthorizationEvidence() {
   const authorized = new Map<string, string[]>();
   const pending = new Map<string, string[]>();
 
+  const storeIdsFromValue = (value: unknown): string[] => {
+    if (!value) return [];
+    if (typeof value === "string") return [value];
+    if (Array.isArray(value)) return value.flatMap(storeIdsFromValue);
+    if (typeof value !== "object") return [];
+    const record = value as JsonRecord;
+    const id = record.store_id || record.storeId || record.id;
+    return typeof id === "string" ? [id] : [];
+  };
+
+  const addEvidence = (target: Map<string, string[]>, ids: string[], file: string) => {
+    for (const id of ids) {
+      target.set(id, [...(target.get(id) || []), file]);
+    }
+  };
+
   for (const file of walkJsonFiles("data/hotel-imports")) {
     try {
       const parsed = JSON.parse(readFileSync(file, "utf8")) as JsonRecord;
-      const storeId = parsed.store_id || parsed.storeId;
-      if (!storeId || typeof storeId !== "string") continue;
+      const rootStoreIds = [
+        ...storeIdsFromValue(parsed.store_id || parsed.storeId),
+        ...storeIdsFromValue(parsed.store_ids || parsed.storeIds),
+      ];
 
       const hasAuthorization =
         parsed.media_authorized === true ||
         parsed.permission?.documented_authorization_found === true;
       if (hasAuthorization) {
-        authorized.set(storeId, [...(authorized.get(storeId) || []), file]);
+        addEvidence(authorized, rootStoreIds, file);
       }
 
       const isPending =
@@ -128,7 +146,23 @@ function loadAuthorizationEvidence() {
         /pending/i.test(String(parsed.permission_status || "")) ||
         parsed.permission?.documented_authorization_found === false;
       if (isPending) {
-        pending.set(storeId, [...(pending.get(storeId) || []), file]);
+        addEvidence(pending, rootStoreIds, file);
+      }
+
+      if (Array.isArray(parsed.stores)) {
+        for (const entry of parsed.stores) {
+          const ids = storeIdsFromValue(entry);
+          if (entry?.media_authorized === true || entry?.permission?.documented_authorization_found === true) {
+            addEvidence(authorized, ids, file);
+          }
+          if (
+            entry?.media_authorized === false ||
+            /pending/i.test(String(entry?.permission_status || "")) ||
+            entry?.permission?.documented_authorization_found === false
+          ) {
+            addEvidence(pending, ids, file);
+          }
+        }
       }
     } catch {
       // Ignore malformed local artifacts.

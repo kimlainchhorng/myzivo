@@ -11,6 +11,7 @@ node_modules
 dist
 dist-ssr
 *.local
+.booking-session/
 
 # Environment secrets — NEVER commit real .env files
 .env
@@ -35,6 +36,10 @@ dist-ssr
 tmp/
 test-results/
 playwright-report/
+
+# Native build caches
+ios/DerivedData/
+ios/App/build/
 
 # Stray Playwright session profiles (Windows-style paths)
 Usersabiga*/
