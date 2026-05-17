@@ -38,6 +38,13 @@ const LIMIT_ARG = args.find((a) => a.startsWith("--limit="))?.split("=")[1];
 const LIMIT = LIMIT_ARG ? parseInt(LIMIT_ARG, 10) : null;
 const DRY_RUN = args.includes("--dry-run");
 const DEBUG_PROGRESS = args.includes("--debug-progress");
+const EXCLUDE_STORE_IDS = new Set(
+  args
+    .filter((a) => a.startsWith("--exclude-store-id="))
+    .flatMap((a) => a.split("=").slice(1).join("=").split(","))
+    .map((id) => id.trim())
+    .filter(Boolean),
+);
 
 function debugProgress(message: string) {
   if (!DEBUG_PROGRESS) return;
@@ -614,11 +621,14 @@ async function main() {
   });
 
   // Filter to those we have a booking URL for
-  const withUrls = needs.filter((s) => urlMap.has(s.id));
+  const withUrls = needs.filter((s) => urlMap.has(s.id) && !EXCLUDE_STORE_IDS.has(s.id));
   const missing = needs.filter((s) => !urlMap.has(s.id));
   console.log(
     `${needs.length} stores need migration. ${withUrls.length} have booking URL, ${missing.length} missing.`,
   );
+  if (EXCLUDE_STORE_IDS.size > 0) {
+    console.log(`Skipping ${EXCLUDE_STORE_IDS.size} excluded store ids.`);
+  }
 
   const toProcess = withUrls.slice(START, LIMIT != null ? START + LIMIT : undefined);
   if (toProcess.length === 0) {

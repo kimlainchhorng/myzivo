@@ -10,6 +10,7 @@
 import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const HotelAskChat = lazy(() => import("@/components/lodging/HotelAskChat"));
+import { LodgingRoomDetailsModal } from "@/components/lodging/LodgingRoomDetailsModal";
 import { Helmet } from "react-helmet-async";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import SafeCaption from "@/components/social/SafeCaption";
@@ -478,6 +479,33 @@ export default function HotelResortDetailPage() {
   const [datesOpen, setDatesOpen] = useState(false);
   const [guestsOpen, setGuestsOpen] = useState(false);
   const [allRoomsOpen, setAllRoomsOpen] = useState(false);
+  const [detailsRoom, setDetailsRoom] = useState<any | null>(null);
+
+  const openRoomDetails = useCallback((room: any) => {
+    setDetailsRoom(room);
+  }, []);
+  const closeRoomDetails = useCallback(() => setDetailsRoom(null), []);
+  const reserveCurrentDetailsRoom = useCallback(() => {
+    if (!detailsRoom) return;
+    const ciStr = format(checkIn, "yyyy-MM-dd");
+    const coStr = format(checkOut, "yyyy-MM-dd");
+    setDetailsRoom(null);
+    setAllRoomsOpen(false);
+    navigate(`/hotel/${storeId}/book?room=${detailsRoom.id}&ci=${ciStr}&co=${coStr}&adults=${adults}&children=${children}`);
+  }, [detailsRoom, checkIn, checkOut, adults, children, navigate, storeId]);
+  const detailsRoomPhotos = useMemo<string[]>(() => {
+    if (!detailsRoom) return [];
+    return uniqueImageUrls([
+      ...collectImageUrls(detailsRoom.photos),
+      ...collectImageUrls(detailsRoom.cover_photo),
+      ...collectImageUrls(detailsRoom.gallery_images),
+      ...collectImageUrls(detailsRoom.image_urls),
+    ]);
+  }, [detailsRoom]);
+  const detailsRoomPrice = useMemo(
+    () => (detailsRoom ? roomPricePresentation(detailsRoom) : null),
+    [detailsRoom],
+  );
   const [mapsKey, setMapsKey] = useState<string>("");
   useEffect(() => {
     // Only resolve the Maps API key when this hotel actually has coordinates
@@ -1207,8 +1235,18 @@ export default function HotelResortDetailPage() {
                 return (
                   <div
                     key={room.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => openRoomDetails(room)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        openRoomDetails(room);
+                      }
+                    }}
+                    aria-label={`View details for ${room.name}`}
                     className={cn(
-                      "snap-start shrink-0 w-60 md:w-auto rounded-xl border border-border bg-card overflow-hidden",
+                      "snap-start shrink-0 w-60 md:w-auto rounded-xl border border-border bg-card overflow-hidden text-left cursor-pointer hover:border-emerald-500/60 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 transition",
                       soldOut && "opacity-80",
                     )}
                   >
@@ -1272,7 +1310,8 @@ export default function HotelResortDetailPage() {
                         </div>
                       ) : (
                         <button type="button"
-                          onClick={() => {
+                          onClick={(e) => {
+                            e.stopPropagation();
                             const ciStr = format(checkIn, "yyyy-MM-dd");
                             const coStr = format(checkOut, "yyyy-MM-dd");
                             navigate(`/hotel/${storeId}/book?room=${room.id}&ci=${ciStr}&co=${coStr}&adults=${adults}&children=${children}`);
@@ -1704,6 +1743,33 @@ export default function HotelResortDetailPage() {
         </div>
       )}
 
+      {/* Room details modal */}
+      <LodgingRoomDetailsModal
+        open={!!detailsRoom}
+        onOpenChange={(v) => { if (!v) closeRoomDetails(); }}
+        name={detailsRoom?.name || ""}
+        type={detailsRoom?.room_type ?? null}
+        beds={detailsRoom?.beds ?? null}
+        maxGuests={detailsRoom?.max_guests ?? 2}
+        sizeSqm={detailsRoom?.size_sqm ?? null}
+        baseRateCents={detailsRoomPrice?.displayCents ?? detailsRoom?.base_rate_cents ?? 0}
+        originalRateCents={
+          detailsRoomPrice && detailsRoomPrice.strikeCents > detailsRoomPrice.displayCents
+            ? detailsRoomPrice.strikeCents
+            : null
+        }
+        description={detailsRoom?.description ?? null}
+        amenities={Array.isArray(detailsRoom?.amenities) ? detailsRoom!.amenities : []}
+        breakfastIncluded={!!detailsRoom?.breakfast_included}
+        photos={detailsRoomPhotos}
+        coverIndex={typeof detailsRoom?.cover_photo_index === "number" ? detailsRoom.cover_photo_index : 0}
+        addons={[]}
+        cancellationPolicy={detailsRoom?.cancellation_policy ?? null}
+        checkInTime={detailsRoom?.check_in_time ?? null}
+        checkOutTime={detailsRoom?.check_out_time ?? null}
+        onReserve={reserveCurrentDetailsRoom}
+      />
+
       {/* All rooms sheet */}
       {allRoomsOpen && (
         <div
@@ -1729,7 +1795,23 @@ export default function HotelResortDetailPage() {
                 const avail = roomAvailability.get(room.id);
                 const soldOut = !!avail?.soldOut;
                 return (
-                  <div key={room.id} className={cn("rounded-xl border border-border bg-card overflow-hidden", soldOut && "opacity-80")}>
+                  <div
+                    key={room.id}
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => openRoomDetails(room)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        e.preventDefault();
+                        openRoomDetails(room);
+                      }
+                    }}
+                    aria-label={`View details for ${room.name}`}
+                    className={cn(
+                      "rounded-xl border border-border bg-card overflow-hidden text-left cursor-pointer hover:border-emerald-500/60 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 transition",
+                      soldOut && "opacity-80",
+                    )}
+                  >
                     <div className="h-28 bg-muted relative">
                         <RoomPhoto room={room} fallbackImages={visibleGalleryImages} />
                       {hasDiscount && !soldOut && (
@@ -1778,7 +1860,8 @@ export default function HotelResortDetailPage() {
                         )}
                       </div>
                       <button type="button"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           const ciStr = format(checkIn, "yyyy-MM-dd");
                           const coStr = format(checkOut, "yyyy-MM-dd");
                           setAllRoomsOpen(false);

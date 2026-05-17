@@ -2,7 +2,7 @@
  * StoreMapPage — Clean white map with store pins
  * Features: light tiles, category filters, user GPS dot, search bar,
  *           expandable nearby sheet, radius filter + map circle,
- *           "search this area", today's hours, check-in counts,
+ *           today's hours, check-in counts,
  *           shopping trail planner, live pulse.
  */
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
@@ -18,7 +18,7 @@ import {
   Users, SlidersHorizontal, Layers, Tag, Sparkles, Plus,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, useDragControls, type PanInfo } from "framer-motion";
 import { toast } from "sonner";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import NavBar from "@/components/home/NavBar";
@@ -33,12 +33,84 @@ import { shareStoreWithCard } from "@/lib/social/storeShareCard";
 import { useStoreFavorites } from "@/hooks/useStoreFavorites";
 import { distanceMiles, fetchActiveStorePins } from "@/hooks/useStorePins";
 import StoreDetailsDrawer from "@/components/store/StoreDetailsDrawer";
-import { MarkerClusterer, type Cluster } from "@googlemaps/markerclusterer";
+import { MarkerClusterer, type Cluster, type Marker as ClusterMarker } from "@googlemaps/markerclusterer";
 
 type StoreSortMode = "distance" | "rating" | "newest";
 const STORE_LIST_PAGE = 12;
+const LOGO_MARKER_MAX_STORE_COUNT = 1200;
 
 const DEFAULT_CENTER = { lat: 11.5564, lng: 104.9282 };
+
+type LocationErrorCode = "denied" | "unavailable" | "timeout" | "unsupported" | null;
+
+interface LocationHelpStep {
+  label: string;
+  detail?: string;
+}
+interface LocationHelpGuide {
+  platform: string;
+  browser: string;
+  steps: LocationHelpStep[];
+  settingsUrl?: string;
+}
+
+function detectLocationHelpGuide(): LocationHelpGuide {
+  const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
+  const isIOS = /iPad|iPhone|iPod/.test(ua);
+  const isAndroid = /Android/.test(ua);
+  const isMac = /Macintosh|Mac OS X/.test(ua) && !isIOS;
+  const isWindows = /Windows/.test(ua);
+  const isEdge = /Edg\//.test(ua);
+  const isChrome = !isEdge && /Chrome\//.test(ua) && !/OPR\//.test(ua);
+  const isFirefox = /Firefox\//.test(ua);
+  const isSafari = /Safari\//.test(ua) && !isChrome && !isEdge && !isFirefox;
+
+  const platform = isIOS ? "iOS" : isAndroid ? "Android" : isMac ? "macOS" : isWindows ? "Windows" : "this device";
+  const browser = isEdge ? "Edge" : isChrome ? "Chrome" : isFirefox ? "Firefox" : isSafari ? "Safari" : "this browser";
+
+  const steps: LocationHelpStep[] = [];
+  let settingsUrl: string | undefined;
+
+  if (isIOS && isSafari) {
+    steps.push({ label: "Open iPhone Settings → Apps → Safari → Location" });
+    steps.push({ label: "Set to Ask or Allow" });
+    steps.push({ label: "Also check Settings → Privacy & Security → Location Services is ON" });
+  } else if (isIOS) {
+    steps.push({ label: `Open iPhone Settings → ${browser} → Location → Allow` });
+    steps.push({ label: "Then Settings → Privacy & Security → Location Services → ON" });
+  } else if (isAndroid) {
+    steps.push({ label: `In ${browser}, tap the lock icon next to the URL → Permissions → Location → Allow` });
+    steps.push({ label: `Also check Android Settings → Apps → ${browser} → Permissions → Location` });
+  } else if (isChrome || isEdge) {
+    steps.push({ label: "Click the icon left of the URL", detail: "It looks like a lock, tune, or info icon" });
+    steps.push({ label: "Set Location to Allow", detail: "Then reload the page" });
+    if (isMac) {
+      steps.push({
+        label: "Also: macOS Settings → Privacy & Security → Location Services",
+        detail: `Make sure it's on, and ${browser} is checked`,
+      });
+    } else if (isWindows) {
+      steps.push({ label: "Also: Windows Settings → Privacy → Location → On" });
+    }
+    settingsUrl = isEdge ? "edge://settings/content/location" : "chrome://settings/content/location";
+  } else if (isFirefox) {
+    steps.push({ label: "Click the lock icon next to the URL → Permissions → Location" });
+    steps.push({ label: "Remove Blocked and reload, then click Allow when prompted" });
+  } else if (isSafari && isMac) {
+    steps.push({ label: "Safari menu → Settings → Websites → Location" });
+    steps.push({ label: "Set this site to Allow, then reload" });
+    steps.push({
+      label: "Also: macOS Settings → Privacy & Security → Location Services",
+      detail: "Make sure it's on and Safari is checked",
+    });
+  } else {
+    steps.push({ label: "Open your browser site settings and allow Location for this page" });
+    steps.push({ label: "Reload the page, then click the locate button again" });
+  }
+
+  return { platform, browser, steps, settingsUrl };
+}
+
 const RADIUS_OPTIONS: Array<{ label: string; value: number | null }> = [
   { label: "All", value: null },
   { label: "500 m", value: 0.5 },
@@ -562,19 +634,6 @@ function makeMarkerIcon(emoji: string, color: string, bgColor: string, isNew = f
   return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
 }
 
-function makeLogoMarkerIcon(color: string): string {
-  const svg = `
-    <svg xmlns="http://www.w3.org/2000/svg" width="42" height="50" viewBox="0 0 42 50">
-      <defs><filter id="ds2" x="-30%" y="-20%" width="160%" height="150%">
-        <feDropShadow dx="0" dy="1.5" stdDeviation="2" flood-color="${color}" flood-opacity="0.3"/>
-      </filter></defs>
-      <polygon points="21,48 16,36 26,36" fill="${color}"/>
-      <circle cx="21" cy="20" r="19" fill="${color}" filter="url(#ds2)"/>
-      <circle cx="21" cy="20" r="15" fill="#ffffff"/>
-    </svg>`;
-  return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
-}
-
 function makeTripStopIcon(num: number): string {
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="40" height="48" viewBox="0 0 40 48">
@@ -589,36 +648,163 @@ function makeTripStopIcon(num: number): string {
   return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
 }
 
-function createLogoMarkerCanvas(
-  logoUrl: string,
+function setClusterMarkerMap(marker: ClusterMarker, map: google.maps.Map | null) {
+  const legacyMarker = marker as google.maps.Marker & { setMap?: (map: google.maps.Map | null) => void };
+  if (typeof legacyMarker.setMap === "function") {
+    legacyMarker.setMap(map);
+    return;
+  }
+  (marker as google.maps.marker.AdvancedMarkerElement).map = map;
+}
+
+function createPhotoMarkerElement(
+  imageUrls: string[],
   color: string,
   bgColor: string,
-  callback: (dataUrl: string) => void
-) {
-  const W = 42 * 2, H = 50 * 2;
-  const canvas = document.createElement("canvas");
-  canvas.width = W; canvas.height = H;
-  const ctx = canvas.getContext("2d")!;
-  const pinSvg = makeLogoMarkerIcon(color);
-  const pinImg = new Image();
-  pinImg.onload = () => {
-    ctx.drawImage(pinImg, 0, 0, W, H);
-    const logo = new Image();
-    logo.crossOrigin = "anonymous";
-    logo.onload = () => {
-      const cx = W / 2, cy = 20 * 2, r = 13 * 2;
-      ctx.save();
-      ctx.beginPath();
-      ctx.arc(cx, cy, r, 0, Math.PI * 2);
-      ctx.clip();
-      ctx.drawImage(logo, cx - r, cy - r, r * 2, r * 2);
-      ctx.restore();
-      callback(canvas.toDataURL());
-    };
-    logo.onerror = () => callback(canvas.toDataURL());
-    logo.src = logoUrl;
+  fallbackEmoji: string,
+  isNew: boolean,
+  hasDeal: boolean,
+  title: string,
+): HTMLElement {
+  const root = document.createElement("div");
+  root.style.cssText = "position:relative;width:42px;height:50px;pointer-events:auto;";
+
+  const tail = document.createElement("div");
+  tail.style.cssText = [
+    "position:absolute",
+    "left:16px",
+    "top:34px",
+    "width:0",
+    "height:0",
+    "border-left:5px solid transparent",
+    "border-right:5px solid transparent",
+    `border-top:14px solid ${color}`,
+    "filter:drop-shadow(0 2px 2px rgba(15,23,42,.18))",
+  ].join(";");
+  root.appendChild(tail);
+
+  const shell = document.createElement("div");
+  shell.style.cssText = [
+    "position:absolute",
+    "left:2px",
+    "top:1px",
+    "width:38px",
+    "height:38px",
+    "border-radius:999px",
+    `background:${color}`,
+    `box-shadow:0 2px 8px ${color}55`,
+  ].join(";");
+  root.appendChild(shell);
+
+  const media = document.createElement("div");
+  media.style.cssText = [
+    "position:absolute",
+    "left:6px",
+    "top:5px",
+    "width:30px",
+    "height:30px",
+    "border-radius:999px",
+    "overflow:hidden",
+    `background:${bgColor}`,
+    "display:flex",
+    "align-items:center",
+    "justify-content:center",
+    "font-size:14px",
+    "line-height:1",
+  ].join(";");
+  shell.appendChild(media);
+
+  const fallback = document.createElement("span");
+  fallback.textContent = fallbackEmoji;
+  fallback.setAttribute("aria-hidden", "true");
+  media.appendChild(fallback);
+
+  const img = document.createElement("img");
+  img.alt = `${title} photo`;
+  img.loading = "lazy";
+  img.decoding = "async";
+  img.style.cssText = "position:absolute;inset:0;width:100%;height:100%;object-fit:cover;";
+  media.appendChild(img);
+
+  let imageIndex = 0;
+  const tryNextImage = () => {
+    const nextUrl = imageUrls[imageIndex];
+    imageIndex += 1;
+    if (!nextUrl) {
+      img.remove();
+      fallback.style.display = "";
+      return;
+    }
+    img.src = nextUrl;
   };
-  pinImg.src = pinSvg;
+  img.onload = () => { fallback.style.display = "none"; };
+  img.onerror = tryNextImage;
+  tryNextImage();
+
+  if (isNew) {
+    const badge = document.createElement("div");
+    badge.textContent = "NEW";
+    badge.style.cssText = [
+      "position:absolute",
+      "left:0",
+      "top:0",
+      "width:14px",
+      "height:14px",
+      "border-radius:999px",
+      "display:flex",
+      "align-items:center",
+      "justify-content:center",
+      "background:#ef4444",
+      "border:1.5px solid #fff",
+      "color:#fff",
+      "font:700 6px system-ui",
+      "letter-spacing:0",
+    ].join(";");
+    root.appendChild(badge);
+  }
+
+  if (hasDeal) {
+    const badge = document.createElement("div");
+    badge.textContent = "%";
+    badge.style.cssText = [
+      "position:absolute",
+      "right:0",
+      "top:0",
+      "width:14px",
+      "height:14px",
+      "border-radius:999px",
+      "display:flex",
+      "align-items:center",
+      "justify-content:center",
+      "background:#16a34a",
+      "border:1.5px solid #fff",
+      "color:#fff",
+      "font:700 9px system-ui",
+    ].join(";");
+    root.appendChild(badge);
+  }
+
+  return root;
+}
+
+function setLegacyMarkerPhotoIcon(marker: google.maps.Marker, imageUrls: string[]) {
+  let imageIndex = 0;
+  const tryNextImage = () => {
+    const nextUrl = imageUrls[imageIndex];
+    imageIndex += 1;
+    if (!nextUrl) return;
+    const img = new Image();
+    img.onload = () => {
+      marker.setIcon({
+        url: nextUrl,
+        scaledSize: new google.maps.Size(36, 36),
+        anchor: new google.maps.Point(18, 36),
+      });
+    };
+    img.onerror = tryNextImage;
+    img.src = nextUrl;
+  };
+  tryNextImage();
 }
 
 function getEmptyReason(
@@ -776,7 +962,7 @@ export default function StoreMapPage() {
   const searchParam = urlParams.get("search");
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<google.maps.Map | null>(null);
-  const markersRef = useRef<google.maps.Marker[]>([]);
+  const markersRef = useRef<ClusterMarker[]>([]);
   const clustererRef = useRef<MarkerClusterer | null>(null);
   const pulseCirclesRef = useRef<google.maps.Circle[]>([]);
   const userDotRef = useRef<google.maps.Marker | null>(null);
@@ -805,6 +991,9 @@ export default function StoreMapPage() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationDenied, setLocationDenied] = useState(false);
   const [locationNoticeDismissed, setLocationNoticeDismissed] = useState(false);
+  const [locationErrorCode, setLocationErrorCode] = useState<LocationErrorCode>(null);
+  const [locationHelpOpen, setLocationHelpOpen] = useState(false);
+  const locationHelpGuide = useMemo(() => detectLocationHelpGuide(), []);
   const [chosenCityName, setChosenCityName] = useState<string>(() => readSavedCityAnchor()?.name || "");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [selectedProductId, setSelectedProductId] = useState<string>("");
@@ -824,8 +1013,9 @@ export default function StoreMapPage() {
     const city = readSavedCityAnchor();
     return city ? { lat: city.lat, lng: city.lng } : null;
   });
-  const [mapIdleCenter, setMapIdleCenter] = useState<{ lat: number; lng: number } | null>(null);
   const [sheetExpanded, setSheetExpanded] = useState(false);
+  const [sheetDismissed, setSheetDismissed] = useState(false);
+  const sheetDragControls = useDragControls();
   const [sortBy, setSortBy] = useState<StoreSortMode>("distance");
   const [visibleCount, setVisibleCount] = useState(STORE_LIST_PAGE);
   const [trailSeen, setTrailSeen] = useState<boolean>(() => {
@@ -848,6 +1038,18 @@ export default function StoreMapPage() {
       setVisibleCount((n) => Math.min(n + STORE_LIST_PAGE, Number.MAX_SAFE_INTEGER));
     }
   }, []);
+  const closeNearbySheet = useCallback(() => {
+    setSheetExpanded(false);
+    setSheetDismissed(true);
+  }, []);
+  const restoreNearbySheet = useCallback(() => {
+    setSheetDismissed(false);
+  }, []);
+  const handleSheetDragEnd = useCallback((_event: MouseEvent | TouchEvent | PointerEvent, info: PanInfo) => {
+    if (info.offset.y > 72 || info.velocity.y > 600) {
+      closeNearbySheet();
+    }
+  }, [closeNearbySheet]);
   const { isFavorite, toggleFavorite, isAuthed } = useStoreFavorites();
   const searchPanelOpen = searchOpen || searchParam === "1";
   const selectedStoreId = selectedStore?.id;
@@ -1130,13 +1332,6 @@ export default function StoreMapPage() {
       .slice(0, 5);
   }, [stores, searchQuery]);
 
-  /* "Search this area" — visible when map is panned > 300 m from effectiveCenter */
-  const showSearchArea = useMemo(() => {
-    if (!mapIdleCenter || !effectiveCenter) return false;
-    const km = distanceMiles(effectiveCenter, mapIdleCenter) * 1.609344;
-    return km > 0.3;
-  }, [mapIdleCenter, effectiveCenter]);
-
   const { data: selectedStoreGallery = [] } = useQuery<string[]>({
     queryKey: ["store-map-gallery", selectedStore?.id],
     queryFn: async (): Promise<string[]> => {
@@ -1172,15 +1367,26 @@ export default function StoreMapPage() {
 
   /* GPS */
   useEffect(() => {
-    if (!("geolocation" in navigator)) { setLocationDenied(true); return; }
+    if (!("geolocation" in navigator)) {
+      setLocationDenied(true);
+      setLocationErrorCode("unsupported");
+      return;
+    }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setUserLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         setLocationDenied(false);
+        setLocationErrorCode(null);
         setLocationNoticeDismissed(false);
       },
-      () => {
+      (err) => {
         setLocationDenied(true);
+        setLocationErrorCode(
+          err.code === err.PERMISSION_DENIED ? "denied"
+            : err.code === err.POSITION_UNAVAILABLE ? "unavailable"
+            : err.code === err.TIMEOUT ? "timeout"
+            : "unavailable",
+        );
         setLocationNoticeDismissed(false);
       },
       { enableHighAccuracy: true, timeout: 8000, maximumAge: 30000 }
@@ -1219,10 +1425,6 @@ export default function StoreMapPage() {
         setSelectedStore(null);
         setSearchOpen(false);
         setSearchQuery("");
-      });
-      map.addListener("idle", () => {
-        const c = map.getCenter();
-        if (c) setMapIdleCenter({ lat: c.lat(), lng: c.lng() });
       });
       if (!cancelled) setMapReady(true);
     })();
@@ -1285,14 +1487,14 @@ export default function StoreMapPage() {
       clustererRef.current.setMap(null);
       clustererRef.current = null;
     }
-    markersRef.current.forEach((m) => m.setMap(null));
+    markersRef.current.forEach((m) => setClusterMarkerMap(m, null));
     markersRef.current = [];
     pulseCirclesRef.current.forEach((c) => c.setMap(null));
     pulseCirclesRef.current = [];
     if (!filteredStores.length) return;
 
     const shouldAnimateMarkers = filteredStores.length <= 80;
-    const shouldRenderLogoMarkers = filteredStores.length <= 80;
+    const shouldRenderLogoMarkers = filteredStores.length <= LOGO_MARKER_MAX_STORE_COUNT;
     const shouldAdjustCamera = markerCameraKeyRef.current !== markerCameraKey;
     markerCameraKeyRef.current = markerCameraKey;
     const bounds = new google.maps.LatLngBounds();
@@ -1304,28 +1506,47 @@ export default function StoreMapPage() {
       const storeIsNew = isNewStore(store);
       const storeHasDeal = dealStoreIds.has(store.id);
 
+      const logoMarkerUrls = shouldRenderLogoMarkers
+        ? uniqueStoreImageUrls(
+            getStoreImageCandidates(store)
+              .map((url) => optimizeImage(url, 96, "square"))
+              .filter((url): url is string => Boolean(url)),
+          )
+        : [];
+
       // Map is set by the clusterer when zoomed in; leaving it null here
       // keeps individual pins hidden until the clusterer expands their cell.
-      const marker = new google.maps.Marker({
-        position: pos,
-        icon: {
-          url: makeMarkerIcon(getCategoryIcon(store.category), color, bg, storeIsNew, storeHasDeal),
-          scaledSize: new google.maps.Size(36, 43),
-          anchor: new google.maps.Point(18, 43),
-        },
-        title: store.name,
-        animation: shouldAnimateMarkers ? google.maps.Animation.DROP : undefined,
-        zIndex: 100,
-      });
-
-      if (store.logo_url && shouldRenderLogoMarkers) {
-        createLogoMarkerCanvas(store.logo_url, color, bg, (dataUrl) => {
-          marker.setIcon({
-            url: dataUrl,
+      let marker: ClusterMarker;
+      const AdvancedMarkerElement = google.maps.marker?.AdvancedMarkerElement;
+      if (logoMarkerUrls.length && AdvancedMarkerElement) {
+        marker = new AdvancedMarkerElement({
+          position: pos,
+          title: store.name,
+          content: createPhotoMarkerElement(
+            logoMarkerUrls,
+            color,
+            bg,
+            getCategoryIcon(store.category),
+            storeIsNew,
+            storeHasDeal,
+            store.name,
+          ),
+          zIndex: 100,
+        });
+      } else {
+        const legacyMarker = new google.maps.Marker({
+          position: pos,
+          icon: {
+            url: makeMarkerIcon(getCategoryIcon(store.category), color, bg, storeIsNew, storeHasDeal),
             scaledSize: new google.maps.Size(36, 43),
             anchor: new google.maps.Point(18, 43),
-          });
+          },
+          title: store.name,
+          animation: shouldAnimateMarkers ? google.maps.Animation.DROP : undefined,
+          zIndex: 100,
         });
+        marker = legacyMarker;
+        if (logoMarkerUrls.length) setLegacyMarkerPhotoIcon(legacyMarker, logoMarkerUrls);
       }
 
       marker.addListener("click", () => {
@@ -1670,34 +1891,44 @@ export default function StoreMapPage() {
   }, [filteredStores, userLocation, effectiveCenter]);
 
   const handleLocateMe = useCallback(() => {
-    if (!("geolocation" in navigator) || !mapRef.current) return;
+    if (!("geolocation" in navigator) || !mapRef.current) {
+      setLocationDenied(true);
+      setLocationErrorCode("unsupported");
+      setLocationNoticeDismissed(false);
+      return;
+    }
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
         setUserLocation(loc);
         setLocationDenied(false);
+        setLocationErrorCode(null);
         setLocationNoticeDismissed(false);
         clearMapArea();
         mapRef.current?.panTo(loc);
         mapRef.current?.setZoom(15);
       },
-      () => {
+      (err) => {
+        const code: LocationErrorCode =
+          err.code === err.PERMISSION_DENIED ? "denied"
+            : err.code === err.POSITION_UNAVAILABLE ? "unavailable"
+            : err.code === err.TIMEOUT ? "timeout"
+            : "unavailable";
         setLocationDenied(true);
+        setLocationErrorCode(code);
         setLocationNoticeDismissed(false);
-        toast.error("Location access denied — enable it in your browser settings");
+        const message = code === "denied"
+          ? "Location blocked — tap How to enable"
+          : code === "timeout"
+          ? "Could not get your location in time — try again"
+          : "Location unavailable — check your device settings";
+        toast.error(message, {
+          action: { label: "How?", onClick: () => setLocationHelpOpen(true) },
+        });
       },
       { enableHighAccuracy: true, timeout: 5000 }
     );
   }, [clearMapArea]);
-
-  const handleSearchArea = useCallback(() => {
-    if (!mapIdleCenter) return;
-    setChosenCityName("");
-    writeSavedCityAnchor(null);
-    setSearchCenter(mapIdleCenter);
-    setMapIdleCenter(null);
-    toast.success("Showing stores in this area");
-  }, [mapIdleCenter]);
 
   const handleShareSelected = useCallback(async (s: StorePin) => {
     const dist = effectiveCenter
@@ -1935,7 +2166,9 @@ export default function StoreMapPage() {
   };
 
   const tripKm = totalTripKm(tripStops, userLocation);
-  const showSheet = !selectedStore && !drawerStore && nearbySorted.length > 0 && !(tripMode && tripStops.length > 0);
+  const canShowNearbySheet = !selectedStore && !drawerStore && nearbySorted.length > 0 && !(tripMode && tripStops.length > 0);
+  const showSheet = canShowNearbySheet && !sheetDismissed;
+  const showSheetRestore = canShowNearbySheet && sheetDismissed;
   // On mobile the bottom sheet was eating ~47% of the viewport. Showing 2
   // peek rows by default (instead of 3) buys back ~56px of map breathing
   // room while still hinting at "tap Expand for more". On large screens
@@ -2397,26 +2630,6 @@ export default function StoreMapPage() {
           )}
         </AnimatePresence>
 
-        {/* ── "Search this area" floating button ── */}
-        <AnimatePresence>
-          {showSearchArea && !selectedStore && !drawerStore && !tripMode && (
-            <motion.div
-              initial={{ y: -20, opacity: 0 }}
-              animate={{ y: 0, opacity: 1 }}
-              exit={{ y: -20, opacity: 0 }}
-              className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-[1050]"
-            >
-              <button type="button"
-                onClick={handleSearchArea}
-                className="flex items-center gap-2 rounded-full px-4 py-2.5 bg-card/95 backdrop-blur-xl shadow-xl border border-border/20 text-[13px] font-bold text-foreground"
-              >
-                <SlidersHorizontal className="w-4 h-4 text-primary" />
-                Search this area
-              </button>
-            </motion.div>
-          )}
-        </AnimatePresence>
-
         {/* ── GPS denied banner with city quick-jump ── */}
         <AnimatePresence>
           {locationDenied && !userLocation && !locationNoticeDismissed && !tripMode && !searchCenter && (
@@ -2431,18 +2644,34 @@ export default function StoreMapPage() {
                   <Locate className="h-5 w-5" />
                 </span>
                 <div className="min-w-0 flex-1">
-                  <p className="text-[14px] font-black leading-tight text-foreground">Choose your map area</p>
+                  <p className="text-[14px] font-black leading-tight text-foreground">
+                    {locationErrorCode === "denied"
+                      ? "Location blocked"
+                      : locationErrorCode === "unsupported"
+                      ? "Location not supported"
+                      : locationErrorCode === "timeout"
+                      ? "Could not find your location"
+                      : "Choose your map area"}
+                  </p>
                   <p className="mt-0.5 text-[12px] font-semibold leading-snug text-muted-foreground">
-                    Location is off. Pick a city or retry to unlock distance-sorted results.
+                    {locationErrorCode === "denied"
+                      ? `${locationHelpGuide.browser} is blocking location for this site. Tap "How to enable" to fix, or pick a city below.`
+                      : locationErrorCode === "unsupported"
+                      ? "This browser does not support GPS. Pick a city below."
+                      : locationErrorCode === "timeout"
+                      ? "GPS took too long to respond. Retry, or pick a city below."
+                      : "Location is off. Pick a city or retry to unlock distance-sorted results."}
                   </p>
                 </div>
                 <div className="flex shrink-0 items-center gap-1.5">
-                  <button type="button"
-                    onClick={() => { handleLocateMe(); }}
-                    className="min-h-[40px] rounded-full bg-foreground px-4 text-[12px] font-black text-background touch-manipulation"
-                  >
-                    Retry
-                  </button>
+                  {locationErrorCode !== "unsupported" && (
+                    <button type="button"
+                      onClick={() => { handleLocateMe(); }}
+                      className="min-h-[40px] rounded-full bg-foreground px-4 text-[12px] font-black text-background touch-manipulation"
+                    >
+                      Retry
+                    </button>
+                  )}
                   <button
                     type="button"
                     aria-label="Dismiss location notice"
@@ -2453,6 +2682,44 @@ export default function StoreMapPage() {
                   </button>
                 </div>
               </div>
+              {locationErrorCode === "denied" && (
+                <div className="mt-2 rounded-2xl bg-amber-50/70 ring-1 ring-amber-200/60 dark:bg-amber-500/10 dark:ring-amber-500/20">
+                  <button
+                    type="button"
+                    onClick={() => setLocationHelpOpen((v) => !v)}
+                    aria-expanded={locationHelpOpen}
+                    className="flex w-full items-center justify-between gap-2 px-3 py-2 text-left text-[12px] font-bold text-amber-800 dark:text-amber-200"
+                  >
+                    <span>How to enable on {locationHelpGuide.platform} · {locationHelpGuide.browser}</span>
+                    {locationHelpOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                  </button>
+                  {locationHelpOpen && (
+                    <ol className="space-y-1.5 px-3 pb-3 text-[11.5px] font-semibold text-amber-900/90 dark:text-amber-100/90">
+                      {locationHelpGuide.steps.map((step, i) => (
+                        <li key={i} className="flex gap-2">
+                          <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-amber-200 text-[10px] font-black text-amber-900 dark:bg-amber-500/30 dark:text-amber-100">
+                            {i + 1}
+                          </span>
+                          <span className="leading-snug">
+                            {step.label}
+                            {step.detail && (
+                              <span className="block text-[11px] font-medium text-amber-800/80 dark:text-amber-200/70">
+                                {step.detail}
+                              </span>
+                            )}
+                          </span>
+                        </li>
+                      ))}
+                      {locationHelpGuide.settingsUrl && (
+                        <li className="pt-1 text-[11px] font-medium text-amber-800/80 dark:text-amber-200/70">
+                          Or paste this into the address bar:
+                          <code className="ml-1 rounded bg-amber-100 px-1.5 py-0.5 font-mono text-amber-900 dark:bg-amber-500/20 dark:text-amber-100">{locationHelpGuide.settingsUrl}</code>
+                        </li>
+                      )}
+                    </ol>
+                  )}
+                </div>
+              )}
               <div className="mt-3 flex items-center gap-1.5 overflow-x-auto scrollbar-hide -mx-1 px-1">
                 {CITY_ANCHORS.map((city) => (
                   <button
@@ -2492,12 +2759,23 @@ export default function StoreMapPage() {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 80, opacity: 0 }}
               transition={{ type: "spring", damping: 30, stiffness: 280 }}
+              drag="y"
+              dragControls={sheetDragControls}
+              dragListener={false}
+              dragConstraints={{ top: 0, bottom: 180 }}
+              dragElastic={{ top: 0, bottom: 0.35 }}
+              onDragEnd={handleSheetDragEnd}
               className="absolute left-3 right-3 z-[1400] overflow-hidden rounded-[28px] border border-white/70 bg-card/95 shadow-[0_22px_70px_rgba(15,23,42,0.20)] ring-1 ring-black/5 backdrop-blur-2xl sm:left-4 sm:right-4 lg:left-6 lg:right-6"
               style={{ bottom: "88px" }}
             >
-              <div className="flex justify-center pt-2">
+              <button
+                type="button"
+                aria-label="Drag down to hide nearby stores"
+                className="flex w-full cursor-grab touch-none justify-center pt-2 active:cursor-grabbing"
+                onPointerDown={(event) => sheetDragControls.start(event.nativeEvent)}
+              >
                 <span className="h-1 w-10 rounded-full bg-muted-foreground/20" aria-hidden="true" />
-              </div>
+              </button>
               {/* Recently viewed strip */}
               {showRecentRow && (
                 <div className="border-b border-border/10 px-4 pb-2 pt-2">
@@ -2629,35 +2907,47 @@ export default function StoreMapPage() {
               </div>
 
               {/* Sheet header */}
-              <button type="button"
-                onClick={() => setSheetExpanded((v) => !v)}
-                className="flex w-full min-h-[52px] items-center gap-2 border-t border-border/10 bg-gradient-to-r from-muted/25 to-transparent px-4 py-3 touch-manipulation"
-              >
-                <p className="flex-1 text-left text-[15px] font-black leading-tight text-foreground">
-                  {(() => {
-                    const groupLabel = activeGroup ? CATEGORY_GROUPS.find((g) => g.id === activeGroup)?.label : null;
-                    const nearestKm = effectiveCenter && nearbySorted.length > 0
-                      ? distanceMiles(effectiveCenter, { lat: nearbySorted[0].latitude, lng: nearbySorted[0].longitude }) * 1.609344
-                      : null;
-                    const isActuallyNearby = nearestKm != null && nearestKm <= 50;
-                    const noun = groupLabel ?? "store";
-                    const plural = nearbySorted.length === 1 ? noun : `${noun}s`;
-                    if (radiusKm) return `${nearbySorted.length} ${plural} within ${radiusKm < 1 ? radiusKm * 1000 + " m" : radiusKm + " km"}`;
-                    if (isActuallyNearby) return `${nearbySorted.length} ${plural} nearby`;
-                    return `${nearbySorted.length} ${plural}`;
-                  })()}
-                  {tripMode && tripStops.length > 0
-                    ? <span className="ml-1.5 text-[12px] font-bold text-muted-foreground">· {tripStops.length} stops · {formatTripEta(tripKm)}</span>
-                    : tripMode
-                    ? <span className="ml-1.5 text-[12px] font-bold text-muted-foreground">· tap to add to trail</span>
-                    : null}
-                </p>
-                {nearbySorted.length > 2 && (
-                  <span className="flex items-center gap-0.5 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-black text-primary">
-                    {sheetExpanded ? <><ChevronDown className="w-3.5 h-3.5" /> Collapse</> : <><ChevronUp className="w-3.5 h-3.5" /> Expand</>}
-                  </span>
-                )}
-              </button>
+              <div className="flex min-h-[52px] items-center gap-2 border-t border-border/10 bg-gradient-to-r from-muted/25 to-transparent px-4 py-2">
+                <button
+                  type="button"
+                  onClick={() => setSheetExpanded((v) => !v)}
+                  className="flex min-w-0 flex-1 items-center gap-2 py-1 text-left touch-manipulation"
+                >
+                  <p className="min-w-0 flex-1 text-[15px] font-black leading-tight text-foreground">
+                    {(() => {
+                      const groupLabel = activeGroup ? CATEGORY_GROUPS.find((g) => g.id === activeGroup)?.label : null;
+                      const nearestKm = effectiveCenter && nearbySorted.length > 0
+                        ? distanceMiles(effectiveCenter, { lat: nearbySorted[0].latitude, lng: nearbySorted[0].longitude }) * 1.609344
+                        : null;
+                      const isActuallyNearby = nearestKm != null && nearestKm <= 50;
+                      const noun = groupLabel ?? "store";
+                      const plural = nearbySorted.length === 1 ? noun : `${noun}s`;
+                      if (radiusKm) return `${nearbySorted.length} ${plural} within ${radiusKm < 1 ? radiusKm * 1000 + " m" : radiusKm + " km"}`;
+                      if (isActuallyNearby) return `${nearbySorted.length} ${plural} nearby`;
+                      return `${nearbySorted.length} ${plural}`;
+                    })()}
+                    {tripMode && tripStops.length > 0
+                      ? <span className="ml-1.5 text-[12px] font-bold text-muted-foreground">· {tripStops.length} stops · {formatTripEta(tripKm)}</span>
+                      : tripMode
+                      ? <span className="ml-1.5 text-[12px] font-bold text-muted-foreground">· tap to add to trail</span>
+                      : null}
+                  </p>
+                  {nearbySorted.length > 2 && (
+                    <span className="flex shrink-0 items-center gap-0.5 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-black text-primary">
+                      {sheetExpanded ? <><ChevronDown className="w-3.5 h-3.5" /> Collapse</> : <><ChevronUp className="w-3.5 h-3.5" /> Expand</>}
+                    </span>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  aria-label="Hide nearby stores"
+                  title="Hide nearby stores"
+                  onClick={closeNearbySheet}
+                  className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-muted/60 text-muted-foreground transition hover:bg-muted hover:text-foreground touch-manipulation"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
 
               {/* Store rows — infinite scroll. Collapsed shows top 3,
                   expanded reveals a scrollable list with auto-load on scroll. */}
@@ -2686,6 +2976,24 @@ export default function StoreMapPage() {
                 )}
               </div>
             </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {showSheetRestore && (
+            <motion.button
+              type="button"
+              initial={{ y: 56, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 56, opacity: 0 }}
+              transition={{ type: "spring", damping: 26, stiffness: 320 }}
+              onClick={restoreNearbySheet}
+              className="absolute bottom-[88px] left-3 right-3 z-[1400] mx-auto flex min-h-[46px] w-fit max-w-[calc(100%-1.5rem)] items-center gap-2 rounded-full border border-white/70 bg-card/95 px-4 text-[13px] font-black text-foreground shadow-[0_16px_45px_rgba(15,23,42,0.20)] ring-1 ring-black/5 backdrop-blur-2xl"
+            >
+              <ChevronUp className="h-4 w-4 text-primary" />
+              <span>Show stores</span>
+              <span className="rounded-full bg-muted px-2 py-0.5 text-[11px] text-muted-foreground">{nearbySorted.length}</span>
+            </motion.button>
           )}
         </AnimatePresence>
 

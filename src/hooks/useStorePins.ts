@@ -25,7 +25,7 @@ export interface StorePin {
   created_at?: string;
 }
 
-const CACHE_KEY = "zivo:stores:cache";
+const CACHE_KEY = "zivo:stores:cache:v2";
 const CACHE_TTL = 24 * 60 * 60 * 1000; // 24h
 
 interface CachedStores {
