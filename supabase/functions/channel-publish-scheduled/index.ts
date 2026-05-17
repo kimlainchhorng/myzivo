@@ -11,7 +11,7 @@
  * Idempotent: the WHERE clause guarantees we only ever flip a post once,
  * and we only fan-out for the rows we actually flipped in this run.
  */
-import { createClient } from "npm:@supabase/supabase-js@2.95.0";
+import { createClient } from "../_shared/deps.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

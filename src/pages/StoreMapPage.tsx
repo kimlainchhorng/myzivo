@@ -26,6 +26,7 @@ import { STORE_CATEGORY_OPTIONS } from "@/config/groceryStores";
 import { trackInitiateCheckout } from "@/services/metaConversion";
 import { buildShopDeepLink } from "@/lib/deepLinks";
 import { isOpenNow } from "@/lib/store/storeHours";
+import { optimizeImage } from "@/lib/optimizeImage";
 import { resolveMapsKey } from "@/lib/mapsKey";
 import { openDirections } from "@/lib/maps/openDirections";
 import { shareStoreWithCard } from "@/lib/social/storeShareCard";
@@ -56,6 +57,8 @@ interface StorePin {
   hours: string | null;
   rating: number | null;
   logo_url: string | null;
+  banner_url?: string | null;
+  gallery_images?: unknown;
   latitude: number;
   longitude: number;
   created_at?: string;
@@ -263,6 +266,53 @@ const CATEGORY_GROUPS: CategoryGroup[] = [
   { id: "wellness", label: "Wellness",      emoji: "💆", categories: ["spa", "salon", "gym", "pharmacy"] },
 ];
 
+function shouldShowSelectedStoreCommerceSection(
+  store: StorePin,
+  productCount: number,
+  isLive: boolean | undefined,
+): boolean {
+  if (store.category === "auto-repair") return true;
+  return productCount > 0 || !!isLive;
+}
+
+type CityAnchor = { name: string; lat: number; lng: number };
+
+const CHOSEN_CITY_KEY = "zivo:map:city";
+
+const CITY_ANCHORS: CityAnchor[] = [
+  { name: "Phnom Penh", lat: 11.5564, lng: 104.9282 },
+  { name: "Siem Reap", lat: 13.3633, lng: 103.8564 },
+  { name: "Sihanoukville", lat: 10.6271, lng: 103.5224 },
+  { name: "Kampot", lat: 10.6101, lng: 104.1810 },
+  { name: "Battambang", lat: 13.0957, lng: 103.2022 },
+  { name: "Kep", lat: 10.4830, lng: 104.3160 },
+];
+
+function readSavedCityAnchor(): CityAnchor | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const name = localStorage.getItem(CHOSEN_CITY_KEY);
+    return CITY_ANCHORS.find((city) => city.name === name) || null;
+  } catch {
+    return null;
+  }
+}
+
+function writeSavedCityAnchor(city: CityAnchor | null) {
+  try {
+    if (city) localStorage.setItem(CHOSEN_CITY_KEY, city.name);
+    else localStorage.removeItem(CHOSEN_CITY_KEY);
+  } catch {
+    /* noop */
+  }
+}
+
+function isCambodiaMapCenter(center: { lat: number; lng: number } | null): center is { lat: number; lng: number } {
+  if (!center) return false;
+  if (!Number.isFinite(center.lat) || !Number.isFinite(center.lng)) return false;
+  return center.lat >= 9 && center.lat <= 16 && center.lng >= 100 && center.lng <= 110;
+}
+
 function getDistKm(store: StorePin, ref: { lat: number; lng: number } | null): number | null {
   if (!ref) return null;
   return distanceMiles(ref, { lat: store.latitude, lng: store.longitude }) * 1.609344;
@@ -277,6 +327,83 @@ function formatWalkMin(km: number): string {
   if (mins < 2) return "< 1 min";
   if (mins >= 60) return `~${Math.round(mins / 60)} h`;
   return `~${mins} min`;
+}
+
+function collectStoreImageUrls(input: unknown): string[] {
+  if (!input) return [];
+  if (typeof input === "string") {
+    const trimmed = input.trim();
+    return trimmed ? [trimmed] : [];
+  }
+  if (Array.isArray(input)) return input.flatMap((item) => collectStoreImageUrls(item));
+  if (typeof input === "object") {
+    const record = input as Record<string, unknown>;
+    return [
+      ...collectStoreImageUrls(record.url),
+      ...collectStoreImageUrls(record.src),
+      ...collectStoreImageUrls(record.path),
+      ...collectStoreImageUrls(record.publicUrl),
+      ...collectStoreImageUrls(record.public_url),
+      ...collectStoreImageUrls(record.imageUrl),
+      ...collectStoreImageUrls(record.image_url),
+      ...collectStoreImageUrls(record.photo_url),
+      ...collectStoreImageUrls(record.thumbnail_url),
+    ];
+  }
+  return [];
+}
+
+function uniqueStoreImageUrls(urls: string[]): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const url of urls) {
+    if (!url || seen.has(url)) continue;
+    seen.add(url);
+    result.push(url);
+  }
+  return result;
+}
+
+function getStoreImageCandidates(store: StorePin): string[] {
+  return uniqueStoreImageUrls([
+    ...collectStoreImageUrls(store.logo_url),
+    ...collectStoreImageUrls(store.banner_url),
+    ...collectStoreImageUrls(store.gallery_images),
+  ]);
+}
+
+function isLodgingCategory(category: string | null | undefined): boolean {
+  return ["hotel", "resort", "guesthouse", "guest-house", "hotel-resort"].includes(category || "");
+}
+
+async function fetchStoreImageFallbacks(store: StorePin): Promise<string[]> {
+  const profileQuery = supabase
+    .from("store_profiles")
+    .select("logo_url, banner_url, gallery_images")
+    .eq("id", store.id)
+    .maybeSingle();
+
+  const roomQuery = isLodgingCategory(store.category)
+    ? supabase
+        .from("lodge_rooms")
+        .select("photos, cover_photo_index")
+        .eq("store_id", store.id)
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true })
+        .limit(4)
+    : Promise.resolve({ data: [] as unknown[], error: null });
+
+  const [{ data: profile }, { data: rooms }] = await Promise.all([profileQuery, roomQuery]);
+  const roomPhotos = ((rooms || []) as Array<{ photos?: unknown; cover_photo_index?: number | null }>).flatMap((room) => {
+    const photos = collectStoreImageUrls(room.photos);
+    const cover = typeof room.cover_photo_index === "number" ? photos[room.cover_photo_index] : undefined;
+    return uniqueStoreImageUrls([...(cover ? [cover] : []), ...photos]);
+  });
+
+  return uniqueStoreImageUrls([
+    ...roomPhotos,
+    ...getStoreImageCandidates({ ...store, ...((profile as Partial<StorePin> | null) || {}) }),
+  ]);
 }
 
 function totalTripKm(stops: StorePin[], origin: { lat: number; lng: number } | null): number {
@@ -345,6 +472,17 @@ function saveRecentStore(id: string) {
 function getRecentStoreIds(): string[] {
   try { return JSON.parse(localStorage.getItem(RECENT_STORES_KEY) || "[]"); }
   catch { return []; }
+}
+
+function useDebouncedValue<T>(value: T, delayMs: number): T {
+  const [debounced, setDebounced] = useState(value);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => setDebounced(value), delayMs);
+    return () => window.clearTimeout(timer);
+  }, [value, delayMs]);
+
+  return debounced;
 }
 
 /** Returns the smart "best for this time of day" category set */
@@ -585,6 +723,49 @@ function MapFallbackCanvas({
   );
 }
 
+function StoreLogo({ store, size = "md", className = "" }: { store: StorePin; size?: "xs" | "sm" | "md" | "lg"; className?: string }) {
+  const sizes = {
+    xs: "h-6 w-6 rounded-lg text-xs",
+    sm: "h-12 w-12 rounded-2xl text-lg",
+    md: "h-14 w-14 rounded-2xl text-2xl",
+    lg: "h-16 w-16 rounded-[22px] text-3xl",
+  };
+  const baseImageCandidates = useMemo(() => getStoreImageCandidates(store), [store]);
+  const { data: fallbackImageCandidates = [] } = useQuery({
+    queryKey: ["store-logo-images", store.id],
+    queryFn: () => fetchStoreImageFallbacks(store),
+    enabled: !!store.id,
+    staleTime: 5 * 60_000,
+  });
+  const imageCandidates = useMemo(
+    () => uniqueStoreImageUrls([...fallbackImageCandidates, ...baseImageCandidates]),
+    [baseImageCandidates, fallbackImageCandidates],
+  );
+  const imageCandidateKey = imageCandidates.join("|");
+  const [imageIndex, setImageIndex] = useState(0);
+  useEffect(() => { setImageIndex(0); }, [imageCandidateKey]);
+  const imageUrl = imageCandidates[imageIndex];
+
+  return (
+    <div
+      className={`relative flex shrink-0 items-center justify-center overflow-hidden shadow-sm ring-1 ring-black/5 ${sizes[size]} ${className}`}
+      style={{ background: `linear-gradient(135deg, ${getCategoryBg(store.category)}, ${getCategoryColor(store.category)}22)` }}
+    >
+      <span aria-hidden="true">{getCategoryIcon(store.category)}</span>
+      {imageUrl && (
+        <img
+          key={imageUrl}
+          src={optimizeImage(imageUrl, size === "xs" ? 64 : size === "sm" ? 120 : 160, "square")}
+          alt={`${store.name} photo`}
+          loading="lazy"
+          className="absolute inset-0 h-full w-full object-cover"
+          onError={() => setImageIndex((idx) => Math.min(idx + 1, imageCandidates.length))}
+        />
+      )}
+    </div>
+  );
+}
+
 export default function StoreMapPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -602,6 +783,7 @@ export default function StoreMapPage() {
   const tripMarkersRef = useRef<google.maps.Marker[]>([]);
   const tripPolylineRef = useRef<google.maps.Polyline | null>(null);
   const radiusCircleRef = useRef<google.maps.Circle | null>(null);
+  const markerCameraKeyRef = useRef("");
 
   const [mapReady, setMapReady] = useState(false);
   const [mapError, setMapError] = useState(false);
@@ -623,6 +805,7 @@ export default function StoreMapPage() {
   const [userLocation, setUserLocation] = useState<{ lat: number; lng: number } | null>(null);
   const [locationDenied, setLocationDenied] = useState(false);
   const [locationNoticeDismissed, setLocationNoticeDismissed] = useState(false);
+  const [chosenCityName, setChosenCityName] = useState<string>(() => readSavedCityAnchor()?.name || "");
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   const [selectedProductId, setSelectedProductId] = useState<string>("");
   const [liveStoreMap, setLiveStoreMap] = useState<Record<string, string>>({});
@@ -637,7 +820,10 @@ export default function StoreMapPage() {
     const v = localStorage.getItem("zivo:map:radius");
     return v ? Number(v) : null;
   });
-  const [searchCenter, setSearchCenter] = useState<{ lat: number; lng: number } | null>(null);
+  const [searchCenter, setSearchCenter] = useState<{ lat: number; lng: number } | null>(() => {
+    const city = readSavedCityAnchor();
+    return city ? { lat: city.lat, lng: city.lng } : null;
+  });
   const [mapIdleCenter, setMapIdleCenter] = useState<{ lat: number; lng: number } | null>(null);
   const [sheetExpanded, setSheetExpanded] = useState(false);
   const [sortBy, setSortBy] = useState<StoreSortMode>("distance");
@@ -664,6 +850,10 @@ export default function StoreMapPage() {
   }, []);
   const { isFavorite, toggleFavorite, isAuthed } = useStoreFavorites();
   const searchPanelOpen = searchOpen || searchParam === "1";
+  const selectedStoreId = selectedStore?.id;
+  const normalizedSearchQuery = searchQuery.trim();
+  const debouncedSearchQuery = useDebouncedValue(normalizedSearchQuery, 180);
+  const filterSearchQuery = searchPanelOpen ? debouncedSearchQuery : normalizedSearchQuery;
 
   useEffect(() => { tripModeRef.current = tripMode; }, [tripMode]);
   useEffect(() => { tripStopsRef.current = tripStops; }, [tripStops]);
@@ -672,7 +862,7 @@ export default function StoreMapPage() {
   useEffect(() => {
     setVisibleCount(STORE_LIST_PAGE);
     if (listScrollRef.current) listScrollRef.current.scrollTop = 0;
-  }, [activeCategory, activeGroup, searchQuery, openNowOnly, trendingOnly, dealsOnly, smartFilterActive, radiusKm, sortBy]);
+  }, [activeCategory, activeGroup, filterSearchQuery, openNowOnly, trendingOnly, dealsOnly, smartFilterActive, radiusKm, searchCenter, sortBy]);
 
   useEffect(() => {
     if (searchParam !== "1") return;
@@ -686,10 +876,10 @@ export default function StoreMapPage() {
 
   /* Save recently viewed when a store is selected */
   useEffect(() => {
-    if (!selectedStore) return;
-    saveRecentStore(selectedStore.id);
+    if (!selectedStoreId) return;
+    saveRecentStore(selectedStoreId);
     setRecentIds(getRecentStoreIds());
-  }, [selectedStore?.id]);
+  }, [selectedStoreId]);
 
   /* Persist filter prefs */
   useEffect(() => { localStorage.setItem("zivo:map:trending", trendingOnly ? "1" : "0"); }, [trendingOnly]);
@@ -719,11 +909,11 @@ export default function StoreMapPage() {
     if (stopsParam) next.set("stops", stopsParam);
     if (activeCategory !== "all") next.set("cat", activeCategory);
     if (activeGroup) next.set("group", activeGroup);
-    if (searchQuery.trim()) next.set("q", searchQuery.trim());
+    if (filterSearchQuery) next.set("q", filterSearchQuery);
     else if (searchOpen) next.set("search", "1");
     if (openNowOnly) next.set("open", "1");
     setUrlParams(next, { replace: true });
-  }, [activeCategory, activeGroup, focusId, openNowOnly, searchOpen, searchQuery, setUrlParams, stopsParam, trailParam]);
+  }, [activeCategory, activeGroup, filterSearchQuery, focusId, openNowOnly, searchOpen, setUrlParams, stopsParam, trailParam]);
 
   const { data: allStores = [] } = useQuery({
     queryKey: ["store-map-all"],
@@ -845,8 +1035,8 @@ export default function StoreMapPage() {
       if (group) result = result.filter((s) => group.categories.includes(s.category));
     }
     if (activeCategory !== "all") result = result.filter((s) => s.category === activeCategory);
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
+    if (filterSearchQuery) {
+      const q = filterSearchQuery.toLowerCase();
       result = result.filter((s) => s.name.toLowerCase().includes(q) || s.address?.toLowerCase().includes(q));
     }
     if (openNowOnly) result = result.filter((s) => isOpenNow(s.hours) === true);
@@ -864,7 +1054,25 @@ export default function StoreMapPage() {
       });
     }
     return result;
-  }, [stores, activeCategory, activeGroup, searchQuery, openNowOnly, trendingOnly, dealsOnly, smartFilterActive, liveStoreMap, dealStoreIds, radiusKm, effectiveCenter]);
+  }, [stores, activeCategory, activeGroup, filterSearchQuery, openNowOnly, trendingOnly, dealsOnly, smartFilterActive, liveStoreMap, dealStoreIds, radiusKm, effectiveCenter]);
+
+  const markerCameraKey = useMemo(() => {
+    const centerKey = effectiveCenter
+      ? `${effectiveCenter.lat.toFixed(4)},${effectiveCenter.lng.toFixed(4)}`
+      : "none";
+    return [
+      activeGroup,
+      activeCategory,
+      filterSearchQuery,
+      openNowOnly ? "open" : "all-hours",
+      trendingOnly ? "live" : "all-live",
+      dealsOnly ? "deals" : "all-deals",
+      smartFilterActive ? "smart" : "manual",
+      radiusKm ?? "all-radius",
+      centerKey,
+      filteredStores.length,
+    ].join("|");
+  }, [activeCategory, activeGroup, dealsOnly, effectiveCenter, filterSearchQuery, filteredStores.length, openNowOnly, radiusKm, smartFilterActive, trendingOnly]);
 
   /* Nearby sorted — driven by the sort chip row in the bottom sheet.
      "distance" falls back to insertion order when no GPS / map center yet,
@@ -933,14 +1141,7 @@ export default function StoreMapPage() {
     queryKey: ["store-map-gallery", selectedStore?.id],
     queryFn: async (): Promise<string[]> => {
       if (!selectedStore?.id) return [];
-      const { data } = await supabase
-        .from("store_profiles")
-        .select("gallery_images")
-        .eq("id", selectedStore.id)
-        .single();
-      const raw = (data as any)?.gallery_images;
-      if (!Array.isArray(raw)) return [];
-      return (raw as unknown[]).filter((v): v is string => typeof v === "string" && v.startsWith("http"));
+      return fetchStoreImageFallbacks(selectedStore);
     },
     enabled: !!selectedStore?.id,
     staleTime: 60_000,
@@ -1090,6 +1291,10 @@ export default function StoreMapPage() {
     pulseCirclesRef.current = [];
     if (!filteredStores.length) return;
 
+    const shouldAnimateMarkers = filteredStores.length <= 80;
+    const shouldRenderLogoMarkers = filteredStores.length <= 80;
+    const shouldAdjustCamera = markerCameraKeyRef.current !== markerCameraKey;
+    markerCameraKeyRef.current = markerCameraKey;
     const bounds = new google.maps.LatLngBounds();
     filteredStores.forEach((store) => {
       const pos = { lat: store.latitude, lng: store.longitude };
@@ -1109,11 +1314,11 @@ export default function StoreMapPage() {
           anchor: new google.maps.Point(18, 43),
         },
         title: store.name,
-        animation: google.maps.Animation.DROP,
+        animation: shouldAnimateMarkers ? google.maps.Animation.DROP : undefined,
         zIndex: 100,
       });
 
-      if (store.logo_url) {
+      if (store.logo_url && shouldRenderLogoMarkers) {
         createLogoMarkerCanvas(store.logo_url, color, bg, (dataUrl) => {
           marker.setIcon({
             url: dataUrl,
@@ -1221,24 +1426,28 @@ export default function StoreMapPage() {
       // map opens looking deliberate, not chaotic.
       const hasUserFocus = !!searchCenter || !!userLocation || !!activeGroup || activeCategory !== "all";
       if (hasUserFocus) {
-        mapRef.current.fitBounds(bounds, { top: 140, bottom: 260, left: 30, right: 30 });
-        const desiredMax = activeGroup || activeCategory !== "all" ? 13 : 11;
-        google.maps.event.addListenerOnce(mapRef.current, "idle", () => {
-          const z = mapRef.current?.getZoom() ?? 0;
-          if (z > desiredMax) mapRef.current?.setZoom(desiredMax);
-          else if (z < 7) mapRef.current?.setZoom(7);
-        });
+        if (shouldAdjustCamera) {
+          mapRef.current.fitBounds(bounds, { top: 140, bottom: 260, left: 30, right: 30 });
+          const desiredMax = activeGroup || activeCategory !== "all" ? 13 : 11;
+          google.maps.event.addListenerOnce(mapRef.current, "idle", () => {
+            const z = mapRef.current?.getZoom() ?? 0;
+            if (z > desiredMax) mapRef.current?.setZoom(desiredMax);
+            else if (z < 7) mapRef.current?.setZoom(7);
+          });
+        }
       } else {
-        mapRef.current.setCenter(DEFAULT_CENTER);
-        mapRef.current.setZoom(11);
+        if (shouldAdjustCamera) {
+          mapRef.current.setCenter(DEFAULT_CENTER);
+          mapRef.current.setZoom(11);
+        }
       }
-    } else if (filteredStores.length === 1) {
+    } else if (filteredStores.length === 1 && shouldAdjustCamera) {
       mapRef.current.setCenter({ lat: filteredStores[0].latitude, lng: filteredStores[0].longitude });
       mapRef.current.setZoom(15);
     }
 
     return () => { if (intervalId !== null) window.clearInterval(intervalId); };
-  }, [mapReady, filteredStores, userLocation, liveStoreMap, dealStoreIds, activeGroup, activeCategory]);
+  }, [mapReady, filteredStores, userLocation, liveStoreMap, dealStoreIds, activeGroup, activeCategory, searchCenter, markerCameraKey]);
 
   /* Trip stop numbered markers + polyline */
   useEffect(() => {
@@ -1327,6 +1536,25 @@ export default function StoreMapPage() {
     }
   }, [mapReady, focusId, trailParam, stopsParam, filteredStores, stores]);
 
+  const clearMapArea = useCallback(() => {
+    setSearchCenter(null);
+    setChosenCityName("");
+    writeSavedCityAnchor(null);
+  }, []);
+
+  const selectCityAnchor = useCallback((city: CityAnchor) => {
+    const nextCenter = { lat: city.lat, lng: city.lng };
+    setChosenCityName(city.name);
+    writeSavedCityAnchor(city);
+    setSearchCenter(nextCenter);
+    if (mapRef.current) {
+      mapRef.current.panTo(nextCenter);
+      mapRef.current.setZoom(12);
+    }
+    setLocationNoticeDismissed(true);
+    toast.success(`Showing stores around ${city.name}`);
+  }, []);
+
   const activeFiltersCount = (openNowOnly ? 1 : 0) + (trendingOnly ? 1 : 0) + (dealsOnly ? 1 : 0) + (smartFilterActive ? 1 : 0) + (activeCategory !== "all" ? 1 : 0) + (activeGroup ? 1 : 0) + (radiusKm ? 1 : 0);
   const clearAllFilters = useCallback(() => {
     setActiveCategory("all");
@@ -1336,9 +1564,17 @@ export default function StoreMapPage() {
     setDealsOnly(false);
     setSmartFilterActive(false);
     setRadiusKm(null);
-    setSearchCenter(null);
+    clearMapArea();
     setSelectedStore(null);
-  }, []);
+  }, [clearMapArea]);
+
+  const hiddenStoreCount = Math.max(0, allStores.length - stores.length);
+  const headerTitle = chosenCityName || (searchCenter ? "Stores in this area" : "Explore Stores");
+  const mapScopeLabel = chosenCityName || (searchCenter ? "this area" : "");
+  const baseHeaderCountText =
+    !searchQuery.trim() && !searchCenter && activeFiltersCount === 0 && hiddenStoreCount > 0
+      ? `${stores.length} on map`
+      : `${filteredStores.length} ${filteredStores.length === 1 ? "store" : "stores"}`;
 
   const handleZoom = useCallback((direction: 1 | -1) => {
     const map = mapRef.current;
@@ -1403,11 +1639,19 @@ export default function StoreMapPage() {
     event?.preventDefault?.();
     event?.stopPropagation?.();
     const p = new URLSearchParams();
+    p.set("map", "1");
+    const listCenter = isCambodiaMapCenter(searchCenter) ? searchCenter : null;
+    if (listCenter) {
+      p.set("lat", String(listCenter.lat));
+      p.set("lng", String(listCenter.lng));
+      if (chosenCityName) p.set("city", chosenCityName);
+    }
+    if (radiusKm) p.set("radius", String(radiusKm));
     if (activeCategory !== "all") p.set("cat", activeCategory);
     if (searchQuery.trim()) p.set("q", searchQuery.trim());
     if (openNowOnly) p.set("open", "1");
     navigate(`/store-map/list${p.toString() ? `?${p.toString()}` : ""}`);
-  }, [activeCategory, navigate, openNowOnly, searchQuery]);
+  }, [activeCategory, chosenCityName, navigate, openNowOnly, radiusKm, searchCenter, searchQuery]);
 
   const handleRecenter = useCallback(() => {
     if (!mapRef.current) {
@@ -1433,7 +1677,7 @@ export default function StoreMapPage() {
         setUserLocation(loc);
         setLocationDenied(false);
         setLocationNoticeDismissed(false);
-        setSearchCenter(null);
+        clearMapArea();
         mapRef.current?.panTo(loc);
         mapRef.current?.setZoom(15);
       },
@@ -1444,10 +1688,12 @@ export default function StoreMapPage() {
       },
       { enableHighAccuracy: true, timeout: 5000 }
     );
-  }, []);
+  }, [clearMapArea]);
 
   const handleSearchArea = useCallback(() => {
     if (!mapIdleCenter) return;
+    setChosenCityName("");
+    writeSavedCityAnchor(null);
     setSearchCenter(mapIdleCenter);
     setMapIdleCenter(null);
     toast.success("Showing stores in this area");
@@ -1503,7 +1749,26 @@ export default function StoreMapPage() {
     navigate(`/rides/hub?${qp.toString()}`);
   }, [currentUserId, navigate]);
 
-  const handleExitTripMode = () => { setTripMode(false); setTripStops([]); };
+  const handleExitTripMode = useCallback(() => {
+    setTripMode(false);
+    setTripStops([]);
+  }, []);
+
+  const handleToggleTripMode = useCallback(() => {
+    try { localStorage.setItem("zivo:map:trail-seen", "1"); } catch { /* noop */ }
+    setTrailSeen(true);
+    if (tripMode) {
+      handleExitTripMode();
+      return;
+    }
+    setTripMode(true);
+    setSelectedStore(null);
+    toast("Trail mode is on. Tap pins or rows to add up to 8 stops.", { duration: 3500 });
+  }, [handleExitTripMode, tripMode]);
+
+  const cycleMapStyle = useCallback(() => {
+    setMapStyle((style) => style === "light" ? "dark" : style === "dark" ? "satellite" : "light");
+  }, []);
 
   const handleShareTrail = useCallback(() => {
     if (!tripStops.length) return;
@@ -1557,34 +1822,37 @@ export default function StoreMapPage() {
             handleTap();
           }
         }}
-        className={`w-full flex items-center gap-3 px-4 py-2.5 border-t border-border/10 text-left transition-colors ${
-          isInTrip ? "bg-indigo-50/80" : "hover:bg-muted/30"
+        className={`group grid w-full grid-cols-[28px_48px_minmax(0,1fr)_auto] items-center gap-3 border-t border-border/10 px-4 py-3 text-left transition-colors ${
+          isInTrip ? "bg-indigo-50/85" : "hover:bg-muted/40"
         }`}
       >
         {/* Rank badge */}
-        <span className="w-5 h-5 rounded-full bg-muted text-muted-foreground text-[10px] font-bold flex items-center justify-center shrink-0">
+        <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-muted text-[11px] font-black text-muted-foreground ring-1 ring-border/40">
           {rank}
         </span>
 
         {/* Logo */}
-        <div
-          className="relative w-10 h-10 rounded-xl flex items-center justify-center shrink-0 overflow-hidden"
-          style={{ background: getCategoryColor(store.category) + "18" }}
-        >
-          {store.logo_url
-            ? <img src={store.logo_url} alt={`${store.name} logo`} loading="lazy" className="w-full h-full object-cover" />
-            : <span className="text-base">{getCategoryIcon(store.category)}</span>
-          }
+        <div className="relative shrink-0">
+          <StoreLogo store={store} size="sm" />
           {isLive && <span className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 border border-white animate-pulse" />}
         </div>
 
         {/* Info */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <p className="text-[13px] font-bold text-foreground truncate">{store.name}</p>
+            <p className="truncate text-[15px] font-black leading-tight text-foreground">{store.name}</p>
             {isInTrip && <CheckCircle2 className="w-3.5 h-3.5 text-foreground shrink-0" />}
           </div>
-          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+          <div className="mt-1 flex min-w-0 items-center gap-1.5 text-[11px] font-semibold text-muted-foreground">
+            <span className="shrink-0">{getCategoryLabel(store.category)}</span>
+            {store.address && (
+              <>
+                <span aria-hidden="true" className="shrink-0 text-muted-foreground/50">·</span>
+                <span className="truncate">{store.address}</span>
+              </>
+            )}
+          </div>
+          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
             {isOpen !== null && (
               <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
                 isOpen ? "bg-emerald-100 text-emerald-700" : "bg-red-100 text-red-600"
@@ -1634,33 +1902,34 @@ export default function StoreMapPage() {
               </span>
             )}
             {isVisited && (
-              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-foreground text-foreground shrink-0">
+              <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-foreground text-background shrink-0">
                 ✓ Visited
               </span>
             )}
           </div>
         </div>
 
-        {/* Quick-save heart */}
-        <motion.button
-          whileTap={{ scale: 0.8 }}
-          onClick={(e) => { e.stopPropagation(); handleToggleFavoriteSelected(store); }}
-          aria-label={isFavorite(store.id) ? "Remove from favorites" : "Save to favorites"}
-          className="w-10 h-10 rounded-full flex items-center justify-center shrink-0 hover:bg-muted/50 transition-colors touch-manipulation"
-        >
-          <Heart className={`w-4 h-4 transition-colors ${isFavorite(store.id) ? "fill-rose-500 text-rose-500" : "text-muted-foreground/30"}`} />
-        </motion.button>
+        <div className="flex min-w-[58px] shrink-0 flex-col items-end gap-1">
+          <motion.button
+            whileTap={{ scale: 0.8 }}
+            onClick={(e) => { e.stopPropagation(); handleToggleFavoriteSelected(store); }}
+            aria-label={isFavorite(store.id) ? "Remove from favorites" : "Save to favorites"}
+            className="flex h-10 w-10 items-center justify-center rounded-full transition-colors hover:bg-muted/60 touch-manipulation"
+          >
+            <Heart className={`h-4 w-4 transition-colors ${isFavorite(store.id) ? "fill-rose-500 text-rose-500" : "text-muted-foreground/35"}`} />
+          </motion.button>
 
-        {/* Distance — hidden when location unknown or store is >200 km away
-            (showing "12,644 km / 506 h" makes the app look broken) */}
-        {km !== null && km <= 200 && (
-          <div className="text-right shrink-0 min-w-[44px]">
-            <p className="text-[12px] font-bold" style={{ color: getCategoryColor(store.category) }}>
-              {formatDistLabel(km)}
-            </p>
-            <p className="text-[10px] text-muted-foreground">{formatWalkMin(km)}</p>
-          </div>
-        )}
+          {/* Distance — hidden when location unknown or store is >200 km away
+              (showing "12,644 km / 506 h" makes the app look broken) */}
+          {km !== null && km <= 200 && (
+            <div className="text-right">
+              <p className="text-[12px] font-black leading-tight" style={{ color: getCategoryColor(store.category) }}>
+                {formatDistLabel(km)}
+              </p>
+              <p className="text-[10px] font-semibold text-muted-foreground">{formatWalkMin(km)}</p>
+            </div>
+          )}
+        </div>
       </motion.div>
     );
   };
@@ -1673,17 +1942,18 @@ export default function StoreMapPage() {
   // we still surface 3 rows since real estate is plentiful.
   const sheetRows = sheetExpanded ? Math.min(nearbySorted.length, 8) : 2;
   /* Sheet height estimate. Components stacked vertically:
-       - Recently viewed strip   ~50px (only when visible)
-       - Combined filter+sort row ~46px
-       - Sheet header            ~44px
-       - Store rows              rows * 56px
+       - Recently viewed strip   ~58px (only when visible)
+       - Combined filter+sort row ~54px
+       - Sheet header            ~58px
+       - Store rows              rows * 72px
      The previous formula only counted header + rows and the FAB column
      ended up tucked behind the sheet on mobile, hiding Locate/Layers. */
-  const sheetChromeHeight = (showRecentRow ? 50 : 0) + 46 + 44;
-  const sheetHeight = sheetChromeHeight + sheetRows * 56;
+  const sheetChromeHeight = (showRecentRow ? 58 : 0) + 54 + 58 + 12;
+  const sheetHeight = sheetChromeHeight + sheetRows * 72;
 
   /* FAB bottom offset adapts to what's visible */
   const fabBottom = drawerStore ? 140 : showSheet ? sheetHeight + 88 + 8 : tripStops.length > 0 ? 220 : 140;
+  const hideFloatingMapControls = showSheet && sheetExpanded && !tripMode;
 
   return (
     <div className="fixed inset-0 z-0 bg-background lg:flex lg:flex-col">
@@ -1699,19 +1969,20 @@ export default function StoreMapPage() {
         {/* ── Header ── */}
         <div className="absolute top-0 left-0 right-0 z-[1100]"
           style={{ paddingTop: "max(env(safe-area-inset-top, 0px), 12px)" }}>
-          <div className="px-4 pb-1">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-56 bg-gradient-to-b from-background/90 via-background/45 to-transparent" />
+          <div className="relative px-3 pb-1 sm:px-4 lg:px-6">
             <AnimatePresence mode="wait">
               {tripMode ? (
                 <motion.div key="trail"
                   initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
-                  className="flex items-center gap-2.5 rounded-2xl px-3 py-2.5 bg-secondary backdrop-blur-xl shadow-lg"
+                  className="flex items-center gap-2.5 rounded-[28px] border border-indigo-200/50 bg-indigo-600/95 px-3 py-2.5 text-white shadow-[0_18px_50px_rgba(79,70,229,0.28)] ring-1 ring-black/5 backdrop-blur-xl"
                 >
                   <div className="w-11 h-11 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
                     <Route className="w-5 h-5 text-white" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[14px] font-bold text-white leading-tight">Shopping Trail</p>
-                    <p className="text-[11px] text-foreground mt-0.5">
+                    <p className="text-[11px] font-semibold text-indigo-50 mt-0.5">
                       {tripStops.length === 0 ? "Tap stores on map to add stops" :
                         `${tripStops.length} stop${tripStops.length > 1 ? "s" : ""} · ${formatDistLabel(tripKm)} total`}
                     </p>
@@ -1802,7 +2073,7 @@ export default function StoreMapPage() {
                   initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.95 }}
                 >
                   <div
-                    className="flex items-center gap-2.5 rounded-2xl px-3 py-2.5 bg-card/95 backdrop-blur-xl shadow-lg border border-border/20 cursor-pointer"
+                    className="group flex min-h-[72px] items-center gap-2 rounded-[28px] border border-white/70 bg-card/95 px-3 py-3 shadow-[0_18px_50px_rgba(15,23,42,0.16)] ring-1 ring-black/5 backdrop-blur-2xl cursor-pointer sm:min-h-[76px] sm:gap-3 sm:px-3.5"
                     role="button"
                     tabIndex={0}
                     aria-label="Search stores and browse all stores"
@@ -1811,32 +2082,38 @@ export default function StoreMapPage() {
                       if (e.key === "Enter" || e.key === " ") openSearchPanel(e);
                     }}
                   >
-                    <div className="w-11 h-11 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                      <Store className="w-5 h-5 text-primary" />
+                    <div className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-[18px] bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/10 min-[420px]:flex sm:h-[52px] sm:w-[52px] sm:rounded-[22px]">
+                      <Store className="h-6 w-6 text-primary" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[14px] font-bold text-foreground leading-tight truncate">
-                        {searchCenter ? "Stores in this area" : "Explore Stores"}
+                      <p className="truncate text-[15px] font-black leading-tight text-foreground sm:text-[17px]">
+                        {headerTitle}
                       </p>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">
-                        {filteredStores.length} {filteredStores.length === 1 ? "store" : "stores"}
-                        {radiusKm && ` within ${radiusKm < 1 ? radiusKm * 1000 + " m" : radiusKm + " km"}`}
-                        {trendingCount > 0 && <span className="ml-1 text-emerald-600 font-semibold">· {trendingCount} live</span>}
+                      <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-[12px] font-semibold text-muted-foreground">
+                        <span>{baseHeaderCountText}</span>
+                        {hiddenStoreCount > 0 && !searchCenter && activeFiltersCount === 0 && !searchQuery.trim() && (
+                          <span className="text-amber-600">{hiddenStoreCount} need pins</span>
+                        )}
+                        {mapScopeLabel && <span className="text-primary">{mapScopeLabel}</span>}
+                        {radiusKm && <span>within {radiusKm < 1 ? radiusKm * 1000 + " m" : radiusKm + " km"}</span>}
+                        {openNowOnly && <span className="text-emerald-600">{openNowCount} open now</span>}
+                        {trendingCount > 0 && <span className="text-emerald-600">{trendingCount} live</span>}
                         {searchCenter && (
-                          <button type="button" onClick={(e) => { e.stopPropagation(); setSearchCenter(null); }} className="ml-1.5 text-primary font-semibold underline">reset</button>
+                          <button type="button" onClick={(e) => { e.stopPropagation(); clearMapArea(); }} className="text-primary font-bold underline">reset area</button>
                         )}
                       </p>
                     </div>
                     <motion.button whileTap={{ scale: 0.94 }}
                       onPointerDown={goToStoreList}
                       onClick={goToStoreList}
-                      className="h-10 px-3 inline-flex items-center gap-1 rounded-xl bg-primary text-primary-foreground text-[12px] font-bold shadow-sm"
+                      className="inline-flex h-11 shrink-0 items-center gap-1.5 rounded-2xl bg-foreground px-3 text-[12px] font-black text-background shadow-sm sm:h-12 sm:px-4 sm:text-[13px]"
+                      aria-label="See all map stores"
                     >
-                      <List className="w-4 h-4" /> See all
+                      <List className="w-4 h-4" /> <span className="hidden min-[430px]:inline">See all</span>
                     </motion.button>
                     <span
                       aria-hidden="true"
-                      className="w-10 h-10 rounded-xl flex items-center justify-center bg-muted/60 hover:bg-muted"
+                      className="hidden h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-muted/70 transition group-hover:bg-muted min-[430px]:flex"
                     >
                       <Search className="w-[18px] h-[18px] text-muted-foreground" />
                     </span>
@@ -1848,7 +2125,7 @@ export default function StoreMapPage() {
 
           {/* Category chips */}
           {!tripMode && (
-            <div className="px-4 pt-2.5 pb-1 overflow-x-auto scrollbar-hide">
+            <div className="relative overflow-x-auto scrollbar-hide px-3 pb-1 pt-2.5 sm:px-4 lg:px-6">
               <div className="flex gap-2 w-max">
                 {/* Clear all active filters */}
                 {activeFiltersCount > 0 && (
@@ -1968,12 +2245,12 @@ export default function StoreMapPage() {
         </div>
 
         {/* ── Map controls ── */}
-        {!drawerStore && (
+        {!drawerStore && !hideFloatingMapControls && (
           <div className="absolute right-4 z-[1500] flex flex-col gap-2.5 transition-all duration-300"
             onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => e.stopPropagation()}
             style={{ bottom: `${fabBottom}px` }}>
-            <div className="overflow-hidden rounded-full border border-border/20 bg-card/95 shadow-lg backdrop-blur-xl">
+            <div className="hidden overflow-hidden rounded-full border border-border/20 bg-card/95 shadow-lg backdrop-blur-xl lg:block">
               <motion.button
                 whileTap={{ scale: 0.92 }}
                 type="button"
@@ -1996,15 +2273,7 @@ export default function StoreMapPage() {
             </div>
             <motion.div whileTap={{ scale: 0.9 }}>
               <Button
-                onClick={() => {
-                  // Mark the trail feature as discovered the first time the
-                  // user actually taps the FAB — the pulse hint then disappears
-                  // permanently for this device.
-                  try { localStorage.setItem("zivo:map:trail-seen", "1"); } catch { /* noop */ }
-                  setTrailSeen(true);
-                  if (tripMode) { handleExitTripMode(); }
-                  else { setTripMode(true); setSelectedStore(null); toast("Tap stores on the map to build a route. Up to 8 stops.", { duration: 3500 }); }
-                }}
+                onClick={handleToggleTripMode}
                 className={`w-12 h-12 rounded-full shadow-lg border relative ${
                   tripMode
                     ? "bg-indigo-600 border-indigo-600 text-white hover:bg-indigo-700"
@@ -2047,7 +2316,7 @@ export default function StoreMapPage() {
             <motion.div whileTap={{ scale: 0.9 }}>
               <Button
                 variant="secondary" size="icon"
-                onClick={() => setMapStyle((s) => s === "light" ? "dark" : s === "dark" ? "satellite" : "light")}
+                onClick={cycleMapStyle}
                 className={`w-12 h-12 rounded-full shadow-lg border border-border/20 bg-card/95 backdrop-blur-xl hover:bg-muted relative ${
                   mapStyle !== "light" ? "text-primary border-primary/40" : "text-foreground"
                 }`}
@@ -2113,7 +2382,10 @@ export default function StoreMapPage() {
                     <p className="text-[15px] font-bold text-foreground">{title}</p>
                     <p className="text-[12px] text-muted-foreground mt-1 leading-snug">{hint}</p>
                     <button type="button"
-                      onClick={() => { setActiveCategory("all"); setOpenNowOnly(false); setTrendingOnly(false); setSmartFilterActive(false); setRadiusKm(null); setSearchQuery(""); setSearchCenter(null); }}
+                      onClick={() => {
+                        clearAllFilters();
+                        setSearchQuery("");
+                      }}
                       className="mt-3 px-5 py-2 rounded-full bg-primary text-primary-foreground text-[12px] font-bold shadow-sm"
                     >
                       Clear all filters
@@ -2147,56 +2419,47 @@ export default function StoreMapPage() {
 
         {/* ── GPS denied banner with city quick-jump ── */}
         <AnimatePresence>
-          {locationDenied && !userLocation && !locationNoticeDismissed && !tripMode && (
+          {locationDenied && !userLocation && !locationNoticeDismissed && !tripMode && !searchCenter && (
             <motion.div
               initial={{ y: -20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: -20, opacity: 0 }}
-              className="absolute top-[128px] left-3 right-3 z-[1600] rounded-2xl border border-amber-200 bg-card/95 px-3 py-2.5 text-[12px] font-semibold text-foreground shadow-lg backdrop-blur-xl"
+              className="absolute top-[128px] left-3 right-3 z-[1600] overflow-hidden rounded-[28px] border border-amber-200/80 bg-card/95 p-3 text-[12px] font-semibold text-foreground shadow-[0_18px_50px_rgba(15,23,42,0.18)] ring-1 ring-black/5 backdrop-blur-2xl sm:left-4 sm:right-4 lg:left-6 lg:right-6"
             >
-              <div className="flex items-center gap-2">
-                <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700">
-                  <Locate className="w-4 h-4" />
+              <div className="flex items-start gap-3">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[20px] bg-amber-100 text-amber-700 ring-1 ring-amber-200/70">
+                  <Locate className="h-5 w-5" />
                 </span>
-                <span className="min-w-0 flex-1 leading-snug">
-                  Location is off. Pick a city or retry to see distance-sorted results.
-                </span>
-                <button type="button"
-                  onClick={() => { handleLocateMe(); }}
-                  className="min-h-[36px] rounded-full bg-foreground px-3 text-[11px] font-bold text-background touch-manipulation"
-                >
-                  Retry
-                </button>
-                <button
-                  type="button"
-                  aria-label="Dismiss location notice"
-                  onClick={() => setLocationNoticeDismissed(true)}
-                  className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
-                >
-                  <X className="h-3.5 w-3.5" />
-                </button>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[14px] font-black leading-tight text-foreground">Choose your map area</p>
+                  <p className="mt-0.5 text-[12px] font-semibold leading-snug text-muted-foreground">
+                    Location is off. Pick a city or retry to unlock distance-sorted results.
+                  </p>
+                </div>
+                <div className="flex shrink-0 items-center gap-1.5">
+                  <button type="button"
+                    onClick={() => { handleLocateMe(); }}
+                    className="min-h-[40px] rounded-full bg-foreground px-4 text-[12px] font-black text-background touch-manipulation"
+                  >
+                    Retry
+                  </button>
+                  <button
+                    type="button"
+                    aria-label="Dismiss location notice"
+                    onClick={() => setLocationNoticeDismissed(true)}
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-muted-foreground hover:bg-muted"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
               </div>
-              <div className="mt-2 flex items-center gap-1.5 overflow-x-auto scrollbar-hide -mx-1 px-1">
-                {([
-                  { name: "Phnom Penh", lat: 11.5564, lng: 104.9282 },
-                  { name: "Siem Reap", lat: 13.3633, lng: 103.8564 },
-                  { name: "Sihanoukville", lat: 10.6271, lng: 103.5224 },
-                  { name: "Kampot", lat: 10.6101, lng: 104.1810 },
-                  { name: "Battambang", lat: 13.0957, lng: 103.2022 },
-                  { name: "Kep", lat: 10.4830, lng: 104.3160 },
-                ] as Array<{ name: string; lat: number; lng: number }>).map((city) => (
+              <div className="mt-3 flex items-center gap-1.5 overflow-x-auto scrollbar-hide -mx-1 px-1">
+                {CITY_ANCHORS.map((city) => (
                   <button
                     key={city.name}
                     type="button"
-                    onClick={() => {
-                      setSearchCenter({ lat: city.lat, lng: city.lng });
-                      if (mapRef.current) {
-                        mapRef.current.panTo({ lat: city.lat, lng: city.lng });
-                        mapRef.current.setZoom(12);
-                      }
-                      setLocationNoticeDismissed(true);
-                    }}
-                    className="shrink-0 rounded-full border border-border/30 bg-muted/40 px-3 py-1 text-[11px] font-bold text-foreground hover:bg-muted touch-manipulation"
+                    onClick={() => selectCityAnchor(city)}
+                    className="min-h-[34px] shrink-0 rounded-full border border-border/40 bg-muted/50 px-3.5 py-1 text-[12px] font-bold text-foreground transition hover:bg-muted touch-manipulation"
                   >
                     {city.name}
                   </button>
@@ -2229,12 +2492,15 @@ export default function StoreMapPage() {
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: 80, opacity: 0 }}
               transition={{ type: "spring", damping: 30, stiffness: 280 }}
-              className="absolute left-3 right-3 z-[1400] rounded-[20px] overflow-hidden bg-card/96 backdrop-blur-xl shadow-2xl border border-border/20"
+              className="absolute left-3 right-3 z-[1400] overflow-hidden rounded-[28px] border border-white/70 bg-card/95 shadow-[0_22px_70px_rgba(15,23,42,0.20)] ring-1 ring-black/5 backdrop-blur-2xl sm:left-4 sm:right-4 lg:left-6 lg:right-6"
               style={{ bottom: "88px" }}
             >
+              <div className="flex justify-center pt-2">
+                <span className="h-1 w-10 rounded-full bg-muted-foreground/20" aria-hidden="true" />
+              </div>
               {/* Recently viewed strip */}
               {showRecentRow && (
-                <div className="px-3 pt-2.5 pb-1 border-b border-border/10">
+                <div className="border-b border-border/10 px-4 pb-2 pt-2">
                   <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wide mb-1.5">Recently viewed</p>
                   <div className="flex gap-2 overflow-x-auto scrollbar-hide">
                     {recentStores.map((s) => (
@@ -2251,6 +2517,13 @@ export default function StoreMapPage() {
                 </div>
               )}
 
+              {tripMode && tripStops.length === 0 && (
+                <div className="mx-4 mt-3 flex items-center gap-2 rounded-2xl border border-indigo-200 bg-indigo-50 px-3 py-2 text-[12px] font-bold text-indigo-900">
+                  <Route className="h-4 w-4 shrink-0 text-indigo-600" />
+                  Trail mode is on · tap a pin or row to add stops
+                </div>
+              )}
+
               {/* Combined sort + radius row. Sort chips lead because
                   they're always meaningful; radius chips trail (and are
                   hidden when no GPS / city is selected, since "5km from
@@ -2259,7 +2532,7 @@ export default function StoreMapPage() {
               <div
                 role="group"
                 aria-label="Sort and filter stores"
-                className="px-3 pt-2 pb-1.5 flex items-center gap-2 overflow-x-auto scrollbar-hide"
+                className="flex items-center gap-2 overflow-x-auto scrollbar-hide px-4 pb-2 pt-3"
               >
                 <div role="radiogroup" aria-label="Sort stores" className="flex items-center gap-2 shrink-0">
                   {([
@@ -2312,14 +2585,55 @@ export default function StoreMapPage() {
                     ))}
                   </>
                 )}
+                {sheetExpanded && (
+                  <>
+                    <span aria-hidden="true" className="h-5 w-px bg-border/40 mx-1 shrink-0" />
+                    <button
+                      type="button"
+                      onClick={handleToggleTripMode}
+                      aria-pressed={tripMode}
+                      aria-label={tripMode ? "Exit shopping trail" : "Plan a shopping trail"}
+                      className={`flex min-h-[34px] w-9 shrink-0 items-center justify-center rounded-full border transition touch-manipulation ${
+                        tripMode
+                          ? "border-indigo-600 bg-indigo-600 text-white"
+                          : "border-border/30 bg-muted/50 text-muted-foreground"
+                      }`}
+                    >
+                      <Route className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        if (userLocation) handleRecenter();
+                        else handleLocateMe();
+                      }}
+                      aria-label={userLocation ? "Re-center on me" : "Find my location"}
+                      className="flex min-h-[34px] w-9 shrink-0 items-center justify-center rounded-full border border-border/30 bg-muted/50 text-muted-foreground transition hover:bg-muted touch-manipulation"
+                    >
+                      <Locate className="h-3.5 w-3.5" />
+                    </button>
+                    <button
+                      type="button"
+                      onClick={cycleMapStyle}
+                      aria-label={`Map style: ${mapStyle}. Tap to change.`}
+                      className={`flex min-h-[34px] w-9 shrink-0 items-center justify-center rounded-full border transition touch-manipulation ${
+                        mapStyle !== "light"
+                          ? "border-primary/40 bg-primary/10 text-primary"
+                          : "border-border/30 bg-muted/50 text-muted-foreground"
+                      }`}
+                    >
+                      <Layers className="h-3.5 w-3.5" />
+                    </button>
+                  </>
+                )}
               </div>
 
               {/* Sheet header */}
               <button type="button"
                 onClick={() => setSheetExpanded((v) => !v)}
-                className="w-full min-h-[40px] flex items-center gap-2 px-4 py-2 border-t border-border/10 touch-manipulation"
+                className="flex w-full min-h-[52px] items-center gap-2 border-t border-border/10 bg-gradient-to-r from-muted/25 to-transparent px-4 py-3 touch-manipulation"
               >
-                <p className="text-[12px] font-bold text-foreground flex-1 text-left">
+                <p className="flex-1 text-left text-[15px] font-black leading-tight text-foreground">
                   {(() => {
                     const groupLabel = activeGroup ? CATEGORY_GROUPS.find((g) => g.id === activeGroup)?.label : null;
                     const nearestKm = effectiveCenter && nearbySorted.length > 0
@@ -2333,13 +2647,13 @@ export default function StoreMapPage() {
                     return `${nearbySorted.length} ${plural}`;
                   })()}
                   {tripMode && tripStops.length > 0
-                    ? <span className="ml-1.5 text-foreground font-semibold">· {tripStops.length} stops · {formatTripEta(tripKm)}</span>
+                    ? <span className="ml-1.5 text-[12px] font-bold text-muted-foreground">· {tripStops.length} stops · {formatTripEta(tripKm)}</span>
                     : tripMode
-                    ? <span className="ml-1.5 text-foreground font-semibold">· tap to add to trail</span>
+                    ? <span className="ml-1.5 text-[12px] font-bold text-muted-foreground">· tap to add to trail</span>
                     : null}
                 </p>
                 {nearbySorted.length > 2 && (
-                  <span className="flex items-center gap-0.5 text-[11px] font-semibold text-primary">
+                  <span className="flex items-center gap-0.5 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-black text-primary">
                     {sheetExpanded ? <><ChevronDown className="w-3.5 h-3.5" /> Collapse</> : <><ChevronUp className="w-3.5 h-3.5" /> Expand</>}
                   </span>
                 )}
@@ -2385,14 +2699,14 @@ export default function StoreMapPage() {
               transition={{ type: "spring", damping: 28, stiffness: 300 }}
               className="absolute bottom-[80px] left-3 right-3 z-[1600]"
             >
-              <div className="rounded-[20px] overflow-hidden shadow-2xl border border-border bg-white/95 backdrop-blur-xl">
+              <div className="overflow-hidden rounded-[24px] border border-white/70 bg-card/95 shadow-[0_22px_70px_rgba(15,23,42,0.22)] ring-1 ring-black/5 backdrop-blur-2xl">
                 <div className="px-4 pt-3 pb-2">
                   <div className="flex items-center justify-between mb-2">
                     <p className="text-[13px] font-bold text-foreground flex items-center gap-1.5">
-                      <Route className="w-4 h-4 text-foreground" />
+                      <Route className="w-4 h-4 text-indigo-600" />
                       Your Shopping Trail
                     </p>
-                    <span className="text-[11px] text-foreground font-semibold">
+                    <span className="text-[11px] text-muted-foreground font-bold">
                       {formatDistLabel(tripKm)} · {formatTripEta(tripKm)}
                     </span>
                   </div>
@@ -2400,8 +2714,8 @@ export default function StoreMapPage() {
                     {tripStops.map((stop, idx) => (
                       <div key={stop.id} className="flex-shrink-0 flex items-center gap-1.5">
                         {idx > 0 && <ChevronRight className="w-3 h-3 text-foreground shrink-0" />}
-                        <div className="flex items-center gap-1.5 bg-foreground border border-border rounded-xl px-2.5 py-1.5">
-                          <span className="w-5 h-5 rounded-full bg-foreground text-white text-[10px] font-bold flex items-center justify-center shrink-0">
+                        <div className="flex items-center gap-1.5 rounded-xl border border-border/40 bg-muted/50 px-2.5 py-1.5">
+                          <span className="w-5 h-5 rounded-full bg-indigo-600 text-white text-[10px] font-bold flex items-center justify-center shrink-0">
                             {idx + 1}
                           </span>
                           <p className="text-[11px] font-semibold text-foreground whitespace-nowrap max-w-[100px] truncate">{stop.name}</p>
@@ -2416,15 +2730,15 @@ export default function StoreMapPage() {
                     ))}
                   </div>
                 </div>
-                <div className="flex border-t border-border">
+                <div className="flex border-t border-border/20">
                   <button type="button" className="flex-1 py-3 text-[12px] font-bold text-red-500 hover:bg-red-50" onClick={handleExitTripMode}>
                     Clear
                   </button>
-                  <div className="w-px bg-foreground" />
+                  <div className="w-px bg-border/30" />
                   {tripStops.length >= 3 && (
                     <>
                       <button type="button"
-                        className="flex-1 py-3 text-[12px] font-bold text-foreground hover:bg-foreground flex items-center justify-center gap-1"
+                        className="flex-1 py-3 text-[12px] font-bold text-foreground hover:bg-muted/50 flex items-center justify-center gap-1"
                         onClick={() => {
                           const optimized = optimizeTrailStops(tripStops, userLocation);
                           setTripStops(optimized);
@@ -2433,7 +2747,7 @@ export default function StoreMapPage() {
                       >
                         ✦ Optimize
                       </button>
-                      <div className="w-px bg-foreground" />
+                      <div className="w-px bg-border/30" />
                     </>
                   )}
                   <button type="button"
@@ -2442,9 +2756,9 @@ export default function StoreMapPage() {
                   >
                     <Share2 className="w-3.5 h-3.5" /> Share
                   </button>
-                  <div className="w-px bg-foreground" />
+                  <div className="w-px bg-border/30" />
                   <button type="button"
-                    className="flex-1 py-3 text-[12px] font-bold text-foreground hover:bg-foreground flex items-center justify-center gap-1.5"
+                    className="flex-1 py-3 text-[12px] font-bold text-foreground hover:bg-muted/50 flex items-center justify-center gap-1.5"
                     onClick={() => navigateShoppingTrail(tripStops, userLocation)}
                   >
                     <Navigation className="w-3.5 h-3.5" /> Navigate
@@ -2466,7 +2780,7 @@ export default function StoreMapPage() {
               className="absolute bottom-[100px] left-3 right-3 z-[1600]"
             >
               <div
-                className="rounded-[20px] overflow-hidden shadow-2xl border border-border/20 bg-card/95 backdrop-blur-xl cursor-pointer active:scale-[0.98] transition-transform"
+                className="rounded-[28px] overflow-hidden shadow-[0_24px_70px_rgba(15,23,42,0.24)] border border-white/70 bg-card/95 ring-1 ring-black/5 backdrop-blur-2xl cursor-pointer active:scale-[0.98] transition-transform"
                 onClick={() => navigate(getStorePublicPath(selectedStore))}
               >
                 {/* Gallery banner — first photo when available */}
@@ -2477,6 +2791,7 @@ export default function StoreMapPage() {
                       alt={`${selectedStore.name} — photo`}
                       loading="lazy"
                       className="w-full h-full object-cover"
+                      onError={(e) => { e.currentTarget.style.display = "none"; }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-card/60 to-transparent" />
                     {selectedStoreGallery.length > 1 && (
@@ -2487,14 +2802,9 @@ export default function StoreMapPage() {
                   </div>
                 )}
                 <div className="p-4 flex items-center gap-3.5">
-                  <div className="w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden shadow-sm"
-                    style={{ background: getCategoryColor(selectedStore.category) + "12" }}>
-                    {selectedStore.logo_url
-                      ? <img src={selectedStore.logo_url} alt={`${selectedStore.name} logo`} loading="lazy" className="w-full h-full object-cover" />
-                      : <span className="text-2xl">{getCategoryIcon(selectedStore.category)}</span>}
-                  </div>
+                  <StoreLogo store={selectedStore} size="md" />
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-bold text-[15px] truncate text-foreground leading-tight">{selectedStore.name}</h3>
+                    <h3 className="font-black text-[16px] truncate text-foreground leading-tight">{selectedStore.name}</h3>
                     <div className="flex items-center gap-2 mt-1 flex-wrap">
                       <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wide"
                         style={{ background: getCategoryColor(selectedStore.category) + "15", color: getCategoryColor(selectedStore.category) }}>
@@ -2583,7 +2893,7 @@ export default function StoreMapPage() {
                           </span>
                         )}
                         {visitedStoreIds.has(selectedStore.id) && (
-                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-foreground text-foreground">
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-foreground text-background">
                             ✓ Visited
                           </span>
                         )}
@@ -2595,9 +2905,9 @@ export default function StoreMapPage() {
                   </div>
                 </div>
 
-                <div className="flex border-t border-border/20 flex-wrap">
+                <div className="grid grid-cols-3 border-t border-border/20">
                   <button type="button"
-                    className="flex-1 min-w-[33%] py-3 text-[12px] font-bold text-center text-primary hover:bg-primary/5 flex items-center justify-center gap-1.5"
+                    className="min-h-[46px] border-r border-border/20 text-[12px] font-black text-center text-primary hover:bg-primary/5 flex items-center justify-center gap-1.5"
                     onClick={(e) => {
                       e.stopPropagation();
                       trackInitiateCheckout({
@@ -2611,38 +2921,49 @@ export default function StoreMapPage() {
                   >
                     <Car className="w-3.5 h-3.5" /> Ride There
                   </button>
-                  {selectedStore.category !== "auto-repair" && (
-                    <>
-                      <div className="w-px bg-border/20" />
-                      <button type="button"
-                        className="flex-1 min-w-[33%] py-3 text-[12px] font-bold text-center text-primary hover:bg-primary/5 flex items-center justify-center gap-1.5"
-                        onClick={(e) => { e.stopPropagation(); navigate(getStorePublicPath(selectedStore)); }}
-                      >
-                        <Store className="w-3.5 h-3.5" /> View Store
-                      </button>
-                      <div className="w-px bg-border/20" />
-                      <button type="button"
-                        className="flex-1 min-w-[33%] py-3 text-[12px] font-bold text-center text-primary hover:bg-primary/5 flex items-center justify-center gap-1.5"
-                        onClick={(e) => { e.stopPropagation(); handleShareSelected(selectedStore); }}
-                      >
-                        <Share2 className="w-3.5 h-3.5" /> Share
-                      </button>
-                      {selectedStore.phone && (
-                        <>
-                          <div className="w-px bg-border/20" />
-                          <button type="button"
-                            className="flex-1 min-w-[33%] py-3 text-[12px] font-bold text-center text-primary hover:bg-primary/5 flex items-center justify-center gap-1.5"
-                            onClick={(e) => { e.stopPropagation(); window.open(`tel:${selectedStore.phone}`, "_self"); }}
-                          >
-                            <Phone className="w-3.5 h-3.5" /> Call
-                          </button>
-                        </>
-                      )}
-                    </>
-                  )}
+                  <button type="button"
+                    className="min-h-[46px] border-r border-border/20 text-[12px] font-black text-center text-primary hover:bg-primary/5 flex items-center justify-center gap-1.5"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      openDirections({ lat: selectedStore.latitude, lng: selectedStore.longitude, label: selectedStore.name, address: selectedStore.address });
+                    }}
+                  >
+                    <Navigation className="w-3.5 h-3.5" /> Directions
+                  </button>
+                  <button type="button"
+                    className="min-h-[46px] text-[12px] font-black text-center text-primary hover:bg-primary/5 flex items-center justify-center gap-1.5"
+                    onClick={(e) => { e.stopPropagation(); navigate(getStorePublicPath(selectedStore)); }}
+                  >
+                    <Store className="w-3.5 h-3.5" /> View Store
+                  </button>
                 </div>
 
-                <div className="flex items-center gap-2 px-3 py-2 border-t border-border/20 bg-muted/10">
+                <div className="grid grid-cols-3 border-t border-border/20 bg-muted/10">
+                  <button type="button"
+                    className="min-h-[42px] border-r border-border/20 text-[12px] font-bold text-foreground hover:bg-muted/60 flex items-center justify-center gap-1.5"
+                    onClick={(e) => { e.stopPropagation(); handleShareSelected(selectedStore); }}
+                  >
+                    <Share2 className="w-3.5 h-3.5" /> Share
+                  </button>
+                  <button type="button"
+                    className="min-h-[42px] border-r border-border/20 text-[12px] font-bold text-foreground hover:bg-muted/60 flex items-center justify-center gap-1.5 disabled:opacity-45"
+                    disabled={!selectedStore.phone}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      if (selectedStore.phone) window.open(`tel:${selectedStore.phone}`, "_self");
+                    }}
+                  >
+                    <Phone className="w-3.5 h-3.5" /> Call
+                  </button>
+                  <button type="button"
+                    className="min-h-[42px] text-[12px] font-bold text-foreground hover:bg-muted/60 flex items-center justify-center gap-1.5"
+                    onClick={(e) => { e.stopPropagation(); setDrawerStore(selectedStore); }}
+                  >
+                    <MoreHorizontal className="w-3.5 h-3.5" /> More
+                  </button>
+                </div>
+
+                <div className="flex items-center gap-2 px-3 py-2 border-t border-border/20 bg-card/70">
                   <button type="button"
                     onClick={(e) => {
                       e.stopPropagation();
@@ -2665,103 +2986,96 @@ export default function StoreMapPage() {
                     <Heart className={`w-4 h-4 ${isFavorite(selectedStore.id) ? "fill-current" : ""}`} />
                     {isFavorite(selectedStore.id) ? "Saved" : "Save"}
                   </button>
-                  <button type="button"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      openDirections({ lat: selectedStore.latitude, lng: selectedStore.longitude, label: selectedStore.name, address: selectedStore.address });
-                    }}
-                    className="h-11 w-11 rounded-xl bg-card border border-border/40 inline-flex items-center justify-center text-foreground"
-                  >
-                    <Navigation className="w-4 h-4" />
-                  </button>
-                  <button type="button"
-                    onClick={(e) => { e.stopPropagation(); setDrawerStore(selectedStore); }}
-                    className="h-11 w-11 rounded-xl bg-card border border-border/40 inline-flex items-center justify-center text-foreground"
-                  >
-                    <MoreHorizontal className="w-4 h-4" />
-                  </button>
                 </div>
 
-                <div className="border-t border-border/20 px-3 py-3 bg-muted/20">
-                  <p className="text-[11px] font-semibold text-muted-foreground mb-2">
-                    {selectedStore.category === "auto-repair" ? "Quick Actions" : "Social-to-Sale"}
-                  </p>
-                  {liveStoreMap[selectedStore.id] && (
-                    <p className="mb-2 inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full">
-                      <span className="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
-                      Live — purchase in last 30 min
+                {shouldShowSelectedStoreCommerceSection(
+                  selectedStore,
+                  selectedStoreProducts.length,
+                  liveStoreMap[selectedStore.id],
+                ) && (
+                  <div className="border-t border-border/20 px-3 py-3 bg-muted/20">
+                    <p className="text-[11px] font-semibold text-muted-foreground mb-2">
+                      {selectedStore.category === "auto-repair"
+                        ? "Quick Actions"
+                        : selectedStoreProducts.length > 0
+                          ? "Social-to-Sale"
+                          : "Live activity"}
                     </p>
-                  )}
-                  {selectedStore.category === "auto-repair" && (
-                    <div className="grid grid-cols-2 gap-2 mb-2">
-                      <button type="button"
-                        className="h-10 rounded-lg bg-primary text-primary-foreground text-xs font-semibold inline-flex items-center justify-center gap-1.5"
-                        onClick={(e) => { e.stopPropagation(); navigate(`/book/${selectedStore.slug}`); }}
-                      >
-                        <Wrench className="w-3.5 h-3.5" /> Book Service
-                      </button>
-                      <button type="button"
-                        className="h-10 rounded-lg border border-primary/30 text-primary text-xs font-semibold inline-flex items-center justify-center gap-1.5 disabled:opacity-50"
-                        disabled={!selectedStore.phone}
-                        onClick={(e) => { e.stopPropagation(); if (selectedStore.phone) window.open(`tel:${selectedStore.phone}`, "_self"); }}
-                      >
-                        <Phone className="w-3.5 h-3.5" /> Call
-                      </button>
-                    </div>
-                  )}
-                  {selectedStore.category !== "auto-repair" && selectedStoreProducts.length > 0 ? (
-                    <>
-                      <select
-                        value={selectedProductId}
-                        onClick={(e) => e.stopPropagation()}
-                        onChange={(e) => setSelectedProductId(e.target.value)}
-                        className="w-full h-9 rounded-lg border border-border/40 bg-background px-2 text-xs"
-                      >
-                        {selectedStoreProducts.map((p) => (
-                          <option key={p.id} value={p.id}>{p.name} (${Number(p.price).toFixed(2)})</option>
-                        ))}
-                      </select>
-                      <div className="grid grid-cols-2 gap-2 mt-2">
+                    {liveStoreMap[selectedStore.id] && (
+                      <p className="mb-2 inline-flex items-center gap-1.5 text-[11px] font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-full">
+                        <span className="inline-flex h-2.5 w-2.5 rounded-full bg-emerald-500 animate-pulse" />
+                        Live — purchase in last 30 min
+                      </p>
+                    )}
+                    {selectedStore.category === "auto-repair" && (
+                      <div className="grid grid-cols-2 gap-2 mb-2">
                         <button type="button"
-                          className="h-9 rounded-lg bg-primary text-primary-foreground text-xs font-semibold"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate("/reels", {
-                              state: {
-                                openCreate: true,
-                                commerceLinkDraft: {
-                                  linkType: "store_product",
-                                  storeId: selectedStore.id, storeProductId: selectedProductId,
-                                  checkoutPath: `${getStorePublicPath(selectedStore)}?buy=${selectedProductId}`,
-                                  mapLat: selectedStore.latitude, mapLng: selectedStore.longitude, mapLabel: selectedStore.name,
-                                },
-                              },
-                            });
-                          }}
+                          className="h-10 rounded-lg bg-primary text-primary-foreground text-xs font-semibold inline-flex items-center justify-center gap-1.5"
+                          onClick={(e) => { e.stopPropagation(); navigate(`/book/${selectedStore.slug}`); }}
                         >
-                          Create Reel
+                          <Wrench className="w-3.5 h-3.5" /> Book Service
                         </button>
                         <button type="button"
-                          className="h-9 rounded-lg border border-primary/30 text-primary text-xs font-semibold"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            trackInitiateCheckout({
-                              eventId: `store-buy-${selectedStore.id}-${selectedProductId}-${Date.now()}`,
-                              externalId: currentUserId || undefined,
-                              sourceType: "store_product", sourceTable: "store_products", sourceId: selectedProductId,
-                              payload: { store_id: selectedStore.id },
-                            });
-                            navigate(`${getStorePublicPath(selectedStore)}?buy=${selectedProductId}`);
-                          }}
+                          className="h-10 rounded-lg border border-primary/30 text-primary text-xs font-semibold inline-flex items-center justify-center gap-1.5 disabled:opacity-50"
+                          disabled={!selectedStore.phone}
+                          onClick={(e) => { e.stopPropagation(); if (selectedStore.phone) window.open(`tel:${selectedStore.phone}`, "_self"); }}
                         >
-                          Buy Now
+                          <Phone className="w-3.5 h-3.5" /> Call
                         </button>
                       </div>
-                    </>
-                  ) : selectedStore.category !== "auto-repair" ? (
-                    <p className="text-[11px] text-muted-foreground">Add products to this store to enable Create Reel and Buy Now.</p>
-                  ) : null}
-                </div>
+                    )}
+                    {selectedStore.category !== "auto-repair" && selectedStoreProducts.length > 0 && (
+                      <>
+                        <select
+                          value={selectedProductId}
+                          onClick={(e) => e.stopPropagation()}
+                          onChange={(e) => setSelectedProductId(e.target.value)}
+                          className="w-full h-9 rounded-lg border border-border/40 bg-background px-2 text-xs"
+                        >
+                          {selectedStoreProducts.map((p) => (
+                            <option key={p.id} value={p.id}>{p.name} (${Number(p.price).toFixed(2)})</option>
+                          ))}
+                        </select>
+                        <div className="grid grid-cols-2 gap-2 mt-2">
+                          <button type="button"
+                            className="h-9 rounded-lg bg-primary text-primary-foreground text-xs font-semibold"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate("/reels", {
+                                state: {
+                                  openCreate: true,
+                                  commerceLinkDraft: {
+                                    linkType: "store_product",
+                                    storeId: selectedStore.id, storeProductId: selectedProductId,
+                                    checkoutPath: `${getStorePublicPath(selectedStore)}?buy=${selectedProductId}`,
+                                    mapLat: selectedStore.latitude, mapLng: selectedStore.longitude, mapLabel: selectedStore.name,
+                                  },
+                                },
+                              });
+                            }}
+                          >
+                            Create Reel
+                          </button>
+                          <button type="button"
+                            className="h-9 rounded-lg border border-primary/30 text-primary text-xs font-semibold"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              trackInitiateCheckout({
+                                eventId: `store-buy-${selectedStore.id}-${selectedProductId}-${Date.now()}`,
+                                externalId: currentUserId || undefined,
+                                sourceType: "store_product", sourceTable: "store_products", sourceId: selectedProductId,
+                                payload: { store_id: selectedStore.id },
+                              });
+                              navigate(`${getStorePublicPath(selectedStore)}?buy=${selectedProductId}`);
+                            }}
+                          >
+                            Buy Now
+                          </button>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
               </div>
             </motion.div>
           )}

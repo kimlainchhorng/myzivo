@@ -36,6 +36,15 @@ const DAY_TOKENS: Record<string, WeekIndex> = {
 };
 
 const DASH_RE = /[-–—]/g;
+const JSON_DAY_KEYS: Record<string, WeekIndex> = {
+  sun: 0,
+  mon: 1,
+  tue: 2,
+  wed: 3,
+  thu: 4,
+  fri: 5,
+  sat: 6,
+};
 
 function normalizeDashes(s: string): string {
   return s.replace(DASH_RE, "-");
@@ -75,11 +84,50 @@ function parseClock(raw: string): number | null {
   return h * 60 + min;
 }
 
+function parseJsonSchedule(input: string): WeekSchedule | null {
+  if (!input.trim().startsWith("{")) return null;
+  try {
+    const parsed = JSON.parse(input) as Record<string, unknown>;
+    const schedule: WeekSchedule = {};
+    let openDays = 0;
+    let twentyFourHourDays = 0;
+
+    for (const [dayKey, day] of Object.entries(parsed)) {
+      const dayIndex = JSON_DAY_KEYS[dayKey.slice(0, 3).toLowerCase()];
+      if (dayIndex === undefined || !day || typeof day !== "object") continue;
+      const info = day as Record<string, unknown>;
+      if (info.closed === true) continue;
+
+      openDays += 1;
+      if (info.is24h === true) {
+        schedule[dayIndex] = [{ start: 0, end: 24 * 60 }];
+        twentyFourHourDays += 1;
+        continue;
+      }
+
+      const open = typeof info.open === "string" ? parseClock(info.open) : null;
+      const close = typeof info.close === "string" ? parseClock(info.close) : null;
+      if (open != null && close != null) {
+        schedule[dayIndex] = [{ start: open, end: close }];
+      }
+    }
+
+    if (openDays === 0) return { alwaysClosed: true };
+    if (openDays === 7 && twentyFourHourDays === 7) return { alwaysOpen: true };
+    return Object.keys(schedule).length ? schedule : null;
+  } catch {
+    return null;
+  }
+}
+
 /** Parse free-text hours into a per-day schedule. Returns null if unparseable. */
 export function parseHours(input: string | null | undefined): WeekSchedule | null {
   if (!input) return null;
   const text = normalizeDashes(input.trim().toLowerCase());
   if (!text) return null;
+
+  const jsonSchedule = parseJsonSchedule(input);
+  if (jsonSchedule) return jsonSchedule;
 
   if (/(^|\s)(24\s*\/\s*7|24\s*hours?|always\s*open|open\s*24)/.test(text)) {
     return { alwaysOpen: true };
@@ -109,20 +157,16 @@ export function parseHours(input: string | null | undefined): WeekSchedule | nul
     const close = parseClock(closeRaw);
     if (open == null || close == null) continue;
 
-    let days: WeekIndex[] = [];
-    if (fromTok === "daily" || fromTok === "everyday") {
-      days = [0, 1, 2, 3, 4, 5, 6];
-    } else if (fromTok === "weekday" || fromTok === "weekdays") {
-      days = [1, 2, 3, 4, 5];
-    } else if (fromTok === "weekend" || fromTok === "weekends") {
-      days = [0, 6];
-    } else {
+    const days: WeekIndex[] | null = (() => {
+      if (fromTok === "daily" || fromTok === "everyday") return [0, 1, 2, 3, 4, 5, 6];
+      if (fromTok === "weekday" || fromTok === "weekdays") return [1, 2, 3, 4, 5];
+      if (fromTok === "weekend" || fromTok === "weekends") return [0, 6];
       const from = DAY_TOKENS[fromTok];
       const to = toTok ? DAY_TOKENS[toTok] : from;
-      if (from === undefined || to === undefined) continue;
-      days = dayRange(from, to);
-    }
+      return from === undefined || to === undefined ? null : dayRange(from, to);
+    })();
 
+    if (!days) continue;
     for (const d of days) {
       (schedule[d] ||= []).push({ start: open, end: close });
     }

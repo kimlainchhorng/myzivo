@@ -21,7 +21,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useZivoOFMode } from "@/hooks/useZivoOFMode";
 import MediaGalleryLightbox from "./MediaGalleryLightbox";
 import { OPEN_MEDIA_EVENT, type OpenMediaDetail } from "@/lib/chat/openMedia";
-import { openP2PTransfer } from "./P2PTransferSheet";
+import { openP2PTransfer } from "@/lib/p2pTransfer";
 import { signedUrlFor } from "@/lib/security/signedMedia";
 import { topicForPairSync } from "@/lib/security/channelName";
 import ArrowLeft from "lucide-react/dist/esm/icons/arrow-left";

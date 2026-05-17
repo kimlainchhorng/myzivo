@@ -5,7 +5,7 @@
  * security settings page so they can see "where you're signed in" and revoke
  * any rogue session via /revoke-session.
  */
-import { createClient } from "npm:@supabase/supabase-js@2.49.1";
+import { createClient } from "../_shared/deps.ts";
 
 const ALLOWED_HEADERS = "authorization, x-client-info, apikey, content-type";
 function cors(req: Request) {

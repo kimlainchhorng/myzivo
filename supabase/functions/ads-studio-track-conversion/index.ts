@@ -1,6 +1,6 @@
 // Conversion attribution: called after a successful order to link it back to an ad click.
 // Updates the food_orders row with click_id/creative_id/variant_id/platform and logs a conversion event.
-import { createClient } from "npm:@supabase/supabase-js@2.49.1";
+import { createClient } from "../_shared/deps.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

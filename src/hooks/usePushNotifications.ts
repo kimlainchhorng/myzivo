@@ -8,7 +8,6 @@ import { PushNotifications, Token, PushNotificationSchema, ActionPerformed } fro
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import ChatNotificationToast from "@/components/chat/ChatNotificationToast";
 import { safeInternalPath } from "@/lib/urlSafety";
 
 export interface NotificationData {
@@ -122,17 +121,23 @@ export const usePushNotifications = () => {
   }, []);
 
   const showChatToast = useCallback((senderId: string, senderName: string, messageText: string, senderAvatar?: string | null) => {
-    toast.custom((toastId) => createElement(ChatNotificationToast, {
-      senderId,
-      senderName,
-      senderAvatar,
-      messageText: messageText || "Sent you a message",
-      onDismiss: () => toast.dismiss(toastId),
-      onReply: (id: string) => {
-        try { sessionStorage.setItem("pendingChatWith", id); } catch {}
-        window.location.href = `/chat?with=${encodeURIComponent(id)}`;
-      },
-    }), { duration: 5000 });
+    void import("@/components/chat/ChatNotificationToast")
+      .then(({ default: ChatNotificationToast }) => {
+        toast.custom((toastId) => createElement(ChatNotificationToast, {
+          senderId,
+          senderName,
+          senderAvatar,
+          messageText: messageText || "Sent you a message",
+          onDismiss: () => toast.dismiss(toastId),
+          onReply: (id: string) => {
+            try { sessionStorage.setItem("pendingChatWith", id); } catch {}
+            window.location.href = `/chat?with=${encodeURIComponent(id)}`;
+          },
+        }), { duration: 5000 });
+      })
+      .catch(() => {
+        toast.message(senderName, { description: messageText || "Sent you a message" });
+      });
   }, []);
 
   // Check if push notifications are supported (native or web with service worker)

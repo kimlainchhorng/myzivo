@@ -9,7 +9,7 @@
  * Special value sessionId: "all_others" terminates every session except the
  * caller's current one (matched by x-device-fingerprint header).
  */
-import { createClient } from "npm:@supabase/supabase-js@2.49.1";
+import { createClient } from "../_shared/deps.ts";
 
 const ALLOWED_HEADERS = "authorization, x-client-info, apikey, content-type, x-device-fingerprint";
 function cors(req: Request) {

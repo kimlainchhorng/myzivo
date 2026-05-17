@@ -16,35 +16,15 @@ import DollarSign from "lucide-react/dist/esm/icons/dollar-sign";
 import Send from "lucide-react/dist/esm/icons/send";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import Wallet from "lucide-react/dist/esm/icons/wallet";
+import {
+  P2P_TRANSFER_EVENT,
+  openP2PTransfer,
+  subscribeP2PTransfer,
+  type P2PTransferDetail,
+} from "@/lib/p2pTransfer";
 
-export const P2P_TRANSFER_EVENT = "zivo:p2p-transfer-open";
-
-export interface P2PTransferDetail {
-  receiverId: string;
-  receiverName: string;
-  /** "send" creates a transfer; "request" flips it into an ask. */
-  mode?: "send" | "request";
-}
-
-// The sheet is lazy-loaded inside a Suspense boundary in App.tsx, so on the
-// very first tap the window event listener may not be attached yet — the
-// CustomEvent fires into the void and "nothing happens". To avoid that, we
-// also stash the latest open-request at module scope and have the listener
-// drain it on mount.
-let pendingOpen: P2PTransferDetail | null = null;
-const liveSubscribers = new Set<(d: P2PTransferDetail) => void>();
-
-export function openP2PTransfer(detail: P2PTransferDetail) {
-  if (liveSubscribers.size > 0) {
-    for (const cb of liveSubscribers) cb(detail);
-  } else {
-    pendingOpen = detail;
-  }
-  // Keep dispatching the window event for any other listeners (analytics, etc.)
-  try {
-    window.dispatchEvent(new CustomEvent<P2PTransferDetail>(P2P_TRANSFER_EVENT, { detail }));
-  } catch { /* environments without DOM */ }
-}
+export { P2P_TRANSFER_EVENT, openP2PTransfer };
+export type { P2PTransferDetail };
 
 const QUICK_AMOUNTS = [5, 10, 20, 50, 100];
 
@@ -70,12 +50,7 @@ export default function P2PTransferSheet() {
       setDetail(d);
       setOpen(true);
     };
-    liveSubscribers.add(subscribe);
-    // Drain any open-request that fired before this component mounted.
-    if (pendingOpen) {
-      subscribe(pendingOpen);
-      pendingOpen = null;
-    }
+    const unsubscribe = subscribeP2PTransfer(subscribe);
     // Belt-and-braces: still listen on the window event in case the function
     // import path was mocked or hot-replaced.
     const winHandler = (e: Event) => {
@@ -84,7 +59,7 @@ export default function P2PTransferSheet() {
     };
     window.addEventListener(P2P_TRANSFER_EVENT, winHandler as EventListener);
     return () => {
-      liveSubscribers.delete(subscribe);
+      unsubscribe();
       window.removeEventListener(P2P_TRANSFER_EVENT, winHandler as EventListener);
     };
   }, []);

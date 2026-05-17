@@ -7,7 +7,7 @@
  * Owners (when their own store is being viewed) get a quick "Open Admin
  * Dashboard" band at the bottom.
  */
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 const HotelAskChat = lazy(() => import("@/components/lodging/HotelAskChat"));
 import { Helmet } from "react-helmet-async";
@@ -96,6 +96,9 @@ const AMENITY_ICON_MAP: Record<string, React.ComponentType<{ className?: string 
   spa: Sparkles,
 };
 
+const HERO_ACTION_BUTTON_CLASS =
+  "h-11 w-11 rounded-full bg-white/95 text-zinc-950 shadow-[0_8px_24px_rgba(0,0,0,0.22)] ring-1 ring-black/10 backdrop-blur-md flex items-center justify-center active:scale-95 transition hover:bg-white dark:bg-zinc-950/80 dark:text-white dark:ring-white/15";
+
 // Format a phone number nicely. KH local numbers (7–9 digits, no leading +)
 // get +855 prefix and grouped as +855 XX XXX XXX.
 const formatPhone = (raw?: string | null) => {
@@ -143,6 +146,85 @@ const parseParamDate = (s: string | null) => {
   return isValid(d) ? d : null;
 };
 
+function collectImageUrls(input: unknown): string[] {
+  if (!input) return [];
+  if (typeof input === "string") {
+    const trimmed = input.trim();
+    return trimmed ? [trimmed] : [];
+  }
+  if (Array.isArray(input)) {
+    return input.flatMap((item) => collectImageUrls(item));
+  }
+  if (typeof input === "object") {
+    const record = input as Record<string, unknown>;
+    return [
+      ...collectImageUrls(record.url),
+      ...collectImageUrls(record.src),
+      ...collectImageUrls(record.path),
+      ...collectImageUrls(record.publicUrl),
+      ...collectImageUrls(record.public_url),
+      ...collectImageUrls(record.image_url),
+      ...collectImageUrls(record.imageUrl),
+      ...collectImageUrls(record.photo_url),
+      ...collectImageUrls(record.thumbnail_url),
+    ];
+  }
+  return [];
+}
+
+function uniqueImageUrls(urls: string[]): string[] {
+  const seen = new Set<string>();
+  const result: string[] = [];
+  for (const url of urls) {
+    if (!url || seen.has(url)) continue;
+    seen.add(url);
+    result.push(url);
+  }
+  return result;
+}
+
+function RoomPhoto({ room, fallbackImages = [] }: { room: any; fallbackImages?: string[] }) {
+  const photoCandidates = useMemo(() => {
+    const roomPhotos = collectImageUrls(room.photos);
+    const coverIdx = typeof room.cover_photo_index === "number" ? room.cover_photo_index : 0;
+    const galleryFallback = roomPhotos.length ? [] : fallbackImages;
+    return uniqueImageUrls([
+      roomPhotos[coverIdx],
+      ...collectImageUrls(room.cover_photo),
+      ...collectImageUrls(room.gallery_images),
+      ...collectImageUrls(room.image_urls),
+      ...roomPhotos,
+      ...galleryFallback,
+    ].filter((url): url is string => !!url));
+  }, [fallbackImages, room]);
+  const photoKey = photoCandidates.join("|");
+  const [photoIndex, setPhotoIndex] = useState(0);
+  useEffect(() => { setPhotoIndex(0); }, [photoKey]);
+  const photo = photoCandidates[photoIndex];
+  const photoSrc = useMemo(() => photo ? optimizeImage(photo, 320) || photo : null, [photo]);
+
+  if (!photo || !photoSrc) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-emerald-500/10 via-sky-500/10 to-violet-500/10">
+        <Hotel className="w-6 h-6 text-muted-foreground" />
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={photoSrc}
+      alt={room.name}
+      className="w-full h-full object-cover"
+      loading="lazy"
+      decoding="async"
+      onError={() => {
+        setPhotoIndex((idx) => Math.min(idx + 1, photoCandidates.length));
+      }}
+    />
+  );
+}
+
 interface PromoInfo {
   type: "percent" | "fixed";
   value: number;
@@ -188,27 +270,60 @@ export default function HotelResortDetailPage() {
   const rooms = roomsQuery.data;
   const activeRooms = useMemo(() => rooms.filter((r: any) => r.is_active !== false), [rooms]);
 
-  const cover = store?.banner_url || store?.logo_url || null;
   const location = store?.address || "";
   const galleryImages = useMemo<string[]>(() => {
-    const raw = (store as any)?.gallery_images;
-    let urls: string[] = [];
-    if (Array.isArray(raw)) {
-      urls = raw
-        .map((item: any) => (typeof item === "string" ? item : item?.url || item?.src || ""))
-        .filter((u): u is string => typeof u === "string" && u.length > 0);
-    }
-    if (cover && !urls.includes(cover)) urls.unshift(cover);
-    return urls;
-  }, [store, cover]);
+    const roomPhotos = activeRooms.flatMap((room: any) => [
+      ...collectImageUrls(room.photos),
+      ...collectImageUrls(room.gallery_images),
+      ...collectImageUrls(room.image_urls),
+      ...collectImageUrls(room.cover_photo),
+    ]);
+    return uniqueImageUrls([
+      ...collectImageUrls(store?.banner_url),
+      ...collectImageUrls((store as any)?.gallery_images),
+      ...roomPhotos,
+    ]);
+  }, [activeRooms, store]);
+  const galleryKey = galleryImages.join("|");
+  const [failedPhotoUrls, setFailedPhotoUrls] = useState<Set<string>>(() => new Set());
+  const markPhotoFailed = useCallback((url: string | null | undefined) => {
+    if (!url) return;
+    setFailedPhotoUrls((prev) => {
+      if (prev.has(url)) return prev;
+      const next = new Set(prev);
+      next.add(url);
+      return next;
+    });
+  }, []);
+  const lastGalleryKeyRef = useRef(galleryKey);
+  useEffect(() => {
+    if (lastGalleryKeyRef.current === galleryKey) return;
+    lastGalleryKeyRef.current = galleryKey;
+    setFailedPhotoUrls(new Set());
+  }, [galleryKey]);
+  const visibleGalleryImages = useMemo(
+    () => galleryImages.filter((url) => !failedPhotoUrls.has(url)),
+    [failedPhotoUrls, galleryImages],
+  );
+  const cover = visibleGalleryImages[0] || null;
+  const logoUrl = collectImageUrls(store?.logo_url)[0] || null;
+  const coverImageSrc = useMemo(() => cover ? optimizeImage(cover, 1024) || cover : null, [cover]);
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [lightboxIdx, setLightboxIdx] = useState(0);
   const [showStickyHeader, setShowStickyHeader] = useState(false);
-  const [coverFailed, setCoverFailed] = useState(false);
-  const [logoFailed, setLogoFailed] = useState(false);
-  // Reset failure flags whenever the underlying urls change
-  useEffect(() => { setCoverFailed(false); }, [cover]);
-  useEffect(() => { setLogoFailed(false); }, [store?.logo_url]);
+  const profileImageCandidates = useMemo(
+    () => uniqueImageUrls([logoUrl, cover, ...visibleGalleryImages].filter((url): url is string => !!url)),
+    [cover, logoUrl, visibleGalleryImages],
+  );
+  const profileImageUrl = profileImageCandidates.find((url) => !failedPhotoUrls.has(url)) || null;
+  const handleProfileImageError = () => {
+    if (!profileImageUrl) return;
+    markPhotoFailed(profileImageUrl);
+  };
+  useEffect(() => {
+    if (visibleGalleryImages.length > 0 && lightboxIdx >= visibleGalleryImages.length) setLightboxIdx(0);
+  }, [lightboxIdx, visibleGalleryImages.length]);
+  const activeLightboxPhoto = visibleGalleryImages[lightboxIdx] || visibleGalleryImages[0] || "";
   const heroSentinelRef = useRef<HTMLDivElement | null>(null);
   const [isFavorite, setIsFavorite] = useState<boolean>(() => {
     if (!storeId) return false;
@@ -293,7 +408,7 @@ export default function HotelResortDetailPage() {
   }, [activeRooms]);
 
   // Apply promo to a base price -> { discounted, pctOff }
-  const applyPromo = (baseCents: number) => {
+  const applyPromo = useCallback((baseCents: number) => {
     if (!baseCents || !promo) return { discounted: baseCents, pctOff: 0 };
     if (promo.type === "percent") {
       const pct = Math.round(promo.value);
@@ -303,9 +418,36 @@ export default function HotelResortDetailPage() {
     const discounted = Math.max(0, baseCents - off);
     const pctOff = Math.round((1 - discounted / baseCents) * 100);
     return { discounted, pctOff };
-  };
+  }, [promo]);
 
-  const minDeal = useMemo(() => applyPromo(minPriceCents), [minPriceCents, promo]);
+  const roomPricePresentation = useCallback((room: any) => {
+    const baseCents = Number(room?.base_rate_cents) || 0;
+    const promoDeal = applyPromo(baseCents);
+    if (promoDeal.pctOff > 0 && promoDeal.discounted < baseCents) {
+      return {
+        displayCents: promoDeal.discounted,
+        strikeCents: baseCents,
+        discountPct: promoDeal.pctOff,
+      };
+    }
+
+    const originalCents = Number(room?.original_rate_cents) || 0;
+    if (originalCents > baseCents && baseCents > 0) {
+      return {
+        displayCents: baseCents,
+        strikeCents: originalCents,
+        discountPct: Math.round((1 - baseCents / originalCents) * 100),
+      };
+    }
+
+    return {
+      displayCents: baseCents,
+      strikeCents: 0,
+      discountPct: 0,
+    };
+  }, [applyPromo]);
+
+  const minDeal = useMemo(() => applyPromo(minPriceCents), [applyPromo, minPriceCents]);
 
   const [searchParams] = useSearchParams();
   const [checkIn, setCheckIn] = useState<Date>(() => parseParamDate(searchParams.get("ci")) ?? todayUTC());
@@ -526,28 +668,37 @@ export default function HotelResortDetailPage() {
       <div className="relative">
         <button
           type="button"
-          onClick={() => { if (galleryImages.length) { setLightboxIdx(0); setLightboxOpen(true); } }}
-          disabled={!galleryImages.length}
-          aria-label={galleryImages.length ? `View all ${galleryImages.length} photos` : "Hotel cover"}
+          onClick={() => { if (visibleGalleryImages.length) { setLightboxIdx(0); setLightboxOpen(true); } }}
+          disabled={!visibleGalleryImages.length}
+          aria-label={visibleGalleryImages.length ? `View all ${visibleGalleryImages.length} photos` : "Hotel cover"}
           className="relative h-56 md:h-80 lg:h-[420px] w-full overflow-hidden bg-muted block group"
         >
-          {cover && !coverFailed ? (
+          {cover && coverImageSrc ? (
             <img
-              src={optimizeImage(cover, 1024)}
+              src={coverImageSrc}
               alt={store?.name ? `${store.name} cover` : "Hotel cover"}
               className="absolute inset-0 w-full h-full object-cover transition-transform group-active:scale-[1.02]"
               loading="eager"
               decoding="async"
               fetchPriority="high"
-              onError={() => setCoverFailed(true)}
+              onError={() => markPhotoFailed(cover)}
             />
           ) : (
-            <div className="absolute inset-0 bg-gradient-to-br from-primary/30 via-primary/10 to-transparent" />
+            <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-emerald-500/20 via-sky-500/10 to-violet-500/15">
+              <div className="flex flex-col items-center gap-3 text-muted-foreground">
+                <span className="flex h-16 w-16 items-center justify-center rounded-3xl bg-background/80 shadow-sm ring-1 ring-border">
+                  <Hotel className="h-8 w-8" />
+                </span>
+                <span className="max-w-[240px] px-4 text-center text-sm font-bold text-foreground/70 line-clamp-2">
+                  {store?.name || "Hotel preview"}
+                </span>
+              </div>
+            </div>
           )}
           <div className="absolute inset-0 bg-gradient-to-t from-background via-background/10 md:via-transparent to-transparent" />
-          {galleryImages.length > 1 && (
+          {visibleGalleryImages.length > 1 && (
             <span className="absolute bottom-3 right-3 inline-flex items-center gap-1 rounded-full bg-black/60 backdrop-blur text-white text-[11px] font-semibold px-3 py-1.5">
-              <ImageIcon className="w-3.5 h-3.5" /> {galleryImages.length} photos
+              <ImageIcon className="w-3.5 h-3.5" /> {visibleGalleryImages.length} photos
             </span>
           )}
         </button>
@@ -557,9 +708,9 @@ export default function HotelResortDetailPage() {
           <button type="button"
             onClick={() => navigate(-1)}
             aria-label="Back"
-            className="h-10 w-10 rounded-full bg-background/80 backdrop-blur flex items-center justify-center shadow-sm active:scale-95 transition"
+            className={HERO_ACTION_BUTTON_CLASS}
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5" strokeWidth={2.6} />
           </button>
           <div className="flex items-center gap-2">
             <button type="button"
@@ -569,27 +720,27 @@ export default function HotelResortDetailPage() {
                 subtitle: store?.address || undefined,
                 meta: minPriceCents > 0 ? `From $${Math.round(minPriceCents / 100)} / night` : undefined,
                 deepLink: window.location.pathname,
-                image: store?.banner_url ?? null,
+                image: cover,
               })}
               aria-label="Share to chat"
-              className="h-10 w-10 rounded-full bg-background/80 backdrop-blur flex items-center justify-center shadow-sm active:scale-95 transition"
+              className={HERO_ACTION_BUTTON_CLASS}
             >
-              <MessageCircle className="w-5 h-5" />
+              <MessageCircle className="w-5 h-5" strokeWidth={2.4} />
             </button>
             <button type="button"
               onClick={toggleFavorite}
               aria-label={isFavorite ? "Remove from favorites" : "Save to favorites"}
               aria-pressed={isFavorite}
-              className="h-10 w-10 rounded-full bg-background/80 backdrop-blur flex items-center justify-center shadow-sm active:scale-95 transition"
+              className={HERO_ACTION_BUTTON_CLASS}
             >
-              <Heart className={cn("w-5 h-5 transition-colors", isFavorite ? "fill-rose-500 text-rose-500" : "text-foreground")} />
+              <Heart className={cn("w-5 h-5 transition-colors", isFavorite ? "fill-rose-500 text-rose-500" : "text-zinc-950 dark:text-white")} strokeWidth={2.6} />
             </button>
             <button type="button"
               onClick={handleShare}
               aria-label="Share"
-              className="h-10 w-10 rounded-full bg-background/80 backdrop-blur flex items-center justify-center shadow-sm active:scale-95 transition"
+              className={HERO_ACTION_BUTTON_CLASS}
             >
-              <Share2 className="w-5 h-5" />
+              <Share2 className="w-5 h-5" strokeWidth={2.4} />
             </button>
           </div>
         </div>
@@ -605,16 +756,16 @@ export default function HotelResortDetailPage() {
           animate={{ opacity: 1, y: 0 }}
           className="relative rounded-2xl border border-border bg-card shadow-sm p-4 pt-8"
         >
-          {/* Logo avatar floating over the cover */}
-          {store?.logo_url && !logoFailed && (
+          {/* Profile avatar floating over the cover */}
+          {profileImageUrl && (
             <div className="absolute -top-7 left-4 h-14 w-14 rounded-2xl overflow-hidden border-2 border-background bg-muted shadow-md ring-1 ring-border">
               <img
-                src={optimizeImage(store.logo_url, 120, "square")}
-                alt={`${store.name} logo`}
+                src={optimizeImage(profileImageUrl, 120, "square")}
+                alt={store?.name ? `${store.name} profile photo` : "Hotel profile photo"}
                 className="w-full h-full object-cover"
                 loading="eager"
                 decoding="async"
-                onError={() => setLogoFailed(true)}
+                onError={handleProfileImageError}
               />
             </div>
           )}
@@ -780,6 +931,123 @@ export default function HotelResortDetailPage() {
             )}
           </div>
         )}
+
+        {!isLoading && !!store?.description && (
+          <section className="mt-4 rounded-[24px] border border-border bg-card p-4 shadow-sm">
+            <div className="flex items-start gap-3">
+              {profileImageUrl ? (
+                <img
+                  src={optimizeImage(profileImageUrl, 96, "square")}
+                  alt={store?.name ? `${store.name} profile photo` : "Hotel profile photo"}
+                  className="h-12 w-12 shrink-0 rounded-2xl border border-border object-cover"
+                  loading="lazy"
+                  decoding="async"
+                  onError={handleProfileImageError}
+                />
+              ) : (
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-emerald-500/10 text-emerald-600">
+                  <Hotel className="h-6 w-6" />
+                </span>
+              )}
+              <div className="min-w-0 flex-1">
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-extrabold text-foreground leading-tight">Profile</p>
+                    <p className="mt-0.5 text-xs font-semibold text-foreground truncate">{store.name}</p>
+                  </div>
+                  <span className="shrink-0 rounded-full bg-emerald-500/10 px-2.5 py-1 text-[10px] font-bold text-emerald-700 dark:text-emerald-300">
+                    {activeRooms.length || "—"} rooms
+                  </span>
+                </div>
+                <p className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
+                  <MapPin className="h-3.5 w-3.5 shrink-0" />
+                  <span className="truncate">{location || "Location available after booking"}</span>
+                </p>
+              </div>
+            </div>
+            <p className="mt-3 text-sm leading-relaxed text-muted-foreground line-clamp-4">
+              <SafeCaption text={store.description} />
+            </p>
+            <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+              <div className="rounded-xl bg-muted/45 px-2 py-2">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Check-in</p>
+                <p className="mt-0.5 text-xs font-extrabold text-foreground">{profile?.check_in_from?.slice(0, 5) || "—"}</p>
+              </div>
+              <div className="rounded-xl bg-muted/45 px-2 py-2">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Check-out</p>
+                <p className="mt-0.5 text-xs font-extrabold text-foreground">{profile?.check_out_until?.slice(0, 5) || "—"}</p>
+              </div>
+              <div className="rounded-xl bg-muted/45 px-2 py-2">
+                <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground">Photos</p>
+                <p className="mt-0.5 text-xs font-extrabold text-foreground">{visibleGalleryImages.length || "—"}</p>
+              </div>
+            </div>
+            {!!profile?.languages?.length && (
+              <div className="mt-3 flex flex-wrap gap-1.5">
+                {profile.languages.slice(0, 6).map((lang: string) => (
+                  <span
+                    key={lang}
+                    className="rounded-full bg-emerald-50 px-2.5 py-1 text-[11px] font-semibold text-emerald-700 dark:bg-emerald-500/10 dark:text-emerald-300"
+                  >
+                    {lang}
+                  </span>
+                ))}
+              </div>
+            )}
+          </section>
+        )}
+
+        {!isLoading && visibleGalleryImages.length > 0 && (
+          <section className="mt-4 rounded-[24px] border border-border bg-card p-2 shadow-sm">
+            <div className="flex items-center justify-between gap-2 px-1 pb-2">
+              <div className="min-w-0">
+                <p className="text-sm font-extrabold text-foreground leading-tight">Photos</p>
+                <p className="text-[11px] text-muted-foreground">
+                  {visibleGalleryImages.length} photo{visibleGalleryImages.length === 1 ? "" : "s"} from the property and rooms
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => { setLightboxIdx(0); setLightboxOpen(true); }}
+                className="shrink-0 rounded-full bg-foreground px-3 py-1.5 text-[11px] font-bold text-background"
+              >
+                View all
+              </button>
+            </div>
+            <div className="grid h-44 grid-cols-4 grid-rows-2 gap-1.5 overflow-hidden rounded-[18px] md:h-64">
+              {visibleGalleryImages.slice(0, 5).map((photo, idx) => {
+                const isLead = idx === 0;
+                const remaining = visibleGalleryImages.length - 5;
+                return (
+                  <button
+                    key={`${photo}-${idx}`}
+                    type="button"
+                    onClick={() => { setLightboxIdx(idx); setLightboxOpen(true); }}
+                    className={cn(
+                      "group relative overflow-hidden bg-muted",
+                      isLead ? "col-span-2 row-span-2" : "",
+                    )}
+                    aria-label={`Open photo ${idx + 1} of ${visibleGalleryImages.length}`}
+                  >
+                    <img
+                      src={optimizeImage(photo, isLead ? 760 : 360)}
+                      alt={`${store?.name || "Hotel"} photo ${idx + 1}`}
+                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-300 group-active:scale-[1.02] md:group-hover:scale-[1.04]"
+                      loading={idx === 0 ? "eager" : "lazy"}
+                      decoding="async"
+                      onError={() => markPhotoFailed(photo)}
+                    />
+                    {idx === 4 && remaining > 0 && (
+                      <span className="absolute inset-0 flex items-center justify-center bg-black/55 text-sm font-extrabold text-white backdrop-blur-[1px]">
+                        +{remaining}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        )}
       </div>
 
       {/* Body wrapper for tablet/desktop centering */}
@@ -864,15 +1132,6 @@ export default function HotelResortDetailPage() {
         </Popover>
       </div>
 
-      {/* Description */}
-      {!!store?.description && (
-        <Section title="About">
-          <p className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap">
-            <SafeCaption text={store.description} />
-          </p>
-        </Section>
-      )}
-
       {/* Amenities */}
       {amenities.length > 0 && (
         <Section title="Amenities">
@@ -919,9 +1178,8 @@ export default function HotelResortDetailPage() {
           <div className="relative">
             <div className="-mx-4 px-4 pr-10 flex gap-3 overflow-x-auto snap-x snap-mandatory pb-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden md:mx-0 md:px-0 md:pr-0 md:overflow-visible md:grid md:grid-cols-2 lg:grid-cols-3 md:gap-3">
               {activeRooms.slice(0, 8).map((room) => {
-                const photo = room.photos?.[room.cover_photo_index ?? 0] || room.photos?.[0];
-                const deal = applyPromo(room.base_rate_cents);
-                const hasDiscount = deal.pctOff > 0 && deal.discounted < room.base_rate_cents;
+                const price = roomPricePresentation(room);
+                const hasDiscount = price.discountPct > 0 && price.strikeCents > price.displayCents;
                 const isTopPick = room.id === topPickRoomId;
                 const avail = roomAvailability.get(room.id);
                 const soldOut = !!avail?.soldOut;
@@ -934,13 +1192,7 @@ export default function HotelResortDetailPage() {
                     )}
                   >
                     <div className="h-28 bg-muted relative">
-                      {photo ? (
-                        <img src={optimizeImage(photo, 320)} alt={room.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Hotel className="w-6 h-6 text-muted-foreground" />
-                        </div>
-                      )}
+                      <RoomPhoto room={room} fallbackImages={visibleGalleryImages} />
                       {room.breakfast_included && (
                         <span className="absolute top-1.5 left-1.5 rounded-full bg-background/90 px-2 py-0.5 text-[9px] font-semibold text-primary">
                           Breakfast
@@ -948,7 +1200,7 @@ export default function HotelResortDetailPage() {
                       )}
                       {hasDiscount && !soldOut && (
                         <span className="absolute top-1.5 right-1.5 rounded-full bg-red-600 text-white px-1.5 py-0.5 text-[9px] font-bold">
-                          -{deal.pctOff}%
+                          -{price.discountPct}%
                         </span>
                       )}
                       {soldOut && (
@@ -977,11 +1229,11 @@ export default function HotelResortDetailPage() {
                         {hasDiscount ? (
                           <>
                             <span className="text-sm font-bold text-emerald-600">
-                              {formatPrice(deal.discounted)}
+                              {formatPrice(price.displayCents)}
                               <span className="text-[10px] font-normal text-muted-foreground"> /night</span>
                             </span>
                             <div className="text-[10px] text-muted-foreground line-through leading-none">
-                              {formatPrice(room.base_rate_cents)}
+                              {formatPrice(price.strikeCents)}
                             </div>
                           </>
                         ) : (
@@ -1383,7 +1635,7 @@ export default function HotelResortDetailPage() {
       )}
 
       {/* Photo lightbox */}
-      {lightboxOpen && galleryImages.length > 0 && (
+      {lightboxOpen && visibleGalleryImages.length > 0 && activeLightboxPhoto && (
         <div
           className="fixed inset-0 z-[60] bg-black flex items-center justify-center"
           onClick={() => setLightboxOpen(false)}
@@ -1391,9 +1643,10 @@ export default function HotelResortDetailPage() {
           aria-label="Photo gallery"
         >
           <img
-            src={galleryImages[lightboxIdx]}
-            alt={`Photo ${lightboxIdx + 1} of ${galleryImages.length}`}
+            src={optimizeImage(activeLightboxPhoto, 1280)}
+            alt={`Photo ${lightboxIdx + 1} of ${visibleGalleryImages.length}`}
             className="max-w-full max-h-full object-contain"
+            onError={() => markPhotoFailed(activeLightboxPhoto)}
             onClick={(e) => e.stopPropagation()}
           />
           <button
@@ -1405,13 +1658,13 @@ export default function HotelResortDetailPage() {
             <X className="w-5 h-5" />
           </button>
           <span className="absolute top-4 left-4 rounded-full bg-white/15 backdrop-blur text-white text-xs font-semibold px-3 py-1.5">
-            {lightboxIdx + 1} / {galleryImages.length}
+            {lightboxIdx + 1} / {visibleGalleryImages.length}
           </span>
-          {galleryImages.length > 1 && (
+          {visibleGalleryImages.length > 1 && (
             <>
               <button
                 type="button"
-                onClick={(e) => { e.stopPropagation(); setLightboxIdx((i) => (i - 1 + galleryImages.length) % galleryImages.length); }}
+                onClick={(e) => { e.stopPropagation(); setLightboxIdx((i) => (i - 1 + visibleGalleryImages.length) % visibleGalleryImages.length); }}
                 aria-label="Previous photo"
                 className="absolute left-3 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-white/15 backdrop-blur text-white flex items-center justify-center active:scale-95"
               >
@@ -1419,7 +1672,7 @@ export default function HotelResortDetailPage() {
               </button>
               <button
                 type="button"
-                onClick={(e) => { e.stopPropagation(); setLightboxIdx((i) => (i + 1) % galleryImages.length); }}
+                onClick={(e) => { e.stopPropagation(); setLightboxIdx((i) => (i + 1) % visibleGalleryImages.length); }}
                 aria-label="Next photo"
                 className="absolute right-3 top-1/2 -translate-y-1/2 h-11 w-11 rounded-full bg-white/15 backdrop-blur text-white flex items-center justify-center active:scale-95"
               >
@@ -1449,25 +1702,18 @@ export default function HotelResortDetailPage() {
             </div>
             <div className="flex-1 overflow-y-auto p-4 grid grid-cols-1 md:grid-cols-2 gap-3 pb-[max(env(safe-area-inset-bottom),16px)]">
               {activeRooms.map((room) => {
-                const photo = room.photos?.[room.cover_photo_index ?? 0] || room.photos?.[0];
-                const deal = applyPromo(room.base_rate_cents);
-                const hasDiscount = deal.pctOff > 0 && deal.discounted < room.base_rate_cents;
+                const price = roomPricePresentation(room);
+                const hasDiscount = price.discountPct > 0 && price.strikeCents > price.displayCents;
                 const isTopPick = room.id === topPickRoomId;
                 const avail = roomAvailability.get(room.id);
                 const soldOut = !!avail?.soldOut;
                 return (
                   <div key={room.id} className={cn("rounded-xl border border-border bg-card overflow-hidden", soldOut && "opacity-80")}>
                     <div className="h-28 bg-muted relative">
-                      {photo ? (
-                        <img src={optimizeImage(photo, 320)} alt={room.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Hotel className="w-6 h-6 text-muted-foreground" />
-                        </div>
-                      )}
+                        <RoomPhoto room={room} fallbackImages={visibleGalleryImages} />
                       {hasDiscount && !soldOut && (
                         <span className="absolute top-1.5 right-1.5 rounded-full bg-red-600 text-white px-1.5 py-0.5 text-[9px] font-bold">
-                          -{deal.pctOff}%
+                          -{price.discountPct}%
                         </span>
                       )}
                       {soldOut && (
@@ -1496,11 +1742,11 @@ export default function HotelResortDetailPage() {
                         {hasDiscount ? (
                           <>
                             <span className="text-sm font-bold text-emerald-600">
-                              {formatPrice(deal.discounted)}
+                              {formatPrice(price.displayCents)}
                               <span className="text-[10px] font-normal text-muted-foreground"> /night</span>
                             </span>
                             <div className="text-[10px] text-muted-foreground line-through leading-none">
-                              {formatPrice(room.base_rate_cents)}
+                              {formatPrice(price.strikeCents)}
                             </div>
                           </>
                         ) : (

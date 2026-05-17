@@ -20,6 +20,7 @@ let sharedPage: Page | null = null;
 import { createClient } from "@supabase/supabase-js";
 import { createHash } from "crypto";
 import path from "path";
+import fs from "fs";
 
 // ─── Config ───────────────────────────────────────────────────────────────────
 const SUPABASE_URL = process.env.SUPABASE_URL!;
@@ -36,11 +37,14 @@ const BUCKET = "store-assets";
 const args = process.argv.slice(2);
 const STORE_ID =
   args.find((a) => a.startsWith("--store-id="))?.split("=")[1] || null;
+const BOOKING_URL =
+  args.find((a) => a.startsWith("--booking-url="))?.split("=")[1] || null;
 const LIMIT = (() => {
   const v = args.find((a) => a.startsWith("--limit="))?.split("=")[1];
   return v ? parseInt(v, 10) : null;
 })();
 const DRY_RUN = args.includes("--dry-run");
+const bookingPageImageUrls = new Map<string, string>();
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
@@ -63,6 +67,97 @@ function hashUrl(url: string): string {
 function fileExtFromUrl(url: string): string {
   const m = url.match(/\.(jpg|jpeg|png|webp|gif)(?:\?|$)/i);
   return m ? m[1].toLowerCase() : "jpg";
+}
+
+function bookingImageId(url: string): string | null {
+  return url.match(/\/xdata\/images\/hotel\/[^/]+\/(\d+)\.(?:jpg|jpeg|png|webp|gif)(?:\?|$)/i)?.[1] || null;
+}
+
+function normalizeBookingUrl(rawUrl: string): string | null {
+  try {
+    const url = new URL(rawUrl.replace(/&amp;/g, "&"));
+    if (!/booking\.com$/i.test(url.hostname) && !/\.booking\.com$/i.test(url.hostname)) {
+      return null;
+    }
+    url.searchParams.set("selected_currency", "USD");
+    url.searchParams.set("lang", "en-us");
+    return `${url.origin}${url.pathname}?${url.searchParams.toString()}`;
+  } catch {
+    return null;
+  }
+}
+
+function loadBookingUrlMap(): Map<string, string> {
+  const map = new Map<string, string>();
+  const files = fs
+    .readdirSync(".")
+    .filter((name) => name.startsWith("booking-") && name.endsWith(".json"));
+
+  for (const file of files) {
+    try {
+      const raw = JSON.parse(fs.readFileSync(file, "utf8"));
+      const visit = (value: unknown) => {
+        if (!value || typeof value !== "object") return;
+        if (Array.isArray(value)) {
+          value.forEach(visit);
+          return;
+        }
+
+        const record = value as Record<string, unknown>;
+        const id = record.storeId || record.store_id || record.id;
+        const rawUrl =
+          record.bookingUrl ||
+          record.booking_url ||
+          record.cleanUrl ||
+          record.source_url ||
+          record.url;
+
+        if (
+          typeof id === "string" &&
+          id.length > 30 &&
+          typeof rawUrl === "string" &&
+          rawUrl.includes("booking.com")
+        ) {
+          const url = normalizeBookingUrl(rawUrl);
+          if (url && !map.has(id)) map.set(id, url);
+        }
+
+        Object.values(record).forEach(visit);
+      };
+      visit(raw);
+    } catch {
+      // Ignore partial logs or unrelated JSON files.
+    }
+  }
+
+  return map;
+}
+
+function sourceUrlForDownload(url: string): string {
+  const id = bookingImageId(url);
+  if (!id) return url;
+  return bookingPageImageUrls.get(id) || url;
+}
+
+async function loadBookingPageImageUrls(page: Page, bookingUrl: string) {
+  console.log("  Loading Booking.com hotel page for signed image URLs...");
+  await page.goto(bookingUrl, {
+    waitUntil: "domcontentloaded",
+    timeout: 45_000,
+  });
+  await sleep(4_000);
+
+  const urls = await page.evaluate(() =>
+    Array.from(document.images)
+      .map((img) => img.currentSrc || img.src)
+      .filter((src) => src.includes("/xdata/images/hotel/")),
+  );
+
+  for (const url of urls) {
+    const id = bookingImageId(url);
+    if (id && !bookingPageImageUrls.has(id)) bookingPageImageUrls.set(id, url);
+  }
+  console.log(`  Found ${bookingPageImageUrls.size} signed hotel image URLs on Booking.com`);
 }
 
 async function downloadViaPlaywright(
@@ -189,7 +284,8 @@ async function migrateOneUrl(
     return data.publicUrl;
   }
 
-  const buffer = await downloadViaPlaywright(context, url);
+  const sourceUrl = sourceUrlForDownload(url);
+  const buffer = await downloadViaPlaywright(context, sourceUrl);
   if (!buffer) return null;
 
   const contentType = ext === "png" ? "image/png" : ext === "webp" ? "image/webp" : "image/jpeg";
@@ -215,6 +311,12 @@ async function processStore(
   let gallery: any[] = Array.isArray(profile?.gallery_images)
     ? profile!.gallery_images
     : [];
+  if (gallery.length === 0 && bookingPageImageUrls.size > 0) {
+    gallery = Array.from(bookingPageImageUrls.values())
+      .slice(0, 60)
+      .map((url, index) => ({ url, order: index }));
+    console.log(`  Rebuilt empty gallery from ${gallery.length} Booking.com page images`);
+  }
 
   // Migrate gallery items
   let migrated = 0;
@@ -236,6 +338,8 @@ async function processStore(
         newGallery.push({ url: newUrl });
       }
       migrated++;
+    } else {
+      newGallery.push(item);
     }
     if (i % 5 === 4) process.stdout.write(`  ...${i + 1}/${gallery.length}\r`);
   }
@@ -297,6 +401,8 @@ async function processStore(
           newPhotos.push({ url: newUrl });
         }
         roomMigrated++;
+      } else {
+        newPhotos.push(photo);
       }
     }
     console.log(`  Room "${room.name}": ${roomMigrated}/${photos.length} migrated`);
@@ -319,7 +425,7 @@ async function main() {
   // Fetch lodging stores to migrate
   let query = supabase
     .from("store_profiles")
-    .select("id, name, gallery_images")
+    .select("id, name, description, banner_url, logo_url, gallery_images")
     .in("category", ["lodging", "resort", "hotel"]);
 
   if (STORE_ID) query = query.eq("id", STORE_ID);
@@ -331,12 +437,17 @@ async function main() {
   }
 
   // Filter to stores that still have Booking URLs
-  const needsMigration = (stores || []).filter((s) => {
+  const needsMigration = STORE_ID ? (stores || []) : (stores || []).filter((s) => {
     const gallery = Array.isArray(s.gallery_images) ? s.gallery_images : [];
-    return gallery.some((item: any) => {
-      const u = extractUrl(item);
-      return u && isBookingUrl(u);
+    const hasGalleryBookingUrl = gallery.some((item: any) => {
+      const url = extractUrl(item);
+      return url && isBookingUrl(url);
     });
+    return (
+      hasGalleryBookingUrl ||
+      (s.banner_url && isBookingUrl(s.banner_url)) ||
+      (s.logo_url && isBookingUrl(s.logo_url))
+    );
   });
 
   const toProcess = LIMIT ? needsMigration.slice(0, LIMIT) : needsMigration;
@@ -367,10 +478,29 @@ async function main() {
   });
   await sleep(2000);
   sharedPage = page;
+  const bookingUrlsByStore = loadBookingUrlMap();
+  const directBookingUrl = BOOKING_URL ? normalizeBookingUrl(BOOKING_URL) : null;
+  console.log(`Loaded ${bookingUrlsByStore.size} saved Booking.com hotel URLs.`);
 
   let processed = 0;
   for (const store of toProcess) {
     try {
+      bookingPageImageUrls.clear();
+      const bookingUrl =
+        STORE_ID && directBookingUrl
+          ? directBookingUrl
+          : bookingUrlsByStore.get(store.id);
+      if (bookingUrl) {
+        try {
+          await loadBookingPageImageUrls(page, bookingUrl);
+        } catch (err) {
+          console.warn(
+            `  Could not load Booking.com page for signed images: ${(err as Error).message}`,
+          );
+        }
+      } else {
+        console.warn("  No saved Booking.com hotel URL for this store; using existing URLs only.");
+      }
       await processStore(context, store);
       processed++;
     } catch (err) {

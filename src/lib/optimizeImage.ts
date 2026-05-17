@@ -26,17 +26,54 @@ function pickBookingSquarePreset(width: number): number {
   return BOOKING_PRESETS_SQUARE[BOOKING_PRESETS_SQUARE.length - 1];
 }
 
+function bookingMaxPath(preset: number): string {
+  if (preset === 1024) return "/max1024x768/";
+  if (preset === 1280) return "/max1280x900/";
+  return `/max${preset}/`;
+}
+
+function resolveImageUrl(input: unknown): string | undefined {
+  if (!input) return undefined;
+  if (typeof input === "string") {
+    const trimmed = input.trim();
+    return trimmed || undefined;
+  }
+  if (Array.isArray(input)) {
+    for (const item of input) {
+      const url = resolveImageUrl(item);
+      if (url) return url;
+    }
+    return undefined;
+  }
+  if (typeof input === "object") {
+    const record = input as Record<string, unknown>;
+    return (
+      resolveImageUrl(record.url) ||
+      resolveImageUrl(record.src) ||
+      resolveImageUrl(record.path) ||
+      resolveImageUrl(record.publicUrl) ||
+      resolveImageUrl(record.public_url) ||
+      resolveImageUrl(record.imageUrl) ||
+      resolveImageUrl(record.image_url) ||
+      resolveImageUrl(record.photo_url) ||
+      resolveImageUrl(record.thumbnail_url)
+    );
+  }
+  return undefined;
+}
+
 /**
  * @param url   Source URL (may be null/undefined — returns undefined)
  * @param size  Desired display width in CSS px (DPR is accounted for internally)
  * @param mode  "cover" rectangular preset (default) or "square" thumbnail
  */
 export function optimizeImage(
-  url: string | null | undefined,
+  url: unknown,
   size: number = 400,
   mode: "cover" | "square" = "cover",
 ): string | undefined {
-  if (!url) return undefined;
+  const sourceUrl = resolveImageUrl(url);
+  if (!sourceUrl) return undefined;
 
   // Account for device pixel ratio so retina screens still look sharp,
   // but cap at 2x — 3x rarely buys perceptible quality and doubles bytes.
@@ -44,27 +81,26 @@ export function optimizeImage(
   const targetPx = Math.round(size * dpr);
 
   // ── Booking.com / bstatic CDN ─────────────────────────────────────────────
-  if (url.includes("bstatic.com")) {
+  if (sourceUrl.includes("bstatic.com")) {
     if (mode === "square") {
       const preset = pickBookingSquarePreset(targetPx);
-      return url
+      return sourceUrl
         .replace(/\/square\d+\//, `/square${preset}/`)
         .replace(/\/max\d+(x\d+)?\//, `/square${preset}/`)
         .replace(/\/crop\/\d+x\d+\//, `/square${preset}/`);
     }
     const preset = pickBookingMaxPreset(targetPx);
-    // Booking's "max" variants keep aspect ratio. max1280x900 includes a height
-    // hint; smaller presets are single-dimension (max500 = ≤500px on long side).
-    const replacement = preset >= 1024 ? `/max${preset}x${Math.round(preset * 0.7)}/` : `/max${preset}/`;
-    return url
+    // Booking's supported max presets are not a pure aspect-ratio formula.
+    const replacement = bookingMaxPath(preset);
+    return sourceUrl
       .replace(/\/max\d+(x\d+)?\//, replacement)
       .replace(/\/square\d+\//, replacement)
       .replace(/\/crop\/\d+x\d+\//, replacement);
   }
 
   // ── Supabase Storage public URL ──────────────────────────────────────────
-  if (url.includes(SUPABASE_OBJECT)) {
-    const transformed = url.replace(SUPABASE_OBJECT, SUPABASE_RENDER);
+  if (sourceUrl.includes(SUPABASE_OBJECT)) {
+    const transformed = sourceUrl.replace(SUPABASE_OBJECT, SUPABASE_RENDER);
     const sep = transformed.includes("?") ? "&" : "?";
     const params =
       mode === "square"
@@ -74,5 +110,5 @@ export function optimizeImage(
   }
 
   // Unknown host — return as-is. The browser will load the original.
-  return url;
+  return sourceUrl;
 }

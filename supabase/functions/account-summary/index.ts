@@ -1,5 +1,5 @@
 // Account Summary v2026 — single endpoint returning profile + counts + ZIVO+ tier
-import { createClient } from "npm:@supabase/supabase-js@2.57.0";
+import { createClient } from "../_shared/deps.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

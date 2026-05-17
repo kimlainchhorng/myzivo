@@ -9,12 +9,8 @@ const pkg = _require("./package.json") as { version: string };
 
 const manualChunkGroups = {
   "vendor-react": ["react", "react-dom", "react-router-dom"],
-  "vendor-charts": ["recharts"],
-  "vendor-motion": ["framer-motion"],
-  "vendor-stripe": ["@stripe/stripe-js", "@stripe/react-stripe-js"],
   "vendor-supabase": ["@supabase/supabase-js"],
   "vendor-query": ["@tanstack/react-query"],
-  "vendor-icons": ["lucide-react"],
   // Keep all Radix in ONE chunk because splitting can evaluate shared internals
   // out of order across chunks.
   "vendor-radix": [
@@ -27,15 +23,6 @@ const manualChunkGroups = {
     "@radix-ui/react-accordion",
     "@radix-ui/react-tooltip",
   ],
-  "vendor-forms": ["react-hook-form", "@hookform/resolvers", "zod"],
-  "vendor-maps": ["@react-google-maps/api"],
-  "vendor-dates": ["date-fns"],
-  "vendor-carousel": ["embla-carousel-react", "embla-carousel-autoplay"],
-  "vendor-livekit": ["livekit-client"],
-  "vendor-pdf": ["jspdf", "jspdf-autotable"],
-  "vendor-canvas": ["html2canvas", "html-to-image"],
-  "vendor-media": ["@ffmpeg/ffmpeg", "@ffmpeg/util", "@ffmpeg/core"],
-  "vendor-scanning": ["@zxing/browser", "jsqr", "qrcode.react"],
 } as const;
 
 const packageSegment = (packageName: string) =>
@@ -54,6 +41,30 @@ const manualChunks = (id: string) => {
     }
   }
 };
+
+const pwaPrecacheGlobPatterns = [
+  "index.html",
+  "manifest.webmanifest",
+  "favicon.ico",
+  "assets/index-*.js",
+  "assets/vendor-react-*.js",
+  "assets/vendor-radix-*.js",
+  "assets/vendor-supabase-*.js",
+  "assets/*.css",
+  "pwa-icons/*.png",
+];
+
+const pwaPrecacheGlobIgnores = [
+  "**/mediapipe/**",
+  "**/stickers/**",
+  "**/gifts/**",
+  "**/vehicles/**",
+  "**/flags/**",
+  "**/videos/**",
+  "**/payments/**",
+  "**/brand-logos/**",
+  "**/destinations/**",
+];
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
@@ -109,20 +120,11 @@ export default defineConfig(({ mode }) => ({
       filename: "sw.js",
       injectManifest: {
         rollupFormat: "iife",
-        globPatterns: ["**/*.{js,css,html,ico,svg,woff2}"],
-        // Skip large media bundles from precache — they get runtime-cached on
-        // first use instead of eating the user's data on initial install.
-        globIgnores: [
-          "**/mediapipe/**",
-          "**/stickers/**",
-          "**/gifts/**",
-          "**/vehicles/**",
-          "**/flags/**",
-          "**/videos/**",
-          "**/payments/**",
-          "**/brand-logos/**",
-          "**/destinations/**",
-        ],
+        // Keep the offline app shell cached, but do not precache every lazy
+        // route chunk. The old manifest pulled 1,200+ files (~18 MB) on
+        // install/update, competing with normal app navigation on slow phones.
+        globPatterns: pwaPrecacheGlobPatterns,
+        globIgnores: pwaPrecacheGlobIgnores,
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
       },
       includeAssets: ["favicon.ico", "robots.txt", "pwa-icons/*.png"],
@@ -186,18 +188,8 @@ export default defineConfig(({ mode }) => ({
         ]
       },
       workbox: {
-        globPatterns: ["**/*.{js,css,html,ico,svg,woff2}"],
-        globIgnores: [
-          "**/mediapipe/**",
-          "**/stickers/**",
-          "**/gifts/**",
-          "**/vehicles/**",
-          "**/flags/**",
-          "**/videos/**",
-          "**/payments/**",
-          "**/brand-logos/**",
-          "**/destinations/**",
-        ],
+        globPatterns: pwaPrecacheGlobPatterns,
+        globIgnores: pwaPrecacheGlobIgnores,
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         navigateFallbackDenylist: [/^\/~oauth/],
         runtimeCaching: [

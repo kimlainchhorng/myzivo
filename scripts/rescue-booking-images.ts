@@ -10,7 +10,7 @@
  * Usage:
  *   set -a && . ./.scrape-session.local && set +a
  *   node --experimental-strip-types --no-warnings \
- *     scripts/rescue-booking-images.ts [--store-id=UUID] [--limit=N]
+ *     scripts/rescue-booking-images.ts [--store-id=UUID] [--booking-url=URL] [--start=N] [--limit=N]
  */
 
 import { chromium, type BrowserContext, type Page } from "playwright";
@@ -31,6 +31,9 @@ const BUCKET = "store-assets";
 
 const args = process.argv.slice(2);
 const STORE_ID = args.find((a) => a.startsWith("--store-id="))?.split("=")[1] || null;
+const BOOKING_URL = args.find((a) => a.startsWith("--booking-url="))?.split("=").slice(1).join("=") || null;
+const START_ARG = args.find((a) => a.startsWith("--start="))?.split("=")[1];
+const START = START_ARG ? parseInt(START_ARG, 10) : 0;
 const LIMIT_ARG = args.find((a) => a.startsWith("--limit="))?.split("=")[1];
 const LIMIT = LIMIT_ARG ? parseInt(LIMIT_ARG, 10) : null;
 const DRY_RUN = args.includes("--dry-run");
@@ -56,6 +59,21 @@ function isBookingImageUrl(url: string): boolean {
 function imageIdFromUrl(url: string): string | null {
   const m = url.match(/\/hotel\/[^/]+\/(\d+)\.(?:jpg|jpeg|png|webp)/i);
   return m ? m[1] : null;
+}
+
+function normalizeBookingUrl(raw: string): string {
+  try {
+    const url = new URL(raw);
+    url.searchParams.set("selected_currency", "USD");
+    url.searchParams.set("lang", "en-us");
+    url.searchParams.set("group_adults", "2");
+    url.searchParams.set("no_rooms", "1");
+    if (!url.searchParams.has("checkin")) url.searchParams.set("checkin", "2026-05-22");
+    if (!url.searchParams.has("checkout")) url.searchParams.set("checkout", "2026-05-23");
+    return `${url.origin}${url.pathname}?${url.searchParams.toString()}`;
+  } catch {
+    return raw;
+  }
 }
 
 function hashUrl(url: string): string {
@@ -90,9 +108,26 @@ async function uploadBuffer(
 // ─── Build storeId → bookingUrl map from log files ────────────────────────────
 function loadBookingUrlMap(): Map<string, string> {
   const map = new Map<string, string>();
-  const candidates = fs
-    .readdirSync(".")
-    .filter((f) => f.startsWith("booking-") && f.endsWith(".json"));
+  const candidates: string[] = [];
+  const walk = (dir: string) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const fullPath = path.join(dir, entry.name);
+      if (entry.isDirectory()) {
+        if ([
+          ".git",
+          ".booking-session",
+          "dist",
+          "node_modules",
+        ].includes(entry.name)) continue;
+        walk(fullPath);
+        continue;
+      }
+      if (entry.isFile() && entry.name.endsWith(".json")) {
+        candidates.push(fullPath);
+      }
+    }
+  };
+  walk(".");
 
   for (const f of candidates) {
     try {
@@ -118,7 +153,7 @@ function loadBookingUrlMap(): Map<string, string> {
           typeof url === "string" &&
           url.includes("booking.com")
         ) {
-          if (!map.has(id)) map.set(id, url);
+          if (!map.has(id)) map.set(id, normalizeBookingUrl(url));
         }
         for (const v of Object.values(obj)) visit(v);
       };
@@ -130,10 +165,41 @@ function loadBookingUrlMap(): Map<string, string> {
   return map;
 }
 
+async function storesWithBookingRoomPhotos(
+  eligibleStoreIds: Set<string>,
+): Promise<Set<string>> {
+  const out = new Set<string>();
+  const PAGE_SIZE = 1000;
+
+  for (let p = 0; ; p++) {
+    const { data, error } = await supabase
+      .from("lodge_rooms")
+      .select("store_id, photos")
+      .range(p * PAGE_SIZE, p * PAGE_SIZE + PAGE_SIZE - 1);
+    if (error) throw new Error(`lodge_rooms scan: ${error.message}`);
+    if (!data || data.length === 0) break;
+
+    for (const room of data) {
+      if (!eligibleStoreIds.has(room.store_id)) continue;
+      const photos = Array.isArray(room.photos) ? room.photos : [];
+      const hasBookingPhoto = photos.some((photo: any) => {
+        const url = extractUrl(photo);
+        return url && isBookingImageUrl(url);
+      });
+      if (hasBookingPhoto) out.add(room.store_id);
+    }
+
+    if (data.length < PAGE_SIZE) break;
+  }
+
+  return out;
+}
+
 // ─── Core: capture images for a single hotel ──────────────────────────────────
 async function captureHotelImages(
   context: BrowserContext,
   bookingUrl: string,
+  wantedIds?: Set<string>,
 ): Promise<Map<string, { buffer: Buffer; url: string; contentType: string }>> {
   // Key = image id (e.g. "558574196"), Value = best-quality buffer we captured
   const captured = new Map<
@@ -152,6 +218,7 @@ async function captureHotelImages(
       if (!ct.startsWith("image/")) return;
       const id = imageIdFromUrl(url);
       if (!id) return;
+      if (wantedIds?.size && !wantedIds.has(id)) return;
 
       const buf = await resp.body();
       const size = buf.length;
@@ -180,6 +247,22 @@ async function captureHotelImages(
       await sleep(400);
     }
     await sleep(1500);
+
+    // Dedicated photo tab exposes more thumbnails and causes the browser to
+    // fetch additional signed cf.bstatic.com image URLs.
+    const mainUrl = page.url();
+    try {
+      const galUrl = mainUrl.split("#")[0] + (mainUrl.includes("?") ? "&" : "?") + "activeTab=photosGallery";
+      await page.goto(galUrl, { waitUntil: "domcontentloaded", timeout: 30000 });
+      await sleep(1200);
+      for (let i = 0; i < 12; i++) {
+        await page.mouse.wheel(0, 1200).catch(() => {});
+        await sleep(250);
+      }
+      await sleep(1000);
+      await page.goto(mainUrl, { waitUntil: "domcontentloaded", timeout: 30000 });
+      await sleep(1000);
+    } catch {}
 
     // Try to open the photo gallery — multiple selector variants
     const gallerySelectors = [
@@ -218,17 +301,34 @@ async function captureHotelImages(
       await sleep(800);
     }
 
-    // Click on room rows to expand room galleries
+    // Make sure the classic Booking rooms table is present before trying room
+    // photo modals.
+    try {
+      const loaded = await page.$("#hprt-table, .hprt-table");
+      if (!loaded) {
+        const checkBtn = page.locator(
+          'button:has-text("Check availability"), input[value="Check availability"], .availability-search__search--button, #availability_search_submit',
+        ).first();
+        await checkBtn.scrollIntoViewIfNeeded({ timeout: 3000 });
+        await checkBtn.click({ timeout: 3000 });
+        await page.waitForSelector("#hprt-table, .hprt-table", { timeout: 12000 });
+      }
+      await sleep(1000);
+    } catch {}
+
+    // Click on room rows to expand room galleries. Booking has both modern
+    // data-testid triggers and older .hprt-roomtype-icon-link anchors.
     try {
       const roomTriggers = await page
         .locator(
-          "[data-testid='room-block-photo'], button[aria-label*='photo'], img[data-room-photo]",
+          ".hprt-roomtype-icon-link, [data-testid='room-block-photo'], button[aria-label*='photo'], img[data-room-photo], [data-testid='room-name'], .room-link",
         )
         .all();
-      for (let i = 0; i < Math.min(roomTriggers.length, 8); i++) {
+      for (let i = 0; i < Math.min(roomTriggers.length, 12); i++) {
+        await roomTriggers[i].scrollIntoViewIfNeeded({ timeout: 2000 }).catch(() => {});
         await roomTriggers[i].click({ timeout: 2000 }).catch(() => {});
         await sleep(800);
-        for (let k = 0; k < 12; k++) {
+        for (let k = 0; k < 18; k++) {
           await page.keyboard.press("ArrowRight").catch(() => {});
           await sleep(200);
         }
@@ -265,7 +365,35 @@ async function processStore(
   console.log(`\n→ ${store.name} (${store.id})`);
   console.log(`  URL: ${bookingUrl.slice(0, 80)}`);
 
-  const captured = await captureHotelImages(context, bookingUrl);
+  const { data: profile } = await supabase
+    .from("store_profiles")
+    .select("banner_url, logo_url, gallery_images")
+    .eq("id", store.id)
+    .single();
+
+  const { data: rooms } = await supabase
+    .from("lodge_rooms")
+    .select("id, name, photos")
+    .eq("store_id", store.id);
+
+  const wantedIds = new Set<string>();
+  const addWantedId = (url: string | null) => {
+    if (!url || !isBookingImageUrl(url)) return;
+    const id = imageIdFromUrl(url);
+    if (id) wantedIds.add(id);
+  };
+  addWantedId(profile?.banner_url || null);
+  addWantedId(profile?.logo_url || null);
+  const profileGallery: any[] = Array.isArray(profile?.gallery_images)
+    ? profile!.gallery_images
+    : [];
+  profileGallery.forEach((item) => addWantedId(extractUrl(item)));
+  for (const room of rooms || []) {
+    const photos: any[] = Array.isArray(room.photos) ? (room.photos as any[]) : [];
+    photos.forEach((photo) => addWantedId(extractUrl(photo)));
+  }
+
+  const captured = await captureHotelImages(context, bookingUrl, wantedIds);
   console.log(`  Captured ${captured.size} unique images`);
 
   if (captured.size === 0) {
@@ -277,27 +405,24 @@ async function processStore(
   const idToPublicUrl = new Map<string, string>();
   let uploaded = 0;
   for (const [id, info] of captured) {
+    if (wantedIds.size > 0 && !wantedIds.has(id)) continue;
     const ext = fileExtFromUrl(info.url);
     const storagePath = `booking-import/${store.id}/${id}.${ext}`;
-    const publicUrl = await uploadBuffer(
-      info.buffer,
-      storagePath,
-      info.contentType || "image/jpeg",
-    );
+    const publicUrl = DRY_RUN
+      ? `dry-run://${storagePath}`
+      : await uploadBuffer(
+          info.buffer,
+          storagePath,
+          info.contentType || "image/jpeg",
+        );
     if (publicUrl) {
       idToPublicUrl.set(id, publicUrl);
       uploaded++;
     }
   }
-  console.log(`  Uploaded ${uploaded}/${captured.size} to storage`);
+  console.log(`  ${DRY_RUN ? "Would upload" : "Uploaded"} ${uploaded}/${captured.size} to storage`);
 
   // ── Update store_profiles (banner, logo, gallery_images) ───────────────────
-  const { data: profile } = await supabase
-    .from("store_profiles")
-    .select("banner_url, logo_url, gallery_images")
-    .eq("id", store.id)
-    .single();
-
   const rewrite = (origUrl: string | null): string | null => {
     if (!origUrl) return origUrl;
     if (!isBookingImageUrl(origUrl)) return origUrl;
@@ -309,9 +434,7 @@ async function processStore(
   const newBanner = rewrite(profile?.banner_url || null);
   const newLogo = rewrite(profile?.logo_url || null);
 
-  const origGallery: any[] = Array.isArray(profile?.gallery_images)
-    ? profile!.gallery_images
-    : [];
+  const origGallery: any[] = profileGallery;
   let galleryMigrated = 0;
   const newGallery = origGallery.map((item) => {
     const origUrl = extractUrl(item);
@@ -350,11 +473,6 @@ async function processStore(
   }
 
   // ── Update lodge_rooms.photos ──────────────────────────────────────────────
-  const { data: rooms } = await supabase
-    .from("lodge_rooms")
-    .select("id, name, photos")
-    .eq("store_id", store.id);
-
   let roomsTotal = 0;
   for (const room of rooms || []) {
     const photos: any[] = Array.isArray(room.photos) ? (room.photos as any[]) : [];
@@ -389,11 +507,12 @@ async function main() {
   if (DRY_RUN) console.log("** DRY RUN — no DB writes **\n");
 
   const urlMap = loadBookingUrlMap();
+  if (STORE_ID && BOOKING_URL) urlMap.set(STORE_ID, normalizeBookingUrl(BOOKING_URL));
   console.log(`Loaded ${urlMap.size} storeId→bookingUrl entries from logs.\n`);
 
   let query = supabase
     .from("store_profiles")
-    .select("id, name, gallery_images, banner_url")
+    .select("id, name, gallery_images, banner_url, logo_url")
     .in("category", ["lodging", "resort", "hotel"]);
   if (STORE_ID) query = query.eq("id", STORE_ID);
 
@@ -403,14 +522,21 @@ async function main() {
     process.exit(1);
   }
 
-  // Stores that need migration: any banner/gallery still on bstatic.com
+  const eligibleIds = new Set((stores || []).map((s) => s.id));
+  const roomNeeds = await storesWithBookingRoomPhotos(eligibleIds);
+
+  // Stores that need migration: any profile media or room photo still on
+  // bstatic.com. Store-id mode stays explicit even if only one side needs work.
   const needs = (stores || []).filter((s) => {
+    if (STORE_ID) return true;
     if (s.banner_url && isBookingImageUrl(s.banner_url)) return true;
+    if (s.logo_url && isBookingImageUrl(s.logo_url)) return true;
     const gallery = Array.isArray(s.gallery_images) ? s.gallery_images : [];
-    return gallery.some((it: any) => {
+    if (gallery.some((it: any) => {
       const u = extractUrl(it);
       return u && isBookingImageUrl(u);
-    });
+    })) return true;
+    return roomNeeds.has(s.id);
   });
 
   // Filter to those we have a booking URL for
@@ -420,7 +546,7 @@ async function main() {
     `${needs.length} stores need migration. ${withUrls.length} have booking URL, ${missing.length} missing.`,
   );
 
-  const toProcess = LIMIT ? withUrls.slice(0, LIMIT) : withUrls;
+  const toProcess = withUrls.slice(START, LIMIT != null ? START + LIMIT : undefined);
   if (toProcess.length === 0) {
     console.log("Nothing to process.");
     return;

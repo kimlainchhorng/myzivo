@@ -60,6 +60,33 @@ const emptyStore = {
   rating: 0, delivery_min: 30, is_active: true,
 };
 
+const PROTECTED_THIRD_PARTY_MEDIA_RE = /(^https?:\/\/)?([^/]+\.)?(booking\.com|bstatic\.com)\//i;
+const BROKEN_THIRD_PARTY_PROFILE_THUMB_RE = /\/xdata\/images\/hotel\/square240\//i;
+
+function mediaRefUrl(entry: unknown): string | null {
+  if (!entry) return null;
+  if (typeof entry === "string") return entry.trim() || null;
+  if (typeof entry !== "object") return null;
+  const ref = entry as Record<string, unknown>;
+  const value = ref.url || ref.src || ref.public_url || ref.path || ref.file;
+  return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function mediaUrls(value: unknown): string[] {
+  if (!value) return [];
+  if (Array.isArray(value)) return value.map(mediaRefUrl).filter(Boolean) as string[];
+  if (typeof value === "object") return Object.values(value).map(mediaRefUrl).filter(Boolean) as string[];
+  const url = mediaRefUrl(value);
+  return url ? [url] : [];
+}
+
+function usesBrokenThirdPartyProfileMedia(value: unknown) {
+  return mediaUrls(value).some((url) => (
+    PROTECTED_THIRD_PARTY_MEDIA_RE.test(url) &&
+    BROKEN_THIRD_PARTY_PROFILE_THUMB_RE.test(url)
+  ));
+}
+
 async function fetchAllAdminStores() {
   const countQuery = supabase
     .from("store_profiles")
@@ -161,10 +188,14 @@ export default function AdminStoresPage() {
 
   const getStoreAccountId = (id: string) => `CBD${id.replace(/-/g, '').slice(0, 8).toUpperCase()}`;
 
+  const hasMissingMediaIssue = (store: any) => {
+    return !mediaRefUrl(store.logo_url) || usesBrokenThirdPartyProfileMedia(store.logo_url);
+  };
+
   const getIssues = (store: any) => {
     const issues: string[] = [];
     if (!store.owner_id) issues.push("no-owner");
-    if (!store.logo_url || !store.banner_url) issues.push("missing-media");
+    if (hasMissingMediaIssue(store)) issues.push("missing-media");
     if (!store.address || typeof store.latitude !== "number" || typeof store.longitude !== "number") issues.push("needs-location");
     if (!store.phone) issues.push("missing-phone");
     if (!store.is_active) issues.push("inactive");
@@ -569,8 +600,8 @@ export default function AdminStoresPage() {
                               No owner assigned
                             </Badge>
                           )}
-                          {!store.logo_url || !store.banner_url ? (
-                            <Badge variant="outline" className="border-sky-300 bg-sky-50 px-2 py-0.5 text-[10px] font-medium text-sky-700">
+                          {hasMissingMediaIssue(store) ? (
+                            <Badge variant="outline" title="Missing or broken profile media" className="border-sky-300 bg-sky-50 px-2 py-0.5 text-[10px] font-medium text-sky-700">
                               Missing media
                             </Badge>
                           ) : null}

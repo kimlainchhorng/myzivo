@@ -1,5 +1,5 @@
 // track-promo-redemption — validates a promo code use, records redemption, attributes to campaign.
-import { createClient } from "npm:@supabase/supabase-js@2.49.1";
+import { createClient } from "../_shared/deps.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

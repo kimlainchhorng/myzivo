@@ -1,5 +1,5 @@
 // Wallet Summary v2026 — balance + recent txns in 1 call
-import { createClient } from "npm:@supabase/supabase-js@2.57.0";
+import { createClient } from "../_shared/deps.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

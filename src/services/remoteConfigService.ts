@@ -10,6 +10,13 @@ import { Database } from '@/integrations/supabase/types';
 type AppSetting = Database['public']['Tables']['app_settings']['Row'];
 type PricingConfig = Database['public']['Tables']['pricing_config']['Row'];
 
+const REMOTE_CONFIG_CACHE_KEY = 'zivo:remote-config:v1';
+
+type RemoteConfigCache = {
+  config: RemoteConfig;
+  lastFetch: number;
+};
+
 export interface RemoteConfig {
   // Pricing & fees
   platformMarkupPercent?: number;
@@ -42,7 +49,9 @@ class RemoteConfigService {
   private cacheDuration: number = 5 * 60 * 1000; // 5 minutes
   private refreshIntervals: NodeJS.Timeout[] = [];
 
-  private constructor() {}
+  private constructor() {
+    this.hydrateFromStorage();
+  }
 
   static getInstance(): RemoteConfigService {
     if (!RemoteConfigService.instance) {
@@ -80,22 +89,23 @@ class RemoteConfigService {
     }
 
     try {
-      // Fetch all app settings
-      const { data: settings, error: settingsError } = await supabase
-        .from('app_settings')
-        .select('*')
-        .is('tenant_id', null); // Global settings
+      const [settingsResult, pricingResult] = await Promise.all([
+        supabase
+          .from('app_settings')
+          .select('*')
+          .is('tenant_id', null), // Global settings
+        supabase
+          .from('pricing_config')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(1),
+      ]);
 
-      if (settingsError) throw settingsError;
+      if (settingsResult.error) throw settingsResult.error;
+      if (pricingResult.error) throw pricingResult.error;
 
-      // Fetch latest pricing config
-      const { data: pricingConfigs, error: pricingError } = await supabase
-        .from('pricing_config')
-        .select('*')
-        .order('created_at', { ascending: false })
-        .limit(1);
-
-      if (pricingError) throw pricingError;
+      const settings = settingsResult.data;
+      const pricingConfigs = pricingResult.data;
 
       // Build config object from settings
       const config: RemoteConfig = {};
@@ -122,6 +132,7 @@ class RemoteConfigService {
 
       this.config = config;
       this.lastFetch = now;
+      this.persistToStorage();
 
       return config;
     } catch (error: any) {
@@ -211,6 +222,32 @@ class RemoteConfigService {
   destroy(): void {
     this.refreshIntervals.forEach(interval => clearInterval(interval));
     this.refreshIntervals = [];
+  }
+
+  private hydrateFromStorage(): void {
+    try {
+      const raw = localStorage.getItem(REMOTE_CONFIG_CACHE_KEY);
+      if (!raw) return;
+
+      const parsed = JSON.parse(raw) as RemoteConfigCache;
+      if (!parsed?.config || typeof parsed.lastFetch !== 'number') return;
+
+      this.config = parsed.config;
+      this.lastFetch = parsed.lastFetch;
+    } catch {
+      // Ignore storage failures in private mode or restricted webviews.
+    }
+  }
+
+  private persistToStorage(): void {
+    try {
+      localStorage.setItem(
+        REMOTE_CONFIG_CACHE_KEY,
+        JSON.stringify({ config: this.config, lastFetch: this.lastFetch }),
+      );
+    } catch {
+      // Ignore storage failures in private mode or restricted webviews.
+    }
   }
 }
 

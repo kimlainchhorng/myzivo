@@ -1,6 +1,6 @@
 // Generates AI budget-shift / creative recommendations from the last 14d of spend rollups.
 // Uses Lovable AI Gateway (LOVABLE_API_KEY). Auth required: store owner or admin.
-import { createClient } from "npm:@supabase/supabase-js@2.45.0";
+import { createClient } from "../_shared/deps.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

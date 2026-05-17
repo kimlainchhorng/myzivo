@@ -1,5 +1,5 @@
 // Notifications Summary v2026 — unread count + latest 5 in 1 call
-import { createClient } from "npm:@supabase/supabase-js@2.57.0";
+import { createClient } from "../_shared/deps.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

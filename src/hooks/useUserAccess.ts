@@ -20,24 +20,66 @@ export interface UserAccess {
   storeId?: string;
 }
 
+const EMPTY_ACCESS: UserAccess = {
+  isAdmin: false,
+  isDriver: false,
+  isRestaurantOwner: false,
+  isCarRentalOwner: false,
+  isHotelOwner: false,
+  isFlightManager: false,
+  isStoreOwner: false,
+  isSupport: false,
+  isModerator: false,
+  isOperations: false,
+  roles: [],
+};
+
+let accessRpcAvailable: boolean | null = null;
+
+function normalizeAccess(data: any): UserAccess {
+  const roles = Array.isArray(data?.roles) ? data.roles.map(String) : [];
+  return {
+    isAdmin: Boolean(data?.isAdmin ?? data?.is_admin),
+    isDriver: Boolean(data?.isDriver ?? data?.is_driver),
+    isRestaurantOwner: Boolean(data?.isRestaurantOwner ?? data?.is_restaurant_owner),
+    isCarRentalOwner: Boolean(data?.isCarRentalOwner ?? data?.is_car_rental_owner),
+    isHotelOwner: Boolean(data?.isHotelOwner ?? data?.is_hotel_owner),
+    isFlightManager: Boolean(data?.isFlightManager ?? data?.is_flight_manager),
+    isStoreOwner: Boolean(data?.isStoreOwner ?? data?.is_store_owner),
+    isSupport: Boolean(data?.isSupport ?? data?.is_support),
+    isModerator: Boolean(data?.isModerator ?? data?.is_moderator),
+    isOperations: Boolean(data?.isOperations ?? data?.is_operations),
+    roles,
+    driverId: data?.driverId ?? data?.driver_id ?? undefined,
+    restaurantId: data?.restaurantId ?? data?.restaurant_id ?? undefined,
+    carRentalIds: Array.isArray(data?.carRentalIds)
+      ? data.carRentalIds
+      : Array.isArray(data?.car_rental_ids)
+        ? data.car_rental_ids
+        : undefined,
+    hotelId: data?.hotelId ?? data?.hotel_id ?? undefined,
+    storeId: data?.storeId ?? data?.store_id ?? undefined,
+  };
+}
+
 export const useUserAccess = (userId: string | undefined) => {
   return useQuery({
     queryKey: ["userAccess", userId],
     queryFn: async (): Promise<UserAccess> => {
       if (!userId) {
-        return {
-          isAdmin: false,
-          isDriver: false,
-          isRestaurantOwner: false,
-          isCarRentalOwner: false,
-          isHotelOwner: false,
-          isFlightManager: false,
-          isStoreOwner: false,
-          isSupport: false,
-          isModerator: false,
-          isOperations: false,
-          roles: [],
-        };
+        return EMPTY_ACCESS;
+      }
+
+      if (accessRpcAvailable !== false) {
+        const { data, error } = await (supabase as any).rpc("get_my_user_access");
+        if (!error && data) {
+          accessRpcAvailable = true;
+          return normalizeAccess(data);
+        }
+
+        if (error?.code === "PGRST202" || error?.code === "42883") {
+          accessRpcAvailable = false;
+        }
       }
 
       // Check all access in parallel

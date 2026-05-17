@@ -55,6 +55,7 @@ import { isOpenNow } from "@/lib/store/storeHours";
 import StoreDetailsDrawer from "@/components/store/StoreDetailsDrawer";
 
 const CATEGORY_ICONS: Record<string, string> = {
+  "hotel": "🏨", "resort": "🏝️", "hotel-resort": "🏨", "guest-house": "🏨",
   "food-market": "🛒", "grocery": "🛒", "restaurant": "🍽️", "fashion": "👗",
   "drink": "🥤", "mall": "🏬", "supermarket": "🏪", "salon": "💇",
   "electronics": "📱", "pharmacy": "💊", "car-rental": "🚗", "car-dealership": "🚙",
@@ -79,6 +80,125 @@ function formatWalk(mi: number): string {
 
 const getIcon = (c: string) => CATEGORY_ICONS[c] || CATEGORY_ICONS.default;
 const getLabel = (c: string) => STORE_CATEGORY_OPTIONS.find((o) => o.value === c)?.label || c;
+
+function collectStoreImageUrls(input: unknown): string[] {
+  if (!input) return [];
+  if (typeof input === "string") {
+    const trimmed = input.trim();
+    return trimmed ? [trimmed] : [];
+  }
+  if (Array.isArray(input)) return input.flatMap((item) => collectStoreImageUrls(item));
+  if (typeof input === "object") {
+    const record = input as Record<string, unknown>;
+    return [
+      ...collectStoreImageUrls(record.url),
+      ...collectStoreImageUrls(record.src),
+      ...collectStoreImageUrls(record.path),
+      ...collectStoreImageUrls(record.publicUrl),
+      ...collectStoreImageUrls(record.public_url),
+      ...collectStoreImageUrls(record.imageUrl),
+      ...collectStoreImageUrls(record.image_url),
+      ...collectStoreImageUrls(record.photo_url),
+      ...collectStoreImageUrls(record.thumbnail_url),
+    ];
+  }
+  return [];
+}
+
+function getStoreImageCandidates(store: StorePin): string[] {
+  const seen = new Set<string>();
+  return [
+    ...collectStoreImageUrls(store.logo_url),
+    ...collectStoreImageUrls(store.banner_url),
+    ...collectStoreImageUrls(store.gallery_images),
+  ].filter((url) => {
+    if (!url || seen.has(url)) return false;
+    seen.add(url);
+    return true;
+  });
+}
+
+function isLodgingCategory(category: string | null | undefined): boolean {
+  return ["hotel", "resort", "guesthouse", "guest-house", "hotel-resort"].includes(category || "");
+}
+
+async function fetchStoreImageFallbacks(store: StorePin): Promise<string[]> {
+  const profileQuery = supabase
+    .from("store_profiles")
+    .select("logo_url, banner_url, gallery_images")
+    .eq("id", store.id)
+    .maybeSingle();
+
+  const roomQuery = isLodgingCategory(store.category)
+    ? supabase
+        .from("lodge_rooms")
+        .select("photos, cover_photo_index")
+        .eq("store_id", store.id)
+        .eq("is_active", true)
+        .order("sort_order", { ascending: true })
+        .limit(4)
+    : Promise.resolve({ data: [] as unknown[], error: null });
+
+  const [{ data: profile }, { data: rooms }] = await Promise.all([profileQuery, roomQuery]);
+  const roomPhotos = ((rooms || []) as Array<{ photos?: unknown; cover_photo_index?: number | null }>).flatMap((room) => {
+    const photos = collectStoreImageUrls(room.photos);
+    const cover = typeof room.cover_photo_index === "number" ? photos[room.cover_photo_index] : undefined;
+    return [...(cover ? [cover] : []), ...photos];
+  });
+
+  const seen = new Set<string>();
+  return [
+    ...roomPhotos,
+    ...getStoreImageCandidates({ ...store, ...((profile as Partial<StorePin> | null) || {}) }),
+  ].filter((url) => {
+    if (!url || seen.has(url)) return false;
+    seen.add(url);
+    return true;
+  });
+}
+
+function StoreThumb({ store, isLive }: { store: StorePin; isLive: boolean }) {
+  const baseImageCandidates = useMemo(() => getStoreImageCandidates(store), [store]);
+  const { data: fallbackImageCandidates = [] } = useQuery({
+    queryKey: ["store-logo-images", store.id],
+    queryFn: () => fetchStoreImageFallbacks(store),
+    enabled: !!store.id,
+    staleTime: 5 * 60_000,
+  });
+  const imageCandidates = useMemo(() => {
+    const seen = new Set<string>();
+    return [...fallbackImageCandidates, ...baseImageCandidates].filter((url) => {
+      if (!url || seen.has(url)) return false;
+      seen.add(url);
+      return true;
+    });
+  }, [baseImageCandidates, fallbackImageCandidates]);
+  const imageCandidateKey = imageCandidates.join("|");
+  const [imageIndex, setImageIndex] = useState(0);
+  useEffect(() => { setImageIndex(0); }, [imageCandidateKey]);
+  const src = imageCandidates[imageIndex] ? optimizeImage(imageCandidates[imageIndex], 120, "square") : null;
+
+  return (
+    <div className="relative w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden bg-primary/10 text-primary border border-border/40">
+      {src ? (
+        <img
+          key={src}
+          src={src}
+          alt={store.name}
+          className="w-full h-full object-cover"
+          loading="lazy"
+          decoding="async"
+          onError={() => setImageIndex((idx) => Math.min(idx + 1, imageCandidates.length))}
+        />
+      ) : (
+        <Store className="w-7 h-7" />
+      )}
+      {isLive && (
+        <span className="absolute top-0.5 right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-card animate-pulse" />
+      )}
+    </div>
+  );
+}
 
 async function shareStore(s: StorePin, distanceMi: number | null) {
   try {
@@ -125,14 +245,34 @@ function writePersistedFilters(prefs: PersistedFilters) {
   }
 }
 
+function isMapReadyStore(store: StorePin): boolean {
+  if (store.latitude == null || store.longitude == null) return false;
+  if (store.latitude < 9 || store.latitude > 16) return false;
+  if (store.longitude < 100 || store.longitude > 110) return false;
+  return true;
+}
+
 export default function StoresListPage() {
   const navigate = useNavigate();
   const [params, setParams] = useSearchParams();
+  const mapReadyOnly = params.get("map") === "1";
+  const mapCityName = params.get("city") || "";
+  const mapCenter = useMemo(() => {
+    const lat = Number(params.get("lat"));
+    const lng = Number(params.get("lng"));
+    if (!Number.isFinite(lat) || !Number.isFinite(lng)) return null;
+    if (lat < 9 || lat > 16 || lng < 100 || lng > 110) return null;
+    return { lat, lng };
+  }, [params]);
+  const mapRadiusKm = useMemo(() => {
+    const raw = Number(params.get("radius"));
+    return Number.isFinite(raw) && raw > 0 ? raw : null;
+  }, [params]);
 
   // Hydrate from URL → fallback to localStorage prefs on first paint
   const initial = useMemo(() => {
     const hasUrl =
-      params.get("cat") || params.get("q") || params.get("fav") || params.get("open");
+      params.get("map") || params.get("lat") || params.get("lng") || params.get("radius") || params.get("cat") || params.get("q") || params.get("fav") || params.get("open");
     if (hasUrl) {
       return {
         cat: params.get("cat") || "all",
@@ -168,14 +308,7 @@ export default function StoresListPage() {
     queryKey: ["store-list-gallery", drawerStore?.id],
     queryFn: async (): Promise<string[]> => {
       if (!drawerStore?.id) return [];
-      const { data } = await supabase
-        .from("store_profiles")
-        .select("gallery_images")
-        .eq("id", drawerStore.id)
-        .single();
-      const raw = (data as any)?.gallery_images;
-      if (!Array.isArray(raw)) return [];
-      return (raw as unknown[]).filter((v): v is string => typeof v === "string" && v.startsWith("http"));
+      return fetchStoreImageFallbacks(drawerStore);
     },
     enabled: !!drawerStore?.id,
     staleTime: 60_000,
@@ -250,12 +383,19 @@ export default function StoresListPage() {
   }, []);
 
   useEffect(() => {
-    requestGps({ silent: true });
-  }, [requestGps]);
+    if (!mapCenter) requestGps({ silent: true });
+  }, [mapCenter, requestGps]);
 
   // Mirror filters back to URL + localStorage
   useEffect(() => {
     const next = new URLSearchParams();
+    if (mapReadyOnly) next.set("map", "1");
+    if (mapCenter) {
+      next.set("lat", String(mapCenter.lat));
+      next.set("lng", String(mapCenter.lng));
+    }
+    if (mapRadiusKm) next.set("radius", String(mapRadiusKm));
+    if (mapCityName) next.set("city", mapCityName);
     if (activeCategory !== "all") next.set("cat", activeCategory);
     if (searchQuery.trim()) next.set("q", searchQuery.trim());
     if (showFavorites) next.set("fav", "1");
@@ -267,19 +407,33 @@ export default function StoresListPage() {
       fav: showFavorites,
       open: openNowOnly,
     });
-  }, [activeCategory, searchQuery, showFavorites, openNowOnly, setParams]);
+  }, [activeCategory, searchQuery, showFavorites, openNowOnly, mapReadyOnly, mapCenter, mapRadiusKm, mapCityName, setParams]);
+
+  const baseStores = useMemo(
+    () => mapReadyOnly ? allStores.filter(isMapReadyStore) : allStores,
+    [allStores, mapReadyOnly],
+  );
+
+  const scopedStores = useMemo(() => {
+    if (!mapCenter || !mapRadiusKm) return baseStores;
+    return baseStores.filter((store) =>
+      distanceMiles(mapCenter, { lat: store.latitude, lng: store.longitude }) * 1.609344 <= mapRadiusKm,
+    );
+  }, [baseStores, mapCenter, mapRadiusKm]);
+
+  const distanceOrigin = userLoc || mapCenter;
 
   const usedCategories = useMemo(() => {
-    const present = new Set(allStores.map((s) => s.category));
+    const present = new Set(scopedStores.map((s) => s.category));
     return STORE_CATEGORY_OPTIONS.filter((o) => present.has(o.value));
-  }, [allStores]);
+  }, [scopedStores]);
 
-  const trendingCount = useMemo(() => allStores.filter((s) => !!liveStoreMap[s.id]).length, [allStores, liveStoreMap]);
-  const openNowCount = useMemo(() => allStores.filter((s) => isOpenNow(s.hours) === true).length, [allStores]);
+  const trendingCount = useMemo(() => scopedStores.filter((s) => !!liveStoreMap[s.id]).length, [scopedStores, liveStoreMap]);
+  const openNowCount = useMemo(() => scopedStores.filter((s) => isOpenNow(s.hours) === true).length, [scopedStores]);
 
   const filtered = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    let list = allStores.filter((s) => {
+    let list = scopedStores.filter((s) => {
       if (showFavorites && !favoriteIds.has(s.id)) return false;
       if (trendingOnly && !liveStoreMap[s.id]) return false;
       const catOk = activeCategory === "all" || s.category === activeCategory;
@@ -296,9 +450,9 @@ export default function StoresListPage() {
     });
 
     list = [...list].sort((a, b) => {
-      if (sortMode === "distance" && userLoc) {
-        return distanceMiles(userLoc, { lat: a.latitude, lng: a.longitude }) -
-               distanceMiles(userLoc, { lat: b.latitude, lng: b.longitude });
+      if (sortMode === "distance" && distanceOrigin) {
+        return distanceMiles(distanceOrigin, { lat: a.latitude, lng: a.longitude }) -
+               distanceMiles(distanceOrigin, { lat: b.latitude, lng: b.longitude });
       }
       if (sortMode === "rating") {
         return (b.rating ?? 0) - (a.rating ?? 0);
@@ -315,7 +469,7 @@ export default function StoresListPage() {
     });
 
     return list;
-  }, [allStores, activeCategory, searchQuery, userLoc, showFavorites, openNowOnly, favoriteIds, trendingOnly, liveStoreMap, sortMode]);
+  }, [scopedStores, activeCategory, searchQuery, distanceOrigin, showFavorites, openNowOnly, favoriteIds, trendingOnly, liveStoreMap, sortMode]);
 
   const visibleFavoriteIds = useMemo(
     () => filtered.filter((s) => favoriteIds.has(s.id)).map((s) => s.id),
@@ -442,16 +596,7 @@ export default function StoresListPage() {
           }}
           className="w-full p-3.5 flex items-center gap-3 text-left"
         >
-          <div className="relative w-14 h-14 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden bg-muted/40">
-            {s.logo_url ? (
-              <img src={optimizeImage(s.logo_url, 120, "square")} alt={s.name} className="w-full h-full object-cover" loading="lazy" decoding="async" />
-            ) : (
-              <span className="text-2xl">{getIcon(s.category)}</span>
-            )}
-            {isLive && (
-              <span className="absolute top-0.5 right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-card animate-pulse" />
-            )}
-          </div>
+          <StoreThumb store={s} isLive={isLive} />
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2">
               <h3 className="font-bold text-[15px] truncate text-foreground">{s.name}</h3>
@@ -551,7 +696,16 @@ export default function StoresListPage() {
     );
   };
 
-  const showGpsBanner = gpsError && !gpsBannerDismissed && !manageMode;
+  const showGpsBanner = gpsError && !gpsBannerDismissed && !manageMode && !mapCenter;
+  const sortLabel =
+    sortMode === "distance" && distanceOrigin
+      ? mapCityName && !userLoc ? `nearest from ${mapCityName}` : "nearest first"
+      : sortMode === "rating" ? "top rated"
+      : sortMode === "name" ? "A-Z"
+      : sortMode === "open" ? "open first"
+      : "";
+  const listScopeTitle = manageMode ? "Manage favorites" : mapCityName ? `${mapCityName} Stores` : mapReadyOnly ? "Map Stores" : "All Stores";
+  const mapScopeSuffix = mapReadyOnly ? (mapRadiusKm ? ` within ${mapRadiusKm < 1 ? mapRadiusKm * 1000 + " m" : mapRadiusKm + " km"}` : " on map") : "";
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
@@ -619,7 +773,7 @@ export default function StoresListPage() {
                 </button>
                 <div className="flex-1 min-w-0">
                   <h1 className="text-[16px] font-bold leading-tight text-foreground flex items-center gap-1.5">
-                    {manageMode ? "Manage favorites" : "All Stores"}
+                    {listScopeTitle}
                     {isOffline && (
                       <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-md bg-amber-100 text-amber-800">
                         <CloudOff className="w-3 h-3" /> Offline
@@ -629,7 +783,7 @@ export default function StoresListPage() {
                   <p className="text-[12px] text-muted-foreground mt-0.5 truncate">
                     {manageMode
                       ? `${selectedIds.size} selected · tap rows to choose`
-                      : `${filtered.length} ${filtered.length === 1 ? "store" : "stores"} · ${sortMode === "distance" && userLoc ? "nearest first" : sortMode === "rating" ? "top rated" : sortMode === "name" ? "A–Z" : sortMode === "open" ? "open first" : ""}`}
+                      : `${filtered.length} ${filtered.length === 1 ? "store" : "stores"}${mapScopeSuffix}${sortLabel ? ` · ${sortLabel}` : ""}`}
                   </p>
                 </div>
                 {!manageMode && favoriteIds.size > 0 && (
@@ -709,7 +863,7 @@ export default function StoresListPage() {
                       : "bg-card text-foreground/80 border-border/40"
                   }`}
                 >
-                  All ({allStores.length})
+                  All ({scopedStores.length})
                 </motion.button>
                 <motion.button
                   whileTap={{ scale: 0.95 }}
@@ -750,7 +904,7 @@ export default function StoresListPage() {
                   Favorites ({favoriteIds.size})
                 </motion.button>
                 {usedCategories.map((cat) => {
-                  const count = allStores.filter((s) => s.category === cat.value).length;
+                  const count = scopedStores.filter((s) => s.category === cat.value).length;
                   const isActive = !showFavorites && activeCategory === cat.value;
                   return (
                     <motion.button
@@ -822,7 +976,7 @@ export default function StoresListPage() {
               Retry
             </Button>
           </div>
-        ) : isLoading && allStores.length === 0 ? (
+        ) : isLoading && scopedStores.length === 0 ? (
           <ul className="space-y-2.5" aria-busy="true" aria-label="Loading stores">
             {Array.from({ length: 6 }).map((_, i) => (
               <li key={i} className="rounded-2xl bg-card border border-border/40 overflow-hidden">

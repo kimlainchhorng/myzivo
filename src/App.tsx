@@ -73,6 +73,13 @@ const FloatingReactionsOverlay = lazyWithRetry(() => import("@/components/chat/F
 const ReactedByHost = lazyWithRetry(() => import("@/components/chat/ReactedByHost"));
 const GlobalDesktopNav = lazyWithRetry(() => import("@/components/app/GlobalDesktopNav"));
 const AdminShellRoute = lazyWithRetry(() => import("@/components/admin/shell/AdminShellRoute").then(m => ({ default: m.AdminShellRoute })));
+const PushNotificationsBootstrap = lazyWithRetry(() => import("@/hooks/usePushNotifications").then((m) => {
+  function PushNotificationsBootstrap() {
+    m.usePushNotifications();
+    return null;
+  }
+  return { default: PushNotificationsBootstrap };
+}));
 const ENABLE_DEV_ROUTES = import.meta.env.DEV;
 let PostMenuRegressionPage: ReturnType<typeof lazy> | null = null;
 let SafeAreaQAPage: ReturnType<typeof lazy> | null = null;
@@ -93,10 +100,10 @@ import { categorizeError } from "@/lib/supabaseErrors";
 import { useBrand } from "@/hooks/useBrand";
 import { applyBrandTheme, resetBrandTheme } from "@/lib/brandTheme";
 import { lazyRetry } from "@/lib/lazyRetry";
-import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { perfLog } from "@/lib/perfTrace";
 import { pathFromNativeOpenUrl } from "@/lib/nativeDeepLinks";
 import { SOCIAL_ROUTE_PATHS } from "@/lib/socialRoutes";
+import { P2P_TRANSFER_EVENT, hasPendingP2PTransfer, subscribeP2PTransferMount } from "@/lib/p2pTransfer";
 
 // Auth pages — lazy loaded (not always the entry point)
 const Login = lazy(() => import("./pages/Login"));
@@ -774,12 +781,6 @@ function GeoDetector() {
   return null;
 }
 
-/** Initializes native/web push registration listeners once auth context is mounted. */
-function PushNotificationsBootstrap() {
-  usePushNotifications();
-  return null;
-}
-
 /** Background geofence check for boosted shops nearby — lazy loaded */
 const GeofenceBootstrap = lazy(() => import("@/hooks/useGeofenceNotifications").then(m => {
   function GeofenceComp() { m.useGeofenceNotifications(); return null; }
@@ -906,6 +907,102 @@ function RouteAwareGlobalUI() {
   );
 }
 
+function DeferredPassiveChatOverlays() {
+  const ready = useAfterFirstPaint(3200);
+  if (!ready) return null;
+
+  return (
+    <Suspense fallback={null}>
+      <OfflineBanner />
+      <OutboxFlusher />
+      <FloatingReactionsOverlay />
+      <ReactedByHost />
+    </Suspense>
+  );
+}
+
+function DeferredRoutePrefetcher() {
+  const ready = useAfterFirstPaint(3600);
+  return ready ? <Suspense fallback={null}><RoutePrefetcher /></Suspense> : null;
+}
+
+const PAYMENT_RETURN_MARKER_RE = /(?:^|[?&])(?:paypal_return|paypal_cancel|square_return|eats_paypal_return|eats_paypal_cancel|eats_square_return|grocery_paypal_return|grocery_paypal_cancel|grocery_square_return|tip_paypal_return|tip_paypal_cancel|tip_square_return)=/;
+
+function PaymentReturnBootstrap() {
+  const { search } = useLocation();
+  if (!PAYMENT_RETURN_MARKER_RE.test(search)) return null;
+  return <Suspense fallback={null}><PaymentReturnHandler /></Suspense>;
+}
+
+function LazyP2PTransferSheetHost() {
+  const [mounted, setMounted] = useState(() => hasPendingP2PTransfer());
+
+  useEffect(() => {
+    const mount = () => setMounted(true);
+    const unsubscribe = subscribeP2PTransferMount(mount);
+    window.addEventListener(P2P_TRANSFER_EVENT, mount);
+    if (hasPendingP2PTransfer()) mount();
+
+    return () => {
+      unsubscribe();
+      window.removeEventListener(P2P_TRANSFER_EVENT, mount);
+    };
+  }, []);
+
+  return mounted ? <Suspense fallback={null}><P2PTransferSheet /></Suspense> : null;
+}
+
+function DeferredGlobalSheets() {
+  const ready = useAfterFirstPaint(2400);
+  if (!ready) return null;
+
+  return (
+    <Suspense fallback={null}>
+      <PartnerSignupSheet />
+      <TwoFactorSetupSheet />
+      <OnboardingTour />
+      <BugReportSheet />
+      <AffiliateLinkSheet />
+      <CreatorSubscribeSheet />
+    </Suspense>
+  );
+}
+
+function DeferredCurrencyPicker() {
+  const ready = useAfterFirstPaint(2400);
+  return ready ? <Suspense fallback={null}><CurrencyPickerSheet /></Suspense> : null;
+}
+
+function useDesktopViewport() {
+  const [isDesktop, setIsDesktop] = useState(() => (
+    typeof window !== "undefined" &&
+    typeof window.matchMedia === "function" &&
+    window.matchMedia("(min-width: 1024px)").matches
+  ));
+
+  useEffect(() => {
+    if (typeof window.matchMedia !== "function") return;
+    const media = window.matchMedia("(min-width: 1024px)");
+    const update = () => setIsDesktop(media.matches);
+    update();
+
+    if (media.addEventListener) {
+      media.addEventListener("change", update);
+      return () => media.removeEventListener("change", update);
+    }
+
+    media.addListener(update);
+    return () => media.removeListener(update);
+  }, []);
+
+  return isDesktop;
+}
+
+function DesktopNavBootstrap() {
+  const isDesktop = useDesktopViewport();
+  return isDesktop ? <Suspense fallback={null}><GlobalDesktopNav /></Suspense> : null;
+}
+
 
 const VerificationRealtimeBridge = () => {
   useVerificationRealtime();
@@ -948,12 +1045,7 @@ const App = () => (
               <SkipToContent />
               <Toaster />
               <Sonner />
-              <Suspense fallback={null}>
-                <OfflineBanner />
-                <OutboxFlusher />
-                <FloatingReactionsOverlay />
-                <ReactedByHost />
-              </Suspense>
+              <DeferredPassiveChatOverlays />
               <BrowserRouter
                 future={{
                   v7_startTransition: true,
@@ -969,26 +1061,19 @@ const App = () => (
                 <Suspense fallback={null}><NavigationProgressBar /></Suspense>
                 <Suspense fallback={null}><ScrollRestoration /></Suspense>
                 <Suspense fallback={null}><PostShareSheet /></Suspense>
-                <Suspense fallback={null}><RoutePrefetcher /></Suspense>
-                <Suspense fallback={null}><PaymentReturnHandler /></Suspense>
+                <DeferredRoutePrefetcher />
+                <PaymentReturnBootstrap />
                 <AuthProvider>
-                  <Suspense fallback={null}><GlobalDesktopNav /></Suspense>
+                  <DesktopNavBootstrap />
                   <AuthBackgroundServices />
                   <Suspense fallback={null}><ShareToChatSheet /></Suspense>
-                  <Suspense fallback={null}>
-                    <P2PTransferSheet />
-                    <PartnerSignupSheet />
-                    <TwoFactorSetupSheet />
-                    <OnboardingTour />
-                    <BugReportSheet />
-                    <AffiliateLinkSheet />
-                    <CreatorSubscribeSheet />
-                  </Suspense>
+                  <LazyP2PTransferSheetHost />
+                  <DeferredGlobalSheets />
                    <RemoteConfigProvider>
                   <ZivoPlusProvider>
                   <CustomerCityProvider>
                     <CurrencyProvider>
-                      <Suspense fallback={null}><CurrencyPickerSheet /></Suspense>
+                      <DeferredCurrencyPicker />
                       <UTMProvider>
                         <Suspense fallback={<PageLoader />}>
                           <Routes>

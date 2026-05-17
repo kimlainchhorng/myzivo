@@ -1,4 +1,4 @@
-import { createClient } from "npm:@supabase/supabase-js@2.49.1";
+import { createClient } from "../_shared/deps.ts";
 import { enforceAal2 } from "../_shared/aalCheck.ts";
 
 type ProfileCandidate = {

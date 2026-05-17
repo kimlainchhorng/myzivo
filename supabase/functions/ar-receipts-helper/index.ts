@@ -14,7 +14,7 @@
 // Used by FinanceExpensesSection when the primary ar-receipts upload fails
 // with a transient storage/DB error such as 08P01.
 
-import { createClient } from "npm:@supabase/supabase-js@2";
+import { createClient } from "../_shared/deps.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

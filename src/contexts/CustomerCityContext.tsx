@@ -4,10 +4,11 @@
  */
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useCurrentLocation } from "@/hooks/useCurrentLocation";
 
 const MAPBOX_TOKEN = import.meta.env.VITE_MAPBOX_ACCESS_TOKEN || "";
 const STORAGE_KEY = "zivo-customer-city";
+const CITIES_CACHE_KEY = "zivo-customer-cities";
+const CITIES_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 export interface CustomerCity {
   id: string;
@@ -30,6 +31,91 @@ interface CustomerCityContextType {
 
 const CustomerCityContext = createContext<CustomerCityContextType | undefined>(undefined);
 
+type DeviceLocation = {
+  lat: number;
+  lng: number;
+  accuracy: number;
+};
+
+type CachedCities = {
+  data: CustomerCity[];
+  ts: number;
+};
+
+function readCachedCities(): CachedCities | null {
+  try {
+    const raw = localStorage.getItem(CITIES_CACHE_KEY);
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as CachedCities;
+    if (!Array.isArray(parsed?.data) || typeof parsed.ts !== "number") return null;
+
+    return parsed;
+  } catch {
+    return null;
+  }
+}
+
+function writeCachedCities(data: CustomerCity[]) {
+  try {
+    localStorage.setItem(CITIES_CACHE_KEY, JSON.stringify({ data, ts: Date.now() }));
+  } catch {
+    // Storage is best-effort; the network fetch still works without it.
+  }
+}
+
+function getDeviceLocation(): Promise<DeviceLocation> {
+  return new Promise((resolve, reject) => {
+    if (!navigator.geolocation) {
+      reject(new Error("Geolocation is not supported by your browser"));
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const result = {
+          lat: position.coords.latitude,
+          lng: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+        };
+
+        if (position.coords.accuracy > 500) {
+          navigator.geolocation.getCurrentPosition(
+            (hiPos) => {
+              resolve({
+                lat: hiPos.coords.latitude,
+                lng: hiPos.coords.longitude,
+                accuracy: hiPos.coords.accuracy,
+              });
+            },
+            () => resolve(result),
+            { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 },
+          );
+          return;
+        }
+
+        resolve(result);
+      },
+      (err) => {
+        let errorMessage = "Failed to get location";
+        if (err.code === err.PERMISSION_DENIED) {
+          errorMessage = "Location permission denied. Please enable location access in your browser settings.";
+        } else if (err.code === err.POSITION_UNAVAILABLE) {
+          errorMessage = "Location unavailable. Please check your device's location services.";
+        } else if (err.code === err.TIMEOUT) {
+          errorMessage = "Location request timed out. Please try again.";
+        }
+        reject(new Error(errorMessage));
+      },
+      {
+        enableHighAccuracy: false,
+        timeout: 5000,
+        maximumAge: 300000,
+      },
+    );
+  });
+}
+
 export function CustomerCityProvider({ children }: { children: React.ReactNode }) {
   const [selectedCity, setSelectedCity] = useState<CustomerCity | null>(null);
   const [cities, setCities] = useState<CustomerCity[]>([]);
@@ -37,13 +123,19 @@ export function CustomerCityProvider({ children }: { children: React.ReactNode }
   const [isDetecting, setIsDetecting] = useState(false);
   const [showCityModal, setShowCityModal] = useState(false);
   const [hasCheckedStorage, setHasCheckedStorage] = useState(false);
-  
-  const { getCurrentLocation, reverseGeocode } = useCurrentLocation();
 
   // Fetch available cities from eats_zones
   useEffect(() => {
     async function fetchCities() {
       try {
+        const cached = readCachedCities();
+        if (cached?.data.length) {
+          setCities(cached.data);
+          if (Date.now() - cached.ts < CITIES_CACHE_TTL_MS) {
+            return;
+          }
+        }
+
         const { data, error } = await supabase
           .from("eats_zones")
           .select("id, city_name, zone_code")
@@ -60,6 +152,7 @@ export function CustomerCityProvider({ children }: { children: React.ReactNode }
         })) || [];
 
         setCities(cityList);
+        writeCachedCities(cityList);
       } catch (err: any) {
         console.error("Error fetching cities:", err?.message || err, err?.code, err?.details);
       }
@@ -134,7 +227,7 @@ export function CustomerCityProvider({ children }: { children: React.ReactNode }
 
     setIsDetecting(true);
     try {
-      const coords = await getCurrentLocation();
+      const coords = await getDeviceLocation();
       
       // Use Mapbox to get city name
       const response = await fetch(
@@ -167,7 +260,7 @@ export function CustomerCityProvider({ children }: { children: React.ReactNode }
     } finally {
       setIsDetecting(false);
     }
-  }, [cities, getCurrentLocation]);
+  }, [cities]);
 
   // Set city and persist
   const setCity = useCallback(async (city: CustomerCity) => {

@@ -15,13 +15,16 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import type { StorePin } from "@/hooks/useStorePins";
 import { distanceMiles } from "@/hooks/useStorePins";
-import { isOpenNow } from "@/lib/store/storeHours";
+import { optimizeImage } from "@/lib/optimizeImage";
+import { isOpenNow, parseHours, type DayWindow } from "@/lib/store/storeHours";
 
 const CATEGORY_ICONS: Record<string, string> = {
   "food-market": "🛒", "grocery": "🛒", "restaurant": "🍽️", "fashion": "👗",
   "drink": "🥤", "mall": "🏬", "supermarket": "🏪", "salon": "💇",
   "electronics": "📱", "pharmacy": "💊", "car-rental": "🚗", "car-dealership": "🚙",
-  "auto-repair": "🔧", "tire-shop": "🛞", "auto-parts": "⚙️", "other": "📍", "default": "📍",
+  "auto-repair": "🔧", "tire-shop": "🛞", "auto-parts": "⚙️",
+  "hotel": "🏨", "resort": "🏖️", "guesthouse": "🏠", "guest-house": "🏠", "hotel-resort": "🏨",
+  "other": "📍", "default": "📍",
 };
 
 const PROMO_KEY = "zivo:pending-promo";
@@ -40,6 +43,32 @@ function fmtWalk(mi: number): string {
   return `~${mins} min by tuk-tuk`;
 }
 
+function minutesToLabel(minutes: number): string {
+  const clamped = ((minutes % (24 * 60)) + 24 * 60) % (24 * 60);
+  const hour24 = Math.floor(clamped / 60);
+  const minute = clamped % 60;
+  const suffix = hour24 >= 12 ? "PM" : "AM";
+  const hour12 = hour24 % 12 || 12;
+  return `${hour12}:${String(minute).padStart(2, "0")} ${suffix}`;
+}
+
+function formatWindow(window: DayWindow): string {
+  if (window.start === 0 && window.end >= 24 * 60) return "Open 24 hours";
+  return `${minutesToLabel(window.start)} - ${minutesToLabel(window.end)}`;
+}
+
+function getStoreHoursSummary(hours: string | null | undefined): string | null {
+  const schedule = parseHours(hours);
+  if (!schedule) return null;
+  if (schedule.alwaysOpen) return "Open 24 hours";
+  if (schedule.alwaysClosed) return "Closed";
+
+  const today = new Date().getDay() as 0 | 1 | 2 | 3 | 4 | 5 | 6;
+  const windows = schedule[today] || [];
+  if (!windows.length) return "Closed today";
+  return windows.map(formatWindow).join(", ");
+}
+
 function savePendingPromo(code: string, store: StorePin) {
   try {
     sessionStorage.setItem(
@@ -47,6 +76,44 @@ function savePendingPromo(code: string, store: StorePin) {
       JSON.stringify({ code, storeId: store.id, storeSlug: store.slug, ts: Date.now() })
     );
   } catch { /* noop */ }
+}
+
+function StoreLogoThumb({ store, isLive }: { store: StorePin; isLive?: boolean }) {
+  const [failed, setFailed] = useState(false);
+  const logoSrc = !failed ? optimizeImage(store.logo_url, 160, "square") : undefined;
+
+  return (
+    <div className="relative w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden bg-primary/10 text-primary border border-border/30">
+      {logoSrc ? (
+        <img
+          src={logoSrc}
+          alt={store.name}
+          className="w-full h-full object-cover"
+          onError={() => setFailed(true)}
+        />
+      ) : (
+        <span className="text-3xl leading-none">{getIcon(store.category)}</span>
+      )}
+      {isLive && (
+        <span className="absolute top-0.5 right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-card animate-pulse" />
+      )}
+    </div>
+  );
+}
+
+function DrawerGalleryImage({ src, alt }: { src: string; alt: string }) {
+  const [failed, setFailed] = useState(false);
+  if (failed) return null;
+
+  return (
+    <img
+      src={optimizeImage(src, 520)}
+      alt={alt}
+      className="h-44 w-auto max-w-[260px] rounded-2xl object-cover shrink-0 border border-border/20 bg-muted/30"
+      loading="lazy"
+      onError={() => setFailed(true)}
+    />
+  );
 }
 
 export interface StoreDetailsDrawerProps {
@@ -104,6 +171,7 @@ export default function StoreDetailsDrawer({
     ? distanceMiles(userLoc, { lat: store.latitude, lng: store.longitude })
     : null;
   const open = isOpenNow(store.hours);
+  const hoursSummary = getStoreHoursSummary(store.hours);
   const showRating = typeof store.rating === "number" && store.rating > 0;
 
   const handleApply = () => {
@@ -156,16 +224,7 @@ export default function StoreDetailsDrawer({
 
           {/* Header */}
           <div className="flex items-start gap-3">
-            <div className="relative w-16 h-16 rounded-2xl flex items-center justify-center shrink-0 overflow-hidden bg-muted/40">
-              {store.logo_url ? (
-                <img src={store.logo_url} alt={store.name} className="w-full h-full object-cover" />
-              ) : (
-                <span className="text-3xl">{getIcon(store.category)}</span>
-              )}
-              {isLive && (
-                <span className="absolute top-0.5 right-0.5 w-3 h-3 rounded-full bg-emerald-500 border-2 border-card animate-pulse" />
-              )}
-            </div>
+            <StoreLogoThumb store={store} isLive={isLive} />
             <div className="flex-1 min-w-0">
               <h2 className="text-[18px] font-bold leading-tight text-foreground">{store.name}</h2>
               <div className="mt-1.5 flex items-center gap-2 flex-wrap">
@@ -204,18 +263,16 @@ export default function StoreDetailsDrawer({
 
           {/* Photo carousel */}
           {(() => {
-            const imgs = gallery ?? [];
+            const imgs = (gallery ?? []).filter(Boolean);
             if (!imgs.length) return null;
             return (
               <div className="mt-4 -mx-4">
                 <div className="flex gap-2 overflow-x-auto scrollbar-hide px-4 pb-1">
                   {imgs.map((src, i) => (
-                    <img
+                    <DrawerGalleryImage
                       key={i}
                       src={src}
                       alt={`${store.name} photo ${i + 1}`}
-                      className="h-44 w-auto max-w-[260px] rounded-2xl object-cover shrink-0 border border-border/20"
-                      loading="lazy"
                     />
                   ))}
                 </div>
@@ -231,10 +288,12 @@ export default function StoreDetailsDrawer({
                 <span className="flex-1">{store.address}</span>
               </div>
             )}
-            {store.hours && (
+            {hoursSummary && (
               <div className="flex items-start gap-2.5 text-[13px] text-foreground">
                 <Clock className="w-4 h-4 mt-0.5 shrink-0 text-muted-foreground" />
-                <span className="flex-1 whitespace-pre-line">{store.hours}</span>
+                <span className="flex-1">
+                  {open === true ? "Open now" : open === false ? "Closed now" : "Hours"} · {hoursSummary}
+                </span>
               </div>
             )}
             {store.phone && (
@@ -306,7 +365,7 @@ export default function StoreDetailsDrawer({
               whileTap={{ scale: 0.95 }}
               onClick={handleCheckIn}
               disabled={checkingIn}
-              className="col-span-2 h-10 rounded-md border border-input bg-background px-4 text-sm font-medium flex items-center justify-center gap-1.5 hover:bg-accent hover:text-accent-foreground transition-colors disabled:opacity-70"
+              className="col-span-2 h-11 rounded-xl border border-border/50 bg-card px-4 text-sm font-semibold text-foreground shadow-sm flex items-center justify-center gap-1.5 hover:bg-muted/60 transition-colors disabled:opacity-70"
             >
               {checkingIn
                 ? <><CheckCircle2 className="w-4 h-4 mr-1.5 text-emerald-500 animate-pulse" /> Checking in…</>

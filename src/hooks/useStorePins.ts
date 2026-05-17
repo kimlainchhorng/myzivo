@@ -18,6 +18,8 @@ export interface StorePin {
   hours: string | null;
   rating: number | null;
   logo_url: string | null;
+  banner_url?: string | null;
+  gallery_images?: unknown;
   latitude: number;
   longitude: number;
   created_at?: string;
@@ -51,7 +53,7 @@ function writeCache(data: StorePin[]) {
   }
 }
 
-const STORE_PIN_SELECT = "id, name, slug, category, address, phone, hours, rating, logo_url, latitude, longitude, created_at";
+const STORE_PIN_SELECT = "id, name, slug, category, address, phone, hours, rating, logo_url, banner_url, gallery_images, latitude, longitude, created_at";
 const STORE_PIN_PAGE_SIZE = 1000;
 
 export async function fetchActiveStorePins(): Promise<StorePin[]> {
@@ -109,11 +111,14 @@ export function useStorePins() {
     },
     staleTime: 60_000,
     placeholderData: cacheFresh,
-    enabled: online, // when offline, rely on cache only
+    retry: online ? 2 : 0,
   });
 
-  // When offline, surface cached data directly.
-  const effectiveData = !online && cached ? cached.data : query.data;
+  // Always attempt a live refresh; use the local cache only when the live query
+  // has not produced rows yet. Some webviews report navigator.onLine=false
+  // while localhost/network requests still work, which otherwise leaves the map
+  // stuck on an older cache shape without richer image fields.
+  const effectiveData = query.data ?? cached?.data;
 
   const stores = useMemo(
     () =>
@@ -121,7 +126,7 @@ export function useStorePins() {
     [effectiveData]
   );
 
-  const isOffline = !online;
+  const isOffline = !online && !query.isFetching && !query.data;
   const cacheAgeMs = cached ? Date.now() - cached.ts : null;
 
   return {

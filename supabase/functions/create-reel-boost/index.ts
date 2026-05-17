@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { serve } from "../_shared/deps.ts";
+import { createClient, serve } from "../_shared/deps.ts";
 import Stripe from "../_shared/stripe.ts";
 
 const corsHeaders = {
@@ -17,7 +17,6 @@ serve(async (req) => {
       apiVersion: "2025-08-27.basil",
     });
 
-    const { createClient } = await import("..//_shared/deps.ts");
     const supabase = createClient(
       Deno.env.get("SUPABASE_URL") ?? "",
       Deno.env.get("SUPABASE_ANON_KEY") ?? "",

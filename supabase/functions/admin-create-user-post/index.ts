@@ -1,4 +1,4 @@
-import { createClient } from "npm:@supabase/supabase-js@2.49.1";
+import { createClient } from "../_shared/deps.ts";
 import { decode } from "https://deno.land/std@0.208.0/encoding/base64.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
 import { enforceAal2 } from "../_shared/aalCheck.ts";

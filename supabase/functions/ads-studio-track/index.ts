@@ -7,7 +7,7 @@
  * POST /functions/v1/ads-studio-track  { creative_id, event_type, variant_id, revenue_cents, utm_* }
  */
 import { serve } from "https://deno.land/std@0.224.0/http/server.ts";
-import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { createClient } from "../_shared/deps.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",

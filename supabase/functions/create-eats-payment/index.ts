@@ -1,6 +1,6 @@
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import Stripe from "../_shared/stripe.ts";
-import { createClient } from "npm:@supabase/supabase-js@2.57.2";
+import { createClient } from "../_shared/deps.ts";
 import { rateLimitDb, rateLimitHeaders } from "../_shared/rateLimiter.ts";
 
 const corsHeaders = {
