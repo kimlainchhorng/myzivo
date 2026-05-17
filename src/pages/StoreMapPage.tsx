@@ -15,7 +15,7 @@ import {
   MapPin, Clock, Star, Navigation, Store, ChevronRight, Search, X,
   Locate, Car, Phone, Wrench, List, Heart, Share2, MoreHorizontal,
   Route, Minus, Flame, Timer, CheckCircle2, ChevronUp, ChevronDown,
-  Users, SlidersHorizontal, Layers, Tag, Sparkles, Plus,
+  Users, SlidersHorizontal, Layers, Tag, Sparkles, Plus, ArrowLeft,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { motion, AnimatePresence, useDragControls, type PanInfo } from "framer-motion";
@@ -189,6 +189,46 @@ async function ensureGoogleMapsReady(): Promise<boolean> {
   }
 
   return hasGoogleMapsConstructor();
+}
+
+function isGoogleMapsErrorText(text: string): boolean {
+  return (
+    text.includes("This page can't load Google Maps correctly") ||
+    text.includes("This page cannot load Google Maps correctly") ||
+    text.includes("Do you own this website?")
+  );
+}
+
+function dismissGoogleMapsErrorUi(container?: HTMLElement | null): boolean {
+  if (typeof document === "undefined") return false;
+
+  let removed = false;
+  const candidates = [
+    ...Array.from(document.querySelectorAll<HTMLElement>('[role="alertdialog"], .gm-err-container, .gm-err-message, .gm-err-title')),
+    ...(container
+      ? Array.from(container.querySelectorAll<HTMLElement>(".gm-err-container, .gm-err-message, .gm-err-title"))
+      : []),
+  ];
+
+  candidates.forEach((element) => {
+    const text = element.textContent || "";
+    const isMapsError =
+      isGoogleMapsErrorText(text) ||
+      element.classList.contains("gm-err-container") ||
+      element.classList.contains("gm-err-message") ||
+      element.classList.contains("gm-err-title");
+
+    if (!isMapsError) return;
+
+    const removable =
+      element.closest<HTMLElement>('[role="alertdialog"]') ||
+      element.closest<HTMLElement>(".gm-err-container") ||
+      element;
+    removable.remove();
+    removed = true;
+  });
+
+  return removed;
 }
 
 async function loadGoogleMaps(apiKey: string): Promise<boolean> {
@@ -876,21 +916,43 @@ function MapFallbackCanvas({
 
         {pins.map((store) => {
           const selected = selectedStoreId === store.id;
+          const imageUrl = uniqueStoreImageUrls(
+            getStoreImageCandidates(store)
+              .map((url) => optimizeImage(url, 80, "square"))
+              .filter((url): url is string => Boolean(url)),
+          )[0];
           return (
             <button
               key={store.id}
               type="button"
               aria-label={`Select ${store.name}`}
               onClick={() => onSelect(store)}
-              className={`absolute z-10 flex h-10 w-10 -translate-x-1/2 -translate-y-full items-center justify-center rounded-full border-2 border-white text-base shadow-lg transition ${
-                selected ? "scale-110 bg-foreground text-background" : "bg-card text-foreground hover:scale-105"
+              className={`absolute z-10 flex h-10 w-10 -translate-x-1/2 -translate-y-full items-center justify-center overflow-hidden rounded-full border-2 border-white shadow-lg transition ${
+                selected ? "scale-110 bg-foreground text-background ring-4 ring-primary/25" : "bg-card text-foreground hover:scale-105"
               }`}
               style={{
                 left: `${hashStorePosition(store.id, "x")}%`,
                 top: `${hashStorePosition(store.slug || store.name, "y")}%`,
               }}
             >
-              <span aria-hidden>{getCategoryIcon(store.category)}</span>
+              {imageUrl && (
+                <img
+                  src={imageUrl}
+                  alt=""
+                  loading="lazy"
+                  className="absolute inset-0 h-full w-full object-cover"
+                  onError={(event) => {
+                    event.currentTarget.style.display = "none";
+                    (event.currentTarget.nextElementSibling as HTMLElement | null)?.classList.remove("hidden");
+                  }}
+                />
+              )}
+              <span
+                aria-hidden="true"
+                className={`flex h-full w-full items-center justify-center ${imageUrl ? "hidden" : ""}`}
+              >
+                <Store className="h-4 w-4" />
+              </span>
             </button>
           );
         })}
@@ -970,6 +1032,7 @@ export default function StoreMapPage() {
   const tripPolylineRef = useRef<google.maps.Polyline | null>(null);
   const radiusCircleRef = useRef<google.maps.Circle | null>(null);
   const markerCameraKeyRef = useRef("");
+  const googleMapUnavailableRef = useRef(false);
 
   const [mapReady, setMapReady] = useState(false);
   const [mapError, setMapError] = useState(false);
@@ -1003,6 +1066,15 @@ export default function StoreMapPage() {
     () => (localStorage.getItem("zivo:mapStyle") as "light" | "dark" | "satellite") || "light"
   );
   const [dealStoreIds, setDealStoreIds] = useState<Set<string>>(new Set());
+
+  const showFallbackMap = useCallback(() => {
+    googleMapUnavailableRef.current = true;
+    dismissGoogleMapsErrorUi(mapContainerRef.current);
+    mapRef.current = null;
+    setMapReady(false);
+    setMapPreviewSettled(true);
+    setMapError(true);
+  }, []);
 
   /* ── Radius + area search ── */
   const [radiusKm, setRadiusKm] = useState<number | null>(() => {
@@ -1397,16 +1469,19 @@ export default function StoreMapPage() {
   useEffect(() => {
     let cancelled = false;
     const previousAuthFailure = (window as any).gm_authFailure;
+    const failMap = () => {
+      if (!cancelled) showFallbackMap();
+    };
     (window as any).gm_authFailure = () => {
       previousAuthFailure?.();
-      if (!cancelled) setMapError(true);
+      failMap();
     };
     (async () => {
       const key = await getApiKey();
-      if (!key || cancelled) { setMapError(true); return; }
+      if (!key || cancelled) { failMap(); return; }
       const loaded = await loadGoogleMaps(key);
-      if (!loaded || cancelled || !hasGoogleMapsConstructor()) { setMapError(true); return; }
-      if (!mapContainerRef.current) { setMapError(true); return; }
+      if (!loaded || cancelled || !hasGoogleMapsConstructor() || googleMapUnavailableRef.current) { failMap(); return; }
+      if (!mapContainerRef.current) { failMap(); return; }
 
       const initStyle = (localStorage.getItem("zivo:mapStyle") || "light") as "light" | "dark" | "satellite";
       const map = new google.maps.Map(mapContainerRef.current, {
@@ -1429,7 +1504,7 @@ export default function StoreMapPage() {
       if (!cancelled) setMapReady(true);
     })();
     const stuckTimeout = setTimeout(() => {
-      if (!cancelled) setMapError((prev) => prev || !mapRef.current);
+      if (!cancelled && !mapRef.current) showFallbackMap();
     }, 20000);
     return () => {
       cancelled = true;
@@ -1438,6 +1513,26 @@ export default function StoreMapPage() {
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  useEffect(() => {
+    if (typeof document === "undefined" || typeof MutationObserver === "undefined") return;
+
+    const checkGoogleMapsErrorUi = () => {
+      if (dismissGoogleMapsErrorUi(mapContainerRef.current)) {
+        showFallbackMap();
+      }
+    };
+
+    checkGoogleMapsErrorUi();
+    const observer = new MutationObserver(checkGoogleMapsErrorUi);
+    observer.observe(document.body, { childList: true, subtree: true });
+
+    const timeoutIds = [500, 1500, 3500].map((delay) => window.setTimeout(checkGoogleMapsErrorUi, delay));
+    return () => {
+      observer.disconnect();
+      timeoutIds.forEach((timeoutId) => window.clearTimeout(timeoutId));
+    };
+  }, [showFallbackMap]);
 
   useEffect(() => {
     if (mapReady || mapError) {
@@ -2315,6 +2410,17 @@ export default function StoreMapPage() {
                       if (e.key === "Enter" || e.key === " ") openSearchPanel(e);
                     }}
                   >
+                    {window.history.length > 1 && (
+                      <motion.button
+                        whileTap={{ scale: 0.92 }}
+                        type="button"
+                        onClick={(e) => { e.stopPropagation(); navigate(-1); }}
+                        aria-label="Go back"
+                        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-[18px] bg-muted/70 transition hover:bg-muted sm:h-[52px] sm:w-[52px] sm:rounded-[22px]"
+                      >
+                        <ArrowLeft className="h-5 w-5 text-foreground" />
+                      </motion.button>
+                    )}
                     <div className="hidden h-11 w-11 shrink-0 items-center justify-center rounded-[18px] bg-gradient-to-br from-primary/20 to-primary/5 ring-1 ring-primary/10 min-[420px]:flex sm:h-[52px] sm:w-[52px] sm:rounded-[22px]">
                       <Store className="h-6 w-6 text-primary" />
                     </div>
@@ -2569,7 +2675,7 @@ export default function StoreMapPage() {
         )}
 
         {/* ── Map ── */}
-        <div ref={mapContainerRef} className={`absolute inset-0 ${mapError ? "opacity-0" : ""}`} style={{ touchAction: "none" }} />
+        <div ref={mapContainerRef} className={`absolute inset-0 ${mapError ? "pointer-events-none opacity-0" : ""}`} style={{ touchAction: "none" }} />
 
         {(mapError || (!mapReady && filteredStores.length > 0)) && (
           <div className="absolute inset-0 z-[400]">

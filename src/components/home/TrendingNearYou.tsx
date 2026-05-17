@@ -103,7 +103,7 @@ function TrendingCard({ store, index }: { store: TrendingStore; index: number })
           <img
             src={store.logo_url}
             alt={store.store_name}
-            className="w-full h-full object-contain p-3"
+            className="w-full h-full object-cover"
             loading="lazy"
           />
         ) : (

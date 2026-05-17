@@ -83,6 +83,8 @@ type MigrationResult = {
   failed: number;
 };
 
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
 function extractUrl(item: unknown): string | null {
   if (!item) return null;
   if (typeof item === "string") return item;
@@ -187,19 +189,27 @@ async function fetchRooms(storeIds: string[]): Promise<RoomRow[]> {
 }
 
 async function downloadImage(url: string): Promise<Buffer | null> {
-  const response = await fetch(url, {
-    headers: {
-      accept: "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
-      "accept-language": "en-US,en;q=0.9",
-      referer: "https://www.booking.com/",
-      "user-agent":
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-    },
-  });
-  if (!response.ok) return null;
-  const contentType = response.headers.get("content-type") || "";
-  if (!contentType.startsWith("image/")) return null;
-  return Buffer.from(await response.arrayBuffer());
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    try {
+      const response = await fetch(url, {
+        headers: {
+          accept: "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+          "accept-language": "en-US,en;q=0.9",
+          referer: "https://www.booking.com/",
+          "user-agent":
+            "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        },
+      });
+      if (!response.ok) return null;
+      const contentType = response.headers.get("content-type") || "";
+      if (!contentType.startsWith("image/")) return null;
+      return Buffer.from(await response.arrayBuffer());
+    } catch (error) {
+      if (attempt === 3) throw error;
+      await sleep(400 * attempt);
+    }
+  }
+  return null;
 }
 
 async function uploadImage(storeId: string, url: string): Promise<string | null> {

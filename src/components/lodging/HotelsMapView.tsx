@@ -86,6 +86,13 @@ export default function HotelsMapView({ hotels, onSelect, apiKey }: Props) {
   const overlaysRef = useRef<Map<string, { overlay: google.maps.OverlayView; el: HTMLElement }>>(new Map());
   const [mapReady, setMapReady] = useState(false);
 
+  // Refs keep click handlers stable so overlays don't need re-creating when
+  // activeId / onSelect change — see the diff-based pill effect below.
+  const activeIdRef = useRef<string | null>(activeId);
+  const onSelectRef = useRef(onSelect);
+  useEffect(() => { activeIdRef.current = activeId; }, [activeId]);
+  useEffect(() => { onSelectRef.current = onSelect; }, [onSelect]);
+
   const focusCard = (id: string) => {
     cardRefs.current[id]?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
   };
@@ -144,8 +151,21 @@ export default function HotelsMapView({ hotels, onSelect, apiKey }: Props) {
     mapRef.current.fitBounds(bounds, 48);
   }, [mapReady, valid]);
 
-  // Re-evaluate which hotels are within the current viewport (capped to 40)
-  const [visibleIds, setVisibleIds] = useState<Set<string>>(() => new Set(valid.slice(0, 40).map((h) => h.id)));
+  // Re-evaluate which hotels are within the current viewport (capped to 40).
+  // We keep an ordered array (best-price first) so the carousel can render
+  // exactly the hotels visible on the map — drops carousel DOM from 200 → ~40.
+  const [visibleHotels, setVisibleHotels] = useState<MapHotel[]>(() => valid.slice(0, 40));
+  const visibleIds = useMemo(() => new Set(visibleHotels.map((h) => h.id)), [visibleHotels]);
+
+  // Keep the carousel populated before the map script finishes loading.
+  useEffect(() => {
+    if (mapReady) return;
+    setVisibleHotels((prev) => {
+      const next = valid.slice(0, 40);
+      if (prev.length === next.length && prev.every((h, i) => h.id === next[i].id)) return prev;
+      return next;
+    });
+  }, [valid, mapReady]);
 
   useEffect(() => {
     if (!mapReady || !mapRef.current) return;
@@ -154,25 +174,30 @@ export default function HotelsMapView({ hotels, onSelect, apiKey }: Props) {
 
     const recompute = () => {
       const bounds = map.getBounds();
+      let next: MapHotel[];
       if (!bounds) {
-        setVisibleIds(new Set(valid.slice(0, 40).map((h) => h.id)));
-        return;
+        next = valid.slice(0, 40);
+      } else {
+        const inView = valid.filter((h) => bounds.contains({ lat: h.latitude, lng: h.longitude }));
+        next = inView
+          .slice()
+          .sort((a, b) => {
+            const pa = a.pricePerNightCents ?? Number.POSITIVE_INFINITY;
+            const pb = b.pricePerNightCents ?? Number.POSITIVE_INFINITY;
+            if (pa !== pb) return pa - pb;
+            return (b.rating ?? 0) - (a.rating ?? 0);
+          })
+          .slice(0, 40);
+        const currentActive = activeIdRef.current;
+        if (currentActive && !next.some((h) => h.id === currentActive)) {
+          const active = valid.find((h) => h.id === currentActive);
+          if (active) next.push(active);
+        }
       }
-      const inView = valid.filter((h) => bounds.contains({ lat: h.latitude, lng: h.longitude }));
-      // Rank by best price asc, then rating desc, then keep first 40
-      const ranked = inView
-        .slice()
-        .sort((a, b) => {
-          const pa = a.pricePerNightCents ?? Number.POSITIVE_INFINITY;
-          const pb = b.pricePerNightCents ?? Number.POSITIVE_INFINITY;
-          if (pa !== pb) return pa - pb;
-          return (b.rating ?? 0) - (a.rating ?? 0);
-        })
-        .slice(0, 40);
-      // Always include the active pin so it never disappears mid-pan
-      const next = new Set(ranked.map((h) => h.id));
-      if (activeId) next.add(activeId);
-      setVisibleIds(next);
+      setVisibleHotels((prev) => {
+        if (prev.length === next.length && prev.every((h, i) => h.id === next[i].id)) return prev;
+        return next;
+      });
     };
 
     const onIdle = () => {
@@ -186,9 +211,11 @@ export default function HotelsMapView({ hotels, onSelect, apiKey }: Props) {
       if (raf) cancelAnimationFrame(raf);
       listener.remove();
     };
-  }, [mapReady, valid, activeId]);
+  }, [mapReady, valid]);
 
   // Build price-pill overlays — only for visible (viewport-capped) hotels.
+  // Diffs add/remove from the previous set instead of rebuilding everything,
+  // so a small pan doesn't tear down 39 unchanged overlays.
   useEffect(() => {
     if (!mapReady || !mapRef.current) return;
     const map = mapRef.current;
@@ -220,14 +247,18 @@ export default function HotelsMapView({ hotels, onSelect, apiKey }: Props) {
       }
     }
 
-    // Clear previous overlays
-    overlaysRef.current.forEach(({ overlay }) => overlay.setMap(null));
-    overlaysRef.current.clear();
+    // Remove overlays no longer visible
+    for (const [id, { overlay }] of overlaysRef.current) {
+      if (!visibleIds.has(id)) {
+        overlay.setMap(null);
+        overlaysRef.current.delete(id);
+      }
+    }
 
-    valid
-      .filter((h) => visibleIds.has(h.id))
-      .forEach((h) => {
-      const isActive = h.id === activeId;
+    // Add overlays for newly-visible hotels
+    visibleHotels.forEach((h) => {
+      if (overlaysRef.current.has(h.id)) return;
+      const isActive = h.id === activeIdRef.current;
       const priceLabel = formatPrice(h.pricePerNightCents);
       const el = document.createElement("button");
       el.type = "button";
@@ -238,8 +269,8 @@ export default function HotelsMapView({ hotels, onSelect, apiKey }: Props) {
       el.setAttribute("aria-label", `${h.name}${priceLabel ? ` from ${priceLabel} per night` : ""}`);
       el.addEventListener("click", (e) => {
         e.stopPropagation();
-        if (h.id === activeId) {
-          onSelect(h.id);
+        if (h.id === activeIdRef.current) {
+          onSelectRef.current(h.id);
         } else {
           setActiveId(h.id);
           focusCard(h.id);
@@ -252,11 +283,19 @@ export default function HotelsMapView({ hotels, onSelect, apiKey }: Props) {
     });
 
     return () => {
+      // Only clear all on unmount — visibleHotels changes don't trigger this
+      // path because React keeps the same effect instance running.
+    };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [mapReady, visibleHotels]);
+
+  // Unmount cleanup: drop all overlays when the component leaves the tree.
+  useEffect(() => {
+    return () => {
       overlaysRef.current.forEach(({ overlay }) => overlay.setMap(null));
       overlaysRef.current.clear();
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mapReady, valid, visibleIds, onSelect]);
+  }, []);
 
   // Toggle active class on pill elements without rebuilding overlays
   useEffect(() => {
@@ -298,7 +337,7 @@ export default function HotelsMapView({ hotels, onSelect, apiKey }: Props) {
 
       {/* Horizontal card carousel */}
       <div className="relative">
-        {valid.length > 1 && (
+        {visibleHotels.length > 1 && (
           <>
             <button
               type="button"
@@ -323,7 +362,7 @@ export default function HotelsMapView({ hotels, onSelect, apiKey }: Props) {
           ref={scrollerRef}
           className="flex gap-3 overflow-x-auto scroll-smooth snap-x snap-mandatory px-3 py-3 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
         >
-          {valid.map((h) => {
+          {visibleHotels.map((h) => {
             const priceLabel = formatPrice(h.pricePerNightCents);
             const isActive = h.id === activeId;
             const hasRating = typeof h.rating === "number";
