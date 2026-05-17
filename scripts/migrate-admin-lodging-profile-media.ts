@@ -14,7 +14,6 @@
 import { chromium, type BrowserContext, type Page } from "playwright";
 import { createClient } from "@supabase/supabase-js";
 import { createHash } from "crypto";
-import path from "path";
 import fs from "fs";
 
 const SUPABASE_URL = process.env.SUPABASE_URL!;
@@ -46,6 +45,9 @@ const CONCURRENCY = (() => {
   return value ? Math.max(1, Number.parseInt(value, 10)) : 5;
 })();
 const DRY_RUN = args.includes("--dry-run");
+const DIRECT_ONLY = args.includes("--direct-only");
+const SIGNED_ONLY = args.includes("--signed-only");
+const UNSIGNED_ONLY = args.includes("--unsigned-only");
 
 type StoreRow = {
   id: string;
@@ -167,13 +169,26 @@ function chooseSource(store: StoreRow) {
     store.logo_url,
     ...mediaUrls(store.gallery_images),
   ].filter(Boolean) as string[];
-  return candidates.find(isProtectedMedia) || candidates[0] || null;
+  return (
+    candidates.find((url) => isProtectedMedia(url) && /[?&]k=/.test(url)) ||
+    candidates.find(isProtectedMedia) ||
+    candidates[0] ||
+    null
+  );
+}
+
+function hasSignedMediaCandidate(store: StoreRow) {
+  return [
+    store.banner_url,
+    store.logo_url,
+    ...mediaUrls(store.gallery_images),
+  ].some((url) => Boolean(url && isProtectedMedia(url) && /[?&]k=/.test(url)));
 }
 
 async function loadBookingPageImageUrls(page: Page, bookingUrl: string) {
   const imageUrls = new Map<string, string>();
-  await page.goto(bookingUrl, { waitUntil: "domcontentloaded", timeout: 45_000 });
-  await sleep(2_000);
+  await page.goto(bookingUrl, { waitUntil: "domcontentloaded", timeout: 15_000 });
+  await sleep(1_000);
   const urls = await page.evaluate(() =>
     Array.from(document.images)
       .map((img) => img.currentSrc || img.src)
@@ -190,6 +205,26 @@ async function loadBookingPageImageUrls(page: Page, bookingUrl: string) {
 function signedSourceUrl(url: string, imageUrls: Map<string, string>) {
   const id = bookingImageId(url);
   return (id && imageUrls.get(id)) || url;
+}
+
+async function downloadDirect(imageUrl: string): Promise<Buffer | null> {
+  try {
+    const response = await fetch(imageUrl, {
+      headers: {
+        accept: "image/avif,image/webp,image/apng,image/svg+xml,image/*,*/*;q=0.8",
+        referer: "https://www.booking.com/",
+        "user-agent":
+          "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+      },
+      signal: AbortSignal.timeout(15_000),
+    });
+    const contentType = response.headers.get("content-type") || "";
+    if (!response.ok || !contentType.startsWith("image/")) return null;
+    const buffer = Buffer.from(await response.arrayBuffer());
+    return buffer.length > 1024 ? buffer : null;
+  } catch {
+    return null;
+  }
 }
 
 async function downloadInBookingPage(
@@ -288,12 +323,19 @@ async function fetchStores() {
 }
 
 async function launchBookingContext() {
-  const sessionDir = path.resolve(".booking-session");
-  return chromium.launchPersistentContext(sessionDir, {
+  const browser = await chromium.launch({
     headless: true,
+  });
+  const context = await browser.newContext({
     userAgent:
       "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
   });
+  const closeContext = context.close.bind(context);
+  context.close = async (...args: Parameters<typeof context.close>) => {
+    await closeContext(...args).catch(() => {});
+    await browser.close().catch(() => {});
+  };
+  return context;
 }
 
 function isContextClosedError(error: unknown) {
@@ -308,15 +350,20 @@ async function main() {
   console.log(`Categories: ${CATEGORIES.join(", ")}`);
   console.log(`Concurrency: ${CONCURRENCY}`);
   if (DRY_RUN) console.log("** DRY RUN — no database writes **");
+  if (DIRECT_ONLY) console.log("** DIRECT ONLY — browser fallback disabled **");
+  if (SIGNED_ONLY) console.log("** SIGNED ONLY **");
+  if (UNSIGNED_ONLY) console.log("** UNSIGNED ONLY **");
 
   const allStores = await fetchStores();
-  const missing = allStores.filter(hasAdminMissingMedia);
+  let missing = allStores.filter(hasAdminMissingMedia);
+  if (SIGNED_ONLY) missing = missing.filter(hasSignedMediaCandidate);
+  if (UNSIGNED_ONLY) missing = missing.filter((store) => !hasSignedMediaCandidate(store));
   const toProcess = LIMIT ? missing.slice(0, LIMIT) : missing;
   console.log(`Found ${missing.length} admin-missing media stores. Processing ${toProcess.length}.`);
 
   if (!toProcess.length) return;
 
-  let context = await launchBookingContext();
+  let context = DIRECT_ONLY ? null : await launchBookingContext();
 
   const bookingUrlsByStore = loadBookingUrlMap();
   console.log(`Loaded ${bookingUrlsByStore.size} saved Booking.com hotel URLs.`);
@@ -334,24 +381,44 @@ async function main() {
       return "skipped" as const;
     }
 
-    let page: Page | null = null;
     try {
-      page = await context.newPage();
-      const bookingUrl = bookingUrlsByStore.get(store.id);
-      let imageUrls = new Map<string, string>();
-      if (bookingUrl) {
-        imageUrls = await loadBookingPageImageUrls(page, bookingUrl).catch((error) => {
-          console.warn(`  page load failed: ${(error as Error).message}`);
-          return new Map<string, string>();
-        });
-      } else {
-        await page.goto("https://www.booking.com/", {
-          waitUntil: "domcontentloaded",
-          timeout: 30_000,
-        });
+      let buffer = await downloadDirect(source);
+      if (!buffer && DIRECT_ONLY) {
+        console.log(`${prefix} ... failed`);
+        return "failed" as const;
       }
 
-      const buffer = await downloadInBookingPage(context, page, signedSourceUrl(source, imageUrls));
+      if (!buffer) {
+        if (!context) context = await launchBookingContext();
+        let page: Page | null = null;
+        try {
+          page = await context.newPage();
+          const bookingUrl = bookingUrlsByStore.get(store.id);
+          let imageUrls = new Map<string, string>();
+          if (bookingUrl) {
+            imageUrls = await loadBookingPageImageUrls(page, bookingUrl).catch((error) => {
+              console.warn(`  page load failed: ${(error as Error).message}`);
+              return new Map<string, string>();
+            });
+          } else {
+            await page.goto("https://www.booking.com/", {
+              waitUntil: "domcontentloaded",
+              timeout: 30_000,
+            });
+          }
+
+          const signedUrl = signedSourceUrl(source, imageUrls);
+          const pageImageUrl =
+            signedUrl === source && imageUrls.size > 0
+              ? Array.from(imageUrls.values())[0]
+              : signedUrl;
+          buffer = await downloadDirect(pageImageUrl);
+          if (!buffer) buffer = await downloadInBookingPage(context, page, pageImageUrl);
+        } finally {
+          await page?.close().catch(() => {});
+        }
+      }
+
       if (!buffer) {
         console.log(`${prefix} ... failed`);
         return "failed" as const;
@@ -382,8 +449,6 @@ async function main() {
       }
       console.log(`${prefix} ... error: ${(error as Error).message}`);
       return "failed" as const;
-    } finally {
-      await page?.close().catch(() => {});
     }
   }
 
@@ -399,14 +464,14 @@ async function main() {
       else failed++;
     }
     if (results.some((result) => result === "browser-closed")) {
-      await context.close().catch(() => {});
+      await context?.close().catch(() => {});
       context = await launchBookingContext();
       console.log("Relaunched browser context after a closed-context failure.");
     }
     console.log(`Progress: ${Math.min(index + batch.length, toProcess.length)}/${toProcess.length}`);
   }
 
-  await context.close();
+  await context?.close();
   console.log(`Done. updated=${updated} skipped=${skipped} failed=${failed}`);
 }
 

@@ -61,7 +61,7 @@ const emptyStore = {
 };
 
 const PROTECTED_THIRD_PARTY_MEDIA_RE = /(^https?:\/\/)?([^/]+\.)?(booking\.com|bstatic\.com)\//i;
-const BROKEN_THIRD_PARTY_PROFILE_THUMB_RE = /\/xdata\/images\/hotel\/square240\//i;
+const BOOKING_PROFILE_THUMB_RE = /\/xdata\/images\/hotel\/square240\//i;
 
 function mediaRefUrl(entry: unknown): string | null {
   if (!entry) return null;
@@ -83,7 +83,8 @@ function mediaUrls(value: unknown): string[] {
 function usesBrokenThirdPartyProfileMedia(value: unknown) {
   return mediaUrls(value).some((url) => (
     PROTECTED_THIRD_PARTY_MEDIA_RE.test(url) &&
-    BROKEN_THIRD_PARTY_PROFILE_THUMB_RE.test(url)
+    BOOKING_PROFILE_THUMB_RE.test(url) &&
+    !url.includes("?")
   ));
 }
 
