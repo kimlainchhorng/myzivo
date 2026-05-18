@@ -754,7 +754,17 @@ export default function StoryViewer({
               )}
             </div>
             <div className="min-w-0 flex-1">
-              <p className="text-white text-sm font-bold leading-tight truncate">{viewingGroup.userName}</p>
+              <p className="text-white text-sm font-bold leading-tight truncate flex items-center gap-1.5">
+                <span className="truncate">{viewingGroup.userName}</span>
+                {currentStory.audienceType === "close_friends" && (
+                  <span className="inline-flex items-center gap-0.5 rounded-full bg-emerald-500/25 ring-1 ring-emerald-400/50 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-emerald-200 shrink-0">
+                    <svg className="w-2.5 h-2.5 fill-emerald-300" viewBox="0 0 24 24" aria-hidden>
+                      <path d="M12 2l2.39 7.36H22l-6.18 4.49L18.21 22 12 17.27 5.79 22l2.39-8.15L2 9.36h7.61z" />
+                    </svg>
+                    Close Friends
+                  </span>
+                )}
+              </p>
               <p className="text-white/70 text-[11px] flex items-center gap-1 leading-tight">
                 <span className="truncate">
                   {formatDistanceToNow(new Date(currentStory.createdAt), { addSuffix: true })}
