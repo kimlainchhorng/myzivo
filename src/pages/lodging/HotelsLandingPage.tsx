@@ -142,7 +142,7 @@ export default function HotelsLandingPage() {
       saved: searchParams.get("saved") === "1",
       budget: parseInt10(searchParams.get("budget")),
       sort: (validSorts.includes(sortRaw as SortKey) ? (sortRaw as SortKey) : "default") as SortKey,
-      view: viewRaw === "map" ? "map" : "list",
+      view: (viewRaw === "map" ? "map" : "list") as "list" | "map",
     };
     // We compute this once at mount; subsequent in-page changes shouldn't
     // re-overwrite the user's edits.
