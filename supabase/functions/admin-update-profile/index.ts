@@ -1,5 +1,6 @@
 import { createClient } from "../_shared/deps.ts";
 import { decode } from "https://deno.land/std@0.208.0/encoding/base64.ts";
+import { withSecurity } from "../_shared/withSecurity.ts";
 import { enforceAal2 } from "../_shared/aalCheck.ts";
 import { scanContentForLinks, logBlockedAttempt, isAbuseThresholdExceeded, isIpAbuseThresholdExceeded, getRequestIpHash } from "../_shared/contentLinkValidation.ts";
 import { isLikelyMaliciousBot } from "../_shared/botDetection.ts";
@@ -9,7 +10,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-Deno.serve(async (req) => {
+Deno.serve(withSecurity("admin-update-profile", async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -320,4 +321,4 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-});
+}, { rateLimit: "upload", skipWaf: true }));

@@ -38,6 +38,7 @@ export const LIMITS = {
   payment:            { max: 10,  windowSec: 60  },
   search:             { max: 30,  windowSec: 60  },
   upload:             { max: 20,  windowSec: 60  },
+  admin_action:       { max: 30,  windowSec: 60  },
   api_general:        { max: 120, windowSec: 60  },
 } as const;
 

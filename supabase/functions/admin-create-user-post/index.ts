@@ -1,6 +1,7 @@
 import { createClient } from "../_shared/deps.ts";
 import { decode } from "https://deno.land/std@0.208.0/encoding/base64.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { withSecurity } from "../_shared/withSecurity.ts";
 import { enforceAal2 } from "../_shared/aalCheck.ts";
 
 type UploadFileInput = {
@@ -33,7 +34,7 @@ function getMediaType(file: UploadFileInput) {
   return file.contentType?.startsWith("video/") ? "video" : "image";
 }
 
-Deno.serve(async (req) => {
+Deno.serve(withSecurity("admin-create-user-post", async (req) => {
   const corsHeaders = getCorsHeaders(req);
 
   if (req.method === "OPTIONS") {
@@ -184,4 +185,4 @@ Deno.serve(async (req) => {
     console.error("[admin-create-user-post] unexpected error:", message);
     return jsonResponse({ error: message }, 500, getCorsHeaders(req));
   }
-});
+}, { rateLimit: "upload", skipWaf: true }));
