@@ -256,10 +256,10 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
         active: true,
       };
       if (editId) {
-        const { error } = await supabase.from("ar_parts").update(payload).eq("id", editId);
+        const { error } = await supabase.from("ar_parts").update(payload as any).eq("id", editId);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("ar_parts").insert(payload);
+        const { error } = await supabase.from("ar_parts").insert(payload as any);
         if (error) throw error;
       }
     },
@@ -330,7 +330,7 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
         };
       }).filter(r => r.sku && r.name);
       if (rows.length === 0) throw new Error("No valid rows found");
-      const { error } = await supabase.from("ar_parts").upsert(rows, { onConflict: "store_id,sku" });
+      const { error } = await supabase.from("ar_parts").upsert(rows as any, { onConflict: "store_id,sku" });
       if (error) throw error;
       return rows.length;
     },

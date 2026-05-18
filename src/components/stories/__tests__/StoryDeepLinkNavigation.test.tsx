@@ -136,23 +136,18 @@ describe("Story deep-link back/forward navigation", () => {
     // fires on the window, so wait for that.
     await act(async () => {
       window.history.back();
-      await new Promise((resolve) => {
-        window.addEventListener("popstate", () => resolve(null), { once: true });
-        // jsdom: also resolve after a tick in case popstate already fired
-        setTimeout(() => resolve(null), 50);
-      });
     });
-    const afterBack = container.querySelector("[data-testid='viewer-story']");
-    expect(afterBack?.textContent).toBe("A");
+    await waitFor(() => {
+      const afterBack = container.querySelector("[data-testid='viewer-story']");
+      expect(afterBack?.textContent).toBe("A");
+    });
 
     // 4) Forward -> should show B again
     await act(async () => {
       window.history.forward();
-      await new Promise((resolve) => {
-        window.addEventListener("popstate", () => resolve(null), { once: true });
-        setTimeout(() => resolve(null), 50);
-      });
     });
-    expect(screen.getByTestId("viewer-story").textContent).toBe("B");
+    await waitFor(() => {
+      expect(screen.getByTestId("viewer-story").textContent).toBe("B");
+    });
   });
 });

@@ -19,6 +19,8 @@ import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
 import Camera from "lucide-react/dist/esm/icons/camera";
 import Type from "lucide-react/dist/esm/icons/type";
 import Globe from "lucide-react/dist/esm/icons/globe";
+import Star from "lucide-react/dist/esm/icons/star";
+import ChevronDown from "lucide-react/dist/esm/icons/chevron-down";
 import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 import ChevronLeft from "lucide-react/dist/esm/icons/chevron-left";
 import Music from "lucide-react/dist/esm/icons/music";
@@ -26,6 +28,9 @@ import Play from "lucide-react/dist/esm/icons/play";
 import Pause from "lucide-react/dist/esm/icons/pause";
 import AlertCircle from "lucide-react/dist/esm/icons/alert-circle";
 import { invalidateAllStoryCaches } from "@/lib/storiesCache";
+import { useCloseFriends } from "@/hooks/useCloseFriends";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import StoryEditor, { type StoryEditorState } from "@/components/stories/StoryEditor";
 
 interface Props {
   open: boolean;
@@ -35,6 +40,7 @@ interface Props {
 
 type Step = "choose" | "preview-media" | "compose-text";
 type UploadPhase = "idle" | "preparing" | "uploading" | "saving";
+type Audience = "public" | "close_friends";
 
 interface Track {
   id: string;
@@ -65,6 +71,8 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
   const activeUploadRef = useRef<XMLHttpRequest | null>(null);
 
   const [step, setStep] = useState<Step>("choose");
+  const [audience, setAudience] = useState<Audience>("public");
+  const { closeFriends } = useCloseFriends();
   const [pickedFile, setPickedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [caption, setCaption] = useState("");
@@ -81,6 +89,7 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
   const [progress, setProgress] = useState(0); // 0..1
   const [uploadError, setUploadError] = useState<string | null>(null);
   const [showQuitConfirm, setShowQuitConfirm] = useState(false);
+  const [editorState, setEditorState] = useState<StoryEditorState>({ overlays: [], filterPreset: null });
 
   // Reset on close
   useEffect(() => {
@@ -98,6 +107,8 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
         setProgress(0);
         setUploadError(null);
         setShowQuitConfirm(false);
+        setAudience("public");
+        setEditorState({ overlays: [], filterPreset: null });
         if (previewAudioRef.current) {
           previewAudioRef.current.pause();
           previewAudioRef.current = null;
@@ -346,6 +357,10 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
         media_type: mediaType,
         text_overlay: captionToSave,
         audio_url: audioTrack?.url || null,
+        audience_type: audience,
+        // Only persist overlays/filter for image/video stories (text-only is canvas-rendered).
+        overlays: step === "preview-media" ? editorState.overlays : [],
+        filter_preset: step === "preview-media" ? editorState.filterPreset : null,
       });
       if (insErr) {
         // Roll back the just-uploaded object so storage doesn't leak.
@@ -364,7 +379,7 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
       setUploadPhase("idle");
       setUploadError(await getErrorMessage(err, "Failed to share story"));
     }
-  }, [user, step, text, pickedFile, caption, audioTrack, onClose, onPublished, queryClient]);
+  }, [user, step, text, pickedFile, caption, audioTrack, audience, editorState, onClose, onPublished, queryClient]);
 
   const toggleAudioPreview = (track: Track) => {
     if (previewAudioRef.current && audioPreviewing && audioTrack?.id === track.id) {
@@ -441,9 +456,63 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
                 </div>
                 <div className="leading-tight">
                   <p className="text-lg font-bold tracking-tight">Create story</p>
-                  <span className="inline-flex items-center gap-1 text-[11px] font-medium text-muted-foreground bg-muted/60 rounded-full px-2 py-0.5 mt-0.5">
-                    <Globe className="w-3 h-3" /> Public · 24h
-                  </span>
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <button
+                        type="button"
+                        disabled={uploading}
+                        className={cn(
+                          "inline-flex items-center gap-1 text-[11px] font-medium rounded-full px-2 py-0.5 mt-0.5 transition-colors",
+                          audience === "close_friends"
+                            ? "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400"
+                            : "bg-muted/60 text-muted-foreground hover:bg-muted",
+                        )}
+                        aria-label="Choose story audience"
+                      >
+                        {audience === "close_friends" ? (
+                          <Star className="w-3 h-3 fill-current" />
+                        ) : (
+                          <Globe className="w-3 h-3" />
+                        )}
+                        {audience === "close_friends" ? "Close Friends" : "Public"} · 24h
+                        <ChevronDown className="w-3 h-3 opacity-70" />
+                      </button>
+                    </PopoverTrigger>
+                    <PopoverContent align="start" className="w-64 p-1.5">
+                      <button
+                        type="button"
+                        onClick={() => setAudience("public")}
+                        className={cn(
+                          "w-full flex items-start gap-3 p-2.5 rounded-lg text-left hover:bg-muted/60 transition-colors",
+                          audience === "public" && "bg-muted/60",
+                        )}
+                      >
+                        <Globe className="w-4 h-4 mt-0.5 text-muted-foreground" />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">Public</p>
+                          <p className="text-[11px] text-muted-foreground">Anyone can see this story</p>
+                        </div>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setAudience("close_friends")}
+                        className={cn(
+                          "w-full flex items-start gap-3 p-2.5 rounded-lg text-left hover:bg-muted/60 transition-colors",
+                          audience === "close_friends" && "bg-emerald-500/10",
+                        )}
+                      >
+                        <Star className="w-4 h-4 mt-0.5 text-emerald-500 fill-emerald-500" />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">Close Friends</p>
+                          <p className="text-[11px] text-muted-foreground">
+                            {closeFriends.length > 0
+                              ? `Only ${closeFriends.length} ${closeFriends.length === 1 ? "person" : "people"} on your list`
+                              : "Your list is empty — manage it in Privacy settings"}
+                          </p>
+                        </div>
+                      </button>
+                    </PopoverContent>
+                  </Popover>
                 </div>
               </div>
             </div>
@@ -519,21 +588,15 @@ export default function CreateStorySheet({ open, onClose, onPublished }: Props) 
 
             {step === "preview-media" && previewUrl && pickedFile && (
               <div className="p-3 space-y-3">
-                <div className="relative w-full aspect-[9/16] rounded-2xl overflow-hidden bg-black">
-                  {pickedFile.type.startsWith("video/") ? (
-                    <video src={previewUrl} className="w-full h-full object-cover" autoPlay muted loop playsInline />
-                  ) : (
-                    <img src={previewUrl} alt="" className="w-full h-full object-cover" />
-                  )}
-                  {caption && (
-                    <div className="absolute bottom-4 left-4 right-4">
-                      <p className="text-white text-sm font-medium drop-shadow-lg bg-black/40 backdrop-blur-sm rounded-xl px-3 py-2 text-center">
-                        {caption}
-                      </p>
-                    </div>
-                  )}
+                <div className="relative">
+                  <StoryEditor
+                    mediaUrl={previewUrl}
+                    mediaType={pickedFile.type.startsWith("video/") ? "video" : "image"}
+                    state={editorState}
+                    onChange={setEditorState}
+                  />
                   {audioTrack && (
-                    <div className="absolute top-3 left-3 right-3 flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1.5">
+                    <div className="absolute top-3 left-3 right-14 flex items-center gap-2 bg-black/50 backdrop-blur-sm rounded-full px-3 py-1.5 z-10">
                       <Music className="w-3.5 h-3.5 text-white shrink-0" />
                       <span className="text-white text-xs font-medium truncate flex-1">{audioTrack.title}</span>
                       <button type="button"

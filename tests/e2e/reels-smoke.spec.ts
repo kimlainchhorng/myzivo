@@ -1,9 +1,8 @@
 import { test, expect } from "@playwright/test";
+import { login } from "./fixtures/login";
 
-const EMAIL = "klainkonkat@gmail.com";
-const PASSWORD = "Chhorng@1998";
-
-test("reels page loads after login and we can capture state", async ({ page }) => {
+test("reels page loads after login and we can capture state", async ({ page }, testInfo) => {
+  test.setTimeout(60_000);
   const consoleErrors: string[] = [];
   const pageErrors: string[] = [];
   page.on("console", (msg) => {
@@ -11,22 +10,13 @@ test("reels page loads after login and we can capture state", async ({ page }) =
   });
   page.on("pageerror", (err) => pageErrors.push(err.message));
 
-  await page.goto("/login");
-  await page.fill("#login-email", EMAIL);
-  await page.fill("#login-password", PASSWORD);
-  await page.click('button[type="submit"]');
+  await login(page);
 
-  // Wait for nav away from /login (success) or for an error toast.
-  await Promise.race([
-    page.waitForURL((url) => !url.pathname.startsWith("/login"), { timeout: 15_000 }).catch(() => null),
-    page.waitForTimeout(8_000),
-  ]);
-
-  await page.screenshot({ path: "tmp/reels-after-login.png", fullPage: false });
+  await page.screenshot({ path: testInfo.outputPath("reels-after-login.png"), fullPage: false });
 
   await page.goto("/reels", { waitUntil: "domcontentloaded" });
-  await page.waitForTimeout(4_000);
-  await page.screenshot({ path: "tmp/reels-page.png", fullPage: false });
+  await expect(page.locator("body")).toContainText(/Reels|For You|Following/i, { timeout: 20_000 });
+  await page.screenshot({ path: testInfo.outputPath("reels-page.png"), fullPage: false });
 
   const url = page.url();
   const title = await page.title();

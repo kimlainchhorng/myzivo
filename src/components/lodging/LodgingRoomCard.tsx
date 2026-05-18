@@ -92,6 +92,7 @@ export function LodgingRoomCard({
     ? expandableFeatures.slice(0, 4).join(" + ")
     : "Parking + late check-out + early check-in + high-speed internet";
   const hasDirectDiscount = !!originalRateCents && originalRateCents > baseRateCents;
+  const hasGetawayDeal = badges.includes("Getaway Deal") && !!originalRateCents;
 
   // Quick chip amenities (icons + labels) — show first 4
   const quickChips = amenities.slice(0, 4);
@@ -278,7 +279,7 @@ export function LodgingRoomCard({
                     </p>
                   </div>
                   <div className="text-right shrink-0">
-                    {hasGetaway && original && (
+                    {hasGetawayDeal && original && (
                       <p className="text-[10px] text-red-500 line-through leading-none">{format(original, "USD")}</p>
                     )}
                     <p className="text-[15px] font-extrabold text-foreground leading-tight">{format(price, "USD")}</p>
@@ -307,8 +308,7 @@ export function LodgingRoomCard({
           {/* Option 2: Breakfast Included */}
           {breakfastRateCents && (() => {
             const bfPrice = breakfastRateCents / 100;
-            const hasGetaway = badges.includes("Getaway Deal") && originalRateCents;
-            const bfOriginal = hasGetaway && originalRateCents ? Math.round(originalRateCents / 100 * (breakfastRateCents / baseRateCents)) : null;
+            const bfOriginal = hasGetawayDeal && originalRateCents ? Math.round(originalRateCents / 100 * (breakfastRateCents / baseRateCents)) : null;
             const discountPct = bfOriginal ? Math.round(((bfOriginal - bfPrice) / bfOriginal) * 100) : 0;
             return (
               <div className="rounded-xl border border-amber-200/60 bg-amber-50/30 dark:border-amber-500/20 dark:bg-amber-500/5 p-3">
@@ -334,7 +334,7 @@ export function LodgingRoomCard({
                     <p className="text-[9px] text-muted-foreground">/night</p>
                   </div>
                 </div>
-                {hasGetaway && discountPct > 0 && (
+                {hasGetawayDeal && discountPct > 0 && (
                   <div className="flex gap-1 mb-2">
                     <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-600 text-white font-bold">{discountPct}% off</span>
                     <span className="text-[9px] px-1.5 py-0.5 rounded bg-emerald-600 text-white font-bold flex items-center gap-0.5">

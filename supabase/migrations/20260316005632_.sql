@@ -1,0 +1,13 @@
+UPDATE public.ride_zones SET city_name_km = 'ចំការមន' WHERE zone_code = 'PNH-CKM';
+UPDATE public.ride_zones SET city_name_km = 'ដូនពេញ' WHERE zone_code = 'PNH-DP';
+UPDATE public.ride_zones SET city_name_km = '៧មករា' WHERE zone_code = 'PNH-7MK';
+UPDATE public.ride_zones SET city_name_km = 'ទួលគោក' WHERE zone_code = 'PNH-TK';
+UPDATE public.ride_zones SET city_name_km = 'មានជ័យ' WHERE zone_code = 'PNH-MC';
+UPDATE public.ride_zones SET city_name_km = 'ឫស្សីកែវ' WHERE zone_code = 'PNH-RK';
+UPDATE public.ride_zones SET city_name_km = 'សែនសុខ' WHERE zone_code = 'PNH-SS';
+UPDATE public.ride_zones SET city_name_km = 'ពោធិ៍សែនជ័យ' WHERE zone_code = 'PNH-PS';
+UPDATE public.ride_zones SET city_name_km = 'ជ្រោយចង្វារ' WHERE zone_code = 'PNH-CC';
+UPDATE public.ride_zones SET city_name_km = 'ព្រែកព្នៅ' WHERE zone_code = 'PNH-PP';
+UPDATE public.ride_zones SET city_name_km = 'ច្បារអំពៅ' WHERE zone_code = 'PNH-CA';
+UPDATE public.ride_zones SET city_name_km = 'កំបូល' WHERE zone_code = 'PNH-KB';
+UPDATE public.ride_zones SET city_name_km = 'ភ្នំពេញ (ទាំងអស់)' WHERE zone_code = 'PNH';;

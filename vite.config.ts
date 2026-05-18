@@ -11,6 +11,16 @@ const manualChunkGroups = {
   "vendor-react": ["react", "react-dom", "react-router-dom"],
   "vendor-supabase": ["@supabase/supabase-js"],
   "vendor-query": ["@tanstack/react-query"],
+  "vendor-motion": ["framer-motion"],
+  "vendor-charts": ["recharts"],
+  "vendor-livekit": ["livekit-client"],
+  "vendor-pdf": ["jspdf", "jspdf-autotable", "html2canvas", "html-to-image"],
+  "vendor-media": [
+    "@ffmpeg/core",
+    "@ffmpeg/ffmpeg",
+    "@ffmpeg/util",
+    "@mediapipe/tasks-vision",
+  ],
   // Keep all Radix in ONE chunk because splitting can evaluate shared internals
   // out of order across chunks.
   "vendor-radix": [
@@ -50,6 +60,7 @@ const pwaPrecacheGlobPatterns = [
   "assets/vendor-react-*.js",
   "assets/vendor-radix-*.js",
   "assets/vendor-supabase-*.js",
+  "assets/vendor-query-*.js",
   "assets/*.css",
   "pwa-icons/*.png",
 ];

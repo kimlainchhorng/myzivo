@@ -1,0 +1,12 @@
+-- 14 trigger/notification functions insert notifications with
+-- category = 'social' (post likes, comments, follows, message reactions,
+-- mentions, story reactions, channel comments, etc.) but the
+-- notification_category enum was originally only
+-- (transactional, account, operational, marketing). Every social action
+-- was raising "invalid input value for enum notification_category" and
+-- silently breaking via the EXCEPTION handlers in those triggers.
+--
+-- Add 'social' to the enum so all those flows work without rewriting.
+-- Postgres requires this to be done outside a transaction; that's fine
+-- via apply_migration which runs each statement separately.
+ALTER TYPE public.notification_category ADD VALUE IF NOT EXISTS 'social';;

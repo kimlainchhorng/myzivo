@@ -56,6 +56,7 @@ export interface StoryItem {
   audioUrl?: string;
   createdAt: string;
   viewsCount: number;
+  audienceType?: "public" | "close_friends";
 }
 
 export interface StoryGroup {
@@ -709,15 +710,17 @@ export default function StoryViewer({
           <div className="absolute inset-0 bg-gradient-to-b from-black/50 via-transparent to-black/60" />
         </div>
 
-        {/* Progress bars — ZIVO Aurora gradient */}
+        {/* Progress bars — green for Close Friends, otherwise ZIVO Aurora gradient */}
         <div className="absolute top-[env(safe-area-inset-top,12px)] left-0 right-0 flex gap-1 px-3 pt-2 z-20">
-          {viewingGroup.stories.map((_, i) => (
+          {viewingGroup.stories.map((s, i) => (
             <div key={i} className="flex-1 h-[3px] bg-white/15 rounded-full overflow-hidden backdrop-blur-sm">
               <motion.div
                 className={cn(
                   "h-full rounded-full",
                   i === viewIdx
-                    ? "bg-gradient-to-r from-[hsl(160_84%_55%)] via-[hsl(174_72%_60%)] to-[hsl(190_85%_65%)] shadow-[0_0_8px_hsl(160_84%_55%/0.7)]"
+                    ? s.audienceType === "close_friends"
+                      ? "bg-gradient-to-r from-emerald-400 via-emerald-500 to-emerald-600 shadow-[0_0_8px_rgb(16_185_129/0.7)]"
+                      : "bg-gradient-to-r from-[hsl(160_84%_55%)] via-[hsl(174_72%_60%)] to-[hsl(190_85%_65%)] shadow-[0_0_8px_hsl(160_84%_55%/0.7)]"
                     : "bg-white/90"
                 )}
                 style={{
@@ -730,8 +733,18 @@ export default function StoryViewer({
 
         {/* Header — single ZIVO glass capsule */}
         <div data-testid="story-header" className="absolute top-[calc(env(safe-area-inset-top,12px)+20px)] left-0 right-0 flex items-center justify-between px-3 z-20 gap-2">
-          <div className="flex items-center gap-2.5 rounded-full bg-black/35 backdrop-blur-xl border border-white/10 ring-1 ring-[hsl(160_84%_55%)/0.25] pl-1 pr-3.5 py-1 shadow-[0_4px_20px_-6px_rgba(0,0,0,0.5)] min-w-0 flex-1 max-w-[68%]">
-            <div className="w-9 h-9 rounded-full ring-2 ring-[hsl(160_84%_55%)/0.7] overflow-hidden shrink-0">
+          <div className={cn(
+            "flex items-center gap-2.5 rounded-full bg-black/35 backdrop-blur-xl border border-white/10 pl-1 pr-3.5 py-1 shadow-[0_4px_20px_-6px_rgba(0,0,0,0.5)] min-w-0 flex-1 max-w-[68%] ring-1",
+            currentStory.audienceType === "close_friends"
+              ? "ring-emerald-500/35"
+              : "ring-[hsl(160_84%_55%)/0.25]"
+          )}>
+            <div className={cn(
+              "w-9 h-9 rounded-full ring-2 overflow-hidden shrink-0",
+              currentStory.audienceType === "close_friends"
+                ? "ring-emerald-500/80"
+                : "ring-[hsl(160_84%_55%)/0.7]"
+            )}>
               {viewingGroup.avatarUrl ? (
                 <img src={viewingGroup.avatarUrl} alt="" className="w-full h-full object-cover" />
               ) : (

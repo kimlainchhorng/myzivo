@@ -7,7 +7,7 @@
 import { forwardRef } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Home, MessageCircle, User, Film, Newspaper } from "lucide-react";
+import { Home, MessageCircle, User, Film, Newspaper, Plus } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -31,6 +31,7 @@ interface NavTab {
   badge?: number;
   /** Lucide icons that render well with `fill="currentColor"` when active. */
   fillable?: boolean;
+  isCreate?: boolean;
 }
 
 const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, ref) => {
@@ -79,6 +80,7 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
     { id: "home", labelKey: "nav.home", icon: Home, path: "/", badge: liveActivity.total, fillable: true },
     { id: "feed", labelKey: "nav.feed", icon: Newspaper, path: SOCIAL_ROUTE_PATHS.feed },
     { id: "reels", labelKey: "nav.reel", icon: Film, path: SOCIAL_ROUTE_PATHS.reels },
+    { id: "create", labelKey: "nav.create", icon: Plus, path: gated(`${SOCIAL_ROUTE_PATHS.feed}?compose=post`), isCreate: true },
     { id: "chat", labelKey: "nav.chat", icon: MessageCircle, path: gated(SOCIAL_ROUTE_PATHS.chat), badge: chatUnread, fillable: true },
     { id: "account", labelKey: "nav.account", icon: User, path: gated(SOCIAL_ROUTE_PATHS.profile), badge: notificationUnread },
   ];
@@ -108,11 +110,12 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
     <nav
       ref={ref}
       data-zivo-mobile-nav
-      className="fixed inset-x-0 bottom-0 z-[1401] lg:hidden pb-safe bg-background/95 backdrop-blur-md border-t border-border/60 shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.18)]"
+      className="fixed inset-x-0 bottom-0 z-[1401] lg:hidden pb-safe bg-background/95 backdrop-blur-xl border-t border-border/50 shadow-[0_-10px_28px_-16px_rgba(0,0,0,0.22)]"
     >
-      <div className="relative flex items-stretch justify-around h-[52px] max-w-lg mx-auto px-1">
+      <div className="relative flex items-stretch justify-around h-[62px] max-w-xl mx-auto px-1.5">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
+          const label = t(tab.labelKey);
 
           return (
             <button type="button"
@@ -126,6 +129,11 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
                 if (target && activeTab !== tab.id) prefetch(target);
               }}
               onClick={() => {
+                if (tab.id === "create") {
+                  impact("medium");
+                  navigate(tab.path);
+                  return;
+                }
                 if (tab.id === "account" && activeTab === "account") {
                   impact("light");
                   const onMore = location.pathname.startsWith("/more");
@@ -138,19 +146,23 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
                 }
               }}
               className={cn(
-                "flex items-center justify-center flex-1 transition-all duration-200 touch-manipulation relative min-w-[44px] min-h-[44px] active:scale-[0.92]",
-                isActive ? "text-foreground" : "text-foreground/45 hover:text-foreground/70"
+                "flex flex-col items-center justify-center flex-1 gap-0.5 transition-all duration-200 touch-manipulation relative min-w-[44px] min-h-[50px] active:scale-[0.92]",
+                tab.isCreate
+                  ? "text-primary-foreground"
+                  : isActive
+                  ? "text-foreground"
+                  : "text-foreground/48 hover:text-foreground/75"
               )}
-              aria-label={t(tab.labelKey)}
+              aria-label={label}
               aria-current={isActive ? "page" : undefined}
             >
               <div className="relative flex items-center justify-center">
-                {isActive && (
+                {isActive && !tab.isCreate && (
                   <motion.span
                     layoutId="zivo-bottom-nav-pill"
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                     aria-hidden
-                    className="absolute -inset-x-3 -inset-y-1.5 rounded-full bg-foreground/[0.07] ring-1 ring-foreground/10"
+                    className="absolute -inset-x-3 -inset-y-1 rounded-full bg-foreground/[0.07] ring-1 ring-foreground/10"
                   />
                 )}
                 {tab.id === "account" && user ? (
@@ -170,11 +182,20 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
                     </AvatarFallback>
                   </Avatar>
                 ) : (
-                  <tab.icon
-                    className="relative z-10 w-[24px] h-[24px]"
-                    strokeWidth={isActive ? 2.4 : 1.6}
-                    fill={isActive && tab.fillable ? "currentColor" : "none"}
-                  />
+                  <span
+                    className={cn(
+                      "relative z-10 flex items-center justify-center transition-all",
+                      tab.isCreate
+                        ? "h-10 w-10 rounded-full bg-foreground text-background shadow-[0_10px_24px_-12px_rgba(0,0,0,0.55)] ring-1 ring-foreground/10"
+                        : "h-7 w-7"
+                    )}
+                  >
+                    <tab.icon
+                      className={cn("relative z-10", tab.isCreate ? "h-5 w-5" : "h-[23px] w-[23px]")}
+                      strokeWidth={tab.isCreate ? 2.6 : isActive ? 2.35 : 1.7}
+                      fill={isActive && tab.fillable ? "currentColor" : "none"}
+                    />
+                  </span>
                 )}
                 {typeof tab.badge === "number" && tab.badge > 0 && (
                   <motion.span
@@ -183,10 +204,18 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
                     transition={{ type: "spring", stiffness: 500, damping: 20 }}
                     className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] px-1 bg-destructive text-destructive-foreground text-[9px] font-bold rounded-full flex items-center justify-center z-20 ring-2 ring-background"
                   >
-                    {tab.badge > 9 ? "9+" : tab.badge}
+                    {tab.badge > 99 ? "99+" : tab.badge}
                   </motion.span>
                 )}
               </div>
+              {!tab.isCreate && (
+                <span className={cn(
+                  "relative z-10 max-w-[48px] truncate text-[10px] font-semibold leading-none",
+                  isActive ? "text-foreground" : "text-foreground/55"
+                )}>
+                  {label}
+                </span>
+              )}
             </button>
           );
         })}

@@ -266,6 +266,51 @@ const FEED_SUPER_APP_TARGETS: FeedSuperAppTarget[] = [
   },
 ];
 
+const FEED_CREATOR_WORKFLOWS = [
+  {
+    label: "Story",
+    description: "24h update",
+    icon: Camera,
+    tone: "from-pink-500 to-orange-400",
+    action: "story",
+  },
+  {
+    label: "Reel",
+    description: "Short video",
+    icon: Film,
+    tone: "from-fuchsia-500 to-violet-500",
+    action: "reel",
+  },
+  {
+    label: "Post",
+    description: "Photo or text",
+    icon: Plus,
+    tone: "from-sky-500 to-cyan-400",
+    action: "post",
+  },
+  {
+    label: "Live",
+    description: "Go on air",
+    icon: Radio,
+    tone: "from-red-500 to-rose-500",
+    action: "live",
+  },
+  {
+    label: "Shop",
+    description: "Sell items",
+    icon: ShoppingBag,
+    tone: "from-amber-500 to-orange-500",
+    action: "shop",
+  },
+  {
+    label: "Jobs",
+    description: "Hire talent",
+    icon: Briefcase,
+    tone: "from-emerald-500 to-teal-400",
+    action: "jobs",
+  },
+] as const;
+
 const trackInitiateCheckout = (input: Record<string, unknown>) =>
   import("@/services/metaConversion").then((m) => m.trackInitiateCheckout(input as any));
 
@@ -447,32 +492,129 @@ const showGuestActionPrompt = (message: string, returnTo = "/feed") => {
 
 function GuestFeedCta({ onLogin, onSignup }: { onLogin: () => void; onSignup: () => void }) {
   return (
-    <div className="mx-3 my-3 rounded-2xl border border-primary/20 bg-card px-4 py-4 shadow-sm">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="min-w-0">
-          <p className="text-sm font-bold text-foreground">Join ZIVO to make this feed yours</p>
-          <p className="mt-1 text-[12px] leading-snug text-muted-foreground">
-            Log in to like, comment, save posts, follow creators, and see friends-only updates.
-          </p>
+    <div className="mx-3 my-3 overflow-hidden rounded-2xl border border-border/50 bg-card shadow-sm">
+      <div className="h-1 bg-gradient-to-r from-pink-500 via-orange-400 to-sky-500" aria-hidden="true" />
+      <div className="px-4 py-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="min-w-0">
+            <p className="text-sm font-bold text-foreground">Make this feed yours</p>
+            <p className="mt-1 text-[12px] leading-snug text-muted-foreground">
+              Follow creators, save posts, message friends, publish reels, and unlock ZIVO's social workflows.
+            </p>
+          </div>
+          <div className="flex shrink-0 gap-2">
+            <button
+              type="button"
+              onClick={onLogin}
+              className="h-9 rounded-full border border-border bg-background px-4 text-[12px] font-semibold text-foreground active:scale-95"
+            >
+              Log in
+            </button>
+            <button
+              type="button"
+              onClick={onSignup}
+              className="h-9 rounded-full bg-primary px-4 text-[12px] font-semibold text-primary-foreground active:scale-95"
+            >
+              Sign up
+            </button>
+          </div>
         </div>
-        <div className="flex shrink-0 gap-2">
-          <button
-            type="button"
-            onClick={onLogin}
-            className="h-9 rounded-full border border-border bg-background px-4 text-[12px] font-semibold text-foreground active:scale-95"
-          >
-            Log in
-          </button>
-          <button
-            type="button"
-            onClick={onSignup}
-            className="h-9 rounded-full bg-primary px-4 text-[12px] font-semibold text-primary-foreground active:scale-95"
-          >
-            Sign up
-          </button>
+        <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+          {[
+            ["Create", "Story, reel, post"],
+            ["Connect", "Follow + chat"],
+            ["Convert", "Shop + jobs"],
+          ].map(([label, description]) => (
+            <div key={label} className="rounded-xl bg-muted/40 px-2 py-2">
+              <p className="text-[11px] font-bold text-foreground">{label}</p>
+              <p className="mt-0.5 truncate text-[9px] text-muted-foreground">{description}</p>
+            </div>
+          ))}
         </div>
       </div>
     </div>
+  );
+}
+
+function FeedWorkflowRail({
+  isSignedIn,
+  onLogin,
+  onCreate,
+  onCreateMode,
+  onNavigate,
+}: {
+  isSignedIn: boolean;
+  onLogin: () => void;
+  onCreate: () => void;
+  onCreateMode: (mode: "photo" | "reel" | "poll" | undefined) => void;
+  onNavigate: (path: string) => void;
+}) {
+  const handleAction = (action: (typeof FEED_CREATOR_WORKFLOWS)[number]["action"]) => {
+    if (!isSignedIn && action !== "shop") {
+      onLogin();
+      return;
+    }
+
+    if (action === "story") {
+      onNavigate("/feed?compose=story");
+      return;
+    }
+    if (action === "reel") {
+      onCreateMode("reel");
+      onCreate();
+      return;
+    }
+    if (action === "post") {
+      onCreateMode(undefined);
+      onCreate();
+      return;
+    }
+    if (action === "live") {
+      onNavigate("/go-live");
+      return;
+    }
+    if (action === "shop") {
+      onNavigate("/marketplace");
+      return;
+    }
+    onNavigate("/personal/employer");
+  };
+
+  return (
+    <section aria-label="Creator workflows" className="border-b border-border/15 bg-background px-3 py-3">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-[13px] font-bold text-foreground">Create, discover, and sell</p>
+          <p className="truncate text-[11px] text-muted-foreground">Instagram-style social workflows connected to the ZIVO super-app</p>
+        </div>
+        <button
+          type="button"
+          onClick={() => onNavigate("/explore")}
+          className="shrink-0 rounded-full bg-muted px-3 py-1.5 text-[11px] font-bold text-foreground active:scale-95"
+        >
+          Explore
+        </button>
+      </div>
+      <div className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-hide">
+        {FEED_CREATOR_WORKFLOWS.map((workflow) => {
+          const Icon = workflow.icon;
+          return (
+            <button
+              type="button"
+              key={workflow.label}
+              onClick={() => handleAction(workflow.action)}
+              className="group min-w-[86px] shrink-0 rounded-2xl border border-border/40 bg-card p-2 text-left shadow-sm active:scale-[0.98]"
+            >
+              <span className={cn("mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br text-white shadow-sm", workflow.tone)}>
+                <Icon className="h-4 w-4" />
+              </span>
+              <span className="block text-[12px] font-bold leading-none text-foreground">{workflow.label}</span>
+              <span className="mt-1 block text-[10px] leading-tight text-muted-foreground">{workflow.description}</span>
+            </button>
+          );
+        })}
+      </div>
+    </section>
   );
 }
 
@@ -1511,14 +1653,32 @@ export default function ReelsFeedPage() {
                       </div>
                     </SheetContent>
                   </Sheet>
-                  <h1 className="text-base font-bold text-foreground shrink-0 drop-shadow-sm">Feed</h1>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setFeedTab("For You");
+                      setFeedFilter("all");
+                      setSelectedHashtag(null);
+                      feedTopRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+                    }}
+                    className="shrink-0 text-left active:scale-95"
+                    aria-label="Back to top of Feed"
+                    title="Back to top"
+                  >
+                    <span className="block bg-gradient-to-r from-pink-500 via-orange-400 to-sky-500 bg-clip-text text-[19px] font-black leading-none tracking-tight text-transparent">
+                      ZIVO
+                    </span>
+                    <span className="block text-[9px] font-bold uppercase leading-none tracking-[0.16em] text-muted-foreground">
+                      Feed
+                    </span>
+                  </button>
                   <div className="flex-1 relative">
                     <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground pointer-events-none" />
                     <input
                       value={searchQuery}
                       onChange={(e) => handleSearchChange(e.target.value)}
                       onFocus={() => setShowSearch(true)}
-                      placeholder="Search…"
+                      placeholder="Search ZIVO…"
                       className="h-11 w-full pl-8 pr-7 rounded-full bg-muted/40 border border-border/30 text-[14px] text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary/30 transition-colors"
                     />
                     {searchQuery && (
@@ -1529,7 +1689,7 @@ export default function ReelsFeedPage() {
                   </div>
                   <button type="button"
                     onClick={() => userId ? setShowCreate(true) : goLogin("/feed?compose=post")}
-                    className="shrink-0 h-11 w-11 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition"
+                    className="shrink-0 h-11 w-11 rounded-full bg-foreground text-background flex items-center justify-center hover:opacity-90 active:scale-95 transition shadow-sm"
                     aria-label="Create post"
                     title="Create post"
                   >
@@ -1565,7 +1725,7 @@ export default function ReelsFeedPage() {
                 <div
                   className={cn(
                     "overflow-hidden transition-all duration-300 ease-out",
-                    headerHidden ? "max-h-0 opacity-0" : "max-h-[76px] opacity-100"
+                    headerHidden ? "max-h-0 opacity-0" : "max-h-[96px] opacity-100"
                   )}
                 >
                   {/* Tab strip — For You / Friends / Following (signed-in only) */}
@@ -1589,21 +1749,38 @@ export default function ReelsFeedPage() {
                     </div>
                   )}
                   {/* Content type filter chips */}
-                  <div className="flex gap-1.5 px-3 pb-1 overflow-x-auto scrollbar-hide">
-                    {(["all", "photos", "videos", "text"] as const).map((f) => (
-                      <button type="button"
-                        key={f}
-                        onClick={() => setFeedFilter(f)}
-                        className={cn(
-                          "shrink-0 min-h-[40px] px-3.5 py-2 rounded-full text-[12px] font-semibold transition-all active:scale-95",
-                          feedFilter === f
-                            ? "bg-foreground text-background"
-                            : "bg-muted/50 text-muted-foreground"
-                        )}
-                      >
-                        {f === "all" ? "All" : f === "photos" ? "Photos" : f === "videos" ? "Videos" : "Text"}
-                      </button>
-                    ))}
+                  <div className="px-3 pb-2">
+                    <div
+                      className="grid grid-cols-4 gap-1 rounded-full border border-border/40 bg-muted/40 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]"
+                      role="toolbar"
+                      aria-label="Filter feed posts"
+                    >
+                      {([
+                        { id: "all", label: "All", icon: Sparkles },
+                        { id: "photos", label: "Photos", icon: ImageIcon },
+                        { id: "videos", label: "Videos", icon: Film },
+                        { id: "text", label: "Text", icon: MessageSquare },
+                      ] as const).map(({ id, label, icon: Icon }) => {
+                        const active = feedFilter === id;
+                        return (
+                          <button
+                            type="button"
+                            key={id}
+                            onClick={() => setFeedFilter(id)}
+                            aria-pressed={active}
+                            className={cn(
+                              "inline-flex h-8 min-w-0 items-center justify-center gap-1.5 rounded-full px-2 text-[12px] font-bold transition-all active:scale-95",
+                              active
+                                ? "bg-foreground text-background shadow-sm"
+                                : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
+                            )}
+                          >
+                            <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                            <span className="truncate">{label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1815,6 +1992,14 @@ export default function ReelsFeedPage() {
           {!userId && (
             <GuestFeedCta onLogin={() => goLogin("/feed")} onSignup={goSignup} />
           )}
+
+          <FeedWorkflowRail
+            isSignedIn={Boolean(userId)}
+            onLogin={() => goLogin("/feed")}
+            onCreate={() => setShowCreate(true)}
+            onCreateMode={setCreateMode}
+            onNavigate={navigate}
+          />
 
           {/* Realtime new-posts banner */}
           <AnimatePresence>
@@ -2446,9 +2631,130 @@ export default function ReelsFeedPage() {
 
         {/* Desktop RIGHT rail — hidden when chat panel is open to avoid overflow */}
         <aside className={cn(
-          "hidden xl:flex flex-col w-[280px] shrink-0 sticky top-[4.5rem] h-[calc(100vh-4.5rem)] overflow-y-auto py-4 px-3 gap-4 border-l border-border/20 bg-background/95",
+          "hidden xl:flex flex-col w-[304px] shrink-0 sticky top-[4.5rem] h-[calc(100vh-4.5rem)] overflow-y-auto py-4 px-3 gap-4 border-l border-border/20 bg-background/95",
           chatOpen && "!hidden"
         )}>
+
+          {/* Social workflow — Instagram-style next actions for the super-app */}
+          <div className="shrink-0 rounded-[18px] border border-border/40 bg-card shadow-sm overflow-hidden">
+            <div className="px-3.5 py-3 border-b border-border/25">
+              <div className="flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <h3 className="text-sm font-bold text-foreground leading-tight">Today on ZIVO</h3>
+                  <p className="text-[11px] text-muted-foreground leading-snug mt-0.5">
+                    Create, reply, book, and keep your feed moving.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => userId ? setShowCreate(true) : goLogin("/feed?compose=post")}
+                  className="shrink-0 inline-flex h-9 w-9 items-center justify-center rounded-full bg-foreground text-background hover:opacity-90 active:scale-95 transition"
+                  aria-label="Create post"
+                  title="Create post"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-3 border-b border-border/25">
+              {[
+                { label: "DMs", value: headerChatUnread, icon: MessageCircle, action: () => userId ? navigate("/chat") : goLogin("/chat") },
+                { label: "Alerts", value: notificationUnread, icon: Bell, action: () => userId ? navigate("/notifications") : goLogin("/notifications") },
+                { label: "Live", value: liveStreamsCount, icon: Radio, action: () => navigate("/live") },
+              ].map(({ label, value, icon: Icon, action }) => (
+                <button
+                  type="button"
+                  key={label}
+                  onClick={action}
+                  className="group flex flex-col items-center gap-1 px-2 py-3 text-center hover:bg-muted/45 active:bg-muted transition-colors"
+                >
+                  <span className="relative inline-flex h-8 w-8 items-center justify-center rounded-full bg-muted/65 text-foreground group-hover:bg-background ring-1 ring-border/40 transition-colors">
+                    <Icon className="h-4 w-4" />
+                    {value > 0 && (
+                      <span className="absolute -right-1 -top-1 min-w-[16px] h-4 px-1 rounded-full bg-red-500 text-[9px] font-bold text-white flex items-center justify-center leading-none ring-2 ring-card">
+                        {value > 99 ? "99+" : value}
+                      </span>
+                    )}
+                  </span>
+                  <span className="text-[11px] font-semibold text-foreground">{label}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="p-2">
+              {[
+                {
+                  label: "Post a reel",
+                  desc: "Turn your next clip into a shoppable social moment.",
+                  icon: Film,
+                  action: () => {
+                    if (!userId) {
+                      goLogin("/feed?compose=reel");
+                      return;
+                    }
+                    setCreateMode("reel");
+                    setShowCreate(true);
+                  },
+                },
+                {
+                  label: "Start a chat",
+                  desc: headerChatUnread > 0 ? `${headerChatUnread} conversation${headerChatUnread === 1 ? "" : "s"} need attention.` : "Open DMs, groups, bots, and saved messages.",
+                  icon: MessageCircle,
+                  action: () => userId ? navigate("/chat") : goLogin("/chat"),
+                },
+                {
+                  label: "Book from feed",
+                  desc: "Jump into rides, eats, hotels, and marketplace from one flow.",
+                  icon: ShoppingBag,
+                  action: () => navigate("/services"),
+                },
+              ].map(({ label, desc, icon: Icon, action }) => (
+                <button
+                  type="button"
+                  key={label}
+                  onClick={action}
+                  className="w-full flex items-center gap-3 rounded-xl px-2.5 py-2.5 text-left hover:bg-muted/55 active:bg-muted transition-colors"
+                >
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-background ring-1 ring-border/45 text-foreground">
+                    <Icon className="h-4 w-4" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[13px] font-bold text-foreground leading-tight">{label}</span>
+                    <span className="block text-[11px] text-muted-foreground leading-snug mt-0.5">{desc}</span>
+                  </span>
+                  <ChevronRight className="h-4 w-4 text-muted-foreground shrink-0" />
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="shrink-0 rounded-[18px] border border-border/40 bg-card p-3 shadow-sm">
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div>
+                <h3 className="text-sm font-bold text-foreground leading-tight">Build your loop</h3>
+                <p className="text-[11px] text-muted-foreground mt-0.5">A simple creator-to-customer workflow.</p>
+              </div>
+              <Sparkles className="h-4 w-4 text-primary" />
+            </div>
+            <div className="space-y-2">
+              {[
+                { step: "1", label: "Share", desc: "Post, story, reel, or live" },
+                { step: "2", label: "Connect", desc: "DM, group, comments, followers" },
+                { step: "3", label: "Convert", desc: "Ride, eats, shop, hotel, booking" },
+              ].map((item) => (
+                <div key={item.step} className="flex items-center gap-2.5">
+                  <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-foreground text-[11px] font-bold text-background">
+                    {item.step}
+                  </span>
+                  <div className="min-w-0">
+                    <p className="text-[12px] font-bold text-foreground leading-tight">{item.label}</p>
+                    <p className="text-[11px] text-muted-foreground leading-tight">{item.desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
 
           {/* Quick Access — service shortcuts */}
           <div className="shrink-0">
@@ -2631,6 +2937,8 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [videoReady, setVideoReady] = useState(false);
+  const [videoError, setVideoError] = useState(false);
   const [muted, setMuted] = useState(true);
   const [liked, setLiked] = useState(false);
   const [localLikes, setLocalLikes] = useState(item.likes_count);
@@ -2736,6 +3044,26 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
 
   const mediaUrl = item.media_urls[0];
   const viewTracked = useRef(false);
+  const markReadyIfPlayable = useCallback((video: HTMLVideoElement) => {
+    const hasDuration = Number.isFinite(video.duration) && video.duration > 0;
+    const hasFrame = video.readyState >= 2;
+    if (hasDuration && hasFrame) {
+      setVideoReady(true);
+      setVideoError(false);
+    }
+  }, []);
+  const playCurrentVideo = useCallback(() => {
+    const video = videoRef.current;
+    if (!video) return;
+    void video
+      .play()
+      .then(() => {
+        setIsPlaying(true);
+      })
+      .catch(() => {
+        setIsPlaying(false);
+      });
+  }, []);
 
   // Auto-play when visible via IntersectionObserver.
   // Also fires a one-shot view-count bump the first time the slide becomes
@@ -2746,8 +3074,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
       ([entry]) => {
         if (entry.isIntersecting) {
           rememberReelForReelsTab(item.id);
-          videoRef.current?.play().catch(() => {});
-          setIsPlaying(true);
+          playCurrentVideo();
           if (
             !viewTracked.current &&
             item.source !== "poll" &&
@@ -2769,13 +3096,12 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
     );
     observer.observe(containerRef.current);
     return () => observer.disconnect();
-  }, [currentUserId, interactionPostId, item.id, item.source]);
+  }, [currentUserId, interactionPostId, item.id, item.source, playCurrentVideo]);
 
   const togglePlay = () => {
     if (!videoRef.current) return;
     if (videoRef.current.paused) {
-      videoRef.current.play().catch(() => {});
-      setIsPlaying(true);
+      playCurrentVideo();
     } else {
       videoRef.current.pause();
       setIsPlaying(false);
@@ -2912,7 +3238,14 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
         loop
         playsInline
         preload="metadata"
+        onLoadStart={() => {
+          setVideoReady(false);
+          setVideoError(false);
+        }}
         onLoadedMetadata={() => {
+          if (videoRef.current) {
+            markReadyIfPlayable(videoRef.current);
+          }
           if (mediaPerfLogged.current || reelsFirstMediaMetadataLogged) return;
           mediaPerfLogged.current = true;
           reelsFirstMediaMetadataLogged = true;
@@ -2921,13 +3254,73 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
             source: item.source,
           });
         }}
+        onDurationChange={(event) => {
+          markReadyIfPlayable(event.currentTarget);
+        }}
+        onCanPlay={(event) => {
+          markReadyIfPlayable(event.currentTarget);
+        }}
+        onWaiting={() => {
+          setVideoReady(false);
+        }}
+        onPlaying={() => {
+          setVideoReady(true);
+          setIsPlaying(true);
+        }}
+        onPause={() => {
+          setIsPlaying(false);
+        }}
+        onError={() => {
+          setVideoError(true);
+          setVideoReady(false);
+          setIsPlaying(false);
+        }}
         onClick={togglePlay}
         className="h-full w-full object-cover bg-black"
       />
 
+      <AnimatePresence>
+        {!videoReady && !videoError && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="absolute inset-0 flex items-center justify-center bg-black/20 pointer-events-none"
+          >
+            <div className="flex items-center gap-2 rounded-full bg-black/45 px-4 py-2 text-xs font-semibold text-white shadow-lg backdrop-blur-sm">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              <span>Loading video...</span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {videoError && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/70 px-6 text-center">
+          <div className="max-w-xs">
+            <p className="text-sm font-semibold text-white">Video could not load</p>
+            <p className="mt-1 text-xs leading-5 text-white/70">
+              The file is reachable, but this video is large. Try again or check your connection.
+            </p>
+            <button
+              type="button"
+              onClick={() => {
+                setVideoError(false);
+                setVideoReady(false);
+                videoRef.current?.load();
+                playCurrentVideo();
+              }}
+              className="mt-4 rounded-full bg-white px-4 py-2 text-sm font-semibold text-black"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Pause indicator */}
       <AnimatePresence>
-        {!isPlaying && (
+        {!isPlaying && videoReady && !videoError && (
           <motion.div
             initial={{ opacity: 0, scale: 0.5 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -4089,6 +4482,52 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
     : "aspect-[4/5]";
 
   const isSharedPost = Boolean(item.shared_from_post_id || item.shared_from_user_id);
+  const metricLabel = (value: number, singular: string, plural = `${singular}s`) => {
+    const formatted = formatCount(value);
+    if (!formatted) return null;
+    return `${formatted} ${value === 1 ? singular : plural}`;
+  };
+  const loopStats = [
+    item.hide_like_counts ? null : metricLabel(localLikes, "like"),
+    metricLabel(localComments, "reply", "replies"),
+    metricLabel(item.shares_count || 0, "share"),
+    item.media_type === "video" ? metricLabel(item.views_count || 0, "view") : null,
+  ].filter(Boolean);
+  const loopHeadline = loopStats.length > 0
+    ? loopStats.slice(0, 3).join(" · ")
+    : item.commerce_link
+      ? "Ready to shop from this post"
+      : "Start the first interaction";
+  const quickLoopActions = [
+    {
+      label: "Reply",
+      icon: MessageCircle,
+      onClick: handleComment,
+      show: commentSetting !== "off",
+      active: showComments,
+    },
+    {
+      label: item.commerce_link ? "Shop" : "Send",
+      icon: item.commerce_link ? ShoppingBag : Send,
+      onClick: item.commerce_link ? handleBuyNow : handleShare,
+      show: item.commerce_link || item.allow_sharing !== false,
+      active: Boolean(item.commerce_link),
+    },
+    {
+      label: saved ? "Saved" : "Save",
+      icon: Bookmark,
+      onClick: handleSave,
+      show: item.source !== "poll",
+      active: saved,
+    },
+    {
+      label: "Creator",
+      icon: UserCheck,
+      onClick: () => item.author_id && navigate(`/user/${item.author_id}`),
+      show: Boolean(item.author_id),
+      active: isFollowingAuthor || isOwner,
+    },
+  ].filter((action) => action.show);
 
   return (
     <div className="bg-card">
@@ -4819,6 +5258,66 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
         </button>
       </div>
 
+      <div className="px-3 pb-2 space-y-2">
+        <button
+          type="button"
+          onClick={handleComment}
+          disabled={commentSetting === "off"}
+          title={commentSetting === "off" ? "Comments are turned off" : "Add a reply"}
+          className={cn(
+            "w-full min-h-[42px] rounded-full border border-border/40 bg-muted/25 px-3 flex items-center gap-2 text-left transition-colors",
+            commentSetting === "off"
+              ? "cursor-not-allowed opacity-60"
+              : "hover:bg-muted/45 active:scale-[0.99]"
+          )}
+        >
+          <span className="h-6 w-6 rounded-full bg-gradient-to-br from-fuchsia-500 via-rose-500 to-amber-400 flex items-center justify-center text-[10px] font-black text-white shrink-0">
+            Z
+          </span>
+          <span className="flex-1 min-w-0 text-[13px] text-muted-foreground truncate">
+            {commentSetting === "off" ? "Comments are turned off" : "Reply to this moment..."}
+          </span>
+          {commentSetting !== "off" && (
+            <span className="text-[11px] font-semibold text-foreground">
+              Post
+            </span>
+          )}
+        </button>
+
+        <div className="flex items-center gap-2 overflow-x-auto scrollbar-none pb-0.5">
+          {quickLoopActions.map((action) => {
+            const Icon = action.icon;
+            return (
+              <button
+                key={action.label}
+                type="button"
+                onClick={action.onClick}
+                title={action.label}
+                className={cn(
+                  "min-h-[34px] shrink-0 rounded-full border px-3 flex items-center gap-1.5 text-[12px] font-semibold transition-all",
+                  action.active
+                    ? "border-primary/40 bg-primary text-primary-foreground shadow-sm"
+                    : "border-border/35 bg-background hover:bg-muted/40 text-foreground"
+                )}
+              >
+                <Icon className="h-3.5 w-3.5" />
+                {action.label}
+              </button>
+            );
+          })}
+        </div>
+
+        <div className="flex items-center justify-between gap-3 text-[11px] text-muted-foreground">
+          <span className="min-w-0 truncate">{loopHeadline}</span>
+          {item.media_type === "video" && item.views_count > 0 && (
+            <span className="inline-flex items-center gap-1 shrink-0">
+              <Eye className="h-3 w-3" />
+              Watching
+            </span>
+          )}
+        </div>
+      </div>
+
       {/* Owner post insights — reach + engagement strip */}
       {isOwner && (item.views_count || 0) > 0 && (
         <div className="mx-3 mb-2 rounded-xl bg-muted/30 border border-border/20 px-3 py-2 flex items-center gap-3">
@@ -4906,14 +5405,6 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
             onCommentsCountChange={setLocalComments}
           />
         </Suspense>
-      )}
-
-      {/* Views */}
-      {item.media_type === "video" && item.views_count > 0 && (
-        <div className="px-3 pb-2 flex items-center gap-1">
-          <Eye className="h-3 w-3 text-muted-foreground" />
-          <p className="text-[11px] text-muted-foreground">{item.views_count.toLocaleString()} views</p>
-        </div>
       )}
 
       {/* Share Sheet */}

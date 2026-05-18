@@ -96,7 +96,11 @@ export default function StoriesRail() {
               <span
                 className={cn(
                   "rounded-full p-[2px]",
-                  seen ? "bg-border" : "bg-ig-gradient",
+                  seen
+                    ? "bg-border"
+                    : s.audienceType === "close_friends"
+                      ? "bg-close-friends-gradient"
+                      : "bg-ig-gradient",
                 )}
               >
                 <span className="block rounded-full p-[2px] bg-background">

@@ -1,22 +1,27 @@
 /**
  * PrivacySettingsPage — Block users, mute conversations, privacy toggles
  */
-import { useState, useEffect } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useNavigate } from "react-router-dom";
-import { ArrowLeft, Shield, Eye, EyeOff, MessageSquare, Users, UserX, Loader2, ToggleLeft, ToggleRight, Database, Cookie, ChevronRight } from "lucide-react";
+import { ArrowLeft, Shield, Eye, EyeOff, MessageSquare, Users, UserX, Loader2, ToggleLeft, ToggleRight, Database, Cookie, ChevronRight, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useCloseFriends } from "@/hooks/useCloseFriends";
+
+const ManageCloseFriendsSheet = lazy(() => import("@/components/social/ManageCloseFriendsSheet"));
 
 export default function PrivacySettingsPage() {
   const { user } = useAuth();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const { closeFriends } = useCloseFriends();
+  const [closeFriendsOpen, setCloseFriendsOpen] = useState(false);
 
   // Scroll to hash anchor (e.g. #blocked) on mount
   useEffect(() => {
@@ -132,6 +137,28 @@ export default function PrivacySettingsPage() {
           </button>
         </section>
 
+        {/* Close Friends */}
+        <section>
+          <button
+            type="button"
+            onClick={() => setCloseFriendsOpen(true)}
+            className="w-full flex items-center gap-3 p-3 rounded-2xl bg-card border border-border/40 hover:bg-accent/50 transition-colors text-left active:scale-[0.99]"
+          >
+            <div className="h-9 w-9 rounded-xl bg-emerald-500/15 flex items-center justify-center">
+              <Star className="h-4 w-4 text-emerald-500" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-semibold">Close Friends</p>
+              <p className="text-xs text-muted-foreground">
+                {closeFriends.length === 0
+                  ? "Pick a private group for stories"
+                  : `${closeFriends.length} ${closeFriends.length === 1 ? "person" : "people"} on your list`}
+              </p>
+            </div>
+            <ChevronRight className="h-4 w-4 text-muted-foreground/40" />
+          </button>
+        </section>
+
         {/* Profile Visibility */}
         <section>
           <h3 className="text-sm font-semibold text-foreground mb-3 flex items-center gap-2">
@@ -205,6 +232,12 @@ export default function PrivacySettingsPage() {
           ))}
         </section>
       </div>
+
+      {closeFriendsOpen && (
+        <Suspense fallback={null}>
+          <ManageCloseFriendsSheet open={closeFriendsOpen} onOpenChange={setCloseFriendsOpen} />
+        </Suspense>
+      )}
     </div>
   );
 }

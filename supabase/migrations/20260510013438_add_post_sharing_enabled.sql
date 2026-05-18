@@ -1,0 +1,2 @@
+ALTER TABLE public.user_posts
+  ADD COLUMN IF NOT EXISTS sharing_enabled BOOLEAN NOT NULL DEFAULT TRUE;;

@@ -821,9 +821,11 @@
      ============================================= */
   :root {
     --ig-gradient: linear-gradient(45deg, #f09433 0%, #e6683c 25%, #dc2743 50%, #cc2366 75%, #bc1888 100%);
+    --close-friends-gradient: linear-gradient(135deg, #34d399 0%, #10b981 50%, #059669 100%);
   }
 
   .bg-ig-gradient { background: var(--ig-gradient); }
+  .bg-close-friends-gradient { background: var(--close-friends-gradient); }
 
   .text-ig-gradient {
     background: var(--ig-gradient);

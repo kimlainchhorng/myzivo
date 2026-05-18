@@ -36,6 +36,7 @@ vi.mock("@/hooks/useI18n", () => ({
         "nav.home": "Home",
         "nav.feed": "Feed",
         "nav.reel": "Reels",
+        "nav.create": "Create",
         "nav.chat": "Chat",
         "nav.account": "Account",
       })[key] ?? key,
@@ -116,5 +117,12 @@ describe("ZivoMobileNav", () => {
     renderMobileNav();
     fireEvent.click(screen.getByLabelText("Account"));
     expect(screen.getByLabelText("current path")).toHaveTextContent("/login?redirect=%2Fprofile");
+  });
+
+  it("routes anonymous create action through login with feed compose redirect", () => {
+    renderMobileNav();
+
+    fireEvent.click(screen.getByLabelText("Create"));
+    expect(screen.getByLabelText("current path")).toHaveTextContent("/login?redirect=%2Ffeed%3Fcompose%3Dpost");
   });
 });

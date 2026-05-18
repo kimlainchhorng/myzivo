@@ -2063,7 +2063,7 @@ export default function AdminStoreEditPage() {
       // Auto-save immediately
       const { error: saveErr } = await supabase
         .from("store_profiles")
-        .update({ [field]: publicUrl })
+        .update({ [field]: publicUrl } as any)
         .eq("id", storeId!);
       if (saveErr) throw saveErr;
       // Verify persistence

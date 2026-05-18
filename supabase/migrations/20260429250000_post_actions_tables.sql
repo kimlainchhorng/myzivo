@@ -17,6 +17,9 @@ create index if not exists idx_post_bookmarks_user
 
 alter table public.post_bookmarks enable row level security;
 
+grant select, insert, delete on table public.post_bookmarks to authenticated;
+grant all on table public.post_bookmarks to service_role;
+
 drop policy if exists "post_bookmarks_select_own" on public.post_bookmarks;
 create policy "post_bookmarks_select_own"
   on public.post_bookmarks for select

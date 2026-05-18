@@ -1,0 +1,1 @@
+UPDATE public.drivers_status SET lat = 11.5564, lng = 104.9282, city = 'Phnom Penh', is_online = true, driver_state = 'online_available', last_seen = now(), updated_at = now() WHERE driver_id = '80049196-9c96-479f-954e-4e2a6f26b07b';;

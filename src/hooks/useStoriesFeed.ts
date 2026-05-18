@@ -8,6 +8,7 @@ export interface FeedStory {
   name: string;
   avatarUrl?: string;
   watched: boolean;
+  audienceType: "public" | "close_friends";
 }
 
 // Fetches the latest unexpired story per followed user, joined to profile
@@ -22,9 +23,9 @@ async function fetchStoriesFeed(viewerId: string): Promise<FeedStory[]> {
   const followingIds = (follows ?? []).map(f => f.following_id);
   if (followingIds.length === 0) return [];
 
-  const { data: stories, error: storiesErr } = await supabase
+  const { data: stories, error: storiesErr } = await (supabase as any)
     .from("stories")
-    .select("id, user_id, created_at")
+    .select("id, user_id, created_at, audience_type")
     .in("user_id", followingIds)
     .gt("expires_at", new Date().toISOString())
     .order("created_at", { ascending: false });
@@ -32,8 +33,11 @@ async function fetchStoriesFeed(viewerId: string): Promise<FeedStory[]> {
   if (!stories || stories.length === 0) return [];
 
   // One entry per user — keep the most recent story (already sorted desc).
-  const latestByUser = new Map<string, { id: string; user_id: string }>();
-  for (const s of stories) {
+  const latestByUser = new Map<
+    string,
+    { id: string; user_id: string; audience_type?: string | null }
+  >();
+  for (const s of stories as any[]) {
     if (!latestByUser.has(s.user_id)) latestByUser.set(s.user_id, s);
   }
   const latestStories = [...latestByUser.values()];
@@ -59,12 +63,15 @@ async function fetchStoriesFeed(viewerId: string): Promise<FeedStory[]> {
   return latestStories.map(s => {
     const p = profileFor(s.user_id);
     const name = p?.username || p?.full_name?.split(" ")[0] || "user";
+    const audienceType: FeedStory["audienceType"] =
+      s.audience_type === "close_friends" ? "close_friends" : "public";
     return {
       id: s.id,
       userId: s.user_id,
       name,
       avatarUrl: p?.avatar_url ?? undefined,
       watched: viewed.has(s.id),
+      audienceType,
     };
   });
 }

@@ -1,0 +1,16 @@
+/*\n  # Add Text Pattern Matching Indexes\n\n  1. Critical Missing Indexes Identified\n    - **profiles table**: Missing indexes on email and phone columns\n      - Used for user lookups and contact searches\n    \n    - **Text pattern searches**: Missing text_pattern_ops indexes\n      - Needed for LIKE 'prefix%' queries\n      - Critical for search functionality\n\n  2. New Indexes\n    - Email/phone indexes on profiles\n    - Text pattern indexes for prefix searches\n    - Optimized booking reference and tracking code lookups\n\n  3. Expected Impact\n    - Fast email/phone lookups in profiles\n    - Efficient LIKE 'prefix%' searches\n    - Better query performance for user searches\n    - Optimized booking reference and tracking code lookups\n*/\n\n-- Profiles table optimization (missing email/phone indexes)\nCREATE INDEX IF NOT EXISTS idx_profiles_email ON public.profiles(email) WHERE email IS NOT NULL;
+\nCREATE INDEX IF NOT EXISTS idx_profiles_phone ON public.profiles(phone) WHERE phone IS NOT NULL;
+\n\n-- Text pattern indexes for LIKE searches (case-insensitive prefix matching)\nCREATE INDEX IF NOT EXISTS idx_drivers_email_pattern ON public.drivers(LOWER(email) text_pattern_ops);
+\nCREATE INDEX IF NOT EXISTS idx_profiles_email_pattern ON public.profiles(LOWER(email) text_pattern_ops) WHERE email IS NOT NULL;
+\nCREATE INDEX IF NOT EXISTS idx_food_orders_tracking_pattern ON public.food_orders(LOWER(tracking_code) text_pattern_ops);
+\n\n-- Additional search optimization indexes\nCREATE INDEX IF NOT EXISTS idx_restaurants_name_pattern ON public.restaurants(LOWER(name) text_pattern_ops);
+\nCREATE INDEX IF NOT EXISTS idx_drivers_name_search ON public.drivers(LOWER(full_name) text_pattern_ops);
+\n\n-- Booking reference optimizations\nCREATE INDEX IF NOT EXISTS idx_flight_bookings_ref_pattern ON public.flight_bookings(LOWER(booking_reference) text_pattern_ops);
+\nCREATE INDEX IF NOT EXISTS idx_travel_orders_number_pattern ON public.travel_orders(LOWER(order_number) text_pattern_ops);
+\n\n-- License plate search optimization\nCREATE INDEX IF NOT EXISTS idx_p2p_vehicles_plate_pattern ON public.p2p_vehicles(LOWER(license_plate) text_pattern_ops);
+\nCREATE INDEX IF NOT EXISTS idx_rental_cars_plate_pattern ON public.rental_cars(LOWER(license_plate) text_pattern_ops) WHERE license_plate IS NOT NULL;
+\n\n-- Email search across multiple tables\nCREATE INDEX IF NOT EXISTS idx_restaurants_email_pattern ON public.restaurants(LOWER(email) text_pattern_ops) WHERE email IS NOT NULL;
+\nCREATE INDEX IF NOT EXISTS idx_hotels_email_pattern ON public.hotels(LOWER(email) text_pattern_ops) WHERE email IS NOT NULL;
+\n\n-- Additional composite indexes for common filtering patterns\nCREATE INDEX IF NOT EXISTS idx_security_events_unresolved ON public.security_events(resolved_at, created_at DESC) WHERE resolved_at IS NULL;
+\nCREATE INDEX IF NOT EXISTS idx_admin_notifications_unread ON public.admin_notifications(is_read, created_at DESC) WHERE is_read = false;
+;

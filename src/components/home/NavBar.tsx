@@ -108,6 +108,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
   const [isLangOpen, setIsLangOpen] = useState(false);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
   const [userName, setUserName] = useState<string | null>(null);
+  const [chatUnreadCount, setChatUnreadCount] = useState(0);
   const { currentLanguage, changeLanguage, t } = useI18n();
   const { unreadCount: notificationUnread } = useNotifications(20);
   const { data: supportedLanguages } = useSupportedLanguages(true);
@@ -131,6 +132,48 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
           if (data.full_name) setUserName(data.full_name);
         }
       });
+  }, [user?.id]);
+
+  useEffect(() => {
+    if (!user?.id) {
+      setChatUnreadCount(0);
+      return;
+    }
+
+    let isMounted = true;
+    const fetchChatUnreadCount = async () => {
+      const { count, error } = await supabase
+        .from("direct_messages")
+        .select("id", { count: "exact", head: true })
+        .eq("receiver_id", user.id)
+        .eq("is_read", false);
+
+      if (!isMounted || error) return;
+      setChatUnreadCount(count || 0);
+    };
+
+    void fetchChatUnreadCount();
+
+    const channel = supabase
+      .channel(`navbar-chat-unread-${user.id}`)
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "direct_messages",
+          filter: `receiver_id=eq.${user.id}`,
+        },
+        () => {
+          void fetchChatUnreadCount();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      isMounted = false;
+      void supabase.removeChannel(channel);
+    };
   }, [user?.id]);
 
   const moreRef = useRef<HTMLDivElement>(null);
@@ -227,6 +270,7 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                 {/* Direct nav pills: Feed, Reels */}
                 {directNavItems.map((item) => {
                   const isActive = location.pathname.startsWith(item.href);
+                  const showChatUnread = item.label === "Chat" && user && chatUnreadCount > 0;
                   return (
                     <motion.div
                       key={item.href}
@@ -236,8 +280,13 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                     >
                       <Link
                         to={item.label === "Chat" && !user ? withRedirectParam("/login", "/chat") : item.href}
+                        aria-label={
+                          showChatUnread
+                            ? `Chat, ${chatUnreadCount} unread`
+                            : item.label
+                        }
                         className={cn(
-                          "flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold tracking-wide transition-all duration-300 whitespace-nowrap border",
+                          "relative flex items-center gap-1.5 px-4 py-2 rounded-full text-[13px] font-semibold tracking-wide transition-all duration-300 whitespace-nowrap border",
                           isActive
                             ? ""
                             : "text-foreground/70 hover:text-foreground border-border/40 hover:border-border/70 hover:bg-muted/40"
@@ -255,6 +304,11 @@ const NavBar = forwardRef<HTMLDivElement>(function NavBar(_, ref) {
                       >
                         <item.icon className="w-4 h-4" style={isActive ? undefined : { color: `hsl(${item.cssVar})` }} />
                         {item.label}
+                        {showChatUnread && (
+                          <span className="absolute -top-1.5 -right-1.5 min-w-[18px] h-[18px] px-1.5 rounded-full bg-red-500 text-[10px] font-bold text-white flex items-center justify-center leading-none shadow-sm ring-2 ring-background">
+                            {chatUnreadCount > 99 ? "99+" : chatUnreadCount}
+                          </span>
+                        )}
                       </Link>
                     </motion.div>
                   );

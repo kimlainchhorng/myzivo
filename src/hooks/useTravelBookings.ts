@@ -254,7 +254,7 @@ export const useUpdateBookingStatus = () => {
 
       const { data, error } = await supabase
         .from('travel_bookings')
-        .update(updateData)
+        .update(updateData as any)
         .eq('id', bookingId)
         .select()
         .single();

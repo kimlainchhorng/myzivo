@@ -147,8 +147,7 @@ const Login = () => {
 
   const canSubmit =
     !submitting &&
-    password.length > 0 &&
-    (mode === "password" ? !!selectedAccount : email.trim().length > 0);
+    (mode === "password" ? !!selectedAccount : true);
 
   const passwordKeyHandlers = {
     onKeyUp: (e: React.KeyboardEvent<HTMLInputElement>) =>
@@ -284,8 +283,12 @@ const Login = () => {
     e.preventDefault();
     if (submitting) return;
     const trimmedEmail = (mode === "password" ? selectedAccount!.email : email).trim();
-    if (!trimmedEmail || !password) {
-      toast.error("Please enter your email and password.");
+    if (!trimmedEmail) {
+      toast.error("Please enter your email.");
+      return;
+    }
+    if (!password) {
+      toast.error("Please enter your password.");
       return;
     }
     setSubmitting(true);

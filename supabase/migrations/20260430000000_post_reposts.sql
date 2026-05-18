@@ -24,6 +24,12 @@ create index if not exists idx_post_reposts_user
 create index if not exists idx_post_reposts_post
   on public.post_reposts (post_id, source, created_at desc);
 
+alter table public.store_posts
+  add column if not exists reposts_count integer not null default 0;
+
+alter table public.user_posts
+  add column if not exists reposts_count integer not null default 0;
+
 alter table public.post_reposts enable row level security;
 
 drop policy if exists "post_reposts_select_all" on public.post_reposts;

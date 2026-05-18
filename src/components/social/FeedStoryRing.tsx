@@ -36,6 +36,7 @@ interface RawStory {
   created_at: string;
   expires_at: string;
   view_count: number | null;
+  audience_type: string | null;
 }
 
 export default function FeedStoryRing() {
@@ -54,7 +55,7 @@ export default function FeedStoryRing() {
     queryFn: async () => {
       const { data } = await (supabase as any)
         .from("stories")
-        .select("id, user_id, media_url, media_type, text_overlay, audio_url, created_at, expires_at, view_count")
+        .select("id, user_id, media_url, media_type, text_overlay, audio_url, created_at, expires_at, view_count, audience_type")
         .gt("expires_at", new Date().toISOString())
         .order("created_at", { ascending: true });
       return ((data as any[]) || []) as RawStory[];
@@ -104,6 +105,7 @@ export default function FeedStoryRing() {
           audioUrl: s.audio_url || undefined,
           createdAt: s.created_at,
           viewsCount: s.view_count ?? 0,
+          audienceType: s.audience_type === "close_friends" ? "close_friends" : "public",
         })),
       });
     }
