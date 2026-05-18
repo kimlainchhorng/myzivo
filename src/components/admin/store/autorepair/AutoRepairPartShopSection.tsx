@@ -256,10 +256,10 @@ export default function AutoRepairPartShopSection({ storeId }: Props) {
         active: true,
       };
       if (editId) {
-        const { error } = await supabase.from("ar_parts").update(payload).eq("id", editId);
+        const { error } = await supabase.from("ar_parts").update(payload as any).eq("id", editId);
         if (error) throw error;
       } else {
-        const { error } = await supabase.from("ar_parts").insert(payload);
+        const { error } = await supabase.from("ar_parts").insert(payload as any);
         if (error) throw error;
       }
     },
