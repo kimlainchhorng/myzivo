@@ -163,7 +163,7 @@ export function useUpdateNotificationPreferences() {
         // Update existing
         const { data, error } = await supabase
           .from("notification_preferences")
-          .update(updateData)
+          .update(updateData as any)
           .eq("user_id", user.id)
           .select()
           .single();
