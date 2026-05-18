@@ -6,6 +6,7 @@
  * any rogue session via /revoke-session.
  */
 import { createClient } from "../_shared/deps.ts";
+import { withSecurity } from "../_shared/withSecurity.ts";
 
 const ALLOWED_HEADERS = "authorization, x-client-info, apikey, content-type";
 function cors(req: Request) {
@@ -24,7 +25,7 @@ function json(req: Request, body: unknown, status = 200): Response {
   });
 }
 
-Deno.serve(async (req) => {
+Deno.serve(withSecurity("list-my-sessions", async (req) => {
   try {
     if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors(req) });
 
@@ -84,4 +85,4 @@ Deno.serve(async (req) => {
     console.error("[list-my-sessions] unhandled", err);
     return json(req, { error: err instanceof Error ? err.message : "Internal server error" }, 500);
   }
-});
+}, { rateLimit: "api_general" }));

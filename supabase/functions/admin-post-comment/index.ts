@@ -1,5 +1,6 @@
 import { createClient } from "../_shared/deps.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { withSecurity } from "../_shared/withSecurity.ts";
 import { enforceAal2 } from "../_shared/aalCheck.ts";
 import { scanContentForLinks, logBlockedAttempt, isAbuseThresholdExceeded, isIpAbuseThresholdExceeded, getRequestIpHash } from "../_shared/contentLinkValidation.ts";
 import { isLikelyMaliciousBot } from "../_shared/botDetection.ts";
@@ -13,7 +14,7 @@ function jsonResponse(body: Record<string, unknown>, status: number, headers: Re
   });
 }
 
-Deno.serve(async (req) => {
+Deno.serve(withSecurity("admin-post-comment", async (req) => {
   const corsHeaders = getCorsHeaders(req);
 
   if (req.method === "OPTIONS") {
@@ -102,4 +103,4 @@ Deno.serve(async (req) => {
     console.error("[admin-post-comment] unexpected error:", message);
     return jsonResponse({ error: message }, 500, getCorsHeaders(req));
   }
-});
+}, { rateLimit: "admin_action" }));

@@ -117,4 +117,15 @@ describe("ZivoMobileNav", () => {
     fireEvent.click(screen.getByLabelText("Account"));
     expect(screen.getByLabelText("current path")).toHaveTextContent("/login?redirect=%2Fprofile");
   });
+
+  it("does not show the old center create button", () => {
+    renderMobileNav("/feed");
+
+    expect(screen.queryByLabelText("Create")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Home")).toBeInTheDocument();
+    expect(screen.getByLabelText("Feed")).toBeInTheDocument();
+    expect(screen.getByLabelText("Reels")).toBeInTheDocument();
+    expect(screen.getByLabelText("Chat")).toBeInTheDocument();
+    expect(screen.getByLabelText("Account")).toBeInTheDocument();
+  });
 });

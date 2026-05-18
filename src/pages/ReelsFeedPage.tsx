@@ -1487,7 +1487,7 @@ export default function ReelsFeedPage() {
     );
     observer.observe(node);
     return () => observer.disconnect();
-  }, [pageSize, isFetching, items.length]);
+  }, [pageSize, isFetching, items.length, PAGE_INCREMENT, PAGE_MAX]);
 
   // Listen for chat panel state to adjust layout
   const [chatOpen, setChatOpen] = useState(false);
@@ -1540,7 +1540,7 @@ export default function ReelsFeedPage() {
         <Suspense fallback={null}><FeedSidebar /></Suspense>
 
         {/* Main Feed Content */}
-        <PullToRefresh onRefresh={handlePullRefresh} className="zivo-shell-mobile bg-background lg:pb-0 flex-1 lg:max-w-[640px] xl:max-w-[680px] lg:mx-auto">
+        <PullToRefresh onRefresh={handlePullRefresh} className="zivo-shell-mobile bg-background lg:pb-0 flex-1 w-full">
           {/* Header — hidden on desktop since the global NavBar already provides search */}
           <div
             data-testid="feed-sticky-header"
@@ -1730,7 +1730,7 @@ export default function ReelsFeedPage() {
                 <div
                   className={cn(
                     "overflow-hidden transition-all duration-300 ease-out",
-                    headerHidden ? "max-h-0 opacity-0" : "max-h-[96px] opacity-100"
+                    headerHidden ? "max-h-0 opacity-0" : "max-h-[76px] opacity-100"
                   )}
                 >
                   {/* Tab strip — For You / Friends / Following (signed-in only) */}
@@ -1754,38 +1754,21 @@ export default function ReelsFeedPage() {
                     </div>
                   )}
                   {/* Content type filter chips */}
-                  <div className="px-3 pb-2">
-                    <div
-                      className="grid grid-cols-4 gap-1 rounded-full border border-border/40 bg-muted/40 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]"
-                      role="toolbar"
-                      aria-label="Filter feed posts"
-                    >
-                      {([
-                        { id: "all", label: "All", icon: Sparkles },
-                        { id: "photos", label: "Photos", icon: ImageIcon },
-                        { id: "videos", label: "Videos", icon: Film },
-                        { id: "text", label: "Text", icon: MessageSquare },
-                      ] as const).map(({ id, label, icon: Icon }) => {
-                        const active = feedFilter === id;
-                        return (
-                          <button
-                            type="button"
-                            key={id}
-                            onClick={() => setFeedFilter(id)}
-                            aria-pressed={active}
-                            className={cn(
-                              "inline-flex h-8 min-w-0 items-center justify-center gap-1.5 rounded-full px-2 text-[12px] font-bold transition-all active:scale-95",
-                              active
-                                ? "bg-foreground text-background shadow-sm"
-                                : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
-                            )}
-                          >
-                            <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                            <span className="truncate">{label}</span>
-                          </button>
-                        );
-                      })}
-                    </div>
+                  <div className="flex gap-1.5 px-3 pb-1 overflow-x-auto scrollbar-hide">
+                    {(["all", "photos", "videos", "text"] as const).map((f) => (
+                      <button type="button"
+                        key={f}
+                        onClick={() => setFeedFilter(f)}
+                        className={cn(
+                          "shrink-0 min-h-[40px] px-3.5 py-2 rounded-full text-[12px] font-semibold transition-all active:scale-95",
+                          feedFilter === f
+                            ? "bg-foreground text-background"
+                            : "bg-muted/50 text-muted-foreground"
+                        )}
+                      >
+                        {f === "all" ? "All" : f === "photos" ? "Photos" : f === "videos" ? "Videos" : "Text"}
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>

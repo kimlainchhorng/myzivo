@@ -1,4 +1,5 @@
 import { createClient } from "../_shared/deps.ts";
+import { withSecurity } from "../_shared/withSecurity.ts";
 import { enforceAal2 } from "../_shared/aalCheck.ts";
 
 type ProfileCandidate = {
@@ -85,7 +86,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-Deno.serve(async (req) => {
+Deno.serve(withSecurity("admin-list-created-users", async (req) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
@@ -302,4 +303,4 @@ Deno.serve(async (req) => {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-});
+}, { rateLimit: "admin_action" }));

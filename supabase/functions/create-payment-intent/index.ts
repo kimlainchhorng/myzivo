@@ -1,9 +1,10 @@
 import { createClient } from "../_shared/deps.ts";
 import { getCorsHeaders } from "../_shared/cors.ts";
+import { withSecurity } from "../_shared/withSecurity.ts";
 import Stripe from "../_shared/stripe.ts";
 import { rateLimitDb, rateLimitHeaders } from "../_shared/rateLimiter.ts";
 
-Deno.serve(async (req) => {
+Deno.serve(withSecurity("create-payment-intent", async (req) => {
   const cors = getCorsHeaders(req);
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: cors });
@@ -133,4 +134,4 @@ Deno.serve(async (req) => {
       headers: { ...getCorsHeaders(req), "Content-Type": "application/json" },
     });
   }
-});
+}, { rateLimit: "payment" }));

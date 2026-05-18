@@ -134,25 +134,29 @@ describe("Story deep-link back/forward navigation", () => {
     // 3) Back -> should show A. history.back() dispatches popstate
     // asynchronously; React Router only re-renders after the popstate event
     // fires on the window, so wait for that.
+    const waitForBack = new Promise((resolve) => {
+      window.addEventListener("popstate", () => resolve(null), { once: true });
+      setTimeout(() => resolve(null), 50);
+    });
     await act(async () => {
       window.history.back();
-      await new Promise((resolve) => {
-        window.addEventListener("popstate", () => resolve(null), { once: true });
-        // jsdom: also resolve after a tick in case popstate already fired
-        setTimeout(() => resolve(null), 50);
-      });
+      await waitForBack;
     });
-    const afterBack = container.querySelector("[data-testid='viewer-story']");
-    expect(afterBack?.textContent).toBe("A");
+    await waitFor(() => {
+      expect(container.querySelector("[data-testid='viewer-story']")?.textContent).toBe("A");
+    });
 
     // 4) Forward -> should show B again
+    const waitForForward = new Promise((resolve) => {
+      window.addEventListener("popstate", () => resolve(null), { once: true });
+      setTimeout(() => resolve(null), 50);
+    });
     await act(async () => {
       window.history.forward();
-      await new Promise((resolve) => {
-        window.addEventListener("popstate", () => resolve(null), { once: true });
-        setTimeout(() => resolve(null), 50);
-      });
+      await waitForForward;
     });
-    expect(screen.getByTestId("viewer-story").textContent).toBe("B");
+    await waitFor(() => {
+      expect(screen.getByTestId("viewer-story").textContent).toBe("B");
+    });
   });
 });

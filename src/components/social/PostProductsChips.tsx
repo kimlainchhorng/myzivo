@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import ShoppingBag from "lucide-react/dist/esm/icons/shopping-bag";
 import { usePostProducts } from "@/hooks/usePostProducts";
@@ -17,6 +18,7 @@ interface Props {
 export default function PostProductsChips({ postId, variant = "chips", className }: Props) {
   const navigate = useNavigate();
   const { data: products = [], isLoading } = usePostProducts(postId);
+  const [brokenImages, setBrokenImages] = useState<Record<string, true>>({});
 
   if (isLoading || products.length === 0) return null;
 
@@ -40,22 +42,25 @@ export default function PostProductsChips({ postId, variant = "chips", className
           key={p.id}
           type="button"
           onClick={() => navigate(`/store/${p.store_id}?product=${p.store_product_id}`)}
-          className="group shrink-0 flex items-center gap-2 rounded-xl border border-border bg-background pl-1 pr-3 py-1 hover:bg-muted/50 transition-colors"
+          className="group shrink-0 flex items-center gap-2 rounded-xl border border-border bg-background text-foreground pl-1 pr-3 py-1 hover:bg-muted/50 transition-colors"
         >
-          {p.image_url ? (
+          {p.image_url && !brokenImages[p.id] ? (
             <img
               src={p.image_url}
               alt=""
               loading="lazy"
               className="h-9 w-9 rounded-lg object-cover"
+              onError={() => {
+                setBrokenImages((prev) => ({ ...prev, [p.id]: true }));
+              }}
             />
           ) : (
             <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-muted">
               <ShoppingBag className="h-4 w-4 text-muted-foreground" />
             </div>
           )}
-          <div className="text-left leading-tight">
-            <div className="text-[11px] font-semibold line-clamp-1 max-w-[140px]">{p.name}</div>
+          <div className="text-left leading-tight min-w-0">
+            <div className="text-[11px] font-semibold text-foreground line-clamp-1 max-w-[140px]">{p.name || "Product"}</div>
             <div className="text-[10px] text-muted-foreground">
               ${p.price.toFixed(2)}
               {p.in_stock === false && <span className="ml-1 text-red-500">· Out</span>}

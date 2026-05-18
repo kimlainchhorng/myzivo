@@ -110,12 +110,13 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
       data-zivo-mobile-nav
       className="fixed inset-x-0 bottom-0 z-[1401] lg:hidden pb-safe bg-background/95 backdrop-blur-md border-t border-border/60 shadow-[0_-8px_24px_-12px_rgba(0,0,0,0.18)]"
     >
-      <div className="relative flex items-stretch justify-around h-[52px] max-w-lg mx-auto px-1">
+      <div className="relative flex h-[56px] max-w-lg items-stretch justify-around mx-auto px-1">
         {tabs.map((tab) => {
           const isActive = activeTab === tab.id;
 
           return (
-            <button type="button"
+            <button
+              type="button"
               key={tab.id}
               onPointerDown={() => {
                 // Strip `/login?redirect=...` wrapper so prefetch hits the
@@ -144,49 +145,7 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
               aria-label={t(tab.labelKey)}
               aria-current={isActive ? "page" : undefined}
             >
-              <div className="relative flex items-center justify-center">
-                {isActive && (
-                  <motion.span
-                    layoutId="zivo-bottom-nav-pill"
-                    transition={{ type: "spring", stiffness: 380, damping: 30 }}
-                    aria-hidden
-                    className="absolute -inset-x-3 -inset-y-1.5 rounded-full bg-foreground/[0.07] ring-1 ring-foreground/10"
-                  />
-                )}
-                {tab.id === "account" && user ? (
-                  <Avatar
-                    className={cn(
-                      "h-[26px] w-[26px] transition-all duration-150",
-                      isActive ? "ring-[1.5px] ring-foreground ring-offset-2 ring-offset-background" : ""
-                    )}
-                  >
-                    <AvatarImage
-                      src={profile?.avatar_url || user.user_metadata?.avatar_url || undefined}
-                      alt="Account"
-                      className="object-cover"
-                    />
-                    <AvatarFallback className="bg-muted text-foreground text-[11px] font-semibold">
-                      {(profile?.full_name?.[0] || user.email?.[0] || "Z").toUpperCase()}
-                    </AvatarFallback>
-                  </Avatar>
-                ) : (
-                  <tab.icon
-                    className="relative z-10 w-[24px] h-[24px]"
-                    strokeWidth={isActive ? 2.4 : 1.6}
-                    fill={isActive && tab.fillable ? "currentColor" : "none"}
-                  />
-                )}
-                {typeof tab.badge === "number" && tab.badge > 0 && (
-                  <motion.span
-                    initial={{ scale: 0 }}
-                    animate={{ scale: 1 }}
-                    transition={{ type: "spring", stiffness: 500, damping: 20 }}
-                    className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] px-1 bg-destructive text-destructive-foreground text-[9px] font-bold rounded-full flex items-center justify-center z-20 ring-2 ring-background"
-                  >
-                    {tab.badge > 9 ? "9+" : tab.badge}
-                  </motion.span>
-                )}
-              </div>
+              <NavIcon tab={tab} isActive={isActive} user={user} profile={profile} />
             </button>
           );
         })}
@@ -200,3 +159,61 @@ const ZivoMobileNav = forwardRef<HTMLElement, Record<string, never>>((_props, re
 ZivoMobileNav.displayName = "ZivoMobileNav";
 
 export default ZivoMobileNav;
+
+function NavIcon({
+  tab,
+  isActive,
+  user,
+  profile,
+}: {
+  tab: NavTab;
+  isActive: boolean;
+  user: ReturnType<typeof useAuth>["user"];
+  profile: ReturnType<typeof useUserProfile>["data"];
+}) {
+  return (
+    <div className="relative flex items-center justify-center">
+      {isActive && (
+        <motion.span
+          layoutId="zivo-bottom-nav-pill"
+          transition={{ type: "spring", stiffness: 380, damping: 30 }}
+          aria-hidden
+          className="absolute -inset-x-3 -inset-y-1.5 rounded-full bg-foreground/[0.07] ring-1 ring-foreground/10"
+        />
+      )}
+      {tab.id === "account" && user ? (
+        <Avatar
+          className={cn(
+            "h-[26px] w-[26px] transition-all duration-150",
+            isActive ? "ring-[1.5px] ring-foreground ring-offset-2 ring-offset-background" : ""
+          )}
+        >
+          <AvatarImage
+            src={profile?.avatar_url || user.user_metadata?.avatar_url || undefined}
+            alt="Account"
+            className="object-cover"
+          />
+          <AvatarFallback className="bg-muted text-foreground text-[11px] font-semibold">
+            {(profile?.full_name?.[0] || user.email?.[0] || "Z").toUpperCase()}
+          </AvatarFallback>
+        </Avatar>
+      ) : (
+        <tab.icon
+          className="relative z-10 w-[24px] h-[24px]"
+          strokeWidth={isActive ? 2.4 : 1.6}
+          fill={isActive && tab.fillable ? "currentColor" : "none"}
+        />
+      )}
+      {typeof tab.badge === "number" && tab.badge > 0 && (
+        <motion.span
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ type: "spring", stiffness: 500, damping: 20 }}
+          className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] px-1 bg-destructive text-destructive-foreground text-[9px] font-bold rounded-full flex items-center justify-center z-20 ring-2 ring-background"
+        >
+          {tab.badge > 9 ? "9+" : tab.badge}
+        </motion.span>
+      )}
+    </div>
+  );
+}
