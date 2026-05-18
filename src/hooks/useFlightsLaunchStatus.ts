@@ -126,7 +126,7 @@ export function useUpdateChecklistItem() {
         .update({
           [key]: value,
           updated_at: new Date().toISOString(),
-        })
+        } as any)
         .eq("id", settingsId);
 
       if (error) throw error;
