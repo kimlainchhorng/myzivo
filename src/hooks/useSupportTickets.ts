@@ -357,7 +357,7 @@ export function useUpdateTicket() {
         .update({
           ...updates,
           updated_at: new Date().toISOString(),
-        })
+        } as any)
         .eq('id', ticketId)
         .select()
         .single();
