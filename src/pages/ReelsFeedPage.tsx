@@ -487,7 +487,7 @@ export default function ReelsFeedPage() {
   const [selectedHashtag, setSelectedHashtag] = useState<string | null>(null);
   const [newPostsCount, setNewPostsCount] = useState(0);
   const [showCreate, setShowCreate] = useState(false);
-  const [createMode, setCreateMode] = useState<"photo" | "reel" | "poll" | undefined>(undefined);
+  const [createMode, setCreateMode] = useState<"photo" | "reel" | "poll" | "story" | "shop" | "live" | undefined>(undefined);
   const [shareForPost, setShareForPost] = useState<{ shareUrl: string; shareText: string; shareMediaUrl?: string; shareMediaType?: "image" | "video"; sharePostId?: string; sharePostAuthorId?: string; sharePostAuthorName?: string } | null>(null);
   const [commerceDraft, setCommerceDraft] = useState<{
     linkType: "store_product" | "truck_sale";
@@ -500,6 +500,7 @@ export default function ReelsFeedPage() {
     mapLabel?: string;
   } | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [authReady, setAuthReady] = useState(false);
   const [userProfile, setUserProfile] = useState<{ name: string; avatar: string | null } | null>(null);
   const { unreadCount: notificationUnread } = useNotifications(20);
   const { prefs: chatPrefs } = useChatPrefs(userId ?? undefined);
@@ -617,6 +618,47 @@ export default function ReelsFeedPage() {
   }, [location.pathname, location.search, navigate]);
 
   useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const compose = params.get("compose");
+    if (!compose || !authReady) return;
+
+    const clearComposeParam = () => {
+      params.delete("compose");
+      navigate({ pathname: location.pathname, search: params.toString() }, { replace: true });
+    };
+
+    if (!userId) {
+      goLogin(`/feed?compose=${encodeURIComponent(compose)}`);
+      return;
+    }
+
+    if (compose === "live") {
+      clearComposeParam();
+      navigate("/live");
+      return;
+    }
+
+    const modeByCompose: Record<string, "photo" | "reel" | "poll" | "story" | "shop"> = {
+      post: "photo",
+      photo: "photo",
+      reel: "reel",
+      story: "story",
+      poll: "poll",
+      shop: "shop",
+      marketplace: "shop",
+    };
+    const mode = modeByCompose[compose];
+    if (!mode) {
+      clearComposeParam();
+      return;
+    }
+
+    setCreateMode(mode);
+    setShowCreate(true);
+    clearComposeParam();
+  }, [authReady, goLogin, location.pathname, location.search, navigate, userId]);
+
+  useEffect(() => {
     const openSearch = () => setShowSearch(true);
     window.addEventListener("zivo-open-feed-search", openSearch);
     return () => window.removeEventListener("zivo-open-feed-search", openSearch);
@@ -683,7 +725,10 @@ export default function ReelsFeedPage() {
       const authUser = data.user;
       const uid = authUser?.id || null;
       setUserId(uid);
-      if (!uid) return;
+      if (!uid) {
+        setAuthReady(true);
+        return;
+      }
 
       const metaAvatar = authUser?.user_metadata?.avatar_url || authUser?.user_metadata?.picture || null;
       const metaName = authUser?.user_metadata?.full_name || authUser?.user_metadata?.name || authUser?.email?.split("@")[0] || "You";
@@ -706,6 +751,10 @@ export default function ReelsFeedPage() {
             });
           }
         });
+    }).catch(() => {
+      setUserId(null);
+    }).finally(() => {
+      setAuthReady(true);
     });
   }, []);
 
@@ -1334,7 +1383,7 @@ export default function ReelsFeedPage() {
     );
     observer.observe(node);
     return () => observer.disconnect();
-  }, [pageSize, isFetching, items.length]);
+  }, [pageSize, isFetching, items.length, PAGE_INCREMENT, PAGE_MAX]);
 
   // Listen for chat panel state to adjust layout
   const [chatOpen, setChatOpen] = useState(false);
@@ -1440,7 +1489,7 @@ export default function ReelsFeedPage() {
                             <div className="flex items-center justify-between px-4 pt-3 pb-2">
                               <h3 className="text-[15px] font-bold text-foreground">Create</h3>
                               <button type="button"
-                                onClick={() => setShowCreate(true)}
+                                onClick={() => { setCreateMode("photo"); setShowCreate(true); }}
                                 className="text-[12px] font-semibold text-primary hover:underline"
                               >
                                 See all
@@ -1451,10 +1500,10 @@ export default function ReelsFeedPage() {
                                 { label: "Business", desc: "Page for your shop", icon: Building2, color: "text-emerald-500", route: "/business/new" },
                                 { label: "Group", desc: "Build a community", icon: Users, color: "text-blue-500", route: "/communities" },
                                 { label: "Event", desc: "Bring people together", icon: Calendar, color: "text-amber-500", route: "/explore" },
-                                { label: "Reel", desc: "Short video", icon: Film, color: "text-fuchsia-500", route: "/reels" },
+                                { label: "Reel", desc: "Short video", icon: Film, color: "text-fuchsia-500", route: "/feed?compose=reel" },
                                 { label: "Story", desc: "Share for 24h", icon: Camera, color: "text-pink-500", route: "/feed?compose=story" },
-                                { label: "Live", desc: "Go live now", icon: Radio, color: "text-red-500", route: "/go-live" },
-                                { label: "Marketplace", desc: "Sell items", icon: ShoppingBag, color: "text-orange-500", route: "/marketplace" },
+                                { label: "Live", desc: "Go live now", icon: Radio, color: "text-red-500", route: "/feed?compose=live" },
+                                { label: "Marketplace", desc: "Sell items", icon: ShoppingBag, color: "text-orange-500", route: "/feed?compose=shop" },
                                 { label: "Job", desc: "Post a hiring", icon: Briefcase, color: "text-sky-500", route: "/personal/employer" },
                                 { label: "Spaces", desc: "Audio room", icon: Mic2, color: "text-violet-500", route: "/spaces" },
                                 { label: "Post", desc: "Photo, text, poll", icon: Plus, color: "text-foreground", action: "compose" as const },
@@ -1468,6 +1517,7 @@ export default function ReelsFeedPage() {
                                     // resolves the right arm without picking
                                     // `never` and erroring on `.route`.
                                     if ("action" in item && item.action === "compose") {
+                                      setCreateMode("photo");
                                       setShowCreate(true);
                                     } else if ("route" in item) {
                                       navigate(item.route);
@@ -1532,7 +1582,14 @@ export default function ReelsFeedPage() {
                     )}
                   </div>
                   <button type="button"
-                    onClick={() => userId ? setShowCreate(true) : goLogin("/feed?compose=post")}
+                    onClick={() => {
+                      if (!userId) {
+                        goLogin("/feed?compose=post");
+                        return;
+                      }
+                      setCreateMode("photo");
+                      setShowCreate(true);
+                    }}
                     className="shrink-0 h-11 w-11 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition"
                     aria-label="Create post"
                     title="Create post"
@@ -1779,7 +1836,7 @@ export default function ReelsFeedPage() {
                   )}
                 </div>
                 <button type="button"
-                  onClick={() => setShowCreate(true)}
+                  onClick={() => { setCreateMode("photo"); setShowCreate(true); }}
                   className="flex-1 text-left px-4 py-1.5 rounded-full bg-muted/40 border border-border/30 text-[13px] text-muted-foreground hover:bg-muted/60 transition-colors"
                 >
                   {(() => {
@@ -1980,7 +2037,7 @@ export default function ReelsFeedPage() {
               <p className="text-sm text-muted-foreground mb-4">Be the first to share something amazing!</p>
               {userId && (
                 <button type="button"
-                  onClick={() => setShowCreate(true)}
+                  onClick={() => { setCreateMode("photo"); setShowCreate(true); }}
                   className="px-6 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-bold active:scale-95 transition-transform shadow-lg shadow-primary/20"
                 >
                   Create Post

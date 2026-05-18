@@ -117,4 +117,15 @@ describe("ZivoMobileNav", () => {
     fireEvent.click(screen.getByLabelText("Account"));
     expect(screen.getByLabelText("current path")).toHaveTextContent("/login?redirect=%2Fprofile");
   });
+
+  it("opens the create drawer and routes anonymous creators to login", () => {
+    renderMobileNav("/feed");
+
+    fireEvent.click(screen.getByLabelText("Create"));
+
+    expect(screen.getByRole("heading", { name: "Create" })).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Create Post" }));
+
+    expect(screen.getByLabelText("current path")).toHaveTextContent("/login?redirect=%2Ffeed");
+  });
 });

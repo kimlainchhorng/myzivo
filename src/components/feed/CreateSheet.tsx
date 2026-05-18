@@ -11,13 +11,14 @@
  * gracefully redirect to /auth?next=… for logged-out users.
  */
 import { useNavigate } from "react-router-dom";
+import type { ComponentType } from "react";
 import {
   Building2, Users, Calendar, Film, Camera, Radio, ShoppingBag,
   Briefcase, Mic2, Plus,
   Bookmark, Bell, MessageSquare, TrendingUp, Clock, Settings,
   ChevronRight, X as XIcon,
 } from "lucide-react";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetDescription, SheetTitle } from "@/components/ui/sheet";
 import { useAuth } from "@/contexts/AuthContext";
 import { cn } from "@/lib/utils";
 
@@ -25,7 +26,7 @@ type CreateItem = {
   id: string;
   label: string;
   sublabel: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: ComponentType<{ className?: string }>;
   iconClass: string;
   bgClass: string;
   path: string;
@@ -35,7 +36,7 @@ type CreateItem = {
 type ShortcutItem = {
   id: string;
   label: string;
-  icon: React.ComponentType<{ className?: string }>;
+  icon: ComponentType<{ className?: string }>;
   path: string;
   requiresAuth?: boolean;
 };
@@ -43,13 +44,13 @@ type ShortcutItem = {
 const CREATE_ITEMS: CreateItem[] = [
   { id: "business", label: "Business", sublabel: "Page for your shop",
     icon: Building2, iconClass: "text-emerald-600", bgClass: "bg-emerald-500/10",
-    path: "/business/new?new=1", requiresAuth: true },
+    path: "/shop-dashboard", requiresAuth: true },
   { id: "group", label: "Group", sublabel: "Build a community",
     icon: Users, iconClass: "text-blue-500", bgClass: "bg-blue-500/10",
     path: "/communities?new=1", requiresAuth: true },
   { id: "event", label: "Event", sublabel: "Bring people together",
     icon: Calendar, iconClass: "text-orange-500", bgClass: "bg-orange-500/10",
-    path: "/explore?new=event", requiresAuth: true },
+    path: "/events-hub/create", requiresAuth: true },
   { id: "reel", label: "Reel", sublabel: "Short video",
     icon: Film, iconClass: "text-pink-500", bgClass: "bg-pink-500/10",
     path: "/feed?compose=reel", requiresAuth: true },
@@ -58,16 +59,16 @@ const CREATE_ITEMS: CreateItem[] = [
     path: "/feed?compose=story", requiresAuth: true },
   { id: "live", label: "Live", sublabel: "Go live now",
     icon: Radio, iconClass: "text-red-500", bgClass: "bg-red-500/10",
-    path: "/go-live", requiresAuth: true },
+    path: "/feed?compose=live", requiresAuth: true },
   { id: "marketplace", label: "Marketplace", sublabel: "Sell items",
     icon: ShoppingBag, iconClass: "text-orange-600", bgClass: "bg-orange-500/10",
-    path: "/marketplace/new", requiresAuth: true },
+    path: "/feed?compose=shop", requiresAuth: true },
   { id: "job", label: "Job", sublabel: "Post a hiring",
     icon: Briefcase, iconClass: "text-sky-500", bgClass: "bg-sky-500/10",
-    path: "/jobs/new", requiresAuth: true },
+    path: "/jobs-hub/create", requiresAuth: true },
   { id: "spaces", label: "Spaces", sublabel: "Audio room",
     icon: Mic2, iconClass: "text-purple-500", bgClass: "bg-purple-500/10",
-    path: "/spaces?new=1", requiresAuth: true },
+    path: "/voice-rooms/create", requiresAuth: true },
   { id: "post", label: "Post", sublabel: "Photo, text, poll",
     icon: Plus, iconClass: "text-foreground", bgClass: "bg-muted",
     path: "/feed?compose=post", requiresAuth: true },
@@ -96,8 +97,8 @@ export default function CreateSheet({ open, onOpenChange, authRedirectPath }: Pr
   const go = (path: string, requiresAuth?: boolean) => {
     onOpenChange(false);
     if (requiresAuth && !user) {
-      const next = encodeURIComponent(authRedirectPath || path);
-      navigate(`/auth?next=${next}`);
+      const redirect = encodeURIComponent(authRedirectPath || path);
+      navigate(`/login?redirect=${redirect}`);
       return;
     }
     navigate(path);
@@ -111,7 +112,12 @@ export default function CreateSheet({ open, onOpenChange, authRedirectPath }: Pr
       >
         {/* Header */}
         <div className="flex items-center justify-between px-4 pt-safe pb-3" style={{ paddingTop: "max(env(safe-area-inset-top, 0px), 16px)" }}>
-          <h2 className="text-2xl font-extrabold tracking-tight">Create</h2>
+          <div>
+            <SheetTitle className="text-2xl font-extrabold tracking-tight">Create</SheetTitle>
+            <SheetDescription className="sr-only">
+              Choose what to create in ZIVO, including posts, reels, stories, live streams, events, listings, jobs, and voice rooms.
+            </SheetDescription>
+          </div>
           <div className="flex items-center gap-1.5">
             <button
               type="button"
@@ -142,6 +148,7 @@ export default function CreateSheet({ open, onOpenChange, authRedirectPath }: Pr
                   <button
                     key={item.id}
                     type="button"
+                    aria-label={`Create ${item.label}`}
                     onClick={() => go(item.path, item.requiresAuth)}
                     className="flex items-center gap-3 px-3 py-3 text-left active:bg-muted/40 transition-colors"
                   >
@@ -197,7 +204,7 @@ export default function CreateSheet({ open, onOpenChange, authRedirectPath }: Pr
               </p>
               <button
                 type="button"
-                onClick={() => go("/auth", false)}
+                onClick={() => go(`/login?redirect=${encodeURIComponent(authRedirectPath || "/feed")}`, false)}
                 className="mt-3 inline-flex h-9 items-center justify-center rounded-full bg-primary px-5 text-[13px] font-semibold text-primary-foreground active:opacity-80"
               >
                 Sign in

@@ -1,6 +1,6 @@
 # Supabase Migration Drift Report
 
-Generated: 2026-05-18T19:06:57.644Z
+Generated: 2026-05-18T19:47:54.425Z
 
 ## Summary
 
@@ -8,10 +8,10 @@ Generated: 2026-05-18T19:06:57.644Z
 - Invalid filenames: 0
 - Duplicate versions: 8
 - Duplicate SQL hashes: 0
-- Remote migrations: 1256
+- Remote migrations: 1260
 - Matched versions: 0
 - Local-only pending: 673
-- Remote-only missing locally: 1256
+- Remote-only missing locally: 1260
 - Pending risk: high=610, medium=48, low=15
 
 ## Domains
@@ -244,5 +244,5 @@ Generated: 2026-05-18T19:06:57.644Z
 - 20260131202048
 - 20260131203610
 - 20260131204000
-- ...and 1156 more
+- ...and 1160 more
 

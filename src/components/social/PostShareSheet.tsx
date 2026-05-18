@@ -7,8 +7,11 @@
  * fallback Copy link.
  */
 import { useEffect, useState } from "react";
+import { useQueryClient } from "@tanstack/react-query";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { invalidateAllStoryCaches } from "@/lib/storiesCache";
 import Send from "lucide-react/dist/esm/icons/send";
 import BookOpen from "lucide-react/dist/esm/icons/book-open";
 import Share2 from "lucide-react/dist/esm/icons/share-2";
@@ -16,6 +19,7 @@ import Link2 from "lucide-react/dist/esm/icons/link-2";
 import Mail from "lucide-react/dist/esm/icons/mail";
 import MessageCircle from "lucide-react/dist/esm/icons/message-circle";
 import Download from "lucide-react/dist/esm/icons/download";
+import Loader2 from "lucide-react/dist/esm/icons/loader-2";
 
 export interface PostShareSheetTarget {
   postId: string;
@@ -70,9 +74,51 @@ const robustCopy = async (text: string): Promise<boolean> => {
   } catch { return false; }
 };
 
+const clampStoryText = (value: string, max = 180) => {
+  const clean = value.replace(/\s+/g, " ").trim();
+  return clean.length > max ? `${clean.slice(0, max - 1)}...` : clean;
+};
+
+const escapeSvgText = (value: string) =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+
+const storyFallbackImage = (title: string, url: string) => {
+  const heading = escapeSvgText(clampStoryText(title || "ZIVO post", 72));
+  const host = (() => {
+    try { return new URL(url).host; } catch { return "myzivo.app"; }
+  })();
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1920" viewBox="0 0 1080 1920">
+      <defs>
+        <linearGradient id="bg" x1="0" x2="1" y1="0" y2="1">
+          <stop offset="0" stop-color="#10b981"/>
+          <stop offset="0.52" stop-color="#0891b2"/>
+          <stop offset="1" stop-color="#111827"/>
+        </linearGradient>
+      </defs>
+      <rect width="1080" height="1920" fill="url(#bg)"/>
+      <circle cx="900" cy="260" r="190" fill="#ffffff" opacity=".11"/>
+      <circle cx="170" cy="1530" r="250" fill="#ffffff" opacity=".1"/>
+      <rect x="108" y="520" width="864" height="880" rx="52" fill="#06131f" opacity=".48"/>
+      <text x="152" y="675" fill="#ffffff" font-family="Inter, Arial, sans-serif" font-size="46" font-weight="800">Shared on ZIVO</text>
+      <foreignObject x="152" y="760" width="776" height="360">
+        <div xmlns="http://www.w3.org/1999/xhtml" style="font-family: Inter, Arial, sans-serif; color: white; font-size: 72px; font-weight: 800; line-height: 1.08;">${heading}</div>
+      </foreignObject>
+      <text x="152" y="1280" fill="#d1fae5" font-family="Inter, Arial, sans-serif" font-size="34" font-weight="700">${escapeSvgText(host)}</text>
+    </svg>
+  `;
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+};
+
 /** Mount once at app root so any caller can open the sheet. */
 export default function PostShareSheet() {
+  const queryClient = useQueryClient();
   const [target, _setTarget] = useState<PostShareSheetTarget | null>(null);
+  const [sharingToStory, setSharingToStory] = useState(false);
 
   useEffect(() => { setSheetTarget = _setTarget; return () => { setSheetTarget = null; }; }, []);
 
@@ -126,10 +172,36 @@ export default function PostShareSheet() {
     close();
   };
 
-  const handleStory = () => {
-    // Stub: deep link the user to the story composer pre-loaded with the post.
-    toast("Share to Story — coming soon", { description: "Re-share posts to your story is on the roadmap." });
-    close();
+  const handleStory = async () => {
+    if (sharingToStory) return;
+    setSharingToStory(true);
+    try {
+      const { data, error: authError } = await supabase.auth.getUser();
+      if (authError || !data.user) {
+        toast("Sign in to add this to your story");
+        return;
+      }
+
+      const caption = clampStoryText(`${text}\n${url}`, 240);
+      const mediaUrl = target.imageUrl || storyFallbackImage(text, url);
+      const { error } = await (supabase as any).from("stories").insert({
+        user_id: data.user.id,
+        media_url: mediaUrl,
+        media_type: "image",
+        text_overlay: caption,
+      });
+      if (error) throw error;
+
+      invalidateAllStoryCaches(queryClient, data.user.id);
+      onShared?.("story");
+      window.dispatchEvent(new CustomEvent("zivo-feed-refresh"));
+      toast.success("Added to your story", { description: "It will stay live for 24 hours." });
+      close();
+    } catch {
+      toast.error("Couldn't add this post to your story");
+    } finally {
+      setSharingToStory(false);
+    }
   };
 
   const handleDownload = async () => {
@@ -181,8 +253,8 @@ export default function PostShareSheet() {
               <Send className="h-5 w-5" />
             </ShareTile>
           )}
-          <ShareTile color="bg-fuchsia-500 text-white" label="Story" onClick={handleStory}>
-            <BookOpen className="h-5 w-5" />
+          <ShareTile color="bg-fuchsia-500 text-white" label={sharingToStory ? "Sharing" : "Story"} onClick={handleStory} disabled={sharingToStory}>
+            {sharingToStory ? <Loader2 className="h-5 w-5 animate-spin" /> : <BookOpen className="h-5 w-5" />}
           </ShareTile>
           <ShareTile color="bg-foreground text-background" label="Native" onClick={handleNativeSheet}>
             <Share2 className="h-5 w-5" />
@@ -217,9 +289,9 @@ export default function PostShareSheet() {
   );
 }
 
-function ShareTile({ color, label, onClick, children }: { color: string; label: string; onClick: () => void; children: React.ReactNode }) {
+function ShareTile({ color, label, onClick, children, disabled }: { color: string; label: string; onClick: () => void; children: React.ReactNode; disabled?: boolean }) {
   return (
-    <button type="button" onClick={onClick} className="flex flex-col items-center gap-1.5 active:scale-95 transition-transform">
+    <button type="button" onClick={onClick} disabled={disabled} className="flex flex-col items-center gap-1.5 active:scale-95 transition-transform disabled:cursor-wait disabled:opacity-70">
       <span className={`flex items-center justify-center w-12 h-12 rounded-full shadow-sm ${color}`}>{children}</span>
       <span className="text-[11px] font-medium text-foreground">{label}</span>
     </button>

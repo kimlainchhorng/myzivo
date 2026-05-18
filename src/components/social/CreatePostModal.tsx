@@ -1,5 +1,5 @@
 /**
- * CreatePostModal — Facebook-style "Create Post" modal
+ * CreatePostModal — ZIVO creator composer modal
  * Shared component for Feed and Profile pages
  */
 import { useState, useRef, useEffect, useCallback } from "react";
@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   X as XIcon, Globe, Users, Lock, FolderPlus, MapPin, Hash,
   ChevronDown, Image as ImageIcon, Play, Film, Radio, Plus, Search, Share2, Loader2,
-  Smile, Music,
+  Smile, Music, ShoppingBag,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -45,8 +45,79 @@ interface CreatePostModalProps {
   initialAudioName?: string;
   // Preselect a creation mode so entry buttons (Photo/Reels/Poll) skip the
   // redundant second tap inside the modal toolbar.
-  initialMode?: "photo" | "reel" | "poll";
+  initialMode?: "photo" | "reel" | "poll" | "story" | "shop" | "live";
 }
+
+const COMPOSER_WORKFLOWS = [
+  { mode: "post", label: "Post", description: "Photo, video, or text", icon: ImageIcon },
+  { mode: "reel", label: "Reel", description: "Short video with sound", icon: Film },
+  { mode: "story", label: "Story", description: "Fast 24h update", icon: Play },
+  { mode: "poll", label: "Poll", description: "Ask and collect votes", icon: Hash },
+  { mode: "shop", label: "Shop", description: "Tag product or sale", icon: ShoppingBag },
+  { mode: "live", label: "Live", description: "Go on air now", icon: Radio },
+] as const;
+
+type ComposerWorkflow = (typeof COMPOSER_WORKFLOWS)[number]["mode"];
+
+const WORKFLOW_STYLES: Record<ComposerWorkflow, {
+  accent: string;
+  activeCard: string;
+  iconBubble: string;
+  soft: string;
+  text: string;
+}> = {
+  post: {
+    accent: "from-sky-500 via-blue-500 to-indigo-500",
+    activeCard: "border-sky-200 bg-sky-50 text-sky-700 shadow-[0_8px_24px_rgba(14,165,233,0.14)]",
+    iconBubble: "bg-sky-500 text-white",
+    soft: "bg-sky-50 text-sky-700",
+    text: "text-sky-700",
+  },
+  reel: {
+    accent: "from-fuchsia-500 via-rose-500 to-orange-400",
+    activeCard: "border-rose-200 bg-rose-50 text-rose-700 shadow-[0_8px_24px_rgba(244,63,94,0.14)]",
+    iconBubble: "bg-rose-500 text-white",
+    soft: "bg-rose-50 text-rose-700",
+    text: "text-rose-700",
+  },
+  story: {
+    accent: "from-amber-400 via-orange-500 to-pink-500",
+    activeCard: "border-orange-200 bg-orange-50 text-orange-700 shadow-[0_8px_24px_rgba(249,115,22,0.14)]",
+    iconBubble: "bg-orange-500 text-white",
+    soft: "bg-orange-50 text-orange-700",
+    text: "text-orange-700",
+  },
+  poll: {
+    accent: "from-violet-500 via-purple-500 to-indigo-500",
+    activeCard: "border-violet-200 bg-violet-50 text-violet-700 shadow-[0_8px_24px_rgba(139,92,246,0.14)]",
+    iconBubble: "bg-violet-500 text-white",
+    soft: "bg-violet-50 text-violet-700",
+    text: "text-violet-700",
+  },
+  shop: {
+    accent: "from-emerald-500 via-teal-500 to-cyan-500",
+    activeCard: "border-emerald-200 bg-emerald-50 text-emerald-700 shadow-[0_8px_24px_rgba(16,185,129,0.14)]",
+    iconBubble: "bg-emerald-500 text-white",
+    soft: "bg-emerald-50 text-emerald-700",
+    text: "text-emerald-700",
+  },
+  live: {
+    accent: "from-red-500 via-pink-500 to-fuchsia-500",
+    activeCard: "border-red-200 bg-red-50 text-red-700 shadow-[0_8px_24px_rgba(239,68,68,0.14)]",
+    iconBubble: "bg-red-500 text-white",
+    soft: "bg-red-50 text-red-700",
+    text: "text-red-700",
+  },
+};
+
+const WORKFLOW_PROMPTS: Record<ComposerWorkflow, string> = {
+  post: "Share an update, tag people, or add a place...",
+  reel: "Write a short hook for your reel...",
+  story: "Add a quick story caption...",
+  poll: "Ask a clear question for your audience...",
+  shop: "Describe what you are selling or promoting...",
+  live: "Tell people what your live is about...",
+};
 
 const FILTERS = [
   { name: "Original", className: "[filter:none]" },
@@ -126,10 +197,29 @@ export default function CreatePostModal({
   const [previews, setPreviews] = useState<string[]>(sharedMediaUrl ? [sharedMediaUrl] : []);
   // Reels are videos; otherwise honor the shared/default image.
   const [mediaType, setMediaType] = useState<"image" | "video">(
-    sharedMediaType || (initialMode === "reel" ? "video" : "image"),
+    sharedMediaType || (initialMode === "reel" || initialMode === "story" ? "video" : "image"),
   );
   const [selectedType, setSelectedType] = useState<"Photo" | "Video" | "Reel" | "Live" | null>(
-    initialMode === "photo" ? "Photo" : initialMode === "reel" ? "Reel" : null,
+    initialMode === "photo" || initialMode === "shop"
+      ? "Photo"
+      : initialMode === "reel" || initialMode === "story"
+        ? "Reel"
+        : initialMode === "live"
+          ? "Live"
+          : null,
+  );
+  const [workflowMode, setWorkflowMode] = useState<ComposerWorkflow>(
+    initialMode === "reel"
+      ? "reel"
+      : initialMode === "story"
+        ? "story"
+        : initialMode === "poll"
+          ? "poll"
+          : initialMode === "shop"
+            ? "shop"
+            : initialMode === "live"
+              ? "live"
+              : "post",
   );
   const [visibility, setVisibility] = useState<"everyone" | "friends" | "onlyme">("everyone");
   const [showVisibilityMenu, setShowVisibilityMenu] = useState(false);
@@ -205,7 +295,7 @@ export default function CreatePostModal({
       const timer = setTimeout(() => setShowCameraChoice(true), 400);
       return () => clearTimeout(timer);
     }
-  }, [initialAudioName]);
+  }, [files.length, initialAudioName, showCameraChoice]);
 
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
     const selected = Array.from(e.target.files || []);
@@ -273,6 +363,31 @@ export default function CreatePostModal({
   const hasSharedLink = !!initialCaption || !!sharedMediaUrl;
 
   const [uploadStatus, setUploadStatus] = useState("");
+
+  const selectWorkflowMode = (mode: ComposerWorkflow) => {
+    setWorkflowMode(mode);
+    if (mode === "live") {
+      setSelectedType("Live");
+      setIsPoll(false);
+      return;
+    }
+    if (mode === "poll") {
+      setSelectedType(null);
+      setMediaType("image");
+      setIsPoll(true);
+      setShowAudioInput(false);
+      return;
+    }
+    setIsPoll(false);
+    if (mode === "reel" || mode === "story") {
+      setSelectedType("Reel");
+      setMediaType("video");
+      setShowAudioInput(true);
+      return;
+    }
+    setSelectedType("Photo");
+    setMediaType("image");
+  };
 
   const handlePost = async () => {
     if (isPoll) {
@@ -452,6 +567,39 @@ export default function CreatePostModal({
 
   const charCount = caption.length;
   const charLimit = 2200;
+  const activeWorkflow = COMPOSER_WORKFLOWS.find((workflow) => workflow.mode === workflowMode) || COMPOSER_WORKFLOWS[0];
+  const activeWorkflowStyle = WORKFLOW_STYLES[workflowMode];
+  const ActiveWorkflowIcon = activeWorkflow.icon;
+  const captionPlaceholder = zivoOFMode ? "Compose a new post for your fans..." : WORKFLOW_PROMPTS[workflowMode];
+  const publishLabel = workflowMode === "reel"
+    ? "Share Reel"
+    : workflowMode === "story"
+      ? "Share Story"
+      : workflowMode === "poll"
+        ? "Post Poll"
+        : workflowMode === "shop"
+          ? "Share Shop"
+          : workflowMode === "live"
+            ? "Go Live"
+            : "Share";
+  const canPublish = !uploading && (
+    workflowMode === "live" ||
+    isPoll ||
+    files.length > 0 ||
+    hasSharedLink ||
+    !!caption.trim()
+  );
+  const workflowTips = workflowMode === "reel"
+    ? ["Video first", "Sound ready", "Short caption"]
+    : workflowMode === "story"
+      ? ["Fast update", "Video or photo", "Keep it light"]
+      : workflowMode === "poll"
+        ? ["Clear question", "2+ answers", "Watch votes"]
+        : workflowMode === "shop"
+          ? ["Add photo", "Tag product", "Link sale"]
+          : workflowMode === "live"
+            ? ["Check signal", "Set title", "Start live"]
+            : ["Photo or text", "Tag people", "Add location"];
 
   return (
     <motion.div
@@ -465,23 +613,39 @@ export default function CreatePostModal({
         initial={{ y: 100 }}
         animate={{ y: 0 }}
         exit={{ y: 100 }}
-        className="w-full max-w-lg bg-card rounded-t-3xl sm:rounded-2xl max-h-[90vh] overflow-auto pb-20 z-[60]"
+        className="w-full max-w-xl bg-card rounded-t-3xl sm:rounded-3xl max-h-[92vh] overflow-auto pb-20 z-[60] shadow-2xl ring-1 ring-black/5"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border/30 sticky top-0 bg-card z-10 rounded-t-3xl">
-          <button type="button" onClick={onClose} aria-label="Close create post" title="Close create post" className="text-muted-foreground active:scale-90 transition-transform">
+        <div className="sticky top-0 z-10 overflow-hidden rounded-t-3xl border-b border-border/30 bg-card/95 backdrop-blur-xl">
+          <div className={cn("h-1 w-full bg-gradient-to-r", activeWorkflowStyle.accent)} />
+          <div className="flex items-center justify-between px-4 py-3">
+          <button type="button" onClick={onClose} aria-label="Close create post" title="Close create post" className="grid h-9 w-9 place-items-center rounded-full bg-muted/60 text-muted-foreground active:scale-90 transition-transform hover:text-foreground">
             <XIcon className="h-5 w-5" />
           </button>
-          <h2 className="text-sm font-bold text-foreground">Create Post</h2>
+          <div className="min-w-0 text-center">
+            <div className="mx-auto mb-1 flex w-fit items-center gap-1.5 rounded-full bg-muted/50 px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-muted-foreground">
+              <ActiveWorkflowIcon className={cn("h-3 w-3", activeWorkflowStyle.text)} />
+              ZIVO Studio
+            </div>
+            <h2 className="text-sm font-bold text-foreground">{activeWorkflow.label}</h2>
+            <p className="max-w-[190px] truncate text-[10px] font-medium text-muted-foreground sm:max-w-none">{activeWorkflow.description}</p>
+          </div>
           <button type="button"
-            onClick={handlePost}
-            disabled={(files.length === 0 && !hasSharedLink && !caption.trim() && !isPoll) || uploading}
-            aria-label="Share post"
-            title="Share post"
+            onClick={() => {
+              if (workflowMode === "live") {
+                onClose();
+                navigate("/live");
+                return;
+              }
+              handlePost();
+            }}
+            disabled={!canPublish}
+            aria-label={publishLabel}
+            title={publishLabel}
             className={cn(
-              "px-4 py-1.5 rounded-full text-xs font-bold transition-all",
-              (files.length > 0 || caption.trim() || hasSharedLink) && !uploading
-                ? "bg-primary text-primary-foreground shadow-sm"
+              "min-w-[84px] rounded-full px-4 py-2 text-xs font-bold transition-all active:scale-[0.98]",
+              canPublish
+                ? cn("bg-gradient-to-r text-white shadow-sm", activeWorkflowStyle.accent)
                 : "bg-muted text-muted-foreground"
             )}
           >
@@ -490,8 +654,62 @@ export default function CreatePostModal({
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 {uploadStatus || "Posting..."}
               </span>
-            ) : "Share"}
+            ) : publishLabel}
           </button>
+          </div>
+        </div>
+
+        <div className="border-b border-border/20 bg-card px-4 py-3">
+          <div className="grid grid-cols-3 gap-2">
+            {COMPOSER_WORKFLOWS.map((workflow) => {
+              const isActive = workflow.mode === workflowMode;
+              const workflowStyle = WORKFLOW_STYLES[workflow.mode];
+              return (
+                <button
+                  type="button"
+                  key={workflow.mode}
+                  aria-label={`${workflow.label} ${workflow.description}`}
+                  aria-pressed={isActive}
+                  onClick={() => selectWorkflowMode(workflow.mode)}
+                  className={cn(
+                    "min-h-[78px] rounded-2xl border px-2.5 py-2 text-left transition-all active:scale-[0.98]",
+                    isActive ? workflowStyle.activeCard : "border-border/50 bg-muted/20 text-foreground hover:bg-muted/40",
+                  )}
+                >
+                  <span className="flex items-center gap-2">
+                    <span className={cn(
+                      "grid h-7 w-7 shrink-0 place-items-center rounded-full",
+                      isActive ? workflowStyle.iconBubble : "bg-background text-muted-foreground",
+                    )}>
+                      <workflow.icon className="h-3.5 w-3.5" />
+                    </span>
+                    <span className="truncate text-[12px] font-bold">{workflow.label}</span>
+                  </span>
+                  <span className="mt-1 block line-clamp-2 text-[10px] font-medium leading-snug text-muted-foreground">
+                    {workflow.description}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="mt-3 rounded-2xl border border-border/40 bg-muted/20 p-2.5">
+            <div className="flex items-center justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[11px] font-bold text-foreground">Workflow checklist</p>
+                <p className="truncate text-[10px] font-medium text-muted-foreground">{captionPlaceholder}</p>
+              </div>
+              <span className={cn("shrink-0 rounded-full px-2.5 py-1 text-[10px] font-bold", activeWorkflowStyle.soft)}>
+                {activeWorkflow.label}
+              </span>
+            </div>
+          <div className="mt-2 flex gap-1.5 overflow-x-auto scrollbar-none">
+            {workflowTips.map((tip) => (
+              <span key={tip} className="shrink-0 rounded-full bg-background px-2.5 py-1 text-[10px] font-semibold text-muted-foreground shadow-sm ring-1 ring-border/30">
+                {tip}
+              </span>
+            ))}
+          </div>
+          </div>
         </div>
 
         {/* Author */}
@@ -524,7 +742,7 @@ export default function CreatePostModal({
         <div className="px-4 relative">
           <textarea
             ref={captionRef}
-            placeholder={zivoOFMode ? "Compose a new post for your fans..." : "Write a caption... Use @ to tag people"}
+            placeholder={captionPlaceholder}
             value={caption}
             onChange={(e) => handleCaptionChange(e.target.value)}
             maxLength={charLimit}
@@ -1214,9 +1432,14 @@ export default function CreatePostModal({
         </AnimatePresence>
 
         {/* Bottom toolbar — Add to your post */}
-        <div className="px-4 py-2 border-t border-border/30">
-          <p className="text-[10px] font-semibold text-muted-foreground/60 uppercase tracking-wide mb-2">Add to your post</p>
-          <div className="flex gap-1 overflow-x-auto scrollbar-none pb-1">
+        <div className="border-t border-border/30 bg-muted/10 px-4 py-3">
+          <div className="mb-2 flex items-center justify-between gap-3">
+            <p className="text-[10px] font-bold uppercase tracking-wide text-muted-foreground/70">Add to your post</p>
+            <span className={cn("rounded-full px-2.5 py-1 text-[10px] font-bold", activeWorkflowStyle.soft)}>
+              {workflowMode === "live" ? "Ready when you are" : canPublish ? "Ready to share" : "Add media or text"}
+            </span>
+          </div>
+          <div className="grid grid-flow-col auto-cols-[74px] gap-2 overflow-x-auto scrollbar-none pb-1">
             {(zivoOFMode
               ? [
                   { label: "Photo", icon: ImageIcon, color: "text-emerald-500", action: "photo" as const },
@@ -1239,7 +1462,9 @@ export default function CreatePostModal({
                 (opt.action === "feeling" && (showFeelingPicker || !!feeling)) ||
                 (opt.action === "poll" && isPoll) ||
                 (opt.action === "unlock" && (showUnlockInput || !!unlockPrice)) ||
-                (["photo", "video", "reel"].includes(opt.action) && selectedType === (opt.label as any));
+                (opt.action === "reel" && workflowMode === "reel") ||
+                (opt.action === "photo" && workflowMode === "post" && selectedType === "Photo") ||
+                (opt.action === "video" && selectedType === "Video");
               return (
                 <button type="button"
                   key={opt.label}
@@ -1251,7 +1476,7 @@ export default function CreatePostModal({
                       return;
                     }
                     if (opt.action === "poll") {
-                      setIsPoll((v) => !v);
+                      selectWorkflowMode("poll");
                       return;
                     }
                     if (opt.action === "unlock") {
@@ -1259,6 +1484,11 @@ export default function CreatePostModal({
                       return;
                     }
                     const accept = opt.action === "video" || opt.action === "reel" ? "video/*" : "image/*";
+                    if (opt.action === "reel") {
+                      selectWorkflowMode("reel");
+                    } else {
+                      selectWorkflowMode("post");
+                    }
                     setSelectedType(opt.label as any);
                     if (fileRef.current) {
                       fileRef.current.accept = accept;
@@ -1267,8 +1497,8 @@ export default function CreatePostModal({
                     }
                   }}
                   className={cn(
-                    "flex flex-col items-center gap-1 py-2 px-3 rounded-xl shrink-0 transition-colors active:scale-95",
-                    isActive ? "bg-primary/10" : "hover:bg-muted/30"
+                    "flex min-h-[62px] flex-col items-center justify-center gap-1 rounded-2xl border px-2 transition-all active:scale-95",
+                    isActive ? "border-primary/30 bg-primary/10 shadow-sm" : "border-border/40 bg-background hover:bg-muted/30"
                   )}
                 >
                   <opt.icon className={cn("h-5 w-5 transition-colors", isActive ? "text-primary" : opt.color)} />

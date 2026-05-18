@@ -1,0 +1,218 @@
+# API Readiness Report
+
+Generated: 2026-05-18T19:54:25.011Z
+
+## Summary
+
+- Critical findings: 0
+- Warnings: 157
+- Edge Functions inventoried: 251
+- High-risk Edge Functions: 107
+- Functions using withSecurity(): 2
+- Functions using strictCorsHeaders(): 0
+- Functions using service role: 199
+- Supabase migration drift: local=673, remote=1260, matched=0, duplicateVersions=8
+
+## Critical
+
+- No critical API readiness issues found.
+
+## Warnings
+
+- [hardcoded-supabase-browser-config] Browser Supabase URL/key are hardcoded. Prefer Vite env values so staging and production can use separate projects. (src/integrations/supabase/client.ts)
+- [preview-origin-allowed-in-cors] Shared CORS allowlist still accepts Lovable preview origins. Remove before strict production go-live if previews are not needed. (supabase/functions/_shared/cors.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/aba-payway-checkout/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/admin-create-user/index.ts)
+- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/admin-create-user/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/admin-create-user-post/index.ts)
+- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/admin-create-user-post/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/admin-delete-user/index.ts)
+- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/admin-delete-user/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/admin-delete-user-post/index.ts)
+- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/admin-delete-user-post/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/admin-list-created-users/index.ts)
+- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/admin-list-created-users/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/admin-moderate-message/index.ts)
+- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/admin-moderate-message/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/admin-post-comment/index.ts)
+- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/admin-post-comment/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/admin-update-profile/index.ts)
+- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/admin-update-profile/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/auth-email-hook/index.ts)
+- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/auth-email-hook/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/auto-cancel-stale-orders/index.ts)
+- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/auto-cancel-stale-orders/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/auto-recharge-ads-wallet/index.ts)
+- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/auto-recharge-ads-wallet/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/bakong-verify/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/cancel-creator-subscription/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/cancel-eats-order/index.ts)
+- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/cancel-eats-order/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/cancel-grocery-order/index.ts)
+- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/cancel-grocery-order/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/cancel-lodging-reservation/index.ts)
+- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/cancel-lodging-reservation/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/cancel-membership/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/cancel-ride-request/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/capture-eats-paypal-order/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/capture-grocery-paypal-order/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/capture-lodging-paypal-order/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/capture-ride-payment/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/capture-ride-tip/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/capture-tip-paypal-order/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/chat-transfer-coins/index.ts)
+- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/chat-transfer-coins/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/close-ride-call-session/index.ts)
+- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/close-ride-call-session/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/close-trip-call-sessions/index.ts)
+- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/close-trip-call-sessions/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/confirm-flight-payment/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/confirm-grocery-payment/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/connect-account-session/index.ts)
+- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/connect-account-session/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/connect-instant-payout/index.ts)
+- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/connect-instant-payout/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/create-ads-wallet-topup/index.ts)
+- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/create-ads-wallet-topup/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/create-coin-checkout/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/create-coin-payment-intent/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/create-eats-payment/index.ts)
+- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/create-eats-payment/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/create-eats-paypal-order/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/create-eats-square-checkout/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/create-flight-checkout/index.ts)
+- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/create-flight-checkout/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/create-flight-payment-intent/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/create-grocery-checkout/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/create-grocery-payment-intent/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/create-grocery-paypal-order/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/create-grocery-square-checkout/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/create-identity-verification-session/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/create-lodging-paypal-order/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/create-lodging-square-checkout/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/create-masked-call-session/index.ts)
+- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/create-masked-call-session/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/create-payment-intent/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/create-ride-payment/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/create-ride-payment-intent/index.ts)
+- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/create-ride-payment-intent/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/create-tip-checkout/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/create-tip-payment-intent/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/create-tip-paypal-order/index.ts)
+- ...and 77 more
+
+## High-Risk Functions Missing withSecurity()
+
+- supabase/functions/aba-payway-checkout/index.ts
+- supabase/functions/admin-create-user/index.ts
+- supabase/functions/admin-create-user-post/index.ts
+- supabase/functions/admin-delete-user/index.ts
+- supabase/functions/admin-delete-user-post/index.ts
+- supabase/functions/admin-list-created-users/index.ts
+- supabase/functions/admin-moderate-message/index.ts
+- supabase/functions/admin-post-comment/index.ts
+- supabase/functions/admin-update-profile/index.ts
+- supabase/functions/auth-email-hook/index.ts
+- supabase/functions/auto-cancel-stale-orders/index.ts
+- supabase/functions/auto-recharge-ads-wallet/index.ts
+- supabase/functions/bakong-verify/index.ts
+- supabase/functions/cancel-creator-subscription/index.ts
+- supabase/functions/cancel-eats-order/index.ts
+- supabase/functions/cancel-grocery-order/index.ts
+- supabase/functions/cancel-lodging-reservation/index.ts
+- supabase/functions/cancel-membership/index.ts
+- supabase/functions/cancel-ride-request/index.ts
+- supabase/functions/capture-eats-paypal-order/index.ts
+- supabase/functions/capture-grocery-paypal-order/index.ts
+- supabase/functions/capture-lodging-paypal-order/index.ts
+- supabase/functions/capture-ride-payment/index.ts
+- supabase/functions/capture-ride-tip/index.ts
+- supabase/functions/capture-tip-paypal-order/index.ts
+- supabase/functions/chat-transfer-coins/index.ts
+- supabase/functions/close-ride-call-session/index.ts
+- supabase/functions/close-trip-call-sessions/index.ts
+- supabase/functions/confirm-flight-payment/index.ts
+- supabase/functions/confirm-grocery-payment/index.ts
+- supabase/functions/connect-account-session/index.ts
+- supabase/functions/connect-instant-payout/index.ts
+- supabase/functions/create-ads-wallet-topup/index.ts
+- supabase/functions/create-coin-checkout/index.ts
+- supabase/functions/create-coin-payment-intent/index.ts
+- supabase/functions/create-eats-payment/index.ts
+- supabase/functions/create-eats-paypal-order/index.ts
+- supabase/functions/create-eats-square-checkout/index.ts
+- supabase/functions/create-flight-checkout/index.ts
+- supabase/functions/create-flight-payment-intent/index.ts
+- supabase/functions/create-grocery-checkout/index.ts
+- supabase/functions/create-grocery-payment-intent/index.ts
+- supabase/functions/create-grocery-paypal-order/index.ts
+- supabase/functions/create-grocery-square-checkout/index.ts
+- supabase/functions/create-identity-verification-session/index.ts
+- supabase/functions/create-lodging-paypal-order/index.ts
+- supabase/functions/create-lodging-square-checkout/index.ts
+- supabase/functions/create-masked-call-session/index.ts
+- supabase/functions/create-payment-intent/index.ts
+- supabase/functions/create-ride-payment/index.ts
+- supabase/functions/create-ride-payment-intent/index.ts
+- supabase/functions/create-tip-checkout/index.ts
+- supabase/functions/create-tip-payment-intent/index.ts
+- supabase/functions/create-tip-paypal-order/index.ts
+- supabase/functions/create-tip-square-checkout/index.ts
+- supabase/functions/create-user-wallet-topup/index.ts
+- supabase/functions/create-zivo-plus-checkout/index.ts
+- supabase/functions/creator-payout-request/index.ts
+- supabase/functions/driver-payout/index.ts
+- supabase/functions/eats-payout-request/index.ts
+- supabase/functions/google-ads-oauth-callback/index.ts
+- supabase/functions/google-ads-oauth-start/index.ts
+- supabase/functions/list-my-sessions/index.ts
+- supabase/functions/livekit-token/index.ts
+- supabase/functions/lodge-payout-request/index.ts
+- supabase/functions/manage-payment-methods/index.ts
+- supabase/functions/mercury-payout/index.ts
+- supabase/functions/meta-oauth-start/index.ts
+- supabase/functions/moderate-trip-message/index.ts
+- supabase/functions/notify-aba-payment/index.ts
+- supabase/functions/oauth-callback/index.ts
+- supabase/functions/payment-verification/index.ts
+- supabase/functions/paypal-eats-webhook/index.ts
+- supabase/functions/paypal-grocery-webhook/index.ts
+- supabase/functions/paypal-lodging-webhook/index.ts
+- supabase/functions/paypal-payout/index.ts
+- supabase/functions/paypal-tip-webhook/index.ts
+- supabase/functions/process-flight-refund/index.ts
+- supabase/functions/process-refund/index.ts
+- supabase/functions/register-push-token/index.ts
+- supabase/functions/restaurant-cancel-order/index.ts
+- supabase/functions/revoke-session/index.ts
+- supabase/functions/send-otp-email/index.ts
+- supabase/functions/send-otp-sms/index.ts
+- supabase/functions/square-eats-webhook/index.ts
+- supabase/functions/square-grocery-webhook/index.ts
+- supabase/functions/square-lodging-webhook/index.ts
+- supabase/functions/square-payout/index.ts
+- supabase/functions/square-tip-webhook/index.ts
+- supabase/functions/stripe-lodging-webhook/index.ts
+- supabase/functions/stripe-ride-webhook/index.ts
+- supabase/functions/stripe-webhook/index.ts
+- supabase/functions/submit-lodging-refund-dispute/index.ts
+- supabase/functions/submit-refund-request/index.ts
+- supabase/functions/travelpayouts-prices/index.ts
+- supabase/functions/unlock-media-checkout/index.ts
+- supabase/functions/verify-aba-telegram/index.ts
+- supabase/functions/verify-ads-wallet-topup/index.ts
+- supabase/functions/verify-coin-purchase/index.ts
+- supabase/functions/verify-gift-card-purchase/index.ts
+- supabase/functions/verify-media-unlock/index.ts
+- supabase/functions/verify-otp-code/index.ts
+- supabase/functions/verify-otp-sms/index.ts
+- supabase/functions/verify-play-integrity/index.ts
+- supabase/functions/verify-user-wallet-topup/index.ts
+- supabase/functions/wallet-summary/index.ts
+
+## Next Hardening Moves
+
+- Reconcile Supabase migration history before running production schema pushes.
+- Move browser Supabase URL/key to Vite env variables for staging and production separation.
+- Add withSecurity() to high-risk Edge Functions first, starting with payment, webhook, admin, auth, and wallet routes.
+- Replace wildcard CORS on authenticated/service-role functions with strictCorsHeaders().

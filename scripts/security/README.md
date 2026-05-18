@@ -39,6 +39,26 @@ Combined: dependency audit + secret scan in one command.
 npm run security:scan
 ```
 
+## api-readiness-check.mjs
+
+Inventories the Supabase/API surface and writes a production readiness report.
+
+```bash
+npm run security:api-readiness:report
+npm run security:api-readiness
+```
+
+Checks:
+- required Supabase public env variables in `.env.example`
+- frontend source for backend-only secret references
+- Supabase Edge Function handler coverage
+- high-risk functions missing the shared `withSecurity()` wrapper
+- wildcard CORS plus service-role risk
+- migration drift summary from `docs/supabase-migration-drift-report.md`
+
+Strict mode exits non-zero only for critical safety breaks. Warnings remain in
+the report so the hardening backlog is visible without blocking every local run.
+
 ## Recommended pre-commit hook
 
 If `husky` is added later:
