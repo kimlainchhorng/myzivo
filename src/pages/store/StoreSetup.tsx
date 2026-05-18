@@ -266,7 +266,7 @@ export default function StoreSetup() {
       };
 
       if (myStore?.id) {
-        await supabase.from("store_profiles").update(storeData).eq("id", myStore.id);
+        await supabase.from("store_profiles").update(storeData as any).eq("id", myStore.id);
       } else {
         const { data } = await supabase.from("store_profiles").insert(storeData as any).select("id").single();
       }
