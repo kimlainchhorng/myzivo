@@ -6,7 +6,7 @@
  * external apps (WhatsApp, Telegram, Messenger, X, Email, SMS), and
  * fallback Copy link.
  */
-import { useEffect, useState } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { toast } from "sonner";
@@ -52,6 +52,14 @@ const externalIntents = (url: string, text: string) => {
     { id: "sms", label: "Messages", color: "bg-green-500", href: `sms:?&body=${t}%20${u}` },
     { id: "email", label: "Email", color: "bg-amber-500", href: `mailto:?subject=${t}&body=${u}` },
   ];
+};
+
+const getShareHost = (url: string) => {
+  try {
+    return new URL(url).host.replace(/^www\./, "");
+  } catch {
+    return "zivo.app";
+  }
 };
 
 const robustCopy = async (text: string): Promise<boolean> => {
@@ -127,6 +135,8 @@ export default function PostShareSheet() {
   const { url, title = "ZIVO post", text = title, onSendToFriend, onShared } = target;
   const close = () => _setTarget(null);
   const intents = externalIntents(url, text);
+  const host = getShareHost(url);
+  const previewText = clampStoryText(text || title, 112);
 
   const handleNativeSheet = async () => {
     try {
@@ -238,36 +248,77 @@ export default function PostShareSheet() {
 
   return (
     <Sheet open={!!target} onOpenChange={(o) => { if (!o) close(); }}>
-      <SheetContent side="bottom" className="rounded-t-2xl px-4 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
+      <SheetContent side="bottom" className="rounded-t-3xl px-4 pt-3 pb-[max(1.25rem,env(safe-area-inset-bottom))]">
         <SheetHeader className="text-left">
-          <SheetTitle className="text-[15px] font-semibold">Share this post</SheetTitle>
+          <SheetTitle className="text-[17px] font-extrabold tracking-tight">Share post</SheetTitle>
           <SheetDescription className="sr-only">
             Choose where to share this post or copy its link.
           </SheetDescription>
         </SheetHeader>
 
-        {/* Primary actions */}
-        <div className="grid grid-cols-4 gap-3 mt-4">
+        <div className="mt-4 overflow-hidden rounded-3xl border border-border/50 bg-card shadow-sm">
+          <div className="flex gap-3 p-3">
+            {target.imageUrl ? (
+              <img
+                src={target.imageUrl}
+                alt=""
+                className="h-20 w-20 shrink-0 rounded-2xl object-cover"
+                loading="lazy"
+              />
+            ) : (
+              <div className="grid h-20 w-20 shrink-0 place-items-center rounded-2xl bg-gradient-to-br from-primary via-sky-500 to-emerald-500 text-white">
+                <Share2 className="h-8 w-8" />
+              </div>
+            )}
+            <div className="min-w-0 flex-1 py-1">
+              <p className="truncate text-[11px] font-bold uppercase tracking-wide text-muted-foreground">
+                {host}
+              </p>
+              <p className="mt-1 line-clamp-2 text-[15px] font-extrabold leading-snug">
+                {title}
+              </p>
+              <p className="mt-1 line-clamp-2 text-[12px] leading-snug text-muted-foreground">
+                {previewText}
+              </p>
+            </div>
+          </div>
+          <div className="flex gap-2 border-t border-border/40 bg-muted/20 px-3 py-2">
+            <span className="rounded-full bg-background px-2.5 py-1 text-[10px] font-bold text-muted-foreground">
+              DM ready
+            </span>
+            <span className="rounded-full bg-background px-2.5 py-1 text-[10px] font-bold text-muted-foreground">
+              Story ready
+            </span>
+            <span className="rounded-full bg-background px-2.5 py-1 text-[10px] font-bold text-muted-foreground">
+              Public link
+            </span>
+          </div>
+        </div>
+
+        <div className="mt-5 flex items-center justify-between px-1">
+          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Recommended</p>
+          <span className="rounded-full bg-primary/10 px-2 py-1 text-[10px] font-bold text-primary">Fast share</span>
+        </div>
+        <div className="mt-2 grid grid-cols-4 gap-2.5">
           {onSendToFriend && (
-            <ShareTile color="bg-primary text-primary-foreground" label="Send" onClick={() => { onSendToFriend(); onShared?.("dm"); close(); }}>
+            <ShareTile color="bg-primary text-primary-foreground" label="Send" description="To chat" onClick={() => { onSendToFriend(); onShared?.("dm"); close(); }}>
               <Send className="h-5 w-5" />
             </ShareTile>
           )}
-          <ShareTile color="bg-fuchsia-500 text-white" label={sharingToStory ? "Sharing" : "Story"} onClick={handleStory} disabled={sharingToStory}>
+          <ShareTile color="bg-fuchsia-500 text-white" label={sharingToStory ? "Sharing" : "Story"} description="24h post" onClick={handleStory} disabled={sharingToStory}>
             {sharingToStory ? <Loader2 className="h-5 w-5 animate-spin" /> : <BookOpen className="h-5 w-5" />}
           </ShareTile>
-          <ShareTile color="bg-foreground text-background" label="Native" onClick={handleNativeSheet}>
+          <ShareTile color="bg-foreground text-background" label="Native" description="System" onClick={handleNativeSheet}>
             <Share2 className="h-5 w-5" />
           </ShareTile>
-          <ShareTile color="bg-muted text-foreground" label="Copy" onClick={handleCopy}>
+          <ShareTile color="bg-muted text-foreground" label="Copy" description="Link" onClick={handleCopy}>
             <Link2 className="h-5 w-5" />
           </ShareTile>
         </div>
 
-        {/* External targets */}
         <div className="mt-5">
-          <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2 px-1">Send via</p>
-          <div className="grid grid-cols-4 gap-3">
+          <p className="mb-2 px-1 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Send via</p>
+          <div className="grid grid-cols-4 gap-2.5">
             {intents.map((it) => (
               <ShareTile key={it.id} color={`${it.color} text-white`} label={it.label} onClick={() => handleExternal(it)}>
                 {it.id === "sms" ? <MessageCircle className="h-5 w-5" /> :
@@ -276,24 +327,53 @@ export default function PostShareSheet() {
               </ShareTile>
             ))}
             {target.imageUrl && (
-              <ShareTile color="bg-zinc-700 text-white" label="Save" onClick={handleDownload}>
+              <ShareTile color="bg-zinc-700 text-white" label="Save" description="Media" onClick={handleDownload}>
                 <Download className="h-5 w-5" />
               </ShareTile>
             )}
           </div>
         </div>
 
-        <p className="text-[11px] text-muted-foreground text-center mt-5 mb-1 break-all">{url}</p>
+        <button
+          type="button"
+          onClick={handleCopy}
+          className="mt-5 flex w-full items-center gap-2 rounded-2xl border border-border/50 bg-muted/25 px-3 py-2.5 text-left transition-colors hover:bg-muted/40 active:scale-[0.99]"
+          aria-label="Copy share link"
+        >
+          <Link2 className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <span className="min-w-0 flex-1 truncate text-[11px] font-medium text-muted-foreground">{url}</span>
+        </button>
       </SheetContent>
     </Sheet>
   );
 }
 
-function ShareTile({ color, label, onClick, children, disabled }: { color: string; label: string; onClick: () => void; children: React.ReactNode; disabled?: boolean }) {
+function ShareTile({
+  color,
+  label,
+  description,
+  onClick,
+  children,
+  disabled,
+}: {
+  color: string;
+  label: string;
+  description?: string;
+  onClick: () => void;
+  children: ReactNode;
+  disabled?: boolean;
+}) {
   return (
-    <button type="button" onClick={onClick} disabled={disabled} className="flex flex-col items-center gap-1.5 active:scale-95 transition-transform disabled:cursor-wait disabled:opacity-70">
-      <span className={`flex items-center justify-center w-12 h-12 rounded-full shadow-sm ${color}`}>{children}</span>
-      <span className="text-[11px] font-medium text-foreground">{label}</span>
+    <button
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+      aria-label={description ? `${label}: ${description}` : label}
+      className="flex min-h-[86px] flex-col items-center justify-center gap-1.5 rounded-2xl border border-border/40 bg-background/70 px-1.5 py-2 text-center transition-transform active:scale-95 disabled:cursor-wait disabled:opacity-70"
+    >
+      <span className={`flex h-12 w-12 items-center justify-center rounded-2xl shadow-sm ${color}`}>{children}</span>
+      <span className="text-[11px] font-extrabold leading-tight text-foreground">{label}</span>
+      {description && <span className="text-[9px] font-semibold leading-tight text-muted-foreground">{description}</span>}
     </button>
   );
 }

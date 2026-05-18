@@ -118,14 +118,14 @@ describe("ZivoMobileNav", () => {
     expect(screen.getByLabelText("current path")).toHaveTextContent("/login?redirect=%2Fprofile");
   });
 
-  it("opens the create drawer and routes anonymous creators to login", () => {
+  it("does not show the old center create button", () => {
     renderMobileNav("/feed");
 
-    fireEvent.click(screen.getByLabelText("Create"));
-
-    expect(screen.getByRole("heading", { name: "Create" })).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Create Post" }));
-
-    expect(screen.getByLabelText("current path")).toHaveTextContent("/login?redirect=%2Ffeed");
+    expect(screen.queryByLabelText("Create")).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Home")).toBeInTheDocument();
+    expect(screen.getByLabelText("Feed")).toBeInTheDocument();
+    expect(screen.getByLabelText("Reels")).toBeInTheDocument();
+    expect(screen.getByLabelText("Chat")).toBeInTheDocument();
+    expect(screen.getByLabelText("Account")).toBeInTheDocument();
   });
 });

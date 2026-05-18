@@ -1436,7 +1436,7 @@ export default function ReelsFeedPage() {
         <Suspense fallback={null}><FeedSidebar /></Suspense>
 
         {/* Main Feed Content */}
-        <PullToRefresh onRefresh={handlePullRefresh} className="zivo-shell-mobile bg-background lg:pb-0 flex-1 lg:max-w-[640px] xl:max-w-[680px] lg:mx-auto">
+        <PullToRefresh onRefresh={handlePullRefresh} className="zivo-shell-mobile bg-background lg:pb-0 flex-1 w-full">
           {/* Header — hidden on desktop since the global NavBar already provides search */}
           <div
             data-testid="feed-sticky-header"
