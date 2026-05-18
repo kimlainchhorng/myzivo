@@ -83,6 +83,7 @@ import { useOwnerStoreProfile } from "@/hooks/useOwnerStoreProfile";
 import { useHaptic } from "@/hooks/useHaptic";
 import { ErrorBoundary } from "@/components/shared/ErrorBoundary";
 import RelativeTime from "@/components/social/RelativeTime";
+import PostProductsChips from "@/components/social/PostProductsChips";
 import { useLodgeRooms } from "@/hooks/lodging/useLodgeRooms";
 import { useLodgePropertyProfile } from "@/hooks/lodging/useLodgePropertyProfile";
 import { getLodgingCompletion } from "@/lib/lodging/lodgingCompletion";
@@ -1691,6 +1692,8 @@ function ReelCard({
             </>
           );
         })()}
+
+        <PostProductsChips postId={post.id} />
 
         {/* Hashtag chips — extracted from caption, rendered as primary-colored
             pills below the caption so they're easier to tap on a tall reel.
@@ -3919,7 +3922,7 @@ export default function FeedPage() {
   }, []);
   // Post actions (bookmark / mute / block / report) + 3-dot menu
   const postActions = usePostActions(userId);
-  const [actionsTarget, setActionsTarget] = useState<{ target: PostActionTarget; authorName?: string; shareUrl?: string } | null>(null);
+  const [actionsTarget, setActionsTarget] = useState<{ target: PostActionTarget; authorName?: string; shareUrl?: string; isPinned?: boolean } | null>(null);
   // Realtime new-posts banner
   const [newPostsCount, setNewPostsCount] = useState(0);
   // Pull-to-refresh state
@@ -5157,6 +5160,7 @@ export default function FeedPage() {
                         },
                         authorName: post.author_name ?? post.store_name,
                         shareUrl: getPostShareUrl(post.id),
+                        isPinned: (post as any).is_pinned === true,
                       });
                     }}
                     currentReaction={(() => {
