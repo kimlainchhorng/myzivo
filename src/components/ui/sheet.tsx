@@ -19,7 +19,7 @@ const SheetOverlay = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <SheetPrimitive.Overlay
     className={cn(
-      "fixed inset-0 z-50 bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
+      "fixed inset-0 z-[1490] bg-black/80 data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0",
       className,
     )}
     {...props}
@@ -34,7 +34,7 @@ SheetOverlay.displayName = SheetPrimitive.Overlay.displayName;
 // max() guards, sheets that touch the top edge get clipped by the system
 // status bar — visible on iOS as the Wi-Fi/clock icons covering the close X.
 const sheetVariants = cva(
-  "fixed z-50 gap-4 bg-background px-6 shadow-2xl transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
+  "fixed z-[1500] gap-4 bg-background px-6 shadow-2xl transition ease-in-out data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:duration-300 data-[state=open]:duration-500",
   {
     variants: {
       side: {
@@ -71,7 +71,7 @@ const SheetContent = React.forwardRef<React.ElementRef<typeof SheetPrimitive.Con
               the sheet sits at the bottom of the screen — applying the inset
               there pushes the X far below the title, which looks broken. */}
           <SheetPrimitive.Close
-            className="absolute right-4 rounded-full w-8 h-8 flex items-center justify-center bg-muted/80 hover:bg-muted ring-offset-background transition-all active:scale-90 touch-manipulation focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none z-50"
+            className="absolute right-4 rounded-full w-8 h-8 flex items-center justify-center bg-foreground text-background shadow-md ring-1 ring-black/10 hover:opacity-90 ring-offset-background transition-all active:scale-90 touch-manipulation focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:pointer-events-none z-50"
             style={{
               top:
                 side === "bottom"

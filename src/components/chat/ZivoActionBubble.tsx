@@ -81,11 +81,25 @@ export default function ZivoActionBubble({ payload, isMe, time }: Props) {
           onClick={() => navigate(payload.deepLink)}
           className="group relative overflow-hidden rounded-2xl border border-border/30 bg-background shadow-sm hover:shadow-md transition active:scale-[0.99] text-left"
         >
-          {/* Top media / gradient strip */}
+          {/* Top media / gradient strip — image may arrive as either a URL
+              string or a JSON object (legacy Booking-import shape). Coerce so
+              we never end up with src="[object Object]". */}
+          {(() => {
+            const raw = payload.image as unknown;
+            const imageUrl: string | null =
+              typeof raw === "string" && raw.trim()
+                ? raw
+                : raw && typeof raw === "object"
+                  ? ((raw as Record<string, unknown>).url
+                      ?? (raw as Record<string, unknown>).src
+                      ?? (raw as Record<string, unknown>).path
+                      ?? null) as string | null
+                  : null;
+            return (
           <div className={`relative h-28 bg-gradient-to-br ${meta.gradient}`}>
-            {payload.image && (
+            {imageUrl && (
               <img
-                src={payload.image}
+                src={imageUrl}
                 alt=""
                 draggable={false}
                 className="absolute inset-0 h-full w-full object-cover opacity-90 group-hover:opacity-100 transition"
@@ -100,6 +114,8 @@ export default function ZivoActionBubble({ payload, isMe, time }: Props) {
               {payload.badge ?? "ZIVO"}
             </div>
           </div>
+            );
+          })()}
 
           {/* Body */}
           <div className="p-3">

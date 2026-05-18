@@ -345,9 +345,10 @@ export function LodgingRoomDetailsModal({
               type="button"
               onClick={openLightbox}
               aria-label="Open full-screen photo viewer"
-              className="absolute top-2.5 right-2.5 h-9 w-9 rounded-full bg-background/90 backdrop-blur-md flex items-center justify-center shadow-md ring-1 ring-black/5 z-10 hover:bg-background transition"
+              className="absolute bottom-3 right-3 inline-flex items-center gap-1.5 h-8 px-3 rounded-full bg-background/95 backdrop-blur-md shadow-md ring-1 ring-black/5 z-10 hover:bg-background transition text-[11px] font-semibold text-foreground touch-manipulation"
             >
-              <Expand className="h-4 w-4" />
+              <Expand className="h-3.5 w-3.5" />
+              {total > 1 ? `View all ${total}` : "View photo"}
             </button>
           )}
 

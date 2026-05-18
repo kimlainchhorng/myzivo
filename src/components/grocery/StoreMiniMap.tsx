@@ -8,6 +8,7 @@ import { MapPin, ExternalLink, Plus, Minus, Locate, Timer, Navigation } from "lu
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { distanceMiles } from "@/hooks/useStorePins";
+import { zivoRouteUrl } from "@/lib/maps/openInZivoMap";
 
 interface StoreMiniMapProps {
   latitude?: number | null;
@@ -228,9 +229,12 @@ export default function StoreMiniMap({ latitude, longitude, storeId, storeName, 
     if (m && hasCoords) { m.panTo({ lat: latitude as number, lng: longitude as number }); m.setZoom(17); }
   };
   const openFullMap = () => navigate(`/store-map?focus=${encodeURIComponent(focusTarget)}`);
-  const directionsUrl = hasCoords
-    ? `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}`
-    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address || storeName)}`;
+  const directionsUrl = zivoRouteUrl({
+    lat: hasCoords ? (latitude as number) : undefined,
+    lng: hasCoords ? (longitude as number) : undefined,
+    label: storeName,
+    address,
+  });
 
   const showFallback = !hasCoords || failed;
   const staticMapUrl = hasCoords && mapsKey
@@ -353,16 +357,15 @@ export default function StoreMiniMap({ latitude, longitude, storeId, storeName, 
             </>
           )}
         </button>
-        <a
-          href={directionsUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label={`Get directions to ${storeName}`}
+        <button
+          type="button"
+          onClick={() => navigate(directionsUrl)}
+          aria-label={`Get directions to ${storeName} in ZIVO`}
           className="ml-auto flex h-8 items-center gap-1.5 rounded-full bg-background/90 px-3 text-[11px] font-bold text-foreground shadow-lg ring-1 ring-border backdrop-blur-xl transition-transform duration-300 hover:scale-105"
         >
           <Navigation className="h-3.5 w-3.5 text-primary" />
           Directions
-        </a>
+        </button>
         <button
           type="button"
           onClick={openFullMap}

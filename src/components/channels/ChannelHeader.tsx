@@ -20,24 +20,26 @@ export function ChannelHeader({ channel, isSubscribed, isOwner, notificationsOn 
   const showInlineSubscribe = isSubscribed || isOwner;
 
   return (
-    <div className="border-b border-border/50 bg-card/70">
+    <div className="border-b border-border bg-background text-foreground">
       <div
-        className="h-24 sm:h-28 w-full bg-gradient-to-br from-primary/20 via-primary/10 to-muted bg-cover bg-center"
+        className="h-24 sm:h-28 w-full bg-gradient-to-br from-zinc-100 via-zinc-200 to-zinc-300 bg-cover bg-center dark:from-zinc-900 dark:via-zinc-800 dark:to-zinc-700"
         style={channel.banner_url ? { backgroundImage: `url(${channel.banner_url})` } : undefined}
         aria-hidden
-      />
+      >
+        <div className="h-full w-full bg-gradient-to-t from-background/30 via-transparent to-transparent" />
+      </div>
       <div className="px-4 pb-3 sm:pb-4">
         <div className="-mt-10 sm:-mt-12">
           <Avatar className="h-20 w-20 sm:h-24 sm:w-24 border-4 border-background shadow-md">
             <AvatarImage src={channel.avatar_url ?? undefined} />
-            <AvatarFallback className="bg-gradient-to-br from-primary/30 to-primary/10 text-primary font-bold">
+            <AvatarFallback className="bg-zinc-100 text-zinc-950 font-bold dark:bg-zinc-800 dark:text-zinc-50">
               {channel.name.slice(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
         </div>
 
         <div className="mt-2.5 sm:mt-3">
-          <h1 className="text-[20px] sm:text-[22px] leading-tight font-bold inline-flex items-center gap-1.5">
+          <h1 className="text-[20px] sm:text-[22px] leading-tight font-bold text-foreground inline-flex items-center gap-1.5">
             {channel.name}
             {(channel as any).is_verified && (
               <BadgeCheck
@@ -62,7 +64,7 @@ export function ChannelHeader({ channel, isSubscribed, isOwner, notificationsOn 
             <p className="mt-2.5 text-[14px] leading-relaxed text-foreground/90">{channel.description}</p>
           )}
 
-          <div className="mt-2.5 inline-flex items-center gap-1 rounded-full bg-muted/60 px-3 py-1 text-[11px] font-medium text-muted-foreground">
+          <div className="mt-2.5 inline-flex items-center gap-1 rounded-full border border-border bg-secondary px-3 py-1 text-[11px] font-medium text-secondary-foreground">
             <Users className="h-3.5 w-3.5" /> {memberLabel}
           </div>
 

@@ -29,19 +29,20 @@ import { buildShopDeepLink } from "@/lib/deepLinks";
 import { isOpenNow } from "@/lib/store/storeHours";
 import { optimizeImage } from "@/lib/optimizeImage";
 import { resolveMapsKey } from "@/lib/mapsKey";
-import { openDirections } from "@/lib/maps/openDirections";
+import { openInZivoMap } from "@/lib/maps/openInZivoMap";
 import { shareStoreWithCard } from "@/lib/social/storeShareCard";
 import { useStoreFavorites } from "@/hooks/useStoreFavorites";
 import { distanceMiles, fetchActiveStorePins } from "@/hooks/useStorePins";
 import StoreDetailsDrawer from "@/components/store/StoreDetailsDrawer";
-import { MarkerClusterer, type Cluster, type Marker as ClusterMarker } from "@googlemaps/markerclusterer";
+import { MarkerClusterer, SuperClusterAlgorithm, type Cluster, type Marker as ClusterMarker } from "@googlemaps/markerclusterer";
 
 type StoreSortMode = "distance" | "rating" | "newest";
-const STORE_LIST_PAGE = 12;
+const STORE_LIST_PAGE = 10;
 const LOGO_MARKER_MAX_STORE_COUNT = 1200;
 const FOCUSED_PHOTO_MARKER_LIMIT = 180;
 
 const DEFAULT_CENTER = { lat: 11.5564, lng: 104.9282 };
+const EMPTY_LODGING_PRICE_MAP: Record<string, LodgingMapPrice> = {};
 
 type LocationErrorCode = "denied" | "unavailable" | "timeout" | "unsupported" | null;
 
@@ -156,6 +157,21 @@ interface LodgingRoomPreview {
   room_type: string | null;
   photos?: unknown;
   cover_photo_index?: number | null;
+}
+
+interface LodgingMapPrice {
+  priceLabel: string | null;
+  baseRateCents: number | null;
+  originalRateCents: number | null;
+  discountLabel: string | null;
+}
+
+interface MarkerIconSpec {
+  url: string;
+  width: number;
+  height: number;
+  anchorX: number;
+  anchorY: number;
 }
 
 // Cache the resolved API key for the lifetime of the page so navigating away
@@ -496,6 +512,24 @@ function getRoomDiscountLabel(room: LodgingRoomPreview | null): string | null {
   return null;
 }
 
+function getLodgingMapPrice(room: Pick<LodgingRoomPreview, "base_rate_cents" | "original_rate_cents" | "weekly_discount_pct" | "monthly_discount_pct"> | null): LodgingMapPrice {
+  if (!room) {
+    return { priceLabel: null, baseRateCents: null, originalRateCents: null, discountLabel: null };
+  }
+  return {
+    priceLabel: formatUsdCents(room.base_rate_cents),
+    baseRateCents: room.base_rate_cents,
+    originalRateCents: room.original_rate_cents,
+    discountLabel: getRoomDiscountLabel({ ...room, id: "", name: "", max_guests: null, beds: null, room_type: null }),
+  };
+}
+
+function chunkItems<T>(items: T[], size: number): T[][] {
+  const chunks: T[][] = [];
+  for (let i = 0; i < items.length; i += size) chunks.push(items.slice(i, i + size));
+  return chunks;
+}
+
 function collectStoreImageUrls(input: unknown): string[] {
   if (!input) return [];
   if (typeof input === "string") {
@@ -734,6 +768,50 @@ function makeMarkerIcon(_emoji: string, color: string, bgColor: string, isNew = 
   return "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg);
 }
 
+function makePriceMarkerIcon(label: string, selected = false, hasDeal = false, isNew = false): MarkerIconSpec {
+  const safeLabel = label.replace(/[&<>"']/g, (char) => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  }[char] || char));
+  const width = Math.max(selected ? 74 : 64, Math.min(110, 38 + safeLabel.length * 10));
+  const pillHeight = selected ? 34 : 30;
+  const height = selected ? 46 : 42;
+  const fill = selected ? "#003b95" : "#ffffff";
+  const stroke = selected ? "#00224f" : "#006ce4";
+  const textColor = selected ? "#ffffff" : "#111827";
+  const shadow = selected ? "rgba(0,53,128,0.36)" : "rgba(15,23,42,0.20)";
+  const tailY = pillHeight + 1;
+  const badge = isNew
+    ? `<circle cx="${width - 8}" cy="7" r="6" fill="#ef4444" stroke="#fff" stroke-width="1.5"/>
+       <text x="${width - 8}" y="9.4" text-anchor="middle" font-size="5.4" font-weight="800" fill="#fff" font-family="system-ui">NEW</text>`
+    : hasDeal
+      ? `<circle cx="${width - 8}" cy="7" r="6" fill="#16a34a" stroke="#fff" stroke-width="1.5"/>
+         <text x="${width - 8}" y="10.5" text-anchor="middle" font-size="7.5" font-weight="900" fill="#fff" font-family="system-ui">%</text>`
+      : "";
+  const svg = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+      <defs>
+        <filter id="pricePinShadow" x="-20%" y="-30%" width="140%" height="180%">
+          <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="${shadow}" flood-opacity="1"/>
+        </filter>
+      </defs>
+      <path d="M${width / 2 - 7} ${tailY} L${width / 2} ${height - 4} L${width / 2 + 7} ${tailY}" fill="${fill}" stroke="${stroke}" stroke-width="${selected ? 2.5 : 2}"/>
+      <rect x="2" y="2" width="${width - 4}" height="${pillHeight}" rx="${pillHeight / 2}" fill="${fill}" stroke="${stroke}" stroke-width="${selected ? 2.5 : 2}" filter="url(#pricePinShadow)"/>
+      <text x="${width / 2}" y="${selected ? 24 : 22}" text-anchor="middle" font-size="${selected ? 15 : 14}" font-weight="900" fill="${textColor}" font-family="system-ui, -apple-system, BlinkMacSystemFont, sans-serif">${safeLabel}</text>
+      ${badge}
+    </svg>`;
+  return {
+    url: "data:image/svg+xml;charset=UTF-8," + encodeURIComponent(svg),
+    width,
+    height,
+    anchorX: width / 2,
+    anchorY: height - 4,
+  };
+}
+
 function makeTripStopIcon(num: number): string {
   const svg = `
     <svg xmlns="http://www.w3.org/2000/svg" width="40" height="48" viewBox="0 0 40 48">
@@ -757,6 +835,14 @@ function setClusterMarkerMap(marker: ClusterMarker, map: google.maps.Map | null)
   (marker as google.maps.marker.AdvancedMarkerElement).map = map;
 }
 
+function canUseAdvancedMapMarkers(map: google.maps.Map | null): boolean {
+  return !!(
+    map &&
+    google.maps.marker?.AdvancedMarkerElement &&
+    map.getMapCapabilities?.().isAdvancedMarkersAvailable
+  );
+}
+
 function createPhotoMarkerElement(
   imageUrls: string[],
   color: string,
@@ -772,11 +858,18 @@ function createPhotoMarkerElement(
   const rootHeight = selected ? 60 : 50;
   const shellSize = selected ? 48 : 38;
   const mediaSize = selected ? 38 : 30;
+  root.setAttribute("role", "button");
+  root.setAttribute("tabindex", "0");
+  root.setAttribute("aria-label", `Open ${title}`);
+  root.title = title;
   root.style.cssText = [
     "position:relative",
     `width:${rootWidth}px`,
     `height:${rootHeight}px`,
     "pointer-events:auto",
+    "cursor:pointer",
+    "touch-action:manipulation",
+    "-webkit-tap-highlight-color:transparent",
     selected ? "transform:translate(-5px,-9px)" : "",
   ].filter(Boolean).join(";");
 
@@ -1293,6 +1386,53 @@ export default function StoreMapPage() {
     return true;
   }), [allStores]);
 
+  const lodgingStoreIds = useMemo(
+    () => stores.filter((store) => isLodgingCategory(store.category)).map((store) => store.id).sort(),
+    [stores],
+  );
+
+  const { data: loadedLodgingPriceMap } = useQuery<Record<string, LodgingMapPrice>>({
+    queryKey: ["store-map-lodging-price-markers", lodgingStoreIds.join("|")],
+    queryFn: async () => {
+      if (!lodgingStoreIds.length) return {};
+      type PriceRow = Pick<LodgingRoomPreview, "base_rate_cents" | "original_rate_cents" | "weekly_discount_pct" | "monthly_discount_pct"> & {
+        store_id?: string | null;
+      };
+      const rows: PriceRow[] = [];
+      const chunks = chunkItems(lodgingStoreIds, 120);
+      const results = await Promise.all(chunks.map((chunk) =>
+        (supabase as any)
+          .from("lodge_rooms")
+          .select("store_id, base_rate_cents, original_rate_cents, weekly_discount_pct, monthly_discount_pct")
+          .in("store_id", chunk)
+          .eq("is_active", true),
+      ));
+
+      results.forEach(({ data, error }) => {
+        if (error || !Array.isArray(data)) return;
+        rows.push(...(data as PriceRow[]));
+      });
+
+      const bestByStore = new Map<string, PriceRow>();
+      rows.forEach((row) => {
+        if (!row.store_id) return;
+        const cents = Number(row.base_rate_cents || 0);
+        if (!Number.isFinite(cents) || cents <= 0) return;
+        const current = bestByStore.get(row.store_id);
+        if (!current || cents < Number(current.base_rate_cents || Infinity)) {
+          bestByStore.set(row.store_id, row);
+        }
+      });
+
+      return Object.fromEntries(
+        Array.from(bestByStore.entries()).map(([storeId, room]) => [storeId, getLodgingMapPrice(room)]),
+      );
+    },
+    enabled: lodgingStoreIds.length > 0,
+    staleTime: 60_000,
+  });
+  const lodgingPriceMap = loadedLodgingPriceMap ?? EMPTY_LODGING_PRICE_MAP;
+
   /* Live pulse */
   useEffect(() => {
     let active = true;
@@ -1622,6 +1762,16 @@ export default function StoreMapPage() {
     return formatUsdCents(selectedBestRoom.original_rate_cents);
   }, [selectedBestRoom]);
   const selectedRoomDiscountLabel = useMemo(() => getRoomDiscountLabel(selectedBestRoom), [selectedBestRoom]);
+  const selectedMapPrice = selectedStoreId ? lodgingPriceMap[selectedStoreId] : null;
+  const selectedDisplayRoomPrice = selectedRoomPrice || selectedMapPrice?.priceLabel || null;
+  const selectedDisplayRoomOriginalPrice = selectedRoomOriginalPrice || (
+    selectedMapPrice?.originalRateCents &&
+    selectedMapPrice?.baseRateCents &&
+    selectedMapPrice.originalRateCents > selectedMapPrice.baseRateCents
+      ? formatUsdCents(selectedMapPrice.originalRateCents)
+      : null
+  );
+  const selectedDisplayRoomDiscountLabel = selectedRoomDiscountLabel || selectedMapPrice?.discountLabel || null;
 
   useEffect(() => {
     if (selectedStoreProducts.length > 0) setSelectedProductId(selectedStoreProducts[0].id);
@@ -1820,7 +1970,10 @@ export default function StoreMapPage() {
       !!searchCenter ||
       !!filterSearchQuery ||
       filteredStores.length <= FOCUSED_PHOTO_MARKER_LIMIT;
-    const shouldRenderLogoMarkers = filteredStores.length <= LOGO_MARKER_MAX_STORE_COUNT && focusedMap;
+    // Non-lodging stores can still use profile-photo pins when the directory
+    // is small enough. Lodging uses price pills instead so the hotel map reads
+    // like a booking surface instead of a wall of tiny thumbnails.
+    const shouldRenderLogoMarkers = filteredStores.length <= LOGO_MARKER_MAX_STORE_COUNT;
     const scopedPhotoStoreIds = new Set(markerPhotoScopeStores.map((store) => store.id));
     const shouldAdjustCamera = markerCameraKeyRef.current !== markerCameraKey;
     markerCameraKeyRef.current = markerCameraKey;
@@ -1833,7 +1986,10 @@ export default function StoreMapPage() {
       const storeIsNew = isNewStore(store);
       const storeHasDeal = dealStoreIds.has(store.id);
       const isSelectedMarker = selectedStoreId === store.id;
-      const shouldUsePhotoMarker = isSelectedMarker || shouldRenderLogoMarkers || scopedPhotoStoreIds.has(store.id);
+      const lodgingPrice = lodgingPriceMap[store.id];
+      const priceMarkerLabel = isLodgingCategory(store.category) ? lodgingPrice?.priceLabel || "View" : null;
+      const shouldUsePriceMarker = !!priceMarkerLabel;
+      const shouldUsePhotoMarker = !shouldUsePriceMarker && (isSelectedMarker || shouldRenderLogoMarkers || scopedPhotoStoreIds.has(store.id));
 
       const logoMarkerUrls = shouldUsePhotoMarker
         ? uniqueStoreImageUrls(
@@ -1842,44 +1998,7 @@ export default function StoreMapPage() {
               .filter((url): url is string => Boolean(url)),
           )
         : [];
-
-      // Map is set by the clusterer when zoomed in; leaving it null here
-      // keeps individual pins hidden until the clusterer expands their cell.
-      let marker: ClusterMarker;
-      const AdvancedMarkerElement = google.maps.marker?.AdvancedMarkerElement;
-      if (logoMarkerUrls.length && AdvancedMarkerElement) {
-        marker = new AdvancedMarkerElement({
-          position: pos,
-          title: store.name,
-          content: createPhotoMarkerElement(
-            logoMarkerUrls,
-            color,
-            bg,
-            getCategoryIcon(store.category),
-            storeIsNew,
-            storeHasDeal,
-            store.name,
-            isSelectedMarker,
-          ),
-          zIndex: isSelectedMarker ? 260 : 100,
-        });
-      } else {
-        const legacyMarker = new google.maps.Marker({
-          position: pos,
-          icon: {
-            url: makeMarkerIcon(getCategoryIcon(store.category), color, bg, storeIsNew, storeHasDeal),
-            scaledSize: new google.maps.Size(isSelectedMarker ? 44 : 36, isSelectedMarker ? 52 : 43),
-            anchor: new google.maps.Point(isSelectedMarker ? 22 : 18, isSelectedMarker ? 52 : 43),
-          },
-          title: store.name,
-          animation: shouldAnimateMarkers ? google.maps.Animation.DROP : undefined,
-          zIndex: isSelectedMarker ? 260 : 100,
-        });
-        marker = legacyMarker;
-        if (logoMarkerUrls.length) setLegacyMarkerPhotoIcon(legacyMarker, logoMarkerUrls);
-      }
-
-      marker.addListener("click", () => {
+      const selectStoreFromMarker = () => {
         if (tripModeRef.current) {
           setTripStops((prev) => {
             const exists = prev.find((s) => s.id === store.id);
@@ -1896,7 +2015,74 @@ export default function StoreMapPage() {
         mapRef.current?.panTo(pos);
         const z = mapRef.current?.getZoom() || 14;
         if (z < 14) mapRef.current?.setZoom(14);
-      });
+      };
+
+      // Map is set by the clusterer when zoomed in; leaving it null here
+      // keeps individual pins hidden until the clusterer expands their cell.
+      let marker: ClusterMarker;
+      const AdvancedMarkerElement = canUseAdvancedMapMarkers(mapRef.current)
+        ? google.maps.marker.AdvancedMarkerElement
+        : undefined;
+      if (logoMarkerUrls.length && AdvancedMarkerElement) {
+        const markerContent = createPhotoMarkerElement(
+          logoMarkerUrls,
+          color,
+          bg,
+          getCategoryIcon(store.category),
+          storeIsNew,
+          storeHasDeal,
+          store.name,
+          isSelectedMarker,
+        );
+        markerContent.addEventListener("click", (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          selectStoreFromMarker();
+        });
+        markerContent.addEventListener("keydown", (event) => {
+          if (event.key !== "Enter" && event.key !== " ") return;
+          event.preventDefault();
+          event.stopPropagation();
+          selectStoreFromMarker();
+        });
+        marker = new AdvancedMarkerElement({
+          position: pos,
+          title: store.name,
+          content: markerContent,
+          zIndex: isSelectedMarker ? 260 : 100,
+        });
+      } else {
+        const priceMarkerSpec = shouldUsePriceMarker
+          ? makePriceMarkerIcon(priceMarkerLabel || "", isSelectedMarker, storeHasDeal || !!lodgingPrice?.discountLabel, storeIsNew)
+          : null;
+        const legacyMarker = new google.maps.Marker({
+          position: pos,
+          icon: priceMarkerSpec
+            ? {
+                url: priceMarkerSpec.url,
+                scaledSize: new google.maps.Size(priceMarkerSpec.width, priceMarkerSpec.height),
+                anchor: new google.maps.Point(priceMarkerSpec.anchorX, priceMarkerSpec.anchorY),
+              }
+            : {
+                url: makeMarkerIcon(getCategoryIcon(store.category), color, bg, storeIsNew, storeHasDeal),
+                scaledSize: new google.maps.Size(isSelectedMarker ? 44 : 36, isSelectedMarker ? 52 : 43),
+                anchor: new google.maps.Point(isSelectedMarker ? 22 : 18, isSelectedMarker ? 52 : 43),
+              },
+          title: store.name,
+          clickable: true,
+          cursor: "pointer",
+          optimized: false,
+          animation: shouldAnimateMarkers ? google.maps.Animation.DROP : undefined,
+          zIndex: isSelectedMarker ? 260 : 100,
+        });
+        marker = legacyMarker;
+        if (!priceMarkerSpec && logoMarkerUrls.length) setLegacyMarkerPhotoIcon(legacyMarker, logoMarkerUrls);
+      }
+
+      marker.addListener("click", selectStoreFromMarker);
+      if (AdvancedMarkerElement && marker instanceof AdvancedMarkerElement) {
+        marker.addListener("gmp-click" as "click", selectStoreFromMarker);
+      }
       markersRef.current.push(marker);
 
       if (liveStoreMap[store.id]) {
@@ -1915,18 +2101,67 @@ export default function StoreMapPage() {
 
     // Group nearby pins into clusters so 600+ markers don't overlap into a wall
     // of pins. The renderer reuses our brand palette so clusters feel native.
+    //
+    // Use a tighter radius than the library default (60px) so a filtered
+    // hotel view breaks into price pills sooner instead of staying as one
+    // giant wall of count bubbles.
     clustererRef.current = new MarkerClusterer({
       map: mapRef.current,
       markers: markersRef.current,
+      // Tighter radius + lower maxZoom than the library defaults (60px /
+      // zoom 16). At 24px the clusterer breaks apart dense groups earlier,
+      // and maxZoom 12 means the city-level zoom (13+) shows real hotel
+      // choices instead of only count bubbles.
+      algorithm: new SuperClusterAlgorithm({ radius: 24, maxZoom: 12 }),
+      // Explicit click handler — fit the camera to the cluster's actual
+      // bounds so the user actually sees the 78 stores inside, not a 2-step
+      // zoom that leaves the cluster still aggregated. For tight bounds
+      // (a stack of 2-3 pins on the same block) we instead step in 2 levels
+      // so we don't overshoot to street-level.
+      onClusterClick: (_, cluster) => {
+        const map = mapRef.current;
+        if (!map) return;
+        const bounds = cluster.bounds;
+        const currentZoom = map.getZoom() ?? 11;
+        // Tight cluster (no meaningful spread) → step in toward center.
+        const ne = bounds?.getNorthEast?.();
+        const sw = bounds?.getSouthWest?.();
+        const isTight = !ne || !sw
+          ? true
+          : (Math.abs(ne.lat() - sw.lat()) < 0.002 && Math.abs(ne.lng() - sw.lng()) < 0.002);
+        if (isTight) {
+          map.panTo(cluster.position);
+          map.setZoom(Math.min(currentZoom + 3, 18));
+          return;
+        }
+        // Spread cluster → frame the full set with comfortable padding so
+        // the sheet/header don't crop the outer pins. Crucially, when the
+        // cluster's bounds are already close to the visible viewport, the
+        // resulting fit-zoom can match (or be lower than) the current zoom,
+        // and the cluster stays at the same density. So we wait for `idle`
+        // and enforce a minimum step-in of +1 zoom level to guarantee the
+        // tap always feels like it did something.
+        map.panTo(cluster.position);
+        map.fitBounds(bounds!, { top: 160, bottom: 220, left: 40, right: 40 });
+        google.maps.event.addListenerOnce(map, "idle", () => {
+          let z = map.getZoom() ?? 12;
+          if (z <= currentZoom) z = currentZoom + 1;       // ensure we always advance
+          if (z > 18) z = 18;                              // never punch past street-level
+          if (z !== map.getZoom()) map.setZoom(z);
+        });
+      },
       renderer: {
         render: ({ count, position }: Cluster) => {
           const tone = count >= 100 ? "#0ea5e9" : count >= 25 ? "#10b981" : "#6366f1";
           const size = count >= 100 ? 56 : count >= 25 ? 48 : 42;
+          // Scale the count label with the bubble so 100+ doesn't look
+          // cramped against the 14-and-under bubbles.
+          const fontSize = count >= 100 ? 18 : count >= 25 ? 16 : 14;
           const svg = `
             <svg xmlns="http://www.w3.org/2000/svg" width="${size}" height="${size}" viewBox="0 0 ${size} ${size}">
               <circle cx="${size / 2}" cy="${size / 2}" r="${size / 2}" fill="${tone}" fill-opacity="0.22"/>
               <circle cx="${size / 2}" cy="${size / 2}" r="${size / 2 - 6}" fill="${tone}"/>
-              <text x="${size / 2}" y="${size / 2 + 5}" text-anchor="middle" font-size="14" font-weight="700" fill="#fff" font-family="system-ui">${count}</text>
+              <text x="${size / 2}" y="${size / 2 + (fontSize / 2 - 1)}" text-anchor="middle" font-size="${fontSize}" font-weight="700" fill="#fff" font-family="system-ui">${count}</text>
             </svg>`;
           return new google.maps.Marker({
             position,
@@ -1936,7 +2171,10 @@ export default function StoreMapPage() {
               anchor: new google.maps.Point(size / 2, size / 2),
             },
             zIndex: 200,
-            title: `${count} stores in this area`,
+            clickable: true,
+            cursor: "pointer",
+            optimized: false,
+            title: `${count} stores · tap to zoom in`,
           });
         },
       },
@@ -1979,18 +2217,31 @@ export default function StoreMapPage() {
       const hasUserFocus = !!searchCenter || !!userLocation || !!activeGroup || activeCategory !== "all";
       if (hasUserFocus) {
         if (shouldAdjustCamera) {
-          mapRef.current.fitBounds(bounds, { top: 140, bottom: 260, left: 30, right: 30 });
-          const desiredMax = activeGroup || activeCategory !== "all" ? 13 : 11;
-          google.maps.event.addListenerOnce(mapRef.current, "idle", () => {
-            const z = mapRef.current?.getZoom() ?? 0;
-            if (z > desiredMax) mapRef.current?.setZoom(desiredMax);
-            else if (z < 7) mapRef.current?.setZoom(7);
-          });
+          const isFiltered = !!activeGroup || activeCategory !== "all" || !!filterSearchQuery;
+          // When a category/group filter is active but we don't know where
+          // the user is (no GPS, no explicit search center), `fitBounds`
+          // across 900+ Cambodia hotels lands the camera in the rural
+          // centroid where no hotels exist. Instead, jump straight to
+          // Phnom Penh metro at zoom 13 — that's where the bulk of stores
+          // are and the user immediately sees photo pins. They can pan to
+          // other cities (Siem Reap / Sihanoukville) from there.
+          if (isFiltered && !userLocation && !searchCenter) {
+            mapRef.current.setCenter(DEFAULT_CENTER);
+            mapRef.current.setZoom(13);
+          } else {
+            mapRef.current.fitBounds(bounds, { top: 140, bottom: 260, left: 30, right: 30 });
+            const desiredMax = isFiltered ? 13 : 11;
+            google.maps.event.addListenerOnce(mapRef.current, "idle", () => {
+              const z = mapRef.current?.getZoom() ?? 0;
+              if (z > desiredMax) mapRef.current?.setZoom(desiredMax);
+              else if (z < 7) mapRef.current?.setZoom(7);
+            });
+          }
         }
       } else {
         if (shouldAdjustCamera) {
           mapRef.current.setCenter(DEFAULT_CENTER);
-          mapRef.current.setZoom(11);
+          mapRef.current.setZoom(13);
         }
       }
     } else if (filteredStores.length === 1 && shouldAdjustCamera) {
@@ -1999,7 +2250,7 @@ export default function StoreMapPage() {
     }
 
     return () => { if (intervalId !== null) window.clearInterval(intervalId); };
-  }, [mapReady, filteredStores, userLocation, liveStoreMap, dealStoreIds, activeGroup, activeCategory, searchCenter, markerCameraKey, mapZoom, selectedStoreId, filterSearchQuery, markerImageFallbackMap, markerPhotoScopeStores]);
+  }, [mapReady, filteredStores, userLocation, liveStoreMap, dealStoreIds, activeGroup, activeCategory, searchCenter, markerCameraKey, mapZoom, selectedStoreId, filterSearchQuery, markerImageFallbackMap, markerPhotoScopeStores, lodgingPriceMap]);
 
   /* Trip stop numbered markers + polyline */
   useEffect(() => {
@@ -2354,6 +2605,7 @@ export default function StoreMapPage() {
     const isVisited = visitedStoreIds.has(store.id);
     const isSelectedRow = selectedStoreId === store.id;
     const closingSoon = isOpen === true ? getClosingSoonMinutes(store.hours) : null;
+    const rowPrice = isLodgingCategory(store.category) ? lodgingPriceMap[store.id] : null;
 
     const handleTap = () => {
       if (tripMode) {
@@ -2477,7 +2729,17 @@ export default function StoreMapPage() {
           </div>
         </div>
 
-        <div className="flex min-w-[58px] shrink-0 flex-col items-end gap-1">
+        <div className="flex min-w-[64px] shrink-0 flex-col items-end gap-1">
+          {rowPrice?.priceLabel && (
+            <div className="rounded-xl bg-primary/10 px-2 py-1 text-right ring-1 ring-primary/15">
+              <p className="text-[12px] font-black leading-none text-primary">{rowPrice.priceLabel}</p>
+              {rowPrice.discountLabel && (
+                <p className="mt-0.5 max-w-[64px] truncate text-[9px] font-bold leading-none text-emerald-700">
+                  {rowPrice.discountLabel}
+                </p>
+              )}
+            </div>
+          )}
           <motion.button
             whileTap={{ scale: 0.8 }}
             onClick={(e) => { e.stopPropagation(); handleToggleFavoriteSelected(store); }}
@@ -3183,9 +3445,9 @@ export default function StoreMapPage() {
                       <button type="button"
                         key={s.id}
                         onClick={() => { setSelectedStore(s); setSheetExpanded(false); mapRef.current?.panTo({ lat: s.latitude, lng: s.longitude }); const z = mapRef.current?.getZoom() || 14; if (z < 14) mapRef.current?.setZoom(14); }}
-                        className="flex-shrink-0 flex items-center gap-1.5 bg-muted/40 hover:bg-muted/70 border border-border/20 rounded-xl px-2.5 py-1.5 transition-colors"
+                        className="flex-shrink-0 flex items-center gap-1.5 bg-muted/40 hover:bg-muted/70 border border-border/20 rounded-xl pl-1 pr-2.5 py-1 transition-colors"
                       >
-                        <span className="text-sm">{getCategoryIcon(s.category)}</span>
+                        <StoreLogo store={s} size="xs" />
                         <span className="text-[11px] font-semibold text-foreground whitespace-nowrap max-w-[90px] truncate">{s.name}</span>
                       </button>
                     ))}
@@ -3347,17 +3609,30 @@ export default function StoreMapPage() {
                 </button>
               </div>
 
-              {/* Store rows — infinite scroll. Collapsed shows top 3,
-                  expanded reveals a scrollable list with auto-load on scroll. */}
+              {/* Store rows — infinite scroll. Collapsed view scrolls
+                  through the first page (10 rows) internally; expanded view
+                  unlocks the full pageable list with auto-load on scroll. */}
               <div
                 ref={listScrollRef}
                 className="overflow-y-auto transition-all duration-300"
-                style={{ maxHeight: sheetExpanded ? "55vh" : "168px" }}
+                style={{ maxHeight: sheetExpanded ? "55vh" : "44vh" }}
                 onScroll={handleListScroll}
               >
-                {(sheetExpanded ? nearbySorted.slice(0, visibleCount) : nearbySorted.slice(0, 2)).map((store, idx) => (
+                {(sheetExpanded
+                  ? nearbySorted.slice(0, visibleCount)
+                  : nearbySorted.slice(0, STORE_LIST_PAGE)
+                ).map((store, idx) => (
                   <NearbyRow key={store.id} store={store} rank={idx + 1} />
                 ))}
+                {!sheetExpanded && nearbySorted.length > STORE_LIST_PAGE && (
+                  <button
+                    type="button"
+                    onClick={() => setSheetExpanded(true)}
+                    className="w-full py-3 text-[12px] font-semibold text-primary hover:bg-muted/40 border-t border-border/10"
+                  >
+                    Show more · {nearbySorted.length - STORE_LIST_PAGE} remaining
+                  </button>
+                )}
                 {sheetExpanded && visibleCount < nearbySorted.length && (
                   <button
                     type="button"
@@ -3475,7 +3750,7 @@ export default function StoreMapPage() {
           )}
         </AnimatePresence>
 
-        {/* ── Selected store card ── */}
+        {/* ── Selected store card — drag down to close, drag up to open detail */}
         <AnimatePresence>
           {selectedStore && !drawerStore && !tripMode && (
             <motion.div
@@ -3483,12 +3758,43 @@ export default function StoreMapPage() {
               animate={{ y: 0, opacity: 1, scale: 1 }}
               exit={{ y: 140, opacity: 0, scale: 0.92 }}
               transition={{ type: "spring", damping: 26, stiffness: 320 }}
-              className="absolute bottom-[100px] left-3 right-3 z-[1600]"
+              drag="y"
+              dragDirectionLock
+              // Generous bottom slack so the user can peek the map underneath
+              // by dragging the card down without immediately dismissing it —
+              // when they release short of the threshold it springs back to
+              // its anchored position. Top slack is smaller because dragging
+              // up only needs to register a "show me more" intent.
+              dragConstraints={{ top: -120, bottom: 400 }}
+              dragElastic={0.3}
+              dragMomentum={false}
+              dragTransition={{ bounceStiffness: 380, bounceDamping: 30 }}
+              onDragEnd={(_, info: PanInfo) => {
+                // Down past commit threshold → dismiss. The threshold is
+                // intentionally large (≈ a third of the card height) so a
+                // peek that returns to position doesn't accidentally close.
+                if (info.offset.y > 180 || info.velocity.y > 900) {
+                  setSelectedStore(null);
+                  return;
+                }
+                // Up past commit threshold → open the full detail page.
+                if (info.offset.y < -80 || info.velocity.y < -800) {
+                  navigate(getStorePublicPath(selectedStore));
+                }
+                // Anything in between → spring back to anchor (no action).
+              }}
+              className="absolute bottom-[100px] left-3 right-3 z-[1600] touch-pan-x"
             >
               <div
-                className="rounded-[28px] overflow-hidden shadow-[0_24px_70px_rgba(15,23,42,0.24)] border border-white/70 bg-card/95 ring-1 ring-black/5 backdrop-blur-2xl cursor-pointer active:scale-[0.98] transition-transform"
-                onClick={() => navigate(getStorePublicPath(selectedStore))}
+                className="rounded-[28px] overflow-hidden shadow-[0_24px_70px_rgba(15,23,42,0.24)] border border-white/70 bg-card/95 ring-1 ring-black/5 backdrop-blur-2xl active:scale-[0.99] transition-transform"
               >
+                {/* Drag handle — hints that this sheet is swipeable */}
+                <div className="absolute top-1.5 left-1/2 -translate-x-1/2 z-10 w-10 h-1 rounded-full bg-foreground/25" />
+                {/* Inner click target — clicks open detail, drags don't trigger this */}
+                <div
+                  className="cursor-pointer"
+                  onClick={() => navigate(getStorePublicPath(selectedStore))}
+                >
                 {/* Gallery banner — first photo when available */}
                 {selectedStoreGallery.length > 0 && (
                   <div className="relative h-32 w-full overflow-hidden">
@@ -3612,16 +3918,18 @@ export default function StoreMapPage() {
                             <p className="text-[10px] font-black uppercase tracking-wide text-sky-700">
                               {selectedLodgingRooms.length > 0
                                 ? `${selectedLodgingRooms.length} room preview${selectedLodgingRooms.length === 1 ? "" : "s"}`
+                                : selectedDisplayRoomPrice
+                                ? "Best nightly price"
                                 : "Room details"}
                             </p>
                             <p className="mt-0.5 text-[12px] font-black text-foreground">
-                              {selectedRoomPrice ? (
+                              {selectedDisplayRoomPrice ? (
                                 <>
-                                  Rooms from {selectedRoomPrice}
+                                  Rooms from {selectedDisplayRoomPrice}
                                   <span className="font-semibold text-muted-foreground"> / night</span>
-                                  {selectedRoomOriginalPrice && (
+                                  {selectedDisplayRoomOriginalPrice && (
                                     <span className="ml-1.5 text-[11px] font-semibold text-muted-foreground line-through">
-                                      {selectedRoomOriginalPrice}
+                                      {selectedDisplayRoomOriginalPrice}
                                     </span>
                                   )}
                                 </>
@@ -3630,9 +3938,9 @@ export default function StoreMapPage() {
                               )}
                             </p>
                           </div>
-                          {selectedRoomDiscountLabel && (
+                          {selectedDisplayRoomDiscountLabel && (
                             <span className="shrink-0 rounded-full bg-emerald-100 px-2 py-1 text-[10px] font-black text-emerald-700">
-                              {selectedRoomDiscountLabel}
+                              {selectedDisplayRoomDiscountLabel}
                             </span>
                           )}
                         </div>
@@ -3676,7 +3984,7 @@ export default function StoreMapPage() {
                     className="min-h-[46px] border-r border-border/20 text-[12px] font-black text-center text-primary hover:bg-primary/5 flex items-center justify-center gap-1.5"
                     onClick={(e) => {
                       e.stopPropagation();
-                      openDirections({ lat: selectedStore.latitude, lng: selectedStore.longitude, label: selectedStore.name, address: selectedStore.address });
+                      openInZivoMap(navigate, { lat: selectedStore.latitude, lng: selectedStore.longitude, label: selectedStore.name, address: selectedStore.address });
                     }}
                   >
                     <Navigation className="w-3.5 h-3.5" /> Directions
@@ -3827,6 +4135,7 @@ export default function StoreMapPage() {
                     )}
                   </div>
                 )}
+                </div>
               </div>
             </motion.div>
           )}
@@ -3844,7 +4153,7 @@ export default function StoreMapPage() {
             onClose={() => setDrawerStore(null)}
             onView={(s) => navigate(getStorePublicPath(s))}
             onRide={(s, promo) => handleRideSelected(s, promo)}
-            onDirections={(s) => openDirections({ lat: s.latitude, lng: s.longitude, label: s.name, address: s.address })}
+            onDirections={(s) => openInZivoMap(navigate, { lat: s.latitude, lng: s.longitude, label: s.name, address: s.address })}
             onShare={(s) => handleShareSelected(s)}
             onToggleFavorite={handleToggleFavoriteSelected}
             onAddToTrail={(s) => {

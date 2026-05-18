@@ -43,6 +43,7 @@ import Phone from "lucide-react/dist/esm/icons/phone";
 import { openShareToChat } from "@/components/chat/ShareToChatSheet";
 import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import { zivoRouteUrl } from "@/lib/maps/openInZivoMap";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -1495,13 +1496,18 @@ export default function EatsLanding() {
               </div>
             )}
 
-            {/* Address row with map link */}
+            {/* Address row → opens in ZIVO map (not external Google Maps) */}
             {currentRestaurant.address && (
               <div className="px-4 pt-4 max-w-lg mx-auto">
-                <a
-                  href={`https://maps.google.com/?q=${encodeURIComponent(currentRestaurant.address)}`}
-                  target="_blank" rel="noreferrer"
-                  className="flex items-center gap-3 p-3 rounded-2xl bg-card border border-border/40 hover:border-primary/30 transition-colors touch-manipulation"
+                <button
+                  type="button"
+                  onClick={() => navigate(zivoRouteUrl({
+                    lat: (currentRestaurant as { latitude?: number | null }).latitude,
+                    lng: (currentRestaurant as { longitude?: number | null }).longitude,
+                    label: currentRestaurant.name,
+                    address: currentRestaurant.address,
+                  }))}
+                  className="w-full text-left flex items-center gap-3 p-3 rounded-2xl bg-card border border-border/40 hover:border-primary/30 transition-colors touch-manipulation"
                 >
                   <div className="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
                     <MapPin className="w-4 h-4" />
@@ -1511,7 +1517,7 @@ export default function EatsLanding() {
                     <p className="text-xs text-foreground truncate">{currentRestaurant.address}</p>
                   </div>
                   <span className="text-[10px] font-bold text-primary">Open map →</span>
-                </a>
+                </button>
               </div>
             )}
 

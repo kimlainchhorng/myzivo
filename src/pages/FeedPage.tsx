@@ -90,8 +90,43 @@ import { perfLog, perfMeasure, perfNow } from "@/lib/perfTrace";
 // videoRepair is heavy (FFmpeg WASM) — dynamic import only when needed
 
 const FEED_STORE_PAGE_SIZE = 18;
-const FEED_USER_PAGE_SIZE = 12;
+const FEED_USER_PAGE_SIZE = 30;
 const firstMediaLogged = { value: false };
+type ReelSourceFilter = "all" | "people" | "shops";
+const REEL_SOURCE_FILTERS: Array<{
+  key: ReelSourceFilter;
+  label: string;
+  shortLabel: string;
+}> = [
+  { key: "all", label: "All reels", shortLabel: "All" },
+  { key: "people", label: "People reels", shortLabel: "People" },
+  { key: "shops", label: "Shop reels", shortLabel: "Shops" },
+];
+
+const isVideoMediaUrl = (url: string) => /\.(mp4|mov|webm|avi|mkv|m4v)(\?.*)?$/i.test(url);
+
+const normalizeUserPostMediaType = (post: { media_type?: string | null; media_urls?: string[] | null; media_url?: string | null }) => {
+  const type = String(post.media_type || "").toLowerCase();
+  const urls = Array.isArray(post.media_urls) && post.media_urls.length > 0
+    ? post.media_urls
+    : post.media_url ? [post.media_url] : [];
+  return type === "video" || type === "reel" || urls.some(isVideoMediaUrl) ? "video" : "image";
+};
+
+const blendCreatorAndStoreReels = (items: FeedPost[]) => {
+  const creators = items.filter((item) => item.source === "user");
+  const stores = items.filter((item) => item.source !== "user");
+  const blended: FeedPost[] = [];
+  let creatorIndex = 0;
+  let storeIndex = 0;
+
+  while (creatorIndex < creators.length || storeIndex < stores.length) {
+    if (creatorIndex < creators.length) blended.push(creators[creatorIndex++]);
+    if (storeIndex < stores.length) blended.push(stores[storeIndex++]);
+  }
+
+  return blended;
+};
 // Shared translation cache — keyed by `${targetLang}:${caption}` so the same
 // text in the same target language is never fetched twice across all cards.
 const translationCache = new Map<string, string>();
@@ -146,6 +181,17 @@ interface FeedPost {
   store_is_verified?: boolean;
   location?: string | null;
 }
+
+const getFeedPostRawId = (postOrId: Pick<FeedPost, "id"> | string): string => {
+  const id = typeof postOrId === "string" ? postOrId : postOrId.id;
+  return id.replace(/^u-/, "");
+};
+
+const getFeedPostSource = (post: Pick<FeedPost, "id" | "source">): "store" | "user" =>
+  post.source === "user" || post.id.startsWith("u-") ? "user" : "store";
+
+const getFeedPostBookmarkKey = (post: Pick<FeedPost, "id" | "source">): string =>
+  `${getFeedPostSource(post)}:${getFeedPostRawId(post)}`;
 
 /* ── Scrolling music ticker ───────────────────────────────────── */
 /**
@@ -368,6 +414,7 @@ function ReelCard({
   initialAuthorIsLive?: boolean;
 }) {
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const haptic = useHaptic();
   const videoRef = useRef<HTMLVideoElement>(null);
   const mediaPerfLogged = useRef(false);
@@ -379,13 +426,17 @@ function ReelCard({
   const [isRepairing, setIsRepairing] = useState(false);
   const [isBlobLoading, setIsBlobLoading] = useState(false);
   const [saved, setSaved] = useState(initialSaved);
+  useEffect(() => {
+    setSaved(initialSaved);
+  }, [initialSaved, post.id]);
   const [showDoubleTapHeart, setShowDoubleTapHeart] = useState(false);
   // Long-press → open reaction picker instead of plain like
   const [showReactionPicker, setShowReactionPicker] = useState(false);
   const longPressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   // Track view: counts after the post stays active in the viewport for 1.5s
-  const rawPostId = post.id.startsWith("u-") ? post.id.slice(2) : post.id;
+  const rawPostId = getFeedPostRawId(post);
+  const bookmarkSource = getFeedPostSource(post);
   usePostViewTracking(rawPostId, post.source ?? "store", isActive, userId);
   const [videoProgress, setVideoProgress] = useState(0); // 0..1
   const [showMoreMenu, setShowMoreMenu] = useState(false);
@@ -403,6 +454,7 @@ function ReelCard({
     if (!isActive) return;
     if (!post.caption || translatedCaption || isTranslating) return;
     const caption = post.caption;
+    // eslint-disable-next-line no-misleading-character-class
     const hasNonLatin = /[؀-ۿ֐-׿ऀ-ॿ฀-๿຀-໿က-႟ក-៿぀-ゟ゠-ヿ一-鿿가-힯Ѐ-ӿ]/.test(caption);
     // Heuristic: if the caption already looks like the user's language, skip.
     // Khmer / Thai / Chinese / Korean / Japanese are detected by Unicode block.
@@ -818,27 +870,57 @@ function ReelCard({
     setSaved(next);
     try {
       if (next) {
-        const { error } = await (supabase as any).from("bookmarks").upsert(
-          {
-            user_id: userId,
-            item_id: post.id,
-            item_type: "post",
-            title: post.caption || `Reel by ${post.source === "user" ? post.author_name : post.store_name}`,
-            collection_name: "Reels",
-          },
-          { onConflict: "user_id,item_id", ignoreDuplicates: true },
-        );
+        const [modernBookmark, legacyBookmark] = await Promise.all([
+          (supabase as any).from("post_bookmarks").upsert(
+            {
+              user_id: userId,
+              post_id: rawPostId,
+              source: bookmarkSource,
+            },
+            { onConflict: "user_id,post_id,source", ignoreDuplicates: true },
+          ),
+          (supabase as any).from("bookmarks").upsert(
+            {
+              user_id: userId,
+              item_id: post.id,
+              item_type: "post",
+              collection_name: "Reels",
+            },
+            { onConflict: "user_id,item_type,item_id", ignoreDuplicates: true },
+          ),
+        ]);
+        const error = modernBookmark.error || legacyBookmark.error;
         if (error && !String(error.message || "").toLowerCase().includes("duplicate")) throw error;
         toast.success("Saved", {
           action: { label: "View", onClick: () => navigate("/saved") },
         });
       } else {
-        await (supabase as any).from("bookmarks").delete().eq("user_id", userId).eq("item_id", post.id);
+        const alternateIds = Array.from(new Set([post.id, rawPostId]));
+        const [modernDelete, legacyDelete] = await Promise.all([
+          (supabase as any)
+            .from("post_bookmarks")
+            .delete()
+            .eq("user_id", userId)
+            .eq("post_id", rawPostId)
+            .eq("source", bookmarkSource),
+          (supabase as any)
+            .from("bookmarks")
+            .delete()
+            .eq("user_id", userId)
+            .eq("item_type", "post")
+            .in("item_id", alternateIds),
+        ]);
+        if (modernDelete.error || legacyDelete.error) throw modernDelete.error || legacyDelete.error;
         toast.success("Removed from saved");
       }
-    } catch {
+      void queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
+      void queryClient.invalidateQueries({ queryKey: ["saved-posts"] });
+      void queryClient.invalidateQueries({ queryKey: ["saved-posts-count"] });
+    } catch (e: any) {
       setSaved(!next);
-      toast.error("Couldn't update saved");
+      const reason = e?.message || e?.error_description || "unknown";
+      console.error("[handleSaveToggle]", e);
+      toast.error(`Couldn't update saved: ${reason}`);
     } finally {
       savingBookmarkRef.current = false;
     }
@@ -1483,7 +1565,9 @@ function ReelCard({
                   <img src={(post.source === "user" ? post.author_avatar : post.store_logo)!} alt="" className="w-full h-full object-cover" loading="lazy" decoding="async" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center">
-                    <Store className="w-5 h-5 text-white" />
+                    {post.source === "user"
+                      ? <UserCircle className="w-5 h-5 text-white" />
+                      : <Store className="w-5 h-5 text-white" />}
                   </div>
                 )}
               </div>
@@ -2805,6 +2889,7 @@ function CommentSheet({
                               type="button"
                               onClick={() => {
                                 setReplyTo({ id: c.id, authorName: name });
+                                // eslint-disable-next-line react-hooks/refs
                                 requestAnimationFrame(() => inputRef.current?.focus());
                               }}
                               className="font-semibold text-foreground/70 hover:text-foreground active:scale-95 transition-transform"
@@ -3772,9 +3857,29 @@ export default function FeedPage() {
       return "foryou";
     } catch { return "foryou"; }
   });
+  const [feedSource, setFeedSource] = useState<ReelSourceFilter>(() => {
+    if (typeof window === "undefined") return "all";
+    try {
+      const stored = localStorage.getItem("zivo_reel_source");
+      if (stored === "people" || stored === "shops" || stored === "all") return stored;
+    } catch { /* ignore */ }
+    return "all";
+  });
   useEffect(() => {
     try { localStorage.setItem("zivo_reel_mode", feedMode); } catch {}
   }, [feedMode]);
+  useEffect(() => {
+    try { localStorage.setItem("zivo_reel_source", feedSource); } catch {}
+  }, [feedSource]);
+  const activeSourceFilter = REEL_SOURCE_FILTERS.find((option) => option.key === feedSource) ?? REEL_SOURCE_FILTERS[0];
+  const cycleSourceFilter = useCallback(() => {
+    setFeedSource((current) => {
+      const index = REEL_SOURCE_FILTERS.findIndex((option) => option.key === current);
+      return REEL_SOURCE_FILTERS[(index + 1) % REEL_SOURCE_FILTERS.length].key;
+    });
+    setActiveIndex(0);
+    requestAnimationFrame(() => cardRefs.current[0]?.scrollIntoView({ block: "start" }));
+  }, []);
   // Reset to For You when the user is logged out — "following" mode with no
   // userId shows a blank black screen since neither the empty state nor the
   // tab controls render without a user.
@@ -3919,11 +4024,13 @@ export default function FeedPage() {
         mutedAuthorIds = new Set((safety ?? []).map((s: any) => s.target_user_id));
       }
 
-      // Fetch store posts and user video posts in parallel.
+      // Fetch store posts and user media posts in parallel. Keep each source
+      // independent so one bad table policy or media-type mismatch cannot
+      // blank the whole reels screen.
       // Page size grows with `pageMultiplier` so "load more" reveals additional content.
       const STORE_PAGE = FEED_STORE_PAGE_SIZE;
       const USER_PAGE  = FEED_USER_PAGE_SIZE;
-      const [{ data: postsData, error }, { data: userVideos }] = await Promise.all([
+      const [storePostsResult, userPostsResult] = await Promise.all([
         supabase
           .from("store_posts")
           .select("id, store_id, caption, media_urls, media_type, is_published, created_at, likes_count, comments_count, shares_count, reposts_count, view_count, audio_name, location")
@@ -3934,19 +4041,27 @@ export default function FeedPage() {
           .from("user_posts")
           .select("id, user_id, media_url, media_urls, media_type, caption, likes_count, comments_count, shares_count, views_count, created_at, audio_name, location")
           .eq("is_published", true)
-          .in("media_type", ["video", "reel"])
           .order("created_at", { ascending: false })
           .limit(USER_PAGE * pageMultiplier),
       ]);
-      if (error) throw error;
+      if (storePostsResult.error && userPostsResult.error) throw storePostsResult.error;
+      if (storePostsResult.error || userPostsResult.error) {
+        console.warn("[FeedPage] Some reel sources failed", {
+          store_posts: storePostsResult.error?.message,
+          user_posts: userPostsResult.error?.message,
+        });
+      }
 
-      // Strip muted/blocked authors from user video posts
-      const filteredUserVideos = (userVideos ?? []).filter(
+      const postsData = storePostsResult.error ? [] : storePostsResult.data;
+      const userMedia = userPostsResult.error ? [] : userPostsResult.data;
+
+      // Strip muted/blocked authors from user media posts
+      const filteredUserMedia = (userMedia ?? []).filter(
         (p: any) => !mutedAuthorIds.has(p.user_id)
       );
 
       const storeIds = [...new Set((postsData || []).map((p: any) => p.store_id))];
-      const userIds = [...new Set(filteredUserVideos.map((p: any) => p.user_id))];
+      const userIds = [...new Set(filteredUserMedia.map((p: any) => p.user_id))];
 
       const [{ data: stores }, { data: profiles }] = await Promise.all([
         storeIds.length
@@ -3983,8 +4098,8 @@ export default function FeedPage() {
         });
       }
 
-      // User video posts (already filtered for muted/blocked authors above)
-      for (const post of filteredUserVideos) {
+      // User media posts (already filtered for muted/blocked authors above)
+      for (const post of filteredUserMedia) {
         const profile = profileMap.get(post.user_id);
         const urls: string[] = Array.isArray(post.media_urls) && post.media_urls.length > 0
           ? post.media_urls
@@ -3995,7 +4110,7 @@ export default function FeedPage() {
           store_id: "",
           caption: post.caption,
           media_urls: urls,
-          media_type: "video",
+          media_type: normalizeUserPostMediaType(post),
           is_published: true,
           created_at: post.created_at,
           likes_count: post.likes_count || 0,
@@ -4028,17 +4143,19 @@ export default function FeedPage() {
         const totalEngagement = (item.likes_count || 0) + (item.comments_count || 0) * 2 + (item.view_count || 0) * 0.1;
         const engagementScore = Math.log2(1 + totalEngagement) / 10;
         const randomFactor = seededRandom(item.id + dayKey) * 0.15;
-        item._feedScore = recencyScore * 0.45 + engagementScore * 0.3 + randomFactor;
+        const creatorBoost = item.source === "user" ? 0.12 : 0;
+        item._feedScore = recencyScore * 0.45 + engagementScore * 0.3 + randomFactor + creatorBoost;
       });
 
       allPosts.sort((a: any, b: any) => (b._feedScore || 0) - (a._feedScore || 0));
+      const blendedPosts = blendCreatorAndStoreReels(allPosts);
       perfMeasure("fullscreen feed query", feedStartedAt, {
         pageMultiplier,
         storeLimit: STORE_PAGE * pageMultiplier,
         userLimit: USER_PAGE * pageMultiplier,
-        itemCount: allPosts.length,
+        itemCount: blendedPosts.length,
       });
-      return allPosts;
+      return blendedPosts;
     },
   });
 
@@ -4048,6 +4165,11 @@ export default function FeedPage() {
     let list = posts;
     if (feedMode === "following" && userId) {
       list = list.filter((p) => p.author_id && followingIds.has(p.author_id));
+    }
+    if (feedSource === "people") {
+      list = list.filter((p) => p.source === "user");
+    } else if (feedSource === "shops") {
+      list = list.filter((p) => p.source === "store");
     }
     if (hiddenAuthorIds.size > 0) {
       list = list.filter((p) => !p.author_id || !hiddenAuthorIds.has(p.author_id));
@@ -4069,30 +4191,72 @@ export default function FeedPage() {
       });
     }
     return list;
-  }, [posts, feedMode, userId, followingIds, hiddenAuthorIds, deletedPostIds, hiddenPosts, selectedHashtag]);
+  }, [posts, feedMode, feedSource, userId, followingIds, hiddenAuthorIds, deletedPostIds, hiddenPosts, selectedHashtag]);
+
+  useEffect(() => {
+    if (visiblePosts.length === 0) return;
+    if (activeIndex >= visiblePosts.length) {
+      setActiveIndex(0);
+      requestAnimationFrame(() => cardRefs.current[0]?.scrollIntoView({ block: "start" }));
+    }
+  }, [activeIndex, visiblePosts.length]);
 
   // Batch-fetch liked + saved post IDs for all visible posts in one round-trip each
   useEffect(() => {
     if (!userId || posts.length === 0) return;
-    const postIds = posts.map((p) => p.id);
+    const storePostIds = posts.filter((p) => p.source !== "user").map((p) => p.id);
+    const userPostIds = posts.filter((p) => p.source === "user").map((p) => p.id.replace(/^u-/, ""));
     // Likes
-    supabase
-      .from("store_post_likes")
-      .select("post_id")
-      .eq("user_id", userId)
-      .in("post_id", postIds)
-      .then(({ data }) => {
-        setUserLikedPostIds(new Set((data || []).map((d: any) => d.post_id)));
-      });
-    // Bookmarks — single query replaces one-per-card queries inside ReelCard
-    (supabase as any)
-      .from("bookmarks")
-      .select("item_id")
-      .eq("user_id", userId)
-      .in("item_id", postIds)
-      .then(({ data }: any) => {
-        setSavedPostIds(new Set((data || []).map((d: any) => d.item_id)));
-      });
+    Promise.all([
+      storePostIds.length
+        ? supabase
+            .from("store_post_likes")
+            .select("post_id")
+            .eq("user_id", userId)
+            .in("post_id", storePostIds)
+        : Promise.resolve({ data: [] as any[] }),
+      userPostIds.length
+        ? (supabase as any)
+            .from("post_likes")
+            .select("post_id")
+            .eq("user_id", userId)
+            .in("post_id", userPostIds)
+        : Promise.resolve({ data: [] as any[] }),
+    ]).then(([storeLikes, userLikes]: any[]) => {
+      const liked = new Set<string>();
+      for (const row of storeLikes.data || []) liked.add(row.post_id);
+      for (const row of userLikes.data || []) liked.add(`u-${row.post_id}`);
+      setUserLikedPostIds(liked);
+    });
+    // Bookmarks — read both the modern post_bookmarks table and the older
+    // general bookmarks table so Feed, Reels, and Saved stay in sync.
+    const bookmarkIds = Array.from(new Set(posts.flatMap((p) => [p.id, getFeedPostRawId(p)])));
+    const rawPostIds = Array.from(new Set(posts.map(getFeedPostRawId)));
+    Promise.all([
+      bookmarkIds.length
+        ? (supabase as any)
+            .from("bookmarks")
+            .select("item_id")
+            .eq("user_id", userId)
+            .eq("item_type", "post")
+            .in("item_id", bookmarkIds)
+        : Promise.resolve({ data: [] as any[] }),
+      rawPostIds.length
+        ? (supabase as any)
+            .from("post_bookmarks")
+            .select("post_id, source")
+            .eq("user_id", userId)
+            .in("post_id", rawPostIds)
+        : Promise.resolve({ data: [] as any[] }),
+    ]).then(([legacyBookmarks, modernBookmarks]: any[]) => {
+      const saved = new Set<string>();
+      for (const row of legacyBookmarks.data || []) saved.add(row.item_id);
+      for (const row of modernBookmarks.data || []) {
+        saved.add(`${row.source}:${row.post_id}`);
+        saved.add(row.source === "user" ? `u-${row.post_id}` : row.post_id);
+      }
+      setSavedPostIds(saved);
+    });
   }, [userId, posts]);
 
   // Batch live-stream check — one query for all unique author IDs in the feed
@@ -4182,12 +4346,14 @@ export default function FeedPage() {
       return next;
     });
 
+    const post = posts.find(p => p.id === postId);
+    const rawPostId = postId.replace(/^u-/, "");
+    const likesTable = post?.source === "user" ? "post_likes" : "store_post_likes";
     if (currentlyLiked) {
-      await supabase.from("store_post_likes").delete().eq("post_id", postId).eq("user_id", userId);
+      await (supabase as any).from(likesTable).delete().eq("post_id", rawPostId).eq("user_id", userId);
     } else {
-      await supabase.from("store_post_likes").insert({ post_id: postId, user_id: userId });
+      await (supabase as any).from(likesTable).insert({ post_id: rawPostId, user_id: userId });
       // Push notification to post author — once per post per session.
-      const post = posts.find(p => p.id === postId);
       const authorId = post?.author_id;
       if (authorId && authorId !== userId && shouldSendLikeNotification(postId)) {
         try {
@@ -4328,10 +4494,13 @@ export default function FeedPage() {
     return () => window.removeEventListener("keydown", handler);
   }, [activeIndex, visiblePosts, userId, userLikedPostIds, showShortcutsHelp]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const didRestorePosition = useRef(false);
+
   // Persist the active post's ID so resume survives feed re-shuffling
   // (the algorithmic feed reorders results; a stored index could land on
   // a different reel after a refresh).
   useEffect(() => {
+    if (!didRestorePosition.current) return;
     if (visiblePosts.length === 0) return;
     const activePost = visiblePosts[activeIndex];
     if (!activePost) return;
@@ -4342,7 +4511,6 @@ export default function FeedPage() {
   // reel. Prefer matching by stored post ID (survives reordering); fall
   // back to stored index if the post is no longer in the feed.
   // Skipped when arriving via a deep link — the link's target wins.
-  const didRestorePosition = useRef(false);
   useEffect(() => {
     if (didRestorePosition.current) return;
     if (visiblePosts.length === 0) return;
@@ -4439,10 +4607,37 @@ export default function FeedPage() {
 
   if (posts.length === 0) {
     return (
-      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-4 z-50">
-        <Store className="h-14 w-14 text-white/20" />
-        <p className="text-white font-semibold">{t("feed.no_posts")}</p>
-        <p className="text-white/50 text-sm text-center px-8">{t("feed.no_posts_desc")}</p>
+      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-4 z-50 px-8 text-center">
+        <div className="flex h-16 w-16 items-center justify-center rounded-full bg-white/10 ring-1 ring-white/15">
+          <Film className="h-8 w-8 text-white/80" />
+        </div>
+        <div>
+          <p className="text-white font-semibold">No reels yet</p>
+          <p className="mt-1 text-white/50 text-sm">
+            People and stores with photos or videos will show here. Create a reel or check back after new posts publish.
+          </p>
+        </div>
+        <div className="flex flex-wrap justify-center gap-2">
+          {userId && (
+            <button
+              type="button"
+              onClick={() => navigate("/feed", { state: { openCreate: true } })}
+              className="rounded-full bg-white px-4 py-2 text-sm font-bold text-black active:scale-95"
+            >
+              Create reel
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => {
+              setFeedSource("all");
+              void queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
+            }}
+            className="rounded-full border border-white/15 bg-white/10 px-4 py-2 text-sm font-semibold text-white active:scale-95"
+          >
+            Refresh
+          </button>
+        </div>
         <ZivoMobileNav />
       </div>
     );
@@ -4497,6 +4692,45 @@ export default function FeedPage() {
               className="px-5 py-2 rounded-full bg-white/10 text-white text-sm font-semibold ring-1 ring-white/15 backdrop-blur-md active:scale-95 transition-transform"
             >
               Discover creators
+            </button>
+          }
+          className="text-white [&_h3]:text-white [&_p]:text-white/55"
+        />
+        <ZivoMobileNav />
+      </div>
+    );
+  }
+
+  if (feedSource !== "all" && visiblePosts.length === 0) {
+    const emptyTitle = feedSource === "people" ? "No people reels yet" : "No shop reels yet";
+    const emptyDescription = feedSource === "people"
+      ? "People posts with photos or videos will show here. Switch back to All to keep watching."
+      : "Store posts with photos or videos will show here. Switch back to All to keep watching.";
+    return (
+      <div className="fixed inset-0 bg-black z-50 flex items-center justify-center">
+        <EmptyState
+          icon={feedSource === "people" ? UserCircle : Store}
+          tone="brand"
+          title={emptyTitle}
+          description={emptyDescription}
+          action={
+            <button
+              type="button"
+              onClick={() => setFeedSource("all")}
+              className="px-5 py-2 rounded-full bg-white text-black text-sm font-bold active:scale-95 transition-transform"
+            >
+              Show all reels
+            </button>
+          }
+          secondaryAction={
+            <button
+              type="button"
+              onClick={() => {
+                void queryClient.invalidateQueries({ queryKey: ["customer-feed"] });
+              }}
+              className="px-5 py-2 rounded-full bg-white/10 text-white text-sm font-semibold ring-1 ring-white/15 backdrop-blur-md active:scale-95 transition-transform"
+            >
+              Refresh
             </button>
           }
           className="text-white [&_h3]:text-white [&_p]:text-white/55"
@@ -4598,6 +4832,24 @@ export default function FeedPage() {
           </div>
         </div>
       )}
+
+      <div className="absolute left-3 top-safe-overlay z-50 lg:left-4">
+        <button
+          type="button"
+          onClick={cycleSourceFilter}
+          aria-label={`Showing ${activeSourceFilter.label}. Tap to change reel source.`}
+          className="pointer-events-auto inline-flex h-10 items-center gap-1.5 rounded-full border border-white/10 bg-black/40 px-3 text-xs font-bold text-white shadow-lg backdrop-blur-sm active:scale-95"
+        >
+          {feedSource === "people" ? (
+            <UserCircle className="h-4 w-4" />
+          ) : feedSource === "shops" ? (
+            <Store className="h-4 w-4" />
+          ) : (
+            <Film className="h-4 w-4" />
+          )}
+          <span>{activeSourceFilter.shortLabel}</span>
+        </button>
+      </div>
 
       {/* Discover + Search + Live buttons — hide on desktop.
           Wrapped in a centered container so on iPad (md+), where the reel
@@ -4832,7 +5084,7 @@ export default function FeedPage() {
                       post={post}
                       isActive={activeIndex === index}
                       shouldPreload={index === activeIndex + 1 || index === activeIndex - 1}
-                      initialSaved={savedPostIds.has(post.id)}
+                      initialSaved={savedPostIds.has(post.id) || savedPostIds.has(getFeedPostBookmarkKey(post))}
                       initialIsFollowing={post.author_id ? followingIds.has(post.author_id) : false}
                       initialAuthorIsLive={post.author_id ? liveAuthorIds.has(post.author_id) : false}
                     globalMuted={globalMuted}

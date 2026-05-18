@@ -6,12 +6,14 @@
  * - Explicit "Open in Maps" button + tap-anywhere fallback
  */
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import MapPin from "lucide-react/dist/esm/icons/map-pin";
 import Navigation from "lucide-react/dist/esm/icons/navigation";
 import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
 import ImageOff from "lucide-react/dist/esm/icons/image-off";
 import { useLocationSharePrefs } from "@/hooks/useLocationSharePrefs";
 import { resolveMapsKey } from "@/lib/mapsKey";
+import { zivoRouteUrl } from "@/lib/maps/openInZivoMap";
 import {
   reverseGeocode,
   getCachedAddress,
@@ -65,10 +67,10 @@ export default function LocationShareBubble({ lat, lng, label, isMe, time }: Loc
     return () => { cancelled = true; };
   }, [lat, lng, prefs.showRoute]);
 
-  const isApple = typeof navigator !== "undefined" && /iPhone|iPad|Mac/i.test(navigator.userAgent);
-  const mapUrl = isApple
-    ? `https://maps.apple.com/?ll=${lat},${lng}&q=${encodeURIComponent(label || "Shared Location")}`
-    : `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`;
+  const navigate = useNavigate();
+  // Open shared locations inside ZIVO's own ride-hub map so the chat
+  // experience stays in-app. The user can decide to book a ride from there.
+  const mapUrl = zivoRouteUrl({ lat, lng, label: label || "Shared Location" });
 
   // Prefer Google Static Maps when a key is available — it's the most
   // reliable. Resolved async via env var or the maps-api-key edge function;
@@ -96,13 +98,12 @@ export default function LocationShareBubble({ lat, lng, label, isMe, time }: Loc
   return (
     <div className={`flex ${isMe ? "justify-end" : "justify-start"}`}>
       <div className="block max-w-[80%] min-w-[260px] rounded-2xl overflow-hidden border border-border/30 bg-card shadow-sm">
-        {/* Map preview (whole area is a tap target → opens Maps) */}
-        <a
-          href={mapUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          aria-label="Open in Maps"
-          className="relative block w-full h-[140px] bg-muted overflow-hidden group"
+        {/* Map preview (whole area is a tap target → opens ZIVO map) */}
+        <button
+          type="button"
+          onClick={() => navigate(mapUrl)}
+          aria-label="Open in ZIVO map"
+          className="relative block w-full h-[140px] bg-muted overflow-hidden group text-left"
         >
           {staticMapUrl && !imgFailed ? (
             <img
@@ -146,7 +147,7 @@ export default function LocationShareBubble({ lat, lng, label, isMe, time }: Loc
               </div>
             </div>
           </div>
-        </a>
+        </button>
 
         {/* Info */}
         <div className="px-3 pt-2.5 pb-3 bg-card">
@@ -170,16 +171,15 @@ export default function LocationShareBubble({ lat, lng, label, isMe, time }: Loc
 
           {/* Open in Maps button + meta row */}
           <div className="mt-2.5 flex items-center justify-between gap-2">
-            <a
-              href={mapUrl}
-              target="_blank"
-              rel="noopener noreferrer"
+            <button
+              type="button"
+              onClick={() => navigate(mapUrl)}
               className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-[11.5px] font-semibold active:scale-95 transition-transform shadow-sm"
             >
               <Navigation className="w-3.5 h-3.5" />
-              Open in Maps
+              Open in ZIVO
               <ChevronRight className="w-3.5 h-3.5 -mr-1 opacity-80" />
-            </a>
+            </button>
             <div className="flex flex-col items-end min-w-0">
               <span className="text-[10px] text-muted-foreground/80 font-mono truncate max-w-[120px]">
                 {coords}

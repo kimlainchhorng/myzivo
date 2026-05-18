@@ -23,6 +23,10 @@ interface Body {
   client_attempt_id?: string;
   /** When 'embedded', returns client_secret for inline Stripe Embedded Checkout instead of a redirect URL. */
   ui_mode?: "hosted" | "embedded";
+  /** Same-origin app URL used after hosted checkout or redirect-based embedded methods. */
+  return_url?: string;
+  /** Same-origin app URL used if hosted checkout is canceled. */
+  cancel_url?: string;
   /** When true, force-mints a new Checkout Session (used when an embedded client_secret expires). */
   force_new?: boolean;
 }
@@ -36,6 +40,7 @@ const TERMINAL_PAYMENT_STATES = new Set([
 ]);
 
 const ROW_LOCK_TTL_SECONDS = 60;
+const EMBEDDED_CARD_REDIRECT_ON_COMPLETION = "never";
 
 const sha256Hex = async (s: string) => {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
@@ -265,12 +270,18 @@ Deno.serve(async (req) => {
         try {
           const stripeTmp = new Stripe(stripeKey, { apiVersion: "2025-08-27.basil" });
           const existing = await stripeTmp.checkout.sessions.retrieve((prior as any).stripe_session_id);
-          if (existing.status === "open" && (existing as any).client_secret) {
+          if (
+            existing.status === "open"
+            && (existing as any).ui_mode === "embedded"
+            && (existing as any).client_secret
+            && (existing as any).redirect_on_completion === EMBEDDED_CARD_REDIRECT_ON_COMPLETION
+          ) {
             return new Response(
               JSON.stringify({
                 client_secret: (existing as any).client_secret,
                 session_id: existing.id,
                 ui_mode: "embedded",
+                redirect_on_completion: (existing as any).redirect_on_completion,
                 reused: true,
               }),
               { headers: { ...cors, "Content-Type": "application/json" } },
@@ -301,7 +312,12 @@ Deno.serve(async (req) => {
         if (existing.status === "open") {
           // Embedded sessions don't have .url — they expose .client_secret instead.
           const existingUiMode = (existing as any).ui_mode as "hosted" | "embedded" | undefined;
-          if (uiMode === "embedded" && existingUiMode === "embedded" && (existing as any).client_secret) {
+          if (
+            uiMode === "embedded"
+            && existingUiMode === "embedded"
+            && (existing as any).client_secret
+            && (existing as any).redirect_on_completion === EMBEDDED_CARD_REDIRECT_ON_COMPLETION
+          ) {
             if (dedupRowId) {
               await admin
                 .from("lodging_deposit_retry_attempts")
@@ -317,6 +333,7 @@ Deno.serve(async (req) => {
                 client_secret: (existing as any).client_secret,
                 session_id: existing.id,
                 ui_mode: "embedded",
+                redirect_on_completion: (existing as any).redirect_on_completion,
                 reused: true,
               }),
               { headers: { ...cors, "Content-Type": "application/json" } },
@@ -351,6 +368,18 @@ Deno.serve(async (req) => {
     }
 
     const origin = req.headers.get("origin") || "https://hizivo.com";
+    const defaultReturnUrl =
+      `${origin}/hotel/${body.store_id}/booking-confirmed?reservation_id=${body.reservation_id}&payment=1&session_id={CHECKOUT_SESSION_ID}`;
+    const defaultCancelUrl =
+      `${origin}/hotel/${body.store_id}/book?payment=cancelled&reservation_id=${body.reservation_id}`;
+    const toSameOriginUrl = (value: unknown, fallback: string) => {
+      if (typeof value !== "string" || !value.trim()) return fallback;
+      const raw = value.trim();
+      const candidate = raw.startsWith("/") ? `${origin}${raw}` : raw;
+      return candidate.startsWith(`${origin}/`) ? candidate : fallback;
+    };
+    const returnUrl = toSameOriginUrl(body.return_url, defaultReturnUrl);
+    const cancelUrl = toSameOriginUrl(body.cancel_url, defaultCancelUrl);
     const productName =
       mode === "deposit"
         ? `Refundable hold – Reservation ${r.number}`
@@ -395,15 +424,18 @@ Deno.serve(async (req) => {
         store_id: body.store_id,
         mode,
       },
+      client_reference_id: body.reservation_id,
     };
 
     if (uiMode === "embedded") {
       sessionParams.ui_mode = "embedded";
-      // Stripe redirects to this URL after the embedded form succeeds (we keep the user inside the booking sheet otherwise).
-      sessionParams.return_url = `${origin}/grocery/shop?lodging_paid=1&ref=${r.number}&session_id={CHECKOUT_SESSION_ID}`;
+      // This checkout entry point is explicitly card payment. Restrict the
+      // embedded session to card so Stripe never needs to leave the ZIVO app.
+      sessionParams.payment_method_types = ["card"];
+      sessionParams.redirect_on_completion = EMBEDDED_CARD_REDIRECT_ON_COMPLETION;
     } else {
-      sessionParams.success_url = `${origin}/grocery/shop?lodging_paid=1&ref=${r.number}&session_id={CHECKOUT_SESSION_ID}`;
-      sessionParams.cancel_url = `${origin}/grocery/shop?lodging_paid=0&ref=${r.number}`;
+      sessionParams.success_url = returnUrl;
+      sessionParams.cancel_url = cancelUrl;
     }
 
     const session = await stripe.checkout.sessions.create(sessionParams, { idempotencyKey });
@@ -414,6 +446,7 @@ Deno.serve(async (req) => {
         stripe_session_id: session.id,
         stripe_payment_intent_id: (session.payment_intent as string) || null,
         deposit_cents: depositCents,
+        payment_provider: "stripe",
         payment_status: mode === "deposit" ? "authorized" : "pending",
         last_payment_error: null,
         // Lock auto-expires; release proactively now that we've handed off to Stripe.
@@ -440,6 +473,7 @@ Deno.serve(async (req) => {
           client_secret: (session as any).client_secret,
           session_id: session.id,
           ui_mode: "embedded",
+          redirect_on_completion: (session as any).redirect_on_completion,
         }),
         { headers: { ...cors, "Content-Type": "application/json" } },
       );

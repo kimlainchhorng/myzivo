@@ -31,6 +31,10 @@ import Wifi from "lucide-react/dist/esm/icons/wifi";
 import Coffee from "lucide-react/dist/esm/icons/coffee";
 import Waves from "lucide-react/dist/esm/icons/waves";
 import Car from "lucide-react/dist/esm/icons/car";
+import Footprints from "lucide-react/dist/esm/icons/footprints";
+import Bike from "lucide-react/dist/esm/icons/bike";
+import TrainFront from "lucide-react/dist/esm/icons/train-front";
+import Navigation from "lucide-react/dist/esm/icons/navigation";
 import Utensils from "lucide-react/dist/esm/icons/utensils";
 import Dumbbell from "lucide-react/dist/esm/icons/dumbbell";
 import Wind from "lucide-react/dist/esm/icons/wind";
@@ -600,7 +604,25 @@ export default function HotelResortDetailPage() {
     }
   }, [storeId, store?.name, store?.category, store?.address, store?.logo_url, store?.banner_url]);
 
-  const handleShare = async () => {
+  // Open the in-app "share to a ZIVO chat" sheet. Centralized so the hero
+  // icon, desktop CTA, and any future share entrypoint all push the same
+  // ZivoCardPayload — no chance of the buttons disagreeing on what gets sent.
+  const handleShareToChat = () => {
+    openShareToChat({
+      kind: "hotel",
+      title: store?.name || "Hotel on ZIVO",
+      subtitle: store?.address || undefined,
+      meta: minPriceCents > 0 ? `From $${Math.round(minPriceCents / 100)} / night` : undefined,
+      deepLink: window.location.pathname,
+      image: cover,
+    });
+  };
+
+  // System share / copy link — secondary affordance used when the user wants
+  // to forward outside the app. If `navigator.share` is unavailable (desktop,
+  // some WKWebView contexts) we fall back to clipboard + toast, and if even
+  // that fails we open the in-app sheet so the tap is never a dead-end.
+  const handleSystemShare = async () => {
     const url = window.location.href;
     const shareData = {
       title: store?.name || "Hotel on ZIVO",
@@ -617,11 +639,17 @@ export default function HotelResortDetailPage() {
     }
     try {
       await navigator.clipboard.writeText(url);
-      toast.success("Link copied");
+      toast.success("Link copied to clipboard");
+      return;
     } catch {
-      toast.error("Could not share link");
+      // Clipboard blocked (insecure context, permissions, etc.) — fall back
+      // to the in-app share sheet so the user still gets something useful.
     }
+    handleShareToChat();
   };
+
+  // Back-compat alias for inline references elsewhere in the file.
+  const handleShare = handleSystemShare;
 
   const handleCheckAvailability = () => {
     const el = document.getElementById("rooms-section");
@@ -763,20 +791,6 @@ export default function HotelResortDetailPage() {
           </button>
           <div className="flex items-center gap-2">
             <button type="button"
-              onClick={() => openShareToChat({
-                kind: "hotel",
-                title: store?.name || "Hotel on ZIVO",
-                subtitle: store?.address || undefined,
-                meta: minPriceCents > 0 ? `From $${Math.round(minPriceCents / 100)} / night` : undefined,
-                deepLink: window.location.pathname,
-                image: cover,
-              })}
-              aria-label="Share to chat"
-              className={HERO_ACTION_BUTTON_CLASS}
-            >
-              <MessageCircle className="w-5 h-5" strokeWidth={2.4} />
-            </button>
-            <button type="button"
               onClick={toggleFavorite}
               aria-label={isFavorite ? "Remove from favorites" : "Save to favorites"}
               aria-pressed={isFavorite}
@@ -785,7 +799,7 @@ export default function HotelResortDetailPage() {
               <Heart className={cn("w-5 h-5 transition-colors", isFavorite ? "fill-rose-500 text-rose-500" : "text-zinc-950 dark:text-white")} strokeWidth={2.6} />
             </button>
             <button type="button"
-              onClick={handleShare}
+              onClick={handleShareToChat}
               aria-label="Share"
               className={HERO_ACTION_BUTTON_CLASS}
             >
@@ -1181,38 +1195,8 @@ export default function HotelResortDetailPage() {
         </Popover>
       </div>
 
-      {/* Amenities */}
-      {amenities.length > 0 && (
-        <Section title="Amenities">
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
-            {amenities.map((label, i) => {
-              const Icon = amenityIconFor(label);
-              const tints = [
-                "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
-                "bg-blue-500/10 text-blue-600 dark:text-blue-400",
-                "bg-violet-500/10 text-violet-600 dark:text-violet-400",
-                "bg-amber-500/10 text-amber-600 dark:text-amber-400",
-                "bg-rose-500/10 text-rose-600 dark:text-rose-400",
-                "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400",
-              ];
-              const tint = tints[i % tints.length];
-              return (
-                <div
-                  key={label}
-                  className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 hover:border-primary/30 transition"
-                >
-                  <span className={cn("w-7 h-7 rounded-lg flex items-center justify-center shrink-0", tint)}>
-                    <Icon className="w-3.5 h-3.5" />
-                  </span>
-                  <span className="text-xs font-semibold text-foreground truncate">{humanizeLabel(label)}</span>
-                </div>
-              );
-            })}
-          </div>
-        </Section>
-      )}
-
-      {/* Rooms */}
+      {/* Rooms — moved to the top of the body so booking is the first action
+          the user sees after the hero. Amenities now sits below it. */}
       <div id="rooms-section" className="scroll-mt-20">
       <Section title={`Rooms${activeRooms.length ? ` · ${activeRooms.length}` : ""}`}>
         {roomsQuery.isLoading ? (
@@ -1342,6 +1326,37 @@ export default function HotelResortDetailPage() {
       </Section>
       </div>
 
+      {/* Amenities */}
+      {amenities.length > 0 && (
+        <Section title="Amenities">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2">
+            {amenities.map((label, i) => {
+              const Icon = amenityIconFor(label);
+              const tints = [
+                "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+                "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+                "bg-violet-500/10 text-violet-600 dark:text-violet-400",
+                "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+                "bg-rose-500/10 text-rose-600 dark:text-rose-400",
+                "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400",
+              ];
+              const tint = tints[i % tints.length];
+              return (
+                <div
+                  key={label}
+                  className="flex items-center gap-2 rounded-xl border border-border bg-card px-3 py-2.5 hover:border-primary/30 transition"
+                >
+                  <span className={cn("w-7 h-7 rounded-lg flex items-center justify-center shrink-0", tint)}>
+                    <Icon className="w-3.5 h-3.5" />
+                  </span>
+                  <span className="text-xs font-semibold text-foreground truncate">{humanizeLabel(label)}</span>
+                </div>
+              );
+            })}
+          </div>
+        </Section>
+      )}
+
       {/* Reviews */}
       <div id="reviews-section">
         <Section title={`Reviews${reviews?.count ? ` · ${reviews.count}` : ""}`}>
@@ -1416,19 +1431,21 @@ export default function HotelResortDetailPage() {
         </Section>
       </div>
 
-      {/* Location */}
+      {/* Location — actions stay inside ZIVO. "View on map" focuses the
+          property pin on the ZIVO store map; "Get directions" pre-fills the
+          ride hub with this hotel as the destination so the user can either
+          see the route or book a ride to get here. */}
       {(location || (typeof store?.latitude === "number" && typeof store?.longitude === "number")) && (
         <Section title="Location">
           {(() => {
             const lat = store?.latitude;
             const lng = store?.longitude;
             const hasCoords = typeof lat === "number" && typeof lng === "number";
-            const mapsHref = hasCoords
-              ? `https://www.google.com/maps/search/?api=1&query=${lat},${lng}`
-              : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location || store?.name || "")}`;
-            const directionsHref = hasCoords
-              ? `https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`
-              : `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(location || store?.name || "")}`;
+            const storeMapUrl = `/store-map?focus=${encodeURIComponent(storeId)}`;
+            const destParams = hasCoords
+              ? `&destLat=${lat}&destLng=${lng}`
+              : "";
+            const directionsUrl = `/rides/hub?tab=book&destination=${encodeURIComponent(store?.name || location || "")}${destParams}`;
             // staticmap.openstreetmap.de went offline — use Google Static Maps
             // (key resolved via env var or maps-api-key edge function).
             const staticMapSrc = hasCoords && mapsKey
@@ -1436,12 +1453,11 @@ export default function HotelResortDetailPage() {
               : null;
             return (
               <div className="rounded-2xl border border-border bg-card overflow-hidden">
-                <a
-                  href={mapsHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="relative block h-40 bg-gradient-to-br from-emerald-500/10 via-blue-500/10 to-violet-500/10 group"
-                  aria-label="Open location in Google Maps"
+                <button
+                  type="button"
+                  onClick={() => navigate(storeMapUrl)}
+                  className="relative block w-full h-40 bg-gradient-to-br from-emerald-500/10 via-blue-500/10 to-violet-500/10 group text-left"
+                  aria-label="Open this property on the ZIVO map"
                 >
                   {staticMapSrc ? (
                     <img
@@ -1460,24 +1476,22 @@ export default function HotelResortDetailPage() {
                     <MapPin className="w-3.5 h-3.5 text-primary shrink-0" />
                     <span className="truncate">{location || "View on map"}</span>
                   </span>
-                </a>
+                </button>
                 <div className="grid grid-cols-2 divide-x divide-border border-t border-border">
-                  <a
-                    href={mapsHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    type="button"
+                    onClick={() => navigate(storeMapUrl)}
                     className="flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold text-foreground hover:bg-muted/50 transition"
                   >
                     <MapPin className="w-3.5 h-3.5" /> View on map
-                  </a>
-                  <a
-                    href={directionsHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => navigate(directionsUrl)}
                     className="flex items-center justify-center gap-1.5 py-2.5 text-xs font-semibold text-emerald-600 hover:bg-emerald-500/10 transition"
                   >
-                    <ExternalLink className="w-3.5 h-3.5" /> Get directions
-                  </a>
+                    <Navigation className="w-3.5 h-3.5" /> Get directions
+                  </button>
                 </div>
               </div>
             );
@@ -1573,7 +1587,7 @@ export default function HotelResortDetailPage() {
         </Section>
       )}
 
-      {/* Nearby */}
+      {/* Nearby — per-mode icon, cleaner meta, tap to open in Google Maps */}
       {!!profile?.nearby?.length && (
         <Section title="What's nearby">
           <div className="grid grid-cols-2 gap-2">
@@ -1583,16 +1597,64 @@ export default function HotelResortDetailPage() {
               const label = n.label || n.name || "";
               const km = n.km ?? n.distance_km;
               const minutes = n.minutes;
-              const mode = n.mode || n.type;
+              const mode = (n.mode || n.type || "").toLowerCase();
               if (!label) return null;
+
+              // Map mode → icon + tint + human label
+              let Icon = MapPin;
+              let tint = "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400";
+              let modeLabel = "";
+              if (mode.includes("walk") || mode.includes("foot")) {
+                Icon = Footprints; tint = "bg-sky-500/10 text-sky-600 dark:text-sky-400";
+                modeLabel = "Walk";
+              } else if (mode.includes("bike") || mode.includes("cycle")) {
+                Icon = Bike; tint = "bg-amber-500/10 text-amber-600 dark:text-amber-400";
+                modeLabel = "Bike";
+              } else if (mode.includes("transit") || mode.includes("bus") || mode.includes("train") || mode.includes("rail")) {
+                Icon = TrainFront; tint = "bg-violet-500/10 text-violet-600 dark:text-violet-400";
+                modeLabel = "Transit";
+              } else if (mode.includes("drive") || mode.includes("car")) {
+                Icon = Car; tint = "bg-rose-500/10 text-rose-600 dark:text-rose-400";
+                modeLabel = "Drive";
+              }
+
+              const metaParts: string[] = [];
+              if (typeof minutes === "number" && minutes > 0) metaParts.push(`${minutes} min`);
+              else if (km != null && km !== "") metaParts.push(`${km} km`);
+              if (modeLabel) metaParts.push(modeLabel);
+              const meta = metaParts.join(" · ");
+
+              const pickupParams = (store?.latitude != null && store?.longitude != null)
+                ? `&pickupLat=${store.latitude}&pickupLng=${store.longitude}&pickup=${encodeURIComponent(store?.name || "Hotel")}`
+                : "";
+              // Always land on the `book` tab — that's the screen with the
+              // actual pickup→destination route on the map. The `map` tab is a
+              // driver-side demand heatmap and was showing the wrong thing
+              // when the guest just wanted to see the route. The book screen
+              // has the map at the top and a (dismissible) ride CTA below, so
+              // a user who only wants to look at the route can do so without
+              // committing to a booking.
+              const rideUrl = `/rides/hub?tab=book&destination=${encodeURIComponent(label)}${pickupParams}`;
+
               return (
-                <div key={`${label}-${i}`} className="rounded-xl border border-border bg-card px-3 py-2 text-xs">
-                  <p className="font-semibold truncate">{label}</p>
-                  <p className="text-[11px] text-muted-foreground">
-                    {minutes ? `${minutes} min` : km != null ? `${km} km` : ""}
-                    {mode ? ` · ${mode}` : ""}
-                  </p>
-                </div>
+                <button
+                  key={`${label}-${i}`}
+                  type="button"
+                  onClick={() => navigate(rideUrl)}
+                  className="group rounded-xl border border-border bg-card px-3 py-2.5 text-xs flex items-center gap-2.5 hover:border-primary/30 hover:shadow-sm active:scale-[0.99] transition text-left w-full"
+                  aria-label={`Open route to ${label} in ZIVO map`}
+                >
+                  <span className={cn("w-8 h-8 rounded-lg flex items-center justify-center shrink-0", tint)}>
+                    <Icon className="w-4 h-4" />
+                  </span>
+                  <span className="min-w-0 flex-1">
+                    <span className="block text-[12px] font-semibold text-foreground truncate">{label}</span>
+                    <span className="block text-[10px] text-muted-foreground truncate">
+                      {meta || "Nearby"}
+                    </span>
+                  </span>
+                  <Navigation className="w-3 h-3 text-muted-foreground/50 group-hover:text-primary shrink-0 transition-colors" />
+                </button>
               );
             })}
           </div>

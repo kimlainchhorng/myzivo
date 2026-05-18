@@ -50,7 +50,7 @@ import { supabase } from "@/integrations/supabase/client";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import NavBar from "@/components/home/NavBar";
 import { shareStoreWithCard } from "@/lib/social/storeShareCard";
-import { openDirections } from "@/lib/maps/openDirections";
+import { openInZivoMap } from "@/lib/maps/openInZivoMap";
 import { isOpenNow } from "@/lib/store/storeHours";
 import StoreDetailsDrawer from "@/components/store/StoreDetailsDrawer";
 
@@ -564,7 +564,7 @@ export default function StoresListPage() {
   };
 
   const handleOpenDirections = (s: StorePin) => {
-    openDirections({ lat: s.latitude, lng: s.longitude, label: s.name, address: s.address });
+    openInZivoMap(navigate, { lat: s.latitude, lng: s.longitude, label: s.name, address: s.address });
   };
 
   const renderRow = (s: StorePin) => {

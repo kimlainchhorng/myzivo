@@ -11,15 +11,8 @@ export default function FeedSkeleton() {
         {/* Subtle moving shimmer over the whole frame */}
         <div className="absolute inset-0 bg-gradient-to-br from-white/5 via-white/[0.02] to-white/5" />
         <div
-          className="absolute inset-0 opacity-30"
-          style={{
-            backgroundImage:
-              "linear-gradient(110deg, transparent 30%, rgba(255,255,255,0.08) 50%, transparent 70%)",
-            backgroundSize: "200% 100%",
-            animation: "shimmer 1.6s linear infinite",
-          }}
+          className="absolute inset-0 opacity-30 zivo-reel-skeleton-shimmer"
         />
-        <style>{`@keyframes shimmer { 0% { background-position: -150% 0; } 100% { background-position: 150% 0; } }`}</style>
 
         {/* Top center — For You / Following tabs */}
         <div

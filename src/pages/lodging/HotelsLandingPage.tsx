@@ -337,6 +337,44 @@ export default function HotelsLandingPage() {
     scrollToResults();
   }, [search, pushRecentSearch, scrollToResults]);
 
+  // "See all top-rated" — used by the Featured-properties section header.
+  // Clears narrow filters and switches sort to rating so the user actually
+  // lands on the same set of properties that were featured, expanded to the
+  // full ranked list.
+  const jumpToFeatured = useCallback(() => {
+    setSearch("");
+    setActiveFilter("all");
+    setActiveTags([]);
+    setSavedOnly(false);
+    setMaxBudget(null);
+    setSortBy("rating");
+    requestAnimationFrame(() => {
+      const el = document.getElementById("hotels-all");
+      if (!el) return;
+      const top = el.getBoundingClientRect().top + window.scrollY - 8;
+      window.scrollTo({ top, behavior: "smooth" });
+    });
+  }, []);
+
+  // Open a hotel detail page with the RPC pre-warmed so the destination
+  // renders in one round-trip instead of 5-6. Shared by featured cards,
+  // recently-viewed cards, and the autocomplete dropdown.
+  const openHotel = useCallback((id: string) => {
+    qc.prefetchQuery({
+      queryKey: ["hotel-detail-rpc", id],
+      queryFn: async () => {
+        const { data } = await (supabase as any).rpc("get_hotel_detail", {
+          p_store_id: id,
+          p_check_in: null,
+          p_check_out: null,
+        });
+        return data;
+      },
+      staleTime: 60_000,
+    });
+    navigate(`/hotel/${id}?ci=${format(checkIn, "yyyy-MM-dd")}&co=${format(checkOut, "yyyy-MM-dd")}&adults=${guests}&children=${children}`);
+  }, [qc, navigate, checkIn, checkOut, guests, children]);
+
   // Smart back — Booking/Airbnb-style. If the user has narrowed the view
   // (search, filter, saved, budget, sort, or map mode), the first back tap
   // unwinds those choices instead of leaving the page. A second tap (now on
@@ -784,17 +822,7 @@ export default function HotelsLandingPage() {
                     onClick={() => {
                       pushRecentSearch(s.name);
                       setSearchFocused(false);
-                      qc.prefetchQuery({
-                        queryKey: ["hotel-detail-rpc", s.id],
-                        queryFn: async () => {
-                          const { data } = await (supabase as any).rpc("get_hotel_detail", {
-                            p_store_id: s.id, p_check_in: null, p_check_out: null,
-                          });
-                          return data;
-                        },
-                        staleTime: 60_000,
-                      });
-                      navigate(`/hotel/${s.id}?ci=${format(checkIn, "yyyy-MM-dd")}&co=${format(checkOut, "yyyy-MM-dd")}&adults=${guests}&children=${children}`);
+                      openHotel(s.id);
                     }}
                     className="w-full px-3 py-2.5 flex items-center gap-3 text-left hover:bg-muted/60 active:bg-muted border-b border-border last:border-b-0 touch-manipulation"
                   >
@@ -1125,8 +1153,9 @@ export default function HotelsLandingPage() {
               Featured properties
             </h3>
             <button type="button"
-              onClick={() => document.getElementById("hotels-all")?.scrollIntoView({ behavior: "smooth", block: "start" })}
+              onClick={jumpToFeatured}
               className="min-h-[40px] px-1 text-[11px] font-semibold text-primary flex items-center gap-0.5 touch-manipulation"
+              aria-label="See all top-rated properties"
             >
               See all <ChevronRight className="w-3 h-3" />
             </button>
@@ -1150,10 +1179,12 @@ export default function HotelsLandingPage() {
                 }
               }
               const showCents = discountedCents ?? minCents;
+              const isFav = favorites.has(store.id);
+              const hasLeftMeta = typeof rating === "number" || ((store as any).created_at && (Date.now() - new Date((store as any).created_at).getTime()) < 30 * 24 * 60 * 60 * 1000);
               return (
                 <button type="button"
                   key={store.id}
-                  onClick={() => navigate(`/hotel/${store.id}?ci=${format(checkIn, "yyyy-MM-dd")}&co=${format(checkOut, "yyyy-MM-dd")}&adults=${guests}&children=${children}`)}
+                  onClick={() => openHotel(store.id)}
                   className="shrink-0 w-[210px] rounded-2xl border border-border bg-card overflow-hidden text-left active:scale-[0.98] transition shadow-sm"
                   aria-label={`Open ${store.name}`}
                 >
@@ -1177,6 +1208,14 @@ export default function HotelsLandingPage() {
                         -{pctOff}%
                       </Badge>
                     )}
+                    <button
+                      type="button"
+                      aria-label={isFav ? "Remove from favorites" : "Save to favorites"}
+                      onClick={(e) => toggleFavorite(store.id, e)}
+                      className="absolute top-1.5 right-1.5 w-7 h-7 rounded-full bg-black/30 backdrop-blur flex items-center justify-center active:scale-90 transition-transform"
+                    >
+                      <Heart className={cn("w-3.5 h-3.5", isFav ? "fill-rose-500 text-rose-500" : "text-white")} />
+                    </button>
                   </div>
                   <div className="p-2.5">
                     <p className="text-[13px] font-bold text-foreground truncate">{store.name}</p>
@@ -1192,11 +1231,11 @@ export default function HotelsLandingPage() {
                           <Star className="w-3 h-3 fill-amber-500 text-amber-500" />
                           {rating.toFixed(1)}
                         </span>
-                      ) : (store as any).created_at && (Date.now() - new Date((store as any).created_at).getTime()) < 30 * 24 * 60 * 60 * 1000 ? (
+                      ) : hasLeftMeta ? (
                         <span className="text-[10px] font-semibold text-emerald-600">New</span>
-                      ) : <span />}
+                      ) : null}
                       {typeof showCents === "number" ? (
-                        <span className="text-[11px] font-bold text-foreground">
+                        <span className={cn("text-[11px] font-bold text-foreground", !hasLeftMeta && "ml-auto")}>
                           from{" "}
                           {discountedCents !== null && typeof minCents === "number" && (
                             <span className="line-through text-muted-foreground font-normal mr-0.5">{fmtPrice(minCents / 100, "USD")}</span>
@@ -1232,19 +1271,7 @@ export default function HotelsLandingPage() {
               <button
                 key={rv.id}
                 type="button"
-                onClick={() => {
-                  qc.prefetchQuery({
-                    queryKey: ["hotel-detail-rpc", rv.id],
-                    queryFn: async () => {
-                      const { data } = await (supabase as any).rpc("get_hotel_detail", {
-                        p_store_id: rv.id, p_check_in: null, p_check_out: null,
-                      });
-                      return data;
-                    },
-                    staleTime: 60_000,
-                  });
-                  navigate(`/hotel/${rv.id}?ci=${format(checkIn, "yyyy-MM-dd")}&co=${format(checkOut, "yyyy-MM-dd")}&adults=${guests}&children=${children}`);
-                }}
+                onClick={() => openHotel(rv.id)}
                 className="shrink-0 w-44 rounded-2xl border border-border bg-card overflow-hidden text-left active:scale-[0.98] transition"
                 aria-label={`Open ${rv.name}`}
               >
@@ -1301,11 +1328,6 @@ export default function HotelsLandingPage() {
             );
           })()}
           <div className="flex items-center gap-2">
-            <span className="text-[11px] text-muted-foreground">
-              {filtered.length === all.length
-                ? `${all.length} found`
-                : `${filtered.length} of ${all.length}`}
-            </span>
             <div className="inline-flex rounded-full border border-border bg-card overflow-hidden text-[11px] font-semibold shrink-0">
               <button
                 type="button"
@@ -1326,6 +1348,73 @@ export default function HotelsLandingPage() {
             </div>
           </div>
         </div>
+
+        {/* Active-filters summary — shows every narrow filter as a removable
+            chip plus a "Clear all" shortcut. Auto-hides when nothing is set. */}
+        {(() => {
+          type Pill = { key: string; label: string; clear: () => void };
+          const pills: Pill[] = [];
+          const dest = POPULAR_DESTINATIONS.find((d) => d.city === search.trim().toLowerCase());
+          if (search.trim() && !dest) {
+            pills.push({ key: "search", label: `"${search.trim()}"`, clear: () => setSearch("") });
+          }
+          if (activeFilter !== "all") {
+            const f = FILTERS.find((x) => x.id === activeFilter);
+            if (f) pills.push({ key: `filter:${f.id}`, label: f.label, clear: () => setActiveFilter("all") });
+          }
+          activeTags.forEach((t) => {
+            const tag = QUICK_TAGS.find((x) => x.id === t);
+            if (tag) pills.push({ key: `tag:${t}`, label: tag.label, clear: () => setActiveTags((prev) => prev.filter((p) => p !== t)) });
+          });
+          if (savedOnly) pills.push({ key: "saved", label: "Saved only", clear: () => setSavedOnly(false) });
+          if (maxBudget !== null) pills.push({ key: "budget", label: `Under $${maxBudget}`, clear: () => setMaxBudget(null) });
+          if (sortBy !== "default") {
+            const sortLabel: Record<string, string> = {
+              price_asc: "Price ↑",
+              price_desc: "Price ↓",
+              rating: "Top rated",
+              near_me: "Near me",
+            };
+            pills.push({ key: "sort", label: sortLabel[sortBy] || sortBy, clear: () => setSortBy("default") });
+          }
+          if (pills.length === 0) return null;
+          return (
+            <div className="px-4 pb-2 flex items-center gap-1.5 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+              {pills.map((p) => (
+                <span
+                  key={p.key}
+                  className="shrink-0 inline-flex items-center gap-1 rounded-full bg-primary/10 text-primary text-[11px] font-semibold pl-2.5 pr-1 py-1"
+                >
+                  {p.label}
+                  <button
+                    type="button"
+                    onClick={p.clear}
+                    aria-label={`Remove filter ${p.label}`}
+                    className="inline-flex items-center justify-center w-4 h-4 rounded-full hover:bg-primary/20"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+              {pills.length > 1 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearch("");
+                    setActiveFilter("all");
+                    setActiveTags([]);
+                    setSavedOnly(false);
+                    setMaxBudget(null);
+                    setSortBy("default");
+                  }}
+                  className="shrink-0 text-[11px] font-semibold text-muted-foreground underline ml-1"
+                >
+                  Clear all
+                </button>
+              )}
+            </div>
+          );
+        })()}
 
         {/* Sort chips */}
         <div className="px-4 pb-2 flex items-center gap-2 overflow-x-auto [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -1417,19 +1506,7 @@ export default function HotelsLandingPage() {
                     rating: reviewStats[s.id]?.count ? reviewStats[s.id].avg : null,
                     reviewCount: reviewStats[s.id]?.count ?? 0,
                   }))}
-                onSelect={(id) => {
-                  qc.prefetchQuery({
-                    queryKey: ["hotel-detail-rpc", id],
-                    queryFn: async () => {
-                      const { data } = await (supabase as any).rpc("get_hotel_detail", {
-                        p_store_id: id, p_check_in: null, p_check_out: null,
-                      });
-                      return data;
-                    },
-                    staleTime: 60_000,
-                  });
-                  navigate(`/hotel/${id}?ci=${format(checkIn, "yyyy-MM-dd")}&co=${format(checkOut, "yyyy-MM-dd")}&adults=${guests}&children=${children}`);
-                }}
+                onSelect={openHotel}
               />
             </Suspense>
           </div>
@@ -1509,23 +1586,7 @@ export default function HotelsLandingPage() {
                     isFavorite={favorites.has(store.id)}
                     onToggleFavorite={(e) => toggleFavorite(store.id, e)}
                     nights={nights}
-                    onOpen={() => {
-                      // Phase D: warm the aggregate RPC cache so the detail page
-                      // renders instantly. One round-trip vs the old 5-6.
-                      qc.prefetchQuery({
-                        queryKey: ["hotel-detail-rpc", store.id],
-                        queryFn: async () => {
-                          const { data } = await (supabase as any).rpc("get_hotel_detail", {
-                            p_store_id: store.id,
-                            p_check_in: null,
-                            p_check_out: null,
-                          });
-                          return data;
-                        },
-                        staleTime: 60_000,
-                      });
-                      navigate(`/hotel/${store.id}?ci=${format(checkIn, "yyyy-MM-dd")}&co=${format(checkOut, "yyyy-MM-dd")}&adults=${guests}&children=${children}`);
-                    }}
+                    onOpen={() => openHotel(store.id)}
                   />
                 ))}
               </div>
@@ -1588,18 +1649,8 @@ export default function HotelsLandingPage() {
             pricePerNightCents: minRates[s.id]?.base ?? null,
           }))}
           onSelect={(id) => {
-            qc.prefetchQuery({
-              queryKey: ["hotel-detail-rpc", id],
-              queryFn: async () => {
-                const { data } = await (supabase as any).rpc("get_hotel_detail", {
-                  p_store_id: id, p_check_in: null, p_check_out: null,
-                });
-                return data;
-              },
-              staleTime: 60_000,
-            });
             setConciergeOpen(false);
-            navigate(`/hotel/${id}?ci=${format(checkIn, "yyyy-MM-dd")}&co=${format(checkOut, "yyyy-MM-dd")}&adults=${guests}&children=${children}`);
+            openHotel(id);
           }}
         />
       </Suspense>

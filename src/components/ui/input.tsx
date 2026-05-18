@@ -105,19 +105,25 @@ const Input = React.forwardRef<HTMLInputElement, InputProps>(
             type={type}
             value={value}
             className={cn(
-              // Base styles - Compact
+              // Base styles - Compact. Use a solid background and full-strength
+              // border so inputs stay legible on light themes — the previous
+              // bg-muted/50 + border-border/40 combo washed out on white cards.
+              // Also pin the foreground colour explicitly so typed text never
+              // inherits a faint placeholder colour, and override the WebKit
+              // autofill text-fill colour for browser-saved values.
               "relative flex h-10 sm:h-11 w-full rounded-lg border text-sm font-medium transition-all duration-200",
-              "bg-muted/50 backdrop-blur-lg",
+              "bg-background text-foreground caret-foreground",
+              "[-webkit-text-fill-color:hsl(var(--foreground))] [&:-webkit-autofill]:[-webkit-text-fill-color:hsl(var(--foreground))] [&:-webkit-autofill]:[-webkit-box-shadow:0_0_0_1000px_hsl(var(--background))_inset]",
               "ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium file:text-foreground",
-              "placeholder:text-muted-foreground/60 placeholder:font-normal placeholder:text-sm",
+              "placeholder:text-muted-foreground placeholder:font-normal placeholder:text-sm",
               // Focus styles
-              "focus-visible:outline-none focus-visible:ring-0 focus-visible:border-sky-500/50 focus-visible:bg-muted/60",
+              "focus-visible:outline-none focus-visible:ring-0 focus-visible:border-sky-500 focus-visible:bg-background",
               // Hover styles
-              "hover:border-border/70 hover:bg-muted/55",
+              "hover:border-foreground/30 hover:bg-background",
               // Disabled styles
-              "disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted/20",
+              "disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-muted/30",
               // Validation states
-              validationState === "default" && "border-border/40",
+              validationState === "default" && "border-border",
               validationState === "error" &&
                 "border-destructive/50 focus-visible:border-destructive bg-destructive/5",
               validationState === "success" &&

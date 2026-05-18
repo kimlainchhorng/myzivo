@@ -13,6 +13,7 @@ import { supabase } from "@/integrations/supabase/client";
 import ZivoMobileNav from "@/components/app/ZivoMobileNav";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { openShareToChat } from "@/components/chat/ShareToChatSheet";
+import { openInZivoMap } from "@/lib/maps/openInZivoMap";
 import SEOHead from "@/components/SEOHead";
 
 interface ReservationSummary {
@@ -123,25 +124,41 @@ export default function HotelBookingConfirmedPage() {
     if (!reservation) return;
     const lat = reservation.store?.latitude;
     const lng = reservation.store?.longitude;
-    const dest = (typeof lat === "number" && typeof lng === "number")
-      ? `${lat},${lng}`
-      : encodeURIComponent(reservation.store?.address || reservation.store?.name || "");
-    if (!dest) {
+    const hasCoords = typeof lat === "number" && typeof lng === "number";
+    if (!hasCoords && !reservation.store?.address && !reservation.store?.name) {
       toast.error("Location not available");
       return;
     }
-    window.open(`https://www.google.com/maps/dir/?api=1&destination=${dest}`, "_blank", "noopener,noreferrer");
+    openInZivoMap(navigate, {
+      lat: hasCoords ? lat : undefined,
+      lng: hasCoords ? lng : undefined,
+      label: reservation.store?.name,
+      address: reservation.store?.address,
+    });
   };
 
   const handleShare = () => {
     if (!reservation) return;
+    // room.photos can be string[] OR { url, order, source, ... }[]. Pull the
+    // URL out either way so the share-card preview doesn't get src="[object
+    // Object]".
+    const rawPhoto = (reservation.room?.photos as unknown[] | undefined)?.[0];
+    const coverImage: string | null =
+      typeof rawPhoto === "string"
+        ? rawPhoto
+        : rawPhoto && typeof rawPhoto === "object"
+          ? ((rawPhoto as Record<string, unknown>).url
+              ?? (rawPhoto as Record<string, unknown>).src
+              ?? (rawPhoto as Record<string, unknown>).path
+              ?? null) as string | null
+          : null;
     openShareToChat({
       kind: "hotel",
       title: reservation.store?.name || "Hotel Booking",
       subtitle: `${format(parseISO(reservation.check_in), "MMM d")} – ${format(parseISO(reservation.check_out), "MMM d")} · ${reservation.room?.name || "Room"}`,
       meta: formatPrice(reservation.total_cents),
       deepLink: `/hotel/${storeId}`,
-      image: reservation.room?.photos?.[0] ?? null,
+      image: coverImage,
     });
   };
 
@@ -181,7 +198,7 @@ export default function HotelBookingConfirmedPage() {
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.3 }}
-          className="text-2xl font-extrabold mb-1 tracking-tight"
+          className="text-2xl font-extrabold text-foreground mb-1 tracking-tight"
         >
           Booking Confirmed!
         </motion.h1>
@@ -204,7 +221,7 @@ export default function HotelBookingConfirmedPage() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.45 }}
-            className="rounded-2xl bg-muted/20 border border-border/20 px-5 py-4 mb-5 w-full"
+            className="rounded-2xl bg-muted/20 border border-border px-5 py-4 mb-5 w-full"
           >
             <div className="flex items-center justify-between">
               <div>
@@ -237,7 +254,7 @@ export default function HotelBookingConfirmedPage() {
             initial={{ opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.5 }}
-            className="w-full rounded-2xl bg-card border border-border/20 p-4 mb-5 space-y-3"
+            className="w-full rounded-2xl bg-card border border-border p-4 mb-5 space-y-3"
           >
             <p className="text-[11px] font-bold text-muted-foreground uppercase tracking-wider flex items-center gap-1.5">
               <Sparkles className="w-3 h-3 text-primary" /> Stay Summary
@@ -291,20 +308,20 @@ export default function HotelBookingConfirmedPage() {
           transition={{ delay: 0.6 }}
           className="grid grid-cols-3 gap-2.5 w-full mb-5"
         >
-          <div className="p-3 rounded-2xl bg-primary/5 border border-primary/10 text-center">
+          <div className="p-3 rounded-2xl bg-primary/5 border border-primary/20 text-center">
             <Hotel className="h-4 w-4 text-primary mx-auto mb-1" />
-            <p className="text-[11px] font-bold">{nights}N</p>
-            <p className="text-[8px] text-muted-foreground">Nights</p>
+            <p className="text-[11px] font-bold text-foreground">{nights}N</p>
+            <p className="text-[9px] text-muted-foreground">Nights</p>
           </div>
-          <div className="p-3 rounded-2xl bg-emerald-500/5 border border-emerald-500/10 text-center">
+          <div className="p-3 rounded-2xl bg-emerald-500/10 border border-emerald-500/25 text-center">
             <CheckCircle className="h-4 w-4 text-emerald-500 mx-auto mb-1" />
-            <p className="text-[11px] font-bold">Ready</p>
-            <p className="text-[8px] text-muted-foreground">Status</p>
+            <p className="text-[11px] font-bold text-foreground">Ready</p>
+            <p className="text-[9px] text-muted-foreground">Status</p>
           </div>
-          <div className="p-3 rounded-2xl bg-muted/20 border border-border/15 text-center">
+          <div className="p-3 rounded-2xl bg-muted/40 border border-border text-center">
             <ShoppingBag className="h-4 w-4 text-muted-foreground mx-auto mb-1" />
-            <p className="text-[11px] font-bold">{formatPrice(reservation?.total_cents ?? 0)}</p>
-            <p className="text-[8px] text-muted-foreground">Total</p>
+            <p className="text-[11px] font-bold text-foreground">{formatPrice(reservation?.total_cents ?? 0)}</p>
+            <p className="text-[9px] text-muted-foreground">Total</p>
           </div>
         </motion.div>
 
@@ -319,7 +336,7 @@ export default function HotelBookingConfirmedPage() {
             <button
               type="button"
               onClick={handleAddToCalendar}
-              className="rounded-2xl border border-border/40 bg-card hover:bg-muted/40 px-3 py-3 flex items-center gap-2 text-left active:scale-[0.98] transition"
+              className="rounded-2xl border border-border bg-card hover:bg-muted/40 px-3 py-3 flex items-center gap-2 text-left active:scale-[0.98] transition"
             >
               <span className="h-9 w-9 rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0">
                 <CalendarRange className="w-4 h-4" />
@@ -332,7 +349,7 @@ export default function HotelBookingConfirmedPage() {
             <button
               type="button"
               onClick={handleGetDirections}
-              className="rounded-2xl border border-border/40 bg-card hover:bg-muted/40 px-3 py-3 flex items-center gap-2 text-left active:scale-[0.98] transition"
+              className="rounded-2xl border border-border bg-card hover:bg-muted/40 px-3 py-3 flex items-center gap-2 text-left active:scale-[0.98] transition"
             >
               <span className="h-9 w-9 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
                 <MapPin className="w-4 h-4" />

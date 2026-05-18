@@ -271,7 +271,11 @@ Deno.serve(async (req) => {
     switch (eventType) {
       case "payment_intent.amount_capturable_updated": {
         const pi = event.data.object;
-        await updateByPI(pi.id, "authorized", { last_payment_error: null });
+        await updateByPI(pi.id, "authorized", {
+          last_payment_error: null,
+          payment_provider: "stripe",
+          status: "confirmed",
+        });
         processingStatus = "applied";
         break;
       }
@@ -283,7 +287,12 @@ Deno.serve(async (req) => {
       }
       case "payment_intent.succeeded": {
         const pi = event.data.object;
-        await updateByPI(pi.id, "captured", { last_payment_error: null });
+        await updateByPI(pi.id, "captured", {
+          last_payment_error: null,
+          paid_cents: Number(pi.amount_received || pi.amount || 0),
+          payment_provider: "stripe",
+          status: "confirmed",
+        });
         if (resolvedReservationId) {
           // Guest confirmation email + SMS (idempotent — keyed on paid amount).
           try {

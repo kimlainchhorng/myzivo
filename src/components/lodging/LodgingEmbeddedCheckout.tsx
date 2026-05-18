@@ -22,6 +22,7 @@ import {
 import {
   Loader2, AlertTriangle, Lock, RefreshCw, CheckCircle2, CreditCard,
   Smartphone, Wallet, ShieldCheck, XCircle, Clock, ReceiptText, ExternalLink,
+  BadgeCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -64,6 +65,7 @@ type ViewState = "loading" | "ready" | "expired" | "error" | "processing" | "suc
 const SESSION_TTL_MS = 23 * 60 * 60 * 1000;
 // If onComplete fires but realtime hasn't flipped yet, wait this long before nudging user.
 const PROCESSING_WATCHDOG_MS = 30_000;
+const SLOW_FORM_HINT_MS = 7_000;
 
 export function LodgingEmbeddedCheckout({
   reservationId,
@@ -96,6 +98,7 @@ export function LodgingEmbeddedCheckout({
   const [reloadKey, setReloadKey] = useState(0);
   const [stripeCompleted, setStripeCompleted] = useState(false);
   const [watchdogTripped, setWatchdogTripped] = useState(false);
+  const [showSlowFormHint, setShowSlowFormHint] = useState(false);
 
   const retryBtnRef = useRef<HTMLButtonElement | null>(null);
   const watchdogRef = useRef<number | null>(null);
@@ -138,7 +141,10 @@ export function LodgingEmbeddedCheckout({
             deposit_cents: amountCents,
             mode,
             ui_mode: "embedded",
-            client_attempt_id: `embedded_${reservationId}${forceNew ? `_${Date.now()}` : ""}`,
+            return_url: typeof window !== "undefined"
+              ? `${window.location.origin}/hotel/${storeId}/booking-confirmed?reservation_id=${reservationId}&payment=1&session_id={CHECKOUT_SESSION_ID}`
+              : undefined,
+            client_attempt_id: `embedded_card_v3_${reservationId}${forceNew ? `_${Date.now()}` : ""}`,
             force_new: forceNew,
           },
         }
@@ -190,6 +196,18 @@ export function LodgingEmbeddedCheckout({
     };
   }, [view]);
 
+  // Stripe's iframe is cross-origin, so we can't inspect its internals. If the
+  // frame is slow or a stale session leaves it visually blank, surface a small
+  // recovery nudge instead of letting the customer stare at empty space.
+  useEffect(() => {
+    if (view !== "ready" || method === "cash" || method === "paypal" || method === "square" || !clientSecret) {
+      setShowSlowFormHint(false);
+      return;
+    }
+    const hintId = window.setTimeout(() => setShowSlowFormHint(true), SLOW_FORM_HINT_MS);
+    return () => window.clearTimeout(hintId);
+  }, [view, method, clientSecret]);
+
   // Auto-focus retry button on error/expired for accessibility.
   useEffect(() => {
     if ((view === "error" || view === "expired" || view === "failed") && retryBtnRef.current) {
@@ -202,6 +220,7 @@ export function LodgingEmbeddedCheckout({
     setClientSecret(null);
     setSecretMintedAt(null);
     setStripeCompleted(false);
+    setShowSlowFormHint(false);
     setReloadKey((k) => k + 1);
   };
 
@@ -251,12 +270,12 @@ export function LodgingEmbeddedCheckout({
     method === "cash" ? "Pay at check-in" :
     view === "succeeded" ? "Payment confirmed" :
     view === "failed" ? "Payment failed" :
-    mode === "deposit" ? "Authorise card hold" : "Pay with card";
+    mode === "deposit" ? "Authorise card hold" : "Secure card payment";
 
   const headerSub =
     method === "cash" ? "Confirmed on arrival · no charge now" :
     view === "succeeded" ? "Your booking is locked in" :
-    "Secured by Stripe · 256-bit TLS";
+    "Card stays in ZIVO · secured by Stripe";
 
   const headerIcon =
     method === "cash" ? Wallet :
@@ -581,33 +600,77 @@ export function LodgingEmbeddedCheckout({
 
         {/* LOADING SKELETON */}
         {view === "loading" && (
-          <div aria-live="polite" aria-busy="true" className="space-y-2 p-2">
-            <Skeleton className="h-10 w-full rounded-lg" />
-            <Skeleton className="h-10 w-full rounded-lg" />
-            <Skeleton className="h-10 w-2/3 rounded-lg" />
-            <div className="flex items-center justify-center gap-1.5 pt-1 text-[11px] text-muted-foreground">
-              <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden />
-              Loading secure card form…
+          <div aria-live="polite" aria-busy="true" className="space-y-3 p-2">
+            <div className="rounded-xl border border-border bg-muted/30 p-3">
+              <div className="mb-3 flex items-center gap-2 text-xs font-bold text-foreground">
+                <Loader2 className="h-4 w-4 animate-spin text-emerald-600" aria-hidden />
+                Preparing secure card checkout
+              </div>
+              <div className="space-y-2">
+                <Skeleton className="h-9 w-full rounded-lg" />
+                <Skeleton className="h-9 w-full rounded-lg" />
+                <Skeleton className="h-9 w-2/3 rounded-lg" />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-2 text-center text-[10px] text-muted-foreground">
+              <div className="rounded-lg bg-background p-2 ring-1 ring-border">Verify hold</div>
+              <div className="rounded-lg bg-background p-2 ring-1 ring-border">Load card form</div>
+              <div className="rounded-lg bg-background p-2 ring-1 ring-border">Confirm booking</div>
             </div>
           </div>
         )}
 
         {/* READY — Stripe Embedded Checkout */}
         {view === "ready" && method !== "cash" && clientSecret && (
-          <div className="rounded-lg overflow-hidden">
-            <EmbeddedCheckoutProvider
-              key={clientSecret /* force remount when secret changes */}
-              stripe={getStripe()}
-              options={{
-                clientSecret,
-                onComplete: () => {
-                  setStripeCompleted(true);
-                  onComplete?.();
-                },
-              }}
-            >
-              <EmbeddedCheckout />
-            </EmbeddedCheckoutProvider>
+          <div className="space-y-3">
+            <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/[0.06] p-3">
+              <div className="flex items-start gap-2">
+                <BadgeCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600" aria-hidden />
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-foreground">Complete card payment here</p>
+                  <p className="mt-0.5 text-[11px] leading-snug text-muted-foreground">
+                    Card details stay inside Stripe. ZIVO watches the webhook and confirms your reservation automatically.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="relative min-h-[520px] overflow-hidden rounded-xl border border-border bg-background">
+              <EmbeddedCheckoutProvider
+                key={clientSecret /* force remount when secret changes */}
+                stripe={getStripe()}
+                options={{
+                  clientSecret,
+                  onComplete: () => {
+                    setStripeCompleted(true);
+                    onComplete?.();
+                  },
+                }}
+              >
+                <EmbeddedCheckout />
+              </EmbeddedCheckoutProvider>
+
+              {showSlowFormHint && (
+                <div className="pointer-events-none absolute inset-x-3 bottom-3 rounded-xl border border-amber-300/60 bg-amber-50/95 p-3 text-[11px] shadow-lg backdrop-blur dark:border-amber-900/60 dark:bg-amber-950/95">
+                  <div className="flex items-start gap-2">
+                    <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0 text-amber-600" aria-hidden />
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold text-amber-900 dark:text-amber-100">Card form taking too long?</p>
+                      <p className="mt-0.5 text-amber-800/80 dark:text-amber-200/80">
+                        Refresh creates a fresh in-app card session. You are not charged until you submit the Stripe form.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRefresh}
+                      className="pointer-events-auto rounded-lg bg-amber-600 px-2.5 py-1.5 text-[10px] font-bold text-white"
+                    >
+                      Refresh
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>

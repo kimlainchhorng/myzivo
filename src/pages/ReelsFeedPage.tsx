@@ -396,11 +396,20 @@ interface FeedItem {
 
 const normalizeUserPostMediaType = (mediaType: string | null | undefined): "image" | "video" =>
   mediaType === "video" || mediaType === "reel" ? "video" : "image";
+const hasNonAsciiText = (text: string): boolean =>
+  Array.from(text).some((char) => (char.codePointAt(0) ?? 0) > 0x7f);
 
 const stripFeedUserPrefix = (postId: string): string => postId.replace(/^u-/, "");
 const getReelsSharePostId = (item: FeedItem): string => stripFeedUserPrefix(item.id);
 const getFeedInteractionPostId = (item: FeedItem): string => item.source === "user" ? stripFeedUserPrefix(item.id) : item.id;
 const getFeedLikesTable = (item: FeedItem): "post_likes" | "store_post_likes" => item.source === "user" ? "post_likes" : "store_post_likes";
+
+const rememberReelForReelsTab = (postId: string) => {
+  try {
+    sessionStorage.setItem("zivo_reel_active_id", postId);
+    localStorage.setItem("zivo_reel_source", "all");
+  } catch { /* ignore private-mode storage failures */ }
+};
 
 // Per-session dedup set for FeedCard view tracking — one bump per post per
 // session. Lives at module scope so navigating between feed tabs without a
@@ -1254,6 +1263,7 @@ export default function ReelsFeedPage() {
       const videoItems = items.filter((item) => item.media_type === "video");
       const videoIndex = videoItems.findIndex((item) => item.id === target.id);
       if (videoIndex >= 0) {
+        rememberReelForReelsTab(target.id);
         setReelsStartIndex(videoIndex);
       }
       return;
@@ -2055,9 +2065,10 @@ export default function ReelsFeedPage() {
                   ) : (
                     <FeedCard item={item} currentUserId={userId} onOpenFullscreen={() => {
                       if (item.media_type === 'video') {
-                        // Find the correct index in video-only list
-                        const videoItems = filteredItems.filter(it => it.media_type === 'video');
+                        // Match the portaled viewer's video-only list exactly.
+                        const videoItems = items.filter(it => it.media_type === 'video');
                         const videoIdx = videoItems.findIndex(v => v.id === item.id);
+                        rememberReelForReelsTab(item.id);
                         setReelsStartIndex(videoIdx >= 0 ? videoIdx : 0);
                       } else {
                         setFullscreenIndex(idx);
@@ -2734,6 +2745,7 @@ function ReelSlide({ item, currentUserId, onClose }: { item: FeedItem; currentUs
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
+          rememberReelForReelsTab(item.id);
           videoRef.current?.play().catch(() => {});
           setIsPlaying(true);
           if (
@@ -3466,18 +3478,26 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
   useEffect(() => {
     if (!currentUserId || item.source === "poll") return;
     let alive = true;
-    (supabase as any)
-      .from("post_bookmarks")
-      .select("id")
-      .eq("user_id", currentUserId)
-      .eq("post_id", interactionPostId)
-      .eq("source", item.source)
-      .maybeSingle()
-      .then(({ data }: any) => {
-        if (alive && data) setSaved(true);
+    Promise.all([
+      (supabase as any)
+        .from("post_bookmarks")
+        .select("id")
+        .eq("user_id", currentUserId)
+        .eq("post_id", interactionPostId)
+        .eq("source", item.source)
+        .maybeSingle(),
+      (supabase as any)
+        .from("bookmarks")
+        .select("id")
+        .eq("user_id", currentUserId)
+        .eq("item_type", "post")
+        .in("item_id", Array.from(new Set([item.id, interactionPostId])))
+        .limit(1),
+    ]).then(([modern, legacy]: any[]) => {
+        if (alive) setSaved(Boolean(modern.data || legacy.data?.length));
       });
     return () => { alive = false; };
-  }, [currentUserId, interactionPostId, item.source]);
+  }, [currentUserId, interactionPostId, item.id, item.source]);
 
   // Hydrate this user's existing emoji reaction for this post (post_reactions)
   useEffect(() => {
@@ -3921,11 +3941,26 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
     setSaved(newSaved);
     try {
       if (newSaved) {
-        const { error } = await (supabase as any).from("post_bookmarks").insert({
-          user_id: currentUserId,
-          post_id: interactionPostId,
-          source: item.source,
-        });
+        const [modernBookmark, legacyBookmark] = await Promise.all([
+          (supabase as any).from("post_bookmarks").upsert(
+            {
+              user_id: currentUserId,
+              post_id: interactionPostId,
+              source: item.source,
+            },
+            { onConflict: "user_id,post_id,source", ignoreDuplicates: true },
+          ),
+          (supabase as any).from("bookmarks").upsert(
+            {
+              user_id: currentUserId,
+              item_id: item.id,
+              item_type: "post",
+              collection_name: "Reels",
+            },
+            { onConflict: "user_id,item_type,item_id", ignoreDuplicates: true },
+          ),
+        ]);
+        const error = modernBookmark.error || legacyBookmark.error;
         if (error) {
           const msg = String(error.message || "").toLowerCase();
           // Already bookmarked is a no-op success — the local state already
@@ -3936,16 +3971,28 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
             throw error;
           }
         } else {
-          toast.success("Saved to bookmarks");
+          toast.success("Saved to bookmarks", {
+            action: { label: "View", onClick: () => navigate("/saved") },
+          });
         }
       } else {
-        const { error } = await (supabase as any).from("post_bookmarks").delete()
-          .eq("user_id", currentUserId)
-          .eq("post_id", interactionPostId)
-          .eq("source", item.source);
+        const [modernDelete, legacyDelete] = await Promise.all([
+          (supabase as any).from("post_bookmarks").delete()
+            .eq("user_id", currentUserId)
+            .eq("post_id", interactionPostId)
+            .eq("source", item.source),
+          (supabase as any).from("bookmarks").delete()
+            .eq("user_id", currentUserId)
+            .eq("item_type", "post")
+            .in("item_id", Array.from(new Set([item.id, interactionPostId]))),
+        ]);
+        const error = modernDelete.error || legacyDelete.error;
         if (error) throw error;
         toast.success("Removed from bookmarks");
       }
+      void queryClient.invalidateQueries({ queryKey: ["bookmarks"] });
+      void queryClient.invalidateQueries({ queryKey: ["saved-posts"] });
+      void queryClient.invalidateQueries({ queryKey: ["saved-posts-count"] });
     } catch (e: any) {
       // Roll back optimistic toggle on real failure.
       setSaved(!newSaved);
@@ -4358,7 +4405,7 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                 </Suspense>
               </CollapsibleCaption>
               {/* Translation — only shown when caption has non-Latin characters */}
-              {/[^ -]/.test(item.caption) && (
+              {hasNonAsciiText(item.caption) && (
                 <div className="mt-1">
                   {translatedCaption ? (
                     <div className="bg-muted/40 rounded-lg px-3 py-2 border border-border/20">

@@ -257,9 +257,12 @@ export default function ProfileEditPage() {
   };
 
   const onSubmit = async (data: ProfileFormData) => {
-    const phoneChanged = (data.phone || "") !== (profile?.phone || "");
-    const hasNewPhone = !!data.phone?.trim();
-    if (phoneChanged && hasNewPhone) { setPendingProfileData(data); setShowPhoneVerify(true); return; }
+    // OTP verification on phone change is intentionally skipped here — the
+    // gates that block service access (PhoneRequiredGate, etc.) only check
+    // that a phone is present, not that it's been verified, so requiring an
+    // OTP at save-time would add friction without enforcing anything. Phone
+    // verification can be opt-in via the Phone Verification dialog elsewhere
+    // in the account settings if/when it becomes a hard requirement.
     const fullName = [data.first_name, data.last_name].filter(Boolean).join(" ") || null;
     await updateProfile.mutateAsync({ full_name: fullName, phone: data.phone || null });
   };

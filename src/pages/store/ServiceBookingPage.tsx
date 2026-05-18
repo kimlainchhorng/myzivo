@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { zivoRouteUrl } from "@/lib/maps/openInZivoMap";
 import { useAuth } from "@/contexts/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -183,7 +184,14 @@ export default function ServiceBookingPage() {
     const endHour = (hour + 1) % 24;
     const endTime = `${String(endHour).padStart(2, "0")}${(mRaw || "00").padStart(2, "0")}00`;
     const calendarUrl = `https://www.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(`${form.service_name} @ ${store.name}`)}&dates=${dateStr}T${startTime}/${dateStr}T${endTime}&details=${encodeURIComponent(`Booking Ref: ${confirmation.ref}\nVehicle: ${form.vehicle_year} ${form.vehicle_make} ${form.vehicle_model}\nNotes: ${form.notes || "—"}`)}&location=${encodeURIComponent(store.address || store.name)}`;
-    const directionsUrl = store.address ? `https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(store.address)}` : "";
+    const directionsUrl = (store.address || store.name)
+      ? zivoRouteUrl({
+          lat: typeof (store as any).latitude === "number" ? (store as any).latitude : undefined,
+          lng: typeof (store as any).longitude === "number" ? (store as any).longitude : undefined,
+          label: store.name,
+          address: store.address,
+        })
+      : "";
     const shareText = `I just booked ${form.service_name} at ${store.name} on ZIVO! Confirmation: ${confirmation.ref}`;
 
     const copyToClipboard = async (text: string): Promise<boolean> => {
@@ -293,7 +301,7 @@ export default function ServiceBookingPage() {
               <span className="text-[11px] font-bold">Call Shop</span>
             </button>
             <button type="button"
-              onClick={() => directionsUrl && window.open(directionsUrl, "_blank")}
+              onClick={() => directionsUrl && navigate(directionsUrl)}
               disabled={!directionsUrl}
               className="flex flex-col items-center gap-1.5 p-3 rounded-2xl bg-card hover:bg-accent border border-border transition active:scale-95 disabled:opacity-40"
             >

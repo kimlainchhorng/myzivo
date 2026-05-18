@@ -84,25 +84,25 @@ export default function ChannelPage() {
   };
 
   return (
-    <div className="zivo-shell-mobile mx-auto max-w-2xl pt-safe pb-20">
+    <div className="zivo-shell-mobile mx-auto max-w-2xl bg-background text-foreground pt-safe pb-20">
       <div className="zivo-sticky-mobile-header z-20 px-3 py-2">
         <div className="flex items-center gap-2">
         <button type="button"
           onClick={() => (window.history.length > 1 ? navigate(-1) : navigate("/channels"))}
-          className="p-2 -ml-2 rounded-full hover:bg-muted"
+          className="p-2 -ml-2 rounded-full text-foreground hover:bg-muted"
           aria-label="Back"
         >
           <ChevronLeft className="w-5 h-5" />
         </button>
           <div className="min-w-0 flex-1">
-            <p className="text-sm font-semibold truncate">{channel.name}</p>
+            <p className="text-sm font-semibold text-foreground truncate">{channel.name}</p>
             <p className="text-[11px] text-muted-foreground truncate inline-flex items-center gap-1">
               <Users className="w-3 h-3" /> {channel.subscriber_count.toLocaleString()} subscriber{channel.subscriber_count === 1 ? "" : "s"}
             </p>
           </div>
         </div>
 
-        <div className="mt-2 grid grid-cols-3 rounded-xl bg-muted/60 p-1">
+        <div className="mt-2 grid grid-cols-3 rounded-xl bg-muted/70 p-1 ring-1 ring-border/40">
           {([
             { id: "posts", label: "Posts", icon: Hash },
             { id: "media", label: "Media", icon: ImageIcon },
@@ -175,7 +175,7 @@ export default function ChannelPage() {
                 ? "Photos and videos posted to this channel will appear here."
                 : "Links shared in posts will appear here.";
           return (
-            <div className="rounded-2xl border border-dashed border-border/70 bg-muted/20 p-8 text-center">
+            <div className="rounded-2xl border border-dashed border-border bg-card p-8 text-center shadow-sm">
               <div className="mx-auto mb-3 inline-flex h-12 w-12 items-center justify-center rounded-full bg-muted/60 text-muted-foreground">
                 <EmptyIcon className="h-5 w-5" />
               </div>

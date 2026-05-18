@@ -42,6 +42,7 @@ interface Group {
   id: string;
   name: string;
   avatar_url?: string | null;
+  member_count?: number;
 }
 
 type Recipient =
@@ -105,11 +106,23 @@ export default function ShareToChatSheet() {
         if (!cancelled) setGroups([]);
         return;
       }
-      const { data: rows } = await (dbFrom("chat_groups") as { select: (s: string) => { in: (k: string, v: string[]) => Promise<{ data: Group[] | null }> } })
-        .select("id, name, avatar_url")
-        .in("id", ids);
+      const [groupsRes, allMembersRes] = await Promise.all([
+        (dbFrom("chat_groups") as { select: (s: string) => { in: (k: string, v: string[]) => Promise<{ data: Group[] | null }> } })
+          .select("id, name, avatar_url")
+          .in("id", ids),
+        // Member counts let users distinguish between two groups with the same
+        // name. One round-trip across all groups is cheaper than N counts.
+        (dbFrom("chat_group_members") as { select: (s: string) => { in: (k: string, v: string[]) => Promise<{ data: { group_id: string }[] | null }> } })
+          .select("group_id")
+          .in("group_id", ids),
+      ]);
       if (cancelled) return;
-      setGroups((rows as Group[] | null) || []);
+      const memberCounts = new Map<string, number>();
+      for (const row of ((allMembersRes as { data: { group_id: string }[] | null }).data || [])) {
+        memberCounts.set(row.group_id, (memberCounts.get(row.group_id) || 0) + 1);
+      }
+      const rows = (groupsRes as { data: Group[] | null }).data || [];
+      setGroups(rows.map((g) => ({ ...g, member_count: memberCounts.get(g.id) ?? 0 })));
     };
     void loadFriends();
     void loadGroups();
@@ -232,7 +245,7 @@ export default function ShareToChatSheet() {
             </div>
 
             {/* Card preview — centered, no time meta */}
-            <div className="px-4 py-3 border-b border-border/20 bg-muted/20 flex justify-center [&>div>div]:!max-w-none [&>div>div]:!w-[260px]">
+            <div className="px-4 py-3 border-b border-border bg-muted/20 flex justify-center [&>div>div]:!max-w-none [&>div>div]:!w-[260px]">
               <ZivoActionBubble payload={card} isMe={false} time="" />
             </div>
 
@@ -244,7 +257,11 @@ export default function ShareToChatSheet() {
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   placeholder="Search friends"
-                  className="w-full pl-9 pr-3 py-2 rounded-xl bg-muted/50 border border-border/30 text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30"
+                  type="search"
+                  inputMode="search"
+                  autoComplete="off"
+                  spellCheck={false}
+                  className="w-full pl-9 pr-3 py-2 rounded-xl bg-background border border-border text-sm text-foreground placeholder:text-muted-foreground outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary/40 [&::-webkit-search-cancel-button]:appearance-none"
                 />
               </div>
             </div>
@@ -281,9 +298,13 @@ export default function ShareToChatSheet() {
                           </Avatar>
                           <div className="flex-1 min-w-0 text-left">
                             <p className="text-sm font-semibold text-foreground truncate">{g.name}</p>
-                            <p className="text-[11px] text-muted-foreground">Group</p>
+                            <p className="text-[11px] text-muted-foreground">
+                              {typeof g.member_count === "number" && g.member_count > 0
+                                ? `${g.member_count} member${g.member_count === 1 ? "" : "s"}`
+                                : "Group"}
+                            </p>
                           </div>
-                          <span className={`h-8 w-8 inline-flex items-center justify-center rounded-full transition ${selected.has(g.id) ? "bg-primary text-primary-foreground" : "bg-muted/60 text-muted-foreground"}`}>
+                          <span className={`h-8 w-8 inline-flex items-center justify-center rounded-full transition ${selected.has(g.id) ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground/70 ring-1 ring-border"}`}>
                             <Check className="w-3.5 h-3.5" />
                           </span>
                         </button>
@@ -317,7 +338,7 @@ export default function ShareToChatSheet() {
                               <p className="text-[11px] text-muted-foreground truncate">@{f.username}</p>
                             )}
                           </div>
-                          <span className={`h-8 w-8 inline-flex items-center justify-center rounded-full transition ${selected.has(f.user_id) ? "bg-primary text-primary-foreground" : "bg-muted/60 text-muted-foreground"}`}>
+                          <span className={`h-8 w-8 inline-flex items-center justify-center rounded-full transition ${selected.has(f.user_id) ? "bg-primary text-primary-foreground" : "bg-muted text-muted-foreground/70 ring-1 ring-border"}`}>
                             <Check className="w-3.5 h-3.5" />
                           </span>
                         </button>
@@ -330,7 +351,7 @@ export default function ShareToChatSheet() {
 
             {/* Sticky send button — appears once at least one recipient selected */}
             {selected.size > 0 && (
-              <div className="px-4 pt-2 pb-1 border-t border-border/20">
+              <div className="px-4 pt-2 pb-1 border-t border-border">
                 <button type="button"
                   onClick={() => void sendSelected()}
                   disabled={sending}

@@ -218,6 +218,8 @@
   .zivo-shell-mobile {
     min-height: 100dvh;
     padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+    background: hsl(var(--background));
+    color: hsl(var(--foreground));
   }
 
   .zivo-sticky-mobile-header {
@@ -516,7 +518,7 @@
     /* Bottom-sheet headers (Comments, Share, post menu, etc.) */
     --zivo-safe-top-sheet: max(var(--zivo-safe-top, 0px), 44px);
     /* Sticky sub-headers (feed, search) */
-    --zivo-safe-top-sticky: max(calc(var(--zivo-safe-top, 0px) + 0.625rem), 48px);
+    --zivo-safe-top-sticky: max(calc(var(--zivo-safe-top, 0px) + 0.125rem), 44px);
   }
 
   /* Desktop has no notch — drop the 48px mobile floor so the fixed NavBar
@@ -2376,6 +2378,21 @@ body[data-share-sheet-open="true"] [data-zivo-mobile-nav] {
 /* Utility: hide horizontal scrollbar but keep scrolling */
 .no-scrollbar { scrollbar-width: none; -ms-overflow-style: none; }
 .no-scrollbar::-webkit-scrollbar { display: none; }
+
+@keyframes zivo-reel-skeleton-shimmer {
+  0% {
+    background-position: -150% 0;
+  }
+  100% {
+    background-position: 150% 0;
+  }
+}
+
+.zivo-reel-skeleton-shimmer {
+  background-image: linear-gradient(110deg, transparent 30%, rgba(255, 255, 255, 0.08) 50%, transparent 70%);
+  background-size: 200% 100%;
+  animation: zivo-reel-skeleton-shimmer 1.6s linear infinite;
+}
 
 @media (max-width: 640px) {
   html,

@@ -19,11 +19,21 @@ export default function SavedPostsLink() {
     staleTime: 60 * 1000,
     queryFn: async () => {
       if (!user) return 0;
-      const { count: c } = await (supabase as any)
-        .from("bookmarks")
-        .select("id", { count: "exact", head: true })
-        .eq("user_id", user.id);
-      return c ?? 0;
+      const [legacy, modern] = await Promise.all([
+        (supabase as any)
+          .from("bookmarks")
+          .select("item_id", { count: "exact" })
+          .eq("user_id", user.id)
+          .eq("item_type", "post"),
+        (supabase as any)
+          .from("post_bookmarks")
+          .select("post_id, source", { count: "exact" })
+          .eq("user_id", user.id),
+      ]);
+      const unique = new Set<string>();
+      for (const row of legacy.data || []) unique.add(String(row.item_id).replace(/^u-/, ""));
+      for (const row of modern.data || []) unique.add(`${row.source}:${row.post_id}`);
+      return unique.size || legacy.count || modern.count || 0;
     },
   });
 
