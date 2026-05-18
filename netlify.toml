@@ -1,0 +1,21 @@
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+  NPM_FLAGS = "--no-audit --no-fund"
+
+[[plugins]]
+  package = "@netlify/plugin-lighthouse"
+
+[[redirects]]
+  from = "/share/c/:handle"
+  to = "https://slirphzzwcogdbkeicff.supabase.co/functions/v1/channel-og?handle=:handle"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

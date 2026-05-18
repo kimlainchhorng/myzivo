@@ -104,6 +104,7 @@ import RelativeTime from "@/components/social/RelativeTime";
 import { topicForUserSync } from "@/lib/security/channelName";
 import TrendingHashtags, { postHasHashtag } from "@/components/social/TrendingHashtags";
 import CollapsibleCaption from "@/components/social/CollapsibleCaption";
+import PostProductsChips from "@/components/social/PostProductsChips";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { isBlueVerified } from "@/lib/verification";
 import { formatCount, commentsLinkLabel } from "@/lib/social/formatCount";
@@ -264,6 +265,23 @@ const FEED_SUPER_APP_TARGETS: FeedSuperAppTarget[] = [
     tone: "bg-foreground/10 text-foreground",
     keywords: ["all", "services", "apps", "more", "everything"],
   },
+];
+
+type FeedWorkflowAction = "story" | "reel" | "post" | "live" | "shop" | "jobs";
+
+const FEED_CREATOR_WORKFLOWS: Array<{
+  action: FeedWorkflowAction;
+  label: string;
+  description: string;
+  icon: typeof Camera;
+  tone: string;
+}> = [
+  { action: "story", label: "Story", description: "24h update", icon: Camera, tone: "from-pink-500 to-orange-400" },
+  { action: "reel", label: "Reel", description: "Short video", icon: Film, tone: "from-fuchsia-500 to-violet-500" },
+  { action: "post", label: "Post", description: "Photo or text", icon: Plus, tone: "from-sky-500 to-cyan-400" },
+  { action: "live", label: "Live", description: "Go on air", icon: Radio, tone: "from-red-500 to-rose-500" },
+  { action: "shop", label: "Shop", description: "Sell items", icon: ShoppingBag, tone: "from-amber-500 to-orange-500" },
+  { action: "jobs", label: "Jobs", description: "Hire talent", icon: Briefcase, tone: "from-emerald-500 to-teal-400" },
 ];
 
 const trackInitiateCheckout = (input: Record<string, unknown>) =>
@@ -477,6 +495,92 @@ function GuestFeedCta({ onLogin, onSignup }: { onLogin: () => void; onSignup: ()
         </div>
       </div>
     </div>
+  );
+}
+
+function FeedWorkflowRail({
+  isSignedIn,
+  onRequireAuth,
+  onCreate,
+  onCreateMode,
+  onNavigate,
+}: {
+  isSignedIn: boolean;
+  onRequireAuth: (returnTo: string) => void;
+  onCreate: () => void;
+  onCreateMode: (mode: "photo" | "reel" | "poll" | "story" | "shop" | "live" | undefined) => void;
+  onNavigate: (path: string) => void;
+}) {
+  const startCreate = (mode: Parameters<typeof onCreateMode>[0]) => {
+    onCreateMode(mode);
+    onCreate();
+  };
+
+  const handleWorkflow = (action: FeedWorkflowAction) => {
+    if (action === "jobs") {
+      if (!isSignedIn) {
+        onRequireAuth("/personal/employer");
+        return;
+      }
+      onNavigate("/personal/employer");
+      return;
+    }
+
+    if (action === "live") {
+      if (!isSignedIn) {
+        onRequireAuth("/live");
+        return;
+      }
+      onNavigate("/live");
+      return;
+    }
+
+    if (!isSignedIn) {
+      onRequireAuth(`/feed?compose=${action}`);
+      return;
+    }
+
+    if (action === "story") startCreate("story");
+    else if (action === "reel") startCreate("reel");
+    else if (action === "shop") startCreate("shop");
+    else startCreate("photo");
+  };
+
+  return (
+    <section className="border-b border-border/10 bg-background px-3 py-3" aria-label="Creator workflows">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-[13px] font-extrabold tracking-tight text-foreground">Create, discover, and sell</h2>
+          <p className="text-[11px] leading-snug text-muted-foreground">
+            Instagram-style social workflows connected to the ZIVO super-app
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => onNavigate("/services")}
+          className="shrink-0 rounded-full bg-muted px-3 py-1.5 text-[11px] font-bold text-foreground active:scale-95"
+        >
+          Explore
+        </button>
+      </div>
+
+      <div className="-mx-3 flex gap-2 overflow-x-auto px-3 pb-0.5 scrollbar-hide lg:grid lg:grid-cols-6 lg:overflow-visible">
+        {FEED_CREATOR_WORKFLOWS.map(({ action, label, description, icon: Icon, tone }) => (
+          <button
+            key={action}
+            type="button"
+            onClick={() => handleWorkflow(action)}
+            className="group min-w-[86px] flex-1 rounded-2xl border border-border/40 bg-card px-2.5 py-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md active:scale-[0.98]"
+          >
+            <span className={cn("mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br text-white shadow-sm transition-transform group-hover:scale-105", tone)}>
+              <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
+            </span>
+            <span className="block text-[12px] font-extrabold leading-tight text-foreground">{label}</span>
+            <span className="mt-0.5 block truncate text-[10px] leading-tight text-muted-foreground">{description}</span>
+          </button>
+        ))}
+      </div>
+    </section>
   );
 }
 
@@ -1869,6 +1973,14 @@ export default function ReelsFeedPage() {
               </div>
             </div>
           )}
+
+          <FeedWorkflowRail
+            isSignedIn={Boolean(userId)}
+            onRequireAuth={goLogin}
+            onCreate={() => setShowCreate(true)}
+            onCreateMode={setCreateMode}
+            onNavigate={navigate}
+          />
 
           {/* Anchor for scroll-to-top after tapping the new-posts banner */}
           <div ref={feedTopRef} aria-hidden="true" />
@@ -4515,6 +4627,14 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                 {item.location}
               </span>
             </div>
+          )}
+
+          {/* Shoppable product chips */}
+          {!item.id.startsWith("p-") && (
+            <PostProductsChips
+              postId={item.id.startsWith("u-") ? item.id.slice(2) : item.id}
+              className="px-3"
+            />
           )}
 
            {/* Media */}
