@@ -23,11 +23,21 @@ Deno.serve(async (req) => {
     { auth: { persistSession: false } }
   );
 
+  const notSubscribed = () =>
+    new Response(
+      JSON.stringify({ subscribed: false, plan: null, subscription_end: null }),
+      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
+    );
+
   try {
     logStep("Function started");
 
     const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-    if (!stripeKey) throw new Error("STRIPE_SECRET_KEY is not set");
+    if (!stripeKey) {
+      logStep("STRIPE_SECRET_KEY missing — returning not subscribed (graceful)");
+      return notSubscribed();
+    }
+
 
     const authHeader = req.headers.get("Authorization") ?? req.headers.get("authorization") ?? "";
     if (!authHeader) {
@@ -126,10 +136,8 @@ Deno.serve(async (req) => {
     );
   } catch (error) {
     const msg = error instanceof Error ? error.message : String(error);
-    logStep("ERROR", { message: msg });
-    return new Response(
-      JSON.stringify({ error: msg }),
-      { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 500 }
-    );
+    logStep("ERROR — returning not subscribed (graceful)", { message: msg });
+    // Never 500 to the client — membership UI should degrade silently.
+    return notSubscribed();
   }
 });
