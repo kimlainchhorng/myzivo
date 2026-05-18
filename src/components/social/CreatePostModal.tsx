@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   X as XIcon, Globe, Users, Lock, FolderPlus, MapPin, Hash,
   ChevronDown, Image as ImageIcon, Play, Film, Radio, Plus, Search, Share2, Loader2,
-  Smile, Music,
+  Smile, Music, ShoppingBag,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
@@ -20,6 +20,7 @@ import { uploadWithProgress } from "@/utils/uploadWithProgress";
 import { stripImageMetadata } from "@/utils/stripImageMetadata";
 import { nativeConfirm } from "@/lib/native/dialog";
 import { useZivoOFMode } from "@/hooks/useZivoOFMode";
+import ProductPickerSheet from "@/components/social/ProductPickerSheet";
 
 interface CreatePostModalProps {
   userId: string;
@@ -45,8 +46,19 @@ interface CreatePostModalProps {
   initialAudioName?: string;
   // Preselect a creation mode so entry buttons (Photo/Reels/Poll) skip the
   // redundant second tap inside the modal toolbar.
-  initialMode?: "photo" | "reel" | "poll";
+  initialMode?: "photo" | "reel" | "poll" | "story" | "shop" | "live";
 }
+
+const COMPOSER_WORKFLOWS = [
+  { mode: "post", label: "Post", description: "Photo, video, or text", icon: ImageIcon },
+  { mode: "reel", label: "Reel", description: "Short video with sound", icon: Film },
+  { mode: "story", label: "Story", description: "Fast 24h update", icon: Play },
+  { mode: "poll", label: "Poll", description: "Ask and collect votes", icon: Hash },
+  { mode: "shop", label: "Shop", description: "Tag product or sale", icon: ShoppingBag },
+  { mode: "live", label: "Live", description: "Go on air now", icon: Radio },
+] as const;
+
+type ComposerWorkflow = (typeof COMPOSER_WORKFLOWS)[number]["mode"];
 
 const FILTERS = [
   { name: "Original", className: "[filter:none]" },
@@ -126,10 +138,29 @@ export default function CreatePostModal({
   const [previews, setPreviews] = useState<string[]>(sharedMediaUrl ? [sharedMediaUrl] : []);
   // Reels are videos; otherwise honor the shared/default image.
   const [mediaType, setMediaType] = useState<"image" | "video">(
-    sharedMediaType || (initialMode === "reel" ? "video" : "image"),
+    sharedMediaType || (initialMode === "reel" || initialMode === "story" ? "video" : "image"),
   );
   const [selectedType, setSelectedType] = useState<"Photo" | "Video" | "Reel" | "Live" | null>(
-    initialMode === "photo" ? "Photo" : initialMode === "reel" ? "Reel" : null,
+    initialMode === "photo" || initialMode === "shop"
+      ? "Photo"
+      : initialMode === "reel" || initialMode === "story"
+        ? "Reel"
+        : initialMode === "live"
+          ? "Live"
+          : null,
+  );
+  const [workflowMode, setWorkflowMode] = useState<ComposerWorkflow>(
+    initialMode === "reel"
+      ? "reel"
+      : initialMode === "story"
+        ? "story"
+        : initialMode === "poll"
+          ? "poll"
+          : initialMode === "shop"
+            ? "shop"
+            : initialMode === "live"
+              ? "live"
+              : "post",
   );
   const [visibility, setVisibility] = useState<"everyone" | "friends" | "onlyme">("everyone");
   const [showVisibilityMenu, setShowVisibilityMenu] = useState(false);
@@ -155,6 +186,9 @@ export default function CreatePostModal({
   const [showFeelingPicker, setShowFeelingPicker] = useState(false);
   const [isPoll, setIsPoll] = useState(initialMode === "poll");
   const [pollOptions, setPollOptions] = useState(["", ""]);
+  // Shoppable: products selected to tag on this post.
+  const [showProductPicker, setShowProductPicker] = useState(false);
+  const [taggedProductIds, setTaggedProductIds] = useState<string[]>([]);
   const { isOFMode: zivoOFMode } = useZivoOFMode();
   const [unlockPrice, setUnlockPrice] = useState<string>("");
   const [showUnlockInput, setShowUnlockInput] = useState(false);
@@ -273,6 +307,31 @@ export default function CreatePostModal({
   const hasSharedLink = !!initialCaption || !!sharedMediaUrl;
 
   const [uploadStatus, setUploadStatus] = useState("");
+
+  const selectWorkflowMode = (mode: ComposerWorkflow) => {
+    setWorkflowMode(mode);
+    if (mode === "live") {
+      setSelectedType("Live");
+      setIsPoll(false);
+      return;
+    }
+    if (mode === "poll") {
+      setSelectedType(null);
+      setMediaType("image");
+      setIsPoll(true);
+      setShowAudioInput(false);
+      return;
+    }
+    setIsPoll(false);
+    if (mode === "reel" || mode === "story") {
+      setSelectedType("Reel");
+      setMediaType("video");
+      setShowAudioInput(true);
+      return;
+    }
+    setSelectedType("Photo");
+    setMediaType("image");
+  };
 
   const handlePost = async () => {
     if (isPoll) {
@@ -436,6 +495,18 @@ export default function CreatePostModal({
         });
       }
 
+      // Persist shoppable product tags (separate from single commerce link).
+      if (taggedProductIds.length > 0 && insertedPost?.id) {
+        const rows = taggedProductIds.map((pid, i) => ({
+          post_id: insertedPost.id,
+          post_source: "user",
+          store_product_id: pid,
+          sort_order: i,
+        }));
+        const { error: tagErr } = await (supabase as any).from("post_products").insert(rows);
+        if (tagErr) console.warn("[CreatePost] product tag insert failed", tagErr);
+      }
+
       // Clear draft on successful post
       localStorage.removeItem(DRAFT_KEY);
 
@@ -452,6 +523,36 @@ export default function CreatePostModal({
 
   const charCount = caption.length;
   const charLimit = 2200;
+  const activeWorkflow = COMPOSER_WORKFLOWS.find((workflow) => workflow.mode === workflowMode) || COMPOSER_WORKFLOWS[0];
+  const publishLabel = workflowMode === "reel"
+    ? "Share Reel"
+    : workflowMode === "story"
+      ? "Share Story"
+      : workflowMode === "poll"
+        ? "Post Poll"
+        : workflowMode === "shop"
+          ? "Share Shop"
+          : workflowMode === "live"
+            ? "Go Live"
+            : "Share";
+  const canPublish = !uploading && (
+    workflowMode === "live" ||
+    isPoll ||
+    files.length > 0 ||
+    hasSharedLink ||
+    !!caption.trim()
+  );
+  const workflowTips = workflowMode === "reel"
+    ? ["Video first", "Sound ready", "Short caption"]
+    : workflowMode === "story"
+      ? ["Fast update", "Video or photo", "Keep it light"]
+      : workflowMode === "poll"
+        ? ["Clear question", "2+ answers", "Watch votes"]
+        : workflowMode === "shop"
+          ? ["Add photo", "Tag product", "Link sale"]
+          : workflowMode === "live"
+            ? ["Check signal", "Set title", "Start live"]
+            : ["Photo or text", "Tag people", "Add location"];
 
   return (
     <motion.div
@@ -472,15 +573,25 @@ export default function CreatePostModal({
           <button type="button" onClick={onClose} aria-label="Close create post" title="Close create post" className="text-muted-foreground active:scale-90 transition-transform">
             <XIcon className="h-5 w-5" />
           </button>
-          <h2 className="text-sm font-bold text-foreground">Create Post</h2>
+          <div className="min-w-0 text-center">
+            <h2 className="text-sm font-bold text-foreground">Creator Studio</h2>
+            <p className="text-[10px] font-medium text-muted-foreground truncate">{activeWorkflow.description}</p>
+          </div>
           <button type="button"
-            onClick={handlePost}
-            disabled={(files.length === 0 && !hasSharedLink && !caption.trim() && !isPoll) || uploading}
-            aria-label="Share post"
-            title="Share post"
+            onClick={() => {
+              if (workflowMode === "live") {
+                onClose();
+                navigate("/live");
+                return;
+              }
+              handlePost();
+            }}
+            disabled={!canPublish}
+            aria-label={publishLabel}
+            title={publishLabel}
             className={cn(
               "px-4 py-1.5 rounded-full text-xs font-bold transition-all",
-              (files.length > 0 || caption.trim() || hasSharedLink) && !uploading
+              canPublish
                 ? "bg-primary text-primary-foreground shadow-sm"
                 : "bg-muted text-muted-foreground"
             )}
@@ -490,8 +601,42 @@ export default function CreatePostModal({
                 <Loader2 className="h-3.5 w-3.5 animate-spin" />
                 {uploadStatus || "Posting..."}
               </span>
-            ) : "Share"}
+            ) : publishLabel}
           </button>
+        </div>
+
+        <div className="px-4 py-3 border-b border-border/20 bg-card">
+          <div className="flex gap-2 overflow-x-auto scrollbar-none pb-1">
+            {COMPOSER_WORKFLOWS.map((workflow) => {
+              const isActive = workflow.mode === workflowMode;
+              return (
+                <button
+                  type="button"
+                  key={workflow.mode}
+                  onClick={() => selectWorkflowMode(workflow.mode)}
+                  className={cn(
+                    "shrink-0 rounded-2xl border px-3 py-2 text-left transition-colors active:scale-[0.98]",
+                    isActive ? "border-primary bg-primary/10 text-primary" : "border-border/50 bg-muted/20 text-foreground hover:bg-muted/40",
+                  )}
+                >
+                  <span className="flex items-center gap-2">
+                    <workflow.icon className="h-4 w-4" />
+                    <span className="text-[12px] font-bold">{workflow.label}</span>
+                  </span>
+                  <span className="block max-w-[112px] truncate text-[10px] font-medium text-muted-foreground">
+                    {workflow.description}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+          <div className="mt-2 flex gap-1.5 overflow-x-auto scrollbar-none">
+            {workflowTips.map((tip) => (
+              <span key={tip} className="shrink-0 rounded-full bg-muted/50 px-2.5 py-1 text-[10px] font-semibold text-muted-foreground">
+                {tip}
+              </span>
+            ))}
+          </div>
         </div>
 
         {/* Author */}
@@ -766,6 +911,26 @@ export default function CreatePostModal({
             {taggedUsers.length > 0 ? `${taggedUsers.length} tagged` : "Tag"}
           </button>
           )}
+
+          {/* Tag products (shoppable) */}
+          <button type="button"
+            onClick={() => {
+              if (!commerceLinkDraft?.storeId) {
+                toast.info("Attach a store link first to tag products");
+                return;
+              }
+              setShowProductPicker(true);
+            }}
+            className={cn(
+              "shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium min-h-[36px]",
+              taggedProductIds.length > 0
+                ? "bg-primary/10 text-primary border-primary/30"
+                : "bg-muted/40 text-muted-foreground border-border/30 hover:bg-muted/50",
+            )}
+          >
+            <ShoppingBag className="h-3.5 w-3.5" />
+            {taggedProductIds.length > 0 ? `${taggedProductIds.length} product${taggedProductIds.length === 1 ? "" : "s"}` : "Tag products"}
+          </button>
         </div>
 
         {/* Location search dropdown */}
@@ -1239,7 +1404,9 @@ export default function CreatePostModal({
                 (opt.action === "feeling" && (showFeelingPicker || !!feeling)) ||
                 (opt.action === "poll" && isPoll) ||
                 (opt.action === "unlock" && (showUnlockInput || !!unlockPrice)) ||
-                (["photo", "video", "reel"].includes(opt.action) && selectedType === (opt.label as any));
+                (opt.action === "reel" && workflowMode === "reel") ||
+                (opt.action === "photo" && workflowMode === "post" && selectedType === "Photo") ||
+                (opt.action === "video" && selectedType === "Video");
               return (
                 <button type="button"
                   key={opt.label}
@@ -1251,7 +1418,7 @@ export default function CreatePostModal({
                       return;
                     }
                     if (opt.action === "poll") {
-                      setIsPoll((v) => !v);
+                      selectWorkflowMode("poll");
                       return;
                     }
                     if (opt.action === "unlock") {
@@ -1259,6 +1426,11 @@ export default function CreatePostModal({
                       return;
                     }
                     const accept = opt.action === "video" || opt.action === "reel" ? "video/*" : "image/*";
+                    if (opt.action === "reel") {
+                      selectWorkflowMode("reel");
+                    } else {
+                      selectWorkflowMode("post");
+                    }
                     setSelectedType(opt.label as any);
                     if (fileRef.current) {
                       fileRef.current.accept = accept;
@@ -1318,6 +1490,15 @@ export default function CreatePostModal({
           accept="video/*"
           className="hidden"
           onChange={handleFiles}
+        />
+
+        {/* Product picker for shoppable posts */}
+        <ProductPickerSheet
+          open={showProductPicker}
+          onOpenChange={setShowProductPicker}
+          storeId={commerceLinkDraft?.storeId ?? null}
+          selectedIds={taggedProductIds}
+          onChange={setTaggedProductIds}
         />
       </motion.div>
     </motion.div>
