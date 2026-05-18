@@ -1,57 +1,75 @@
-
 ## Goal
-Fix the visible issues on `/hotels` (HotelsLandingPage.tsx) in light theme and finish the deferred Step 3 of the Maps performance plan. Pure frontend/presentation work plus one shared component.
 
----
+Sweep the whole stack — frontend deps, Vite/React, Supabase DB, edge functions, API performance — flag what's outdated, what's slow, and what's half-built. Then upgrade/fix in a controlled order.
 
-## A. Hotel page visual polish
+## Current state (from inspection)
 
-**File:** `src/pages/lodging/HotelsLandingPage.tsx`
+**Frontend deps** — already on bleeding edge: React 19.2, Vite 8, Tailwind 4, TS 6, Supabase JS 2.106, Capacitor 8, Stripe v9, Zod 4. Nothing major to bump.
 
-1. **Hero scrim & legibility** — the current `from-primary/75 via-primary/45 to-background` washes the sunset photo emerald in light mode and still leaves the title low-contrast. Replace with a true dark scrim that works in both themes:
-   - `bg-gradient-to-b from-black/55 via-black/30 to-background`
-   - Add `bg-black/15` base layer behind everything so title/subtitle always read.
-   - Bump title to `text-[22px] sm:text-[26px]` and subtitle to `text-[13px]` with `text-white/90`.
+**Backend** — Supabase Postgres 17.6, GoTrue 2.188, CLI 2.100, ~200+ migrations, ~150 edge functions.
 
-2. **Quick filter chips contrast** — `bg-background` + `border-border` chips disappear on the white page. Change inactive state to `bg-card border-border/80 shadow-sm` and ensure the row sits on a faint divider (`border-t border-border/60`) so it reads as its own band. Same treatment for the Sort / Budget / Type chip rows for consistency.
+**Known debt** (from `docs/supabase-performance-upgrade-report.md`, 2026-05-18):
+- 97 `auth_rls_initplan` warnings (RLS calling `auth.uid()` per row instead of `(select auth.uid())`)
+- 3,048 `multiple_permissive_policies` warnings (overlapping RLS policies on same table/role/action)
+- 1 `security_definer_view` error on `public.bots_directory`
+- Security-definer functions executable by anon/authenticated
+- Functions with mutable `search_path`
+- Public bucket listing warnings
 
-3. **Featured / Popular horizontal rows — scroll affordance on desktop** — at ≥`md` add a right-edge fade (`after:` pseudo overlay) and small chevron button that scrolls the row by ~320px. Mobile unchanged.
+**Known runtime issues** (from console logs):
+- Edge function `duffel-destination-prices` failing (FunctionsFetchError → fallback)
+- `check-zivo-plus` failing on load
+- Profile fetch failing (`Load failed`)
+- Module script import failing (likely stale chunk after deploy)
 
-4. **Sort row consistency** — already uses `bg-primary` vs `bg-muted/70`; leave behavior but switch active to `bg-foreground text-background` so it matches the existing List/Map toggle and doesn't read as "emerald button" next to neutral chips.
+**Half-built / suspected gaps**:
+- Hotel scraping pipeline (Booking.com importers) has lots of one-off JSON logs at repo root — needs cleanup/finalization
+- Firecrawl connector not wired (you declined earlier) → Chaiya Palace seed still pending
+- Many `probe-*.mjs` scripts at repo root suggest debugging leftovers
 
-5. **"New" badge spam** — only render the `New` badge for stores `created_at` within last 30 days (data already on store). Otherwise render rating-or-price (already computed) where the badge sat.
+## Plan — phased, each phase shippable independently
 
-**New shared component:** `src/components/shared/SmartImage.tsx`
+### Phase 1 — DB speed cleanup (biggest win, lowest risk)
 
-- Wraps `<img>` with: skeleton (`bg-muted animate-pulse`) until `onLoad`, fallback to a branded placeholder (HotelIcon + gradient like the existing empty state) on `onError`, `loading="lazy"` and `decoding="async"` by default. Accepts `aspect` and `rounded` props.
-- Replace raw `<img>` in featured/all-hotels cards and Popular destinations tiles. Removes the `?` placeholder seen on broken images and gives a consistent skeleton instead.
+1. **Fix `auth_rls_initplan` (97 warnings)** — script-rewrite every policy that calls `auth.uid()`, `auth.jwt()`, `auth.role()` directly to wrap them in `(select …)`. This makes Postgres evaluate once per query instead of per row. Huge speedup on large tables (`posts`, `messages`, `notifications`, `activity_feed`).
+2. **Consolidate `multiple_permissive_policies` (3,048 warnings)** — for each (table, role, action) with N permissive policies, merge into one `USING (cond1 OR cond2 OR …)`. Done table-by-table, starting with hottest tables (use `pg_stat_user_tables` to rank).
+3. **Add missing indexes** — run `pg_stat_statements` snapshot and add covering indexes for top-20 slow queries (focus on feed ranking, chat unread, dispatch matching).
+4. **Connection pooling** — verify Supavisor transaction-mode is used for edge functions and session-mode only where needed.
 
----
+### Phase 2 — Security advisor fixes
 
-## B. Finish Maps Performance — Step 3
+5. Drop/recreate `public.bots_directory` without `SECURITY DEFINER`, or convert to a SECURITY INVOKER function.
+6. `REVOKE EXECUTE … FROM anon, authenticated` on every security-definer function that doesn't need public access; keep only the ones explicitly callable via RPC.
+7. Set `SET search_path = public, pg_temp` on every flagged function.
+8. Lock down public storage buckets — disable bucket listing, keep object-level public reads where needed.
 
-**File:** `src/components/lodging/HotelsMapView.tsx`
+### Phase 3 — Edge functions reliability & speed
 
-1. **Viewport-cap markers to 40** — listen to `map.addListener('idle', …)` (throttled 200ms via `requestAnimationFrame`), compute `map.getBounds()`, filter hotels in-bounds, slice top 40 by price/rating, and render only those overlays. Off-screen overlays are removed from the DOM (huge win on mid-range Android).
+9. Audit the failing functions visible in console (`duffel-destination-prices`, `check-zivo-plus`) — likely cold-start timeouts or missing secrets. Add response caching (Edge cache headers + KV-style cache in `service_health_status`) and a circuit breaker so frontend stops retrying.
+10. Standardize on `npm:` specifiers (drop esm.sh) for stable deploys — referenced in your own edge-function knowledge file.
+11. Add `EdgeRuntime.waitUntil` for fire-and-forget logging so user-facing latency drops.
+12. Pin Deno lockfile or remove `deno.lock` files from functions where deploys have been flaky.
 
-2. **AdvancedMarkerElement when available** — if `google.maps.marker?.AdvancedMarkerElement` exists AND `import.meta.env.VITE_GOOGLE_MAPS_MAP_ID` is set, render price pills via `AdvancedMarkerElement` with a custom DOM element. Otherwise fall back to current `OverlayView` (no regression).
+### Phase 4 — Frontend perf
 
-3. **Map `mapId` prop** — pass `mapId={import.meta.env.VITE_GOOGLE_MAPS_MAP_ID}` to the GoogleMap so Advanced markers actually mount.
+13. Bundle audit — verify the lucide-react no-barrel-import rule is enforced (already in memory). Add `vite-bundle-visualizer` run and trim anything >100KB that's not lazy-loaded.
+14. Route-level code splitting audit — confirm `Lazy@unknown` in the stack trace isn't masking an oversized chunk.
+15. Add `<link rel="preload">` for the LCP image on `/feed` and `/index`.
+16. Image pipeline — already have `SmartImage`; extend it to use Supabase Storage `render/image` transformer everywhere (currently only avatars per memory).
 
-No new dependencies. No backend / RLS / data changes.
+### Phase 5 — Half-built features to finish or remove
 
----
+17. **Hotel scraper pipeline** — decide: finish (Firecrawl connector + scheduled job) OR archive the 30+ `booking-*.json` files and `probe-*.mjs` files at repo root.
+18. **Chaiya Palace seed** — connect Firecrawl OR build the manual admin upload form (your earlier choice is still open).
+19. **Cleanup** — move debugging scripts (`check-*.ts`, `debug-*.ts`, `fix-*.ts`, `probe-*.mjs`, `update-gallery.ts`) into `scripts/` or delete.
 
-## C. Validation
+## What I need from you before I start
 
-1. Visually verify `/hotels` in light theme at 1034px (desktop) and 390px (iPhone) — hero readable, chips visible, no `?` images.
-2. Toggle to Map view → confirm price pills render and panning re-caps to ≤40 visible markers.
-3. Build passes (auto). No console errors beyond the pre-existing `has_role` permission warning (unrelated to this scope).
+Pick which phases to run, and in what order. My recommendation:
 
----
+> **Run Phase 1 first** (DB speed) — single migration, measurable improvement, zero frontend risk. Then Phase 2 (security), then 3 (edge fn reliability). Phase 4 & 5 can wait.
 
-## Out of scope (explicitly not touching)
-
-- `RoutePrefetcher`, `HotelLanding.tsx`, search forms.
-- The `Error fetching brand config: permission denied for function has_role` console warning (separate RLS issue — flag for a follow-up).
-- Any backend/data changes to `food_orders`, `stores`, or RLS.
+Also tell me:
+- **A.** Should I tackle all 4 phases now, or just Phase 1?
+- **B.** For Phase 5 cleanup — archive the half-built hotel scraper pipeline, or finish it (Firecrawl)?
+- **C.** Any tables I should leave alone in Phase 1 (e.g. tables your scheduled jobs hit constantly)?
