@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { airports } from "@/data/airports";
-import { edgeFunctionFallback } from "@/utils/edgeFunctionFallback";
+import { edgeFunctionFallback, isEdgeFunctionCircuitOpen, recordEdgeFunctionResult } from "@/utils/edgeFunctionFallback";
 
 export interface HotDeal {
   origin: string;
@@ -60,6 +60,9 @@ export function useHotDeals(autoDetectOrigin = false) {
   return useQuery({
     queryKey: ["hot-deals", origin],
     queryFn: async () => {
+      if (isEdgeFunctionCircuitOpen("duffel-hot-deals")) {
+        return [] as HotDeal[];
+      }
       const { data, error } = await supabase.functions.invoke("duffel-hot-deals", {
         body: { origin },
       });
@@ -73,6 +76,7 @@ export function useHotDeals(autoDetectOrigin = false) {
         });
       }
 
+      recordEdgeFunctionResult("duffel-hot-deals", true);
       return (data?.deals || []) as HotDeal[];
     },
     staleTime: 4 * 60 * 60 * 1000,

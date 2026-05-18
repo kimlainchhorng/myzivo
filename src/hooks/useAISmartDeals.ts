@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { airports } from "@/data/airports";
-import { edgeFunctionFallback } from "@/utils/edgeFunctionFallback";
+import { edgeFunctionFallback, isEdgeFunctionCircuitOpen, recordEdgeFunctionResult } from "@/utils/edgeFunctionFallback";
 
 export interface SmartDeal {
   id: string;
@@ -78,6 +78,14 @@ export function useAISmartDeals(category?: string, autoDetectOrigin = false) {
   return useQuery({
     queryKey: ["ai-smart-deals", origin, category],
     queryFn: async (): Promise<SmartDealsResponse> => {
+      if (isEdgeFunctionCircuitOpen("ai-smart-deals")) {
+        return {
+          deals: [],
+          generatedAt: new Date().toISOString(),
+          totalRoutesSearched: 0,
+          totalDealsFound: 0,
+        };
+      }
       const { data, error } = await supabase.functions.invoke("ai-smart-deals", {
         body: { origin, category },
       });
@@ -94,6 +102,7 @@ export function useAISmartDeals(category?: string, autoDetectOrigin = false) {
           context: { origin, category },
         });
       }
+      recordEdgeFunctionResult("ai-smart-deals", true);
       return {
         deals: (data?.deals || []) as SmartDeal[],
         generatedAt: data?.generatedAt || new Date().toISOString(),
