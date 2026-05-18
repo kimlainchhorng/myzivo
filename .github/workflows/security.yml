@@ -35,7 +35,7 @@ jobs:
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "24"
           cache: npm
 
       - name: Install dependencies
@@ -46,6 +46,9 @@ jobs:
 
       - name: Secret scan
         run: npm run security:check-secrets
+
+      - name: Supabase migration integrity
+        run: npm run supabase:migrations:check
 
       - name: TypeScript build
         env:

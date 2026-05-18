@@ -104,6 +104,7 @@ import RelativeTime from "@/components/social/RelativeTime";
 import { topicForUserSync } from "@/lib/security/channelName";
 import TrendingHashtags, { postHasHashtag } from "@/components/social/TrendingHashtags";
 import CollapsibleCaption from "@/components/social/CollapsibleCaption";
+import PostProductsChips from "@/components/social/PostProductsChips";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import { isBlueVerified } from "@/lib/verification";
 import { formatCount, commentsLinkLabel } from "@/lib/social/formatCount";
@@ -264,6 +265,23 @@ const FEED_SUPER_APP_TARGETS: FeedSuperAppTarget[] = [
     tone: "bg-foreground/10 text-foreground",
     keywords: ["all", "services", "apps", "more", "everything"],
   },
+];
+
+type FeedWorkflowAction = "story" | "reel" | "post" | "live" | "shop" | "jobs";
+
+const FEED_CREATOR_WORKFLOWS: Array<{
+  action: FeedWorkflowAction;
+  label: string;
+  description: string;
+  icon: typeof Camera;
+  tone: string;
+}> = [
+  { action: "story", label: "Story", description: "24h update", icon: Camera, tone: "from-pink-500 to-orange-400" },
+  { action: "reel", label: "Reel", description: "Short video", icon: Film, tone: "from-fuchsia-500 to-violet-500" },
+  { action: "post", label: "Post", description: "Photo or text", icon: Plus, tone: "from-sky-500 to-cyan-400" },
+  { action: "live", label: "Live", description: "Go on air", icon: Radio, tone: "from-red-500 to-rose-500" },
+  { action: "shop", label: "Shop", description: "Sell items", icon: ShoppingBag, tone: "from-amber-500 to-orange-500" },
+  { action: "jobs", label: "Jobs", description: "Hire talent", icon: Briefcase, tone: "from-emerald-500 to-teal-400" },
 ];
 
 const trackInitiateCheckout = (input: Record<string, unknown>) =>
@@ -480,6 +498,92 @@ function GuestFeedCta({ onLogin, onSignup }: { onLogin: () => void; onSignup: ()
   );
 }
 
+function FeedWorkflowRail({
+  isSignedIn,
+  onRequireAuth,
+  onCreate,
+  onCreateMode,
+  onNavigate,
+}: {
+  isSignedIn: boolean;
+  onRequireAuth: (returnTo: string) => void;
+  onCreate: () => void;
+  onCreateMode: (mode: "photo" | "reel" | "poll" | "story" | "shop" | "live" | undefined) => void;
+  onNavigate: (path: string) => void;
+}) {
+  const startCreate = (mode: Parameters<typeof onCreateMode>[0]) => {
+    onCreateMode(mode);
+    onCreate();
+  };
+
+  const handleWorkflow = (action: FeedWorkflowAction) => {
+    if (action === "jobs") {
+      if (!isSignedIn) {
+        onRequireAuth("/personal/employer");
+        return;
+      }
+      onNavigate("/personal/employer");
+      return;
+    }
+
+    if (action === "live") {
+      if (!isSignedIn) {
+        onRequireAuth("/live");
+        return;
+      }
+      onNavigate("/live");
+      return;
+    }
+
+    if (!isSignedIn) {
+      onRequireAuth(`/feed?compose=${action}`);
+      return;
+    }
+
+    if (action === "story") startCreate("story");
+    else if (action === "reel") startCreate("reel");
+    else if (action === "shop") startCreate("shop");
+    else startCreate("photo");
+  };
+
+  return (
+    <section className="border-b border-border/10 bg-background px-3 py-3" aria-label="Creator workflows">
+      <div className="mb-2 flex items-center justify-between gap-3">
+        <div className="min-w-0">
+          <h2 className="text-[13px] font-extrabold tracking-tight text-foreground">Create, discover, and sell</h2>
+          <p className="text-[11px] leading-snug text-muted-foreground">
+            Instagram-style social workflows connected to the ZIVO super-app
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={() => onNavigate("/services")}
+          className="shrink-0 rounded-full bg-muted px-3 py-1.5 text-[11px] font-bold text-foreground active:scale-95"
+        >
+          Explore
+        </button>
+      </div>
+
+      <div className="-mx-3 flex gap-2 overflow-x-auto px-3 pb-0.5 scrollbar-hide lg:grid lg:grid-cols-6 lg:overflow-visible">
+        {FEED_CREATOR_WORKFLOWS.map(({ action, label, description, icon: Icon, tone }) => (
+          <button
+            key={action}
+            type="button"
+            onClick={() => handleWorkflow(action)}
+            className="group min-w-[86px] flex-1 rounded-2xl border border-border/40 bg-card px-2.5 py-3 text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-primary/30 hover:shadow-md active:scale-[0.98]"
+          >
+            <span className={cn("mb-2 flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br text-white shadow-sm transition-transform group-hover:scale-105", tone)}>
+              <Icon className="h-[18px] w-[18px]" aria-hidden="true" />
+            </span>
+            <span className="block text-[12px] font-extrabold leading-tight text-foreground">{label}</span>
+            <span className="mt-0.5 block truncate text-[10px] leading-tight text-muted-foreground">{description}</span>
+          </button>
+        ))}
+      </div>
+    </section>
+  );
+}
+
 export default function ReelsFeedPage() {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -487,7 +591,7 @@ export default function ReelsFeedPage() {
   const [selectedHashtag, setSelectedHashtag] = useState<string | null>(null);
   const [newPostsCount, setNewPostsCount] = useState(0);
   const [showCreate, setShowCreate] = useState(false);
-  const [createMode, setCreateMode] = useState<"photo" | "reel" | "poll" | undefined>(undefined);
+  const [createMode, setCreateMode] = useState<"photo" | "reel" | "poll" | "story" | "shop" | "live" | undefined>(undefined);
   const [shareForPost, setShareForPost] = useState<{ shareUrl: string; shareText: string; shareMediaUrl?: string; shareMediaType?: "image" | "video"; sharePostId?: string; sharePostAuthorId?: string; sharePostAuthorName?: string } | null>(null);
   const [commerceDraft, setCommerceDraft] = useState<{
     linkType: "store_product" | "truck_sale";
@@ -500,6 +604,7 @@ export default function ReelsFeedPage() {
     mapLabel?: string;
   } | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
+  const [authReady, setAuthReady] = useState(false);
   const [userProfile, setUserProfile] = useState<{ name: string; avatar: string | null } | null>(null);
   const { unreadCount: notificationUnread } = useNotifications(20);
   const { prefs: chatPrefs } = useChatPrefs(userId ?? undefined);
@@ -617,6 +722,47 @@ export default function ReelsFeedPage() {
   }, [location.pathname, location.search, navigate]);
 
   useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const compose = params.get("compose");
+    if (!compose || !authReady) return;
+
+    const clearComposeParam = () => {
+      params.delete("compose");
+      navigate({ pathname: location.pathname, search: params.toString() }, { replace: true });
+    };
+
+    if (!userId) {
+      goLogin(`/feed?compose=${encodeURIComponent(compose)}`);
+      return;
+    }
+
+    if (compose === "live") {
+      clearComposeParam();
+      navigate("/live");
+      return;
+    }
+
+    const modeByCompose: Record<string, "photo" | "reel" | "poll" | "story" | "shop"> = {
+      post: "photo",
+      photo: "photo",
+      reel: "reel",
+      story: "story",
+      poll: "poll",
+      shop: "shop",
+      marketplace: "shop",
+    };
+    const mode = modeByCompose[compose];
+    if (!mode) {
+      clearComposeParam();
+      return;
+    }
+
+    setCreateMode(mode);
+    setShowCreate(true);
+    clearComposeParam();
+  }, [authReady, goLogin, location.pathname, location.search, navigate, userId]);
+
+  useEffect(() => {
     const openSearch = () => setShowSearch(true);
     window.addEventListener("zivo-open-feed-search", openSearch);
     return () => window.removeEventListener("zivo-open-feed-search", openSearch);
@@ -683,7 +829,10 @@ export default function ReelsFeedPage() {
       const authUser = data.user;
       const uid = authUser?.id || null;
       setUserId(uid);
-      if (!uid) return;
+      if (!uid) {
+        setAuthReady(true);
+        return;
+      }
 
       const metaAvatar = authUser?.user_metadata?.avatar_url || authUser?.user_metadata?.picture || null;
       const metaName = authUser?.user_metadata?.full_name || authUser?.user_metadata?.name || authUser?.email?.split("@")[0] || "You";
@@ -706,6 +855,10 @@ export default function ReelsFeedPage() {
             });
           }
         });
+    }).catch(() => {
+      setUserId(null);
+    }).finally(() => {
+      setAuthReady(true);
     });
   }, []);
 
@@ -1440,7 +1593,7 @@ export default function ReelsFeedPage() {
                             <div className="flex items-center justify-between px-4 pt-3 pb-2">
                               <h3 className="text-[15px] font-bold text-foreground">Create</h3>
                               <button type="button"
-                                onClick={() => setShowCreate(true)}
+                                onClick={() => { setCreateMode("photo"); setShowCreate(true); }}
                                 className="text-[12px] font-semibold text-primary hover:underline"
                               >
                                 See all
@@ -1451,10 +1604,10 @@ export default function ReelsFeedPage() {
                                 { label: "Business", desc: "Page for your shop", icon: Building2, color: "text-emerald-500", route: "/business/new" },
                                 { label: "Group", desc: "Build a community", icon: Users, color: "text-blue-500", route: "/communities" },
                                 { label: "Event", desc: "Bring people together", icon: Calendar, color: "text-amber-500", route: "/explore" },
-                                { label: "Reel", desc: "Short video", icon: Film, color: "text-fuchsia-500", route: "/reels" },
+                                { label: "Reel", desc: "Short video", icon: Film, color: "text-fuchsia-500", route: "/feed?compose=reel" },
                                 { label: "Story", desc: "Share for 24h", icon: Camera, color: "text-pink-500", route: "/feed?compose=story" },
-                                { label: "Live", desc: "Go live now", icon: Radio, color: "text-red-500", route: "/go-live" },
-                                { label: "Marketplace", desc: "Sell items", icon: ShoppingBag, color: "text-orange-500", route: "/marketplace" },
+                                { label: "Live", desc: "Go live now", icon: Radio, color: "text-red-500", route: "/feed?compose=live" },
+                                { label: "Marketplace", desc: "Sell items", icon: ShoppingBag, color: "text-orange-500", route: "/feed?compose=shop" },
                                 { label: "Job", desc: "Post a hiring", icon: Briefcase, color: "text-sky-500", route: "/personal/employer" },
                                 { label: "Spaces", desc: "Audio room", icon: Mic2, color: "text-violet-500", route: "/spaces" },
                                 { label: "Post", desc: "Photo, text, poll", icon: Plus, color: "text-foreground", action: "compose" as const },
@@ -1468,6 +1621,7 @@ export default function ReelsFeedPage() {
                                     // resolves the right arm without picking
                                     // `never` and erroring on `.route`.
                                     if ("action" in item && item.action === "compose") {
+                                      setCreateMode("photo");
                                       setShowCreate(true);
                                     } else if ("route" in item) {
                                       navigate(item.route);
@@ -1532,7 +1686,14 @@ export default function ReelsFeedPage() {
                     )}
                   </div>
                   <button type="button"
-                    onClick={() => userId ? setShowCreate(true) : goLogin("/feed?compose=post")}
+                    onClick={() => {
+                      if (!userId) {
+                        goLogin("/feed?compose=post");
+                        return;
+                      }
+                      setCreateMode("photo");
+                      setShowCreate(true);
+                    }}
                     className="shrink-0 h-11 w-11 rounded-full flex items-center justify-center text-foreground hover:bg-muted/60 active:scale-95 transition"
                     aria-label="Create post"
                     title="Create post"
@@ -1569,7 +1730,7 @@ export default function ReelsFeedPage() {
                 <div
                   className={cn(
                     "overflow-hidden transition-all duration-300 ease-out",
-                    headerHidden ? "max-h-0 opacity-0" : "max-h-[76px] opacity-100"
+                    headerHidden ? "max-h-0 opacity-0" : "max-h-[96px] opacity-100"
                   )}
                 >
                   {/* Tab strip — For You / Friends / Following (signed-in only) */}
@@ -1593,21 +1754,38 @@ export default function ReelsFeedPage() {
                     </div>
                   )}
                   {/* Content type filter chips */}
-                  <div className="flex gap-1.5 px-3 pb-1 overflow-x-auto scrollbar-hide">
-                    {(["all", "photos", "videos", "text"] as const).map((f) => (
-                      <button type="button"
-                        key={f}
-                        onClick={() => setFeedFilter(f)}
-                        className={cn(
-                          "shrink-0 min-h-[40px] px-3.5 py-2 rounded-full text-[12px] font-semibold transition-all active:scale-95",
-                          feedFilter === f
-                            ? "bg-foreground text-background"
-                            : "bg-muted/50 text-muted-foreground"
-                        )}
-                      >
-                        {f === "all" ? "All" : f === "photos" ? "Photos" : f === "videos" ? "Videos" : "Text"}
-                      </button>
-                    ))}
+                  <div className="px-3 pb-2">
+                    <div
+                      className="grid grid-cols-4 gap-1 rounded-full border border-border/40 bg-muted/40 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,0.45)]"
+                      role="toolbar"
+                      aria-label="Filter feed posts"
+                    >
+                      {([
+                        { id: "all", label: "All", icon: Sparkles },
+                        { id: "photos", label: "Photos", icon: ImageIcon },
+                        { id: "videos", label: "Videos", icon: Film },
+                        { id: "text", label: "Text", icon: MessageSquare },
+                      ] as const).map(({ id, label, icon: Icon }) => {
+                        const active = feedFilter === id;
+                        return (
+                          <button
+                            type="button"
+                            key={id}
+                            onClick={() => setFeedFilter(id)}
+                            aria-pressed={active}
+                            className={cn(
+                              "inline-flex h-8 min-w-0 items-center justify-center gap-1.5 rounded-full px-2 text-[12px] font-bold transition-all active:scale-95",
+                              active
+                                ? "bg-foreground text-background shadow-sm"
+                                : "text-muted-foreground hover:bg-background/60 hover:text-foreground"
+                            )}
+                          >
+                            <Icon className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+                            <span className="truncate">{label}</span>
+                          </button>
+                        );
+                      })}
+                    </div>
                   </div>
                 </div>
               </div>
@@ -1779,7 +1957,7 @@ export default function ReelsFeedPage() {
                   )}
                 </div>
                 <button type="button"
-                  onClick={() => setShowCreate(true)}
+                  onClick={() => { setCreateMode("photo"); setShowCreate(true); }}
                   className="flex-1 text-left px-4 py-1.5 rounded-full bg-muted/40 border border-border/30 text-[13px] text-muted-foreground hover:bg-muted/60 transition-colors"
                 >
                   {(() => {
@@ -1812,6 +1990,14 @@ export default function ReelsFeedPage() {
               </div>
             </div>
           )}
+
+          <FeedWorkflowRail
+            isSignedIn={Boolean(userId)}
+            onRequireAuth={goLogin}
+            onCreate={() => setShowCreate(true)}
+            onCreateMode={setCreateMode}
+            onNavigate={navigate}
+          />
 
           {/* Anchor for scroll-to-top after tapping the new-posts banner */}
           <div ref={feedTopRef} aria-hidden="true" />
@@ -1980,7 +2166,7 @@ export default function ReelsFeedPage() {
               <p className="text-sm text-muted-foreground mb-4">Be the first to share something amazing!</p>
               {userId && (
                 <button type="button"
-                  onClick={() => setShowCreate(true)}
+                  onClick={() => { setCreateMode("photo"); setShowCreate(true); }}
                   className="px-6 py-2.5 bg-primary text-primary-foreground rounded-full text-sm font-bold active:scale-95 transition-transform shadow-lg shadow-primary/20"
                 >
                   Create Post
@@ -4458,6 +4644,14 @@ const FeedCard = memo(function FeedCard({ item, currentUserId, onOpenFullscreen,
                 {item.location}
               </span>
             </div>
+          )}
+
+          {/* Shoppable product chips */}
+          {!item.id.startsWith("p-") && (
+            <PostProductsChips
+              postId={item.id.startsWith("u-") ? item.id.slice(2) : item.id}
+              className="px-3"
+            />
           )}
 
            {/* Media */}

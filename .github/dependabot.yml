@@ -1,0 +1,62 @@
+version: 2
+
+# Keep npm dependencies and GitHub Actions versions current.
+# Grouped updates so PR volume stays manageable; security alerts still open
+# individual PRs as soon as advisories drop.
+
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Asia/Phnom_Penh
+    open-pull-requests-limit: 5
+    labels: ["dependencies", "npm"]
+    commit-message:
+      prefix: "chore(deps)"
+      include: scope
+    groups:
+      radix-ui:
+        patterns: ["@radix-ui/*"]
+      capacitor:
+        patterns: ["@capacitor/*", "@capgo/*", "@capawesome/*"]
+      stripe:
+        patterns: ["@stripe/*", "stripe"]
+      supabase:
+        patterns: ["@supabase/*", "supabase"]
+      tanstack:
+        patterns: ["@tanstack/*"]
+      testing:
+        patterns: ["vitest", "@vitest/*", "@playwright/*", "playwright", "@testing-library/*"]
+      lint-format:
+        patterns: ["eslint", "@eslint/*", "eslint-*", "prettier", "typescript-eslint"]
+      types:
+        patterns: ["@types/*"]
+    ignore:
+      # Hold majors for Node tooling that require coordinated upgrades.
+      - dependency-name: "vite"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-dom"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "tailwindcss"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Asia/Phnom_Penh
+    open-pull-requests-limit: 3
+    labels: ["dependencies", "github-actions"]
+    commit-message:
+      prefix: "chore(ci)"
+      include: scope
+    groups:
+      actions-core:
+        patterns: ["actions/*"]
