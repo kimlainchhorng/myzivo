@@ -12924,6 +12924,30 @@ export type Database = {
         }
         Relationships: []
       }
+      comment_likes: {
+        Row: {
+          comment_id: string
+          created_at: string
+          id: string
+          target_table: string
+          user_id: string
+        }
+        Insert: {
+          comment_id: string
+          created_at?: string
+          id?: string
+          target_table: string
+          user_id: string
+        }
+        Update: {
+          comment_id?: string
+          created_at?: string
+          id?: string
+          target_table?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       comment_reactions: {
         Row: {
           comment_id: string
@@ -32278,6 +32302,13 @@ export type Database = {
             referencedRelation: "lodge_rooms"
             referencedColumns: ["id"]
           },
+          {
+            foreignKeyName: "lodge_reservations_store_id_fkey"
+            columns: ["store_id"]
+            isOneToOne: false
+            referencedRelation: "store_profiles"
+            referencedColumns: ["id"]
+          },
         ]
       }
       lodge_room_blocks: {
@@ -43033,6 +43064,30 @@ export type Database = {
         }
         Relationships: []
       }
+      post_bookmarks: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          source: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          source: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          source?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       post_boosts: {
         Row: {
           budget_cents: number
@@ -43319,6 +43374,41 @@ export type Database = {
         }
         Relationships: []
       }
+      post_products: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          post_source: string
+          sort_order: number
+          store_product_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          post_source: string
+          sort_order?: number
+          store_product_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          post_source?: string
+          sort_order?: number
+          store_product_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "post_products_store_product_id_fkey"
+            columns: ["store_product_id"]
+            isOneToOne: false
+            referencedRelation: "store_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       post_reports: {
         Row: {
           created_at: string | null
@@ -43352,6 +43442,33 @@ export type Database = {
           reviewed_at?: string | null
           reviewed_by?: string | null
           status?: string | null
+        }
+        Relationships: []
+      }
+      post_reposts: {
+        Row: {
+          created_at: string
+          id: string
+          post_id: string
+          quote_text: string | null
+          source: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          post_id: string
+          quote_text?: string | null
+          source: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          post_id?: string
+          quote_text?: string | null
+          source?: string
+          user_id?: string
         }
         Relationships: []
       }
@@ -50018,34 +50135,79 @@ export type Database = {
           },
         ]
       }
+      saved_collection_posts: {
+        Row: {
+          collection_id: string
+          created_at: string
+          id: string
+          post_bookmark_id: string
+          sort_order: number
+        }
+        Insert: {
+          collection_id: string
+          created_at?: string
+          id?: string
+          post_bookmark_id: string
+          sort_order?: number
+        }
+        Update: {
+          collection_id?: string
+          created_at?: string
+          id?: string
+          post_bookmark_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "saved_collection_posts_collection_id_fkey"
+            columns: ["collection_id"]
+            isOneToOne: false
+            referencedRelation: "saved_collections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "saved_collection_posts_post_bookmark_id_fkey"
+            columns: ["post_bookmark_id"]
+            isOneToOne: false
+            referencedRelation: "post_bookmarks"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       saved_collections: {
         Row: {
+          color: string | null
           cover_url: string | null
           created_at: string | null
           id: string
           is_private: boolean | null
           item_count: number | null
           name: string
+          sort_order: number
           updated_at: string | null
           user_id: string
         }
         Insert: {
+          color?: string | null
           cover_url?: string | null
           created_at?: string | null
           id?: string
           is_private?: boolean | null
           item_count?: number | null
           name: string
+          sort_order?: number
           updated_at?: string | null
           user_id: string
         }
         Update: {
+          color?: string | null
           cover_url?: string | null
           created_at?: string | null
           id?: string
           is_private?: boolean | null
           item_count?: number | null
           name?: string
+          sort_order?: number
           updated_at?: string | null
           user_id?: string
         }
@@ -54439,6 +54601,7 @@ export type Database = {
           location: string | null
           media_type: string
           media_urls: string[]
+          reposts_count: number
           scheduled_at: string | null
           shares_count: number
           store_id: string
@@ -54458,6 +54621,7 @@ export type Database = {
           location?: string | null
           media_type?: string
           media_urls?: string[]
+          reposts_count?: number
           scheduled_at?: string | null
           shares_count?: number
           store_id: string
@@ -54477,6 +54641,7 @@ export type Database = {
           location?: string | null
           media_type?: string
           media_urls?: string[]
+          reposts_count?: number
           scheduled_at?: string | null
           shares_count?: number
           store_id?: string
@@ -54873,9 +55038,11 @@ export type Database = {
           created_at: string
           duration_seconds: number
           expires_at: string
+          filter_preset: string | null
           id: string
           media_type: string
           media_url: string
+          overlays: Json
           text_color: string | null
           text_overlay: string | null
           text_position: string | null
@@ -54888,9 +55055,11 @@ export type Database = {
           created_at?: string
           duration_seconds?: number
           expires_at?: string
+          filter_preset?: string | null
           id?: string
           media_type?: string
           media_url: string
+          overlays?: Json
           text_color?: string | null
           text_overlay?: string | null
           text_position?: string | null
@@ -54903,9 +55072,11 @@ export type Database = {
           created_at?: string
           duration_seconds?: number
           expires_at?: string
+          filter_preset?: string | null
           id?: string
           media_type?: string
           media_url?: string
+          overlays?: Json
           text_color?: string | null
           text_overlay?: string | null
           text_position?: string | null
@@ -54975,6 +55146,44 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      story_overlay_responses: {
+        Row: {
+          created_at: string
+          id: string
+          overlay_id: string
+          response_type: string
+          response_value: Json
+          story_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          overlay_id: string
+          response_type: string
+          response_value: Json
+          story_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          overlay_id?: string
+          response_type?: string
+          response_value?: Json
+          story_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "story_overlay_responses_story_id_fkey"
+            columns: ["story_id"]
+            isOneToOne: false
+            referencedRelation: "stories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       story_reactions: {
         Row: {
@@ -61067,6 +61276,7 @@ export type Database = {
           media_url: string | null
           media_urls: string[] | null
           owner_notifications_enabled: boolean
+          reposts_count: number
           shared_from_post_id: string | null
           shared_from_user_id: string | null
           shares_count: number
@@ -61097,6 +61307,7 @@ export type Database = {
           media_url?: string | null
           media_urls?: string[] | null
           owner_notifications_enabled?: boolean
+          reposts_count?: number
           shared_from_post_id?: string | null
           shared_from_user_id?: string | null
           shares_count?: number
@@ -61127,6 +61338,7 @@ export type Database = {
           media_url?: string | null
           media_urls?: string[] | null
           owner_notifications_enabled?: boolean
+          reposts_count?: number
           shared_from_post_id?: string | null
           shared_from_user_id?: string | null
           shares_count?: number
@@ -68482,6 +68694,15 @@ export type Database = {
         Args: { p_amount: number; p_driver_id: string }
         Returns: Json
       }
+      claim_daily_coin_reward: {
+        Args: never
+        Returns: {
+          amount: number
+          balance: number
+          claimed: boolean
+          current_streak: number
+        }[]
+      }
       claim_employee_invite: { Args: { _token: string }; Returns: Json }
       clean_expired_flight_cache: { Args: never; Returns: undefined }
       cleanup_expired_device_link_tokens: { Args: never; Returns: undefined }
@@ -68658,6 +68879,7 @@ export type Database = {
           location: string | null
           media_type: string
           media_urls: string[]
+          reposts_count: number
           scheduled_at: string | null
           shares_count: number
           store_id: string
@@ -69099,6 +69321,16 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      get_daily_reward_status: {
+        Args: never
+        Returns: {
+          balance: number
+          can_claim: boolean
+          current_streak: number
+          next_amount: number
+          next_claim_at: string
+        }[]
+      }
       get_day_of_week: { Args: { ts: string }; Returns: number }
       get_default_pricing_zone_id: { Args: never; Returns: string }
       get_delivered_order_for_rating: {
@@ -69172,6 +69404,15 @@ export type Database = {
       }
       get_follower_count: { Args: { target_user_id: string }; Returns: number }
       get_following_count: { Args: { target_user_id: string }; Returns: number }
+      get_for_you_feed: {
+        Args: { p_limit?: number; p_offset?: number; p_user_id: string }
+        Returns: {
+          created_at: string
+          post_id: string
+          score: number
+          source: string
+        }[]
+      }
       get_friend_count: { Args: { target_user_id: string }; Returns: number }
       get_friendship_status: {
         Args: { target_user_id: string }
@@ -69321,6 +69562,7 @@ export type Database = {
           user_role: string
         }[]
       }
+      get_my_user_access: { Args: never; Returns: Json }
       get_nearby_drivers: {
         Args: {
           p_lat: number
@@ -69602,6 +69844,15 @@ export type Database = {
         Args: { lat1: number; lat2: number; lon1: number; lon2: number }
         Returns: number
       }
+      increment_counter: {
+        Args: {
+          amount?: number
+          column_name: string
+          row_id: string
+          table_name: string
+        }
+        Returns: undefined
+      }
       increment_driver_acceptance: {
         Args: { driver_id_param: string }
         Returns: undefined
@@ -69759,6 +70010,20 @@ export type Database = {
       link_user_device:
         | { Args: { p_device_id: string; p_role: string }; Returns: undefined }
         | { Args: { p_device_id: string; p_role?: string }; Returns: undefined }
+      list_my_recent_logins: {
+        Args: { _hours?: number; _limit?: number }
+        Returns: {
+          city: string
+          country: string
+          device_name: string
+          device_type: string
+          id: string
+          ip_address: string
+          is_suspicious: boolean
+          logged_in_at: string
+          user_agent: string
+        }[]
+      }
       lodging_wiring_report: { Args: never; Returns: Json }
       log_pii_access: {
         Args: {
@@ -69942,6 +70207,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      record_post_share: {
+        Args: { _channel?: string; _post_id: string; _source?: string }
+        Returns: undefined
       }
       record_push_subscription: {
         Args: {
@@ -70160,6 +70429,26 @@ export type Database = {
       sync_customer_phone_verified: { Args: never; Returns: Json }
       sync_driver_phone_verified: { Args: never; Returns: Json }
       toggle_channel_post_pin: { Args: { p_post_id: string }; Returns: boolean }
+      toggle_comment_like: {
+        Args: { _comment_id: string; _target_table: string }
+        Returns: {
+          liked: boolean
+          total: number
+        }[]
+      }
+      toggle_comment_pin: {
+        Args: { _comment_id: string; _target_table?: string }
+        Returns: {
+          pinned: boolean
+        }[]
+      }
+      toggle_post_repost: {
+        Args: { _post_id: string; _quote_text?: string; _source: string }
+        Returns: {
+          reposted: boolean
+          total: number
+        }[]
+      }
       toggle_unified_comment_pin: {
         Args: { _comment_id: string }
         Returns: {
