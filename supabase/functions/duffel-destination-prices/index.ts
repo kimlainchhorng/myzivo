@@ -55,15 +55,20 @@ const DESTINATION_CODES: Record<string, string> = {
   'ho-chi-minh': 'SGN',
 };
 
+const FETCH_TIMEOUT_MS = 10_000;
+
 async function fetchLowestFare(
   origin: string,
   destination: string,
   departureDate: string,
   apiKey: string
 ): Promise<number | null> {
+  const ctl = new AbortController();
+  const timer = setTimeout(() => ctl.abort(), FETCH_TIMEOUT_MS);
   try {
     const response = await fetch(`${DUFFEL_API_URL}/air/offer_requests`, {
       method: 'POST',
+      signal: ctl.signal,
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Duffel-Version': 'v2',
@@ -92,8 +97,11 @@ async function fetchLowestFare(
     return prices.length > 0 ? Math.min(...prices) : null;
   } catch {
     return null;
+  } finally {
+    clearTimeout(timer);
   }
 }
+
 
 serve(async (req: Request) => {
   const corsHeaders = getCorsHeaders(req);
@@ -116,9 +124,14 @@ serve(async (req: Request) => {
 
     const apiKey = Deno.env.get('DUFFEL_API_KEY');
     if (!apiKey) {
-      return new Response(JSON.stringify({ error: 'DUFFEL_API_KEY not configured' }), {
-        status: 500,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      // Graceful: return empty prices so frontend stops retrying.
+      return new Response(JSON.stringify({ prices: {}, reason: 'duffel_not_configured' }), {
+        status: 200,
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+          'Cache-Control': 'public, max-age=3600',
+        },
       });
     }
 
@@ -130,8 +143,12 @@ serve(async (req: Request) => {
     const cacheKey = `${origin}:${destinations.sort().join(',')}:${departureDate}`;
     const cached = priceCache.get(cacheKey);
     if (cached && cached.expires > Date.now()) {
-      return new Response(JSON.stringify({ prices: cached.data }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      return new Response(JSON.stringify({ prices: cached.data, cached: true }), {
+        headers: {
+          ...corsHeaders,
+          'Content-Type': 'application/json',
+          'Cache-Control': 'public, max-age=900',
+        },
       });
     }
 
@@ -149,7 +166,6 @@ serve(async (req: Request) => {
 
     const fetchPromises = Array.from(uniqueDestCodes.entries()).map(async ([code, destKeys]) => {
       if (code === origin) {
-        // Same airport, skip
         for (const key of destKeys) results[key] = null;
         return;
       }
@@ -163,13 +179,22 @@ serve(async (req: Request) => {
     priceCache.set(cacheKey, { data: results, expires: Date.now() + CACHE_TTL_MS });
 
     return new Response(JSON.stringify({ prices: results }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json',
+        'Cache-Control': 'public, max-age=900',
+      },
     });
   } catch (error) {
     console.error('Destination prices error:', error);
-    return new Response(JSON.stringify({ error: 'Internal server error' }), {
-      status: 500,
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+    // Graceful: return empty so client doesn't see an error or retry-storm.
+    return new Response(JSON.stringify({ prices: {}, error: 'transient' }), {
+      status: 200,
+      headers: {
+        ...corsHeaders,
+        'Content-Type': 'application/json',
+        'Cache-Control': 'no-store',
+      },
     });
   }
 });
