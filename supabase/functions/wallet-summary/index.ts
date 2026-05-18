@@ -1,5 +1,6 @@
 // Wallet Summary v2026 — balance + recent txns in 1 call
 import { createClient } from "../_shared/deps.ts";
+import { withSecurity } from "../_shared/withSecurity.ts";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -7,7 +8,7 @@ const corsHeaders = {
     "authorization, x-client-info, apikey, content-type",
 };
 
-Deno.serve(async (req) => {
+Deno.serve(withSecurity("wallet-summary", async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
   }
@@ -79,4 +80,4 @@ Deno.serve(async (req) => {
       }
     );
   }
-});
+}, { rateLimit: "api_general" }));

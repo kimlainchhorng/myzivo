@@ -6,6 +6,7 @@
  * response shape preserved: { success: true, message, userId, actionLink }.
  */
 import { serve, createClient } from "../_shared/deps.ts";
+import { withSecurity } from "../_shared/withSecurity.ts";
 import { withErrorHandling, HttpError } from "../_shared/errors.ts";
 import { parseBody, v } from "../_shared/validate.ts";
 import { ok, preflight } from "../_shared/respond.ts";
@@ -169,4 +170,4 @@ const handler = withErrorHandling(async (req: Request): Promise<Response> => {
   });
 }, "verify-otp-code");
 
-serve(handler);
+serve(withSecurity("verify-otp-code", handler, { rateLimit: "auth_otp" }));

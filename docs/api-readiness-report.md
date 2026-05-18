@@ -1,14 +1,14 @@
 # API Readiness Report
 
-Generated: 2026-05-18T19:54:25.011Z
+Generated: 2026-05-18T20:16:01.913Z
 
 ## Summary
 
 - Critical findings: 0
-- Warnings: 157
+- Warnings: 141
 - Edge Functions inventoried: 251
 - High-risk Edge Functions: 107
-- Functions using withSecurity(): 2
+- Functions using withSecurity(): 10
 - Functions using strictCorsHeaders(): 0
 - Functions using service role: 199
 - Supabase migration drift: local=673, remote=1260, matched=0, duplicateVersions=8
@@ -22,22 +22,6 @@ Generated: 2026-05-18T19:54:25.011Z
 - [hardcoded-supabase-browser-config] Browser Supabase URL/key are hardcoded. Prefer Vite env values so staging and production can use separate projects. (src/integrations/supabase/client.ts)
 - [preview-origin-allowed-in-cors] Shared CORS allowlist still accepts Lovable preview origins. Remove before strict production go-live if previews are not needed. (supabase/functions/_shared/cors.ts)
 - [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/aba-payway-checkout/index.ts)
-- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/admin-create-user/index.ts)
-- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/admin-create-user/index.ts)
-- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/admin-create-user-post/index.ts)
-- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/admin-create-user-post/index.ts)
-- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/admin-delete-user/index.ts)
-- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/admin-delete-user/index.ts)
-- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/admin-delete-user-post/index.ts)
-- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/admin-delete-user-post/index.ts)
-- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/admin-list-created-users/index.ts)
-- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/admin-list-created-users/index.ts)
-- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/admin-moderate-message/index.ts)
-- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/admin-moderate-message/index.ts)
-- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/admin-post-comment/index.ts)
-- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/admin-post-comment/index.ts)
-- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/admin-update-profile/index.ts)
-- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/admin-update-profile/index.ts)
 - [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/auth-email-hook/index.ts)
 - [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/auth-email-hook/index.ts)
 - [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/auto-cancel-stale-orders/index.ts)
@@ -99,19 +83,27 @@ Generated: 2026-05-18T19:54:25.011Z
 - [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/create-tip-checkout/index.ts)
 - [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/create-tip-payment-intent/index.ts)
 - [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/create-tip-paypal-order/index.ts)
-- ...and 77 more
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/create-tip-square-checkout/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/create-user-wallet-topup/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/create-zivo-plus-checkout/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/creator-payout-request/index.ts)
+- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/creator-payout-request/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/driver-payout/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/eats-payout-request/index.ts)
+- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/eats-payout-request/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/google-ads-oauth-callback/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/google-ads-oauth-start/index.ts)
+- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/google-ads-oauth-start/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/list-my-sessions/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/livekit-token/index.ts)
+- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/livekit-token/index.ts)
+- [high-risk-function-without-wrapper] High-risk Edge Function does not use withSecurity(). (supabase/functions/lodge-payout-request/index.ts)
+- [service-role-wildcard-cors] High-risk service-role function appears to use wildcard CORS without the shared security wrapper. (supabase/functions/lodge-payout-request/index.ts)
+- ...and 61 more
 
 ## High-Risk Functions Missing withSecurity()
 
 - supabase/functions/aba-payway-checkout/index.ts
-- supabase/functions/admin-create-user/index.ts
-- supabase/functions/admin-create-user-post/index.ts
-- supabase/functions/admin-delete-user/index.ts
-- supabase/functions/admin-delete-user-post/index.ts
-- supabase/functions/admin-list-created-users/index.ts
-- supabase/functions/admin-moderate-message/index.ts
-- supabase/functions/admin-post-comment/index.ts
-- supabase/functions/admin-update-profile/index.ts
 - supabase/functions/auth-email-hook/index.ts
 - supabase/functions/auto-cancel-stale-orders/index.ts
 - supabase/functions/auto-recharge-ads-wallet/index.ts

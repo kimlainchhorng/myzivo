@@ -7,6 +7,7 @@
  */
 import { serve, createClient } from "../_shared/deps.ts";
 import { Resend } from "npm:resend@2.0.0";
+import { withSecurity } from "../_shared/withSecurity.ts";
 import { withErrorHandling, HttpError } from "../_shared/errors.ts";
 import { parseBody, v } from "../_shared/validate.ts";
 import { ok, preflight } from "../_shared/respond.ts";
@@ -129,4 +130,4 @@ const handler = withErrorHandling(async (req: Request): Promise<Response> => {
   return ok(req, { success: true, message: "Verification code sent", expiresAt });
 }, "send-otp-email");
 
-serve(handler);
+serve(withSecurity("send-otp-email", handler, { rateLimit: "auth_otp" }));

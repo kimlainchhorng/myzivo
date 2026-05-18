@@ -10,6 +10,7 @@
  * caller's current one (matched by x-device-fingerprint header).
  */
 import { createClient } from "../_shared/deps.ts";
+import { withSecurity } from "../_shared/withSecurity.ts";
 
 const ALLOWED_HEADERS = "authorization, x-client-info, apikey, content-type, x-device-fingerprint";
 function cors(req: Request) {
@@ -28,7 +29,7 @@ function json(req: Request, body: unknown, status = 200): Response {
   });
 }
 
-Deno.serve(async (req) => {
+Deno.serve(withSecurity("revoke-session", async (req) => {
   try {
     if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: cors(req) });
     if (req.method !== "POST") return json(req, { error: "Method not allowed" }, 405);
@@ -112,4 +113,4 @@ Deno.serve(async (req) => {
     console.error("[revoke-session] unhandled", err);
     return json(req, { error: err instanceof Error ? err.message : "Internal server error" }, 500);
   }
-});
+}, { rateLimit: "auth_password_reset" }));

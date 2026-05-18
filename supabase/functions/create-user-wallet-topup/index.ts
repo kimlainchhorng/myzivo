@@ -10,6 +10,7 @@
  * stripe session id).
  */
 import { createClient } from "../_shared/deps.ts";
+import { withSecurity } from "../_shared/withSecurity.ts";
 import Stripe from "../_shared/stripe.ts";
 
 const corsHeaders = {
@@ -20,7 +21,7 @@ const corsHeaders = {
 const MIN_TOPUP_CENTS = 500;     // $5
 const MAX_TOPUP_CENTS = 50_000_00; // $50,000
 
-Deno.serve(async (req) => {
+Deno.serve(withSecurity("create-user-wallet-topup", async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
@@ -92,4 +93,4 @@ Deno.serve(async (req) => {
       status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
   }
-});
+}, { rateLimit: "payment" }));
