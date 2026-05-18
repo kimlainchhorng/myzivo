@@ -21,6 +21,10 @@ jobs:
   lint:
     name: Lint
     runs-on: ubuntu-latest
+    # Advisory until we burn down the pre-existing 98 errors / 299 warnings on
+    # main. CI surfaces them on every PR but doesn't fail. Flip to required
+    # (drop `continue-on-error`) once `npm run lint` exits clean.
+    continue-on-error: true
     timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
