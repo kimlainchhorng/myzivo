@@ -188,7 +188,7 @@ export function useUpdateNotificationPreferences() {
             quiet_hours_end: updates.quietHoursEnd ?? "08:00",
             sms_consent_at: updates.smsConsentAt ?? null,
             sms_consent_text: updates.smsConsentText ?? null,
-          })
+          } as any)
           .select()
           .single();
 
