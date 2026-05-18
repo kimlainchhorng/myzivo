@@ -3797,6 +3797,16 @@ export default function FeedPage() {
   // On `/reels` we render the TikTok-style hero — hide the desktop side rails
   // so the video can fill the viewport. `/feed` keeps the 3-column layout.
   const isReelsRoute = location.pathname.startsWith("/reels");
+  const requestedReelId = useMemo(() => {
+    const params = new URLSearchParams(location.search);
+    const linkedId = routePostId || params.get("post");
+    if (linkedId) return linkedId;
+    try {
+      return sessionStorage.getItem("zivo_reel_active_id");
+    } catch {
+      return null;
+    }
+  }, [location.search, routePostId]);
   const [globalMuted, setGlobalMuted] = useState<boolean>(() => {
     // Persist mute preference — autoplay policies require starting muted on
     // some browsers, but we still respect the user's last choice when they
@@ -4009,7 +4019,7 @@ export default function FeedPage() {
   }, [userId]);
 
   const { data: posts = [], isLoading, isFetching } = useQuery({
-    queryKey: ["customer-feed", userId, pageMultiplier],
+    queryKey: ["customer-feed", userId, pageMultiplier, requestedReelId],
     queryFn: async () => {
       const feedStartedAt = perfNow();
       // Pull the muted/blocked author list first so we can filter the feed
@@ -4052,8 +4062,43 @@ export default function FeedPage() {
         });
       }
 
-      const postsData = storePostsResult.error ? [] : storePostsResult.data;
-      const userMedia = userPostsResult.error ? [] : userPostsResult.data;
+      let postsData = storePostsResult.error ? [] : [...(storePostsResult.data ?? [])];
+      let userMedia = userPostsResult.error ? [] : [...(userPostsResult.data ?? [])];
+
+      // When a customer opens media from /feed and then taps the Reels tab,
+      // /reels should land on that same media even if the algorithmic first
+      // page did not include it. Hydrate the remembered/deep-linked post as a
+      // one-off before enrichment so the rest of the workflow stays unified.
+      const requestedRawId = requestedReelId?.replace(/^u-/, "") || null;
+      if (requestedRawId) {
+        const hasStoreTarget = postsData.some((post: any) => post.id === requestedRawId);
+        const hasUserTarget = userMedia.some((post: any) => post.id === requestedRawId);
+        if (!hasStoreTarget && !hasUserTarget) {
+          const shouldTryStore = !requestedReelId?.startsWith("u-");
+          const [targetStoreResult, targetUserResult] = await Promise.all([
+            shouldTryStore
+              ? supabase
+                  .from("store_posts")
+                  .select("id, store_id, caption, media_urls, media_type, is_published, created_at, likes_count, comments_count, shares_count, reposts_count, view_count, audio_name, location")
+                  .eq("id", requestedRawId)
+                  .eq("is_published", true)
+                  .maybeSingle()
+              : Promise.resolve({ data: null, error: null } as any),
+            (supabase as any)
+              .from("user_posts")
+              .select("id, user_id, media_url, media_urls, media_type, caption, likes_count, comments_count, shares_count, views_count, created_at, audio_name, location")
+              .eq("id", requestedRawId)
+              .eq("is_published", true)
+              .maybeSingle(),
+          ]);
+
+          if (targetStoreResult.data) {
+            postsData = [targetStoreResult.data, ...postsData];
+          } else if (targetUserResult.data) {
+            userMedia = [targetUserResult.data, ...userMedia];
+          }
+        }
+      }
 
       // Strip muted/blocked authors from user media posts
       const filteredUserMedia = (userMedia ?? []).filter(
@@ -4084,7 +4129,10 @@ export default function FeedPage() {
       // Store posts — Reels is a vertical media scroller, so drop text-only
       // store announcements (no media_urls). They have a home in /feed where
       // text cards render correctly; here they'd just produce empty slides.
+      const seenStorePosts = new Set<string>();
       for (const post of ((postsData as any[]) || [])) {
+        if (seenStorePosts.has(post.id)) continue;
+        seenStorePosts.add(post.id);
         const hasMedia = Array.isArray(post.media_urls) && post.media_urls.length > 0;
         if (!hasMedia) continue;
         const store = storeMap.get(post.store_id);
@@ -4099,7 +4147,10 @@ export default function FeedPage() {
       }
 
       // User media posts (already filtered for muted/blocked authors above)
+      const seenUserPosts = new Set<string>();
       for (const post of filteredUserMedia) {
+        if (seenUserPosts.has(post.id)) continue;
+        seenUserPosts.add(post.id);
         const profile = profileMap.get(post.user_id);
         const urls: string[] = Array.isArray(post.media_urls) && post.media_urls.length > 0
           ? post.media_urls

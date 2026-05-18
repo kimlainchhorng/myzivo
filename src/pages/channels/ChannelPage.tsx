@@ -11,6 +11,7 @@ import { getChannelShareUrl } from "@/lib/getPublicOrigin";
 import { shareContent } from "@/lib/native/share";
 import { copyText } from "@/lib/native/clipboard";
 import { toast } from "sonner";
+import { openShareToChat } from "@/components/chat/ShareToChatSheet";
 
 type ViewTab = "posts" | "media" | "links";
 
@@ -61,7 +62,48 @@ export default function ChannelPage() {
   const canViewComments = isSubscribed || canPost;
   const showInlineJoin = !isSubscribed && !canPost && filteredPosts.length === 0;
 
-  const shareChannel = async () => {
+  // Primary share path — opens the in-app picker so the channel card lands
+  // in a friend's ZIVO chat with the proper preview (handle, subscribers,
+  // banner image, deep-link back into this channel). Keeps the experience
+  // inside the app, same pattern as hotels/stores share.
+  const shareChannel = () => {
+    const subtitle = `@${channel.handle}` +
+      (channel.subscriber_count > 0
+        ? ` · ${channel.subscriber_count.toLocaleString()} subscriber${channel.subscriber_count === 1 ? "" : "s"}`
+        : "");
+    openShareToChat({
+      kind: "channel",
+      title: channel.name,
+      subtitle,
+      meta: channel.description?.slice(0, 80) || undefined,
+      image: channel.banner_url || channel.avatar_url || null,
+      deepLink: `/c/${channel.handle}`,
+    });
+  };
+
+  // Copy the channel URL straight to the clipboard. The helper has a
+  // three-tier fallback (legacy execCommand → Capacitor → Async Clipboard
+  // API) so this works on every supported platform. If all three fail
+  // (e.g. very strict permissions in a webview), surface the URL in a
+  // long-lived toast so the user can still long-press to copy it manually.
+  const copyChannelLink = async () => {
+    const url = getChannelShareUrl(channel.handle);
+    try {
+      await copyText(url);
+      toast.success("Channel link copied", { description: url, duration: 4000 });
+    } catch {
+      toast.message("Copy this channel link", {
+        description: url,
+        duration: 12000,
+      });
+    }
+  };
+
+  // System share sheet (WhatsApp, Telegram, mail, etc.) — kept available
+  // for any future entry that wants OS-wide reach. Falls back to clipboard
+  // when native share is unavailable or the user dismisses without
+  // sharing.
+  const shareChannelExternal = async () => {
     const url = getChannelShareUrl(channel.handle);
     try {
       const result = await shareContent({
@@ -74,13 +116,7 @@ export default function ChannelPage() {
     } catch {
       // fall through to clipboard fallback
     }
-
-    try {
-      await copyText(url);
-      toast.success("Channel link copied");
-    } catch {
-      toast.error("Could not copy channel link");
-    }
+    await copyChannelLink();
   };
 
   return (
@@ -183,14 +219,25 @@ export default function ChannelPage() {
               <p className="mt-1 text-[12px] text-muted-foreground">{emptySubtitle}</p>
               {activeTab === "posts" && (
                 <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-                  <Button type="button" size="sm" variant="outline" onClick={() => void shareChannel()}>
-                    Share Channel
+                  {canPost && (
+                    <Button type="button" size="sm" onClick={() => setControlOpen(true)}>
+                      Create first post
+                    </Button>
+                  )}
+                  <Button type="button" size="sm" variant="outline" onClick={shareChannel}>
+                    Share to a chat
+                  </Button>
+                  <Button type="button" size="sm" variant="ghost" onClick={() => void copyChannelLink()}>
+                    Copy link
                   </Button>
                   {!isSubscribed && !canPost && !showInlineJoin && (
                     <Button type="button" size="sm" onClick={subscribe}>
                       Join Channel
                     </Button>
                   )}
+                  <Button type="button" size="sm" variant="ghost" onClick={() => navigate("/channels")}>
+                    Discover channels
+                  </Button>
                 </div>
               )}
             </div>

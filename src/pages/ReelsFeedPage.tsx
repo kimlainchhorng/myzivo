@@ -394,8 +394,12 @@ interface FeedItem {
   } | null;
 }
 
-const normalizeUserPostMediaType = (mediaType: string | null | undefined): "image" | "video" =>
-  mediaType === "video" || mediaType === "reel" ? "video" : "image";
+const isFeedVideoMediaUrl = (url: string) => /\.(mp4|mov|webm|avi|mkv|m4v)(\?.*)?$/i.test(url);
+const normalizeUserPostMediaType = (
+  mediaType: string | null | undefined,
+  mediaUrls: string[] = [],
+): "image" | "video" =>
+  mediaType === "video" || mediaType === "reel" || mediaUrls.some(isFeedVideoMediaUrl) ? "video" : "image";
 const hasNonAsciiText = (text: string): boolean =>
   Array.from(text).some((char) => (char.codePointAt(0) ?? 0) > 0x7f);
 
@@ -949,8 +953,11 @@ export default function ReelsFeedPage() {
           for (const post of userPosts as any[]) {
             const profileDisplay = publicProfileMap.get(post.user_id);
             const profileSettings = profileSettingsMap.get(post.user_id);
-            if (!post.media_url && !post.caption?.trim()) continue;
-            const normalizedMediaType = normalizeUserPostMediaType(post.media_type);
+            const postMediaUrls: string[] = Array.isArray(post.media_urls) && post.media_urls.length > 0
+              ? post.media_urls
+              : post.media_url ? [post.media_url] : [];
+            if (!postMediaUrls.length && !post.caption?.trim()) continue;
+            const normalizedMediaType = normalizeUserPostMediaType(post.media_type, postMediaUrls);
 
             const originalUserPost = post.shared_from_post_id ? originalUserPostMap.get(post.shared_from_post_id) : null;
             const originalStorePost = post.shared_from_post_id ? originalStorePostMap.get(post.shared_from_post_id) : null;
@@ -982,10 +989,6 @@ export default function ReelsFeedPage() {
               sharedFromUserName = sharedProfile?.full_name?.trim() || "Someone";
               sharedFromUserAvatar = optimizeAvatar(sharedProfile?.avatar_url, 96) || sharedProfile?.avatar_url || null;
             }
-
-            const postMediaUrls: string[] = Array.isArray(post.media_urls) && post.media_urls.length > 0
-              ? post.media_urls
-              : post.media_url ? [post.media_url] : [];
 
             allItems.push({
               id: `u-${post.id}`,
@@ -1271,6 +1274,7 @@ export default function ReelsFeedPage() {
 
     const itemIndex = items.findIndex((item) => item.id === target.id);
     if (itemIndex >= 0) {
+      rememberReelForReelsTab(target.id);
       setFullscreenIndex(itemIndex);
     }
   }, [items, location.search]);
@@ -2064,11 +2068,11 @@ export default function ReelsFeedPage() {
                     </div>
                   ) : (
                     <FeedCard item={item} currentUserId={userId} onOpenFullscreen={() => {
+                      rememberReelForReelsTab(item.id);
                       if (item.media_type === 'video') {
                         // Match the portaled viewer's video-only list exactly.
                         const videoItems = items.filter(it => it.media_type === 'video');
                         const videoIdx = videoItems.findIndex(v => v.id === item.id);
-                        rememberReelForReelsTab(item.id);
                         setReelsStartIndex(videoIdx >= 0 ? videoIdx : 0);
                       } else {
                         setFullscreenIndex(idx);

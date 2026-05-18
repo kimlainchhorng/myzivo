@@ -30,6 +30,18 @@ interface CustomerCityContextType {
 }
 
 const CustomerCityContext = createContext<CustomerCityContextType | undefined>(undefined);
+const CUSTOMER_CITY_FALLBACK: CustomerCityContextType = {
+  selectedCity: null,
+  cities: [],
+  isLoading: false,
+  isDetecting: false,
+  showCityModal: false,
+  setCity: () => {},
+  clearCity: () => {},
+  detectCity: async () => {},
+  openCityModal: () => {},
+  closeCityModal: () => {},
+};
 
 type DeviceLocation = {
   lat: number;
@@ -317,8 +329,5 @@ export function CustomerCityProvider({ children }: { children: React.ReactNode }
 
 export function useCustomerCity() {
   const context = useContext(CustomerCityContext);
-  if (context === undefined) {
-    throw new Error("useCustomerCity must be used within a CustomerCityProvider");
-  }
-  return context;
+  return context ?? CUSTOMER_CITY_FALLBACK;
 }

@@ -13,11 +13,12 @@ import Compass from "lucide-react/dist/esm/icons/compass";
 import ShoppingCart from "lucide-react/dist/esm/icons/shopping-cart";
 import ChevronRight from "lucide-react/dist/esm/icons/chevron-right";
 import Forward from "lucide-react/dist/esm/icons/forward";
+import Megaphone from "lucide-react/dist/esm/icons/megaphone";
 import type { ComponentType, SVGProps } from "react";
 import { useNavigate } from "react-router-dom";
 import { openShareToChat } from "./ShareToChatSheet";
 
-export type ZivoCardKind = "flight" | "hotel" | "eats" | "ride" | "trip" | "product" | "car" | "restaurant" | "activity";
+export type ZivoCardKind = "flight" | "hotel" | "eats" | "ride" | "trip" | "product" | "car" | "restaurant" | "activity" | "channel";
 
 export interface ZivoCardPayload {
   kind: ZivoCardKind;
@@ -53,6 +54,7 @@ const KIND_META: Record<ZivoCardKind, {
   car:        { label: "Car Rental",   icon: Car,           gradient: "from-violet-500 to-fuchsia-500", cta: "View rental" },
   restaurant: { label: "Restaurant",   icon: UtensilsCrossed, gradient: "from-orange-500 to-rose-500", cta: "View booking" },
   activity:   { label: "Activity",     icon: Compass,       gradient: "from-amber-500 to-pink-500",    cta: "View activity" },
+  channel:    { label: "Channel",      icon: Megaphone,     gradient: "from-blue-500 to-violet-500",   cta: "Open channel" },
 };
 
 export default function ZivoActionBubble({ payload, isMe, time }: Props) {
