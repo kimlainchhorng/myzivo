@@ -1347,9 +1347,9 @@ const CreateCVPage = () => {
     };
     let error;
     if (cvId) {
-      ({ error } = await supabase.from("user_cvs").update(payload).eq("id", cvId));
+      ({ error } = await supabase.from("user_cvs").update(payload as any).eq("id", cvId));
     } else {
-      const res = await supabase.from("user_cvs").insert(payload).select("id, share_code").single();
+      const res = await supabase.from("user_cvs").insert(payload as any).select("id, share_code").single();
       error = res.error;
       if (res.data) { setCvId(res.data.id); if ((res.data as any).share_code) setShareCode((res.data as any).share_code); }
     }
