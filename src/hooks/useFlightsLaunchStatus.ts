@@ -126,7 +126,7 @@ export function useUpdateChecklistItem() {
         .update({
           [key]: value,
           updated_at: new Date().toISOString(),
-        })
+        } as any)
         .eq("id", settingsId);
 
       if (error) throw error;
@@ -159,7 +159,7 @@ export function useUpdateLaunchPhase() {
       
       const { error } = await supabase
         .from("flights_launch_settings")
-        .update(updates)
+        .update(updates as any)
         .eq("id", settingsId);
 
       if (error) throw error;

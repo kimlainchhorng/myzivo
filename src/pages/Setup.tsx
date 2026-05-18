@@ -176,7 +176,7 @@ export default function Setup() {
       if (existingProfile) {
         const { error: updateError } = await supabase
           .from("profiles")
-          .update(profileUpdate)
+          .update(profileUpdate as any)
           .eq("id", existingProfile.id);
 
         if (updateError) throw updateError;

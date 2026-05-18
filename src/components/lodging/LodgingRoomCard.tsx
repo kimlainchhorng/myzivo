@@ -267,6 +267,7 @@ export function LodgingRoomCard({
             const price = baseRateCents / 100;
             const original = hasDirectDiscount ? (originalRateCents ?? 0) / 100 : null;
             const discountPct = original ? Math.round(((original - price) / original) * 100) : 0;
+            const hasGetaway = badges.includes("Getaway Deal") && !!originalRateCents;
             return (
               <div className="rounded-xl border border-border/60 bg-muted/30 p-3">
                 <div className="flex items-start justify-between gap-2 mb-2">

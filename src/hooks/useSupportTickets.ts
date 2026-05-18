@@ -325,7 +325,7 @@ export function useCreateTicket() {
           category: data.category,
           priority: data.priority || 'normal',
           status: 'open',
-        })
+        } as any)
         .select()
         .single();
 
@@ -357,7 +357,7 @@ export function useUpdateTicket() {
         .update({
           ...updates,
           updated_at: new Date().toISOString(),
-        })
+        } as any)
         .eq('id', ticketId)
         .select()
         .single();

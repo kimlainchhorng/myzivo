@@ -4050,7 +4050,7 @@ export default function StoreMapPage() {
                 {shouldShowSelectedStoreCommerceSection(
                   selectedStore,
                   selectedStoreProducts.length,
-                  liveStoreMap[selectedStore.id],
+                  !!liveStoreMap[selectedStore.id],
                 ) && (
                   <div className="border-t border-border/20 px-3 py-3 bg-muted/20">
                     <p className="text-[11px] font-semibold text-muted-foreground mb-2">

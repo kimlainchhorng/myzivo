@@ -211,7 +211,7 @@ export function useDeliveryAddress() {
         if (Object.keys(supabaseUpdates).length > 0) {
           await supabase
             .from("saved_locations")
-            .update(supabaseUpdates)
+            .update(supabaseUpdates as any)
             .eq("id", id);
         }
       } catch (err) {

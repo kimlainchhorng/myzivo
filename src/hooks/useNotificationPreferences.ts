@@ -163,7 +163,7 @@ export function useUpdateNotificationPreferences() {
         // Update existing
         const { data, error } = await supabase
           .from("notification_preferences")
-          .update(updateData)
+          .update(updateData as any)
           .eq("user_id", user.id)
           .select()
           .single();
@@ -188,7 +188,7 @@ export function useUpdateNotificationPreferences() {
             quiet_hours_end: updates.quietHoursEnd ?? "08:00",
             sms_consent_at: updates.smsConsentAt ?? null,
             sms_consent_text: updates.smsConsentText ?? null,
-          })
+          } as any)
           .select()
           .single();
 
@@ -330,7 +330,7 @@ export function useReenableSMS() {
         .update({ 
           sms_enabled: true,
           sms_consent_at: new Date().toISOString(),
-        })
+        } as any)
         .eq("user_id", user.id);
 
       if (prefsError) throw prefsError;
