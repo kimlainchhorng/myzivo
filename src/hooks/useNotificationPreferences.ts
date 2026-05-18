@@ -330,7 +330,7 @@ export function useReenableSMS() {
         .update({ 
           sms_enabled: true,
           sms_consent_at: new Date().toISOString(),
-        })
+        } as any)
         .eq("user_id", user.id);
 
       if (prefsError) throw prefsError;
