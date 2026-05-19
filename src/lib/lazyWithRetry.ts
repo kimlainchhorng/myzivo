@@ -42,10 +42,15 @@ export function lazyWithRetry<T extends ComponentType<any>>(
       }
     }
     try {
-      if (typeof window !== "undefined" && !sessionStorage.getItem(RELOAD_KEY)) {
-        sessionStorage.setItem(RELOAD_KEY, "1");
-        window.location.reload();
-        return new Promise(() => {}) as never;
+      if (typeof window !== "undefined") {
+        const last = Number(sessionStorage.getItem(RELOAD_KEY) || "0");
+        // Allow another auto-reload attempt after 30s (handles fresh deploys
+        // that arrive after the first reload also missed the chunk).
+        if (Date.now() - last > 30_000) {
+          sessionStorage.setItem(RELOAD_KEY, String(Date.now()));
+          window.location.reload();
+          return new Promise(() => {}) as never;
+        }
       }
     } catch {}
     throw lastErr;
